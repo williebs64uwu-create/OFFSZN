@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Feed - OFFSZN</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #0a0a0a;
+            color: #e5e5e5;
+            overflow-x: hidden;
+            line-height: 1.5;
+        }
+
+        /* ===== NAVBAR ===== */
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 1.5rem;
+            background: rgba(0, 0, 0, 0.98);
+            position: sticky;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .navbar .logo a {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #fff;
+            text-decoration: none;
+            letter-spacing: -0.5px;
+        }
+
+        .navbar-center {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .navbar-links {
+            list-style: none;
+            display: flex;
+            gap: 1.5rem;
+            align-items: center;
+        }
+
+        .navbar-links a {
+            color: #999;
+            text-decoration: none;
+            transition: all 0.2s;
+            font-weight: 500;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+
+        .navbar-links a:hover {
+            color: #fff;
+        }
+
+        .navbar-links a.active {
+            color: #8b5cf6;
+        }
+
+        .navbar-search {
+            position: relative;
+            width: 280px;
+        }
+
+        .navbar-search input {
+            width: 100%;
+            padding: 0.6rem 2rem 0.6rem 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: #fff;
+            font-size: 0.85rem;
+            outline: none;
+        }
+
+        .navbar-search input:focus {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(139, 92, 246, 0.5);
+        }
+
+        .navbar-right {
+            display: flex;
+            gap: 0.75rem;
+            align-items: center;
+        }
+
+        .navbar-icon-button {
+            width: 36px;
+            height: 36px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #999;
+            font-size: 16px;
+            text-decoration: none;
+        }
+
+        .navbar-icon-button:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: #fff;
+        }
+
+        /* ===== FEED CONTAINER ===== */
+        .feed-container {
+            display: flex;
+            gap: 24px;
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 24px;
+            min-height: calc(100vh - 57px);
+            flex-wrap: wrap;
+        }
+
+        .feed-sidebar-left {
+            flex: 0 0 250px;
+        }
+
+        .feed-main {
+            flex: 1;
+            max-width: 700px;
+        }
+
+        .feed-sidebar-right {
+            flex: 0 0 280px;
+        }
+
+        /* ===== LEFT SIDEBAR ===== */
+        .filter-section {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+
+        .filter-title {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .filter-option {
+            padding: 10px 12px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 8px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.85rem;
+            color: #999;
+        }
+
+        .filter-option:hover,
+        .filter-option.active {
+            background: rgba(139, 92, 246, 0.15);
+            border-color: #8b5cf6;
+            color: #fff;
+            font-weight: 600;
+        }
+
+        /* ===== MAIN FEED ===== */
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin: 24px 0 16px;
+            padding: 0 4px;
+        }
+
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-link {
+            color: #8b5cf6;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .section-link:hover {
+            color: #a78bfa;
+        }
+
+        .empty-section {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 40px 24px;
+            text-align: center;
+            margin-bottom: 32px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .empty-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #8b5cf6, #ec4899);
+            opacity: 0.5;
+        }
+
+        .empty-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 20px;
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(236, 72, 153, 0.2));
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            color: #8b5cf6;
+        }
+
+        .empty-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 8px;
+        }
+
+        .empty-description {
+            font-size: 0.9rem;
+            color: #999;
+            line-height: 1.5;
+            max-width: 400px;
+            margin: 0 auto 20px;
+        }
+
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .empty-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px dashed rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            padding: 32px 20px;
+            text-align: center;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .empty-card:hover {
+            border-color: rgba(139, 92, 246, 0.5);
+            background: rgba(139, 92, 246, 0.05);
+            transform: translateY(-4px);
+        }
+
+        .empty-card-icon {
+            font-size: 2.5rem;
+            margin-bottom: 12px;
+            opacity: 0.4;
+            color: #8b5cf6;
+        }
+
+        .empty-card-text {
+            font-size: 0.85rem;
+            color: #999;
+            font-weight: 600;
+        }
+
+        .producers-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 32px;
+        }
+
+        .empty-producer {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px dashed rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .empty-producer:hover {
+            border-color: rgba(139, 92, 246, 0.5);
+            background: rgba(139, 92, 246, 0.05);
+        }
+
+        .empty-avatar {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.3), rgba(236, 72, 153, 0.3));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            opacity: 0.5;
+            color: transparent;
+        }
+
+        .empty-producer-info {
+            flex: 1;
+        }
+
+        .empty-producer-name {
+            font-weight: 600;
+            color: #999;
+            margin-bottom: 4px;
+        }
+
+        .empty-producer-genre {
+            font-size: 0.8rem;
+            color: #666;
+        }
+
+        /* ===== RIGHT SIDEBAR ===== */
+        .sidebar-widget {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+
+        .widget-title {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .stats-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: #999;
+        }
+
+        .stat-value {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #8b5cf6;
+        }
+
+        .cta-widget {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(236, 72, 153, 0.1));
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            border-radius: 12px;
+            padding: 24px 20px;
+            text-align: center;
+        }
+
+        .cta-icon {
+            font-size: 2.5rem;
+            margin-bottom: 12px;
+            color: #8b5cf6;
+        }
+
+        .cta-title {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 8px;
+        }
+
+        .cta-text {
+            font-size: 0.85rem;
+            color: #999;
+            margin-bottom: 16px;
+            line-height: 1.5;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 900px) {
+            .feed-container {
+                flex-direction: column;
+                padding: 16px;
+            }
+            .feed-sidebar-left,
+            .feed-sidebar-right {
+                order: 2;
+            }
+            .feed-main {
+                order: 1;
+            }
+            .products-grid {
+                grid-template-columns: 1fr;
+            }
+            .navbar-center {
+                display: none;
+            }
+            .navbar-search {
+                width: 180px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo">
+            <a href="dashboard.html">OFFSZN</a>
+        </div>
+
+        <div class="navbar-center">
+            <ul class="navbar-links">
+                <li><a href="dashboard.html">INICIO</a></li>
+                <li><a href="blog.html">BLOG</a></li>
+                <li><a href="feed.html" class="active">COMUNIDAD</a></li>
+            </ul>
+
+            <div class="navbar-search">
+                <input type="text" placeholder="Buscar...">
+            </div>
+        </div>
+
+        <div class="navbar-right">
+            <a href="#" class="navbar-icon-button">🔔</a>
+            <a href="Gift-Cards.html" class="navbar-icon-button">🛒</a>
+            <a href="account-settings.html" class="navbar-icon-button">👤</a>
+        </div>
+    </nav>
+
+    <div class="feed-container">
+        <!-- LEFT SIDEBAR -->
+        <aside class="feed-sidebar-left">
+            <div class="filter-section">
+                <div class="filter-title">Recomendado para ti</div>
+                <div class="filter-option active">Todo</div>
+                <div class="filter-option">Beats</div>
+                <div class="filter-option">Drum Kits</div>
+                <div class="filter-option">Presets</div>
+                <div class="filter-option">Colaboraciones</div>
+            </div>
+        </aside>
+
+        <!-- MAIN FEED -->
+        <main class="feed-main">
+            <div class="section-header">
+                <h2 class="section-title">🔥 Para ti</h2>
+                <a href="#" class="section-link">Ver más</a>
+            </div>
+            <div class="empty-section">
+                <div class="empty-icon">✨</div>
+                <h3 class="empty-title">Pronto verás contenido personalizado</h3>
+                <p class="empty-description">Basado en tus gustos, seguidos y actividad, aquí aparecerá música y creadores que te interesen.</p>
+            </div>
+
+            <div class="section-header">
+                <h2 class="section-title">🎧 Beats Populares</h2>
+                <a href="#" class="section-link">Explorar</a>
+            </div>
+            <div class="products-grid">
+                <div class="empty-card">
+                    <div class="empty-card-icon">🎚️</div>
+                    <div class="empty-card-text">Próximamente</div>
+                </div>
+                <div class="empty-card">
+                    <div class="empty-card-icon">🥁</div>
+                    <div class="empty-card-text">Próximamente</div>
+                </div>
+            </div>
+
+            <div class="section-header">
+                <h2 class="section-title">👥 Productores en Tendencia</h2>
+                <a href="#" class="section-link">Ver todos</a>
+            </div>
+            <div class="producers-list">
+                <div class="empty-producer">
+                    <div class="empty-avatar"></div>
+                    <div class="empty-producer-info">
+                        <div class="empty-producer-name">Próximamente</div>
+                        <div class="empty-producer-genre">Creadores destacados aparecerán aquí</div>
+                    </div>
+                </div>
+                <div class="empty-producer">
+                    <div class="empty-avatar"></div>
+                    <div class="empty-producer-info">
+                        <div class="empty-producer-name">Próximamente</div>
+                        <div class="empty-producer-genre">Basado en tu región y estilo</div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- RIGHT SIDEBAR -->
+        <aside class="feed-sidebar-right">
+            <div class="sidebar-widget">
+                <h3 class="widget-title">🎯 Tu Perfil Musical</h3>
+                <div class="stats-list">
+                    <div class="stat-item">
+                        <span class="stat-label">Géneros</span>
+                        <span class="stat-value">—</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">BPM preferido</span>
+                        <span class="stat-value">—</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Instrumentos</span>
+                        <span class="stat-value">—</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="cta-widget">
+                <div class="cta-icon">💡</div>
+                <h3 class="cta-title">Mejora tus recomendaciones</h3>
+                <p class="cta-text">Sigue productores, marca beats favoritos y completa tu perfil para una experiencia más personalizada.</p>
+                <a href="account-settings.html" class="cta-button" style="display:block;width:100%;padding:10px 16px;background:#8b5cf6;color:#fff;text-decoration:none;border-radius:8px;font-weight:600;font-size:0.85rem;text-align:center;">Editar Perfil</a>
+            </div>
+        </aside>
+    </div>
+</body>
+</html>
+

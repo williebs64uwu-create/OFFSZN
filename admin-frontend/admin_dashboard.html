@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - OFFSZN</title>
+    <link rel="stylesheet" href="admin_style.css">
+    <script>
+        const token = localStorage.getItem('authToken');
+        let isAdmin = false;
+
+        if (token) {
+            try {
+                const base64Url = token.split('.')[1];
+                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                const jsonPayload = decodeURIComponent(atob(base64).split('').map(function (c) {
+                    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                }).join(''));
+
+                const payload = JSON.parse(jsonPayload);
+                isAdmin = payload.isAdmin === true;
+
+            } catch (e) {
+                console.error("Error decodificando token o token inválido:", e);
+                isAdmin = false;
+                localStorage.removeItem('authToken');
+            }
+        }
+
+        if (!isAdmin) {
+            console.log("Acceso denegado al admin dashboard, redirigiendo al login.");
+            window.location.replace('/pages/login.html');
+        }
+    </script>
+</head>
+
+<body>
+    <div class="dashboard-container">
+        <aside class="sidebar">
+            <h2>OFFSZN Admin</h2>
+            <nav>
+                <ul>
+                    <li><a href="#dashboard" class="active">Dashboard</a></li>
+                    <li><a href="#products">Productos</a></li>
+                    <li><a href="#orders">Pedidos</a></li>
+                    <li><a href="#users">Usuarios</a></li>
+                </ul>
+            </nav>
+            <button id="admin-logout-button">Cerrar Sesión</button>
+        </aside>
+        <main class="content" id="main-content">
+            <h1>Bienvenido al Dashboard</h1>
+            <p>Selecciona una opción del menú lateral.</p>
+        </main>
+    </div>
+    <script src="admin_dashboard.js"></script>
+</body>
+
+</html>

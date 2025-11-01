@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configuración - OFFSZN</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body {font-family:'Inter',sans-serif;background:#0a0a0a;color:#e5e5e5;overflow-x:hidden;}
+
+        /* ---------- NAVBAR ---------- */
+        .navbar {display:flex;justify-content:space-between;align-items:center;padding:0.75rem 3rem;background:rgba(0,0,0,.98);position:sticky;top:0;width:100%;z-index:1000;border-bottom:1px solid rgba(255,255,255,.08);backdrop-filter:blur(20px);}
+        .navbar .logo a {font-size:1.5rem;font-weight:800;color:#fff;text-decoration:none;letter-spacing:-.5px;}
+        .navbar-center {display:flex;align-items:center;gap:2.5rem;}
+        .navbar-links {list-style:none;display:flex;gap:2rem;align-items:center;}
+        .navbar-links a {color:#999;text-decoration:none;transition:all .2s;font-weight:500;font-size:.9rem;display:flex;align-items:center;gap:5px;cursor:pointer;}
+        .navbar-links a:hover {color:#fff;}
+        .navbar-search {position:relative;width:380px;}
+        .navbar-search input {width:100%;padding:.6rem 2.5rem .6rem 1rem;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:#fff;font-size:.85rem;outline:none;transition:all .2s;}
+        .navbar-search input:focus {background:rgba(255,255,255,.08);border-color:rgba(139,92,246,.5);}
+        .navbar-search i {position:absolute;right:1rem;top:50%;transform:translateY(-50%);color:#666;font-size:.9rem;}
+        .navbar-right {display:flex;gap:.75rem;align-items:center;}
+        .navbar-icon-button {width:36px;height:36px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#999;font-size:16px;transition:all .2s;text-decoration:none;}
+        .navbar-icon-button:hover {background:rgba(255,255,255,.08);color:#fff;}
+
+        /* ---------- DASHBOARD LAYOUT ---------- */
+        .dashboard-container {display:grid;grid-template-columns:260px 1fr;min-height:calc(100vh - 57px);}
+        .sidebar {background:rgba(15,15,15,.6);border-right:1px solid rgba(255,255,255,.08);position:sticky;top:57px;height:calc(100vh - 57px);overflow-y:auto;}
+        .sidebar::-webkit-scrollbar {width:5px;}
+        .sidebar::-webkit-scrollbar-thumb {background:rgba(255,255,255,.1);border-radius:3px;}
+        .profile-header {padding:24px 20px;border-bottom:1px solid rgba(255,255,255,.08);}
+        .profile-info {display:flex;align-items:center;gap:12px;}
+        .profile-avatar {width:44px;height:44px;border-radius:50%;background:#333;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1.1rem;color:#666;}
+        .profile-name {font-weight:600;color:#fff;font-size:.95rem;}
+        .wallet-section {padding:16px 20px;border-bottom:1px solid rgba(255,255,255,.08);background:rgba(139,92,246,.05);}
+        .wallet-label {font-size:.7rem;color:#999;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px;font-weight:600;}
+        .wallet-amount {font-size:1.6rem;font-weight:700;color:#fff;}
+        .upload-btn {margin:20px 20px 0;padding:14px 18px;background:#8b5cf6;color:#fff;border:none;border-radius:10px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .2s;font-size:.9rem;width:calc(100% - 40px);}
+        .upload-btn:hover {background:#7c3aed;transform:translateY(-1px);}
+        .sidebar-search {margin:16px 20px;position:relative;}
+        .sidebar-search input {width:100%;padding:10px 36px 10px 12px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:#fff;font-size:.85rem;outline:none;transition:all .2s;}
+        .sidebar-search input:focus {background:rgba(255,255,255,.08);border-color:rgba(139,92,246,.5);}
+        .sidebar-menu {padding:12px 0;}
+        .menu-section-title {padding:16px 20px 8px;font-size:.65rem;color:#666;text-transform:uppercase;letter-spacing:1px;font-weight:700;}
+        .menu-item {display:flex;align-items:center;gap:12px;padding:11px 20px;color:#999;text-decoration:none;font-size:.88rem;transition:all .2s;position:relative;cursor:pointer;font-weight:500;}
+        .menu-item:hover {background:rgba(255,255,255,.05);color:#fff;}
+        .menu-item.active {background:rgba(139,92,246,.1);color:#fff;border-left:2px solid #8b5cf6;}
+        .menu-item.disabled {opacity:.4;cursor:not-allowed;}
+        .menu-item i {width:18px;text-align:center;font-size:.95rem;}
+        .menu-item .badge {margin-left:auto;background:#8b5cf6;color:#fff;padding:2px 7px;border-radius:10px;font-size:.65rem;font-weight:700;}
+        .menu-item .soon-badge {margin-left:auto;background:rgba(255,255,255,.08);color:#666;padding:2px 8px;border-radius:10px;font-size:.6rem;font-weight:600;text-transform:uppercase;}
+        .menu-divider {height:1px;background:rgba(255,255,255,.08);margin:12px 20px;}
+        .logout-btn {margin:20px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);color:#ef4444;padding:11px 18px;border-radius:10px;display:flex;align-items:center;gap:10px;justify-content:center;text-decoration:none;font-weight:600;font-size:.88rem;transition:all .2s;}
+        .logout-btn:hover {background:rgba(239,68,68,.15);border-color:rgba(239,68,68,.3);}
+
+        /* ---------- MAIN CONTENT ---------- */
+        .main-content {padding:36px 48px;background:#0a0a0a;}
+        .breadcrumb {display:flex;align-items:center;gap:8px;margin-bottom:24px;font-size:.85rem;color:#666;}
+        .breadcrumb a {color:#666;text-decoration:none;}
+        .breadcrumb .active {color:#fff;font-weight:600;}
+        .page-header {margin-bottom:32px;}
+        .page-title {font-size:2rem;font-weight:700;color:#fff;margin-bottom:6px;letter-spacing:-.5px;}
+        .page-subtitle {color:#666;font-size:.95rem;font-weight:400;}
+        .settings-section {background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:28px;margin-bottom:24px;}
+        .section-title {font-size:1.4rem;font-weight:700;color:#fff;margin-bottom:20px;display:flex;align-items:center;gap:10px;}
+        .form-group {margin-bottom:24px;}
+        .form-label {display:block;color:#e5e5e5;font-weight:600;margin-bottom:8px;font-size:.9rem;}
+        .form-input {width:100%;padding:12px 16px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:10px;color:#fff;font-size:.9rem;outline:none;transition:all .2s;font-family:'Inter',sans-serif;}
+        .form-input:focus {background:rgba(255,255,255,.08);border-color:rgba(139,92,246,.5);}
+        .form-input::placeholder {color:#666;}
+        textarea.form-input {min-height:100px;resize:vertical;}
+        .social-input-group {display:grid;grid-template-columns:1fr auto;gap:12px;}
+        .verify-btn {padding:12px 24px;background:rgba(139,92,246,.1);border:1px solid rgba(139,92,246,.3);border-radius:10px;color:#8b5cf6;font-weight:600;font-size:.85rem;cursor:pointer;transition:all .2s;white-space:nowrap;}
+        .verify-btn:hover {background:rgba(139,92,246,.2);}
+        .verify-btn.verified {background:rgba(34,197,94,.1);border-color:rgba(34,197,94,.3);color:#22c55e;cursor:default;}
+        .form-helper {font-size:.8rem;color:#666;margin-top:6px;}
+        .save-btn {padding:14px 32px;background:#8b5cf6;border:none;border-radius:10px;color:#fff;font-weight:700;font-size:.95rem;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:8px;}
+        .save-btn:hover {background:#7c3aed;transform:translateY(-1px);}
+        .success-message {display:none;padding:12px 20px;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);border-radius:10px;color:#22c55e;margin-bottom:20px;font-size:.9rem;align-items:center;gap:10px;}
+        .success-message.show {display:flex;}
+        .toggle-switch {position:relative;display:inline-block;width:50px;height:26px;opacity:0.5;pointer-events:none;}
+        .toggle-switch input {opacity:0;width:0;height:0;}
+        .toggle-slider {position:absolute;cursor:not-allowed;top:0;left:0;right:0;bottom:0;background:rgba(255,255,255,.1);transition:.4s;border-radius:34px;border:1px solid rgba(255,255,255,.1);}
+        .toggle-slider:before {position:absolute;content:"";height:18px;width:18px;left:4px;bottom:3px;background:#666;transition:.4s;border-radius:50%;}
+        input:checked + .toggle-slider {background:rgba(139,92,246,.3);border-color:#8b5cf6;}
+        input:checked + .toggle-slider:before {transform:translateX(24px);background:#8b5cf6;}
+        .setting-row {display:flex;justify-content:space-between;align-items:center;padding:16px 0;border-bottom:1px solid rgba(255,255,255,.05);}
+        .setting-row:last-child {border-bottom:none;}
+        .setting-info h4 {color:#fff;font-size:.95rem;font-weight:600;margin-bottom:4px;}
+        .setting-info p {color:#666;font-size:.8rem;}
+        .danger-zone {background:rgba(239,68,68,.05);border-color:rgba(239,68,68,.2);}
+        .danger-btn {padding:12px 28px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:10px;color:#ef4444;font-weight:600;font-size:.9rem;cursor:not-allowed;opacity:0.5;transition:all .2s;}
+        .danger-btn:hover {background:rgba(239,68,68,.1);}
+
+        .locked-notice {
+            background:rgba(255,255,255,.02);border:1px dashed rgba(255,255,255,.15);border-radius:12px;padding:20px;text-align:center;margin:16px 0;color:#666;font-size:.9rem;
+        }
+
+        @media (max-width:1200px){.dashboard-container{grid-template-columns:1fr;}.sidebar{position:relative;top:0;height:auto;}}
+        @media (max-width:768px){.main-content{padding:20px;}.social-input-group{grid-template-columns:1fr;}}
+    </style>
+</head>
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="logo"><a href="index.html">OFFSZN</a></div>
+        <div class="navbar-center">
+            <ul class="navbar-links">
+                <li><a href="index.html">INICIO</a></li>
+                <li><a href="recursos.html">RECURSOS</a></li>
+                <li><a href="comunidad.html">COMUNIDAD</a></li>
+            </ul>
+            <div class="navbar-search">
+                <input type="text" placeholder="Buscar beats, kits, productores...">
+                <i class="fas fa-search"></i>
+            </div>
+        </div>
+        <div class="navbar-right">
+            <a href="notifications.html" class="navbar-icon-button"><i class="fas fa-bell"></i></a>
+            <a href="cart.html" class="navbar-icon-button"><i class="fas fa-shopping-cart"></i></a>
+            <a href="dashboard.html" class="navbar-icon-button"><i class="fas fa-user"></i></a>
+        </div>
+    </nav>
+
+    <!-- Dashboard Container -->
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="profile-header">
+                <div class="profile-info">
+                    <div class="profile-avatar">?</div>
+                    <div><div class="profile-name">Usuario</div></div>
+                </div>
+            </div>
+            <div class="wallet-section">
+                <div class="wallet-label">Saldo Disponible</div>
+                <div class="wallet-amount">$0.00</div>
+            </div>
+            <button class="upload-btn" onclick="showLoginRequired()">
+                <i class="fas fa-cloud-upload-alt"></i> Subir Kit
+            </button>
+            <div class="sidebar-search">
+                <input type="text" placeholder="Buscar mis productos...">
+                <i class="fas fa-search"></i>
+            </div>
+            <div class="sidebar-menu">
+                <div class="menu-section-title">Principal</div>
+                <a href="dashboard.html" class="menu-item"><i class="fas fa-th-large"></i><span>Dashboard</span></a>
+                <a href="#" class="menu-item disabled" onclick="showLoginRequired()"><i class="fas fa-music"></i><span>Mis Kits</span><span class="soon-badge">Pronto</span></a>
+                <a href="#" class="menu-item disabled" onclick="showLoginRequired()"><i class="fas fa-chart-line"></i><span>Analíticas</span><span class="soon-badge">Pronto</span></a>
+                <a href="#" class="menu-item disabled" onclick="showLoginRequired()"><i class="fas fa-heart"></i><span>Favoritos</span><span class="soon-badge">Pronto</span></a>
+                <a href="#" class="menu-item disabled" onclick="showLoginRequired()"><i class="fas fa-history"></i><span>Historial</span><span class="soon-badge">Pronto</span></a>
+                <div class="menu-divider"></div>
+                <div class="menu-section-title">Colaboración</div>
+                <a href="#" class="menu-item disabled" onclick="showLoginRequired()"><i class="fas fa-users"></i><span>Colaboraciones</span><span class="soon-badge">Pronto</span></a>
+                <div class="menu-divider"></div>
+                <div class="menu-section-title">Compras</div>
+                <a href="#" class="menu-item disabled" onclick="showLoginRequired()"><i class="fas fa-shopping-bag"></i><span>Mis Compras</span><span class="soon-badge">Pronto</span></a>
+                <a href="gift-cards.html" class="menu-item"><i class="fas fa-gift"></i><span>Gift Cards</span></a>
+                <a href="messages.html" class="menu-item"><i class="fas fa-envelope"></i><span>Mensajes</span><span class="badge">0</span></a>
+                <div class="menu-divider"></div>
+                <div class="menu-section-title">Configuración</div>
+                <a href="account-settings.html" class="menu-item active"><i class="fas fa-cog"></i><span>Configuración</span></a>
+                <a href="blog.html" class="menu-item"><i class="fas fa-book-open"></i><span>Blog</span></a>
+            </div>
+            <a href="logout.html" class="logout-btn"><i class="fas fa-sign-out-alt"></i><span>Cerrar Sesión</span></a>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="breadcrumb">
+                <a href="dashboard.html"><i class="fas fa-home"></i> Dashboard</a>
+                <span><i class="fas fa-chevron-right"></i></span>
+                <span class="active">Configuración</span>
+            </div>
+
+            <div class="page-header">
+                <h1 class="page-title">Configuración de Cuenta</h1>
+                <p class="page-subtitle">Personaliza tu perfil, seguridad y notificaciones.</p>
+            </div>
+
+            <!-- Mensaje de login requerido -->
+            <div class="locked-notice">
+                <i class="fas fa-lock" style="font-size:1.5rem;margin-bottom:10px;display:block;opacity:.5;"></i>
+                <strong>Necesitas iniciar sesión</strong> para utilizar estas funciones.
+                <br><br>
+                <a href="login.html" style="color:#8b5cf6;text-decoration:none;font-weight:600;">Iniciar Sesión →</a>
+            </div>
+
+            <!-- Información Personal -->
+            <div class="settings-section">
+                <h2 class="section-title"><i class="fas fa-user"></i> Información Personal</h2>
+                <div class="form-group"><label class="form-label">Nombre Completo</label><input type="text" class="form-input" placeholder="Tu nombre completo" disabled></div>
+                <div class="form-group"><label class="form-label">Nombre de Usuario</label><input type="text" class="form-input" placeholder="@tu_usuario" disabled><p class="form-helper">Tu identificador único en OFFSZN</p></div>
+                <div class="form-group"><label class="form-label">Email</label><input type="email" class="form-input" placeholder="tu@email.com" disabled></div>
+                <div class="form-group"><label class="form-label">Bio</label><textarea class="form-input" placeholder="Cuéntanos sobre ti..." disabled></textarea><p class="form-helper">Máx. 200 caracteres</p></div>
+                <button class="save-btn" onclick="showLoginRequired()" disabled><i class="fas fa-save"></i> Guardar</button>
+            </div>
+
+            <!-- Redes Sociales -->
+            <div class="settings-section">
+                <h2 class="section-title"><i class="fas fa-share-alt"></i> Redes Sociales</h2>
+                <div class="form-group">
+                    <label class="form-label"><i class="fab fa-youtube" style="color:#ff0000;"></i> YouTube</label>
+                    <div class="social-input-group">
+                        <input type="text" class="form-input" placeholder="@usuario o link" disabled>
+                        <button class="verify-btn" onclick="showLoginRequired()" disabled><i class="fas fa-check"></i> Verificar</button>
+                    </div>
+                </div>
+                <!-- Repetir para Instagram, TikTok, Spotify -->
+                <div class="form-group">
+                    <label class="form-label"><i class="fab fa-instagram" style="color:#e4405f;"></i> Instagram</label>
+                    <div class="social-input-group">
+                        <input type="text" class="form-input" placeholder="@usuario o link" disabled>
+                        <button class="verify-btn" onclick="showLoginRequired()" disabled><i class="fas fa-check"></i> Verificar</button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label"><i class="fab fa-tiktok" style="color:#000;"></i> TikTok</label>
+                    <div class="social-input-group">
+                        <input type="text" class="form-input" placeholder="@usuario o link" disabled>
+                        <button class="verify-btn" onclick="showLoginRequired()" disabled><i class="fas fa-check"></i> Verificar</button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label"><i class="fab fa-spotify" style="color:#1db954;"></i> Spotify</label>
+                    <div class="social-input-group">
+                        <input type="text" class="form-input" placeholder="Link de artista" disabled>
+                        <button class="verify-btn" onclick="showLoginRequired()" disabled><i class="fas fa-check"></i> Verificar</button>
+                    </div>
+                </div>
+                <button class="save-btn" onclick="showLoginRequired()" disabled><i class="fas fa-save"></i> Guardar</button>
+            </div>
+
+            <!-- Seguridad -->
+            <div class="settings-section">
+                <h2 class="section-title"><i class="fas fa-shield-alt"></i> Seguridad</h2>
+                <div class="form-group"><label class="form-label">Contraseña Actual</label><input type="password" class="form-input" disabled></div>
+                <div class="form-group"><label class="form-label">Nueva Contraseña</label><input type="password" class="form-input" disabled><p class="form-helper">Mín. 8 caracteres</p></div>
+                <div class="form-group"><label class="form-label">Confirmar</label><input type="password" class="form-input" disabled></div>
+                <button class="save-btn" onclick="showLoginRequired()" disabled><i class="fas fa-key"></i> Cambiar</button>
+                <div class="menu-divider" style="margin:32px 0;"></div>
+                <div class="setting-row">
+                    <div class="setting-info"><h4>2FA</h4><p>Autenticación de dos factores</p></div>
+                    <label class="toggle-switch"><input type="checkbox" disabled><span class="toggle-slider"></span></label>
+                </div>
+            </div>
+
+            <!-- Notificaciones -->
+            <div class="settings-section">
+                <h2 class="section-title"><i class="fas fa-bell"></i> Notificaciones</h2>
+                <div class="setting-row"><div class="setting-info"><h4>Email</h4><p>Actualizaciones</p></div><label class="toggle-switch"><input type="checkbox" disabled><span class="toggle-slider"></span></label></div>
+                <div class="setting-row"><div class="setting-info"><h4>Ventas</h4><p>Nueva venta</p></div><label class="toggle-switch"><input type="checkbox" disabled><span class="toggle-slider"></span></label></div>
+                <div class="setting-row"><div class="setting-info"><h4>Mensajes</h4><p>Nuevos</p></div><label class="toggle-switch"><input type="checkbox" disabled><span class="toggle-slider"></span></label></div>
+                <div class="setting-row"><div class="setting-info"><h4>Colaboraciones</h4><p>Oportunidades</p></div><label class="toggle-switch"><input type="checkbox" disabled><span class="toggle-slider"></span></label></div>
+                <div class="setting-row"><div class="setting-info"><h4>Noticias</h4><p>Nuevas funciones</p></div><label class="toggle-switch"><input type="checkbox" disabled><span class="toggle-slider"></span></label></div>
+            </div>
+
+            <!-- Privacidad -->
+            <div class="settings-section">
+                <h2 class="section-title"><i class="fas fa-user-secret"></i> Privacidad</h2>
+                <div class="setting-row"><div class="setting-info"><h4>Perfil Público</h4><p>Visible</p></div><label class="toggle-switch"><input type="checkbox" disabled><span class="toggle-slider"></span></label></div>
+                <div class="setting-row"><div class="setting-info"><h4>Mostrar Email</h4><p>En perfil</p></div><label class="toggle-switch"><input type="checkbox" disabled><span class="toggle-slider"></span></label></div>
+                <div class="setting-row"><div class="setting-info"><h4>Estadísticas</h4><p>Ventas</p></div><label class="toggle-switch"><input type="checkbox" disabled><span class="toggle-slider"></span></label></div>
+                <div class="setting-row"><div class="setting-info"><h4>Mensajes</h4><p>De desconocidos</p></div><label class="toggle-switch"><input type="checkbox" disabled><span class="toggle-slider"></span></label></div>
+            </div>
+
+            <!-- Zona de Peligro -->
+            <div class="settings-section danger-zone">
+                <h2 class="section-title"><i class="fas fa-exclamation-triangle"></i> Zona de Peligro</h2>
+                <div class="setting-row">
+                    <div class="setting-info"><h4>Desactivar Cuenta</h4><p>Puedes reactivarla</p></div>
+                    <button class="danger-btn" onclick="showLoginRequired()">Desactivar</button>
+                </div>
+                <div class="setting-row">
+                    <div class="setting-info"><h4>Eliminar Cuenta</h4><p>Permanente</p></div>
+                    <button class="danger-btn" onclick="showLoginRequired()">Eliminar</button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal" id="modal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal()"><i class="fas fa-times"></i></button>
+            <div class="modal-icon"><i class="fas fa-lock"></i></div>
+            <h2 class="modal-title">Inicia Sesión</h2>
+            <p class="modal-text">Necesitas <strong>iniciar sesión</strong> para acceder a esta función.</p>
+            <a href="login.html" style="display:inline-block;margin-top:16px;padding:10px 24px;background:#8b5cf6;color:#fff;border-radius:10px;text-decoration:none;font-weight:600;">Iniciar Sesión</a>
+        </div>
+    </div>
+<script>
+    // === MODAL DE INICIO DE SESIÓN ===
+    function showLoginRequired() {
+        document.getElementById('modal').classList.add('active');
+    }
+
+    function closeModal() {
+        document.getElementById('modal').classList.remove('active');
+    }
+
+    // Cerrar modal al hacer clic fuera
+    document.getElementById('modal').addEventListener('click', (e) => {
+        if (e.target === document.getElementById('modal')) closeModal();
+    });
+
+    // === SINCRONIZACIÓN DE BILLETERA + CONVERSIÓN DE MONEDA ===
+    (function() {
+        const STORAGE_KEY = 'offszn_giftcards_state';
+        const EXCHANGE_RATE = 3.8; // 1 USD = 3.8 PEN
+
+        // Cargar estado de forma segura
+        function getWalletState() {
+            try {
+                const saved = localStorage.getItem(STORAGE_KEY);
+                if (!saved) return { balance: 0, currency: 'USD' };
+
+                const data = JSON.parse(saved);
+                const balance = typeof data.totalBalance === 'number' ? data.totalBalance : 0;
+                const currency = data.currentCurrency === 'PEN' ? 'PEN' : 'USD';
+
+                return { balance, currency };
+            } catch (e) {
+                console.warn('Error cargando billetera:', e);
+                return { balance: 0, currency: 'USD' };
+            }
+        }
+
+        // Formatear saldo con conversión
+        function formatBalance(balance, currency) {
+            if (currency === 'PEN') {
+                return `S/${(balance * EXCHANGE_RATE).toFixed(2)}`;
+            }
+            return `$${balance.toFixed(2)}`;
+        }
+
+        // Actualizar saldo en el sidebar
+        function updateWalletDisplay() {
+            const walletEl = document.querySelector('.wallet-amount');
+            if (!walletEl) return;
+
+            const { balance, currency } = getWalletState();
+            const formatted = formatBalance(balance, currency);
+
+            if (walletEl.textContent !== formatted) {
+                walletEl.textContent = formatted;
+                // Animación verde al actualizar
+                walletEl.style.transition = 'color 0.3s';
+                walletEl.style.color = '#10b981';
+                setTimeout(() => walletEl.style.color = '', 500);
+            }
+        }
+
+        // Inicialización segura
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(updateWalletDisplay, 100);
+            setInterval(updateWalletDisplay, 2000); // Refrescar cada 2 seg
+        });
+
+        // Escuchar cambios desde otras pestañas
+        window.addEventListener('storage', (e) => {
+            if (e.key === STORAGE_KEY) {
+                setTimeout(updateWalletDisplay, 50);
+            }
+        });
+
+        // === FUNCIÓN DE EMERGENCIA (F12) ===
+        window.resetWallet = () => {
+            localStorage.removeItem(STORAGE_KEY);
+            updateWalletDisplay();
+            alert('Billetera reiniciada');
+        };
+    })();
+</script>
+    
+</body>
+</html>

@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Regalo Mensual</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: radial-gradient(circle at center, #1a1a1a, #000);
+      color: #fff;
+      font-family: 'Poppins', sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      overflow: hidden;
+      text-align: center;
+    }
+
+    h2 {
+      font-size: 1.8rem;
+      margin-bottom: 20px;
+    }
+
+    iframe {
+      width: 350px;
+      height: 350px;
+      border: none;
+      border-radius: 16px;
+      box-shadow: 0 0 30px rgba(255, 255, 255, 0.1);
+      transition: transform 0.8s ease;
+    }
+
+    iframe:hover {
+      transform: scale(1.05);
+    }
+
+    button {
+      margin-top: 20px;
+      padding: 12px 28px;
+      font-size: 1rem;
+      border: none;
+      border-radius: 50px;
+      background: linear-gradient(90deg, #7b3fe4, #9b5eff);
+      color: white;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    button:hover {
+      transform: scale(1.1);
+      background: linear-gradient(90deg, #9b5eff, #7b3fe4);
+      box-shadow: 0 0 15px rgba(155, 94, 255, 0.4);
+    }
+
+    .message {
+      font-size: 1.2rem;
+      margin-top: 25px;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+    }
+
+    .visible {
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>🎁 Regalo Mensual</h2>
+
+  <iframe src="https://my.spline.design/giftbox-qVMG6i5JKzRKL6ouqGWjHtQe/" frameborder="0"></iframe>
+
+  <button id="claimBtn">Reclamarlo</button>
+  <div class="message" id="message"></div>
+
+  <script>
+    const btn = document.getElementById('claimBtn');
+    const msg = document.getElementById('message');
+
+    btn.addEventListener('click', () => {
+      btn.style.display = 'none';
+      msg.textContent = '💰 5$ para usar en la tienda';
+      msg.classList.add('visible');
+
+      setTimeout(() => {
+        msg.textContent = '';
+        const nextBtn = document.createElement('button');
+        nextBtn.textContent = 'Siguiente';
+        document.body.appendChild(nextBtn);
+
+        nextBtn.addEventListener('click', () => {
+          nextBtn.remove();
+          msg.textContent = '✅ ¡Completado! Encuéntralo en tus giftcards';
+          msg.classList.add('visible');
+        });
+      }, 2000);
+    });
+  </script>
+
+</body>
+</html>

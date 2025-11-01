@@ -1,0 +1,1170 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blog Personal - OFFSZN</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0a0a0a;
+            color: #e5e5e5;
+            overflow-x: hidden;
+        }
+
+        /* ===== NAVBAR ===== */
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 3rem;
+            background: rgba(0, 0, 0, 0.98);
+            position: sticky;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(20px);
+        }
+        .navbar .logo a {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #fff;
+            text-decoration: none;
+            letter-spacing: -0.5px;
+        }
+        .navbar-center {
+            display: flex;
+            align-items: center;
+            gap: 2.5rem;
+        }
+        .navbar-links {
+            list-style: none;
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+        .navbar-links a {
+            color: #999;
+            text-decoration: none;
+            transition: all 0.2s;
+            font-weight: 500;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .navbar-links a:hover {
+            color: #fff;
+        }
+
+        /* ===== DROPDOWN HOVER (Recursos & Comunidad) ===== */
+        .dropdown {
+            position: relative;
+        }
+        .dropdown-toggle {
+            color: #999;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        .dropdown-toggle:hover {
+            color: #fff;
+        }
+        .dropdown-menu {
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%) translateY(-10px);
+            background: rgba(20, 20, 20, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 10px;
+            padding: 12px 0;
+            min-width: 220px;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            z-index: 999;
+        }
+        .dropdown:hover .dropdown-menu {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(8px);
+        }
+        .dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 20px;
+            color: #ccc;
+            text-decoration: none;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+        .dropdown-item:hover {
+            background: rgba(139, 92, 246, 0.1);
+            color: #fff;
+        }
+        .dropdown-item i {
+            width: 18px;
+            text-align: center;
+            font-size: 0.9rem;
+            color: #8b5cf6;
+        }
+
+        .navbar-search {
+            position: relative;
+            width: 380px;
+        }
+        .navbar-search input {
+            width: 100%;
+            padding: 0.6rem 2.5rem 0.6rem 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: #fff;
+            font-size: 0.85rem;
+            outline: none;
+            transition: all 0.2s;
+        }
+        .navbar-search input:focus {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(139, 92, 246, 0.5);
+        }
+        .navbar-search i {
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        /* ===== USER DROPDOWN (Hover) ===== */
+        .user-dropdown {
+            position: relative;
+        }
+        .user-dropdown-toggle {
+            width: 36px;
+            height: 36px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #999;
+            font-size: 16px;
+            transition: all 0.2s;
+        }
+        .user-dropdown-toggle:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: #fff;
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+        .user-dropdown-menu {
+            position: absolute;
+            top: calc(100% + 12px);
+            right: 0;
+            background: rgba(20, 20, 20, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 10px;
+            padding: 16px;
+            min-width: 260px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            z-index: 999;
+        }
+        .user-dropdown:hover .user-dropdown-menu {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+        .user-dropdown-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .user-dropdown-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #8b5cf6, #6366f1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1rem;
+            color: #fff;
+        }
+        .user-dropdown-info {
+            display: flex;
+            flex-direction: column;
+        }
+        .user-dropdown-name {
+            font-weight: 600;
+            color: #fff;
+            font-size: 0.95rem;
+        }
+        .user-dropdown-email {
+            color: #888;
+            font-size: 0.8rem;
+        }
+        .user-dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 0;
+            color: #ccc;
+            text-decoration: none;
+            font-size: 0.88rem;
+            transition: color 0.2s;
+        }
+        .user-dropdown-item:hover {
+            color: #fff;
+        }
+        .user-dropdown-item i {
+            width: 18px;
+            text-align: center;
+            color: #8b5cf6;
+            font-size: 0.9rem;
+        }
+        .user-dropdown-item.logout {
+            color: #ef4444;
+            margin-top: 8px;
+            padding-top: 12px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .user-dropdown-item.logout:hover {
+            color: #fca5a5;
+        }
+
+        /* ===== SIDEBAR ===== */
+        .dashboard-container {
+            display: grid;
+            grid-template-columns: 260px 1fr;
+            min-height: calc(100vh - 57px);
+        }
+        .sidebar {
+            background: rgba(15, 15, 15, 0.6);
+            border-right: 1px solid rgba(255, 255, 255, 0.08);
+            position: sticky;
+            top: 57px;
+            height: calc(100vh - 57px);
+            overflow-y: auto;
+            padding: 20px 0;
+        }
+        .profile-header {
+            padding: 0 20px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .profile-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+        .profile-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #8b5cf6, #6366f1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: #fff;
+        }
+        .profile-name {
+            font-weight: 600;
+            color: #fff;
+            font-size: 0.95rem;
+        }
+        .profile-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: #000;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+        .sidebar-menu {
+            padding: 12px 0;
+        }
+        .menu-section-title {
+            padding: 16px 20px 8px;
+            font-size: 0.65rem;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 700;
+        }
+        .menu-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 11px 20px;
+            color: #999;
+            text-decoration: none;
+            font-size: 0.88rem;
+            transition: all 0.2s;
+            font-weight: 500;
+            cursor: pointer;
+        }
+        .menu-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+        }
+        .menu-item.active {
+            background: rgba(139, 92, 246, 0.1);
+            color: #fff;
+            border-left: 2px solid #8b5cf6;
+        }
+        .menu-item i {
+            width: 18px;
+            text-align: center;
+            font-size: 0.95rem;
+        }
+        .menu-divider {
+            height: 1px;
+            background: rgba(255, 255, 255, 0.08);
+            margin: 12px 20px;
+        }
+        .logout-btn {
+            margin: 20px;
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+            padding: 11px 18px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            justify-content: center;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.88rem;
+            transition: all 0.2s;
+        }
+        .logout-btn:hover {
+            background: rgba(239, 68, 68, 0.15);
+            border-color: rgba(239, 68, 68, 0.3);
+        }
+
+        /* ===== MAIN CONTENT ===== */
+        .main-content {
+            padding: 36px 48px;
+            background: #0a0a0a;
+        }
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 24px;
+            font-size: 0.85rem;
+            color: #666;
+        }
+        .breadcrumb a {
+            color: #666;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+        .breadcrumb a:hover {
+            color: #8b5cf6;
+        }
+        .breadcrumb .active {
+            color: #fff;
+            font-weight: 600;
+        }
+        .page-header {
+            margin-bottom: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .page-title {
+            font-size: 2rem;
+            font-weight: 800;
+            color: #fff;
+            letter-spacing: -0.5px;
+        }
+        .btn-create-post {
+            background: #8b5cf6;
+            color: #fff;
+            padding: 10px 18px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        .btn-create-post:hover {
+            background: #7c3aed;
+            transform: translateY(-1px);
+        }
+
+        /* ===== FORMULARIO DESPLEGABLE ===== */
+        .create-post-form {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 32px;
+            display: none;
+            grid-template-columns: 1fr 140px;
+            gap: 16px;
+            align-items: end;
+            animation: slideDown 0.3s ease;
+        }
+        .create-post-form.active {
+            display: grid;
+        }
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .form-left {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .post-textarea {
+            width: 100%;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            color: #fff;
+            font-size: 0.95rem;
+            resize: none;
+            min-height: 80px;
+            outline: none;
+            transition: all 0.2s;
+        }
+        .post-textarea:focus {
+            border-color: rgba(139, 92, 246, 0.5);
+            background: rgba(255, 255, 255, 0.08);
+        }
+        .form-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+        .file-input-wrapper {
+            position: relative;
+            display: inline-block;
+            cursor: pointer;
+        }
+        .file-input {
+            position: absolute;
+            opacity: 0;
+            width: 0.1px;
+            height: 0.1px;
+        }
+        .file-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: rgba(139, 92, 246, 0.1);
+            border: 1px dashed rgba(139, 92, 246, 0.3);
+            border-radius: 8px;
+            color: #8b5cf6;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .file-label:hover {
+            background: rgba(139, 92, 246, 0.15);
+        }
+        .file-name {
+            color: #aaa;
+            font-size: 0.75rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 200px;
+        }
+        .hashtags-input {
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: #fff;
+            font-size: 0.85rem;
+            outline: none;
+        }
+        .hashtags-input:focus {
+            border-color: rgba(139, 92, 246, 0.5);
+        }
+        .btn-publish {
+            background: #8b5cf6;
+            color: #fff;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+            width: 100%;
+            justify-content: center;
+        }
+        .btn-publish:hover {
+            background: #7c3aed;
+            transform: translateY(-1px);
+        }
+
+        /* ===== MENSAJE DE ERROR (NUEVO) ===== */
+        .error-message {
+            color: #fca5a5;
+            font-size: 0.8rem;
+            margin-top: 8px;
+            display: none;
+            align-items: center;
+            gap: 6px;
+        }
+        .error-message.show {
+            display: flex;
+        }
+
+        /* ===== POSTS ISLA ===== */
+        .posts-list {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .post-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 24px;
+            transition: all 0.3s ease;
+        }
+        .post-card:hover {
+            border-color: rgba(139, 92, 246, 0.3);
+            background: rgba(255, 255, 255, 0.05);
+            transform: translateY(-4px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+        .post-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 16px;
+        }
+        .post-author-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .post-author-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #8b5cf6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: #fff;
+        }
+        .post-author-name {
+            font-weight: 600;
+            color: #fff;
+            font-size: 1rem;
+        }
+        .post-date {
+            font-size: 0.8rem;
+            color: #666;
+        }
+        .post-actions {
+            display: flex;
+            gap: 8px;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .post-card:hover .post-actions {
+            opacity: 1;
+        }
+        .post-action-btn {
+            background: none;
+            border: none;
+            color: #666;
+            cursor: pointer;
+            font-size: 1rem;
+            padding: 4px;
+            transition: color 0.2s;
+        }
+        .post-action-btn:hover {
+            color: #8b5cf6;
+        }
+        .post-action-btn.delete:hover {
+            color: #ef4444;
+        }
+        .post-content {
+            color: #ccc;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            margin-bottom: 16px;
+        }
+        .post-attachment {
+            margin: 16px 0;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 0.85rem;
+            cursor: pointer;
+        }
+        .attachment-icon {
+            width: 36px;
+            height: 36px;
+            background: rgba(139, 92, 246, 0.2);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #8b5cf6;
+        }
+        .attachment-name {
+            flex: 1;
+            color: #ccc;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .attachment-size {
+            color: #666;
+            font-size: 0.75rem;
+        }
+        .post-hashtags {
+            margin: 12px 0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .hashtag {
+            background: rgba(139, 92, 246, 0.1);
+            color: #8b5cf6;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+        .hashtag:hover {
+            background: rgba(139, 92, 246, 0.2);
+            color: #a78bfa;
+        }
+        .post-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.85rem;
+            color: #666;
+            margin-top: 16px;
+        }
+        .post-views {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .post-views i {
+            font-size: 1rem;
+            color: #8b5cf6;
+        }
+        .post-favorite {
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        .post-favorite.active {
+            color: #ef4444;
+        }
+
+        /* ===== ANIMACIÓN ÉXITO ===== */
+        .success-animation {
+            position: fixed;
+            top: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: #fff;
+            padding: 16px 32px;
+            border-radius: 12px;
+            font-weight: 600;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            z-index: 9999;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.4s ease;
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .success-animation.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(0);
+        }
+        .success-animation i {
+            font-size: 1.2rem;
+            animation: check 0.6s ease;
+        }
+        @keyframes check {
+            0% { transform: scale(0); }
+            50% { transform: scale(1.3); }
+            100% { transform: scale(1); }
+        }
+
+        /* ===== EMPTY STATE ===== */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+            font-size: 1rem;
+        }
+
+        @media (max-width: 992px) {
+            .create-post-form {
+                grid-template-columns: 1fr;
+            }
+            .btn-publish { margin-top: 12px; }
+        }
+        @media (max-width: 768px) {
+            .navbar { padding: 0.75rem 1.5rem; }
+            .navbar-center { display: none; }
+            .main-content { padding: 20px; }
+            .page-header { flex-direction: column; align-items: flex-start; gap: 16px; }
+        }
+    </style>
+</head>
+<body>
+    <!-- NAVBAR -->
+    <nav class="navbar">
+        <div class="logo">
+            <a href="index.html">OFFSZN</a>
+        </div>
+        <div class="navbar-center">
+            <ul class="navbar-links">
+                <li><a href="index.html">INICIO</a></li>
+                <li class="dropdown">
+                    <div class="dropdown-toggle">
+                        RECURSOS <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="dropdown-menu">
+                        <a href="#" class="dropdown-item"><i class="fas fa-book"></i> Guías</a>
+                        <a href="#" class="dropdown-item"><i class="fas fa-file-alt"></i> Plantillas</a>
+                        <a href="#" class="dropdown-item"><i class="fas fa-video"></i> Tutoriales</a>
+                        <a href="#" class="dropdown-item"><i class="fas fa-music"></i> Beats</a>
+                        <a href="#" class="dropdown-item"><i class="fas fa-gift"></i> Recursos Gratis</a>
+                    </div>
+                </li>
+                <li class="dropdown">
+                    <div class="dropdown-toggle">
+                        COMUNIDAD <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="dropdown-menu">
+                        <a href="#" class="dropdown-item"><i class="fas fa-rss"></i> Feed</a>
+                        <a href="#" class="dropdown-item"><i class="fas fa-users"></i> Productores</a>
+                        <a href="colaboraciones.html" class="dropdown-item"><i class="fas fa-handshake"></i> Colaboraciones</a>
+                        <a href="#" class="dropdown-item"><i class="fas fa-comments"></i> Foros</a>
+                        <a href="#" class="dropdown-item"><i class="fas fa-calendar-alt"></i> Eventos</a>
+                    </div>
+                </li>
+            </ul>
+            <div class="navbar-search">
+                <input type="text" placeholder="Buscar publicaciones...">
+                <i class="fas fa-search"></i>
+            </div>
+        </div>
+        <div class="navbar-right">
+            <div class="user-dropdown">
+                <div class="user-dropdown-toggle">
+                    <i class="fas fa-user"></i>
+                </div>
+                <div class="user-dropdown-menu">
+                    <div class="user-dropdown-header">
+                        <div class="user-dropdown-avatar">U</div>
+                        <div class="user-dropdown-info">
+                            <div class="user-dropdown-name">Usuario</div>
+                            <div class="user-dropdown-email">usuario@offszn.com</div>
+                        </div>
+                    </div>
+                    <a href="profile.html" class="user-dropdown-item">
+                        <i class="fas fa-user-circle"></i> Mi Perfil
+                    </a>
+                    <a href="dashboard.html" class="user-dropdown-item">
+                        <i class="fas fa-th-large"></i> Dashboard
+                    </a>
+                    <a href="#" class="user-dropdown-item">
+                        <i class="fas fa-wallet"></i> Billetera
+                    </a>
+                    <a href="mis-compras.html" class="user-dropdown-item">
+                        <i class="fas fa-shopping-bag"></i> Mis Compras
+                    </a>
+                    <a href="#" class="user-dropdown-item">
+                        <i class="fas fa-chart-line"></i> Analíticas
+                    </a>
+                    <a href="account-settings.html" class="user-dropdown-item">
+                        <i class="fas fa-cog"></i> Configuración
+                    </a>
+                    <a href="#" class="user-dropdown-item">
+                        <i class="fas fa-question-circle"></i> Ayuda
+                    </a>
+                    <a href="logout.html" class="user-dropdown-item logout">
+                        <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="dashboard-container">
+        <!-- SIDEBAR -->
+        <aside class="sidebar">
+            <div class="profile-header">
+                <div class="profile-info">
+                    <div class="profile-avatar">U</div>
+                    <div>
+                        <div class="profile-name">Usuario</div>
+                    </div>
+                </div>
+                <div class="profile-badge">
+                    <i class="fas fa-award"></i>
+                    Top Seller
+                </div>
+            </div>
+            <div class="sidebar-menu">
+                <div class="menu-section-title">Principal</div>
+                <a href="dashboard.html" class="menu-item">
+                    <i class="fas fa-th-large"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="#" class="menu-item">
+                    <i class="fas fa-music"></i>
+                    <span>Mis Kits</span>
+                </a>
+                <a href="#" class="menu-item">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Analíticas</span>
+                </a>
+                <a href="favoritos.html" class="menu-item">
+                    <i class="fas fa-heart"></i>
+                    <span>Favoritos</span>
+                </a>
+                <a href="#" class="menu-item">
+                    <i class="fas fa-history"></i>
+                    <span>Historial</span>
+                </a>
+                <div class="menu-divider"></div>
+                <div class="menu-section-title">Compras</div>
+                <a href="mis-compras.html" class="menu-item">
+                    <i class="fas fa-shopping-bag"></i>
+                    <span>Mis Compras</span>
+                </a>
+                <a href="gift-cards.html" class="menu-item">
+                    <i class="fas fa-gift"></i>
+                    <span>Gift Cards</span>
+                </a>
+                <a href="messages.html" class="menu-item">
+                    <i class="fas fa-envelope"></i>
+                    <span>Mensajes</span>
+                </a>
+                <div class="menu-divider"></div>
+                <div class="menu-section-title">Configuración</div>
+                <a href="account-settings.html" class="menu-item">
+                    <i class="fas fa-cog"></i>
+                    <span>Configuración</span>
+                </a>
+                <a href="blog.html" class="menu-item active">
+                    <i class="fas fa-book-open"></i>
+                    <span>Blog</span>
+                </a>
+            </div>
+            <a href="logout.html" class="logout-btn">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Cerrar Sesión</span>
+            </a>
+        </aside>
+
+        <!-- MAIN CONTENT -->
+        <main class="main-content">
+            <div class="breadcrumb">
+                <a href="dashboard.html"><i class="fas fa-home"></i> Dashboard</a>
+                <span><i class="fas fa-chevron-right"></i></span>
+                <span class="active">Blog Personal</span>
+            </div>
+            <div class="page-header">
+                <h1 class="page-title">Mi Blog</h1>
+                <div class="btn-create-post" onclick="toggleCreateForm()">
+                    <i class="fas fa-plus"></i> Crear una publicación
+                </div>
+            </div>
+
+            <!-- FORMULARIO DESPLEGABLE -->
+            <div class="create-post-form" id="create-post-form">
+                <div class="form-left">
+                    <textarea class="post-textarea" id="post-content" placeholder="¿Qué estás pensando?"></textarea>
+                    <div class="form-actions">
+                        <div class="file-input-wrapper">
+                            <input type="file" class="file-input" id="post-file" accept="image/*,video/*,.pdf,.zip">
+                            <label for="post-file" class="file-label">
+                                <i class="fas fa-paperclip"></i>
+                                <span>Archivo</span>
+                            </label>
+                        </div>
+                        <div class="file-name" id="file-name"></div>
+                        <input type="text" class="hashtags-input" id="post-hashtags" placeholder="#produccion #beats">
+                    </div>
+                    <!-- MENSAJE DE ERROR -->
+                    <div class="error-message" id="file-error">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <span></span>
+                    </div>
+                </div>
+                <button class="btn-publish" id="btn-publish">
+                    <i class="fas fa-paper-plane"></i>
+                    Publicar
+                </button>
+            </div>
+
+            <!-- LISTA DE PUBLICACIONES -->
+            <div class="posts-list" id="posts-list">
+                <div class="empty-state">Agrega tu primera publicación</div>
+            </div>
+        </main>
+    </div>
+
+    <!-- ANIMACIÓN DE ÉXITO -->
+    <div class="success-animation" id="success-animation">
+        <i class="fas fa-check"></i>
+        <span>Publicado con éxito</span>
+    </div>
+
+    <script>
+        const currentUser = 'Usuario';
+        const STORAGE_KEY_POSTS = 'blog_posts_v1';
+        const STORAGE_KEY_FAVS = 'blog_favorites_v1';
+        let posts = JSON.parse(localStorage.getItem(STORAGE_KEY_POSTS)) || [];
+        let favorites = JSON.parse(localStorage.getItem(STORAGE_KEY_FAVS)) || [];
+
+        function toggleCreateForm() {
+            const form = document.getElementById('create-post-form');
+            form.classList.toggle('active');
+            if (form.classList.contains('active')) {
+                document.getElementById('post-content').focus();
+            }
+        }
+
+        // === VALIDACIÓN DE ARCHIVO: MÁXIMO 10 MB ===
+        document.getElementById('post-file').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            const nameEl = document.getElementById('file-name');
+            const errorEl = document.getElementById('file-error');
+
+            // Reiniciar
+            nameEl.textContent = '';
+            errorEl.classList.remove('show');
+
+            if (!file) return;
+
+            const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
+
+            // Validar tamaño
+            if (file.size > MAX_FILE_SIZE) {
+                errorEl.querySelector('span').textContent = 'El archivo es demasiado grande. Máximo 10 MB.';
+                errorEl.classList.add('show');
+                e.target.value = ''; // Limpiar input
+                return;
+            }
+
+            // Mostrar nombre y tamaño
+            nameEl.textContent = `${file.name} (${formatBytes(file.size)})`;
+        });
+
+        document.getElementById('btn-publish').addEventListener('click', () => {
+            const content = document.getElementById('post-content').value.trim();
+            if (!content) return;
+
+            const fileInput = document.getElementById('post-file');
+            const hashtags = document.getElementById('post-hashtags').value.trim();
+            const file = fileInput.files[0];
+
+            const post = {
+                id: Date.now(),
+                author: currentUser,
+                content: content,
+                file: file ? {
+                    name: file.name,
+                    size: file.size,
+                    type: file.type,
+                    url: URL.createObjectURL(file)
+                } : null,
+                hashtags: hashtags ? hashtags.split(/\s+/).filter(h => h.startsWith('#')) : [],
+                date: new Date().toISOString(),
+                views: 0
+            };
+
+            posts.unshift(post);
+            savePosts();
+
+            // Limpiar
+            document.getElementById('post-content').value = '';
+            document.getElementById('post-file').value = '';
+            document.getElementById('post-hashtags').value = '';
+            document.getElementById('file-name').textContent = '';
+            document.getElementById('file-error').classList.remove('show');
+            document.getElementById('create-post-form').classList.remove('active');
+
+            showSuccess();
+        });
+
+        function showSuccess() {
+            const el = document.getElementById('success-animation');
+            el.classList.add('show');
+            setTimeout(() => el.classList.remove('show'), 2500);
+        }
+
+        function renderPosts() {
+            const container = document.getElementById('posts-list');
+            if (posts.length === 0) {
+                container.innerHTML = '<div class="empty-state">Agrega tu primera publicación</div>';
+                return;
+            }
+
+            container.innerHTML = posts.map(post => `
+                <div class="post-card" data-id="${post.id}">
+                    <div class="post-header">
+                        <div class="post-author-info">
+                            <div class="post-author-avatar">${post.author[0]}</div>
+                            <div>
+                                <div class="post-author-name">${post.author}</div>
+                                <div class="post-date">${formatDate(post.date)}</div>
+                            </div>
+                        </div>
+                        <div class="post-actions">
+                            ${post.author === currentUser ? `<button class="post-action-btn delete" onclick="deletePost(${post.id})"><i class="fas fa-trash"></i></button>` : ''}
+                        </div>
+                    </div>
+                    <div class="post-content">${escapeHtml(post.content)}</div>
+                    ${post.file ? `
+                        <div class="post-attachment" onclick="window.open('${post.file.url}', '_blank')">
+                            <div class="attachment-icon"><i class="fas fa-file"></i></div>
+                            <div class="attachment-name">${post.file.name}</div>
+                            <div class="attachment-size">${formatBytes(post.file.size)}</div>
+                        </div>
+                    ` : ''}
+                    ${post.hashtags.length ? `
+                        <div class="post-hashtags">
+                            ${post.hashtags.map(tag => `<a href="#" class="hashtag">${tag}</a>`).join('')}
+                        </div>
+                    ` : ''}
+                    <div class="post-footer">
+                        <div class="post-views"><i class="fas fa-eye"></i> <span class="view-count">${post.views}</span> visualizaciones</div>
+                        <div class="post-favorite ${favorites.includes(post.id) ? 'active' : ''}" onclick="toggleFavorite(${post.id})">
+                            <i class="fas fa-heart"></i>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            // Contador de vistas
+            document.querySelectorAll('.post-card').forEach(card => {
+                const postId = card.dataset.id;
+                if (!sessionStorage.getItem(`viewed_${postId}`)) {
+                    setTimeout(() => {
+                        const post = posts.find(p => p.id == postId);
+                        if (post) {
+                            post.views++;
+                            savePosts();
+                            sessionStorage.setItem(`viewed_${postId}`, 'true');
+                        }
+                    }, 5000);
+                }
+            });
+        }
+
+        function deletePost(id) {
+            if (confirm('¿Eliminar esta publicación?')) {
+                posts = posts.filter(p => p.id !== id);
+                savePosts();
+            }
+        }
+
+        function toggleFavorite(id) {
+            const i = favorites.indexOf(id);
+            if (i === -1) favorites.push(id);
+            else favorites.splice(i, 1);
+            localStorage.setItem(STORAGE_KEY_FAVS, JSON.stringify(favorites));
+            renderPosts();
+        }
+
+        function savePosts() {
+            localStorage.setItem(STORAGE_KEY_POSTS, JSON.stringify(posts));
+            renderPosts();
+        }
+
+        function formatDate(dateStr) {
+            const date = new Date(dateStr);
+            return date.toLocaleDateString('es-ES', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+        }
+
+        function formatBytes(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        document.addEventListener('DOMContentLoaded', renderPosts);
+    </script>
+</body>
+</html>

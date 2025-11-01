@@ -1,0 +1,1060 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Favoritos - OFFSZN</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css ">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0a0a0a;
+            color: #e5e5e5;
+            overflow-x: hidden;
+        }
+
+        /* ---------- NAVBAR ---------- */
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 3rem;
+            background: rgba(0, 0, 0, .98);
+            position: sticky;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+            border-bottom: 1px solid rgba(255, 255, 255, .08);
+            backdrop-filter: blur(20px);
+        }
+
+        .navbar .logo a {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #fff;
+            text-decoration: none;
+            letter-spacing: -.5px;
+        }
+
+        .navbar-center {
+            display: flex;
+            align-items: center;
+            gap: 2.5rem;
+        }
+
+        .navbar-links {
+            list-style: none;
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .navbar-links li {
+            position: relative;
+        }
+
+        .navbar-links a {
+            color: #999;
+            text-decoration: none;
+            transition: all .2s;
+            font-weight: 500;
+            font-size: .9rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+        }
+
+        .navbar-links a:hover {
+            color: #fff;
+        }
+
+        .navbar-links > li > a > i {
+            font-size: .7rem;
+            transition: transform .2s;
+        }
+
+        .dropdown-menu {
+            position: absolute;
+            top: calc(100% + 12px);
+            left: 50%;
+            transform: translateX(-50%) translateY(-10px);
+            background: rgba(20, 20, 20, .98);
+            border: 1px solid rgba(255, 255, 255, .1);
+            border-radius: 12px;
+            padding: 8px;
+            min-width: 240px;
+            opacity: 0;
+            visibility: hidden;
+            transition: all .3s ease;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, .5);
+            backdrop-filter: blur(20px);
+            z-index: 1001;
+        }
+
+        .navbar-links li:hover .dropdown-menu {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .navbar-links > li:hover > a > i {
+            transform: rotate(180deg);
+        }
+
+        .dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 14px;
+            color: #999;
+            text-decoration: none;
+            font-size: .85rem;
+            border-radius: 8px;
+            transition: all .2s;
+            font-weight: 500;
+        }
+
+        .dropdown-item:hover {
+            background: rgba(139, 92, 246, .1);
+            color: #fff;
+        }
+
+        .dropdown-item i {
+            width: 20px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .dropdown-divider {
+            height: 1px;
+            background: rgba(255, 255, 255, .08);
+            margin: 8px 0;
+        }
+
+        .navbar-search {
+            position: relative;
+            width: 380px;
+        }
+
+        .navbar-search input {
+            width: 100%;
+            padding: .6rem 2.5rem .6rem 1rem;
+            background: rgba(255, 255, 255, .05);
+            border: 1px solid rgba(255, 255, 255, .1);
+            border-radius: 8px;
+            color: #fff;
+            font-size: .85rem;
+            outline: none;
+            transition: all .2s;
+        }
+
+        .navbar-search input:focus {
+            background: rgba(255, 255, 255, .08);
+            border-color: rgba(139, 92, 246, .5);
+        }
+
+        .navbar-search input::placeholder {
+            color: #666;
+        }
+
+        .navbar-search i {
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #666;
+            font-size: .9rem;
+        }
+
+        .navbar-right {
+            display: flex;
+            gap: .75rem;
+            align-items: center;
+        }
+
+        .navbar-icon-button {
+            width: 36px;
+            height: 36px;
+            background: rgba(255, 255, 255, .05);
+            border: 1px solid rgba(255, 255, 255, .1);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #999;
+            font-size: 16px;
+            transition: all .2s;
+            text-decoration: none;
+            position: relative;
+        }
+
+        .navbar-icon-button:hover {
+            background: rgba(255, 255, 255, .08);
+            color: #fff;
+            border-color: rgba(255, 255, 255, .15);
+        }
+
+        /* User Dropdown */
+        .user-dropdown {
+            position: relative;
+        }
+
+        .user-dropdown-menu {
+            position: absolute;
+            top: calc(100% + 12px);
+            right: 0;
+            background: rgba(20, 20, 20, .98);
+            border: 1px solid rgba(255, 255, 255, .1);
+            border-radius: 12px;
+            padding: 12px;
+            min-width: 260px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all .3s ease;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, .5);
+            backdrop-filter: blur(20px);
+        }
+
+        .user-dropdown.active .user-dropdown-menu {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .user-dropdown-header {
+            padding: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, .08);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .user-dropdown-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1rem;
+            color: #666;
+        }
+
+        .user-dropdown-info {
+            flex: 1;
+        }
+
+        .user-dropdown-name {
+            font-weight: 600;
+            color: #fff;
+            font-size: .9rem;
+            margin-bottom: 2px;
+        }
+
+        .user-dropdown-email {
+            font-size: .75rem;
+            color: #666;
+        }
+
+        .user-dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            color: #999;
+            text-decoration: none;
+            font-size: .85rem;
+            border-radius: 8px;
+            transition: all .2s;
+            font-weight: 500;
+        }
+
+        .user-dropdown-item:hover {
+            background: rgba(139, 92, 246, .1);
+            color: #fff;
+        }
+
+        .user-dropdown-item.disabled {
+            opacity: .4;
+            cursor: not-allowed;
+        }
+
+        .user-dropdown-item i {
+            width: 18px;
+            text-align: center;
+        }
+
+        .user-dropdown-item .soon-badge {
+            margin-left: auto;
+            background: rgba(255, 255, 255, .08);
+            color: #666;
+            padding: 2px 8px;
+            border-radius: 8px;
+            font-size: .6rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .user-dropdown-item.logout {
+            color: #ef4444;
+            margin-top: 8px;
+            border-top: 1px solid rgba(255, 255, 255, .08);
+            padding-top: 12px;
+        }
+
+        .user-dropdown-item.logout:hover {
+            background: rgba(239, 68, 68, .1);
+        }
+
+        /* Dashboard Layout */
+        .dashboard-container {
+            display: grid;
+            grid-template-columns: 260px 1fr;
+            min-height: calc(100vh - 57px);
+        }
+
+        .sidebar {
+            background: rgba(15, 15, 15, .6);
+            border-right: 1px solid rgba(255, 255, 255, .08);
+            position: sticky;
+            top: 57px;
+            height: calc(100vh - 57px);
+            overflow-y: auto;
+        }
+
+        .sidebar::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .sidebar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, .1);
+            border-radius: 3px;
+        }
+
+        .profile-header {
+            padding: 24px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, .08);
+        }
+
+        .profile-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .profile-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: #333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: #666;
+        }
+
+        .profile-name {
+            font-weight: 600;
+            color: #fff;
+            font-size: .95rem;
+        }
+
+        .wallet-section {
+            padding: 16px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, .08);
+            background: rgba(139, 92, 246, .05);
+        }
+
+        .wallet-label {
+            font-size: .7rem;
+            color: #999;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+            font-weight: 600;
+        }
+
+        .wallet-amount {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .upload-btn {
+            margin: 20px 20px 0;
+            padding: 14px 18px;
+            background: #8b5cf6;
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all .2s;
+            font-size: .9rem;
+            width: calc(100% - 40px);
+        }
+
+        .upload-btn:hover {
+            background: #7c3aed;
+            transform: translateY(-1px);
+        }
+
+        .sidebar-search {
+            margin: 16px 20px;
+            position: relative;
+        }
+
+        .sidebar-search input {
+            width: 100%;
+            padding: 10px 36px 10px 12px;
+            background: rgba(255, 255, 255, .05);
+            border: 1px solid rgba(255, 255, 255, .1);
+            border-radius: 8px;
+            color: #fff;
+            font-size: .85rem;
+            outline: none;
+            transition: all .2s;
+        }
+
+        .sidebar-search input:focus {
+            background: rgba(255, 255, 255, .08);
+            border-color: rgba(139, 92, 246, .5);
+        }
+
+        .sidebar-search input::placeholder {
+            color: #666;
+            font-size: .82rem;
+        }
+
+        .sidebar-search i {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #666;
+            font-size: .85rem;
+        }
+
+        .sidebar-menu {
+            padding: 12px 0;
+        }
+
+        .menu-section-title {
+            padding: 16px 20px 8px;
+            font-size: .65rem;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 700;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 11px 20px;
+            color: #999;
+            text-decoration: none;
+            font-size: .88rem;
+            transition: all .2s;
+            position: relative;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .menu-item:hover {
+            background: rgba(255, 255, 255, .05);
+            color: #fff;
+        }
+
+        .menu-item.active {
+            background: rgba(139, 92, 246, .1);
+            color: #fff;
+            border-left: 2px solid #8b5cf6;
+        }
+
+        .menu-item.disabled {
+            opacity: .4;
+            cursor: not-allowed;
+        }
+
+        .menu-item i {
+            width: 18px;
+            text-align: center;
+            font-size: .95rem;
+        }
+
+        .menu-item .soon-badge {
+            margin-left: auto;
+            background: rgba(255, 255, 255, .08);
+            color: #666;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: .6rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .menu-divider {
+            height: 1px;
+            background: rgba(255, 255, 255, .08);
+            margin: 12px 20px;
+        }
+
+        .logout-btn {
+            margin: 20px;
+            background: rgba(239, 68, 68, .1);
+            border: 1px solid rgba(239, 68, 68, .2);
+            color: #ef4444;
+            padding: 11px 18px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            justify-content: center;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: .88rem;
+            transition: all .2s;
+        }
+
+        .logout-btn:hover {
+            background: rgba(239, 68, 68, .15);
+            border-color: rgba(239, 68, 68, .3);
+        }
+
+        /* Main Content */
+        .main-content {
+            padding: 36px 48px;
+            background: #0a0a0a;
+        }
+
+        .dashboard-header {
+            margin-bottom: 32px;
+        }
+
+        .welcome-text {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 6px;
+            letter-spacing: -.5px;
+        }
+
+        .welcome-subtitle {
+            color: #666;
+            font-size: .95rem;
+            font-weight: 400;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 24px;
+            border-bottom: 1px solid rgba(255, 255, 255, .08);
+            padding-bottom: 12px;
+        }
+
+        .tab {
+            padding: 8px 16px;
+            color: #999;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: .9rem;
+            border-radius: 8px;
+            transition: all .2s;
+        }
+
+        .tab:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, .05);
+        }
+
+        .tab.active {
+            color: #8b5cf6;
+            background: rgba(139, 92, 246, .1);
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 40px;
+            background: rgba(255, 255, 255, .02);
+            border: 1px dashed rgba(255, 255, 255, .15);
+            border-radius: 12px;
+        }
+
+        .empty-icon {
+            font-size: 4rem;
+            color: #8b5cf6;
+            opacity: 0.7;
+            margin-bottom: 24px;
+        }
+
+        .empty-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 12px;
+        }
+
+        .empty-description {
+            color: #999;
+            margin-bottom: 28px;
+            line-height: 1.6;
+            font-size: 1rem;
+        }
+
+        .empty-cta {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: #8b5cf6;
+            color: #fff;
+            padding: 12px 28px;
+            border-radius: 10px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all .2s;
+        }
+
+        .empty-cta:hover {
+            background: #7c3aed;
+            transform: translateY(-2px);
+        }
+
+        /* Tips Section */
+        .tips-section {
+            background: rgba(139, 92, 246, .05);
+            border: 1px solid rgba(139, 92, 246, .15);
+            border-radius: 12px;
+            padding: 24px;
+            margin-top: 32px;
+        }
+
+        .tips-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #8b5cf6;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tips-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 16px;
+        }
+
+        .tip-item {
+            display: flex;
+            gap: 10px;
+            font-size: 0.95rem;
+            color: #ccc;
+        }
+
+        .tip-icon {
+            color: #8b5cf6;
+            font-weight: bold;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, .85);
+            backdrop-filter: blur(10px);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: rgba(20, 20, 20, .98);
+            border: 1px solid rgba(255, 255, 255, .1);
+            border-radius: 16px;
+            padding: 44px;
+            max-width: 460px;
+            text-align: center;
+            position: relative;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 18px;
+            right: 18px;
+            background: none;
+            border: none;
+            color: #666;
+            font-size: 1.3rem;
+            cursor: pointer;
+            transition: all .2s;
+        }
+
+        .modal-close:hover {
+            color: #fff;
+        }
+
+        .modal-icon {
+            font-size: 3.5rem;
+            margin-bottom: 18px;
+            color: #8b5cf6;
+        }
+
+        .modal-title {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 12px;
+            letter-spacing: -.3px;
+        }
+
+        .modal-text {
+            color: #999;
+            margin-bottom: 24px;
+            line-height: 1.6;
+            font-size: .95rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .dashboard-container {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar {
+                position: relative;
+                top: 0;
+                height: auto;
+            }
+
+            .navbar-search {
+                width: 300px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .navbar {
+                padding: .75rem 1.5rem;
+            }
+
+            .navbar-center {
+                display: none;
+            }
+
+            .main-content {
+                padding: 20px;
+            }
+
+            .tabs {
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="logo"><a href="dashboard.html">OFFSZN</a></div>
+
+        <div class="navbar-center">
+            <ul class="navbar-links">
+                <li><a href="dashboard.html">INICIO</a></li>
+                <li>
+                    <a>RECURSOS <i class="fas fa-chevron-down"></i></a>
+                    <div class="dropdown-menu">
+                        <a href="beats.html" class="dropdown-item">
+                            <i class="fas fa-music"></i>
+                            <span>Beats & Instrumentales</span>
+                        </a>
+                        <a href="drum-kits.html" class="dropdown-item">
+                            <i class="fas fa-drum"></i>
+                            <span>Drum Kits</span>
+                        </a>
+                        <a href="presets.html" class="dropdown-item">
+                            <i class="fas fa-sliders-h"></i>
+                            <span>Presets & Plugins</span>
+                        </a>
+                        <a href="samples.html" class="dropdown-item">
+                            <i class="fas fa-wave-square"></i>
+                            <span>Samples & Loops</span>
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a href="free-resources.html" class="dropdown-item">
+                            <i class="fas fa-gift"></i>
+                            <span>Recursos Gratis</span>
+                        </a>
+                    </div>
+                </li>
+                <li>
+                    <a>COMUNIDAD <i class="fas fa-chevron-down"></i></a>
+                    <div class="dropdown-menu">
+                        <a href="feed.html" class="dropdown-item">
+                            <i class="fas fa-home"></i>
+                            <span>Feed</span>
+                        </a>
+                        <a href="productores.html" class="dropdown-item">
+                            <i class="fas fa-users"></i>
+                            <span>Productores</span>
+                        </a>
+                        <a href="colaboraciones.html" class="dropdown-item">
+                            <i class="fas fa-handshake"></i>
+                            <span>Colaboraciones</span>
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a href="foros.html" class="dropdown-item">
+                            <i class="fas fa-comments"></i>
+                            <span>Foros</span>
+                        </a>
+                        <a href="eventos.html" class="dropdown-item">
+                            <i class="fas fa-calendar"></i>
+                            <span>Eventos</span>
+                        </a>
+                    </div>
+                </li>
+            </ul>
+
+            <div class="navbar-search">
+                <input type="text" placeholder="Buscar beats, kits, productores...">
+                <i class="fas fa-search"></i>
+            </div>
+        </div>
+
+        <div class="navbar-right">
+            <a href="notifications.html" class="navbar-icon-button"><i class="fas fa-bell"></i></a>
+            <a href="cart.html" class="navbar-icon-button"><i class="fas fa-shopping-cart"></i></a>
+            <div class="user-dropdown">
+                <div class="navbar-icon-button" onclick="toggleUserDropdown()"><i class="fas fa-user"></i></div>
+                <div class="user-dropdown-menu">
+                    <div class="user-dropdown-header">
+                        <!-- ✅ Skeleton classes added -->
+                        <div class="user-dropdown-avatar skeleton-avatar">?</div>
+                        <div class="user-dropdown-info">
+                            <div class="user-dropdown-name skeleton-text">Usuario</div>
+                            <div class="user-dropdown-email skeleton-text">usuario@offszn.com</div>
+                        </div>
+                    </div>
+                    <a href="profile.html" class="user-dropdown-item"><i class="fas fa-user-circle"></i><span>Mi Perfil</span></a>
+                    <a href="dashboard.html" class="user-dropdown-item"><i class="fas fa-th-large"></i><span>Dashboard</span></a>
+                    <a href="wallet.html" class="user-dropdown-item"><i class="fas fa-wallet"></i><span>Billetera</span></a>
+                    <a href="mis-compras.html" class="user-dropdown-item"><i class="fas fa-shopping-bag"></i><span>Mis Compras</span></a>
+                    <a href="favoritos.html" class="user-dropdown-item active"><i class="fas fa-heart"></i><span>Favoritos</span></a>
+                    <a href="#" class="user-dropdown-item disabled"><i class="fas fa-chart-line"></i><span>Analíticas</span><span class="soon-badge">Pronto</span></a>
+                    <a href="account-settings.html" class="user-dropdown-item"><i class="fas fa-cog"></i><span>Configuración</span></a>
+                    <a href="help.html" class="user-dropdown-item"><i class="fas fa-question-circle"></i><span>Ayuda</span></a>
+                    <a href="logout.html" class="user-dropdown-item logout"><i class="fas fa-sign-out-alt"></i><span>Cerrar Sesión</span></a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="dashboard-container">
+
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="profile-header">
+                <div class="profile-info">
+                    <!-- ✅ Skeleton classes added -->
+                    <div class="profile-avatar skeleton-avatar">?</div>
+                    <div>
+                        <div class="profile-name skeleton-text">Usuario</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="wallet-section">
+                <div class="wallet-label">Saldo Disponible</div>
+                <!-- ✅ Skeleton class added -->
+                <div class="wallet-amount skeleton-text">$0.00</div>
+            </div>
+
+            <button class="upload-btn" onclick="window.location.href='subir-kit.html'">
+                <i class="fas fa-cloud-upload-alt"></i> Subir Kit
+            </button>
+
+            <div class="sidebar-search">
+                <input type="text" placeholder="Buscar mis productos...">
+                <i class="fas fa-search"></i>
+            </div>
+
+            <div class="sidebar-menu">
+                <div class="menu-section-title">Principal</div>
+                <a href="dashboard.html" class="menu-item"><i class="fas fa-th-large"></i><span>Dashboard</span></a>
+                <a href="mis-kits.html" class="menu-item"><i class="fas fa-music"></i><span>Mis Kits</span></a>
+                <a href="#" class="menu-item disabled"><i class="fas fa-chart-line"></i><span>Analíticas</span><span class="soon-badge">Pronto</span></a>
+                <a href="favoritos.html" class="menu-item active"><i class="fas fa-heart"></i><span>Favoritos</span></a>
+                <a href="#" class="menu-item"><i class="fas fa-history"></i><span>Historial</span></a>
+
+                <div class="menu-divider"></div>
+
+                <div class="menu-section-title">Colaboración</div>
+                <a href="colaboraciones.html" class="menu-item"><i class="fas fa-users"></i><span>Colaboraciones</span></a>
+
+                <div class="menu-divider"></div>
+
+                <div class="menu-section-title">Compras</div>
+                <a href="mis-compras.html" class="menu-item"><i class="fas fa-shopping-bag"></i><span>Mis Compras</span></a>
+                <a href="gift-cards.html" class="menu-item"><i class="fas fa-gift"></i><span>Gift Cards</span></a>
+                <a href="messages.html" class="menu-item"><i class="fas fa-envelope"></i><span>Mensajes</span></a>
+
+                <div class="menu-divider"></div>
+
+                <div class="menu-section-title">Configuración</div>
+                <a href="account-settings.html" class="menu-item"><i class="fas fa-cog"></i><span>Configuración</span></a>
+                <a href="blog.html" class="menu-item"><i class="fas fa-book-open"></i><span>Blog</span></a>
+            </div>
+
+            <a href="logout.html" class="logout-btn"><i class="fas fa-sign-out-alt"></i><span>Cerrar Sesión</span></a>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="dashboard-header">
+                <h1 class="welcome-text">Favoritos</h1>
+                <p class="welcome-subtitle">Guarda beats, kits y productores que te inspiren</p>
+            </div>
+
+            <div class="tabs">
+                <div class="tab active" data-tab="beats">Beats</div>
+                <div class="tab" data-tab="kits">Drum Kits</div>
+                <div class="tab" data-tab="presets">Presets</div>
+                <div class="tab" data-tab="productores">Productores</div>
+            </div>
+
+            <!-- Tab Content: Beats -->
+            <div class="tab-content active" id="beats-content">
+                <div class="empty-state">
+                    <div class="empty-icon">❤️</div>
+                    <h2 class="empty-title">Aún no has guardado ningún beat</h2>
+                    <p class="empty-description">
+                        Cuando encuentres un beat que te guste,<br>
+                        haz clic en el corazón para guardarlo aquí.
+                    </p>
+                    <a href="beats.html" class="empty-cta">
+                        <i class="fas fa-search"></i> Explorar Beats
+                    </a>
+                </div>
+            </div>
+
+            <!-- Tab Content: Kits -->
+            <div class="tab-content" id="kits-content" style="display:none;">
+                <div class="empty-state">
+                    <div class="empty-icon">🥁</div>
+                    <h2 class="empty-title">Aún no has guardado ningún drum kit</h2>
+                    <p class="empty-description">
+                        Encuentra los mejores drum kits y guárdalos aquí<br>
+                        para acceder rápidamente cuando los necesites.
+                    </p>
+                    <a href="drum-kits.html" class="empty-cta">
+                        <i class="fas fa-search"></i> Explorar Drum Kits
+                    </a>
+                </div>
+            </div>
+
+            <!-- Tab Content: Presets -->
+            <div class="tab-content" id="presets-content" style="display:none;">
+                <div class="empty-state">
+                    <div class="empty-icon">🎛️</div>
+                    <h2 class="empty-title">Aún no has guardado ningún preset</h2>
+                    <p class="empty-description">
+                        Guarda tus presets favoritos para tenerlos<br>
+                        siempre a la mano en tu flujo de trabajo.
+                    </p>
+                    <a href="presets.html" class="empty-cta">
+                        <i class="fas fa-search"></i> Explorar Presets
+                    </a>
+                </div>
+            </div>
+
+            <!-- Tab Content: Productores -->
+            <div class="tab-content" id="productores-content" style="display:none;">
+                <div class="empty-state">
+                    <div class="empty-icon">👥</div>
+                    <h2 class="empty-title">Aún no sigues a ningún productor</h2>
+                    <p class="empty-description">
+                        Sigue a tus productores favoritos para estar al día<br>
+                        con sus nuevos lanzamientos y colaboraciones.
+                    </p>
+                    <a href="productores.html" class="empty-cta">
+                        <i class="fas fa-search"></i> Descubrir Productores
+                    </a>
+                </div>
+            </div>
+
+            <div class="tips-section">
+                <h3 class="tips-title">💡 Consejos para usar Favoritos</h3>
+                <div class="tips-list">
+                    <div class="tip-item">
+                        <span class="tip-icon">•</span>
+                        <span>Guarda beats que encajen con tu estilo vocal.</span>
+                    </div>
+                    <div class="tip-item">
+                        <span class="tip-icon">•</span>
+                        <span>Revisa tus favoritos antes de comprar — ¡puedes comparar!</span>
+                    </div>
+                    <div class="tip-item">
+                        <span class="tip-icon">•</span>
+                        <span>Sigue productores para ver sus nuevos lanzamientos primero.</span>
+                    </div>
+                    <div class="tip-item">
+                        <span class="tip-icon">•</span>
+                        <span>Organiza tus favoritos por categorías para encontrarlos más rápido.</span>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal" id="modal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal()"><i class="fas fa-times"></i></button>
+            <div class="modal-icon"><i class="fas fa-rocket"></i></div>
+            <h2 class="modal-title">Próximamente</h2>
+            <p class="modal-text">
+                Estamos trabajando en <strong id="featureName">esta función</strong>.<br>
+                Será lanzada pronto.
+            </p>
+        </div>
+    </div>
+
+    <script src="favoritos.js"></script>
+</body>
+</html>
+
