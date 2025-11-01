@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mis Productos – OFFSZN Academy</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/auth.css">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700&family=Poppins:wght@300;400;500&display=swap"
+        rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
+    <script>
+        const token = localStorage.getItem('authToken');
+        if (!token) {
+            window.location.replace('/pages/login.html'); //si no hay token, al login
+        }
+    </script>
+</head>
+
+<body>
+
+    <header class="navbar">
+        <div class="logo"><a href="/index.html">OFFSZN Academy</a></div>
+        <button class="menu-toggle" aria-label="Abrir menú"><i class="bi bi-list"></i></button>
+        <nav>
+            <ul>
+                <li><a href="/index.html">Inicio</a></li>
+                <li><a href="/pages/cursos.html">Cursos</a></li>
+                <li><a href="/pages/presets-v2.html">Presets</a></li>
+                <li><a href="/pages/playlist.html">Playlist</a></li>
+                <li><a href="/pages/contacto.html">Contacto</a></li>
+                <li><a href="/pages/my-products.html" class="active">Mis Productos</a></li>
+            </ul>
+        </nav>
+        <div class="user-actions">
+
+        <a href="cart.html" class="cart-icon navbar-icon-button" title="Carrito">
+    <i class="bi bi-cart3"></i>
+  </a>
+
+        <a href="/pages/login.html" class="login-icon logged-out navbar-icon-button" title="Iniciar Sesión">
+          <i class="bi bi-person"></i>
+        </a>
+
+        <a href="/pages/my-products.html" class="account-icon logged-in navbar-icon-button" title="Mi Cuenta">
+          <i class="bi bi-person-check"></i>
+        </a>
+
+        <button id="global-logout-button" class="logout-button logged-in navbar-icon-button" title="Cerrar Sesión">
+          <i class="bi bi-box-arrow-right"></i>
+        </button>
+      </div>
+    </header>
+
+    <main class="auth-section" style="min-height: 70vh;">
+        <div class="auth-container" style="max-width: 800px; text-align: left;">
+            <h2 style="text-align: center;">Mis Productos Comprados</h2>
+
+            <div id="purchased-products-list">
+                <p>Cargando tus productos...</p>
+            </div>
+
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="footer-content">
+            <p>OFFSZN 2025 © – Todos los derechos reservados.</p>
+        </div>
+    </footer>
+
+    <script src="/script/menu.js"></script>
+    <script>
+        //lógica para logout
+        const logoutButton = document.getElementById('logout-button');
+        if (logoutButton) {
+            logoutButton.addEventListener('click', (e) => {
+                e.preventDefault();
+                localStorage.removeItem('authToken');
+                alert('¡Has cerrado sesión!');
+                window.location.replace('/index.html');
+            });
+        }
+
+        //lógica para cargar los productos comparods
+        document.addEventListener('DOMContentLoaded', async () => {
+            const productListDiv = document.getElementById('purchased-products-list');
+            const token = localStorage.getItem('authToken');
+
+            //
+            let API_URL = '';
+            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                API_URL = 'http://localhost:3000/api';
+            } else {
+                API_URL = 'https://offszn-academy.onrender.com/api';
+            }
+
+            if (!token) {
+                productListDiv.innerHTML = '<p>Error: Debes iniciar sesión para ver tus productos.</p>';
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/my-products`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('No se pudo obtener la lista de productos.');
+                }
+
+                const products = await response.json();
+
+                if (products.length === 0) {
+                    productListDiv.innerHTML = '<p>Aún no has comprado ningún producto.</p>';
+                } else {
+                    let html = '<ul>';
+                    products.forEach(product => {
+                        if (product) {
+                            html += `
+                <li style="margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid rgba(114, 9, 183, 0.2);">
+                  <strong>${product.name}</strong><br>
+                  ${product.description}<br>
+                  <a href="${product.download_url}" target="_blank" class="btn" style="margin-top: 0.5rem; padding: 5px 10px; font-size: 0.8rem;">Descargar</a>
+                </li>
+              `;
+                        }
+                    });
+                    html += '</ul>';
+                    productListDiv.innerHTML = html;
+                }
+
+            } catch (error) {
+                console.error('Error al cargar productos:', error);
+                productListDiv.innerHTML = '<p>Error al cargar tus productos. Intenta recargar.</p>';
+            }
+        });
+    </script>
+</body>
+
+</html>
