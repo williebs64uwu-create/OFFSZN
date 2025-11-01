@@ -116,7 +116,8 @@
       padding: 1rem;
       border-bottom: 1px solid rgba(114, 9, 183, 0.15);
       cursor: pointer;
-      transition: all 0.3s;
+      transition: background 0.2s;
+      border-radius: 8px;
     }
 
     .search-result-item:last-child {
@@ -125,7 +126,6 @@
 
     .search-result-item:hover {
       background: rgba(114, 9, 183, 0.1);
-      border-radius: 8px;
     }
 
     .search-result-title {
@@ -145,7 +145,7 @@
       padding: 2rem;
     }
 
-    /* Accesos Rápidos */
+    /* Accesos Rápidos - SIN animaciones de hover agresivas */
     .help-quick-access {
       padding: 60px 5%;
       max-width: 1400px;
@@ -165,16 +165,14 @@
       border-radius: 20px;
       padding: 2rem;
       cursor: pointer;
-      transition: all 0.3s;
+      transition: border-color 0.3s, box-shadow 0.3s;
       text-align: center;
       backdrop-filter: blur(10px);
     }
 
     .help-card:hover {
-      background: rgba(26, 10, 46, 0.6);
       border-color: #7209b7;
-      transform: translateY(-8px);
-      box-shadow: 0 8px 40px rgba(114, 9, 183, 0.3);
+      box-shadow: 0 4px 20px rgba(114, 9, 183, 0.2);
     }
 
     .help-card-icon {
@@ -233,14 +231,12 @@
       border: 1px solid rgba(114, 9, 183, 0.3);
       border-radius: 20px;
       padding: 2rem;
-      transition: all 0.3s;
+      transition: border-color 0.3s;
       backdrop-filter: blur(10px);
     }
 
     .help-kb-category:hover {
-      background: rgba(26, 10, 46, 0.6);
       border-color: rgba(114, 9, 183, 0.5);
-      box-shadow: 0 8px 30px rgba(114, 9, 183, 0.2);
     }
 
     .help-kb-category h3 {
@@ -276,7 +272,7 @@
     .help-kb-links a {
       color: #e9d5ff;
       text-decoration: none;
-      transition: all 0.3s;
+      transition: color 0.2s;
       display: flex;
       align-items: center;
       gap: 0.5rem;
@@ -285,7 +281,6 @@
 
     .help-kb-links a:hover {
       color: #c9a7eb;
-      padding-left: 0.5rem;
     }
 
     .help-kb-links a::before {
@@ -331,13 +326,38 @@
       transition: all 0.3s;
       text-decoration: none;
       backdrop-filter: blur(10px);
+      cursor: pointer;
+      position: relative;
     }
 
     .help-contact-email:hover {
       border-color: #7209b7;
       background: rgba(26, 10, 46, 0.6);
-      transform: scale(1.05);
-      box-shadow: 0 0 30px rgba(114, 9, 183, 0.3);
+    }
+
+    /* Toast de copiado */
+    .copy-toast {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      background: linear-gradient(90deg, #7209b7, #560bad);
+      color: #fff;
+      padding: 1rem 1.5rem;
+      border-radius: 10px;
+      box-shadow: 0 4px 20px rgba(114, 9, 183, 0.5);
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: all 0.3s;
+      z-index: 10000;
+      pointer-events: none;
+    }
+
+    .copy-toast.show {
+      opacity: 1;
+      transform: translateY(0);
     }
 
     /* Responsive */
@@ -391,6 +411,13 @@
       .help-contact-section h2 {
         font-size: 1.8rem;
       }
+
+      .copy-toast {
+        bottom: 20px;
+        right: 20px;
+        left: 20px;
+        justify-content: center;
+      }
     }
   </style>
 </head>
@@ -415,24 +442,24 @@
       <li class="dropdown-parent">
         <a>RECURSOS <i class="bi bi-chevron-down"></i></a>
         <div class="dropdown-menu">
-          <a href="/pages/recursos/beats-instrumentales.html" class="dropdown-item">
+          <a href="/pages/recursos/beats-instrumentales.html" class="dropdown-item" target="_blank">
             <i class="bi bi-music-note-beamed"></i>
             <span>Beats & Instrumentales</span>
           </a>
-          <a href="/pages/recursos/drum-kits.html" class="dropdown-item">
+          <a href="/pages/recursos/drum-kits.html" class="dropdown-item" target="_blank">
             <i class="bi bi-disc"></i>
             <span>Drum Kits</span>
           </a>
-          <a href="/pages/presets-v2.html" class="dropdown-item">
+          <a href="/pages/presets-v2.html" class="dropdown-item" target="_blank">
             <i class="bi bi-sliders"></i>
             <span>Presets & Plugins</span>
           </a>
-          <a href="/pages/recursos/samples-loops.html" class="dropdown-item">
+          <a href="/pages/recursos/samples-loops.html" class="dropdown-item" target="_blank">
             <i class="bi bi-soundwave"></i>
             <span>Samples & Loops</span>
           </a>
           <div class="dropdown-divider"></div>
-          <a href="/pages/recursos/recursos-gratis.html" class="dropdown-item">
+          <a href="/pages/recursos/recursos-gratis.html" class="dropdown-item" target="_blank">
             <i class="bi bi-gift"></i>
             <span>Recursos Gratis</span>
           </a>
@@ -441,24 +468,24 @@
       <li class="dropdown-parent">
         <a>COMUNIDAD <i class="bi bi-chevron-down"></i></a>
         <div class="dropdown-menu">
-          <a href="/pages/comunidad/feed.html" class="dropdown-item">
+          <a href="/pages/comunidad/feed.html" class="dropdown-item" target="_blank">
             <i class="bi bi-house"></i>
             <span>Feed</span>
           </a>
-          <a href="/pages/comunidad/productores.html" class="dropdown-item">
+          <a href="/pages/comunidad/productores.html" class="dropdown-item" target="_blank">
             <i class="bi bi-people"></i>
             <span>Productores</span>
           </a>
-          <a href="/pages/comunidad/colaboraciones.html" class="dropdown-item">
+          <a href="/pages/comunidad/colaboraciones.html" class="dropdown-item" target="_blank">
             <i class="bi bi-hand-index-thumb"></i>
             <span>Colaboraciones</span>
           </a>
           <div class="dropdown-divider"></div>
-          <a href="/pages/comunidad/foros.html" class="dropdown-item">
+          <a href="/pages/comunidad/foros.html" class="dropdown-item" target="_blank">
             <i class="bi bi-chat-dots"></i>
             <span>Foros</span>
           </a>
-          <a href="/pages/comunidad/eventos.html" class="dropdown-item">
+          <a href="/pages/comunidad/eventos.html" class="dropdown-item" target="_blank">
             <i class="bi bi-calendar-event"></i>
             <span>Eventos</span>
           </a>
@@ -619,11 +646,11 @@
       <h3>🛠️ Soporte Técnico</h3>
       <p>Soluciona problemas técnicos</p>
       <ul class="help-kb-links">
-        <li><a href="#" data-question="No puedo iniciar sesión">Problemas de inicio de sesión</a></li>
-        <li><a href="#" data-question="No puedo descargar mis productos">Error al descargar</a></li>
-        <li><a href="#" data-question="El preset no suena igual">Preset suena diferente</a></li>
-        <li><a href="#" data-question="El sitio no carga correctamente">Problemas de carga</a></li>
-        <li><a href="#" data-question="Error durante el pago">Errores de pago</a></li>
+        <li><a href="#" data-question="Problemas de inicio de sesión">No puedo iniciar sesión</a></li>
+        <li><a href="#" data-question="Error al descargar">No puedo descargar mis productos</a></li>
+        <li><a href="#" data-question="Preset suena diferente">El preset no suena igual</a></li>
+        <li><a href="#" data-question="Problemas de carga">El sitio no carga correctamente</a></li>
+        <li><a href="#" data-question="Errores de pago">Error durante el pago</a></li>
       </ul>
     </div>
 
@@ -631,9 +658,9 @@
       <h3>📋 Políticas y Términos</h3>
       <p>Lee nuestras políticas y términos</p>
       <ul class="help-kb-links">
-        <li><a href="/pages/terminos-de-servicio.html">Términos de servicio</a></li>
-        <li><a href="/pages/terminos-de-uso.html">Términos de uso</a></li>
-        <li><a href="/pages/politica-de-privacidad.html">Política de privacidad</a></li>
+        <li><a href="/pages/terminos-de-servicio.html" target="_blank">Términos de servicio</a></li>
+        <li><a href="/pages/terminos-de-uso.html" target="_blank">Términos de uso</a></li>
+        <li><a href="/pages/politica-de-privacidad.html" target="_blank">Política de privacidad</a></li>
         <li><a href="#" data-question="¿Cuáles son los derechos de autor?">Derechos de autor</a></li>
         <li><a href="#" data-question="¿Puedo usar los presets comercialmente?">Uso comercial</a></li>
       </ul>
@@ -646,21 +673,29 @@
   <h2>¿No encuentras lo que buscas?</h2>
   <p>Contáctanos directamente y te ayudaremos lo antes posible</p>
   
-  <a href="mailto:offszn.studio@gmail.com" class="help-contact-email">
+  <div class="help-contact-email" onclick="copyEmail()">
     <i class="bi bi-envelope-fill"></i>
     offszn.studio@gmail.com
-  </a>
+    <i class="bi bi-clipboard" style="margin-left: 0.5rem; font-size: 0.9rem;"></i>
+  </div>
+  <p style="font-size: 0.85rem; color: #999; margin-top: 0.8rem;">Haz clic para copiar</p>
 </section>
+
+<!-- Toast de copiado -->
+<div class="copy-toast" id="copyToast">
+  <i class="bi bi-check-circle-fill" style="font-size: 1.5rem;"></i>
+  <span>Email copiado al portapapeles</span>
+</div>
 
 <!-- ==================== FOOTER ==================== -->
 <footer class="footer">
   <div class="footer-content">
     <p>© 2025 OFFSZN</p>
     <ul>
-      <li><a href="/pages/politica-de-privacidad.html">Política de Privacidad</a></li>
-      <li><a href="/pages/terminos-de-uso.html">Términos de Uso</a></li>
-      <li><a href="/pages/terminos-de-servicio.html">Términos de Servicio</a></li>
-      <li><a href="/pages/contacto.html">Contacto</a></li>
+      <li><a href="/pages/politica-de-privacidad.html" target="_blank">Política de Privacidad</a></li>
+      <li><a href="/pages/terminos-de-uso.html" target="_blank">Términos de Uso</a></li>
+      <li><a href="/pages/terminos-de-servicio.html" target="_blank">Términos de Servicio</a></li>
+      <li><a href="/pages/contacto.html" target="_blank">Contacto</a></li>
     </ul>
     <div class="footer-social">
       <a href="https://wa.link/t89kep" target="_blank" rel="noopener noreferrer" title="WhatsApp">
@@ -680,11 +715,310 @@
 <script src="/script/menu.js"></script>
 
 <script>
-// Base de datos de preguntas y respuestas
+// ========== BASE DE CONOCIMIENTOS COMPLETA ==========
 const knowledgeBase = {
   // CUENTA
-  "¿Cómo creo una cuenta en OFFSZN?": "Para crear una cuenta, haz clic en 'Únete' en la esquina superior derecha y completa el formulario de registro con tu email y contraseña.",
-  "¿Cómo recupero mi contraseña?": "En la página de inicio de sesión, haz clic en '¿Olvidaste tu contraseña?' e ingresa tu email. Te enviaremos un enlace para resetearla.",
-  "¿Cómo edito mi perfil?": "Ve a tu cuenta haciendo clic en el ícono de usuario, luego selecciona 'Configuración' para editar tu información personal.",
-  "¿Cómo cambio mi correo electrónico?": "En Configuración > Cuenta, encontrarás la opción para actualizar tu dirección de email.",
-  "¿Cómo elimino mi cuenta?": "Contáctanos a offszn.studio@gmail.com para solicitar la eliminación de tu cuenta. Ten en cuenta que esto es permanente.",
+  "¿Cómo creo una cuenta en OFFSZN?": "Para crear una cuenta, haz clic en 'Únete' en la esquina superior derecha y completa el formulario de registro con tu email y contraseña. Recibirás un correo de confirmación.",
+  "¿Cómo recupero mi contraseña?": "En la página de inicio de sesión, haz clic en '¿Olvidaste tu contraseña?' e ingresa tu email. Te enviaremos un enlace seguro para resetearla en los próximos minutos.",
+  "¿Cómo edito mi perfil?": "Ve a tu cuenta haciendo clic en el ícono de usuario en la esquina superior derecha, luego selecciona 'Configuración' para editar tu información personal, foto de perfil y preferencias.",
+  "¿Cómo cambio mi correo electrónico?": "En Configuración > Cuenta, encontrarás la opción para actualizar tu dirección de email. Necesitarás confirmar el cambio desde tu correo actual.",
+  "¿Cómo elimino mi cuenta?": "Contáctanos a offszn.studio@gmail.com para solicitar la eliminación de tu cuenta. Ten en cuenta que esto es permanente y perderás acceso a todos tus productos.",
+  
+  // PRODUCTOS Y DESCARGAS
+  "¿Dónde encuentro mis productos comprados?": "Accede a 'Mis Productos' desde el menú de tu cuenta (ícono de usuario). Ahí encontrarás todos los presets, cursos y recursos que has comprado, listos para descargar.",
+  "¿Cómo descargo mis presets?": "En 'Mis Productos', haz clic en el botón de descarga junto al preset que desees. El archivo se descargará en formato ZIP. Si tienes problemas, actualiza la página o contáctanos.",
+  "¿Los presets funcionan en mi DAW?": "Nuestros presets están optimizados para FL Studio y usan plugins de Waves. También incluimos versiones con plugins nativos cuando es posible. Revisa la descripción de cada producto para confirmar compatibilidad.",
+  "¿Cómo instalo los presets?": "Descarga el archivo ZIP, descomprímelo y copia los archivos a la carpeta de presets de tu DAW. Para FL Studio: colócalos en la carpeta 'Mixer presets'. Incluimos instrucciones detalladas en cada descarga.",
+  "¿Puedo compartir mis presets comprados?": "No. Los presets tienen licencia de uso personal. No puedes redistribuirlos, revenderlos ni compartirlos. Son solo para tu uso en tus propias producciones musicales.",
+  
+  // PAGOS Y REEMBOLSOS
+  "¿Qué métodos de pago aceptan?": "Aceptamos PayPal, tarjetas de crédito/débito (Visa, Mastercard, American Express) y Yape (solo Perú). Todos los pagos son procesados de forma segura.",
+  "¿Cómo uso una gift card?": "Durante el proceso de compra, ingresa el código de tu gift card en el campo 'Código de descuento'. El saldo se aplicará automáticamente a tu compra.",
+  "¿Puedo solicitar un reembolso?": "Ofrecemos reembolsos dentro de las primeras 24 horas solo si hay problemas técnicos con el producto que no podamos resolver. Los productos digitales no son reembolsables una vez descargados.",
+  "¿Por qué fue rechazado mi pago?": "Los pagos pueden rechazarse por fondos insuficientes, datos incorrectos o problemas con tu banco. Verifica tu información e intenta de nuevo. Si el problema persiste, contáctanos.",
+  "¿Dónde está mi factura?": "Las facturas se envían automáticamente a tu email después de cada compra. También puedes descargarlas desde 'Mis Productos' > 'Historial de compras'.",
+  
+  // CURSOS Y APRENDIZAJE
+  "¿Cómo funcionan los cursos en vivo?": "Los cursos son clases personalizadas 100% en vivo por videollamada (Zoom, Meet o Teams). Cada sesión dura 40-60 minutos. Trabajamos directamente en tu proyecto desde la primera clase.",
+  "¿Necesito experiencia previa?": "No es necesario. Los cursos se adaptan a tu nivel, desde principiante hasta intermedio. Yo ajusto cada clase según tu experiencia y objetivos específicos.",
+  "¿Qué incluye un curso?": "Cada curso incluye: clases en vivo personalizadas, grabación de todas las sesiones, feedback en tiempo real sobre tu música, acceso a presets exclusivos y soporte por WhatsApp entre clases.",
+  "¿Puedo ver las clases grabadas?": "Sí, todas las clases quedan grabadas y las recibes después de cada sesión. Puedes verlas las veces que necesites para repasar el contenido.",
+  "¿Cómo agendo una clase?": "Después de comprar un curso, te contactaremos por email y WhatsApp para coordinar horarios. Agendamos las clases según tu disponibilidad y zona horaria.",
+  
+  // SOPORTE TÉCNICO
+  "Problemas de inicio de sesión": "Verifica que estés usando el email y contraseña correctos. Si olvidaste tu contraseña, usa la opción 'Recuperar contraseña'. Limpia el caché de tu navegador si el problema persiste.",
+  "Error al descargar": "Asegúrate de estar logueado en tu cuenta. Prueba con otro navegador o desactiva temporalmente tu bloqueador de anuncios. Si el problema continúa, escríbenos a offszn.studio@gmail.com.",
+  "Preset suena diferente": "Verifica que tengas los mismos plugins instalados. Los presets necesitan las versiones específicas de plugins mencionadas en la descripción. Algunos efectos pueden sonar diferente según tu configuración.",
+  "Problemas de carga": "Intenta limpiar el caché del navegador (Ctrl+Shift+Del) o usa otro navegador. Verifica tu conexión a internet. Si usas VPN, prueba desactivándola.",
+  "Errores de pago": "Si ves un error al pagar, verifica que tus datos sean correctos. Intenta con otro método de pago. Si el problema persiste, contáctanos y te ayudaremos a completar la compra manualmente.",
+  
+  // POLÍTICAS
+  "¿Cuáles son los derechos de autor?": "Todo el contenido de OFFSZN (presets, cursos, samples) está protegido por derechos de autor. Puedes usar los productos en tus canciones, pero no puedes redistribuirlos ni revenderlos.",
+  "¿Puedo usar los presets comercialmente?": "Sí, puedes usar los presets en tus producciones comerciales sin problemas. Lo que NO puedes hacer es vender o redistribuir los presets mismos como productos independientes."
+};
+
+// ========== COPIAR EMAIL AL PORTAPAPELES ==========
+function copyEmail() {
+  const email = 'offszn.studio@gmail.com';
+  
+  // Usar la API moderna del portapapeles
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(email).then(() => {
+      showCopyToast();
+    }).catch(err => {
+      console.error('Error al copiar:', err);
+      fallbackCopyEmail(email);
+    });
+  } else {
+    fallbackCopyEmail(email);
+  }
+}
+
+// Método alternativo para navegadores antiguos
+function fallbackCopyEmail(email) {
+  const textArea = document.createElement('textarea');
+  textArea.value = email;
+  textArea.style.position = 'fixed';
+  textArea.style.left = '-999999px';
+  document.body.appendChild(textArea);
+  textArea.select();
+  
+  try {
+    document.execCommand('copy');
+    showCopyToast();
+  } catch (err) {
+    console.error('Error al copiar:', err);
+    alert('Email: ' + email);
+  }
+  
+  document.body.removeChild(textArea);
+}
+
+// Mostrar toast de confirmación
+function showCopyToast() {
+  const toast = document.getElementById('copyToast');
+  toast.classList.add('show');
+  
+  setTimeout(() => {
+    toast.classList.remove('show');
+  }, 3000);
+}
+
+// ========== FUNCIONES DE BÚSQUEDA ==========
+function searchHelp() {
+  const searchInput = document.getElementById('helpSearchInput');
+  const searchResults = document.getElementById('searchResults');
+  const query = searchInput.value.trim().toLowerCase();
+  
+  if (!query) {
+    searchResults.classList.remove('active');
+    return;
+  }
+  
+  // Buscar en la base de conocimientos
+  const results = [];
+  
+  for (const [question, answer] of Object.entries(knowledgeBase)) {
+    const questionLower = question.toLowerCase();
+    const answerLower = answer.toLowerCase();
+    
+    if (questionLower.includes(query) || answerLower.includes(query)) {
+      results.push({ question, answer });
+    }
+  }
+  
+  // Mostrar resultados
+  if (results.length > 0) {
+    let html = '<div style="margin-bottom: 1rem;"><strong style="color: #c9a7eb;">Encontramos ' + results.length + ' resultado' + (results.length > 1 ? 's' : '') + ':</strong></div>';
+    
+    results.forEach(result => {
+      const preview = result.answer.length > 120 ? result.answer.substring(0, 120) + '...' : result.answer;
+      html += `
+        <div class="search-result-item" onclick="showAnswer('${result.question.replace(/'/g, "\\'")}')">
+          <div class="search-result-title">${result.question}</div>
+          <div class="search-result-text">${preview}</div>
+        </div>
+      `;
+    });
+    searchResults.innerHTML = html;
+    searchResults.classList.add('active');
+  } else {
+    searchResults.innerHTML = `
+      <div class="no-results">
+        <i class="bi bi-search" style="font-size: 3rem; color: #7209b7; margin-bottom: 1rem;"></i>
+        <p style="font-size: 1.1rem; margin-bottom: 0.5rem;">No encontramos resultados para "<strong>${query}</strong>"</p>
+        <p style="font-size: 0.9rem; color: #999; margin-top: 1rem;">Intenta con otras palabras clave o explora las categorías abajo</p>
+        <div style="margin-top: 1.5rem;">
+          <button onclick="clearSearch()" style="background: rgba(114, 9, 183, 0.2); border: 1px solid rgba(114, 9, 183, 0.5); color: #c9a7eb; padding: 0.6rem 1.5rem; border-radius: 8px; cursor: pointer; margin-right: 0.5rem;">
+            <i class="bi bi-arrow-left"></i> Volver
+          </button>
+          <button onclick="copyEmail()" style="background: linear-gradient(90deg, #7209b7, #560bad); border: none; color: #fff; padding: 0.6rem 1.5rem; border-radius: 8px; cursor: pointer; font-weight: 600;">
+            <i class="bi bi-envelope-fill"></i> Contáctanos
+          </button>
+        </div>
+      </div>
+    `;
+    searchResults.classList.add('active');
+  }
+}
+
+// Buscar al presionar Enter
+document.addEventListener('DOMContentLoaded', () => {
+  const searchInput = document.getElementById('helpSearchInput');
+  if (searchInput) {
+    searchInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        searchHelp();
+      }
+    });
+  }
+  
+  // Agregar eventos a los enlaces de la base de conocimientos
+  const kbLinks = document.querySelectorAll('.help-kb-links a[data-question]');
+  kbLinks.forEach(link => {
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+      const question = link.getAttribute('data-question');
+      showAnswer(question);
+    });
+  });
+});
+
+// ========== MOSTRAR RESPUESTA ==========
+function showAnswer(question) {
+  const answer = knowledgeBase[question];
+  if (!answer) return;
+  
+  // Scroll al inicio suave
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  
+  // Mostrar respuesta en el área de resultados
+  const searchResults = document.getElementById('searchResults');
+  searchResults.innerHTML = `
+    <div style="padding: 1rem;">
+      <div style="display: flex; align-items: flex-start; gap: 1rem; margin-bottom: 1.5rem;">
+        <i class="bi bi-question-circle-fill" style="font-size: 2.5rem; color: #7209b7; flex-shrink: 0;"></i>
+        <h3 style="color: #c9a7eb; margin: 0; font-size: 1.3rem; line-height: 1.3;">${question}</h3>
+      </div>
+      <div style="background: rgba(114, 9, 183, 0.1); padding: 1.5rem; border-radius: 10px; border-left: 4px solid #7209b7;">
+        <p style="color: #e9d5ff; line-height: 1.8; margin: 0; font-size: 1rem;">${answer}</p>
+      </div>
+      <div style="margin-top: 1.5rem; display: flex; gap: 0.8rem; flex-wrap: wrap; justify-content: center;">
+        <button onclick="clearSearch()" style="background: rgba(114, 9, 183, 0.2); border: 1px solid rgba(114, 9, 183, 0.5); color: #c9a7eb; padding: 0.7rem 1.5rem; border-radius: 8px; cursor: pointer; font-weight: 500; transition: all 0.2s;">
+          <i class="bi bi-arrow-left"></i> Volver a buscar
+        </button>
+        <button onclick="copyEmail()" style="background: linear-gradient(90deg, #7209b7, #560bad); border: none; color: #fff; padding: 0.7rem 1.5rem; border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.2s;">
+          <i class="bi bi-envelope-fill"></i> ¿Necesitas más ayuda?
+        </button>
+      </div>
+    </div>
+  `;
+  searchResults.classList.add('active');
+}
+
+// ========== LIMPIAR BÚSQUEDA ==========
+function clearSearch() {
+  const searchResults = document.getElementById('searchResults');
+  const searchInput = document.getElementById('helpSearchInput');
+  searchResults.classList.remove('active');
+  searchInput.value = '';
+  searchInput.focus();
+}
+
+// ========== SCROLL A CATEGORÍA ==========
+function scrollToCategory(categoryId) {
+  const category = document.getElementById(categoryId);
+  if (category) {
+    const offset = 100;
+    const elementPosition = category.getBoundingClientRect().top;
+    const offsetPosition = elementPosition + window.pageYOffset - offset;
+    
+    window.scrollTo({
+      top: offsetPosition,
+      behavior: 'smooth'
+    });
+    
+    // Efecto visual sutil
+    category.style.borderColor = '#7209b7';
+    setTimeout(() => {
+      category.style.borderColor = '';
+    }, 1500);
+  }
+}
+
+// ========== USER DROPDOWN ==========
+function toggleUserDropdown(event) {
+  event.stopPropagation();
+  const dropdown = document.querySelector('.user-dropdown');
+  if (dropdown) {
+    dropdown.classList.toggle('active');
+  }
+}
+
+// Cerrar dropdown al hacer clic fuera
+document.addEventListener('click', (e) => {
+  const userDropdown = document.querySelector('.user-dropdown');
+  if (userDropdown && !userDropdown.contains(e.target)) {
+    userDropdown.classList.remove('active');
+  }
+});
+
+// ========== LOGOUT ==========
+function handleLogout(event) {
+  event.preventDefault();
+  if (confirm('¿Estás seguro que deseas cerrar sesión?')) {
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('offszn_user_cache');
+    localStorage.removeItem('offszn_giftcards_state');
+    window.location.href = '/pages/login.html';
+  }
+}
+
+// ========== VERIFICAR AUTENTICACIÓN ==========
+document.addEventListener('DOMContentLoaded', () => {
+  const token = localStorage.getItem('authToken');
+  const body = document.body;
+  
+  if (token) {
+    body.classList.add('user-logged-in');
+    
+    // Cargar datos del usuario si están en caché
+    const cachedUser = localStorage.getItem('offszn_user_cache');
+    if (cachedUser) {
+      try {
+        const userData = JSON.parse(cachedUser);
+        
+        // Actualizar nombre en dropdown
+        const dropdownName = document.querySelector('.user-dropdown-name');
+        const dropdownEmail = document.querySelector('.user-dropdown-email');
+        const dropdownAvatar = document.querySelector('.user-dropdown-avatar');
+        
+        if (dropdownName) {
+          dropdownName.textContent = userData.nickname || userData.first_name || 'Usuario';
+        }
+        if (dropdownEmail) {
+          dropdownEmail.textContent = userData.email || '';
+        }
+        if (dropdownAvatar) {
+          const initial = (userData.first_name || userData.nickname || 'U').charAt(0).toUpperCase();
+          dropdownAvatar.textContent = initial;
+        }
+        
+        // Mostrar admin dashboard si es admin
+        if (userData.role === 'admin') {
+          body.classList.add('user-is-admin');
+        }
+      } catch (e) {
+        console.error('Error al cargar datos del usuario:', e);
+      }
+    }
+  } else {
+    body.classList.remove('user-logged-in');
+  }
+});
+
+console.log('✅ Centro de Ayuda OFFSZN - Versión optimizada cargada');
+</script>
+
+</body>
+</html>
