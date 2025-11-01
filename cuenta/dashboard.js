@@ -255,15 +255,55 @@ document.addEventListener('DOMContentLoaded', async () => {
     // ---------- EJECUTAR CARGA ----------
     loadDashboardData();
 
+    function handleLogout(e) {
+        e.preventDefault();
+        console.log("Iniciando cierre de sesión...");
+
+        const overlay = document.getElementById('logout-overlay');
+        const messageEl = document.getElementById('logout-message');
+        const iconEl = overlay.querySelector('i');
+
+        if (!overlay || !messageEl || !iconEl) {
+            console.warn("Faltan elementos del DOM para el logout animado. Usando fallback.");
+            localStorage.removeItem('authToken');
+            window.location.replace('/index.html'); 
+            return;
+        }
+
+        messageEl.textContent = "Te veremos pronto..."; 
+        iconEl.className = 'fas fa-spinner fa-spin';
+        overlay.classList.add('active');
+        setTimeout(() => {
+
+            localStorage.removeItem('authToken');
+            console.log("Sesión cerrada. Mostrando mensaje de despedida.");
+            messageEl.textContent = "¡Cerraste sesión!";
+            iconEl.className = 'fas fa-check-circle'; 
+
+        }, 1500); 
+
+        setTimeout(() => {
+
+            console.log("Desvaneciendo overlay...");
+            overlay.classList.add('fading-out');
+
+        }, 3000); 
+        setTimeout(() => {
+
+            console.log("Redirigiendo a index.html");
+            window.location.replace('/index.html');
+
+        }, 3500);
+    }
+
     const sidebarLogoutButton = document.querySelector('.logout-btn');
     if (sidebarLogoutButton) {
-        sidebarLogoutButton.addEventListener('click', (e) => {
-            e.preventDefault();
-            localStorage.removeItem('authToken');
-            localStorage.removeItem(CACHE_KEY); // Limpiar caché al salir
-            alert('¡Has cerrado sesión!');
-            window.location.replace('/pages/login.html');
-        });
+        sidebarLogoutButton.addEventListener('click', handleLogout);
+    }
+
+    const navbarLogoutButton = document.getElementById('navbar-logout-btn');
+    if (navbarLogoutButton) {
+        navbarLogoutButton.addEventListener('click', handleLogout);
     }
 
 });

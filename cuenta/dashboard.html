@@ -106,7 +106,15 @@
             transform: translateX(-50%) translateY(0);
         }
         
-        .navbar-links > li:hover > a > i {
+        .navbar-links a i.fa-chevron-down {
+            transition: transform .2s;
+        }
+
+        .navbar-links a i.fa-chevron-down {
+            transition: transform .2s;
+        }
+
+        .navbar-links li:hover a i.fa-chevron-down {
             transform: rotate(180deg);
         }
 
@@ -1027,6 +1035,74 @@
                 grid-template-columns: 1fr;
             }
         }
+
+        #logout-overlay {
+            display: none;
+            /* Oculto por defecto */
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(10, 10, 10, 0.9);
+            /* Fondo oscuro */
+            backdrop-filter: blur(8px);
+            z-index: 10001;
+            /* Encima de todo */
+
+            /* Para centrar */
+            align-items: center;
+            justify-content: center;
+
+            /* Para la animación */
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            /* Duración del fade-in/out */
+        }
+
+        /* Clase que JS añade para MOSTRARLO */
+        #logout-overlay.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        /* Clase que JS añade para DESVANECERLO */
+        #logout-overlay.fading-out {
+            opacity: 0;
+        }
+
+        .logout-content {
+            text-align: center;
+            color: #fff;
+        }
+
+        .logout-content i {
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+            color: #8b5cf6;
+            /* Tu color morado */
+        }
+
+        .logout-content h2 {
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: #e5e5e5;
+        }
+
+        /* Animación de spin (por si acaso) */
+        @keyframes fa-spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .fa-spin {
+            animation: fa-spin 1.5s linear infinite;
+        }
     </style>
 </head>
 
@@ -1125,8 +1201,8 @@
                             class="fas fa-cog"></i><span>Configuración</span></a>
                     <a href="help.html" class="user-dropdown-item"><i
                             class="fas fa-question-circle"></i><span>Ayuda</span></a>
-                    <a href="logout.html" class="user-dropdown-item logout"><i
-                            class="fas fa-sign-out-alt"></i><span>Cerrar Sesión</span></a>
+                    <a href="#" id="navbar-logout-btn" class="user-dropdown-item logout"><i class="fas fa-sign-out-alt"></i><span>Cerrar
+                            Sesión</span></a>
                 </div>
             </div>
         </div>
@@ -1191,7 +1267,8 @@
                 <a href="blog.html" class="menu-item"><i class="fas fa-book-open"></i><span>Blog</span></a>
             </div>
 
-            <a href="logout.html" class="logout-btn"><i class="fas fa-sign-out-alt"></i><span>Cerrar Sesión</span></a>
+            <a href="#" id="navbar-logout-btn" class="user-dropdown-item logout logout-btn"><i
+                    class="fas fa-sign-out-alt"></i><span>Cerrar Sesión</span></a>
         </aside>
 
         <!-- Main Content -->
@@ -1334,6 +1411,13 @@
         </main>
     </div>
 
+    <div id="logout-overlay">
+        <div class="logout-content">
+            <i class="fas fa-spinner fa-spin"></i>
+            <h2 id="logout-message">Te veremos pronto...</h2>
+        </div>
+    </div>
+
     <!-- Modal -->
     <div class="modal" id="modal">
         <div class="modal-content">
@@ -1403,6 +1487,60 @@
         });
     </script>
     <script src="dashboard.js"></script>
+
+    <div class="modal" id="upload-modal">
+        <div class="modal-content" style="text-align: left; max-width: 600px;">
+            <button class="modal-close" onclick="closeModal('upload-modal')"><i class="fas fa-times"></i></button>
+            <h2 class="modal-title">Subir Nuevo Producto</h2>
+            <form id="upload-product-form" enctype="multipart/form-data">
+
+                <label for="product-name">Nombre del Producto:*</label>
+                <input type="text" id="product-name" name="name" required>
+
+                <label for="product-type">Tipo:*</label>
+                <select id="product-type" name="product_type" required>
+                    <option value="">-- Selecciona --</option>
+                    <option value="beat">Beat / Instrumental</option>
+                    <option value="drumkit">Drum Kit</option>
+                    <option value="preset">Preset / Plugin</option>
+                    <option value="sample">Sample / Loop</option>
+                    <option value="otro">Otro</option>
+                </select>
+
+                <label for="product-price-usd">Precio (USD):*</label>
+                <input type="number" id="product-price-usd" name="price_usd" step="0.01" required>
+
+                <label for="product-price-pen">Precio (Soles PEN):</label>
+                <input type="number" id="product-price-pen" name="price_pen" step="0.01">
+
+                <label for="product-description">Descripción:</label>
+                <textarea id="product-description" name="description"></textarea>
+
+                <label for="product-bpm">BPM (si aplica):</label>
+                <input type="number" id="product-bpm" name="bpm">
+
+                <label for="product-key">Key / Tonalidad (si aplica):</label>
+                <input type="text" id="product-key" name="key">
+
+                <label for="product-tags">Tags (separados por coma):</label>
+                <input type="text" id="product-tags" name="tags" placeholder="Ej: trap, dark, 808">
+
+                <label for="product-image">URL de Imagen de Portada:</label>
+                <input type="url" id="product-image" name="image_url" placeholder="https://...">
+
+                <label for="product-file">Archivo del Producto (.zip, .wav, .mp3 - Máx 50MB):*</label>
+                <input type="file" id="product-file" name="productFile" required accept=".zip,.wav,.mp3">
+
+                <div class="upload-progress" style="margin-top: 10px; display:none;">
+                    Subiendo: <progress id="upload-progress-bar" value="0" max="100"></progress> <span
+                        id="upload-progress-text">0%</span>
+                </div>
+
+                <button type="submit" class="btn" style="width: 100%; margin-top: 1.5rem;">Subir Producto</button>
+                <div id="upload-message" class="message" role="alert"></div>
+            </form>
+        </div>
+    </div>
 </body>
 
 </html>

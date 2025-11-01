@@ -83,8 +83,8 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log("Usuario es Admin, redirigiendo a /admin-frontend/admin_dashboard.html");
             window.location.href = '/admin-frontend/admin_dashboard.html';
           } else {
-            console.log("Usuario normal, redirigiendo a /pages/my-products.html");
-            window.location.href = '/pages/my-products.html';
+            console.log("Usuario normal, redirigiendo a /cuenta/dashboard.html");
+            window.location.href = '/cuenta/dashboard.html';
           }
         } else {
           showMessage(messageDiv, data.error, true);
