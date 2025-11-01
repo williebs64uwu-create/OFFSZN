@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Centro de Ayuda - OFFSZN</title>
+  
+  <!-- SEO -->
+  <meta name="description" content="Centro de ayuda OFFSZN - Encuentra respuestas sobre tu cuenta, productos, pagos y más.">
+  
+  <!-- CSS -->
+  <link rel="stylesheet" href="/css/style.css">
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+
+  <style>
+    /* Estilos específicos para el Centro de Ayuda */
+    .help-hero {
+      background: radial-gradient(circle at top right, rgba(114, 9, 183, 0.08), transparent 60%);
+      padding: 80px 5% 60px;
+      text-align: center;
+    }
+
+    .help-hero h1 {
+      font-size: 3.5rem;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 1rem;
+      font-family: 'Montserrat', sans-serif;
+      text-shadow: 0 0 10px rgba(114, 9, 183, 0.3);
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+
+    .help-hero p {
+      font-size: 1.1rem;
+      color: #d1d1d1;
+      margin-bottom: 2.5rem;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    /* Buscador Principal */
+    .help-search-container {
+      max-width: 700px;
+      margin: 0 auto 3rem;
+      position: relative;
+    }
+
+    .help-search-box {
+      width: 100%;
+      padding: 1.2rem 3.5rem 1.2rem 1.5rem;
+      background: rgba(26, 10, 46, 0.4);
+      border: 2px solid rgba(114, 9, 183, 0.3);
+      border-radius: 15px;
+      color: #fff;
+      font-size: 1rem;
+      backdrop-filter: blur(10px);
+      transition: all 0.3s;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    .help-search-box:focus {
+      outline: none;
+      border-color: #7209b7;
+      background: rgba(26, 10, 46, 0.6);
+      box-shadow: 0 0 20px rgba(114, 9, 183, 0.3);
+    }
+
+    .help-search-box::placeholder {
+      color: rgba(255, 255, 255, 0.4);
+    }
+
+    .help-search-btn {
+      position: absolute;
+      right: 0.5rem;
+      top: 50%;
+      transform: translateY(-50%);
+      background: linear-gradient(90deg, #7209b7, #560bad);
+      border: none;
+      padding: 0.8rem 2rem;
+      border-radius: 10px;
+      color: #fff;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .help-search-btn:hover {
+      background: linear-gradient(90deg, #560bad, #3c096c);
+      box-shadow: 0 0 20px rgba(114, 9, 183, 0.5);
+    }
+
+    /* Resultados de búsqueda */
+    .search-results {
+      display: none;
+      max-width: 700px;
+      margin: 0 auto 3rem;
+      background: rgba(26, 10, 46, 0.4);
+      border: 1px solid rgba(114, 9, 183, 0.3);
+      border-radius: 15px;
+      padding: 1.5rem;
+      backdrop-filter: blur(10px);
+    }
+
+    .search-results.active {
+      display: block;
+    }
+
+    .search-result-item {
+      padding: 1rem;
+      border-bottom: 1px solid rgba(114, 9, 183, 0.15);
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .search-result-item:last-child {
+      border-bottom: none;
+    }
+
+    .search-result-item:hover {
+      background: rgba(114, 9, 183, 0.1);
+      border-radius: 8px;
+    }
+
+    .search-result-title {
+      color: #c9a7eb;
+      font-weight: 600;
+      margin-bottom: 0.3rem;
+    }
+
+    .search-result-text {
+      color: #d1d1d1;
+      font-size: 0.9rem;
+    }
+
+    .no-results {
+      text-align: center;
+      color: #999;
+      padding: 2rem;
+    }
+
+    /* Accesos Rápidos */
+    .help-quick-access {
+      padding: 60px 5%;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .help-cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 2rem;
+      margin-top: 2rem;
+    }
+
+    .help-card {
+      background: rgba(26, 10, 46, 0.4);
+      border: 2px solid rgba(114, 9, 183, 0.3);
+      border-radius: 20px;
+      padding: 2rem;
+      cursor: pointer;
+      transition: all 0.3s;
+      text-align: center;
+      backdrop-filter: blur(10px);
+    }
+
+    .help-card:hover {
+      background: rgba(26, 10, 46, 0.6);
+      border-color: #7209b7;
+      transform: translateY(-8px);
+      box-shadow: 0 8px 40px rgba(114, 9, 183, 0.3);
+    }
+
+    .help-card-icon {
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 1.5rem;
+      background: linear-gradient(135deg, #7209b7, #560bad);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.5rem;
+      box-shadow: 0 0 30px rgba(114, 9, 183, 0.4);
+    }
+
+    .help-card h3 {
+      font-size: 1.4rem;
+      margin-bottom: 0.8rem;
+      color: #fff;
+      font-family: 'Montserrat', sans-serif;
+    }
+
+    .help-card p {
+      color: #d1d1d1;
+      font-size: 0.95rem;
+      line-height: 1.5;
+    }
+
+    /* Base de Conocimiento */
+    .help-knowledge-base {
+      padding: 80px 5%;
+      background: rgba(26, 10, 46, 0.2);
+      border-top: 1px solid rgba(114, 9, 183, 0.2);
+    }
+
+    .help-kb-title {
+      font-size: 2.5rem;
+      margin-bottom: 3rem;
+      text-align: center;
+      font-weight: 800;
+      color: #fff;
+      font-family: 'Montserrat', sans-serif;
+      text-shadow: 0 0 10px rgba(114, 9, 183, 0.3);
+    }
+
+    .help-kb-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 2rem;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .help-kb-category {
+      background: rgba(26, 10, 46, 0.4);
+      border: 1px solid rgba(114, 9, 183, 0.3);
+      border-radius: 20px;
+      padding: 2rem;
+      transition: all 0.3s;
+      backdrop-filter: blur(10px);
+    }
+
+    .help-kb-category:hover {
+      background: rgba(26, 10, 46, 0.6);
+      border-color: rgba(114, 9, 183, 0.5);
+      box-shadow: 0 8px 30px rgba(114, 9, 183, 0.2);
+    }
+
+    .help-kb-category h3 {
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+      color: #c9a7eb;
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 700;
+    }
+
+    .help-kb-category p {
+      color: #d1d1d1;
+      margin-bottom: 1.5rem;
+      line-height: 1.6;
+      font-size: 0.95rem;
+    }
+
+    .help-kb-links {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .help-kb-links li {
+      padding: 0.8rem 0;
+      border-bottom: 1px solid rgba(114, 9, 183, 0.1);
+    }
+
+    .help-kb-links li:last-child {
+      border-bottom: none;
+    }
+
+    .help-kb-links a {
+      color: #e9d5ff;
+      text-decoration: none;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.95rem;
+    }
+
+    .help-kb-links a:hover {
+      color: #c9a7eb;
+      padding-left: 0.5rem;
+    }
+
+    .help-kb-links a::before {
+      content: "→";
+      color: #7209b7;
+      font-weight: bold;
+      font-size: 1.2rem;
+    }
+
+    /* Sección de Contacto */
+    .help-contact-section {
+      padding: 80px 5%;
+      text-align: center;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .help-contact-section h2 {
+      font-size: 2.5rem;
+      color: #fff;
+      margin-bottom: 1rem;
+      font-family: 'Montserrat', sans-serif;
+      text-shadow: 0 0 10px rgba(114, 9, 183, 0.3);
+    }
+
+    .help-contact-section p {
+      color: #d1d1d1;
+      margin-bottom: 2rem;
+      font-size: 1.1rem;
+    }
+
+    .help-contact-email {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.8rem;
+      background: rgba(26, 10, 46, 0.4);
+      border: 2px solid rgba(114, 9, 183, 0.3);
+      padding: 1rem 2rem;
+      border-radius: 12px;
+      color: #c9a7eb;
+      font-size: 1.1rem;
+      font-weight: 600;
+      transition: all 0.3s;
+      text-decoration: none;
+      backdrop-filter: blur(10px);
+    }
+
+    .help-contact-email:hover {
+      border-color: #7209b7;
+      background: rgba(26, 10, 46, 0.6);
+      transform: scale(1.05);
+      box-shadow: 0 0 30px rgba(114, 9, 183, 0.3);
+    }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+      .help-hero h1 {
+        font-size: 2.5rem;
+      }
+
+      .help-cards-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .help-kb-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .help-search-container {
+        padding: 0 1rem;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .help-hero {
+        padding: 60px 5% 40px;
+      }
+
+      .help-hero h1 {
+        font-size: 2rem;
+      }
+
+      .help-hero p {
+        font-size: 1rem;
+      }
+
+      .help-search-box {
+        padding: 1rem 1rem;
+        font-size: 0.9rem;
+      }
+
+      .help-search-btn {
+        position: static;
+        transform: none;
+        width: 100%;
+        margin-top: 0.5rem;
+      }
+
+      .help-kb-title {
+        font-size: 1.8rem;
+      }
+
+      .help-contact-section h2 {
+        font-size: 1.8rem;
+      }
+    }
+  </style>
+</head>
+
+<body>
+<!-- ==================== NAVBAR ==================== -->
+<header class="navbar" id="navbar">
+  <div class="logo">
+    <a href="/index.html">
+      <img src="/images/LOGO OFFSZN.png" alt="OFFSZN Logo" style="height: 32px; vertical-align: middle; margin-right: 8px;">
+      OFFSZN
+    </a>
+  </div>
+  
+  <button class="menu-toggle" id="menuToggle" aria-label="Menú">
+    <i class="bi bi-list"></i>
+  </button>
+
+  <div class="navbar-center">
+    <ul class="navbar-links">
+      <li><a href="/index.html">INICIO</a></li>
+      <li class="dropdown-parent">
+        <a>RECURSOS <i class="bi bi-chevron-down"></i></a>
+        <div class="dropdown-menu">
+          <a href="/pages/recursos/beats-instrumentales.html" class="dropdown-item">
+            <i class="bi bi-music-note-beamed"></i>
+            <span>Beats & Instrumentales</span>
+          </a>
+          <a href="/pages/recursos/drum-kits.html" class="dropdown-item">
+            <i class="bi bi-disc"></i>
+            <span>Drum Kits</span>
+          </a>
+          <a href="/pages/presets-v2.html" class="dropdown-item">
+            <i class="bi bi-sliders"></i>
+            <span>Presets & Plugins</span>
+          </a>
+          <a href="/pages/recursos/samples-loops.html" class="dropdown-item">
+            <i class="bi bi-soundwave"></i>
+            <span>Samples & Loops</span>
+          </a>
+          <div class="dropdown-divider"></div>
+          <a href="/pages/recursos/recursos-gratis.html" class="dropdown-item">
+            <i class="bi bi-gift"></i>
+            <span>Recursos Gratis</span>
+          </a>
+        </div>
+      </li>
+      <li class="dropdown-parent">
+        <a>COMUNIDAD <i class="bi bi-chevron-down"></i></a>
+        <div class="dropdown-menu">
+          <a href="/pages/comunidad/feed.html" class="dropdown-item">
+            <i class="bi bi-house"></i>
+            <span>Feed</span>
+          </a>
+          <a href="/pages/comunidad/productores.html" class="dropdown-item">
+            <i class="bi bi-people"></i>
+            <span>Productores</span>
+          </a>
+          <a href="/pages/comunidad/colaboraciones.html" class="dropdown-item">
+            <i class="bi bi-hand-index-thumb"></i>
+            <span>Colaboraciones</span>
+          </a>
+          <div class="dropdown-divider"></div>
+          <a href="/pages/comunidad/foros.html" class="dropdown-item">
+            <i class="bi bi-chat-dots"></i>
+            <span>Foros</span>
+          </a>
+          <a href="/pages/comunidad/eventos.html" class="dropdown-item">
+            <i class="bi bi-calendar-event"></i>
+            <span>Eventos</span>
+          </a>
+        </div>
+      </li>
+    </ul>
+
+    <div class="navbar-search">
+      <input type="text" placeholder="Buscar beats, kits, productores...">
+      <i class="bi bi-search"></i>
+    </div>
+  </div>
+
+  <div class="navbar-right">
+    <div class="user-actions-container"> 
+        <div class="logged-out-actions"> 
+            <a href="/pages/login.html" class="navbar-login-link">Iniciar Sesión</a>
+            <a href="/pages/register.html" class="btn btn-join">
+                Únete <i class="bi bi-rocket-takeoff"></i>
+            </a>
+        </div>
+
+        <div class="user-dropdown logged-in-actions"> 
+            <button class="navbar-icon-button" onclick="toggleUserDropdown(event)" title="Mi Cuenta">
+                <i class="bi bi-person-check"></i>
+            </button>
+            
+            <div class="user-dropdown-menu"> 
+                <div class="user-dropdown-header">
+                    <div class="user-dropdown-avatar">U</div>
+                    <div class="user-dropdown-info">
+                        <div class="user-dropdown-name">Usuario</div>
+                        <div class="user-dropdown-email">email@offszn.com</div>
+                    </div>
+                </div>
+                <a href="/pages/my-products.html" class="user-dropdown-item">
+                    <i class="bi bi-folder"></i>
+                    <span>Mis Productos</span>
+                </a>
+                <a href="/admin-frontend/admin-dashboard.html" class="user-dropdown-item admin-only">
+                     <i class="bi bi-shield-lock"></i>
+                     <span>Admin Dashboard</span>
+                </a>
+                <a href="#" class="user-dropdown-item">
+                    <i class="bi bi-gear"></i>
+                    <span>Configuración</span>
+                </a>
+                <a href="#" class="user-dropdown-item logout" onclick="handleLogout(event)">
+                    <i class="bi bi-box-arrow-right"></i>
+                    <span>Cerrar Sesión</span>
+                </a>
+            </div>
+        </div> 
+    </div>
+
+    <a href="/pages/cart.html" class="navbar-icon-button" title="Carrito">
+        <i class="bi bi-cart3"></i>
+    </a>
+  </div>
+</header>
+
+<!-- ==================== HERO SECTION ==================== -->
+<section class="help-hero">
+  <h1>¿En qué podemos ayudarte?</h1>
+  <p>Busca respuestas o explora nuestras categorías de ayuda</p>
+  
+  <div class="help-search-container">
+    <input type="text" class="help-search-box" placeholder="Escribe tu pregunta aquí..." id="helpSearchInput">
+    <button class="help-search-btn" onclick="searchHelp()">Buscar</button>
+  </div>
+
+  <div class="search-results" id="searchResults"></div>
+</section>
+
+<!-- ==================== ACCESOS RÁPIDOS ==================== -->
+<section class="help-quick-access">
+  <div class="help-cards-grid">
+    <div class="help-card" onclick="scrollToCategory('cuenta')">
+      <div class="help-card-icon">👤</div>
+      <h3>Tu Cuenta</h3>
+      <p>Gestiona tu perfil, configuración de privacidad y preferencias de OFFSZN</p>
+    </div>
+
+    <div class="help-card" onclick="scrollToCategory('productos')">
+      <div class="help-card-icon">🎵</div>
+      <h3>Productos y Descargas</h3>
+      <p>Información sobre presets, cursos y cómo acceder a tus compras</p>
+    </div>
+
+    <div class="help-card" onclick="scrollToCategory('pagos')">
+      <div class="help-card-icon">💳</div>
+      <h3>Pagos y Suscripciones</h3>
+      <p>Información sobre pagos, reembolsos y métodos de pago</p>
+    </div>
+
+    <div class="help-card" onclick="scrollToCategory('tecnico')">
+      <div class="help-card-icon">🔧</div>
+      <h3>Soporte Técnico</h3>
+      <p>Soluciona problemas técnicos con la plataforma o productos</p>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== BASE DE CONOCIMIENTO ==================== -->
+<section class="help-knowledge-base">
+  <h2 class="help-kb-title">Base de Conocimiento</h2>
+  
+  <div class="help-kb-grid">
+    <div class="help-kb-category" id="cuenta">
+      <h3>🔐 Tu Cuenta</h3>
+      <p>Todo sobre tu cuenta y perfil en OFFSZN</p>
+      <ul class="help-kb-links">
+        <li><a href="#" data-question="¿Cómo creo una cuenta en OFFSZN?">Crear tu cuenta</a></li>
+        <li><a href="#" data-question="¿Cómo recupero mi contraseña?">Recuperar contraseña</a></li>
+        <li><a href="#" data-question="¿Cómo edito mi perfil?">Editar tu perfil</a></li>
+        <li><a href="#" data-question="¿Cómo cambio mi correo electrónico?">Cambiar correo electrónico</a></li>
+        <li><a href="#" data-question="¿Cómo elimino mi cuenta?">Eliminar cuenta</a></li>
+      </ul>
+    </div>
+
+    <div class="help-kb-category" id="productos">
+      <h3>🎚️ Productos y Descargas</h3>
+      <p>Sobre presets, cursos y recursos</p>
+      <ul class="help-kb-links">
+        <li><a href="#" data-question="¿Dónde encuentro mis productos comprados?">Acceder a mis productos</a></li>
+        <li><a href="#" data-question="¿Cómo descargo mis presets?">Descargar presets</a></li>
+        <li><a href="#" data-question="¿Los presets funcionan en mi DAW?">Compatibilidad de presets</a></li>
+        <li><a href="#" data-question="¿Cómo instalo los presets?">Instalar presets</a></li>
+        <li><a href="#" data-question="¿Puedo compartir mis presets comprados?">Licencia de uso</a></li>
+      </ul>
+    </div>
+
+    <div class="help-kb-category" id="pagos">
+      <h3>💰 Pagos y Reembolsos</h3>
+      <p>Información sobre transacciones y pagos</p>
+      <ul class="help-kb-links">
+        <li><a href="#" data-question="¿Qué métodos de pago aceptan?">Métodos de pago</a></li>
+        <li><a href="#" data-question="¿Cómo uso una gift card?">Usar gift cards</a></li>
+        <li><a href="#" data-question="¿Puedo solicitar un reembolso?">Política de reembolsos</a></li>
+        <li><a href="#" data-question="¿Por qué fue rechazado mi pago?">Problemas con pagos</a></li>
+        <li><a href="#" data-question="¿Dónde está mi factura?">Descargar facturas</a></li>
+      </ul>
+    </div>
+
+    <div class="help-kb-category" id="cursos">
+      <h3>📚 Cursos y Aprendizaje</h3>
+      <p>Todo sobre nuestros cursos de producción</p>
+      <ul class="help-kb-links">
+        <li><a href="#" data-question="¿Cómo funcionan los cursos en vivo?">Clases en vivo</a></li>
+        <li><a href="#" data-question="¿Necesito experiencia previa?">Requisitos previos</a></li>
+        <li><a href="#" data-question="¿Qué incluye un curso?">Contenido del curso</a></li>
+        <li><a href="#" data-question="¿Puedo ver las clases grabadas?">Acceso a grabaciones</a></li>
+        <li><a href="#" data-question="¿Cómo agendo una clase?">Agendar clases</a></li>
+      </ul>
+    </div>
+
+    <div class="help-kb-category" id="tecnico">
+      <h3>🛠️ Soporte Técnico</h3>
+      <p>Soluciona problemas técnicos</p>
+      <ul class="help-kb-links">
+        <li><a href="#" data-question="No puedo iniciar sesión">Problemas de inicio de sesión</a></li>
+        <li><a href="#" data-question="No puedo descargar mis productos">Error al descargar</a></li>
+        <li><a href="#" data-question="El preset no suena igual">Preset suena diferente</a></li>
+        <li><a href="#" data-question="El sitio no carga correctamente">Problemas de carga</a></li>
+        <li><a href="#" data-question="Error durante el pago">Errores de pago</a></li>
+      </ul>
+    </div>
+
+    <div class="help-kb-category" id="politicas">
+      <h3>📋 Políticas y Términos</h3>
+      <p>Lee nuestras políticas y términos</p>
+      <ul class="help-kb-links">
+        <li><a href="/pages/terminos-de-servicio.html">Términos de servicio</a></li>
+        <li><a href="/pages/terminos-de-uso.html">Términos de uso</a></li>
+        <li><a href="/pages/politica-de-privacidad.html">Política de privacidad</a></li>
+        <li><a href="#" data-question="¿Cuáles son los derechos de autor?">Derechos de autor</a></li>
+        <li><a href="#" data-question="¿Puedo usar los presets comercialmente?">Uso comercial</a></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== CONTACTO ==================== -->
+<section class="help-contact-section">
+  <h2>¿No encuentras lo que buscas?</h2>
+  <p>Contáctanos directamente y te ayudaremos lo antes posible</p>
+  
+  <a href="mailto:offszn.studio@gmail.com" class="help-contact-email">
+    <i class="bi bi-envelope-fill"></i>
+    offszn.studio@gmail.com
+  </a>
+</section>
+
+<!-- ==================== FOOTER ==================== -->
+<footer class="footer">
+  <div class="footer-content">
+    <p>© 2025 OFFSZN</p>
+    <ul>
+      <li><a href="/pages/politica-de-privacidad.html">Política de Privacidad</a></li>
+      <li><a href="/pages/terminos-de-uso.html">Términos de Uso</a></li>
+      <li><a href="/pages/terminos-de-servicio.html">Términos de Servicio</a></li>
+      <li><a href="/pages/contacto.html">Contacto</a></li>
+    </ul>
+    <div class="footer-social">
+      <a href="https://wa.link/t89kep" target="_blank" rel="noopener noreferrer" title="WhatsApp">
+        <i class="bi bi-whatsapp"></i>
+      </a>
+      <a href="https://www.instagram.com/willieinspired/" target="_blank" rel="noopener noreferrer" title="Instagram">
+        <i class="bi bi-instagram"></i>
+      </a>
+      <a href="https://www.youtube.com/@willieinspired" target="_blank" rel="noopener noreferrer" title="YouTube">
+        <i class="bi bi-youtube"></i>
+      </a>
+    </div>
+  </div>
+</footer>
+
+<!-- ==================== SCRIPTS ==================== -->
+<script src="/script/menu.js"></script>
+
+<script>
+// Base de datos de preguntas y respuestas
+const knowledgeBase = {
+  // CUENTA
+  "¿Cómo creo una cuenta en OFFSZN?": "Para crear una cuenta, haz clic en 'Únete' en la esquina superior derecha y completa el formulario de registro con tu email y contraseña.",
+  "¿Cómo recupero mi contraseña?": "En la página de inicio de sesión, haz clic en '¿Olvidaste tu contraseña?' e ingresa tu email. Te enviaremos un enlace para resetearla.",
+  "¿Cómo edito mi perfil?": "Ve a tu cuenta haciendo clic en el ícono de usuario, luego selecciona 'Configuración' para editar tu información personal.",
+  "¿Cómo cambio mi correo electrónico?": "En Configuración > Cuenta, encontrarás la opción para actualizar tu dirección de email.",
+  "¿Cómo elimino mi cuenta?": "Contáctanos a offszn.studio@gmail.com para solicitar la eliminación de tu cuenta. Ten en cuenta que esto es permanente.",
