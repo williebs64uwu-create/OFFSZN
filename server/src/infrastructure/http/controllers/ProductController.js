@@ -4,18 +4,43 @@ import { supabase } from '../../database/connection.js';
 
 export const getAllProducts = async (req, res) => {
     try {
+        // --- ¡CONSULTA CORREGIDA V3! (Usando el nombre de la Foreign Key) ---
         const { data, error } = await supabase
             .from('products')
-            .select('*');
+            // Le decimos a Supabase que use la "relación" llamada 'products_producer_id_fkey'
+            // para traer los datos de 'users'.
+            .select(`
+                *, 
+                users!products_producer_id_fkey ( nickname ) 
+            `)
+            .eq('status', 'approved');
 
         if (error) {
+            // Si esto vuelve a fallar, el error saldrá aquí
+            console.error("Error en getAllProducts (JOIN v3):", error.message);
             throw error;
         }
 
-        res.status(200).json(data);
+        // --- APLANAR LOS DATOS ---
+        // Con esta sintaxis, los datos del productor vienen en un objeto 'users'
+        const formattedData = data.map(product => {
+            const producerNickname = (product.users && product.users.nickname)
+                ? product.users.nickname
+                : 'Anónimo';
+
+            // Creamos un nuevo objeto limpio para el frontend
+            delete product.users; // Quitamos el objeto anidado 'users'
+
+            return {
+                ...product,
+                producer_nickname: producerNickname
+            };
+        });
+
+        res.status(200).json(formattedData); // Enviamos la data formateada
 
     } catch (err) {
-        console.error("Error en getAllProducts:", err.message);
+        console.error("Error en getAllProducts (catch):", err.message);
         res.status(500).json({ error: err.message || 'Error al obtener los productos' });
     }
 };

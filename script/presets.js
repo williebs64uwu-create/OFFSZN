@@ -46,34 +46,70 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
-      let productHTML = '';
+      productGrid.innerHTML = '';
       allProducts.forEach(product => {
         const isPurchased = purchasedProductIds.has(product.id);
 
-        productHTML += `
-          <div class="product-card ${isPurchased ? 'purchased' : ''}">
-            <img src="${product.image_url}" alt="${product.name}">
-            <div class="product-content">
-              <h3>${product.name}</h3>
-              <p>${product.description}</p>
-              <div class="product-price">$${product.price}</div>
+        const card = document.createElement('div');
+        card.className = `product-card ${isPurchased ? 'purchased' : ''}`;
 
-              ${isPurchased
-            ? `<div class="purchased-badge"><i class="bi bi-check-circle-fill"></i> Adquirido</div>`
-            : `
-                  <button class="btn btn-add-to-cart" data-product-id="${product.id}">
-                    <i class="bi bi-cart-plus"></i> Añadir al Carrito
-                  </button>
-                  <div class="paypal-button-container" data-product-id="${product.id}"></div>
-                `
+        const img = document.createElement('img');
+        img.src = product.image_url;
+        img.alt = product.name;
+        const content = document.createElement('div');
+        content.className = 'product-content';
+
+        const title = document.createElement('h3');
+        title.textContent = product.name;
+
+        const description = document.createElement('p');
+        description.textContent = product.description;
+
+        const price = document.createElement('div');
+        price.className = 'product-price';
+
+        if (product.is_free) {
+          price.textContent = 'Gratis';
+          price.classList.add('free-price');
+        } else {
+          const prices = [
+            product.price_basic,
+            product.price_premium,
+            product.price_stems,
+            product.price_exclusive
+          ].filter(p => p > 0);
+
+          if (prices.length > 0) {
+            const lowestPrice = Math.min(...prices);
+            price.textContent = `Desde $${lowestPrice.toFixed(2)}`;
+          } else {
+            price.textContent = 'No disponible';
           }
+        }
+        content.append(title);
+        content.append(description);
+        content.append(price);
 
-            </div>
-          </div>
-        `;
+
+        if (isPurchased) {
+          content.innerHTML += `
+            <div class="purchased-badge">
+                <i class="bi bi-check-circle-fill"></i> Adquirido
+            </div>`;
+        } else {
+          content.innerHTML += `
+              <button class="btn btn-add-to-cart" data-product-id="${product.id}">
+                <i class="bi bi-cart-plus"></i> Añadir al Carrito
+              </button>
+              <div class="paypal-button-container" data-product-id="${product.id}"></div>
+          `;
+        }
+
+        card.append(img);
+        card.append(content);
+
+        productGrid.append(card);
       });
-
-      productGrid.innerHTML = productHTML;
 
       initializePayPalButtons();
       addCartButtonListeners();
