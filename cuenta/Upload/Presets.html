@@ -1,0 +1,1212 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Sube y comparte tus presets de FL Studio con la comunidad de OFFSZN">
+    <title>Subir Preset - OFFSZN</title>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0a0a0a;
+            color: #e5e5e5;
+            overflow-x: hidden;
+        }
+
+        /* ===== NAVBAR (NO TOCAR) ===== */
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 3rem;
+            background: rgba(0, 0, 0, .98);
+            position: sticky;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+            border-bottom: 1px solid rgba(255, 255, 255, .08);
+            backdrop-filter: blur(20px);
+        }
+        .navbar .logo a {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #fff;
+            text-decoration: none;
+            letter-spacing: -.5px;
+        }
+        .navbar-center {
+            display: flex;
+            align-items: center;
+            gap: 2.5rem;
+        }
+        .navbar-links {
+            list-style: none;
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+        .navbar-links li {
+            position: relative;
+        }
+        .navbar-links a {
+            color: #999;
+            text-decoration: none;
+            transition: all .2s;
+            font-weight: 500;
+            font-size: .9rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+        }
+        .navbar-links a:hover {
+            color: #fff;
+        }
+        .navbar-links > li > a > i {
+            font-size: .7rem;
+            transition: transform .2s;
+        }
+        .dropdown-menu {
+            position: absolute;
+            top: calc(100% + 12px);
+            left: 50%;
+            transform: translateX(-50%) translateY(-10px);
+            background: rgba(20, 20, 20, .98);
+            border: 1px solid rgba(255, 255, 255, .1);
+            border-radius: 12px;
+            padding: 8px;
+            min-width: 240px;
+            opacity: 0;
+            visibility: hidden;
+            transition: all .3s ease;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, .5);
+            backdrop-filter: blur(20px);
+            z-index: 1001;
+        }
+        .navbar-links li:hover .dropdown-menu {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(0);
+        }
+        .navbar-links > li:hover > a > i {
+            transform: rotate(180deg);
+        }
+        .dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 14px;
+            color: #999;
+            text-decoration: none;
+            font-size: .85rem;
+            border-radius: 8px;
+            transition: all .2s;
+            font-weight: 500;
+        }
+        .dropdown-item:hover {
+            background: rgba(139, 92, 246, .1);
+            color: #fff;
+        }
+        .dropdown-item i {
+            width: 20px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+        .dropdown-divider {
+            height: 1px;
+            background: rgba(255, 255, 255, .08);
+            margin: 8px 0;
+        }
+        .navbar-search {
+            position: relative;
+            width: 380px;
+        }
+        .navbar-search input {
+            width: 100%;
+            padding: .6rem 2.5rem .6rem 1rem;
+            background: rgba(255, 255, 255, .05);
+            border: 1px solid rgba(255, 255, 255, .1);
+            border-radius: 8px;
+            color: #fff;
+            font-size: .85rem;
+            outline: none;
+            transition: all .2s;
+        }
+        .navbar-search input:focus {
+            background: rgba(255, 255, 255, .08);
+            border-color: rgba(139, 92, 246, .5);
+        }
+        .navbar-search input::placeholder {
+            color: #666;
+        }
+        .navbar-search i {
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #666;
+            font-size: .9rem;
+        }
+        .navbar-right {
+            display: flex;
+            gap: .75rem;
+            align-items: center;
+        }
+        .navbar-icon-button {
+            width: 36px;
+            height: 36px;
+            background: rgba(255, 255, 255, .05);
+            border: 1px solid rgba(255, 255, 255, .1);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #999;
+            font-size: 16px;
+            transition: all .2s;
+            text-decoration: none;
+            position: relative;
+        }
+        .navbar-icon-button:hover {
+            background: rgba(255, 255, 255, .08);
+            color: #fff;
+            border-color: rgba(255, 255, 255, .15);
+        }
+        .user-dropdown {
+            position: relative;
+        }
+        .user-dropdown-menu {
+            position: absolute;
+            top: calc(100% + 12px);
+            right: 0;
+            background: rgba(20, 20, 20, .98);
+            border: 1px solid rgba(255, 255, 255, .1);
+            border-radius: 12px;
+            padding: 12px;
+            min-width: 260px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all .3s ease;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, .5);
+            backdrop-filter: blur(20px);
+        }
+        .user-dropdown.active .user-dropdown-menu {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+        .user-dropdown-header {
+            padding: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, .08);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .user-dropdown-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #8b5cf6, #6366f1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1rem;
+            color: #fff;
+        }
+        .user-dropdown-info {
+            flex: 1;
+        }
+        .user-dropdown-name {
+            font-weight: 600;
+            color: #fff;
+            font-size: .9rem;
+            margin-bottom: 2px;
+        }
+        .user-dropdown-email {
+            font-size: .75rem;
+            color: #666;
+        }
+        .user-dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            color: #999;
+            text-decoration: none;
+            font-size: .85rem;
+            border-radius: 8px;
+            transition: all .2s;
+            font-weight: 500;
+        }
+        .user-dropdown-item:hover {
+            background: rgba(139, 92, 246, .1);
+            color: #fff;
+        }
+        .user-dropdown-item i {
+            width: 18px;
+            text-align: center;
+        }
+        .user-dropdown-item.logout {
+            color: #ef4444;
+            margin-top: 8px;
+            border-top: 1px solid rgba(255, 255, 255, .08);
+            padding-top: 12px;
+        }
+        .user-dropdown-item.logout:hover {
+            background: rgba(239, 68, 68, .1);
+        }
+
+        /* ===== MAIN CONTENT ===== */
+        .main-content {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 48px 32px 80px;
+        }
+        .page-header {
+            margin-bottom: 40px;
+        }
+        .page-title {
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: #fff;
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
+        }
+        .page-subtitle {
+            font-size: 1rem;
+            color: #666;
+        }
+
+        /* ===== FORM SECTIONS ===== */
+        .form-section {
+            background: rgba(20, 20, 20, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 32px;
+            margin-bottom: 32px;
+            backdrop-filter: blur(10px);
+        }
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 28px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .section-icon {
+            width: 36px;
+            height: 36px;
+            background: rgba(139, 92, 246, 0.15);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #a78bfa;
+            font-size: 1rem;
+        }
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        /* ===== GRID LAYOUTS ===== */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 28px;
+        }
+        .grid-1 {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 24px;
+        }
+
+        /* ===== INPUTS ===== */
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-label {
+            display: block;
+            font-size: 0.92rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #ccc;
+        }
+        .required {
+            color: #ef4444;
+        }
+        .form-input, .form-textarea, .form-select {
+            width: 100%;
+            padding: 14px 16px;
+            background: rgba(30, 30, 30, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 10px;
+            color: #fff;
+            font-size: 0.95rem;
+            outline: none;
+            transition: all 0.25s;
+        }
+        .form-input:focus, .form-textarea:focus, .form-select:focus {
+            border-color: #8b5cf6;
+            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
+        }
+        .form-input::placeholder, .form-textarea::placeholder {
+            color: #666;
+        }
+        .form-textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+        .char-count {
+            text-align: right;
+            font-size: 0.85rem;
+            color: #777;
+            margin-top: 6px;
+        }
+
+        /* ===== FILE UPLOAD ===== */
+        .file-upload {
+            background: rgba(30, 30, 30, 0.5);
+            border: 2px dashed rgba(139, 92, 246, 0.3);
+            border-radius: 14px;
+            padding: 32px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .file-upload:hover {
+            background: rgba(30, 30, 30, 0.7);
+            border-color: #8b5cf6;
+        }
+        .file-icon {
+            font-size: 2.8rem;
+            color: #8b5cf6;
+            margin-bottom: 14px;
+        }
+        .file-title {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #fff;
+        }
+        .file-hint {
+            font-size: 0.85rem;
+            color: #777;
+        }
+        .file-info {
+            margin-top: 20px;
+            padding-top: 16px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 0.9rem;
+            color: #a78bfa;
+        }
+
+        /* ===== MULTI SELECT ===== */
+        .multi-select {
+            position: relative;
+        }
+        .select-display {
+            min-height: 52px;
+            padding: 12px 14px;
+            background: rgba(30, 30, 30, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 10px;
+            cursor: pointer;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+            transition: all 0.25s;
+        }
+        .select-display:hover {
+            background: rgba(30, 30, 30, 0.8);
+        }
+        .select-placeholder {
+            color: #777;
+        }
+        .select-tag {
+            background: rgba(139, 92, 246, 0.2);
+            color: #c4b5fd;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .tag-remove {
+            cursor: pointer;
+            width: 18px;
+            height: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: rgba(196, 181, 253, 0.2);
+        }
+        .select-dropdown {
+            position: absolute;
+            top: calc(100% + 8px);
+            left: 0;
+            right: 0;
+            background: rgba(20, 20, 20, 0.95);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            border-radius: 10px;
+            padding: 10px;
+            max-height: 300px;
+            overflow-y: auto;
+            z-index: 100;
+            display: none;
+            backdrop-filter: blur(10px);
+        }
+        .select-dropdown.show {
+            display: block;
+        }
+        .select-option {
+            padding: 10px 14px;
+            cursor: pointer;
+            border-radius: 8px;
+            color: #ccc;
+        }
+        .select-option:hover {
+            background: rgba(139, 92, 246, 0.15);
+            color: #fff;
+        }
+        .select-option.selected {
+            background: rgba(139, 92, 246, 0.25);
+            color: #c4b5fd;
+        }
+
+        /* ===== MONETIZACIÓN ===== */
+        .license-item {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding: 20px;
+            background: rgba(30, 30, 30, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 14px;
+            transition: all 0.2s;
+        }
+        .license-item.active {
+            border-color: #8b5cf6;
+            background: rgba(139, 92, 246, 0.1);
+        }
+        .license-toggle {
+            width: 50px;
+            height: 28px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 14px;
+            position: relative;
+            cursor: pointer;
+        }
+        .license-item.active .license-toggle {
+            background: #8b5cf6;
+        }
+        .license-toggle::before {
+            content: '';
+            position: absolute;
+            width: 22px;
+            height: 22px;
+            background: #fff;
+            border-radius: 50%;
+            top: 3px;
+            left: 3px;
+            transition: all 0.25s;
+        }
+        .license-item.active .license-toggle::before {
+            left: 25px;
+        }
+        .license-details {
+            flex: 1;
+        }
+        .license-name {
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 4px;
+        }
+        .license-desc {
+            font-size: 0.88rem;
+            color: #888;
+        }
+        .license-price {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .price-input {
+            width: 120px;
+            padding: 10px 12px;
+            background: rgba(30, 30, 30, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 8px;
+            color: #fff;
+            text-align: right;
+            font-weight: 600;
+        }
+        .free-section {
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            margin-top: 20px;
+        }
+        .free-section p {
+            font-size: 1.1rem;
+            color: #86efac;
+            font-weight: 600;
+        }
+        .original-price {
+            text-decoration: line-through;
+            color: #666;
+            margin-right: 10px;
+        }
+
+        /* ===== COLABORADORES ===== */
+        .collab-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px;
+            background: rgba(30, 30, 30, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            margin-bottom: 12px;
+        }
+        .collab-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #8b5cf6, #6366f1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            color: #fff;
+        }
+        .collab-input {
+            width: 90px;
+            padding: 8px;
+            background: rgba(30, 30, 30, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 6px;
+            color: #fff;
+            text-align: center;
+        }
+        .remove-collab {
+            background: none;
+            border: none;
+            color: #ef4444;
+            font-size: 1.3rem;
+            cursor: pointer;
+        }
+        .percentage-display {
+            padding: 14px;
+            background: rgba(139, 92, 246, 0.15);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            border-radius: 10px;
+            text-align: center;
+            font-weight: 600;
+            color: #c4b5fd;
+        }
+        .percentage-display.error {
+            background: rgba(239, 68, 68, 0.15);
+            border-color: rgba(239, 68, 68, 0.4);
+            color: #fca5a5;
+        }
+
+        /* ===== CHECKBOX ===== */
+        .checkbox-field {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 16px;
+            background: rgba(30, 30, 30, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            cursor: pointer;
+        }
+        .checkbox-field input[type="checkbox"] {
+            accent-color: #8b5cf6;
+            margin-top: 4px;
+        }
+        .checkbox-text {
+            font-size: 0.95rem;
+            color: #ccc;
+        }
+
+        /* ===== ERROR ===== */
+        .error-msg {
+            color: #ef4444;
+            font-size: 0.85rem;
+            margin-top: 8px;
+            display: none;
+        }
+        .error-msg.show {
+            display: block;
+        }
+
+        /* ===== ACTIONS ===== */
+        .form-actions {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            margin-top: 50px;
+            padding-top: 30px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .btn {
+            padding: 14px 32px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s;
+        }
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.08);
+            color: #aaa;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+        .btn-outline {
+            background: transparent;
+            color: #a78bfa;
+            border: 1px solid rgba(139, 92, 246, 0.4);
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+            color: #fff;
+            box-shadow: 0 4px 20px rgba(139, 92, 246, 0.3);
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(139, 92, 246, 0.4);
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 900px) {
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+            .navbar-center {
+                display: none;
+            }
+            .main-content {
+                padding: 32px 20px;
+            }
+            .form-section {
+                padding: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- NAVBAR (NO TOCAR) -->
+    <nav class="navbar">
+        <div class="logo"><a href="../dashboard.html">OFFSZN</a></div>
+        <div class="navbar-center">
+            <ul class="navbar-links">
+                <li><a href="../dashboard.html">INICIO</a></li>
+                <li>
+                    <a>RECURSOS <i class="fas fa-chevron-down"></i></a>
+                    <div class="dropdown-menu">
+                        <a href="../../beats.html" class="dropdown-item">
+                            <i class="fas fa-music"></i>
+                            <span>Beats & Instrumentales</span>
+                        </a>
+                        <a href="../../drum-kits.html" class="dropdown-item">
+                            <i class="fas fa-drum"></i>
+                            <span>Drum Kits</span>
+                        </a>
+                        <a href="../../presets.html" class="dropdown-item">
+                            <i class="fas fa-sliders-h"></i>
+                            <span>Presets & Plugins</span>
+                        </a>
+                        <a href="../../samples.html" class="dropdown-item">
+                            <i class="fas fa-wave-square"></i>
+                            <span>Samples & Loops</span>
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a href="../../free-resources.html" class="dropdown-item">
+                            <i class="fas fa-gift"></i>
+                            <span>Recursos Gratis</span>
+                        </a>
+                    </div>
+                </li>
+                <li>
+                    <a>COMUNIDAD <i class="fas fa-chevron-down"></i></a>
+                    <div class="dropdown-menu">
+                        <a href="../feed.html" class="dropdown-item">
+                            <i class="fas fa-home"></i>
+                            <span>Feed</span>
+                        </a>
+                        <a href="../../productores.html" class="dropdown-item">
+                            <i class="fas fa-users"></i>
+                            <span>Productores</span>
+                        </a>
+                        <a href="../colaboraciones.html" class="dropdown-item">
+                            <i class="fas fa-handshake"></i>
+                            <span>Colaboraciones</span>
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a href="../../foros.html" class="dropdown-item">
+                            <i class="fas fa-comments"></i>
+                            <span>Foros</span>
+                        </a>
+                        <a href="../../eventos.html" class="dropdown-item">
+                            <i class="fas fa-calendar"></i>
+                            <span>Eventos</span>
+                        </a>
+                    </div>
+                </li>
+            </ul>
+            <div class="navbar-search">
+                <input type="text" placeholder="Buscar beats, kits, presets...">
+                <i class="fas fa-search"></i>
+            </div>
+        </div>
+        <div class="navbar-right">
+            <a href="../notifications.html" class="navbar-icon-button"><i class="fas fa-bell"></i></a>
+            <a href="../../cart.html" class="navbar-icon-button"><i class="fas fa-shopping-cart"></i></a>
+            <div class="user-dropdown">
+                <div class="navbar-icon-button" onclick="toggleUserDropdown()"><i class="fas fa-user"></i></div>
+                <div class="user-dropdown-menu">
+                    <div class="user-dropdown-header">
+                        <div class="user-dropdown-avatar">U</div>
+                        <div class="user-dropdown-info">
+                            <div class="user-dropdown-name">Usuario</div>
+                            <div class="user-dropdown-email">usuario@offszn.com</div>
+                        </div>
+                    </div>
+                    <a href="../profile.html" class="user-dropdown-item"><i class="fas fa-user-circle"></i><span>Mi Perfil</span></a>
+                    <a href="../dashboard.html" class="user-dropdown-item"><i class="fas fa-th-large"></i><span>Dashboard</span></a>
+                    <a href="../wallet.html" class="user-dropdown-item"><i class="fas fa-wallet"></i><span>Billetera</span></a>
+                    <a href="../account-settings.html" class="user-dropdown-item"><i class="fas fa-cog"></i><span>Configuración</span></a>
+                    <a href="../logout.html" class="user-dropdown-item logout"><i class="fas fa-sign-out-alt"></i><span>Cerrar Sesión</span></a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+        <header class="page-header">
+            <h1 class="page-title">Subir Preset</h1>
+            <p class="page-subtitle">Solo para FL Studio (.flp, .fst, .rar)</p>
+        </header>
+
+        <form id="uploadForm" novalidate>
+            <!-- INFORMACIÓN BÁSICA -->
+            <section class="form-section">
+                <div class="section-header">
+                    <div class="section-icon"><i class="fas fa-sliders-h"></i></div>
+                    <h2 class="section-title">Información Básica</h2>
+                </div>
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label class="form-label">Nombre del Preset <span class="required">*</span></label>
+                        <input type="text" id="titleInput" class="form-input" placeholder="Ej: Dark 808 Bass - FLP" maxlength="50">
+                        <div class="error-msg" id="titleError">Este campo es obligatorio.</div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Descripción</label>
+                        <textarea id="descInput" class="form-textarea" placeholder="Describe tu preset..." maxlength="500"></textarea>
+                        <div class="char-count"><span id="charCount">0</span> / 500</div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Plugin compatible</label>
+                    <input type="text" id="pluginInput" class="form-input" value="FL Studio" readonly>
+                </div>
+            </section>
+
+            <!-- ARCHIVOS -->
+            <section class="form-section">
+                <div class="section-header">
+                    <div class="section-icon"><i class="fas fa-file"></i></div>
+                    <h2 class="section-title">Archivos del Preset</h2>
+                </div>
+                <div class="file-upload" id="fileDrop" onclick="document.getElementById('presetInput').click()">
+                    <i class="fas fa-cloud-upload-alt file-icon"></i>
+                    <h3 class="file-title">Subir Preset <span class="required">*</span></h3>
+                    <p class="file-hint">Formatos aceptados: .flp, .fst, .rar (máx. 10 MB)</p>
+                    <input type="file" id="presetInput" style="display: none;" accept=".flp,.fst,.rar">
+                    <div class="file-info" id="fileInfo" style="display: none;"></div>
+                </div>
+                <div class="error-msg" id="fileError">Debes subir un archivo válido.</div>
+            </section>
+
+            <!-- METADATOS -->
+            <section class="form-section">
+                <div class="section-header">
+                    <div class="section-icon"><i class="fas fa-tags"></i></div>
+                    <h2 class="section-title">Metadatos</h2>
+                </div>
+                <div class="grid-1">
+                    <!-- Categoría -->
+                    <div class="form-group">
+                        <label class="form-label">Categoría</label>
+                        <div class="multi-select">
+                            <div class="select-display" id="categoryDisplay" onclick="toggleDropdown('category')">
+                                <span class="select-placeholder">Selecciona una categoría</span>
+                            </div>
+                            <div class="select-dropdown" id="categoryDropdown">
+                                <div id="categoryOptions"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Versión FL Studio -->
+                    <div class="form-group">
+                        <label class="form-label">Versión de FL Studio Compatible</label>
+                        <div class="multi-select">
+                            <div class="select-display" id="versionDisplay" onclick="toggleDropdown('version')">
+                                <span class="select-placeholder">Selecciona versiones</span>
+                            </div>
+                            <div class="select-dropdown" id="versionDropdown">
+                                <div id="versionOptions"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Géneros -->
+                    <div class="form-group">
+                        <label class="form-label">Géneros <span class="required">*</span></label>
+                        <div class="multi-select">
+                            <div class="select-display" id="genresDisplay" onclick="toggleDropdown('genres')">
+                                <span class="select-placeholder">Selecciona géneros</span>
+                            </div>
+                            <div class="select-dropdown" id="genresDropdown">
+                                <div id="genresOptions"></div>
+                            </div>
+                        </div>
+                        <div class="error-msg" id="genresError">Selecciona al menos un género.</div>
+                    </div>
+
+                    <!-- Mood -->
+                    <div class="form-group">
+                        <label class="form-label">Mood</label>
+                        <div class="multi-select">
+                            <div class="select-display" id="moodDisplay" onclick="toggleDropdown('mood')">
+                                <span class="select-placeholder">Selecciona mood</span>
+                            </div>
+                            <div class="select-dropdown" id="moodDropdown">
+                                <div id="moodOptions"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="checkbox-field" onclick="document.getElementById('thirdPartyCheckbox').click()">
+                    <input type="checkbox" id="thirdPartyCheckbox">
+                    <span class="checkbox-text">Este preset usa samples o bancos de terceros</span>
+                </div>
+            </section>
+
+            <!-- MONETIZACIÓN -->
+            <section class="form-section">
+                <div class="section-header">
+                    <div class="section-icon"><i class="fas fa-dollar-sign"></i></div>
+                    <h2 class="section-title">Monetización</h2>
+                </div>
+                <div class="form-group">
+                    <div class="checkbox-field" onclick="toggleFreeMode()">
+                        <input type="checkbox" id="freeCheckbox">
+                        <span class="checkbox-text"><strong>Ofrecer gratis (requiere email del usuario)</strong></span>
+                    </div>
+                </div>
+
+                <div id="licensesSection">
+                    <div class="license-item active" data-license="personal" onclick="toggleLicense('personal')">
+                        <div class="license-toggle"></div>
+                        <div class="license-details">
+                            <div class="license-name">Uso Personal</div>
+                            <div class="license-desc">Solo para uso propio, sin distribución</div>
+                        </div>
+                        <div class="license-price">
+                            <span>$</span>
+                            <input type="number" class="price-input" id="pricePersonal" value="15.00" min="1" max="1000" step="0.01">
+                        </div>
+                    </div>
+                    <div class="license-item active" data-license="commercial" onclick="toggleLicense('commercial')">
+                        <div class="license-toggle"></div>
+                        <div class="license-details">
+                            <div class="license-name">Uso Comercial</div>
+                            <div class="license-desc">Incluye uso en lanzamientos comerciales</div>
+                        </div>
+                        <div class="license-price">
+                            <span>$</span>
+                            <input type="number" class="price-input" id="priceCommercial" value="30.00" min="1" max="1000" step="0.01">
+                        </div>
+                    </div>
+                </div>
+
+                <div id="freePreview" class="free-section" style="display: none;">
+                    <p><span class="original-price">Antes: $<span id="originalPrice">30.00</span></span> — Ahora: <strong>GRATIS</strong></p>
+                </div>
+            </section>
+
+            <!-- COLABORADORES -->
+            <section class="form-section">
+                <div class="section-header">
+                    <div class="section-icon"><i class="fas fa-users"></i></div>
+                    <h2 class="section-title">Colaboradores</h2>
+                </div>
+                <div class="form-group">
+                    <input type="text" id="collabInput" class="form-input" placeholder="Escribe '@willieinspired' (solo usuarios verificados)">
+                </div>
+                <div id="collabList"></div>
+                <div class="percentage-display" id="percentageDisplay">Tu porcentaje: <strong>100%</strong></div>
+            </section>
+
+            <!-- PUBLICACIÓN -->
+            <section class="form-section">
+                <div class="section-header">
+                    <div class="section-icon"><i class="fas fa-calendar"></i></div>
+                    <h2 class="section-title">Publicación</h2>
+                </div>
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label class="form-label">Visibilidad</label>
+                        <select id="visibilitySelect" class="form-select">
+                            <option value="public">Público</option>
+                            <option value="unlisted">No listado</option>
+                            <option value="private">Privado</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Fecha de Publicación</label>
+                        <input type="datetime-local" id="dateInput" class="form-input">
+                        <div class="error-msg" id="dateError">La fecha no puede ser en el pasado.</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- BOTONES -->
+            <div class="form-actions">
+                <a href="../dashboard.html" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Cancelar
+                </a>
+                <button type="button" class="btn btn-outline">
+                    <i class="fas fa-save"></i> Guardar Borrador
+                </button>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-cloud-upload-alt"></i> Publicar Preset
+                </button>
+            </div>
+        </form>
+    </main>
+
+    <script>
+        // ===== DATOS =====
+        const CATEGORIES = ['808', 'Bass', 'Lead', 'Pad', 'Piano', 'Vocal', 'FX', 'Drum Kit'];
+        const VERSIONS = ['FL Studio 20', 'FL Studio 21', 'FL Studio 24', 'FL Studio 25'];
+        const GENRES = ['Trap', 'Hip Hop', 'R&B', 'Pop', 'Electronic', 'Lo-Fi', 'Drill', 'Afrobeats'];
+        const MOODS = ['Agresivo', 'Triste', 'Feliz', 'Romántico', 'Relajado', 'Motivador', 'Oscuro', 'Épico'];
+
+        const state = {
+            categories: [],
+            versions: [],
+            genres: [],
+            moods: [],
+            collaborators: [{ name: 'willieinspired', percentage: 0 }], // Solo permitido por ahora
+            licenseActive: { personal: true, commercial: true },
+            isFree: false,
+            file: null
+        };
+
+        // ===== RENDER OPTIONS =====
+        function renderOptions(type, list) {
+            const container = document.getElementById(`${type}Options`);
+            container.innerHTML = list.map(item => 
+                `<div class="select-option" data-value="${item}">${item}</div>`
+            ).join('');
+            container.addEventListener('click', (e) => {
+                if (e.target.classList.contains('select-option')) {
+                    toggleSelection(type, e.target.dataset.value);
+                }
+            });
+        }
+
+        // ===== TOGGLE SELECTION =====
+        function toggleSelection(type, value) {
+            const limits = { categories: 1, versions: 4, genres: 3, moods: 5 };
+            const arr = state[type];
+            const idx = arr.indexOf(value);
+            if (idx > -1) {
+                arr.splice(idx, 1);
+            } else if (arr.length < (limits[type] || 5)) {
+                arr.push(value);
+            }
+            updateDisplay(type);
+        }
+
+        function updateDisplay(type) {
+            const display = document.getElementById(`${type}Display`);
+            const arr = state[type];
+            if (arr.length) {
+                display.innerHTML = arr.map(item => 
+                    `<span class="select-tag">${item}<span class="tag-remove" onclick="removeTag('${type}', '${item}', event)">×</span></span>`
+                ).join('');
+            } else {
+                display.innerHTML = `<span class="select-placeholder">Selecciona ${type === 'genres' ? 'géneros' : type}</span>`;
+            }
+        }
+
+        function removeTag(type, value, e) {
+            e.stopPropagation();
+            const idx = state[type].indexOf(value);
+            if (idx > -1) state[type].splice(idx, 1);
+            updateDisplay(type);
+        }
+
+        // ===== DROPDOWNS =====
+        function toggleDropdown(type) {
+            const dropdown = document.getElementById(`${type}Dropdown`);
+            dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+        }
+
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.multi-select')) {
+                document.querySelectorAll('.select-dropdown').forEach(d => d.style.display = 'none');
+            }
+        });
+
+        // ===== FILE HANDLING =====
+        document.getElementById('presetInput').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const validExts = ['flp', 'fst', 'rar'];
+            const ext = file.name.split('.').pop().toLowerCase();
+            if (!validExts.includes(ext)) {
+                document.getElementById('fileError').classList.add('show');
+                return;
+            }
+
+            if (file.size > 10 * 1024 * 1024) {
+                document.getElementById('fileError').textContent = 'El archivo no puede superar los 10 MB.';
+                document.getElementById('fileError').classList.add('show');
+                return;
+            }
+
+            document.getElementById('fileError').classList.remove('show');
+            state.file = file;
+            document.getElementById('fileInfo').innerHTML = `<strong>${file.name}</strong> • ${(file.size / (1024*1024)).toFixed(2)} MB`;
+            document.getElementById('fileInfo').style.display = 'block';
+        });
+
+        // ===== FREE MODE =====
+        function toggleFreeMode() {
+            state.isFree = !state.isFree;
+            document.getElementById('freeCheckbox').checked = state.isFree;
+            document.getElementById('licensesSection').style.display = state.isFree ? 'none' : 'block';
+            document.getElementById('freePreview').style.display = state.isFree ? 'block' : 'none';
+            if (state.isFree) {
+                document.getElementById('originalPrice').textContent = document.getElementById('priceCommercial').value;
+            }
+        }
+
+        // ===== CHAR COUNT =====
+        document.getElementById('descInput').addEventListener('input', (e) => {
+            document.getElementById('charCount').textContent = e.target.value.length;
+        });
+
+        // ===== COLABORADORES (SOLO @willieinspired POR AHORA) =====
+        document.getElementById('collabInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const value = e.target.value.trim().toLowerCase();
+                if (value === '@willieinspired') {
+                    if (state.collaborators.length === 1 && state.collaborators[0].name === 'willieinspired') {
+                        alert('Ya está agregado.');
+                    } else {
+                        state.collaborators = [{ name: 'willieinspired', percentage: 0 }];
+                        renderCollaborators();
+                    }
+                } else {
+                    alert('Solo se permite @willieinspired por ahora.');
+                }
+                e.target.value = '';
+            }
+        });
+
+        function renderCollaborators() {
+            const list = document.getElementById('collabList');
+            const collab = state.collaborators[0];
+            list.innerHTML = `
+                <div class="collab-item">
+                    <div class="collab-avatar">W</div>
+                    <div style="flex:1;">${collab.name}</div>
+                    <input type="number" class="collab-input" value="${collab.percentage}" min="0" max="100" onchange="updatePercentage(this.value)">
+                    <span>%</span>
+                    <button class="remove-collab" onclick="removeCollab()">×</button>
+                </div>
+            `;
+            updatePercentageDisplay();
+        }
+
+        function updatePercentage(value) {
+            state.collaborators[0].percentage = parseInt(value) || 0;
+            updatePercentageDisplay();
+        }
+
+        function removeCollab() {
+            state.collaborators = [];
+            document.getElementById('collabList').innerHTML = '';
+            updatePercentageDisplay();
+        }
+
+        function updatePercentageDisplay() {
+            const yourPerc = 100 - (state.collaborators[0]?.percentage || 0);
+            const display = document.getElementById('percentageDisplay');
+            if (yourPerc < 0) {
+                display.classList.add('error');
+                display.innerHTML = `Error: Total > 100%`;
+            } else {
+                display.classList.remove('error');
+                display.innerHTML = `Tu porcentaje: <strong>${yourPerc}%</strong>`;
+            }
+        }
+
+        // ===== INITIALIZE =====
+        document.addEventListener('DOMContentLoaded', () => {
+            renderOptions('category', CATEGORIES);
+            renderOptions('version', VERSIONS);
+            renderOptions('genres', GENRES);
+            renderOptions('mood', MOODS);
+
+            // Set current datetime
+            const now = new Date();
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+            document.getElementById('dateInput').value = now.toISOString().slice(0, 16);
+            document.getElementById('dateInput').min = now.toISOString().slice(0, 16);
+        });
+
+        function toggleUserDropdown() {
+            document.querySelector('.user-dropdown')?.classList.toggle('active');
+        }
+    </script>
+</body>
+</html>
