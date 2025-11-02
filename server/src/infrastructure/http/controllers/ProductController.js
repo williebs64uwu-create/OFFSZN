@@ -1,12 +1,12 @@
 import { supabase } from '../../database/connection.js';
-import { v4 as uuidv4 } from 'uuid';
-import path from 'path';
+//import { v4 as uuidv4 } from 'uuid';
+//import path from 'path';
 
 export const getAllProducts = async (req, res) => {
     try {
         const { data, error } = await supabase
             .from('products')
-            .select('*'); 
+            .select('*');
 
         if (error) {
             throw error;
@@ -23,60 +23,54 @@ export const getAllProducts = async (req, res) => {
 export const createProduct = async (req, res) => {
     try {
         const userId = req.user.userId;
-        const { name, description, price_usd, price_pen, product_type, bpm, key, tags } = req.body;
-        const productFile = req.file;
+        const {
+            title,
+            description,
+            key,
+            bpm,
+            tags,
+            genres,
+            moods,
+            isFree,
+            licenses,
+            artwork_url,
+            mp3_url,
+            wav_url,
+            stems_url,
+            product_type
+        } = req.body;
+        //const productFile = req.file;
 
-        if (!name || !price_usd || !product_type || !productFile) {
-            return res.status(400).json({ error: 'Nombre, precio USD, tipo y archivo son requeridos.' });
+        if (!title || !genres || !artwork_url) {
+            return res.status(400).json({ error: 'Faltan datos clave (título, género o portada).' });
         }
-        if (isNaN(parseFloat(price_usd)) || parseFloat(price_usd) < 0) {
-             return res.status(400).json({ error: 'Precio USD inválido.' });
+        // Si no es gratis, DEBE tener un MP3
+        if (isFree === false && !mp3_url) {
+            return res.status(400).json({ error: 'Un producto de pago debe tener un archivo MP3.' });
         }
-
-        const fileExt = path.extname(productFile.originalname);
-        const fileName = `${uuidv4()}${fileExt}`;
-        const filePath = `${userId}/${fileName}`; 
-
-        console.log(`Subiendo archivo a Storage: ${filePath}`);
-
-        const { data: uploadData, error: uploadError } = await supabase.storage
-            .from('product_files')
-            .upload(filePath, productFile.buffer, {
-                contentType: productFile.mimetype,
-            });
-
-        if (uploadError) {
-            console.error("Error al subir a Supabase Storage:", uploadError);
-            throw new Error('Error al subir el archivo del producto.');
-        }
-         if (!uploadData || !uploadData.path) {
-             throw new Error('La subida del archivo no devolvió una ruta válida.');
-         }
-
-        console.log("Archivo subido exitosamente:", uploadData);
-
-        const { data: urlData } = supabase.storage
-             .from('product_files')
-             .getPublicUrl(filePath);
-             
-        const fileUrl = urlData?.publicUrl || '';
-         if (!fileUrl) {
-              console.warn("No se pudo obtener la URL pública del archivo. ¿El bucket es público?");
-         }
 
         const productData = {
             producer_id: userId,
-            name: name,
+            name: title,
             description: description || null,
-            price_usd: parseFloat(price_usd),
-            price_pen: price_pen ? parseFloat(price_pen) : null,
-            product_type: product_type,
+            image_url: artwork_url,
+            product_type: product_type || 'beat',
+            status: 'approved',
             bpm: bpm ? parseInt(bpm) : null,
             key: key || null,
-            tags: tags ? tags.split(',').map(t => t.trim()) : null,
-            image_url: req.body.image_url || null,
-            download_url: fileUrl,
-            status: 'pending'
+            tags: tags || null,
+            genres: genres || null,
+            moods: moods || null,
+
+            download_url_mp3: mp3_url,
+            download_url_wav: wav_url || null,
+            download_url_stems: stems_url || null,
+
+            is_free: isFree,
+            price_basic: licenses?.basic || null,
+            price_premium: licenses?.premium || null,
+            price_stems: licenses?.stems || null,
+            price_exclusive: licenses?.exclusive || null
         };
 
         const { data: newProduct, error: insertError } = await supabase
@@ -85,15 +79,15 @@ export const createProduct = async (req, res) => {
             .select()
             .single();
 
-        if (insertError) {
-            console.error("Error al guardar producto en BD:", insertError);
-            throw new Error('Error al guardar la información del producto.');
-        }
+        if (insertError) throw insertError;
 
-        res.status(201).json({ message: 'Producto subido exitosamente. Pendiente de aprobación.', product: newProduct });
+        res.status(201).json({ message: '¡Producto publicado exitosamente!', product: newProduct });
 
     } catch (err) {
         console.error("Error en createProduct:", err.message);
-        res.status(500).json({ error: err.message || 'Error al subir el producto.' });
+        if (err.code === '22P02') {
+            return res.status(400).json({ error: 'Error en los datos enviados. Revisa los tipos de datos (ej: BPM debe ser un número).' });
+        }
+        res.status(500).json({ error: err.message || 'Error al crear el producto.' });
     }
 };

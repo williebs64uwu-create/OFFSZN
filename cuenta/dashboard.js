@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const productsGrid = document.querySelector('.products-grid');
     const uploadButton = document.querySelector('.upload-btn');
     const token = localStorage.getItem('authToken');
-
+    let userData = null;
     // ---------- GIFT CARDS STATE ----------
     const STORAGE_KEY = 'offszn_giftcards_state';
     const CACHE_KEY = 'offszn_user_cache';
@@ -83,6 +83,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
+    //localStorage.setItem('userId', userData.id);
+
     // ---------- ACTUALIZAR UI ----------
     function updateUserUI(userData, fromCache = false) {
         if (welcomeText) {
@@ -136,8 +138,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                 throw new Error(`Error ${userResponse.status}: No se pudieron obtener los datos del usuario.`);
             }
 
-            const userData = await userResponse.json();
+            userData = await userResponse.json();
             console.log("Datos del usuario (frescos):", userData);
+
+
+            localStorage.setItem('userId', userData.id);
 
             // Guardar en caché para próxima visita
             saveUserCache(userData);
