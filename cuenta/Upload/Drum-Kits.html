@@ -3,2134 +3,864 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Sube y comparte tus drum kits con la comunidad de OFFSZN">
     <title>Subir Drum Kit - OFFSZN</title>
+    
+    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        body {
-            font-family: 'Inter', sans-serif;
-            background: #0a0a0a;
-            color: #e5e5e5;
-            overflow-x: hidden;
-        }
-        /* ===== NAVBAR (de favoritos.html) ===== */
-        .navbar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0.75rem 3rem;
-            background: rgba(0, 0, 0, .98);
-            position: sticky;
-            top: 0;
-            width: 100%;
-            z-index: 1000;
-            border-bottom: 1px solid rgba(255, 255, 255, .08);
-            backdrop-filter: blur(20px);
-        }
-        .navbar .logo a {
-            font-size: 1.5rem;
-            font-weight: 800;
-            color: #fff;
-            text-decoration: none;
-            letter-spacing: -.5px;
-        }
-        .navbar-center {
-            display: flex;
-            align-items: center;
-            gap: 2.5rem;
-        }
-        .navbar-links {
-            list-style: none;
-            display: flex;
-            gap: 2rem;
-            align-items: center;
-        }
-        .navbar-links li {
-            position: relative;
-        }
-        .navbar-links a {
-            color: #999;
-            text-decoration: none;
-            transition: all .2s;
-            font-weight: 500;
-            font-size: .9rem;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            cursor: pointer;
-        }
-        .navbar-links a:hover {
-            color: #fff;
-        }
-        .navbar-links > li > a > i {
-            font-size: .7rem;
-            transition: transform .2s;
-        }
-        .dropdown-menu {
-            position: absolute;
-            top: calc(100% + 12px);
-            left: 50%;
-            transform: translateX(-50%) translateY(-10px);
-            background: rgba(20, 20, 20, .98);
-            border: 1px solid rgba(255, 255, 255, .1);
-            border-radius: 12px;
-            padding: 8px;
-            min-width: 240px;
-            opacity: 0;
-            visibility: hidden;
-            transition: all .3s ease;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, .5);
-            backdrop-filter: blur(20px);
-            z-index: 1001;
-        }
-        .navbar-links li:hover .dropdown-menu {
-            opacity: 1;
-            visibility: visible;
-            transform: translateX(-50%) translateY(0);
-        }
-        .navbar-links > li:hover > a > i {
-            transform: rotate(180deg);
-        }
-        .dropdown-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 10px 14px;
-            color: #999;
-            text-decoration: none;
-            font-size: .85rem;
-            border-radius: 8px;
-            transition: all .2s;
-            font-weight: 500;
-        }
-        .dropdown-item:hover {
-            background: rgba(139, 92, 246, .1);
-            color: #fff;
-        }
-        .dropdown-item i {
-            width: 20px;
-            text-align: center;
-            flex-shrink: 0;
-        }
-        .dropdown-divider {
-            height: 1px;
-            background: rgba(255, 255, 255, .08);
-            margin: 8px 0;
-        }
-        .navbar-search {
-            position: relative;
-            width: 380px;
-        }
-        .navbar-search input {
-            width: 100%;
-            padding: .6rem 2.5rem .6rem 1rem;
-            background: rgba(255, 255, 255, .05);
-            border: 1px solid rgba(255, 255, 255, .1);
-            border-radius: 8px;
-            color: #fff;
-            font-size: .85rem;
-            outline: none;
-            transition: all .2s;
-        }
-        .navbar-search input:focus {
-            background: rgba(255, 255, 255, .08);
-            border-color: rgba(139, 92, 246, .5);
-        }
-        .navbar-search input::placeholder {
-            color: #666;
-        }
-        .navbar-search i {
-            position: absolute;
-            right: 1rem;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #666;
-            font-size: .9rem;
-        }
-        .navbar-right {
-            display: flex;
-            gap: .75rem;
-            align-items: center;
-        }
-        .navbar-icon-button {
-            width: 36px;
-            height: 36px;
-            background: rgba(255, 255, 255, .05);
-            border: 1px solid rgba(255, 255, 255, .1);
-            border-radius: 8px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #999;
-            font-size: 16px;
-            transition: all .2s;
-            text-decoration: none;
-            position: relative;
-        }
-        .navbar-icon-button:hover {
-            background: rgba(255, 255, 255, .08);
-            color: #fff;
-            border-color: rgba(255, 255, 255, .15);
-        }
-        .user-dropdown {
-            position: relative;
-        }
-        .user-dropdown-menu {
-            position: absolute;
-            top: calc(100% + 12px);
-            right: 0;
-            background: rgba(20, 20, 20, .98);
-            border: 1px solid rgba(255, 255, 255, .1);
-            border-radius: 12px;
-            padding: 12px;
-            min-width: 260px;
-            opacity: 0;
-            visibility: hidden;
-            transform: translateY(-10px);
-            transition: all .3s ease;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, .5);
-            backdrop-filter: blur(20px);
-        }
-        .user-dropdown.active .user-dropdown-menu {
-            opacity: 1;
-            visibility: visible;
-            transform: translateY(0);
-        }
-        .user-dropdown-header {
-            padding: 12px;
-            border-bottom: 1px solid rgba(255, 255, 255, .08);
-            margin-bottom: 8px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        .user-dropdown-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #8b5cf6, #6366f1);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            font-size: 1rem;
-            color: #fff;
-        }
-        .user-dropdown-info {
-            flex: 1;
-        }
-        .user-dropdown-name {
-            font-weight: 600;
-            color: #fff;
-            font-size: .9rem;
-            margin-bottom: 2px;
-        }
-        .user-dropdown-email {
-            font-size: .75rem;
-            color: #666;
-        }
-        .user-dropdown-item {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 10px 12px;
-            color: #999;
-            text-decoration: none;
-            font-size: .85rem;
-            border-radius: 8px;
-            transition: all .2s;
-            font-weight: 500;
-        }
-        .user-dropdown-item:hover {
-            background: rgba(139, 92, 246, .1);
-            color: #fff;
-        }
-        .user-dropdown-item i {
-            width: 18px;
-            text-align: center;
-        }
-        .user-dropdown-item.logout {
-            color: #ef4444;
-            margin-top: 8px;
-            border-top: 1px solid rgba(255, 255, 255, .08);
-            padding-top: 12px;
-        }
-        .user-dropdown-item.logout:hover {
-            background: rgba(239, 68, 68, .1);
-        }
-        /* ===== MAIN CONTENT ===== */
-        .main-content {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 48px 40px 100px;
-        }
-        .page-header {
-            margin-bottom: 40px;
-        }
-        .page-title {
-            font-size: 2.2rem;
-            font-weight: 800;
-            color: #fff;
-            margin-bottom: 8px;
-            letter-spacing: -0.5px;
-        }
-        .page-subtitle {
-            font-size: 1rem;
-            color: #666;
-        }
-        /* ===== FORM SECTIONS ===== */
-        .form-section {
-            background: rgba(255, 255, 255, 0.02);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 16px;
-            padding: 36px;
-            margin-bottom: 28px;
-        }
-        .section-header {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 32px;
-            padding-bottom: 20px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-        }
-        .section-icon {
-            width: 40px;
-            height: 40px;
-            background: rgba(139, 92, 246, 0.1);
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #8b5cf6;
-            font-size: 1.1rem;
-        }
-        .section-title {
-            font-size: 1.3rem;
-            font-weight: 700;
-            color: #fff;
-        }
-        /* ===== INFO BÁSICA ===== */
-        .basic-info-layout {
-            display: grid;
-            grid-template-columns: 220px 1fr;
-            gap: 40px;
-            margin-bottom: 32px;
-        }
-        .artwork-upload {
-            position: relative;
-        }
-        .artwork-preview-container {
-            width: 220px;
-            height: 220px;
-            border-radius: 14px;
-            background: #1a1a1a;
-            border: 2px dashed rgba(255, 255, 255, 0.15);
-            position: relative;
-            overflow: hidden;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        .artwork-preview-container:hover {
-            border-color: #8b5cf6;
-            background: rgba(139, 92, 246, 0.05);
-        }
-        .artwork-preview-container.has-image {
-            border-style: solid;
-            border-color: rgba(139, 92, 246, 0.3);
-        }
-        .artwork-img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-        .artwork-placeholder {
-            position: absolute;
-            inset: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 12px;
-            color: #666;
-        }
-        .artwork-placeholder i {
-            font-size: 3rem;
-            color: #8b5cf6;
-        }
-        .artwork-placeholder-text {
-            font-size: 0.9rem;
-            font-weight: 600;
-        }
-        .artwork-placeholder-hint {
-            font-size: 0.75rem;
-            color: #555;
-        }
-        .remove-artwork-btn {
-            position: absolute;
-            top: 12px;
-            right: 12px;
-            width: 36px;
-            height: 36px;
-            background: rgba(239, 68, 68, 0.9);
-            border: none;
-            border-radius: 50%;
-            color: #fff;
-            cursor: pointer;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s;
-            z-index: 10;
-        }
-        .artwork-preview-container.has-image .remove-artwork-btn {
-            display: flex;
-        }
-        .remove-artwork-btn:hover {
-            background: #ef4444;
-            transform: scale(1.1);
-        }
-        .basic-info-fields {
-            display: flex;
-            flex-direction: column;
-            gap: 24px;
-        }
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-        .form-label {
-            font-size: 0.9rem;
-            color: #ccc;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .required {
-            color: #ef4444;
-        }
-        .info-icon {
-            width: 18px;
-            height: 18px;
-            background: rgba(139, 92, 246, 0.15);
-            border: 1px solid rgba(139, 92, 246, 0.3);
-            border-radius: 50%;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            color: #8b5cf6;
-            font-size: 0.7rem;
-            cursor: help;
-            position: relative;
-        }
-        .info-icon::after {
-            content: attr(data-tip);
-            position: absolute;
-            bottom: calc(100% + 10px);
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(20, 20, 20, 0.98);
-            color: #fff;
-            padding: 10px 14px;
-            border-radius: 8px;
-            font-size: 0.8rem;
-            white-space: nowrap;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.2s;
-            pointer-events: none;
-            z-index: 1000;
-        }
-        .info-icon:hover::after {
-            opacity: 1;
-            visibility: visible;
-        }
-        .form-input, .form-textarea, .form-select {
-            padding: 14px 16px;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-            color: #fff;
-            font-size: 0.95rem;
-            outline: none;
-            transition: all 0.2s;
-            font-family: 'Inter', sans-serif;
-        }
-        .form-input:focus, .form-textarea:focus, .form-select:focus {
-            background: rgba(255, 255, 255, 0.08);
-            border-color: #8b5cf6;
-            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
-        }
-        .form-input::placeholder, .form-textarea::placeholder {
-            color: #555;
-        }
-        .form-input.error, .form-textarea.error, .form-select.error {
-            border-color: #ef4444;
-        }
-        .form-textarea {
-            min-height: 120px;
-            resize: vertical;
-        }
-        .char-count {
-            text-align: right;
-            font-size: 0.8rem;
-            color: #666;
-            margin-top: -4px;
-        }
-        /* ===== FILE UPLOAD ===== */
-        .files-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 24px;
-        }
-        .file-upload-card {
-            background: rgba(255, 255, 255, 0.03);
-            border: 2px dashed rgba(255, 255, 255, 0.15);
-            border-radius: 14px;
-            padding: 36px 24px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s;
-            position: relative;
-        }
-        .file-upload-card:hover {
-            border-color: #8b5cf6;
-            background: rgba(139, 92, 246, 0.05);
-        }
-        .file-upload-card.has-file {
-            border-style: solid;
-            border-color: #8b5cf6;
-            background: rgba(139, 92, 246, 0.08);
-        }
-        .file-icon {
-            font-size: 3.5rem;
-            color: #8b5cf6;
-            margin-bottom: 16px;
-        }
-        .file-title {
-            font-size: 1rem;
-            font-weight: 600;
-            color: #fff;
-            margin-bottom: 8px;
-        }
-        .file-hint {
-            font-size: 0.85rem;
-            color: #666;
-        }
-        .file-info {
-            margin-top: 16px;
-            padding-top: 16px;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        .file-name {
-            font-size: 0.88rem;
-            color: #a78bfa;
-            font-weight: 600;
-            word-break: break-all;
-            margin-bottom: 6px;
-        }
-        .file-size {
-            font-size: 0.8rem;
-            color: #999;
-        }
-        /* ===== METADATA ===== */
-        .metadata-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 24px;
-            margin-bottom: 28px;
-        }
-        .metadata-grid .form-group {
-            gap: 12px;
-        }
-        /* ===== AUTOCOMPLETE ===== */
-        .autocomplete-wrapper {
-            position: relative;
-        }
-        .autocomplete-dropdown {
-            position: absolute;
-            top: calc(100% + 6px);
-            left: 0;
-            right: 0;
-            background: rgba(20, 20, 20, 0.98);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            border-radius: 10px;
-            max-height: 240px;
-            overflow-y: auto;
-            z-index: 100;
-            display: none;
-            backdrop-filter: blur(20px);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-        }
-        .autocomplete-dropdown.show {
-            display: block;
-        }
-        .autocomplete-item {
-            padding: 12px 16px;
-            cursor: pointer;
-            transition: all 0.2s;
-            color: #ccc;
-            font-size: 0.9rem;
-        }
-        .autocomplete-item:hover {
-            background: rgba(139, 92, 246, 0.15);
-            color: #fff;
-        }
-        /* ===== MULTI SELECT ===== */
-        .multi-select {
-            position: relative;
-        }
-        .select-display {
-            min-height: 52px;
-            padding: 12px 14px;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            align-items: center;
-        }
-        .select-display:hover {
-            background: rgba(255, 255, 255, 0.08);
-        }
-        .select-display.active {
-            border-color: #8b5cf6;
-            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
-        }
-        .select-placeholder {
-            color: #555;
-            font-size: 0.95rem;
-        }
-        .select-tag {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            background: rgba(139, 92, 246, 0.15);
-            color: #a78bfa;
-            padding: 6px 12px;
-            border-radius: 8px;
-            font-size: 0.88rem;
-            font-weight: 500;
-        }
-        .tag-remove {
-            cursor: pointer;
-            width: 18px;
-            height: 18px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 50%;
-            background: rgba(167, 139, 250, 0.2);
-            transition: all 0.2s;
-        }
-        .tag-remove:hover {
-            background: rgba(167, 139, 250, 0.4);
-        }
-        .select-dropdown {
-            position: absolute;
-            top: calc(100% + 6px);
-            left: 0;
-            right: 0;
-            background: rgba(20, 20, 20, 0.98);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            border-radius: 10px;
-            padding: 10px;
-            max-height: 320px;
-            overflow-y: auto;
-            z-index: 100;
-            display: none;
-            backdrop-filter: blur(20px);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-        }
-        .select-dropdown.show {
-            display: block;
-        }
-        .select-search {
-            width: 100%;
-            padding: 10px 14px;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 8px;
-            color: #fff;
-            font-size: 0.9rem;
-            outline: none;
-            margin-bottom: 10px;
-        }
-        .select-search:focus {
-            border-color: #8b5cf6;
-        }
-        .select-option {
-            padding: 11px 14px;
-            cursor: pointer;
-            border-radius: 8px;
-            transition: all 0.2s;
-            color: #ccc;
-            font-size: 0.9rem;
-        }
-        .select-option:hover {
-            background: rgba(139, 92, 246, 0.1);
-            color: #fff;
-        }
-        .select-option.selected {
-            background: rgba(139, 92, 246, 0.15);
-            color: #a78bfa;
-        }
-        /* ===== LICENSES ===== */
-        .licenses-list {
-            display: grid;
-            gap: 18px;
-            margin-bottom: 24px;
-        }
-        .license-item {
-            background: rgba(255, 255, 255, 0.03);
-            border: 2px solid rgba(255, 255, 255, 0.08);
-            border-radius: 14px;
-            padding: 24px;
-            display: grid;
-            grid-template-columns: auto 1fr auto;
-            gap: 24px;
-            align-items: center;
-            transition: all 0.3s;
-        }
-        .license-item.active {
-            border-color: #8b5cf6;
-            background: rgba(139, 92, 246, 0.06);
-        }
-        .license-toggle {
-            width: 54px;
-            height: 32px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 16px;
-            position: relative;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        .license-item.active .license-toggle {
-            background: #8b5cf6;
-        }
-        .license-toggle::before {
-            content: '';
-            position: absolute;
-            width: 26px;
-            height: 26px;
-            background: #fff;
-            border-radius: 50%;
-            top: 3px;
-            left: 3px;
-            transition: all 0.3s;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
-        }
-        .license-item.active .license-toggle::before {
-            left: 25px;
-        }
-        .license-details {
-            flex: 1;
-        }
-        .license-name {
-            font-size: 1.08rem;
-            font-weight: 700;
-            color: #fff;
-            margin-bottom: 6px;
-        }
-        .license-desc {
-            font-size: 0.88rem;
-            color: #888;
-        }
-        .license-pricing {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .price-symbol {
-            font-size: 1.2rem;
-            color: #666;
-            font-weight: 600;
-        }
-        .price-input {
-            width: 140px;
-            padding: 12px 16px;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-            color: #fff;
-            font-size: 1.1rem;
-            font-weight: 600;
-            outline: none;
-            transition: all 0.2s;
-            text-align: right;
-        }
-        .price-input:focus {
-            border-color: #8b5cf6;
-            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
-        }
-        .manage-licenses {
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            padding: 12px 20px;
-            background: rgba(139, 92, 246, 0.1);
-            border: 1px solid rgba(139, 92, 246, 0.3);
-            border-radius: 10px;
-            color: #8b5cf6;
-            font-weight: 600;
-            font-size: 0.9rem;
-            cursor: pointer;
-            transition: all 0.2s;
-            text-decoration: none;
-        }
-        .manage-licenses:hover {
-            background: rgba(139, 92, 246, 0.15);
-        }
-        /* ===== DISCOUNT ===== */
-        .discount-section {
-            margin-top: 32px;
-            padding-top: 32px;
-            border-top: 1px solid rgba(255, 255, 255, 0.08);
-        }
-        .radio-group {
-            display: flex;
-            gap: 28px;
-            margin-bottom: 24px;
-        }
-        .radio-label {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            cursor: pointer;
-            color: #ccc;
-            font-size: 0.95rem;
-        }
-        .radio-label input[type="radio"] {
-            width: 20px;
-            height: 20px;
-            cursor: pointer;
-            accent-color: #8b5cf6;
-        }
-        .discount-config {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 20px;
-        }
-        .discount-license-field {
-            grid-column: 1 / -1;
-        }
-        /* ===== COLLABORATORS ===== */
-        .collab-item {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            padding: 20px;
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
-            margin-bottom: 16px;
-        }
-        .collab-avatar {
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #8b5cf6, #6366f1);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            color: #fff;
-            font-size: 1.1rem;
-        }
-        .collab-info {
-            flex: 1;
-        }
-        .collab-name {
-            font-weight: 600;
-            color: #fff;
-            margin-bottom: 4px;
-        }
-        .collab-role {
-            font-size: 0.85rem;
-            color: #999;
-        }
-        .collab-percentage {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        .percentage-input {
-            width: 100px;
-            padding: 10px 14px;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 8px;
-            color: #fff;
-            font-size: 0.95rem;
-            font-weight: 600;
-            outline: none;
-            text-align: center;
-        }
-        .percentage-input:focus {
-            border-color: #8b5cf6;
-        }
-        .remove-collab {
-            width: 36px;
-            height: 36px;
-            background: rgba(239, 68, 68, 0.1);
-            border: 1px solid rgba(239, 68, 68, 0.3);
-            border-radius: 8px;
-            color: #ef4444;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s;
-        }
-        .remove-collab:hover {
-            background: rgba(239, 68, 68, 0.2);
-        }
-        .percentage-remaining {
-            padding: 14px 18px;
-            background: rgba(139, 92, 246, 0.1);
-            border: 1px solid rgba(139, 92, 246, 0.3);
-            border-radius: 10px;
-            text-align: center;
-            font-size: 0.9rem;
-            color: #a78bfa;
-        }
-        .percentage-remaining.error {
-            background: rgba(239, 68, 68, 0.1);
-            border-color: rgba(239, 68, 68, 0.3);
-            color: #fca5a5;
-        }
-        /* ===== CHECKBOX ===== */
-        .checkbox-field {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 16px 18px;
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 10px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .checkbox-field:hover {
-            background: rgba(255, 255, 255, 0.05);
-        }
-        .checkbox-field input[type="checkbox"] {
-            width: 20px;
-            height: 20px;
-            cursor: pointer;
-            accent-color: #8b5cf6;
-        }
-        .checkbox-text {
-            font-size: 0.95rem;
-            color: #ccc;
-            cursor: pointer;
-        }
-        /* ===== ALERTS ===== */
-        .alert {
-            padding: 16px 20px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            gap: 14px;
-            margin-bottom: 24px;
-            font-size: 0.92rem;
-        }
-        .alert-warning {
-            background: rgba(245, 158, 11, 0.1);
-            border: 1px solid rgba(245, 158, 11, 0.3);
-            color: #fcd34d;
-        }
-        .alert-info {
-            background: rgba(59, 130, 246, 0.1);
-            border: 1px solid rgba(59, 130, 246, 0.3);
-            color: #93c5fd;
-        }
-        /* ===== ERROR MESSAGES ===== */
-        .error-msg {
-            font-size: 0.85rem;
-            color: #ef4444;
-            display: none;
-            align-items: center;
-            gap: 8px;
-            margin-top: 8px;
-        }
-        .error-msg.show {
-            display: flex;
-        }
-        /* ===== FORM ACTIONS ===== */
-        .form-actions {
-            display: flex;
-            gap: 16px;
-            justify-content: center;
-            margin-top: 56px;
-            padding-top: 36px;
-            border-top: 1px solid rgba(255, 255, 255, 0.08);
-        }
-        .btn {
-            padding: 16px 44px;
-            border: none;
-            border-radius: 12px;
-            font-size: 1rem;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.3s;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            text-decoration: none;
-        }
-        .btn-back {
-            background: rgba(255, 255, 255, 0.05);
-            color: #999;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        .btn-back:hover {
-            background: rgba(255, 255, 255, 0.08);
-            color: #fff;
-        }
-        .btn-draft {
-            background: rgba(139, 92, 246, 0.15);
-            color: #a78bfa;
-            border: 1px solid rgba(139, 92, 246, 0.3);
-        }
-        .btn-draft:hover {
-            background: rgba(139, 92, 246, 0.25);
-        }
-        .btn-publish {
-            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
-            color: #fff;
-            box-shadow: 0 4px 20px rgba(139, 92, 246, 0.3);
-        }
-        .btn-publish:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 30px rgba(139, 92, 246, 0.4);
-        }
-        /* ===== TOAST ===== */
-        .toast {
-            position: fixed;
-            top: 80px;
-            right: 20px;
-            z-index: 10000;
-            max-width: 420px;
-            padding: 18px 22px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            gap: 14px;
-            font-size: 0.92rem;
-            animation: slideIn 0.3s ease;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(20px);
-        }
-        .toast.success {
-            background: rgba(34, 197, 94, 0.15);
-            border: 1px solid rgba(34, 197, 94, 0.4);
-            color: #86efac;
-        }
-        .toast.error {
-            background: rgba(239, 68, 68, 0.15);
-            border: 1px solid rgba(239, 68, 68, 0.4);
-            color: #fca5a5;
-        }
-        @keyframes slideIn {
-            from { transform: translateX(400px); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
-        /* ===== RESPONSIVE ===== */
-        @media (max-width: 1024px) {
-            .basic-info-layout {
-                grid-template-columns: 1fr;
-            }
-            .files-grid {
-                grid-template-columns: 1fr;
-            }
-            .metadata-grid {
-                grid-template-columns: 1fr;
-            }
-            .discount-config {
-                grid-template-columns: 1fr;
-            }
-        }
-        @media (max-width: 768px) {
-            .navbar {
-                padding: 0.75rem 1.5rem;
-            }
-            .navbar-center {
-                display: none;
-            }
-            .main-content {
-                padding: 28px 20px 80px;
-            }
-            .form-section {
-                padding: 28px 20px;
-            }
-            .form-actions {
-                flex-direction: column;
-            }
-            .btn {
-                width: 100%;
-                justify-content: center;
-            }
-        }
-    </style>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- CSS Externo -->
+    <link rel="stylesheet" href="drumkit-upload-styles.css">
 </head>
 <body>
+    <!-- ============================= -->
     <!-- NAVBAR -->
-    <nav class="navbar">
-        <div class="logo"><a href="../dashboard.html">OFFSZN</a></div>
-        <div class="navbar-center">
-            <ul class="navbar-links">
-                <li><a href="../dashboard.html">INICIO</a></li>
-                <li>
-                    <a>RECURSOS <i class="fas fa-chevron-down"></i></a>
-                    <div class="dropdown-menu">
-                        <a href="../../beats.html" class="dropdown-item">
-                            <i class="fas fa-music"></i>
-                            <span>Beats & Instrumentales</span>
-                        </a>
-                        <a href="../../drum-kits.html" class="dropdown-item">
-                            <i class="fas fa-drum"></i>
-                            <span>Drum Kits</span>
-                        </a>
-                        <a href="../../presets.html" class="dropdown-item">
-                            <i class="fas fa-sliders-h"></i>
-                            <span>Presets & Plugins</span>
-                        </a>
-                        <a href="../../samples.html" class="dropdown-item">
-                            <i class="fas fa-wave-square"></i>
-                            <span>Samples & Loops</span>
-                        </a>
-                        <div class="dropdown-divider"></div>
-                        <a href="../../free-resources.html" class="dropdown-item">
-                            <i class="fas fa-gift"></i>
-                            <span>Recursos Gratis</span>
-                        </a>
-                    </div>
-                </li>
-                <li>
-                    <a>COMUNIDAD <i class="fas fa-chevron-down"></i></a>
-                    <div class="dropdown-menu">
-                        <a href="../feed.html" class="dropdown-item">
-                            <i class="fas fa-home"></i>
-                            <span>Feed</span>
-                        </a>
-                        <a href="../../productores.html" class="dropdown-item">
-                            <i class="fas fa-users"></i>
-                            <span>Productores</span>
-                        </a>
-                        <a href="../colaboraciones.html" class="dropdown-item">
-                            <i class="fas fa-handshake"></i>
-                            <span>Colaboraciones</span>
-                        </a>
-                        <div class="dropdown-divider"></div>
-                        <a href="../../foros.html" class="dropdown-item">
-                            <i class="fas fa-comments"></i>
-                            <span>Foros</span>
-                        </a>
-                        <a href="../../eventos.html" class="dropdown-item">
-                            <i class="fas fa-calendar"></i>
-                            <span>Eventos</span>
-                        </a>
-                    </div>
-                </li>
-            </ul>
-            <div class="navbar-search">
-                <input type="text" placeholder="Buscar beats, kits, productores...">
-                <i class="fas fa-search"></i>
+    <!-- ============================= -->
+    <nav class="navbar" role="navigation" aria-label="Navegación principal">
+        <div class="navbar-container">
+            <!-- Logo -->
+            <div class="navbar-logo">
+                <a href="../dashboard.html" aria-label="Ir al dashboard">OFFSZN</a>
             </div>
-        </div>
-        <div class="navbar-right">
-            <a href="../notifications.html" class="navbar-icon-button"><i class="fas fa-bell"></i></a>
-            <a href="../../cart.html" class="navbar-icon-button"><i class="fas fa-shopping-cart"></i></a>
-            <div class="user-dropdown">
-                <div class="navbar-icon-button" onclick="toggleUserDropdown()"><i class="fas fa-user"></i></div>
-                <div class="user-dropdown-menu">
-                    <div class="user-dropdown-header">
-                        <div class="user-dropdown-avatar">U</div>
-                        <div class="user-dropdown-info">
-                            <div class="user-dropdown-name">Usuario</div>
-                            <div class="user-dropdown-email">usuario@offszn.com</div>
+
+            <!-- Centro (Desktop) -->
+            <div class="navbar-center">
+                <!-- Links de navegación -->
+                <ul class="navbar-links">
+                    <li>
+                        <a href="../dashboard.html">INICIO</a>
+                    </li>
+                    <li class="navbar-dropdown">
+                        <button class="navbar-link-btn" aria-expanded="false" aria-haspopup="true">
+                            RECURSOS <i class="fas fa-chevron-down"></i>
+                        </button>
+                        <div class="dropdown-menu" role="menu">
+                            <a href="../../beats.html" class="dropdown-item" role="menuitem">
+                                <i class="fas fa-music"></i>
+                                <span>Beats & Instrumentales</span>
+                            </a>
+                            <a href="../../drum-kits.html" class="dropdown-item" role="menuitem">
+                                <i class="fas fa-drum"></i>
+                                <span>Drum Kits</span>
+                            </a>
+                            <a href="../../presets.html" class="dropdown-item" role="menuitem">
+                                <i class="fas fa-sliders-h"></i>
+                                <span>Presets & Plugins</span>
+                            </a>
+                            <a href="../../samples.html" class="dropdown-item" role="menuitem">
+                                <i class="fas fa-wave-square"></i>
+                                <span>Samples & Loops</span>
+                            </a>
+                            <div class="dropdown-divider"></div>
+                            <a href="../../free-resources.html" class="dropdown-item" role="menuitem">
+                                <i class="fas fa-gift"></i>
+                                <span>Recursos Gratis</span>
+                            </a>
                         </div>
-                    </div>
-                    <a href="../profile.html" class="user-dropdown-item"><i class="fas fa-user-circle"></i><span>Mi Perfil</span></a>
-                    <a href="../dashboard.html" class="user-dropdown-item"><i class="fas fa-th-large"></i><span>Dashboard</span></a>
-                    <a href="../wallet.html" class="user-dropdown-item"><i class="fas fa-wallet"></i><span>Billetera</span></a>
-                    <a href="../account-settings.html" class="user-dropdown-item"><i class="fas fa-cog"></i><span>Configuración</span></a>
-                    <a href="../logout.html" class="user-dropdown-item logout"><i class="fas fa-sign-out-alt"></i><span>Cerrar Sesión</span></a>
+                    </li>
+                    <li class="navbar-dropdown">
+                        <button class="navbar-link-btn" aria-expanded="false" aria-haspopup="true">
+                            COMUNIDAD <i class="fas fa-chevron-down"></i>
+                        </button>
+                        <div class="dropdown-menu" role="menu">
+                            <a href="../feed.html" class="dropdown-item" role="menuitem">
+                                <i class="fas fa-home"></i>
+                                <span>Feed</span>
+                            </a>
+                            <a href="../../productores.html" class="dropdown-item" role="menuitem">
+                                <i class="fas fa-users"></i>
+                                <span>Productores</span>
+                            </a>
+                            <a href="../colaboraciones.html" class="dropdown-item" role="menuitem">
+                                <i class="fas fa-handshake"></i>
+                                <span>Colaboraciones</span>
+                            </a>
+                            <div class="dropdown-divider"></div>
+                            <a href="../../foros.html" class="dropdown-item" role="menuitem">
+                                <i class="fas fa-comments"></i>
+                                <span>Foros</span>
+                            </a>
+                            <a href="../../eventos.html" class="dropdown-item" role="menuitem">
+                                <i class="fas fa-calendar"></i>
+                                <span>Eventos</span>
+                            </a>
+                        </div>
+                    </li>
+                </ul>
+
+                <!-- Buscador -->
+                <div class="navbar-search">
+                    <input type="search" 
+                           placeholder="Buscar beats, kits, productores..." 
+                           aria-label="Buscar en OFFSZN">
+                    <i class="fas fa-search" aria-hidden="true"></i>
                 </div>
+            </div>
+
+            <!-- Derecha -->
+            <div class="navbar-right">
+                <!-- Notificaciones -->
+                <a href="../notifications.html" class="navbar-icon-btn" aria-label="Notificaciones">
+                    <i class="fas fa-bell"></i>
+                </a>
+
+                <!-- Carrito -->
+                <a href="../../cart.html" class="navbar-icon-btn" aria-label="Carrito de compras">
+                    <i class="fas fa-shopping-cart"></i>
+                </a>
+
+                <!-- Usuario Dropdown -->
+                <div class="user-dropdown">
+                    <button class="navbar-icon-btn" aria-label="Menú de usuario" aria-expanded="false" aria-haspopup="true">
+                        <i class="fas fa-user"></i>
+                    </button>
+                    <div class="user-dropdown-menu" role="menu">
+                        <div class="user-dropdown-header">
+                            <div class="user-avatar" aria-hidden="true">U</div>
+                            <div class="user-info">
+                                <div class="user-name">Usuario</div>
+                                <div class="user-email">usuario@offszn.com</div>
+                            </div>
+                        </div>
+                        <a href="../profile.html" class="dropdown-item" role="menuitem">
+                            <i class="fas fa-user-circle"></i>
+                            <span>Mi Perfil</span>
+                        </a>
+                        <a href="../dashboard.html" class="dropdown-item" role="menuitem">
+                            <i class="fas fa-th-large"></i>
+                            <span>Dashboard</span>
+                        </a>
+                        <a href="../wallet.html" class="dropdown-item" role="menuitem">
+                            <i class="fas fa-wallet"></i>
+                            <span>Billetera</span>
+                        </a>
+                        <a href="../account-settings.html" class="dropdown-item" role="menuitem">
+                            <i class="fas fa-cog"></i>
+                            <span>Configuración</span>
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a href="../logout.html" class="dropdown-item logout-item" role="menuitem">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span>Cerrar Sesión</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Menú Hamburguesa (Mobile) -->
+                <button class="navbar-hamburger" aria-label="Menú" aria-expanded="false">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
             </div>
         </div>
     </nav>
+
+    <!-- ============================= -->
     <!-- MAIN CONTENT -->
-    <main class="main-content">
-        <div class="page-header">
+    <!-- ============================= -->
+    <main class="main-content" role="main">
+        <!-- Header de página -->
+        <header class="page-header">
             <h1 class="page-title">Subir Drum Kit</h1>
             <p class="page-subtitle">Comparte tus kits de batería con miles de productores alrededor del mundo</p>
-        </div>
-        <form id="uploadForm">
-            <!-- INFORMACIÓN BÁSICA -->
-            <div class="form-section">
+        </header>
+
+        <!-- Formulario principal -->
+        <form id="uploadForm" novalidate>
+            
+            <!-- ============================= -->
+            <!-- SECCIÓN 1: INFORMACIÓN BÁSICA -->
+            <!-- ============================= -->
+            <section class="form-section" aria-labelledby="section-basic-info">
                 <div class="section-header">
-                    <div class="section-icon"><i class="fas fa-drum"></i></div>
-                    <h2 class="section-title">Información Básica</h2>
-                </div>
-                <div class="basic-info-layout">
-                    <div class="artwork-upload">
-                        <div class="artwork-preview-container" id="artworkContainer" onclick="document.getElementById('artworkInput').click()">
-                            <img id="artworkImg" class="artwork-img" style="display: none;" alt="Portada">
-                            <div class="artwork-placeholder" id="artworkPlaceholder">
-                                <i class="fas fa-image"></i>
-                                <div class="artwork-placeholder-text">Subir Portada</div>
-                                <div class="artwork-placeholder-hint">JPG, PNG o WEBP (máx. 5MB)</div>
-                            </div>
-                            <button type="button" class="remove-artwork-btn" onclick="removeArtwork(event)">
-                                <i class="fas fa-times"></i>
-                            </button>
-                        </div>
-                        <input type="file" id="artworkInput" style="display: none;" accept="image/jpeg,image/png,image/webp">
+                    <div class="section-icon" aria-hidden="true">
+                        <i class="fas fa-drum"></i>
                     </div>
-                    <div class="basic-info-fields">
-                        <div class="form-group">
-                            <label class="form-label">
-                                Título del Kit <span class="required">*</span>
-                                <span class="info-icon" data-tip="Ejemplo: [DEMO] Willie Inspired Drumkit Vol.3">
-                                    <i class="fas fa-info-circle"></i>
-                                </span>
-                            </label>
-                            <input type="text" id="titleInput" class="form-input" placeholder="Ej: [DEMO] Willie Inspired Drumkit Vol.3" maxlength="100">
-                            <div class="error-msg" id="titleError">
-                                <i class="fas fa-exclamation-circle"></i> El título es requerido
+                    <h2 class="section-title" id="section-basic-info">Información Básica</h2>
+                </div>
+
+                <div class="basic-info-layout">
+                    <!-- Portada -->
+                    <div class="artwork-column">
+                        <label class="form-label">Portada del Kit <span class="required" aria-label="requerido">*</span></label>
+                        
+                        <div class="artwork-upload">
+                            <input type="file" 
+                                   id="artworkInput" 
+                                   accept="image/jpeg,image/png,image/webp"
+                                   aria-label="Subir imagen de portada"
+                                   class="file-input-hidden">
+                            
+                            <div class="artwork-preview" id="artworkPreview" tabindex="0" role="button" aria-label="Click para subir imagen">
+                                <img id="artworkImg" class="artwork-img" alt="Portada del kit" style="display: none;">
+                                
+                                <div class="artwork-placeholder" id="artworkPlaceholder">
+                                    <i class="fas fa-image" aria-hidden="true"></i>
+                                    <span class="placeholder-text">Subir Portada</span>
+                                    <span class="placeholder-hint">JPG, PNG o WEBP (máx. 5MB)<br>Recomendado: 1000x1000px</span>
+                                </div>
+                                
+                                <button type="button" 
+                                        class="remove-artwork-btn" 
+                                        id="removeArtworkBtn"
+                                        aria-label="Eliminar imagen"
+                                        style="display: none;">
+                                    <i class="fas fa-times"></i>
+                                </button>
                             </div>
                         </div>
+
+                        <div class="error-message" id="artworkError" role="alert" aria-live="polite"></div>
+                    </div>
+
+                    <!-- Campos de información -->
+                    <div class="info-column">
+                        <!-- Título -->
                         <div class="form-group">
-                            <label class="form-label">Descripción</label>
-                            <textarea id="descInput" class="form-textarea" placeholder="Describe tu drum kit, su inspiración y características únicas..." maxlength="500"></textarea>
-                            <div class="char-count"><span id="charCount">0</span>/500</div>
+                            <label for="titleInput" class="form-label">
+                                Título del Kit <span class="required" aria-label="requerido">*</span>
+                                <button type="button" class="info-tooltip" aria-label="Información sobre el título">
+                                    <i class="fas fa-info-circle"></i>
+                                    <span class="tooltip-text">Ejemplo: [DEMO] Willie Inspired Drumkit Vol.3<br>Máximo 100 caracteres</span>
+                                </button>
+                            </label>
+                            <input type="text" 
+                                   id="titleInput" 
+                                   class="form-input" 
+                                   placeholder="Ej: [DEMO] Willie Inspired Drumkit Vol.3"
+                                   maxlength="100"
+                                   required
+                                   aria-required="true"
+                                   aria-describedby="titleError">
+                            <div class="error-message" id="titleError" role="alert" aria-live="polite"></div>
                         </div>
+
+                        <!-- Descripción -->
                         <div class="form-group">
-                            <label class="form-label">Tipo de Recurso</label>
+                            <label for="descInput" class="form-label">
+                                Descripción
+                                <button type="button" class="info-tooltip" aria-label="Información sobre la descripción">
+                                    <i class="fas fa-info-circle"></i>
+                                    <span class="tooltip-text">Describe tu drum kit, su inspiración y características únicas</span>
+                                </button>
+                            </label>
+                            <textarea id="descInput" 
+                                      class="form-textarea" 
+                                      placeholder="Describe tu drum kit, su inspiración y características únicas..."
+                                      maxlength="1000"
+                                      rows="4"
+                                      aria-describedby="charCount"></textarea>
+                            <div class="char-counter">
+                                <span id="charCount" aria-live="polite">0</span> / 1000 caracteres
+                            </div>
+                        </div>
+
+                        <!-- Tipo de Recurso -->
+                        <div class="form-group">
+                            <label for="typeSelect" class="form-label">Tipo de Recurso</label>
                             <select id="typeSelect" class="form-select">
                                 <option value="drumkit">Drum Kit</option>
                                 <option value="samplepack">Sample Pack</option>
                                 <option value="loopkit">Loop Kit</option>
+                                <option value="midikik">MIDI Kit</option>
                             </select>
                         </div>
+
+                        <!-- Fecha de Lanzamiento -->
                         <div class="form-group">
-                            <label class="form-label">Fecha de Lanzamiento</label>
-                            <input type="datetime-local" id="releaseDateInput" class="form-input">
-                            <div class="error-msg" id="dateError">
-                                <i class="fas fa-exclamation-circle"></i> La fecha debe ser hoy o posterior
-                            </div>
+                            <label for="releaseDateInput" class="form-label">
+                                Fecha de Lanzamiento
+                                <button type="button" class="info-tooltip" aria-label="Información sobre la fecha">
+                                    <i class="fas fa-info-circle"></i>
+                                    <span class="tooltip-text">Puedes programar una fecha futura para el lanzamiento</span>
+                                </button>
+                            </label>
+                            <input type="datetime-local" 
+                                   id="releaseDateInput" 
+                                   class="form-input"
+                                   aria-describedby="dateError">
+                            <div class="error-message" id="dateError" role="alert" aria-live="polite"></div>
                         </div>
-                        <div class="form-group">
-                            <label class="form-label">Visibilidad</label>
+
+                        <!-- Visibilidad -->
+                        <fieldset class="form-group">
+                            <legend class="form-label">Visibilidad</legend>
                             <div class="radio-group">
                                 <label class="radio-label">
                                     <input type="radio" name="visibility" value="public" checked>
-                                    <span>Público</span>
-                                </label>
-                                <label class="radio-label">
-                                    <input type="radio" name="visibility" value="private">
-                                    <span>Privado</span>
+                                    <span class="radio-text">
+                                        <strong>Público</strong>
+                                        <small>Visible para todos</small>
+                                    </span>
                                 </label>
                                 <label class="radio-label">
                                     <input type="radio" name="visibility" value="unlisted">
-                                    <span>No listado</span>
+                                    <span class="radio-text">
+                                        <strong>No listado</strong>
+                                        <small>Solo con el enlace</small>
+                                    </span>
+                                </label>
+                                <label class="radio-label">
+                                    <input type="radio" name="visibility" value="private">
+                                    <span class="radio-text">
+                                        <strong>Privado</strong>
+                                        <small>Solo tú puedes verlo</small>
+                                    </span>
                                 </label>
                             </div>
-                        </div>
+                        </fieldset>
                     </div>
                 </div>
-            </div>
-            <!-- ARCHIVOS DEL KIT -->
-            <div class="form-section">
+            </section>
+
+            <!-- ============================= -->
+            <!-- SECCIÓN 2: ARCHIVOS DEL KIT -->
+            <!-- ============================= -->
+            <section class="form-section" aria-labelledby="section-files">
                 <div class="section-header">
-                    <div class="section-icon"><i class="fas fa-folder-open"></i></div>
-                    <h2 class="section-title">Archivos del Kit</h2>
+                    <div class="section-icon" aria-hidden="true">
+                        <i class="fas fa-folder-open"></i>
+                    </div>
+                    <h2 class="section-title" id="section-files">Archivos del Kit</h2>
                 </div>
+
                 <div class="files-grid">
-                    <div class="file-upload-card" id="kitCard" onclick="document.getElementById('kitInput').click()">
-                        <div class="file-icon"><i class="fas fa-folder-open"></i></div>
-                        <div class="file-title">Subir Kit Principal <span class="required">*</span></div>
-                        <div class="file-hint">ZIP o RAR (máx. 500MB)</div>
-                        <div id="kitInfo"></div>
-                        <input type="file" id="kitInput" style="display: none;" accept=".zip,.rar,application/zip,application/x-rar-compressed,application/x-zip-compressed">
+                    <!-- Kit Principal -->
+                    <div class="file-upload-card">
+                        <input type="file" 
+                               id="kitInput" 
+                               accept=".zip,.rar"
+                               aria-label="Subir archivo principal del kit"
+                               class="file-input-hidden">
+                        
+                        <div class="file-card-content" tabindex="0" role="button">
+                            <div class="file-icon" aria-hidden="true">
+                                <i class="fas fa-folder-open"></i>
+                            </div>
+                            <h3 class="file-title">
+                                Subir Kit Principal <span class="required" aria-label="requerido">*</span>
+                            </h3>
+                            <p class="file-description">ZIP o RAR (máx. 500MB)</p>
+                            
+                            <div class="file-info" id="kitFileInfo" style="display: none;">
+                                <div class="file-name" id="kitFileName"></div>
+                                <div class="file-size" id="kitFileSize"></div>
+                                <button type="button" class="remove-file-btn" aria-label="Eliminar archivo">
+                                    <i class="fas fa-times"></i> Eliminar
+                                </button>
+                            </div>
+                        </div>
                     </div>
-                    <div class="file-upload-card" id="previewCard" onclick="document.getElementById('previewInput').click()">
-                        <div class="file-icon"><i class="fas fa-file-audio"></i></div>
-                        <div class="file-title">Subir Audio de Previsualización</div>
-                        <div class="file-hint">MP3 o WAV (máx. 50MB)</div>
-                        <div id="previewInfo"></div>
-                        <input type="file" id="previewInput" style="display: none;" accept=".mp3,.wav,audio/mpeg,audio/wav">
+
+                    <!-- Audio Preview -->
+                    <div class="file-upload-card">
+                        <input type="file" 
+                               id="previewInput" 
+                               accept=".mp3,.wav"
+                               aria-label="Subir audio de previsualización"
+                               class="file-input-hidden">
+                        
+                        <div class="file-card-content" tabindex="0" role="button">
+                            <div class="file-icon" aria-hidden="true">
+                                <i class="fas fa-file-audio"></i>
+                            </div>
+                            <h3 class="file-title">Audio de Previsualización</h3>
+                            <p class="file-description">MP3 o WAV (máx. 50MB)</p>
+                            
+                            <div class="file-info" id="previewFileInfo" style="display: none;">
+                                <div class="file-name" id="previewFileName"></div>
+                                <div class="file-size" id="previewFileSize"></div>
+                                <audio id="previewAudio" controls class="audio-preview"></audio>
+                                <button type="button" class="remove-file-btn" aria-label="Eliminar audio">
+                                    <i class="fas fa-times"></i> Eliminar
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <div class="error-msg" id="filesError">
-                    <i class="fas fa-exclamation-circle"></i> Debes subir el archivo principal del kit
-                </div>
-            </div>
-            <!-- METADATOS -->
-            <div class="form-section">
+
+                <div class="error-message" id="filesError" role="alert" aria-live="polite"></div>
+            </section>
+
+            <!-- ============================= -->
+            <!-- SECCIÓN 3: METADATOS -->
+            <!-- ============================= -->
+            <section class="form-section" aria-labelledby="section-metadata">
                 <div class="section-header">
-                    <div class="section-icon"><i class="fas fa-tags"></i></div>
-                    <h2 class="section-title">Metadatos</h2>
+                    <div class="section-icon" aria-hidden="true">
+                        <i class="fas fa-tags"></i>
+                    </div>
+                    <h2 class="section-title" id="section-metadata">Metadatos y Categorías</h2>
                 </div>
+
                 <div class="metadata-grid">
+                    <!-- Géneros -->
                     <div class="form-group">
-                        <label class="form-label">Formatos Incluidos</label>
-                        <div class="multi-select">
-                            <div class="select-display" id="formatsDisplay" onclick="toggleSelect('formats')">
-                                <span class="select-placeholder">Selecciona formatos</span>
+                        <label class="form-label">
+                            Géneros <span class="required" aria-label="requerido">*</span>
+                            <button type="button" class="info-tooltip" aria-label="Información sobre géneros">
+                                <i class="fas fa-info-circle"></i>
+                                <span class="tooltip-text">Selecciona hasta 3 géneros que describan tu kit</span>
+                            </button>
+                        </label>
+                        <div class="multi-select" id="genresSelect">
+                            <div class="multi-select-display" tabindex="0" role="button" aria-haspopup="listbox">
+                                <span class="multi-select-placeholder">Selecciona hasta 3 géneros</span>
                             </div>
-                            <div class="select-dropdown" id="formatsDropdown">
-                                <input type="text" class="select-search" id="formatsSearch" placeholder="Buscar formato...">
-                                <div id="formatsOptions"></div>
+                            <div class="multi-select-dropdown" role="listbox" style="display: none;">
+                                <input type="search" 
+                                       class="multi-select-search" 
+                                       placeholder="Buscar género..."
+                                       aria-label="Buscar género">
+                                <div class="multi-select-options" id="genresOptions"></div>
+                            </div>
+                        </div>
+                        <div class="error-message" id="genresError" role="alert" aria-live="polite"></div>
+                    </div>
+
+                    <!-- Número de Samples -->
+                    <div class="form-group">
+                        <label for="sampleCountInput" class="form-label">Número de Samples</label>
+                        <input type="number" 
+                               id="sampleCountInput" 
+                               class="form-input" 
+                               placeholder="100"
+                               min="1"
+                               max="10000">
+                    </div>
+
+                    <!-- Mood -->
+                    <div class="form-group">
+                        <label class="form-label">
+                            Mood
+                            <button type="button" class="info-tooltip" aria-label="Información sobre mood">
+                                <i class="fas fa-info-circle"></i>
+                                <span class="tooltip-text">Selecciona hasta 5 moods</span>
+                            </button>
+                        </label>
+                        <div class="multi-select" id="moodSelect">
+                            <div class="multi-select-display" tabindex="0" role="button" aria-haspopup="listbox">
+                                <span class="multi-select-placeholder">Selecciona hasta 5 moods</span>
+                            </div>
+                            <div class="multi-select-dropdown" role="listbox" style="display: none;">
+                                <input type="search" 
+                                       class="multi-select-search" 
+                                       placeholder="Buscar mood..."
+                                       aria-label="Buscar mood">
+                                <div class="multi-select-options" id="moodOptions"></div>
                             </div>
                         </div>
                     </div>
+
+                    <!-- Formatos -->
                     <div class="form-group">
-                        <label class="form-label">Número de Samples</label>
-                        <input type="number" id="sampleCountInput" class="form-input" placeholder="100" min="1" max="10000">
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Tags (máx. 3)</label>
-                    <div class="multi-select">
-                        <div class="select-display" id="tagsDisplay" onclick="toggleTagsInput()">
-                            <span class="select-placeholder">Escribe y presiona Enter</span>
+                        <label class="form-label">
+                            Formatos Incluidos
+                            <button type="button" class="info-tooltip" aria-label="Información sobre formatos">
+                                <i class="fas fa-info-circle"></i>
+                                <span class="tooltip-text">Selecciona hasta 10 formatos</span>
+                            </button>
+                        </label>
+                        <div class="multi-select" id="formatsSelect">
+                            <div class="multi-select-display" tabindex="0" role="button" aria-haspopup="listbox">
+                                <span class="multi-select-placeholder">Selecciona formatos</span>
+                            </div>
+                            <div class="multi-select-dropdown" role="listbox" style="display: none;">
+                                <input type="search" 
+                                       class="multi-select-search" 
+                                       placeholder="Buscar formato..."
+                                       aria-label="Buscar formato">
+                                <div class="multi-select-options" id="formatsOptions"></div>
+                            </div>
                         </div>
                     </div>
-                    <input type="text" id="tagsInput" style="display: none;">
                 </div>
+
+                <!-- Tags e Instrumentos (ancho completo) -->
                 <div class="form-group">
                     <label class="form-label">
-                        Géneros (máx. 3) <span class="required">*</span>
+                        Tags
+                        <button type="button" class="info-tooltip" aria-label="Información sobre tags">
+                            <i class="fas fa-info-circle"></i>
+                            <span class="tooltip-text">Máximo 3 tags. Presiona Enter para agregar cada uno</span>
+                        </button>
                     </label>
-                    <div class="multi-select">
-                        <div class="select-display" id="genresDisplay" onclick="toggleSelect('genres')">
-                            <span class="select-placeholder">Selecciona o busca géneros</span>
+                    <div class="tags-input-wrapper">
+                        <div class="tags-container" id="tagsContainer">
+                            <input type="text" 
+                                   id="tagsInput" 
+                                   class="tags-input" 
+                                   placeholder="Escribe un tag y presiona Enter..."
+                                   maxlength="30">
                         </div>
-                        <div class="select-dropdown" id="genresDropdown">
-                            <input type="text" class="select-search" id="genresSearch" placeholder="Buscar género...">
-                            <div id="genresOptions"></div>
-                        </div>
-                    </div>
-                    <div class="error-msg" id="genresError">
-                        <i class="fas fa-exclamation-circle"></i> Selecciona al menos un género
                     </div>
                 </div>
+
                 <div class="form-group">
-                    <label class="form-label">Mood (máx. 5)</label>
-                    <div class="multi-select">
-                        <div class="select-display" id="moodDisplay" onclick="toggleSelect('mood')">
-                            <span class="select-placeholder">Selecciona o busca mood</span>
+                    <label class="form-label">
+                        Instrumentos
+                        <button type="button" class="info-tooltip" aria-label="Información sobre instrumentos">
+                            <i class="fas fa-info-circle"></i>
+                            <span class="tooltip-text">Selecciona hasta 10 instrumentos</span>
+                        </button>
+                    </label>
+                    <div class="multi-select" id="instrumentsSelect">
+                        <div class="multi-select-display" tabindex="0" role="button" aria-haspopup="listbox">
+                            <span class="multi-select-placeholder">Selecciona instrumentos</span>
                         </div>
-                        <div class="select-dropdown" id="moodDropdown">
-                            <input type="text" class="select-search" id="moodSearch" placeholder="Buscar mood...">
-                            <div id="moodOptions"></div>
-                        </div>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Instrumentos (máx. 10)</label>
-                    <div class="multi-select">
-                        <div class="select-display" id="instrumentsDisplay" onclick="toggleSelect('instruments')">
-                            <span class="select-placeholder">Selecciona o busca instrumentos</span>
-                        </div>
-                        <div class="select-dropdown" id="instrumentsDropdown">
-                            <input type="text" class="select-search" id="instrumentsSearch" placeholder="Buscar instrumento...">
-                            <div id="instrumentsOptions"></div>
+                        <div class="multi-select-dropdown" role="listbox" style="display: none;">
+                            <input type="search" 
+                                   class="multi-select-search" 
+                                   placeholder="Buscar instrumento..."
+                                   aria-label="Buscar instrumento">
+                            <div class="multi-select-options" id="instrumentsOptions"></div>
                         </div>
                     </div>
                 </div>
+
+                <!-- Checkbox de samples de terceros -->
                 <div class="checkbox-field">
-                    <input type="checkbox" id="hasSamples">
-                    <label class="checkbox-text" for="hasSamples">Este kit contiene samples de terceros</label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="hasSamplesCheckbox">
+                        <span class="checkbox-text">Este kit contiene samples de terceros</span>
+                    </label>
                 </div>
-            </div>
-            <!-- MONETIZACIÓN -->
-            <div class="form-section">
+            </section>
+
+            <!-- ============================= -->
+            <!-- SECCIÓN 4: MONETIZACIÓN -->
+            <!-- ============================= -->
+            <section class="form-section" aria-labelledby="section-monetization">
                 <div class="section-header">
-                    <div class="section-icon"><i class="fas fa-dollar-sign"></i></div>
-                    <h2 class="section-title">Monetización</h2>
+                    <div class="section-icon" aria-hidden="true">
+                        <i class="fas fa-dollar-sign"></i>
+                    </div>
+                    <h2 class="section-title" id="section-monetization">Monetización</h2>
                 </div>
-                <div class="alert alert-warning" id="licenseAlert" style="display: none;">
-                    <i class="fas fa-info-circle"></i>
-                    Debes activar al menos una licencia o configurar como gratis
+
+                <!-- Alerta de licencias -->
+                <div class="alert alert-warning" id="licenseAlert" role="alert" style="display: none;">
+                    <i class="fas fa-exclamation-triangle" aria-hidden="true"></i>
+                    <span>Debes activar al menos una licencia o marcar como gratis</span>
                 </div>
-                <div class="checkbox-field" style="margin-bottom: 28px;">
-                    <input type="checkbox" id="freeCheckbox" onchange="toggleFreeMode()">
-                    <label class="checkbox-text" for="freeCheckbox"><strong>Ofrecer gratis (requiere correo electrónico del usuario)</strong></label>
+
+                <!-- Checkbox Gratis -->
+                <div class="checkbox-field free-checkbox">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="freeCheckbox">
+                        <span class="checkbox-text">
+                            <strong>Ofrecer gratis (requiere correo electrónico del usuario)</strong>
+                            <small>Los usuarios deberán proporcionar su email para descargar</small>
+                        </span>
+                    </label>
                 </div>
+
+                <!-- Sección de Licencias -->
                 <div id="licensesSection">
                     <div class="licenses-list">
+                        <!-- Licencia No Exclusiva -->
                         <div class="license-item active" data-license="non-exclusive">
-                            <div class="license-toggle" onclick="toggleLicense('non-exclusive')"></div>
+                            <div class="license-toggle">
+                                <input type="checkbox" 
+                                       id="licenseNonExclusive" 
+                                       checked
+                                       aria-label="Activar licencia no exclusiva">
+                                <span class="toggle-slider"></span>
+                            </div>
                             <div class="license-details">
-                                <div class="license-name">Licencia No Exclusiva</div>
-                                <div class="license-desc">Uso comercial limitado</div>
+                                <h3 class="license-name">Licencia No Exclusiva</h3>
+                                <p class="license-description">Uso comercial limitado</p>
                             </div>
                             <div class="license-pricing">
                                 <span class="price-symbol">$</span>
-                                <input type="number" id="nonExclusivePrice" class="price-input" value="20.00" min="1" max="10000" step="0.01">
+                                <input type="number" 
+                                       id="priceNonExclusive" 
+                                       class="price-input" 
+                                       value="20.00"
+                                       min="1"
+                                       max="10000"
+                                       step="0.01"
+                                       aria-label="Precio licencia no exclusiva">
                             </div>
                         </div>
-                        <div class="license-item active" data-license="free-archive">
-                            <div class="license-toggle" onclick="toggleLicense('free-archive')"></div>
-                            <div class="license-details">
-                                <div class="license-name">Archivo Gratis (ZIP/RAR)</div>
-                                <div class="license-desc">Requiere correo electrónico</div>
-                            </div>
-                            <div class="license-pricing">
-                                <span class="price-symbol">$</span>
-                                <input type="number" id="freeArchivePrice" class="price-input" value="0.00" min="0" max="10000" step="0.01" disabled>
-                            </div>
-                        </div>
+
+                        <!-- Licencia Exclusiva -->
                         <div class="license-item" data-license="exclusive">
-                            <div class="license-toggle" onclick="toggleLicense('exclusive')"></div>
+                            <div class="license-toggle">
+                                <input type="checkbox" 
+                                       id="licenseExclusive"
+                                       aria-label="Activar licencia exclusiva">
+                                <span class="toggle-slider"></span>
+                            </div>
                             <div class="license-details">
-                                <div class="license-name">Licencia Exclusiva</div>
-                                <div class="license-desc">Derechos exclusivos</div>
+                                <h3 class="license-name">Licencia Exclusiva</h3>
+                                <p class="license-description">Derechos exclusivos totales</p>
                             </div>
                             <div class="license-pricing">
                                 <span class="price-symbol">$</span>
-                                <input type="number" id="exclusivePrice" class="price-input" value="100.00" min="1" max="10000" step="0.01">
+                                <input type="number" 
+                                       id="priceExclusive" 
+                                       class="price-input" 
+                                       value="100.00"
+                                       min="1"
+                                       max="10000"
+                                       step="0.01"
+                                       aria-label="Precio licencia exclusiva">
                             </div>
                         </div>
                     </div>
-                    <a href="/cuenta/licencias.html" class="manage-licenses">
-                        <i class="fas fa-cog"></i> Manejar Licencias
+
+                    <!-- Link a gestión de licencias -->
+                    <a href="/cuenta/licencias.html" class="manage-licenses-link">
+                        <i class="fas fa-cog"></i>
+                        <span>Gestionar Mis Licencias</span>
                     </a>
-                    <!-- DESCUENTOS -->
+
+                    <!-- Descuentos -->
                     <div class="discount-section">
-                        <label class="form-label" style="margin-bottom: 18px;">Descuentos (Opcional)</label>
-                        <div class="radio-group">
+                        <h3 class="subsection-title">Descuentos (Opcional)</h3>
+                        
+                        <fieldset class="radio-group">
+                            <legend class="sr-only">Tipo de descuento</legend>
                             <label class="radio-label">
-                                <input type="radio" name="discountType" value="none" checked onchange="toggleDiscountConfig()">
-                                <span>Sin descuento</span>
+                                <input type="radio" name="discountType" value="none" checked>
+                                <span class="radio-text">Sin descuento</span>
                             </label>
                             <label class="radio-label">
-                                <input type="radio" name="discountType" value="percentage" onchange="toggleDiscountConfig()">
-                                <span>Porcentaje</span>
+                                <input type="radio" name="discountType" value="percentage">
+                                <span class="radio-text">Porcentaje (%)</span>
                             </label>
                             <label class="radio-label">
-                                <input type="radio" name="discountType" value="fixed" onchange="toggleDiscountConfig()">
-                                <span>Monto fijo</span>
+                                <input type="radio" name="discountType" value="fixed">
+                                <span class="radio-text">Monto fijo ($)</span>
                             </label>
-                        </div>
-                        <div id="discountConfig" style="display: none;">
-                            <div class="discount-config">
-                                <div class="form-group discount-license-field">
-                                    <label class="form-label">Aplicar a licencia</label>
-                                    <select id="discountLicenseSelect" class="form-select">
+                        </fieldset>
+
+                        <div id="discountConfig" class="discount-config" style="display: none;">
+                            <div class="discount-fields">
+                                <div class="form-group">
+                                    <label for="discountLicense" class="form-label">Aplicar a licencia</label>
+                                    <select id="discountLicense" class="form-select">
                                         <option value="">Seleccionar licencia</option>
                                         <option value="non-exclusive">Licencia No Exclusiva</option>
-                                        <option value="free-archive">Archivo Gratis</option>
                                         <option value="exclusive">Licencia Exclusiva</option>
                                     </select>
                                 </div>
+
                                 <div class="form-group">
-                                    <label class="form-label">Valor del descuento</label>
-                                    <input type="number" id="discountValue" class="form-input" placeholder="0" min="0">
+                                    <label for="discountValue" class="form-label">Valor del descuento</label>
+                                    <input type="number" 
+                                           id="discountValue" 
+                                           class="form-input" 
+                                           placeholder="0"
+                                           min="0"
+                                           step="0.01">
                                 </div>
+
                                 <div class="form-group">
-                                    <label class="form-label">Fecha de expiración (opcional)</label>
-                                    <input type="date" id="discountExpiry" class="form-input">
+                                    <label for="discountExpiry" class="form-label">Fecha de expiración (opcional)</label>
+                                    <input type="date" 
+                                           id="discountExpiry" 
+                                           class="form-input">
                                 </div>
                             </div>
-                            <div class="error-msg" id="discountError">
-                                <i class="fas fa-exclamation-circle"></i> El descuento no puede ser mayor o igual al precio
+
+                            <div class="error-message" id="discountError" role="alert" aria-live="polite"></div>
+                        </div>
+
+                        <!-- Descuentos por volumen -->
+                        <div class="checkbox-field">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="bulkDiscountCheckbox" checked>
+                                <span class="checkbox-text">
+                                    <strong>Incluir en ofertas por volumen</strong>
+                                    <small>Se aplica automáticamente cuando los usuarios compran múltiples productos</small>
+                                </span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============================= -->
+            <!-- SECCIÓN 5: COLABORADORES -->
+            <!-- ============================= -->
+            <section class="form-section" aria-labelledby="section-collaborators">
+                <div class="section-header">
+                    <div class="section-icon" aria-hidden="true">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <h2 class="section-title" id="section-collaborators">Colaboradores y Regalías</h2>
+                </div>
+
+                <!-- Alerta informativa -->
+                <div class="alert alert-info" role="alert">
+                    <i class="fas fa-info-circle" aria-hidden="true"></i>
+                    <span>Añade colaboradores y divide las regalías. El total debe sumar 100%</span>
+                </div>
+
+                <!-- Buscador de colaboradores -->
+                <div class="form-group">
+                    <label for="collabSearch" class="form-label">Buscar colaborador</label>
+                    <div class="search-wrapper">
+                        <input type="search" 
+                               id="collabSearch" 
+                               class="form-input" 
+                               placeholder="Buscar por nombre de usuario o email..."
+                               autocomplete="off"
+                               aria-describedby="collabSearchHint"
+                               aria-autocomplete="list">
+                        <i class="fas fa-search search-icon" aria-hidden="true"></i>
+                        
+                        <!-- Dropdown de resultados -->
+                        <div class="autocomplete-dropdown" id="collabDropdown" role="listbox" style="display: none;">
+                            <div class="autocomplete-loading" style="display: none;">
+                                <i class="fas fa-spinner fa-spin"></i>
+                                <span>Buscando...</span>
+                            </div>
+                            <div class="autocomplete-results" id="collabResults"></div>
+                            <div class="autocomplete-empty" style="display: none;">
+                                <i class="fas fa-user-slash"></i>
+                                <span>No se encontraron usuarios</span>
                             </div>
                         </div>
                     </div>
-                    <div class="checkbox-field" style="margin-top: 24px;">
-                        <input type="checkbox" id="bulkDiscount" checked>
-                        <label class="checkbox-text" for="bulkDiscount">Incluir en ofertas por volumen (se aplica automáticamente)</label>
-                    </div>
+                    <small id="collabSearchHint" class="form-hint">Escribe al menos 3 caracteres para buscar</small>
                 </div>
-            </div>
-            <!-- COLABORADORES -->
-            <div class="form-section">
+
+                <!-- Lista de colaboradores -->
+                <div id="collabList" class="collab-list"></div>
+
+                <!-- Porcentaje restante -->
+                <div class="percentage-display" id="percentageDisplay">
+                    <div class="percentage-label">Tu porcentaje de regalías:</div>
+                    <div class="percentage-value">100%</div>
+                </div>
+            </section>
+
+            <!-- ============================= -->
+            <!-- SECCIÓN 6: TÉRMINOS Y CONDICIONES -->
+            <!-- ============================= -->
+            <section class="form-section" aria-labelledby="section-terms">
                 <div class="section-header">
-                    <div class="section-icon"><i class="fas fa-users"></i></div>
-                    <h2 class="section-title">Colaboradores</h2>
+                    <div class="section-icon" aria-hidden="true">
+                        <i class="fas fa-file-contract"></i>
+                    </div>
+                    <h2 class="section-title" id="section-terms">Términos y Condiciones</h2>
                 </div>
-                <div class="alert alert-info">
-                    <i class="fas fa-info-circle"></i>
-                    Añade colaboradores y divide las regalías. El total debe sumar 100%
+
+                <div class="checkbox-field">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="termsCheckbox" required aria-required="true">
+                        <span class="checkbox-text">
+                            Acepto los <a href="/terminos.html" target="_blank">Términos y Condiciones</a> y la 
+                            <a href="/politica-privacidad.html" target="_blank">Política de Privacidad</a>
+                            <span class="required" aria-label="requerido">*</span>
+                        </span>
+                    </label>
                 </div>
-                <div class="form-group autocomplete-wrapper">
-                    <label class="form-label">Buscar colaborador</label>
-                    <input type="text" id="collabSearch" class="form-input" placeholder="Buscar usuario..." autocomplete="off">
-                    <div class="autocomplete-dropdown" id="collabDropdown"></div>
+
+                <div class="checkbox-field">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="copyrightCheckbox" required aria-required="true">
+                        <span class="checkbox-text">
+                            Confirmo que tengo los derechos de autor y licencias necesarias para distribuir este contenido
+                            <span class="required" aria-label="requerido">*</span>
+                        </span>
+                    </label>
                 </div>
-                <div id="collabList"></div>
-                <div class="percentage-remaining" id="percentageDisplay">
-                    Tu porcentaje: <strong>100%</strong>
+
+                <div class="checkbox-field">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="contentPolicyCheckbox" required aria-required="true">
+                        <span class="checkbox-text">
+                            He leído y acepto la <a href="/politica-contenido.html" target="_blank">Política de Contenido</a>
+                            <span class="required" aria-label="requerido">*</span>
+                        </span>
+                    </label>
                 </div>
-            </div>
+
+                <div class="error-message" id="termsError" role="alert" aria-live="polite"></div>
+            </section>
+
+            <!-- ============================= -->
             <!-- BOTONES DE ACCIÓN -->
+            <!-- ============================= -->
             <div class="form-actions">
-                <a href="../dashboard.html" class="btn btn-back">
-                    <i class="fas fa-arrow-left"></i> Regresar
+                <a href="../dashboard.html" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i>
+                    <span>Cancelar</span>
                 </a>
-                <button type="button" class="btn btn-draft" onclick="saveDraft()">
-                    <i class="fas fa-save"></i> Guardar Borrador
+
+                <button type="button" class="btn btn-outline" id="saveDraftBtn">
+                    <i class="fas fa-save"></i>
+                    <span>Guardar Borrador</span>
                 </button>
-                <button type="submit" class="btn btn-publish">
-                    <i class="fas fa-cloud-upload-alt"></i> Publicar Drum Kit
+
+                <button type="submit" class="btn btn-primary" id="publishBtn">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <span>Publicar Drum Kit</span>
                 </button>
+            </div>
+
+            <!-- Indicador de progreso del upload -->
+            <div class="upload-progress" id="uploadProgress" style="display: none;">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <div class="progress-text">
+                    <span id="progressMessage">Subiendo archivos...</span>
+                    <span id="progressPercent">0%</span>
+                </div>
             </div>
         </form>
     </main>
-    <script>
-        // ===== ESTADO GLOBAL =====
-        const STORAGE_KEY = 'offszn_drumkit_draft';
-        const state = {
-            files: { artwork: null, kit: null, preview: null },
-            tags: [],
-            genres: [],
-            moods: [],
-            instruments: [],
-            formats: [],
-            collaborators: [],
-            activeLicenses: ['non-exclusive', 'free-archive']
-        };
-        // ===== DATOS =====
-        const GENRES = ['Trap', 'Hip Hop', 'R&B', 'Pop', 'Rock', 'Electronic', 'Lo-Fi', 'Drill', 'Afrobeats', 'Reggaeton', 'Jazz', 'Soul', 'House', 'Techno', 'Ambient', 'Dancehall', 'UK Drill', 'Latin', 'Country', 'Indie'];
-        const MOODS = ['Agresivo', 'Triste', 'Feliz', 'Romántico', 'Relajado', 'Motivador', 'Misterioso', 'Épico', 'Melancólico', 'Enérgico', 'Oscuro', 'Vibrante', 'Nostálgico', 'Inspirador', 'Intenso'];
-        const INSTRUMENTS = ['Kick', 'Snare', 'Hi-Hat', 'Clap', 'Tom', 'Cymbal', 'Percusión', 'Shaker', 'Conga', 'Bongo', 'Cowbell', 'Crash', 'Ride', 'Splash', 'China'];
-        const FORMATS = ['WAV', 'MP3', 'AIFF', 'FLAC', 'OGG', 'DRUM', 'KONTAKT', 'SERATO', 'MASCHINE', 'SPARK', 'ADDICTIVE DRUMS', 'EZDRUMMER', 'SUPERIOR DRUMMER', 'STUDIO ONE', 'ABLETON', 'FL STUDIO', 'LOGIC PRO', 'CUBASE', 'PRO TOOLS'];
-        const FILE_LIMITS = {
-            artwork: { size: 5 * 1024 * 1024, types: ['image/jpeg', 'image/png', 'image/webp'], ext: ['jpg', 'jpeg', 'png', 'webp'] },
-            kit: { size: 500 * 1024 * 1024, types: ['application/zip', 'application/x-rar-compressed', 'application/x-zip-compressed'], ext: ['zip', 'rar'] },
-            preview: { size: 50 * 1024 * 1024, types: ['audio/mpeg', 'audio/wav', 'audio/x-wav'], ext: ['mp3', 'wav'] }
-        };
-        // ===== INICIALIZACIÓN =====
-        document.addEventListener('DOMContentLoaded', () => {
-            initDateTime();
-            initFileHandlers();
-            initMultiSelects();
-            initTagsInput();
-            initPriceValidation();
-            loadDraft();
-            document.getElementById('descInput').addEventListener('input', updateCharCount);
-            document.getElementById('uploadForm').addEventListener('submit', handleSubmit);
-            // Cerrar dropdowns al hacer clic fuera
-            document.addEventListener('click', closeAllDropdowns);
-        });
-        function initDateTime() {
-            const now = new Date();
-            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-            const minDateTime = now.toISOString().slice(0, 16);
-            document.getElementById('releaseDateInput').min = minDateTime;
-            document.getElementById('releaseDateInput').value = minDateTime;
-        }
-        function updateCharCount(e) {
-            document.getElementById('charCount').textContent = e.target.value.length;
-        }
-        // ===== MANEJO DE ARCHIVOS =====
-        function initFileHandlers() {
-            ['artwork', 'kit', 'preview'].forEach(type => {
-                const input = document.getElementById(type + 'Input');
-                if (input) {
-                    input.addEventListener('change', (e) => handleFileUpload(type, e));
-                    input.addEventListener('click', (e) => e.stopPropagation());
-                }
-            });
-        }
-        function handleFileUpload(type, event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            const limits = FILE_LIMITS[type];
-            const ext = file.name.split('.').pop().toLowerCase();
-            // Validar extensión
-            if (!limits.ext.includes(ext)) {
-                const allowed = limits.ext.map(e => e.toUpperCase()).join(', ');
-                showToast(`Error: El archivo debe ser ${allowed}`, 'error');
-                event.target.value = '';
-                return;
-            }
-            // Validar tipo MIME
-            if (!limits.types.includes(file.type)) {
-                const allowed = limits.ext.map(e => e.toUpperCase()).join(' o ');
-                showToast(`Error: Debes subir un archivo ${allowed}`, 'error');
-                event.target.value = '';
-                return;
-            }
-            // Validar tamaño
-            if (file.size > limits.size) {
-                const maxMB = Math.floor(limits.size / (1024 * 1024));
-                showToast(`Error: El archivo no puede superar los ${maxMB}MB`, 'error');
-                event.target.value = '';
-                return;
-            }
-            // Guardar archivo
-            state.files[type] = file;
-            if (type === 'artwork') {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    document.getElementById('artworkImg').src = e.target.result;
-                    document.getElementById('artworkImg').style.display = 'block';
-                    document.getElementById('artworkPlaceholder').style.display = 'none';
-                    document.getElementById('artworkContainer').classList.add('has-image');
-                };
-                reader.readAsDataURL(file);
-            } else {
-                const card = document.getElementById(type + 'Card');
-                const info = document.getElementById(type + 'Info');
-                card.classList.add('has-file');
-                info.innerHTML = `
-                    <div class="file-info">
-                        <div class="file-name">${file.name}</div>
-                        <div class="file-size">${(file.size / (1024 * 1024)).toFixed(2)} MB</div>
-                    </div>
-                `;
-            }
-            saveDraftAuto();
-        }
-        function removeArtwork(event) {
-            event.stopPropagation();
-            state.files.artwork = null;
-            document.getElementById('artworkImg').style.display = 'none';
-            document.getElementById('artworkImg').src = '';
-            document.getElementById('artworkPlaceholder').style.display = 'flex';
-            document.getElementById('artworkContainer').classList.remove('has-image');
-            document.getElementById('artworkInput').value = '';
-            saveDraftAuto();
-        }
-        // ===== MULTI SELECT =====
-        function initMultiSelects() {
-            renderOptions('genres', GENRES);
-            renderOptions('mood', MOODS);
-            renderOptions('instruments', INSTRUMENTS);
-            renderOptions('formats', FORMATS);
-            ['genres', 'mood', 'instruments', 'formats'].forEach(type => {
-                const search = document.getElementById(type + 'Search');
-                if (search) {
-                    search.addEventListener('input', (e) => filterOptions(type, e.target.value));
-                    search.addEventListener('click', (e) => e.stopPropagation());
-                }
-            });
-        }
-        function renderOptions(type, options) {
-            const container = document.getElementById(type + 'Options');
-            container.innerHTML = options.map(opt => 
-                `<div class="select-option" onclick="toggleOption('${type}', '${opt}')">${opt}</div>`
-            ).join('');
-        }
-        function toggleSelect(type) {
-            const dropdown = document.getElementById(type + 'Dropdown');
-            const display = document.getElementById(type + 'Display');
-            // Cerrar otros
-            ['genres', 'mood', 'instruments', 'formats'].forEach(t => {
-                if (t !== type) {
-                    document.getElementById(t + 'Dropdown')?.classList.remove('show');
-                    document.getElementById(t + 'Display')?.classList.remove('active');
-                }
-            });
-            dropdown.classList.toggle('show');
-            display.classList.toggle('active');
-        }
-        function toggleOption(type, value) {
-            const limits = { genres: 3, mood: 5, instruments: 10, formats: 10 };
-            const array = state[type];
-            const idx = array.indexOf(value);
-            if (idx > -1) {
-                array.splice(idx, 1);
-            } else if (array.length < limits[type]) {
-                array.push(value);
-            } else {
-                showToast(`Máximo ${limits[type]} permitidos`, 'error');
-                return;
-            }
-            updateSelectDisplay(type);
-            saveDraftAuto();
-        }
-        function updateSelectDisplay(type) {
-            const display = document.getElementById(type + 'Display');
-            const array = state[type];
-            const placeholders = {
-                genres: 'Selecciona o busca géneros',
-                mood: 'Selecciona o busca mood',
-                instruments: 'Selecciona o busca instrumentos',
-                formats: 'Selecciona formatos'
-            };
-            if (array.length) {
-                const tags = array.map(item => `
-                    <span class="select-tag">
-                        ${item}
-                        <span class="tag-remove" onclick="removeOption('${type}', '${item}', event)">
-                            <i class="fas fa-times"></i>
-                        </span>
-                    </span>
-                `).join('');
-                display.innerHTML = tags;
-            } else {
-                display.innerHTML = `<span class="select-placeholder">${placeholders[type]}</span>`;
-            }
-            // Actualizar opciones
-            document.querySelectorAll(`#${type}Options .select-option`).forEach(opt => {
-                opt.classList.toggle('selected', array.includes(opt.textContent));
-            });
-        }
-        function removeOption(type, value, event) {
-            event.stopPropagation();
-            const idx = state[type].indexOf(value);
-            if (idx > -1) state[type].splice(idx, 1);
-            updateSelectDisplay(type);
-            saveDraftAuto();
-        }
-        function filterOptions(type, query) {
-            const options = document.querySelectorAll(`#${type}Options .select-option`);
-            options.forEach(opt => {
-                const match = opt.textContent.toLowerCase().includes(query.toLowerCase());
-                opt.style.display = match ? 'block' : 'none';
-            });
-        }
-        // ===== TAGS INPUT =====
-        function initTagsInput() {
-            const input = document.getElementById('tagsInput');
-            input.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    addTag(input.value.trim());
-                    input.value = '';
-                }
-            });
-            input.addEventListener('blur', () => {
-                if (input.value.trim()) addTag(input.value.trim());
-                input.value = '';
-                input.style.display = 'none';
-            });
-            input.addEventListener('click', (e) => e.stopPropagation());
-        }
-        function toggleTagsInput() {
-            const input = document.getElementById('tagsInput');
-            input.style.display = 'block';
-            input.focus();
-        }
-        function addTag(tag) {
-            if (!tag || state.tags.includes(tag.toLowerCase())) return;
-            if (state.tags.length >= 3) {
-                showToast('Máximo 3 tags permitidos', 'error');
-                return;
-            }
-            state.tags.push(tag.toLowerCase());
-            updateTagsDisplay();
-            saveDraftAuto();
-        }
-        function updateTagsDisplay() {
-            const display = document.getElementById('tagsDisplay');
-            if (state.tags.length) {
-                const tags = state.tags.map((tag, i) => `
-                    <span class="select-tag">
-                        ${tag}
-                        <span class="tag-remove" onclick="removeTag(${i}, event)">
-                            <i class="fas fa-times"></i>
-                        </span>
-                    </span>
-                `).join('');
-                display.innerHTML = tags;
-            } else {
-                display.innerHTML = '<span class="select-placeholder">Escribe y presiona Enter</span>';
-            }
-        }
-        function removeTag(index, event) {
-            event.stopPropagation();
-            state.tags.splice(index, 1);
-            updateTagsDisplay();
-            saveDraftAuto();
-        }
-        // ===== LICENCIAS =====
-        function toggleLicense(license) {
-            const item = document.querySelector(`.license-item[data-license="${license}"]`);
-            const idx = state.activeLicenses.indexOf(license);
-            const isFree = document.getElementById('freeCheckbox').checked;
-            if (idx > -1) {
-                if (state.activeLicenses.length === 1 && !isFree) {
-                    showToast('Debes tener al menos una licencia activa o marcar como gratis', 'error');
-                    return;
-                }
-                state.activeLicenses.splice(idx, 1);
-                item.classList.remove('active');
-            } else {
-                state.activeLicenses.push(license);
-                item.classList.add('active');
-            }
-            document.getElementById('licenseAlert').style.display = 'none';
-            saveDraftAuto();
-        }
-        function toggleFreeMode() {
-            const isFree = document.getElementById('freeCheckbox').checked;
-            const section = document.getElementById('licensesSection');
-            if (isFree) {
-                section.style.opacity = '0.5';
-                section.style.pointerEvents = 'none';
-                document.querySelector('input[name="discountType"][value="none"]').checked = true;
-                toggleDiscountConfig();
-            } else {
-                section.style.opacity = '1';
-                section.style.pointerEvents = 'auto';
-                if (state.activeLicenses.length === 0) {
-                    state.activeLicenses.push('non-exclusive');
-                    document.querySelector('.license-item[data-license="non-exclusive"]').classList.add('active');
-                }
-            }
-            saveDraftAuto();
-        }
-        function initPriceValidation() {
-            ['nonExclusive', 'freeArchive', 'exclusive'].forEach(type => {
-                const input = document.getElementById(type + 'Price');
-                if (input) {
-                    input.addEventListener('blur', (e) => validatePrice(e.target));
-                    input.addEventListener('input', saveDraftAuto);
-                }
-            });
-        }
-        function validatePrice(input) {
-            let value = parseFloat(input.value);
-            if (isNaN(value) || value < 0) {
-                input.value = '0.00';
-            } else if (value > 10000) {
-                input.value = '10000.00';
-                showToast('El precio máximo es $10,000', 'error');
-            } else {
-                input.value = value.toFixed(2);
-            }
-        }
-        // ===== DESCUENTOS =====
-        function toggleDiscountConfig() {
-            const type = document.querySelector('input[name="discountType"]:checked').value;
-            const config = document.getElementById('discountConfig');
-            const isFree = document.getElementById('freeCheckbox').checked;
-            if (type === 'none' || isFree) {
-                config.style.display = 'none';
-            } else {
-                config.style.display = 'block';
-                document.getElementById('discountValue').placeholder = type === 'percentage' ? '0-100' : '$0.00';
-            }
-            saveDraftAuto();
-        }
-        function validateDiscount() {
-            const type = document.querySelector('input[name="discountType"]:checked').value;
-            if (type === 'none') return true;
-            const license = document.getElementById('discountLicenseSelect').value;
-            const value = parseFloat(document.getElementById('discountValue').value);
-            const errorDiv = document.getElementById('discountError');
-            if (!license) {
-                errorDiv.innerHTML = '<i class="fas fa-exclamation-circle"></i> Selecciona una licencia';
-                errorDiv.classList.add('show');
-                return false;
-            }
-            if (!value || value <= 0) {
-                errorDiv.innerHTML = '<i class="fas fa-exclamation-circle"></i> Ingresa un valor válido';
-                errorDiv.classList.add('show');
-                return false;
-            }
-            const priceInputId = license === 'free-archive' ? 'freeArchivePrice' : license === 'exclusive' ? 'exclusivePrice' : 'nonExclusivePrice';
-            const price = parseFloat(document.getElementById(priceInputId).value);
-            if (type === 'percentage') {
-                if (value > 100) {
-                    errorDiv.innerHTML = '<i class="fas fa-exclamation-circle"></i> El porcentaje no puede ser mayor a 100%';
-                    errorDiv.classList.add('show');
-                    return false;
-                }
-                if (value === 100) {
-                    showToast('Un descuento del 100% es gratis. Considera activar "Ofrecer gratis"', 'error');
-                }
-            } else if (type === 'fixed') {
-                if (value >= price) {
-                    errorDiv.innerHTML = `<i class="fas fa-exclamation-circle"></i> El descuento no puede ser mayor o igual al precio (${price.toFixed(2)})`;
-                    errorDiv.classList.add('show');
-                    return false;
-                }
-            }
-            errorDiv.classList.remove('show');
-            return true;
-        }
-        // ===== COLABORADORES =====
-        function updatePercentageDisplay() {
-            const total = state.collaborators.reduce((sum, c) => sum + c.percentage, 0);
-            const remaining = 100 - total;
-            const display = document.getElementById('percentageDisplay');
-            if (remaining < 0) {
-                display.className = 'percentage-remaining error';
-                display.innerHTML = `<strong>Error:</strong> El total supera el 100% (${total}%)`;
-            } else {
-                display.className = 'percentage-remaining';
-                display.innerHTML = `Tu porcentaje: <strong>${remaining}%</strong>`;
-            }
-        }
-        function addCollaborator(name, percentage = 50) {
-            const initial = name.charAt(0).toUpperCase();
-            const collab = { name, percentage };
-            state.collaborators.push(collab);
-            const collabList = document.getElementById('collabList');
-            const div = document.createElement('div');
-            div.className = 'collab-item';
-            div.innerHTML = `
-                <div class="collab-avatar">${initial}</div>
-                <div class="collab-info">
-                    <div class="collab-name">${name}</div>
-                    <div class="collab-role">Colaborador</div>
-                </div>
-                <div class="collab-percentage">
-                    <input type="number" class="percentage-input" value="${percentage}" min="1" max="99" 
-                           onchange="updateCollabPercentage(${state.collaborators.length - 1}, this.value)">
-                    <span>%</span>
-                </div>
-                <button type="button" class="remove-collab" onclick="removeCollaborator(${state.collaborators.length - 1})">
+
+    <!-- ============================= -->
+    <!-- TOAST NOTIFICATIONS -->
+    <!-- ============================= -->
+    <div class="toast-container" id="toastContainer" role="region" aria-live="polite" aria-label="Notificaciones"></div>
+
+    <!-- ============================= -->
+    <!-- MODAL DE CONFIRMACIÓN -->
+    <!-- ============================= -->
+    <div class="modal-overlay" id="modalOverlay" style="display: none;">
+        <div class="modal" role="dialog" aria-labelledby="modalTitle" aria-describedby="modalDescription">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle"></h3>
+                <button type="button" class="modal-close" aria-label="Cerrar modal">
                     <i class="fas fa-times"></i>
                 </button>
-            `;
-            collabList.appendChild(div);
-            updatePercentageDisplay();
-            saveDraftAuto();
-        }
-        function updateCollabPercentage(index, value) {
-            value = parseInt(value);
-            if (value < 1) value = 1;
-            if (value > 99) value = 99;
-            state.collaborators[index].percentage = value;
-            updatePercentageDisplay();
-            saveDraftAuto();
-        }
-        function removeCollaborator(index) {
-            state.collaborators.splice(index, 1);
-            document.getElementById('collabList').children[index].remove();
-            updatePercentageDisplay();
-            saveDraftAuto();
-        }
-        // ===== VALIDACIÓN =====
-        function validateForm() {
-            let isValid = true;
-            // Limpiar errores
-            document.querySelectorAll('.error-msg').forEach(e => e.classList.remove('show'));
-            document.querySelectorAll('.form-input, .form-select').forEach(e => e.classList.remove('error'));
-            // Título
-            if (!document.getElementById('titleInput').value.trim()) {
-                document.getElementById('titleError').classList.add('show');
-                document.getElementById('titleInput').classList.add('error');
-                isValid = false;
-            }
-            // Kit Principal
-            if (!state.files.kit) {
-                document.getElementById('filesError').classList.add('show');
-                isValid = false;
-            }
-            // Géneros
-            if (state.genres.length === 0) {
-                document.getElementById('genresError').classList.add('show');
-                isValid = false;
-            }
-            // Licencias
-            const isFree = document.getElementById('freeCheckbox').checked;
-            if (!isFree && state.activeLicenses.length === 0) {
-                document.getElementById('licenseAlert').style.display = 'flex';
-                isValid = false;
-            }
-            // Fecha
-            const releaseDate = new Date(document.getElementById('releaseDateInput').value);
-            const now = new Date();
-            if (releaseDate < now) {
-                document.getElementById('dateError').classList.add('show');
-                document.getElementById('releaseDateInput').classList.add('error');
-                isValid = false;
-            }
-            // Descuentos
-            if (!validateDiscount()) {
-                isValid = false;
-            }
-            // Colaboradores
-            const total = state.collaborators.reduce((sum, c) => sum + c.percentage, 0);
-            if (total > 100) {
-                showToast('El porcentaje de colaboradores no puede superar el 100%', 'error');
-                isValid = false;
-            }
-            if (!isValid) {
-                showToast('Por favor completa todos los campos requeridos', 'error');
-                const firstError = document.querySelector('.error-msg.show');
-                if (firstError) {
-                    firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                }
-            }
-            return isValid;
-        }
-        // ===== ENVÍO =====
-        function handleSubmit(e) {
-            e.preventDefault();
-            if (!validateForm()) return;
-            const formData = collectFormData();
-            console.log('📦 Publicando drum kit:', formData);
-            showToast('¡Drum Kit publicado exitosamente!', 'success');
-            localStorage.removeItem(STORAGE_KEY);
-            setTimeout(() => {
-                window.location.href = '/cuenta/mis-kits.html';
-            }, 2000);
-        }
-        function saveDraft() {
-            const formData = collectFormData();
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(formData));
-            console.log('💾 Borrador guardado');
-            showToast('Borrador guardado correctamente', 'success');
-            setTimeout(() => {
-                window.location.href = '/cuenta/borradores.html';
-            }, 1500);
-        }
-        function saveDraftAuto() {
-            const formData = collectFormData();
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(formData));
-        }
-        function loadDraft() {
-            const saved = localStorage.getItem(STORAGE_KEY);
-            if (!saved) return;
-            try {
-                const data = JSON.parse(saved);
-                if (data.title) document.getElementById('titleInput').value = data.title;
-                if (data.description) {
-                    document.getElementById('descInput').value = data.description;
-                    updateCharCount({ target: { value: data.description } });
-                }
-                if (data.type) document.getElementById('typeSelect').value = data.type;
-                if (data.releaseDate) document.getElementById('releaseDateInput').value = data.releaseDate;
-                if (data.visibility) {
-                    document.querySelector(`input[name="visibility"][value="${data.visibility}"]`).checked = true;
-                }
-                if (data.tags) {
-                    state.tags = data.tags;
-                    updateTagsDisplay();
-                }
-                if (data.genres) {
-                    state.genres = data.genres;
-                    updateSelectDisplay('genres');
-                }
-                if (data.moods) {
-                    state.moods = data.moods;
-                    updateSelectDisplay('mood');
-                }
-                if (data.instruments) {
-                    state.instruments = data.instruments;
-                    updateSelectDisplay('instruments');
-                }
-                if (data.formats) {
-                    state.formats = data.formats;
-                    updateSelectDisplay('formats');
-                }
-                if (data.isFree) {
-                    document.getElementById('freeCheckbox').checked = true;
-                    toggleFreeMode();
-                }
-                if (data.activeLicenses) {
-                    state.activeLicenses = data.activeLicenses;
-                    state.activeLicenses.forEach(license => {
-                        const item = document.querySelector(`.license-item[data-license="${license}"]`);
-                        if (item) item.classList.add('active');
-                    });
-                }
-                if (data.nonExclusivePrice) document.getElementById('nonExclusivePrice').value = data.nonExclusivePrice;
-                if (data.freeArchivePrice) document.getElementById('freeArchivePrice').value = data.freeArchivePrice;
-                if (data.exclusivePrice) document.getElementById('exclusivePrice').value = data.exclusivePrice;
-                console.log('📄 Borrador cargado');
-            } catch (e) {
-                console.error('Error al cargar borrador:', e);
-            }
-        }
-        function collectFormData() {
-            const data = {
-                title: document.getElementById('titleInput').value.trim(),
-                description: document.getElementById('descInput').value.trim(),
-                type: document.getElementById('typeSelect').value,
-                releaseDate: document.getElementById('releaseDateInput').value,
-                visibility: document.querySelector('input[name="visibility"]:checked').value,
-                tags: state.tags,
-                genres: state.genres,
-                moods: state.moods,
-                instruments: state.instruments,
-                formats: state.formats,
-                sampleCount: document.getElementById('sampleCountInput').value,
-                hasSamples: document.getElementById('hasSamples').checked,
-                isFree: document.getElementById('freeCheckbox').checked,
-                licenses: {},
-                discount: null,
-                bulkDiscount: document.getElementById('bulkDiscount').checked,
-                collaborators: state.collaborators,
-                activeLicenses: state.activeLicenses
-            };
-            if (!data.isFree) {
-                state.activeLicenses.forEach(license => {
-                    const priceInputId = license === 'free-archive' ? 'freeArchivePrice' : license === 'exclusive' ? 'exclusivePrice' : 'nonExclusivePrice';
-                    data.licenses[license] = parseFloat(document.getElementById(priceInputId).value);
-                });
-            }
-            const discountType = document.querySelector('input[name="discountType"]:checked').value;
-            if (discountType !== 'none' && !data.isFree) {
-                data.discount = {
-                    type: discountType,
-                    license: document.getElementById('discountLicenseSelect').value,
-                    value: parseFloat(document.getElementById('discountValue').value),
-                    expiry: document.getElementById('discountExpiry').value || null
-                };
-            }
-            return data;
-        }
-        // ===== UTILIDADES =====
-        function showToast(message, type = 'success') {
-            const existing = document.querySelector('.toast');
-            if (existing) existing.remove();
-            const toast = document.createElement('div');
-            toast.className = `toast ${type}`;
-            toast.innerHTML = `
-                <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
-                <span>${message}</span>
-            `;
-            document.body.appendChild(toast);
-            setTimeout(() => {
-                toast.style.animation = 'slideOut 0.3s ease';
-                setTimeout(() => toast.remove(), 300);
-            }, 4000);
-        }
-        function closeAllDropdowns(e) {
-            if (!e.target.closest('.multi-select') && !e.target.closest('.autocomplete-wrapper')) {
-                document.querySelectorAll('.select-dropdown').forEach(d => d.classList.remove('show'));
-                document.querySelectorAll('.select-display').forEach(d => d.classList.remove('active'));
-                document.querySelectorAll('.autocomplete-dropdown').forEach(d => d.classList.remove('show'));
-            }
-            if (!e.target.closest('.user-dropdown')) {
-                document.querySelector('.user-dropdown')?.classList.remove('active');
-            }
-        }
-        function toggleUserDropdown() {
-            document.querySelector('.user-dropdown')?.classList.toggle('active');
-        }
-        // ===== AUTO-GUARDAR =====
-        setInterval(() => {
-            if (document.getElementById('titleInput').value.trim()) {
-                saveDraftAuto();
-            }
-        }, 30000); // Cada 30 segundos
-        // Evitar envío con Enter en inputs
-        document.querySelectorAll('.form-input, .form-select').forEach(input => {
-            input.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') {
-                    e.preventDefault();
-                }
-            });
-        });
-    </script>
+            </div>
+            <div class="modal-body">
+                <p id="modalDescription"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="modalCancelBtn">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="modalConfirmBtn">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================= -->
+    <!-- LOADING OVERLAY -->
+    <!-- ============================= -->
+    <div class="loading-overlay" id="loadingOverlay" style="display: none;">
+        <div class="loading-spinner">
+            <i class="fas fa-circle-notch fa-spin"></i>
+            <p>Procesando...</p>
+        </div>
+    </div>
+
+    <!-- ============================= -->
+    <!-- SCRIPTS -->
+    <!-- ============================= -->
+    <script src="drumkit-upload-script.js"></script>
 </body>
 </html>
-
