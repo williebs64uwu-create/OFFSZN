@@ -3,424 +3,1595 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>OFFSZN - Vocal Presets y Cursos de Producción Musical</title>
-  
-  <!-- SEO -->
-  <meta name="description" content="OFFSZN - Comunidad de productores y artistas. Presets exclusivos, cursos de mezcla y masterización por Willie Inspired.">
-  
-  <!-- CSS -->
-  <link rel="stylesheet" href="./css/style.css">
-
+  <title>OFFSZN - El Primer Marketplace Musical Hecho en Perú 🇵🇪</title>
   <!-- Google Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
-
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Montserrat:wght@700;800;900&display=swap" rel="stylesheet">
   <!-- Bootstrap Icons -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
-</head>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    :root {
+      --purple-main: #7209b7;
+      --purple-dark: #560bad;
+      --purple-darker: #3c096c;
+      --purple-light: #c9a7eb;
+      --purple-glow: rgba(114, 9, 183, 0.4);
+      --green-verified: #0cbc87;
+      --text-primary: #ffffff;
+      --text-secondary: #e9d5ff;
+      --text-muted: #999;
+      --bg-black: #000000;
+      --bg-dark: #0a0118;
+      --bg-card: rgba(26, 10, 46, 0.4);
+    }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg-black);
+      color: var(--text-secondary);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
 
+    /* ==================== COUNTDOWN BANNER ==================== */
+    .countdown-banner {
+      background: linear-gradient(90deg, #7209b7 0%, #560bad 100%);
+      padding: 0.5rem 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      z-index: 1001;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .countdown-content {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      max-width: 1400px;
+      width: 100%;
+      padding: 0 1.5rem;
+      justify-content: center;
+    }
+    .countdown-text {
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: #fff;
+    }
+    .countdown-timer {
+      display: flex;
+      gap: 0.5rem;
+    }
+    .time-block {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: rgba(0, 0, 0, 0.3);
+      padding: 0.375rem 0.625rem;
+      border-radius: 4px;
+      min-width: 40px;
+    }
+    .time-number {
+      font-size: 1rem;
+      font-weight: 800;
+      line-height: 1;
+      color: #fff;
+    }
+    .time-label {
+      font-size: 0.5rem;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.7);
+      margin-top: 0.125rem;
+      letter-spacing: 0.5px;
+    }
+    .countdown-btn {
+      background: #000;
+      color: #fff;
+      padding: 0.5rem 1.25rem;
+      border-radius: 6px;
+      text-decoration: none;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      transition: all 0.3s;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    .countdown-btn:hover {
+      background: rgba(0, 0, 0, 0.8);
+      border-color: #fff;
+      transform: translateY(-1px);
+    }
+    .countdown-close {
+      position: absolute;
+      right: 1.5rem;
+      background: none;
+      border: none;
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 1.25rem;
+      cursor: pointer;
+      transition: color 0.3s;
+      padding: 0.25rem;
+      line-height: 1;
+    }
+    .countdown-close:hover {
+      color: #fff;
+    }
+
+    /* ==================== NAVBAR ==================== */
+    .navbar {
+      position: sticky;
+      top: 0;
+      background: rgba(0, 0, 0, 0.95);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 0.75rem 0;
+      z-index: 1000;
+    }
+    .navbar-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 2rem;
+    }
+    .logo {
+      font-size: 1.25rem;
+      font-weight: 900;
+      letter-spacing: 1px;
+      flex-shrink: 0;
+    }
+    .logo a {
+      color: #fff;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: opacity 0.3s;
+    }
+    .navbar-center {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      flex: 1;
+    }
+    .navbar-links {
+      display: flex;
+      list-style: none;
+      gap: 0.25rem;
+      align-items: center;
+    }
+    .navbar-links li {
+      position: relative;
+    }
+    .navbar-links > li > a {
+      color: rgba(255, 255, 255, 0.7);
+      text-decoration: none;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+      transition: all 0.3s;
+      padding: 0.5rem 0.875rem;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      gap: 0.375rem;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .navbar-links > li > a:hover,
+    .navbar-links > li > a.active {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.05);
+    }
+    .navbar-links > li > a i.bi-chevron-down {
+      font-size: 0.6rem;
+      transition: transform 0.3s;
+    }
+    .navbar-links > li.dropdown-active > a i.bi-chevron-down {
+      transform: rotate(180deg);
+    }
+    .nav-badge {
+      background: linear-gradient(135deg, #7209b7, #560bad);
+      color: #fff;
+      font-size: 0.5rem;
+      padding: 0.125rem 0.375rem;
+      border-radius: 3px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-left: 0.25rem;
+    }
+    .dropdown-menu {
+      position: absolute;
+      top: calc(100% + 0.5rem);
+      left: 0;
+      background: rgba(8, 8, 8, 0.98);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      padding: 0.5rem;
+      min-width: 240px;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(-10px);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7);
+      z-index: 1001;
+    }
+    .dropdown-active .dropdown-menu {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+    .dropdown-menu.dropdown-large {
+      min-width: 440px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.5rem;
+    }
+    .dropdown-section {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+    .dropdown-section-title {
+      font-size: 0.625rem;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.5);
+      font-weight: 700;
+      letter-spacing: 1px;
+      padding: 0.375rem 0.75rem 0.125rem;
+    }
+    .dropdown-item {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.625rem 0.75rem;
+      color: rgba(255, 255, 255, 0.75);
+      text-decoration: none;
+      border-radius: 6px;
+      transition: all 0.2s;
+      font-size: 0.8125rem;
+      font-weight: 500;
+    }
+    .dropdown-item:hover {
+      background: rgba(114, 9, 183, 0.12);
+      color: #fff;
+    }
+    .dropdown-item i {
+      font-size: 1rem;
+      color: #7209b7;
+      width: 18px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+    .dropdown-item-content {
+      flex: 1;
+    }
+    .dropdown-item-title {
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: #fff;
+    }
+    .dropdown-item-desc {
+      font-size: 0.6875rem;
+      color: rgba(255, 255, 255, 0.5);
+      margin-top: 0.125rem;
+    }
+    .dropdown-item.discord-link {
+      background: rgba(88, 101, 242, 0.08);
+      border: 1px solid rgba(88, 101, 242, 0.2);
+      margin-top: 0.5rem;
+    }
+    .dropdown-item.discord-link:hover {
+      background: rgba(88, 101, 242, 0.15);
+      border-color: rgba(88, 101, 242, 0.4);
+    }
+    .dropdown-item.discord-link i {
+      color: #5865F2;
+    }
+    .dropdown-divider {
+      height: 1px;
+      background: rgba(255, 255, 255, 0.08);
+      margin: 0.375rem 0;
+      grid-column: 1 / -1;
+    }
+    .navbar-right {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-shrink: 0;
+    }
+    .navbar-login-link {
+      color: rgba(255, 255, 255, 0.75);
+      text-decoration: none;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      padding: 0.5rem 0.75rem;
+      border-radius: 6px;
+      transition: all 0.3s;
+      white-space: nowrap;
+    }
+    .navbar-login-link:hover {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.05);
+    }
+    .btn-join {
+      background: linear-gradient(135deg, #7209b7 0%, #560bad 100%);
+      color: #fff;
+      padding: 0.5rem 1.25rem;
+      border-radius: 8px;
+      text-decoration: none;
+      font-size: 0.8125rem;
+      font-weight: 700;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      gap: 0.375rem;
+      border: none;
+      cursor: pointer;
+      letter-spacing: 0.3px;
+      white-space: nowrap;
+    }
+    .btn-join:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(114, 9, 183, 0.5);
+    }
+    .navbar-icon-button {
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: rgba(255, 255, 255, 0.75);
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      font-size: 1rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s;
+      text-decoration: none;
+      position: relative;
+    }
+    .navbar-icon-button:hover {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.05);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+    .menu-toggle {
+      display: none;
+      background: none;
+      border: none;
+      color: #fff;
+      font-size: 1.25rem;
+      cursor: pointer;
+      padding: 0.5rem;
+    }
+
+    /* ==================== SECCIONES PRINCIPALES ==================== */
+    section {
+      padding: 4rem 1.5rem;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .section-header {
+      text-align: center;
+      margin-bottom: 2.5rem;
+    }
+    .section-eyebrow {
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--purple-light);
+      margin-bottom: 0.75rem;
+      display: block;
+    }
+    .section-title {
+      font-size: clamp(2rem, 5vw, 3.5rem);
+      font-weight: 900;
+      color: var(--text-primary);
+      font-family: 'Montserrat', sans-serif;
+      line-height: 1.1;
+      margin-bottom: 1rem;
+    }
+    .section-subtitle {
+      font-size: 1rem;
+      color: var(--text-muted);
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    /* HERO */
+    .hero {
+      min-height: 80vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 3rem 1.5rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero-container {
+      max-width: 1200px;
+      width: 100%;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2.5rem;
+      align-items: center;
+      position: relative;
+      z-index: 1;
+    }
+    .hero-content {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      background: rgba(114, 9, 183, 0.15);
+      border: 1px solid rgba(114, 9, 183, 0.4);
+      border-radius: 50px;
+      font-size: 0.75rem;
+      color: var(--purple-light);
+      font-weight: 700;
+      width: fit-content;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+    .hero-title {
+      font-size: clamp(2.5rem, 6vw, 5rem);
+      font-weight: 900;
+      line-height: 0.95;
+      letter-spacing: -2px;
+      color: var(--text-primary);
+      font-family: 'Montserrat', sans-serif;
+      text-transform: uppercase;
+      margin: 0;
+    }
+    .hero-title .gradient-text {
+      background: linear-gradient(135deg, var(--purple-main), var(--purple-light));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero-subtitle {
+      font-size: 1rem;
+      color: var(--text-secondary);
+      line-height: 1.6;
+      max-width: 450px;
+    }
+    .hero-stats {
+      display: flex;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+    }
+    .stat-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      background: rgba(114, 9, 183, 0.1);
+      border: 1px solid rgba(114, 9, 183, 0.3);
+      border-radius: 10px;
+      transition: all 0.3s;
+    }
+    .stat-number {
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: var(--text-primary);
+      font-family: 'Montserrat', sans-serif;
+      line-height: 1;
+    }
+    .stat-label {
+      font-size: 0.6875rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      margin-top: 0.125rem;
+    }
+    .hero-buttons {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+    .btn-hero {
+      padding: 0.875rem 2rem;
+      border-radius: 10px;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 0.9375rem;
+      transition: all 0.3s;
+      border: 2px solid transparent;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .btn-hero-primary {
+      background: linear-gradient(135deg, var(--purple-main), var(--purple-dark));
+      color: var(--text-primary);
+    }
+    .btn-hero-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px var(--purple-glow);
+    }
+    .btn-hero-secondary {
+      background: transparent;
+      color: var(--text-primary);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+    .btn-hero-secondary:hover {
+      border-color: rgba(255, 255, 255, 0.4);
+      background: rgba(255, 255, 255, 0.05);
+    }
+    .hero-image img {
+      width: 100%;
+      border-radius: 16px;
+      box-shadow: 0 20px 60px rgba(114, 9, 183, 0.3);
+    }
+
+    /* DEMO INTERACTIVA */
+    .demo-interactive {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1.5rem;
+      margin-top: 2rem;
+    }
+    .demo-step {
+      background: var(--bg-card);
+      border: 1px solid rgba(114, 9, 183, 0.2);
+      border-radius: 16px;
+      padding: 1.5rem;
+      position: relative;
+      transition: all 0.3s;
+    }
+    .demo-step-number {
+      width: 48px;
+      height: 48px;
+      background: linear-gradient(135deg, var(--purple-main), var(--purple-dark));
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+      font-weight: 900;
+      color: var(--text-primary);
+      margin: 0 auto 1rem;
+      box-shadow: 0 6px 16px rgba(114, 9, 183, 0.4);
+    }
+    .demo-step-icon {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+      opacity: 0.3;
+      transition: all 0.3s;
+    }
+    .demo-step:hover .demo-step-icon {
+      opacity: 1;
+      transform: scale(1.1);
+    }
+    .demo-step-title {
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: var(--text-primary);
+      margin-bottom: 0.5rem;
+    }
+    .demo-step-desc {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+    .demo-upload-zone {
+      margin-top: 2rem;
+      padding: 2.5rem 1.5rem;
+      background: rgba(114, 9, 183, 0.05);
+      border: 2px dashed rgba(114, 9, 183, 0.3);
+      border-radius: 16px;
+      transition: all 0.3s;
+      cursor: pointer;
+    }
+    .demo-upload-icon {
+      font-size: 2.5rem;
+      color: var(--purple-light);
+      margin-bottom: 0.75rem;
+    }
+    .demo-upload-text {
+      font-size: 1.125rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 0.25rem;
+    }
+
+    /* SIMULACIÓN DE VENTA */
+    #saleSimulation, #saleSuccess {
+      display: none;
+      margin-top: 2rem;
+      padding: 1.5rem;
+      background: rgba(26, 10, 46, 0.4);
+      border-radius: 16px;
+      text-align: center;
+    }
+    #saleSuccess {
+      background: rgba(0, 255, 0, 0.1);
+      border: 2px solid #0cbc87;
+    }
+    .sale-checkmark {
+      font-size: 2.5rem;
+      color: #0cbc87;
+      margin-bottom: 0.75rem;
+    }
+    .btn-hero.sale-btn {
+      padding: 0.625rem 1.25rem;
+      font-size: 0.8125rem;
+    }
+
+    /* BEATS */
+    .beats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+      margin-top: 2rem;
+    }
+    .beat-card {
+      background: var(--bg-card);
+      border: 1px solid rgba(114, 9, 183, 0.2);
+      border-radius: 16px;
+      overflow: hidden;
+      transition: all 0.3s;
+    }
+    .beat-card:hover {
+      border-color: rgba(114, 9, 183, 0.6);
+      transform: translateY(-5px);
+      box-shadow: 0 10px 30px rgba(114, 9, 183, 0.3);
+    }
+    .beat-cover {
+      width: 100%;
+      height: 180px;
+      background: linear-gradient(135deg, var(--purple-dark), var(--purple-main));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .beat-play-btn {
+      width: 60px;
+      height: 60px;
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+      color: var(--purple-main);
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    .beat-info {
+      padding: 1.25rem;
+    }
+    .beat-title {
+      font-size: 1.125rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 0.5rem;
+    }
+    .beat-producer {
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+      margin-bottom: 0.75rem;
+    }
+    .beat-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: 0.75rem;
+      border-top: 1px solid rgba(114, 9, 183, 0.2);
+    }
+    .beat-price {
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: var(--purple-light);
+      font-family: 'Montserrat', sans-serif;
+    }
+    .beat-bpm {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    /* WHY */
+    .why-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+      margin-top: 2rem;
+    }
+    .why-card {
+      background: var(--bg-card);
+      border: 1px solid rgba(114, 9, 183, 0.2);
+      border-radius: 16px;
+      padding: 1.5rem;
+      transition: all 0.3s;
+    }
+    .why-card:hover {
+      border-color: rgba(114, 9, 183, 0.6);
+      transform: translateY(-5px);
+      box-shadow: 0 10px 30px rgba(114, 9, 183, 0.3);
+    }
+    .why-icon {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+      display: block;
+      color: var(--purple-light);
+    }
+    .why-title {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: var(--text-primary);
+      margin-bottom: 0.75rem;
+      font-family: 'Montserrat', sans-serif;
+    }
+    .why-desc {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    /* TESTIMONIOS */
+    .testimonial-card {
+      background: var(--bg-card);
+      border: 1px solid rgba(114, 9, 183, 0.3);
+      border-radius: 16px;
+      padding: 2rem;
+      text-align: center;
+    }
+    .testimonial-avatar {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      border: 3px solid var(--purple-main);
+      margin: 0 auto 1rem;
+      object-fit: cover;
+    }
+    .testimonial-text {
+      font-size: 1rem;
+      color: var(--text-secondary);
+      line-height: 1.7;
+      margin-bottom: 1rem;
+      font-style: italic;
+    }
+    .testimonial-author {
+      font-size: 1.125rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 0.25rem;
+    }
+    .testimonial-role {
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+      margin-bottom: 1rem;
+    }
+    .testimonial-socials {
+      display: flex;
+      gap: 0.75rem;
+      justify-content: center;
+    }
+    .social-link {
+      width: 32px;
+      height: 32px;
+      background: rgba(114, 9, 183, 0.2);
+      border: 1px solid rgba(114, 9, 183, 0.4);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--purple-light);
+      text-decoration: none;
+      font-size: 1rem;
+      transition: all 0.3s;
+    }
+    .social-link:hover {
+      background: rgba(114, 9, 183, 0.4);
+      border-color: rgba(114, 9, 183, 0.6);
+      transform: translateY(-2px);
+    }
+
+    /* FAQ */
+    .faq-list {
+      margin-top: 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+    .faq-item {
+      background: var(--bg-card);
+      border: 1px solid rgba(114, 9, 183, 0.2);
+      border-radius: 10px;
+      overflow: hidden;
+      transition: all 0.3s;
+    }
+    .faq-question {
+      padding: 1.25rem;
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .faq-icon {
+      font-size: 1rem;
+      color: var(--purple-main);
+      transition: transform 0.3s;
+    }
+    .faq-item.active .faq-icon {
+      transform: rotate(180deg);
+    }
+    .faq-answer {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+    }
+    .faq-item.active .faq-answer {
+      max-height: 500px;
+    }
+    .faq-answer-content {
+      padding: 0 1.25rem 1.25rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    /* CTA */
+    .cta-section {
+      padding: 6rem 1.5rem;
+      background: linear-gradient(180deg, var(--bg-black) 0%, var(--bg-dark) 100%);
+      text-align: center;
+    }
+    .cta-container {
+      max-width: 700px;
+      margin: 0 auto;
+    }
+    .cta-title {
+      font-size: clamp(2rem, 5vw, 3.5rem);
+      font-weight: 900;
+      color: var(--text-primary);
+      font-family: 'Montserrat', sans-serif;
+      margin-bottom: 1rem;
+      line-height: 1.1;
+    }
+    .cta-subtitle {
+      font-size: 1rem;
+      color: var(--text-muted);
+      margin-bottom: 2rem;
+    }
+
+    /* FOOTER */
+    .footer {
+      background: var(--bg-black);
+      padding: 2.5rem 1.5rem 1.5rem;
+      border-top: 1px solid rgba(114, 9, 183, 0.2);
+    }
+    .footer-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 2rem;
+      margin-bottom: 1.5rem;
+    }
+    .footer-section h4 {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 1rem;
+      font-family: 'Montserrat', sans-serif;
+    }
+    .footer-links {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .footer-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.875rem;
+      transition: all 0.3s;
+    }
+    .footer-links a:hover {
+      color: var(--purple-light);
+      padding-left: 0.25rem;
+    }
+    .footer-socials {
+      display: flex;
+      gap: 0.75rem;
+      margin-top: 1rem;
+    }
+    .footer-social-link {
+      width: 32px;
+      height: 32px;
+      background: rgba(114, 9, 183, 0.2);
+      border: 1px solid rgba(114, 9, 183, 0.4);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--purple-light);
+      text-decoration: none;
+      font-size: 1rem;
+      transition: all 0.3s;
+    }
+    .footer-social-link:hover {
+      background: rgba(114, 9, 183, 0.4);
+      border-color: rgba(114, 9, 183, 0.6);
+      transform: translateY(-2px);
+    }
+    .footer-bottom {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding-top: 1.5rem;
+      border-top: 1px solid rgba(114, 9, 183, 0.2);
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.8125rem;
+    }
+
+    /* ==================== RESPONSIVE ==================== */
+    @media (max-width: 968px) {
+      .countdown-content { gap: 1rem; flex-wrap: wrap; padding: 0 1rem; }
+      .navbar-container { padding: 0 1rem; gap: 1rem; }
+      .navbar-center { display: none; }
+      .menu-toggle { display: block; }
+      .hero-container { grid-template-columns: 1fr; text-align: center; gap: 2rem; }
+      .hero-content { align-items: center; }
+      .hero-buttons { justify-content: center; }
+      .demo-interactive { grid-template-columns: 1fr; }
+      .beats-grid { grid-template-columns: 1fr; }
+      .why-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 600px) {
+      .countdown-banner { padding: 0.4rem 0; }
+      .time-block { min-width: 32px; padding: 0.25rem 0.375rem; }
+      .time-number { font-size: 0.875rem; }
+      .hero { padding: 2rem 1rem; }
+      .hero-title { font-size: 2rem; }
+      .btn-hero { width: 100%; justify-content: center; }
+    }
+  </style>
+</head>
 <body>
 
 <!-- ==================== COUNTDOWN BANNER ==================== -->
 <div class="countdown-banner" id="countdownBanner">
   <div class="countdown-content">
-    <span class="countdown-text">VOCAL PRESET EXCLUSIVO 25% OFF</span>
+    <span class="countdown-text">🎁 ¡REGÍSTRATE AHORA Y RECIBE $5 USD GRATIS PARA TU PRIMERA COMPRA!</span>
     <div class="countdown-timer">
       <div class="time-block">
         <span class="time-number" id="days">30</span>
-        <span class="time-label">DÍAS</span>
+        <span class="time-label">Días</span>
       </div>
       <div class="time-block">
         <span class="time-number" id="hours">00</span>
-        <span class="time-label">HORAS</span>
+        <span class="time-label">Hrs</span>
       </div>
       <div class="time-block">
         <span class="time-number" id="minutes">00</span>
-        <span class="time-label">MIN</span>
+        <span class="time-label">Min</span>
       </div>
       <div class="time-block">
         <span class="time-number" id="seconds">00</span>
-        <span class="time-label">SEG</span>
+        <span class="time-label">Seg</span>
       </div>
     </div>
-    <a href="/pages/Preset.html" class="countdown-btn">CONSEGUIRLO</a>
-    <button class="countdown-close" id="countdownClose" aria-label="Cerrar banner">×</button>
+    <a href="/pages/register.html" class="countdown-btn">Reclamar Tu Bonificación</a>
+    <button class="countdown-close" id="countdownClose" aria-label="Cerrar">×</button>
   </div>
 </div>
-  
+
 <!-- ==================== NAVBAR ==================== -->
-<header class="navbar" id="navbar">
-  <div class="logo">
-    <a href="/index.html">
-      <img src="/images/LOGO OFFSZN.png" alt="OFFSZN Logo" style="height: 32px; vertical-align: middle; margin-right: 8px;">
-      OFFSZN
-    </a>
-  </div>
-  
-  <button class="menu-toggle" id="menuToggle" aria-label="Menú">
-    <i class="bi bi-list"></i>
-  </button>
-
-  <div class="navbar-center">
-    <ul class="navbar-links">
-      <li><a href="/index.html" class="active">INICIO</a></li>
-      <li class="dropdown-parent">
-        <a>RECURSOS <i class="bi bi-chevron-down"></i></a>
-        <div class="dropdown-menu">
-          <a href="/pages/recursos/beats-instrumentales.html" class="dropdown-item">
-            <i class="bi bi-music-note-beamed"></i>
-            <span>Beats & Instrumentales</span>
-          </a>
-          <a href="/pages/recursos/drum-kits.html" class="dropdown-item">
-            <i class="bi bi-disc"></i>
-            <span>Drum Kits</span>
-          </a>
-          <a href="/pages/presets-v2.html" class="dropdown-item">
-            <i class="bi bi-sliders"></i>
-            <span>Presets & Plugins</span>
-          </a>
-          <a href="/pages/recursos/samples-loops.html" class="dropdown-item">
-            <i class="bi bi-soundwave"></i>
-            <span>Samples & Loops</span>
-          </a>
-          <div class="dropdown-divider"></div>
-          <a href="/pages/recursos/recursos-gratis.html" class="dropdown-item">
-            <i class="bi bi-gift"></i>
-            <span>Recursos Gratis</span>
-          </a>
-        </div>
-      </li>
-      <li class="dropdown-parent">
-        <a>COMUNIDAD <i class="bi bi-chevron-down"></i></a>
-        <div class="dropdown-menu">
-          <a href="/pages/comunidad/feed.html" class="dropdown-item">
-            <i class="bi bi-house"></i>
-            <span>Feed</span>
-          </a>
-          <a href="/pages/comunidad/productores.html" class="dropdown-item">
-            <i class="bi bi-people"></i>
-            <span>Productores</span>
-          </a>
-          <a href="/pages/comunidad/colaboraciones.html" class="dropdown-item">
-            <i class="bi bi-hand-index-thumb"></i>
-            <span>Colaboraciones</span>
-          </a>
-          <div class="dropdown-divider"></div>
-          <a href="/pages/comunidad/foros.html" class="dropdown-item">
-            <i class="bi bi-chat-dots"></i>
-            <span>Foros</span>
-          </a>
-          <a href="/pages/comunidad/eventos.html" class="dropdown-item">
-            <i class="bi bi-calendar-event"></i>
-            <span>Eventos</span>
-          </a>
-        </div>
-      </li>
-    </ul>
-
-    <div class="navbar-search">
-      <input type="text" placeholder="Buscar beats, kits, productores...">
-      <i class="bi bi-search"></i>
+<header class="navbar">
+  <div class="navbar-container">
+    <div class="logo">
+      <a href="/index.html">
+        <img src="/images/logo-offszn.png" alt="OFFSZN" style="height: 22px;">
+      </a>
     </div>
-  </div>
-
-  <div class="navbar-right">
-    
-
-    <div class="user-actions-container"> 
-
-        <div class="logged-out-actions"> 
-            <a href="/pages/login.html" class="navbar-login-link">Iniciar Sesión</a>
-            <a href="/pages/register.html" class="btn btn-join">
-                Únete <i class="bi bi-rocket-takeoff"></i>
-            </a>
-        </div>
-
-        <div class="user-dropdown logged-in-actions"> 
-            <button class="navbar-icon-button" onclick="toggleUserDropdown(event)" title="Mi Cuenta">
-                <i class="bi bi-person-check"></i>
-            </button>
-            
-            <div class="user-dropdown-menu"> 
-                <div class="user-dropdown-header">
-                    <div class="user-dropdown-avatar">U</div>
-                    <div class="user-dropdown-info">
-                        <div class="user-dropdown-name">Usuario</div>
-                        <div class="user-dropdown-email">email@offszn.com</div>
-                    </div>
+    <div class="navbar-center">
+      <ul class="navbar-links">
+        <li><a href="/index.html" class="active">Inicio</a></li>
+        <li class="dropdown-parent">
+          <a onclick="toggleDropdown(this)">
+            Recursos <i class="bi bi-chevron-down"></i>
+          </a>
+          <div class="dropdown-menu dropdown-large">
+            <div class="dropdown-section">
+              <span class="dropdown-section-title">PRODUCTOS DIGITALES</span>
+              <a href="/pages/presets-v2.html" class="dropdown-item">
+                <i class="bi bi-sliders"></i>
+                <div class="dropdown-item-content">
+                  <div class="dropdown-item-title">Presets & Plugins</div>
+                  <div class="dropdown-item-desc">Chains profesionales</div>
                 </div>
-                <a href="/pages/my-products.html" class="user-dropdown-item">
-                    <i class="bi bi-folder"></i>
-                    <span>Mis Productos</span>
-                </a>
-                <a href="/admin-frontend/admin-dashboard.html" class="user-dropdown-item admin-only" style="display: none;">
-                     <i class="bi bi-shield-lock"></i>
-                     <span>Admin Dashboard</span>
-                </a>
-                <a href="#" class="user-dropdown-item">
-                    <i class="bi bi-gear"></i>
-                    <span>Configuración</span>
-                </a>
-                <a href="#" class="user-dropdown-item logout" onclick="handleLogout(event)">
-                    <i class="bi bi-box-arrow-right"></i>
-                    <span>Cerrar Sesión</span>
-                </a>
+              </a>
+              <a href="/pages/recursos/beats-instrumentales.html" class="dropdown-item">
+                <i class="bi bi-music-note-beamed"></i>
+                <div class="dropdown-item-content">
+                  <div class="dropdown-item-title">Beats & Instrumentales</div>
+                  <div class="dropdown-item-desc">Licencias disponibles</div>
+                </div>
+              </a>
+              <a href="/pages/recursos/drum-kits.html" class="dropdown-item">
+                <i class="bi bi-disc"></i>
+                <div class="dropdown-item-content">
+                  <div class="dropdown-item-title">Drum Kits</div>
+                  <div class="dropdown-item-desc">Samples únicos</div>
+                </div>
+              </a>
             </div>
-            </div> 
-        </div> 
-
-        <a href="/pages/cart.html" class="navbar-icon-button" title="Carrito">
+            <div class="dropdown-section">
+              <span class="dropdown-section-title">CONTENIDO</span>
+              <a href="/pages/recursos/samples-loops.html" class="dropdown-item">
+                <i class="bi bi-soundwave"></i>
+                <div class="dropdown-item-content">
+                  <div class="dropdown-item-title">Samples & Loops</div>
+                  <div class="dropdown-item-desc">Loops de calidad</div>
+                </div>
+              </a>
+              <a href="/pages/recursos/tutoriales.html" class="dropdown-item">
+                <i class="bi bi-play-circle"></i>
+                <div class="dropdown-item-content">
+                  <div class="dropdown-item-title">Tutoriales</div>
+                  <div class="dropdown-item-desc">Guías y videos</div>
+                </div>
+              </a>
+            </div>
+            <div class="dropdown-divider"></div>
+            <a href="/pages/recursos/recursos-gratis.html" class="dropdown-item" style="grid-column: 1 / -1;">
+              <i class="bi bi-gift"></i>
+              <div class="dropdown-item-content">
+                <div class="dropdown-item-title">Recursos Gratis</div>
+                <div class="dropdown-item-desc">Descarga sin costo</div>
+              </div>
+            </a>
+          </div>
+        </li>
+        <li class="dropdown-parent">
+          <a onclick="toggleDropdown(this)">
+            Comunidad <i class="bi bi-chevron-down"></i>
+          </a>
+          <div class="dropdown-menu">
+            <a href="/pages/comunidad/feed.html" class="dropdown-item">
+              <i class="bi bi-house"></i>
+              <div class="dropdown-item-content">
+                <div class="dropdown-item-title">Feed</div>
+              </div>
+            </a>
+            <a href="/pages/comunidad/productores.html" class="dropdown-item">
+              <i class="bi bi-people"></i>
+              <div class="dropdown-item-content">
+                <div class="dropdown-item-title">Productores</div>
+              </div>
+            </a>
+            <a href="/pages/comunidad/colaboraciones.html" class="dropdown-item">
+              <i class="bi bi-hand-index-thumb"></i>
+              <div class="dropdown-item-content">
+                <div class="dropdown-item-title">Colaboraciones</div>
+              </div>
+            </a>
+            <div class="dropdown-divider"></div>
+            <a href="/pages/comunidad/foros.html" class="dropdown-item">
+              <i class="bi bi-chat-dots"></i>
+              <div class="dropdown-item-content">
+                <div class="dropdown-item-title">Foros</div>
+              </div>
+            </a>
+            <a href="/pages/comunidad/eventos.html" class="dropdown-item">
+              <i class="bi bi-calendar-event"></i>
+              <div class="dropdown-item-content">
+                <div class="dropdown-item-title">Eventos</div>
+              </div>
+            </a>
+            <a href="https://discord.gg/vX7XktMeBU" target="_blank" class="dropdown-item discord-link">
+              <i class="bi bi-discord"></i>
+              <div class="dropdown-item-content">
+                <div class="dropdown-item-title">Únete a Discord</div>
+                <div class="dropdown-item-desc">Comunidad activa</div>
+              </div>
+            </a>
+          </div>
+        </li>
+        <li>
+          <a href="/pages/cursos.html">
+            Cursos
+            <span class="nav-badge">SOON</span>
+          </a>
+        </li>
+      </ul>
+    </div>
+    <button class="menu-toggle" id="menuToggle">
+      <i class="bi bi-list"></i>
+    </button>
+    <div class="navbar-right">
+      <a href="/pages/login.html" class="navbar-login-link">Iniciar Sesión</a>
+      <a href="/pages/register.html" class="btn-join">
+        Únete <i class="bi bi-rocket-takeoff"></i>
+      </a>
+      <a href="/pages/cart.html" class="navbar-icon-button" title="Carrito">
         <i class="bi bi-cart3"></i>
-    </a>
+        <!-- SIN cart-badge -->
+      </a>
     </div>
+  </div>
 </header>
-<!-- ==================== HERO ==================== -->
+
+<!-- ==================== HERO SECTION ==================== -->
 <section class="hero" id="inicio">
-  <div class="hero-content">
-    <h1>VOCAL PRESETS PACK</h1>
-    <p>
-      Consigue todos los presets gratis que tenemos y mucho más en este pack exclusivo.<br>
-      Listo para usar en FL Studio.
-    </p>
-    <a href="#" class="btn" data-eo-form-toggle-id="c6ea1c0a-a946-11f0-a963-2d3399b4bc98">
-      DESCARGA GRATIS BETA
-    </a>
-    <span class="small-text">Versión Beta — lanzamiento completo pronto</span>
-  </div>
-
-  <div class="hero-image">
-    <div class="image-placeholder">
-      <img src="/images/IMAGEN 1.png" alt="OFFSZN Vocal Presets Pack">
+  <div class="hero-container">
+    <div class="hero-content">
+      <div class="hero-badge">
+        🇵🇪 100% Peruano • Beta Abierta
+      </div>
+      <h1 class="hero-title">
+        EL PRIMER<br>
+        <span class="gradient-text">MARKETPLACE</span><br>
+        MUSICAL DE PERÚ
+      </h1>
+      <p class="hero-subtitle">
+        Donde productores peruanos venden beats, kits y presets al mundo entero.
+      </p>
+      <div class="hero-stats">
+        <div class="stat-item">
+          <span class="stat-number">+100</span>
+          <span class="stat-label">Productores</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-number">+500</span>
+          <span class="stat-label">Descargas</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-number">5.0</span>
+          <span class="stat-label">Valoración</span>
+        </div>
+      </div>
+      <div class="hero-buttons">
+        <a href="#beats" class="btn-hero btn-hero-primary">
+          <span>Explorar Recursos</span>
+          <i class="bi bi-arrow-right"></i>
+        </a>
+        <a href="#demo" class="btn-hero btn-hero-secondary">
+          <span>Empezar a Vender</span>
+          <i class="bi bi-upload"></i>
+        </a>
+      </div>
+    </div>
+    <div class="hero-image">
+      <img src="https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?w=600&h=600&fit=crop" alt="OFFSZN Platform">
     </div>
   </div>
 </section>
 
-<!-- ==================== SOBRE OFFSZN ==================== -->
-<section class="about">
-  <h2>¿Qué es OFFSZN?</h2>
-  <p>
-    OFFSZN es una comunidad de productores y artistas creada por <strong>Willie Inspired</strong>.
-    Aquí encuentras cursos prácticos de mezcla, recursos gratis y acceso a presets listos para aplicar en tu música.
-  </p>
+<!-- ==================== DEMO INTERACTIVA ==================== -->
+<section class="demo-section" id="demo">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-eyebrow">✨ AHORA TE TOCA A TI</span>
+      <h2 class="section-title">Simula Tu Primera Venta</h2>
+      <p class="section-subtitle">
+        En 3 simples pasos, convierte tu música en ingresos.
+      </p>
+    </div>
+    <div class="demo-interactive">
+      <div class="demo-step">
+        <div class="demo-step-number">1</div>
+        <div class="demo-step-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" viewBox="0 0 16 16">
+            <path d="M4 3.5A1.5 1.5 0 0 1 5.5 2h5A1.5 1.5 0 0 1 12 3.5v9a1.5 1.5 0 0 1-1.5 1.5H5.5A1.5 1.5 0 0 1 4 12.5v-9z"/>
+          </svg>
+        </div>
+        <h3 class="demo-step-title">Sube tu archivo</h3>
+        <p class="demo-step-desc">Beat, Kit o Preset. Formatos WAV, MP3, ZIP aceptados.</p>
+      </div>
+      <div class="demo-step">
+        <div class="demo-step-number">2</div>
+        <div class="demo-step-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" viewBox="0 0 16 16">
+            <path d="M8 0a8 8 0 1 1 0 16A8 8 0 0 1 8 0zM5.5 7.5a2.5 2.5 0 1 1 5 0 2.5 2.5 0 0 1-5 0z"/>
+            <path d="M8 10a2 2 0 1 1 0 4 2 2 0 0 1 0-4z"/>
+          </svg>
+        </div>
+        <h3 class="demo-step-title">Define tu precio</h3>
+        <p class="demo-step-desc">Tú decides cuánto vale tu trabajo.</p>
+      </div>
+      <div class="demo-step">
+        <div class="demo-step-number">3</div>
+        <div class="demo-step-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" viewBox="0 0 16 16">
+            <path d="M10 0l-1.5 1.5L12 5H0v2h12l-3.5 3.5L10 12l6-6L10 0z"/>
+          </svg>
+        </div>
+        <h3 class="demo-step-title">¡Publica y cobra!</h3>
+        <p class="demo-step-desc">Recibe pagos en Yape o PayPal. Instantáneo.</p>
+      </div>
+    </div>
+    <div class="demo-upload-zone">
+      <div class="demo-upload-icon">
+        <i class="bi bi-cloud-upload"></i>
+      </div>
+      <div class="demo-upload-text">Arrastra tu archivo aquí</div>
+      <div class="demo-upload-hint">o haz clic para seleccionar</div>
+    </div>
+    <!-- Simulación de Venta -->
+    <div id="saleSimulation">
+      <h3 style="color: var(--text-primary); margin-bottom: 0.75rem;">🎉 ¡Una venta está por cerrarse!</h3>
+      <p style="font-size: 1rem; color: var(--text-secondary); margin-bottom: 1rem;">
+        <strong>Willie Inspired</strong> quiere comprar tu producto <strong>"Trap Dark 2025"</strong> por <strong>$25</strong>.
+      </p>
+      <div style="display: flex; gap: 0.75rem; justify-content: center;">
+        <button id="acceptSale" class="btn-hero btn-hero-primary sale-btn">
+          <i class="bi bi-check2"></i> Aceptar
+        </button>
+        <button id="rejectSale" class="btn-hero btn-hero-secondary sale-btn">
+          <i class="bi bi-x-lg"></i> Rechazar
+        </button>
+      </div>
+    </div>
+    <div id="saleSuccess">
+      <div class="sale-checkmark">✅</div>
+      <h3 style="color: var(--text-primary); margin-bottom: 0.5rem;">¡Venta Exitosa!</h3>
+      <p style="color: var(--text-secondary);">
+        $25 han sido transferidos a tu cuenta.
+      </p>
+    </div>
+  </div>
 </section>
 
-<!-- ==================== QUÉ OFRECEMOS ==================== -->
-<section class="offer">
-  <h2>Lo que ofrecemos</h2>
-  <div class="cards">
-    <div class="card">
-      <div class="card-content">
-        <h3>Cursos online</h3>
-        <p>Aprende paso a paso mezcla y producción.</p>
+<!-- ==================== BEATS PLAYER ==================== -->
+<section class="beats-section" id="beats">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-eyebrow">🎧 ESCUCHA LO QUE OTROS VENDEN</span>
+      <h2 class="section-title">Beats en Venta Ahora</h2>
+      <p class="section-subtitle">
+        De productores peruanos, para el mundo. Calidad profesional garantizada.
+      </p>
+    </div>
+    <div class="beats-grid">
+      <div class="beat-card">
+        <div class="beat-cover">
+          <div class="beat-play-btn">
+            <i class="bi bi-play-fill"></i>
+          </div>
+        </div>
+        <div class="beat-info">
+          <h3 class="beat-title">Trap Dark 2025</h3>
+          <p class="beat-producer">by Producer_PE</p>
+          <div class="beat-meta">
+            <span class="beat-price">$25</span>
+            <span class="beat-bpm">140 BPM</span>
+          </div>
+        </div>
       </div>
-      <div class="card-image">
-        <img src="https://m.media-amazon.com/images/I/91fsiSGgEWL._UF350,350_QL80_.jpg" alt="Cursos de producción musical online">
+      <div class="beat-card">
+        <div class="beat-cover">
+          <div class="beat-play-btn">
+            <i class="bi bi-play-fill"></i>
+          </div>
+        </div>
+        <div class="beat-info">
+          <h3 class="beat-title">Reggaeton Vibes</h3>
+          <p class="beat-producer">by Lima_Beats</p>
+          <div class="beat-meta">
+            <span class="beat-price">$30</span>
+            <span class="beat-bpm">95 BPM</span>
+          </div>
+        </div>
+      </div>
+      <div class="beat-card">
+        <div class="beat-cover">
+          <div class="beat-play-btn">
+            <i class="bi bi-play-fill"></i>
+          </div>
+        </div>
+        <div class="beat-info">
+          <h3 class="beat-title">Drill Essence</h3>
+          <p class="beat-producer">by Peru_Drillz</p>
+          <div class="beat-meta">
+            <span class="beat-price">$20</span>
+            <span class="beat-bpm">150 BPM</span>
+          </div>
+        </div>
       </div>
     </div>
+  </div>
+</section>
 
-    <div class="card">
-      <div class="card-content">
-        <h3>Presets exclusivos</h3>
-        <p>Acelera tu workflow con cadenas listas.</p>
-      </div>
-      <div class="card-image">
-        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSHOQ93P_svWGAsBu045f6RTlvqZElYw5hu7AHeM8GiCVeue1iOg2gT0FrNFJ27OCJhmYE&usqp=CAU" alt="Presets de vocal para FL Studio">
-      </div>
+<!-- ==================== WHY OFFSZN ==================== -->
+<section class="why-section">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-eyebrow">💜 ¿POR QUÉ OFFSZN?</span>
+      <h2 class="section-title">No es solo un marketplace.<br>Es tu comunidad.</h2>
     </div>
-
-    <div class="card">
-      <div class="card-content">
-        <h3>Comunidad privada</h3>
-        <p>Discord con feedback, eventos y concursos.</p>
+    <div class="why-grid">
+      <div class="why-card">
+        <span class="why-icon">🇵🇪</span>
+        <h3 class="why-title">Hecho en Perú, para el mundo</h3>
+        <p class="why-desc">
+          La primera plataforma donde productores peruanos venden su música globalmente.
+        </p>
       </div>
-      <div class="card-image">
-        <img src="https://observatorioblockchain.com/wp-content/uploads/2022/03/discord.jpg" alt="Comunidad OFFSZN Discord">
+      <div class="why-card">
+        <span class="why-icon">💸</span>
+        <h3 class="why-title">Pagos locales sin complicaciones</h3>
+        <p class="why-desc">
+          Cobra en soles con Yape o dólares con PayPal. Sin restricciones, sin demoras.
+        </p>
+      </div>
+      <div class="why-card">
+        <span class="why-icon">👥</span>
+        <h3 class="why-title">Comunidad integrada</h3>
+        <p class="why-desc">
+          Foros, Discord activo, colaboraciones. Esto no es mío, es de todos nosotros.
+        </p>
       </div>
     </div>
   </div>
 </section>
 
 <!-- ==================== TESTIMONIOS ==================== -->
-<section class="testimonials">
-  <h2>Testimonios</h2>
-  <div class="testi-grid">
-    <div class="testi-card">
-      <a href="https://www.instagram.com/_nachoorh_?igsh=MWR4ODVmdm5kNGduaw==" target="_blank" rel="noopener noreferrer">
-        <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="Testimonio productor independiente">
-      </a>
-      <h3>Productor Independiente</h3>
-      <p>"Los presets de OFFSZN me ahorraron horas de trabajo. Suenan brutales."</p>
-      <div class="social-icons">
-        <a href="https://www.instagram.com/_nachoorh_?igsh=MWR4ODVmdm5kNGduaw==" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
-          <i class="bi bi-instagram"></i>
-        </a>
-      </div>
+<section class="testimonials-section" id="testimonios">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-eyebrow">💬 LO QUE DICEN</span>
+      <h2 class="section-title">Historias Reales</h2>
     </div>
-
-    <div class="testi-card">
-      <a href="https://www.instagram.com/jwolflabestia?igsh=MWQ1ZW01cHoydHpoMQ%3D%3D&utm_source=qr" target="_blank" rel="noopener noreferrer">
-        <img src="/images/Jwolf.jpg" alt="J Wolf La Bestia - Artista">
-      </a>
-      <h3>Artista Emergente</h3>
-      <p>
-        "Gracias a las mezclas y masters de Willie Inspired logré sonar con mayor calidad profesional y encontrar mi verdadera esencia artística.
-        Su guía me permitió llevar mis canciones al siguiente nivel y destacar con un sonido único."
+    <div class="testimonial-card">
+      <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&h=200&fit=crop" alt="Producer" class="testimonial-avatar">
+      <p class="testimonial-text">
+        "Gracias a OFFSZN pude vender mi primer beat a un artista internacional.
+        La plataforma es súper fácil de usar y los pagos llegan al instante."
       </p>
-      <p><strong>- J Wolf La Bestia</strong></p>
-      <div class="social-icons">
-        <a href="https://www.instagram.com/jwolflabestia?igsh=MWQ1ZW01cHoydHpoMQ%3D%3D&utm_source=qr" target="_blank" rel="noopener noreferrer" aria-label="Instagram J Wolf">
-          <i class="bi bi-instagram"></i>
-        </a>
-        <a href="https://open.spotify.com/intl-es/artist/76eg3WFn2kPSMOOF25kovn" target="_blank" rel="noopener noreferrer" aria-label="Spotify J Wolf">
-          <i class="bi bi-spotify"></i>
-        </a>
-        <a href="https://www.tiktok.com/@j_wolf_la_bestia" target="_blank" rel="noopener noreferrer" aria-label="TikTok J Wolf">
-          <i class="bi bi-tiktok"></i>
-        </a>
+      <h4 class="testimonial-author">J Wolf La Bestia</h4>
+      <p class="testimonial-role">Artista · Lima, Perú</p>
+      <div class="testimonial-socials">
+        <a href="#" class="social-link"><i class="bi bi-instagram"></i></a>
+        <a href="#" class="social-link"><i class="bi bi-spotify"></i></a>
+        <a href="#" class="social-link"><i class="bi bi-tiktok"></i></a>
       </div>
     </div>
   </div>
 </section>
 
 <!-- ==================== FAQ ==================== -->
-<section class="faq" id="faq">
-  <h2>❓ Preguntas Frecuentes (FAQ)</h2>
-
-  <div class="faq-category">
-    <h3>📀 Sobre los cursos</h3>
-
-    <div class="faq-item">
-      <p class="question">¿Qué ofrecen tus cursos?</p>
-      <p class="answer">
-        Mis cursos están diseñados para ayudarte a mejorar tus habilidades de producción musical, desde lo más básico hasta técnicas avanzadas.
-        Aprenderás mezcla, masterización, grabación de voces, uso de MIDI y efectos, siempre con un enfoque práctico en tus propios proyectos desde la primera clase.
-      </p>
+<section class="faq-section">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-eyebrow">❓ PREGUNTAS FRECUENTES</span>
+      <h2 class="section-title">Todo lo que necesitas saber</h2>
     </div>
-
-    <div class="faq-item">
-      <p class="question">¿Cómo funcionan las clases?</p>
-      <p class="answer">
-        Las clases son 100% en vivo por videollamada (Zoom, Meet o Teams). Cada sesión dura entre 40 y 60 minutos, incluye explicación paso a paso y práctica directa sobre tu canción o beat.
-        Además, recibirás la grabación de cada clase para repasar.
-      </p>
-    </div>
-
-    <div class="faq-item">
-      <p class="question">¿Necesito experiencia previa para tomar el curso?</p>
-      <p class="answer">
-        No. Puedes empezar sin conocimientos o con un nivel intermedio. Yo adapto cada clase a tu nivel y estilo musical de preferencia.
-      </p>
+    <div class="faq-list">
+      <div class="faq-item">
+        <div class="faq-question">
+          <span>¿Cómo empiezo a vender en OFFSZN?</span>
+          <i class="bi bi-chevron-down faq-icon"></i>
+        </div>
+        <div class="faq-answer">
+          <div class="faq-answer-content">
+            Crea tu cuenta gratis, configura tus métodos de pago (Yape o PayPal) y sube tus productos.
+            En minutos estarás vendiendo.
+          </div>
+        </div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-question">
+          <span>¿Qué comisión cobra OFFSZN?</span>
+          <i class="bi bi-chevron-down faq-icon"></i>
+        </div>
+        <div class="faq-answer">
+          <div class="faq-answer-content">
+            Solo cobramos 5% por transacción completada. Sin costos ocultos, sin mensualidades.
+          </div>
+        </div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-question">
+          <span>¿Puedo vender beats, kits y presets?</span>
+          <i class="bi bi-chevron-down faq-icon"></i>
+        </div>
+        <div class="faq-answer">
+          <div class="faq-answer-content">
+            ¡Sí! Puedes vender cualquier tipo de contenido musical: beats, drum kits, presets de vocal,
+            samples, loops y más.
+          </div>
+        </div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-question">
+          <span>¿Cómo recibo mis pagos?</span>
+          <i class="bi bi-chevron-down faq-icon"></i>
+        </div>
+        <div class="faq-answer">
+          <div class="faq-answer-content">
+            Puedes configurar Yape (para pagos en soles) o PayPal (para pagos internacionales).
+            Los pagos son instantáneos.
+          </div>
+        </div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-question">
+          <span>¿Necesito ser productor profesional?</span>
+          <i class="bi bi-chevron-down faq-icon"></i>
+        </div>
+        <div class="faq-answer">
+          <div class="faq-answer-content">
+            No. OFFSZN es para todos los niveles. Desde principiantes hasta profesionales.
+            Lo importante es la calidad de tu trabajo.
+          </div>
+        </div>
+      </div>
     </div>
   </div>
+</section>
 
-  <div class="faq-category">
-    <h3>🎚 Sobre presets y recursos</h3>
-
-    <div class="faq-item">
-      <p class="question">¿Qué incluyen los presets?</p>
-      <p class="answer">
-        Mis presets están optimizados para FL Studio y plugins de Waves, pero siempre indico compatibilidad en la descripción.
-        También incluyo presets nativos para que todos puedan usarlos sin problema.
-      </p>
-    </div>
-
-    <div class="faq-item">
-      <p class="question">¿Cómo recibo mis presets después de la compra?</p>
-      <p class="answer">
-        Una vez que completes el pago, recibirás un link de descarga inmediato y también lo tendrás guardado en tu cuenta en la página.
-      </p>
-    </div>
-  </div>
-
-  <div class="faq-category">
-    <h3>💳 Pagos y soporte</h3>
-
-    <div class="faq-item">
-      <p class="question">¿Qué métodos de pago aceptas?</p>
-      <p class="answer">
-        Se aceptan los siguientes métodos de pago: PayPal, tarjeta de crédito y Yape.
-      </p>
-    </div>
-
-    <div class="faq-item">
-      <p class="question">¿Qué hago si tengo problemas/dudas con mi compra?</p>
-      <p class="answer">
-        Escríbeme directo a WhatsApp +51 993 525 005 o por Instagram @willieinspired y te respondo lo más rápido posible.
-      </p>
-    </div>
-  </div>
-
-  <div class="faq-category">
-    <h3>🎶 Comunidad y novedades</h3>
-
-    <div class="faq-item">
-      <p class="question">¿Dónde puedo estar al día con lo nuevo?</p>
-      <p class="answer">
-        En mi servidor de Discord y en mi Instagram @willieinspired, donde comparto tips, presets gratis, lanzamientos y concursos.
-      </p>
-    </div>
-
-    <div class="faq-item">
-      <p class="question">¿Ofreces descuentos?</p>
-      <p class="answer">
-        Sí, en lanzamientos y promociones especiales anuncio descuentos limitados en mis redes.
-      </p>
-    </div>
+<!-- ==================== CTA FINAL ==================== -->
+<section class="cta-section">
+  <div class="cta-container">
+    <h2 class="cta-title">¿Listo para vender tu música?</h2>
+    <p class="cta-subtitle">
+      Únete a +100 productores peruanos que ya están generando ingresos con su música.
+    </p>
+    <a href="/pages/register.html" class="btn-hero btn-hero-primary">
+      <span>Crear Cuenta Gratis</span>
+      <i class="bi bi-arrow-right"></i>
+    </a>
   </div>
 </section>
 
 <!-- ==================== FOOTER ==================== -->
 <footer class="footer">
-  <div class="footer-content">
-    <p>© 2025 OFFSZN</p>
-    <ul>
-      <li><a href="/pages/politica-de-privacidad.html" target="_blank" rel="noopener noreferrer">Política de Privacidad</a></li>
-      <li><a href="/pages/terminos-de-uso.html" target="_blank" rel="noopener noreferrer">Términos de Uso</a></li>
-      <li><a href="/pages/terminos-de-servicio.html" target="_blank" rel="noopener noreferrer">Términos de Servicio</a></li>
-      <li><a href="/pages/contacto.html">Contacto</a></li>
-    </ul>
-    <div class="footer-social">
-      <a href="https://wa.link/t89kep" target="_blank" rel="noopener noreferrer" title="WhatsApp">
-        <i class="bi bi-whatsapp"></i>
-      </a>
-      <a href="https://www.instagram.com/willieinspired/" target="_blank" rel="noopener noreferrer" title="Instagram">
-        <i class="bi bi-instagram"></i>
-      </a>
-      <a href="https://www.youtube.com/@willieinspired" target="_blank" rel="noopener noreferrer" title="YouTube">
-        <i class="bi bi-youtube"></i>
-      </a>
+  <div class="footer-container">
+    <div class="footer-section">
+      <h4>OFFSZN</h4>
+      <p style="color: var(--text-muted); font-size: 0.875rem; line-height: 1.6;">
+        El primer marketplace musical<br>hecho en Perú 🇵🇪
+      </p>
+      <div class="footer-socials">
+        <a href="#" class="footer-social-link"><i class="bi bi-instagram"></i></a>
+        <a href="#" class="footer-social-link"><i class="bi bi-discord"></i></a>
+        <a href="#" class="footer-social-link"><i class="bi bi-youtube"></i></a>
+        <a href="#" class="footer-social-link"><i class="bi bi-whatsapp"></i></a>
+      </div>
     </div>
+    <div class="footer-section">
+      <h4>Recursos</h4>
+      <div class="footer-links">
+        <a href="/pages/recursos/beats-instrumentales.html">Beats & Instrumentales</a>
+        <a href="/pages/recursos/drum-kits.html">Drum Kits</a>
+        <a href="/pages/presets-v2.html">Presets & Plugins</a>
+        <a href="/pages/recursos/samples-loops.html">Samples & Loops</a>
+        <a href="/pages/recursos/recursos-gratis.html">Recursos Gratis</a>
+      </div>
+    </div>
+    <div class="footer-section">
+      <h4>Comunidad</h4>
+      <div class="footer-links">
+        <a href="/pages/comunidad/feed.html">Feed</a>
+        <a href="/pages/comunidad/productores.html">Productores</a>
+        <a href="/pages/comunidad/colaboraciones.html">Colaboraciones</a>
+        <a href="/pages/comunidad/foros.html">Foros</a>
+        <a href="https://discord.gg/vX7XktMeBU" target="_blank">Discord</a>
+      </div>
+    </div>
+    <div class="footer-section">
+      <h4>Legal</h4>
+      <div class="footer-links">
+        <a href="#">Términos de Uso</a>
+        <a href="#">Política de Privacidad</a>
+        <a href="#">Términos de Servicio</a>
+        <a href="#">Contacto</a>
+      </div>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p>© 2025 OFFSZN. Hecho con 💜 en Perú.</p>
   </div>
 </footer>
 
-<!-- ==================== POPUPS ==================== -->
-<!-- POPUP 1: Auto al entrar -->
-<script async src="https://eomail5.com/form/6d6c94f4-936c-11f0-a6b1-2398b9a18ea0.js" data-form="6d6c94f4-936c-11f0-a6b1-2398b9a18ea0"></script>
-
-<!-- POPUP 2: Con el botón "Descarga Gratis Beta" -->
-<script async src="https://eomail5.com/form/c6ea1c0a-a946-11f0-a963-2d3399b4bc98.js" data-form="c6ea1c0a-a946-11f0-a963-2d3399b4bc98"></script>
-
-<script src="/css/countdown.js"></script>
-<!-- ==================== SCRIPTS EXTERNOS ==================== -->
-<script src="/script/popup.js"></script>
-<script src="/script/faq.js"></script>
-<script src="/script/menu.js"></script>
-
-<!-- Script para User Dropdown -->
+<!-- ==================== SCRIPTS ==================== -->
 <script>
-function toggleUserDropdown() {
-  const dropdown = document.querySelector('.user-dropdown');
-  dropdown.classList.toggle('active');
+// Countdown (NO se oculta al recargar)
+function updateCountdown() {
+  const targetDate = new Date();
+  targetDate.setDate(targetDate.getDate() + 30);
+  setInterval(() => {
+    const now = new Date().getTime();
+    const distance = targetDate - now;
+    document.getElementById('days').textContent = Math.floor(distance / (1000 * 60 * 60 * 24));
+    document.getElementById('hours').textContent = String(Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))).padStart(2, '0');
+    document.getElementById('minutes').textContent = String(Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60))).padStart(2, '0');
+    document.getElementById('seconds').textContent = String(Math.floor((distance % (1000 * 60)) / 1000)).padStart(2, '0');
+  }, 1000);
 }
+updateCountdown();
 
-// Close user dropdown when clicking outside
-document.addEventListener('click', function(e) {
-  const userDropdown = document.querySelector('.user-dropdown');
-  
-  if (userDropdown && !userDropdown.contains(e.target)) {
-    userDropdown.classList.remove('active');
+// Solo se oculta si el usuario hace clic en la X
+document.getElementById('countdownClose').addEventListener('click', function() {
+  document.getElementById('countdownBanner').style.display = 'none';
+});
+
+// Dropdowns
+function toggleDropdown(element) {
+  const parent = element.closest('.dropdown-parent');
+  const isActive = parent.classList.contains('dropdown-active');
+  document.querySelectorAll('.dropdown-parent').forEach(p => {
+    p.classList.remove('dropdown-active');
+  });
+  if (!isActive) {
+    parent.classList.add('dropdown-active');
   }
+}
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.dropdown-parent')) {
+    document.querySelectorAll('.dropdown-parent').forEach(p => {
+      p.classList.remove('dropdown-active');
+    });
+  }
+});
+
+// Simulación de Venta
+document.querySelector('.btn-hero[href="#demo"]').addEventListener('click', function(e) {
+  e.preventDefault();
+  document.getElementById('saleSimulation').style.display = 'block';
+});
+document.getElementById('acceptSale').addEventListener('click', function() {
+  document.getElementById('saleSimulation').style.display = 'none';
+  document.getElementById('saleSuccess').style.display = 'block';
+});
+document.getElementById('rejectSale').addEventListener('click', function() {
+  document.getElementById('saleSimulation').style.display = 'none';
+  alert("La venta ha sido rechazada.");
+});
+
+// FAQ
+document.querySelectorAll('.faq-question').forEach(question => {
+  question.addEventListener('click', function() {
+    const faqItem = this.parentElement;
+    faqItem.classList.toggle('active');
+  });
+});
+
+// Smooth Scroll
+document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+  anchor.addEventListener('click', function (e) {
+    e.preventDefault();
+    document.querySelector(this.getAttribute('href')).scrollIntoView({
+      behavior: 'smooth'
+    });
+  });
+});
+
+// Beat Play Buttons
+document.querySelectorAll('.beat-play-btn').forEach(btn => {
+  btn.addEventListener('click', function() {
+    const icon = this.querySelector('i');
+    icon.classList.toggle('bi-play-fill');
+    icon.classList.toggle('bi-pause-fill');
+  });
 });
 </script>
 
 </body>
 </html>
+
