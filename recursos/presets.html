@@ -8,7 +8,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Montserrat:wght@700;800;900&display=swap" rel="stylesheet">
   <!-- Bootstrap Icons -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
- <style>
+<style>
     * {
       margin: 0;
       padding: 0;
@@ -37,105 +37,7 @@
       line-height: 1.6;
       overflow-x: hidden;
     }
-
-    /* ==================== COUNTDOWN BANNER ==================== */
-    .countdown-banner {
-      background: linear-gradient(90deg, #7209b7 0%, #560bad 100%);
-      padding: 0.5rem 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      position: relative;
-      z-index: 1001;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    }
-
-    .countdown-content {
-      display: flex;
-      align-items: center;
-      gap: 1.5rem;
-      max-width: 1400px;
-      width: 100%;
-      padding: 0 1.5rem;
-      justify-content: center;
-    }
-
-    .countdown-text {
-      font-size: 0.75rem;
-      font-weight: 700;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-      color: #fff;
-    }
-
-    .countdown-timer {
-      display: flex;
-      gap: 0.5rem;
-    }
-
-    .time-block {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      background: rgba(0, 0, 0, 0.3);
-      padding: 0.375rem 0.625rem;
-      border-radius: 4px;
-      min-width: 40px;
-    }
-
-    .time-number {
-      font-size: 1rem;
-      font-weight: 800;
-      line-height: 1;
-      color: #fff;
-    }
-
-    .time-label {
-      font-size: 0.5rem;
-      text-transform: uppercase;
-      color: rgba(255, 255, 255, 0.7);
-      margin-top: 0.125rem;
-      letter-spacing: 0.5px;
-    }
-
-    .countdown-btn {
-      background: #000;
-      color: #fff;
-      padding: 0.5rem 1.25rem;
-      border-radius: 6px;
-      text-decoration: none;
-      font-size: 0.75rem;
-      font-weight: 700;
-      letter-spacing: 0.5px;
-      text-transform: uppercase;
-      transition: all 0.3s;
-      border: 1px solid rgba(255, 255, 255, 0.2);
-    }
-
-    .countdown-btn:hover {
-      background: rgba(0, 0, 0, 0.8);
-      border-color: #fff;
-      transform: translateY(-1px);
-    }
-
-    .countdown-close {
-      position: absolute;
-      right: 1.5rem;
-      background: none;
-      border: none;
-      color: rgba(255, 255, 255, 0.7);
-      font-size: 1.25rem;
-      cursor: pointer;
-      transition: color 0.3s;
-      padding: 0.25rem;
-      line-height: 1;
-    }
-
-    .countdown-close:hover {
-      color: #fff;
-    }
-
-    /* ==================== NAVBAR ==================== */
+        /* ==================== NAVBAR ==================== */
     .navbar {
       position: sticky;
       top: 0;
@@ -459,6 +361,7 @@
     }
 
 
+
    /* FOOTER */
     .footer {
       background: var(--bg-black);
@@ -743,7 +646,66 @@
     grid-template-columns: 1fr;
   }
 }
-    
+ /* 3. Estilo del contenedor de las partículas */
+    .sparkle-wrap {
+      position: absolute;
+      /* ¡Sácalo del flujo! */
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      /* Detrás del texto */
+      pointer-events: none;
+      /* No puede ser clickeado */
+    }
+
+    /* 4. Lógica de cada partícula */
+    .particle {
+      --f: 1;
+      --pos-k: max(0, var(--k));
+      --neg-k: max(0, -1 * var(--k));
+      --low-c: min(1, 4 * (1 - var(--pos-k)));
+      --abs-d: max(var(--neg-k) - .5, .5 - var(--neg-k));
+      --mov-f: var(--pos-k);
+      display: grid;
+      position: absolute;
+      left: var(--x);
+      top: var(--y);
+      rotate: var(--a);
+      animation: k 1s linear calc(1s * var(--t, 0)) infinite;
+    }
+
+    .particle::before {
+      --sa: calc(min(1, 1 - 2 * min(.5, var(--mov-f))) * 45deg);
+      grid-area: 1/ 1;
+      width: .75em;
+      aspect-ratio: 1;
+      border-radius: calc(1.25 * min(.8, var(--mov-f)) * 50%) 50% 50%;
+      transform-origin: 0 0;
+      translate: calc(var(--mov-f) * var(--d));
+      rotate: -45deg;
+      scale: var(--f);
+      transform: skew(var(--sa), var(--sa));
+      opacity: var(--low-c);
+      filter: Saturate(var(--low-c));
+      /* ¡Color adaptado a tu diseño! */
+      background: radial-gradient(at 85% 85%, #ffffff, var(--purple-light) 75%);
+      content: '';
+    }
+
+    /* 6. La "estrella" o "brillo" principal (el ::after) */
+    .particle::after {
+      grid-area: 1/ 1;
+      translate: -50% -50%;
+      scale: calc(var(--f) * (1 - 2 * var(--abs-d)));
+      text-align: center;
+      filter: blur(.5px);
+      color: #fff;
+      /* Color del brillo */
+      content: '✦';
+      /* El símbolo del brillo */
+    }
   </style>
 </head>
 <body>
