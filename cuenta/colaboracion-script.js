@@ -1,9 +1,25 @@
 // ===============================================
-// COLABORACIONES - JAVASCRIPT CORREGIDO
+// COLABORACIONES - JAVASCRIPT CON SKELETON LOADING
 // ===============================================
 
 // -------------------------
-// Datos de productores actualizados
+// Configuración de API
+// -------------------------
+let API_URL = '';
+if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    API_URL = 'http://localhost:3000/api';
+} else {
+    API_URL = 'https://offszn-academy.onrender.com/api';
+}
+
+// -------------------------
+// Cache Keys
+// -------------------------
+const CACHE_KEY = 'offszn_user_cache';
+const COLLAB_CACHE_KEY = 'offszn_collab_cache';
+
+// -------------------------
+// Datos de productores
 // -------------------------
 const producers = [
     {
@@ -108,13 +124,18 @@ const weeklyProgress = {
 };
 
 // -------------------------
-// Elementos del DOM - Con verificación de existencia
+// Elementos del DOM
 // -------------------------
 const menuToggle = document.getElementById("menuToggle");
 const sidebar = document.getElementById("sidebar");
 const menuItems = document.querySelectorAll(".menu-item");
 const views = document.querySelectorAll(".view");
 const producersGrid = document.getElementById("producersGrid");
+
+// Elementos del perfil (para skeleton)
+const profileAvatar = document.querySelector('.profile-avatar');
+const profileName = document.querySelector('.profile-name');
+const walletAmount = document.querySelector('.wallet-amount');
 
 // Filtros
 const roleFilter = document.getElementById("roleFilter");
@@ -140,7 +161,145 @@ const modalVerified = document.getElementById("modalVerified");
 const startCollabBtn = document.querySelector(".start-collab-btn");
 
 // -------------------------
-// Helper: Obtener iniciales del nombre
+// SKELETON LOADING SYSTEM
+// -------------------------
+function showSkeletonLoading() {
+    // Avatar
+    if (profileAvatar) {
+        profileAvatar.classList.add('skeleton');
+        profileAvatar.textContent = '';
+    }
+    
+    // Nombre
+    if (profileName) {
+        profileName.classList.add('skeleton');
+        profileName.textContent = 'Cargando...';
+    }
+    
+    // Saldo
+    if (walletAmount) {
+        walletAmount.classList.add('skeleton');
+        walletAmount.textContent = '$0.00';
+    }
+}
+
+function hideSkeletonLoading() {
+    // Remover skeleton con fade-in
+    document.querySelectorAll('.skeleton').forEach(el => {
+        el.classList.remove('skeleton');
+        el.classList.add('fade-in');
+    });
+}
+
+// -------------------------
+// CACHE SYSTEM
+// -------------------------
+function loadCachedUser() {
+    try {
+        const cached = localStorage.getItem(CACHE_KEY);
+        if (cached) {
+            const cachedData = JSON.parse(cached);
+            console.log('✅ Cargando datos desde caché...');
+            updateUserUI(cachedData, true);
+            return true;
+        }
+    } catch (err) {
+        console.error('Error al cargar caché:', err);
+    }
+    return false;
+}
+
+function saveUserCache(userData) {
+    try {
+        localStorage.setItem(CACHE_KEY, JSON.stringify(userData));
+    } catch (err) {
+        console.error('Error al guardar caché:', err);
+    }
+}
+
+// -------------------------
+// UPDATE USER UI
+// -------------------------
+function updateUserUI(userData, fromCache = false) {
+    if (profileName) {
+        const displayName = userData.nickname || userData.first_name || 'Usuario';
+        profileName.textContent = displayName;
+        profileName.classList.remove('skeleton');
+        profileName.classList.add('fade-in');
+    }
+
+    if (profileAvatar) {
+        const initial = (userData.first_name || userData.nickname || 'U').charAt(0).toUpperCase();
+        profileAvatar.textContent = initial;
+        profileAvatar.classList.remove('skeleton');
+        profileAvatar.classList.add('fade-in');
+    }
+
+    // El saldo se manejará separadamente si existe en userData
+    if (walletAmount && userData.balance !== undefined) {
+        walletAmount.textContent = `$${userData.balance.toFixed(2)}`;
+        walletAmount.classList.remove('skeleton');
+        walletAmount.classList.add('fade-in');
+    } else if (walletAmount) {
+        // Si no hay balance en userData, dejamos el skeleton o ponemos $0.00
+        walletAmount.textContent = '$0.00';
+        walletAmount.classList.remove('skeleton');
+    }
+
+    if (!fromCache) {
+        hideSkeletonLoading();
+    }
+}
+
+// -------------------------
+// LOAD USER DATA FROM API
+// -------------------------
+async function loadUserData() {
+    const token = localStorage.getItem('authToken');
+    
+    if (!token) {
+        console.warn('⚠️ No hay token de autenticación');
+        hideSkeletonLoading();
+        return null;
+    }
+
+    try {
+        const response = await fetch(`${API_URL}/me`, {
+            headers: { 
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`Error ${response.status}: No se pudieron obtener los datos del usuario`);
+        }
+
+        const userData = await response.json();
+        console.log('✅ Datos del usuario cargados:', userData);
+
+        // Guardar en caché
+        saveUserCache(userData);
+
+        // Actualizar UI con datos frescos
+        updateUserUI(userData, false);
+
+        return userData;
+    } catch (error) {
+        console.error('❌ Error al cargar datos del usuario:', error);
+        hideSkeletonLoading();
+        
+        // Si falla, al menos quitamos los skeletons
+        if (profileName) profileName.textContent = 'Usuario';
+        if (profileAvatar) profileAvatar.textContent = 'U';
+        if (walletAmount) walletAmount.textContent = '$0.00';
+        
+        return null;
+    }
+}
+
+// -------------------------
+// Helper: Obtener iniciales
 // -------------------------
 function getInitials(name) {
     const parts = name.split(' ');
@@ -151,7 +310,7 @@ function getInitials(name) {
 }
 
 // -------------------------
-// Helper: Validar elementos del DOM
+// Helper: Validar elementos DOM
 // -------------------------
 function elementExists(element, name) {
     if (!element) {
@@ -162,7 +321,7 @@ function elementExists(element, name) {
 }
 
 // -------------------------
-// Render de progreso semanal
+// Render progreso semanal
 // -------------------------
 function renderWeeklyProgress() {
     if (!elementExists(progressCard, "progressCard")) return;
@@ -175,7 +334,7 @@ function renderWeeklyProgress() {
 }
 
 // -------------------------
-// Render de colaboraciones activas
+// Render colaboraciones activas
 // -------------------------
 function renderActiveCollaborations() {
     if (!elementExists(activeCollabsList, "activeCollabsList")) return;
@@ -197,7 +356,6 @@ function renderActiveCollaborations() {
             </div>
         `).join("");
 
-        // Evento para abrir chat
         document.querySelectorAll(".btn-chat").forEach(btn => {
             btn.addEventListener("click", (e) => {
                 const collabId = e.currentTarget.dataset.collabId;
@@ -217,15 +375,11 @@ function handleOpenChat(collabId) {
     const collab = activeCollaborations.find(c => c.id === parseInt(collabId));
     if (collab) {
         alert(`✅ Abriendo chat con ${collab.partnerName}...\n\n(Esto se conectará al sistema de mensajes)`);
-        // Aquí podrías:
-        // - Cambiar a la vista de mensajes
-        // - Abrir un modal de chat
-        // - Redirigir a otra página
     }
 }
 
 // -------------------------
-// Helper para mostrar nombre legible del rol
+// Helper rol legible
 // -------------------------
 function getRoleLabel(role) {
     const labels = {
@@ -238,7 +392,7 @@ function getRoleLabel(role) {
 }
 
 // -------------------------
-// Render dinámico de productores con filtros
+// Render productores con filtros
 // -------------------------
 function renderProducers(filteredProducers = producers) {
     if (!elementExists(producersGrid, "producersGrid")) return;
@@ -272,7 +426,6 @@ function renderProducers(filteredProducers = producers) {
             </div>
         `).join("");
 
-        // Agregar eventos a las tarjetas
         document.querySelectorAll(".producer-card").forEach(card => {
             card.addEventListener("click", () => {
                 const id = parseInt(card.dataset.id);
@@ -314,7 +467,7 @@ function applyFilters() {
 }
 
 // -------------------------
-// Eventos de filtros
+// Inicializar filtros
 // -------------------------
 function initializeFilters() {
     const filters = [roleFilter, countryFilter, genreFilter, availabilityFilter];
@@ -335,7 +488,6 @@ function initializeSidebar() {
             sidebar.classList.toggle("open");
         });
 
-        // Cerrar sidebar al hacer clic fuera (opcional)
         document.addEventListener("click", (e) => {
             if (sidebar.classList.contains("open") && 
                 !sidebar.contains(e.target) && 
@@ -347,42 +499,113 @@ function initializeSidebar() {
 }
 
 // -------------------------
-// Cambio de vistas
+// Cambio de vistas + Mensajes "Próximamente"
 // -------------------------
 function initializeViews() {
     menuItems.forEach(item => {
         item.addEventListener("click", () => {
-            // Remover clase active de todos los items
             menuItems.forEach(btn => btn.classList.remove("active"));
-            
-            // Agregar clase active al item clickeado
             item.classList.add("active");
             
-            // Obtener la vista correspondiente
             const view = item.dataset.view;
             
-            // Ocultar todas las vistas
+            // Verificar si es una vista "próximamente"
+            if (view === 'blog' || view === 'analytics' || view === 'history') {
+                showComingSoonMessage(view);
+                return;
+            }
+            
             views.forEach(v => v.classList.remove("active"));
             
-            // Mostrar la vista seleccionada
             const selectedView = document.getElementById(view + "View");
             if (selectedView) {
                 selectedView.classList.add("active");
             }
 
-            // Si se abre la vista de colaboraciones, renderizamos datos
             if (view === "collaborations") {
                 renderWeeklyProgress();
                 renderActiveCollaborations();
                 renderProducers();
             }
 
-            // Cerrar sidebar en mobile
             if (sidebar && window.innerWidth < 768) {
                 sidebar.classList.remove("open");
             }
         });
     });
+}
+
+// -------------------------
+// Mensaje "Próximamente disponible"
+// -------------------------
+function showComingSoonMessage(feature) {
+    const featureNames = {
+        'blog': 'Blog',
+        'analytics': 'Analíticas',
+        'history': 'Historial'
+    };
+    
+    const featureName = featureNames[feature] || feature;
+    
+    // Crear overlay temporal
+    const overlay = document.createElement('div');
+    overlay.style.cssText = `
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.85);
+        backdrop-filter: blur(8px);
+        z-index: 9999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        animation: fadeIn 0.3s ease;
+    `;
+    
+    const message = document.createElement('div');
+    message.style.cssText = `
+        background: linear-gradient(135deg, #1f2937, #111827);
+        border: 1px solid rgba(147, 51, 234, 0.3);
+        border-radius: 16px;
+        padding: 40px;
+        max-width: 500px;
+        text-align: center;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        animation: slideUp 0.4s ease;
+    `;
+    
+    message.innerHTML = `
+        <div style="font-size: 64px; margin-bottom: 20px;">🚀</div>
+        <h2 style="color: #fff; font-size: 24px; font-weight: 700; margin-bottom: 12px;">
+            ${featureName} - Próximamente
+        </h2>
+        <p style="color: #a1a1aa; font-size: 15px; line-height: 1.6; margin-bottom: 24px;">
+            Esta función estará disponible muy pronto. Te notificaremos por correo electrónico cuando esté lista para usar.
+        </p>
+        <button onclick="this.closest('[style*=fixed]').remove()" style="
+            background: linear-gradient(135deg, #9333ea, #7e22ce);
+            color: white;
+            border: none;
+            padding: 12px 32px;
+            border-radius: 9999px;
+            font-weight: 600;
+            font-size: 15px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        " onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+            Entendido
+        </button>
+    `;
+    
+    overlay.appendChild(message);
+    document.body.appendChild(overlay);
+    
+    // Auto-cerrar después de 5 segundos
+    setTimeout(() => {
+        if (overlay.parentNode) {
+            overlay.style.animation = 'fadeOut 0.3s ease';
+            setTimeout(() => overlay.remove(), 300);
+        }
+    }, 5000);
 }
 
 // -------------------------
@@ -405,7 +628,6 @@ function openModal(producer) {
             modalVerified.style.display = producer.verified ? "inline" : "none";
         }
 
-        // Prevenir scroll del body
         document.body.style.overflow = "hidden";
     } catch (error) {
         console.error("Error al abrir modal:", error);
@@ -431,7 +653,6 @@ function initializeModal() {
             }
         });
 
-        // Cerrar con tecla ESC
         document.addEventListener("keydown", (e) => {
             if (e.key === "Escape" && modal.classList.contains("active")) {
                 closeModalHandler();
@@ -441,13 +662,12 @@ function initializeModal() {
 }
 
 // -------------------------
-// Botón de "Empieza tu primera colaboración"
+// Botón "Empieza tu primera colaboración"
 // -------------------------
 function initializeStartCollabButton() {
     if (startCollabBtn) {
         startCollabBtn.addEventListener("click", () => {
             try {
-                // Cambiar a la vista de colaboraciones
                 menuItems.forEach(btn => btn.classList.remove("active"));
                 
                 const collabItem = document.querySelector('.menu-item[data-view="collaborations"]');
@@ -461,12 +681,10 @@ function initializeStartCollabButton() {
                     }
                 }
 
-                // Renderizar contenido
                 renderWeeklyProgress();
                 renderActiveCollaborations();
                 renderProducers();
 
-                // Scroll suave al área de búsqueda
                 setTimeout(() => {
                     const findSection = document.querySelector(".find-collaborators");
                     if (findSection) {
@@ -481,7 +699,7 @@ function initializeStartCollabButton() {
 }
 
 // -------------------------
-// Botón de "Enviar propuesta de colaboración" en modal
+// Botón "Colaborar" en modal
 // -------------------------
 function initializeCollaborateButton() {
     document.addEventListener("click", (e) => {
@@ -491,12 +709,6 @@ function initializeCollaborateButton() {
                 closeModalHandler();
                 
                 alert(`✅ Propuesta de colaboración enviada a ${producerName}.\n\nPronto recibirás una notificación cuando responda.`);
-                
-                // Aquí podrías:
-                // - Enviar petición a backend
-                // - Actualizar weeklyProgress.sent++
-                // - Añadir notificación en UI
-                // - Actualizar estado local
                 
                 weeklyProgress.sent++;
                 renderWeeklyProgress();
@@ -508,25 +720,19 @@ function initializeCollaborateButton() {
 }
 
 // -------------------------
-// Función para toggle de dropdowns (navbar)
-// -------------------------
-window.toggleDropdown = function(element) {
-    // Esta función puede ser usada por tu navbar
-    // Implementación básica si es necesaria
-    const parent = element.closest('.dropdown-parent');
-    if (parent) {
-        parent.classList.toggle('active');
-    }
-};
-
-// -------------------------
 // INICIALIZACIÓN PRINCIPAL
 // -------------------------
-function init() {
+async function init() {
     console.log("🚀 Inicializando aplicación de colaboraciones...");
 
     try {
-        // Inicializar componentes
+        // 1. Mostrar skeletons inmediatamente
+        showSkeletonLoading();
+
+        // 2. Cargar caché primero (instantáneo)
+        const hasCachedData = loadCachedUser();
+
+        // 3. Inicializar componentes
         initializeSidebar();
         initializeViews();
         initializeModal();
@@ -534,17 +740,21 @@ function init() {
         initializeStartCollabButton();
         initializeCollaborateButton();
 
-        // Renderizar contenido inicial
+        // 4. Renderizar contenido inicial
         renderProducers();
+
+        // 5. Cargar datos frescos del servidor (asíncrono)
+        await loadUserData();
 
         console.log("✅ Aplicación inicializada correctamente");
     } catch (error) {
         console.error("❌ Error al inicializar la aplicación:", error);
+        hideSkeletonLoading();
     }
 }
 
 // -------------------------
-// Esperar a que el DOM esté listo
+// Esperar DOM
 // -------------------------
 if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", init);
@@ -553,7 +763,7 @@ if (document.readyState === "loading") {
 }
 
 // -------------------------
-// Exportar funciones si es necesario (para debugging)
+// Debug utilities
 // -------------------------
 window.appDebug = {
     producers,
@@ -562,5 +772,6 @@ window.appDebug = {
     renderProducers,
     renderActiveCollaborations,
     renderWeeklyProgress,
-    applyFilters
+    applyFilters,
+    showComingSoonMessage
 };
