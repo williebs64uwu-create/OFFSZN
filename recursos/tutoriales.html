@@ -1,0 +1,1008 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nuestros tutoriales de la comunidad</title>
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Montserrat:wght@700;800;900&display=swap" rel="stylesheet">
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+<style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --purple-main: #7209b7;
+      --purple-dark: #560bad;
+      --purple-darker: #3c096c;
+      --purple-light: #c9a7eb;
+      --purple-glow: rgba(114, 9, 183, 0.4);
+      --green-verified: #0cbc87;
+      --text-primary: #ffffff;
+      --text-secondary: #e9d5ff;
+      --text-muted: #999;
+      --bg-black: #000000;
+      --bg-dark: #0a0118;
+      --bg-card: rgba(26, 10, 46, 0.4);
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg-black);
+      color: var(--text-secondary);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+         /* ==================== NAVBAR ==================== */
+    .navbar {
+      position: sticky;
+      top: 0;
+      background: rgba(0, 0, 0, 0.95);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 0.75rem 0;
+      z-index: 1000;
+    }
+
+    .navbar-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 2rem;
+    }
+
+    .logo {
+      font-size: 1.25rem;
+      font-weight: 900;
+      letter-spacing: 1px;
+      flex-shrink: 0;
+    }
+
+    .logo a {
+      color: #fff;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: opacity 0.3s;
+    }
+
+    .navbar-center {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      flex: 1;
+    }
+
+    .navbar-links {
+      display: flex;
+      list-style: none;
+      gap: 0.25rem;
+      align-items: center;
+    }
+
+    .navbar-links li {
+      position: relative;
+    }
+
+    .navbar-links>li>a {
+      color: rgba(255, 255, 255, 0.7);
+      text-decoration: none;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+      transition: all 0.3s;
+      padding: 0.5rem 0.875rem;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      gap: 0.375rem;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .navbar-links>li>a:hover,
+    .navbar-links>li>a.active {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .navbar-links>li>a i.bi-chevron-down {
+      font-size: 0.6rem;
+      transition: transform 0.3s;
+    }
+
+    .navbar-links>li.dropdown-active>a i.bi-chevron-down {
+      transform: rotate(180deg);
+    }
+
+    .nav-badge {
+      background: linear-gradient(135deg, #7209b7, #560bad);
+      color: #fff;
+      font-size: 0.5rem;
+      padding: 0.125rem 0.375rem;
+      border-radius: 3px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-left: 0.25rem;
+    }
+
+    .dropdown-menu {
+      position: absolute;
+      top: calc(100% + 0.5rem);
+      left: 0;
+      background: rgba(8, 8, 8, 0.98);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      padding: 0.5rem;
+      min-width: 240px;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(-10px);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7);
+      z-index: 1001;
+    }
+
+    .dropdown-active .dropdown-menu {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+
+    .dropdown-menu.dropdown-large {
+      min-width: 440px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.5rem;
+    }
+
+    .dropdown-section {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .dropdown-section-title {
+      font-size: 0.625rem;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.5);
+      font-weight: 700;
+      letter-spacing: 1px;
+      padding: 0.375rem 0.75rem 0.125rem;
+    }
+
+    .dropdown-item {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.625rem 0.75rem;
+      color: rgba(255, 255, 255, 0.75);
+      text-decoration: none;
+      border-radius: 6px;
+      transition: all 0.2s;
+      font-size: 0.8125rem;
+      font-weight: 500;
+    }
+
+    .dropdown-item:hover {
+      background: rgba(114, 9, 183, 0.12);
+      color: #fff;
+    }
+
+    .dropdown-item i {
+      font-size: 1rem;
+      color: #7209b7;
+      width: 18px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    .dropdown-item-content {
+      flex: 1;
+    }
+
+    .dropdown-item-title {
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    .dropdown-item-desc {
+      font-size: 0.6875rem;
+      color: rgba(255, 255, 255, 0.5);
+      margin-top: 0.125rem;
+    }
+
+    .dropdown-item.discord-link {
+      background: rgba(88, 101, 242, 0.08);
+      border: 1px solid rgba(88, 101, 242, 0.2);
+      margin-top: 0.5rem;
+    }
+
+    .dropdown-item.discord-link:hover {
+      background: rgba(88, 101, 242, 0.15);
+      border-color: rgba(88, 101, 242, 0.4);
+    }
+
+    .dropdown-item.discord-link i {
+      color: #5865F2;
+    }
+
+    .dropdown-divider {
+      height: 1px;
+      background: rgba(255, 255, 255, 0.08);
+      margin: 0.375rem 0;
+      grid-column: 1 / -1;
+    }
+
+    .navbar-right {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-shrink: 0;
+    }
+
+    .navbar-login-link {
+      color: rgba(255, 255, 255, 0.75);
+      text-decoration: none;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      padding: 0.5rem 0.75rem;
+      border-radius: 6px;
+      transition: all 0.3s;
+      white-space: nowrap;
+    }
+
+    .navbar-login-link:hover {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .btn-join {
+      background: linear-gradient(135deg, #7209b7 0%, #560bad 100%);
+      color: #fff;
+      padding: 0.5rem 1.25rem;
+      border-radius: 8px;
+      text-decoration: none;
+      font-size: 0.8125rem;
+      font-weight: 700;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      gap: 0.375rem;
+      border: none;
+      cursor: pointer;
+      letter-spacing: 0.3px;
+      white-space: nowrap;
+    }
+
+    .btn-join:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(114, 9, 183, 0.5);
+    }
+
+    .navbar-icon-button {
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: rgba(255, 255, 255, 0.75);
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      font-size: 1rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s;
+      text-decoration: none;
+      position: relative;
+    }
+
+    .navbar-icon-button:hover {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.05);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .menu-toggle {
+      display: none;
+      background: none;
+      border: none;
+      color: #fff;
+      font-size: 1.25rem;
+      cursor: pointer;
+      padding: 0.5rem;
+    }
+
+    /* ==================== BOTÓN DE NAV PRINCIPAL (CON GLOW) ==================== */
+    .btn-nav-primary {
+      /* --- 1. Estilos de Fondo y Color --- */
+      background: var(--purple-main) !important;
+      color: var(--text-primary) !important;
+      background-image: linear-gradient(135deg, var(--purple-main), var(--purple-dark)) !important;
+      border-radius: 8px !important;
+      transition: all 0.3s !important;
+
+      /* --- 2. Layout y centrado --- */
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      text-align: center !important;
+      padding: 0.5rem 1rem !important;
+      border: none !important;
+
+      /* --- 3. Ajustes de tamaño y posición --- */
+      line-height: 1.2 !important;
+      min-width: auto !important;
+      width: auto !important;
+      white-space: nowrap !important;
+      height: 36px !important;
+
+      position: relative;
+      overflow: hidden;
+
+      vertical-align: middle !important;
+      margin: 0 !important;
+    }
+
+    .btn-nav-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 30px rgba(114, 9, 183, 0.7);
+    }
+
+
+
+
+   /* FOOTER */
+    .footer {
+      background: var(--bg-black);
+      padding: 2.5rem 1.5rem 1.5rem;
+      border-top: 1px solid rgba(114, 9, 183, 0.2);
+    }
+    .footer-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 2rem;
+      margin-bottom: 1.5rem;
+    }
+    .footer-section h4 {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 1rem;
+      font-family: 'Montserrat', sans-serif;
+    }
+    .footer-links {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .footer-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.875rem;
+      transition: all 0.3s;
+    }
+    .footer-links a:hover {
+      color: var(--purple-light);
+      padding-left: 0.25rem;
+    }
+    .footer-socials {
+      display: flex;
+      gap: 0.75rem;
+      margin-top: 1rem;
+    }
+    .footer-social-link {
+      width: 32px;
+      height: 32px;
+      background: rgba(114, 9, 183, 0.2);
+      border: 1px solid rgba(114, 9, 183, 0.4);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--purple-light);
+      text-decoration: none;
+      font-size: 1rem;
+      transition: all 0.3s;
+    }
+    .footer-social-link:hover {
+      background: rgba(114, 9, 183, 0.4);
+      border-color: rgba(114, 9, 183, 0.6);
+      transform: translateY(-2px);
+    }
+    .footer-bottom {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding-top: 1.5rem;
+      border-top: 1px solid rgba(114, 9, 183, 0.2);
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.8125rem;
+    }
+
+   /* ==================== BUSCADOR ==================== */
+.marketplace-hero {
+  background: linear-gradient(180deg, rgba(15, 10, 35, 1) 0%, rgba(5, 5, 15, 1) 100%);
+  padding: 4rem 1.5rem;
+  text-align: center;
+  border-bottom: 1px solid rgba(114, 9, 183, 0.15);
+}
+
+.container {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.marketplace-title {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 3.5rem;
+  font-weight: 900;
+  color: var(--text-primary);
+  margin-bottom: 1rem;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+}
+
+.marketplace-subtitle {
+  font-size: 1.125rem;
+  color: rgba(255, 255, 255, 0.6);
+  margin-bottom: 2.5rem;
+  font-weight: 400;
+}
+
+.search-bar {
+  max-width: 700px;
+  margin: 0 auto;
+  display: flex;
+  background: rgba(20, 15, 40, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.search-bar input {
+  flex-grow: 1;
+  background: transparent;
+  border: none;
+  padding: 1rem 1.5rem;
+  font-size: 1rem;
+  color: var(--text-primary);
+  outline: none;
+}
+
+.search-bar input::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.search-bar button {
+  background: var(--purple-main);
+  border: none;
+  color: var(--text-primary);
+  padding: 0 2rem;
+  cursor: pointer;
+  font-size: 1.25rem;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.search-bar button:hover {
+  background: var(--purple-dark);
+}
+
+
+/* ==================== HERO ==================== */
+.hero {
+  background: linear-gradient(135deg, var(--purple-darker) 0%, var(--bg-black) 100%);
+  padding: 4rem 1.5rem;
+  text-align: center;
+  border-bottom: 1px solid rgba(114, 9, 183, 0.2);
+}
+
+.hero-content h1 {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 2.5rem;
+  font-weight: 900;
+  color: var(--text-primary);
+  margin-bottom: 1rem;
+  line-height: 1.2;
+}
+
+.hero-content p {
+  font-size: 1.125rem;
+  color: var(--text-muted);
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+/* ==================== SECCIÓN PRESETS ==================== */
+.cursos {
+  max-width: 1200px;
+  margin: 4rem auto;
+  padding: 0 1.5rem;
+  text-align: center;
+}
+
+.cursos h2 {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+/* ==================== GRID DE PRODUCTOS ==================== */
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.5rem;
+  margin-top: 2rem;
+}
+
+.product-card {
+  background: var(--bg-card);
+  border: 1px solid rgba(114, 9, 183, 0.2);
+  border-radius: 12px;
+  padding: 1.5rem;
+  transition: all 0.3s;
+  text-align: left;
+}
+
+.product-card:hover {
+  transform: translateY(-5px);
+  border-color: rgba(114, 9, 183, 0.5);
+  box-shadow: 0 10px 30px rgba(114, 9, 183, 0.3);
+}
+
+.product-card img,
+.product-card .product-image {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  background: rgba(114, 9, 183, 0.1);
+}
+
+.product-card .product-image {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
+
+.product-card h3 {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.product-card .product-title {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.5rem;
+}
+
+.product-card .product-description {
+  font-size: 0.9375rem;
+  color: var(--text-secondary);
+  margin-bottom: 1rem;
+  line-height: 1.5;
+}
+
+.product-card .product-price {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--purple-light);
+  margin-bottom: 1rem;
+}
+
+.product-card button {
+  width: 100%;
+  background: linear-gradient(135deg, #7209b7 0%, #560bad 100%);
+  color: #fff;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s;
+  letter-spacing: 0.3px;
+}
+
+.product-card button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(114, 9, 183, 0.5);
+}
+
+/* ==================== RESPONSIVE ==================== */
+@media (max-width: 768px) {
+  .hero-content h1 {
+    font-size: 1.75rem;
+  }
+  
+  .product-grid {
+    grid-template-columns: 1fr;
+  }
+}
+  @property --k {
+      syntax: '<number>';
+      initial-value: -1;
+      inherits: true;
+    }
+
+    /* 2. Define la animación 'k' que pulsa la propiedad '--k' */
+    @keyframes k {
+
+      0%,
+      33.3% {
+        --k: 1;
+      }
+    }
+
+    /* 3. Estilo del contenedor de las partículas */
+    .sparkle-wrap {
+      position: absolute;
+      /* ¡Sácalo del flujo! */
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      /* Detrás del texto */
+      pointer-events: none;
+      /* No puede ser clickeado */
+    }
+
+    /* 4. Lógica de cada partícula */
+    .particle {
+      --f: 1;
+      --pos-k: max(0, var(--k));
+      --neg-k: max(0, -1 * var(--k));
+      --low-c: min(1, 4 * (1 - var(--pos-k)));
+      --abs-d: max(var(--neg-k) - .5, .5 - var(--neg-k));
+      --mov-f: var(--pos-k);
+      display: grid;
+      position: absolute;
+      left: var(--x);
+      top: var(--y);
+      rotate: var(--a);
+      animation: k 1s linear calc(1s * var(--t, 0)) infinite;
+    }
+
+    .particle::before {
+      --sa: calc(min(1, 1 - 2 * min(.5, var(--mov-f))) * 45deg);
+      grid-area: 1/ 1;
+      width: .75em;
+      aspect-ratio: 1;
+      border-radius: calc(1.25 * min(.8, var(--mov-f)) * 50%) 50% 50%;
+      transform-origin: 0 0;
+      translate: calc(var(--mov-f) * var(--d));
+      rotate: -45deg;
+      scale: var(--f);
+      transform: skew(var(--sa), var(--sa));
+      opacity: var(--low-c);
+      filter: Saturate(var(--low-c));
+      /* ¡Color adaptado a tu diseño! */
+      background: radial-gradient(at 85% 85%, #ffffff, var(--purple-light) 75%);
+      content: '';
+    }
+
+    /* 6. La "estrella" o "brillo" principal (el ::after) */
+    .particle::after {
+      grid-area: 1/ 1;
+      translate: -50% -50%;
+      scale: calc(var(--f) * (1 - 2 * var(--abs-d)));
+      text-align: center;
+      filter: blur(.5px);
+      color: #fff;
+      /* Color del brillo */
+      content: '✦';
+      /* El símbolo del brillo */
+    }
+  </style>
+</head>
+<body>
+<!-- ==================== NAVBAR ==================== -->
+  <header class="navbar">
+    <div class="navbar-container">
+      <div class="logo">
+        <a href="/index">
+          <img src="/images/LOGO-OFFSZN.png" alt="OFFSZN" style="height: 45px;">
+        </a>
+      </div>
+      <div class="navbar-center">
+        <ul class="navbar-links">
+          <li><a href="/index" class="active">Inicio</a></li>
+          <li class="dropdown-parent">
+            <a onclick="toggleDropdown(this)">
+              Recursos <i class="bi bi-chevron-down"></i>
+            </a>
+            <div class="dropdown-menu dropdown-large">
+              <div class="dropdown-section">
+                <span class="dropdown-section-title">PRODUCTOS DIGITALES</span>
+                <a href="/recursos/presets" class="dropdown-item">
+                  <i class="bi bi-sliders"></i>
+                  <div class="dropdown-item-content">
+                    <div class="dropdown-item-title">Presets & Plugins</div>
+                    <div class="dropdown-item-desc">Chains profesionales</div>
+                  </div>
+                </a>
+                <a href="/recursos/beats-instrumentales" class="dropdown-item">
+                  <i class="bi bi-music-note-beamed"></i>
+                  <div class="dropdown-item-content">
+                    <div class="dropdown-item-title">Beats & Instrumentales</div>
+                    <div class="dropdown-item-desc">Licencias disponibles</div>
+                  </div>
+                </a>
+                <a href="/recursos/drum-kits" class="dropdown-item">
+                  <i class="bi bi-disc"></i>
+                  <div class="dropdown-item-content">
+                    <div class="dropdown-item-title">Drum Kits</div>
+                    <div class="dropdown-item-desc">Samples únicos</div>
+                  </div>
+                </a>
+              </div>
+              <div class="dropdown-section">
+                <span class="dropdown-section-title">CONTENIDO</span>
+                <a href="/recursos/samples-loops" class="dropdown-item">
+                  <i class="bi bi-soundwave"></i>
+                  <div class="dropdown-item-content">
+                    <div class="dropdown-item-title">Samples & Loops</div>
+                    <div class="dropdown-item-desc">Loops de calidad</div>
+                  </div>
+                </a>
+                <a href="/recursos/tutoriales" class="dropdown-item">
+                  <i class="bi bi-play-circle"></i>
+                  <div class="dropdown-item-content">
+                    <div class="dropdown-item-title">Tutoriales</div>
+                    <div class="dropdown-item-desc">Guías y videos</div>
+                  </div>
+                </a>
+              </div>
+              <div class="dropdown-divider"></div>
+              <a href="/recursos/recursos-gratis" class="dropdown-item" style="grid-column: 1 / -1;">
+                <i class="bi bi-gift"></i>
+                <div class="dropdown-item-content">
+                  <div class="dropdown-item-title">Recursos Gratis</div>
+                  <div class="dropdown-item-desc">Descarga sin costo</div>
+                </div>
+              </a>
+            </div>
+          </li>
+          <li class="dropdown-parent">
+            <a onclick="toggleDropdown(this)">
+              Comunidad <i class="bi bi-chevron-down"></i>
+            </a>
+            <div class="dropdown-menu">
+              <a href="/comunidad/feed" class="dropdown-item">
+                <i class="bi bi-house"></i>
+                <div class="dropdown-item-content">
+                  <div class="dropdown-item-title">Feed</div>
+                </div>
+              </a>
+              <a href="/comunidad/productores" class="dropdown-item">
+                <i class="bi bi-people"></i>
+                <div class="dropdown-item-content">
+                  <div class="dropdown-item-title">Productores</div>
+                </div>
+              </a>
+              <a href="/comunidad/colaboraciones" class="dropdown-item">
+                <i class="bi bi-hand-index-thumb"></i>
+                <div class="dropdown-item-content">
+                  <div class="dropdown-item-title">Colaboraciones</div>
+                </div>
+              </a>
+              <div class="dropdown-divider"></div>
+              <a href="/comunidad/foros" class="dropdown-item">
+                <i class="bi bi-chat-dots"></i>
+                <div class="dropdown-item-content">
+                  <div class="dropdown-item-title">Foros</div>
+                </div>
+              </a>
+              <a href="/comunidad/eventos" class="dropdown-item">
+                <i class="bi bi-calendar-event"></i>
+                <div class="dropdown-item-content">
+                  <div class="dropdown-item-title">Eventos</div>
+                </div>
+              </a>
+              <a href="https://discord.gg/vX7XktMeBU" target="_blank" class="dropdown-item discord-link">
+                <i class="bi bi-discord"></i>
+                <div class="dropdown-item-content">
+                  <div class="dropdown-item-title">Únete a Discord</div>
+                  <div class="dropdown-item-desc">Comunidad activa</div>
+                </div>
+              </a>
+            </div>
+          </li>
+          <li>
+            <a href="/pages/marketplace" class="btn-nav-primary">
+              Marketplace
+              <span class="sparkle-wrap" aria-hidden="true">
+                <span class="particle" style="--a: -45deg; --x: 53%; --y: 15%; --d: 4em; --f: .7; --t: .15"></span>
+                <span class="particle" style="--a: 150deg; --x: 40%; --y: 70%; --d: 7.5em; --f: .8; --t: .08"></span>
+                <span class="particle" style="--a: 10deg; --x: 90%; --y: 65%; --d: 7em; --f: .6; --t: .25"></span>
+                <span class="particle" style="--a: -120deg; --x: 15%; --y: 10%; --d: 4em"></span>
+                <span class="particle" style="--a: -175deg; --x: 10%; --y: 25%; --d: 5.25em; --f: .6; --t: .32"></span>
+                <span class="particle" style="--a: -18deg; --x: 80%; --y: 25%; --d: 4.75em; --f: .5; --t: .4"></span>
+                <span class="particle" style="--a: -160deg; --x: 30%; --y: 5%; --d: 9em; --f: .9; --t: .5"></span>
+                <span class="particle" style="--a: 175deg; --x: 9%; --y: 30%; --d: 6em; --f: .95; --t: .6"></span>
+                <span class="particle" style="--a: -10deg; --x: 89%; --y: 25%; --d: 4.5em; --f: .55; --t: .67"></span>
+                <span class="particle" style="--a: -140deg; --x: 40%; --y: 10%; --d: 5em; --f: .85; --t: .75"></span>
+                <span class="particle" style="--a: 90deg; --x: 45%; --y: 65%; --d: 4em; --f: .5; --t: .83"></span>
+                <span class="particle" style="--a: 30deg; --x: 70%; --y: 80%; --d: 6.5em; --f: .75; --t: .92"></span>
+              </span>
+            </a>
+          </li>
+          <li>
+            <a href="/cursos/inicio">
+              Cursos
+              <span class="nav-badge">SOON</span>
+            </a>
+          </li>
+
+        </ul>
+      </div>
+      <button class="menu-toggle" id="menuToggle">
+        <i class="bi bi-list"></i>
+      </button>
+      <div class="navbar-right">
+        <a href="/pages/login" class="navbar-login-link">Iniciar Sesión</a>
+        <a href="/pages/register" class="btn-join">
+          Únete <i class="bi bi-rocket-takeoff"></i>
+        </a>
+        <a href="/pages/cart" class="navbar-icon-button" title="Carrito">
+          <i class="bi bi-cart3"></i>
+          <!-- SIN cart-badge -->
+        </a>
+      </div>
+    </div>
+  </header>
+      <!-- SECCIÓN DE BUSCADOR -->
+    <section class="marketplace-hero">
+        <div class="container">
+            <h1 class="marketplace-title">TUTORIALES</h1>
+            <p class="marketplace-subtitle">Encuentra los tutoriales más buscados de la comunidad y empieza aprende con nosotros</p>
+            
+            <div class="search-bar">
+                <input type="text" id="searchInput" placeholder="Busca por nombre, género, mood o tag...">
+                <button id="searchButton"><i class="bi bi-search"></i></button>
+            </div>
+        </div>
+    </section>
+
+    <!-- SECCIÓN DE PRESETS -->
+    <section id="presets" class="cursos">
+        <h2>Nuestros Tutoriales</h2>
+        <p style="color: #d1d1d1; max-width: 600px; margin: 0 auto 2rem auto;">
+            Explora nuestros tutoriales y videos intuitivos para que los apliques desde el día 1 en tus producciones y mezclas
+        </p>
+
+        <div id="product-grid" class="product-grid">
+        </div>
+    </section>
+  
+<!-- ==================== FOOTER ==================== -->
+<footer class="footer">
+  <div class="footer-container">
+    <div class="footer-section">
+      <h4>OFFSZN</h4>
+      <p style="color: var(--text-muted); font-size: 0.875rem; line-height: 1.6;">
+        El primer marketplace musical<br>hecho en Perú 🇵🇪
+      </p>
+      <div class="footer-socials">
+        <a href="https://www.instagram.com/willieinspired/" target="_blank" rel="noopener noreferrer" class="footer-social-link"><i class="bi bi-instagram"></i></a>
+        <a href="https://discord.gg/vX7XktMeBU" target="_blank" rel="noopener noreferrer" class="footer-social-link"><i class="bi bi-discord"></i></a>
+        <a href="https://www.youtube.com/@willieinspired" target="_blank" rel="noopener noreferrer" class="footer-social-link"><i class="bi bi-youtube"></i></a>
+        <a href="https://wa.link/vhlxuj" target="_blank" rel="noopener noreferrer" class="footer-social-link"><i class="bi bi-whatsapp"></i></a>
+      </div>
+    </div>
+    
+    <div class="footer-section">
+      <h4>Recursos</h4>
+      <div class="footer-links">
+        <a href="/recursos/beats-instrumentales">Beats & Instrumentales</a>
+        <a href="/recursos/drum-kits">Drum Kits</a>
+        <a href="/recursos/presets">Presets & Plugins</a>
+        <a href="/recursos/samples-loops">Samples & Loops</a>
+        <a href="/recursos/recursos-gratis">Recursos Gratis</a>
+      </div>
+    </div>
+    
+    <div class="footer-section">
+      <h4>Comunidad</h4>
+      <div class="footer-links">
+        <a href="/comunidad/feed">Feed</a>
+        <a href="/comunidad/productores">Productores</a>
+        <a href="/comunidad/colaboraciones">Colaboraciones</a>
+        <a href="/comunidad/foros">Foros</a>
+        <a href="https://discord.gg/vX7XktMeBU" target="_blank" rel="noopener noreferrer">Discord</a>
+      </div>
+    </div>
+    
+    <div class="footer-section">
+      <h4>Legal</h4>
+      <div class="footer-links">
+        <a href="/legal/terminos-de-uso" target="_blank">Términos de Uso</a>
+        <a href="/legal/politica-de-privacidad" target="_blank">Política de Privacidad</a>
+        <a href="/legal/terminos-de-servicio" target="_blank">Términos de Servicio</a>
+        <a href="/legal/contacto" target="_blank">Contacto</a>
+      </div>
+    </div>
+  </div>
+  
+  <div class="footer-bottom">
+    <p>© 2025 OFFSZN. Hecho con 💜 en Perú.</p>
+  </div>
+</footer>
+    <!-- ==================== SCRIPTS ==================== -->
+<script>
+// Solo se oculta si el usuario hace clic en la X
+document.getElementById('countdownClose')?.addEventListener('click', function() {
+  document.getElementById('countdownBanner').style.display = 'none';
+});
+
+// Dropdowns
+function toggleDropdown(element) {
+  const parent = element.closest('.dropdown-parent');
+  const isActive = parent.classList.contains('dropdown-active');
+  document.querySelectorAll('.dropdown-parent').forEach(p => {
+    p.classList.remove('dropdown-active');
+  });
+  if (!isActive) {
+    parent.classList.add('dropdown-active');
+  }
+}
+
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.dropdown-parent')) {
+    document.querySelectorAll('.dropdown-parent').forEach(p => {
+      p.classList.remove('dropdown-active');
+    });
+  }
+});
+
+// Smooth Scroll
+document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+  anchor.addEventListener('click', function (e) {
+    e.preventDefault();
+    const target = document.querySelector(this.getAttribute('href'));
+    if (target) {
+      target.scrollIntoView({
+        behavior: 'smooth'
+      });
+    }
+  });
+});
+</script>
+
+<script src="/script/menu.js"></script>
+
+<script src="https://www.paypal.com/sdk/js?client-id=ASAqVEzFVpwhpbZ9W0f9xLdoo7Yo2jXEuJtzbw8JNKVGdTUoo0qiWoECo9BZc3-GCBVsrWYckIF4Favy&currency=USD"></script>
+
+<script src="/script/presets.js"></script>
+
+</body>
+</html>
