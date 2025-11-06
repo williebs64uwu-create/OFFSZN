@@ -1,0 +1,1580 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Productores Destacados | OFFSZN</title>
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Montserrat:wght@700;800;900&display=swap" rel="stylesheet">
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+<style>
+    /* ==================== VARIABLES Y RESET ==================== */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --purple-main: #7209b7;
+      --purple-dark: #560bad;
+      --purple-darker: #3c096c;
+      --purple-light: #c9a7eb;
+      --purple-glow: rgba(114, 9, 183, 0.4);
+      --green-verified: #0cbc87;
+      --text-primary: #ffffff;
+      --text-secondary: #e9d5ff;
+      --text-muted: #999;
+      --bg-black: #000000;
+      --bg-dark: #0a0118;
+      --bg-card: rgba(26, 10, 46, 0.4);
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg-black);
+      color: var(--text-secondary);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    /* ==================== NAVBAR (INTACTO) ==================== */
+    .navbar {
+      position: sticky;
+      top: 0;
+      background: rgba(0, 0, 0, 0.95);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 0.75rem 0;
+      z-index: 1000;
+    }
+
+    .navbar-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 2rem;
+    }
+
+    .logo {
+      font-size: 1.25rem;
+      font-weight: 900;
+      letter-spacing: 1px;
+      flex-shrink: 0;
+    }
+
+    .logo a {
+      color: #fff;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: opacity 0.3s;
+    }
+
+    .navbar-center {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      flex: 1;
+    }
+
+    .navbar-links {
+      display: flex;
+      list-style: none;
+      gap: 0.25rem;
+      align-items: center;
+    }
+
+    .navbar-links li {
+      position: relative;
+    }
+
+    .navbar-links>li>a {
+      color: rgba(255, 255, 255, 0.7);
+      text-decoration: none;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+      transition: all 0.3s;
+      padding: 0.5rem 0.875rem;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      gap: 0.375rem;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .navbar-links>li>a:hover,
+    .navbar-links>li>a.active {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .navbar-links>li>a i.bi-chevron-down {
+      font-size: 0.6rem;
+      transition: transform 0.3s;
+    }
+
+    .navbar-links>li.dropdown-active>a i.bi-chevron-down {
+      transform: rotate(180deg);
+    }
+
+    .nav-badge {
+      background: linear-gradient(135deg, #7209b7, #560bad);
+      color: #fff;
+      font-size: 0.5rem;
+      padding: 0.125rem 0.375rem;
+      border-radius: 3px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-left: 0.25rem;
+    }
+
+    .dropdown-menu {
+      position: absolute;
+      top: calc(100% + 0.5rem);
+      left: 0;
+      background: rgba(8, 8, 8, 0.98);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      padding: 0.5rem;
+      min-width: 240px;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(-10px);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7);
+      z-index: 1001;
+    }
+
+    .dropdown-active .dropdown-menu {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+
+    .dropdown-menu.dropdown-large {
+      min-width: 440px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.5rem;
+    }
+
+    .dropdown-section {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .dropdown-section-title {
+      font-size: 0.625rem;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.5);
+      font-weight: 700;
+      letter-spacing: 1px;
+      padding: 0.375rem 0.75rem 0.125rem;
+    }
+
+    .dropdown-item {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.625rem 0.75rem;
+      color: rgba(255, 255, 255, 0.75);
+      text-decoration: none;
+      border-radius: 6px;
+      transition: all 0.2s;
+      font-size: 0.8125rem;
+      font-weight: 500;
+    }
+
+    .dropdown-item:hover {
+      background: rgba(114, 9, 183, 0.12);
+      color: #fff;
+    }
+
+    .dropdown-item i {
+      font-size: 1rem;
+      color: #7209b7;
+      width: 18px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    .dropdown-item-content {
+      flex: 1;
+    }
+
+    .dropdown-item-title {
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    .dropdown-item-desc {
+      font-size: 0.6875rem;
+      color: rgba(255, 255, 255, 0.5);
+      margin-top: 0.125rem;
+    }
+
+    .dropdown-item.discord-link {
+      background: rgba(88, 101, 242, 0.08);
+      border: 1px solid rgba(88, 101, 242, 0.2);
+      margin-top: 0.5rem;
+    }
+
+    .dropdown-item.discord-link:hover {
+      background: rgba(88, 101, 242, 0.15);
+      border-color: rgba(88, 101, 242, 0.4);
+    }
+
+    .dropdown-item.discord-link i {
+      color: #5865F2;
+    }
+
+    .dropdown-divider {
+      height: 1px;
+      background: rgba(255, 255, 255, 0.08);
+      margin: 0.375rem 0;
+      grid-column: 1 / -1;
+    }
+
+    .navbar-right {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-shrink: 0;
+    }
+
+    .navbar-login-link {
+      color: rgba(255, 255, 255, 0.75);
+      text-decoration: none;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      padding: 0.5rem 0.75rem;
+      border-radius: 6px;
+      transition: all 0.3s;
+      white-space: nowrap;
+    }
+
+    .navbar-login-link:hover {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .btn-join {
+      background: linear-gradient(135deg, #7209b7 0%, #560bad 100%);
+      color: #fff;
+      padding: 0.5rem 1.25rem;
+      border-radius: 8px;
+      text-decoration: none;
+      font-size: 0.8125rem;
+      font-weight: 700;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      gap: 0.375rem;
+      border: none;
+      cursor: pointer;
+      letter-spacing: 0.3px;
+      white-space: nowrap;
+    }
+
+    .btn-join:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(114, 9, 183, 0.5);
+    }
+
+    .navbar-icon-button {
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: rgba(255, 255, 255, 0.75);
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      font-size: 1rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s;
+      text-decoration: none;
+      position: relative;
+    }
+
+    .navbar-icon-button:hover {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.05);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .menu-toggle {
+      display: none;
+      background: none;
+      border: none;
+      color: #fff;
+      font-size: 1.25rem;
+      cursor: pointer;
+      padding: 0.5rem;
+    }
+
+    /* Botón del nav con brillo (intacto) */
+    .btn-nav-primary {
+      background: var(--purple-main) !important;
+      color: var(--text-primary) !important;
+      background-image: linear-gradient(135deg, var(--purple-main), var(--purple-dark)) !important;
+      border-radius: 8px !important;
+      transition: all 0.3s !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      text-align: center !important;
+      padding: 0.5rem 1rem !important;
+      border: none !important;
+      line-height: 1.2 !important;
+      min-width: auto !important;
+      width: auto !important;
+      white-space: nowrap !important;
+      height: 36px !important;
+      position: relative;
+      overflow: hidden;
+      vertical-align: middle !important;
+      margin: 0 !important;
+    }
+
+    .btn-nav-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 30px rgba(114, 9, 183, 0.7);
+    }
+
+    /* Animaciones del brillo (intactas) */
+    @property --k {
+      syntax: '<number>';
+      initial-value: -1;
+      inherits: true;
+    }
+
+    @keyframes k {
+      0%, 33.3% {
+        --k: 1;
+      }
+    }
+
+    .sparkle-wrap {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .particle {
+      --f: 1;
+      --pos-k: max(0, var(--k));
+      --neg-k: max(0, -1 * var(--k));
+      --low-c: min(1, 4 * (1 - var(--pos-k)));
+      --abs-d: max(var(--neg-k) - .5, .5 - var(--neg-k));
+      --mov-f: var(--pos-k);
+      display: grid;
+      position: absolute;
+      left: var(--x);
+      top: var(--y);
+      rotate: var(--a);
+      animation: k 1s linear calc(1s * var(--t, 0)) infinite;
+    }
+
+    .particle::before {
+      --sa: calc(min(1, 1 - 2 * min(.5, var(--mov-f))) * 45deg);
+      grid-area: 1/ 1;
+      width: .75em;
+      aspect-ratio: 1;
+      border-radius: calc(1.25 * min(.8, var(--mov-f)) * 50%) 50% 50%;
+      transform-origin: 0 0;
+      translate: calc(var(--mov-f) * var(--d));
+      rotate: -45deg;
+      scale: var(--f);
+      transform: skew(var(--sa), var(--sa));
+      opacity: var(--low-c);
+      filter: Saturate(var(--low-c));
+      background: radial-gradient(at 85% 85%, #ffffff, var(--purple-light) 75%);
+      content: '';
+    }
+
+    .particle::after {
+      grid-area: 1/ 1;
+      translate: -50% -50%;
+      scale: calc(var(--f) * (1 - 2 * var(--abs-d)));
+      text-align: center;
+      filter: blur(.5px);
+      color: #fff;
+      content: '✦';
+    }
+
+    /* ==================== HERO CON BÚSQUEDA IA ==================== */
+    .producers-hero {
+      background: linear-gradient(180deg, rgba(15, 10, 35, 1) 0%, rgba(5, 5, 15, 1) 100%);
+      padding: 4rem 1.5rem 3rem;
+      text-align: center;
+      border-bottom: 1px solid rgba(114, 9, 183, 0.15);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .producers-hero::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 800px;
+      height: 800px;
+      background: radial-gradient(circle, rgba(114, 9, 183, 0.15) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 1;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .producers-hero h1 {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 3rem;
+      font-weight: 900;
+      color: var(--text-primary);
+      margin-bottom: 0.75rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    .producers-hero .subtitle {
+      font-size: 1.125rem;
+      color: rgba(255, 255, 255, 0.6);
+      margin-bottom: 2.5rem;
+    }
+
+    /* ==================== BARRA DE BÚSQUEDA IA ==================== */
+    .ai-search-container {
+      max-width: 700px;
+      margin: 0 auto 2rem;
+    }
+
+    .ai-search-box {
+      display: flex;
+      background: rgba(20, 15, 40, 0.8);
+      border: 2px solid rgba(114, 9, 183, 0.3);
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 8px 32px rgba(114, 9, 183, 0.2);
+      transition: all 0.3s;
+      backdrop-filter: blur(10px);
+    }
+
+    .ai-search-box:focus-within {
+      border-color: rgba(114, 9, 183, 0.6);
+      box-shadow: 0 8px 32px rgba(114, 9, 183, 0.4);
+    }
+
+    .ai-search-icon {
+      padding: 1.25rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--purple-light);
+      font-size: 1.5rem;
+    }
+
+    .ai-search-input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      padding: 1.25rem 0;
+      font-size: 1rem;
+      color: var(--text-primary);
+      outline: none;
+    }
+
+    .ai-search-input::placeholder {
+      color: rgba(255, 255, 255, 0.4);
+    }
+
+    .ai-search-button {
+      background: linear-gradient(135deg, var(--purple-main), var(--purple-dark));
+      border: none;
+      color: var(--text-primary);
+      padding: 0 2rem;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 0.9375rem;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .ai-search-button:hover {
+      background: linear-gradient(135deg, var(--purple-dark), var(--purple-darker));
+      box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.1);
+    }
+
+    /* ==================== FILTROS INTELIGENTES ==================== */
+    .filter-section {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem;
+    }
+
+    .filter-chips {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .filter-chip {
+      background: rgba(26, 10, 46, 0.6);
+      border: 1px solid rgba(114, 9, 183, 0.3);
+      padding: 0.625rem 1.25rem;
+      border-radius: 50px;
+      color: rgba(255, 255, 255, 0.8);
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .filter-chip:hover {
+      background: rgba(114, 9, 183, 0.15);
+      border-color: rgba(114, 9, 183, 0.5);
+      color: var(--text-primary);
+    }
+
+    .filter-chip.active {
+      background: linear-gradient(135deg, var(--purple-main), var(--purple-dark));
+      border-color: transparent;
+      color: var(--text-primary);
+    }
+
+    .filter-chip i {
+      font-size: 1rem;
+    }
+
+    /* ==================== PRODUCTORES GRID ==================== */
+    .producers-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 3rem 1.5rem;
+    }
+
+    .section-header {
+      text-align: center;
+      margin-bottom: 3rem;
+    }
+
+    .section-header h2 {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--text-primary);
+      margin-bottom: 0.5rem;
+    }
+
+    .section-header p {
+      color: var(--text-muted);
+      font-size: 1rem;
+    }
+
+    .producers-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 2rem;
+    }
+
+    /* ==================== TARJETA DE PRODUCTOR ==================== */
+    .producer-card {
+      background: var(--bg-card);
+      border: 1px solid rgba(114, 9, 183, 0.2);
+      border-radius: 16px;
+      padding: 2rem;
+      transition: all 0.3s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .producer-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 4px;
+      background: linear-gradient(90deg, var(--purple-main), var(--purple-dark));
+      transform: scaleX(0);
+      transition: transform 0.3s;
+    }
+
+    .producer-card:hover {
+      border-color: rgba(114, 9, 183, 0.5);
+      box-shadow: 0 12px 40px rgba(114, 9, 183, 0.3);
+      transform: translateY(-5px);
+    }
+
+    .producer-card:hover::before {
+      transform: scaleX(1);
+    }
+
+    .producer-header {
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .producer-avatar {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--purple-main), var(--purple-dark));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      font-weight: 800;
+      color: white;
+      border: 3px solid rgba(114, 9, 183, 0.3);
+      position: relative;
+    }
+
+    .online-indicator {
+      position: absolute;
+      bottom: 2px;
+      right: 2px;
+      width: 16px;
+      height: 16px;
+      background: var(--green-verified);
+      border: 3px solid var(--bg-card);
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        box-shadow: 0 0 0 0 rgba(12, 188, 135, 0.7);
+      }
+      50% {
+        box-shadow: 0 0 0 6px rgba(12, 188, 135, 0);
+      }
+    }
+
+    .producer-info {
+      flex: 1;
+    }
+
+    .producer-name {
+      font-size: 1.375rem;
+      font-weight: 800;
+      color: var(--text-primary);
+      margin-bottom: 0.25rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .verified-badge {
+      color: var(--green-verified);
+      font-size: 1.25rem;
+    }
+
+    .producer-role {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-weight: 600;
+    }
+
+    .producer-bio {
+      color: var(--text-secondary);
+      line-height: 1.6;
+      margin-bottom: 1.5rem;
+      font-size: 0.9375rem;
+    }
+
+    .producer-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      padding: 1rem;
+      background: rgba(114, 9, 183, 0.05);
+      border-radius: 12px;
+      border: 1px solid rgba(114, 9, 183, 0.1);
+    }
+
+    .stat-box {
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: var(--purple-light);
+      display: block;
+    }
+
+    .stat-label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .producer-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .tag {
+      background: rgba(114, 9, 183, 0.15);
+      color: var(--purple-light);
+      padding: 0.375rem 0.875rem;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      border: 1px solid rgba(114, 9, 183, 0.2);
+    }
+
+    .producer-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+    }
+
+    .btn-primary, .btn-secondary {
+      padding: 0.75rem 1.5rem;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 0.875rem;
+      cursor: pointer;
+      transition: all 0.3s;
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      text-decoration: none;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--purple-main), var(--purple-dark));
+      color: var(--text-primary);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(114, 9, 183, 0.5);
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--text-primary);
+      border: 1px solid rgba(114, 9, 183, 0.4);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(114, 9, 183, 0.1);
+      border-color: rgba(114, 9, 183, 0.6);
+    }
+
+    /* ==================== FOOTER (INTACTO) ==================== */
+    .footer {
+      background: var(--bg-black);
+      padding: 2.5rem 1.5rem 1.5rem;
+      border-top: 1px solid rgba(114, 9, 183, 0.2);
+      margin-top: 4rem;
+    }
+
+    .footer-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 2rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .footer-section h4 {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 1rem;
+      font-family: 'Montserrat', sans-serif;
+    }
+
+    .footer-links {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .footer-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.875rem;
+      transition: all 0.3s;
+    }
+
+    .footer-links a:hover {
+      color: var(--purple-light);
+      padding-left: 0.25rem;
+    }
+
+    .footer-socials {
+      display: flex;
+      gap: 0.75rem;
+      margin-top: 1rem;
+    }
+
+    .footer-social-link {
+      width: 32px;
+      height: 32px;
+      background: rgba(114, 9, 183, 0.2);
+      border: 1px solid rgba(114, 9, 183, 0.4);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--purple-light);
+      text-decoration: none;
+      font-size: 1rem;
+      transition: all 0.3s;
+    }
+
+    .footer-social-link:hover {
+      background: rgba(114, 9, 183, 0.4);
+      border-color: rgba(114, 9, 183, 0.6);
+      transform: translateY(-2px);
+    }
+
+    .footer-bottom {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding-top: 1.5rem;
+      border-top: 1px solid rgba(114, 9, 183, 0.2);
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.8125rem;
+    }
+
+    /* ==================== RESPONSIVE ==================== */
+    @media (max-width: 768px) {
+      .producers-hero h1 {
+        font-size: 2rem;
+      }
+
+      .producers-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .producer-actions {
+        grid-template-columns: 1fr;
+      }
+
+      .filter-chips {
+        justify-content: flex-start;
+      }
+    }
+
+    /* ==================== LOADING ANIMATION ==================== */
+    .loading-message {
+      text-align: center;
+      padding: 3rem;
+      color: var(--text-muted);
+      font-size: 1rem;
+    }
+
+    .spinner {
+      border: 3px solid rgba(114, 9, 183, 0.2);
+      border-top: 3px solid var(--purple-main);
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 1rem;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* ==================== NO RESULTS MESSAGE ==================== */
+    .no-results {
+      text-align: center;
+      padding: 4rem 2rem;
+      color: var(--text-muted);
+    }
+
+    .no-results i {
+      font-size: 4rem;
+      color: rgba(114, 9, 183, 0.3);
+      margin-bottom: 1rem;
+    }
+
+    .no-results h3 {
+      font-size: 1.5rem;
+      color: var(--text-primary);
+      margin-bottom: 0.5rem;
+    }
+
+    .no-results p {
+      font-size: 1rem;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ==================== NAVBAR (INTACTO) ==================== -->
+<header class="navbar">
+  <div class="navbar-container">
+    <div class="logo">
+      <a href="/index">
+        <img src="/images/LOGO-OFFSZN.png" alt="OFFSZN" style="height: 45px;">
+      </a>
+    </div>
+    <div class="navbar-center">
+      <ul class="navbar-links">
+        <li><a href="/index">Inicio</a></li>
+        <li class="dropdown-parent">
+          <a onclick="toggleDropdown(this)">
+            Recursos <i class="bi bi-chevron-down"></i>
+          </a>
+          <div class="dropdown-menu dropdown-large">
+            <div class="dropdown-section">
+              <span class="dropdown-section-title">PRODUCTOS DIGITALES</span>
+              <a href="/recursos/presets" class="dropdown-item">
+                <i class="bi bi-sliders"></i>
+                <div class="dropdown-item-content">
+                  <div class="dropdown-item-title">Presets & Plugins</div>
+                  <div class="dropdown-item-desc">Chains profesionales</div>
+                </div>
+              </a>
+              <a href="/recursos/beats-instrumentales" class="dropdown-item">
+                <i class="bi bi-music-note-beamed"></i>
+                <div class="dropdown-item-content">
+                  <div class="dropdown-item-title">Beats & Instrumentales</div>
+                  <div class="dropdown-item-desc">Licencias disponibles</div>
+                </div>
+              </a>
+              <a href="/recursos/drum-kits" class="dropdown-item">
+                <i class="bi bi-disc"></i>
+                <div class="dropdown-item-content">
+                  <div class="dropdown-item-title">Drum Kits</div>
+                  <div class="dropdown-item-desc">Samples únicos</div>
+                </div>
+              </a>
+            </div>
+            <div class="dropdown-section">
+              <span class="dropdown-section-title">CONTENIDO</span>
+              <a href="/recursos/samples-loops" class="dropdown-item">
+                <i class="bi bi-soundwave"></i>
+                <div class="dropdown-item-content">
+                  <div class="dropdown-item-title">Samples & Loops</div>
+                  <div class="dropdown-item-desc">Loops de calidad</div>
+                </div>
+              </a>
+              <a href="/recursos/tutoriales" class="dropdown-item">
+                <i class="bi bi-play-circle"></i>
+                <div class="dropdown-item-content">
+                  <div class="dropdown-item-title">Tutoriales</div>
+                  <div class="dropdown-item-desc">Guías y videos</div>
+                </div>
+              </a>
+            </div>
+            <div class="dropdown-divider"></div>
+            <a href="/recursos/recursos-gratis" class="dropdown-item" style="grid-column: 1 / -1;">
+              <i class="bi bi-gift"></i>
+              <div class="dropdown-item-content">
+                <div class="dropdown-item-title">Recursos Gratis</div>
+                <div class="dropdown-item-desc">Descarga sin costo</div>
+              </div>
+            </a>
+          </div>
+        </li>
+        <li class="dropdown-parent">
+          <a onclick="toggleDropdown(this)">
+            Comunidad <i class="bi bi-chevron-down"></i>
+          </a>
+          <div class="dropdown-menu">
+            <a href="/comunidad/feed" class="dropdown-item">
+              <i class="bi bi-house"></i>
+              <div class="dropdown-item-content">
+                <div class="dropdown-item-title">Feed</div>
+              </div>
+            </a>
+            <a href="/comunidad/productores" class="dropdown-item">
+              <i class="bi bi-people"></i>
+              <div class="dropdown-item-content">
+                <div class="dropdown-item-title">Productores</div>
+              </div>
+            </a>
+            <a href="/comunidad/colaboraciones" class="dropdown-item">
+              <i class="bi bi-hand-index-thumb"></i>
+              <div class="dropdown-item-content">
+                <div class="dropdown-item-title">Colaboraciones</div>
+              </div>
+            </a>
+            <div class="dropdown-divider"></div>
+            <a href="/comunidad/foros" class="dropdown-item">
+              <i class="bi bi-chat-dots"></i>
+              <div class="dropdown-item-content">
+                <div class="dropdown-item-title">Foros</div>
+              </div>
+            </a>
+            <a href="/comunidad/eventos" class="dropdown-item">
+              <i class="bi bi-calendar-event"></i>
+              <div class="dropdown-item-content">
+                <div class="dropdown-item-title">Eventos</div>
+              </div>
+            </a>
+            <a href="https://discord.gg/vX7XktMeBU" target="_blank" class="dropdown-item discord-link">
+              <i class="bi bi-discord"></i>
+              <div class="dropdown-item-content">
+                <div class="dropdown-item-title">Únete a Discord</div>
+                <div class="dropdown-item-desc">Comunidad activa</div>
+              </div>
+            </a>
+          </div>
+        </li>
+        <li>
+          <a href="/pages/marketplace" class="btn-nav-primary">
+            Marketplace
+            <span class="sparkle-wrap" aria-hidden="true">
+              <span class="particle" style="--a: -45deg; --x: 53%; --y: 15%; --d: 4em; --f: .7; --t: .15"></span>
+              <span class="particle" style="--a: 150deg; --x: 40%; --y: 70%; --d: 7.5em; --f: .8; --t: .08"></span>
+              <span class="particle" style="--a: 10deg; --x: 90%; --y: 65%; --d: 7em; --f: .6; --t: .25"></span>
+              <span class="particle" style="--a: -120deg; --x: 15%; --y: 10%; --d: 4em"></span>
+              <span class="particle" style="--a: -175deg; --x: 10%; --y: 25%; --d: 5.25em; --f: .6; --t: .32"></span>
+              <span class="particle" style="--a: -18deg; --x: 80%; --y: 25%; --d: 4.75em; --f: .5; --t: .4"></span>
+              <span class="particle" style="--a: -160deg; --x: 30%; --y: 5%; --d: 9em; --f: .9; --t: .5"></span>
+              <span class="particle" style="--a: 175deg; --x: 9%; --y: 30%; --d: 6em; --f: .95; --t: .6"></span>
+              <span class="particle" style="--a: -10deg; --x: 89%; --y: 25%; --d: 4.5em; --f: .55; --t: .67"></span>
+              <span class="particle" style="--a: -140deg; --x: 40%; --y: 10%; --d: 5em; --f: .85; --t: .75"></span>
+              <span class="particle" style="--a: 90deg; --x: 45%; --y: 65%; --d: 4em; --f: .5; --t: .83"></span>
+              <span class="particle" style="--a: 30deg; --x: 70%; --y: 80%; --d: 6.5em; --f: .75; --t: .92"></span>
+            </span>
+          </a>
+        </li>
+        <li>
+          <a href="/cursos/inicio">
+            Cursos
+            <span class="nav-badge">SOON</span>
+          </a>
+        </li>
+      </ul>
+    </div>
+    <button class="menu-toggle" id="menuToggle">
+      <i class="bi bi-list"></i>
+    </button>
+    <div class="navbar-right">
+      <a href="/pages/login" class="navbar-login-link">Iniciar Sesión</a>
+      <a href="/pages/register" class="btn-join">
+        Únete <i class="bi bi-rocket-takeoff"></i>
+      </a>
+      <a href="/pages/cart" class="navbar-icon-button" title="Carrito">
+        <i class="bi bi-cart3"></i>
+      </a>
+    </div>
+  </div>
+</header>
+
+<!-- ==================== HERO CON BÚSQUEDA IA ==================== -->
+<section class="producers-hero">
+  <div class="hero-content">
+    <h1>🎧 Productores Destacados</h1>
+    <p class="subtitle">Descubre y conecta con los mejores productores de la comunidad OFFSZN</p>
+    
+    <!-- Barra de búsqueda con IA -->
+    <div class="ai-search-container">
+      <div class="ai-search-box">
+        <div class="ai-search-icon">
+          <i class="bi bi-stars"></i>
+        </div>
+        <input 
+          type="text" 
+          id="aiSearchInput" 
+          class="ai-search-input" 
+          placeholder="Busca por nombre, género, habilidades o mood... (ej: 'trap melódico', 'productor de reggaeton')"
+        >
+        <button class="ai-search-button" id="aiSearchButton">
+          <i class="bi bi-search"></i>
+          Buscar
+        </button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== FILTROS INTELIGENTES ==================== -->
+<section class="filter-section">
+  <div class="filter-chips">
+    <button class="filter-chip active" data-filter="all">
+      <i class="bi bi-grid"></i>
+      Todos
+    </button>
+    <button class="filter-chip" data-filter="trap">
+      <i class="bi bi-music-note-beamed"></i>
+      Trap
+    </button>
+    <button class="filter-chip" data-filter="reggaeton">
+      <i class="bi bi-lightning"></i>
+      Reggaeton
+    </button>
+    <button class="filter-chip" data-filter="pop">
+      <i class="bi bi-star"></i>
+      Pop
+    </button>
+    <button class="filter-chip" data-filter="r&b">
+      <i class="bi bi-heart"></i>
+      R&B
+    </button>
+    <button class="filter-chip" data-filter="verified">
+      <i class="bi bi-patch-check"></i>
+      Verificados
+    </button>
+    <button class="filter-chip" data-filter="online">
+      <i class="bi bi-circle-fill" style="font-size: 0.5rem; color: var(--green-verified);"></i>
+      En línea
+    </button>
+  </div>
+</section>
+
+<!-- ==================== GRID DE PRODUCTORES ==================== -->
+<section class="producers-container">
+  <div class="section-header">
+    <h2>Productores Activos</h2>
+    <p id="resultsCount">Mostrando 1 productor</p>
+  </div>
+
+  <div class="producers-grid" id="producersGrid">
+    
+    <!-- ==================== WILLIE INSPIRED - PRODUCTOR DESTACADO ==================== -->
+    <article class="producer-card">
+      <div class="producer-header">
+        <div class="producer-avatar">
+          WI
+          <span class="online-indicator"></span>
+        </div>
+        <div class="producer-info">
+          <h3 class="producer-name">
+            Willie Inspired
+            <i class="bi bi-patch-check-fill verified-badge"></i>
+          </h3>
+          <p class="producer-role">Productor | Ingeniero de Mezcla</p>
+        </div>
+      </div>
+
+      <p class="producer-bio">
+        Productor musical especializado en trap latino y reggaeton. Creador de OFFSZN, el primer marketplace musical hecho en Perú 🇵🇪. Más de 5 años de experiencia creando beats y presets profesionales.
+      </p>
+
+      <div class="producer-stats">
+        <div class="stat-box">
+          <span class="stat-value">50+</span>
+          <span class="stat-label">Productos</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-value">1.2K</span>
+          <span class="stat-label">Seguidores</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-value">4.9</span>
+          <span class="stat-label">Rating</span>
+        </div>
+      </div>
+
+      <div class="producer-tags">
+        <span class="tag">Trap</span>
+        <span class="tag">Reggaeton</span>
+        <span class="tag">R&B</span>
+        <span class="tag">Mixing</span>
+        <span class="tag">FL Studio</span>
+      </div>
+
+      <div class="producer-actions">
+        <a href="#" class="btn-primary">
+          <i class="bi bi-person-plus"></i>
+          Seguir
+        </a>
+        <a href="#" class="btn-secondary">
+          <i class="bi bi-bag"></i>
+          Ver Tienda
+        </a>
+      </div>
+    </article>
+
+  </div>
+
+  <!-- Mensaje cuando no hay resultados -->
+  <div class="no-results" id="noResults" style="display: none;">
+    <i class="bi bi-search"></i>
+    <h3>No se encontraron productores</h3>
+    <p>Intenta ajustar tus filtros o búsqueda</p>
+  </div>
+
+</section>
+
+<!-- ==================== FOOTER (INTACTO) ==================== -->
+<footer class="footer">
+  <div class="footer-container">
+    <div class="footer-section">
+      <h4>OFFSZN</h4>
+      <p style="color: var(--text-muted); font-size: 0.875rem; line-height: 1.6;">
+        El primer marketplace musical<br>hecho en Perú 🇵🇪
+      </p>
+      <div class="footer-socials">
+        <a href="https://www.instagram.com/willieinspired/" target="_blank" rel="noopener noreferrer" class="footer-social-link"><i class="bi bi-instagram"></i></a>
+        <a href="https://discord.gg/vX7XktMeBU" target="_blank" rel="noopener noreferrer" class="footer-social-link"><i class="bi bi-discord"></i></a>
+        <a href="https://www.youtube.com/@willieinspired" target="_blank" rel="noopener noreferrer" class="footer-social-link"><i class="bi bi-youtube"></i></a>
+        <a href="https://wa.link/vhlxuj" target="_blank" rel="noopener noreferrer" class="footer-social-link"><i class="bi bi-whatsapp"></i></a>
+      </div>
+    </div>
+    
+    <div class="footer-section">
+      <h4>Recursos</h4>
+      <div class="footer-links">
+        <a href="/recursos/beats-instrumentales">Beats & Instrumentales</a>
+        <a href="/recursos/drum-kits">Drum Kits</a>
+        <a href="/recursos/presets">Presets & Plugins</a>
+        <a href="/recursos/samples-loops">Samples & Loops</a>
+        <a href="/recursos/recursos-gratis">Recursos Gratis</a>
+      </div>
+    </div>
+    
+    <div class="footer-section">
+      <h4>Comunidad</h4>
+      <div class="footer-links">
+        <a href="/comunidad/feed">Feed</a>
+        <a href="/comunidad/productores">Productores</a>
+        <a href="/comunidad/colaboraciones">Colaboraciones</a>
+        <a href="/comunidad/foros">Foros</a>
+        <a href="https://discord.gg/vX7XktMeBU" target="_blank" rel="noopener noreferrer">Discord</a>
+      </div>
+    </div>
+    
+    <div class="footer-section">
+      <h4>Legal</h4>
+      <div class="footer-links">
+        <a href="/legal/terminos-de-uso" target="_blank">Términos de Uso</a>
+        <a href="/legal/politica-de-privacidad" target="_blank">Política de Privacidad</a>
+        <a href="/legal/terminos-de-servicio" target="_blank">Términos de Servicio</a>
+        <a href="/legal/contacto" target="_blank">Contacto</a>
+      </div>
+    </div>
+  </div>
+  
+  <div class="footer-bottom">
+    <p>© 2025 OFFSZN. Hecho con 💜 en Perú.</p>
+  </div>
+</footer>
+
+<!-- ==================== SCRIPTS ==================== -->
+<script>
+/**
+ * ==================== BASE DE DATOS DE PRODUCTORES ====================
+ * Aquí se conectará con la API real en el futuro
+ */
+const producersDatabase = [
+  {
+    id: 1,
+    name: "Willie Inspired",
+    username: "willieinspired",
+    role: "Productor | Ingeniero de Mezcla",
+    bio: "Productor musical especializado en trap latino y reggaeton. Creador de OFFSZN, el primer marketplace musical hecho en Perú 🇵🇪. Más de 5 años de experiencia creando beats y presets profesionales.",
+    avatar: "WI",
+    verified: true,
+    online: true,
+    stats: {
+      products: "50+",
+      followers: "1.2K",
+      rating: "4.9"
+    },
+    tags: ["Trap", "Reggaeton", "R&B", "Mixing", "FL Studio"],
+    genres: ["trap", "reggaeton", "r&b"]
+  }
+  // Más productores se agregarán aquí cuando tengas datos reales
+];
+
+/**
+ * ==================== SISTEMA DE BÚSQUEDA IA ====================
+ * Búsqueda inteligente con coincidencias flexibles
+ */
+function aiSearch(query) {
+  const searchTerm = query.toLowerCase().trim();
+  
+  if (!searchTerm) {
+    return producersDatabase;
+  }
+
+  return producersDatabase.filter(producer => {
+    // Búsqueda en nombre
+    if (producer.name.toLowerCase().includes(searchTerm)) return true;
+    
+    // Búsqueda en username
+    if (producer.username.toLowerCase().includes(searchTerm)) return true;
+    
+    // Búsqueda en bio
+    if (producer.bio.toLowerCase().includes(searchTerm)) return true;
+    
+    // Búsqueda en tags
+    if (producer.tags.some(tag => tag.toLowerCase().includes(searchTerm))) return true;
+    
+    // Búsqueda en géneros
+    if (producer.genres.some(genre => genre.includes(searchTerm))) return true;
+    
+    return false;
+  });
+}
+
+/**
+ * ==================== RENDERIZAR PRODUCTORES ====================
+ * Genera las tarjetas de productores dinámicamente
+ */
+function renderProducers(producers) {
+  const grid = document.getElementById('producersGrid');
+  const noResults = document.getElementById('noResults');
+  const resultsCount = document.getElementById('resultsCount');
+
+  if (producers.length === 0) {
+    grid.innerHTML = '';
+    noResults.style.display = 'block';
+    resultsCount.textContent = 'No se encontraron productores';
+    return;
+  }
+
+  noResults.style.display = 'none';
+  resultsCount.textContent = `Mostrando ${producers.length} productor${producers.length !== 1 ? 'es' : ''}`;
+
+  grid.innerHTML = producers.map(producer => `
+    <article class="producer-card">
+      <div class="producer-header">
+        <div class="producer-avatar">
+          ${producer.avatar}
+          ${producer.online ? '<span class="online-indicator"></span>' : ''}
+        </div>
+        <div class="producer-info">
+          <h3 class="producer-name">
+            ${producer.name}
+            ${producer.verified ? '<i class="bi bi-patch-check-fill verified-badge"></i>' : ''}
+          </h3>
+          <p class="producer-role">${producer.role}</p>
+        </div>
+      </div>
+
+      <p class="producer-bio">${producer.bio}</p>
+
+      <div class="producer-stats">
+        <div class="stat-box">
+          <span class="stat-value">${producer.stats.products}</span>
+          <span class="stat-label">Productos</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-value">${producer.stats.followers}</span>
+          <span class="stat-label">Seguidores</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-value">${producer.stats.rating}</span>
+          <span class="stat-label">Rating</span>
+        </div>
+      </div>
+
+      <div class="producer-tags">
+        ${producer.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
+      </div>
+
+      <div class="producer-actions">
+        <a href="#" class="btn-primary">
+          <i class="bi bi-person-plus"></i>
+          Seguir
+        </a>
+        <a href="#" class="btn-secondary">
+          <i class="bi bi-bag"></i>
+          Ver Tienda
+        </a>
+      </div>
+    </article>
+  `).join('');
+
+  // Reaplica los event listeners después de renderizar
+  attachCardEventListeners();
+}
+
+/**
+ * ==================== SISTEMA DE FILTROS ====================
+ * Filtra productores por categorías
+ */
+function filterProducers(filterType) {
+  if (filterType === 'all') {
+    return producersDatabase;
+  }
+
+  return producersDatabase.filter(producer => {
+    switch(filterType) {
+      case 'verified':
+        return producer.verified;
+      case 'online':
+        return producer.online;
+      default:
+        // Filtra por género
+        return producer.genres.includes(filterType);
+    }
+  });
+}
+
+/**
+ * ==================== EVENT LISTENERS DE BÚSQUEDA ====================
+ */
+const aiSearchInput = document.getElementById('aiSearchInput');
+const aiSearchButton = document.getElementById('aiSearchButton');
+
+// Búsqueda al hacer click en el botón
+aiSearchButton.addEventListener('click', function() {
+  const query = aiSearchInput.value;
+  const results = aiSearch(query);
+  renderProducers(results);
+});
+
+// Búsqueda al presionar Enter
+aiSearchInput.addEventListener('keypress', function(e) {
+  if (e.key === 'Enter') {
+    const query = aiSearchInput.value;
+    const results = aiSearch(query);
+    renderProducers(results);
+  }
+});
+
+// Búsqueda en tiempo real (opcional, comentado por rendimiento)
+// aiSearchInput.addEventListener('input', function() {
+//   const query = this.value;
+//   const results = aiSearch(query);
+//   renderProducers(results);
+// });
+
+/**
+ * ==================== EVENT LISTENERS DE FILTROS ====================
+ */
+const filterChips = document.querySelectorAll('.filter-chip');
+
+filterChips.forEach(chip => {
+  chip.addEventListener('click', function() {
+    // Actualiza UI de chips activos
+    filterChips.forEach(c => c.classList.remove('active'));
+    this.classList.add('active');
+
+    // Aplica el filtro
+    const filterType = this.getAttribute('data-filter');
+    const results = filterProducers(filterType);
+    renderProducers(results);
+
+    // Limpia la búsqueda
+    aiSearchInput.value = '';
+  });
+});
+
+/**
+ * ==================== ANIMACIONES DE TARJETAS ====================
+ */
+function attachCardEventListeners() {
+  const cards = document.querySelectorAll('.producer-card');
+  
+  cards.forEach(card => {
+    card.addEventListener('mouseenter', function() {
+      this.style.transform = 'translateY(-8px)';
+    });
+    
+    card.addEventListener('mouseleave', function() {
+      this.style.transform = 'translateY(0)';
+    });
+  });
+}
+
+/**
+ * ==================== DROPDOWNS DEL NAVBAR ====================
+ */
+function toggleDropdown(element) {
+  const parent = element.closest('.dropdown-parent');
+  const isActive = parent.classList.contains('dropdown-active');
+  
+  document.querySelectorAll('.dropdown-parent').forEach(p => {
+    p.classList.remove('dropdown-active');
+  });
+  
+  if (!isActive) {
+    parent.classList.add('dropdown-active');
+  }
+}
+
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.dropdown-parent')) {
+    document.querySelectorAll('.dropdown-parent').forEach(p => {
+      p.classList.remove('dropdown-active');
+    });
+  }
+});
+
+/**
+ * ==================== SMOOTH SCROLL ====================
+ */
+document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+  anchor.addEventListener('click', function (e) {
+    e.preventDefault();
+    const target = document.querySelector(this.getAttribute('href'));
+    if (target) {
+      target.scrollIntoView({
+        behavior: 'smooth'
+      });
+    }
+  });
+});
+
+/**
+ * ==================== INICIALIZACIÓN ====================
+ */
+document.addEventListener('DOMContentLoaded', function() {
+  console.log('🎧 Productores Destacados cargado correctamente');
+  console.log(`Total de productores: ${producersDatabase.length}`);
+  
+  // Renderiza todos los productores al cargar
+  renderProducers(producersDatabase);
+  attachCardEventListeners();
+  
+  // Efecto de focus en el search
+  aiSearchInput.addEventListener('focus', function() {
+    this.parentElement.style.transform = 'scale(1.02)';
+  });
+  
+  aiSearchInput.addEventListener('blur', function() {
+    this.parentElement.style.transform = 'scale(1)';
+  });
+});
+</script>
+
+</body>
+</html>
