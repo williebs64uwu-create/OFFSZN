@@ -1,0 +1,1806 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Eventos - Próximamente | OFFSZN</title>
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Montserrat:wght@700;800;900&display=swap" rel="stylesheet">
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+<style>
+    /* ==================== VARIABLES Y RESET ==================== */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --purple-main: #7209b7;
+      --purple-dark: #560bad;
+      --purple-darker: #3c096c;
+      --purple-light: #c9a7eb;
+      --purple-glow: rgba(114, 9, 183, 0.4);
+      --green-verified: #0cbc87;
+      --orange-event: #ff6b35;
+      --pink-event: #e91e63;
+      --text-primary: #ffffff;
+      --text-secondary: #e9d5ff;
+      --text-muted: #999;
+      --bg-black: #000000;
+      --bg-dark: #0a0118;
+      --bg-card: rgba(26, 10, 46, 0.4);
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg-black);
+      color: var(--text-secondary);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    /* ==================== NAVBAR (INTACTO - NO MODIFICAR) ==================== */
+    .navbar {
+      position: sticky;
+      top: 0;
+      background: rgba(0, 0, 0, 0.95);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 0.75rem 0;
+      z-index: 1000;
+    }
+
+    .navbar-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 2rem;
+    }
+
+    .logo {
+      font-size: 1.25rem;
+      font-weight: 900;
+      letter-spacing: 1px;
+      flex-shrink: 0;
+    }
+
+    .logo a {
+      color: #fff;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: opacity 0.3s;
+    }
+
+    .navbar-center {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      flex: 1;
+    }
+
+    .navbar-links {
+      display: flex;
+      list-style: none;
+      gap: 0.25rem;
+      align-items: center;
+    }
+
+    .navbar-links li {
+      position: relative;
+    }
+
+    .navbar-links>li>a {
+      color: rgba(255, 255, 255, 0.7);
+      text-decoration: none;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+      transition: all 0.3s;
+      padding: 0.5rem 0.875rem;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      gap: 0.375rem;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .navbar-links>li>a:hover,
+    .navbar-links>li>a.active {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .navbar-links>li>a i.bi-chevron-down {
+      font-size: 0.6rem;
+      transition: transform 0.3s;
+    }
+
+    .navbar-links>li.dropdown-active>a i.bi-chevron-down {
+      transform: rotate(180deg);
+    }
+
+    .nav-badge {
+      background: linear-gradient(135deg, #7209b7, #560bad);
+      color: #fff;
+      font-size: 0.5rem;
+      padding: 0.125rem 0.375rem;
+      border-radius: 3px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-left: 0.25rem;
+    }
+
+    .dropdown-menu {
+      position: absolute;
+      top: calc(100% + 0.5rem);
+      left: 0;
+      background: rgba(8, 8, 8, 0.98);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      padding: 0.5rem;
+      min-width: 240px;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(-10px);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7);
+      z-index: 1001;
+    }
+
+    .dropdown-active .dropdown-menu {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+
+    .dropdown-menu.dropdown-large {
+      min-width: 440px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.5rem;
+    }
+
+    .dropdown-section {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .dropdown-section-title {
+      font-size: 0.625rem;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.5);
+      font-weight: 700;
+      letter-spacing: 1px;
+      padding: 0.375rem 0.75rem 0.125rem;
+    }
+
+    .dropdown-item {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.625rem 0.75rem;
+      color: rgba(255, 255, 255, 0.75);
+      text-decoration: none;
+      border-radius: 6px;
+      transition: all 0.2s;
+      font-size: 0.8125rem;
+      font-weight: 500;
+    }
+
+    .dropdown-item:hover {
+      background: rgba(114, 9, 183, 0.12);
+      color: #fff;
+    }
+
+    .dropdown-item i {
+      font-size: 1rem;
+      color: #7209b7;
+      width: 18px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    .dropdown-item-content {
+      flex: 1;
+    }
+
+    .dropdown-item-title {
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    .dropdown-item-desc {
+      font-size: 0.6875rem;
+      color: rgba(255, 255, 255, 0.5);
+      margin-top: 0.125rem;
+    }
+
+    .dropdown-item.discord-link {
+      background: rgba(88, 101, 242, 0.08);
+      border: 1px solid rgba(88, 101, 242, 0.2);
+      margin-top: 0.5rem;
+    }
+
+    .dropdown-item.discord-link:hover {
+      background: rgba(88, 101, 242, 0.15);
+      border-color: rgba(88, 101, 242, 0.4);
+    }
+
+    .dropdown-item.discord-link i {
+      color: #5865F2;
+    }
+
+    .dropdown-divider {
+      height: 1px;
+      background: rgba(255, 255, 255, 0.08);
+      margin: 0.375rem 0;
+      grid-column: 1 / -1;
+    }
+
+    .navbar-right {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-shrink: 0;
+    }
+
+    .navbar-login-link {
+      color: rgba(255, 255, 255, 0.75);
+      text-decoration: none;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      padding: 0.5rem 0.75rem;
+      border-radius: 6px;
+      transition: all 0.3s;
+      white-space: nowrap;
+    }
+
+    .navbar-login-link:hover {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .btn-join {
+      background: linear-gradient(135deg, #7209b7 0%, #560bad 100%);
+      color: #fff;
+      padding: 0.5rem 1.25rem;
+      border-radius: 8px;
+      text-decoration: none;
+      font-size: 0.8125rem;
+      font-weight: 700;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      gap: 0.375rem;
+      border: none;
+      cursor: pointer;
+      letter-spacing: 0.3px;
+      white-space: nowrap;
+    }
+
+    .btn-join:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(114, 9, 183, 0.5);
+    }
+
+    .navbar-icon-button {
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: rgba(255, 255, 255, 0.75);
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      font-size: 1rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s;
+      text-decoration: none;
+      position: relative;
+    }
+
+    .navbar-icon-button:hover {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.05);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .menu-toggle {
+      display: none;
+      background: none;
+      border: none;
+      color: #fff;
+      font-size: 1.25rem;
+      cursor: pointer;
+      padding: 0.5rem;
+    }
+
+    .btn-nav-primary {
+      background: var(--purple-main) !important;
+      color: var(--text-primary) !important;
+      background-image: linear-gradient(135deg, var(--purple-main), var(--purple-dark)) !important;
+      border-radius: 8px !important;
+      transition: all 0.3s !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      text-align: center !important;
+      padding: 0.5rem 1rem !important;
+      border: none !important;
+      line-height: 1.2 !important;
+      min-width: auto !important;
+      width: auto !important;
+      white-space: nowrap !important;
+      height: 36px !important;
+      position: relative;
+      overflow: hidden;
+      vertical-align: middle !important;
+      margin: 0 !important;
+    }
+
+    .btn-nav-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 30px rgba(114, 9, 183, 0.7);
+    }
+
+    @property --k {
+      syntax: '<number>';
+      initial-value: -1;
+      inherits: true;
+    }
+
+    @keyframes k {
+      0%, 33.3% {
+        --k: 1;
+      }
+    }
+
+    .sparkle-wrap {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .particle {
+      --f: 1;
+      --pos-k: max(0, var(--k));
+      --neg-k: max(0, -1 * var(--k));
+      --low-c: min(1, 4 * (1 - var(--pos-k)));
+      --abs-d: max(var(--neg-k) - .5, .5 - var(--neg-k));
+      --mov-f: var(--pos-k);
+      display: grid;
+      position: absolute;
+      left: var(--x);
+      top: var(--y);
+      rotate: var(--a);
+      animation: k 1s linear calc(1s * var(--t, 0)) infinite;
+    }
+
+    .particle::before {
+      --sa: calc(min(1, 1 - 2 * min(.5, var(--mov-f))) * 45deg);
+      grid-area: 1/ 1;
+      width: .75em;
+      aspect-ratio: 1;
+      border-radius: calc(1.25 * min(.8, var(--mov-f)) * 50%) 50% 50%;
+      transform-origin: 0 0;
+      translate: calc(var(--mov-f) * var(--d));
+      rotate: -45deg;
+      scale: var(--f);
+      transform: skew(var(--sa), var(--sa));
+      opacity: var(--low-c);
+      filter: Saturate(var(--low-c));
+      background: radial-gradient(at 85% 85%, #ffffff, var(--purple-light) 75%);
+      content: '';
+    }
+
+    .particle::after {
+      grid-area: 1/ 1;
+      translate: -50% -50%;
+      scale: calc(var(--f) * (1 - 2 * var(--abs-d)));
+      text-align: center;
+      filter: blur(.5px);
+      color: #fff;
+      content: '✦';
+    }
+
+    /* ==================== EVENTOS HERO SECTION ==================== */
+    .events-hero {
+      min-height: calc(100vh - 80px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+      padding: 2rem 1.5rem;
+    }
+
+    /* Fondo animado con múltiples gradientes que se mueven */
+    .events-hero::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 1200px;
+      height: 1200px;
+      background: 
+        radial-gradient(circle at 30% 40%, rgba(255, 107, 53, 0.15) 0%, transparent 50%),
+        radial-gradient(circle at 70% 60%, rgba(114, 9, 183, 0.15) 0%, transparent 50%),
+        radial-gradient(circle at 50% 50%, rgba(233, 30, 99, 0.1) 0%, transparent 60%);
+      animation: morphBackground 8s ease-in-out infinite;
+      pointer-events: none;
+    }
+
+    @keyframes morphBackground {
+      0%, 100% {
+        transform: translate(-50%, -50%) scale(1) rotate(0deg);
+        opacity: 0.6;
+      }
+      33% {
+        transform: translate(-45%, -55%) scale(1.1) rotate(120deg);
+        opacity: 0.8;
+      }
+      66% {
+        transform: translate(-55%, -45%) scale(0.9) rotate(240deg);
+        opacity: 0.7;
+      }
+    }
+
+    /* Ondas de sonido animadas */
+    .sound-waves {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      overflow: hidden;
+    }
+
+    .sound-wave {
+      position: absolute;
+      width: 300px;
+      height: 300px;
+      border: 2px solid rgba(255, 107, 53, 0.3);
+      border-radius: 50%;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      animation: soundPulse 3s ease-out infinite;
+    }
+
+    .sound-wave:nth-child(2) {
+      animation-delay: 1s;
+      border-color: rgba(114, 9, 183, 0.3);
+    }
+
+    .sound-wave:nth-child(3) {
+      animation-delay: 2s;
+      border-color: rgba(233, 30, 99, 0.3);
+    }
+
+    @keyframes soundPulse {
+      0% {
+        transform: translate(-50%, -50%) scale(0.5);
+        opacity: 1;
+      }
+      100% {
+        transform: translate(-50%, -50%) scale(2.5);
+        opacity: 0;
+      }
+    }
+
+    /* Confetti flotante */
+    .confetti-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      overflow: hidden;
+    }
+
+    .confetti {
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      background: var(--purple-main);
+      opacity: 0;
+      animation: confettiFall 6s ease-in infinite;
+    }
+
+    /* Diferentes colores y posiciones para el confetti */
+    .confetti:nth-child(1) { left: 5%; animation-delay: 0s; background: var(--purple-main); }
+    .confetti:nth-child(2) { left: 15%; animation-delay: 0.5s; background: var(--orange-event); }
+    .confetti:nth-child(3) { left: 25%; animation-delay: 1s; background: var(--pink-event); }
+    .confetti:nth-child(4) { left: 35%; animation-delay: 1.5s; background: var(--purple-light); }
+    .confetti:nth-child(5) { left: 45%; animation-delay: 2s; background: var(--orange-event); }
+    .confetti:nth-child(6) { left: 55%; animation-delay: 2.5s; background: var(--purple-main); }
+    .confetti:nth-child(7) { left: 65%; animation-delay: 3s; background: var(--pink-event); }
+    .confetti:nth-child(8) { left: 75%; animation-delay: 3.5s; background: var(--purple-light); }
+    .confetti:nth-child(9) { left: 85%; animation-delay: 4s; background: var(--orange-event); }
+    .confetti:nth-child(10) { left: 95%; animation-delay: 4.5s; background: var(--purple-main); }
+
+    @keyframes confettiFall {
+      0% {
+        top: -10px;
+        opacity: 0;
+        transform: rotateZ(0deg);
+      }
+      10% {
+        opacity: 1;
+      }
+      90% {
+        opacity: 1;
+      }
+      100% {
+        top: 100%;
+        opacity: 0;
+        transform: rotateZ(720deg);
+      }
+    }
+
+    /* Contenedor principal */
+    .events-content {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    /* Ícono principal con efecto especial */
+    .main-event-icon {
+      font-size: 7rem;
+      display: inline-block;
+      margin-bottom: 2rem;
+      position: relative;
+      animation: iconBounce 2s ease-in-out infinite;
+    }
+
+    .main-event-icon i {
+      background: linear-gradient(135deg, var(--orange-event), var(--pink-event), var(--purple-main));
+      background-clip: text;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      filter: drop-shadow(0 0 40px rgba(255, 107, 53, 0.6));
+    }
+
+    @keyframes iconBounce {
+      0%, 100% {
+        transform: translateY(0) scale(1);
+      }
+      50% {
+        transform: translateY(-15px) scale(1.05);
+      }
+    }
+
+    /* Badge especial para eventos */
+    .event-badge {
+      display: inline-block;
+      background: linear-gradient(135deg, rgba(255, 107, 53, 0.2), rgba(233, 30, 99, 0.2));
+      border: 2px solid var(--orange-event);
+      color: var(--orange-event);
+      padding: 0.5rem 1.5rem;
+      border-radius: 50px;
+      font-size: 0.875rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-bottom: 2rem;
+      animation: eventBadgePulse 2s ease-in-out infinite;
+      box-shadow: 0 0 30px rgba(255, 107, 53, 0.3);
+    }
+
+    @keyframes eventBadgePulse {
+      0%, 100% {
+        box-shadow: 0 0 30px rgba(255, 107, 53, 0.3);
+        transform: scale(1);
+      }
+      50% {
+        box-shadow: 0 0 50px rgba(255, 107, 53, 0.6);
+        transform: scale(1.05);
+      }
+    }
+
+    /* Título con gradiente multicolor */
+    .events-title {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 4.5rem;
+      font-weight: 900;
+      color: var(--text-primary);
+      margin-bottom: 1.5rem;
+      letter-spacing: 3px;
+      line-height: 1.1;
+      background: linear-gradient(135deg, #ffffff, var(--orange-event), var(--pink-event), var(--purple-main));
+      background-size: 300% 300%;
+      background-clip: text;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: gradientFlow 4s ease infinite;
+    }
+
+    @keyframes gradientFlow {
+      0%, 100% {
+        background-position: 0% 50%;
+      }
+      50% {
+        background-position: 100% 50%;
+      }
+    }
+
+    /* Subtítulo */
+    .events-subtitle {
+      font-size: 1.375rem;
+      color: rgba(255, 255, 255, 0.8);
+      margin-bottom: 3rem;
+      line-height: 1.8;
+      font-weight: 500;
+    }
+
+    /* Formulario de notificación mejorado */
+    .notify-form {
+      max-width: 550px;
+      margin: 0 auto 3rem;
+    }
+
+    .email-input-wrapper {
+      display: flex;
+      background: rgba(20, 15, 40, 0.7);
+      border: 2px solid rgba(255, 107, 53, 0.4);
+      border-radius: 16px;
+      overflow: hidden;
+      transition: all 0.3s;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 8px 32px rgba(255, 107, 53, 0.2);
+    }
+
+    .email-input-wrapper:focus-within {
+      border-color: rgba(255, 107, 53, 0.7);
+      box-shadow: 0 8px 40px rgba(255, 107, 53, 0.4);
+      transform: translateY(-3px);
+    }
+
+    .email-icon {
+      padding: 1.25rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--orange-event);
+      font-size: 1.25rem;
+    }
+
+    .email-input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      padding: 1.25rem 0;
+      font-size: 1rem;
+      color: var(--text-primary);
+      outline: none;
+    }
+
+    .email-input::placeholder {
+      color: rgba(255, 255, 255, 0.4);
+    }
+
+    .notify-button {
+      background: linear-gradient(135deg, var(--orange-event), var(--pink-event));
+      border: none;
+      color: var(--text-primary);
+      padding: 0 2rem;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 0.9375rem;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      white-space: nowrap;
+    }
+
+    .notify-button:hover {
+      background: linear-gradient(135deg, var(--pink-event), var(--purple-main));
+      box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.2);
+      transform: scale(1.02);
+    }
+
+    /* Mensaje de éxito mejorado */
+    .success-message {
+      display: none;
+      background: rgba(12, 188, 135, 0.15);
+      border: 2px solid var(--green-verified);
+      border-radius: 12px;
+      padding: 1.25rem;
+      color: var(--green-verified);
+      font-weight: 600;
+      margin-top: 1rem;
+      animation: slideInBounce 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    }
+
+    @keyframes slideInBounce {
+      0% {
+        opacity: 0;
+        transform: translateY(-20px) scale(0.9);
+      }
+      50% {
+        transform: translateY(5px) scale(1.05);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    /* Tipos de eventos preview */
+    .event-types {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 2rem;
+      margin-top: 4rem;
+      margin-bottom: 3rem;
+    }
+
+    .event-type-card {
+      background: rgba(26, 10, 46, 0.5);
+      border: 2px solid rgba(255, 107, 53, 0.3);
+      border-radius: 20px;
+      padding: 2.5rem 1.5rem;
+      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Efecto de brillo que se mueve */
+    .event-type-card::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+      transform: rotate(45deg);
+      transition: all 0.6s;
+    }
+
+    .event-type-card:hover::before {
+      left: 100%;
+    }
+
+    .event-type-card:hover {
+      border-color: var(--orange-event);
+      transform: translateY(-10px) scale(1.02);
+      box-shadow: 0 20px 60px rgba(255, 107, 53, 0.3);
+      background: rgba(26, 10, 46, 0.7);
+    }
+
+    .event-type-icon {
+      font-size: 3rem;
+      margin-bottom: 1.5rem;
+      display: inline-block;
+      transition: all 0.3s;
+    }
+
+    .event-type-card:hover .event-type-icon {
+      transform: scale(1.15) rotateY(360deg);
+    }
+
+    /* Diferentes colores para cada tipo de evento */
+    .event-type-card:nth-child(1) .event-type-icon { color: var(--orange-event); }
+    .event-type-card:nth-child(2) .event-type-icon { color: var(--pink-event); }
+    .event-type-card:nth-child(3) .event-type-icon { color: var(--purple-main); }
+    .event-type-card:nth-child(4) .event-type-icon { color: var(--purple-light); }
+
+    .event-type-title {
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: var(--text-primary);
+      margin-bottom: 0.75rem;
+      font-family: 'Montserrat', sans-serif;
+    }
+
+    .event-type-desc {
+      font-size: 0.9375rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    /* Timeline de próximos eventos */
+    .events-timeline {
+      max-width: 700px;
+      margin: 4rem auto 3rem;
+      padding: 2.5rem;
+      background: rgba(26, 10, 46, 0.3);
+      border: 2px solid rgba(114, 9, 183, 0.3);
+      border-radius: 20px;
+      backdrop-filter: blur(10px);
+    }
+
+    .timeline-title {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 1.75rem;
+      font-weight: 800;
+      color: var(--text-primary);
+      margin-bottom: 1.5rem;
+      text-align: center;
+    }
+
+    .timeline-items {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .timeline-item {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      padding: 1.5rem;
+      background: rgba(114, 9, 183, 0.1);
+      border: 1px solid rgba(114, 9, 183, 0.2);
+      border-radius: 12px;
+      transition: all 0.3s;
+    }
+
+    .timeline-item:hover {
+      background: rgba(114, 9, 183, 0.15);
+      border-color: rgba(114, 9, 183, 0.4);
+      transform: translateX(5px);
+    }
+
+    .timeline-icon-wrapper {
+      width: 60px;
+      height: 60px;
+      background: linear-gradient(135deg, var(--orange-event), var(--pink-event));
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.75rem;
+      color: white;
+      flex-shrink: 0;
+    }
+
+    .timeline-content {
+      flex: 1;
+    }
+
+    .timeline-item-title {
+      font-size: 1.125rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 0.25rem;
+    }
+
+    .timeline-item-desc {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+    }
+
+    /* Discord CTA mejorado */
+    .discord-cta {
+      margin-top: 3rem;
+      padding: 2.5rem;
+      background: rgba(88, 101, 242, 0.1);
+      border: 2px solid rgba(88, 101, 242, 0.4);
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 2rem;
+      transition: all 0.3s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Efecto de onda en el fondo */
+    .discord-cta::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(88, 101, 242, 0.1), transparent);
+      transition: all 0.6s;
+    }
+
+    .discord-cta:hover::before {
+      left: 100%;
+    }
+
+    .discord-cta:hover {
+      border-color: rgba(88, 101, 242, 0.6);
+      background: rgba(88, 101, 242, 0.15);
+      box-shadow: 0 10px 40px rgba(88, 101, 242, 0.2);
+    }
+
+    .discord-cta-content {
+      flex: 1;
+      text-align: left;
+      position: relative;
+      z-index: 1;
+    }
+
+    .discord-cta-title {
+      font-size: 1.625rem;
+      font-weight: 800;
+      color: var(--text-primary);
+      margin-bottom: 0.5rem;
+      font-family: 'Montserrat', sans-serif;
+    }
+
+    .discord-cta-desc {
+      color: rgba(255, 255, 255, 0.75);
+      font-size: 1.0625rem;
+      line-height: 1.6;
+    }
+
+    .discord-button {
+      background: #5865F2;
+      color: white;
+      padding: 1.125rem 2.25rem;
+      border-radius: 12px;
+      text-decoration: none;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      transition: all 0.3s;
+      white-space: nowrap;
+      position: relative;
+      z-index: 1;
+      font-size: 1rem;
+    }
+
+    .discord-button:hover {
+      background: #4752C4;
+      transform: translateY(-3px) scale(1.05);
+      box-shadow: 0 10px 30px rgba(88, 101, 242, 0.5);
+    }
+
+    /* ==================== FOOTER (INTACTO - NO MODIFICAR) ==================== */
+    .footer {
+      background: var(--bg-black);
+      padding: 2.5rem 1.5rem 1.5rem;
+      border-top: 1px solid rgba(114, 9, 183, 0.2);
+      margin-top: 4rem;
+    }
+
+    .footer-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 2rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .footer-section h4 {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 1rem;
+      font-family: 'Montserrat', sans-serif;
+    }
+
+    .footer-links {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .footer-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.875rem;
+      transition: all 0.3s;
+    }
+
+    .footer-links a:hover {
+      color: var(--purple-light);
+      padding-left: 0.25rem;
+    }
+
+    .footer-socials {
+      display: flex;
+      gap: 0.75rem;
+      margin-top: 1rem;
+    }
+
+    .footer-social-link {
+      width: 32px;
+      height: 32px;
+      background: rgba(114, 9, 183, 0.2);
+      border: 1px solid rgba(114, 9, 183, 0.4);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--purple-light);
+      text-decoration: none;
+      font-size: 1rem;
+      transition: all 0.3s;
+    }
+
+    .footer-social-link:hover {
+      background: rgba(114, 9, 183, 0.4);
+      border-color: rgba(114, 9, 183, 0.6);
+      transform: translateY(-2px);
+    }
+
+    .footer-bottom {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding-top: 1.5rem;
+      border-top: 1px solid rgba(114, 9, 183, 0.2);
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.8125rem;
+    }
+
+    /* ==================== RESPONSIVE ==================== */
+    @media (max-width: 768px) {
+      .events-title {
+        font-size: 2.75rem;
+      }
+
+      .events-subtitle {
+        font-size: 1.125rem;
+      }
+
+      .main-event-icon {
+        font-size: 5rem;
+      }
+
+      .discord-cta {
+        flex-direction: column;
+        text-align: center;
+      }
+
+      .discord-cta-content {
+        text-align: center;
+      }
+
+      .event-types {
+        grid-template-columns: 1fr;
+      }
+
+      .email-input-wrapper {
+        flex-direction: column;
+      }
+
+      .notify-button {
+        padding: 1rem;
+        width: 100%;
+        justify-content: center;
+      }
+
+      .email-icon {
+        display: none;
+      }
+
+      .timeline-item {
+        flex-direction: column;
+        text-align: center;
+      }
+
+      .events-timeline {
+        padding: 1.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ==================== NAVBAR (INTACTO - NO MODIFICAR) ==================== -->
+<header class="navbar">
+  <div class="navbar-container">
+    <div class="logo">
+      <a href="/index">
+        <img src="/images/LOGO-OFFSZN.png" alt="OFFSZN" style="height: 45px;">
+      </a>
+    </div>
+    <div class="navbar-center">
+      <ul class="navbar-links">
+        <li><a href="/index">Inicio</a></li>
+        <li class="dropdown-parent">
+          <a onclick="toggleDropdown(this)">
+            Recursos <i class="bi bi-chevron-down"></i>
+          </a>
+          <div class="dropdown-menu dropdown-large">
+            <div class="dropdown-section">
+              <span class="dropdown-section-title">PRODUCTOS DIGITALES</span>
+              <a href="/recursos/presets" class="dropdown-item">
+                <i class="bi bi-sliders"></i>
+                <div class="dropdown-item-content">
+                  <div class="dropdown-item-title">Presets & Plugins</div>
+                  <div class="dropdown-item-desc">Chains profesionales</div>
+                </div>
+              </a>
+              <a href="/recursos/beats-instrumentales" class="dropdown-item">
+                <i class="bi bi-music-note-beamed"></i>
+                <div class="dropdown-item-content">
+                  <div class="dropdown-item-title">Beats & Instrumentales</div>
+                  <div class="dropdown-item-desc">Licencias disponibles</div>
+                </div>
+              </a>
+              <a href="/recursos/drum-kits" class="dropdown-item">
+                <i class="bi bi-disc"></i>
+                <div class="dropdown-item-content">
+                  <div class="dropdown-item-title">Drum Kits</div>
+                  <div class="dropdown-item-desc">Samples únicos</div>
+                </div>
+              </a>
+            </div>
+            <div class="dropdown-section">
+              <span class="dropdown-section-title">CONTENIDO</span>
+              <a href="/recursos/samples-loops" class="dropdown-item">
+                <i class="bi bi-soundwave"></i>
+                <div class="dropdown-item-content">
+                  <div class="dropdown-item-title">Samples & Loops</div>
+                  <div class="dropdown-item-desc">Loops de calidad</div>
+                </div>
+              </a>
+              <a href="/recursos/tutoriales" class="dropdown-item">
+                <i class="bi bi-play-circle"></i>
+                <div class="dropdown-item-content">
+                  <div class="dropdown-item-title">Tutoriales</div>
+                  <div class="dropdown-item-desc">Guías y videos</div>
+                </div>
+              </a>
+            </div>
+            <div class="dropdown-divider"></div>
+            <a href="/recursos/recursos-gratis" class="dropdown-item" style="grid-column: 1 / -1;">
+              <i class="bi bi-gift"></i>
+              <div class="dropdown-item-content">
+                <div class="dropdown-item-title">Recursos Gratis</div>
+                <div class="dropdown-item-desc">Descarga sin costo</div>
+              </div>
+            </a>
+          </div>
+        </li>
+        <li class="dropdown-parent">
+          <a onclick="toggleDropdown(this)">
+            Comunidad <i class="bi bi-chevron-down"></i>
+          </a>
+          <div class="dropdown-menu">
+            <a href="/comunidad/feed" class="dropdown-item">
+              <i class="bi bi-house"></i>
+              <div class="dropdown-item-content">
+                <div class="dropdown-item-title">Feed</div>
+              </div>
+            </a>
+            <a href="/comunidad/productores" class="dropdown-item">
+              <i class="bi bi-people"></i>
+              <div class="dropdown-item-content">
+                <div class="dropdown-item-title">Productores</div>
+              </div>
+            </a>
+            <a href="/comunidad/colaboraciones" class="dropdown-item">
+              <i class="bi bi-hand-index-thumb"></i>
+              <div class="dropdown-item-content">
+                <div class="dropdown-item-title">Colaboraciones</div>
+              </div>
+            </a>
+            <div class="dropdown-divider"></div>
+            <a href="/comunidad/foros" class="dropdown-item">
+              <i class="bi bi-chat-dots"></i>
+              <div class="dropdown-item-content">
+                <div class="dropdown-item-title">Foros</div>
+              </div>
+            </a>
+            <a href="/comunidad/eventos" class="dropdown-item">
+              <i class="bi bi-calendar-event"></i>
+              <div class="dropdown-item-content">
+                <div class="dropdown-item-title">Eventos</div>
+              </div>
+            </a>
+            <a href="https://discord.gg/vX7XktMeBU" target="_blank" class="dropdown-item discord-link">
+              <i class="bi bi-discord"></i>
+              <div class="dropdown-item-content">
+                <div class="dropdown-item-title">Únete a Discord</div>
+                <div class="dropdown-item-desc">Comunidad activa</div>
+              </div>
+            </a>
+          </div>
+        </li>
+        <li>
+          <a href="/pages/marketplace" class="btn-nav-primary">
+            Marketplace
+            <span class="sparkle-wrap" aria-hidden="true">
+              <span class="particle" style="--a: -45deg; --x: 53%; --y: 15%; --d: 4em; --f: .7; --t: .15"></span>
+              <span class="particle" style="--a: 150deg; --x: 40%; --y: 70%; --d: 7.5em; --f: .8; --t: .08"></span>
+              <span class="particle" style="--a: 10deg; --x: 90%; --y: 65%; --d: 7em; --f: .6; --t: .25"></span>
+              <span class="particle" style="--a: -120deg; --x: 15%; --y: 10%; --d: 4em"></span>
+              <span class="particle" style="--a: -175deg; --x: 10%; --y: 25%; --d: 5.25em; --f: .6; --t: .32"></span>
+              <span class="particle" style="--a: -18deg; --x: 80%; --y: 25%; --d: 4.75em; --f: .5; --t: .4"></span>
+              <span class="particle" style="--a: -160deg; --x: 30%; --y: 5%; --d: 9em; --f: .9; --t: .5"></span>
+              <span class="particle" style="--a: 175deg; --x: 9%; --y: 30%; --d: 6em; --f: .95; --t: .6"></span>
+              <span class="particle" style="--a: -10deg; --x: 89%; --y: 25%; --d: 4.5em; --f: .55; --t: .67"></span>
+              <span class="particle" style="--a: -140deg; --x: 40%; --y: 10%; --d: 5em; --f: .85; --t: .75"></span>
+              <span class="particle" style="--a: 90deg; --x: 45%; --y: 65%; --d: 4em; --f: .5; --t: .83"></span>
+              <span class="particle" style="--a: 30deg; --x: 70%; --y: 80%; --d: 6.5em; --f: .75; --t: .92"></span>
+            </span>
+          </a>
+        </li>
+        <li>
+          <a href="/cursos/inicio">
+            Cursos
+            <span class="nav-badge">SOON</span>
+          </a>
+        </li>
+      </ul>
+    </div>
+    <button class="menu-toggle" id="menuToggle">
+      <i class="bi bi-list"></i>
+    </button>
+    <div class="navbar-right">
+      <a href="/pages/login" class="navbar-login-link">Iniciar Sesión</a>
+      <a href="/pages/register" class="btn-join">
+        Únete <i class="bi bi-rocket-takeoff"></i>
+      </a>
+      <a href="/pages/cart" class="navbar-icon-button" title="Carrito">
+        <i class="bi bi-cart3"></i>
+      </a>
+    </div>
+  </div>
+</header>
+
+<!-- ==================== EVENTS HERO ==================== -->
+<section class="events-hero">
+  
+  <!-- Ondas de sonido animadas -->
+  <div class="sound-waves">
+    <div class="sound-wave"></div>
+    <div class="sound-wave"></div>
+    <div class="sound-wave"></div>
+  </div>
+
+  <!-- Confetti flotante -->
+  <div class="confetti-container">
+    <div class="confetti"></div>
+    <div class="confetti"></div>
+    <div class="confetti"></div>
+    <div class="confetti"></div>
+    <div class="confetti"></div>
+    <div class="confetti"></div>
+    <div class="confetti"></div>
+    <div class="confetti"></div>
+    <div class="confetti"></div>
+    <div class="confetti"></div>
+  </div>
+
+  <div class="events-content">
+    
+    <!-- Ícono principal con gradiente -->
+    <div class="main-event-icon">
+      <i class="bi bi-calendar-event-fill"></i>
+    </div>
+
+    <!-- Badge de próximamente -->
+    <div class="event-badge">
+      <i class="bi bi-stars"></i> Muy Pronto
+    </div>
+
+    <!-- Título principal -->
+    <h1 class="events-title">Eventos OFFSZN</h1>
+
+    <!-- Subtítulo descriptivo -->
+    <p class="events-subtitle">
+      Workshops exclusivos, beat battles épicos, listening parties con productores reconocidos y networking sessions. El lugar donde la comunidad se encuentra en vivo para aprender, competir y crecer juntos.
+    </p>
+
+    <!-- Formulario de notificación -->
+    <!-- TODO: Integrar con Supabase o servicio de email gratuito para capturar leads -->
+    <div class="notify-form">
+      <form id="notifyForm">
+        <div class="email-input-wrapper">
+          <div class="email-icon">
+            <i class="bi bi-calendar-check"></i>
+          </div>
+          <input 
+            type="email" 
+            id="emailInput" 
+            class="email-input" 
+            placeholder="Quiero ser el primero en saberlo..."
+            required
+          >
+          <button type="submit" class="notify-button">
+            <i class="bi bi-rocket-takeoff"></i>
+            Avisarme
+          </button>
+        </div>
+      </form>
+      
+      <!-- Mensaje de éxito (oculto inicialmente) -->
+      <div class="success-message" id="successMessage">
+        <i class="bi bi-check-circle-fill"></i>
+        ¡Genial! Serás el primero en enterarte de nuestros eventos.
+      </div>
+    </div>
+
+    <!-- Tipos de eventos que vendrán -->
+    <div class="event-types">
+      
+      <div class="event-type-card">
+        <div class="event-type-icon">
+          <i class="bi bi-trophy-fill"></i>
+        </div>
+        <h3 class="event-type-title">Beat Battles</h3>
+        <p class="event-type-desc">Competencias mensuales donde los mejores productores se enfrentan por premios y reconocimiento</p>
+      </div>
+
+      <div class="event-type-card">
+        <div class="event-type-icon">
+          <i class="bi bi-laptop"></i>
+        </div>
+        <h3 class="event-type-title">Workshops Live</h3>
+        <p class="event-type-desc">Sesiones en vivo con productores profesionales compartiendo sus técnicas y secretos</p>
+      </div>
+
+      <div class="event-type-card">
+        <div class="event-type-icon">
+          <i class="bi bi-headphones"></i>
+        </div>
+        <h3 class="event-type-title">Listening Parties</h3>
+        <p class="event-type-desc">Escucha y analiza los últimos lanzamientos con la comunidad en tiempo real</p>
+      </div>
+
+      <div class="event-type-card">
+        <div class="event-type-icon">
+          <i class="bi bi-people-fill"></i>
+        </div>
+        <h3 class="event-type-title">Networking Sessions</h3>
+        <p class="event-type-desc">Conecta con otros productores, artistas e ingenieros de la industria musical</p>
+      </div>
+
+    </div>
+
+    <!-- Timeline de próximos eventos -->
+    <div class="events-timeline">
+      <h3 class="timeline-title">🎯 Lo que viene</h3>
+      <div class="timeline-items">
+        
+        <div class="timeline-item">
+          <div class="timeline-icon-wrapper">
+            <i class="bi bi-gear-fill"></i>
+          </div>
+          <div class="timeline-content">
+            <h4 class="timeline-item-title">Plataforma en desarrollo</h4>
+            <p class="timeline-item-desc">Estamos construyendo el mejor sistema de eventos para productores</p>
+          </div>
+        </div>
+
+        <div class="timeline-item">
+          <div class="timeline-icon-wrapper">
+            <i class="bi bi-camera-video-fill"></i>
+          </div>
+          <div class="timeline-content">
+            <h4 class="timeline-item-title">Streaming integrado</h4>
+            <p class="timeline-item-desc">Transmisiones en vivo de alta calidad directamente en OFFSZN</p>
+          </div>
+        </div>
+
+        <div class="timeline-item">
+          <div class="timeline-icon-wrapper">
+            <i class="bi bi-chat-left-dots-fill"></i>
+          </div>
+          <div class="timeline-content">
+            <h4 class="timeline-item-title">Chat en vivo</h4>
+            <p class="timeline-item-desc">Interactúa con los speakers y la comunidad durante los eventos</p>
+          </div>
+        </div>
+
+        <div class="timeline-item">
+          <div class="timeline-icon-wrapper">
+            <i class="bi bi-gift-fill"></i>
+          </div>
+          <div class="timeline-content">
+            <h4 class="timeline-item-title">Premios exclusivos</h4>
+            <p class="timeline-item-desc">Presets, plugins, sessions y más para los ganadores</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Call to action para Discord mientras tanto -->
+    <div class="discord-cta">
+      <div class="discord-cta-content">
+        <h3 class="discord-cta-title">Únete al Discord ahora</h3>
+        <p class="discord-cta-desc">
+          Mientras preparamos la plataforma de eventos, ya estamos organizando sesiones y challenges en Discord. ¡No te pierdas nada!
+        </p>
+      </div>
+      <a href="https://discord.gg/vX7XktMeBU" target="_blank" class="discord-button">
+        <i class="bi bi-discord"></i>
+        Unirse Gratis
+      </a>
+    </div>
+
+  </div>
+</section>
+
+<!-- ==================== FOOTER (INTACTO - NO MODIFICAR) ==================== -->
+<footer class="footer">
+  <div class="footer-container">
+    <div class="footer-section">
+      <h4>OFFSZN</h4>
+      <p style="color: var(--text-muted); font-size: 0.875rem; line-height: 1.6;">
+        El primer marketplace musical<br>hecho en Perú 🇵🇪
+      </p>
+      <div class="footer-socials">
+        <a href="https://www.instagram.com/willieinspired/" target="_blank" rel="noopener noreferrer" class="footer-social-link"><i class="bi bi-instagram"></i></a>
+        <a href="https://discord.gg/vX7XktMeBU" target="_blank" rel="noopener noreferrer" class="footer-social-link"><i class="bi bi-discord"></i></a>
+        <a href="https://www.youtube.com/@willieinspired" target="_blank" rel="noopener noreferrer" class="footer-social-link"><i class="bi bi-youtube"></i></a>
+        <a href="https://wa.link/vhlxuj" target="_blank" rel="noopener noreferrer" class="footer-social-link"><i class="bi bi-whatsapp"></i></a>
+      </div>
+    </div>
+    
+    <div class="footer-section">
+      <h4>Recursos</h4>
+      <div class="footer-links">
+        <a href="/recursos/beats-instrumentales">Beats & Instrumentales</a>
+        <a href="/recursos/drum-kits">Drum Kits</a>
+        <a href="/recursos/presets">Presets & Plugins</a>
+        <a href="/recursos/samples-loops">Samples & Loops</a>
+        <a href="/recursos/recursos-gratis">Recursos Gratis</a>
+      </div>
+    </div>
+    
+    <div class="footer-section">
+      <h4>Comunidad</h4>
+      <div class="footer-links">
+        <a href="/comunidad/feed">Feed</a>
+        <a href="/comunidad/productores">Productores</a>
+        <a href="/comunidad/colaboraciones">Colaboraciones</a>
+        <a href="/comunidad/foros">Foros</a>
+        <a href="https://discord.gg/vX7XktMeBU" target="_blank" rel="noopener noreferrer">Discord</a>
+      </div>
+    </div>
+    
+    <div class="footer-section">
+      <h4>Legal</h4>
+      <div class="footer-links">
+        <a href="/legal/terminos-de-uso" target="_blank">Términos de Uso</a>
+        <a href="/legal/politica-de-privacidad" target="_blank">Política de Privacidad</a>
+        <a href="/legal/terminos-de-servicio" target="_blank">Términos de Servicio</a>
+        <a href="/legal/contacto" target="_blank">Contacto</a>
+      </div>
+    </div>
+  </div>
+  
+  <div class="footer-bottom">
+    <p>© 2025 OFFSZN. Hecho con 💜 en Perú.</p>
+  </div>
+</footer>
+
+<!-- ==================== SCRIPTS ==================== -->
+<script>
+/**
+ * ==================== DROPDOWN NAVIGATION ====================
+ * Maneja la apertura/cierre de los menús desplegables del navbar
+ */
+function toggleDropdown(element) {
+  const parent = element.closest('.dropdown-parent');
+  const isActive = parent.classList.contains('dropdown-active');
+  
+  // Cierra todos los dropdowns
+  document.querySelectorAll('.dropdown-parent').forEach(p => {
+    p.classList.remove('dropdown-active');
+  });
+  
+  // Abre el dropdown clickeado si no estaba activo
+  if (!isActive) {
+    parent.classList.add('dropdown-active');
+  }
+}
+
+// Cierra dropdowns al hacer click fuera
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.dropdown-parent')) {
+    document.querySelectorAll('.dropdown-parent').forEach(p => {
+      p.classList.remove('dropdown-active');
+    });
+  }
+});
+
+/**
+ * ==================== EMAIL NOTIFICATION FORM ====================
+ * Maneja el formulario de notificación por email
+ * TODO: Integrar con Supabase, SendGrid, Mailchimp o servicio similar
+ */
+document.getElementById('notifyForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+  
+  const emailInput = document.getElementById('emailInput');
+  const successMessage = document.getElementById('successMessage');
+  const email = emailInput.value;
+
+  // Validación básica de email
+  if (!email || !email.includes('@')) {
+    alert('Por favor ingresa un email válido');
+    return;
+  }
+
+  // TODO: Aquí irá la integración con el backend
+  // Ejemplo con Supabase:
+  /*
+  supabase
+    .from('events_waitlist')
+    .insert([{ 
+      email: email, 
+      created_at: new Date(),
+      source: 'eventos_landing'
+    }])
+    .then(response => {
+      console.log('Email guardado:', response);
+    })
+    .catch(error => {
+      console.error('Error al guardar:', error);
+    });
+  */
+
+  // Por ahora solo guardamos en localStorage como demo
+  const waitlist = JSON.parse(localStorage.getItem('eventsWaitlist') || '[]');
+  waitlist.push({
+    email: email,
+    timestamp: new Date().toISOString(),
+    page: 'eventos'
+  });
+  localStorage.setItem('eventsWaitlist', JSON.stringify(waitlist));
+
+  // Muestra mensaje de éxito
+  successMessage.style.display = 'block';
+  emailInput.value = '';
+
+  // Log para testing
+  console.log('🎉 Email agregado a lista de espera de eventos:', email);
+  console.log('Total en lista de espera:', waitlist.length);
+
+  // Oculta el mensaje después de 6 segundos
+  setTimeout(() => {
+    successMessage.style.display = 'none';
+  }, 6000);
+
+  // Efecto especial: Hace que las ondas de sonido pulsen
+  document.querySelectorAll('.sound-wave').forEach((wave, index) => {
+    setTimeout(() => {
+      wave.style.animation = 'none';
+      setTimeout(() => {
+        wave.style.animation = '';
+      }, 10);
+    }, index * 100);
+  });
+});
+
+/**
+ * ==================== ANIMACIONES DE ENTRADA ====================
+ * Añade animaciones suaves al cargar la página
+ */
+document.addEventListener('DOMContentLoaded', function() {
+  console.log('🎪 Página de Eventos - Próximamente cargada');
+  
+  // Fade in del contenido principal
+  const content = document.querySelector('.events-content');
+  content.style.opacity = '0';
+  content.style.transform = 'translateY(40px)';
+  
+  setTimeout(() => {
+    content.style.transition = 'all 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+    content.style.opacity = '1';
+    content.style.transform = 'translateY(0)';
+  }, 100);
+
+  // Animación secuencial de las tarjetas de eventos
+  const eventCards = document.querySelectorAll('.event-type-card');
+  eventCards.forEach((card, index) => {
+    card.style.opacity = '0';
+    card.style.transform = 'translateY(30px)';
+    
+    setTimeout(() => {
+      card.style.transition = 'all 0.6s ease-out';
+      card.style.opacity = '1';
+      card.style.transform = 'translateY(0)';
+    }, 800 + (index * 150));
+  });
+
+  // Animación de los items del timeline
+  const timelineItems = document.querySelectorAll('.timeline-item');
+  timelineItems.forEach((item, index) => {
+    item.style.opacity = '0';
+    item.style.transform = 'translateX(-30px)';
+    
+    setTimeout(() => {
+      item.style.transition = 'all 0.5s ease-out';
+      item.style.opacity = '1';
+      item.style.transform = 'translateX(0)';
+    }, 1400 + (index * 100));
+  });
+
+  // Log de emails en lista de espera (solo para desarrollo)
+  const waitlist = JSON.parse(localStorage.getItem('eventsWaitlist') || '[]');
+  if (waitlist.length > 0) {
+    console.log(`📊 Emails en lista de espera de eventos: ${waitlist.length}`);
+  }
+});
+
+/**
+ * ==================== EFECTO PARALLAX SUAVE ====================
+ * Añade profundidad al scroll
+ */
+let ticking = false;
+
+window.addEventListener('scroll', function() {
+  if (!ticking) {
+    window.requestAnimationFrame(function() {
+      const scrolled = window.pageYOffset;
+      
+      // Mueve las ondas de sonido más lento que el scroll
+      const soundWaves = document.querySelector('.sound-waves');
+      if (soundWaves) {
+        soundWaves.style.transform = `translateY(${scrolled * 0.3}px)`;
+      }
+
+      // Mueve el confetti más rápido
+      const confettiContainer = document.querySelector('.confetti-container');
+      if (confettiContainer) {
+        confettiContainer.style.transform = `translateY(${scrolled * 0.5}px)`;
+      }
+
+      ticking = false;
+    });
+
+    ticking = true;
+  }
+});
+
+/**
+ * ==================== HOVER EFFECTS MEJORADOS ====================
+ * Efectos 3D en las tarjetas de eventos
+ */
+const eventCards = document.querySelectorAll('.event-type-card');
+
+eventCards.forEach(card => {
+  card.addEventListener('mousemove', function(e) {
+    const rect = card.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    
+    const centerX = rect.width / 2;
+    const centerY = rect.height / 2;
+    
+    const rotateX = (y - centerY) / 10;
+    const rotateY = (centerX - x) / 10;
+    
+    card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-10px) scale(1.02)`;
+  });
+  
+  card.addEventListener('mouseleave', function() {
+    card.style.transform = '';
+  });
+});
+
+/**
+ * ==================== CONTADOR DE INTERACCIONES ====================
+ * Tracking de engagement (para analytics futuros)
+ */
+let interactions = {
+  formFocused: false,
+  cardsHovered: 0,
+  discordClicked: false,
+  timeOnPage: 0
+};
+
+// Track focus en el formulario
+document.getElementById('emailInput').addEventListener('focus', function() {
+  if (!interactions.formFocused) {
+    interactions.formFocused = true;
+    console.log('📝 Usuario interesado: formulario enfocado');
+  }
+});
+
+// Track hover en tarjetas
+eventCards.forEach(card => {
+  card.addEventListener('mouseenter', function() {
+    interactions.cardsHovered++;
+  });
+});
+
+// Track click en Discord
+document.querySelector('.discord-button').addEventListener('click', function() {
+  interactions.discordClicked = true;
+  console.log('💬 Usuario redirigido a Discord');
+});
+
+// Track tiempo en página
+setInterval(() => {
+  interactions.timeOnPage += 5;
+  
+  // Log cada 30 segundos para ver engagement
+  if (interactions.timeOnPage % 30 === 0) {
+    console.log('⏱️ Engagement:', {
+      tiempoEnPagina: `${interactions.timeOnPage}s`,
+      formFocused: interactions.formFocused,
+      cardsHovered: interactions.cardsHovered,
+      discordClicked: interactions.discordClicked
+    });
+  }
+}, 5000);
+
+/**
+ * ==================== SMOOTH SCROLL ====================
+ * Scroll suave para enlaces internos
+ */
+document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+  anchor.addEventListener('click', function (e) {
+    e.preventDefault();
+    const target = document.querySelector(this.getAttribute('href'));
+    if (target) {
+      target.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start'
+      });
+    }
+  });
+});
+
+/**
+ * ==================== EFECTOS ESPECIALES AL SUBMIT ====================
+ * Celebración visual cuando alguien se suscribe
+ */
+function celebrateSubscription() {
+  // Hace que el ícono principal haga un bounce especial
+  const mainIcon = document.querySelector('.main-event-icon');
+  mainIcon.style.animation = 'none';
+  setTimeout(() => {
+    mainIcon.style.animation = 'iconBounce 0.5s ease-in-out';
+  }, 10);
+  
+  // Aumenta temporalmente la velocidad del confetti
+  const confettiElements = document.querySelectorAll('.confetti');
+  confettiElements.forEach(confetti => {
+    confetti.style.animationDuration = '3s';
+    setTimeout(() => {
+      confetti.style.animationDuration = '';
+    }, 3000);
+  });
+}
+
+// Llamar celebración cuando se envía el formulario
+document.getElementById('notifyForm').addEventListener('submit', function() {
+  celebrateSubscription();
+});
+
+/**
+ * ==================== EASTER EGG ====================
+ * Mensaje secreto para curiosos
+ */
+console.log('%c🎉 ¡Hola productor curioso! 🎉', 'font-size: 20px; color: #ff6b35; font-weight: bold;');
+console.log('%cEstamos construyendo algo increíble para ti.', 'font-size: 14px; color: #7209b7;');
+console.log('%c¿Tienes ideas? Escríbenos en Discord 👉 https://discord.gg/vX7XktMeBU', 'font-size: 12px; color: #c9a7eb;');
+</script>
+
+</body>
+</html>
