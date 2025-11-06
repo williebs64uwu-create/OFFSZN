@@ -16,7 +16,7 @@
         <div class="navbar-center">
             <ul class="navbar-links">
                 <li><a href="dashboard">INICIO</a></li>
-                <li class="dropdown-parent">
+                <li>
                     <a>RECURSOS <i class="fas fa-chevron-down"></i></a>
                     <div class="dropdown-menu">
                         <a href="beats" class="dropdown-item">
@@ -42,7 +42,7 @@
                         </a>
                     </div>
                 </li>
-                <li class="dropdown-parent">
+                <li>
                     <a>COMUNIDAD <i class="fas fa-chevron-down"></i></a>
                     <div class="dropdown-menu">
                         <a href="feed" class="dropdown-item">
@@ -79,243 +79,283 @@
         <div class="navbar-right">
             <a href="notifications" class="navbar-icon-button"><i class="fas fa-bell"></i></a>
             <a href="Gift-Cards" class="navbar-icon-button"><i class="fas fa-shopping-cart"></i></a>
-            <a href="profile" class="navbar-icon-button"><i class="fas fa-user"></i></a>
+            <div class="user-dropdown">
+                <div class="navbar-icon-button" onclick="toggleUserDropdown()"><i class="fas fa-user"></i></div>
+                <div class="user-dropdown-menu">
+                    <div class="user-dropdown-header">
+                        <div class="user-dropdown-avatar">U</div>
+                        <div class="user-dropdown-info">
+                            <div class="user-dropdown-name">Usuario</div>
+                            <div class="user-dropdown-email">usuario@email.com</div>
+                        </div>
+                    </div>
+                    <a href="profile" class="user-dropdown-item"><i class="fas fa-user-circle"></i><span>Mi Perfil</span></a>
+                    <a href="dashboard" class="user-dropdown-item"><i class="fas fa-th-large"></i><span>Dashboard</span></a>
+                    <a href="wallet" class="user-dropdown-item"><i class="fas fa-wallet"></i><span>Billetera</span></a>
+                    <a href="mis-compras" class="user-dropdown-item"><i class="fas fa-shopping-bag"></i><span>Mis Compras</span></a>
+                    <a href="favoritos" class="user-dropdown-item"><i class="fas fa-heart"></i><span>Favoritos</span></a>
+                    <a href="account-settings" class="user-dropdown-item"><i class="fas fa-cog"></i><span>Configuración</span></a>
+                    <a href="help" class="user-dropdown-item"><i class="fas fa-question-circle"></i><span>Ayuda</span></a>
+                    <a href="logout" class="user-dropdown-item logout"><i class="fas fa-sign-out-alt"></i><span>Cerrar Sesión</span></a>
+                </div>
+            </div>
         </div>
-
-        <button class="menu-toggle" id="menuToggle">
-            <i class="fas fa-bars"></i>
-        </button>
     </nav>
 
     <div class="dashboard-container">
 
         <!-- Sidebar -->
-        <aside class="sidebar" id="sidebar">
-            <div class="sidebar-content">
-                
-                <!-- Profile Header con Skeleton -->
-                <div class="profile-header">
-                    <div class="profile-info">
-                        <div class="profile-avatar skeleton">U</div>
-                        <div>
-                            <div class="profile-name skeleton">Cargando...</div>
-                        </div>
+        <aside class="sidebar">
+            <div class="profile-header">
+                <div class="profile-info">
+                    <div class="profile-avatar skeleton">U</div>
+                    <div>
+                        <div class="profile-name skeleton">Usuario</div>
                     </div>
                 </div>
-
-                <!-- Wallet Section con Skeleton -->
-                <div class="wallet-section">
-                    <div class="wallet-label">Saldo Disponible</div>
-                    <div class="wallet-amount skeleton">$0.00</div>
-                </div>
-
-                <!-- Menu Items -->
-                <div class="menu-section">
-                    <div class="menu-title">Principal</div>
-                    <a href="dashboard" class="menu-item">
-                        <i class="fas fa-th-large"></i>
-                        <span>Dashboard</span>
-                    </a>
-                    <button class="menu-item" data-view="kits">
-                        <i class="fas fa-music"></i>
-                        <span>Mis Kits</span>
-                    </button>
-                    <a href="favoritos" class="menu-item">
-                        <i class="fas fa-heart"></i>
-                        <span>Favoritos</span>
-                    </a>
-                    <button class="menu-item" data-view="history">
-                        <i class="fas fa-history"></i>
-                        <span>Historial</span>
-                    </button>
-                </div>
-
-                <div class="menu-divider"></div>
-
-                <div class="menu-section">
-                    <div class="menu-title">Colaboración</div>
-                    <button class="menu-item active" data-view="collaborations">
-                        <i class="fas fa-users"></i>
-                        <span>Colaboraciones</span>
-                    </button>
-                </div>
-
-                <div class="menu-divider"></div>
-
-                <div class="menu-section">
-                    <div class="menu-title">Compras</div>
-                    <a href="mis-compras" class="menu-item">
-                        <i class="fas fa-shopping-bag"></i>
-                        <span>Mis Compras</span>
-                    </a>
-                    <a href="Gift-Cards" class="menu-item">
-                        <i class="fas fa-gift"></i>
-                        <span>Gift Cards</span>
-                    </a>
-                    <a href="messages" class="menu-item">
-                        <i class="fas fa-envelope"></i>
-                        <span>Mensajes</span>
-                    </a>
-                </div>
-
-                <div class="menu-divider"></div>
-
-                <div class="menu-section">
-                    <div class="menu-title">Contenido</div>
-                    <button class="menu-item" data-view="blog">
-                        <i class="fas fa-newspaper"></i>
-                        <span>Blog</span>
-                    </button>
-                    <button class="menu-item" data-view="analytics">
-                        <i class="fas fa-chart-line"></i>
-                        <span>Analíticas</span>
-                    </button>
-                </div>
-
-                <div class="menu-divider"></div>
-
-                <div class="menu-section">
-                    <div class="menu-title">Configuración</div>
-                    <a href="account-settings" class="menu-item">
-                        <i class="fas fa-cog"></i>
-                        <span>Configuración</span>
-                    </a>
-                </div>
-
-                <a href="logout" class="logout-btn">
-                    <i class="fas fa-sign-out-alt"></i>
-                    <span>Cerrar Sesión</span>
-                </a>
-
             </div>
+
+            <div class="wallet-section">
+                <div class="wallet-label">Saldo Disponible</div>
+                <div class="wallet-amount skeleton">$0.00</div>
+            </div>
+
+            <button class="upload-btn" onclick="window.location.href='subir-kit.html'">
+                <i class="fas fa-cloud-upload-alt"></i> Subir Kit
+            </button>
+
+            <div class="sidebar-search">
+                <input type="text" placeholder="Buscar mis productos...">
+                <i class="fas fa-search"></i>
+            </div>
+
+            <div class="sidebar-menu">
+                <div class="menu-section-title">Principal</div>
+                <a href="dashboard" class="menu-item"><i class="fas fa-th-large"></i><span>Dashboard</span></a>
+                <a href="mis-kits" class="menu-item"><i class="fas fa-music"></i><span>Mis Kits</span></a>
+                <a href="favoritos" class="menu-item"><i class="fas fa-heart"></i><span>Favoritos</span></a>
+                <button class="menu-item" data-view="history"><i class="fas fa-history"></i><span>Historial</span></button>
+
+                <div class="menu-divider"></div>
+
+                <div class="menu-section-title">Colaboración</div>
+                <a href="colaboraciones" class="menu-item active"><i class="fas fa-users"></i><span>Colaboraciones</span></a>
+
+                <div class="menu-divider"></div>
+
+                <div class="menu-section-title">Compras</div>
+                <a href="mis-compras" class="menu-item"><i class="fas fa-shopping-bag"></i><span>Mis Compras</span></a>
+                <a href="Gift-Cards" class="menu-item"><i class="fas fa-gift"></i><span>Gift Cards</span></a>
+                <a href="messages" class="menu-item"><i class="fas fa-envelope"></i><span>Mensajes</span></a>
+
+                <div class="menu-divider"></div>
+
+                <div class="menu-section-title">Contenido</div>
+                <button class="menu-item" data-view="blog"><i class="fas fa-newspaper"></i><span>Blog</span></button>
+                <button class="menu-item" data-view="analytics"><i class="fas fa-chart-line"></i><span>Analíticas</span></button>
+
+                <div class="menu-divider"></div>
+
+                <div class="menu-section-title">Configuración</div>
+                <a href="account-settings" class="menu-item"><i class="fas fa-cog"></i><span>Configuración</span></a>
+            </div>
+
+            <a href="logout" class="logout-btn"><i class="fas fa-sign-out-alt"></i><span>Cerrar Sesión</span></a>
         </aside>
 
         <!-- Main Content -->
         <main class="main-content">
+            <!-- Header -->
+            <div class="dashboard-header">
+                <h1 class="welcome-text">Colaboraciones</h1>
+                <p class="welcome-subtitle">Conecta con productores y músicos para crear juntos</p>
+            </div>
 
-            <!-- ============================================
-                 VISTA: COLABORACIONES (Activa por defecto)
-            ============================================= -->
-            <div id="collaborationsView" class="view active">
-                <div class="collab-header">
-                    <h1 class="page-title">Colaboraciones</h1>
-                    <button class="start-collab-btn">
-                        <i class="fas fa-plus"></i>
-                        <span>Empieza tu primera colaboración</span>
-                    </button>
-                </div>
-
-                <!-- Progreso semanal -->
-                <div class="progress-summary">
-                    <div class="progress-card">
-                        <h3>📊 Tu progreso esta semana</h3>
-                        <p>Enviaste <strong>0 propuestas</strong> (0 aceptadas, 0 sin leer)</p>
+            <!-- Hero CTA -->
+            <div class="hero-cta">
+                <div class="hero-cta-content">
+                    <div class="hero-cta-text">
+                        <h2>🤝 ¡Empieza tu primera colaboración!</h2>
+                        <p>Conecta con talentosos productores, cantantes y músicos. Juntos pueden crear algo increíble.</p>
                     </div>
-                </div>
-
-                <!-- Filtros de búsqueda -->
-                <div class="filters-section">
-                    <h3>Buscar colaboradores</h3>
-                    <div class="filters-container">
-                        <select id="roleFilter" class="filter-select">
-                            <option value="">Todos los roles</option>
-                            <option value="producer">Productor</option>
-                            <option value="vocalist">Cantante</option>
-                            <option value="instrumentalist">Instrumentista</option>
-                            <option value="mixer">Mezclador</option>
-                        </select>
-
-                        <select id="countryFilter" class="filter-select">
-                            <option value="">Todos los países</option>
-                            <option value="us">Estados Unidos</option>
-                            <option value="es">España</option>
-                            <option value="ar">Argentina</option>
-                            <option value="au">Australia</option>
-                            <option value="th">Tailandia</option>
-                        </select>
-
-                        <select id="genreFilter" class="filter-select">
-                            <option value="">Todos los géneros</option>
-                            <option value="trap">Trap</option>
-                            <option value="hiphop">Hip Hop</option>
-                            <option value="reggaeton">Reggaetón</option>
-                            <option value="rnb">R&B</option>
-                            <option value="pop">Pop</option>
-                        </select>
-
-                        <select id="availabilityFilter" class="filter-select">
-                            <option value="">Disponibilidad</option>
-                            <option value="available">Disponible</option>
-                            <option value="busy">Ocupado</option>
-                        </select>
-
-                        <div class="recommended-placeholder">
-                            <i class="fas fa-magic"></i> Recomendados para ti
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Grid de productores -->
-                <div class="producers-grid" id="producersGrid">
-                    <!-- Se llenará dinámicamente con JavaScript -->
-                </div>
-
-                <!-- Colaboraciones activas -->
-                <div class="collaborations-active">
-                    <h2>
-                        <i class="fas fa-fire"></i>
-                        Colaboraciones Activas
-                    </h2>
-                    <div class="active-collabs-list">
-                        <!-- Se llenará dinámicamente con JavaScript -->
-                    </div>
-                </div>
-
-                <!-- Call to action -->
-                <div class="find-collaborators">
-                    <h2>¿No encuentras lo que buscas?</h2>
-                    <p>Explora nuestra comunidad completa de productores y músicos</p>
-                    <a href="productores" class="secondary-btn">
-                        Ver todos los productores
+                    <a href="productores" class="hero-cta-button">
+                        <span>Buscar Colaboradores</span>
+                        <i class="fas fa-arrow-right"></i>
                     </a>
                 </div>
             </div>
 
-            <!-- ============================================
-                 VISTA: MIS KITS
-            ============================================= -->
-            <div id="kitsView" class="view">
-                <div class="empty-state">
-                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"/>
-                    </svg>
-                    <h2>No tienes kits subidos</h2>
-                    <p>Comienza a compartir tu música con la comunidad. Sube tu primer kit y empieza a ganar.</p>
-                    <button class="primary-btn" onclick="window.location.href='subir-kit.html'">
-                        <i class="fas fa-cloud-upload-alt"></i>
-                        Subir mi primer kit
-                    </button>
+            <!-- Stats Grid -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <span class="stat-label">Activas</span>
+                        <div class="stat-icon purple">📊</div>
+                    </div>
+                    <div class="stat-value">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <span class="stat-label">Propuestas Enviadas</span>
+                        <div class="stat-icon blue">📤</div>
+                    </div>
+                    <div class="stat-value">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <span class="stat-label">Propuestas Recibidas</span>
+                        <div class="stat-icon green">📥</div>
+                    </div>
+                    <div class="stat-value">0</div>
+                </div>
+            </div>
+
+            <!-- Features Grid -->
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-header">
+                        <div class="feature-icon">🎵</div>
+                        <h3 class="feature-title">Encuentra Talento</h3>
+                    </div>
+                    <p class="feature-description">
+                        Explora perfiles de productores, cantantes e instrumentistas disponibles para colaborar en tu próximo proyecto.
+                    </p>
+                    <a href="productores" class="feature-link">
+                        Explorar músicos <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-header">
+                        <div class="feature-icon">💬</div>
+                        <h3 class="feature-title">Chat en Tiempo Real</h3>
+                    </div>
+                    <p class="feature-description">
+                        Comunícate directamente, comparte ideas y archivos de audio. Todo en una sola plataforma.
+                    </p>
+                    <a href="messages" class="feature-link">
+                        Ver mensajes <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-header">
+                        <div class="feature-icon">⚡</div>
+                        <h3 class="feature-title">Proceso Simple</h3>
+                    </div>
+                    <p class="feature-description">
+                        Envía propuestas, negocia términos y gestiona proyectos. Todo desde tu dashboard personal.
+                    </p>
+                    <a href="#" class="feature-link">
+                        Ver cómo funciona <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-header">
+                        <div class="feature-icon">🎯</div>
+                        <h3 class="feature-title">Gestión de Proyectos</h3>
+                    </div>
+                    <p class="feature-description">
+                        Mantén un seguimiento de tus colaboraciones activas, plazos y entregas en un solo lugar.
+                    </p>
+                    <a href="#" class="feature-link">
+                        Conocer más <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Musicians Section -->
+            <div class="musicians-section">
+                <div class="section-header">
+                    <h2 class="section-title">Músicos Destacados</h2>
+                    <a href="productores" class="section-link">Ver todos →</a>
+                </div>
+                <div class="musicians-carousel">
+                    <div class="musician-card">
+                        <div class="musician-avatar avatar-gradient-1">
+                            SP
+                            <div class="status-badge"></div>
+                        </div>
+                        <div class="musician-name">Stein en la pista</div>
+                        <div class="musician-role">Productor</div>
+                        <div class="musician-tags">
+                            <span class="tag">Trap</span>
+                            <span class="tag">Hip Hop</span>
+                        </div>
+                    </div>
+
+                    <div class="musician-card">
+                        <div class="musician-avatar avatar-gradient-2">
+                            DP
+                            <div class="status-badge"></div>
+                        </div>
+                        <div class="musician-name">Dakota Parker</div>
+                        <div class="musician-role">Cantante</div>
+                        <div class="musician-tags">
+                            <span class="tag">R&B</span>
+                            <span class="tag">Pop</span>
+                        </div>
+                    </div>
+
+                    <div class="musician-card">
+                        <div class="musician-avatar avatar-gradient-3">
+                            PF
+                        </div>
+                        <div class="musician-name">Productor Fix</div>
+                        <div class="musician-role">Productor</div>
+                        <div class="musician-tags">
+                            <span class="tag">Reggaetón</span>
+                            <span class="tag">Trap</span>
+                        </div>
+                    </div>
+
+                    <div class="musician-card">
+                        <div class="musician-avatar avatar-gradient-4">
+                            MG
+                            <div class="status-badge"></div>
+                        </div>
+                        <div class="musician-name">MAGNATE</div>
+                        <div class="musician-role">Instrumentista</div>
+                        <div class="musician-tags">
+                            <span class="tag">Hip Hop</span>
+                            <span class="tag">Pop</span>
+                        </div>
+                    </div>
+
+                    <div class="musician-card">
+                        <div class="musician-avatar avatar-gradient-5">
+                            RI
+                            <div class="status-badge"></div>
+                        </div>
+                        <div class="musician-name">Robar incluso</div>
+                        <div class="musician-role">Mezclador</div>
+                        <div class="musician-tags">
+                            <span class="tag">Trap</span>
+                            <span class="tag">Reggaetón</span>
+                        </div>
+                    </div>
+
+                    <div class="musician-card">
+                        <div class="musician-avatar avatar-gradient-1">
+                            TB
+                        </div>
+                        <div class="musician-name">THAIBEATS</div>
+                        <div class="musician-role">Productor</div>
+                        <div class="musician-tags">
+                            <span class="tag">Trap</span>
+                            <span class="tag">Hip Hop</span>
+                        </div>
+                    </div>
                 </div>
             </div>
 
         </main>
     </div>
 
-    <!-- Modal de Productor -->
-    <div id="producerModal" class="modal">
-        <div class="modal-overlay"></div>
-        <div class="modal-content">
-            <div class="modal-header">
-                <div class="producer-info">
-                    <div id="modalAvatar" class="producer-avatar-large bg-blue-400">SP</div>
-                    <div>
-                        <div class="producer-name-header">
-                            <h2 id="modalName">Productor</h2>
-                            <svg id="modalVerified" class="verified-badge-large" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
-                            </svg>
-                        </div>
-                        <p id="modalLocation" class="producer-location-large">Ubicación</p>
+    <script src="colaboraciones.js"></script>
+</body>
+</html>-location-large">Ubicación</p>
                     </div>
                 </div>
                 <button id="closeModal" class="close-btn">
