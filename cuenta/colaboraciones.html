@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -5,7 +6,914 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Colaboraciones - OFFSZN</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="colaboracion-style.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0a0a0a;
+            color: #e5e5e5;
+            overflow-x: hidden;
+        }
+
+        /* ---------- NAVBAR ---------- */
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 3rem;
+            background: rgba(0, 0, 0, .98);
+            position: sticky;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+            border-bottom: 1px solid rgba(255, 255, 255, .08);
+            backdrop-filter: blur(20px);
+        }
+
+        .navbar .logo a {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #fff;
+            text-decoration: none;
+            letter-spacing: -.5px;
+        }
+
+        .navbar-center {
+            display: flex;
+            align-items: center;
+            gap: 2.5rem;
+        }
+
+        .navbar-links {
+            list-style: none;
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .navbar-links li {
+            position: relative;
+        }
+
+        .navbar-links a {
+            color: #999;
+            text-decoration: none;
+            transition: all .2s;
+            font-weight: 500;
+            font-size: .9rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+        }
+
+        .navbar-links a:hover {
+            color: #fff;
+        }
+
+        .navbar-links > li > a > i {
+            font-size: .7rem;
+            transition: transform .2s;
+        }
+
+        .dropdown-menu {
+            position: absolute;
+            top: calc(100% + 12px);
+            left: 50%;
+            transform: translateX(-50%) translateY(-10px);
+            background: rgba(20, 20, 20, .98);
+            border: 1px solid rgba(255, 255, 255, .1);
+            border-radius: 12px;
+            padding: 8px;
+            min-width: 240px;
+            opacity: 0;
+            visibility: hidden;
+            transition: all .3s ease;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, .5);
+            backdrop-filter: blur(20px);
+            z-index: 1001;
+        }
+
+        .navbar-links li:hover .dropdown-menu {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .navbar-links > li:hover > a > i {
+            transform: rotate(180deg);
+        }
+
+        .dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 14px;
+            color: #999;
+            text-decoration: none;
+            font-size: .85rem;
+            border-radius: 8px;
+            transition: all .2s;
+            font-weight: 500;
+        }
+
+        .dropdown-item:hover {
+            background: rgba(139, 92, 246, .1);
+            color: #fff;
+        }
+
+        .dropdown-item i {
+            width: 20px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .dropdown-divider {
+            height: 1px;
+            background: rgba(255, 255, 255, .08);
+            margin: 8px 0;
+        }
+
+        .navbar-search {
+            position: relative;
+            width: 380px;
+        }
+
+        .navbar-search input {
+            width: 100%;
+            padding: .6rem 2.5rem .6rem 1rem;
+            background: rgba(255, 255, 255, .05);
+            border: 1px solid rgba(255, 255, 255, .1);
+            border-radius: 8px;
+            color: #fff;
+            font-size: .85rem;
+            outline: none;
+            transition: all .2s;
+        }
+
+        .navbar-search input:focus {
+            background: rgba(255, 255, 255, .08);
+            border-color: rgba(139, 92, 246, .5);
+        }
+
+        .navbar-search input::placeholder {
+            color: #666;
+        }
+
+        .navbar-search i {
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #666;
+            font-size: .9rem;
+        }
+
+        .navbar-right {
+            display: flex;
+            gap: .75rem;
+            align-items: center;
+        }
+
+        .navbar-icon-button {
+            width: 36px;
+            height: 36px;
+            background: rgba(255, 255, 255, .05);
+            border: 1px solid rgba(255, 255, 255, .1);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #999;
+            font-size: 16px;
+            transition: all .2s;
+            text-decoration: none;
+            position: relative;
+        }
+
+        .navbar-icon-button:hover {
+            background: rgba(255, 255, 255, .08);
+            color: #fff;
+            border-color: rgba(255, 255, 255, .15);
+        }
+
+        .user-dropdown {
+            position: relative;
+        }
+
+        .user-dropdown-menu {
+            position: absolute;
+            top: calc(100% + 12px);
+            right: 0;
+            background: rgba(20, 20, 20, .98);
+            border: 1px solid rgba(255, 255, 255, .1);
+            border-radius: 12px;
+            padding: 12px;
+            min-width: 260px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all .3s ease;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, .5);
+            backdrop-filter: blur(20px);
+        }
+
+        .user-dropdown.active .user-dropdown-menu {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .user-dropdown-header {
+            padding: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, .08);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .user-dropdown-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1rem;
+            color: #666;
+        }
+
+        .user-dropdown-info {
+            flex: 1;
+        }
+
+        .user-dropdown-name {
+            font-weight: 600;
+            color: #fff;
+            font-size: .9rem;
+            margin-bottom: 2px;
+        }
+
+        .user-dropdown-email {
+            font-size: .75rem;
+            color: #666;
+        }
+
+        .user-dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            color: #999;
+            text-decoration: none;
+            font-size: .85rem;
+            border-radius: 8px;
+            transition: all .2s;
+            font-weight: 500;
+        }
+
+        .user-dropdown-item:hover {
+            background: rgba(139, 92, 246, .1);
+            color: #fff;
+        }
+
+        .user-dropdown-item i {
+            width: 18px;
+            text-align: center;
+        }
+
+        .user-dropdown-item.logout {
+            color: #ef4444;
+            margin-top: 8px;
+            border-top: 1px solid rgba(255, 255, 255, .08);
+            padding-top: 12px;
+        }
+
+        .user-dropdown-item.logout:hover {
+            background: rgba(239, 68, 68, .1);
+        }
+
+        /* Dashboard Layout */
+        .dashboard-container {
+            display: grid;
+            grid-template-columns: 260px 1fr;
+            min-height: calc(100vh - 57px);
+        }
+
+        .sidebar {
+            background: rgba(15, 15, 15, .6);
+            border-right: 1px solid rgba(255, 255, 255, .08);
+            position: sticky;
+            top: 57px;
+            height: calc(100vh - 57px);
+            overflow-y: auto;
+        }
+
+        .sidebar::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .sidebar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, .1);
+            border-radius: 3px;
+        }
+
+        .profile-header {
+            padding: 24px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, .08);
+        }
+
+        .profile-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .profile-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: #333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: #666;
+        }
+
+        .profile-name {
+            font-weight: 600;
+            color: #fff;
+            font-size: .95rem;
+        }
+
+        .wallet-section {
+            padding: 16px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, .08);
+            background: rgba(139, 92, 246, .05);
+        }
+
+        .wallet-label {
+            font-size: .7rem;
+            color: #999;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+            font-weight: 600;
+        }
+
+        .wallet-amount {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .upload-btn {
+            margin: 20px 20px 0;
+            padding: 14px 18px;
+            background: #8b5cf6;
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all .2s;
+            font-size: .9rem;
+            width: calc(100% - 40px);
+        }
+
+        .upload-btn:hover {
+            background: #7c3aed;
+            transform: translateY(-1px);
+        }
+
+        .sidebar-search {
+            margin: 16px 20px;
+            position: relative;
+        }
+
+        .sidebar-search input {
+            width: 100%;
+            padding: 10px 36px 10px 12px;
+            background: rgba(255, 255, 255, .05);
+            border: 1px solid rgba(255, 255, 255, .1);
+            border-radius: 8px;
+            color: #fff;
+            font-size: .85rem;
+            outline: none;
+            transition: all .2s;
+        }
+
+        .sidebar-search input:focus {
+            background: rgba(255, 255, 255, .08);
+            border-color: rgba(139, 92, 246, .5);
+        }
+
+        .sidebar-search input::placeholder {
+            color: #666;
+            font-size: .82rem;
+        }
+
+        .sidebar-search i {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #666;
+            font-size: .85rem;
+        }
+
+        .sidebar-menu {
+            padding: 12px 0;
+        }
+
+        .menu-section-title {
+            padding: 16px 20px 8px;
+            font-size: .65rem;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 700;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 11px 20px;
+            color: #999;
+            text-decoration: none;
+            font-size: .88rem;
+            transition: all .2s;
+            position: relative;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .menu-item:hover {
+            background: rgba(255, 255, 255, .05);
+            color: #fff;
+        }
+
+        .menu-item.active {
+            background: rgba(139, 92, 246, .1);
+            color: #fff;
+            border-left: 2px solid #8b5cf6;
+        }
+
+        .menu-item i {
+            width: 18px;
+            text-align: center;
+            font-size: .95rem;
+        }
+
+        .menu-divider {
+            height: 1px;
+            background: rgba(255, 255, 255, .08);
+            margin: 12px 20px;
+        }
+
+        .logout-btn {
+            margin: 20px;
+            background: rgba(239, 68, 68, .1);
+            border: 1px solid rgba(239, 68, 68, .2);
+            color: #ef4444;
+            padding: 11px 18px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            justify-content: center;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: .88rem;
+            transition: all .2s;
+        }
+
+        .logout-btn:hover {
+            background: rgba(239, 68, 68, .15);
+            border-color: rgba(239, 68, 68, .3);
+        }
+
+        /* ========== MAIN CONTENT - REDISEÑO ========== */
+        .main-content {
+            padding: 36px 48px;
+            background: #0a0a0a;
+            max-width: 1400px;
+        }
+
+        .dashboard-header {
+            margin-bottom: 32px;
+            animation: fadeIn 0.6s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .welcome-text {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 6px;
+            letter-spacing: -.5px;
+        }
+
+        .welcome-subtitle {
+            color: #666;
+            font-size: .95rem;
+            font-weight: 400;
+        }
+
+        /* Hero CTA Card */
+        .hero-cta {
+            background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);
+            border-radius: 16px;
+            padding: 40px;
+            margin-bottom: 32px;
+            position: relative;
+            overflow: hidden;
+            animation: fadeIn 0.6s ease 0.2s backwards;
+        }
+
+        .hero-cta::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: rotate 20s linear infinite;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .hero-cta-content {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 24px;
+        }
+
+        .hero-cta-text h2 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 8px;
+        }
+
+        .hero-cta-text p {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1rem;
+            line-height: 1.5;
+        }
+
+        .hero-cta-button {
+            background: #fff;
+            color: #8b5cf6;
+            padding: 14px 32px;
+            border-radius: 10px;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all .3s ease;
+            white-space: nowrap;
+        }
+
+        .hero-cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-bottom: 32px;
+            animation: fadeIn 0.6s ease 0.3s backwards;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, .02);
+            border: 1px solid rgba(255, 255, 255, .08);
+            border-radius: 12px;
+            padding: 24px;
+            transition: all .3s ease;
+        }
+
+        .stat-card:hover {
+            background: rgba(255, 255, 255, .04);
+            border-color: rgba(139, 92, 246, .3);
+            transform: translateY(-2px);
+        }
+
+        .stat-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .stat-label {
+            font-size: .85rem;
+            color: #999;
+            font-weight: 500;
+        }
+
+        .stat-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        .stat-icon.purple { background: rgba(139, 92, 246, .1); }
+        .stat-icon.blue { background: rgba(59, 130, 246, .1); }
+        .stat-icon.green { background: rgba(16, 185, 129, .1); }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        /* Features Grid */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-bottom: 32px;
+            animation: fadeIn 0.6s ease 0.4s backwards;
+        }
+
+        .feature-card {
+            background: rgba(255, 255, 255, .02);
+            border: 1px solid rgba(255, 255, 255, .08);
+            border-radius: 12px;
+            padding: 24px;
+            transition: all .3s ease;
+        }
+
+        .feature-card:hover {
+            background: rgba(255, 255, 255, .04);
+            border-color: rgba(139, 92, 246, .3);
+            transform: translateY(-4px);
+        }
+
+        .feature-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .feature-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .feature-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .feature-description {
+            color: #999;
+            line-height: 1.6;
+            font-size: .9rem;
+            margin-bottom: 16px;
+        }
+
+        .feature-link {
+            color: #8b5cf6;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: .9rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            transition: all .2s;
+        }
+
+        .feature-link:hover {
+            gap: 8px;
+        }
+
+        /* Musicians Section */
+        .musicians-section {
+            margin-bottom: 32px;
+            animation: fadeIn 0.6s ease 0.5s backwards;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .section-link {
+            color: #8b5cf6;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: .9rem;
+            transition: all .2s;
+        }
+
+        .section-link:hover {
+            color: #a78bfa;
+        }
+
+        .musicians-carousel {
+            display: flex;
+            gap: 16px;
+            overflow-x: auto;
+            padding-bottom: 16px;
+            scroll-snap-type: x mandatory;
+        }
+
+        .musicians-carousel::-webkit-scrollbar {
+            height: 6px;
+        }
+
+        .musicians-carousel::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, .05);
+            border-radius: 10px;
+        }
+
+        .musicians-carousel::-webkit-scrollbar-thumb {
+            background: #8b5cf6;
+            border-radius: 10px;
+        }
+
+        .musician-card {
+            flex: 0 0 180px;
+            background: rgba(255, 255, 255, .02);
+            border: 1px solid rgba(255, 255, 255, .08);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            transition: all .3s ease;
+            scroll-snap-align: start;
+            cursor: pointer;
+        }
+
+        .musician-card:hover {
+            background: rgba(255, 255, 255, .04);
+            border-color: rgba(139, 92, 246, .3);
+            transform: translateY(-4px);
+        }
+
+        .musician-avatar {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            margin: 0 auto 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #fff;
+            position: relative;
+        }
+
+        .avatar-gradient-1 { background: linear-gradient(135deg, #f59e0b, #ef4444); }
+        .avatar-gradient-2 { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+        .avatar-gradient-3 { background: linear-gradient(135deg, #10b981, #059669); }
+        .avatar-gradient-4 { background: linear-gradient(135deg, #a855f7, #7e22ce); }
+        .avatar-gradient-5 { background: linear-gradient(135deg, #ec4899, #be185d); }
+
+        .status-badge {
+            position: absolute;
+            bottom: 2px;
+            right: 2px;
+            width: 16px;
+            height: 16px;
+            background: #10b981;
+            border: 3px solid rgba(15, 15, 15, .9);
+            border-radius: 50%;
+        }
+
+        .musician-name {
+            font-weight: 600;
+            color: #fff;
+            font-size: .9rem;
+            margin-bottom: 4px;
+        }
+
+        .musician-role {
+            font-size: .8rem;
+            color: #999;
+            margin-bottom: 12px;
+        }
+
+        .musician-tags {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .tag {
+            font-size: .7rem;
+            padding: 4px 8px;
+            background: rgba(139, 92, 246, .1);
+            color: #8b5cf6;
+            border-radius: 6px;
+            border: 1px solid rgba(139, 92, 246, .2);
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .dashboard-container {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar {
+                position: relative;
+                top: 0;
+                height: auto;
+            }
+
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .navbar {
+                padding: .75rem 1.5rem;
+            }
+
+            .navbar-center {
+                display: none;
+            }
+
+            .main-content {
+                padding: 20px;
+            }
+
+            .hero-cta-content {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .hero-cta-text h2 {
+                font-size: 1.4rem;
+            }
+        }
+    </style>
 </head>
 <body>
 
@@ -108,16 +1016,16 @@
         <aside class="sidebar">
             <div class="profile-header">
                 <div class="profile-info">
-                    <div class="profile-avatar skeleton">U</div>
+                    <div class="profile-avatar">U</div>
                     <div>
-                        <div class="profile-name skeleton">Usuario</div>
+                        <div class="profile-name">Usuario</div>
                     </div>
                 </div>
             </div>
 
             <div class="wallet-section">
                 <div class="wallet-label">Saldo Disponible</div>
-                <div class="wallet-amount skeleton">$0.00</div>
+                <div class="wallet-amount">$0.00</div>
             </div>
 
             <button class="upload-btn" onclick="window.location.href='subir-kit.html'">
@@ -134,7 +1042,7 @@
                 <a href="dashboard" class="menu-item"><i class="fas fa-th-large"></i><span>Dashboard</span></a>
                 <a href="mis-kits" class="menu-item"><i class="fas fa-music"></i><span>Mis Kits</span></a>
                 <a href="favoritos" class="menu-item"><i class="fas fa-heart"></i><span>Favoritos</span></a>
-                <button class="menu-item" data-view="history"><i class="fas fa-history"></i><span>Historial</span></button>
+                <a href="#" class="menu-item"><i class="fas fa-history"></i><span>Historial</span></a>
 
                 <div class="menu-divider"></div>
 
@@ -147,12 +1055,6 @@
                 <a href="mis-compras" class="menu-item"><i class="fas fa-shopping-bag"></i><span>Mis Compras</span></a>
                 <a href="Gift-Cards" class="menu-item"><i class="fas fa-gift"></i><span>Gift Cards</span></a>
                 <a href="messages" class="menu-item"><i class="fas fa-envelope"></i><span>Mensajes</span></a>
-
-                <div class="menu-divider"></div>
-
-                <div class="menu-section-title">Contenido</div>
-                <button class="menu-item" data-view="blog"><i class="fas fa-newspaper"></i><span>Blog</span></button>
-                <button class="menu-item" data-view="analytics"><i class="fas fa-chart-line"></i><span>Analíticas</span></button>
 
                 <div class="menu-divider"></div>
 
@@ -353,48 +1255,840 @@
         </main>
     </div>
 
-    <script src="colaboraciones.js"></script>
-</body>
-</html>-location-large">Ubicación</p>
-                    </div>
+    <script>
+        // Toggle User Dropdown
+        function toggleUserDropdown() {
+            const dropdown = document.querySelector('.user-dropdown');
+            dropdown.classList.toggle('active');
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            const dropdown = document.querySelector('.user-dropdown');
+            const button = dropdown.querySelector('.navbar-icon-button');
+            
+            if (!dropdown.contains(e.target)) {
+                dropdown.classList.remove('active');
+            }
+        });
+
+        // Smooth scroll for carousel
+        const carousel = document.querySelector('.musicians-carousel');
+        let isDown = false;
+        let startX;
+        let scrollLeft;
+
+        carousel.addEventListener('mousedown', (e) => {
+            isDown = true;
+            carousel.style.cursor = 'grabbing';
+            startX = e.pageX - carousel.offsetLeft;
+            scrollLeft = carousel.scrollLeft;
+        });
+
+        carousel.addEventListener('mouseleave', () => {
+            isDown = false;
+            carousel.style.cursor = 'grab';
+        });
+
+        carousel.addEventListener('mouseup', () => {
+            isDown = false;
+            carousel.style.cursor = 'grab';
+        });
+
+        carousel.addEventListener('mousemove', (e) => {
+            if (!isDown) return;
+            e.preventDefault();
+            const x = e.pageX - carousel.offsetLeft;
+            const walk = (x - startX) * 2;
+            carousel.scrollLeft = scrollLeft - walk;
+        });
+
+        // Click handler for musician cards
+        document.querySelectorAll('.musician-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const name = this.querySelector('.musician-name').textContent;
+                console.log('Clicked on:', name);
+                // Aquí puedes abrir un modal o redirigir al perfil
+            });
+        });
+// ===============================================
+// COLABORACIONES - JAVASCRIPT CON SKELETON LOADING
+// ===============================================
+
+// -------------------------
+// Configuración de API
+// -------------------------
+let API_URL = '';
+if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    API_URL = 'http://localhost:3000/api';
+} else {
+    API_URL = 'https://offszn-academy.onrender.com/api';
+}
+
+// -------------------------
+// Cache Keys
+// -------------------------
+const CACHE_KEY = 'offszn_user_cache';
+const COLLAB_CACHE_KEY = 'offszn_collab_cache';
+
+// -------------------------
+// Datos de productores
+// -------------------------
+const producers = [
+    {
+        id: 1,
+        name: "Stein en la pista",
+        location: "USA",
+        country: "us",
+        role: "producer",
+        genres: ["trap", "hiphop"],
+        available: true,
+        type: "50% DE DESCUENTO HOY",
+        verified: true,
+        color: "bg-blue-400"
+    },
+    {
+        id: 2,
+        name: "Dakota Parker",
+        location: "Los Ángeles, USA",
+        country: "us",
+        role: "vocalist",
+        genres: ["rnb", "pop"],
+        available: true,
+        type: "ANUNCIO",
+        verified: true,
+        color: "bg-blue-600"
+    },
+    {
+        id: 3,
+        name: "Productor Fix",
+        location: "Madrid, España",
+        country: "es",
+        role: "producer",
+        genres: ["reggaeton", "trap"],
+        available: false,
+        type: "ANUNCIO",
+        verified: false,
+        color: "bg-gray-400"
+    },
+    {
+        id: 4,
+        name: "MAGNATE",
+        location: "Sídney, Australia",
+        country: "au",
+        role: "instrumentalist",
+        genres: ["hiphop", "pop"],
+        available: true,
+        type: "",
+        verified: false,
+        color: "bg-black"
+    },
+    {
+        id: 5,
+        name: "Robar incluso",
+        location: "Buenos Aires, Argentina",
+        country: "ar",
+        role: "mixer",
+        genres: ["trap", "reggaeton"],
+        available: true,
+        type: "",
+        verified: true,
+        color: "bg-gray-600"
+    },
+    {
+        id: 6,
+        name: "THAIBEATS",
+        location: "Bangkok, Tailandia",
+        country: "th",
+        role: "producer",
+        genres: ["trap", "hiphop"],
+        available: false,
+        type: "",
+        verified: true,
+        color: "bg-red-500"
+    }
+];
+
+// -------------------------
+// Datos de colaboraciones activas (simuladas)
+// -------------------------
+const activeCollaborations = [
+    {
+        id: 101,
+        partnerName: "Alex Beats",
+        status: "En progreso",
+        lastMessage: "Hoy"
+    },
+    {
+        id: 102,
+        partnerName: "Luna Vocals",
+        status: "Esperando respuesta",
+        lastMessage: "Ayer"
+    }
+];
+
+// -------------------------
+// Progreso semanal (simulado)
+// -------------------------
+const weeklyProgress = {
+    sent: 3,
+    accepted: 2,
+    unread: 1
+};
+
+// -------------------------
+// Elementos del DOM
+// -------------------------
+const menuToggle = document.getElementById("menuToggle");
+const sidebar = document.getElementById("sidebar");
+const menuItems = document.querySelectorAll(".menu-item");
+const views = document.querySelectorAll(".view");
+const producersGrid = document.getElementById("producersGrid");
+
+// Elementos del perfil (para skeleton)
+const profileAvatar = document.querySelector('.profile-avatar');
+const profileName = document.querySelector('.profile-name');
+const walletAmount = document.querySelector('.wallet-amount');
+
+// Filtros
+const roleFilter = document.getElementById("roleFilter");
+const countryFilter = document.getElementById("countryFilter");
+const genreFilter = document.getElementById("genreFilter");
+const availabilityFilter = document.getElementById("availabilityFilter");
+
+// Progreso semanal
+const progressCard = document.querySelector(".progress-card p");
+
+// Colaboraciones activas
+const activeCollabsList = document.querySelector(".active-collabs-list");
+
+// Modal
+const modal = document.getElementById("producerModal");
+const closeModal = document.getElementById("closeModal");
+const modalName = document.getElementById("modalName");
+const modalLocation = document.getElementById("modalLocation");
+const modalAvatar = document.getElementById("modalAvatar");
+const modalVerified = document.getElementById("modalVerified");
+
+// Botón de "Empieza tu primera colaboración"
+const startCollabBtn = document.querySelector(".start-collab-btn");
+
+// -------------------------
+// SKELETON LOADING SYSTEM
+// -------------------------
+function showSkeletonLoading() {
+    // Avatar
+    if (profileAvatar) {
+        profileAvatar.classList.add('skeleton');
+        profileAvatar.textContent = '';
+    }
+    
+    // Nombre
+    if (profileName) {
+        profileName.classList.add('skeleton');
+        profileName.textContent = 'Cargando...';
+    }
+    
+    // Saldo
+    if (walletAmount) {
+        walletAmount.classList.add('skeleton');
+        walletAmount.textContent = '$0.00';
+    }
+}
+
+function hideSkeletonLoading() {
+    // Remover skeleton con fade-in
+    document.querySelectorAll('.skeleton').forEach(el => {
+        el.classList.remove('skeleton');
+        el.classList.add('fade-in');
+    });
+}
+
+// -------------------------
+// CACHE SYSTEM
+// -------------------------
+function loadCachedUser() {
+    try {
+        const cached = localStorage.getItem(CACHE_KEY);
+        if (cached) {
+            const cachedData = JSON.parse(cached);
+            console.log('✅ Cargando datos desde caché...');
+            updateUserUI(cachedData, true);
+            return true;
+        }
+    } catch (err) {
+        console.error('Error al cargar caché:', err);
+    }
+    return false;
+}
+
+function saveUserCache(userData) {
+    try {
+        localStorage.setItem(CACHE_KEY, JSON.stringify(userData));
+    } catch (err) {
+        console.error('Error al guardar caché:', err);
+    }
+}
+
+// -------------------------
+// UPDATE USER UI
+// -------------------------
+function updateUserUI(userData, fromCache = false) {
+    if (profileName) {
+        const displayName = userData.nickname || userData.first_name || 'Usuario';
+        profileName.textContent = displayName;
+        profileName.classList.remove('skeleton');
+        profileName.classList.add('fade-in');
+    }
+
+    if (profileAvatar) {
+        const initial = (userData.first_name || userData.nickname || 'U').charAt(0).toUpperCase();
+        profileAvatar.textContent = initial;
+        profileAvatar.classList.remove('skeleton');
+        profileAvatar.classList.add('fade-in');
+    }
+
+    // El saldo se manejará separadamente si existe en userData
+    if (walletAmount && userData.balance !== undefined) {
+        walletAmount.textContent = `$${userData.balance.toFixed(2)}`;
+        walletAmount.classList.remove('skeleton');
+        walletAmount.classList.add('fade-in');
+    } else if (walletAmount) {
+        // Si no hay balance en userData, dejamos el skeleton o ponemos $0.00
+        walletAmount.textContent = '$0.00';
+        walletAmount.classList.remove('skeleton');
+    }
+
+    if (!fromCache) {
+        hideSkeletonLoading();
+    }
+}
+
+// -------------------------
+// LOAD USER DATA FROM API
+// -------------------------
+async function loadUserData() {
+    const token = localStorage.getItem('authToken');
+    
+    if (!token) {
+        console.warn('⚠️ No hay token de autenticación');
+        hideSkeletonLoading();
+        return null;
+    }
+
+    try {
+        const response = await fetch(`${API_URL}/me`, {
+            headers: { 
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`Error ${response.status}: No se pudieron obtener los datos del usuario`);
+        }
+
+        const userData = await response.json();
+        console.log('✅ Datos del usuario cargados:', userData);
+
+        // Guardar en caché
+        saveUserCache(userData);
+
+        // Actualizar UI con datos frescos
+        updateUserUI(userData, false);
+
+        return userData;
+    } catch (error) {
+        console.error('❌ Error al cargar datos del usuario:', error);
+        hideSkeletonLoading();
+        
+        // Si falla, al menos quitamos los skeletons
+        if (profileName) profileName.textContent = 'Usuario';
+        if (profileAvatar) profileAvatar.textContent = 'U';
+        if (walletAmount) walletAmount.textContent = '$0.00';
+        
+        return null;
+    }
+}
+
+// -------------------------
+// Helper: Obtener iniciales
+// -------------------------
+function getInitials(name) {
+    const parts = name.split(' ');
+    if (parts.length >= 2) {
+        return parts[0][0] + parts[1][0];
+    }
+    return name.substring(0, 2).toUpperCase();
+}
+
+// -------------------------
+// Helper: Validar elementos DOM
+// -------------------------
+function elementExists(element, name) {
+    if (!element) {
+        console.warn(`⚠️ Elemento no encontrado: ${name}`);
+        return false;
+    }
+    return true;
+}
+
+// -------------------------
+// Render progreso semanal
+// -------------------------
+function renderWeeklyProgress() {
+    if (!elementExists(progressCard, "progressCard")) return;
+    
+    try {
+        progressCard.innerHTML = `Enviaste <strong>${weeklyProgress.sent} propuestas</strong> (${weeklyProgress.accepted} aceptadas, ${weeklyProgress.unread} sin leer)`;
+    } catch (error) {
+        console.error("Error al renderizar progreso semanal:", error);
+    }
+}
+
+// -------------------------
+// Render colaboraciones activas
+// -------------------------
+function renderActiveCollaborations() {
+    if (!elementExists(activeCollabsList, "activeCollabsList")) return;
+
+    try {
+        if (activeCollaborations.length === 0) {
+            activeCollabsList.innerHTML = `<p class="no-active">No tienes colaboraciones activas.</p>`;
+            return;
+        }
+
+        activeCollabsList.innerHTML = activeCollaborations.map(collab => `
+            <div class="collab-item">
+                <div class="collab-avatar">${getInitials(collab.partnerName)}</div>
+                <div class="collab-info">
+                    <h4>Colaboración con ${collab.partnerName}</h4>
+                    <p>Estado: ${collab.status} • Último mensaje: ${collab.lastMessage}</p>
                 </div>
-                <button id="closeModal" class="close-btn">
-                    <i class="fas fa-times"></i>
-                </button>
+                <button class="btn-chat" data-collab-id="${collab.id}">Abrir chat</button>
             </div>
+        `).join("");
 
-            <div class="modal-actions">
-                <button class="primary-btn full-width">
-                    <i class="fas fa-comment"></i>
-                    Enviar mensaje
-                </button>
-                <button class="collaborate-btn full-width">
-                    <i class="fas fa-handshake"></i>
-                    Enviar propuesta de colaboración
-                </button>
-            </div>
+        document.querySelectorAll(".btn-chat").forEach(btn => {
+            btn.addEventListener("click", (e) => {
+                const collabId = e.currentTarget.dataset.collabId;
+                handleOpenChat(collabId);
+            });
+        });
+    } catch (error) {
+        console.error("Error al renderizar colaboraciones activas:", error);
+        activeCollabsList.innerHTML = `<p class="no-active">Error al cargar colaboraciones.</p>`;
+    }
+}
 
-            <div class="modal-stats">
-                <h3>Estadísticas</h3>
-                <div class="stats-grid">
-                    <div class="stat-item">
-                        <div class="stat-value">12</div>
-                        <div class="stat-label">Proyectos</div>
+// -------------------------
+// Handler: Abrir chat
+// -------------------------
+function handleOpenChat(collabId) {
+    const collab = activeCollaborations.find(c => c.id === parseInt(collabId));
+    if (collab) {
+        alert(`✅ Abriendo chat con ${collab.partnerName}...\n\n(Esto se conectará al sistema de mensajes)`);
+    }
+}
+
+// -------------------------
+// Helper rol legible
+// -------------------------
+function getRoleLabel(role) {
+    const labels = {
+        producer: "Productor",
+        vocalist: "Cantante",
+        instrumentalist: "Instrumentista",
+        mixer: "Mezclador"
+    };
+    return labels[role] || role;
+}
+
+// -------------------------
+// Render productores con filtros
+// -------------------------
+function renderProducers(filteredProducers = producers) {
+    if (!elementExists(producersGrid, "producersGrid")) return;
+
+    try {
+        if (filteredProducers.length === 0) {
+            producersGrid.innerHTML = `<p class="no-results">No se encontraron productores con esos filtros.</p>`;
+            return;
+        }
+
+        producersGrid.innerHTML = filteredProducers.map(p => `
+            <div class="producer-card" data-id="${p.id}">
+                <div class="producer-avatar ${p.color}">
+                    ${getInitials(p.name)}
+                </div>
+                <div class="producer-info">
+                    <h3>
+                        ${p.name} 
+                        ${p.verified ? '<svg class="verified-badge" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>' : ''}
+                    </h3>
+                    <p>${p.location}</p>
+                    <div class="producer-meta">
+                        <span class="meta-role">${getRoleLabel(p.role)}</span>
+                        <span class="meta-genre">${p.genres.slice(0, 2).join(", ")}</span>
+                        <span class="meta-availability ${p.available ? 'available' : 'busy'}">
+                            ${p.available ? 'Disponible' : 'Ocupado'}
+                        </span>
                     </div>
-                    <div class="stat-item">
-                        <div class="stat-value">4.8</div>
-                        <div class="stat-label">Rating</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-value">24h</div>
-                        <div class="stat-label">Respuesta</div>
-                    </div>
+                    ${p.type ? `<span class="producer-type">${p.type}</span>` : ""}
                 </div>
             </div>
-        </div>
-    </div>
+        `).join("");
 
-    <!-- JavaScript -->
-    <script src="colaboracion-script.js"></script>
+        document.querySelectorAll(".producer-card").forEach(card => {
+            card.addEventListener("click", () => {
+                const id = parseInt(card.dataset.id);
+                const producer = producers.find(p => p.id === id);
+                if (producer) {
+                    openModal(producer);
+                }
+            });
+        });
+    } catch (error) {
+        console.error("Error al renderizar productores:", error);
+        producersGrid.innerHTML = `<p class="no-results">Error al cargar productores.</p>`;
+    }
+}
+
+// -------------------------
+// Aplicar filtros
+// -------------------------
+function applyFilters() {
+    try {
+        const role = roleFilter?.value || "";
+        const country = countryFilter?.value || "";
+        const genre = genreFilter?.value || "";
+        const availability = availabilityFilter?.value || "";
+
+        const filtered = producers.filter(p => {
+            if (role && p.role !== role) return false;
+            if (country && p.country !== country) return false;
+            if (genre && !p.genres.includes(genre)) return false;
+            if (availability === "available" && !p.available) return false;
+            if (availability === "busy" && p.available) return false;
+            return true;
+        });
+
+        renderProducers(filtered);
+    } catch (error) {
+        console.error("Error al aplicar filtros:", error);
+    }
+}
+
+// -------------------------
+// Inicializar filtros
+// -------------------------
+function initializeFilters() {
+    const filters = [roleFilter, countryFilter, genreFilter, availabilityFilter];
+    
+    filters.forEach(filter => {
+        if (filter) {
+            filter.addEventListener("change", applyFilters);
+        }
+    });
+}
+
+// -------------------------
+// Sidebar toggle
+// -------------------------
+function initializeSidebar() {
+    if (menuToggle && sidebar) {
+        menuToggle.addEventListener("click", () => {
+            sidebar.classList.toggle("open");
+        });
+
+        document.addEventListener("click", (e) => {
+            if (sidebar.classList.contains("open") && 
+                !sidebar.contains(e.target) && 
+                !menuToggle.contains(e.target)) {
+                sidebar.classList.remove("open");
+            }
+        });
+    }
+}
+
+// -------------------------
+// Cambio de vistas + Mensajes "Próximamente"
+// -------------------------
+function initializeViews() {
+    menuItems.forEach(item => {
+        item.addEventListener("click", () => {
+            menuItems.forEach(btn => btn.classList.remove("active"));
+            item.classList.add("active");
+            
+            const view = item.dataset.view;
+            
+            // Verificar si es una vista "próximamente"
+            if (view === 'blog' || view === 'analytics' || view === 'history') {
+                showComingSoonMessage(view);
+                return;
+            }
+            
+            views.forEach(v => v.classList.remove("active"));
+            
+            const selectedView = document.getElementById(view + "View");
+            if (selectedView) {
+                selectedView.classList.add("active");
+            }
+
+            if (view === "collaborations") {
+                renderWeeklyProgress();
+                renderActiveCollaborations();
+                renderProducers();
+            }
+
+            if (sidebar && window.innerWidth < 768) {
+                sidebar.classList.remove("open");
+            }
+        });
+    });
+}
+
+// -------------------------
+// Mensaje "Próximamente disponible"
+// -------------------------
+function showComingSoonMessage(feature) {
+    const featureNames = {
+        'blog': 'Blog',
+        'analytics': 'Analíticas',
+        'history': 'Historial'
+    };
+    
+    const featureName = featureNames[feature] || feature;
+    
+    // Crear overlay temporal
+    const overlay = document.createElement('div');
+    overlay.style.cssText = `
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.85);
+        backdrop-filter: blur(8px);
+        z-index: 9999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        animation: fadeIn 0.3s ease;
+    `;
+    
+    const message = document.createElement('div');
+    message.style.cssText = `
+        background: linear-gradient(135deg, #1f2937, #111827);
+        border: 1px solid rgba(147, 51, 234, 0.3);
+        border-radius: 16px;
+        padding: 40px;
+        max-width: 500px;
+        text-align: center;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        animation: slideUp 0.4s ease;
+    `;
+    
+    message.innerHTML = `
+        <div style="font-size: 64px; margin-bottom: 20px;">🚀</div>
+        <h2 style="color: #fff; font-size: 24px; font-weight: 700; margin-bottom: 12px;">
+            ${featureName} - Próximamente
+        </h2>
+        <p style="color: #a1a1aa; font-size: 15px; line-height: 1.6; margin-bottom: 24px;">
+            Esta función estará disponible muy pronto. Te notificaremos por correo electrónico cuando esté lista para usar.
+        </p>
+        <button onclick="this.closest('[style*=fixed]').remove()" style="
+            background: linear-gradient(135deg, #9333ea, #7e22ce);
+            color: white;
+            border: none;
+            padding: 12px 32px;
+            border-radius: 9999px;
+            font-weight: 600;
+            font-size: 15px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        " onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+            Entendido
+        </button>
+    `;
+    
+    overlay.appendChild(message);
+    document.body.appendChild(overlay);
+    
+    // Auto-cerrar después de 5 segundos
+    setTimeout(() => {
+        if (overlay.parentNode) {
+            overlay.style.animation = 'fadeOut 0.3s ease';
+            setTimeout(() => overlay.remove(), 300);
+        }
+    }, 5000);
+}
+
+// -------------------------
+// Modal
+// -------------------------
+function openModal(producer) {
+    if (!modal || !modalName || !modalLocation || !modalAvatar) {
+        console.error("Error: Elementos del modal no encontrados");
+        return;
+    }
+
+    try {
+        modal.classList.add("active");
+        modalName.textContent = producer.name;
+        modalLocation.textContent = producer.location;
+        modalAvatar.className = `producer-avatar-large ${producer.color}`;
+        modalAvatar.textContent = getInitials(producer.name);
+        
+        if (modalVerified) {
+            modalVerified.style.display = producer.verified ? "inline" : "none";
+        }
+
+        document.body.style.overflow = "hidden";
+    } catch (error) {
+        console.error("Error al abrir modal:", error);
+    }
+}
+
+function closeModalHandler() {
+    if (modal) {
+        modal.classList.remove("active");
+        document.body.style.overflow = "";
+    }
+}
+
+function initializeModal() {
+    if (closeModal) {
+        closeModal.addEventListener("click", closeModalHandler);
+    }
+
+    if (modal) {
+        modal.addEventListener("click", (e) => {
+            if (e.target.classList.contains("modal-overlay")) {
+                closeModalHandler();
+            }
+        });
+
+        document.addEventListener("keydown", (e) => {
+            if (e.key === "Escape" && modal.classList.contains("active")) {
+                closeModalHandler();
+            }
+        });
+    }
+}
+
+// -------------------------
+// Botón "Empieza tu primera colaboración"
+// -------------------------
+function initializeStartCollabButton() {
+    if (startCollabBtn) {
+        startCollabBtn.addEventListener("click", () => {
+            try {
+                menuItems.forEach(btn => btn.classList.remove("active"));
+                
+                const collabItem = document.querySelector('.menu-item[data-view="collaborations"]');
+                if (collabItem) {
+                    collabItem.classList.add("active");
+                    views.forEach(v => v.classList.remove("active"));
+                    
+                    const collabView = document.getElementById("collaborationsView");
+                    if (collabView) {
+                        collabView.classList.add("active");
+                    }
+                }
+
+                renderWeeklyProgress();
+                renderActiveCollaborations();
+                renderProducers();
+
+                setTimeout(() => {
+                    const findSection = document.querySelector(".find-collaborators");
+                    if (findSection) {
+                        findSection.scrollIntoView({ behavior: "smooth", block: "center" });
+                    }
+                }, 100);
+            } catch (error) {
+                console.error("Error al iniciar colaboración:", error);
+            }
+        });
+    }
+}
+
+// -------------------------
+// Botón "Colaborar" en modal
+// -------------------------
+function initializeCollaborateButton() {
+    document.addEventListener("click", (e) => {
+        if (e.target.classList.contains("collaborate-btn")) {
+            try {
+                const producerName = modalName?.textContent || "este productor";
+                closeModalHandler();
+                
+                alert(`✅ Propuesta de colaboración enviada a ${producerName}.\n\nPronto recibirás una notificación cuando responda.`);
+                
+                weeklyProgress.sent++;
+                renderWeeklyProgress();
+            } catch (error) {
+                console.error("Error al enviar propuesta:", error);
+            }
+        }
+    });
+}
+
+// -------------------------
+// INICIALIZACIÓN PRINCIPAL
+// -------------------------
+async function init() {
+    console.log("🚀 Inicializando aplicación de colaboraciones...");
+
+    try {
+        // 1. Mostrar skeletons inmediatamente
+        showSkeletonLoading();
+
+        // 2. Cargar caché primero (instantáneo)
+        const hasCachedData = loadCachedUser();
+
+        // 3. Inicializar componentes
+        initializeSidebar();
+        initializeViews();
+        initializeModal();
+        initializeFilters();
+        initializeStartCollabButton();
+        initializeCollaborateButton();
+
+        // 4. Renderizar contenido inicial
+        renderProducers();
+
+        // 5. Cargar datos frescos del servidor (asíncrono)
+        await loadUserData();
+
+        console.log("✅ Aplicación inicializada correctamente");
+    } catch (error) {
+        console.error("❌ Error al inicializar la aplicación:", error);
+        hideSkeletonLoading();
+    }
+}
+
+// -------------------------
+// Esperar DOM
+// -------------------------
+if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
+} else {
+    init();
+}
+
+// -------------------------
+// Debug utilities
+// -------------------------
+window.appDebug = {
+    producers,
+    activeCollaborations,
+    weeklyProgress,
+    renderProducers,
+    renderActiveCollaborations,
+    renderWeeklyProgress,
+    applyFilters,
+    showComingSoonMessage
+};
+        console.log('✅ Colaboraciones UI - Ready for backend integration');
+    </script>
 </body>
 </html>
