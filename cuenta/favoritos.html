@@ -1,354 +1,369 @@
 <!DOCTYPE html>
 <html lang="es">
-  <head>
+<head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Mis Favoritos - OFFSZN</title>
+    <title>Mis Favoritos | OFFSZN</title>
+    
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Icons and Fonts -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Montserrat:wght@700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- Custom Styles -->
     <style>
-      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
-      body {
-        font-family: 'Inter', sans-serif;
-      }
-      .custom-scrollbar::-webkit-scrollbar {
-        width: 6px;
-      }
-      .custom-scrollbar::-webkit-scrollbar-track {
-        background: transparent;
-      }
-      .custom-scrollbar::-webkit-scrollbar-thumb {
-        background: rgba(255, 255, 255, 0.1);
-        border-radius: 3px;
-      }
-      .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-        background: rgba(255, 255, 255, 0.2);
-      }
-
-      /* Skeleton Loading Styles */
-      .skeleton-avatar,
-      .skeleton-text {
-        background: linear-gradient(90deg, 
-          rgba(255, 255, 255, 0.05) 25%, 
-          rgba(255, 255, 255, 0.1) 50%, 
-          rgba(255, 255, 255, 0.05) 75%
-        );
-        background-size: 200% 100%;
-        animation: loading 1.5s infinite;
-        border-radius: 4px;
-      }
-
-      .skeleton-avatar {
-        border-radius: 50% !important;
-      }
-
-      .skeleton-text {
-        height: 1em;
-        min-width: 80px;
-        display: inline-block;
-      }
-
-      .skeleton-balance {
-        min-width: 100px;
-        height: 2rem;
-      }
-
-      @keyframes loading {
-        0% {
-          background-position: 200% 0;
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0a0a0a;
         }
-        100% {
-          background-position: -200% 0;
+        .font-montserrat {
+            font-family: 'Montserrat', sans-serif;
         }
-      }
+        
+        /* Skeleton Loading */
+        .skeleton-loader {
+            background: linear-gradient(90deg, 
+                rgba(255, 255, 255, 0.03) 25%, 
+                rgba(255, 255, 255, 0.08) 50%, 
+                rgba(255, 255, 255, 0.03) 75%
+            );
+            background-size: 200% 100%;
+            animation: skeleton-loading 1.5s ease-in-out infinite;
+            color: transparent !important;
+            user-select: none;
+            border-radius: 4px;
+        }
+        .skeleton-avatar {
+            background: linear-gradient(90deg, 
+                rgba(255, 255, 255, 0.05) 25%, 
+                rgba(255, 255, 255, 0.1) 50%, 
+                rgba(255, 255, 255, 0.05) 75%
+            );
+            background-size: 200% 100%;
+            animation: skeleton-loading 1.5s ease-in-out infinite;
+            border-radius: 50% !important;
+        }
+        .skeleton-text {
+            background: linear-gradient(90deg, 
+                rgba(255, 255, 255, 0.05) 25%, 
+                rgba(255, 255, 255, 0.1) 50%, 
+                rgba(255, 255, 255, 0.05) 75%
+            );
+            background-size: 200% 100%;
+            animation: skeleton-loading 1.5s ease-in-out infinite;
+            border-radius: 4px;
+            height: 1em;
+            min-width: 80px;
+            display: inline-block;
+            color: transparent !important;
+        }
+        @keyframes skeleton-loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        
+        /* Custom Scrollbar */
+        .scrollbar-thin {
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+        }
+        .scrollbar-thin::-webkit-scrollbar {
+            width: 5px;
+        }
+        .scrollbar-thin::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .scrollbar-thin::-webkit-scrollbar-thumb {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+        }
+        
+        /* Gradient Animation */
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+        
+        /* Heartbeat Animation */
+        @keyframes heartbeat {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        
+        .heart-pulse:hover {
+            animation: heartbeat 0.6s ease-in-out;
+        }
+        
+        /* Kit Card Hover Effect */
+        .kit-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .kit-card:hover {
+            transform: translateY(-8px) scale(1.02);
+        }
+        
+        /* Glass Effect */
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
     </style>
-  </head>
-  <body class="bg-[#0a0a0a] text-[#e5e5e5]">
+</head>
+
+<body class="bg-black text-[#e5e5e5] overflow-x-hidden">
     <!-- NAVBAR -->
-    <nav class="sticky top-0 z-50 flex items-center justify-between bg-[rgba(0,0,0,0.98)] px-6 py-3 md:px-12 backdrop-blur-xl border-b border-white/10">
-      <div class="logo">
-        <a href="/dashboard" class="text-2xl font-extrabold tracking-tight text-white">OFFSZN</a>
-      </div>
-
-      <div class="hidden lg:flex items-center gap-10">
-        <div class="relative w-96">
-          <input type="text" placeholder="Buscar beats, kits, productores..." class="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm text-white outline-none transition-all placeholder:text-gray-500 focus:border-violet-500/50 focus:bg-white/[0.08]" />
-          <i class="fas fa-search absolute right-4 top-1/2 -translate-y-1/2 text-gray-500"></i>
+    <nav class="sticky top-0 z-50 flex items-center justify-between px-6 sm:px-12 py-2 bg-[rgba(0,0,0,0.98)] border-b border-[rgba(255,255,255,0.08)] backdrop-blur-xl">
+        <div class="text-2xl font-extrabold tracking-tight text-white">
+            <a href="dashboard">OFFSZN</a>
         </div>
-      </div>
-
-      <div class="flex items-center gap-3">
-        <a href="/notificaciones" class="flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-gray-400 transition-colors hover:bg-white/[0.08] hover:text-white">
-          <i class="fas fa-bell"></i>
-        </a>
-        <a href="/carrito" class="flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-gray-400 transition-colors hover:bg-white/[0.08] hover:text-white">
-          <i class="fas fa-shopping-cart"></i>
-        </a>
-        <div class="relative">
-          <button onclick="toggleUserDropdown()" class="flex h-9 w-9 items-center justify-center rounded-full bg-violet-600 text-white font-bold transition-transform hover:scale-105 navbar-user-avatar skeleton-avatar">
-          </button>
-          <div class="user-dropdown-menu absolute right-0 mt-3 w-64 rounded-xl border border-white/10 bg-[rgba(20,20,20,0.98)] p-3 shadow-2xl backdrop-blur-xl hidden">
-            <div class="mb-2 flex items-center gap-3 border-b border-white/10 p-3">
-              <div class="navbar-user-avatar-dropdown flex h-10 w-10 items-center justify-center rounded-full bg-violet-600 font-bold text-white skeleton-avatar"></div>
-              <div class="flex-1">
-                <p class="text-sm font-semibold text-white navbar-user-name skeleton-text"></p>
-                <p class="text-xs text-gray-500 navbar-user-email skeleton-text"></p>
-              </div>
+        
+        <div class="hidden lg:flex items-center gap-10">
+            <ul class="flex items-center gap-8">
+                <li><a href="dashboard" class="text-[#999] hover:text-white transition-colors duration-200 text-sm font-medium">INICIO</a></li>
+                <li class="group relative">
+                    <a class="text-[#999] group-hover:text-white transition-colors duration-200 text-sm font-medium flex items-center gap-1.5 cursor-pointer py-2">
+                        RECURSOS <i class="fas fa-chevron-down text-[0.7rem] transition-transform duration-200 group-hover:rotate-180"></i>
+                    </a>
+                    <div class="absolute top-full left-1/2 -translate-x-1/2 pt-3 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300">
+                        <div class="bg-[rgba(20,20,20,0.98)] border border-[rgba(255,255,255,0.1)] rounded-xl shadow-2xl backdrop-blur-lg p-2 min-w-[240px]">
+                            <a href="beats" class="flex items-center gap-3 p-2.5 text-[#999] hover:text-white hover:bg-violet-500/10 rounded-lg text-sm transition-colors font-medium">
+                                <i class="fas fa-music w-5 text-center"></i> Beats & Instrumentales
+                            </a>
+                            <a href="drum-kits" class="flex items-center gap-3 p-2.5 text-[#999] hover:text-white hover:bg-violet-500/10 rounded-lg text-sm transition-colors font-medium">
+                                <i class="fas fa-drum w-5 text-center"></i> Drum Kits
+                            </a>
+                        </div>
+                    </div>
+                </li>
+                <li class="group relative">
+                    <a class="text-[#999] group-hover:text-white transition-colors duration-200 text-sm font-medium flex items-center gap-1.5 cursor-pointer py-2">
+                        COMUNIDAD <i class="fas fa-chevron-down text-[0.7rem] transition-transform duration-200 group-hover:rotate-180"></i>
+                    </a>
+                    <div class="absolute top-full left-1/2 -translate-x-1/2 pt-3 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300">
+                        <div class="bg-[rgba(20,20,20,0.98)] border border-[rgba(255,255,255,0.1)] rounded-xl shadow-2xl backdrop-blur-lg p-2 min-w-[240px]">
+                            <a href="feed" class="flex items-center gap-3 p-2.5 text-[#999] hover:text-white hover:bg-violet-500/10 rounded-lg text-sm transition-colors font-medium">
+                                <i class="fas fa-home w-5 text-center"></i> Feed
+                            </a>
+                            <a href="colaboraciones" class="flex items-center gap-3 p-2.5 text-[#999] hover:text-white hover:bg-violet-500/10 rounded-lg text-sm transition-colors font-medium">
+                                <i class="fas fa-handshake w-5 text-center"></i> Colaboraciones
+                            </a>
+                        </div>
+                    </div>
+                </li>
+            </ul>
+            <div class="relative w-96">
+                <input type="text" placeholder="Buscar beats, kits, productores..." class="w-full pl-4 pr-10 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white text-sm outline-none focus:bg-white/10 focus:border-violet-500/50 transition-all duration-200" />
+                <i class="fas fa-search absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 text-sm"></i>
             </div>
-            <a href="/perfil" class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-gray-400 transition-colors hover:bg-white/5 hover:text-white">
-              <i class="fas fa-user-circle w-5 text-center"></i> Mi Perfil
-            </a>
-            <a href="/dashboard" class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-gray-400 transition-colors hover:bg-white/5 hover:text-white">
-              <i class="fas fa-th-large w-5 text-center"></i> Dashboard
-            </a>
-            <a href="/configuracion" class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-gray-400 transition-colors hover:bg-white/5 hover:text-white">
-              <i class="fas fa-cog w-5 text-center"></i> Configuración
-            </a>
-            <div class="my-2 h-px bg-white/10"></div>
-            <a href="#" class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-red-500 transition-colors hover:bg-red-500/10 logout-btn">
-              <i class="fas fa-sign-out-alt w-5 text-center"></i> Cerrar Sesión
-            </a>
-          </div>
         </div>
-      </div>
+        
+        <div class="flex items-center gap-3">
+            <a href="notifications" class="flex items-center justify-center w-9 h-9 bg-white/5 border border-white/10 rounded-lg text-[#999] hover:bg-white/10 hover:text-white transition-all duration-200">
+                <i class="fas fa-bell"></i>
+            </a>
+            <a href="cart" class="flex items-center justify-center w-9 h-9 bg-white/5 border border-white/10 rounded-lg text-[#999] hover:bg-white/10 hover:text-white transition-all duration-200">
+                <i class="fas fa-shopping-cart"></i>
+            </a>
+            <div class="relative user-dropdown">
+                <button onclick="toggleUserDropdown()" class="flex items-center justify-center w-9 h-9 bg-white/5 border border-white/10 rounded-lg text-[#999] hover:bg-white/10 hover:text-white transition-all duration-200">
+                    <i class="fas fa-user"></i>
+                </button>
+                <div class="user-dropdown-menu absolute top-full right-0 mt-3 w-64 bg-[rgba(20,20,20,0.98)] border border-white/10 rounded-xl shadow-2xl backdrop-blur-lg p-3 transition-all duration-300 transform-gpu opacity-0 invisible -translate-y-2">
+                    <div class="flex items-center gap-3 p-3 border-b border-white/10 mb-2">
+                        <div class="user-dropdown-avatar flex items-center justify-center w-10 h-10 rounded-full bg-zinc-800 font-bold text-zinc-500 text-base skeleton-avatar"></div>
+                        <div class="flex-1 overflow-hidden">
+                            <p class="user-dropdown-name font-semibold text-sm text-white truncate skeleton-text">Cargando...</p>
+                            <p class="user-dropdown-email text-xs text-zinc-500 truncate skeleton-text">email@loading.com</p>
+                        </div>
+                    </div>
+                    <a href="profile" class="flex items-center gap-2.5 px-3 py-2 text-sm rounded-lg transition-colors text-zinc-400 hover:bg-violet-500/10 hover:text-white">
+                        <i class="fas fa-user-circle w-4 text-center"></i> Mi Perfil
+                    </a>
+                    <a href="dashboard" class="flex items-center gap-2.5 px-3 py-2 text-sm rounded-lg transition-colors text-zinc-400 hover:bg-violet-500/10 hover:text-white">
+                        <i class="fas fa-th-large w-4 text-center"></i> Dashboard
+                    </a>
+                    <a href="account-settings" class="flex items-center gap-2.5 px-3 py-2 text-sm rounded-lg transition-colors text-zinc-400 hover:bg-violet-500/10 hover:text-white">
+                        <i class="fas fa-cog w-4 text-center"></i> Configuración
+                    </a>
+                    <div class="mt-2 pt-2 border-t border-white/10">
+                        <a href="#" class="logout-btn flex items-center gap-2.5 px-3 py-2 text-sm rounded-lg transition-colors text-red-500 hover:bg-red-500/10">
+                            <i class="fas fa-sign-out-alt w-4 text-center"></i> Cerrar Sesión
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
     </nav>
 
-    <div class="grid md:grid-cols-[260px_1fr]">
-      <!-- SIDEBAR -->
-      <aside class="hidden md:flex flex-col sticky top-[65px] h-[calc(100vh-65px)] bg-[rgba(15,15,15,0.6)] border-r border-white/10">
-        <div>
-          <div class="p-5 border-b border-white/10">
-            <div class="flex items-center gap-3">
-              <div class="sidebar-user-avatar flex h-11 w-11 items-center justify-center rounded-full bg-violet-600 font-bold text-white text-lg skeleton-avatar"></div>
-              <div>
-                <p class="font-semibold text-white sidebar-user-name skeleton-text"></p>
-              </div>
-            </div>
-          </div>
-
-          <div class="p-5 border-b border-white/10 bg-violet-600/5">
-            <div class="text-xs font-semibold uppercase text-gray-400 mb-1.5">Saldo Disponible</div>
-            <div class="text-3xl font-bold text-white sidebar-wallet-balance skeleton-text skeleton-balance"></div>
-          </div>
-        </div>
-
-        <nav class="flex-grow p-3 overflow-y-auto custom-scrollbar">
-          <div>
-            <h3 class="px-2 pt-4 pb-2 text-xs font-bold uppercase text-gray-500 tracking-wider">Principal</h3>
-            <ul>
-              <li>
-                <a href="/dashboard" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors text-gray-400 hover:bg-white/5 hover:text-white">
-                  <i class="fas fa-th-large w-5 text-center text-base"></i>
-                  <span>Dashboard</span>
-                </a>
-              </li>
-              <li>
-                <a href="/mis-kits" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors text-gray-400 hover:bg-white/5 hover:text-white">
-                  <i class="fas fa-music w-5 text-center text-base"></i>
-                  <span>Mis Kits</span>
-                </a>
-              </li>
-              <li>
-                <a href="/analiticas" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors text-gray-400 hover:bg-white/5 hover:text-white opacity-50 cursor-not-allowed">
-                  <i class="fas fa-chart-line w-5 text-center text-base"></i>
-                  <span>Analíticas</span>
-                  <span class="ml-auto text-xs font-semibold bg-white/10 text-gray-400 px-2 py-0.5 rounded-full">Pronto</span>
-                </a>
-              </li>
-              <li>
-                <a href="/favoritos" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors bg-violet-600/10 text-white">
-                  <i class="fas fa-heart w-5 text-center text-base"></i>
-                  <span>Favoritos</span>
-                </a>
-              </li>
-              <li>
-                <a href="/historial" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors text-gray-400 hover:bg-white/5 hover:text-white opacity-50 cursor-not-allowed">
-                  <i class="fas fa-history w-5 text-center text-base"></i>
-                  <span>Historial</span>
-                  <span class="ml-auto text-xs font-semibold bg-white/10 text-gray-400 px-2 py-0.5 rounded-full">Pronto</span>
-                </a>
-              </li>
-            </ul>
-          </div>
-
-          <div class="my-3 h-px bg-white/10"></div>
-
-          <div>
-            <h3 class="px-2 pt-4 pb-2 text-xs font-bold uppercase text-gray-500 tracking-wider">Colaboración</h3>
-            <ul>
-              <li>
-                <a href="/colaboraciones" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors text-gray-400 hover:bg-white/5 hover:text-white">
-                  <i class="fas fa-users w-5 text-center text-base"></i>
-                  <span>Colaboraciones</span>
-                </a>
-              </li>
-            </ul>
-          </div>
-
-          <div class="my-3 h-px bg-white/10"></div>
-
-          <div>
-            <h3 class="px-2 pt-4 pb-2 text-xs font-bold uppercase text-gray-500 tracking-wider">Compras</h3>
-            <ul>
-              <li>
-                <a href="/mis-compras" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors text-gray-400 hover:bg-white/5 hover:text-white">
-                  <i class="fas fa-shopping-bag w-5 text-center text-base"></i>
-                  <span>Mis Compras</span>
-                </a>
-              </li>
-              <li>
-                <a href="/gift-cards" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors text-gray-400 hover:bg-white/5 hover:text-white">
-                  <i class="fas fa-gift w-5 text-center text-base"></i>
-                  <span>Gift Cards</span>
-                </a>
-              </li>
-              <li>
-                <a href="/mensajes" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors text-gray-400 hover:bg-white/5 hover:text-white">
-                  <i class="fas fa-envelope w-5 text-center text-base"></i>
-                  <span>Mensajes</span>
-                </a>
-              </li>
-            </ul>
-          </div>
-
-          <div class="my-3 h-px bg-white/10"></div>
-
-          <div>
-            <h3 class="px-2 pt-4 pb-2 text-xs font-bold uppercase text-gray-500 tracking-wider">Configuración</h3>
-            <ul>
-              <li>
-                <a href="/configuracion" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors text-gray-400 hover:bg-white/5 hover:text-white">
-                  <i class="fas fa-cog w-5 text-center text-base"></i>
-                  <span>Configuración</span>
-                </a>
-              </li>
-              <li>
-                <a href="/blog" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors text-gray-400 hover:bg-white/5 hover:text-white opacity-50 cursor-not-allowed">
-                  <i class="fas fa-book-open w-5 text-center text-base"></i>
-                  <span>Blog</span>
-                  <span class="ml-auto text-xs font-semibold bg-white/10 text-gray-400 px-2 py-0.5 rounded-full">Pronto</span>
-                </a>
-              </li>
-            </ul>
-          </div>
-        </nav>
-
-        <div class="p-4 border-t border-white/10">
-          <a href="#" class="flex items-center justify-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold text-red-400 border border-red-500/20 bg-red-500/5 transition-colors hover:bg-red-500/10 hover:border-red-500/40 logout-btn">
-            <i class="fas fa-sign-out-alt w-5 text-center"></i>
-            <span>Cerrar Sesión</span>
-          </a>
-        </div>
-      </aside>
-
-      <!-- MAIN CONTENT -->
-      <main class="main-content px-6 py-9 md:px-12">
-        <div class="breadcrumb flex items-center gap-2 text-sm text-gray-500 mb-6">
-          <a href="/dashboard" class="hover:text-violet-400">
-            <i class="fas fa-home"></i> Dashboard
-          </a>
-          <span><i class="fas fa-chevron-right text-xs"></i></span>
-          <span class="font-semibold text-white">Mis Favoritos</span>
-        </div>
-
-        <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-          <div>
-            <h1 class="text-3xl font-extrabold text-white tracking-tight flex items-center gap-3">
-              <i class="fas fa-heart text-violet-500"></i>Mis Favoritos
-            </h1>
-            <p class="text-gray-400 mt-1">Aquí encontrarás todos los kits que has guardado. Accede a ellos rápidamente.</p>
-          </div>
-        </header>
-
-        <div class="bg-white/5 border border-white/10 rounded-xl p-4 mb-6">
-          <div class="flex flex-col md:flex-row gap-4">
-            <div class="relative flex-grow">
-              <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-500"></i>
-              <input type="text" id="search-input" placeholder="Buscar en tus favoritos..." class="w-full bg-black/20 border border-white/10 rounded-lg pl-10 pr-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-violet-500" />
-            </div>
-            <div>
-              <select id="sort-select" class="w-full md:w-auto bg-black/20 border border-white/10 rounded-lg px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-violet-500">
-                <option value="createdAt_desc">Más Recientes</option>
-                <option value="createdAt_asc">Más Antiguos</option>
-                <option value="price_desc">Precio: Mayor a Menor</option>
-                <option value="price_asc">Precio: Menor a Mayor</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
-        <div id="kits-container">
-          <!-- Skeleton Loading -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            <div class="bg-[#131313] border border-white/10 rounded-xl overflow-hidden animate-pulse">
-              <div class="w-full h-40 bg-white/10"></div>
-              <div class="p-4">
-                <div class="h-5 w-3/4 rounded bg-white/10 mb-2"></div>
-                <div class="mt-4 pt-3 border-t border-white/10 flex justify-between">
-                  <div class="space-y-2">
-                    <div class="h-2 w-10 rounded bg-white/10"></div>
-                    <div class="h-4 w-14 rounded bg-white/10"></div>
-                  </div>
-                  <div class="space-y-2 flex flex-col items-end">
-                    <div class="h-2 w-8 rounded bg-white/10"></div>
-                    <div class="h-4 w-12 rounded bg-white/10"></div>
-                  </div>
+    <div class="flex flex-col xl:flex-row min-h-screen">
+        <!-- SIDEBAR -->
+        <aside class="bg-[rgba(15,15,15,0.6)] border-b xl:border-b-0 xl:border-r border-white/10 xl:sticky xl:top-[57px] xl:h-[calc(100vh-57px)] xl:overflow-y-auto scrollbar-thin xl:w-[260px]">
+            <div class="p-5 border-b border-white/10">
+                <div class="flex items-center gap-3">
+                    <div class="profile-avatar flex items-center justify-center w-11 h-11 rounded-full bg-zinc-800 font-bold text-xl text-zinc-500 skeleton-avatar">?</div>
+                    <div class="flex-1 overflow-hidden">
+                        <div class="profile-name font-semibold text-white truncate skeleton-text">Cargando...</div>
+                    </div>
                 </div>
-              </div>
             </div>
-            <div class="bg-[#131313] border border-white/10 rounded-xl overflow-hidden animate-pulse">
-              <div class="w-full h-40 bg-white/10"></div>
-              <div class="p-4">
-                <div class="h-5 w-3/4 rounded bg-white/10 mb-2"></div>
-                <div class="mt-4 pt-3 border-t border-white/10 flex justify-between">
-                  <div class="space-y-2">
-                    <div class="h-2 w-10 rounded bg-white/10"></div>
-                    <div class="h-4 w-14 rounded bg-white/10"></div>
-                  </div>
-                  <div class="space-y-2 flex flex-col items-end">
-                    <div class="h-2 w-8 rounded bg-white/10"></div>
-                    <div class="h-4 w-12 rounded bg-white/10"></div>
-                  </div>
+            
+            <div class="p-5 border-b border-white/10 bg-violet-500/5">
+                <div class="text-xs text-zinc-400 uppercase tracking-wider font-semibold mb-1.5">Saldo Disponible</div>
+                <div class="wallet-amount text-3xl font-bold text-white skeleton-text">$0.00</div>
+            </div>
+            
+            <div class="p-5">
+                <button onclick="window.location.href='subir-kit.html'" class="w-full py-3.5 px-4.5 bg-violet-600 text-white rounded-lg font-semibold flex items-center justify-center gap-2 hover:bg-violet-700 hover:-translate-y-0.5 transition-all duration-200 text-sm">
+                    <i class="fas fa-cloud-upload-alt"></i> Subir Kit
+                </button>
+            </div>
+            
+            <div class="px-5 pb-2">
+                <div class="relative">
+                    <input type="text" placeholder="Buscar..." class="w-full pl-4 pr-10 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white text-sm outline-none focus:bg-white/10 focus:border-violet-500/50 transition-all duration-200" />
+                    <i class="fas fa-search absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 text-sm"></i>
                 </div>
-              </div>
             </div>
-            <div class="bg-[#131313] border border-white/10 rounded-xl overflow-hidden animate-pulse">
-              <div class="w-full h-40 bg-white/10"></div>
-              <div class="p-4">
-                <div class="h-5 w-3/4 rounded bg-white/10 mb-2"></div>
-                <div class="mt-4 pt-3 border-t border-white/10 flex justify-between">
-                  <div class="space-y-2">
-                    <div class="h-2 w-10 rounded bg-white/10"></div>
-                    <div class="h-4 w-14 rounded bg-white/10"></div>
-                  </div>
-                  <div class="space-y-2 flex flex-col items-end">
-                    <div class="h-2 w-8 rounded bg-white/10"></div>
-                    <div class="h-4 w-12 rounded bg-white/10"></div>
-                  </div>
+            
+            <nav class="py-3">
+                <div class="px-5 py-3 text-xs text-zinc-500 uppercase tracking-widest font-bold">Principal</div>
+                <a href="dashboard" class="flex items-center gap-3 px-5 py-2.5 text-sm font-medium transition-colors text-zinc-400 hover:bg-white/5 hover:text-white">
+                    <i class="fas fa-th-large w-4 text-center text-base"></i> Dashboard
+                </a>
+                <a href="mis-kits" class="flex items-center gap-3 px-5 py-2.5 text-sm font-medium transition-colors text-zinc-400 hover:bg-white/5 hover:text-white">
+                    <i class="fas fa-music w-4 text-center text-base"></i> Mis Kits
+                </a>
+                <a href="favoritos" class="flex items-center gap-3 px-5 py-2.5 text-sm font-medium transition-colors bg-violet-500/10 text-white border-l-2 border-violet-500">
+                    <i class="fas fa-heart w-4 text-center text-base"></i> Favoritos
+                </a>
+                
+                <div class="mx-5 my-3 border-t border-white/10"></div>
+                
+                <div class="px-5 py-3 text-xs text-zinc-500 uppercase tracking-widest font-bold">Colaboración</div>
+                <a href="colaboraciones" class="flex items-center gap-3 px-5 py-2.5 text-sm font-medium transition-colors text-zinc-400 hover:bg-white/5 hover:text-white">
+                    <i class="fas fa-users w-4 text-center text-base"></i> Colaboraciones
+                </a>
+                
+                <div class="mx-5 my-3 border-t border-white/10"></div>
+                
+                <div class="px-5 py-3 text-xs text-zinc-500 uppercase tracking-widest font-bold">Compras</div>
+                <a href="mis-compras" class="flex items-center gap-3 px-5 py-2.5 text-sm font-medium transition-colors text-zinc-400 hover:bg-white/5 hover:text-white">
+                    <i class="fas fa-shopping-bag w-4 text-center text-base"></i> Mis Compras
+                </a>
+                <a href="Gift-Cards" class="flex items-center gap-3 px-5 py-2.5 text-sm font-medium transition-colors text-zinc-400 hover:bg-white/5 hover:text-white">
+                    <i class="fas fa-gift w-4 text-center text-base"></i> Gift Cards
+                </a>
+            </nav>
+            
+            <div class="p-5 mt-4">
+                <a href="#" class="logout-btn w-full py-3 bg-red-500/10 border border-red-500/20 text-red-500 rounded-lg font-semibold flex items-center justify-center gap-2 hover:bg-red-500/15 hover:border-red-500/30 transition-all duration-200 text-sm">
+                    <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+                </a>
+            </div>
+        </aside>
+
+        <!-- MAIN CONTENT -->
+        <main class="flex-1">
+            <!-- Hero Section -->
+            <section class="bg-gradient-to-b from-[#23103d] to-[#0a0a0a] text-center py-20 px-6 border-b border-pink-900/30 relative overflow-hidden">
+                <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(219,39,119,0.15)_0%,_transparent_60%)]"></div>
+                <div class="relative z-10 max-w-4xl mx-auto">
+                    <div class="inline-flex items-center gap-3 bg-gradient-to-r from-pink-600/20 to-pink-500/20 border border-pink-500/30 text-pink-400 px-6 py-2 rounded-full text-sm font-bold uppercase tracking-wider mb-6">
+                        <i class="fas fa-heart animate-pulse"></i>
+                        Colección Personal
+                    </div>
+                    <h1 class="font-montserrat text-5xl md:text-6xl font-black text-white uppercase tracking-wider mb-4">
+                        Mis Favoritos
+                    </h1>
+                    <p class="text-xl text-zinc-300 max-w-2xl mx-auto mb-8 leading-relaxed">
+                        Los kits que amas, siempre a tu alcance. Accede rápidamente a tu colección guardada.
+                    </p>
+                    <div class="flex justify-center gap-4 flex-wrap">
+                        <div class="glass-effect px-6 py-3 rounded-xl">
+                            <span class="text-3xl font-bold text-pink-400" id="total-favorites">0</span>
+                            <span class="text-sm text-zinc-400 ml-2">Favoritos</span>
+                        </div>
+                        <div class="glass-effect px-6 py-3 rounded-xl">
+                            <span class="text-3xl font-bold text-violet-400">∞</span>
+                            <span class="text-sm text-zinc-400 ml-2">Posibilidades</span>
+                        </div>
+                    </div>
                 </div>
-              </div>
-            </div>
-            <div class="bg-[#131313] border border-white/10 rounded-xl overflow-hidden animate-pulse">
-              <div class="w-full h-40 bg-white/10"></div>
-              <div class="p-4">
-                <div class="h-5 w-3/4 rounded bg-white/10 mb-2"></div>
-                <div class="mt-4 pt-3 border-t border-white/10 flex justify-between">
-                  <div class="space-y-2">
-                    <div class="h-2 w-10 rounded bg-white/10"></div>
-                    <div class="h-4 w-14 rounded bg-white/10"></div>
-                  </div>
-                  <div class="space-y-2 flex flex-col items-end">
-                    <div class="h-2 w-8 rounded bg-white/10"></div>
-                    <div class="h-4 w-12 rounded bg-white/10"></div>
-                  </div>
+            </section>
+
+            <!-- Filters Section -->
+            <section class="bg-[rgba(15,10,35,0.5)] py-8 px-6 border-b border-pink-900/20">
+                <div class="max-w-7xl mx-auto">
+                    <div class="flex flex-col md:flex-row gap-4">
+                        <div class="relative flex-1">
+                            <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500"></i>
+                            <input type="text" id="search-input" placeholder="Buscar en tus favoritos..." class="w-full pl-12 pr-4 py-3.5 bg-white/5 border border-white/10 rounded-xl text-white text-sm outline-none focus:bg-white/10 focus:border-pink-500/50 transition-all duration-200" />
+                        </div>
+                        <select id="sort-select" class="px-6 py-3.5 bg-white/5 border border-white/10 rounded-xl text-white text-sm outline-none focus:bg-white/10 focus:border-pink-500/50 transition-all duration-200 cursor-pointer">
+                            <option value="createdAt_desc">Más Recientes</option>
+                            <option value="createdAt_asc">Más Antiguos</option>
+                            <option value="price_desc">Precio: Mayor a Menor</option>
+                            <option value="price_asc">Precio: Menor a Mayor</option>
+                        </select>
+                    </div>
                 </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </main>
+            </section>
+
+            <!-- Kits Grid -->
+            <section class="py-16 px-6">
+                <div class="max-w-7xl mx-auto" id="kits-container">
+                    <!-- Skeleton Loading -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                        <div class="kit-card bg-gradient-to-br from-[rgba(26,10,46,0.6)] to-[rgba(15,10,35,0.6)] border border-pink-900/40 rounded-2xl overflow-hidden">
+                            <div class="w-full h-48 skeleton-loader"></div>
+                            <div class="p-5">
+                                <div class="h-6 w-3/4 rounded skeleton-loader mb-3"></div>
+                                <div class="flex justify-between items-center pt-4 border-t border-white/10">
+                                    <div class="h-8 w-20 rounded skeleton-loader"></div>
+                                    <div class="h-8 w-16 rounded skeleton-loader"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="kit-card bg-gradient-to-br from-[rgba(26,10,46,0.6)] to-[rgba(15,10,35,0.6)] border border-pink-900/40 rounded-2xl overflow-hidden">
+                            <div class="w-full h-48 skeleton-loader"></div>
+                            <div class="p-5">
+                                <div class="h-6 w-3/4 rounded skeleton-loader mb-3"></div>
+                                <div class="flex justify-between items-center pt-4 border-t border-white/10">
+                                    <div class="h-8 w-20 rounded skeleton-loader"></div>
+                                    <div class="h-8 w-16 rounded skeleton-loader"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="kit-card bg-gradient-to-br from-[rgba(26,10,46,0.6)] to-[rgba(15,10,35,0.6)] border border-pink-900/40 rounded-2xl overflow-hidden">
+                            <div class="w-full h-48 skeleton-loader"></div>
+                            <div class="p-5">
+                                <div class="h-6 w-3/4 rounded skeleton-loader mb-3"></div>
+                                <div class="flex justify-between items-center pt-4 border-t border-white/10">
+                                    <div class="h-8 w-20 rounded skeleton-loader"></div>
+                                    <div class="h-8 w-16 rounded skeleton-loader"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="kit-card bg-gradient-to-br from-[rgba(26,10,46,0.6)] to-[rgba(15,10,35,0.6)] border border-pink-900/40 rounded-2xl overflow-hidden">
+                            <div class="w-full h-48 skeleton-loader"></div>
+                            <div class="p-5">
+                                <div class="h-6 w-3/4 rounded skeleton-loader mb-3"></div>
+                                <div class="flex justify-between items-center pt-4 border-t border-white/10">
+                                    <div class="h-8 w-20 rounded skeleton-loader"></div>
+                                    <div class="h-8 w-16 rounded skeleton-loader"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
     </div>
 
     <script src="favoritos.js"></script>
-  </body>
+</body>
 </html>
