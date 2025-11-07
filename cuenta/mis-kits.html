@@ -1,16 +1,20 @@
 <!DOCTYPE html>
 <html lang="es">
-<head>
+  <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Mis Kits - OFFSZN</title>
+    <!-- Tailwind CSS for styling -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <style>
+      /* Google Font 'Inter' */
       @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
       body {
         font-family: 'Inter', sans-serif;
       }
+      /* Custom scrollbar for a sleek, modern look */
       .custom-scrollbar::-webkit-scrollbar {
         width: 6px;
       }
@@ -25,26 +29,27 @@
         background: rgba(255, 255, 255, 0.2);
       }
     </style>
-<script type="importmap">
-{
-  "imports": {
-    "react": "https://esm.sh/react@18.2.0",
-    "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
-    "@google/genai": "https://esm.sh/@google/genai"
+  <!-- Import Map to load React from a CDN -->
+  <script type="importmap">
+  {
+    "imports": {
+      "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
+      "react": "https://esm.sh/react@18.2.0"
+    }
   }
-}
-</script>
+  </script>
 </head>
-<body class="bg-[#0a0a0a] text-[#e5e5e5]">
+  <body class="bg-[#0a0a0a] text-[#e5e5e5]">
+    <!-- The root element where the React app will be mounted -->
     <div id="root"></div>
 
+    <!-- The entire React application logic is contained within this script tag -->
     <script type="module">
-      import React, { useState, useEffect, useMemo, useRef } from 'react';
+      import React, { useState, useEffect, useMemo } from 'react';
       import ReactDOM from 'react-dom/client';
-      import { GoogleGenAI } from '@google/genai';
 
       //================================================================
-      // TYPES
+      // TYPES (as JavaScript objects)
       //================================================================
       const KitStatus = {
         Published: 'Published',
@@ -53,84 +58,16 @@
       };
 
       //================================================================
-      // SERVICES / API
+      // SERVICES / MOCK API
       //================================================================
-      const getApiUrl = () => {
-        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-          return 'http://localhost:3000/api';
-        }
-        return 'https://offszn-academy.onrender.com/api';
+      const mockUser = {
+        id: 'user-123',
+        firstName: 'David',
+        lastName: 'Reyes',
+        nickname: 'davidreyes',
+        email: 'david.reyes@offszn.com',
+        walletBalance: 125.50,
       };
-
-      const getWalletBalance = () => {
-        const STORAGE_KEY = 'offszn_giftcards_state';
-        try {
-          const savedState = localStorage.getItem(STORAGE_KEY);
-          if (savedState) {
-            const parsedState = JSON.parse(savedState);
-            return parsedState.totalBalance || 0;
-          }
-        } catch (error) {
-          console.error('Error reading wallet balance from localStorage:', error);
-        }
-        return 0;
-      };
-      
-      const fetchUserData = async () => {
-        console.log('API Call: Attempting to fetch user data...');
-        const token = localStorage.getItem('authToken');
-
-        const fallbackToMockUser = async () => {
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            const mockUser = {
-                id: 'dev-user-01',
-                first_name: 'David',
-                last_name: 'Reyes',
-                nickname: 'davidreyes',
-                email: 'david.reyes@offszn.com',
-                walletBalance: getWalletBalance() || 125.50,
-            };
-            console.log('API Response: Using mock user data.', mockUser);
-            return mockUser;
-        };
-
-        if (!token) {
-            console.warn("No authentication token found. Falling back to mock user data.");
-            return fallbackToMockUser();
-        }
-
-        console.log('Auth token found. Fetching real user data from API...');
-        const API_URL = getApiUrl();
-
-        try {
-            const response = await fetch(`${API_URL}/me`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-
-            if (!response.ok) {
-                if (response.status === 401 || response.status === 403) {
-                    localStorage.removeItem('authToken');
-                }
-                throw new Error(`Failed to fetch user data: ${response.status} ${response.statusText}`);
-            }
-
-            const userDataFromApi = await response.json();
-            const walletBalance = getWalletBalance();
-            
-            const user = {
-                ...userDataFromApi,
-                walletBalance,
-            };
-
-            console.log('API Response: Real user data received and processed.', user);
-            return user;
-
-        } catch (error) {
-            console.error('Error during user data fetch, falling back to mock data:', error);
-            return fallbackToMockUser();
-        }
-      };
-
 
       const generateMockKits = () => {
         const statuses = [KitStatus.Published, KitStatus.Draft, KitStatus.Archived];
@@ -151,10 +88,18 @@
 
       const mockKits = generateMockKits();
 
-      const fetchUserKits = () => {
-        console.log('API Call: Fetching user kits (mocked)...');
+      const fetchUserData = () => {
+        console.log('API Call: Fetching user data...');
         return new Promise(resolve => setTimeout(() => {
-          console.log('API Response: User kits received (mocked).');
+          console.log('API Response: User data received.');
+          resolve(mockUser);
+        }, 1500));
+      };
+
+      const fetchUserKits = () => {
+        console.log('API Call: Fetching user kits...');
+        return new Promise(resolve => setTimeout(() => {
+          console.log('API Response: User kits received.');
           resolve(mockKits);
         }, 2000));
       };
@@ -163,25 +108,24 @@
       // SKELETON COMPONENTS
       //================================================================
       const UserInfoSkeleton = ({ type }) => {
-        if (type === 'navbar') {
-          return React.createElement('div', { className: "flex items-center gap-3 animate-pulse" },
-            React.createElement('div', { className: "h-10 w-10 rounded-full bg-white/10" }),
-            React.createElement('div', { className: "flex-1 space-y-2" },
-              React.createElement('div', { className: "h-3 w-20 rounded bg-white/10" }),
-              React.createElement('div', { className: "h-2 w-28 rounded bg-white/10" })
-            )
-          );
-        }
-        return React.createElement('div', { className: "flex items-center gap-3 animate-pulse" },
+        const navbarSkeleton = React.createElement('div', { className: "flex items-center gap-3 animate-pulse" },
+          React.createElement('div', { className: "h-10 w-10 rounded-full bg-white/10" }),
+          React.createElement('div', { className: "flex-1 space-y-2" },
+            React.createElement('div', { className: "h-3 w-20 rounded bg-white/10" }),
+            React.createElement('div', { className: "h-2 w-28 rounded bg-white/10" })
+          )
+        );
+        const sidebarSkeleton = React.createElement('div', { className: "flex items-center gap-3 animate-pulse" },
           React.createElement('div', { className: "h-11 w-11 rounded-full bg-white/10" }),
           React.createElement('div', { className: "flex-1" },
             React.createElement('div', { className: "h-4 w-32 rounded bg-white/10" })
           )
         );
+        return type === 'navbar' ? navbarSkeleton : sidebarSkeleton;
       };
 
-      const KitCardSkeleton = () => (
-        React.createElement('div', { className: "bg-[#131313] border border-white/10 rounded-xl overflow-hidden animate-pulse" },
+      const KitCardSkeleton = () => {
+        return React.createElement('div', { className: "bg-[#131313] border border-white/10 rounded-xl overflow-hidden animate-pulse" },
           React.createElement('div', { className: "w-full h-40 bg-white/10" }),
           React.createElement('div', { className: "p-4" },
             React.createElement('div', { className: "h-5 w-3/4 rounded bg-white/10 mb-2" }),
@@ -196,9 +140,9 @@
               )
             )
           )
-        )
-      );
-
+        );
+      };
+      
       //================================================================
       // UI COMPONENTS
       //================================================================
@@ -223,13 +167,14 @@
         );
       };
 
+      const statusStyles = {
+        [KitStatus.Published]: { bg: 'bg-green-500/10', text: 'text-green-400', icon: 'fa-check-circle' },
+        [KitStatus.Draft]: { bg: 'bg-yellow-500/10', text: 'text-yellow-400', icon: 'fa-pencil-alt' },
+        [KitStatus.Archived]: { bg: 'bg-gray-500/10', text: 'text-gray-400', icon: 'fa-archive' },
+      };
+
       const KitCard = ({ kit, onEdit }) => {
         const [dropdownOpen, setDropdownOpen] = useState(false);
-        const statusStyles = {
-          [KitStatus.Published]: { bg: 'bg-green-500/10', text: 'text-green-400', icon: 'fa-check-circle' },
-          [KitStatus.Draft]: { bg: 'bg-yellow-500/10', text: 'text-yellow-400', icon: 'fa-pencil-alt' },
-          [KitStatus.Archived]: { bg: 'bg-gray-500/10', text: 'text-gray-400', icon: 'fa-archive' },
-        };
         const { bg, text, icon } = statusStyles[kit.status];
         const handleEditClick = (e) => {
           e.preventDefault();
@@ -272,26 +217,27 @@
           )
         );
       };
-      
+
+      const menuSections = [
+        { title: 'Principal', items: [{ icon: 'fa-th-large', label: 'Dashboard', href: '/dashboard' }, { icon: 'fa-music', label: 'Mis Kits', href: '/mis-kits', active: true }, { icon: 'fa-chart-line', label: 'Analíticas', href: '/analiticas', soon: true }, { icon: 'fa-heart', label: 'Favoritos', href: '/favoritos' }, { icon: 'fa-history', label: 'Historial', href: '/historial', soon: true }] },
+        { title: 'Colaboración', items: [{ icon: 'fa-users', label: 'Colaboraciones', href: '/colaboraciones' }] },
+        { title: 'Compras', items: [{ icon: 'fa-shopping-bag', label: 'Mis Compras', href: '/mis-compras' }, { icon: 'fa-gift', label: 'Gift Cards', href: '/gift-cards' }, { icon: 'fa-envelope', label: 'Mensajes', href: '/mensajes' }] },
+        { title: 'Configuración', items: [{ icon: 'fa-cog', label: 'Configuración', href: '/configuracion' }, { icon: 'fa-book-open', label: 'Blog', href: '/blog', soon: true }] }
+      ];
+
       const Sidebar = ({ user, loading }) => {
-        const menuSections = [
-          { title: 'Principal', items: [{ icon: 'fa-th-large', label: 'Dashboard', href: '/dashboard' }, { icon: 'fa-music', label: 'Mis Kits', href: '/mis-kits', active: true }, { icon: 'fa-chart-line', label: 'Analíticas', href: '/analiticas', soon: true }, { icon: 'fa-heart', label: 'Favoritos', href: '/favoritos' }, { icon: 'fa-history', label: 'Historial', href: '/historial', soon: true }] },
-          { title: 'Colaboración', items: [{ icon: 'fa-users', label: 'Colaboraciones', href: '/colaboraciones' }] },
-          { title: 'Compras', items: [{ icon: 'fa-shopping-bag', label: 'Mis Compras', href: '/mis-compras' }, { icon: 'fa-gift', label: 'Gift Cards', href: '/gift-cards' }, { icon: 'fa-envelope', label: 'Mensajes', href: '/mensajes' }] },
-          { title: 'Configuración', items: [{ icon: 'fa-cog', label: 'Configuración', href: '/configuracion' }, { icon: 'fa-book-open', label: 'Blog', href: '/blog', soon: true }] }
-        ];
-        const userInitial = user ? (user.first_name || user.nickname || 'U').charAt(0).toUpperCase() : '';
+        const userInitial = user ? (user.firstName || user.nickname || 'U').charAt(0).toUpperCase() : '';
         return React.createElement('aside', { className: "hidden md:flex flex-col sticky top-[65px] h-[calc(100vh-65px)] bg-[rgba(15,15,15,0.6)] border-r border-white/10" },
           React.createElement('div', null,
             React.createElement('div', { className: "p-5 border-b border-white/10" },
-              loading ? React.createElement(UserInfoSkeleton, { type: "sidebar" }) : user ? React.createElement('div', { className: "flex items-center gap-3" },
+              loading ? React.createElement(UserInfoSkeleton, { type: "sidebar" }) : React.createElement('div', { className: "flex items-center gap-3" },
                 React.createElement('div', { className: "flex h-11 w-11 items-center justify-center rounded-full bg-violet-600 font-bold text-white text-lg" }, userInitial),
-                React.createElement('div', null, React.createElement('p', { className: "font-semibold text-white" }, `${user.first_name} ${user.last_name}`))
-              ) : React.createElement(UserInfoSkeleton, { type: "sidebar" })
+                React.createElement('div', null, React.createElement('p', { className: "font-semibold text-white" }, `${user?.firstName} ${user?.lastName}`))
+              )
             ),
             React.createElement('div', { className: "p-5 border-b border-white/10 bg-violet-600/5" },
               React.createElement('div', { className: "text-xs font-semibold uppercase text-gray-400 mb-1.5" }, "Saldo Disponible"),
-              loading ? React.createElement('div', { className: "h-8 w-32 animate-pulse rounded-md bg-white/10" }) : user ? React.createElement('div', { className: "text-3xl font-bold text-white" }, `$${user.walletBalance.toFixed(2)}`) : React.createElement('div', { className: "h-8 w-32 rounded-md bg-white/10" })
+              loading ? React.createElement('div', { className: "h-8 w-32 animate-pulse rounded-md bg-white/10" }) : React.createElement('div', { className: "text-3xl font-bold text-white" }, `$${user?.walletBalance.toFixed(2)}`)
             )
           ),
           React.createElement('nav', { className: "flex-grow p-3 overflow-y-auto custom-scrollbar" },
@@ -315,10 +261,26 @@
           )
         );
       };
-      
+
       const Navbar = ({ user, loading }) => {
         const [userDropdownOpen, setUserDropdownOpen] = useState(false);
-        const userInitial = user ? (user.first_name || user.nickname || 'U').charAt(0).toUpperCase() : '';
+        const userInitial = user ? (user.firstName || user.nickname || 'U').charAt(0).toUpperCase() : '';
+        const dropdownMenu = React.createElement('div', { className: "absolute right-0 mt-3 w-64 rounded-xl border border-white/10 bg-[rgba(20,20,20,0.98)] p-3 shadow-2xl backdrop-blur-xl" },
+          React.createElement('div', { className: "mb-2 flex items-center gap-3 border-b border-white/10 p-3" },
+            loading ? React.createElement(UserInfoSkeleton, { type: "navbar" }) : React.createElement(React.Fragment, null,
+              React.createElement('div', { className: "flex h-10 w-10 items-center justify-center rounded-full bg-violet-600 font-bold text-white" }, userInitial),
+              React.createElement('div', null,
+                React.createElement('p', { className: "text-sm font-semibold text-white" }, user?.nickname),
+                React.createElement('p', { className: "text-xs text-gray-500" }, user?.email)
+              )
+            )
+          ),
+          React.createElement('a', { href: "/perfil", className: "flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-gray-400 transition-colors hover:bg-white/5 hover:text-white" }, React.createElement('i', { className: "fas fa-user-circle w-5 text-center" }), " Mi Perfil"),
+          React.createElement('a', { href: "/dashboard", className: "flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-gray-400 transition-colors hover:bg-white/5 hover:text-white" }, React.createElement('i', { className: "fas fa-th-large w-5 text-center" }), " Dashboard"),
+          React.createElement('a', { href: "/configuracion", className: "flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-gray-400 transition-colors hover:bg-white/5 hover:text-white" }, React.createElement('i', { className: "fas fa-cog w-5 text-center" }), " Configuración"),
+          React.createElement('div', { className: "my-2 h-px bg-white/10" }),
+          React.createElement('a', { href: "/logout", className: "flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-red-500 transition-colors hover:bg-red-500/10" }, React.createElement('i', { className: "fas fa-sign-out-alt w-5 text-center" }), " Cerrar Sesión")
+        );
         return React.createElement('nav', { className: "sticky top-0 z-50 flex items-center justify-between bg-[rgba(0,0,0,0.98)] px-6 py-3 md:px-12 backdrop-blur-xl border-b border-white/10" },
           React.createElement('div', { className: "logo" }, React.createElement('a', { href: "/dashboard", className: "text-2xl font-extrabold tracking-tight text-white" }, "OFFSZN")),
           React.createElement('div', { className: "hidden lg:flex items-center gap-10" },
@@ -331,150 +293,8 @@
             React.createElement('a', { href: "/notificaciones", className: "flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-gray-400 transition-colors hover:bg-white/[0.08] hover:text-white" }, React.createElement('i', { className: "fas fa-bell" })),
             React.createElement('a', { href: "/carrito", className: "flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-gray-400 transition-colors hover:bg-white/[0.08] hover:text-white" }, React.createElement('i', { className: "fas fa-shopping-cart" })),
             React.createElement('div', { className: "relative" },
-              React.createElement('button', { onClick: () => setUserDropdownOpen(!userDropdownOpen), className: "flex h-9 w-9 items-center justify-center rounded-full bg-violet-600 text-white font-bold transition-transform hover:scale-105" }, 
-                loading ? React.createElement('i', { className: "fa-solid fa-spinner fa-spin" }) : userInitial || React.createElement('i', { className: "fa-solid fa-user" })
-              ),
-              userDropdownOpen && React.createElement('div', { className: "absolute right-0 mt-3 w-64 rounded-xl border border-white/10 bg-[rgba(20,20,20,0.98)] p-3 shadow-2xl backdrop-blur-xl" },
-                React.createElement('div', { className: "mb-2 flex items-center gap-3 border-b border-white/10 p-3" },
-                  loading ? React.createElement(UserInfoSkeleton, { type: "navbar" }) : user ? React.createElement(React.Fragment, null,
-                    React.createElement('div', { className: "flex h-10 w-10 items-center justify-center rounded-full bg-violet-600 font-bold text-white" }, userInitial),
-                    React.createElement('div', null,
-                      React.createElement('p', { className: "text-sm font-semibold text-white" }, user.nickname),
-                      React.createElement('p', { className: "text-xs text-gray-500" }, user.email)
-                    )
-                  ) : React.createElement('div', { className: "text-sm text-gray-400" }, "Not logged in")
-                ),
-                React.createElement('a', { href: "/perfil", className: "flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-gray-400 transition-colors hover:bg-white/5 hover:text-white" }, React.createElement('i', { className: "fas fa-user-circle w-5 text-center" }), " Mi Perfil"),
-                React.createElement('a', { href: "/dashboard", className: "flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-gray-400 transition-colors hover:bg-white/5 hover:text-white" }, React.createElement('i', { className: "fas fa-th-large w-5 text-center" }), " Dashboard"),
-                React.createElement('a', { href: "/configuracion", className: "flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-gray-400 transition-colors hover:bg-white/5 hover:text-white" }, React.createElement('i', { className: "fas fa-cog w-5 text-center" }), " Configuración"),
-                React.createElement('div', { className: "my-2 h-px bg-white/10" }),
-                React.createElement('a', { href: "/logout", className: "flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-red-500 transition-colors hover:bg-red-500/10" }, React.createElement('i', { className: "fas fa-sign-out-alt w-5 text-center" }), " Cerrar Sesión")
-              )
-            )
-          )
-        );
-      };
-
-      const TypingIndicator = () => (
-        React.createElement('div', { className: "flex items-center space-x-1" },
-          React.createElement('div', { className: "w-2 h-2 bg-violet-400 rounded-full animate-pulse [animation-delay:-0.3s]" }),
-          React.createElement('div', { className: "w-2 h-2 bg-violet-400 rounded-full animate-pulse [animation-delay:-0.15s]" }),
-          React.createElement('div', { className: "w-2 h-2 bg-violet-400 rounded-full animate-pulse" })
-        )
-      );
-
-      const AIAssistantModal = ({ isOpen, onClose, kits }) => {
-        const [messages, setMessages] = useState([]);
-        const [input, setInput] = useState('');
-        const [isLoading, setIsLoading] = useState(false);
-        const chatEndRef = useRef(null);
-
-        const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-
-        useEffect(() => {
-          if (isOpen) {
-            setMessages([
-              { role: 'model', content: '¡Hola! Soy tu asistente de IA. Puedes preguntarme cualquier cosa sobre tus kits, como "¿Cuál es mi kit más vendido?" o "Resume mis kits de Trap".' }
-            ]);
-          }
-        }, [isOpen]);
-
-        useEffect(() => {
-          chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-        }, [messages, isLoading]);
-
-        const handleSendMessage = async (e) => {
-          e.preventDefault();
-          if (!input.trim() || isLoading) return;
-
-          const userMessage = { role: 'user', content: input };
-          setMessages(prev => [...prev, userMessage]);
-          setInput('');
-          setIsLoading(true);
-
-          try {
-            const kitsData = JSON.stringify(kits.map(({ id, name, price, sales, status, createdAt }) => ({ id, name, price, sales, status, createdAt })));
-            
-            const prompt = `
-              You are a helpful AI assistant named OFFSZN AI, designed for music producers on the OFFSZN marketplace.
-              Your answers must be based *only* on the following JSON data representing the user's sound kits. Do not make up information.
-              If a question cannot be answered with this data, politely state that.
-              Keep your answers concise, friendly, and well-formatted (use markdown like lists or bold text).
-
-              Kit Data:
-              ${kitsData}
-
-              User's Question:
-              "${input}"
-            `;
-            
-            const response = await ai.models.generateContent({
-              model: 'gemini-2.5-flash',
-              contents: prompt,
-            });
-
-            const aiResponse = { role: 'model', content: response.text };
-            setMessages(prev => [...prev, aiResponse]);
-
-          } catch (error) {
-            console.error("Gemini API error:", error);
-            const errorMessage = { role: 'model', content: 'Lo siento, he encontrado un error al procesar tu solicitud. Por favor, inténtalo de nuevo.' };
-            setMessages(prev => [...prev, errorMessage]);
-          } finally {
-            setIsLoading(false);
-          }
-        };
-        
-        if (!isOpen) return null;
-
-        const handleContentClick = (e) => e.stopPropagation();
-
-        return React.createElement('div', { className: "fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm", onClick: onClose },
-          React.createElement('div', { 
-            className: "bg-[#131313] border border-white/10 rounded-xl w-full max-w-2xl m-4 shadow-2xl shadow-violet-900/30 flex flex-col",
-            style: { height: 'clamp(400px, 80vh, 700px)' },
-            onClick: handleContentClick
-          },
-            React.createElement('div', { className: "flex justify-between items-center p-4 border-b border-white/10 flex-shrink-0" },
-              React.createElement('h2', { className: "text-lg font-bold text-white flex items-center gap-2" },
-                React.createElement('i', { className: "fas fa-sparkles text-violet-400" }),
-                "Asistente IA"
-              ),
-              React.createElement('button', { onClick: onClose, className: "text-gray-500 hover:text-white transition-colors" },
-                React.createElement('i', { className: "fas fa-times" })
-              )
-            ),
-            React.createElement('div', { className: "flex-grow p-4 overflow-y-auto custom-scrollbar space-y-4" },
-              messages.map((msg, index) => (
-                React.createElement('div', { key: index, className: `flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}` },
-                  React.createElement('div', { className: `max-w-md p-3 rounded-xl ${msg.role === 'user' ? 'bg-violet-600 text-white' : 'bg-white/10 text-gray-300'}` },
-                    React.createElement('p', { className: "text-sm whitespace-pre-wrap" }, msg.content)
-                  )
-                )
-              )),
-              isLoading && (
-                React.createElement('div', { className: "flex justify-start" },
-                  React.createElement('div', { className: "max-w-md p-3 rounded-xl bg-white/10 text-gray-300" },
-                    React.createElement(TypingIndicator, null)
-                  )
-                )
-              ),
-              React.createElement('div', { ref: chatEndRef })
-            ),
-            React.createElement('div', { className: "p-4 border-t border-white/10 flex-shrink-0" },
-              React.createElement('form', { onSubmit: handleSendMessage, className: "flex items-center gap-3" },
-                React.createElement('input', { 
-                  type: "text", 
-                  value: input,
-                  onChange: (e) => setInput(e.target.value),
-                  placeholder: "Escribe tu pregunta aquí...",
-                  disabled: isLoading,
-                  className: "flex-grow bg-black/20 border border-white/10 rounded-lg px-4 py-2.5 text-sm text-white outline-none focus:ring-2 focus:ring-violet-500 disabled:opacity-50" 
-                }),
-                React.createElement('button', { type: "submit", disabled: isLoading || !input.trim(), className: "bg-violet-600 text-white font-bold px-4 py-2.5 rounded-lg hover:bg-violet-700 transition-colors disabled:bg-violet-900 disabled:cursor-not-allowed" },
-                  React.createElement('i', { className: "fas fa-paper-plane" })
-                )
-              )
+              React.createElement('button', { onClick: () => setUserDropdownOpen(!userDropdownOpen), className: "flex h-9 w-9 items-center justify-center rounded-full bg-violet-600 text-white font-bold transition-transform hover:scale-105" }, loading ? React.createElement('i', { className: "fa-solid fa-spinner fa-spin" }) : userInitial),
+              userDropdownOpen && dropdownMenu
             )
           )
         );
@@ -484,7 +304,6 @@
         const [kits, setKits] = useState([]);
         const [loading, setLoading] = useState(true);
         const [editingKit, setEditingKit] = useState(null);
-        const [isAssistantOpen, setIsAssistantOpen] = useState(false);
         const [searchTerm, setSearchTerm] = useState('');
         const [statusFilter, setStatusFilter] = useState('All');
         const [sortOrder, setSortOrder] = useState('createdAt_desc');
@@ -516,12 +335,20 @@
 
         const handleEditKit = (kit) => setEditingKit(kit);
         const handleCloseModal = () => setEditingKit(null);
-        
-        const StatusButton = ({ status, label, currentFilter, setFilter }) => (
-          React.createElement('button', { onClick: () => setFilter(status), className: `px-4 py-2 text-sm font-semibold rounded-lg transition-colors ${currentFilter === status ? 'bg-violet-600 text-white' : 'bg-white/5 text-gray-400 hover:bg-white/10'}` }, label)
-        );
 
-        return React.createElement(React.Fragment, null,
+        const StatusButton = ({ status, label }) => React.createElement('button', { onClick: () => setStatusFilter(status), className: `px-4 py-2 text-sm font-semibold rounded-lg transition-colors ${statusFilter === status ? 'bg-violet-600 text-white' : 'bg-white/5 text-gray-400 hover:bg-white/10'}` }, label);
+
+        const kitGrid = loading ? 
+            React.createElement('div', { className: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" }, Array.from({ length: 8 }).map((_, index) => React.createElement(KitCardSkeleton, { key: index }))) :
+            filteredAndSortedKits.length > 0 ?
+              React.createElement('div', { className: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" }, filteredAndSortedKits.map(kit => React.createElement(KitCard, { key: kit.id, kit: kit, onEdit: handleEditKit }))) :
+              React.createElement('div', { className: "text-center py-20 bg-white/5 rounded-xl" },
+                React.createElement('i', { className: "fas fa-box-open text-5xl text-gray-600 mb-4" }),
+                React.createElement('h3', { className: "text-xl font-bold text-white" }, "No se encontraron kits"),
+                React.createElement('p', { className: "text-gray-400 mt-2" }, "Prueba a cambiar los filtros o sube tu primer kit.")
+              );
+        
+        return React.createElement('div', null,
           React.createElement('div', { className: "breadcrumb flex items-center gap-2 text-sm text-gray-500 mb-6" },
             React.createElement('a', { href: "/dashboard", className: "hover:text-violet-400" }, React.createElement('i', { className: "fas fa-home" }), " Dashboard"),
             React.createElement('span', null, React.createElement('i', { className: "fas fa-chevron-right text-xs" })),
@@ -532,14 +359,7 @@
               React.createElement('h1', { className: "text-3xl font-extrabold text-white tracking-tight" }, "Mis Kits"),
               React.createElement('p', { className: "text-gray-400 mt-1" }, "Gestiona los productos que has subido al marketplace.")
             ),
-            React.createElement('div', { className: "flex items-center gap-3" },
-                React.createElement('button', { onClick: () => setIsAssistantOpen(true), className: "flex items-center gap-2 bg-transparent border border-violet-500 text-violet-400 font-bold px-5 py-3 rounded-lg hover:bg-violet-500/10 hover:text-white transition-all" },
-                  React.createElement('i', { className: "fa-solid fa-wand-magic-sparkles" }), "Asistente IA"
-                ),
-                React.createElement('button', { className: "flex items-center gap-2 bg-violet-600 text-white font-bold px-5 py-3 rounded-lg hover:bg-violet-700 transition-all transform hover:scale-105" },
-                  React.createElement('i', { className: "fas fa-cloud-upload-alt" }), "Subir Nuevo Kit"
-                )
-            )
+            React.createElement('button', { className: "flex items-center gap-2 bg-violet-600 text-white font-bold px-5 py-3 rounded-lg hover:bg-violet-700 transition-all transform hover:scale-105" }, React.createElement('i', { className: "fas fa-cloud-upload-alt" }), "Subir Nuevo Kit")
           ),
           React.createElement('div', { className: "bg-white/5 border border-white/10 rounded-xl p-4 mb-6" },
             React.createElement('div', { className: "flex flex-col md:flex-row gap-4" },
@@ -548,10 +368,10 @@
                 React.createElement('input', { type: "text", placeholder: "Buscar por nombre...", value: searchTerm, onChange: (e) => setSearchTerm(e.target.value), className: "w-full bg-black/20 border border-white/10 rounded-lg pl-10 pr-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-violet-500" })
               ),
               React.createElement('div', { className: "flex items-center gap-2 flex-wrap" },
-                React.createElement(StatusButton, { status: "All", label: "Todos", currentFilter: statusFilter, setFilter: setStatusFilter }),
-                React.createElement(StatusButton, { status: KitStatus.Published, label: "Publicados", currentFilter: statusFilter, setFilter: setStatusFilter }),
-                React.createElement(StatusButton, { status: KitStatus.Draft, label: "Borradores", currentFilter: statusFilter, setFilter: setStatusFilter }),
-                React.createElement(StatusButton, { status: KitStatus.Archived, label: "Archivados", currentFilter: statusFilter, setFilter: setStatusFilter })
+                React.createElement(StatusButton, { status: "All", label: "Todos" }),
+                React.createElement(StatusButton, { status: KitStatus.Published, label: "Publicados" }),
+                React.createElement(StatusButton, { status: KitStatus.Draft, label: "Borradores" }),
+                React.createElement(StatusButton, { status: KitStatus.Archived, label: "Archivados" })
               ),
               React.createElement('div', null,
                 React.createElement('select', { value: sortOrder, onChange: (e) => setSortOrder(e.target.value), className: "w-full md:w-auto bg-black/20 border border-white/10 rounded-lg px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-violet-500" },
@@ -564,27 +384,8 @@
               )
             )
           ),
-          loading ? (
-            React.createElement('div', { className: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" },
-              Array.from({ length: 8 }).map((_, index) => React.createElement(KitCardSkeleton, { key: index }))
-            )
-          ) : filteredAndSortedKits.length > 0 ? (
-            React.createElement('div', { className: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" },
-              filteredAndSortedKits.map(kit => React.createElement(KitCard, { key: kit.id, kit: kit, onEdit: handleEditKit }))
-            )
-          ) : (
-            React.createElement('div', { className: "text-center py-20 bg-white/5 rounded-xl" },
-              React.createElement('i', { className: "fas fa-box-open text-5xl text-gray-600 mb-4" }),
-              React.createElement('h3', { className: "text-xl font-bold text-white" }, "No se encontraron kits"),
-              React.createElement('p', { className: "text-gray-400 mt-2" }, "Prueba a cambiar los filtros o sube tu primer kit.")
-            )
-          ),
-          React.createElement(KitEditModal, { kit: editingKit, onClose: handleCloseModal }),
-          React.createElement(AIAssistantModal, { 
-            isOpen: isAssistantOpen, 
-            onClose: () => setIsAssistantOpen(false),
-            kits: kits
-          })
+          kitGrid,
+          React.createElement(KitEditModal, { kit: editingKit, onClose: handleCloseModal })
         );
       };
 
@@ -610,18 +411,15 @@
           React.createElement('div', { className: "grid md:grid-cols-[260px_1fr]" },
             React.createElement(Sidebar, { user, loading }),
             React.createElement('main', { className: "main-content px-6 py-9 md:px-12" },
-              React.createElement(MyKitsPage, null)
+              React.createElement(MyKitsPage)
             )
           )
         );
       };
 
-      const rootElement = document.getElementById('root');
-      if (!rootElement) {
-        throw new Error("Could not find root element to mount to");
-      }
-      const root = ReactDOM.createRoot(rootElement);
+      const root = ReactDOM.createRoot(document.getElementById('root'));
       root.render(React.createElement(React.StrictMode, null, React.createElement(App)));
+
     </script>
-</body>
+  </body>
 </html>
