@@ -2,6 +2,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     const token = localStorage.getItem('authToken');
     const CACHE_KEY = 'offszn_user_cache';
+    const STORAGE_KEY = 'offszn_giftcards_state';
     
     // ===== CONFIGURACIÓN DE API =====
     let API_URL = '';
@@ -55,180 +56,168 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
+    // ===== CARGAR BALANCE DESDE GIFT CARDS =====
+    function loadBalance() {
+        try {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) {
+                const giftCardsState = JSON.parse(saved);
+                return giftCardsState.totalBalance || 0;
+            }
+        } catch (error) {
+            console.error('❌ Error al cargar balance:', error);
+        }
+        return 0;
+    }
+
     // ===== ACTUALIZAR UI CON DATOS DEL USUARIO =====
     function updateUserUI(userData) {
-        // Sidebar
-        const sidebarName = document.getElementById('sidebar-name');
-        const sidebarAvatar = document.getElementById('sidebar-avatar');
-        const sidebarWallet = document.getElementById('sidebar-wallet');
-
-        if (sidebarName) {
-            sidebarName.classList.remove('skeleton-text');
-            sidebarName.textContent = `${userData.first_name || ''} ${userData.last_name || ''}`.trim() || userData.nickname || 'Usuario';
-        }
-
-        if (sidebarAvatar) {
-            sidebarAvatar.classList.remove('skeleton-avatar');
+        const balance = loadBalance();
+        
+        // ===== ACTUALIZAR SIDEBAR =====
+        // Avatar en sidebar
+        const profileAvatar = document.querySelector('.profile-avatar');
+        if (profileAvatar) {
+            profileAvatar.classList.remove('skeleton-avatar');
             const initial = (userData.first_name || userData.nickname || 'U').charAt(0).toUpperCase();
-            sidebarAvatar.textContent = initial;
+            profileAvatar.textContent = initial;
         }
 
+        // Nombre en sidebar
+        const profileName = document.querySelector('.profile-name');
+        if (profileName) {
+            profileName.classList.remove('skeleton-text');
+            profileName.textContent = `${userData.first_name || ''} ${userData.last_name || ''}`.trim() || userData.nickname || 'Usuario';
+        }
+
+        // Balance en sidebar
+        const sidebarWallet = document.querySelector('.wallet-amount');
         if (sidebarWallet) {
             sidebarWallet.classList.remove('skeleton-text');
-            sidebarWallet.textContent = `$${(userData.walletBalance || 0).toFixed(2)}`;
+            sidebarWallet.textContent = `$${balance.toFixed(2)}`;
         }
 
-        // Navbar dropdown
-        const navbarAvatar = document.getElementById('navbar-avatar');
-        const dropdownAvatar = document.getElementById('dropdown-avatar');
-        const dropdownName = document.getElementById('dropdown-name');
-        const dropdownEmail = document.getElementById('dropdown-email');
-
-        const initial = (userData.first_name || userData.nickname || 'U').charAt(0).toUpperCase();
-
-        if (navbarAvatar) {
-            navbarAvatar.textContent = initial;
-        }
-
-        if (dropdownAvatar) {
-            dropdownAvatar.classList.remove('skeleton-avatar');
-            dropdownAvatar.textContent = initial;
-        }
+        // ===== ACTUALIZAR NAVBAR DROPDOWN =====
+        const dropdownName = document.querySelector('.user-dropdown-name');
+        const dropdownEmail = document.querySelector('.user-dropdown-email');
+        const dropdownAvatar = document.querySelector('.user-dropdown-avatar');
 
         if (dropdownName) {
             dropdownName.classList.remove('skeleton-text');
             dropdownName.textContent = userData.nickname || userData.first_name || 'Usuario';
         }
-
         if (dropdownEmail) {
             dropdownEmail.classList.remove('skeleton-text');
             dropdownEmail.textContent = userData.email || 'usuario@offszn.com';
         }
+        if (dropdownAvatar) {
+            dropdownAvatar.classList.remove('skeleton-avatar');
+            const initial = (userData.first_name || userData.nickname || 'U').charAt(0).toUpperCase();
+            dropdownAvatar.textContent = initial;
+        }
+
+        console.log('✅ UI actualizada con datos reales');
     }
 
-    // ===== MOCK DATA DE KITS (mantener como estaba) =====
-    const KitStatus = {
-        Published: 'Published',
-        Draft: 'Draft',
-        Archived: 'Archived',
-    };
-
-    function generateMockKits() {
-        const statuses = [KitStatus.Published, KitStatus.Draft, KitStatus.Archived];
-        const kitNames = [
-            "Reggaeton Flow Vol. 1", "Trap Essentials 2024", "Lo-Fi Dreams", "Synthwave Odyssey",
-            "Drill UK Madness", "Future Bass Anthems", "EDM Power Pack", "Acoustic Gems", "Urban Latin Vibes"
-        ];
-        return kitNames.map((name, index) => ({
-            id: `kit-${index + 1}`,
-            name: name,
-            imageUrl: `https://picsum.photos/seed/${name.replace(/\s+/g, '-')}/400/300`,
-            price: parseFloat((Math.random() * 20 + 10).toFixed(2)),
-            sales: Math.floor(Math.random() * 500),
-            status: statuses[index % statuses.length],
-            createdAt: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
-        }));
-    }
-
-    let allKits = [];
-    let filteredKits = [];
-    let currentStatusFilter = 'All';
-    let currentSearchTerm = '';
-    let currentSortOrder = 'createdAt_desc';
-
-    // ===== CARGAR KITS =====
-    async function loadKits() {
-        const container = document.getElementById('kits-container');
-        
-        // Mostrar skeletons
-        container.innerHTML = Array.from({ length: 8 }).map(() => `
-            <div class="bg-[#131313] border border-white/10 rounded-xl overflow-hidden animate-pulse">
-                <div class="w-full h-40 bg-white/10"></div>
-                <div class="p-4">
-                    <div class="h-5 w-3/4 rounded bg-white/10 mb-2"></div>
-                    <div class="mt-4 pt-3 border-t border-white/10 flex justify-between">
-                        <div class="space-y-2">
-                            <div class="h-2 w-10 rounded bg-white/10"></div>
-                            <div class="h-4 w-14 rounded bg-white/10"></div>
-                        </div>
-                        <div class="space-y-2 flex flex-col items-end">
-                            <div class="h-2 w-8 rounded bg-white/10"></div>
-                            <div class="h-4 w-12 rounded bg-white/10"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `).join('');
-
-        // Simular carga de kits
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        
-        allKits = generateMockKits();
-        filteredKits = [...allKits];
-        renderKits();
+    // ===== CARGAR KITS DEL USUARIO (TODO: Conectar con backend) =====
+    async function loadUserKits() {
+        try {
+            // TODO: Cuando el backend esté listo, hacer:
+            // const response = await fetch(`${API_URL}/kits/my-kits`, {
+            //     headers: { 'Authorization': `Bearer ${token}` }
+            // });
+            // const kits = await response.json();
+            
+            // Por ahora, datos de ejemplo:
+            const kits = [
+                {
+                    id: 1,
+                    name: "Trap Essentials Vol. 1",
+                    price: 29.99,
+                    sales: 156,
+                    status: "Published",
+                    createdAt: "2024-01-15",
+                    image: "https://via.placeholder.com/300x300/8b5cf6/ffffff?text=Trap+Kit"
+                },
+                {
+                    id: 2,
+                    name: "Melodic Drill Pack",
+                    price: 39.99,
+                    sales: 89,
+                    status: "Published",
+                    createdAt: "2024-02-10",
+                    image: "https://via.placeholder.com/300x300/6366f1/ffffff?text=Drill+Kit"
+                },
+                {
+                    id: 3,
+                    name: "Lo-Fi Dreams Bundle",
+                    price: 19.99,
+                    sales: 234,
+                    status: "Draft",
+                    createdAt: "2024-03-05",
+                    image: "https://via.placeholder.com/300x300/ec4899/ffffff?text=LoFi+Kit"
+                }
+            ];
+            
+            renderKits(kits);
+            
+        } catch (error) {
+            console.error('❌ Error cargando kits:', error);
+        }
     }
 
     // ===== RENDERIZAR KITS =====
-    function renderKits() {
+    function renderKits(kits) {
         const container = document.getElementById('kits-container');
         
-        if (filteredKits.length === 0) {
+        if (kits.length === 0) {
             container.innerHTML = `
-                <div class="col-span-full text-center py-20 bg-white/5 rounded-xl">
-                    <i class="fas fa-box-open text-5xl text-gray-600 mb-4"></i>
-                    <h3 class="text-xl font-bold text-white">No se encontraron kits</h3>
-                    <p class="text-gray-400 mt-2">Prueba a cambiar los filtros o sube tu primer kit.</p>
+                <div class="col-span-full text-center py-16">
+                    <i class="fas fa-music text-6xl text-zinc-600 mb-4"></i>
+                    <h3 class="text-xl font-bold text-white mb-2">No tienes kits publicados</h3>
+                    <p class="text-zinc-400 mb-6">Comienza subiendo tu primer kit al marketplace</p>
+                    <button onclick="window.location.href='subir-kit.html'" class="bg-gradient-to-r from-violet-600 to-violet-500 text-white px-8 py-3 rounded-lg font-bold hover:shadow-lg hover:shadow-violet-500/50 transition-all">
+                        <i class="fas fa-cloud-upload-alt mr-2"></i>
+                        Subir Mi Primer Kit
+                    </button>
                 </div>
             `;
             return;
         }
 
-        container.innerHTML = filteredKits.map(kit => {
-            const statusStyles = {
-                [KitStatus.Published]: { bg: 'bg-green-500/10', text: 'text-green-400', icon: 'fa-check-circle' },
-                [KitStatus.Draft]: { bg: 'bg-yellow-500/10', text: 'text-yellow-400', icon: 'fa-pencil-alt' },
-                [KitStatus.Archived]: { bg: 'bg-gray-500/10', text: 'text-gray-400', icon: 'fa-archive' },
+        container.innerHTML = kits.map(kit => {
+            const statusColors = {
+                'Published': 'bg-green-500/10 text-green-400 border-green-500/20',
+                'Draft': 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20',
+                'Archived': 'bg-zinc-500/10 text-zinc-400 border-zinc-500/20'
             };
-            const { bg, text, icon } = statusStyles[kit.status];
-
+            
             return `
-                <div class="bg-[#131313] border border-white/10 rounded-xl overflow-hidden group transition-all duration-300 hover:border-violet-500/50 hover:shadow-2xl hover:shadow-violet-900/20">
-                    <div class="relative">
-                        <img src="${kit.imageUrl}" alt="${kit.name}" class="w-full h-40 object-cover">
-                        <div class="absolute top-2 left-2 flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold ${bg} ${text} backdrop-blur-sm">
-                            <i class="fas ${icon}"></i>
-                            <span>${kit.status}</span>
+                <div class="bg-[rgba(26,10,46,0.4)] border border-violet-900/40 rounded-xl overflow-hidden transition-all duration-300 hover:border-violet-700 hover:shadow-xl hover:shadow-violet-900/40 hover:-translate-y-1">
+                    <div class="relative aspect-square bg-gradient-to-br from-violet-900/30 to-violet-600/20 overflow-hidden">
+                        <img src="${kit.image}" alt="${kit.name}" class="w-full h-full object-cover" />
+                        <div class="absolute top-3 right-3">
+                            <span class="inline-block px-3 py-1 rounded-full text-xs font-bold border ${statusColors[kit.status]}">
+                                ${kit.status}
+                            </span>
                         </div>
                     </div>
                     <div class="p-4">
-                        <div class="flex justify-between items-start">
-                            <h3 class="font-bold text-white mb-1 truncate pr-2" title="${kit.name}">${kit.name}</h3>
-                            <div class="relative">
-                                <button onclick="toggleKitDropdown('${kit.id}')" class="text-gray-500 hover:text-white transition-colors h-6 w-6 rounded-full flex items-center justify-center hover:bg-white/10">
-                                    <i class="fas fa-ellipsis-v"></i>
-                                </button>
-                                <div id="dropdown-${kit.id}" class="hidden absolute right-0 mt-2 w-40 bg-[#1f1f1f] border border-white/10 rounded-lg shadow-xl z-10 p-1.5">
-                                    <button onclick="openEditModal('${kit.id}', '${kit.name}')" class="w-full flex items-center gap-2 px-3 py-1.5 text-sm text-gray-300 hover:bg-white/10 rounded-md text-left">
-                                        <i class="fas fa-edit w-4"></i> Editar
-                                    </button>
-                                    <a href="/analiticas" class="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-300 hover:bg-white/10 rounded-md">
-                                        <i class="fas fa-chart-bar w-4"></i> Analíticas
-                                    </a>
-                                    <a href="#" class="flex items-center gap-2 px-3 py-1.5 text-sm text-red-500 hover:bg-red-500/10 rounded-md mt-1">
-                                        <i class="fas fa-trash-alt w-4"></i> Eliminar
-                                    </a>
-                                </div>
-                            </div>
+                        <h3 class="font-bold text-white text-lg mb-2 truncate">${kit.name}</h3>
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="text-2xl font-bold text-violet-400">$${kit.price}</span>
+                            <span class="text-sm text-zinc-400">
+                                <i class="fas fa-shopping-cart mr-1"></i>
+                                ${kit.sales} ventas
+                            </span>
                         </div>
-                        <div class="flex justify-between items-center text-sm mt-3 pt-3 border-t border-white/10">
-                            <div class="flex flex-col">
-                                <span class="text-xs text-gray-500">Precio</span>
-                                <span class="font-semibold text-green-400">$${kit.price.toFixed(2)}</span>
-                            </div>
-                            <div class="flex flex-col items-end">
-                                <span class="text-xs text-gray-500">Ventas</span>
-                                <span class="font-semibold text-white">${kit.sales}</span>
-                            </div>
+                        <div class="flex gap-2">
+                            <button onclick="openEditModal('${kit.name}')" class="flex-1 bg-violet-500/10 border border-violet-500/20 text-violet-300 py-2 rounded-lg text-sm font-semibold hover:bg-violet-500/20 transition-colors">
+                                <i class="fas fa-edit mr-1"></i> Editar
+                            </button>
+                            <button class="px-3 bg-white/5 border border-white/10 text-zinc-400 rounded-lg text-sm hover:bg-white/10 transition-colors">
+                                <i class="fas fa-ellipsis-v"></i>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -236,131 +225,96 @@ document.addEventListener('DOMContentLoaded', async () => {
         }).join('');
     }
 
-    // ===== FILTROS Y BÚSQUEDA =====
-    function applyFilters() {
-        filteredKits = allKits.filter(kit => {
-            const matchesSearch = kit.name.toLowerCase().includes(currentSearchTerm.toLowerCase());
-            const matchesStatus = currentStatusFilter === 'All' || kit.status === currentStatusFilter;
-            return matchesSearch && matchesStatus;
-        });
-
-        // Ordenar
-        filteredKits.sort((a, b) => {
-            switch (currentSortOrder) {
-                case 'createdAt_desc':
-                    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-                case 'createdAt_asc':
-                    return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
-                case 'sales_desc':
-                    return b.sales - a.sales;
-                case 'price_desc':
-                    return b.price - a.price;
-                case 'price_asc':
-                    return a.price - b.price;
-                default:
-                    return 0;
-            }
-        });
-
-        renderKits();
-    }
-
-    window.filterStatus = function(status) {
-        currentStatusFilter = status;
-        
-        // Actualizar botones
-        document.querySelectorAll('.status-filter').forEach(btn => {
-            btn.classList.remove('bg-violet-600', 'text-white');
-            btn.classList.add('bg-white/5', 'text-gray-400');
-        });
-        event.target.classList.remove('bg-white/5', 'text-gray-400');
-        event.target.classList.add('bg-violet-600', 'text-white');
-        
-        applyFilters();
+    // ===== MODAL DE EDICIÓN =====
+    window.openEditModal = function(kitName) {
+        document.getElementById('editing-kit-name').textContent = kitName;
+        document.getElementById('edit-modal').classList.remove('hidden');
     };
 
-    // ===== EVENT LISTENERS =====
+    window.closeEditModal = function() {
+        document.getElementById('edit-modal').classList.add('hidden');
+    };
+
+    // ===== FUNCIONES DE UI =====
+    window.toggleUserDropdown = function() {
+        const dropdown = document.querySelector('.user-dropdown');
+        if (dropdown) {
+            dropdown.classList.toggle('active');
+        }
+    };
+
+    // Cerrar dropdown al hacer clic fuera
+    document.addEventListener('click', function(e) {
+        const userDropdown = document.querySelector('.user-dropdown');
+        if (userDropdown && !userDropdown.contains(e.target)) {
+            userDropdown.classList.remove('active');
+        }
+    });
+
+    // ===== LOGOUT =====
+    const logoutLinks = document.querySelectorAll('a[href="logout"], .logout-btn');
+    logoutLinks.forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            localStorage.removeItem('authToken');
+            localStorage.removeItem(CACHE_KEY);
+            alert('¡Has cerrado sesión!');
+            window.location.replace('/pages/login.html');
+        });
+    });
+
+    // ===== FILTROS Y BÚSQUEDA =====
+    window.filterStatus = function(status) {
+        const buttons = document.querySelectorAll('.status-filter');
+        buttons.forEach(btn => {
+            btn.classList.remove('bg-violet-600', 'text-white');
+            btn.classList.add('bg-white/5', 'text-zinc-400');
+        });
+        event.target.classList.remove('bg-white/5', 'text-zinc-400');
+        event.target.classList.add('bg-violet-600', 'text-white');
+        console.log('📊 Filtrando por:', status);
+        // TODO: Implementar lógica de filtrado
+    };
+
     const searchInput = document.getElementById('search-input');
     if (searchInput) {
         searchInput.addEventListener('input', (e) => {
-            currentSearchTerm = e.target.value;
-            applyFilters();
+            console.log('🔍 Buscando:', e.target.value);
+            // TODO: Implementar lógica de búsqueda
         });
     }
 
     const sortSelect = document.getElementById('sort-select');
     if (sortSelect) {
         sortSelect.addEventListener('change', (e) => {
-            currentSortOrder = e.target.value;
-            applyFilters();
+            console.log('🔄 Ordenando por:', e.target.value);
+            // TODO: Implementar lógica de ordenamiento
         });
     }
-
-    // ===== DROPDOWN Y MODAL =====
-    window.toggleUserDropdown = function() {
-        const dropdown = document.getElementById('user-dropdown');
-        if (dropdown) {
-            dropdown.classList.toggle('hidden');
-        }
-    };
-
-    window.toggleKitDropdown = function(kitId) {
-        const dropdown = document.getElementById(`dropdown-${kitId}`);
-        
-        // Cerrar otros dropdowns
-        document.querySelectorAll('[id^="dropdown-kit-"]').forEach(d => {
-            if (d.id !== `dropdown-${kitId}`) {
-                d.classList.add('hidden');
-            }
-        });
-        
-        if (dropdown) {
-            dropdown.classList.toggle('hidden');
-        }
-    };
-
-    window.openEditModal = function(kitId, kitName) {
-        const modal = document.getElementById('edit-modal');
-        const nameElement = document.getElementById('editing-kit-name');
-        
-        if (modal && nameElement) {
-            nameElement.textContent = kitName;
-            modal.classList.remove('hidden');
-        }
-        
-        // Cerrar dropdown
-        document.getElementById(`dropdown-${kitId}`)?.classList.add('hidden');
-    };
-
-    window.closeEditModal = function() {
-        const modal = document.getElementById('edit-modal');
-        if (modal) {
-            modal.classList.add('hidden');
-        }
-    };
-
-    // Cerrar dropdowns al hacer clic fuera
-    document.addEventListener('click', function(e) {
-        if (!e.target.closest('[id^="dropdown-"]') && !e.target.closest('button')) {
-            document.querySelectorAll('[id^="dropdown-"]').forEach(d => {
-                d.classList.add('hidden');
-            });
-        }
-    });
 
     // ===== INICIALIZACIÓN =====
     async function initApp() {
         console.log('🚀 Iniciando Mis Kits...');
         
-        // 1. Cargar datos del usuario desde API
+        // Cargar datos del usuario desde API (con skeleton loading)
         await loadUserData();
         
-        // 2. Cargar kits
-        await loadKits();
+        // Cargar kits del usuario
+        await loadUserKits();
         
         console.log('✅ Mis Kits inicializado correctamente');
     }
 
     // Iniciar la app
     await initApp();
+
+    // ===== AUTO-GUARDAR PERIÓDICO =====
+    setInterval(() => {
+        // Recargar balance por si cambió en otra pestaña
+        const balance = loadBalance();
+        const sidebarWallet = document.querySelector('.wallet-amount');
+        if (sidebarWallet && !sidebarWallet.classList.contains('skeleton-text')) {
+            sidebarWallet.textContent = `$${balance.toFixed(2)}`;
+        }
+    }, 5000); // Cada 5 segundos
 });
