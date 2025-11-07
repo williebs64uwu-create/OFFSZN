@@ -4,17 +4,13 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Mis Favoritos - OFFSZN</title>
-    <!-- Tailwind CSS for styling -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <style>
-      /* Google Font 'Inter' */
       @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
       body {
         font-family: 'Inter', sans-serif;
       }
-      /* Custom scrollbar for a sleek, modern look */
       .custom-scrollbar::-webkit-scrollbar {
         width: 6px;
       }
@@ -28,345 +24,331 @@
       .custom-scrollbar::-webkit-scrollbar-thumb:hover {
         background: rgba(255, 255, 255, 0.2);
       }
+
+      /* Skeleton Loading Styles */
+      .skeleton-avatar,
+      .skeleton-text {
+        background: linear-gradient(90deg, 
+          rgba(255, 255, 255, 0.05) 25%, 
+          rgba(255, 255, 255, 0.1) 50%, 
+          rgba(255, 255, 255, 0.05) 75%
+        );
+        background-size: 200% 100%;
+        animation: loading 1.5s infinite;
+        border-radius: 4px;
+      }
+
+      .skeleton-avatar {
+        border-radius: 50% !important;
+      }
+
+      .skeleton-text {
+        height: 1em;
+        min-width: 80px;
+        display: inline-block;
+      }
+
+      .skeleton-balance {
+        min-width: 100px;
+        height: 2rem;
+      }
+
+      @keyframes loading {
+        0% {
+          background-position: 200% 0;
+        }
+        100% {
+          background-position: -200% 0;
+        }
+      }
     </style>
-  <!-- Import Map to load React from a CDN -->
-  <script type="importmap">
-  {
-    "imports": {
-      "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
-      "react": "https://esm.sh/react@18.2.0"
-    }
-  }
-  </script>
-</head>
+  </head>
   <body class="bg-[#0a0a0a] text-[#e5e5e5]">
-    <!-- The root element where the React app will be mounted -->
-    <div id="root"></div>
+    <!-- NAVBAR -->
+    <nav class="sticky top-0 z-50 flex items-center justify-between bg-[rgba(0,0,0,0.98)] px-6 py-3 md:px-12 backdrop-blur-xl border-b border-white/10">
+      <div class="logo">
+        <a href="/dashboard" class="text-2xl font-extrabold tracking-tight text-white">OFFSZN</a>
+      </div>
 
-    <!-- The entire React application logic is contained within this script tag -->
-    <script type="module">
-      import React, { useState, useEffect, useMemo } from 'react';
-      import ReactDOM from 'react-dom/client';
+      <div class="hidden lg:flex items-center gap-10">
+        <div class="relative w-96">
+          <input type="text" placeholder="Buscar beats, kits, productores..." class="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm text-white outline-none transition-all placeholder:text-gray-500 focus:border-violet-500/50 focus:bg-white/[0.08]" />
+          <i class="fas fa-search absolute right-4 top-1/2 -translate-y-1/2 text-gray-500"></i>
+        </div>
+      </div>
 
-      //================================================================
-      // TYPES (as JavaScript objects)
-      //================================================================
-      const KitStatus = {
-        Published: 'Published',
-        Draft: 'Draft',
-        Archived: 'Archived',
-      };
+      <div class="flex items-center gap-3">
+        <a href="/notificaciones" class="flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-gray-400 transition-colors hover:bg-white/[0.08] hover:text-white">
+          <i class="fas fa-bell"></i>
+        </a>
+        <a href="/carrito" class="flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-gray-400 transition-colors hover:bg-white/[0.08] hover:text-white">
+          <i class="fas fa-shopping-cart"></i>
+        </a>
+        <div class="relative">
+          <button onclick="toggleUserDropdown()" class="flex h-9 w-9 items-center justify-center rounded-full bg-violet-600 text-white font-bold transition-transform hover:scale-105 navbar-user-avatar skeleton-avatar">
+          </button>
+          <div class="user-dropdown-menu absolute right-0 mt-3 w-64 rounded-xl border border-white/10 bg-[rgba(20,20,20,0.98)] p-3 shadow-2xl backdrop-blur-xl hidden">
+            <div class="mb-2 flex items-center gap-3 border-b border-white/10 p-3">
+              <div class="navbar-user-avatar-dropdown flex h-10 w-10 items-center justify-center rounded-full bg-violet-600 font-bold text-white skeleton-avatar"></div>
+              <div class="flex-1">
+                <p class="text-sm font-semibold text-white navbar-user-name skeleton-text"></p>
+                <p class="text-xs text-gray-500 navbar-user-email skeleton-text"></p>
+              </div>
+            </div>
+            <a href="/perfil" class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-gray-400 transition-colors hover:bg-white/5 hover:text-white">
+              <i class="fas fa-user-circle w-5 text-center"></i> Mi Perfil
+            </a>
+            <a href="/dashboard" class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-gray-400 transition-colors hover:bg-white/5 hover:text-white">
+              <i class="fas fa-th-large w-5 text-center"></i> Dashboard
+            </a>
+            <a href="/configuracion" class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-gray-400 transition-colors hover:bg-white/5 hover:text-white">
+              <i class="fas fa-cog w-5 text-center"></i> Configuración
+            </a>
+            <div class="my-2 h-px bg-white/10"></div>
+            <a href="#" class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-red-500 transition-colors hover:bg-red-500/10 logout-btn">
+              <i class="fas fa-sign-out-alt w-5 text-center"></i> Cerrar Sesión
+            </a>
+          </div>
+        </div>
+      </div>
+    </nav>
 
-      //================================================================
-      // SERVICES / MOCK API
-      //================================================================
-      const mockUser = {
-        id: 'user-123',
-        firstName: 'David',
-        lastName: 'Reyes',
-        nickname: 'davidreyes',
-        email: 'david.reyes@offszn.com',
-        walletBalance: 125.50,
-      };
+    <div class="grid md:grid-cols-[260px_1fr]">
+      <!-- SIDEBAR -->
+      <aside class="hidden md:flex flex-col sticky top-[65px] h-[calc(100vh-65px)] bg-[rgba(15,15,15,0.6)] border-r border-white/10">
+        <div>
+          <div class="p-5 border-b border-white/10">
+            <div class="flex items-center gap-3">
+              <div class="sidebar-user-avatar flex h-11 w-11 items-center justify-center rounded-full bg-violet-600 font-bold text-white text-lg skeleton-avatar"></div>
+              <div>
+                <p class="font-semibold text-white sidebar-user-name skeleton-text"></p>
+              </div>
+            </div>
+          </div>
 
-      const generateMockKits = () => {
-        const statuses = [KitStatus.Published, KitStatus.Draft, KitStatus.Archived];
-        const kitNames = [
-          "Reggaeton Flow Vol. 1", "Trap Essentials 2024", "Lo-Fi Dreams", "Synthwave Odyssey",
-          "Drill UK Madness", "Future Bass Anthems", "EDM Power Pack", "Acoustic Gems", "Urban Latin Vibes"
-        ];
-        return kitNames.map((name, index) => ({
-          id: `kit-${index + 1}`,
-          name: name,
-          imageUrl: `https://picsum.photos/seed/${name.replace(/\s+/g, '-')}/400/300`,
-          price: parseFloat((Math.random() * 20 + 10).toFixed(2)),
-          sales: Math.floor(Math.random() * 500),
-          status: statuses[index % statuses.length],
-          createdAt: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
-        }));
-      };
-      
-      const mockKits = generateMockKits();
-      const mockFavoriteKits = mockKits.slice(0, 5); 
+          <div class="p-5 border-b border-white/10 bg-violet-600/5">
+            <div class="text-xs font-semibold uppercase text-gray-400 mb-1.5">Saldo Disponible</div>
+            <div class="text-3xl font-bold text-white sidebar-wallet-balance skeleton-text skeleton-balance"></div>
+          </div>
+        </div>
 
-      const fetchUserData = () => {
-        console.log('API Call: Fetching user data...');
-        return new Promise(resolve => setTimeout(() => {
-          console.log('API Response: User data received.');
-          resolve(mockUser);
-        }, 1500));
-      };
-      
-      const fetchFavoriteKits = () => {
-          console.log('API Call: Fetching favorite kits...');
-          return new Promise(resolve => {
-            setTimeout(() => {
-              console.log('API Response: Favorite kits received.');
-              // Para probar el estado vacío, descomenta la siguiente línea:
-              // resolve([]);
-              resolve(mockFavoriteKits);
-            }, 2000);
-          });
-      };
+        <nav class="flex-grow p-3 overflow-y-auto custom-scrollbar">
+          <div>
+            <h3 class="px-2 pt-4 pb-2 text-xs font-bold uppercase text-gray-500 tracking-wider">Principal</h3>
+            <ul>
+              <li>
+                <a href="/dashboard" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors text-gray-400 hover:bg-white/5 hover:text-white">
+                  <i class="fas fa-th-large w-5 text-center text-base"></i>
+                  <span>Dashboard</span>
+                </a>
+              </li>
+              <li>
+                <a href="/mis-kits" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors text-gray-400 hover:bg-white/5 hover:text-white">
+                  <i class="fas fa-music w-5 text-center text-base"></i>
+                  <span>Mis Kits</span>
+                </a>
+              </li>
+              <li>
+                <a href="/analiticas" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors text-gray-400 hover:bg-white/5 hover:text-white opacity-50 cursor-not-allowed">
+                  <i class="fas fa-chart-line w-5 text-center text-base"></i>
+                  <span>Analíticas</span>
+                  <span class="ml-auto text-xs font-semibold bg-white/10 text-gray-400 px-2 py-0.5 rounded-full">Pronto</span>
+                </a>
+              </li>
+              <li>
+                <a href="/favoritos" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors bg-violet-600/10 text-white">
+                  <i class="fas fa-heart w-5 text-center text-base"></i>
+                  <span>Favoritos</span>
+                </a>
+              </li>
+              <li>
+                <a href="/historial" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors text-gray-400 hover:bg-white/5 hover:text-white opacity-50 cursor-not-allowed">
+                  <i class="fas fa-history w-5 text-center text-base"></i>
+                  <span>Historial</span>
+                  <span class="ml-auto text-xs font-semibold bg-white/10 text-gray-400 px-2 py-0.5 rounded-full">Pronto</span>
+                </a>
+              </li>
+            </ul>
+          </div>
 
-      //================================================================
-      // SKELETON COMPONENTS
-      //================================================================
-      const UserInfoSkeleton = ({ type }) => {
-        const navbarSkeleton = React.createElement('div', { className: "flex items-center gap-3 animate-pulse" },
-          React.createElement('div', { className: "h-10 w-10 rounded-full bg-white/10" }),
-          React.createElement('div', { className: "flex-1 space-y-2" },
-            React.createElement('div', { className: "h-3 w-20 rounded bg-white/10" }),
-            React.createElement('div', { className: "h-2 w-28 rounded bg-white/10" })
-          )
-        );
-        const sidebarSkeleton = React.createElement('div', { className: "flex items-center gap-3 animate-pulse" },
-          React.createElement('div', { className: "h-11 w-11 rounded-full bg-white/10" }),
-          React.createElement('div', { className: "flex-1" },
-            React.createElement('div', { className: "h-4 w-32 rounded bg-white/10" })
-          )
-        );
-        return type === 'navbar' ? navbarSkeleton : sidebarSkeleton;
-      };
+          <div class="my-3 h-px bg-white/10"></div>
 
-      const KitCardSkeleton = () => {
-        return React.createElement('div', { className: "bg-[#131313] border border-white/10 rounded-xl overflow-hidden animate-pulse" },
-          React.createElement('div', { className: "w-full h-40 bg-white/10" }),
-          React.createElement('div', { className: "p-4" },
-            React.createElement('div', { className: "h-5 w-3/4 rounded bg-white/10 mb-2" }),
-            React.createElement('div', { className: "mt-4 pt-3 border-t border-white/10 flex justify-between" },
-              React.createElement('div', { className: "space-y-2" },
-                React.createElement('div', { className: "h-2 w-10 rounded bg-white/10" }),
-                React.createElement('div', { className: "h-4 w-14 rounded bg-white/10" })
-              ),
-              React.createElement('div', { className: "space-y-2 flex flex-col items-end" },
-                React.createElement('div', { className: "h-2 w-8 rounded bg-white/10" }),
-                React.createElement('div', { className: "h-4 w-12 rounded bg-white/10" })
-              )
-            )
-          )
-        );
-      };
-      
-      //================================================================
-      // UI COMPONENTS
-      //================================================================
-      const KitCard = ({ kit }) => {
-        const [dropdownOpen, setDropdownOpen] = useState(false);
-        const dropdownMenu = React.createElement('div', { className: "absolute right-0 mt-2 w-48 bg-[#1f1f1f] border border-white/10 rounded-lg shadow-xl z-10 p-1.5" },
-            React.createElement('a', { href: "#", className: "flex items-center gap-2 px-3 py-1.5 text-sm text-gray-300 hover:bg-white/10 rounded-md" }, React.createElement('i', { className: "fas fa-eye w-4" }), " Ver producto"),
-            React.createElement('a', { href: "#", className: "flex items-center gap-2 px-3 py-1.5 text-sm text-gray-300 hover:bg-white/10 rounded-md" }, React.createElement('i', { className: "fas fa-shopping-cart w-4" }), " Añadir al carrito"),
-            React.createElement('button', { className: "w-full flex items-center gap-2 px-3 py-1.5 text-sm text-red-500 hover:bg-red-500/10 rounded-md mt-1 text-left" }, React.createElement('i', { className: "fas fa-heart-broken w-4" }), " Quitar de Favoritos")
-        );
-        return React.createElement('div', { className: "bg-[#131313] border border-white/10 rounded-xl overflow-hidden group transition-all duration-300 hover:border-violet-500/50 hover:shadow-2xl hover:shadow-violet-900/20" },
-          React.createElement('div', { className: "relative" },
-            React.createElement('img', { src: kit.imageUrl, alt: kit.name, className: "w-full h-40 object-cover" }),
-            React.createElement('div', { className: "absolute top-2 right-2 text-red-500 bg-black/50 rounded-full h-8 w-8 flex items-center justify-center" }, React.createElement('i', { className: "fas fa-heart" }))
-          ),
-          React.createElement('div', { className: "p-4" },
-            React.createElement('div', { className: "flex justify-between items-start" },
-              React.createElement('h3', { className: "font-bold text-white mb-1 truncate pr-2", title: kit.name }, kit.name),
-              React.createElement('div', { className: "relative" },
-                React.createElement('button', { onClick: () => setDropdownOpen(!dropdownOpen), className: "text-gray-500 hover:text-white transition-colors h-6 w-6 rounded-full flex items-center justify-center hover:bg-white/10" }, React.createElement('i', { className: "fas fa-ellipsis-v" })),
-                dropdownOpen && dropdownMenu
-              )
-            ),
-            React.createElement('div', { className: "flex justify-between items-center text-sm mt-3 pt-3 border-t border-white/10" },
-              React.createElement('div', { className: "flex flex-col" },
-                React.createElement('span', { className: "text-xs text-gray-500" }, "Precio"),
-                React.createElement('span', { className: "font-semibold text-green-400" }, `$${kit.price.toFixed(2)}`)
-              ),
-              React.createElement('div', { className: "flex flex-col items-end" },
-                React.createElement('span', { className: "text-xs text-gray-500" }, "Ventas"),
-                React.createElement('span', { className: "font-semibold text-white" }, kit.sales)
-              )
-            )
-          )
-        );
-      };
+          <div>
+            <h3 class="px-2 pt-4 pb-2 text-xs font-bold uppercase text-gray-500 tracking-wider">Colaboración</h3>
+            <ul>
+              <li>
+                <a href="/colaboraciones" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors text-gray-400 hover:bg-white/5 hover:text-white">
+                  <i class="fas fa-users w-5 text-center text-base"></i>
+                  <span>Colaboraciones</span>
+                </a>
+              </li>
+            </ul>
+          </div>
 
-      const menuSections = [
-        { title: 'Principal', items: [{ icon: 'fa-th-large', label: 'Dashboard', href: '/dashboard' }, { icon: 'fa-music', label: 'Mis Kits', href: '/mis-kits' }, { icon: 'fa-chart-line', label: 'Analíticas', href: '/analiticas', soon: true }, { icon: 'fa-heart', label: 'Favoritos', href: '/favoritos', active: true }, { icon: 'fa-history', label: 'Historial', href: '/historial', soon: true }] },
-        { title: 'Colaboración', items: [{ icon: 'fa-users', label: 'Colaboraciones', href: '/colaboraciones' }] },
-        { title: 'Compras', items: [{ icon: 'fa-shopping-bag', label: 'Mis Compras', href: '/mis-compras' }, { icon: 'fa-gift', label: 'Gift Cards', href: '/gift-cards' }, { icon: 'fa-envelope', label: 'Mensajes', href: '/mensajes' }] },
-        { title: 'Configuración', items: [{ icon: 'fa-cog', label: 'Configuración', href: '/configuracion' }, { icon: 'fa-book-open', label: 'Blog', href: '/blog', soon: true }] }
-      ];
+          <div class="my-3 h-px bg-white/10"></div>
 
-      const Sidebar = ({ user, loading }) => {
-        const userInitial = user ? (user.firstName || user.nickname || 'U').charAt(0).toUpperCase() : '';
-        return React.createElement('aside', { className: "hidden md:flex flex-col sticky top-[65px] h-[calc(100vh-65px)] bg-[rgba(15,15,15,0.6)] border-r border-white/10" },
-          React.createElement('div', null,
-            React.createElement('div', { className: "p-5 border-b border-white/10" },
-              loading ? React.createElement(UserInfoSkeleton, { type: "sidebar" }) : React.createElement('div', { className: "flex items-center gap-3" },
-                React.createElement('div', { className: "flex h-11 w-11 items-center justify-center rounded-full bg-violet-600 font-bold text-white text-lg" }, userInitial),
-                React.createElement('div', null, React.createElement('p', { className: "font-semibold text-white" }, `${user?.firstName} ${user?.lastName}`))
-              )
-            ),
-            React.createElement('div', { className: "p-5 border-b border-white/10 bg-violet-600/5" },
-              React.createElement('div', { className: "text-xs font-semibold uppercase text-gray-400 mb-1.5" }, "Saldo Disponible"),
-              loading ? React.createElement('div', { className: "h-8 w-32 animate-pulse rounded-md bg-white/10" }) : React.createElement('div', { className: "text-3xl font-bold text-white" }, `$${user?.walletBalance.toFixed(2)}`)
-            )
-          ),
-          React.createElement('nav', { className: "flex-grow p-3 overflow-y-auto custom-scrollbar" },
-            menuSections.map((section, index) => React.createElement('div', { key: section.title },
-              index > 0 && React.createElement('div', { className: "my-3 h-px bg-white/10" }),
-              React.createElement('h3', { className: "px-2 pt-4 pb-2 text-xs font-bold uppercase text-gray-500 tracking-wider" }, section.title),
-              React.createElement('ul', null, section.items.map(item => React.createElement('li', { key: item.label },
-                React.createElement('a', { href: item.href, className: `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${item.active ? 'bg-violet-600/10 text-white' : 'text-gray-400 hover:bg-white/5 hover:text-white'} ${item.soon ? 'opacity-50 cursor-not-allowed' : ''}` },
-                  React.createElement('i', { className: `fas ${item.icon} w-5 text-center text-base` }),
-                  React.createElement('span', null, item.label),
-                  item.soon && React.createElement('span', { className: "ml-auto text-xs font-semibold bg-white/10 text-gray-400 px-2 py-0.5 rounded-full" }, "Pronto")
-                )
-              )))
-            ))
-          ),
-          React.createElement('div', { className: "p-4 border-t border-white/10" },
-            React.createElement('a', { href: "/logout", className: "flex items-center justify-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold text-red-400 border border-red-500/20 bg-red-500/5 transition-colors hover:bg-red-500/10 hover:border-red-500/40" },
-              React.createElement('i', { className: "fas fa-sign-out-alt w-5 text-center" }),
-              React.createElement('span', null, "Cerrar Sesión")
-            )
-          )
-        );
-      };
+          <div>
+            <h3 class="px-2 pt-4 pb-2 text-xs font-bold uppercase text-gray-500 tracking-wider">Compras</h3>
+            <ul>
+              <li>
+                <a href="/mis-compras" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors text-gray-400 hover:bg-white/5 hover:text-white">
+                  <i class="fas fa-shopping-bag w-5 text-center text-base"></i>
+                  <span>Mis Compras</span>
+                </a>
+              </li>
+              <li>
+                <a href="/gift-cards" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors text-gray-400 hover:bg-white/5 hover:text-white">
+                  <i class="fas fa-gift w-5 text-center text-base"></i>
+                  <span>Gift Cards</span>
+                </a>
+              </li>
+              <li>
+                <a href="/mensajes" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors text-gray-400 hover:bg-white/5 hover:text-white">
+                  <i class="fas fa-envelope w-5 text-center text-base"></i>
+                  <span>Mensajes</span>
+                </a>
+              </li>
+            </ul>
+          </div>
 
-      const Navbar = ({ user, loading }) => {
-        const [userDropdownOpen, setUserDropdownOpen] = useState(false);
-        const userInitial = user ? (user.firstName || user.nickname || 'U').charAt(0).toUpperCase() : '';
-        const dropdownMenu = React.createElement('div', { className: "absolute right-0 mt-3 w-64 rounded-xl border border-white/10 bg-[rgba(20,20,20,0.98)] p-3 shadow-2xl backdrop-blur-xl" },
-          React.createElement('div', { className: "mb-2 flex items-center gap-3 border-b border-white/10 p-3" },
-            loading ? React.createElement(UserInfoSkeleton, { type: "navbar" }) : React.createElement(React.Fragment, null,
-              React.createElement('div', { className: "flex h-10 w-10 items-center justify-center rounded-full bg-violet-600 font-bold text-white" }, userInitial),
-              React.createElement('div', null,
-                React.createElement('p', { className: "text-sm font-semibold text-white" }, user?.nickname),
-                React.createElement('p', { className: "text-xs text-gray-500" }, user?.email)
-              )
-            )
-          ),
-          React.createElement('a', { href: "/perfil", className: "flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-gray-400 transition-colors hover:bg-white/5 hover:text-white" }, React.createElement('i', { className: "fas fa-user-circle w-5 text-center" }), " Mi Perfil"),
-          React.createElement('a', { href: "/dashboard", className: "flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-gray-400 transition-colors hover:bg-white/5 hover:text-white" }, React.createElement('i', { className: "fas fa-th-large w-5 text-center" }), " Dashboard"),
-          React.createElement('a', { href: "/configuracion", className: "flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-gray-400 transition-colors hover:bg-white/5 hover:text-white" }, React.createElement('i', { className: "fas fa-cog w-5 text-center" }), " Configuración"),
-          React.createElement('div', { className: "my-2 h-px bg-white/10" }),
-          React.createElement('a', { href: "/logout", className: "flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-red-500 transition-colors hover:bg-red-500/10" }, React.createElement('i', { className: "fas fa-sign-out-alt w-5 text-center" }), " Cerrar Sesión")
-        );
-        return React.createElement('nav', { className: "sticky top-0 z-50 flex items-center justify-between bg-[rgba(0,0,0,0.98)] px-6 py-3 md:px-12 backdrop-blur-xl border-b border-white/10" },
-          React.createElement('div', { className: "logo" }, React.createElement('a', { href: "/dashboard", className: "text-2xl font-extrabold tracking-tight text-white" }, "OFFSZN")),
-          React.createElement('div', { className: "hidden lg:flex items-center gap-10" },
-            React.createElement('div', { className: "relative w-96" },
-              React.createElement('input', { type: "text", placeholder: "Buscar beats, kits, productores...", className: "w-full rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm text-white outline-none transition-all placeholder:text-gray-500 focus:border-violet-500/50 focus:bg-white/[0.08]" }),
-              React.createElement('i', { className: "fas fa-search absolute right-4 top-1/2 -translate-y-1/2 text-gray-500" })
-            )
-          ),
-          React.createElement('div', { className: "flex items-center gap-3" },
-            React.createElement('a', { href: "/notificaciones", className: "flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-gray-400 transition-colors hover:bg-white/[0.08] hover:text-white" }, React.createElement('i', { className: "fas fa-bell" })),
-            React.createElement('a', { href: "/carrito", className: "flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-gray-400 transition-colors hover:bg-white/[0.08] hover:text-white" }, React.createElement('i', { className: "fas fa-shopping-cart" })),
-            React.createElement('div', { className: "relative" },
-              React.createElement('button', { onClick: () => setUserDropdownOpen(!userDropdownOpen), className: "flex h-9 w-9 items-center justify-center rounded-full bg-violet-600 text-white font-bold transition-transform hover:scale-105" }, loading ? React.createElement('i', { className: "fa-solid fa-spinner fa-spin" }) : userInitial),
-              userDropdownOpen && dropdownMenu
-            )
-          )
-        );
-      };
+          <div class="my-3 h-px bg-white/10"></div>
 
-      const FavoritesPage = () => {
-        const [kits, setKits] = useState([]);
-        const [loading, setLoading] = useState(true);
-        const [searchTerm, setSearchTerm] = useState('');
-        const [sortOrder, setSortOrder] = useState('createdAt_desc');
-        useEffect(() => {
-          const loadFavoriteKits = async () => {
-            setLoading(true);
-            const favoriteKits = await fetchFavoriteKits();
-            setKits(favoriteKits);
-            setLoading(false);
-          };
-          loadFavoriteKits();
-        }, []);
-        const filteredAndSortedKits = useMemo(() => {
-          return kits
-            .filter(kit => kit.name.toLowerCase().includes(searchTerm.toLowerCase()))
-            .sort((a, b) => {
-              switch (sortOrder) {
-                case 'createdAt_desc': return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-                case 'createdAt_asc': return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
-                case 'price_desc': return b.price - a.price;
-                case 'price_asc': return a.price - b.price;
-                default: return 0;
-              }
-            });
-        }, [kits, searchTerm, sortOrder]);
-        const kitGrid = loading ?
-            React.createElement('div', { className: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" }, Array.from({ length: 4 }).map((_, index) => React.createElement(KitCardSkeleton, { key: index }))) :
-            filteredAndSortedKits.length > 0 ?
-              React.createElement('div', { className: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" }, filteredAndSortedKits.map(kit => React.createElement(KitCard, { key: kit.id, kit: kit }))) :
-              React.createElement('div', { className: "text-center py-20 bg-white/5 rounded-xl border border-dashed border-white/10" },
-                React.createElement('i', { className: "far fa-heart text-6xl text-gray-600 mb-4" }),
-                React.createElement('h3', { className: "text-2xl font-bold text-white" }, "Tu lista de favoritos está vacía"),
-                React.createElement('p', { className: "text-gray-400 mt-2 mb-6 max-w-md mx-auto" }, "Explora el marketplace y presiona el ícono del corazón en los kits que te gusten para guardarlos aquí."),
-                React.createElement('a', { href: "/marketplace", className: "inline-flex items-center gap-2 bg-violet-600 text-white font-bold px-6 py-3 rounded-lg hover:bg-violet-700 transition-all transform hover:scale-105" }, React.createElement('i', { className: "fas fa-store" }), " Explorar Marketplace")
-              );
-        return React.createElement('div', null,
-          React.createElement('div', { className: "breadcrumb flex items-center gap-2 text-sm text-gray-500 mb-6" },
-            React.createElement('a', { href: "/dashboard", className: "hover:text-violet-400" }, React.createElement('i', { className: "fas fa-home" }), " Dashboard"),
-            React.createElement('span', null, React.createElement('i', { className: "fas fa-chevron-right text-xs" })),
-            React.createElement('span', { className: "font-semibold text-white" }, "Mis Favoritos")
-          ),
-          React.createElement('header', { className: "flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4" },
-            React.createElement('div', null,
-              React.createElement('h1', { className: "text-3xl font-extrabold text-white tracking-tight flex items-center gap-3" }, React.createElement('i', { className: "fas fa-heart text-violet-500" }), "Mis Favoritos"),
-              React.createElement('p', { className: "text-gray-400 mt-1" }, "Aquí encontrarás todos los kits que has guardado. Accede a ellos rápidamente.")
-            )
-          ),
-          React.createElement('div', { className: "bg-white/5 border border-white/10 rounded-xl p-4 mb-6" },
-            React.createElement('div', { className: "flex flex-col md:flex-row gap-4" },
-              React.createElement('div', { className: "relative flex-grow" },
-                React.createElement('i', { className: "fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" }),
-                React.createElement('input', { type: "text", placeholder: "Buscar en tus favoritos...", value: searchTerm, onChange: (e) => setSearchTerm(e.target.value), className: "w-full bg-black/20 border border-white/10 rounded-lg pl-10 pr-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-violet-500" })
-              ),
-              React.createElement('div', null,
-                React.createElement('select', { value: sortOrder, onChange: (e) => setSortOrder(e.target.value), className: "w-full md:w-auto bg-black/20 border border-white/10 rounded-lg px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-violet-500" },
-                  React.createElement('option', { value: "createdAt_desc" }, "Más Recientes"),
-                  React.createElement('option', { value: "createdAt_asc" }, "Más Antiguos"),
-                  React.createElement('option', { value: "price_desc" }, "Precio: Mayor a Menor"),
-                  React.createElement('option', { value: "price_asc" }, "Precio: Menor a Mayor")
-                )
-              )
-            )
-          ),
-          React.createElement('div', null, kitGrid)
-        );
-      };
+          <div>
+            <h3 class="px-2 pt-4 pb-2 text-xs font-bold uppercase text-gray-500 tracking-wider">Configuración</h3>
+            <ul>
+              <li>
+                <a href="/configuracion" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors text-gray-400 hover:bg-white/5 hover:text-white">
+                  <i class="fas fa-cog w-5 text-center text-base"></i>
+                  <span>Configuración</span>
+                </a>
+              </li>
+              <li>
+                <a href="/blog" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors text-gray-400 hover:bg-white/5 hover:text-white opacity-50 cursor-not-allowed">
+                  <i class="fas fa-book-open w-5 text-center text-base"></i>
+                  <span>Blog</span>
+                  <span class="ml-auto text-xs font-semibold bg-white/10 text-gray-400 px-2 py-0.5 rounded-full">Pronto</span>
+                </a>
+              </li>
+            </ul>
+          </div>
+        </nav>
 
-      //================================================================
-      // APP ROOT & RENDERER
-      //================================================================
-      const App = () => {
-        const [user, setUser] = useState(null);
-        const [loading, setLoading] = useState(true);
+        <div class="p-4 border-t border-white/10">
+          <a href="#" class="flex items-center justify-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold text-red-400 border border-red-500/20 bg-red-500/5 transition-colors hover:bg-red-500/10 hover:border-red-500/40 logout-btn">
+            <i class="fas fa-sign-out-alt w-5 text-center"></i>
+            <span>Cerrar Sesión</span>
+          </a>
+        </div>
+      </aside>
 
-        useEffect(() => {
-          const loadUser = async () => {
-            setLoading(true);
-            const userData = await fetchUserData();
-            setUser(userData);
-            setLoading(false);
-          };
-          loadUser();
-        }, []);
+      <!-- MAIN CONTENT -->
+      <main class="main-content px-6 py-9 md:px-12">
+        <div class="breadcrumb flex items-center gap-2 text-sm text-gray-500 mb-6">
+          <a href="/dashboard" class="hover:text-violet-400">
+            <i class="fas fa-home"></i> Dashboard
+          </a>
+          <span><i class="fas fa-chevron-right text-xs"></i></span>
+          <span class="font-semibold text-white">Mis Favoritos</span>
+        </div>
 
-        return React.createElement('div', { className: "min-h-screen bg-[#0a0a0a]" },
-          React.createElement(Navbar, { user, loading }),
-          React.createElement('div', { className: "grid md:grid-cols-[260px_1fr]" },
-            React.createElement(Sidebar, { user, loading }),
-            React.createElement('main', { className: "main-content px-6 py-9 md:px-12" },
-              React.createElement(FavoritesPage)
-            )
-          )
-        );
-      };
+        <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+          <div>
+            <h1 class="text-3xl font-extrabold text-white tracking-tight flex items-center gap-3">
+              <i class="fas fa-heart text-violet-500"></i>Mis Favoritos
+            </h1>
+            <p class="text-gray-400 mt-1">Aquí encontrarás todos los kits que has guardado. Accede a ellos rápidamente.</p>
+          </div>
+        </header>
 
-      const root = ReactDOM.createRoot(document.getElementById('root'));
-      root.render(React.createElement(React.StrictMode, null, React.createElement(App)));
+        <div class="bg-white/5 border border-white/10 rounded-xl p-4 mb-6">
+          <div class="flex flex-col md:flex-row gap-4">
+            <div class="relative flex-grow">
+              <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-500"></i>
+              <input type="text" id="search-input" placeholder="Buscar en tus favoritos..." class="w-full bg-black/20 border border-white/10 rounded-lg pl-10 pr-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-violet-500" />
+            </div>
+            <div>
+              <select id="sort-select" class="w-full md:w-auto bg-black/20 border border-white/10 rounded-lg px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-violet-500">
+                <option value="createdAt_desc">Más Recientes</option>
+                <option value="createdAt_asc">Más Antiguos</option>
+                <option value="price_desc">Precio: Mayor a Menor</option>
+                <option value="price_asc">Precio: Menor a Mayor</option>
+              </select>
+            </div>
+          </div>
+        </div>
 
-    </script>
+        <div id="kits-container">
+          <!-- Skeleton Loading -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div class="bg-[#131313] border border-white/10 rounded-xl overflow-hidden animate-pulse">
+              <div class="w-full h-40 bg-white/10"></div>
+              <div class="p-4">
+                <div class="h-5 w-3/4 rounded bg-white/10 mb-2"></div>
+                <div class="mt-4 pt-3 border-t border-white/10 flex justify-between">
+                  <div class="space-y-2">
+                    <div class="h-2 w-10 rounded bg-white/10"></div>
+                    <div class="h-4 w-14 rounded bg-white/10"></div>
+                  </div>
+                  <div class="space-y-2 flex flex-col items-end">
+                    <div class="h-2 w-8 rounded bg-white/10"></div>
+                    <div class="h-4 w-12 rounded bg-white/10"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="bg-[#131313] border border-white/10 rounded-xl overflow-hidden animate-pulse">
+              <div class="w-full h-40 bg-white/10"></div>
+              <div class="p-4">
+                <div class="h-5 w-3/4 rounded bg-white/10 mb-2"></div>
+                <div class="mt-4 pt-3 border-t border-white/10 flex justify-between">
+                  <div class="space-y-2">
+                    <div class="h-2 w-10 rounded bg-white/10"></div>
+                    <div class="h-4 w-14 rounded bg-white/10"></div>
+                  </div>
+                  <div class="space-y-2 flex flex-col items-end">
+                    <div class="h-2 w-8 rounded bg-white/10"></div>
+                    <div class="h-4 w-12 rounded bg-white/10"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="bg-[#131313] border border-white/10 rounded-xl overflow-hidden animate-pulse">
+              <div class="w-full h-40 bg-white/10"></div>
+              <div class="p-4">
+                <div class="h-5 w-3/4 rounded bg-white/10 mb-2"></div>
+                <div class="mt-4 pt-3 border-t border-white/10 flex justify-between">
+                  <div class="space-y-2">
+                    <div class="h-2 w-10 rounded bg-white/10"></div>
+                    <div class="h-4 w-14 rounded bg-white/10"></div>
+                  </div>
+                  <div class="space-y-2 flex flex-col items-end">
+                    <div class="h-2 w-8 rounded bg-white/10"></div>
+                    <div class="h-4 w-12 rounded bg-white/10"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="bg-[#131313] border border-white/10 rounded-xl overflow-hidden animate-pulse">
+              <div class="w-full h-40 bg-white/10"></div>
+              <div class="p-4">
+                <div class="h-5 w-3/4 rounded bg-white/10 mb-2"></div>
+                <div class="mt-4 pt-3 border-t border-white/10 flex justify-between">
+                  <div class="space-y-2">
+                    <div class="h-2 w-10 rounded bg-white/10"></div>
+                    <div class="h-4 w-14 rounded bg-white/10"></div>
+                  </div>
+                  <div class="space-y-2 flex flex-col items-end">
+                    <div class="h-2 w-8 rounded bg-white/10"></div>
+                    <div class="h-4 w-12 rounded bg-white/10"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <script src="favoritos.js"></script>
   </body>
 </html>
