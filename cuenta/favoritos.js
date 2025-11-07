@@ -2,6 +2,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     const token = localStorage.getItem('authToken');
     const CACHE_KEY = 'offszn_user_cache';
+    const STORAGE_KEY = 'offszn_giftcards_state';
     
     // ===== CONFIGURACIÓN DE API =====
     let API_URL = '';
@@ -21,7 +22,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // ===== CARGAR DATOS DEL USUARIO DESDE API =====
     async function loadUserData() {
         try {
-            // Intentar cargar desde caché primero (para skeleton loading rápido)
+            // Intentar cargar desde caché primero
             const cached = localStorage.getItem(CACHE_KEY);
             if (cached) {
                 const cachedData = JSON.parse(cached);
@@ -46,7 +47,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             const userData = await response.json();
             console.log('✅ Datos del usuario cargados desde API:', userData);
             
-            // Guardar en caché
             localStorage.setItem(CACHE_KEY, JSON.stringify(userData));
             updateUserUI(userData);
 
@@ -55,100 +55,76 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    // ===== ACTUALIZAR UI CON DATOS DEL USUARIO =====
-    function updateUserUI(userData) {
-        const userInitial = (userData.first_name || userData.nickname || 'U').charAt(0).toUpperCase();
-        
-        // Actualizar avatares en navbar
-        const navbarAvatar = document.querySelector('.navbar-user-avatar');
-        if (navbarAvatar) {
-            navbarAvatar.classList.remove('skeleton-avatar');
-            navbarAvatar.textContent = userInitial;
+    // ===== CARGAR BALANCE =====
+    function loadBalance() {
+        try {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) {
+                const giftCardsState = JSON.parse(saved);
+                return giftCardsState.totalBalance || 0;
+            }
+        } catch (error) {
+            console.error('❌ Error al cargar balance:', error);
         }
-
-        const navbarAvatarDropdown = document.querySelector('.navbar-user-avatar-dropdown');
-        if (navbarAvatarDropdown) {
-            navbarAvatarDropdown.classList.remove('skeleton-avatar');
-            navbarAvatarDropdown.textContent = userInitial;
-        }
-
-        // Actualizar nombre en navbar dropdown
-        const navbarUserName = document.querySelector('.navbar-user-name');
-        if (navbarUserName) {
-            navbarUserName.classList.remove('skeleton-text');
-            navbarUserName.textContent = userData.nickname || userData.first_name || 'Usuario';
-        }
-
-        // Actualizar email en navbar dropdown
-        const navbarUserEmail = document.querySelector('.navbar-user-email');
-        if (navbarUserEmail) {
-            navbarUserEmail.classList.remove('skeleton-text');
-            navbarUserEmail.textContent = userData.email || 'usuario@offszn.com';
-        }
-
-        // Actualizar avatar en sidebar
-        const sidebarAvatar = document.querySelector('.sidebar-user-avatar');
-        if (sidebarAvatar) {
-            sidebarAvatar.classList.remove('skeleton-avatar');
-            sidebarAvatar.textContent = userInitial;
-        }
-
-        // Actualizar nombre en sidebar
-        const sidebarUserName = document.querySelector('.sidebar-user-name');
-        if (sidebarUserName) {
-            sidebarUserName.classList.remove('skeleton-text');
-            sidebarUserName.textContent = `${userData.first_name || ''} ${userData.last_name || ''}`.trim() || userData.nickname || 'Usuario';
-        }
-
-        // Actualizar balance en sidebar
-        const sidebarBalance = document.querySelector('.sidebar-wallet-balance');
-        if (sidebarBalance) {
-            sidebarBalance.classList.remove('skeleton-text', 'skeleton-balance');
-            // TODO: Conectar con balance real cuando esté disponible en el backend
-            sidebarBalance.textContent = '$0.00';
-        }
+        return 0;
     }
 
-    // ===== TOGGLE USER DROPDOWN =====
-    window.toggleUserDropdown = function() {
-        const dropdown = document.querySelector('.user-dropdown-menu');
-        if (dropdown) {
-            dropdown.classList.toggle('hidden');
-        }
-    };
-
-    // Cerrar dropdown al hacer clic fuera
-    document.addEventListener('click', function(e) {
-        const dropdown = document.querySelector('.user-dropdown-menu');
-        const button = document.querySelector('.navbar-user-avatar');
+    // ===== ACTUALIZAR UI CON DATOS DEL USUARIO =====
+    function updateUserUI(userData) {
+        const balance = loadBalance();
+        const userInitial = (userData.first_name || userData.nickname || 'U').charAt(0).toUpperCase();
         
-        if (dropdown && !dropdown.contains(e.target) && e.target !== button) {
-            dropdown.classList.add('hidden');
+        // Sidebar
+        const profileAvatar = document.querySelector('.profile-avatar');
+        if (profileAvatar) {
+            profileAvatar.classList.remove('skeleton-avatar');
+            profileAvatar.textContent = userInitial;
         }
-    });
 
-    // ===== LOGOUT =====
-    const logoutBtns = document.querySelectorAll('.logout-btn');
-    logoutBtns.forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            e.preventDefault();
-            localStorage.removeItem('authToken');
-            localStorage.removeItem(CACHE_KEY);
-            alert('¡Has cerrado sesión!');
-            window.location.replace('/pages/login.html');
-        });
-    });
+        const profileName = document.querySelector('.profile-name');
+        if (profileName) {
+            profileName.classList.remove('skeleton-text');
+            profileName.textContent = `${userData.first_name || ''} ${userData.last_name || ''}`.trim() || userData.nickname || 'Usuario';
+        }
 
-    // ===== MOCK DATA PARA FAVORITOS (TEMPORAL) =====
-    // TODO: Reemplazar con llamada real a API cuando esté disponible
-    // Endpoint sugerido: GET /api/favorites
+        const sidebarWallet = document.querySelector('.wallet-amount');
+        if (sidebarWallet) {
+            sidebarWallet.classList.remove('skeleton-text');
+            sidebarWallet.textContent = `$${balance.toFixed(2)}`;
+        }
+
+        // Navbar Dropdown
+        const dropdownName = document.querySelector('.user-dropdown-name');
+        const dropdownEmail = document.querySelector('.user-dropdown-email');
+        const dropdownAvatar = document.querySelector('.user-dropdown-avatar');
+
+        if (dropdownName) {
+            dropdownName.classList.remove('skeleton-text');
+            dropdownName.textContent = userData.nickname || userData.first_name || 'Usuario';
+        }
+        if (dropdownEmail) {
+            dropdownEmail.classList.remove('skeleton-text');
+            dropdownEmail.textContent = userData.email || 'usuario@offszn.com';
+        }
+        if (dropdownAvatar) {
+            dropdownAvatar.classList.remove('skeleton-avatar');
+            dropdownAvatar.textContent = userInitial;
+        }
+
+        console.log('✅ UI actualizada con datos reales');
+    }
+
+    // ===== MOCK DATA PARA FAVORITOS =====
     const generateMockKits = () => {
         const kitNames = [
             "Reggaeton Flow Vol. 1", 
             "Trap Essentials 2024", 
             "Lo-Fi Dreams", 
             "Synthwave Odyssey",
-            "Drill UK Madness"
+            "Drill UK Madness",
+            "Future Bass Anthems",
+            "EDM Power Pack",
+            "Urban Latin Vibes"
         ];
         
         return kitNames.map((name, index) => ({
@@ -168,18 +144,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         try {
             console.log('📦 Cargando favoritos...');
             
-            // TODO: Reemplazar con llamada real a la API
-            // const response = await fetch(`${API_URL}/favorites`, {
-            //     headers: { 'Authorization': `Bearer ${token}` }
-            // });
-            // const data = await response.json();
-            // favoriteKits = data.favorites;
-            
-            // Simulando carga con datos mock
+            // Simulando carga
             await new Promise(resolve => setTimeout(resolve, 1500));
             favoriteKits = generateMockKits();
             
             console.log('✅ Favoritos cargados:', favoriteKits.length, 'kits');
+            
+            // Actualizar contador
+            const totalFavs = document.getElementById('total-favorites');
+            if (totalFavs) {
+                totalFavs.textContent = favoriteKits.length;
+            }
+            
             renderKits(favoriteKits);
         } catch (error) {
             console.error('❌ Error cargando favoritos:', error);
@@ -206,43 +182,36 @@ document.addEventListener('DOMContentLoaded', async () => {
         const html = `
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 ${kits.map(kit => `
-                    <div class="bg-[#131313] border border-white/10 rounded-xl overflow-hidden group transition-all duration-300 hover:border-violet-500/50 hover:shadow-2xl hover:shadow-violet-900/20">
-                        <div class="relative">
-                            <img src="${kit.imageUrl}" alt="${kit.name}" class="w-full h-40 object-cover" loading="lazy">
-                            <div class="absolute top-2 right-2 text-red-500 bg-black/50 rounded-full h-8 w-8 flex items-center justify-center">
-                                <i class="fas fa-heart"></i>
+                    <div class="kit-card bg-gradient-to-br from-[rgba(26,10,46,0.6)] to-[rgba(15,10,35,0.6)] border border-pink-900/40 rounded-2xl overflow-hidden hover:border-pink-700 hover:shadow-2xl hover:shadow-pink-900/50 transition-all duration-300 relative group">
+                        <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-pink-600 via-pink-500 to-pink-600" style="background-size: 200% 100%; animation: gradientShift 3s ease infinite;"></div>
+                        
+                        <div class="relative overflow-hidden">
+                            <img src="${kit.imageUrl}" alt="${kit.name}" class="w-full h-48 object-cover transition-transform duration-500 group-hover:scale-110" loading="lazy">
+                            <div class="absolute top-3 right-3">
+                                <button class="heart-pulse w-10 h-10 bg-black/60 backdrop-blur-sm rounded-full flex items-center justify-center text-pink-500 hover:bg-pink-500 hover:text-white transition-all duration-300 remove-favorite-btn" data-kit-id="${kit.id}">
+                                    <i class="fas fa-heart"></i>
+                                </button>
                             </div>
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                         </div>
-                        <div class="p-4">
-                            <div class="flex justify-between items-start">
-                                <h3 class="font-bold text-white mb-1 truncate pr-2" title="${kit.name}">${kit.name}</h3>
-                                <div class="relative">
-                                    <button class="text-gray-500 hover:text-white transition-colors h-6 w-6 rounded-full flex items-center justify-center hover:bg-white/10 kit-menu-btn" data-kit-id="${kit.id}">
-                                        <i class="fas fa-ellipsis-v"></i>
-                                    </button>
-                                    <div class="kit-dropdown hidden absolute right-0 mt-2 w-48 bg-[#1f1f1f] border border-white/10 rounded-lg shadow-xl z-10 p-1.5">
-                                        <a href="#" class="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-300 hover:bg-white/10 rounded-md">
-                                            <i class="fas fa-eye w-4"></i> Ver producto
-                                        </a>
-                                        <a href="#" class="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-300 hover:bg-white/10 rounded-md">
-                                            <i class="fas fa-shopping-cart w-4"></i> Añadir al carrito
-                                        </a>
-                                        <button class="w-full flex items-center gap-2 px-3 py-1.5 text-sm text-red-500 hover:bg-red-500/10 rounded-md mt-1 text-left remove-favorite-btn" data-kit-id="${kit.id}">
-                                            <i class="fas fa-heart-broken w-4"></i> Quitar de Favoritos
-                                        </button>
-                                    </div>
+                        
+                        <div class="p-5">
+                            <h3 class="font-bold text-white text-lg mb-2 truncate" title="${kit.name}">${kit.name}</h3>
+                            
+                            <div class="flex justify-between items-center pt-4 border-t border-white/10">
+                                <div>
+                                    <span class="block text-xs text-zinc-400 uppercase tracking-wide mb-0.5">Precio</span>
+                                    <span class="text-xl font-bold text-pink-400">$${kit.price.toFixed(2)}</span>
+                                </div>
+                                <div class="text-right">
+                                    <span class="block text-xs text-zinc-400 uppercase tracking-wide mb-0.5">Ventas</span>
+                                    <span class="text-xl font-bold text-violet-400">${kit.sales}</span>
                                 </div>
                             </div>
-                            <div class="flex justify-between items-center text-sm mt-3 pt-3 border-t border-white/10">
-                                <div class="flex flex-col">
-                                    <span class="text-xs text-gray-500">Precio</span>
-                                    <span class="font-semibold text-green-400">${kit.price.toFixed(2)}</span>
-                                </div>
-                                <div class="flex flex-col items-end">
-                                    <span class="text-xs text-gray-500">Ventas</span>
-                                    <span class="font-semibold text-white">${kit.sales}</span>
-                                </div>
-                            </div>
+                            
+                            <button class="mt-4 w-full bg-gradient-to-r from-pink-600 to-pink-500 text-white py-2.5 rounded-lg font-semibold text-sm hover:shadow-lg hover:shadow-pink-500/50 hover:-translate-y-0.5 transition-all duration-300 flex items-center justify-center gap-2">
+                                <i class="fas fa-shopping-cart"></i> Añadir al Carrito
+                            </button>
                         </div>
                     </div>
                 `).join('')}
@@ -251,23 +220,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         container.innerHTML = html;
 
-        // Agregar event listeners para los dropdowns de kits
-        const menuBtns = document.querySelectorAll('.kit-menu-btn');
-        menuBtns.forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const dropdown = btn.nextElementSibling;
-                
-                // Cerrar otros dropdowns
-                document.querySelectorAll('.kit-dropdown').forEach(d => {
-                    if (d !== dropdown) d.classList.add('hidden');
-                });
-                
-                dropdown.classList.toggle('hidden');
-            });
-        });
-
-        // Agregar event listeners para quitar de favoritos
+        // Event listeners para quitar de favoritos
         const removeBtns = document.querySelectorAll('.remove-favorite-btn');
         removeBtns.forEach(btn => {
             btn.addEventListener('click', (e) => {
@@ -276,16 +229,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 removeFavorite(kitId);
             });
         });
-
-        // Cerrar dropdowns al hacer clic fuera
-        const closeDropdowns = (e) => {
-            if (!e.target.closest('.kit-menu-btn') && !e.target.closest('.kit-dropdown')) {
-                document.querySelectorAll('.kit-dropdown').forEach(d => d.classList.add('hidden'));
-            }
-        };
-        
-        document.removeEventListener('click', closeDropdowns);
-        document.addEventListener('click', closeDropdowns);
         
         console.log('✅ Kits renderizados correctamente');
     }
@@ -294,13 +237,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     function renderEmptyState() {
         const container = document.getElementById('kits-container');
         container.innerHTML = `
-            <div class="text-center py-20 bg-white/5 rounded-xl border border-dashed border-white/10">
-                <i class="far fa-heart text-6xl text-gray-600 mb-4"></i>
-                <h3 class="text-2xl font-bold text-white">Tu lista de favoritos está vacía</h3>
-                <p class="text-gray-400 mt-2 mb-6 max-w-md mx-auto">
-                    Explora el marketplace y presiona el ícono del corazón en los kits que te gusten para guardarlos aquí.
+            <div class="text-center py-20 bg-gradient-to-br from-[rgba(26,10,46,0.4)] to-[rgba(15,10,35,0.4)] border-2 border-dashed border-pink-900/40 rounded-2xl">
+                <i class="fas fa-heart-broken text-7xl text-pink-500/30 mb-6"></i>
+                <h3 class="font-montserrat text-3xl font-bold text-white mb-3">Tu lista de favoritos está vacía</h3>
+                <p class="text-zinc-400 text-lg mb-8 max-w-md mx-auto leading-relaxed">
+                    Explora el marketplace y presiona el <i class="fas fa-heart text-pink-500"></i> en los kits que te gusten para guardarlos aquí.
                 </p>
-                <a href="/marketplace" class="inline-flex items-center gap-2 bg-violet-600 text-white font-bold px-6 py-3 rounded-lg hover:bg-violet-700 transition-all transform hover:scale-105">
+                <a href="/marketplace" class="inline-flex items-center gap-3 bg-gradient-to-r from-pink-600 to-pink-500 text-white font-bold px-8 py-3.5 rounded-lg hover:shadow-lg hover:shadow-pink-500/50 hover:-translate-y-0.5 transition-all">
                     <i class="fas fa-store"></i> Explorar Marketplace
                 </a>
             </div>
@@ -310,17 +253,21 @@ document.addEventListener('DOMContentLoaded', async () => {
     // ===== QUITAR DE FAVORITOS =====
     async function removeFavorite(kitId) {
         try {
-            // TODO: Implementar llamada real a API
-            // await fetch(`${API_URL}/favorites/${kitId}`, {
-            //     method: 'DELETE',
-            //     headers: { 'Authorization': `Bearer ${token}` }
-            // });
+            console.log('🗑️ Quitando favorito:', kitId);
             
             favoriteKits = favoriteKits.filter(kit => kit.id !== kitId);
-            renderKits(favoriteKits);
+            console.log('✅ Favorito eliminado. Quedan:', favoriteKits.length);
+            
+            // Actualizar contador
+            const totalFavs = document.getElementById('total-favorites');
+            if (totalFavs) {
+                totalFavs.textContent = favoriteKits.length;
+            }
             
             if (favoriteKits.length === 0) {
                 renderEmptyState();
+            } else {
+                renderKits(favoriteKits);
             }
         } catch (error) {
             console.error('❌ Error al quitar favorito:', error);
@@ -360,11 +307,43 @@ document.addEventListener('DOMContentLoaded', async () => {
     searchInput.addEventListener('input', filterAndSortKits);
     sortSelect.addEventListener('change', filterAndSortKits);
 
+    // ===== TOGGLE USER DROPDOWN =====
+    window.toggleUserDropdown = function() {
+        const dropdown = document.querySelector('.user-dropdown-menu');
+        if (dropdown) {
+            dropdown.classList.toggle('opacity-0');
+            dropdown.classList.toggle('invisible');
+            dropdown.classList.toggle('-translate-y-2');
+        }
+    };
+
+    // Cerrar dropdown al hacer clic fuera
+    document.addEventListener('click', function(e) {
+        const dropdown = document.querySelector('.user-dropdown-menu');
+        const userDropdown = document.querySelector('.user-dropdown');
+        
+        if (dropdown && userDropdown && !userDropdown.contains(e.target)) {
+            dropdown.classList.add('opacity-0', 'invisible', '-translate-y-2');
+        }
+    });
+
+    // ===== LOGOUT =====
+    const logoutBtns = document.querySelectorAll('.logout-btn');
+    logoutBtns.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            localStorage.removeItem('authToken');
+            localStorage.removeItem(CACHE_KEY);
+            alert('¡Has cerrado sesión!');
+            window.location.replace('/pages/login.html');
+        });
+    });
+
     // ===== INICIALIZACIÓN =====
     async function initApp() {
         console.log('🚀 Iniciando Favoritos...');
         
-        // 1. Cargar datos del usuario desde API (con skeleton loading)
+        // 1. Cargar datos del usuario
         await loadUserData();
         
         // 2. Cargar kits favoritos
@@ -376,4 +355,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Iniciar la app
     await initApp();
+
+    // Auto-actualizar balance cada 5 segundos
+    setInterval(() => {
+        const balance = loadBalance();
+        const sidebarWallet = document.querySelector('.wallet-amount');
+        if (sidebarWallet && !sidebarWallet.classList.contains('skeleton-text')) {
+            sidebarWallet.textContent = `$${balance.toFixed(2)}`;
+        }
+    }, 5000);
 });
