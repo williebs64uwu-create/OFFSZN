@@ -672,7 +672,40 @@
             <App />
           </React.StrictMode>
         );
+ /* ---------- CARGA DE SALDO (localStorage) ---------- */
+        const STORAGE_KEY = 'offszn_giftcards_state';
+        let appState = { totalBalance: 0, giftCards: [] };
 
+        function loadState() {
+            try {
+                const saved = localStorage.getItem(STORAGE_KEY);
+                if (saved) {
+                    appState = JSON.parse(saved);
+                    updateWalletAmount();
+                }
+            } catch (err) { console.error('Error al cargar estado:', err); }
+        }
+        function updateWalletAmount() {
+            const el = document.querySelector('.wallet-amount');
+            if (el) el.textContent = `$${appState.totalBalance.toFixed(2)}`;
+        }
+
+        /* ---------- DETECCIÓN DE PRODUCTOS (estado vacío) ---------- */
+        function checkProducts() {
+            const grid = document.getElementById('products-grid');
+            const empty = document.getElementById('empty-products-state');
+            const hasProducts = grid.children.length > 0;
+            grid.style.display = hasProducts ? 'grid' : 'none';
+            empty.style.display = hasProducts ? 'none' : 'block';
+        }
+
+        /* ---------- INICIALIZACIÓN ---------- */
+        document.addEventListener('DOMContentLoaded', () => {
+            loadState();
+            checkProducts();
+        });
+    </script>
+    <script src="dashboard.js"></script>
     </script>
 </body>
 </html>
