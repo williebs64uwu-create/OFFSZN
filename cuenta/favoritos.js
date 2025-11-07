@@ -166,6 +166,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     // ===== CARGAR FAVORITOS =====
     async function loadFavoriteKits() {
         try {
+            console.log('📦 Cargando favoritos...');
+            
             // TODO: Reemplazar con llamada real a la API
             // const response = await fetch(`${API_URL}/favorites`, {
             //     headers: { 'Authorization': `Bearer ${token}` }
@@ -174,9 +176,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             // favoriteKits = data.favorites;
             
             // Simulando carga con datos mock
-            await new Promise(resolve => setTimeout(resolve, 2000));
+            await new Promise(resolve => setTimeout(resolve, 1500));
             favoriteKits = generateMockKits();
             
+            console.log('✅ Favoritos cargados:', favoriteKits.length, 'kits');
             renderKits(favoriteKits);
         } catch (error) {
             console.error('❌ Error cargando favoritos:', error);
@@ -188,17 +191,24 @@ document.addEventListener('DOMContentLoaded', async () => {
     function renderKits(kits) {
         const container = document.getElementById('kits-container');
         
+        if (!container) {
+            console.error('❌ Container #kits-container no encontrado');
+            return;
+        }
+        
         if (kits.length === 0) {
             renderEmptyState();
             return;
         }
+
+        console.log('🎨 Renderizando', kits.length, 'kits');
 
         const html = `
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 ${kits.map(kit => `
                     <div class="bg-[#131313] border border-white/10 rounded-xl overflow-hidden group transition-all duration-300 hover:border-violet-500/50 hover:shadow-2xl hover:shadow-violet-900/20">
                         <div class="relative">
-                            <img src="${kit.imageUrl}" alt="${kit.name}" class="w-full h-40 object-cover">
+                            <img src="${kit.imageUrl}" alt="${kit.name}" class="w-full h-40 object-cover" loading="lazy">
                             <div class="absolute top-2 right-2 text-red-500 bg-black/50 rounded-full h-8 w-8 flex items-center justify-center">
                                 <i class="fas fa-heart"></i>
                             </div>
@@ -207,7 +217,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                             <div class="flex justify-between items-start">
                                 <h3 class="font-bold text-white mb-1 truncate pr-2" title="${kit.name}">${kit.name}</h3>
                                 <div class="relative">
-                                    <button class="text-gray-500 hover:text-white transition-colors h-6 w-6 rounded-full flex items-center justify-center hover:bg-white/10 kit-menu-btn">
+                                    <button class="text-gray-500 hover:text-white transition-colors h-6 w-6 rounded-full flex items-center justify-center hover:bg-white/10 kit-menu-btn" data-kit-id="${kit.id}">
                                         <i class="fas fa-ellipsis-v"></i>
                                     </button>
                                     <div class="kit-dropdown hidden absolute right-0 mt-2 w-48 bg-[#1f1f1f] border border-white/10 rounded-lg shadow-xl z-10 p-1.5">
@@ -226,7 +236,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                             <div class="flex justify-between items-center text-sm mt-3 pt-3 border-t border-white/10">
                                 <div class="flex flex-col">
                                     <span class="text-xs text-gray-500">Precio</span>
-                                    <span class="font-semibold text-green-400">$${kit.price.toFixed(2)}</span>
+                                    <span class="font-semibold text-green-400">${kit.price.toFixed(2)}</span>
                                 </div>
                                 <div class="flex flex-col items-end">
                                     <span class="text-xs text-gray-500">Ventas</span>
@@ -261,15 +271,23 @@ document.addEventListener('DOMContentLoaded', async () => {
         const removeBtns = document.querySelectorAll('.remove-favorite-btn');
         removeBtns.forEach(btn => {
             btn.addEventListener('click', (e) => {
+                e.stopPropagation();
                 const kitId = btn.dataset.kitId;
                 removeFavorite(kitId);
             });
         });
 
         // Cerrar dropdowns al hacer clic fuera
-        document.addEventListener('click', () => {
-            document.querySelectorAll('.kit-dropdown').forEach(d => d.classList.add('hidden'));
-        });
+        const closeDropdowns = (e) => {
+            if (!e.target.closest('.kit-menu-btn') && !e.target.closest('.kit-dropdown')) {
+                document.querySelectorAll('.kit-dropdown').forEach(d => d.classList.add('hidden'));
+            }
+        };
+        
+        document.removeEventListener('click', closeDropdowns);
+        document.addEventListener('click', closeDropdowns);
+        
+        console.log('✅ Kits renderizados correctamente');
     }
 
     // ===== RENDERIZAR ESTADO VACÍO =====
