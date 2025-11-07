@@ -1,20 +1,20 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# 🎓 OFFSZN Academy
 
-# Run and deploy your AI Studio app
+OFFSZN Academy es una plataforma educativa y creativa orientada al desarrollo musical, producción de contenido y aprendizaje digital.  
+Aquí compartimos herramientas, cursos y proyectos que combinan tecnología y arte.
 
-This contains everything you need to run your app locally.
+---
 
-View your app in AI Studio: https://ai.studio/apps/drive/15x4mdaQOUiYq2ojNzQHd4zn0m6FBGkEY
+## 🚀 Objetivo
+Fomentar el aprendizaje práctico y la colaboración entre artistas, productores y desarrolladores.
 
-## Run Locally
+---
 
-**Prerequisites:**  Node.js
+## 🧩 Tecnologías utilizadas
+- HTML / CSS / JavaScript  
+- Visual Studio Code  
+- Git y GitHub  
 
+---
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+## 📁 Estructura del proyecto
