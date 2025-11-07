@@ -49,7 +49,20 @@
       import ReactDOM from 'react-dom/client';
 
       //================================================================
-      // TYPES (as JavaScript objects)
+      // CONFIGURACIÓN DE API
+      // Detecta si estamos en localhost o producción
+      //================================================================
+      const getApiUrl = () => {
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+          return 'http://localhost:3000/api';
+        }
+        return 'https://offszn-academy.onrender.com/api';
+      };
+
+      const API_URL = getApiUrl();
+
+      //================================================================
+      // TIPOS Y ESTADOS
       //================================================================
       const KitStatus = {
         Published: 'Published',
@@ -58,54 +71,95 @@
       };
 
       //================================================================
-      // SERVICES / MOCK API
+      // SERVICIOS DE API REALES
+      // Basados en tu dashboard.js
       //================================================================
-      const mockUser = {
-        id: 'user-123',
-        firstName: 'David',
-        lastName: 'Reyes',
-        nickname: 'davidreyes',
-        email: 'david.reyes@offszn.com',
-        walletBalance: 125.50,
+      
+      // Obtener token de autenticación
+      const getAuthToken = () => {
+        return localStorage.getItem('authToken');
       };
 
-      const generateMockKits = () => {
-        const statuses = [KitStatus.Published, KitStatus.Draft, KitStatus.Archived];
-        const kitNames = [
-          "Reggaeton Flow Vol. 1", "Trap Essentials 2024", "Lo-Fi Dreams", "Synthwave Odyssey",
-          "Drill UK Madness", "Future Bass Anthems", "EDM Power Pack", "Acoustic Gems", "Urban Latin Vibes"
-        ];
-        return kitNames.map((name, index) => ({
-          id: `kit-${index + 1}`,
-          name: name,
-          imageUrl: `https://picsum.photos/seed/${name.replace(/\s+/g, '-')}/400/300`,
-          price: parseFloat((Math.random() * 20 + 10).toFixed(2)),
-          sales: Math.floor(Math.random() * 500),
-          status: statuses[index % statuses.length],
-          createdAt: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
-        }));
-      };
-
-      const mockKits = generateMockKits();
-
-      const fetchUserData = () => {
+      // Fetch datos del usuario (igual que en dashboard.js)
+      const fetchUserData = async () => {
         console.log('API Call: Fetching user data...');
-        return new Promise(resolve => setTimeout(() => {
-          console.log('API Response: User data received.');
-          resolve(mockUser);
-        }, 1500));
+        const token = getAuthToken();
+        
+        if (!token) {
+          console.error("No hay token de autenticación");
+          window.location.replace('#'); // Cambiar a tu ruta de login
+          throw new Error('No authenticated');
+        }
+
+        try {
+          const response = await fetch(`${API_URL}/me`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+
+          if (!response.ok) {
+            if (response.status === 401 || response.status === 403) {
+              localStorage.removeItem('authToken');
+              window.location.replace('#'); // Cambiar a tu ruta de login
+            }
+            throw new Error(`Error ${response.status}: No se pudieron obtener los datos del usuario.`);
+          }
+
+          const userData = await response.json();
+          console.log('API Response: User data received.', userData);
+          
+          // Guardar userId para uso posterior
+          if (userData.id) {
+            localStorage.setItem('userId', userData.id);
+          }
+          
+          return userData;
+        } catch (error) {
+          console.error('Error fetching user data:', error);
+          throw error;
+        }
       };
 
-      const fetchUserKits = () => {
+      // Fetch kits del usuario productor (nueva implementación)
+      const fetchUserKits = async () => {
         console.log('API Call: Fetching user kits...');
-        return new Promise(resolve => setTimeout(() => {
-          console.log('API Response: User kits received.');
-          resolve(mockKits);
-        }, 2000));
+        const token = getAuthToken();
+        
+        if (!token) {
+          throw new Error('No authenticated');
+        }
+
+        try {
+          // Esta ruta debe coincidir con tu backend - ajústala según tu API
+          const response = await fetch(`${API_URL}/me/products`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+
+          if (!response.ok) {
+            throw new Error('No se pudieron cargar tus kits.');
+          }
+
+          const kits = await response.json();
+          console.log('API Response: User kits received.', kits);
+          
+          // Mapear los productos a la estructura de Kit esperada
+          return kits.map(kit => ({
+            id: kit.id || kit._id,
+            name: kit.name,
+            imageUrl: kit.image_url || `https://picsum.photos/seed/${kit.name}/400/300`,
+            price: parseFloat(kit.price) || 0,
+            sales: kit.sales || 0, // Si tu API no tiene sales, puedes dejarlo en 0
+            status: kit.status || KitStatus.Published,
+            createdAt: kit.created_at || kit.createdAt || new Date().toISOString(),
+          }));
+        } catch (error) {
+          console.error('Error fetching user kits:', error);
+          throw error;
+        }
       };
 
       //================================================================
       // SKELETON COMPONENTS
+      // Mantienen el estilo original
       //================================================================
       const UserInfoSkeleton = ({ type }) => {
         const navbarSkeleton = React.createElement('div', { className: "flex items-center gap-3 animate-pulse" },
@@ -145,6 +199,7 @@
       
       //================================================================
       // UI COMPONENTS
+      // Mantienen funcionalidad original
       //================================================================
       const KitEditModal = ({ kit, onClose }) => {
         if (!kit) return null;
@@ -183,7 +238,7 @@
         };
         const dropdownMenu = React.createElement('div', { className: "absolute right-0 mt-2 w-40 bg-[#1f1f1f] border border-white/10 rounded-lg shadow-xl z-10 p-1.5" },
           React.createElement('button', { onClick: handleEditClick, className: "w-full flex items-center gap-2 px-3 py-1.5 text-sm text-gray-300 hover:bg-white/10 rounded-md text-left" }, React.createElement('i', { className: "fas fa-edit w-4" }), " Editar"),
-          React.createElement('a', { href: "/analiticas", className: "flex items-center gap-2 px-3 py-1.5 text-sm text-gray-300 hover:bg-white/10 rounded-md" }, React.createElement('i', { className: "fas fa-chart-bar w-4" }), " Analíticas"),
+          React.createElement('a', { href: "#", className: "flex items-center gap-2 px-3 py-1.5 text-sm text-gray-300 hover:bg-white/10 rounded-md" }, React.createElement('i', { className: "fas fa-chart-bar w-4" }), " Analíticas"),
           React.createElement('a', { href: "#", className: "flex items-center gap-2 px-3 py-1.5 text-sm text-red-500 hover:bg-red-500/10 rounded-md mt-1" }, React.createElement('i', { className: "fas fa-trash-alt w-4" }), " Eliminar")
         );
         return React.createElement('div', { className: "bg-[#131313] border border-white/10 rounded-xl overflow-hidden group transition-all duration-300 hover:border-violet-500/50 hover:shadow-2xl hover:shadow-violet-900/20" },
@@ -218,26 +273,62 @@
         );
       };
 
+      // Menú del sidebar - todas las rutas con "#" temporal
       const menuSections = [
-        { title: 'Principal', items: [{ icon: 'fa-th-large', label: 'Dashboard', href: '/dashboard' }, { icon: 'fa-music', label: 'Mis Kits', href: '/mis-kits', active: true }, { icon: 'fa-chart-line', label: 'Analíticas', href: '/analiticas', soon: true }, { icon: 'fa-heart', label: 'Favoritos', href: '/favoritos' }, { icon: 'fa-history', label: 'Historial', href: '/historial', soon: true }] },
-        { title: 'Colaboración', items: [{ icon: 'fa-users', label: 'Colaboraciones', href: '/colaboraciones' }] },
-        { title: 'Compras', items: [{ icon: 'fa-shopping-bag', label: 'Mis Compras', href: '/mis-compras' }, { icon: 'fa-gift', label: 'Gift Cards', href: '/gift-cards' }, { icon: 'fa-envelope', label: 'Mensajes', href: '/mensajes' }] },
-        { title: 'Configuración', items: [{ icon: 'fa-cog', label: 'Configuración', href: '/configuracion' }, { icon: 'fa-book-open', label: 'Blog', href: '/blog', soon: true }] }
+        { title: 'Principal', items: [
+          { icon: 'fa-th-large', label: 'Dashboard', href: '#' }, 
+          { icon: 'fa-music', label: 'Mis Kits', href: '#', active: true }, 
+          { icon: 'fa-chart-line', label: 'Analíticas', href: '#', soon: true }, 
+          { icon: 'fa-heart', label: 'Favoritos', href: '#' }, 
+          { icon: 'fa-history', label: 'Historial', href: '#', soon: true }
+        ]},
+        { title: 'Colaboración', items: [
+          { icon: 'fa-users', label: 'Colaboraciones', href: '#' }
+        ]},
+        { title: 'Compras', items: [
+          { icon: 'fa-shopping-bag', label: 'Mis Compras', href: '#' }, 
+          { icon: 'fa-gift', label: 'Gift Cards', href: '#' }, 
+          { icon: 'fa-envelope', label: 'Mensajes', href: '#' }
+        ]},
+        { title: 'Configuración', items: [
+          { icon: 'fa-cog', label: 'Configuración', href: '#' }, 
+          { icon: 'fa-book-open', label: 'Blog', href: '#', soon: true }
+        ]}
       ];
 
+      //================================================================
+      // SIDEBAR COMPONENT
+      // Ahora carga datos reales del usuario
+      //================================================================
       const Sidebar = ({ user, loading }) => {
-        const userInitial = user ? (user.firstName || user.nickname || 'U').charAt(0).toUpperCase() : '';
+        const userInitial = user ? (user.first_name || user.nickname || 'U').charAt(0).toUpperCase() : '';
+        
+        // Cargar saldo desde gift cards (igual que en dashboard.js)
+        const [walletBalance, setWalletBalance] = useState(0);
+        
+        useEffect(() => {
+          try {
+            const saved = localStorage.getItem('offszn_giftcards_state');
+            if (saved) {
+              const appState = JSON.parse(saved);
+              setWalletBalance(appState.totalBalance || 0);
+            }
+          } catch (err) {
+            console.error('Error al cargar saldo:', err);
+          }
+        }, []);
+
         return React.createElement('aside', { className: "hidden md:flex flex-col sticky top-[65px] h-[calc(100vh-65px)] bg-[rgba(15,15,15,0.6)] border-r border-white/10" },
           React.createElement('div', null,
             React.createElement('div', { className: "p-5 border-b border-white/10" },
               loading ? React.createElement(UserInfoSkeleton, { type: "sidebar" }) : React.createElement('div', { className: "flex items-center gap-3" },
                 React.createElement('div', { className: "flex h-11 w-11 items-center justify-center rounded-full bg-violet-600 font-bold text-white text-lg" }, userInitial),
-                React.createElement('div', null, React.createElement('p', { className: "font-semibold text-white" }, `${user?.firstName} ${user?.lastName}`))
+                React.createElement('div', null, React.createElement('p', { className: "font-semibold text-white" }, `${user?.first_name || ''} ${user?.last_name || ''}`.trim() || user?.nickname))
               )
             ),
             React.createElement('div', { className: "p-5 border-b border-white/10 bg-violet-600/5" },
               React.createElement('div', { className: "text-xs font-semibold uppercase text-gray-400 mb-1.5" }, "Saldo Disponible"),
-              loading ? React.createElement('div', { className: "h-8 w-32 animate-pulse rounded-md bg-white/10" }) : React.createElement('div', { className: "text-3xl font-bold text-white" }, `$${user?.walletBalance.toFixed(2)}`)
+              loading ? React.createElement('div', { className: "h-8 w-32 animate-pulse rounded-md bg-white/10" }) : React.createElement('div', { className: "text-3xl font-bold text-white" }, `$${walletBalance.toFixed(2)}`)
             )
           ),
           React.createElement('nav', { className: "flex-grow p-3 overflow-y-auto custom-scrollbar" },
@@ -254,7 +345,7 @@
             ))
           ),
           React.createElement('div', { className: "p-4 border-t border-white/10" },
-            React.createElement('a', { href: "/logout", className: "flex items-center justify-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold text-red-400 border border-red-500/20 bg-red-500/5 transition-colors hover:bg-red-500/10 hover:border-red-500/40" },
+            React.createElement('a', { href: "#", className: "flex items-center justify-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold text-red-400 border border-red-500/20 bg-red-500/5 transition-colors hover:bg-red-500/10 hover:border-red-500/40" },
               React.createElement('i', { className: "fas fa-sign-out-alt w-5 text-center" }),
               React.createElement('span', null, "Cerrar Sesión")
             )
@@ -262,9 +353,14 @@
         );
       };
 
+      //================================================================
+      // NAVBAR COMPONENT
+      // Ahora carga datos reales del usuario
+      //================================================================
       const Navbar = ({ user, loading }) => {
         const [userDropdownOpen, setUserDropdownOpen] = useState(false);
-        const userInitial = user ? (user.firstName || user.nickname || 'U').charAt(0).toUpperCase() : '';
+        const userInitial = user ? (user.first_name || user.nickname || 'U').charAt(0).toUpperCase() : '';
+        
         const dropdownMenu = React.createElement('div', { className: "absolute right-0 mt-3 w-64 rounded-xl border border-white/10 bg-[rgba(20,20,20,0.98)] p-3 shadow-2xl backdrop-blur-xl" },
           React.createElement('div', { className: "mb-2 flex items-center gap-3 border-b border-white/10 p-3" },
             loading ? React.createElement(UserInfoSkeleton, { type: "navbar" }) : React.createElement(React.Fragment, null,
@@ -275,14 +371,15 @@
               )
             )
           ),
-          React.createElement('a', { href: "/perfil", className: "flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-gray-400 transition-colors hover:bg-white/5 hover:text-white" }, React.createElement('i', { className: "fas fa-user-circle w-5 text-center" }), " Mi Perfil"),
-          React.createElement('a', { href: "/dashboard", className: "flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-gray-400 transition-colors hover:bg-white/5 hover:text-white" }, React.createElement('i', { className: "fas fa-th-large w-5 text-center" }), " Dashboard"),
-          React.createElement('a', { href: "/configuracion", className: "flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-gray-400 transition-colors hover:bg-white/5 hover:text-white" }, React.createElement('i', { className: "fas fa-cog w-5 text-center" }), " Configuración"),
+          React.createElement('a', { href: "#", className: "flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-gray-400 transition-colors hover:bg-white/5 hover:text-white" }, React.createElement('i', { className: "fas fa-user-circle w-5 text-center" }), " Mi Perfil"),
+          React.createElement('a', { href: "#", className: "flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-gray-400 transition-colors hover:bg-white/5 hover:text-white" }, React.createElement('i', { className: "fas fa-th-large w-5 text-center" }), " Dashboard"),
+          React.createElement('a', { href: "#", className: "flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-gray-400 transition-colors hover:bg-white/5 hover:text-white" }, React.createElement('i', { className: "fas fa-cog w-5 text-center" }), " Configuración"),
           React.createElement('div', { className: "my-2 h-px bg-white/10" }),
-          React.createElement('a', { href: "/logout", className: "flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-red-500 transition-colors hover:bg-red-500/10" }, React.createElement('i', { className: "fas fa-sign-out-alt w-5 text-center" }), " Cerrar Sesión")
+          React.createElement('a', { href: "#", className: "flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-red-500 transition-colors hover:bg-red-500/10" }, React.createElement('i', { className: "fas fa-sign-out-alt w-5 text-center" }), " Cerrar Sesión")
         );
+        
         return React.createElement('nav', { className: "sticky top-0 z-50 flex items-center justify-between bg-[rgba(0,0,0,0.98)] px-6 py-3 md:px-12 backdrop-blur-xl border-b border-white/10" },
-          React.createElement('div', { className: "logo" }, React.createElement('a', { href: "/dashboard", className: "text-2xl font-extrabold tracking-tight text-white" }, "OFFSZN")),
+          React.createElement('div', { className: "logo" }, React.createElement('a', { href: "#", className: "text-2xl font-extrabold tracking-tight text-white" }, "OFFSZN")),
           React.createElement('div', { className: "hidden lg:flex items-center gap-10" },
             React.createElement('div', { className: "relative w-96" },
               React.createElement('input', { type: "text", placeholder: "Buscar beats, kits, productores...", className: "w-full rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm text-white outline-none transition-all placeholder:text-gray-500 focus:border-violet-500/50 focus:bg-white/[0.08]" }),
@@ -290,8 +387,8 @@
             )
           ),
           React.createElement('div', { className: "flex items-center gap-3" },
-            React.createElement('a', { href: "/notificaciones", className: "flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-gray-400 transition-colors hover:bg-white/[0.08] hover:text-white" }, React.createElement('i', { className: "fas fa-bell" })),
-            React.createElement('a', { href: "/carrito", className: "flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-gray-400 transition-colors hover:bg-white/[0.08] hover:text-white" }, React.createElement('i', { className: "fas fa-shopping-cart" })),
+            React.createElement('a', { href: "#", className: "flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-gray-400 transition-colors hover:bg-white/[0.08] hover:text-white" }, React.createElement('i', { className: "fas fa-bell" })),
+            React.createElement('a', { href: "#", className: "flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-gray-400 transition-colors hover:bg-white/[0.08] hover:text-white" }, React.createElement('i', { className: "fas fa-shopping-cart" })),
             React.createElement('div', { className: "relative" },
               React.createElement('button', { onClick: () => setUserDropdownOpen(!userDropdownOpen), className: "flex h-9 w-9 items-center justify-center rounded-full bg-violet-600 text-white font-bold transition-transform hover:scale-105" }, loading ? React.createElement('i', { className: "fa-solid fa-spinner fa-spin" }) : userInitial),
               userDropdownOpen && dropdownMenu
@@ -300,6 +397,10 @@
         );
       };
 
+      //================================================================
+      // MY KITS PAGE - COMPONENTE PRINCIPAL
+      // Ahora carga kits reales de la API
+      //================================================================
       const MyKitsPage = () => {
         const [kits, setKits] = useState([]);
         const [loading, setLoading] = useState(true);
@@ -307,17 +408,28 @@
         const [searchTerm, setSearchTerm] = useState('');
         const [statusFilter, setStatusFilter] = useState('All');
         const [sortOrder, setSortOrder] = useState('createdAt_desc');
+        const [error, setError] = useState(null);
 
+        // Cargar kits desde la API al montar el componente
         useEffect(() => {
           const loadKits = async () => {
             setLoading(true);
-            const userKits = await fetchUserKits();
-            setKits(userKits);
-            setLoading(false);
+            setError(null);
+            try {
+              const userKits = await fetchUserKits();
+              setKits(userKits);
+              console.log(`✅ ${userKits.length} kits cargados correctamente`);
+            } catch (err) {
+              console.error('Error cargando kits:', err);
+              setError(err.message);
+            } finally {
+              setLoading(false);
+            }
           };
           loadKits();
         }, []);
 
+        // Filtrar y ordenar kits (lógica original mantenida)
         const filteredAndSortedKits = useMemo(() => {
           return kits
             .filter(kit => kit.name.toLowerCase().includes(searchTerm.toLowerCase()) && (statusFilter === 'All' || kit.status === statusFilter))
@@ -336,45 +448,102 @@
         const handleEditKit = (kit) => setEditingKit(kit);
         const handleCloseModal = () => setEditingKit(null);
 
-        const StatusButton = ({ status, label }) => React.createElement('button', { onClick: () => setStatusFilter(status), className: `px-4 py-2 text-sm font-semibold rounded-lg transition-colors ${statusFilter === status ? 'bg-violet-600 text-white' : 'bg-white/5 text-gray-400 hover:bg-white/10'}` }, label);
+        // Botones de filtro por estado
+        const StatusButton = ({ status, label }) => React.createElement('button', { 
+          onClick: () => setStatusFilter(status), 
+          className: `px-4 py-2 text-sm font-semibold rounded-lg transition-colors ${statusFilter === status ? 'bg-violet-600 text-white' : 'bg-white/5 text-gray-400 hover:bg-white/10'}` 
+        }, label);
 
-        const kitGrid = loading ? 
-            React.createElement('div', { className: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" }, Array.from({ length: 8 }).map((_, index) => React.createElement(KitCardSkeleton, { key: index }))) :
-            filteredAndSortedKits.length > 0 ?
-              React.createElement('div', { className: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" }, filteredAndSortedKits.map(kit => React.createElement(KitCard, { key: kit.id, kit: kit, onEdit: handleEditKit }))) :
-              React.createElement('div', { className: "text-center py-20 bg-white/5 rounded-xl" },
-                React.createElement('i', { className: "fas fa-box-open text-5xl text-gray-600 mb-4" }),
-                React.createElement('h3', { className: "text-xl font-bold text-white" }, "No se encontraron kits"),
-                React.createElement('p', { className: "text-gray-400 mt-2" }, "Prueba a cambiar los filtros o sube tu primer kit.")
-              );
+        // Renderizado condicional del grid de kits
+        let kitGrid;
+        
+        if (loading) {
+          // Mostrar skeletons mientras carga
+          kitGrid = React.createElement('div', { className: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" }, 
+            Array.from({ length: 8 }).map((_, index) => React.createElement(KitCardSkeleton, { key: index }))
+          );
+        } else if (error) {
+          // Mostrar error si hubo problemas al cargar
+          kitGrid = React.createElement('div', { className: "text-center py-20 bg-red-500/5 border border-red-500/20 rounded-xl" },
+            React.createElement('i', { className: "fas fa-exclamation-triangle text-5xl text-red-500 mb-4" }),
+            React.createElement('h3', { className: "text-xl font-bold text-white" }, "Error al cargar kits"),
+            React.createElement('p', { className: "text-gray-400 mt-2" }, error),
+            React.createElement('button', { 
+              onClick: () => window.location.reload(),
+              className: "mt-4 bg-violet-600 text-white px-6 py-2 rounded-lg hover:bg-violet-700 transition-colors"
+            }, "Reintentar")
+          );
+        } else if (filteredAndSortedKits.length > 0) {
+          // Mostrar kits cuando hay resultados
+          kitGrid = React.createElement('div', { className: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" }, 
+            filteredAndSortedKits.map(kit => React.createElement(KitCard, { key: kit.id, kit: kit, onEdit: handleEditKit }))
+          );
+        } else {
+          // Estado vacío cuando no hay kits o no coinciden con los filtros
+          kitGrid = React.createElement('div', { className: "text-center py-20 bg-white/5 rounded-xl" },
+            React.createElement('i', { className: "fas fa-box-open text-5xl text-gray-600 mb-4" }),
+            React.createElement('h3', { className: "text-xl font-bold text-white" }, "No se encontraron kits"),
+            React.createElement('p', { className: "text-gray-400 mt-2" }, 
+              kits.length === 0 
+                ? "Aún no has subido ningún kit. ¡Comienza ahora!" 
+                : "Prueba a cambiar los filtros para ver más resultados."
+            )
+          );
+        }
         
         return React.createElement('div', null,
+          // Breadcrumb navigation
           React.createElement('div', { className: "breadcrumb flex items-center gap-2 text-sm text-gray-500 mb-6" },
-            React.createElement('a', { href: "/dashboard", className: "hover:text-violet-400" }, React.createElement('i', { className: "fas fa-home" }), " Dashboard"),
+            React.createElement('a', { href: "#", className: "hover:text-violet-400" }, React.createElement('i', { className: "fas fa-home" }), " Dashboard"),
             React.createElement('span', null, React.createElement('i', { className: "fas fa-chevron-right text-xs" })),
             React.createElement('span', { className: "font-semibold text-white" }, "Mis Kits")
           ),
+          
+          // Header con título y botón de subir
           React.createElement('header', { className: "flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4" },
             React.createElement('div', null,
               React.createElement('h1', { className: "text-3xl font-extrabold text-white tracking-tight" }, "Mis Kits"),
               React.createElement('p', { className: "text-gray-400 mt-1" }, "Gestiona los productos que has subido al marketplace.")
             ),
-            React.createElement('button', { className: "flex items-center gap-2 bg-violet-600 text-white font-bold px-5 py-3 rounded-lg hover:bg-violet-700 transition-all transform hover:scale-105" }, React.createElement('i', { className: "fas fa-cloud-upload-alt" }), "Subir Nuevo Kit")
+            React.createElement('button', { 
+              className: "flex items-center gap-2 bg-violet-600 text-white font-bold px-5 py-3 rounded-lg hover:bg-violet-700 transition-all transform hover:scale-105",
+              onClick: () => alert('Funcionalidad de subir kit en desarrollo')
+            }, 
+              React.createElement('i', { className: "fas fa-cloud-upload-alt" }), 
+              "Subir Nuevo Kit"
+            )
           ),
+          
+          // Barra de filtros y búsqueda
           React.createElement('div', { className: "bg-white/5 border border-white/10 rounded-xl p-4 mb-6" },
             React.createElement('div', { className: "flex flex-col md:flex-row gap-4" },
+              // Campo de búsqueda
               React.createElement('div', { className: "relative flex-grow" },
                 React.createElement('i', { className: "fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" }),
-                React.createElement('input', { type: "text", placeholder: "Buscar por nombre...", value: searchTerm, onChange: (e) => setSearchTerm(e.target.value), className: "w-full bg-black/20 border border-white/10 rounded-lg pl-10 pr-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-violet-500" })
+                React.createElement('input', { 
+                  type: "text", 
+                  placeholder: "Buscar por nombre...", 
+                  value: searchTerm, 
+                  onChange: (e) => setSearchTerm(e.target.value), 
+                  className: "w-full bg-black/20 border border-white/10 rounded-lg pl-10 pr-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-violet-500" 
+                })
               ),
+              
+              // Botones de filtro por estado
               React.createElement('div', { className: "flex items-center gap-2 flex-wrap" },
                 React.createElement(StatusButton, { status: "All", label: "Todos" }),
                 React.createElement(StatusButton, { status: KitStatus.Published, label: "Publicados" }),
                 React.createElement(StatusButton, { status: KitStatus.Draft, label: "Borradores" }),
                 React.createElement(StatusButton, { status: KitStatus.Archived, label: "Archivados" })
               ),
+              
+              // Selector de ordenamiento
               React.createElement('div', null,
-                React.createElement('select', { value: sortOrder, onChange: (e) => setSortOrder(e.target.value), className: "w-full md:w-auto bg-black/20 border border-white/10 rounded-lg px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-violet-500" },
+                React.createElement('select', { 
+                  value: sortOrder, 
+                  onChange: (e) => setSortOrder(e.target.value), 
+                  className: "w-full md:w-auto bg-black/20 border border-white/10 rounded-lg px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-violet-500" 
+                },
                   React.createElement('option', { value: "createdAt_desc" }, "Más Recientes"),
                   React.createElement('option', { value: "createdAt_asc" }, "Más Antiguos"),
                   React.createElement('option', { value: "sales_desc" }, "Más Vendidos"),
@@ -384,13 +553,18 @@
               )
             )
           ),
+          
+          // Grid de kits (skeleton, error, resultados o estado vacío)
           kitGrid,
+          
+          // Modal de edición
           React.createElement(KitEditModal, { kit: editingKit, onClose: handleCloseModal })
         );
       };
 
       //================================================================
-      // APP ROOT & RENDERER
+      // APP ROOT COMPONENT
+      // Carga datos del usuario al inicio
       //================================================================
       const App = () => {
         const [user, setUser] = useState(null);
@@ -399,9 +573,17 @@
         useEffect(() => {
           const loadUser = async () => {
             setLoading(true);
-            const userData = await fetchUserData();
-            setUser(userData);
-            setLoading(false);
+            try {
+              const userData = await fetchUserData();
+              setUser(userData);
+              console.log('✅ Usuario cargado correctamente');
+            } catch (error) {
+              console.error('❌ Error cargando usuario:', error);
+              // Si hay error de autenticación, mantener loading pero no redirigir
+              // ya que fetchUserData maneja la redirección
+            } finally {
+              setLoading(false);
+            }
           };
           loadUser();
         }, []);
@@ -417,6 +599,9 @@
         );
       };
 
+      //================================================================
+      // RENDERIZAR LA APLICACIÓN
+      //================================================================
       const root = ReactDOM.createRoot(document.getElementById('root'));
       root.render(React.createElement(React.StrictMode, null, React.createElement(App)));
 
