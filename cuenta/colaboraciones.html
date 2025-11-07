@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -33,8 +32,33 @@
             animation: skeleton-loading 1.5s ease-in-out infinite;
             color: transparent !important;
             user-select: none;
+            border-radius: 4px;
         }
-         @keyframes skeleton-loading {
+        .skeleton-avatar {
+            background: linear-gradient(90deg, 
+                rgba(255, 255, 255, 0.05) 25%, 
+                rgba(255, 255, 255, 0.1) 50%, 
+                rgba(255, 255, 255, 0.05) 75%
+            );
+            background-size: 200% 100%;
+            animation: skeleton-loading 1.5s ease-in-out infinite;
+            border-radius: 50% !important;
+        }
+        .skeleton-text {
+            background: linear-gradient(90deg, 
+                rgba(255, 255, 255, 0.05) 25%, 
+                rgba(255, 255, 255, 0.1) 50%, 
+                rgba(255, 255, 255, 0.05) 75%
+            );
+            background-size: 200% 100%;
+            animation: skeleton-loading 1.5s ease-in-out infinite;
+            border-radius: 4px;
+            height: 1em;
+            min-width: 80px;
+            display: inline-block;
+            color: transparent !important;
+        }
+        @keyframes skeleton-loading {
             0% { background-position: 200% 0; }
             100% { background-position: -200% 0; }
         }
@@ -52,6 +76,10 @@
             background-color: rgba(255, 255, 255, 0.1);
             border-radius: 20px;
             border: 3px solid transparent;
+        }
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
         }
     </style>
     
@@ -76,7 +104,7 @@
         import React, { useState, useEffect, useRef } from 'react';
         import ReactDOM from 'react-dom/client';
 
-        // --- TYPES (from types.ts) ---
+        // --- TYPES ---
         interface User {
             id: string;
             firstName?: string;
@@ -116,7 +144,7 @@
             };
         }
 
-        // --- NAVBAR COMPONENT (from components/Navbar.tsx) ---
+        // --- NAVBAR COMPONENT ---
         const NavDropdown = ({ title, children }) => {
             return (
                 <li className="group relative">
@@ -174,26 +202,26 @@
             return (
                 <nav className="sticky top-0 z-50 flex items-center justify-between px-6 sm:px-12 py-2 bg-[rgba(0,0,0,0.98)] border-b border-[rgba(255,255,255,0.08)] backdrop-blur-xl">
                     <div className="text-2xl font-extrabold tracking-tight text-white">
-                        <a href="#">OFFSZN</a>
+                        <a href="dashboard">OFFSZN</a>
                     </div>
                     <div className="hidden lg:flex items-center gap-10">
                         <ul className="flex items-center gap-8">
-                            <li><a href="#" className="text-[#999] hover:text-white transition-colors duration-200 text-sm font-medium">INICIO</a></li>
+                            <li><a href="dashboard" className="text-[#999] hover:text-white transition-colors duration-200 text-sm font-medium">INICIO</a></li>
                             <NavDropdown title="RECURSOS">
-                                <DropdownItem icon="fas fa-music" text="Beats & Instrumentales" />
-                                <DropdownItem icon="fas fa-drum" text="Drum Kits" />
-                                <DropdownItem icon="fas fa-sliders-h" text="Presets & Plugins" />
-                                <DropdownItem icon="fas fa-wave-square" text="Samples & Loops" />
+                                <DropdownItem icon="fas fa-music" text="Beats & Instrumentales" href="beats" />
+                                <DropdownItem icon="fas fa-drum" text="Drum Kits" href="drum-kits" />
+                                <DropdownItem icon="fas fa-sliders-h" text="Presets & Plugins" href="presets" />
+                                <DropdownItem icon="fas fa-wave-square" text="Samples & Loops" href="samples" />
                                 <div className="h-[1px] bg-white/10 my-2 mx-2"></div>
-                                <DropdownItem icon="fas fa-gift" text="Recursos Gratis" />
+                                <DropdownItem icon="fas fa-gift" text="Recursos Gratis" href="free-resources" />
                             </NavDropdown>
                              <NavDropdown title="COMUNIDAD">
-                                <DropdownItem icon="fas fa-home" text="Feed" />
-                                <DropdownItem icon="fas fa-users" text="Productores" />
-                                <DropdownItem icon="fas fa-handshake" text="Colaboraciones" />
+                                <DropdownItem icon="fas fa-home" text="Feed" href="feed" />
+                                <DropdownItem icon="fas fa-users" text="Productores" href="productores" />
+                                <DropdownItem icon="fas fa-handshake" text="Colaboraciones" href="colaboraciones" />
                                 <div className="h-[1px] bg-white/10 my-2 mx-2"></div>
-                                <DropdownItem icon="fas fa-comments" text="Foros" />
-                                <DropdownItem icon="fas fa-calendar" text="Eventos" />
+                                <DropdownItem icon="fas fa-comments" text="Foros" href="foros" />
+                                <DropdownItem icon="fas fa-calendar" text="Eventos" href="eventos" />
                             </NavDropdown>
                         </ul>
                         <div className="relative w-96">
@@ -202,10 +230,10 @@
                         </div>
                     </div>
                     <div className="flex items-center gap-3">
-                        <a href="#" className="flex items-center justify-center w-9 h-9 bg-white/5 border border-white/10 rounded-lg text-[#999] hover:bg-white/10 hover:text-white transition-all duration-200">
+                        <a href="notifications" className="flex items-center justify-center w-9 h-9 bg-white/5 border border-white/10 rounded-lg text-[#999] hover:bg-white/10 hover:text-white transition-all duration-200">
                             <i className="fas fa-bell"></i>
                         </a>
-                        <a href="#" className="flex items-center justify-center w-9 h-9 bg-white/5 border border-white/10 rounded-lg text-[#999] hover:bg-white/10 hover:text-white transition-all duration-200">
+                        <a href="cart" className="flex items-center justify-center w-9 h-9 bg-white/5 border border-white/10 rounded-lg text-[#999] hover:bg-white/10 hover:text-white transition-all duration-200">
                             <i className="fas fa-shopping-cart"></i>
                         </a>
                         <div className="relative" ref={dropdownRef}>
@@ -214,35 +242,22 @@
                             </button>
                             <div className={`absolute top-full right-0 mt-3 w-64 bg-[rgba(20,20,20,0.98)] border border-white/10 rounded-xl shadow-2xl backdrop-blur-lg p-3 transition-all duration-300 transform-gpu ${userDropdownOpen ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible -translate-y-2'}`}>
                                 <div className="flex items-center gap-3 p-3 border-b border-white/10 mb-2">
-                                    {loading ? (
-                                        <div className="w-10 h-10 rounded-full skeleton-loader"></div>
-                                    ) : (
-                                        <div className="flex items-center justify-center w-10 h-10 rounded-full bg-zinc-800 font-bold text-zinc-500 text-base">{initial}</div>
-                                    )}
+                                    <div className="user-dropdown-avatar flex items-center justify-center w-10 h-10 rounded-full bg-zinc-800 font-bold text-zinc-500 text-base skeleton-avatar"></div>
                                     <div className="flex-1 overflow-hidden">
-                                        {loading ? (
-                                            <>
-                                                <div className="h-4 rounded w-3/4 mb-1.5 skeleton-loader"></div>
-                                                <div className="h-3 rounded w-full skeleton-loader"></div>
-                                            </>
-                                        ) : (
-                                            <>
-                                                <p className="font-semibold text-sm text-white truncate">{user?.nickname || user?.firstName}</p>
-                                                <p className="text-xs text-zinc-500 truncate">{user?.email}</p>
-                                            </>
-                                        )}
+                                        <p className="user-dropdown-name font-semibold text-sm text-white truncate skeleton-text">Cargando...</p>
+                                        <p className="user-dropdown-email text-xs text-zinc-500 truncate skeleton-text">email@loading.com</p>
                                     </div>
                                 </div>
-                                <UserDropdownItem icon="fas fa-user-circle" text="Mi Perfil" />
-                                <UserDropdownItem icon="fas fa-th-large" text="Dashboard" />
-                                <UserDropdownItem icon="fas fa-wallet" text="Billetera" />
-                                <UserDropdownItem icon="fas fa-shopping-bag" text="Mis Compras" />
-                                <UserDropdownItem icon="fas fa-heart" text="Favoritos" />
+                                <UserDropdownItem icon="fas fa-user-circle" text="Mi Perfil" href="profile" />
+                                <UserDropdownItem icon="fas fa-th-large" text="Dashboard" href="dashboard" />
+                                <UserDropdownItem icon="fas fa-wallet" text="Billetera" href="wallet" />
+                                <UserDropdownItem icon="fas fa-shopping-bag" text="Mis Compras" href="mis-compras" />
+                                <UserDropdownItem icon="fas fa-heart" text="Favoritos" href="favoritos" />
                                 <UserDropdownItem icon="fas fa-chart-line" text="Analíticas" disabled soon />
-                                <UserDropdownItem icon="fas fa-cog" text="Configuración" />
-                                <UserDropdownItem icon="fas fa-question-circle" text="Ayuda" />
+                                <UserDropdownItem icon="fas fa-cog" text="Configuración" href="account-settings" />
+                                <UserDropdownItem icon="fas fa-question-circle" text="Ayuda" href="help" />
                                 <div className="mt-2 pt-2 border-t border-white/10">
-                                    <UserDropdownItem icon="fas fa-sign-out-alt" text="Cerrar Sesión" isLogout />
+                                    <UserDropdownItem icon="fas fa-sign-out-alt" text="Cerrar Sesión" href="logout" isLogout />
                                 </div>
                             </div>
                         </div>
@@ -251,7 +266,7 @@
             );
         };
         
-        // --- SIDEBAR COMPONENT (from components/Sidebar.tsx) ---
+        // --- SIDEBAR COMPONENT ---
         const MenuItem = ({ icon, text, href = "#", active, disabled, soon, badge }) => {
             const activeClasses = 'bg-violet-500/10 text-white border-l-2 border-violet-500';
             const defaultClasses = 'text-zinc-400 hover:bg-white/5 hover:text-white';
@@ -279,27 +294,15 @@
                 <aside className="bg-[rgba(15,15,15,0.6)] border-b xl:border-b-0 xl:border-r border-white/10 xl:sticky xl:top-[57px] xl:h-[calc(100vh-57px)] xl:overflow-y-auto scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
                     <div className="p-5 border-b border-white/10">
                         <div className="flex items-center gap-3">
-                            {loading ? (
-                                 <div className="w-11 h-11 rounded-full skeleton-loader"></div>
-                            ) : (
-                                <div className="flex items-center justify-center w-11 h-11 rounded-full bg-zinc-800 font-bold text-xl text-zinc-500">{initial}</div>
-                            )}
+                            <div className="profile-avatar flex items-center justify-center w-11 h-11 rounded-full bg-zinc-800 font-bold text-xl text-zinc-500 skeleton-avatar">?</div>
                             <div className="flex-1 overflow-hidden">
-                                {loading ? (
-                                    <div className="h-5 rounded w-32 skeleton-loader"></div>
-                                ) : (
-                                    <div className="font-semibold text-white truncate">{profileName}</div>
-                                )}
+                                <div className="profile-name font-semibold text-white truncate skeleton-text">Cargando...</div>
                             </div>
                         </div>
                     </div>
                     <div className="p-5 border-b border-white/10 bg-violet-500/5">
                         <div className="text-xs text-zinc-400 uppercase tracking-wider font-semibold mb-1.5">Saldo Disponible</div>
-                        {loading ? (
-                             <div className="h-9 rounded w-24 skeleton-loader"></div>
-                        ) : (
-                             <div className="text-3xl font-bold text-white">${user?.balance?.toFixed(2) ?? '0.00'}</div>
-                        )}
+                        <div className="wallet-amount text-3xl font-bold text-white skeleton-text">$0.00</div>
                     </div>
                      {user?.is_producer && (
                         <div className="p-5">
@@ -317,26 +320,26 @@
                     </div>
                     <nav className="py-3">
                         <div className="px-5 py-3 text-xs text-zinc-500 uppercase tracking-widest font-bold">Principal</div>
-                        <MenuItem icon="fas fa-th-large" text="Dashboard" active={activePage === 'Dashboard'} />
-                        {user?.is_producer && <MenuItem icon="fas fa-music" text="Mis Kits" active={activePage === 'Mis Kits'} />}
+                        <MenuItem icon="fas fa-th-large" text="Dashboard" href="dashboard" active={activePage === 'Dashboard'} />
+                        {user?.is_producer && <MenuItem icon="fas fa-music" text="Mis Kits" href="mis-kits" active={activePage === 'Mis Kits'} />}
                         {user?.is_producer && <MenuItem icon="fas fa-chart-line" text="Analíticas" disabled soon />}
-                        <MenuItem icon="fas fa-heart" text="Favoritos" active={activePage === 'Favoritos'}/>
+                        <MenuItem icon="fas fa-heart" text="Favoritos" href="favoritos" active={activePage === 'Favoritos'}/>
                         <MenuItem icon="fas fa-history" text="Historial" active={activePage === 'Historial'}/>
                         <div className="mx-5 my-3 border-t border-white/10"></div>
                         <div className="px-5 py-3 text-xs text-zinc-500 uppercase tracking-widest font-bold">Colaboración</div>
-                        <MenuItem icon="fas fa-users" text="Colaboraciones" active={activePage === 'Colaboraciones'}/>
+                        <MenuItem icon="fas fa-users" text="Colaboraciones" href="colaboraciones" active={activePage === 'Colaboraciones'}/>
                         <div className="mx-5 my-3 border-t border-white/10"></div>
                         <div className="px-5 py-3 text-xs text-zinc-500 uppercase tracking-widest font-bold">Compras</div>
-                        <MenuItem icon="fas fa-shopping-bag" text="Mis Compras" active={activePage === 'Mis Compras'}/>
-                        <MenuItem icon="fas fa-gift" text="Gift Cards" active={activePage === 'Gift Cards'}/>
-                        <MenuItem icon="fas fa-envelope" text="Mensajes" active={activePage === 'Mensajes'}/>
+                        <MenuItem icon="fas fa-shopping-bag" text="Mis Compras" href="mis-compras" active={activePage === 'Mis Compras'}/>
+                        <MenuItem icon="fas fa-gift" text="Gift Cards" href="Gift-Cards" active={activePage === 'Gift Cards'}/>
+                        <MenuItem icon="fas fa-envelope" text="Mensajes" href="messages" active={activePage === 'Mensajes'}/>
                         <div className="mx-5 my-3 border-t border-white/10"></div>
                         <div className="px-5 py-3 text-xs text-zinc-500 uppercase tracking-widest font-bold">Configuración</div>
-                        <MenuItem icon="fas fa-cog" text="Configuración" active={activePage === 'Configuración'}/>
-                        <MenuItem icon="fas fa-book-open" text="Blog" active={activePage === 'Blog'}/>
+                        <MenuItem icon="fas fa-cog" text="Configuración" href="account-settings" active={activePage === 'Configuración'}/>
+                        <MenuItem icon="fas fa-book-open" text="Blog" href="blog" active={activePage === 'Blog'}/>
                     </nav>
                     <div className="p-5 mt-4">
-                         <a href="#" className="w-full py-3 bg-red-500/10 border border-red-500/20 text-red-500 rounded-lg font-semibold flex items-center justify-center gap-2 hover:bg-red-500/15 hover:border-red-500/30 transition-all duration-200 text-sm">
+                         <a href="logout" className="logout-btn w-full py-3 bg-red-500/10 border border-red-500/20 text-red-500 rounded-lg font-semibold flex items-center justify-center gap-2 hover:bg-red-500/15 hover:border-red-500/30 transition-all duration-200 text-sm">
                             <i className="fas fa-sign-out-alt"></i>
                             Cerrar Sesión
                         </a>
@@ -345,10 +348,10 @@
             );
         };
 
-        // --- MAINCONTENT COMPONENT (from components/MainContent.tsx) ---
+        // --- MAINCONTENT COMPONENT ---
         const FeaturedCard = ({ collab }) => (
             <div className="bg-[rgba(26,10,46,0.4)] border-2 border-violet-900/60 rounded-2xl p-8 transition-all duration-300 hover:border-violet-700 hover:shadow-2xl hover:shadow-violet-900/50 hover:-translate-y-2 relative overflow-hidden">
-                <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-violet-600 via-violet-500 to-violet-600 animate-[gradientShift_3s_ease_infinite]" style={{ backgroundSize: '200% 100%' }}></div>
+                <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-violet-600 via-violet-500 to-violet-600" style={{ backgroundSize: '200% 100%', animation: 'gradientShift 3s ease infinite' }}></div>
                 <div className="inline-flex items-center gap-2 bg-gradient-to-r from-violet-600 to-violet-500 text-white px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider mb-6">
                     <i className="bi bi-trending-up"></i>
                     Destacado
@@ -382,12 +385,6 @@
                 <button className="w-full bg-gradient-to-r from-violet-600 to-violet-500 text-white py-3 rounded-lg font-bold flex items-center justify-center gap-2 hover:shadow-lg hover:shadow-violet-500/50 hover:-translate-y-0.5 transition-all">
                     Ver Detalles <i className="bi bi-arrow-right"></i>
                 </button>
-                <style>{`
-                    @keyframes gradientShift {
-                        0%, 100% { background-position: 0% 50%; }
-                        50% { background-position: 100% 50%; }
-                    }
-                `}</style>
             </div>
         );
 
@@ -521,54 +518,9 @@
             )
         };
 
-        // --- APP COMPONENT (from App.tsx) ---
-        const Footer = () => (
-            <footer className="bg-black py-10 px-6 sm:py-14 sm:px-8 border-t border-violet-900/40 mt-16">
-                <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 mb-6">
-                    <div className="footer-section">
-                        <h4 className="text-base font-bold text-white mb-4 font-montserrat">OFFSZN</h4>
-                        <div className="flex flex-col gap-2">
-                            <a href="#" className="text-zinc-400 text-sm hover:text-[#c9a7eb] hover:pl-1 transition-all">Acerca de</a>
-                            <a href="#" className="text-zinc-400 text-sm hover:text-[#c9a7eb] hover:pl-1 transition-all">Carreras</a>
-                            <a href="#" className="text-zinc-400 text-sm hover:text-[#c9a7eb] hover:pl-1 transition-all">Prensa</a>
-                        </div>
-                    </div>
-                    <div className="footer-section">
-                        <h4 className="text-base font-bold text-white mb-4 font-montserrat">Recursos</h4>
-                        <div className="flex flex-col gap-2">
-                            <a href="#" className="text-zinc-400 text-sm hover:text-[#c9a7eb] hover:pl-1 transition-all">Cursos</a>
-                            <a href="#" className="text-zinc-400 text-sm hover:text-[#c9a7eb] hover:pl-1 transition-all">Samples</a>
-                            <a href="#" className="text-zinc-400 text-sm hover:text-[#c9a7eb] hover:pl-1 transition-all">Presets</a>
-                        </div>
-                    </div>
-                    <div className="footer-section">
-                        <h4 className="text-base font-bold text-white mb-4 font-montserrat">Comunidad</h4>
-                        <div className="flex flex-col gap-2">
-                            <a href="#" className="text-zinc-400 text-sm hover:text-[#c9a7eb] hover:pl-1 transition-all">Colaboraciones</a>
-                            <a href="#" className="text-zinc-400 text-sm hover:text-[#c9a7eb] hover:pl-1 transition-all">Foro</a>
-                            <a href="#" className="text-zinc-400 text-sm hover:text-[#c9a7eb] hover:pl-1 transition-all">Eventos</a>
-                        </div>
-                    </div>
-                     <div className="footer-section">
-                        <h4 className="text-base font-bold text-white mb-4 font-montserrat">Legal</h4>
-                        <div className="flex flex-col gap-2">
-                            <a href="#" className="text-zinc-400 text-sm hover:text-[#c9a7eb] hover:pl-1 transition-all">Privacidad</a>
-                            <a href="#" className="text-zinc-400 text-sm hover:text-[#c9a7eb] hover:pl-1 transition-all">Términos</a>
-                            <a href="#" className="text-zinc-400 text-sm hover:text-[#c9a7eb] hover:pl-1 transition-all">Cookies</a>
-                        </div>
-                        <div className="flex gap-3 mt-4">
-                            <a href="#" className="w-8 h-8 bg-violet-500/10 border border-violet-500/20 rounded-full flex items-center justify-center text-[#7209b7] hover:bg-violet-500/20 transition-colors"><i className="bi bi-instagram"></i></a>
-                            <a href="#" className="w-8 h-8 bg-violet-500/10 border border-violet-500/20 rounded-full flex items-center justify-center text-[#7209b7] hover:bg-violet-500/20 transition-colors"><i className="bi bi-youtube"></i></a>
-                            <a href="#" className="w-8 h-8 bg-violet-500/10 border border-violet-500/20 rounded-full flex items-center justify-center text-[#7209b7] hover:bg-violet-500/20 transition-colors"><i className="bi bi-twitter-x"></i></a>
-                        </div>
-                    </div>
-                </div>
-                <div className="pt-6 border-t border-white/10 text-center">
-                    <p className="text-sm text-zinc-400">© 2025 OFFSZN. Todos los derechos reservados.</p>
-                </div>
-            </footer>
-        );
 
+
+        // --- APP COMPONENT ---
         const App = () => {
             const [user, setUser] = useState(null);
             const [loadingUser, setLoadingUser] = useState(true);
@@ -655,12 +607,11 @@
                         <Sidebar user={user} loading={loadingUser} activePage="Colaboraciones" />
                         <MainContent featured={featuredCollabs} general={generalCollabs} loading={loadingContent} />
                     </div>
-                    <Footer />
                 </div>
             );
         };
         
-        // --- RENDER THE APP (from index.tsx) ---
+        // --- RENDER THE APP ---
         const rootElement = document.getElementById('root');
         if (!rootElement) {
           throw new Error("Could not find root element to mount to");
@@ -672,40 +623,10 @@
             <App />
           </React.StrictMode>
         );
- /* ---------- CARGA DE SALDO (localStorage) ---------- */
-        const STORAGE_KEY = 'offszn_giftcards_state';
-        let appState = { totalBalance: 0, giftCards: [] };
-
-        function loadState() {
-            try {
-                const saved = localStorage.getItem(STORAGE_KEY);
-                if (saved) {
-                    appState = JSON.parse(saved);
-                    updateWalletAmount();
-                }
-            } catch (err) { console.error('Error al cargar estado:', err); }
-        }
-        function updateWalletAmount() {
-            const el = document.querySelector('.wallet-amount');
-            if (el) el.textContent = `$${appState.totalBalance.toFixed(2)}`;
-        }
-
-        /* ---------- DETECCIÓN DE PRODUCTOS (estado vacío) ---------- */
-        function checkProducts() {
-            const grid = document.getElementById('products-grid');
-            const empty = document.getElementById('empty-products-state');
-            const hasProducts = grid.children.length > 0;
-            grid.style.display = hasProducts ? 'grid' : 'none';
-            empty.style.display = hasProducts ? 'none' : 'block';
-        }
-
-        /* ---------- INICIALIZACIÓN ---------- */
-        document.addEventListener('DOMContentLoaded', () => {
-            loadState();
-            checkProducts();
-        });
     </script>
-    <script src="dashboard.js"></script>
-    </script>
+    
+    <!-- Script externo con datos reales de Supabase -->
+    <script src="colaboraciones.js"></script>
 </body>
 </html>
+            
