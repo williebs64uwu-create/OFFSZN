@@ -20,6 +20,13 @@
             background: #0a0a0a;
             color: #e5e5e5;
             overflow-x: hidden;
+            /* Se añade un fade-in suave al inicio como en favoritos (5).html */
+            opacity: 0;
+            transition: opacity 0.3s ease-in;
+        }
+
+        body.loaded {
+            opacity: 1;
         }
 
         /* ---------- NAVBAR ---------- */
@@ -570,57 +577,45 @@
             min-height: calc(100vh - 57px);
         }
 
+        /* ESTILO DEL BANNER (Page Header) ADAPTADO DE FAVORITOS (5).HTML */
         .page-header {
             margin-bottom: 48px;
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
-            background: linear-gradient(135deg, rgba(34, 197, 94, .12), rgba(16, 185, 129, .06));
-            border: 1px solid rgba(34, 197, 94, .25);
+            background: rgba(15, 15, 15, .6);
+            border: 1px solid rgba(255, 255, 255, .08);
             border-radius: 20px;
             padding: 40px;
             position: relative;
             overflow: hidden;
-            box-shadow: 0 8px 32px rgba(34, 197, 94, .1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, .3);
         }
 
         .page-header::before {
             content: '';
             position: absolute;
-            top: -50%;
-            right: -10%;
-            width: 400px;
-            height: 400px;
-            background: radial-gradient(circle, rgba(34, 197, 94, .2), transparent);
+            top: -50px;
+            right: -50px;
+            width: 250px;
+            height: 250px;
+            background: radial-gradient(circle, rgba(139, 92, 246, .2), transparent 70%);
             border-radius: 50%;
             pointer-events: none;
-            animation: pulse 8s ease-in-out infinite;
+            z-index: 0;
         }
 
         .page-header::after {
             content: '';
             position: absolute;
-            bottom: -30%;
-            left: -5%;
-            width: 300px;
-            height: 300px;
-            background: radial-gradient(circle, rgba(16, 185, 129, .15), transparent);
+            bottom: -30px;
+            left: -30px;
+            width: 150px;
+            height: 150px;
+            background: radial-gradient(circle, rgba(139, 92, 246, .1), transparent 70%);
             border-radius: 50%;
             pointer-events: none;
-        }
-
-        @keyframes pulse {
-
-            0%,
-            100% {
-                transform: scale(1);
-                opacity: .5;
-            }
-
-            50% {
-                transform: scale(1.1);
-                opacity: .3;
-            }
+            z-index: 0;
         }
 
         .page-title-section {
@@ -634,11 +629,11 @@
             color: #fff;
             margin-bottom: 12px;
             letter-spacing: -1.2px;
+            /* Gradient adaptado para Colaboraciones (Verde/Éxito) */
             background: linear-gradient(135deg, #fff 0%, #86efac 50%, #22c55e 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
-            text-shadow: 0 0 40px rgba(34, 197, 94, .3);
         }
 
         .page-subtitle {
@@ -669,6 +664,7 @@
         }
 
         .header-btn.primary {
+            /* Mantenido verde para la acción de Colaboraciones */
             background: #22c55e;
             color: #fff;
         }
@@ -763,7 +759,7 @@
             color: #fff;
         }
 
-        /* ---------- STATS CARDS ---------- */
+        /* ---------- STATS CARDS (ADAPTADO DE FAVORITOS (5).HTML) ---------- */
         .stats-row {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -780,7 +776,8 @@
         }
 
         .stat-card:hover {
-            border-color: rgba(34, 197, 94, .2);
+            /* Color de hover de Favorite/Dashboard */
+            border-color: rgba(139, 92, 246, .2);
             background: rgba(255, 255, 255, .04);
         }
 
@@ -794,6 +791,7 @@
         .stat-icon {
             width: 48px;
             height: 48px;
+            /* Color de Colaboraciones (Éxito/Verde) */
             background: rgba(34, 197, 94, .1);
             border-radius: 12px;
             display: flex;
@@ -895,7 +893,6 @@
         }
 
         .profile-info-section {
-            /* Mantenemos el margen para el avatar */
             margin-top: 55px;
         }
 
@@ -970,7 +967,7 @@
             border-top: 1px solid rgba(255, 255, 255, .08);
         }
 
-        /* Ajustes para el botón de acción */
+        /* Estilo del botón de acción: idéntico al de favoritos */
         .action-btn {
             flex: 1;
             padding: 10px;
@@ -984,7 +981,6 @@
             align-items: center;
             justify-content: center;
             gap: 8px;
-            /* Estilo por defecto (Ver Perfil - Secondary) */
             background: rgba(255, 255, 255, .05);
             color: #999;
         }
@@ -996,14 +992,14 @@
         }
 
         .action-btn.primary {
-            /* Estilo para el botón primario (Mensaje) */
-            background: #22c55e; /* Fondo sólido verde */
+            /* Mantenido el color verde para la acción "Mensaje" */
+            background: #22c55e;
             color: #fff;
             border-color: #22c55e;
         }
 
         .action-btn.primary:hover {
-            background: #16a34a; /* Verde más oscuro al pasar el ratón */
+            background: #16a34a;
             color: #fff;
             transform: translateY(-1px);
             border-color: #16a34a;
@@ -1063,27 +1059,23 @@
             transform: translateY(-2px);
         }
 
-        /* ---------- LOADING SKELETON (AÑADIDO Y MEJORADO) ---------- */
+        /* ---------- LOADING SKELETON ---------- */
         .skeleton {
             background: linear-gradient(90deg, rgba(255, 255, 255, .03) 25%, rgba(255, 255, 255, .08) 50%, rgba(255, 255, 255, .03) 75%);
             background-size: 200% 100%;
             animation: skeleton-loading 1.5s ease-in-out infinite;
             border-radius: 8px;
-            /* Asegura que el skeleton ocupe espacio y no muestre texto */
             color: transparent !important;
-            /* Para que los elementos de texto puedan ser reemplazados */
             display: inline-block;
             user-select: none;
         }
 
-        /* Clases específicas para skeletons */
         .profile-avatar.skeleton,
         .profile-avatar-large.skeleton {
             border-radius: 50%;
             background: linear-gradient(90deg, rgba(255, 255, 255, .03) 25%, rgba(255, 255, 255, .08) 50%, rgba(255, 255, 255, .03) 75%);
         }
 
-        /* Asegura que el stat-value tome el espacio del texto */
         .stat-value.skeleton {
             margin-bottom: 6px;
         }
@@ -1410,28 +1402,28 @@
                     <div class="stat-header">
                         <div class="stat-icon"><i class="fas fa-handshake"></i></div>
                     </div>
-                    <div class="stat-value skeleton" style="height: 38px; width: 60px; border-radius: 6px;">&nbsp;</div>
+                    <div class="stat-value skeleton" data-stat-index="0" style="height: 38px; width: 60px; border-radius: 6px;">&nbsp;</div>
                     <div class="stat-label">Colaboraciones Activas</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-header">
                         <div class="stat-icon"><i class="fas fa-users"></i></div>
                     </div>
-                    <div class="stat-value skeleton" style="height: 38px; width: 60px; border-radius: 6px;">&nbsp;</div>
+                    <div class="stat-value skeleton" data-stat-index="1" style="height: 38px; width: 60px; border-radius: 6px;">&nbsp;</div>
                     <div class="stat-label">Colaboradores</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-header">
                         <div class="stat-icon"><i class="fas fa-music"></i></div>
                     </div>
-                    <div class="stat-value skeleton" style="height: 38px; width: 60px; border-radius: 6px;">&nbsp;</div>
+                    <div class="stat-value skeleton" data-stat-index="2" style="height: 38px; width: 60px; border-radius: 6px;">&nbsp;</div>
                     <div class="stat-label">Proyectos Completados</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-header">
                         <div class="stat-icon"><i class="fas fa-envelope"></i></div>
                     </div>
-                    <div class="stat-value skeleton" style="height: 38px; width: 60px; border-radius: 6px;">&nbsp;</div>
+                    <div class="stat-value skeleton" data-stat-index="3" style="height: 38px; width: 60px; border-radius: 6px;">&nbsp;</div>
                     <div class="stat-label">Solicitudes Pendientes</div>
                 </div>
             </div>
@@ -1593,11 +1585,10 @@
     </div>
 
     <script>
-        // ---------- ELEMENTOS DEL DOM (Actualizado para usar IDs) ----------
-        const sidebarAvatar = document.getElementById('sidebar-avatar'); // Nuevo
-        const sidebarName = document.getElementById('sidebar-name'); // Nuevo
-        const walletAmountEl = document.getElementById('wallet-amount-el'); // Nuevo
-        const statsValues = document.querySelectorAll('.stat-value');
+        // ---------- ELEMENTOS DEL DOM ----------
+        const sidebarAvatar = document.getElementById('sidebar-avatar'); 
+        const sidebarName = document.getElementById('sidebar-name'); 
+        const walletAmountEl = document.getElementById('wallet-amount-el'); 
         const profilesGrid = document.getElementById('profiles-grid');
         const emptyState = document.getElementById('empty-state');
         const searchInput = document.getElementById('search-collaborators');
@@ -1605,7 +1596,7 @@
         let userData = null;
         let allProfiles = [];
 
-        // ---------- GIFT CARDS STATE ----------
+        // ---------- GIFT CARDS STATE & CACHE ----------
         const STORAGE_KEY = 'offszn_giftcards_state';
         const CACHE_KEY = 'offszn_user_cache';
         let appState = { totalBalance: 0, giftCards: [] };
@@ -1624,6 +1615,15 @@
             window.location.replace('/pages/login.html');
         }
 
+        // ---------- VISTA INICIAL (SKELETON) ----------
+        function showSkeletonLoading() {
+            // Asegura que el body tenga la clase 'loaded' solo al finalizar la carga
+            document.body.classList.remove('loaded'); 
+            // Esto es más un control de estado que una función visual, la UI ya tiene los skeletons en HTML
+            profilesGrid.style.display = 'grid';
+            emptyState.style.display = 'none';
+        }
+
         // ---------- CACHÉ DE USUARIO ----------
         function loadCachedUser() {
             try {
@@ -1632,7 +1632,7 @@
                     const cachedData = JSON.parse(cached);
                     console.log('Cargando datos desde caché...');
                     updateUserUI(cachedData, true);
-                    loadGiftCardsState(); // Carga el saldo de la billetera desde caché
+                    loadGiftCardsState(); 
                     return true;
                 }
             } catch (err) {
@@ -1649,11 +1649,10 @@
             }
         }
 
-        // ---------- ACTUALIZAR UI DE USUARIO (MODIFICADO para quitar skeleton) ----------
-        function updateUserUI(userData, fromCache = false) {
+        // ---------- ACTUALIZAR UI DE USUARIO ----------
+        function updateUserUI(userData) {
             if (sidebarName) {
                 sidebarName.textContent = `${userData.first_name || ''} ${userData.lastName || ''}`.trim() || userData.nickname;
-                // Quitar skeleton y estilos inline
                 sidebarName.classList.remove('skeleton');
                 sidebarName.removeAttribute('style');
             }
@@ -1661,7 +1660,6 @@
             if (sidebarAvatar) {
                 const initial = (userData.first_name || userData.nickname || 'U').charAt(0).toUpperCase();
                 sidebarAvatar.textContent = initial;
-                // Quitar skeleton y estilos inline
                 sidebarAvatar.classList.remove('skeleton');
                 sidebarAvatar.removeAttribute('style');
                 sidebarAvatar.classList.add('fade-in');
@@ -1669,7 +1667,7 @@
             }
         }
 
-        // ---------- GIFT CARDS (MODIFICADO para quitar skeleton) ----------
+        // ---------- GIFT CARDS ----------
         function loadGiftCardsState() {
             try {
                 const saved = localStorage.getItem(STORAGE_KEY);
@@ -1685,11 +1683,9 @@
 
         function updateWalletAmount() {
             if (walletAmountEl) {
-                // Formatear el saldo antes de mostrarlo
                 const formattedBalance = `$${appState.totalBalance.toFixed(2)}`;
                 walletAmountEl.textContent = formattedBalance;
                 
-                // Quitar skeleton y estilos inline
                 walletAmountEl.classList.remove('skeleton');
                 walletAmountEl.removeAttribute('style');
                 walletAmountEl.classList.add('fade-in');
@@ -1714,21 +1710,22 @@
                 localStorage.setItem('userId', userData.id);
                 saveUserCache(userData);
                 updateUserUI(userData, false);
-                // loadGiftCardsState() ya se llamó en loadCachedUser() si había caché
-                if (!loadCachedUser()) {
-                   loadGiftCardsState(); // Cargar la billetera si no estaba en caché
+                
+                // Si loadCachedUser() no funcionó, cargamos la billetera ahora
+                if (!loadCachedUser()) { 
+                   loadGiftCardsState(); 
                 }
-
 
                 await loadCollaborators();
 
             } catch (error) {
                 console.error("Error al cargar datos:", error);
                 
-                // Si falla la carga, asegurar que los skeletons de perfil y wallet al menos se quiten
+                // Asegurar que los skeletons se quiten para evitar errores visuales
                 if(sidebarName) sidebarName.classList.remove('skeleton');
                 if(sidebarAvatar) sidebarAvatar.classList.remove('skeleton');
                 if(walletAmountEl) walletAmountEl.classList.remove('skeleton');
+                updateStats([]); // Quita skeletons de stats
 
                 // Si falla, limpiar el grid de skeletons y mostrar empty state
                 if (profilesGrid) profilesGrid.innerHTML = '';
@@ -1739,6 +1736,9 @@
                     localStorage.removeItem(CACHE_KEY);
                     window.location.replace('/pages/login.html');
                 }
+            } finally {
+                 // Añadir clase loaded al body al finalizar la carga (exitosa o con error)
+                document.body.classList.add('loaded');
             }
         }
 
@@ -1756,30 +1756,28 @@
                 allProfiles = await response.json();
                 console.log("Colaboradores cargados:", allProfiles);
 
-                updateStats(allProfiles); // Quita skeletons de stats
+                updateStats(allProfiles); 
 
                 if (allProfiles.length === 0) {
                     profilesGrid.style.display = 'none';
-                    profilesGrid.innerHTML = ''; // Limpia los skeletons
+                    profilesGrid.innerHTML = ''; 
                     emptyState.style.display = 'block';
                 } else {
                     emptyState.style.display = 'none';
                     profilesGrid.style.display = 'grid';
-                    renderProfiles(allProfiles); // Reemplaza skeletons con datos
+                    renderProfiles(allProfiles); 
                 }
 
             } catch (error) {
                 console.error("Error cargando colaboradores:", error);
-                // Si falla, limpiar el grid de skeletons y mostrar empty state
                 profilesGrid.innerHTML = '';
                 profilesGrid.style.display = 'none';
                 emptyState.style.display = 'block';
-                // Asegurar que los skeletons de stats se quiten si falla la carga completa
                 updateStats([]);
             }
         }
 
-        // ---------- ACTUALIZAR ESTADÍSTICAS (MODIFICADO para quitar skeleton) ----------
+        // ---------- ACTUALIZAR ESTADÍSTICAS ----------
         function updateStats(profiles) {
             const stats = {
                 active: profiles.filter(p => p.collaboration_status === 'active').length,
@@ -1790,21 +1788,18 @@
 
             const statElements = document.querySelectorAll('.stat-value');
 
-            // Función interna para actualizar cada stat y quitar skeleton
-            const updateStatEl = (el, value) => {
-                if (el) {
-                    el.textContent = value;
-                    el.classList.remove('skeleton');
-                    el.removeAttribute('style'); // Crucial
-                    el.classList.add('fade-in');
-                    el.style.color = '';
-                }
-            };
+            // Mapeo manual de índices a valores (ajustado para Colaboraciones)
+            const statValues = [stats.active, stats.total, stats.completed, stats.pending];
 
-            updateStatEl(statElements[0], stats.active);
-            updateStatEl(statElements[1], stats.total);
-            updateStatEl(statElements[2], stats.completed);
-            updateStatEl(statElements[3], stats.pending);
+            statElements.forEach((el, index) => {
+                const value = statValues[index] !== undefined ? statValues[index] : '0';
+                
+                el.textContent = value;
+                el.classList.remove('skeleton');
+                el.removeAttribute('style'); 
+                el.classList.add('fade-in');
+                el.style.color = '';
+            });
         }
 
         // ---------- RENDERIZAR PERFILES ----------
@@ -1869,40 +1864,36 @@
             }
         };
 
-        // ---------- BÚSQUEDA ----------
+        // ---------- BÚSQUEDA Y FILTROS ----------
         if (searchInput) {
             searchInput.addEventListener('input', (e) => {
                 const query = e.target.value.toLowerCase();
-                const filtered = allProfiles.filter(p =>
-                    (p.name && p.name.toLowerCase().includes(query)) ||
-                    (p.username && p.username.toLowerCase().includes(query)) ||
-                    (p.bio && p.bio.toLowerCase().includes(query))
-                );
-                
-                if (filtered.length === 0) {
-                    profilesGrid.innerHTML = '';
-                    profilesGrid.style.display = 'none';
-                    emptyState.style.display = 'block';
-                } else {
-                    emptyState.style.display = 'none';
-                    profilesGrid.style.display = 'grid';
-                    renderProfiles(filtered);
-                }
+                applyFilters(query);
             });
         }
 
-        // ---------- FILTROS ----------
         const filterType = document.getElementById('filter-type');
         const filterGenre = document.getElementById('filter-genre');
         const filterSort = document.getElementById('filter-sort');
 
-        if (filterType) filterType.addEventListener('change', applyFilters);
-        if (filterGenre) filterGenre.addEventListener('change', applyFilters);
-        if (filterSort) filterSort.addEventListener('change', applyFilters);
+        if (filterType) filterType.addEventListener('change', () => applyFilters(searchInput?.value));
+        if (filterGenre) filterGenre.addEventListener('change', () => applyFilters(searchInput?.value));
+        if (filterSort) filterSort.addEventListener('change', () => applyFilters(searchInput?.value));
 
-        function applyFilters() {
+        function applyFilters(query = '') {
             let filtered = [...allProfiles];
+            const lowerQuery = query.toLowerCase();
 
+            // Filtrar por búsqueda
+            if (lowerQuery) {
+                filtered = filtered.filter(p =>
+                    (p.name && p.name.toLowerCase().includes(lowerQuery)) ||
+                    (p.username && p.username.toLowerCase().includes(lowerQuery)) ||
+                    (p.bio && p.bio.toLowerCase().includes(lowerQuery))
+                );
+            }
+
+            // Filtrar por tipo
             const type = filterType?.value;
             if (type && type !== 'all') {
                 filtered = filtered.filter(p => {
@@ -1911,6 +1902,7 @@
                 });
             }
 
+            // Filtrar por género
             const genre = filterGenre?.value;
             if (genre && genre !== 'all') {
                 filtered = filtered.filter(p =>
@@ -1918,6 +1910,7 @@
                 );
             }
 
+            // Ordenar
             const sort = filterSort?.value;
             if (sort) {
                 switch (sort) {
@@ -1933,6 +1926,7 @@
                 }
             }
 
+            // Mostrar resultados
             if (filtered.length === 0) {
                 profilesGrid.innerHTML = ''; 
                 profilesGrid.style.display = 'none';
@@ -1951,6 +1945,7 @@
                 btn.classList.add('active');
                 const view = btn.dataset.view;
                 console.log('Cambiar vista a:', view);
+                // Aquí iría la lógica para cambiar entre vista de grid y lista (CSS)
             });
         });
 
@@ -2019,6 +2014,9 @@
             if (navbarLogoutButton) {
                 navbarLogoutButton.addEventListener('click', handleLogout);
             }
+
+            // Mostrar skeletons al inicio
+            showSkeletonLoading(); 
 
             // Cargar caché si existe (y quita skeletons de caché si lo logra)
             loadCachedUser();
