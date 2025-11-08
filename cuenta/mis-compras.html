@@ -1,369 +1,1894 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Mis Compras | OFFSZN</title>
-    
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Icons and Fonts -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Montserrat:wght@700;800;900&display=swap" rel="stylesheet">
-    
-    <!-- Custom Styles -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mis Compras - OFFSZN Productor</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
             font-family: 'Inter', sans-serif;
             background: #0a0a0a;
+            color: #e5e5e5;
+            overflow-x: hidden;
+            transition: opacity 0.3s ease-in;
         }
-        .font-montserrat {
-            font-family: 'Montserrat', sans-serif;
+
+        /* ---------- NAVBAR (Sin cambios) ---------- */
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 3rem;
+            background: rgba(0, 0, 0, .98);
+            position: sticky;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+            border-bottom: 1px solid rgba(255, 255, 255, .08);
+            backdrop-filter: blur(20px);
         }
-        .skeleton-avatar {
-            background: linear-gradient(90deg, 
-                rgba(255, 255, 255, 0.05) 25%, 
-                rgba(255, 255, 255, 0.1) 50%, 
-                rgba(255, 255, 255, 0.05) 75%
-            );
-            background-size: 200% 100%;
-            animation: skeleton-loading 1.5s ease-in-out infinite;
-            border-radius: 50% !important;
+
+        .navbar .logo a {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #fff;
+            text-decoration: none;
+            letter-spacing: -.5px;
         }
-        .skeleton-text {
-            background: linear-gradient(90deg, 
-                rgba(255, 255, 255, 0.05) 25%, 
-                rgba(255, 255, 255, 0.1) 50%, 
-                rgba(255, 255, 255, 0.05) 75%
-            );
-            background-size: 200% 100%;
-            animation: skeleton-loading 1.5s ease-in-out infinite;
-            border-radius: 4px;
-            height: 1em;
-            min-width: 80px;
-            display: inline-block;
-            color: transparent !important;
+
+        .navbar-center {
+            display: flex;
+            align-items: center;
+            gap: 2.5rem;
         }
-        @keyframes skeleton-loading {
-            0% { background-position: 200% 0; }
-            100% { background-position: -200% 0; }
+
+        .navbar-links {
+            list-style: none;
+            display: flex;
+            gap: 2rem;
+            align-items: center;
         }
-        .scrollbar-thin {
-            scrollbar-width: thin;
-            scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+
+        .navbar-links li {
+            position: relative;
         }
-        .scrollbar-thin::-webkit-scrollbar {
+
+        .navbar-links a {
+            color: #999;
+            text-decoration: none;
+            transition: all .2s;
+            font-weight: 500;
+            font-size: .9rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+        }
+
+        .navbar-links a:hover {
+            color: #fff;
+        }
+
+        .navbar-links>li>a>i {
+            font-size: .7rem;
+            transition: transform .2s;
+        }
+
+        .dropdown-menu {
+            position: absolute;
+            top: calc(100% + 12px);
+            left: 50%;
+            transform: translateX(-50%) translateY(-10px);
+            background: rgba(20, 20, 20, .98);
+            border: 1px solid rgba(255, 255, 255, .1);
+            border-radius: 12px;
+            padding: 8px;
+            min-width: 240px;
+            opacity: 0;
+            visibility: hidden;
+            transition: all .3s ease;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, .5);
+            backdrop-filter: blur(20px);
+            z-index: 1001;
+        }
+
+        .navbar-links li:hover .dropdown-menu {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .navbar-links a i.fa-chevron-down {
+            transition: transform .2s;
+        }
+
+        .navbar-links li:hover a i.fa-chevron-down {
+            transform: rotate(180deg);
+        }
+
+        .dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 14px;
+            color: #999;
+            text-decoration: none;
+            font-size: .85rem;
+            border-radius: 8px;
+            transition: all .2s;
+            font-weight: 500;
+        }
+
+        .dropdown-item:hover {
+            background: rgba(139, 92, 246, .1);
+            color: #fff;
+        }
+
+        .dropdown-item i {
+            width: 18px;
+            text-align: center;
+        }
+
+        .dropdown-divider {
+            height: 1px;
+            background: rgba(255, 255, 255, .08);
+            margin: 8px 0;
+        }
+
+        .navbar-search {
+            position: relative;
+            width: 380px;
+        }
+
+        .navbar-search input {
+            width: 100%;
+            padding: .6rem 2.5rem .6rem 1rem;
+            background: rgba(255, 255, 255, .05);
+            border: 1px solid rgba(255, 255, 255, .1);
+            border-radius: 8px;
+            color: #fff;
+            font-size: .85rem;
+            outline: none;
+            transition: all .2s;
+        }
+
+        .navbar-search input:focus {
+            background: rgba(255, 255, 255, .08);
+            border-color: rgba(139, 92, 246, .5);
+        }
+
+        .navbar-search input::placeholder {
+            color: #666;
+        }
+
+        .navbar-search i {
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #666;
+            font-size: .9rem;
+        }
+
+        .navbar-right {
+            display: flex;
+            gap: .75rem;
+            align-items: center;
+        }
+
+        .navbar-icon-button {
+            width: 36px;
+            height: 36px;
+            background: rgba(255, 255, 255, .05);
+            border: 1px solid rgba(255, 255, 255, .1);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #999;
+            font-size: 16px;
+            transition: all .2s;
+            text-decoration: none;
+        }
+
+        .navbar-icon-button:hover {
+            background: rgba(255, 255, 255, .08);
+            color: #fff;
+            border-color: rgba(255, 255, 255, .15);
+        }
+
+        .user-dropdown {
+            position: relative;
+        }
+
+        .user-dropdown-menu {
+            position: absolute;
+            top: calc(100%+12px);
+            right: 0;
+            background: rgba(20, 20, 20, .98);
+            border: 1px solid rgba(255, 255, 255, .1);
+            border-radius: 12px;
+            padding: 12px;
+            min-width: 260px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all .3s ease;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, .5);
+            backdrop-filter: blur(20px);
+        }
+
+        .user-dropdown.active .user-dropdown-menu {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .user-dropdown-header {
+            padding: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, .08);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .user-dropdown-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1rem;
+            color: #666;
+        }
+
+        .user-dropdown-info {
+            flex: 1;
+        }
+
+        .user-dropdown-name {
+            font-weight: 600;
+            color: #fff;
+            font-size: .9rem;
+            margin-bottom: 2px;
+        }
+
+        .user-dropdown-email {
+            font-size: .75rem;
+            color: #666;
+        }
+
+        .user-dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            color: #999;
+            text-decoration: none;
+            font-size: .85rem;
+            border-radius: 8px;
+            transition: all .2s;
+            font-weight: 500;
+        }
+
+        .user-dropdown-item:hover {
+            background: rgba(139, 92, 246, .1);
+            color: #fff;
+        }
+
+        .user-dropdown-item.disabled {
+            opacity: .4;
+            cursor: not-allowed;
+        }
+
+        .user-dropdown-item i {
+            width: 18px;
+            text-align: center;
+        }
+
+        .user-dropdown-item .soon-badge {
+            margin-left: auto;
+            background: rgba(255, 255, 255, .08);
+            color: #666;
+            padding: 2px 8px;
+            border-radius: 8px;
+            font-size: .6rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .user-dropdown-item.logout {
+            color: #ef4444;
+            margin-top: 8px;
+            border-top: 1px solid rgba(255, 255, 255, .08);
+            padding-top: 12px;
+        }
+
+        .user-dropdown-item.logout:hover {
+            background: rgba(239, 68, 68, .1);
+        }
+
+        /* ---------- DASHBOARD LAYOUT (Sin cambios) ---------- */
+        .dashboard-container {
+            display: grid;
+            grid-template-columns: 260px 1fr;
+            min-height: calc(100vh - 57px);
+        }
+
+        .sidebar {
+            background: rgba(15, 15, 15, .6);
+            border-right: 1px solid rgba(255, 255, 255, .08);
+            position: sticky;
+            top: 57px;
+            height: calc(100vh - 57px);
+            overflow-y: auto;
+        }
+
+        .sidebar::-webkit-scrollbar {
             width: 5px;
         }
-        .scrollbar-thin::-webkit-scrollbar-track {
+
+        .sidebar::-webkit-scrollbar-track {
             background: transparent;
         }
-        .scrollbar-thin::-webkit-scrollbar-thumb {
-            background-color: rgba(255, 255, 255, 0.1);
-            border-radius: 20px;
-            border: 3px solid transparent;
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, .1);
+            border-radius: 3px;
         }
+
+        .profile-header {
+            padding: 24px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, .08);
+        }
+
+        .profile-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .profile-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: #333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: #666;
+        }
+
+        .profile-name {
+            font-weight: 600;
+            color: #fff;
+            font-size: .95rem;
+        }
+
+        .wallet-section {
+            padding: 16px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, .08);
+            background: rgba(139, 92, 246, .05);
+        }
+
+        .wallet-label {
+            font-size: .7rem;
+            color: #999;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+            font-weight: 600;
+        }
+
+        .wallet-amount {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .upload-btn {
+            margin: 20px 20px 0;
+            padding: 14px 18px;
+            background: #8b5cf6;
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all .2s;
+            font-size: .9rem;
+            width: calc(100% - 40px);
+        }
+
+        .upload-btn:hover {
+            background: #7c3aed;
+            transform: translateY(-1px);
+        }
+
+        .sidebar-search {
+            margin: 16px 20px;
+            position: relative;
+        }
+
+        .sidebar-search input {
+            width: 100%;
+            padding: 10px 36px 10px 12px;
+            background: rgba(255, 255, 255, .05);
+            border: 1px solid rgba(255, 255, 255, .1);
+            border-radius: 8px;
+            color: #fff;
+            font-size: .85rem;
+            outline: none;
+            transition: all .2s;
+        }
+
+        .sidebar-search input:focus {
+            background: rgba(255, 255, 255, .08);
+            border-color: rgba(139, 92, 246, .5);
+        }
+
+        .sidebar-search input::placeholder {
+            color: #666;
+            font-size: .82rem;
+        }
+
+        .sidebar-search i {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #666;
+            font-size: .85rem;
+        }
+
+        .sidebar-menu {
+            padding: 12px 0;
+        }
+
+        .menu-section-title {
+            padding: 16px 20px 8px;
+            font-size: .65rem;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 700;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 11px 20px;
+            color: #999;
+            text-decoration: none;
+            font-size: .88rem;
+            transition: all .2s;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .menu-item:hover {
+            background: rgba(255, 255, 255, .05);
+            color: #fff;
+        }
+
+        .menu-item.active {
+            background: rgba(139, 92, 246, .1);
+            color: #fff;
+            border-left: 2px solid #8b5cf6;
+        }
+
+        .menu-item.disabled {
+            opacity: .4;
+            cursor: not-allowed;
+        }
+
+        .menu-item i {
+            width: 18px;
+            text-align: center;
+            font-size: .95rem;
+        }
+
+        .menu-item .badge {
+            margin-left: auto;
+            background: #8b5cf6;
+            color: #fff;
+            padding: 2px 7px;
+            border-radius: 10px;
+            font-size: .65rem;
+            font-weight: 700;
+        }
+
+        .menu-item .soon-badge {
+            margin-left: auto;
+            background: rgba(255, 255, 255, .08);
+            color: #666;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: .6rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .menu-divider {
+            height: 1px;
+            background: rgba(255, 255, 255, .08);
+            margin: 12px 20px;
+        }
+
+        .logout-btn {
+            margin: 20px;
+            background: rgba(239, 68, 68, .1);
+            border: 1px solid rgba(239, 68, 68, .2);
+            color: #ef4444;
+            padding: 11px 18px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            justify-content: center;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: .88rem;
+            transition: all .2s;
+        }
+
+        .logout-btn:hover {
+            background: rgba(239, 68, 68, .15);
+            border-color: rgba(239, 68, 68, .3);
+        }
+
+        /* ---------- MAIN CONTENT ---------- */
+        .main-content {
+            padding: 36px 48px;
+            background: #0a0a0a;
+        }
+
+        /* ----- PAGE HEADER (TEMA VERDE) ----- */
+        .page-header {
+            margin-bottom: 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            /* TEMA VERDE */
+            background: linear-gradient(135deg, rgba(34, 197, 94, .08), rgba(74, 222, 128, .05));
+            border: 1px solid rgba(34, 197, 94, .2);
+            border-radius: 16px;
+            padding: 32px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .page-header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -10%;
+            width: 300px;
+            height: 300px;
+            /* TEMA VERDE */
+            background: radial-gradient(circle, rgba(34, 197, 94, .15), transparent);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        .page-title-section {
+            position: relative;
+            z-index: 1;
+        }
+
+        .page-title-section h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #fff;
+            margin-bottom: 8px;
+            letter-spacing: -.8px;
+            /* TEMA VERDE */
+            background: linear-gradient(135deg, #fff, #86efac);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .page-subtitle {
+            color: #999;
+            font-size: 1rem;
+            font-weight: 400;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header-btn {
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: .9rem;
+            border: none;
+            cursor: pointer;
+            transition: all .2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        /* Botón Primario (Verde) - NUEVO */
+        .header-btn.primary-green {
+            background: #22c55e;
+            color: #fff;
+        }
+
+        .header-btn.primary-green:hover {
+            background: #16a34a;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(34, 197, 94, .3);
+        }
+
+        .header-btn.secondary {
+            background: rgba(255, 255, 255, .05);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, .1);
+        }
+
+        .header-btn.secondary:hover {
+            background: rgba(255, 255, 255, .08);
+        }
+
+        /* ---------- FILTERS (TEMA VERDE) ---------- */
+        .filters-bar {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .filter-label {
+            font-size: .85rem;
+            color: #999;
+            font-weight: 500;
+        }
+
+        .filter-select {
+            padding: 10px 14px;
+            background: rgba(255, 255, 255, .05);
+            border: 1px solid rgba(255, 255, 255, .1);
+            border-radius: 8px;
+            color: #fff;
+            font-size: .85rem;
+            outline: none;
+            transition: all .2s;
+            min-width: 150px;
+        }
+
+        .filter-select:focus {
+            background: rgba(255, 255, 255, .08);
+            /* TEMA VERDE */
+            border-color: rgba(34, 197, 94, .5);
+        }
+
+        .filter-select option {
+            background: #1a1a1a;
+            color: #fff;
+        }
+
+        .view-toggle {
+            margin-left: auto;
+            display: flex;
+            gap: 8px;
+            background: rgba(255, 255, 255, .05);
+            padding: 4px;
+            border-radius: 8px;
+        }
+
+        .view-btn {
+            padding: 8px 12px;
+            background: transparent;
+            border: none;
+            color: #999;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all .2s;
+            font-size: .9rem;
+        }
+
+        .view-btn:hover {
+            color: #fff;
+        }
+
+        .view-btn.active {
+            /* TEMA VERDE */
+            background: rgba(34, 197, 94, .2);
+            color: #fff;
+        }
+
+        /* ---------- STATS CARDS (TEMA VERDE) ---------- */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, .02);
+            border: 1px solid rgba(255, 255, 255, .08);
+            border-radius: 12px;
+            padding: 20px;
+            transition: all .2s;
+        }
+
+        .stat-card:hover {
+            border-color: rgba(255, 255, 255, .15);
+            background: rgba(255, 255, 255, .04);
+        }
+
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+
+        .stat-icon {
+            width: 40px;
+            height: 40px;
+            /* TEMA VERDE */
+            background: rgba(34, 197, 94, .1);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            /* TEMA VERDE */
+            color: #22c55e;
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: .85rem;
+            font-weight: 500;
+        }
+
+        /* ---------- PURCHASES GRID (NUEVO) ---------- */
+        .purchases-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+            min-height: calc(100vh - 500px);
+        }
+
         .purchase-card {
-            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, .02);
+            border: 1px solid rgba(255, 255, 255, .08);
+            border-radius: 12px;
+            overflow: hidden;
+            transition: all .2s;
+            position: relative;
         }
+
         .purchase-card:hover {
             transform: translateY(-4px);
+            border-color: rgba(255, 255, 255, .15);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, .3);
+        }
+
+        .purchase-image {
+            width: 100%;
+            height: 180px; /* Igual que el de producto */
+            background: linear-gradient(135deg, #22c55e, #4ade80);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .purchase-image i.fa-music {
+            font-size: 3rem;
+            color: rgba(255, 255, 255, .9);
+        }
+
+        .purchase-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, .7);
+            backdrop-filter: blur(10px);
+            padding: 5px 10px;
+            border-radius: 12px;
+            font-size: .65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .3px;
+        }
+
+        .purchase-info {
+            padding: 18px;
+        }
+
+        .purchase-title {
+            font-size: 1rem; 
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 8px;
+        }
+
+        .purchase-creator {
+            font-size: .8rem;
+            color: #666;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .purchase-meta {
+            display: flex;
+            gap: 12px;
+            padding-top: 12px;
+            border-top: 1px solid rgba(255, 255, 255, .08);
+            font-size: .8rem;
+            color: #666;
+        }
+
+        .purchase-meta span {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .purchase-actions {
+            display: flex;
+            gap: 8px;
+            padding: 12px 18px;
+            border-top: 1px solid rgba(255, 255, 255, .08);
+        }
+
+        .action-btn {
+            flex: 1;
+            padding: 8px;
+            background: rgba(255, 255, 255, .05);
+            border: 1px solid rgba(255, 255, 255, .1);
+            border-radius: 8px;
+            color: #999;
+            cursor: pointer;
+            transition: all .2s;
+            font-size: .85rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .action-btn:hover {
+            /* TEMA VERDE */
+            background: rgba(34, 197, 94, .1);
+            color: #fff;
+            border-color: rgba(34, 197, 94, .3);
+        }
+
+        .action-btn.download {
+            /* Color principal para la acción principal */
+            color: #22c55e;
+            font-weight: 600;
+        }
+
+        .action-btn.download:hover {
+            /* TEMA VERDE */
+            background: rgba(34, 197, 94, .15);
+            border-color: rgba(34, 197, 94, .4);
+        }
+
+        /* ---------- EMPTY STATE (TEMA VERDE) ---------- */
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+            background: rgba(255, 255, 255, .02);
+            border: 1px dashed rgba(255, 255, 255, .15);
+            border-radius: 12px;
+        }
+
+        .empty-state i.fa-shopping-cart {
+            font-size: 4rem;
+            margin-bottom: 24px;
+            opacity: .3;
+            /* TEMA VERDE */
+            color: #22c55e;
+        }
+
+        .empty-state h3 {
+            color: #fff;
+            margin-bottom: 12px;
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+
+        .empty-state p {
+            color: #666;
+            margin-bottom: 28px;
+            line-height: 1.6;
+            font-size: .95rem;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .empty-state p i.fa-search-dollar {
+            /* TEMA VERDE */
+            color: #22c55e;
+            font-size: .95rem;
+        }
+
+        .empty-state-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            /* TEMA VERDE */
+            background: #22c55e;
+            color: #fff;
+            padding: 14px 32px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: .9rem;
+            border: none;
+            cursor: pointer;
+            transition: all .2s;
+            text-decoration: none;
+        }
+
+        .empty-state-btn:hover {
+            /* TEMA VERDE */
+            background: #16a34a;
+            transform: translateY(-2px);
+        }
+
+        /* ---------- LOADING (Sin cambios) ---------- */
+        .skeleton {
+            background: linear-gradient(90deg, rgba(255, 255, 255, .03) 25%, rgba(255, 255, 255, .08) 50%, rgba(255, 255, 255, .03) 75%);
+            background-size: 200% 100%;
+            animation: skeleton-loading 1.5s ease-in-out infinite;
+            border-radius: 8px;
+            color: transparent !important;
+            display: inline-block;
+            user-select: none;
+        }
+        
+        .profile-avatar.skeleton {
+            border-radius: 50%;
+        }
+        
+        .stat-value.skeleton {
+            margin-bottom: 4px;
+        }
+
+        /* SKELETON ADAPTADO PARA PURCHASE CARD */
+        .purchase-card .purchase-image.skeleton {
+             margin-bottom: 0;
+             height: 180px;
+             border-radius: 0;
+        }
+        .purchase-card .purchase-title.skeleton {
+            height: 20px; width: 80%; border-radius: 6px; margin-bottom: 12px;
+        }
+        .purchase-card .purchase-creator.skeleton {
+            height: 16px; width: 50%; border-radius: 6px; margin-bottom: 16px;
+        }
+        .purchase-card .purchase-meta .skeleton {
+             height: 16px; width: 40%; border-radius: 6px;
+        }
+        .purchase-card .purchase-actions .skeleton {
+             height: 36px; border-radius: 8px;
+        }
+        /* FIN SKELETON ADAPTADO */
+
+
+        @keyframes skeleton-loading {
+            0% {
+                background-position: 200% 0;
+            }
+
+            100% {
+                background-position: -200% 0;
+            }
+        }
+
+        .fade-in {
+            animation: fadeIn .3s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ---------- LOGOUT OVERLAY (Sin cambios) ---------- */
+        #logout-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(10, 10, 10, 0.9);
+            backdrop-filter: blur(8px);
+            z-index: 10001;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        #logout-overlay.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        #logout-overlay.fading-out {
+            opacity: 0;
+        }
+
+        .logout-content {
+            text-align: center;
+            color: #fff;
+        }
+
+        .logout-content i {
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+            color: #ef4444;
+        }
+
+        .logout-content h2 {
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: #e5e5e5;
+        }
+
+        @keyframes fa-spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .fa-spin {
+            animation: fa-spin 1.5s linear infinite;
+        }
+
+        /* ---------- RESPONSIVE (Sin cambios) ---------- */
+        @media (max-width:1400px) {
+            .stats-row {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .purchases-grid {
+                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            }
+        }
+
+        @media (max-width:1200px) {
+            .dashboard-container {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar {
+                position: relative;
+                top: 0;
+                height: auto;
+            }
+
+            .navbar-search {
+                width: 300px;
+            }
+        }
+
+        @media (max-width:768px) {
+            .navbar {
+                padding: .75rem 1.5rem;
+            }
+
+            .navbar-center {
+                display: none;
+            }
+
+            .main-content {
+                padding: 20px;
+            }
+
+            .stats-row,
+            .purchases-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .filters-bar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .view-toggle {
+                margin-left: 0;
+            }
         }
     </style>
 </head>
 
-<body class="bg-black text-[#e5e5e5] overflow-x-hidden">
-    <!-- Navbar -->
-    <nav class="sticky top-0 z-50 flex items-center justify-between px-6 sm:px-12 py-2 bg-[rgba(0,0,0,0.98)] border-b border-[rgba(255,255,255,0.08)] backdrop-blur-xl">
-        <div class="text-2xl font-extrabold tracking-tight text-white">
-            <a href="dashboard">OFFSZN</a>
-        </div>
-        
-        <div class="hidden lg:flex items-center gap-10">
-            <div class="relative w-96">
-                <input type="text" placeholder="Buscar beats, kits, productores..." class="w-full pl-4 pr-10 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white text-sm outline-none focus:bg-white/10 focus:border-violet-500/50 transition-all duration-200" />
-                <i class="fas fa-search absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 text-sm"></i>
+<body>
+
+    <nav class="navbar">
+        <div class="logo"><a href="index">OFFSZN</a></div>
+
+        <div class="navbar-center">
+            <ul class="navbar-links">
+                <li><a href="index">INICIO</a></li>
+                <li>
+                    <a>RECURSOS <i class="fas fa-chevron-down"></i></a>
+                    <div class="dropdown-menu">
+                        <a href="beats" class="dropdown-item">
+                            <i class="fas fa-music"></i>
+                            <span>Beats & Instrumentales</span>
+                        </a>
+                        <a href="drum-kits" class="dropdown-item">
+                            <i class="fas fa-drum"></i>
+                            <span>Drum Kits</span>
+                        </a>
+                        <a href="presets" class="dropdown-item">
+                            <i class="fas fa-sliders-h"></i>
+                            <span>Presets & Plugins</span>
+                        </a>
+                        <a href="samples" class="dropdown-item">
+                            <i class="fas fa-wave-square"></i>
+                            <span>Samples & Loops</span>
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a href="free-resources" class="dropdown-item">
+                            <i class="fas fa-gift"></i>
+                            <span>Recursos Gratis</span>
+                        </a>
+                    </div>
+                </li>
+                <li>
+                    <a>COMUNIDAD <i class="fas fa-chevron-down"></i></a>
+                    <div class="dropdown-menu">
+                        <a href="feed" class="dropdown-item">
+                            <i class="fas fa-home"></i>
+                            <span>Feed</span>
+                        </a>
+                        <a href="productores" class="dropdown-item">
+                            <i class="fas fa-users"></i>
+                            <span>Productores</span>
+                        </a>
+                        <a href="colaboraciones" class="dropdown-item">
+                            <i class="fas fa-handshake"></i>
+                            <span>Colaboraciones</span>
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a href="foros" class="dropdown-item">
+                            <i class="fas fa-comments"></i>
+                            <span>Foros</span>
+                        </a>
+                        <a href="eventos" class="dropdown-item">
+                            <i class="fas fa-calendar"></i>
+                            <span>Eventos</span>
+                        </a>
+                    </div>
+                </li>
+            </ul>
+
+            <div class="navbar-search">
+                <input type="text" placeholder="Buscar beats, kits, productores...">
+                <i class="fas fa-search"></i>
             </div>
         </div>
 
-        <div class="flex items-center gap-3">
-            <a href="notifications" class="flex items-center justify-center w-9 h-9 bg-white/5 border border-white/10 rounded-lg text-[#999] hover:bg-white/10 hover:text-white transition-all duration-200">
-                <i class="fas fa-bell"></i>
-            </a>
-            <a href="cart" class="flex items-center justify-center w-9 h-9 bg-white/5 border border-white/10 rounded-lg text-[#999] hover:bg-white/10 hover:text-white transition-all duration-200">
-                <i class="fas fa-shopping-cart"></i>
-            </a>
-            <div class="relative user-dropdown">
-                <button onclick="toggleUserDropdown()" class="flex items-center justify-center w-9 h-9 bg-white/5 border border-white/10 rounded-lg text-[#999] hover:bg-white/10 hover:text-white transition-all duration-200">
-                    <i class="fas fa-user"></i>
-                </button>
-                <div class="user-dropdown-menu absolute top-full right-0 mt-3 w-64 bg-[rgba(20,20,20,0.98)] border border-white/10 rounded-xl shadow-2xl backdrop-blur-lg p-3 opacity-0 invisible transition-all duration-300 transform -translate-y-2">
-                    <div class="flex items-center gap-3 p-3 border-b border-white/10 mb-2">
-                        <div class="user-dropdown-avatar flex items-center justify-center w-10 h-10 rounded-full bg-zinc-800 font-bold text-zinc-500 text-base skeleton-avatar"></div>
-                        <div class="flex-1 overflow-hidden">
-                            <p class="user-dropdown-name font-semibold text-sm text-white truncate skeleton-text">Cargando...</p>
-                            <p class="user-dropdown-email text-xs text-zinc-500 truncate skeleton-text">email@loading.com</p>
+        <div class="navbar-right">
+            <a href="notifications" class="navbar-icon-button"><i class="fas fa-bell"></i></a>
+            <a href="cart" class="navbar-icon-button"><i class="fas fa-shopping-cart"></i></a>
+            <div class="user-dropdown">
+                <div class="navbar-icon-button" onclick="toggleUserDropdown()"><i class="fas fa-user"></i></div>
+                <div class="user-dropdown-menu">
+                    <div class="user-dropdown-header">
+                        <div class="user-dropdown-avatar">?</div>
+                        <div class="user-dropdown-info">
+                            <div class="user-dropdown-name">Usuario</div>
+                            <div class="user-dropdown-email">usuario@offszn.com</div>
                         </div>
                     </div>
-                    <a href="profile" class="flex items-center gap-2.5 px-3 py-2 text-sm rounded-lg transition-colors text-zinc-400 hover:bg-violet-500/10 hover:text-white">
-                        <i class="fas fa-user-circle w-4 text-center"></i>
-                        <span>Mi Perfil</span>
-                    </a>
-                    <a href="dashboard" class="flex items-center gap-2.5 px-3 py-2 text-sm rounded-lg transition-colors text-zinc-400 hover:bg-violet-500/10 hover:text-white">
-                        <i class="fas fa-th-large w-4 text-center"></i>
-                        <span>Dashboard</span>
-                    </a>
-                    <a href="wallet" class="flex items-center gap-2.5 px-3 py-2 text-sm rounded-lg transition-colors text-zinc-400 hover:bg-violet-500/10 hover:text-white">
-                        <i class="fas fa-wallet w-4 text-center"></i>
-                        <span>Billetera</span>
-                    </a>
-                    <a href="mis-compras" class="flex items-center gap-2.5 px-3 py-2 text-sm rounded-lg transition-colors bg-violet-500/10 text-white">
-                        <i class="fas fa-shopping-bag w-4 text-center"></i>
-                        <span>Mis Compras</span>
-                    </a>
-                    <a href="favoritos" class="flex items-center gap-2.5 px-3 py-2 text-sm rounded-lg transition-colors text-zinc-400 hover:bg-violet-500/10 hover:text-white">
-                        <i class="fas fa-heart w-4 text-center"></i>
-                        <span>Favoritos</span>
-                    </a>
-                    <a href="#" class="flex items-center gap-2.5 px-3 py-2 text-sm rounded-lg transition-colors text-zinc-400 hover:bg-violet-500/10 hover:text-white opacity-40 cursor-not-allowed">
-                        <i class="fas fa-chart-line w-4 text-center"></i>
-                        <span>Analíticas</span>
-                        <span class="ml-auto bg-white/10 text-zinc-500 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase">Pronto</span>
-                    </a>
-                    <a href="account-settings" class="flex items-center gap-2.5 px-3 py-2 text-sm rounded-lg transition-colors text-zinc-400 hover:bg-violet-500/10 hover:text-white">
-                        <i class="fas fa-cog w-4 text-center"></i>
-                        <span>Configuración</span>
-                    </a>
-                    <a href="help" class="flex items-center gap-2.5 px-3 py-2 text-sm rounded-lg transition-colors text-zinc-400 hover:bg-violet-500/10 hover:text-white">
-                        <i class="fas fa-question-circle w-4 text-center"></i>
-                        <span>Ayuda</span>
-                    </a>
-                    <div class="mt-2 pt-2 border-t border-white/10">
-                        <a href="logout" class="flex items-center gap-2.5 px-3 py-2 text-sm rounded-lg transition-colors text-red-500 hover:bg-red-500/10">
-                            <i class="fas fa-sign-out-alt w-4 text-center"></i>
-                            <span>Cerrar Sesión</span>
-                        </a>
-                    </div>
+                    <a href="profile" class="user-dropdown-item"><i class="fas fa-user-circle"></i><span>Mi
+                            Perfil</span></a>
+                    <a href="dashboard" class="user-dropdown-item"><i
+                            class="fas fa-th-large"></i><span>Dashboard</span></a>
+                    <a href="wallet" class="user-dropdown-item"><i class="fas fa-wallet"></i><span>Billetera</span></a>
+                    <a href="mis-compras" class="user-dropdown-item"><i class="fas fa-shopping-bag"></i><span>Mis
+                            Compras</span></a>
+                    <a href="#" class="user-dropdown-item disabled"><i
+                            class="fas fa-chart-line"></i><span>Analíticas</span><span
+                            class="soon-badge">Pronto</span></a>
+                    <a href="account-settings" class="user-dropdown-item"><i
+                            class="fas fa-cog"></i><span>Configuración</span></a>
+                    <a href="help" class="user-dropdown-item"><i
+                            class="fas fa-question-circle"></i><span>Ayuda</span></a>
+                    <a href="#" id="navbar-logout-btn" class="user-dropdown-item logout"><i
+                            class="fas fa-sign-out-alt"></i><span>Cerrar Sesión</span></a>
                 </div>
             </div>
         </div>
     </nav>
 
-    <div class="flex-grow grid grid-cols-1 xl:grid-cols-[260px_1fr]">
-        <!-- Sidebar -->
-        <aside class="bg-[rgba(15,15,15,0.6)] border-b xl:border-b-0 xl:border-r border-white/10 xl:sticky xl:top-[57px] xl:h-[calc(100vh-57px)] xl:overflow-y-auto scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
-            <div class="p-5 border-b border-white/10">
-                <div class="flex items-center gap-3">
-                    <div class="profile-avatar flex items-center justify-center w-11 h-11 rounded-full bg-zinc-800 font-bold text-xl text-zinc-500 skeleton-avatar">?</div>
-                    <div class="flex-1 overflow-hidden">
-                        <div class="profile-name font-semibold text-white truncate skeleton-text">Cargando...</div>
+    <div class="dashboard-container">
+
+        <aside class="sidebar">
+            <div class="profile-header">
+                <div class="profile-info">
+                    <div class="profile-avatar skeleton" style="opacity: 1;">&nbsp;</div>
+                    <div>
+                        <div class="profile-name skeleton"
+                            style="height: 20px; width: 120px; border-radius: 6px; opacity: 1;">&nbsp;</div>
                     </div>
                 </div>
             </div>
-            
-            <div class="p-5 border-b border-white/10 bg-violet-500/5">
-                <div class="text-xs text-zinc-400 uppercase tracking-wider font-semibold mb-1.5">Saldo Disponible</div>
-                <div class="wallet-amount text-3xl font-bold text-white skeleton-text">$0.00</div>
+
+            <div class="wallet-section">
+                <div class="wallet-label">Saldo Disponible</div>
+                <div class="wallet-amount skeleton"
+                    style="height: 30px; width: 100px; border-radius: 6px; opacity: 1;">&nbsp;</div>
             </div>
-            
-            <div class="p-5">
-                <button onclick="window.location.href='subir-kit.html'" class="w-full py-3.5 px-4.5 bg-violet-600 text-white rounded-lg font-semibold flex items-center justify-center gap-2 hover:bg-violet-700 hover:-translate-y-0.5 transition-all duration-200 text-sm">
-                    <i class="fas fa-cloud-upload-alt"></i>
-                    Subir Kit
-                </button>
+
+            <button class="upload-btn" onclick="window.location.href='subir-kit.html'">
+                <i class="fas fa-cloud-upload-alt"></i> Subir Kit
+            </button>
+
+            <div class="sidebar-search">
+                <input type="text" placeholder="Buscar en mis compras..." id="search-purchases">
+                <i class="fas fa-search"></i>
             </div>
-            
-            <div class="px-5 pb-2">
-                <div class="relative">
-                    <input type="text" placeholder="Buscar..." class="w-full pl-4 pr-10 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white text-sm outline-none focus:bg-white/10 focus:border-violet-500/50 transition-all duration-200" />
-                    <i class="fas fa-search absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 text-sm"></i>
-                </div>
+
+            <div class="sidebar-menu">
+                <div class="menu-section-title">Principal</div>
+                <a href="dashboard" class="menu-item"><i class="fas fa-th-large"></i><span>Dashboard</span></a>
+                <a href="mis-kits" class="menu-item"><i class="fas fa-music"></i><span>Mis Kits</span></a>
+                <a href="#" class="menu-item disabled"><i class="fas fa-chart-line"></i><span>Analíticas</span><span
+                        class="soon-badge">Pronto</span></a>
+                <a href="favoritos" class="menu-item"><i class="fas fa-heart"></i><span>Favoritos</span></a>
+                <a href="#" class="menu-item"><i class="fas fa-history"></i><span>Historial</span></a>
+
+                <div class="menu-divider"></div>
+
+                <div class="menu-section-title">Colaboración</div>
+                <a href="colaboraciones" class="menu-item"><i class="fas fa-users"></i><span>Colaboraciones</span></a>
+
+                <div class="menu-divider"></div>
+
+                <div class="menu-section-title">Compras</div>
+                <a href="mis-compras" class="menu-item active"><i class="fas fa-shopping-bag"></i><span>Mis Compras</span></a>
+                <a href="gift-cards" class="menu-item"><i class="fas fa-gift"></i><span>Gift Cards</span></a>
+                <a href="messages" class="menu-item"><i class="fas fa-envelope"></i><span>Mensajes</span></a>
+
+                <div class="menu-divider"></div>
+
+                <div class="menu-section-title">Configuración</div>
+                <a href="account-settings" class="menu-item"><i class="fas fa-cog"></i><span>Configuración</span></a>
+                <a href="blog" class="menu-item"><i class="fas fa-book-open"></i><span>Blog</span></a>
             </div>
-            
-            <nav class="py-3">
-                <div class="px-5 py-3 text-xs text-zinc-500 uppercase tracking-widest font-bold">Principal</div>
-                <a href="dashboard" class="flex items-center gap-3 px-5 py-2.5 text-sm font-medium text-zinc-400 hover:bg-white/5 hover:text-white transition-colors">
-                    <i class="fas fa-th-large w-4 text-center text-base"></i>
-                    <span>Dashboard</span>
-                </a>
-                <a href="mis-kits" class="flex items-center gap-3 px-5 py-2.5 text-sm font-medium text-zinc-400 hover:bg-white/5 hover:text-white transition-colors">
-                    <i class="fas fa-music w-4 text-center text-base"></i>
-                    <span>Mis Kits</span>
-                </a>
-                <a href="#" class="flex items-center gap-3 px-5 py-2.5 text-sm font-medium text-zinc-600 cursor-not-allowed opacity-40">
-                    <i class="fas fa-chart-line w-4 text-center text-base"></i>
-                    <span>Analíticas</span>
-                    <span class="ml-auto bg-white/10 text-zinc-500 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase">Pronto</span>
-                </a>
-                <a href="favoritos" class="flex items-center gap-3 px-5 py-2.5 text-sm font-medium text-zinc-400 hover:bg-white/5 hover:text-white transition-colors">
-                    <i class="fas fa-heart w-4 text-center text-base"></i>
-                    <span>Favoritos</span>
-                </a>
-                <a href="#" class="flex items-center gap-3 px-5 py-2.5 text-sm font-medium text-zinc-400 hover:bg-white/5 hover:text-white transition-colors">
-                    <i class="fas fa-history w-4 text-center text-base"></i>
-                    <span>Historial</span>
-                </a>
-                
-                <div class="mx-5 my-3 border-t border-white/10"></div>
-                
-                <div class="px-5 py-3 text-xs text-zinc-500 uppercase tracking-widest font-bold">Colaboración</div>
-                <a href="colaboraciones" class="flex items-center gap-3 px-5 py-2.5 text-sm font-medium text-zinc-400 hover:bg-white/5 hover:text-white transition-colors">
-                    <i class="fas fa-users w-4 text-center text-base"></i>
-                    <span>Colaboraciones</span>
-                </a>
-                
-                <div class="mx-5 my-3 border-t border-white/10"></div>
-                
-                <div class="px-5 py-3 text-xs text-zinc-500 uppercase tracking-widest font-bold">Compras</div>
-                <a href="mis-compras" class="flex items-center gap-3 px-5 py-2.5 text-sm font-medium bg-violet-500/10 text-white border-l-2 border-violet-500 transition-colors">
-                    <i class="fas fa-shopping-bag w-4 text-center text-base"></i>
-                    <span>Mis Compras</span>
-                </a>
-                <a href="Gift-Cards" class="flex items-center gap-3 px-5 py-2.5 text-sm font-medium text-zinc-400 hover:bg-white/5 hover:text-white transition-colors">
-                    <i class="fas fa-gift w-4 text-center text-base"></i>
-                    <span>Gift Cards</span>
-                </a>
-                <a href="messages" class="flex items-center gap-3 px-5 py-2.5 text-sm font-medium text-zinc-400 hover:bg-white/5 hover:text-white transition-colors">
-                    <i class="fas fa-envelope w-4 text-center text-base"></i>
-                    <span>Mensajes</span>
-                </a>
-                
-                <div class="mx-5 my-3 border-t border-white/10"></div>
-                
-                <div class="px-5 py-3 text-xs text-zinc-500 uppercase tracking-widest font-bold">Configuración</div>
-                <a href="account-settings" class="flex items-center gap-3 px-5 py-2.5 text-sm font-medium text-zinc-400 hover:bg-white/5 hover:text-white transition-colors">
-                    <i class="fas fa-cog w-4 text-center text-base"></i>
-                    <span>Configuración</span>
-                </a>
-                <a href="blog" class="flex items-center gap-3 px-5 py-2.5 text-sm font-medium text-zinc-400 hover:bg-white/5 hover:text-white transition-colors">
-                    <i class="fas fa-book-open w-4 text-center text-base"></i>
-                    <span>Blog</span>
-                </a>
-            </nav>
-            
-            <div class="p-5 mt-4">
-                <a href="logout" class="logout-btn w-full py-3 bg-red-500/10 border border-red-500/20 text-red-500 rounded-lg font-semibold flex items-center justify-center gap-2 hover:bg-red-500/15 hover:border-red-500/30 transition-all duration-200 text-sm">
-                    <i class="fas fa-sign-out-alt w-5 text-center"></i>
-                    <span>Cerrar Sesión</span>
-                </a>
-            </div>
+
+            <a href="#" id="sidebar-logout-btn" class="logout-btn"><i class="fas fa-sign-out-alt"></i><span>Cerrar
+                    Sesión</span></a>
         </aside>
 
-        <!-- Main Content -->
-        <main class="px-6 py-9 md:px-12 bg-[#0a0a0a]">
-            <div class="flex items-center gap-2 text-sm text-zinc-500 mb-6">
-                <a href="dashboard" class="hover:text-violet-400 transition-colors">
-                    <i class="fas fa-home"></i> Dashboard
+        <main class="main-content">
+            <div class="page-header">
+                <div class="page-title-section">
+                    <h1>Mis Compras 🛍️</h1>
+                    <p class="page-subtitle">Todos tus productos adquiridos en un solo lugar</p>
+                </div>
+                <div class="header-actions">
+                    <button class="header-btn secondary" onclick="window.location.href='drum-kits'">
+                        <i class="fas fa-search-dollar"></i> Explorar Tienda
+                    </button>
+                    <button class="header-btn primary-green" onclick="window.location.href='facturas'">
+                        <i class="fas fa-file-invoice"></i> Ver Facturas
+                    </button>
+                </div>
+            </div>
+
+            <div class="stats-row">
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div class="stat-icon"><i class="fas fa-shopping-bag"></i></div>
+                    </div>
+                    <div class="stat-value skeleton"
+                        style="height: 34px; width: 60px; border-radius: 6px; opacity: 1;">&nbsp;</div>
+                    <div class="stat-label">Compras Totales</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div class="stat-icon"><i class="fas fa-drum"></i></div>
+                    </div>
+                    <div class="stat-value skeleton"
+                        style="height: 34px; width: 60px; border-radius: 6px; opacity: 1;">&nbsp;</div>
+                    <div class="stat-label">Drum Kits</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div class="stat-icon"><i class="fas fa-music"></i></div>
+                    </div>
+                    <div class="stat-value skeleton"
+                        style="height: 34px; width: 60px; border-radius: 6px; opacity: 1;">&nbsp;</div>
+                    <div class="stat-label">Beats & Samples</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div class="stat-icon"><i class="fas fa-dollar-sign"></i></div>
+                    </div>
+                    <div class="stat-value skeleton"
+                        style="height: 34px; width: 100px; border-radius: 6px; opacity: 1;">&nbsp;</div>
+                    <div class="stat-label">Gasto Total</div>
+                </div>
+            </div>
+
+            <div class="filters-bar">
+                <div class="filter-group">
+                    <span class="filter-label">Tipo:</span>
+                    <select class="filter-select" id="filter-type">
+                        <option value="all">Todos</option>
+                        <option value="beat">Beats</option>
+                        <option value="drumkit">Drum Kits</option>
+                        <option value="preset">Presets</option>
+                        <option value="sample">Samples</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <span class="filter-label">Ordenar:</span>
+                    <select class="filter-select" id="filter-sort">
+                        <option value="recent">Fecha de Compra: Reciente</option>
+                        <option value="oldest">Fecha de Compra: Antigua</option>
+                        <option value="name-az">Nombre: A-Z</option>
+                        <option value="name-za">Nombre: Z-A</option>
+                    </select>
+                </div>
+                <div class="view-toggle">
+                    <button class="view-btn active" data-view="grid"><i class="fas fa-th"></i></button>
+                    <button class="view-btn" data-view="list"><i class="fas fa-list"></i></button>
+                </div>
+            </div>
+
+            <div class="empty-state" id="empty-state" style="display: none;">
+                <i class="fas fa-shopping-cart"></i>
+                <h3>Aún no has comprado nada</h3>
+                <p>
+                    Explora nuestro marketplace, ¡seguro encuentras algo para tu próxima producción!
+                    Haz click en <i class="fas fa-search-dollar"></i> para empezar.
+                </p>
+                <a href="drum-kits" class="empty-state-btn">
+                    <i class="fas fa-search-dollar"></i> Explorar Tienda
                 </a>
-                <span><i class="fas fa-chevron-right text-xs"></i></span>
-                <span class="font-semibold text-white">Mis Compras</span>
             </div>
 
-            <header class="mb-8">
-                <h1 class="font-montserrat text-4xl font-black text-white uppercase tracking-wider mb-2">Mis Compras</h1>
-                <p class="text-zinc-400 text-lg">Todos tus recursos adquiridos listos para descargar</p>
-            </header>
-
-            <!-- Stats Cards -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <div class="bg-[rgba(26,10,46,0.4)] border border-violet-900/40 rounded-xl p-6">
-                    <div class="flex items-center justify-between mb-2">
-                        <span class="text-zinc-400 text-sm font-semibold">Total Gastado</span>
-                        <i class="fas fa-dollar-sign text-violet-400 text-xl"></i>
+            <div class="purchases-grid" id="purchases-grid">
+                <div class="purchase-card">
+                    <div class="purchase-image skeleton"></div>
+                    <div class="purchase-info">
+                        <div class="purchase-title skeleton"></div>
+                        <div class="purchase-creator skeleton"></div>
+                        <div class="purchase-meta" style="border-top: none; padding-top: 0;">
+                            <span class="skeleton"></span>
+                        </div>
                     </div>
-                    <p id="total-spent" class="text-3xl font-bold text-white">$0.00</p>
-                </div>
-                <div class="bg-[rgba(26,10,46,0.4)] border border-violet-900/40 rounded-xl p-6">
-                    <div class="flex items-center justify-between mb-2">
-                        <span class="text-zinc-400 text-sm font-semibold">Productos</span>
-                        <i class="fas fa-box text-violet-400 text-xl"></i>
+                    <div class="purchase-actions">
+                        <div class="action-btn skeleton"></div>
+                        <div class="action-btn skeleton"></div>
                     </div>
-                    <p id="total-products" class="text-3xl font-bold text-white">0</p>
                 </div>
-                <div class="bg-[rgba(26,10,46,0.4)] border border-violet-900/40 rounded-xl p-6">
-                    <div class="flex items-center justify-between mb-2">
-                        <span class="text-zinc-400 text-sm font-semibold">Última Compra</span>
-                        <i class="fas fa-clock text-violet-400 text-xl"></i>
+                <div class="purchase-card">
+                    <div class="purchase-image skeleton"></div>
+                    <div class="purchase-info">
+                        <div class="purchase-title skeleton"></div>
+                        <div class="purchase-creator skeleton"></div>
+                        <div class="purchase-meta" style="border-top: none; padding-top: 0;">
+                            <span class="skeleton"></span>
+                        </div>
                     </div>
-                    <p id="last-purchase" class="text-xl font-bold text-white">-</p>
+                    <div class="purchase-actions">
+                        <div class="action-btn skeleton"></div>
+                        <div class="action-btn skeleton"></div>
+                    </div>
                 </div>
-            </div>
-
-            <!-- Filter Tabs -->
-            <div class="bg-[rgba(26,10,46,0.4)] border border-violet-900/40 rounded-xl p-4 mb-8">
-                <div class="flex items-center gap-2 flex-wrap">
-                    <button onclick="filterPurchases('all')" class="purchase-filter px-4 py-2 text-sm font-semibold rounded-lg transition-colors bg-violet-600 text-white">
-                        Todos
-                    </button>
-                    <button onclick="filterPurchases('kits')" class="purchase-filter px-4 py-2 text-sm font-semibold rounded-lg transition-colors bg-white/5 text-zinc-400 hover:bg-white/10">
-                        Drum Kits
-                    </button>
-                    <button onclick="filterPurchases('beats')" class="purchase-filter px-4 py-2 text-sm font-semibold rounded-lg transition-colors bg-white/5 text-zinc-400 hover:bg-white/10">
-                        Beats
-                    </button>
-                    <button onclick="filterPurchases('presets')" class="purchase-filter px-4 py-2 text-sm font-semibold rounded-lg transition-colors bg-white/5 text-zinc-400 hover:bg-white/10">
-                        Presets
-                    </button>
-                    <button onclick="filterPurchases('samples')" class="purchase-filter px-4 py-2 text-sm font-semibold rounded-lg transition-colors bg-white/5 text-zinc-400 hover:bg-white/10">
-                        Samples
-                    </button>
+                <div class="purchase-card">
+                    <div class="purchase-image skeleton"></div>
+                    <div class="purchase-info">
+                        <div class="purchase-title skeleton"></div>
+                        <div class="purchase-creator skeleton"></div>
+                        <div class="purchase-meta" style="border-top: none; padding-top: 0;">
+                            <span class="skeleton"></span>
+                        </div>
+                    </div>
+                    <div class="purchase-actions">
+                        <div class="action-btn skeleton"></div>
+                        <div class="action-btn skeleton"></div>
+                    </div>
                 </div>
-            </div>
-
-            <!-- Purchases Container -->
-            <div id="purchases-container">
-                <!-- Content will be loaded here -->
             </div>
         </main>
     </div>
 
+    <div id="logout-overlay">
+        <div class="logout-content">
+            <i class="fas fa-spinner fa-spin"></i>
+            <h2 id="logout-message">Te veremos pronto...</h2>
+        </div>
+    </div>
+
     <script>
-        // Toggle user dropdown
+        // ---------- TOGGLE USER DROPDOWN (Sin cambios) ----------
         function toggleUserDropdown() {
             const dropdown = document.querySelector('.user-dropdown');
-            if (dropdown) {
-                dropdown.classList.toggle('active');
-            }
+            dropdown.classList.toggle('active');
         }
 
-        // Agregar clase active para mostrar dropdown
-        document.addEventListener('DOMContentLoaded', function() {
-            const style = document.createElement('style');
-            style.textContent = `
-                .user-dropdown.active .user-dropdown-menu {
-                    opacity: 1;
-                    visibility: visible;
-                    transform: translateY(0);
-                }
-            `;
-            document.head.appendChild(style);
-            
-            // Cerrar dropdown al hacer clic fuera
-            document.addEventListener('click', function(e) {
-                const userDropdown = document.querySelector('.user-dropdown');
-                if (userDropdown && !userDropdown.contains(e.target)) {
-                    userDropdown.classList.remove('active');
-                }
+        // ---------- CLOSE DROPDOWNS ON OUTSIDE CLICK (Sin cambios) ----------
+        document.addEventListener('click', e => {
+            const userDropdown = document.querySelector('.user-dropdown');
+            const userBtn = document.querySelector('.user-dropdown .navbar-icon-button');
+            if (!userDropdown.contains(e.target) && e.target !== userBtn) {
+                userDropdown.classList.remove('active');
+            }
+        });
+
+        // ---------- VIEW TOGGLE (Sin cambios) ----------
+        document.querySelectorAll('.view-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
             });
         });
 
-        // Filter purchases
-        window.filterPurchases = function(type) {
-            const buttons = document.querySelectorAll('.purchase-filter');
-            buttons.forEach(btn => {
-                btn.classList.remove('bg-violet-600', 'text-white');
-                btn.classList.add('bg-white/5', 'text-zinc-400');
-            });
-            event.target.classList.remove('bg-white/5', 'text-zinc-400');
-            event.target.classList.add('bg-violet-600', 'text-white');
-            console.log('Filtrando por:', type);
-            // La lógica de filtrado se manejará en el JS externo
-        };
+        document.addEventListener('DOMContentLoaded', async () => {
+
+            // ---------- ELEMENTOS DEL DOM (Actualizados) ----------
+            const profileAvatar = document.querySelector('.profile-avatar');
+            const profileName = document.querySelector('.profile-name');
+            const walletAmount = document.querySelector('.wallet-amount');
+            const statsValues = document.querySelectorAll('.stat-value');
+            // ID de cuadrícula actualizado
+            const purchasesGrid = document.getElementById('purchases-grid'); 
+            const emptyState = document.getElementById('empty-state');
+            // ID de búsqueda actualizado
+            const searchInput = document.getElementById('search-purchases'); 
+            const token = localStorage.getItem('authToken');
+            let userData = null;
+            // Variable de estado actualizada
+            let allPurchases = []; 
+
+            // ---------- GIFT CARDS STATE (Sin cambios) ----------
+            const STORAGE_KEY = 'offszn_giftcards_state';
+            const CACHE_KEY = 'offszn_user_cache';
+            let appState = { totalBalance: 0, giftCards: [] };
+
+            // ---------- API URL (Sin cambios) ----------
+            let API_URL = '';
+            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                API_URL = 'http://localhost:3000/api';
+            } else {
+                API_URL = 'https://offszn-academy.onrender.com/api';
+            }
+
+            // ---------- VERIFICAR TOKEN (Actualizado) ----------
+            if (!token) {
+                console.error("Mis Compras: No hay token, redirigiendo al login.");
+                window.location.replace('/pages/login.html');
+                return;
+            }
+
+            // ---------- SKELETON LOADING (Sin cambios) ----------
+            function showSkeletonLoading() {
+                if (emptyState) {
+                    emptyState.style.display = 'none';
+                }
+                if (purchasesGrid) {
+                    purchasesGrid.style.display = 'grid';
+                }
+            }
+
+            // ---------- CACHÉ DE USUARIO (Sin cambios) ----------
+            function loadCachedUser() {
+                try {
+                    const cached = localStorage.getItem(CACHE_KEY);
+                    if (cached) {
+                        const cachedData = JSON.parse(cached);
+                        console.log('Cargando datos desde caché...');
+                        updateUserUI(cachedData, true);
+                        return true;
+                    }
+                } catch (err) {
+                    console.error('Error al cargar caché:', err);
+                }
+                return false;
+            }
+
+            function saveUserCache(userData) {
+                try {
+                    localStorage.setItem(CACHE_KEY, JSON.stringify(userData));
+                } catch (err) {
+                    console.error('Error al guardar caché:', err);
+                }
+            }
+
+            // ---------- ACTUALIZAR UI DE USUARIO (Sin cambios) ----------
+            function updateUserUI(userData, fromCache = false) {
+                if (profileName) {
+                    profileName.textContent = `${userData.first_name || ''} ${userData.lastName || ''}`.trim() || userData.nickname;
+                    profileName.classList.remove('skeleton');
+                    profileName.removeAttribute('style');
+                }
+
+                if (profileAvatar) {
+                    const initial = (userData.first_name || userData.nickname || 'U').charAt(0).toUpperCase();
+                    profileAvatar.textContent = initial;
+                    profileAvatar.classList.remove('skeleton');
+                    profileAvatar.removeAttribute('style');
+                    profileAvatar.classList.add('fade-in');
+                }
+            }
+
+            // ---------- GIFT CARDS (Sin cambios) ----------
+            function loadGiftCardsState() {
+                try {
+                    const saved = localStorage.getItem(STORAGE_KEY);
+                    if (saved) {
+                        appState = JSON.parse(saved);
+                    }
+                    updateWalletAmount();
+                } catch (err) {
+                    console.error('Error al cargar estado de gift cards:', err);
+                    updateWalletAmount();
+                }
+            }
+
+            function updateWalletAmount() {
+                if (walletAmount) {
+                    walletAmount.textContent = `$${appState.totalBalance.toFixed(2)}`;
+                    walletAmount.classList.remove('skeleton');
+                    walletAmount.removeAttribute('style');
+                    walletAmount.classList.add('fade-in');
+                }
+            }
+
+            // ---------- CARGAR DATOS DEL DASHBOARD (Actualizado) ----------
+            async function loadDashboardData() {
+                try {
+                    const userResponse = await fetch(`${API_URL}/me`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+
+                    if (!userResponse.ok) {
+                        localStorage.removeItem('authToken');
+                        throw new Error(`Error ${userResponse.status}: No se pudieron obtener los datos del usuario.`);
+                    }
+
+                    userData = await userResponse.json();
+                    console.log("Datos del usuario:", userData);
+
+                    localStorage.setItem('userId', userData.id);
+                    saveUserCache(userData);
+                    updateUserUI(userData, false);
+                    loadGiftCardsState();
+
+                    // FUNCIÓN ACTUALIZADA
+                    await loadPurchases();
+
+                } catch (error) {
+                    console.error("Error al cargar datos:", error);
+                    if (error.message.includes('401') || error.message.includes('403')) {
+                        localStorage.removeItem('authToken');
+                        localStorage.removeItem(CACHE_KEY);
+                        window.location.replace('/pages/login.html');
+                    }
+                }
+            }
+
+            // ---------- CARGAR COMPRAS (NUEVA FUNCIÓN) ----------
+            async function loadPurchases() {
+                if (!purchasesGrid || !emptyState) return;
+
+                try {
+                    // ENDPOINT ACTUALIZADO (Supuesto)
+                    const response = await fetch(`${API_URL}/me/purchases`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+
+                    if (!response.ok) {
+                        console.warn('No se pudieron cargar las compras, mostrando empty state');
+                        allPurchases = [];
+                        updateStats([]); // Actualiza stats a 0 y quita skeletons
+                        purchasesGrid.style.display = 'none';
+                        purchasesGrid.innerHTML = ''; // Limpia los skeletons
+                        emptyState.style.display = 'block';
+                        return;
+                    }
+
+                    const compras = await response.json();
+                    console.log("Compras cargadas:", compras);
+
+                    allPurchases = compras;
+                    updateStats(compras); // Actualiza stats y quita skeletons
+
+                    if (compras.length === 0) {
+                        purchasesGrid.style.display = 'none';
+                        purchasesGrid.innerHTML = ''; // Limpia los skeletons
+                        emptyState.style.display = 'block';
+                    } else {
+                        emptyState.style.display = 'none';
+                        purchasesGrid.style.display = 'grid';
+                        renderPurchases(compras); // Reemplaza skeletons con datos reales
+                    }
+
+                } catch (error) {
+                    console.error("Error cargando compras:", error);
+                    allPurchases = [];
+                    updateStats([]); // Actualiza stats a 0 y quita skeletons
+                    purchasesGrid.style.display = 'none';
+                    purchasesGrid.innerHTML = ''; // Limpia los skeletons
+                    emptyState.style.display = 'block';
+                }
+            }
+
+            // ---------- ACTUALIZAR ESTADÍSTICAS (Actualizado) ----------
+            function updateStats(compras) {
+                const stats = {
+                    total: compras.length,
+                    drumkits: compras.filter(p => p.product_type === 'drumkit').length,
+                    beats: compras.filter(p => p.product_type === 'beat' || p.product_type === 'sample').length,
+                    gastoTotal: compras.reduce((acc, p) => acc + parseFloat(p.price || 0), 0)
+                };
+
+                const statElements = document.querySelectorAll('.stat-value');
+
+                const updateStatEl = (el, value) => {
+                    if (el) {
+                        el.textContent = value;
+                        el.classList.remove('skeleton');
+                        el.removeAttribute('style');
+                        el.classList.add('fade-in');
+                    }
+                };
+
+                updateStatEl(statElements[0], stats.total);
+                updateStatEl(statElements[1], stats.drumkits);
+                updateStatEl(statElements[2], stats.beats);
+                updateStatEl(statElements[3], `$${stats.gastoTotal.toFixed(2)}`); // Formateado
+            }
+
+            // ---------- RENDERIZAR COMPRAS (NUEVA FUNCIÓN) ----------
+            function renderPurchases(compras) {
+                
+                const purchaseHTML = compras.map(p => `
+                    <div class="purchase-card fade-in">
+                        <div class="purchase-image" style="${p.image_url ? `background-image: url(${p.image_url}); background-size:cover; background-position:center;` : ''}">
+                            ${!p.image_url ? '<i class="fas fa-music"></i>' : ''}
+                            <span class="purchase-badge">${p.product_type || 'Kit'}</span>
+                        </div>
+                        <div class="purchase-info">
+                            <div class="purchase-title">${p.name}</div>
+                            <div class="purchase-creator">
+                                <i class="fas fa-user"></i> ${p.creator_name || 'Productor'}
+                            </div>
+                            <div class="purchase-meta">
+                                <span><i class="fas fa-calendar-check"></i> Comprado: ${new Date(p.purchased_at).toLocaleDateString()}</span>
+                            </div>
+                        </div>
+                        <div class="purchase-actions">
+                            <button class="action-btn download" onclick="downloadProduct(${p.id}, '${p.download_url}')">
+                                <i class="fas fa-download"></i> Descargar
+                            </button>
+                            <button class="action-btn" onclick="leaveReview(${p.product_id})">
+                                <i class="fas fa-star"></i> Reseña
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+
+                purchasesGrid.innerHTML = purchaseHTML;
+            }
+
+            // ---------- FUNCIONES DE ACCIONES (Actualizadas) ----------
+            window.downloadProduct = function (id, url) {
+                console.log('Descargando producto:', id, 'desde', url);
+                if (!url || url === 'null' || url === 'undefined') {
+                    alert('Error: No se encontró el archivo de descarga.');
+                    return;
+                }
+                // Simulación de descarga (o enlace directo)
+                window.location.href = url;
+            };
+
+            window.leaveReview = function (productId) {
+                console.log('Dejar reseña para producto:', productId);
+                // Redirige a la página del producto, con un query param para abrir el modal de reseña
+                window.location.href = `producto.html?id=${productId}&review=true`;
+            };
+
+            // ---------- FILTROS (Actualizado) ----------
+            const filterType = document.getElementById('filter-type');
+            const filterSort = document.getElementById('filter-sort');
+
+            if (filterType) {
+                filterType.addEventListener('change', applyFilters);
+            }
+            if (filterSort) {
+                filterSort.addEventListener('change', applyFilters);
+            }
+
+            function applyFilters() {
+                let filtered = [...allPurchases];
+
+                // Filtrar por tipo
+                const typeFilter = filterType?.value;
+                if (typeFilter && typeFilter !== 'all') {
+                    filtered = filtered.filter(p => p.product_type === typeFilter);
+                }
+
+                // Ordenar
+                const sortFilter = filterSort?.value;
+                if (sortFilter) {
+                    switch (sortFilter) {
+                        case 'recent':
+                            filtered.sort((a, b) => new Date(b.purchased_at) - new Date(a.purchased_at));
+                            break;
+                        case 'oldest':
+                            filtered.sort((a, b) => new Date(a.purchased_at) - new Date(b.purchased_at));
+                            break;
+                        case 'name-az':
+                            filtered.sort((a, b) => a.name.localeCompare(b.name));
+                            break;
+                        case 'name-za':
+                            filtered.sort((a, b) => b.name.localeCompare(a.name));
+                            break;
+                    }
+                }
+
+                if (filtered.length === 0) {
+                    purchasesGrid.innerHTML = '';
+                    purchasesGrid.style.display = 'none';
+                    emptyState.style.display = 'block';
+                } else {
+                    emptyState.style.display = 'none';
+                    purchasesGrid.style.display = 'grid';
+                    renderPurchases(filtered);
+                }
+            }
+
+            // ---------- BÚSQUEDA (Actualizado) ----------
+            if (searchInput) {
+                searchInput.addEventListener('input', (e) => {
+                    const searchTerm = e.target.value.toLowerCase().trim();
+
+                    if (searchTerm === '') {
+                        applyFilters(); 
+                        return;
+                    }
+
+                    const filtered = allPurchases.filter(p =>
+                        p.name.toLowerCase().includes(searchTerm) ||
+                        (p.creator_name && p.creator_name.toLowerCase().includes(searchTerm))
+                    );
+
+                    if (filtered.length === 0) {
+                        purchasesGrid.innerHTML = '';
+                        purchasesGrid.style.display = 'none';
+                        emptyState.style.display = 'block';
+                    } else {
+                        emptyState.style.display = 'none';
+                        purchasesGrid.style.display = 'grid';
+                        renderPurchases(filtered);
+                    }
+                });
+            }
+
+            // ---------- LOGOUT HANDLER (Sin cambios) ----------
+            function handleLogout(e) {
+                e.preventDefault();
+                console.log("Iniciando cierre de sesión...");
+
+                const overlay = document.getElementById('logout-overlay');
+                const messageEl = document.getElementById('logout-message');
+                const iconEl = overlay.querySelector('i');
+
+                if (!overlay || !messageEl || !iconEl) {
+                    console.warn("Faltan elementos del DOM para el logout animado. Usando fallback.");
+                    localStorage.removeItem('authToken');
+                    window.location.replace('/index.html');
+                    return;
+                }
+
+                messageEl.textContent = "Te veremos pronto...";
+                iconEl.className = 'fas fa-spinner fa-spin';
+                overlay.classList.add('active');
+
+                setTimeout(() => {
+                    localStorage.removeItem('authToken');
+                    console.log("Sesión cerrada. Mostrando mensaje de despedida.");
+                    messageEl.textContent = "¡Cerraste sesión!";
+                    iconEl.className = 'fas fa-check-circle';
+                }, 1500);
+
+                setTimeout(() => {
+                    console.log("Desvaneciendo overlay...");
+                    overlay.classList.add('fading-out');
+                }, 3000);
+
+                setTimeout(() => {
+                    console.log("Redirigiendo a index.html");
+                    window.location.replace('/index.html');
+                }, 3500);
+            }
+
+            // Attach logout handlers
+            const sidebarLogoutButton = document.getElementById('sidebar-logout-btn');
+            if (sidebarLogoutButton) {
+                sidebarLogoutButton.addEventListener('click', handleLogout);
+            }
+
+            const navbarLogoutButton = document.getElementById('navbar-logout-btn');
+            if (navbarLogoutButton) {
+                navbarLogoutButton.addEventListener('click', handleLogout);
+            }
+
+            // ---------- INICIALIZACIÓN (Actualizado) ----------
+            showSkeletonLoading(); 
+            loadCachedUser(); 
+            loadDashboardData(); // Inicia la carga principal de datos
+
+        });
     </script>
-    
-    <!-- Script externo con datos reales de Supabase -->
-    <script src="mis-compras.js"></script>
+
 </body>
+
 </html>
