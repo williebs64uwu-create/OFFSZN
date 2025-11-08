@@ -20,13 +20,11 @@
             background: #0a0a0a;
             color: #e5e5e5;
             overflow-x: hidden;
-            opacity: 0;
+            /* opacity: 0; <-- ELIMINADO PARA QUITAR PANTALLA NEGRA */
             transition: opacity 0.3s ease-in;
         }
 
-        body.loaded {
-            opacity: 1;
-        }
+        /* body.loaded { opacity: 1; } <-- ELIMINADO */
 
         /* ---------- NAVBAR ---------- */
         .navbar {
@@ -1011,6 +1009,20 @@
             background-size: 200% 100%;
             animation: skeleton-loading 1.5s ease-in-out infinite;
             border-radius: 8px;
+            /* AÑADIDO para que el skeleton se vea bien en línea */
+            color: transparent !important;
+            display: inline-block;
+            user-select: none;
+        }
+        
+        /* AÑADIDO para que el avatar se vea redondo */
+        .profile-avatar.skeleton {
+            border-radius: 50%;
+        }
+        
+        /* AÑADIDO para espaciado de stats */
+        .stat-value.skeleton {
+            margin-bottom: 4px;
         }
 
         @keyframes skeleton-loading {
@@ -1155,7 +1167,6 @@
 
 <body>
 
-    <!-- Navbar -->
     <nav class="navbar">
         <div class="logo"><a href="index">OFFSZN</a></div>
 
@@ -1256,23 +1267,23 @@
         </div>
     </nav>
 
-    <!-- Dashboard Container -->
     <div class="dashboard-container">
 
-        <!-- Sidebar -->
         <aside class="sidebar">
             <div class="profile-header">
                 <div class="profile-info">
-                    <div class="profile-avatar">?</div>
+                    <div class="profile-avatar skeleton" style="opacity: 1;">&nbsp;</div>
                     <div>
-                        <div class="profile-name">Usuario</div>
+                        <div class="profile-name skeleton"
+                            style="height: 20px; width: 120px; border-radius: 6px; opacity: 1;">&nbsp;</div>
                     </div>
                 </div>
             </div>
 
             <div class="wallet-section">
                 <div class="wallet-label">Saldo Disponible</div>
-                <div class="wallet-amount">$0.00</div>
+                <div class="wallet-amount skeleton"
+                    style="height: 30px; width: 100px; border-radius: 6px; opacity: 1;">&nbsp;</div>
             </div>
 
             <button class="upload-btn" onclick="window.location.href='subir-kit.html'">
@@ -1316,7 +1327,6 @@
                     Sesión</span></a>
         </aside>
 
-        <!-- Main Content -->
         <main class="main-content">
             <div class="page-header">
                 <div class="page-title-section">
@@ -1330,39 +1340,41 @@
                 </div>
             </div>
 
-            <!-- Stats Row -->
             <div class="stats-row">
                 <div class="stat-card">
                     <div class="stat-header">
                         <div class="stat-icon"><i class="fas fa-heart"></i></div>
                     </div>
-                    <div class="stat-value">0</div>
+                    <div class="stat-value skeleton"
+                        style="height: 34px; width: 60px; border-radius: 6px; opacity: 1;">&nbsp;</div>
                     <div class="stat-label">Total de Favoritos</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-header">
                         <div class="stat-icon"><i class="fas fa-drum"></i></div>
                     </div>
-                    <div class="stat-value">0</div>
+                    <div class="stat-value skeleton"
+                        style="height: 34px; width: 60px; border-radius: 6px; opacity: 1;">&nbsp;</div>
                     <div class="stat-label">Drum Kits</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-header">
                         <div class="stat-icon"><i class="fas fa-music"></i></div>
                     </div>
-                    <div class="stat-value">0</div>
+                    <div class="stat-value skeleton"
+                        style="height: 34px; width: 60px; border-radius: 6px; opacity: 1;">&nbsp;</div>
                     <div class="stat-label">Beats & Samples</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-header">
                         <div class="stat-icon"><i class="fas fa-sliders-h"></i></div>
                     </div>
-                    <div class="stat-value">0</div>
+                    <div class="stat-value skeleton"
+                        style="height: 34px; width: 60px; border-radius: 6px; opacity: 1;">&nbsp;</div>
                     <div class="stat-label">Presets</div>
                 </div>
             </div>
 
-            <!-- Filters -->
             <div class="filters-bar">
                 <div class="filter-group">
                     <span class="filter-label">Tipo:</span>
@@ -1390,8 +1402,7 @@
                 </div>
             </div>
 
-            <!-- Empty State -->
-            <div class="empty-state" id="empty-state">
+            <div class="empty-state" id="empty-state" style="display: none;">
                 <i class="fas fa-heart-broken"></i>
                 <h3>Aún no tienes favoritos</h3>
                 <p>
@@ -1404,14 +1415,74 @@
                 </a>
             </div>
 
-            <!-- Products Grid -->
-            <div class="products-grid" id="products-grid" style="display: none;">
-                <!-- Los productos favoritos se cargarán dinámicamente aquí -->
+            <div class="products-grid" id="products-grid">
+                <div class="product-card">
+                    <div class="product-image skeleton" style="height: 180px; margin-bottom: 0;"></div>
+                    <div class="product-info">
+                        <div class="product-title skeleton"
+                            style="height: 20px; width: 80%; border-radius: 6px; margin-bottom: 12px;"></div>
+                        <div class="product-creator skeleton"
+                            style="height: 16px; width: 50%; border-radius: 6px; margin-bottom: 16px;"></div>
+                        <div class="product-price skeleton"
+                            style="height: 24px; width: 30%; border-radius: 6px; margin-bottom: 16px;"></div>
+                        <div class="product-stats" style="border-top: none; padding-top: 0; gap: 8px;">
+                            <span class="skeleton" style="height: 16px; width: 25%; border-radius: 6px;"></span>
+                            <span class="skeleton" style="height: 16px; width: 25%; border-radius: 6px;"></span>
+                            <span class="skeleton" style="height: 16px; width: 25%; border-radius: 6px;"></span>
+                        </div>
+                    </div>
+                    <div class="product-actions">
+                        <div class="action-btn skeleton" style="height: 36px; border-radius: 8px;"></div>
+                        <div class="action-btn skeleton" style="height: 36px; border-radius: 8px;"></div>
+                        <div class="action-btn skeleton" style="height: 36px; border-radius: 8px;"></div>
+                    </div>
+                </div>
+                <div class="product-card">
+                    <div class="product-image skeleton" style="height: 180px; margin-bottom: 0;"></div>
+                    <div class="product-info">
+                        <div class="product-title skeleton"
+                            style="height: 20px; width: 80%; border-radius: 6px; margin-bottom: 12px;"></div>
+                        <div class="product-creator skeleton"
+                            style="height: 16px; width: 50%; border-radius: 6px; margin-bottom: 16px;"></div>
+                        <div class="product-price skeleton"
+                            style="height: 24px; width: 30%; border-radius: 6px; margin-bottom: 16px;"></div>
+                        <div class="product-stats" style="border-top: none; padding-top: 0; gap: 8px;">
+                            <span class="skeleton" style="height: 16px; width: 25%; border-radius: 6px;"></span>
+                            <span class="skeleton" style="height: 16px; width: 25%; border-radius: 6px;"></span>
+                            <span class="skeleton" style="height: 16px; width: 25%; border-radius: 6px;"></span>
+                        </div>
+                    </div>
+                    <div class="product-actions">
+                        <div class="action-btn skeleton" style="height: 36px; border-radius: 8px;"></div>
+                        <div class="action-btn skeleton" style="height: 36px; border-radius: 8px;"></div>
+                        <div class="action-btn skeleton" style="height: 36px; border-radius: 8px;"></div>
+                    </div>
+                </div>
+                <div class="product-card">
+                    <div class="product-image skeleton" style="height: 180px; margin-bottom: 0;"></div>
+                    <div class="product-info">
+                        <div class="product-title skeleton"
+                            style="height: 20px; width: 80%; border-radius: 6px; margin-bottom: 12px;"></div>
+                        <div class="product-creator skeleton"
+                            style="height: 16px; width: 50%; border-radius: 6px; margin-bottom: 16px;"></div>
+                        <div class="product-price skeleton"
+                            style="height: 24px; width: 30%; border-radius: 6px; margin-bottom: 16px;"></div>
+                        <div class="product-stats" style="border-top: none; padding-top: 0; gap: 8px;">
+                            <span class="skeleton" style="height: 16px; width: 25%; border-radius: 6px;"></span>
+                            <span class="skeleton" style="height: 16px; width: 25%; border-radius: 6px;"></span>
+                            <span class="skeleton" style="height: 16px; width: 25%; border-radius: 6px;"></span>
+                        </div>
+                    </div>
+                    <div class="product-actions">
+                        <div class="action-btn skeleton" style="height: 36px; border-radius: 8px;"></div>
+                        <div class="action-btn skeleton" style="height: 36px; border-radius: 8px;"></div>
+                        <div class="action-btn skeleton" style="height: 36px; border-radius: 8px;"></div>
+                    </div>
+                </div>
             </div>
         </main>
     </div>
 
-    <!-- Logout Overlay -->
     <div id="logout-overlay">
         <div class="logout-content">
             <i class="fas fa-spinner fa-spin"></i>
@@ -1477,23 +1548,21 @@
                 return;
             }
 
-            // ---------- SKELETON LOADING ----------
+            // ---------- SKELETON LOADING (MODIFICADO) ----------
             function showSkeletonLoading() {
-                // No mostrar nada hasta que los datos estén listos
-                if (productsGrid) {
-                    productsGrid.style.display = 'none';
-                    productsGrid.innerHTML = '';
-                }
-
+                // El skeleton HTML ya está en la página.
+                // Solo nos aseguramos de que el empty state esté oculto.
                 if (emptyState) {
                     emptyState.style.display = 'none';
                 }
+                // Y que la cuadrícula esté visible (display: grid)
+                if (productsGrid) {
+                    productsGrid.style.display = 'grid';
+                }
             }
 
-            function hideSkeletonLoading() {
-                // Hacer visible toda la página de una vez
-                document.body.classList.add('loaded');
-            }
+            // ---------- hideSkeletonLoading() FUE ELIMINADA ----------
+            // function hideSkeletonLoading() { ... }
 
             // ---------- CACHÉ DE USUARIO ----------
             function loadCachedUser() {
@@ -1519,26 +1588,28 @@
                 }
             }
 
-            // ---------- ACTUALIZAR UI DE USUARIO ----------
+            // ---------- ACTUALIZAR UI DE USUARIO (MODIFICADO) ----------
             function updateUserUI(userData, fromCache = false) {
                 if (profileName) {
                     profileName.textContent = `${userData.first_name || ''} ${userData.lastName || ''}`.trim() || userData.nickname;
+                    // Quitamos el skeleton
+                    profileName.classList.remove('skeleton');
+                    profileName.removeAttribute('style');
                 }
 
                 if (profileAvatar) {
                     const initial = (userData.first_name || userData.nickname || 'U').charAt(0).toUpperCase();
                     profileAvatar.textContent = initial;
+                    // Quitamos el skeleton
                     profileAvatar.classList.remove('skeleton');
+                    profileAvatar.removeAttribute('style');
                     profileAvatar.classList.add('fade-in');
-                    profileAvatar.style.opacity = '1';
                 }
 
-                if (!fromCache) {
-                    hideSkeletonLoading();
-                }
+                // Ya no se llama a hideSkeletonLoading()
             }
 
-            // ---------- GIFT CARDS ----------
+            // ---------- GIFT CARDS (MODIFICADO) ----------
             function loadGiftCardsState() {
                 try {
                     const saved = localStorage.getItem(STORAGE_KEY);
@@ -1555,13 +1626,14 @@
             function updateWalletAmount() {
                 if (walletAmount) {
                     walletAmount.textContent = `$${appState.totalBalance.toFixed(2)}`;
+                    // Quitamos el skeleton
                     walletAmount.classList.remove('skeleton');
+                    walletAmount.removeAttribute('style');
                     walletAmount.classList.add('fade-in');
-                    walletAmount.style.opacity = '1';
                 }
             }
 
-            // ---------- CARGAR DATOS DEL DASHBOARD ----------
+            // ---------- CARGAR DATOS DEL DASHBOARD (MODIFICADO) ----------
             async function loadDashboardData() {
                 try {
                     const userResponse = await fetch(`${API_URL}/me`, {
@@ -1583,13 +1655,12 @@
 
                     await loadFavorites();
 
-                    // Hacer visible la página cuando todo esté listo
-                    document.body.classList.add('loaded');
+                    // Ya no se necesita añadir 'loaded' al body
 
                 } catch (error) {
                     console.error("Error al cargar datos:", error);
-                    hideSkeletonLoading();
-                    document.body.classList.add('loaded'); // Mostrar aunque haya error
+                    // Ya no se llama a hideSkeletonLoading()
+                    // La página ya es visible, así que el usuario verá los skeletons
 
                     if (error.message.includes('401') || error.message.includes('403')) {
                         localStorage.removeItem('authToken');
@@ -1599,7 +1670,7 @@
                 }
             }
 
-            // ---------- CARGAR FAVORITOS ----------
+            // ---------- CARGAR FAVORITOS (MODIFICADO) ----------
             async function loadFavorites() {
                 if (!productsGrid || !emptyState) return;
 
@@ -1609,14 +1680,13 @@
                     });
 
                     if (!response.ok) {
-                        // Si hay error, mostrar empty state en lugar de mensaje de error
                         console.warn('No se pudieron cargar favoritos, mostrando empty state');
                         allFavorites = [];
-                        updateStats([]);
+                        updateStats([]); // Actualiza stats a 0 y quita skeletons
                         productsGrid.style.display = 'none';
-                        productsGrid.innerHTML = '';
+                        productsGrid.innerHTML = ''; // Limpia los skeletons
                         emptyState.style.display = 'block';
-                        hideSkeletonLoading();
+                        // No se llama a hideSkeletonLoading()
                         return;
                     }
 
@@ -1624,33 +1694,32 @@
                     console.log("Favoritos cargados:", favorites);
 
                     allFavorites = favorites;
-                    updateStats(favorites);
+                    updateStats(favorites); // Actualiza stats y quita skeletons
 
                     if (favorites.length === 0) {
                         productsGrid.style.display = 'none';
-                        productsGrid.innerHTML = '';
+                        productsGrid.innerHTML = ''; // Limpia los skeletons
                         emptyState.style.display = 'block';
-                        hideSkeletonLoading();
+                        // No se llama a hideSkeletonLoading()
                     } else {
                         emptyState.style.display = 'none';
                         productsGrid.style.display = 'grid';
-                        renderFavorites(favorites);
-                        hideSkeletonLoading();
+                        renderFavorites(favorites); // Reemplaza skeletons con datos reales
+                        // No se llama a hideSkeletonLoading()
                     }
 
                 } catch (error) {
                     console.error("Error cargando favoritos:", error);
-                    // En caso de error, mostrar empty state en lugar de mensaje de error
                     allFavorites = [];
-                    updateStats([]);
+                    updateStats([]); // Actualiza stats a 0 y quita skeletons
                     productsGrid.style.display = 'none';
-                    productsGrid.innerHTML = '';
+                    productsGrid.innerHTML = ''; // Limpia los skeletons
                     emptyState.style.display = 'block';
-                    hideSkeletonLoading();
+                    // No se llama a hideSkeletonLoading()
                 }
             }
 
-            // ---------- ACTUALIZAR ESTADÍSTICAS ----------
+            // ---------- ACTUALIZAR ESTADÍSTICAS (MODIFICADO) ----------
             function updateStats(favorites) {
                 const stats = {
                     total: favorites.length,
@@ -1660,33 +1729,26 @@
                 };
 
                 const statElements = document.querySelectorAll('.stat-value');
-                if (statElements[0]) {
-                    statElements[0].textContent = stats.total;
-                    statElements[0].classList.remove('skeleton');
-                    statElements[0].classList.add('fade-in');
-                    statElements[0].style.color = '1';
-                }
-                if (statElements[1]) {
-                    statElements[1].textContent = stats.drumkits;
-                    statElements[1].classList.remove('skeleton');
-                    statElements[1].classList.add('fade-in');
-                    statElements[1].style.color = '1';
-                }
-                if (statElements[2]) {
-                    statElements[2].textContent = stats.beats;
-                    statElements[2].classList.remove('skeleton');
-                    statElements[2].classList.add('fade-in');
-                    statElements[2].style.color = '1';
-                }
-                if (statElements[3]) {
-                    statElements[3].textContent = stats.presets;
-                    statElements[3].classList.remove('skeleton');
-                    statElements[3].classList.add('fade-in');
-                    statElements[3].style.color = '1';
-                }
+
+                // Función interna para actualizar cada stat y quitar skeleton
+                const updateStatEl = (el, value) => {
+                    if (el) {
+                        el.textContent = value;
+                        el.classList.remove('skeleton');
+                        el.removeAttribute('style');
+                        el.classList.add('fade-in');
+                    }
+                };
+
+                updateStatEl(statElements[0], stats.total);
+                updateStatEl(statElements[1], stats.drumkits);
+                updateStatEl(statElements[2], stats.beats);
+                updateStatEl(statElements[3], stats.presets);
             }
 
-            // ---------- RENDERIZAR FAVORITOS ----------
+            // ---------- RENDERIZAR FAVORITOS (sin cambios) ----------
+            // Esta función ya reemplaza el .innerHTML, por lo que
+            // automáticamente elimina los skeletons.
             function renderFavorites(favorites) {
                 const productHTML = favorites.map(fav => `
                     <div class="product-card fade-in">
@@ -1757,7 +1819,7 @@
                     if (!response.ok) throw new Error('No se pudo quitar de favoritos.');
 
                     alert('Producto quitado de favoritos');
-                    await loadFavorites();
+                    await loadFavorites(); // Recarga la lista
 
                 } catch (error) {
                     console.error('Error quitando favorito:', error);
@@ -1808,6 +1870,7 @@
                 }
 
                 if (filtered.length === 0) {
+                    productsGrid.innerHTML = ''; // Limpia skeletons si los hay
                     productsGrid.style.display = 'none';
                     emptyState.style.display = 'block';
                 } else {
@@ -1823,7 +1886,7 @@
                     const searchTerm = e.target.value.toLowerCase().trim();
 
                     if (searchTerm === '') {
-                        applyFilters();
+                        applyFilters(); // Vuelve a los filtros si la búsqueda está vacía
                         return;
                     }
 
@@ -1834,6 +1897,7 @@
                     );
 
                     if (filtered.length === 0) {
+                        productsGrid.innerHTML = ''; // Limpia skeletons si los hay
                         productsGrid.style.display = 'none';
                         emptyState.style.display = 'block';
                     } else {
@@ -1894,9 +1958,9 @@
             }
 
             // ---------- INICIALIZACIÓN ----------
-            showSkeletonLoading();
-            loadCachedUser();
-            loadDashboardData();
+            showSkeletonLoading(); // Prepara la UI (oculta empty state, muestra grid)
+            loadCachedUser(); // Intenta cargar caché (y quita skeletons si lo logra)
+            loadDashboardData(); // Inicia la carga principal de datos
 
         });
     </script>
