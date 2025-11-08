@@ -3,122 +3,62 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Subir Kit - OFFSZN</title>
+    <title>Subir Curso - OFFSZN</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script>
+        if (!localStorage.getItem('authToken')) {
+            window.location.replace('/pages/login.html'); 
+        }
+    </script>
+
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Inter', sans-serif;
             background: #0a0a0a;
             color: #e5e5e5;
-            overflow-x: hidden;
             padding: 60px 20px;
-        }
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        .header {
-            text-align: center;
-            margin-bottom: 40px;
-        }
-        .header h1 {
-            font-size: 2.5rem;
-            font-weight: 700;
-            color: #fff;
-            margin-bottom: 10px;
-        }
-        .header p {
-            color: #666;
-            font-size: 1rem;
-            line-height: 1.6;
-        }
-        .upload-options {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 30px;
-            margin-top: 40px;
-        }
-        .upload-option {
-            background: rgba(255, 255, 255, .02);
-            border: 1px solid rgba(255, 255, 255, .08);
-            border-radius: 12px;
-            padding: 30px;
-            text-align: center;
-            transition: all .2s;
-            cursor: pointer;
-        }
-        .upload-option:hover {
-            border-color: rgba(255, 255, 255, .15);
-            background: rgba(255, 255, 255, .04);
-        }
-        .upload-option i {
-            font-size: 3.5rem;
-            color: #8b5cf6;
-            margin-bottom: 20px;
-        }
-        .upload-option h3 {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: #fff;
-            margin-bottom: 15px;
-        }
-        .upload-option p {
-            color: #666;
-            font-size: .9rem;
-            line-height: 1.6;
-        }
-        .back-btn {
-            display: inline-flex;
+            min-height: 100vh;
+            display: flex;
             align-items: center;
-            gap: 8px;
-            color: #8b5cf6;
-            text-decoration: none;
-            font-size: .9rem;
-            font-weight: 600;
-            margin-top: 30px;
-            transition: all .2s;
+            justify-content: center;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
         }
-        .back-btn:hover {
-            color: #a78bfa;
+        body::before {
+            content: ''; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1;
+            background: radial-gradient(circle at 20% 30%, rgba(239, 68, 68, 0.1), transparent 35%),
+                        radial-gradient(circle at 80% 70%, rgba(239, 68, 68, 0.05), transparent 35%);
+            animation: subtle-glow 20s ease-in-out infinite;
         }
-        @media (max-width: 768px) {
-            .upload-options {
-                grid-template-columns: 1fr;
-            }
+        @keyframes subtle-glow {
+            0% { background: radial-gradient(circle at 20% 30%, rgba(239, 68, 68, 0.1), transparent 35%), radial-gradient(circle at 80% 70%, rgba(239, 68, 68, 0.05), transparent 35%); }
+            50% { background: radial-gradient(circle at 30% 80%, rgba(239, 68, 68, 0.15), transparent 35%), radial-gradient(circle at 70% 20%, rgba(239, 68, 68, 0.1), transparent 35%); }
+            100% { background: radial-gradient(circle at 20% 30%, rgba(239, 68, 68, 0.1), transparent 35%), radial-gradient(circle at 80% 70%, rgba(239, 68, 68, 0.05), transparent 35%); }
         }
+        .container { max-width: 600px; margin: 0 auto; }
+        .header h1 { font-size: 2.5rem; font-weight: 700; color: #fff; margin-bottom: 10px; }
+        .header i { font-size: 3.5rem; color: #ef4444; margin-bottom: 20px; }
+        .header p { color: #999; font-size: 1rem; line-height: 1.6; margin-bottom: 30px; }
+        .back-btn {
+            display: inline-flex; align-items: center; gap: 8px; color: #ef4444;
+            text-decoration: none; font-size: .9rem; font-weight: 600; transition: all .2s;
+        }
+        .back-btn:hover { color: #f87171; }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>¿Qué quieres subir hoy?</h1>
-            <p>Selecciona el tipo de contenido que deseas subir a OFFSZN.</p>
+            <i class="fas fa-graduation-cap"></i>
+            <h1>Subir Curso</h1>
+            <p>Esta funcionalidad estará disponible muy pronto. Prepara tu material para convertirte en un instructor de OFFSZN.</p>
         </div>
-        <div class="upload-options">
-            <div class="upload-option" onclick="window.location.href='/cuenta/Upload/Beats.html'">
-                <i class="fas fa-music"></i>
-                <h3>Subir Beat</h3>
-                <p>Comparte tu música con miles de artistas alrededor del mundo. Esta funcionalidad está en desarrollo.</p>
-            </div>
-            <div class="upload-option" onclick="window.location.href='/cuenta/Upload/Drum-Kits.html'">
-                <i class="fas fa-drum"></i>
-                <h3>Subir Drum Kit</h3>
-                <p>Comparte tus kits de batería con miles de productores alrededor del mundo. Esta funcionalidad está en desarrollo.</p>
-            </div>
-            <div class="upload-option" onclick="window.location.href='/cuenta/Upload/Presets.html'">
-                <i class="fas fa-sliders-h"></i>
-                <h3>Subir Preset</h3>
-                <p>Comparte tus presets y plugins con la comunidad OFFSZN. Esta funcionalidad está en desarrollo.</p>
-            </div>
-        </div>
-        <a href="/cuenta/dashboard" class="back-btn">
-            <i class="fas fa-arrow-left"></i> Volver al Dashboard
+        <a href="subir-kit.html" class="back-btn">
+            <i class="fas fa-arrow-left"></i> Volver a Opciones
         </a>
     </div>
 </body>
