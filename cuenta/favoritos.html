@@ -1595,7 +1595,17 @@
                         headers: { 'Authorization': `Bearer ${token}` }
                     });
 
-                    if (!response.ok) throw new Error('No se pudieron cargar tus favoritos.');
+                    if (!response.ok) {
+                        // Si hay error, mostrar empty state en lugar de mensaje de error
+                        console.warn('No se pudieron cargar favoritos, mostrando empty state');
+                        allFavorites = [];
+                        updateStats([]);
+                        productsGrid.style.display = 'none';
+                        productsGrid.innerHTML = '';
+                        emptyState.style.display = 'block';
+                        hideSkeletonLoading();
+                        return;
+                    }
 
                     const favorites = await response.json();
                     console.log("Favoritos cargados:", favorites);
@@ -1617,7 +1627,12 @@
 
                 } catch (error) {
                     console.error("Error cargando favoritos:", error);
-                    productsGrid.innerHTML = `<p style="color:red;grid-column:1/-1;">Error al cargar tus favoritos: ${error.message}</p>`;
+                    // En caso de error, mostrar empty state en lugar de mensaje de error
+                    allFavorites = [];
+                    updateStats([]);
+                    productsGrid.style.display = 'none';
+                    productsGrid.innerHTML = '';
+                    emptyState.style.display = 'block';
                     hideSkeletonLoading();
                 }
             }
