@@ -1,10 +1,21 @@
 document.addEventListener('DOMContentLoaded', async () => {
-    
+
+    // ---------- ELEMENTOS DEL DOM ----------
+    const profileAvatar = document.querySelector('.profile-avatar');
+    const profileName = document.querySelector('.profile-name');
+    const walletAmount = document.querySelector('.wallet-amount');
+    const statsValues = document.querySelectorAll('.stat-value');
+    const productsGrid = document.getElementById('products-grid');
+    const emptyState = document.getElementById('empty-state');
     const token = localStorage.getItem('authToken');
-    const CACHE_KEY = 'offszn_user_cache';
+    let userData = null;
+
+    // ---------- GIFT CARDS STATE ----------
     const STORAGE_KEY = 'offszn_giftcards_state';
-    
-    // ===== CONFIGURACIÓN DE API =====
+    const CACHE_KEY = 'offszn_user_cache';
+    let appState = { totalBalance: 0, giftCards: [] };
+
+    // ---------- API URL ----------
     let API_URL = '';
     if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
         API_URL = 'http://localhost:3000/api';
@@ -12,309 +23,382 @@ document.addEventListener('DOMContentLoaded', async () => {
         API_URL = 'https://offszn-academy.onrender.com/api';
     }
 
-    // ===== VERIFICAR AUTH =====
+    // ---------- VERIFICAR TOKEN ----------
     if (!token) {
-        console.error("No hay token, redirigiendo al login.");
+        console.error("Mis Kits: No hay token, redirigiendo al login.");
         window.location.replace('/pages/login.html');
         return;
     }
 
-    // ===== CARGAR DATOS DEL USUARIO DESDE API =====
-    async function loadUserData() {
+    // ---------- SKELETON LOADING ----------
+    function showSkeletonLoading() {
+        // Skeleton en avatar
+        if (profileAvatar) profileAvatar.classList.add('skeleton');
+        
+        // Skeleton en wallet
+        if (walletAmount) {
+            walletAmount.classList.add('skeleton');
+            walletAmount.textContent = '$000.00';
+        }
+
+        // Skeleton en stats
+        statsValues.forEach(el => {
+            el.classList.add('skeleton');
+            el.textContent = '000';
+        });
+
+        // Skeleton en productos
+        if (productsGrid) {
+            productsGrid.style.display = 'grid';
+            productsGrid.innerHTML = `
+                <div class="product-card skeleton" style="height:400px;"></div>
+                <div class="product-card skeleton" style="height:400px;"></div>
+                <div class="product-card skeleton" style="height:400px;"></div>
+            `;
+        }
+        
+        if (emptyState) emptyState.style.display = 'none';
+    }
+
+    function hideSkeletonLoading() {
+        document.querySelectorAll('.skeleton').forEach(el => {
+            el.classList.remove('skeleton');
+            el.classList.add('fade-in');
+        });
+    }
+
+    // ---------- CACHÉ DE USUARIO ----------
+    function loadCachedUser() {
         try {
-            // Intentar cargar desde caché primero (para skeleton loading rápido)
             const cached = localStorage.getItem(CACHE_KEY);
             if (cached) {
                 const cachedData = JSON.parse(cached);
-                updateUserUI(cachedData);
+                console.log('Cargando datos desde caché...');
+                updateUserUI(cachedData, true);
+                return true;
             }
+        } catch (err) {
+            console.error('Error al cargar caché:', err);
+        }
+        return false;
+    }
 
-            // Cargar datos frescos del servidor
-            const response = await fetch(`${API_URL}/me`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-
-            if (!response.ok) {
-                if (response.status === 401 || response.status === 403) {
-                    localStorage.removeItem('authToken');
-                    localStorage.removeItem(CACHE_KEY);
-                    window.location.replace('/pages/login.html');
-                    return;
-                }
-                throw new Error('Error al cargar datos del usuario');
-            }
-
-            const userData = await response.json();
-            console.log('✅ Datos del usuario cargados desde API:', userData);
-            
-            // Guardar en caché
+    function saveUserCache(userData) {
+        try {
             localStorage.setItem(CACHE_KEY, JSON.stringify(userData));
-            updateUserUI(userData);
-
-        } catch (error) {
-            console.error('❌ Error cargando usuario desde API:', error);
+        } catch (err) {
+            console.error('Error al guardar caché:', err);
         }
     }
 
-    // ===== CARGAR BALANCE DESDE GIFT CARDS =====
-    function loadBalance() {
+    // ---------- ACTUALIZAR UI DE USUARIO ----------
+    function updateUserUI(userData, fromCache = false) {
+        if (profileName) {
+            profileName.textContent = `${userData.first_name || ''} ${userData.lastName || ''}`.trim() || userData.nickname;
+        }
+
+        if (profileAvatar) {
+            const initial = (userData.first_name || userData.nickname || 'U').charAt(0).toUpperCase();
+            profileAvatar.textContent = initial;
+            profileAvatar.classList.remove('skeleton');
+            profileAvatar.classList.add('fade-in');
+        }
+
+        if (!fromCache) {
+            hideSkeletonLoading();
+        }
+    }
+
+    // ---------- GIFT CARDS ----------
+    function loadGiftCardsState() {
         try {
             const saved = localStorage.getItem(STORAGE_KEY);
             if (saved) {
-                const giftCardsState = JSON.parse(saved);
-                return giftCardsState.totalBalance || 0;
+                appState = JSON.parse(saved);
+                updateWalletAmount();
             }
-        } catch (error) {
-            console.error('❌ Error al cargar balance:', error);
+        } catch (err) {
+            console.error('Error al cargar estado de gift cards:', err);
         }
-        return 0;
     }
 
-    // ===== ACTUALIZAR UI CON DATOS DEL USUARIO =====
-    function updateUserUI(userData) {
-        const balance = loadBalance();
-        
-        // ===== ACTUALIZAR SIDEBAR =====
-        // Avatar en sidebar
-        const profileAvatar = document.querySelector('.profile-avatar');
-        if (profileAvatar) {
-            profileAvatar.classList.remove('skeleton-avatar');
-            const initial = (userData.first_name || userData.nickname || 'U').charAt(0).toUpperCase();
-            profileAvatar.textContent = initial;
+    function updateWalletAmount() {
+        if (walletAmount) {
+            walletAmount.textContent = `$${appState.totalBalance.toFixed(2)}`;
+            walletAmount.classList.remove('skeleton');
         }
-
-        // Nombre en sidebar
-        const profileName = document.querySelector('.profile-name');
-        if (profileName) {
-            profileName.classList.remove('skeleton-text');
-            profileName.textContent = `${userData.first_name || ''} ${userData.last_name || ''}`.trim() || userData.nickname || 'Usuario';
-        }
-
-        // Balance en sidebar
-        const sidebarWallet = document.querySelector('.wallet-amount');
-        if (sidebarWallet) {
-            sidebarWallet.classList.remove('skeleton-text');
-            sidebarWallet.textContent = `$${balance.toFixed(2)}`;
-        }
-
-        // ===== ACTUALIZAR NAVBAR DROPDOWN =====
-        const dropdownName = document.querySelector('.user-dropdown-name');
-        const dropdownEmail = document.querySelector('.user-dropdown-email');
-        const dropdownAvatar = document.querySelector('.user-dropdown-avatar');
-
-        if (dropdownName) {
-            dropdownName.classList.remove('skeleton-text');
-            dropdownName.textContent = userData.nickname || userData.first_name || 'Usuario';
-        }
-        if (dropdownEmail) {
-            dropdownEmail.classList.remove('skeleton-text');
-            dropdownEmail.textContent = userData.email || 'usuario@offszn.com';
-        }
-        if (dropdownAvatar) {
-            dropdownAvatar.classList.remove('skeleton-avatar');
-            const initial = (userData.first_name || userData.nickname || 'U').charAt(0).toUpperCase();
-            dropdownAvatar.textContent = initial;
-        }
-
-        console.log('✅ UI actualizada con datos reales');
     }
 
-    // ===== CARGAR KITS DEL USUARIO (TODO: Conectar con backend) =====
-    async function loadUserKits() {
+    // ---------- CARGAR DATOS DEL DASHBOARD ----------
+    async function loadDashboardData() {
         try {
-            // TODO: Cuando el backend esté listo, hacer:
-            // const response = await fetch(`${API_URL}/kits/my-kits`, {
-            //     headers: { 'Authorization': `Bearer ${token}` }
-            // });
-            // const kits = await response.json();
-            
-            // Por ahora, datos de ejemplo:
-            const kits = [
-                {
-                    id: 1,
-                    name: "Trap Essentials Vol. 1",
-                    price: 29.99,
-                    sales: 156,
-                    status: "Published",
-                    createdAt: "2024-01-15",
-                    image: "https://via.placeholder.com/300x300/8b5cf6/ffffff?text=Trap+Kit"
-                },
-                {
-                    id: 2,
-                    name: "Melodic Drill Pack",
-                    price: 39.99,
-                    sales: 89,
-                    status: "Published",
-                    createdAt: "2024-02-10",
-                    image: "https://via.placeholder.com/300x300/6366f1/ffffff?text=Drill+Kit"
-                },
-                {
-                    id: 3,
-                    name: "Lo-Fi Dreams Bundle",
-                    price: 19.99,
-                    sales: 234,
-                    status: "Draft",
-                    createdAt: "2024-03-05",
-                    image: "https://via.placeholder.com/300x300/ec4899/ffffff?text=LoFi+Kit"
-                }
-            ];
-            
-            renderKits(kits);
-            
+            // Cargar datos del usuario
+            const userResponse = await fetch(`${API_URL}/me`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            if (!userResponse.ok) {
+                localStorage.removeItem('authToken');
+                throw new Error(`Error ${userResponse.status}: No se pudieron obtener los datos del usuario.`);
+            }
+
+            userData = await userResponse.json();
+            console.log("Datos del usuario:", userData);
+
+            localStorage.setItem('userId', userData.id);
+            saveUserCache(userData);
+            updateUserUI(userData, false);
+            loadGiftCardsState();
+
+            // Cargar productos del productor
+            await loadMyKits();
+
         } catch (error) {
-            console.error('❌ Error cargando kits:', error);
+            console.error("Error al cargar datos:", error);
+            hideSkeletonLoading();
+
+            if (error.message.includes('401') || error.message.includes('403')) {
+                localStorage.removeItem('authToken');
+                localStorage.removeItem(CACHE_KEY);
+                window.location.replace('/pages/login.html');
+            }
         }
     }
 
-    // ===== RENDERIZAR KITS =====
-    function renderKits(kits) {
-        const container = document.getElementById('kits-container');
-        
-        if (kits.length === 0) {
-            container.innerHTML = `
-                <div class="col-span-full text-center py-16">
-                    <i class="fas fa-music text-6xl text-zinc-600 mb-4"></i>
-                    <h3 class="text-xl font-bold text-white mb-2">No tienes kits publicados</h3>
-                    <p class="text-zinc-400 mb-6">Comienza subiendo tu primer kit al marketplace</p>
-                    <button onclick="window.location.href='subir-kit.html'" class="bg-gradient-to-r from-violet-600 to-violet-500 text-white px-8 py-3 rounded-lg font-bold hover:shadow-lg hover:shadow-violet-500/50 transition-all">
-                        <i class="fas fa-cloud-upload-alt mr-2"></i>
-                        Subir Mi Primer Kit
+    // ---------- CARGAR PRODUCTOS ----------
+    async function loadMyKits() {
+        if (!productsGrid || !emptyState) return;
+
+        try {
+            const response = await fetch(`${API_URL}/me/products`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            if (!response.ok) throw new Error('No se pudieron cargar tus productos.');
+
+            const products = await response.json();
+            console.log("Productos cargados:", products);
+
+            // Actualizar stats
+            updateStats(products);
+
+            if (products.length === 0) {
+                // Mostrar empty state
+                productsGrid.style.display = 'none';
+                productsGrid.innerHTML = '';
+                emptyState.style.display = 'block';
+                hideSkeletonLoading();
+            } else {
+                // Mostrar productos
+                emptyState.style.display = 'none';
+                productsGrid.style.display = 'grid';
+                renderProducts(products);
+                hideSkeletonLoading();
+            }
+
+        } catch (error) {
+            console.error("Error cargando productos:", error);
+            productsGrid.innerHTML = `<p style="color:red;grid-column:1/-1;">Error al cargar tus productos: ${error.message}</p>`;
+            hideSkeletonLoading();
+        }
+    }
+
+    // ---------- ACTUALIZAR ESTADÍSTICAS ----------
+    function updateStats(products) {
+        const stats = {
+            total: products.length,
+            views: products.reduce((sum, p) => sum + (p.views || 0), 0),
+            sales: products.reduce((sum, p) => sum + (p.sales || 0), 0),
+            revenue: products.reduce((sum, p) => sum + ((p.sales || 0) * parseFloat(p.price || 0)), 0)
+        };
+
+        const statElements = document.querySelectorAll('.stat-value');
+        if (statElements[0]) statElements[0].textContent = stats.total;
+        if (statElements[1]) statElements[1].textContent = stats.views.toLocaleString();
+        if (statElements[2]) statElements[2].textContent = stats.sales;
+        if (statElements[3]) statElements[3].textContent = `$${stats.revenue.toFixed(2)}`;
+    }
+
+    // ---------- RENDERIZAR PRODUCTOS ----------
+    function renderProducts(products) {
+        const productHTML = products.map(product => `
+            <div class="product-card fade-in">
+                <div class="product-image" style="${product.image_url ? `background-image: url(${product.image_url}); background-size:cover; background-position:center;` : ''}">
+                    ${!product.image_url ? '<i class="fas fa-music"></i>' : ''}
+                    <span class="product-badge">${product.product_type || 'Kit'}</span>
+                    <span class="product-status ${product.status || 'active'}">
+                        <i class="fas fa-circle" style="font-size:.5rem;"></i>
+                        ${product.status === 'draft' ? 'Borrador' : 'Activo'}
+                    </span>
+                </div>
+                <div class="product-info">
+                    <div class="product-title">${product.name}</div>
+                    <div class="product-meta">
+                        ${product.bpm ? `<span><i class="fas fa-tachometer-alt"></i> ${product.bpm} BPM</span>` : ''}
+                        ${product.key ? `<span><i class="fas fa-music"></i> ${product.key}</span>` : ''}
+                        ${!product.bpm && !product.key ? `<span><i class="fas fa-calendar"></i> ${new Date(product.created_at).toLocaleDateString()}</span>` : ''}
+                    </div>
+                    <div class="product-price">$${parseFloat(product.price || 0).toFixed(2)}</div>
+                    <div class="product-stats">
+                        <span><i class="fas fa-eye"></i> ${product.views || 0}</span>
+                        <span><i class="fas fa-shopping-bag"></i> ${product.sales || 0}</span>
+                        <span><i class="fas fa-heart"></i> ${product.likes || 0}</span>
+                    </div>
+                </div>
+                <div class="product-actions">
+                    <button class="action-btn" onclick="editProduct(${product.id})">
+                        <i class="fas fa-edit"></i> Editar
+                    </button>
+                    <button class="action-btn" onclick="viewProduct(${product.id})">
+                        <i class="fas fa-eye"></i> Ver
+                    </button>
+                    <button class="action-btn danger" onclick="deleteProduct(${product.id}, '${product.name}')">
+                        <i class="fas fa-trash"></i>
                     </button>
                 </div>
-            `;
+            </div>
+        `).join('');
+
+        productsGrid.innerHTML = productHTML;
+    }
+
+    // ---------- FUNCIONES DE ACCIONES ----------
+    window.editProduct = function(id) {
+        console.log('Editar producto:', id);
+        window.location.href = `editar-producto.html?id=${id}`;
+    };
+
+    window.viewProduct = function(id) {
+        console.log('Ver producto:', id);
+        window.location.href = `producto.html?id=${id}`;
+    };
+
+    window.deleteProduct = async function(id, name) {
+        if (!confirm(`¿Estás seguro de eliminar "${name}"? Esta acción no se puede deshacer.`)) {
             return;
         }
 
-        container.innerHTML = kits.map(kit => {
-            const statusColors = {
-                'Published': 'bg-green-500/10 text-green-400 border-green-500/20',
-                'Draft': 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20',
-                'Archived': 'bg-zinc-500/10 text-zinc-400 border-zinc-500/20'
-            };
-            
-            return `
-                <div class="bg-[rgba(26,10,46,0.4)] border border-violet-900/40 rounded-xl overflow-hidden transition-all duration-300 hover:border-violet-700 hover:shadow-xl hover:shadow-violet-900/40 hover:-translate-y-1">
-                    <div class="relative aspect-square bg-gradient-to-br from-violet-900/30 to-violet-600/20 overflow-hidden">
-                        <img src="${kit.image}" alt="${kit.name}" class="w-full h-full object-cover" />
-                        <div class="absolute top-3 right-3">
-                            <span class="inline-block px-3 py-1 rounded-full text-xs font-bold border ${statusColors[kit.status]}">
-                                ${kit.status}
-                            </span>
-                        </div>
-                    </div>
-                    <div class="p-4">
-                        <h3 class="font-bold text-white text-lg mb-2 truncate">${kit.name}</h3>
-                        <div class="flex items-center justify-between mb-4">
-                            <span class="text-2xl font-bold text-violet-400">$${kit.price}</span>
-                            <span class="text-sm text-zinc-400">
-                                <i class="fas fa-shopping-cart mr-1"></i>
-                                ${kit.sales} ventas
-                            </span>
-                        </div>
-                        <div class="flex gap-2">
-                            <button onclick="openEditModal('${kit.name}')" class="flex-1 bg-violet-500/10 border border-violet-500/20 text-violet-300 py-2 rounded-lg text-sm font-semibold hover:bg-violet-500/20 transition-colors">
-                                <i class="fas fa-edit mr-1"></i> Editar
-                            </button>
-                            <button class="px-3 bg-white/5 border border-white/10 text-zinc-400 rounded-lg text-sm hover:bg-white/10 transition-colors">
-                                <i class="fas fa-ellipsis-v"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }).join('');
-    }
+        try {
+            const response = await fetch(`${API_URL}/products/${id}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
 
-    // ===== MODAL DE EDICIÓN =====
-    window.openEditModal = function(kitName) {
-        document.getElementById('editing-kit-name').textContent = kitName;
-        document.getElementById('edit-modal').classList.remove('hidden');
-    };
+            if (!response.ok) throw new Error('No se pudo eliminar el producto.');
 
-    window.closeEditModal = function() {
-        document.getElementById('edit-modal').classList.add('hidden');
-    };
+            alert('Producto eliminado exitosamente');
+            loadMyKits(); // Recargar la lista
 
-    // ===== FUNCIONES DE UI =====
-    window.toggleUserDropdown = function() {
-        const dropdown = document.querySelector('.user-dropdown');
-        if (dropdown) {
-            dropdown.classList.toggle('active');
+        } catch (error) {
+            console.error('Error eliminando producto:', error);
+            alert('Error al eliminar el producto: ' + error.message);
         }
     };
 
-    // Cerrar dropdown al hacer clic fuera
-    document.addEventListener('click', function(e) {
+    // ---------- FILTROS ----------
+    const filterType = document.getElementById('filter-type');
+    const filterStatus = document.getElementById('filter-status');
+    const filterSort = document.getElementById('filter-sort');
+
+    if (filterType) {
+        filterType.addEventListener('change', applyFilters);
+    }
+    if (filterStatus) {
+        filterStatus.addEventListener('change', applyFilters);
+    }
+    if (filterSort) {
+        filterSort.addEventListener('change', applyFilters);
+    }
+
+    async function applyFilters() {
+        // Aquí puedes implementar la lógica de filtrado
+        console.log('Aplicando filtros:', {
+            type: filterType?.value,
+            status: filterStatus?.value,
+            sort: filterSort?.value
+        });
+        // Recargar productos con filtros
+        await loadMyKits();
+    }
+
+    // ---------- VIEW TOGGLE ----------
+    document.querySelectorAll('.view-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            const view = btn.dataset.view;
+            // Implementar cambio de vista aquí
+            console.log('Cambiar vista a:', view);
+        });
+    });
+
+    // ---------- LOGOUT HANDLER ----------
+    function handleLogout(e) {
+        e.preventDefault();
+        console.log("Iniciando cierre de sesión...");
+
+        const overlay = document.getElementById('logout-overlay');
+        const messageEl = document.getElementById('logout-message');
+        const iconEl = overlay.querySelector('i');
+
+        if (!overlay || !messageEl || !iconEl) {
+            console.warn("Faltan elementos del DOM para el logout animado. Usando fallback.");
+            localStorage.removeItem('authToken');
+            window.location.replace('/index.html');
+            return;
+        }
+
+        messageEl.textContent = "Te veremos pronto...";
+        iconEl.className = 'fas fa-spinner fa-spin';
+        overlay.classList.add('active');
+
+        setTimeout(() => {
+            localStorage.removeItem('authToken');
+            console.log("Sesión cerrada. Mostrando mensaje de despedida.");
+            messageEl.textContent = "¡Cerraste sesión!";
+            iconEl.className = 'fas fa-check-circle';
+        }, 1500);
+
+        setTimeout(() => {
+            console.log("Desvaneciendo overlay...");
+            overlay.classList.add('fading-out');
+        }, 3000);
+
+        setTimeout(() => {
+            console.log("Redirigiendo a index.html");
+            window.location.replace('/index.html');
+        }, 3500);
+    }
+
+    // Attach logout handlers
+    const sidebarLogoutButton = document.getElementById('sidebar-logout-btn');
+    if (sidebarLogoutButton) {
+        sidebarLogoutButton.addEventListener('click', handleLogout);
+    }
+
+    const navbarLogoutButton = document.getElementById('navbar-logout-btn');
+    if (navbarLogoutButton) {
+        navbarLogoutButton.addEventListener('click', handleLogout);
+    }
+
+    // ---------- DROPDOWN TOGGLE ----------
+    window.toggleUserDropdown = function() {
+        const dropdown = document.querySelector('.user-dropdown');
+        dropdown.classList.toggle('active');
+    };
+
+    // Close dropdown on outside click
+    document.addEventListener('click', e => {
         const userDropdown = document.querySelector('.user-dropdown');
-        if (userDropdown && !userDropdown.contains(e.target)) {
+        const userBtn = document.querySelector('.user-dropdown .navbar-icon-button');
+        if (!userDropdown.contains(e.target) && e.target !== userBtn) {
             userDropdown.classList.remove('active');
         }
     });
 
-    // ===== LOGOUT =====
-    const logoutLinks = document.querySelectorAll('a[href="logout"], .logout-btn');
-    logoutLinks.forEach(link => {
-        link.addEventListener('click', (e) => {
-            e.preventDefault();
-            localStorage.removeItem('authToken');
-            localStorage.removeItem(CACHE_KEY);
-            alert('¡Has cerrado sesión!');
-            window.location.replace('/pages/login.html');
-        });
-    });
+    // ---------- INICIALIZACIÓN ----------
+    showSkeletonLoading();
+    loadCachedUser(); // Cargar caché primero (instantáneo)
+    loadDashboardData(); // Luego cargar datos frescos
 
-    // ===== FILTROS Y BÚSQUEDA =====
-    window.filterStatus = function(status) {
-        const buttons = document.querySelectorAll('.status-filter');
-        buttons.forEach(btn => {
-            btn.classList.remove('bg-violet-600', 'text-white');
-            btn.classList.add('bg-white/5', 'text-zinc-400');
-        });
-        event.target.classList.remove('bg-white/5', 'text-zinc-400');
-        event.target.classList.add('bg-violet-600', 'text-white');
-        console.log('📊 Filtrando por:', status);
-        // TODO: Implementar lógica de filtrado
-    };
-
-    const searchInput = document.getElementById('search-input');
-    if (searchInput) {
-        searchInput.addEventListener('input', (e) => {
-            console.log('🔍 Buscando:', e.target.value);
-            // TODO: Implementar lógica de búsqueda
-        });
-    }
-
-    const sortSelect = document.getElementById('sort-select');
-    if (sortSelect) {
-        sortSelect.addEventListener('change', (e) => {
-            console.log('🔄 Ordenando por:', e.target.value);
-            // TODO: Implementar lógica de ordenamiento
-        });
-    }
-
-    // ===== INICIALIZACIÓN =====
-    async function initApp() {
-        console.log('🚀 Iniciando Mis Kits...');
-        
-        // Cargar datos del usuario desde API (con skeleton loading)
-        await loadUserData();
-        
-        // Cargar kits del usuario
-        await loadUserKits();
-        
-        console.log('✅ Mis Kits inicializado correctamente');
-    }
-
-    // Iniciar la app
-    await initApp();
-
-    // ===== AUTO-GUARDAR PERIÓDICO =====
-    setInterval(() => {
-        // Recargar balance por si cambió en otra pestaña
-        const balance = loadBalance();
-        const sidebarWallet = document.querySelector('.wallet-amount');
-        if (sidebarWallet && !sidebarWallet.classList.contains('skeleton-text')) {
-            sidebarWallet.textContent = `$${balance.toFixed(2)}`;
-        }
-    }, 5000); // Cada 5 segundos
 });
