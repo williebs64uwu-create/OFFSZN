@@ -20,6 +20,12 @@
             background: #0a0a0a;
             color: #e5e5e5;
             overflow-x: hidden;
+            opacity: 0;
+            transition: opacity 0.3s ease-in;
+        }
+
+        body.loaded {
+            opacity: 1;
         }
 
         /* ---------- NAVBAR ---------- */
@@ -784,7 +790,7 @@
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
             gap: 20px;
-            min-height: calc(100vh - 500px); 
+            min-height: calc(100vh - 500px);
         }
 
         .product-card {
@@ -1473,51 +1479,20 @@
 
             // ---------- SKELETON LOADING ----------
             function showSkeletonLoading() {
-                if (profileAvatar) {
-                    profileAvatar.classList.add('skeleton');
-                    profileAvatar.style.opacity = '0.3';
-                    profileAvatar.textContent = '?';
-                }
-
-                if (walletAmount) {
-                    walletAmount.classList.add('skeleton');
-                    walletAmount.style.opacity = '0.3';
-                    walletAmount.textContent = '$0.00';
-                }
-
-                statsValues.forEach(el => {
-                    el.classList.add('skeleton');
-                    el.style.opacity = '0.3';
-                    el.textContent = '0';
-                });
-
+                // No mostrar nada hasta que los datos estén listos
                 if (productsGrid) {
-                    productsGrid.style.display = 'grid';
-                    productsGrid.innerHTML = `
-        <div class="product-card skeleton" style="height:400px; opacity:0.3;"></div>
-        <div class="product-card skeleton" style="height:400px; opacity:0.3;"></div>
-        <div class="product-card skeleton" style="height:400px; opacity:0.3;"></div>
-        <div class="product-card skeleton" style="height:400px; opacity:0.3;"></div>
-        <div class="product-card skeleton" style="height:400px; opacity:0.3;"></div>
-        <div class="product-card skeleton" style="height:400px; opacity:0.3;"></div>
-        <div class="product-card skeleton" style="height:400px; opacity:0.3;"></div>
-        <div class="product-card skeleton" style="height:400px; opacity:0.3;"></div>
-        <div class="product-card skeleton" style="height:400px; opacity:0.3;"></div>
-        <div class="product-card skeleton" style="height:400px; opacity:0.3;"></div>
-        <div class="product-card skeleton" style="height:400px; opacity:0.3;"></div>
-        <div class="product-card skeleton" style="height:400px; opacity:0.3;"></div>
-    `;
+                    productsGrid.style.display = 'none';
+                    productsGrid.innerHTML = '';
                 }
 
-                if (emptyState) emptyState.style.display = 'none';
+                if (emptyState) {
+                    emptyState.style.display = 'none';
+                }
             }
 
             function hideSkeletonLoading() {
-                document.querySelectorAll('.skeleton').forEach(el => {
-                    el.classList.remove('skeleton');
-                    el.classList.add('fade-in');
-                    el.style.opacity = '1';
-                });
+                // Hacer visible toda la página de una vez
+                document.body.classList.add('loaded');
             }
 
             // ---------- CACHÉ DE USUARIO ----------
@@ -1608,9 +1583,13 @@
 
                     await loadFavorites();
 
+                    // Hacer visible la página cuando todo esté listo
+                    document.body.classList.add('loaded');
+
                 } catch (error) {
                     console.error("Error al cargar datos:", error);
                     hideSkeletonLoading();
+                    document.body.classList.add('loaded'); // Mostrar aunque haya error
 
                     if (error.message.includes('401') || error.message.includes('403')) {
                         localStorage.removeItem('authToken');
