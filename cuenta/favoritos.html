@@ -1600,7 +1600,27 @@
                 }
             }
         }
+  // ---------- CARGAR DATOS DEL DASHBOARD ----------
+            async function loadDashboardData() {
+                try {
+                    // Cargar datos del usuario
+                    const userResponse = await fetch(`${API_URL}/me`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
 
+                    if (!userResponse.ok) {
+                        localStorage.removeItem('authToken');
+                        throw new Error(`Error ${userResponse.status}: No se pudieron obtener los datos del usuario.`);
+                    }
+
+                    userData = await userResponse.json();
+                    console.log("Datos del usuario:", userData);
+
+                    localStorage.setItem('userId', userData.id);
+                    saveUserCache(userData);
+                    updateUserUI(userData, false);
+                    loadGiftCardsState();
+                    
         // ---------- CARGAR FAVORITOS ----------
         async function loadFavorites() {
             if (!productsGrid || !emptyState) return;
@@ -1866,6 +1886,10 @@
             loadCachedUser();
             loadDashboardData();
         });
+
+         });
+
+     
     </script>
 
 </body>
