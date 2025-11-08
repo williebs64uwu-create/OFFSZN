@@ -610,10 +610,13 @@
         }
 
         @keyframes pulse {
-            0%, 100% {
+
+            0%,
+            100% {
                 transform: scale(1);
                 opacity: .5;
             }
+
             50% {
                 transform: scale(1.1);
                 opacity: .3;
@@ -1138,6 +1141,7 @@
                 opacity: 0;
                 transform: translateY(10px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -1283,14 +1287,22 @@
                             <div class="user-dropdown-email">usuario@offszn.com</div>
                         </div>
                     </div>
-                    <a href="profile" class="user-dropdown-item"><i class="fas fa-user-circle"></i><span>Mi Perfil</span></a>
-                    <a href="dashboard" class="user-dropdown-item"><i class="fas fa-th-large"></i><span>Dashboard</span></a>
+                    <a href="profile" class="user-dropdown-item"><i class="fas fa-user-circle"></i><span>Mi
+                            Perfil</span></a>
+                    <a href="dashboard" class="user-dropdown-item"><i
+                            class="fas fa-th-large"></i><span>Dashboard</span></a>
                     <a href="wallet" class="user-dropdown-item"><i class="fas fa-wallet"></i><span>Billetera</span></a>
-                    <a href="mis-compras" class="user-dropdown-item"><i class="fas fa-shopping-bag"></i><span>Mis Compras</span></a>
-                    <a href="#" class="user-dropdown-item disabled"><i class="fas fa-chart-line"></i><span>Analíticas</span><span class="soon-badge">Pronto</span></a>
-                    <a href="account-settings" class="user-dropdown-item"><i class="fas fa-cog"></i><span>Configuración</span></a>
-                    <a href="help" class="user-dropdown-item"><i class="fas fa-question-circle"></i><span>Ayuda</span></a>
-                    <a href="#" id="navbar-logout-btn" class="user-dropdown-item logout"><i class="fas fa-sign-out-alt"></i><span>Cerrar Sesión</span></a>
+                    <a href="mis-compras" class="user-dropdown-item"><i class="fas fa-shopping-bag"></i><span>Mis
+                            Compras</span></a>
+                    <a href="#" class="user-dropdown-item disabled"><i
+                            class="fas fa-chart-line"></i><span>Analíticas</span><span
+                            class="soon-badge">Pronto</span></a>
+                    <a href="account-settings" class="user-dropdown-item"><i
+                            class="fas fa-cog"></i><span>Configuración</span></a>
+                    <a href="help" class="user-dropdown-item"><i
+                            class="fas fa-question-circle"></i><span>Ayuda</span></a>
+                    <a href="#" id="navbar-logout-btn" class="user-dropdown-item logout"><i
+                            class="fas fa-sign-out-alt"></i><span>Cerrar Sesión</span></a>
                 </div>
             </div>
         </div>
@@ -1328,14 +1340,16 @@
                 <div class="menu-section-title">Principal</div>
                 <a href="dashboard" class="menu-item"><i class="fas fa-th-large"></i><span>Dashboard</span></a>
                 <a href="mis-kits" class="menu-item"><i class="fas fa-music"></i><span>Mis Kits</span></a>
-                <a href="#" class="menu-item disabled"><i class="fas fa-chart-line"></i><span>Analíticas</span><span class="soon-badge">Pronto</span></a>
+                <a href="#" class="menu-item disabled"><i class="fas fa-chart-line"></i><span>Analíticas</span><span
+                        class="soon-badge">Pronto</span></a>
                 <a href="favoritos" class="menu-item"><i class="fas fa-heart"></i><span>Favoritos</span></a>
                 <a href="#" class="menu-item"><i class="fas fa-history"></i><span>Historial</span></a>
 
                 <div class="menu-divider"></div>
 
                 <div class="menu-section-title">Colaboración</div>
-                <a href="colaboraciones" class="menu-item active"><i class="fas fa-users"></i><span>Colaboraciones</span></a>
+                <a href="colaboraciones" class="menu-item active"><i
+                        class="fas fa-users"></i><span>Colaboraciones</span></a>
 
                 <div class="menu-divider"></div>
 
@@ -1351,7 +1365,8 @@
                 <a href="blog" class="menu-item"><i class="fas fa-book-open"></i><span>Blog</span></a>
             </div>
 
-            <a href="#" id="sidebar-logout-btn" class="logout-btn"><i class="fas fa-sign-out-alt"></i><span>Cerrar Sesión</span></a>
+            <a href="#" id="sidebar-logout-btn" class="logout-btn"><i class="fas fa-sign-out-alt"></i><span>Cerrar
+                    Sesión</span></a>
         </aside>
 
         <!-- Main Content -->
@@ -1444,8 +1459,8 @@
                 <i class="fas fa-users"></i>
                 <h3>Comienza a colaborar</h3>
                 <p>
-                    Descubre productores y artistas para crear música juntos. Explora perfiles, 
-                    conecta con talentos afines y lleva tus proyectos al siguiente nivel. 
+                    Descubre productores y artistas para crear música juntos. Explora perfiles,
+                    conecta con talentos afines y lleva tus proyectos al siguiente nivel.
                     <strong>¡La magia ocurre cuando trabajamos en equipo!</strong>
                 </p>
                 <a href="productores" class="empty-state-btn">
@@ -1502,27 +1517,34 @@
 
         // ---------- SKELETON LOADING ----------
         function showSkeletonLoading() {
-            if (profileAvatar) profileAvatar.classList.add('skeleton');
-            
-            if (walletAmount) {
-                walletAmount.classList.add('skeleton');
-                walletAmount.textContent = '';
+            // Avatar skeleton
+            if (profileAvatar) {
+                profileAvatar.classList.add('skeleton');
+                profileAvatar.textContent = ''; // Vaciar contenido
             }
 
+            // Wallet skeleton
+            if (walletAmount) {
+                walletAmount.classList.add('skeleton');
+                walletAmount.textContent = '$000.00'; // Texto placeholder para skeleton
+            }
+
+            // Stats skeletons
             statsValues.forEach(el => {
                 el.classList.add('skeleton');
-                el.textContent = '';
+                el.textContent = '000'; // Texto placeholder para skeleton
             });
 
+            // Profiles grid skeleton
             if (profilesGrid) {
                 profilesGrid.style.display = 'grid';
                 profilesGrid.innerHTML = `
-                    <div class="profile-card skeleton" style="height:450px;"></div>
-                    <div class="profile-card skeleton" style="height:450px;"></div>
-                    <div class="profile-card skeleton" style="height:450px;"></div>
-                `;
+            <div class="profile-card skeleton" style="height:450px;"></div>
+            <div class="profile-card skeleton" style="height:450px;"></div>
+            <div class="profile-card skeleton" style="height:450px;"></div>
+        `;
             }
-            
+
             if (emptyState) emptyState.style.display = 'none';
         }
 
@@ -1582,16 +1604,21 @@
                 if (saved) {
                     appState = JSON.parse(saved);
                     updateWalletAmount();
+                } else {
+                    // Si no hay datos guardados, actualizar con 0
+                    updateWalletAmount();
                 }
             } catch (err) {
                 console.error('Error al cargar estado de gift cards:', err);
+                updateWalletAmount();
             }
         }
 
         function updateWalletAmount() {
             if (walletAmount) {
-                walletAmount.textContent = `${appState.totalBalance.toFixed(2)}`;
+                walletAmount.textContent = `$${appState.totalBalance.toFixed(2)}`;
                 walletAmount.classList.remove('skeleton');
+                walletAmount.classList.add('fade-in');
             }
         }
 
@@ -1676,10 +1703,26 @@
             };
 
             const statElements = document.querySelectorAll('.stat-value');
-            if (statElements[0]) statElements[0].textContent = stats.active;
-            if (statElements[1]) statElements[1].textContent = stats.total;
-            if (statElements[2]) statElements[2].textContent = stats.completed;
-            if (statElements[3]) statElements[3].textContent = stats.pending;
+            if (statElements[0]) {
+                statElements[0].textContent = stats.active;
+                statElements[0].classList.remove('skeleton');
+                statElements[0].classList.add('fade-in');
+            }
+            if (statElements[1]) {
+                statElements[1].textContent = stats.total;
+                statElements[1].classList.remove('skeleton');
+                statElements[1].classList.add('fade-in');
+            }
+            if (statElements[2]) {
+                statElements[2].textContent = stats.completed;
+                statElements[2].classList.remove('skeleton');
+                statElements[2].classList.add('fade-in');
+            }
+            if (statElements[3]) {
+                statElements[3].textContent = stats.pending;
+                statElements[3].classList.remove('skeleton');
+                statElements[3].classList.add('fade-in');
+            }
         }
 
         // ---------- RENDERIZAR PERFILES ----------
@@ -1688,56 +1731,56 @@
                 const initial = (profile.name || profile.username || 'U').charAt(0).toUpperCase();
                 const isProducer = profile.user_type === 'producer' || profile.user_type === 'both';
                 const isArtist = profile.user_type === 'artist' || profile.user_type === 'both';
-                
+
                 return `
-                <div class="profile-card fade-in">
-                    <div class="profile-banner">
-                        <span class="profile-badge ${isProducer ? 'producer' : 'artist'}">
-                            <i class="fas fa-${isProducer ? 'headphones' : 'microphone'}"></i>
-                            ${isProducer && isArtist ? 'Productor & Artista' : isProducer ? 'Productor' : 'Artista'}
-                        </span>
+        <div class="profile-card fade-in">
+            <div class="profile-banner">
+                <span class="profile-badge ${isProducer ? 'producer' : 'artist'}">
+                    <i class="fas fa-${isProducer ? 'headphones' : 'microphone'}"></i>
+                    ${isProducer && isArtist ? 'Productor & Artista' : isProducer ? 'Productor' : 'Artista'}
+                </span>
+            </div>
+            <div class="profile-content">
+                <div class="profile-avatar-large">${initial}</div>
+                <div class="profile-info-section">
+                    <div class="profile-name-large">${profile.name || profile.username}</div>
+                    <div class="profile-username">@${profile.username}</div>
+                    <div class="profile-bio">
+                        ${profile.bio || 'Listo para colaborar en nuevos proyectos musicales. ¡Hagamos magia juntos!'}
                     </div>
-                    <div class="profile-content">
-                        <div class="profile-avatar-large">${initial}</div>
-                        <div class="profile-info-section">
-                            <div class="profile-name-large">${profile.name || profile.username}</div>
-                            <div class="profile-username">@${profile.username}</div>
-                            <div class="profile-bio">
-                                ${profile.bio || 'Listo para colaborar en nuevos proyectos musicales. ¡Hagamos magia juntos!'}
-                            </div>
-                            <div class="profile-tags">
-                                ${(profile.genres || ['Trap', 'Hip Hop']).slice(0, 3).map(genre => 
-                                    `<span class="profile-tag">${genre}</span>`
-                                ).join('')}
-                            </div>
-                            <div class="profile-stats">
-                                <span><i class="fas fa-music"></i> ${profile.tracks || 0} tracks</span>
-                                <span><i class="fas fa-users"></i> ${profile.collabs || 0} colabs</span>
-                                <span><i class="fas fa-star"></i> ${profile.rating || '5.0'}</span>
-                            </div>
-                        </div>
+                    <div class="profile-tags">
+                        ${(profile.genres || ['Trap', 'Hip Hop']).slice(0, 3).map(genre =>
+                    `<span class="profile-tag">${genre}</span>`
+                ).join('')}
                     </div>
-                    <div class="profile-actions">
-                        <button class="action-btn" onclick="viewProfile(${profile.id})">
-                            <i class="fas fa-eye"></i> Ver Perfil
-                        </button>
-                        <button class="action-btn primary" onclick="sendMessage(${profile.id}, '${profile.name || profile.username}')">
-                            <i class="fas fa-envelope"></i> Mensaje
-                        </button>
+                    <div class="profile-stats">
+                        <span><i class="fas fa-music"></i> ${profile.tracks || 0} tracks</span>
+                        <span><i class="fas fa-users"></i> ${profile.collabs || 0} colabs</span>
+                        <span><i class="fas fa-star"></i> ${profile.rating || '5.0'}</span>
                     </div>
                 </div>
-            `}).join('');
+            </div>
+            <div class="profile-actions">
+                <button class="action-btn" onclick="viewProfile(${profile.id})">
+                    <i class="fas fa-eye"></i> Ver Perfil
+                </button>
+                <button class="action-btn primary" onclick="sendMessage(${profile.id}, '${profile.name || profile.username}')">
+                    <i class="fas fa-envelope"></i> Mensaje
+                </button>
+            </div>
+        </div>
+    `}).join('');
 
             profilesGrid.innerHTML = profilesHTML;
         }
 
         // ---------- FUNCIONES DE ACCIONES ----------
-        window.viewProfile = function(id) {
+        window.viewProfile = function (id) {
             console.log('Ver perfil:', id);
             window.location.href = `profile.html?id=${id}`;
         };
 
-        window.sendMessage = function(id, name) {
+        window.sendMessage = function (id, name) {
             console.log('Enviar mensaje a:', id, name);
             if (confirm(`¿Quieres enviar un mensaje a ${name}?`)) {
                 window.location.href = `messages.html?user=${id}`;
@@ -1748,7 +1791,7 @@
         if (searchInput) {
             searchInput.addEventListener('input', (e) => {
                 const query = e.target.value.toLowerCase();
-                const filtered = allProfiles.filter(p => 
+                const filtered = allProfiles.filter(p =>
                     (p.name && p.name.toLowerCase().includes(query)) ||
                     (p.username && p.username.toLowerCase().includes(query)) ||
                     (p.bio && p.bio.toLowerCase().includes(query))
@@ -1779,14 +1822,14 @@
 
             const genre = filterGenre?.value;
             if (genre && genre !== 'all') {
-                filtered = filtered.filter(p => 
+                filtered = filtered.filter(p =>
                     p.genres && p.genres.some(g => g.toLowerCase() === genre.toLowerCase())
                 );
             }
 
             const sort = filterSort?.value;
             if (sort) {
-                switch(sort) {
+                switch (sort) {
                     case 'recent':
                         filtered.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
                         break;
@@ -1851,7 +1894,7 @@
         }
 
         // ---------- DROPDOWN TOGGLE ----------
-        window.toggleUserDropdown = function() {
+        window.toggleUserDropdown = function () {
             const dropdown = document.querySelector('.user-dropdown');
             dropdown.classList.toggle('active');
         };
@@ -1878,8 +1921,13 @@
                 navbarLogoutButton.addEventListener('click', handleLogout);
             }
 
+            // INICIAR CON SKELETONS
             showSkeletonLoading();
-            loadCachedUser();
+
+            // Cargar caché si existe (sin hacer fetch aún)
+            const hasCachedData = loadCachedUser();
+
+            // Cargar datos frescos del backend
             loadDashboardData();
         });
     </script>
