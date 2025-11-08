@@ -1057,12 +1057,29 @@
             transform: translateY(-2px);
         }
 
-        /* ---------- LOADING ---------- */
+        /* ---------- LOADING SKELETON (AÑADIDO Y MEJORADO) ---------- */
         .skeleton {
             background: linear-gradient(90deg, rgba(255, 255, 255, .03) 25%, rgba(255, 255, 255, .08) 50%, rgba(255, 255, 255, .03) 75%);
             background-size: 200% 100%;
             animation: skeleton-loading 1.5s ease-in-out infinite;
             border-radius: 8px;
+            /* Asegura que el skeleton ocupe espacio y no muestre texto */
+            color: transparent !important;
+            /* Para que los elementos de texto puedan ser reemplazados */
+            display: inline-block;
+            user-select: none;
+        }
+
+        /* Clases específicas para skeletons */
+        .profile-avatar.skeleton,
+        .profile-avatar-large.skeleton {
+            border-radius: 50%;
+            background: linear-gradient(90deg, rgba(255, 255, 255, .03) 25%, rgba(255, 255, 255, .08) 50%, rgba(255, 255, 255, .03) 75%);
+        }
+        
+        /* Asegura que el stat-value tome el espacio del texto */
+        .stat-value.skeleton {
+            margin-bottom: 6px; 
         }
 
         @keyframes skeleton-loading {
@@ -1207,7 +1224,6 @@
 
 <body>
 
-    <!-- Navbar -->
     <nav class="navbar">
         <div class="logo"><a href="index">OFFSZN</a></div>
 
@@ -1308,23 +1324,21 @@
         </div>
     </nav>
 
-    <!-- Dashboard Container -->
     <div class="dashboard-container">
 
-        <!-- Sidebar -->
         <aside class="sidebar">
             <div class="profile-header">
                 <div class="profile-info">
-                    <div class="profile-avatar">?</div>
+                    <div class="profile-avatar skeleton" id="sidebar-avatar" style="opacity: 1;">&nbsp;</div>
                     <div>
-                        <div class="profile-name">Usuario</div>
+                        <div class="profile-name skeleton" id="sidebar-name" style="height: 20px; width: 120px; border-radius: 6px; opacity: 1;">&nbsp;</div>
                     </div>
                 </div>
             </div>
 
             <div class="wallet-section">
                 <div class="wallet-label">Saldo Disponible</div>
-                <div class="wallet-amount">$0.00</div>
+                <div class="wallet-amount skeleton" id="wallet-amount-el" style="height: 30px; width: 100px; border-radius: 6px; opacity: 1;">&nbsp;</div>
             </div>
 
             <button class="upload-btn" onclick="window.location.href='subir-kit.html'">
@@ -1369,7 +1383,6 @@
                     Sesión</span></a>
         </aside>
 
-        <!-- Main Content -->
         <main class="main-content">
             <div class="page-header">
                 <div class="page-title-section">
@@ -1386,39 +1399,37 @@
                 </div>
             </div>
 
-            <!-- Stats Row -->
             <div class="stats-row">
                 <div class="stat-card">
                     <div class="stat-header">
                         <div class="stat-icon"><i class="fas fa-handshake"></i></div>
                     </div>
-                    <div class="stat-value">0</div>
+                    <div class="stat-value skeleton" style="height: 38px; width: 60px; border-radius: 6px;">&nbsp;</div>
                     <div class="stat-label">Colaboraciones Activas</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-header">
                         <div class="stat-icon"><i class="fas fa-users"></i></div>
                     </div>
-                    <div class="stat-value">0</div>
+                    <div class="stat-value skeleton" style="height: 38px; width: 60px; border-radius: 6px;">&nbsp;</div>
                     <div class="stat-label">Colaboradores</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-header">
                         <div class="stat-icon"><i class="fas fa-music"></i></div>
                     </div>
-                    <div class="stat-value">0</div>
+                    <div class="stat-value skeleton" style="height: 38px; width: 60px; border-radius: 6px;">&nbsp;</div>
                     <div class="stat-label">Proyectos Completados</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-header">
                         <div class="stat-icon"><i class="fas fa-envelope"></i></div>
                     </div>
-                    <div class="stat-value">0</div>
+                    <div class="stat-value skeleton" style="height: 38px; width: 60px; border-radius: 6px;">&nbsp;</div>
                     <div class="stat-label">Solicitudes Pendientes</div>
                 </div>
             </div>
 
-            <!-- Filters -->
             <div class="filters-bar">
                 <div class="filter-group">
                     <span class="filter-label">Tipo:</span>
@@ -1454,8 +1465,7 @@
                 </div>
             </div>
 
-            <!-- Empty State (mostrado por defecto hasta que se conecte el backend) -->
-            <div class="empty-state" id="empty-state">
+            <div class="empty-state" id="empty-state" style="display: none;">
                 <i class="fas fa-users"></i>
                 <h3>Comienza a colaborar</h3>
                 <p>
@@ -1468,14 +1478,107 @@
                 </a>
             </div>
 
-            <!-- Profiles Grid (oculto por defecto) -->
-            <div class="profiles-grid" id="profiles-grid" style="display: none;">
-                <!-- Los perfiles se cargarán dinámicamente aquí desde el backend -->
+            <div class="profiles-grid" id="profiles-grid">
+                <div class="profile-card">
+                    <div class="profile-banner skeleton" style="height: 120px; margin-bottom: 0;"></div>
+                    <div class="profile-content">
+                        <div class="profile-avatar-large skeleton" style="top: -45px; border-radius: 50%;">&nbsp;</div>
+                        <div class="profile-info-section">
+                            <div class="profile-name-large skeleton"
+                                style="height: 22px; width: 60%; border-radius: 6px; margin-bottom: 8px;"></div>
+                            <div class="profile-username skeleton"
+                                style="height: 16px; width: 40%; border-radius: 6px; margin-bottom: 18px;"></div>
+                            <div class="profile-bio skeleton" style="height: 16px; width: 100%; border-radius: 6px;">
+                            </div>
+                            <div class="profile-bio skeleton"
+                                style="height: 16px; width: 100%; border-radius: 6px; margin-top: 6px;"></div>
+                            <div class="profile-bio skeleton"
+                                style="height: 16px; width: 70%; border-radius: 6px; margin-top: 6px; margin-bottom: 20px;">
+                            </div>
+                            <div class="profile-tags" style="display: flex; gap: 8px;">
+                                <span class="skeleton" style="height: 26px; width: 70px; border-radius: 8px;"></span>
+                                <span class="skeleton" style="height: 26px; width: 80px; border-radius: 8px;"></span>
+                            </div>
+                            <div class="profile-stats" style="border-top: 1px solid rgba(255, 255, 255, .08); padding-top: 14px; gap: 20px;">
+                                <span class="skeleton" style="height: 16px; width: 25%; border-radius: 6px;"></span>
+                                <span class="skeleton" style="height: 16px; width: 25%; border-radius: 6px;"></span>
+                                <span class="skeleton" style="height: 16px; width: 25%; border-radius: 6px;"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="profile-actions">
+                        <div class="action-btn skeleton" style="height: 40px; border-radius: 10px; flex: 1;"></div>
+                        <div class="action-btn skeleton" style="height: 40px; border-radius: 10px; flex: 1;"></div>
+                    </div>
+                </div>
+                <div class="profile-card">
+                    <div class="profile-banner skeleton" style="height: 120px; margin-bottom: 0;"></div>
+                    <div class="profile-content">
+                        <div class="profile-avatar-large skeleton" style="top: -45px; border-radius: 50%;">&nbsp;</div>
+                        <div class="profile-info-section">
+                            <div class="profile-name-large skeleton"
+                                style="height: 22px; width: 60%; border-radius: 6px; margin-bottom: 8px;"></div>
+                            <div class="profile-username skeleton"
+                                style="height: 16px; width: 40%; border-radius: 6px; margin-bottom: 18px;"></div>
+                            <div class="profile-bio skeleton" style="height: 16px; width: 100%; border-radius: 6px;">
+                            </div>
+                            <div class="profile-bio skeleton"
+                                style="height: 16px; width: 100%; border-radius: 6px; margin-top: 6px;"></div>
+                            <div class="profile-bio skeleton"
+                                style="height: 16px; width: 70%; border-radius: 6px; margin-top: 6px; margin-bottom: 20px;">
+                            </div>
+                            <div class="profile-tags" style="display: flex; gap: 8px;">
+                                <span class="skeleton" style="height: 26px; width: 70px; border-radius: 8px;"></span>
+                                <span class="skeleton" style="height: 26px; width: 80px; border-radius: 8px;"></span>
+                            </div>
+                            <div class="profile-stats" style="border-top: 1px solid rgba(255, 255, 255, .08); padding-top: 14px; gap: 20px;">
+                                <span class="skeleton" style="height: 16px; width: 25%; border-radius: 6px;"></span>
+                                <span class="skeleton" style="height: 16px; width: 25%; border-radius: 6px;"></span>
+                                <span class="skeleton" style="height: 16px; width: 25%; border-radius: 6px;"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="profile-actions">
+                        <div class="action-btn skeleton" style="height: 40px; border-radius: 10px; flex: 1;"></div>
+                        <div class="action-btn skeleton" style="height: 40px; border-radius: 10px; flex: 1;"></div>
+                    </div>
+                </div>
+                <div class="profile-card">
+                    <div class="profile-banner skeleton" style="height: 120px; margin-bottom: 0;"></div>
+                    <div class="profile-content">
+                        <div class="profile-avatar-large skeleton" style="top: -45px; border-radius: 50%;">&nbsp;</div>
+                        <div class="profile-info-section">
+                            <div class="profile-name-large skeleton"
+                                style="height: 22px; width: 60%; border-radius: 6px; margin-bottom: 8px;"></div>
+                            <div class="profile-username skeleton"
+                                style="height: 16px; width: 40%; border-radius: 6px; margin-bottom: 18px;"></div>
+                            <div class="profile-bio skeleton" style="height: 16px; width: 100%; border-radius: 6px;">
+                            </div>
+                            <div class="profile-bio skeleton"
+                                style="height: 16px; width: 100%; border-radius: 6px; margin-top: 6px;"></div>
+                            <div class="profile-bio skeleton"
+                                style="height: 16px; width: 70%; border-radius: 6px; margin-top: 6px; margin-bottom: 20px;">
+                            </div>
+                            <div class="profile-tags" style="display: flex; gap: 8px;">
+                                <span class="skeleton" style="height: 26px; width: 70px; border-radius: 8px;"></span>
+                                <span class="skeleton" style="height: 26px; width: 80px; border-radius: 8px;"></span>
+                            </div>
+                            <div class="profile-stats" style="border-top: 1px solid rgba(255, 255, 255, .08); padding-top: 14px; gap: 20px;">
+                                <span class="skeleton" style="height: 16px; width: 25%; border-radius: 6px;"></span>
+                                <span class="skeleton" style="height: 16px; width: 25%; border-radius: 6px;"></span>
+                                <span class="skeleton" style="height: 16px; width: 25%; border-radius: 6px;"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="profile-actions">
+                        <div class="action-btn skeleton" style="height: 40px; border-radius: 10px; flex: 1;"></div>
+                        <div class="action-btn skeleton" style="height: 40px; border-radius: 10px; flex: 1;"></div>
+                    </div>
+                </div>
             </div>
         </main>
     </div>
 
-    <!-- Logout Overlay -->
     <div id="logout-overlay">
         <div class="logout-content">
             <i class="fas fa-spinner fa-spin"></i>
@@ -1484,10 +1587,10 @@
     </div>
 
     <script>
-        // ---------- ELEMENTOS DEL DOM ----------
-        const profileAvatar = document.querySelector('.profile-avatar');
-        const profileName = document.querySelector('.profile-name');
-        const walletAmount = document.querySelector('.wallet-amount');
+        // ---------- ELEMENTOS DEL DOM (Actualizado para usar IDs) ----------
+        const sidebarAvatar = document.getElementById('sidebar-avatar'); // Nuevo
+        const sidebarName = document.getElementById('sidebar-name'); // Nuevo
+        const walletAmountEl = document.getElementById('wallet-amount-el'); // Nuevo
         const statsValues = document.querySelectorAll('.stat-value');
         const profilesGrid = document.getElementById('profiles-grid');
         const emptyState = document.getElementById('empty-state');
@@ -1515,49 +1618,9 @@
             window.location.replace('/pages/login.html');
         }
 
-        // ---------- SKELETON LOADING ----------
-        function showSkeletonLoading() {
-            // Avatar skeleton
-            if (profileAvatar) {
-                profileAvatar.classList.add('skeleton');
-                profileAvatar.style.color = 'transparent';
-                profileAvatar.textContent = '?';
-            }
-
-            // Wallet skeleton - solo blur, sin texto visible
-            if (walletAmount) {
-                walletAmount.classList.add('skeleton');
-                walletAmount.style.color = 'transparent';
-                walletAmount.textContent = '$000.00';
-            }
-
-            // Stats skeletons - solo blur, sin texto visible
-            statsValues.forEach(el => {
-                el.classList.add('skeleton');
-                el.style.color = 'transparent';
-                el.textContent = '000';
-            });
-
-            // Profiles grid skeleton
-            if (profilesGrid) {
-                profilesGrid.style.display = 'grid';
-                profilesGrid.innerHTML = `
-            <div class="profile-card skeleton" style="height:450px;"></div>
-            <div class="profile-card skeleton" style="height:450px;"></div>
-            <div class="profile-card skeleton" style="height:450px;"></div>
-        `;
-            }
-
-            if (emptyState) emptyState.style.display = 'none';
-        }
-
-        function hideSkeletonLoading() {
-            document.querySelectorAll('.skeleton').forEach(el => {
-                el.classList.remove('skeleton');
-                el.classList.add('fade-in');
-                el.style.color = '';
-            });
-        }
+        // ---------- SKELETON LOADING (ELIMINADO - Ya no se necesitan las funciones de añadir y quitar general) ----------
+        // function showSkeletonLoading() { ... }
+        // function hideSkeletonLoading() { ... }
 
         // ---------- CACHÉ DE USUARIO ----------
         function loadCachedUser() {
@@ -1567,6 +1630,7 @@
                     const cachedData = JSON.parse(cached);
                     console.log('Cargando datos desde caché...');
                     updateUserUI(cachedData, true);
+                    loadGiftCardsState(); // Carga el saldo de la billetera desde caché
                     return true;
                 }
             } catch (err) {
@@ -1583,26 +1647,27 @@
             }
         }
 
-        // ---------- ACTUALIZAR UI DE USUARIO ----------
+        // ---------- ACTUALIZAR UI DE USUARIO (MODIFICADO para quitar skeleton) ----------
         function updateUserUI(userData, fromCache = false) {
-            if (profileName) {
-                profileName.textContent = `${userData.first_name || ''} ${userData.lastName || ''}`.trim() || userData.nickname;
+            if (sidebarName) {
+                sidebarName.textContent = `${userData.first_name || ''} ${userData.lastName || ''}`.trim() || userData.nickname;
+                // Quitar skeleton y estilos inline
+                sidebarName.classList.remove('skeleton');
+                sidebarName.removeAttribute('style');
             }
 
-            if (profileAvatar) {
+            if (sidebarAvatar) {
                 const initial = (userData.first_name || userData.nickname || 'U').charAt(0).toUpperCase();
-                profileAvatar.textContent = initial;
-                profileAvatar.classList.remove('skeleton');
-                profileAvatar.classList.add('fade-in');
-                profileAvatar.style.color = '';
-            }
-
-            if (!fromCache) {
-                hideSkeletonLoading();
+                sidebarAvatar.textContent = initial;
+                // Quitar skeleton y estilos inline
+                sidebarAvatar.classList.remove('skeleton');
+                sidebarAvatar.removeAttribute('style');
+                sidebarAvatar.classList.add('fade-in');
+                sidebarAvatar.style.color = '';
             }
         }
 
-        // ---------- GIFT CARDS ----------
+        // ---------- GIFT CARDS (MODIFICADO para quitar skeleton) ----------
         function loadGiftCardsState() {
             try {
                 const saved = localStorage.getItem(STORAGE_KEY);
@@ -1617,11 +1682,12 @@
         }
 
         function updateWalletAmount() {
-            if (walletAmount) {
-                walletAmount.textContent = `$${appState.totalBalance.toFixed(2)}`;
-                walletAmount.classList.remove('skeleton');
-                walletAmount.classList.add('fade-in');
-                walletAmount.style.color = '';
+            if (walletAmountEl) {
+                walletAmountEl.textContent = `$${appState.totalBalance.toFixed(2)}`;
+                // Quitar skeleton y estilos inline
+                walletAmountEl.classList.remove('skeleton');
+                walletAmountEl.removeAttribute('style');
+                walletAmountEl.classList.add('fade-in');
             }
         }
 
@@ -1649,7 +1715,15 @@
 
             } catch (error) {
                 console.error("Error al cargar datos:", error);
-                hideSkeletonLoading();
+                
+                // Si falla la carga, asegurar que los skeletons de perfil y wallet al menos se quiten
+                if(sidebarName) sidebarName.classList.remove('skeleton');
+                if(sidebarAvatar) sidebarAvatar.classList.remove('skeleton');
+                if(walletAmountEl) walletAmountEl.classList.remove('skeleton');
+
+                // Si falla, limpiar el grid de skeletons y mostrar empty state
+                if (profilesGrid) profilesGrid.innerHTML = '';
+                if (emptyState) emptyState.style.display = 'block';
 
                 if (error.message.includes('401') || error.message.includes('403')) {
                     localStorage.removeItem('authToken');
@@ -1673,29 +1747,30 @@
                 allProfiles = await response.json();
                 console.log("Colaboradores cargados:", allProfiles);
 
-                updateStats(allProfiles);
+                updateStats(allProfiles); // Quita skeletons de stats
 
                 if (allProfiles.length === 0) {
                     profilesGrid.style.display = 'none';
-                    profilesGrid.innerHTML = '';
+                    profilesGrid.innerHTML = ''; // Limpia los skeletons
                     emptyState.style.display = 'block';
-                    hideSkeletonLoading();
                 } else {
                     emptyState.style.display = 'none';
                     profilesGrid.style.display = 'grid';
-                    renderProfiles(allProfiles);
-                    hideSkeletonLoading();
+                    renderProfiles(allProfiles); // Reemplaza skeletons con datos
                 }
 
             } catch (error) {
                 console.error("Error cargando colaboradores:", error);
+                // Si falla, limpiar el grid de skeletons y mostrar empty state
+                profilesGrid.innerHTML = '';
                 profilesGrid.style.display = 'none';
                 emptyState.style.display = 'block';
-                hideSkeletonLoading();
+                // Asegurar que los skeletons de stats se quiten si falla la carga completa
+                updateStats([]);
             }
         }
 
-        // ---------- ACTUALIZAR ESTADÍSTICAS ----------
+        // ---------- ACTUALIZAR ESTADÍSTICAS (MODIFICADO para quitar skeleton) ----------
         function updateStats(profiles) {
             const stats = {
                 active: profiles.filter(p => p.collaboration_status === 'active').length,
@@ -1705,30 +1780,22 @@
             };
 
             const statElements = document.querySelectorAll('.stat-value');
-            if (statElements[0]) {
-                statElements[0].textContent = stats.active;
-                statElements[0].classList.remove('skeleton');
-                statElements[0].classList.add('fade-in');
-                statElements[0].style.color = '';
-            }
-            if (statElements[1]) {
-                statElements[1].textContent = stats.total;
-                statElements[1].classList.remove('skeleton');
-                statElements[1].classList.add('fade-in');
-                statElements[1].style.color = '';
-            }
-            if (statElements[2]) {
-                statElements[2].textContent = stats.completed;
-                statElements[2].classList.remove('skeleton');
-                statElements[2].classList.add('fade-in');
-                statElements[2].style.color = '';
-            }
-            if (statElements[3]) {
-                statElements[3].textContent = stats.pending;
-                statElements[3].classList.remove('skeleton');
-                statElements[3].classList.add('fade-in');
-                statElements[3].style.color = '';
-            }
+
+            // Función interna para actualizar cada stat y quitar skeleton
+            const updateStatEl = (el, value) => {
+                if (el) {
+                    el.textContent = value;
+                    el.classList.remove('skeleton');
+                    el.removeAttribute('style'); // Crucial
+                    el.classList.add('fade-in');
+                    el.style.color = '';
+                }
+            };
+
+            updateStatEl(statElements[0], stats.active);
+            updateStatEl(statElements[1], stats.total);
+            updateStatEl(statElements[2], stats.completed);
+            updateStatEl(statElements[3], stats.pending);
         }
 
         // ---------- RENDERIZAR PERFILES ----------
@@ -1802,7 +1869,16 @@
                     (p.username && p.username.toLowerCase().includes(query)) ||
                     (p.bio && p.bio.toLowerCase().includes(query))
                 );
-                renderProfiles(filtered);
+                
+                if (filtered.length === 0) {
+                    profilesGrid.innerHTML = '';
+                    profilesGrid.style.display = 'none';
+                    emptyState.style.display = 'block';
+                } else {
+                    emptyState.style.display = 'none';
+                    profilesGrid.style.display = 'grid';
+                    renderProfiles(filtered);
+                }
             });
         }
 
@@ -1848,7 +1924,15 @@
                 }
             }
 
-            renderProfiles(filtered);
+            if (filtered.length === 0) {
+                profilesGrid.innerHTML = ''; 
+                profilesGrid.style.display = 'none';
+                emptyState.style.display = 'block';
+            } else {
+                emptyState.style.display = 'none';
+                profilesGrid.style.display = 'grid';
+                renderProfiles(filtered);
+            }
         }
 
         // ---------- VIEW TOGGLE ----------
@@ -1927,10 +2011,7 @@
                 navbarLogoutButton.addEventListener('click', handleLogout);
             }
 
-            // INICIAR CON SKELETONS
-            showSkeletonLoading();
-
-            // Cargar caché si existe (sin hacer fetch aún)
+            // Cargar caché si existe (y quita skeletons de caché si lo logra)
             loadCachedUser();
 
             // Cargar datos frescos del backend
