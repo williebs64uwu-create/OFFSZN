@@ -1435,18 +1435,28 @@
 
         // ---------- SKELETON LOADING ----------
         function showSkeletonLoading() {
-            if (profileAvatar) profileAvatar.classList.add('skeleton');
+            // Avatar skeleton
+            if (profileAvatar) {
+                profileAvatar.classList.add('skeleton');
+                profileAvatar.style.color = 'transparent';
+                profileAvatar.textContent = '?';
+            }
             
+            // Wallet skeleton - solo blur, sin texto visible
             if (walletAmount) {
                 walletAmount.classList.add('skeleton');
+                walletAmount.style.color = 'transparent';
                 walletAmount.textContent = '$000.00';
             }
 
+            // Stats skeletons - solo blur, sin texto visible
             statsValues.forEach(el => {
                 el.classList.add('skeleton');
+                el.style.color = 'transparent';
                 el.textContent = '000';
             });
 
+            // Products grid skeleton
             if (productsGrid) {
                 productsGrid.style.display = 'grid';
                 productsGrid.innerHTML = `
@@ -1463,6 +1473,7 @@
             document.querySelectorAll('.skeleton').forEach(el => {
                 el.classList.remove('skeleton');
                 el.classList.add('fade-in');
+                el.style.color = '';
             });
         }
 
@@ -1501,6 +1512,7 @@
                 profileAvatar.textContent = initial;
                 profileAvatar.classList.remove('skeleton');
                 profileAvatar.classList.add('fade-in');
+                profileAvatar.style.color = '';
             }
 
             if (!fromCache) {
@@ -1514,10 +1526,11 @@
                 const saved = localStorage.getItem(STORAGE_KEY);
                 if (saved) {
                     appState = JSON.parse(saved);
-                    updateWalletAmount();
                 }
+                updateWalletAmount();
             } catch (err) {
                 console.error('Error al cargar estado de gift cards:', err);
+                updateWalletAmount();
             }
         }
 
@@ -1525,310 +1538,7 @@
             if (walletAmount) {
                 walletAmount.textContent = `${appState.totalBalance.toFixed(2)}`;
                 walletAmount.classList.remove('skeleton');
+                walletAmount.classList.add('fade-in');
+                walletAmount.style.color = '';
             }
         }
-
-        // ---------- CARGAR DATOS DEL DASHBOARD ----------
-        async function loadDashboardData() {
-            try {
-                const userResponse = await fetch(`${API_URL}/me`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-
-                if (!userResponse.ok) {
-                    localStorage.removeItem('authToken');
-                    throw new Error(`Error ${userResponse.status}: No se pudieron obtener los datos del usuario.`);
-                }
-
-                userData = await userResponse.json();
-                console.log("Datos del usuario:", userData);
-
-                localStorage.setItem('userId', userData.id);
-                saveUserCache(userData);
-                updateUserUI(userData, false);
-                loadGiftCardsState();
-
-                await loadFavorites();
-
-            } catch (error) {
-                console.error("Error al cargar datos:", error);
-                hideSkeletonLoading();
-
-                if (error.message.includes('401') || error.message.includes('403')) {
-                    localStorage.removeItem('authToken');
-                    localStorage.removeItem(CACHE_KEY);
-                    window.location.replace('/pages/login.html');
-                }
-            }
-        }
-
-        // ---------- CARGAR FAVORITOS ----------
-        async function loadFavorites() {
-            if (!productsGrid || !emptyState) return;
-
-            try {
-                const response = await fetch(`${API_URL}/me/favorites`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-
-                if (!response.ok) throw new Error('No se pudieron cargar tus favoritos.');
-
-                allFavorites = await response.json();
-                console.log("Favoritos cargados:", allFavorites);
-
-                updateStats(allFavorites);
-
-                if (allFavorites.length === 0) {
-                    productsGrid.style.display = 'none';
-                    productsGrid.innerHTML = '';
-                    emptyState.style.display = 'block';
-                    hideSkeletonLoading();
-                } else {
-                    emptyState.style.display = 'none';
-                    productsGrid.style.display = 'grid';
-                    renderFavorites(allFavorites);
-                    hideSkeletonLoading();
-                }
-
-            } catch (error) {
-                console.error("Error cargando favoritos:", error);
-                productsGrid.innerHTML = `<p style="color:red;grid-column:1/-1;">Error al cargar tus favoritos: ${error.message}</p>`;
-                hideSkeletonLoading();
-            }
-        }
-
-        // ---------- ACTUALIZAR ESTADÍSTICAS ----------
-        function updateStats(favorites) {
-            const stats = {
-                total: favorites.length,
-                drumkits: favorites.filter(f => f.product_type === 'drumkit').length,
-                beats: favorites.filter(f => ['beat', 'sample'].includes(f.product_type)).length,
-                presets: favorites.filter(f => f.product_type === 'preset').length
-            };
-
-            const statElements = document.querySelectorAll('.stat-value');
-            if (statElements[0]) statElements[0].textContent = stats.total;
-            if (statElements[1]) statElements[1].textContent = stats.drumkits;
-            if (statElements[2]) statElements[2].textContent = stats.beats;
-            if (statElements[3]) statElements[3].textContent = stats.presets;
-        }
-
-        // ---------- RENDERIZAR FAVORITOS ----------
-        function renderFavorites(favorites) {
-            const productHTML = favorites.map(product => `
-                <div class="product-card fade-in">
-                    <div class="product-image" style="${product.image_url ? `background-image: url(${product.image_url}); background-size:cover; background-position:center;` : ''}">
-                        ${!product.image_url ? '<i class="fas fa-music"></i>' : ''}
-                        <span class="favorite-badge">
-                            <i class="fas fa-heart"></i> Favorito
-                        </span>
-                        <span class="product-badge">${product.product_type || 'Kit'}</span>
-                    </div>
-                    <div class="product-info">
-                        <div class="product-title">${product.name}</div>
-                        <div class="product-creator">
-                            <i class="fas fa-user"></i> por ${product.creator_name || 'Productor'}
-                        </div>
-                        <div class="product-meta">
-                            ${product.bpm ? `<span><i class="fas fa-tachometer-alt"></i> ${product.bpm} BPM</span>` : ''}
-                            ${product.key ? `<span><i class="fas fa-music"></i> ${product.key}</span>` : ''}
-                            ${!product.bpm && !product.key ? `<span><i class="fas fa-calendar"></i> ${new Date(product.created_at).toLocaleDateString()}</span>` : ''}
-                        </div>
-                        <div class="product-price">${parseFloat(product.price || 0).toFixed(2)}</div>
-                        <div class="product-stats">
-                            <span><i class="fas fa-eye"></i> ${product.views || 0}</span>
-                            <span><i class="fas fa-shopping-bag"></i> ${product.sales || 0}</span>
-                            <span><i class="fas fa-heart"></i> ${product.likes || 0}</span>
-                        </div>
-                    </div>
-                    <div class="product-actions">
-                        <button class="action-btn" onclick="viewProduct(${product.id})">
-                            <i class="fas fa-eye"></i> Ver
-                        </button>
-                        <button class="action-btn" onclick="addToCart(${product.id})">
-                            <i class="fas fa-shopping-cart"></i> Añadir
-                        </button>
-                        <button class="action-btn remove" onclick="removeFavorite(${product.id}, '${product.name}')">
-                            <i class="fas fa-heart-broken"></i>
-                        </button>
-                    </div>
-                </div>
-            `).join('');
-
-            productsGrid.innerHTML = productHTML;
-        }
-
-        // ---------- FUNCIONES DE ACCIONES ----------
-        window.viewProduct = function(id) {
-            console.log('Ver producto:', id);
-            window.location.href = `producto.html?id=${id}`;
-        };
-
-        window.addToCart = function(id) {
-            console.log('Añadir al carrito:', id);
-            // Implementar lógica de añadir al carrito
-            alert('Producto añadido al carrito');
-        };
-
-        window.removeFavorite = async function(id, name) {
-            if (!confirm(`¿Quitar "${name}" de favoritos?`)) {
-                return;
-            }
-
-            try {
-                const response = await fetch(`${API_URL}/favorites/${id}`, {
-                    method: 'DELETE',
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-
-                if (!response.ok) throw new Error('No se pudo quitar de favoritos.');
-
-                alert('Eliminado de favoritos');
-                loadFavorites();
-
-            } catch (error) {
-                console.error('Error eliminando favorito:', error);
-                alert('Error al quitar de favoritos: ' + error.message);
-            }
-        };
-
-        // ---------- BÚSQUEDA ----------
-        if (searchInput) {
-            searchInput.addEventListener('input', (e) => {
-                const query = e.target.value.toLowerCase();
-                const filtered = allFavorites.filter(p => 
-                    p.name.toLowerCase().includes(query) ||
-                    (p.creator_name && p.creator_name.toLowerCase().includes(query))
-                );
-                renderFavorites(filtered);
-            });
-        }
-
-        // ---------- FILTROS ----------
-        const filterType = document.getElementById('filter-type');
-        const filterSort = document.getElementById('filter-sort');
-
-        if (filterType) {
-            filterType.addEventListener('change', applyFilters);
-        }
-        if (filterSort) {
-            filterSort.addEventListener('change', applyFilters);
-        }
-
-        function applyFilters() {
-            let filtered = [...allFavorites];
-
-            const type = filterType?.value;
-            if (type && type !== 'all') {
-                filtered = filtered.filter(p => p.product_type === type);
-            }
-
-            const sort = filterSort?.value;
-            if (sort) {
-                switch(sort) {
-                    case 'recent':
-                        filtered.sort((a, b) => new Date(b.favorited_at) - new Date(a.favorited_at));
-                        break;
-                    case 'oldest':
-                        filtered.sort((a, b) => new Date(a.favorited_at) - new Date(b.favorited_at));
-                        break;
-                    case 'popular':
-                        filtered.sort((a, b) => (b.views || 0) - (a.views || 0));
-                        break;
-                    case 'price-high':
-                        filtered.sort((a, b) => parseFloat(b.price || 0) - parseFloat(a.price || 0));
-                        break;
-                    case 'price-low':
-                        filtered.sort((a, b) => parseFloat(a.price || 0) - parseFloat(b.price || 0));
-                        break;
-                }
-            }
-
-            renderFavorites(filtered);
-        }
-
-        // ---------- VIEW TOGGLE ----------
-        document.querySelectorAll('.view-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                const view = btn.dataset.view;
-                console.log('Cambiar vista a:', view);
-            });
-        });
-
-        // ---------- LOGOUT HANDLER ----------
-        function handleLogout(e) {
-            e.preventDefault();
-            console.log("Iniciando cierre de sesión...");
-
-            const overlay = document.getElementById('logout-overlay');
-            const messageEl = document.getElementById('logout-message');
-            const iconEl = overlay.querySelector('i');
-
-            if (!overlay || !messageEl || !iconEl) {
-                console.warn("Faltan elementos del DOM para el logout animado. Usando fallback.");
-                localStorage.removeItem('authToken');
-                window.location.replace('/index.html');
-                return;
-            }
-
-            messageEl.textContent = "Te veremos pronto...";
-            iconEl.className = 'fas fa-spinner fa-spin';
-            overlay.classList.add('active');
-
-            setTimeout(() => {
-                localStorage.removeItem('authToken');
-                console.log("Sesión cerrada. Mostrando mensaje de despedida.");
-                messageEl.textContent = "¡Cerraste sesión!";
-                iconEl.className = 'fas fa-check-circle';
-            }, 1500);
-
-            setTimeout(() => {
-                console.log("Desvaneciendo overlay...");
-                overlay.classList.add('fading-out');
-            }, 3000);
-
-            setTimeout(() => {
-                console.log("Redirigiendo a index.html");
-                window.location.replace('/index.html');
-            }, 3500);
-        }
-
-        // ---------- DROPDOWN TOGGLE ----------
-        window.toggleUserDropdown = function() {
-            const dropdown = document.querySelector('.user-dropdown');
-            dropdown.classList.toggle('active');
-        };
-
-        // Close dropdown on outside click
-        document.addEventListener('click', e => {
-            const userDropdown = document.querySelector('.user-dropdown');
-            const userBtn = document.querySelector('.user-dropdown .navbar-icon-button');
-            if (!userDropdown.contains(e.target) && e.target !== userBtn) {
-                userDropdown.classList.remove('active');
-            }
-        });
-
-        // ---------- INICIALIZACIÓN ----------
-        document.addEventListener('DOMContentLoaded', () => {
-            // Attach logout handlers
-            const sidebarLogoutButton = document.getElementById('sidebar-logout-btn');
-            if (sidebarLogoutButton) {
-                sidebarLogoutButton.addEventListener('click', handleLogout);
-            }
-
-            const navbarLogoutButton = document.getElementById('navbar-logout-btn');
-            if (navbarLogoutButton) {
-                navbarLogoutButton.addEventListener('click', handleLogout);
-            }
-
-            showSkeletonLoading();
-            loadCachedUser();
-            loadDashboardData();
-        });
-    </script>
-
-</body>
-
-</html>
