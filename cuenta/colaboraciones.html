@@ -1520,19 +1520,22 @@
             // Avatar skeleton
             if (profileAvatar) {
                 profileAvatar.classList.add('skeleton');
-                profileAvatar.textContent = ''; // Vaciar contenido
+                profileAvatar.style.color = 'transparent';
+                profileAvatar.textContent = '?';
             }
 
-            // Wallet skeleton
+            // Wallet skeleton - solo blur, sin texto visible
             if (walletAmount) {
                 walletAmount.classList.add('skeleton');
-                walletAmount.textContent = '$000.00'; // Texto placeholder para skeleton
+                walletAmount.style.color = 'transparent';
+                walletAmount.textContent = '$000.00';
             }
 
-            // Stats skeletons
+            // Stats skeletons - solo blur, sin texto visible
             statsValues.forEach(el => {
                 el.classList.add('skeleton');
-                el.textContent = '000'; // Texto placeholder para skeleton
+                el.style.color = 'transparent';
+                el.textContent = '000';
             });
 
             // Profiles grid skeleton
@@ -1552,6 +1555,7 @@
             document.querySelectorAll('.skeleton').forEach(el => {
                 el.classList.remove('skeleton');
                 el.classList.add('fade-in');
+                el.style.color = '';
             });
         }
 
@@ -1590,6 +1594,7 @@
                 profileAvatar.textContent = initial;
                 profileAvatar.classList.remove('skeleton');
                 profileAvatar.classList.add('fade-in');
+                profileAvatar.style.color = '';
             }
 
             if (!fromCache) {
@@ -1603,11 +1608,8 @@
                 const saved = localStorage.getItem(STORAGE_KEY);
                 if (saved) {
                     appState = JSON.parse(saved);
-                    updateWalletAmount();
-                } else {
-                    // Si no hay datos guardados, actualizar con 0
-                    updateWalletAmount();
                 }
+                updateWalletAmount();
             } catch (err) {
                 console.error('Error al cargar estado de gift cards:', err);
                 updateWalletAmount();
@@ -1619,6 +1621,7 @@
                 walletAmount.textContent = `$${appState.totalBalance.toFixed(2)}`;
                 walletAmount.classList.remove('skeleton');
                 walletAmount.classList.add('fade-in');
+                walletAmount.style.color = '';
             }
         }
 
@@ -1686,7 +1689,6 @@
 
             } catch (error) {
                 console.error("Error cargando colaboradores:", error);
-                // Mostrar empty state con mensaje de error
                 profilesGrid.style.display = 'none';
                 emptyState.style.display = 'block';
                 hideSkeletonLoading();
@@ -1707,21 +1709,25 @@
                 statElements[0].textContent = stats.active;
                 statElements[0].classList.remove('skeleton');
                 statElements[0].classList.add('fade-in');
+                statElements[0].style.color = '';
             }
             if (statElements[1]) {
                 statElements[1].textContent = stats.total;
                 statElements[1].classList.remove('skeleton');
                 statElements[1].classList.add('fade-in');
+                statElements[1].style.color = '';
             }
             if (statElements[2]) {
                 statElements[2].textContent = stats.completed;
                 statElements[2].classList.remove('skeleton');
                 statElements[2].classList.add('fade-in');
+                statElements[2].style.color = '';
             }
             if (statElements[3]) {
                 statElements[3].textContent = stats.pending;
                 statElements[3].classList.remove('skeleton');
                 statElements[3].classList.add('fade-in');
+                statElements[3].style.color = '';
             }
         }
 
@@ -1925,7 +1931,7 @@
             showSkeletonLoading();
 
             // Cargar caché si existe (sin hacer fetch aún)
-            const hasCachedData = loadCachedUser();
+            loadCachedUser();
 
             // Cargar datos frescos del backend
             loadDashboardData();
