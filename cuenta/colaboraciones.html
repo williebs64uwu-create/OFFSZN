@@ -895,6 +895,7 @@
         }
 
         .profile-info-section {
+            /* Mantenemos el margen para el avatar */
             margin-top: 55px;
         }
 
@@ -969,13 +970,12 @@
             border-top: 1px solid rgba(255, 255, 255, .08);
         }
 
+        /* Ajustes para el botón de acción */
         .action-btn {
             flex: 1;
             padding: 10px;
-            background: rgba(255, 255, 255, .05);
             border: 1px solid rgba(255, 255, 255, .1);
             border-radius: 10px;
-            color: #999;
             cursor: pointer;
             transition: all .2s ease;
             font-size: .88rem;
@@ -984,23 +984,29 @@
             align-items: center;
             justify-content: center;
             gap: 8px;
+            /* Estilo por defecto (Ver Perfil - Secondary) */
+            background: rgba(255, 255, 255, .05);
+            color: #999;
         }
 
         .action-btn:hover {
-            background: rgba(34, 197, 94, .1);
+            background: rgba(255, 255, 255, .1);
             color: #fff;
-            border-color: rgba(34, 197, 94, .3);
+            border-color: rgba(255, 255, 255, .2);
         }
 
         .action-btn.primary {
-            background: rgba(34, 197, 94, .1);
-            color: #22c55e;
-            border-color: rgba(34, 197, 94, .2);
+            /* Estilo para el botón primario (Mensaje) */
+            background: #22c55e; /* Fondo sólido verde */
+            color: #fff;
+            border-color: #22c55e;
         }
 
         .action-btn.primary:hover {
-            background: rgba(34, 197, 94, .15);
-            border-color: rgba(34, 197, 94, .3);
+            background: #16a34a; /* Verde más oscuro al pasar el ratón */
+            color: #fff;
+            transform: translateY(-1px);
+            border-color: #16a34a;
         }
 
         /* ---------- EMPTY STATE ---------- */
@@ -1076,10 +1082,10 @@
             border-radius: 50%;
             background: linear-gradient(90deg, rgba(255, 255, 255, .03) 25%, rgba(255, 255, 255, .08) 50%, rgba(255, 255, 255, .03) 75%);
         }
-        
+
         /* Asegura que el stat-value tome el espacio del texto */
         .stat-value.skeleton {
-            margin-bottom: 6px; 
+            margin-bottom: 6px;
         }
 
         @keyframes skeleton-loading {
@@ -1618,10 +1624,6 @@
             window.location.replace('/pages/login.html');
         }
 
-        // ---------- SKELETON LOADING (ELIMINADO - Ya no se necesitan las funciones de añadir y quitar general) ----------
-        // function showSkeletonLoading() { ... }
-        // function hideSkeletonLoading() { ... }
-
         // ---------- CACHÉ DE USUARIO ----------
         function loadCachedUser() {
             try {
@@ -1683,7 +1685,10 @@
 
         function updateWalletAmount() {
             if (walletAmountEl) {
-                walletAmountEl.textContent = `$${appState.totalBalance.toFixed(2)}`;
+                // Formatear el saldo antes de mostrarlo
+                const formattedBalance = `$${appState.totalBalance.toFixed(2)}`;
+                walletAmountEl.textContent = formattedBalance;
+                
                 // Quitar skeleton y estilos inline
                 walletAmountEl.classList.remove('skeleton');
                 walletAmountEl.removeAttribute('style');
@@ -1709,7 +1714,11 @@
                 localStorage.setItem('userId', userData.id);
                 saveUserCache(userData);
                 updateUserUI(userData, false);
-                loadGiftCardsState();
+                // loadGiftCardsState() ya se llamó en loadCachedUser() si había caché
+                if (!loadCachedUser()) {
+                   loadGiftCardsState(); // Cargar la billetera si no estaba en caché
+                }
+
 
                 await loadCollaborators();
 
