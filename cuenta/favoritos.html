@@ -1,369 +1,1834 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Mis Favoritos | OFFSZN</title>
-    
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Icons and Fonts -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Montserrat:wght@700;800;900&display=swap" rel="stylesheet">
-    
-    <!-- Custom Styles -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mis Favoritos - OFFSZN Productor</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
             font-family: 'Inter', sans-serif;
             background: #0a0a0a;
+            color: #e5e5e5;
+            overflow-x: hidden;
         }
-        .font-montserrat {
-            font-family: 'Montserrat', sans-serif;
+
+        /* ---------- NAVBAR ---------- */
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 3rem;
+            background: rgba(0, 0, 0, .98);
+            position: sticky;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+            border-bottom: 1px solid rgba(255, 255, 255, .08);
+            backdrop-filter: blur(20px);
         }
-        
-        /* Skeleton Loading */
-        .skeleton-loader {
-            background: linear-gradient(90deg, 
-                rgba(255, 255, 255, 0.03) 25%, 
-                rgba(255, 255, 255, 0.08) 50%, 
-                rgba(255, 255, 255, 0.03) 75%
-            );
-            background-size: 200% 100%;
-            animation: skeleton-loading 1.5s ease-in-out infinite;
-            color: transparent !important;
-            user-select: none;
-            border-radius: 4px;
+
+        .navbar .logo a {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #fff;
+            text-decoration: none;
+            letter-spacing: -.5px;
         }
-        .skeleton-avatar {
-            background: linear-gradient(90deg, 
-                rgba(255, 255, 255, 0.05) 25%, 
-                rgba(255, 255, 255, 0.1) 50%, 
-                rgba(255, 255, 255, 0.05) 75%
-            );
-            background-size: 200% 100%;
-            animation: skeleton-loading 1.5s ease-in-out infinite;
-            border-radius: 50% !important;
+
+        .navbar-center {
+            display: flex;
+            align-items: center;
+            gap: 2.5rem;
         }
-        .skeleton-text {
-            background: linear-gradient(90deg, 
-                rgba(255, 255, 255, 0.05) 25%, 
-                rgba(255, 255, 255, 0.1) 50%, 
-                rgba(255, 255, 255, 0.05) 75%
-            );
-            background-size: 200% 100%;
-            animation: skeleton-loading 1.5s ease-in-out infinite;
-            border-radius: 4px;
-            height: 1em;
-            min-width: 80px;
+
+        .navbar-links {
+            list-style: none;
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .navbar-links li {
+            position: relative;
+        }
+
+        .navbar-links a {
+            color: #999;
+            text-decoration: none;
+            transition: all .2s;
+            font-weight: 500;
+            font-size: .9rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+        }
+
+        .navbar-links a:hover {
+            color: #fff;
+        }
+
+        .navbar-links>li>a>i {
+            font-size: .7rem;
+            transition: transform .2s;
+        }
+
+        .dropdown-menu {
+            position: absolute;
+            top: calc(100% + 12px);
+            left: 50%;
+            transform: translateX(-50%) translateY(-10px);
+            background: rgba(20, 20, 20, .98);
+            border: 1px solid rgba(255, 255, 255, .1);
+            border-radius: 12px;
+            padding: 8px;
+            min-width: 240px;
+            opacity: 0;
+            visibility: hidden;
+            transition: all .3s ease;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, .5);
+            backdrop-filter: blur(20px);
+            z-index: 1001;
+        }
+
+        .navbar-links li:hover .dropdown-menu {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .navbar-links a i.fa-chevron-down {
+            transition: transform .2s;
+        }
+
+        .navbar-links li:hover a i.fa-chevron-down {
+            transform: rotate(180deg);
+        }
+
+        .dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 14px;
+            color: #999;
+            text-decoration: none;
+            font-size: .85rem;
+            border-radius: 8px;
+            transition: all .2s;
+            font-weight: 500;
+        }
+
+        .dropdown-item:hover {
+            background: rgba(139, 92, 246, .1);
+            color: #fff;
+        }
+
+        .dropdown-item i {
+            width: 18px;
+            text-align: center;
+            direction: ltr;
             display: inline-block;
-            color: transparent !important;
         }
-        @keyframes skeleton-loading {
-            0% { background-position: 200% 0; }
-            100% { background-position: -200% 0; }
+
+        .dropdown-divider {
+            height: 1px;
+            background: rgba(255, 255, 255, .08);
+            margin: 8px 0;
         }
-        
-        /* Custom Scrollbar */
-        .scrollbar-thin {
-            scrollbar-width: thin;
-            scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+
+        .navbar-search {
+            position: relative;
+            width: 380px;
         }
-        .scrollbar-thin::-webkit-scrollbar {
+
+        .navbar-search input {
+            width: 100%;
+            padding: .6rem 2.5rem .6rem 1rem;
+            background: rgba(255, 255, 255, .05);
+            border: 1px solid rgba(255, 255, 255, .1);
+            border-radius: 8px;
+            color: #fff;
+            font-size: .85rem;
+            outline: none;
+            transition: all .2s;
+        }
+
+        .navbar-search input:focus {
+            background: rgba(255, 255, 255, .08);
+            border-color: rgba(139, 92, 246, .5);
+        }
+
+        .navbar-search input::placeholder {
+            color: #666;
+        }
+
+        .navbar-search i {
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #666;
+            font-size: .9rem;
+        }
+
+        .navbar-right {
+            display: flex;
+            gap: .75rem;
+            align-items: center;
+        }
+
+        .navbar-icon-button {
+            width: 36px;
+            height: 36px;
+            background: rgba(255, 255, 255, .05);
+            border: 1px solid rgba(255, 255, 255, .1);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #999;
+            font-size: 16px;
+            transition: all .2s;
+            text-decoration: none;
+            position: relative;
+        }
+
+        .navbar-icon-button:hover {
+            background: rgba(255, 255, 255, .08);
+            color: #fff;
+            border-color: rgba(255, 255, 255, .15);
+        }
+
+        .user-dropdown {
+            position: relative;
+        }
+
+        .user-dropdown-menu {
+            position: absolute;
+            top: calc(100%+12px);
+            right: 0;
+            background: rgba(20, 20, 20, .98);
+            border: 1px solid rgba(255, 255, 255, .1);
+            border-radius: 12px;
+            padding: 12px;
+            min-width: 260px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all .3s ease;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, .5);
+            backdrop-filter: blur(20px);
+        }
+
+        .user-dropdown.active .user-dropdown-menu {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .user-dropdown-header {
+            padding: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, .08);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .user-dropdown-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1rem;
+            color: #666;
+        }
+
+        .user-dropdown-info {
+            flex: 1;
+        }
+
+        .user-dropdown-name {
+            font-weight: 600;
+            color: #fff;
+            font-size: .9rem;
+            margin-bottom: 2px;
+        }
+
+        .user-dropdown-email {
+            font-size: .75rem;
+            color: #666;
+        }
+
+        .user-dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            color: #999;
+            text-decoration: none;
+            font-size: .85rem;
+            border-radius: 8px;
+            transition: all .2s;
+            font-weight: 500;
+        }
+
+        .user-dropdown-item:hover {
+            background: rgba(139, 92, 246, .1);
+            color: #fff;
+        }
+
+        .user-dropdown-item.disabled {
+            opacity: .4;
+            cursor: not-allowed;
+        }
+
+        .user-dropdown-item i {
+            width: 18px;
+            text-align: center;
+        }
+
+        .user-dropdown-item .soon-badge {
+            margin-left: auto;
+            background: rgba(255, 255, 255, .08);
+            color: #666;
+            padding: 2px 8px;
+            border-radius: 8px;
+            font-size: .6rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .user-dropdown-item.logout {
+            color: #ef4444;
+            margin-top: 8px;
+            border-top: 1px solid rgba(255, 255, 255, .08);
+            padding-top: 12px;
+        }
+
+        .user-dropdown-item.logout:hover {
+            background: rgba(239, 68, 68, .1);
+        }
+
+        /* ---------- DASHBOARD LAYOUT ---------- */
+        .dashboard-container {
+            display: grid;
+            grid-template-columns: 260px 1fr;
+            min-height: calc(100vh - 57px);
+        }
+
+        .sidebar {
+            background: rgba(15, 15, 15, .6);
+            border-right: 1px solid rgba(255, 255, 255, .08);
+            position: sticky;
+            top: 57px;
+            height: calc(100vh - 57px);
+            overflow-y: auto;
+        }
+
+        .sidebar::-webkit-scrollbar {
             width: 5px;
         }
-        .scrollbar-thin::-webkit-scrollbar-track {
+
+        .sidebar::-webkit-scrollbar-track {
             background: transparent;
         }
-        .scrollbar-thin::-webkit-scrollbar-thumb {
-            background-color: rgba(255, 255, 255, 0.1);
-            border-radius: 20px;
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, .1);
+            border-radius: 3px;
         }
-        
-        /* Gradient Animation */
-        @keyframes gradientShift {
-            0%, 100% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
+
+        .profile-header {
+            padding: 24px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, .08);
         }
-        
-        /* Heartbeat Animation */
-        @keyframes heartbeat {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.1); }
+
+        .profile-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
         }
-        
-        .heart-pulse:hover {
-            animation: heartbeat 0.6s ease-in-out;
+
+        .profile-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: #333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: #666;
         }
-        
-        /* Kit Card Hover Effect */
-        .kit-card {
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+        .profile-name {
+            font-weight: 600;
+            color: #fff;
+            font-size: .95rem;
         }
-        .kit-card:hover {
-            transform: translateY(-8px) scale(1.02);
+
+        .wallet-section {
+            padding: 16px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, .08);
+            background: rgba(139, 92, 246, .05);
         }
-        
-        /* Glass Effect */
-        .glass-effect {
-            background: rgba(255, 255, 255, 0.03);
+
+        .wallet-label {
+            font-size: .7rem;
+            color: #999;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+            font-weight: 600;
+        }
+
+        .wallet-amount {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .upload-btn {
+            margin: 20px 20px 0;
+            padding: 14px 18px;
+            background: #8b5cf6;
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all .2s;
+            font-size: .9rem;
+            width: calc(100% - 40px);
+        }
+
+        .upload-btn:hover {
+            background: #7c3aed;
+            transform: translateY(-1px);
+        }
+
+        .sidebar-search {
+            margin: 16px 20px;
+            position: relative;
+        }
+
+        .sidebar-search input {
+            width: 100%;
+            padding: 10px 36px 10px 12px;
+            background: rgba(255, 255, 255, .05);
+            border: 1px solid rgba(255, 255, 255, .1);
+            border-radius: 8px;
+            color: #fff;
+            font-size: .85rem;
+            outline: none;
+            transition: all .2s;
+        }
+
+        .sidebar-search input:focus {
+            background: rgba(255, 255, 255, .08);
+            border-color: rgba(139, 92, 246, .5);
+        }
+
+        .sidebar-search input::placeholder {
+            color: #666;
+            font-size: .82rem;
+        }
+
+        .sidebar-search i {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #666;
+            font-size: .85rem;
+        }
+
+        .sidebar-menu {
+            padding: 12px 0;
+        }
+
+        .menu-section-title {
+            padding: 16px 20px 8px;
+            font-size: .65rem;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 700;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 11px 20px;
+            color: #999;
+            text-decoration: none;
+            font-size: .88rem;
+            transition: all .2s;
+            position: relative;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .menu-item:hover {
+            background: rgba(255, 255, 255, .05);
+            color: #fff;
+        }
+
+        .menu-item.active {
+            background: rgba(139, 92, 246, .1);
+            color: #fff;
+            border-left: 2px solid #8b5cf6;
+        }
+
+        .menu-item.disabled {
+            opacity: .4;
+            cursor: not-allowed;
+        }
+
+        .menu-item i {
+            width: 18px;
+            text-align: center;
+            font-size: .95rem;
+        }
+
+        .menu-item .badge {
+            margin-left: auto;
+            background: #8b5cf6;
+            color: #fff;
+            padding: 2px 7px;
+            border-radius: 10px;
+            font-size: .65rem;
+            font-weight: 700;
+        }
+
+        .menu-item .soon-badge {
+            margin-left: auto;
+            background: rgba(255, 255, 255, .08);
+            color: #666;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: .6rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .menu-divider {
+            height: 1px;
+            background: rgba(255, 255, 255, .08);
+            margin: 12px 20px;
+        }
+
+        .logout-btn {
+            margin: 20px;
+            background: rgba(239, 68, 68, .1);
+            border: 1px solid rgba(239, 68, 68, .2);
+            color: #ef4444;
+            padding: 11px 18px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            justify-content: center;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: .88rem;
+            transition: all .2s;
+        }
+
+        .logout-btn:hover {
+            background: rgba(239, 68, 68, .15);
+            border-color: rgba(239, 68, 68, .3);
+        }
+
+        /* ---------- MAIN CONTENT ---------- */
+        .main-content {
+            padding: 36px 48px;
+            background: #0a0a0a;
+        }
+
+        .page-header {
+            margin-bottom: 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            background: linear-gradient(135deg, rgba(239, 68, 68, .08), rgba(244, 63, 94, .05));
+            border: 1px solid rgba(239, 68, 68, .2);
+            border-radius: 16px;
+            padding: 32px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .page-header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -10%;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(239, 68, 68, .15), transparent);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        .page-title-section {
+            position: relative;
+            z-index: 1;
+        }
+
+        .page-title-section h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #fff;
+            margin-bottom: 8px;
+            letter-spacing: -.8px;
+            background: linear-gradient(135deg, #fff, #fca5a5);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .page-subtitle {
+            color: #999;
+            font-size: 1rem;
+            font-weight: 400;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header-btn {
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: .9rem;
+            border: none;
+            cursor: pointer;
+            transition: all .2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .header-btn.primary {
+            background: #ef4444;
+            color: #fff;
+        }
+
+        .header-btn.primary:hover {
+            background: #dc2626;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(239, 68, 68, .3);
+        }
+
+        .header-btn.secondary {
+            background: rgba(255, 255, 255, .05);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, .1);
+        }
+
+        .header-btn.secondary:hover {
+            background: rgba(255, 255, 255, .08);
+        }
+
+        /* ---------- FILTERS ---------- */
+        .filters-bar {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .filter-label {
+            font-size: .85rem;
+            color: #999;
+            font-weight: 500;
+        }
+
+        .filter-select,
+        .filter-input {
+            padding: 10px 14px;
+            background: rgba(255, 255, 255, .05);
+            border: 1px solid rgba(255, 255, 255, .1);
+            border-radius: 8px;
+            color: #fff;
+            font-size: .85rem;
+            outline: none;
+            transition: all .2s;
+            min-width: 150px;
+        }
+
+        .filter-select:focus,
+        .filter-input:focus {
+            background: rgba(255, 255, 255, .08);
+            border-color: rgba(239, 68, 68, .5);
+        }
+
+        .filter-select option {
+            background: #1a1a1a;
+            color: #fff;
+        }
+
+        .view-toggle {
+            margin-left: auto;
+            display: flex;
+            gap: 8px;
+            background: rgba(255, 255, 255, .05);
+            padding: 4px;
+            border-radius: 8px;
+        }
+
+        .view-btn {
+            padding: 8px 12px;
+            background: transparent;
+            border: none;
+            color: #999;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all .2s;
+            font-size: .9rem;
+        }
+
+        .view-btn:hover {
+            color: #fff;
+        }
+
+        .view-btn.active {
+            background: rgba(239, 68, 68, .2);
+            color: #fff;
+        }
+
+        /* ---------- STATS CARDS ---------- */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, .02);
+            border: 1px solid rgba(255, 255, 255, .08);
+            border-radius: 12px;
+            padding: 20px;
+            transition: all .2s;
+        }
+
+        .stat-card:hover {
+            border-color: rgba(255, 255, 255, .15);
+            background: rgba(255, 255, 255, .04);
+        }
+
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+
+        .stat-icon {
+            width: 40px;
+            height: 40px;
+            background: rgba(239, 68, 68, .1);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            color: #ef4444;
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: .85rem;
+            font-weight: 500;
+        }
+
+        /* ---------- PRODUCTS GRID ---------- */
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .product-card {
+            background: rgba(255, 255, 255, .02);
+            border: 1px solid rgba(255, 255, 255, .08);
+            border-radius: 12px;
+            overflow: hidden;
+            transition: all .2s;
+            position: relative;
+        }
+
+        .product-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(255, 255, 255, .15);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, .3);
+        }
+
+        .product-image {
+            width: 100%;
+            height: 180px;
+            background: linear-gradient(135deg, #ef4444, #f43f5e);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .product-image i {
+            font-size: 3rem;
+            color: rgba(255, 255, 255, .9);
+        }
+
+        .product-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, .7);
             backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 5px 10px;
+            border-radius: 12px;
+            font-size: .65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .3px;
+        }
+
+        .favorite-badge {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(239, 68, 68, .2);
+            color: #ef4444;
+            padding: 5px 10px;
+            border-radius: 12px;
+            font-size: .65rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .product-info {
+            padding: 18px;
+        }
+
+        .product-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 8px;
+        }
+
+        .product-creator {
+            font-size: .8rem;
+            color: #666;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .product-meta {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 12px;
+            font-size: .8rem;
+            color: #666;
+        }
+
+        .product-meta span {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .product-price {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #ef4444;
+            margin-bottom: 12px;
+        }
+
+        .product-stats {
+            display: flex;
+            gap: 16px;
+            padding-top: 12px;
+            border-top: 1px solid rgba(255, 255, 255, .08);
+            font-size: .8rem;
+            color: #666;
+        }
+
+        .product-stats span {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .product-actions {
+            display: flex;
+            gap: 8px;
+            padding: 12px 18px;
+            border-top: 1px solid rgba(255, 255, 255, .08);
+        }
+
+        .action-btn {
+            flex: 1;
+            padding: 8px;
+            background: rgba(255, 255, 255, .05);
+            border: 1px solid rgba(255, 255, 255, .1);
+            border-radius: 8px;
+            color: #999;
+            cursor: pointer;
+            transition: all .2s;
+            font-size: .85rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .action-btn:hover {
+            background: rgba(239, 68, 68, .1);
+            color: #fff;
+            border-color: rgba(239, 68, 68, .3);
+        }
+
+        .action-btn.remove {
+            color: #ef4444;
+        }
+
+        .action-btn.remove:hover {
+            background: rgba(239, 68, 68, .15);
+            border-color: rgba(239, 68, 68, .4);
+        }
+
+        /* ---------- EMPTY STATE ---------- */
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+            background: rgba(255, 255, 255, .02);
+            border: 1px dashed rgba(255, 255, 255, .15);
+            border-radius: 12px;
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 24px;
+            opacity: .3;
+            color: #ef4444;
+        }
+
+        .empty-state h3 {
+            color: #fff;
+            margin-bottom: 12px;
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+
+        .empty-state p {
+            color: #666;
+            margin-bottom: 28px;
+            line-height: 1.6;
+            font-size: .95rem;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .empty-state-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #ef4444;
+            color: #fff;
+            padding: 14px 32px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: .9rem;
+            border: none;
+            cursor: pointer;
+            transition: all .2s;
+            text-decoration: none;
+        }
+
+        .empty-state-btn:hover {
+            background: #dc2626;
+            transform: translateY(-2px);
+        }
+
+        /* ---------- LOADING ---------- */
+        .skeleton {
+            background: linear-gradient(90deg, rgba(255, 255, 255, .03) 25%, rgba(255, 255, 255, .08) 50%, rgba(255, 255, 255, .03) 75%);
+            background-size: 200% 100%;
+            animation: skeleton-loading 1.5s ease-in-out infinite;
+            border-radius: 8px;
+        }
+
+        @keyframes skeleton-loading {
+            0% {
+                background-position: 200% 0;
+            }
+
+            100% {
+                background-position: -200% 0;
+            }
+        }
+
+        /* ---------- LOGOUT OVERLAY ---------- */
+        #logout-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(10, 10, 10, 0.9);
+            backdrop-filter: blur(8px);
+            z-index: 10001;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        #logout-overlay.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        #logout-overlay.fading-out {
+            opacity: 0;
+        }
+
+        .logout-content {
+            text-align: center;
+            color: #fff;
+        }
+
+        .logout-content i {
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+            color: #ef4444;
+        }
+
+        .logout-content h2 {
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: #e5e5e5;
+        }
+
+        @keyframes fa-spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .fa-spin {
+            animation: fa-spin 1.5s linear infinite;
+        }
+
+        .fade-in {
+            animation: fadeIn .3s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ---------- RESPONSIVE ---------- */
+        @media (max-width:1400px) {
+            .stats-row {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .products-grid {
+                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            }
+        }
+
+        @media (max-width:1200px) {
+            .dashboard-container {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar {
+                position: relative;
+                top: 0;
+                height: auto;
+            }
+
+            .navbar-search {
+                width: 300px;
+            }
+        }
+
+        @media (max-width:768px) {
+            .navbar {
+                padding: .75rem 1.5rem;
+            }
+
+            .navbar-center {
+                display: none;
+            }
+
+            .main-content {
+                padding: 20px;
+            }
+
+            .stats-row,
+            .products-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .filters-bar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .view-toggle {
+                margin-left: 0;
+            }
         }
     </style>
 </head>
 
-<body class="bg-black text-[#e5e5e5] overflow-x-hidden">
-    <!-- NAVBAR -->
-    <nav class="sticky top-0 z-50 flex items-center justify-between px-6 sm:px-12 py-2 bg-[rgba(0,0,0,0.98)] border-b border-[rgba(255,255,255,0.08)] backdrop-blur-xl">
-        <div class="text-2xl font-extrabold tracking-tight text-white">
-            <a href="dashboard">OFFSZN</a>
-        </div>
-        
-        <div class="hidden lg:flex items-center gap-10">
-            <ul class="flex items-center gap-8">
-                <li><a href="dashboard" class="text-[#999] hover:text-white transition-colors duration-200 text-sm font-medium">INICIO</a></li>
-                <li class="group relative">
-                    <a class="text-[#999] group-hover:text-white transition-colors duration-200 text-sm font-medium flex items-center gap-1.5 cursor-pointer py-2">
-                        RECURSOS <i class="fas fa-chevron-down text-[0.7rem] transition-transform duration-200 group-hover:rotate-180"></i>
-                    </a>
-                    <div class="absolute top-full left-1/2 -translate-x-1/2 pt-3 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300">
-                        <div class="bg-[rgba(20,20,20,0.98)] border border-[rgba(255,255,255,0.1)] rounded-xl shadow-2xl backdrop-blur-lg p-2 min-w-[240px]">
-                            <a href="beats" class="flex items-center gap-3 p-2.5 text-[#999] hover:text-white hover:bg-violet-500/10 rounded-lg text-sm transition-colors font-medium">
-                                <i class="fas fa-music w-5 text-center"></i> Beats & Instrumentales
-                            </a>
-                            <a href="drum-kits" class="flex items-center gap-3 p-2.5 text-[#999] hover:text-white hover:bg-violet-500/10 rounded-lg text-sm transition-colors font-medium">
-                                <i class="fas fa-drum w-5 text-center"></i> Drum Kits
-                            </a>
-                        </div>
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="logo"><a href="index">OFFSZN</a></div>
+
+        <div class="navbar-center">
+            <ul class="navbar-links">
+                <li><a href="index">INICIO</a></li>
+                <li>
+                    <a>RECURSOS <i class="fas fa-chevron-down"></i></a>
+                    <div class="dropdown-menu">
+                        <a href="beats" class="dropdown-item">
+                            <i class="fas fa-music"></i>
+                            <span>Beats & Instrumentales</span>
+                        </a>
+                        <a href="drum-kits" class="dropdown-item">
+                            <i class="fas fa-drum"></i>
+                            <span>Drum Kits</span>
+                        </a>
+                        <a href="presets" class="dropdown-item">
+                            <i class="fas fa-sliders-h"></i>
+                            <span>Presets & Plugins</span>
+                        </a>
+                        <a href="samples" class="dropdown-item">
+                            <i class="fas fa-wave-square"></i>
+                            <span>Samples & Loops</span>
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a href="free-resources" class="dropdown-item">
+                            <i class="fas fa-gift"></i>
+                            <span>Recursos Gratis</span>
+                        </a>
                     </div>
                 </li>
-                <li class="group relative">
-                    <a class="text-[#999] group-hover:text-white transition-colors duration-200 text-sm font-medium flex items-center gap-1.5 cursor-pointer py-2">
-                        COMUNIDAD <i class="fas fa-chevron-down text-[0.7rem] transition-transform duration-200 group-hover:rotate-180"></i>
-                    </a>
-                    <div class="absolute top-full left-1/2 -translate-x-1/2 pt-3 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300">
-                        <div class="bg-[rgba(20,20,20,0.98)] border border-[rgba(255,255,255,0.1)] rounded-xl shadow-2xl backdrop-blur-lg p-2 min-w-[240px]">
-                            <a href="feed" class="flex items-center gap-3 p-2.5 text-[#999] hover:text-white hover:bg-violet-500/10 rounded-lg text-sm transition-colors font-medium">
-                                <i class="fas fa-home w-5 text-center"></i> Feed
-                            </a>
-                            <a href="colaboraciones" class="flex items-center gap-3 p-2.5 text-[#999] hover:text-white hover:bg-violet-500/10 rounded-lg text-sm transition-colors font-medium">
-                                <i class="fas fa-handshake w-5 text-center"></i> Colaboraciones
-                            </a>
-                        </div>
+                <li>
+                    <a>COMUNIDAD <i class="fas fa-chevron-down"></i></a>
+                    <div class="dropdown-menu">
+                        <a href="feed" class="dropdown-item">
+                            <i class="fas fa-home"></i>
+                            <span>Feed</span>
+                        </a>
+                        <a href="productores" class="dropdown-item">
+                            <i class="fas fa-users"></i>
+                            <span>Productores</span>
+                        </a>
+                        <a href="colaboraciones" class="dropdown-item">
+                            <i class="fas fa-handshake"></i>
+                            <span>Colaboraciones</span>
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a href="foros" class="dropdown-item">
+                            <i class="fas fa-comments"></i>
+                            <span>Foros</span>
+                        </a>
+                        <a href="eventos" class="dropdown-item">
+                            <i class="fas fa-calendar"></i>
+                            <span>Eventos</span>
+                        </a>
                     </div>
                 </li>
             </ul>
-            <div class="relative w-96">
-                <input type="text" placeholder="Buscar beats, kits, productores..." class="w-full pl-4 pr-10 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white text-sm outline-none focus:bg-white/10 focus:border-violet-500/50 transition-all duration-200" />
-                <i class="fas fa-search absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 text-sm"></i>
+
+            <div class="navbar-search">
+                <input type="text" placeholder="Buscar beats, kits, productores...">
+                <i class="fas fa-search"></i>
             </div>
         </div>
-        
-        <div class="flex items-center gap-3">
-            <a href="notifications" class="flex items-center justify-center w-9 h-9 bg-white/5 border border-white/10 rounded-lg text-[#999] hover:bg-white/10 hover:text-white transition-all duration-200">
-                <i class="fas fa-bell"></i>
-            </a>
-            <a href="cart" class="flex items-center justify-center w-9 h-9 bg-white/5 border border-white/10 rounded-lg text-[#999] hover:bg-white/10 hover:text-white transition-all duration-200">
-                <i class="fas fa-shopping-cart"></i>
-            </a>
-            <div class="relative user-dropdown">
-                <button onclick="toggleUserDropdown()" class="flex items-center justify-center w-9 h-9 bg-white/5 border border-white/10 rounded-lg text-[#999] hover:bg-white/10 hover:text-white transition-all duration-200">
-                    <i class="fas fa-user"></i>
-                </button>
-                <div class="user-dropdown-menu absolute top-full right-0 mt-3 w-64 bg-[rgba(20,20,20,0.98)] border border-white/10 rounded-xl shadow-2xl backdrop-blur-lg p-3 transition-all duration-300 transform-gpu opacity-0 invisible -translate-y-2">
-                    <div class="flex items-center gap-3 p-3 border-b border-white/10 mb-2">
-                        <div class="user-dropdown-avatar flex items-center justify-center w-10 h-10 rounded-full bg-zinc-800 font-bold text-zinc-500 text-base skeleton-avatar"></div>
-                        <div class="flex-1 overflow-hidden">
-                            <p class="user-dropdown-name font-semibold text-sm text-white truncate skeleton-text">Cargando...</p>
-                            <p class="user-dropdown-email text-xs text-zinc-500 truncate skeleton-text">email@loading.com</p>
+
+        <div class="navbar-right">
+            <a href="notifications" class="navbar-icon-button"><i class="fas fa-bell"></i></a>
+            <a href="cart" class="navbar-icon-button"><i class="fas fa-shopping-cart"></i></a>
+            <div class="user-dropdown">
+                <div class="navbar-icon-button" onclick="toggleUserDropdown()"><i class="fas fa-user"></i></div>
+                <div class="user-dropdown-menu">
+                    <div class="user-dropdown-header">
+                        <div class="user-dropdown-avatar">?</div>
+                        <div class="user-dropdown-info">
+                            <div class="user-dropdown-name">Usuario</div>
+                            <div class="user-dropdown-email">usuario@offszn.com</div>
                         </div>
                     </div>
-                    <a href="profile" class="flex items-center gap-2.5 px-3 py-2 text-sm rounded-lg transition-colors text-zinc-400 hover:bg-violet-500/10 hover:text-white">
-                        <i class="fas fa-user-circle w-4 text-center"></i> Mi Perfil
-                    </a>
-                    <a href="dashboard" class="flex items-center gap-2.5 px-3 py-2 text-sm rounded-lg transition-colors text-zinc-400 hover:bg-violet-500/10 hover:text-white">
-                        <i class="fas fa-th-large w-4 text-center"></i> Dashboard
-                    </a>
-                    <a href="account-settings" class="flex items-center gap-2.5 px-3 py-2 text-sm rounded-lg transition-colors text-zinc-400 hover:bg-violet-500/10 hover:text-white">
-                        <i class="fas fa-cog w-4 text-center"></i> Configuración
-                    </a>
-                    <div class="mt-2 pt-2 border-t border-white/10">
-                        <a href="#" class="logout-btn flex items-center gap-2.5 px-3 py-2 text-sm rounded-lg transition-colors text-red-500 hover:bg-red-500/10">
-                            <i class="fas fa-sign-out-alt w-4 text-center"></i> Cerrar Sesión
-                        </a>
-                    </div>
+                    <a href="profile" class="user-dropdown-item"><i class="fas fa-user-circle"></i><span>Mi Perfil</span></a>
+                    <a href="dashboard" class="user-dropdown-item"><i class="fas fa-th-large"></i><span>Dashboard</span></a>
+                    <a href="wallet" class="user-dropdown-item"><i class="fas fa-wallet"></i><span>Billetera</span></a>
+                    <a href="mis-compras" class="user-dropdown-item"><i class="fas fa-shopping-bag"></i><span>Mis Compras</span></a>
+                    <a href="#" class="user-dropdown-item disabled"><i class="fas fa-chart-line"></i><span>Analíticas</span><span class="soon-badge">Pronto</span></a>
+                    <a href="account-settings" class="user-dropdown-item"><i class="fas fa-cog"></i><span>Configuración</span></a>
+                    <a href="help" class="user-dropdown-item"><i class="fas fa-question-circle"></i><span>Ayuda</span></a>
+                    <a href="#" id="navbar-logout-btn" class="user-dropdown-item logout"><i class="fas fa-sign-out-alt"></i><span>Cerrar Sesión</span></a>
                 </div>
             </div>
         </div>
     </nav>
 
-    <div class="flex flex-col xl:flex-row min-h-screen">
-        <!-- SIDEBAR -->
-        <aside class="bg-[rgba(15,15,15,0.6)] border-b xl:border-b-0 xl:border-r border-white/10 xl:sticky xl:top-[57px] xl:h-[calc(100vh-57px)] xl:overflow-y-auto scrollbar-thin xl:w-[260px]">
-            <div class="p-5 border-b border-white/10">
-                <div class="flex items-center gap-3">
-                    <div class="profile-avatar flex items-center justify-center w-11 h-11 rounded-full bg-zinc-800 font-bold text-xl text-zinc-500 skeleton-avatar">?</div>
-                    <div class="flex-1 overflow-hidden">
-                        <div class="profile-name font-semibold text-white truncate skeleton-text">Cargando...</div>
+    <!-- Dashboard Container -->
+    <div class="dashboard-container">
+
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="profile-header">
+                <div class="profile-info">
+                    <div class="profile-avatar">?</div>
+                    <div>
+                        <div class="profile-name">Usuario</div>
                     </div>
                 </div>
             </div>
-            
-            <div class="p-5 border-b border-white/10 bg-violet-500/5">
-                <div class="text-xs text-zinc-400 uppercase tracking-wider font-semibold mb-1.5">Saldo Disponible</div>
-                <div class="wallet-amount text-3xl font-bold text-white skeleton-text">$0.00</div>
+
+            <div class="wallet-section">
+                <div class="wallet-label">Saldo Disponible</div>
+                <div class="wallet-amount">$0.00</div>
             </div>
-            
-            <div class="p-5">
-                <button onclick="window.location.href='subir-kit.html'" class="w-full py-3.5 px-4.5 bg-violet-600 text-white rounded-lg font-semibold flex items-center justify-center gap-2 hover:bg-violet-700 hover:-translate-y-0.5 transition-all duration-200 text-sm">
-                    <i class="fas fa-cloud-upload-alt"></i> Subir Kit
-                </button>
+
+            <button class="upload-btn" onclick="window.location.href='subir-kit.html'">
+                <i class="fas fa-cloud-upload-alt"></i> Subir Kit
+            </button>
+
+            <div class="sidebar-search">
+                <input type="text" placeholder="Buscar en favoritos..." id="search-favorites">
+                <i class="fas fa-search"></i>
             </div>
-            
-            <div class="px-5 pb-2">
-                <div class="relative">
-                    <input type="text" placeholder="Buscar..." class="w-full pl-4 pr-10 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white text-sm outline-none focus:bg-white/10 focus:border-violet-500/50 transition-all duration-200" />
-                    <i class="fas fa-search absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 text-sm"></i>
-                </div>
+
+            <div class="sidebar-menu">
+                <div class="menu-section-title">Principal</div>
+                <a href="dashboard" class="menu-item"><i class="fas fa-th-large"></i><span>Dashboard</span></a>
+                <a href="mis-kits" class="menu-item"><i class="fas fa-music"></i><span>Mis Kits</span></a>
+                <a href="#" class="menu-item disabled"><i class="fas fa-chart-line"></i><span>Analíticas</span><span class="soon-badge">Pronto</span></a>
+                <a href="favoritos" class="menu-item active"><i class="fas fa-heart"></i><span>Favoritos</span></a>
+                <a href="#" class="menu-item"><i class="fas fa-history"></i><span>Historial</span></a>
+
+                <div class="menu-divider"></div>
+
+                <div class="menu-section-title">Colaboración</div>
+                <a href="colaboraciones" class="menu-item"><i class="fas fa-users"></i><span>Colaboraciones</span></a>
+
+                <div class="menu-divider"></div>
+
+                <div class="menu-section-title">Compras</div>
+                <a href="mis-compras" class="menu-item"><i class="fas fa-shopping-bag"></i><span>Mis Compras</span></a>
+                <a href="gift-cards" class="menu-item"><i class="fas fa-gift"></i><span>Gift Cards</span></a>
+                <a href="messages" class="menu-item"><i class="fas fa-envelope"></i><span>Mensajes</span></a>
+
+                <div class="menu-divider"></div>
+
+                <div class="menu-section-title">Configuración</div>
+                <a href="account-settings" class="menu-item"><i class="fas fa-cog"></i><span>Configuración</span></a>
+                <a href="blog" class="menu-item"><i class="fas fa-book-open"></i><span>Blog</span></a>
             </div>
-            
-            <nav class="py-3">
-                <div class="px-5 py-3 text-xs text-zinc-500 uppercase tracking-widest font-bold">Principal</div>
-                <a href="dashboard" class="flex items-center gap-3 px-5 py-2.5 text-sm font-medium transition-colors text-zinc-400 hover:bg-white/5 hover:text-white">
-                    <i class="fas fa-th-large w-4 text-center text-base"></i> Dashboard
-                </a>
-                <a href="mis-kits" class="flex items-center gap-3 px-5 py-2.5 text-sm font-medium transition-colors text-zinc-400 hover:bg-white/5 hover:text-white">
-                    <i class="fas fa-music w-4 text-center text-base"></i> Mis Kits
-                </a>
-                <a href="favoritos" class="flex items-center gap-3 px-5 py-2.5 text-sm font-medium transition-colors bg-violet-500/10 text-white border-l-2 border-violet-500">
-                    <i class="fas fa-heart w-4 text-center text-base"></i> Favoritos
-                </a>
-                
-                <div class="mx-5 my-3 border-t border-white/10"></div>
-                
-                <div class="px-5 py-3 text-xs text-zinc-500 uppercase tracking-widest font-bold">Colaboración</div>
-                <a href="colaboraciones" class="flex items-center gap-3 px-5 py-2.5 text-sm font-medium transition-colors text-zinc-400 hover:bg-white/5 hover:text-white">
-                    <i class="fas fa-users w-4 text-center text-base"></i> Colaboraciones
-                </a>
-                
-                <div class="mx-5 my-3 border-t border-white/10"></div>
-                
-                <div class="px-5 py-3 text-xs text-zinc-500 uppercase tracking-widest font-bold">Compras</div>
-                <a href="mis-compras" class="flex items-center gap-3 px-5 py-2.5 text-sm font-medium transition-colors text-zinc-400 hover:bg-white/5 hover:text-white">
-                    <i class="fas fa-shopping-bag w-4 text-center text-base"></i> Mis Compras
-                </a>
-                <a href="Gift-Cards" class="flex items-center gap-3 px-5 py-2.5 text-sm font-medium transition-colors text-zinc-400 hover:bg-white/5 hover:text-white">
-                    <i class="fas fa-gift w-4 text-center text-base"></i> Gift Cards
-                </a>
-            </nav>
-            
-            <div class="p-5 mt-4">
-                <a href="#" class="logout-btn w-full py-3 bg-red-500/10 border border-red-500/20 text-red-500 rounded-lg font-semibold flex items-center justify-center gap-2 hover:bg-red-500/15 hover:border-red-500/30 transition-all duration-200 text-sm">
-                    <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
-                </a>
-            </div>
+
+            <a href="#" id="sidebar-logout-btn" class="logout-btn"><i class="fas fa-sign-out-alt"></i><span>Cerrar Sesión</span></a>
         </aside>
 
-        <!-- MAIN CONTENT -->
-        <main class="flex-1">
-            <!-- Hero Section -->
-            <section class="bg-gradient-to-b from-[#23103d] to-[#0a0a0a] text-center py-20 px-6 border-b border-pink-900/30 relative overflow-hidden">
-                <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(219,39,119,0.15)_0%,_transparent_60%)]"></div>
-                <div class="relative z-10 max-w-4xl mx-auto">
-                    <div class="inline-flex items-center gap-3 bg-gradient-to-r from-pink-600/20 to-pink-500/20 border border-pink-500/30 text-pink-400 px-6 py-2 rounded-full text-sm font-bold uppercase tracking-wider mb-6">
-                        <i class="fas fa-heart animate-pulse"></i>
-                        Colección Personal
-                    </div>
-                    <h1 class="font-montserrat text-5xl md:text-6xl font-black text-white uppercase tracking-wider mb-4">
-                        Mis Favoritos
-                    </h1>
-                    <p class="text-xl text-zinc-300 max-w-2xl mx-auto mb-8 leading-relaxed">
-                        Los kits que amas, siempre a tu alcance. Accede rápidamente a tu colección guardada.
-                    </p>
-                    <div class="flex justify-center gap-4 flex-wrap">
-                        <div class="glass-effect px-6 py-3 rounded-xl">
-                            <span class="text-3xl font-bold text-pink-400" id="total-favorites">0</span>
-                            <span class="text-sm text-zinc-400 ml-2">Favoritos</span>
-                        </div>
-                        <div class="glass-effect px-6 py-3 rounded-xl">
-                            <span class="text-3xl font-bold text-violet-400">∞</span>
-                            <span class="text-sm text-zinc-400 ml-2">Posibilidades</span>
-                        </div>
-                    </div>
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="page-header">
+                <div class="page-title-section">
+                    <h1>Mis Favoritos ❤️</h1>
+                    <p class="page-subtitle">Tu colección de productos guardados</p>
                 </div>
-            </section>
+                <div class="header-actions">
+                    <button class="header-btn secondary" onclick="window.location.href='drum-kits'">
+                        <i class="fas fa-compass"></i> Explorar Más
+                    </button>
+                </div>
+            </div>
 
-            <!-- Filters Section -->
-            <section class="bg-[rgba(15,10,35,0.5)] py-8 px-6 border-b border-pink-900/20">
-                <div class="max-w-7xl mx-auto">
-                    <div class="flex flex-col md:flex-row gap-4">
-                        <div class="relative flex-1">
-                            <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500"></i>
-                            <input type="text" id="search-input" placeholder="Buscar en tus favoritos..." class="w-full pl-12 pr-4 py-3.5 bg-white/5 border border-white/10 rounded-xl text-white text-sm outline-none focus:bg-white/10 focus:border-pink-500/50 transition-all duration-200" />
-                        </div>
-                        <select id="sort-select" class="px-6 py-3.5 bg-white/5 border border-white/10 rounded-xl text-white text-sm outline-none focus:bg-white/10 focus:border-pink-500/50 transition-all duration-200 cursor-pointer">
-                            <option value="createdAt_desc">Más Recientes</option>
-                            <option value="createdAt_asc">Más Antiguos</option>
-                            <option value="price_desc">Precio: Mayor a Menor</option>
-                            <option value="price_asc">Precio: Menor a Mayor</option>
-                        </select>
+            <!-- Stats Row -->
+            <div class="stats-row">
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div class="stat-icon"><i class="fas fa-heart"></i></div>
                     </div>
+                    <div class="stat-value">0</div>
+                    <div class="stat-label">Total de Favoritos</div>
                 </div>
-            </section>
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div class="stat-icon"><i class="fas fa-drum"></i></div>
+                    </div>
+                    <div class="stat-value">0</div>
+                    <div class="stat-label">Drum Kits</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div class="stat-icon"><i class="fas fa-music"></i></div>
+                    </div>
+                    <div class="stat-value">0</div>
+                    <div class="stat-label">Beats & Samples</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div class="stat-icon"><i class="fas fa-sliders-h"></i></div>
+                    </div>
+                    <div class="stat-value">0</div>
+                    <div class="stat-label">Presets</div>
+                </div>
+            </div>
 
-            <!-- Kits Grid -->
-            <section class="py-16 px-6">
-                <div class="max-w-7xl mx-auto" id="kits-container">
-                    <!-- Skeleton Loading -->
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                        <div class="kit-card bg-gradient-to-br from-[rgba(26,10,46,0.6)] to-[rgba(15,10,35,0.6)] border border-pink-900/40 rounded-2xl overflow-hidden">
-                            <div class="w-full h-48 skeleton-loader"></div>
-                            <div class="p-5">
-                                <div class="h-6 w-3/4 rounded skeleton-loader mb-3"></div>
-                                <div class="flex justify-between items-center pt-4 border-t border-white/10">
-                                    <div class="h-8 w-20 rounded skeleton-loader"></div>
-                                    <div class="h-8 w-16 rounded skeleton-loader"></div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="kit-card bg-gradient-to-br from-[rgba(26,10,46,0.6)] to-[rgba(15,10,35,0.6)] border border-pink-900/40 rounded-2xl overflow-hidden">
-                            <div class="w-full h-48 skeleton-loader"></div>
-                            <div class="p-5">
-                                <div class="h-6 w-3/4 rounded skeleton-loader mb-3"></div>
-                                <div class="flex justify-between items-center pt-4 border-t border-white/10">
-                                    <div class="h-8 w-20 rounded skeleton-loader"></div>
-                                    <div class="h-8 w-16 rounded skeleton-loader"></div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="kit-card bg-gradient-to-br from-[rgba(26,10,46,0.6)] to-[rgba(15,10,35,0.6)] border border-pink-900/40 rounded-2xl overflow-hidden">
-                            <div class="w-full h-48 skeleton-loader"></div>
-                            <div class="p-5">
-                                <div class="h-6 w-3/4 rounded skeleton-loader mb-3"></div>
-                                <div class="flex justify-between items-center pt-4 border-t border-white/10">
-                                    <div class="h-8 w-20 rounded skeleton-loader"></div>
-                                    <div class="h-8 w-16 rounded skeleton-loader"></div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="kit-card bg-gradient-to-br from-[rgba(26,10,46,0.6)] to-[rgba(15,10,35,0.6)] border border-pink-900/40 rounded-2xl overflow-hidden">
-                            <div class="w-full h-48 skeleton-loader"></div>
-                            <div class="p-5">
-                                <div class="h-6 w-3/4 rounded skeleton-loader mb-3"></div>
-                                <div class="flex justify-between items-center pt-4 border-t border-white/10">
-                                    <div class="h-8 w-20 rounded skeleton-loader"></div>
-                                    <div class="h-8 w-16 rounded skeleton-loader"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+            <!-- Filters -->
+            <div class="filters-bar">
+                <div class="filter-group">
+                    <span class="filter-label">Tipo:</span>
+                    <select class="filter-select" id="filter-type">
+                        <option value="all">Todos</option>
+                        <option value="beat">Beats</option>
+                        <option value="drumkit">Drum Kits</option>
+                        <option value="preset">Presets</option>
+                        <option value="sample">Samples</option>
+                    </select>
                 </div>
-            </section>
+                <div class="filter-group">
+                    <span class="filter-label">Ordenar:</span>
+                    <select class="filter-select" id="filter-sort">
+                        <option value="recent">Añadidos Recientemente</option>
+                        <option value="oldest">Más Antiguos</option>
+                        <option value="popular">Más Populares</option>
+                        <option value="price-high">Precio: Mayor a Menor</option>
+                        <option value="price-low">Precio: Menor a Mayor</option>
+                    </select>
+                </div>
+                <div class="view-toggle">
+                    <button class="view-btn active" data-view="grid"><i class="fas fa-th"></i></button>
+                    <button class="view-btn" data-view="list"><i class="fas fa-list"></i></button>
+                </div>
+            </div>
+
+            <!-- Empty State (mostrado por defecto hasta que se conecte el backend) -->
+            <div class="empty-state" id="empty-state">
+                <i class="fas fa-heart-broken"></i>
+                <h3>Aún no tienes favoritos</h3>
+                <p>
+                    Explora nuestro marketplace y guarda tus productos favoritos para acceder a ellos fácilmente. 
+                    Haz click en el ícono de corazón <i class="fas fa-heart" style="color:#ef4444;"></i> en cualquier producto para agregarlo aquí.
+                </p>
+                <a href="drum-kits" class="empty-state-btn">
+                    <i class="fas fa-compass"></i> Explorar Productos
+                </a>
+            </div>
+
+            <!-- Products Grid (oculto por defecto) -->
+            <div class="products-grid" id="products-grid" style="display: none;">
+                <!-- Los productos favoritos se cargarán dinámicamente aquí desde el backend -->
+            </div>
         </main>
     </div>
 
-    <script src="favoritos.js"></script>
+    <!-- Logout Overlay -->
+    <div id="logout-overlay">
+        <div class="logout-content">
+            <i class="fas fa-spinner fa-spin"></i>
+            <h2 id="logout-message">Te veremos pronto...</h2>
+        </div>
+    </div>
+
+    <script>
+        // ---------- ELEMENTOS DEL DOM ----------
+        const profileAvatar = document.querySelector('.profile-avatar');
+        const profileName = document.querySelector('.profile-name');
+        const walletAmount = document.querySelector('.wallet-amount');
+        const statsValues = document.querySelectorAll('.stat-value');
+        const productsGrid = document.getElementById('products-grid');
+        const emptyState = document.getElementById('empty-state');
+        const searchInput = document.getElementById('search-favorites');
+        const token = localStorage.getItem('authToken');
+        let userData = null;
+        let allFavorites = [];
+
+        // ---------- GIFT CARDS STATE ----------
+        const STORAGE_KEY = 'offszn_giftcards_state';
+        const CACHE_KEY = 'offszn_user_cache';
+        let appState = { totalBalance: 0, giftCards: [] };
+
+        // ---------- API URL ----------
+        let API_URL = '';
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            API_URL = 'http://localhost:3000/api';
+        } else {
+            API_URL = 'https://offszn-academy.onrender.com/api';
+        }
+
+        // ---------- VERIFICAR TOKEN ----------
+        if (!token) {
+            console.error("Favoritos: No hay token, redirigiendo al login.");
+            window.location.replace('/pages/login.html');
+        }
+
+        // ---------- SKELETON LOADING ----------
+        function showSkeletonLoading() {
+            if (profileAvatar) profileAvatar.classList.add('skeleton');
+            
+            if (walletAmount) {
+                walletAmount.classList.add('skeleton');
+                walletAmount.textContent = '$000.00';
+            }
+
+            statsValues.forEach(el => {
+                el.classList.add('skeleton');
+                el.textContent = '000';
+            });
+
+            if (productsGrid) {
+                productsGrid.style.display = 'grid';
+                productsGrid.innerHTML = `
+                    <div class="product-card skeleton" style="height:400px;"></div>
+                    <div class="product-card skeleton" style="height:400px;"></div>
+                    <div class="product-card skeleton" style="height:400px;"></div>
+                `;
+            }
+            
+            if (emptyState) emptyState.style.display = 'none';
+        }
+
+        function hideSkeletonLoading() {
+            document.querySelectorAll('.skeleton').forEach(el => {
+                el.classList.remove('skeleton');
+                el.classList.add('fade-in');
+            });
+        }
+
+        // ---------- CACHÉ DE USUARIO ----------
+        function loadCachedUser() {
+            try {
+                const cached = localStorage.getItem(CACHE_KEY);
+                if (cached) {
+                    const cachedData = JSON.parse(cached);
+                    console.log('Cargando datos desde caché...');
+                    updateUserUI(cachedData, true);
+                    return true;
+                }
+            } catch (err) {
+                console.error('Error al cargar caché:', err);
+            }
+            return false;
+        }
+
+        function saveUserCache(userData) {
+            try {
+                localStorage.setItem(CACHE_KEY, JSON.stringify(userData));
+            } catch (err) {
+                console.error('Error al guardar caché:', err);
+            }
+        }
+
+        // ---------- ACTUALIZAR UI DE USUARIO ----------
+        function updateUserUI(userData, fromCache = false) {
+            if (profileName) {
+                profileName.textContent = `${userData.first_name || ''} ${userData.lastName || ''}`.trim() || userData.nickname;
+            }
+
+            if (profileAvatar) {
+                const initial = (userData.first_name || userData.nickname || 'U').charAt(0).toUpperCase();
+                profileAvatar.textContent = initial;
+                profileAvatar.classList.remove('skeleton');
+                profileAvatar.classList.add('fade-in');
+            }
+
+            if (!fromCache) {
+                hideSkeletonLoading();
+            }
+        }
+
+        // ---------- GIFT CARDS ----------
+        function loadGiftCardsState() {
+            try {
+                const saved = localStorage.getItem(STORAGE_KEY);
+                if (saved) {
+                    appState = JSON.parse(saved);
+                    updateWalletAmount();
+                }
+            } catch (err) {
+                console.error('Error al cargar estado de gift cards:', err);
+            }
+        }
+
+        function updateWalletAmount() {
+            if (walletAmount) {
+                walletAmount.textContent = `${appState.totalBalance.toFixed(2)}`;
+                walletAmount.classList.remove('skeleton');
+            }
+        }
+
+        // ---------- CARGAR DATOS DEL DASHBOARD ----------
+        async function loadDashboardData() {
+            try {
+                const userResponse = await fetch(`${API_URL}/me`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (!userResponse.ok) {
+                    localStorage.removeItem('authToken');
+                    throw new Error(`Error ${userResponse.status}: No se pudieron obtener los datos del usuario.`);
+                }
+
+                userData = await userResponse.json();
+                console.log("Datos del usuario:", userData);
+
+                localStorage.setItem('userId', userData.id);
+                saveUserCache(userData);
+                updateUserUI(userData, false);
+                loadGiftCardsState();
+
+                await loadFavorites();
+
+            } catch (error) {
+                console.error("Error al cargar datos:", error);
+                hideSkeletonLoading();
+
+                if (error.message.includes('401') || error.message.includes('403')) {
+                    localStorage.removeItem('authToken');
+                    localStorage.removeItem(CACHE_KEY);
+                    window.location.replace('/pages/login.html');
+                }
+            }
+        }
+
+        // ---------- CARGAR FAVORITOS ----------
+        async function loadFavorites() {
+            if (!productsGrid || !emptyState) return;
+
+            try {
+                const response = await fetch(`${API_URL}/me/favorites`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (!response.ok) throw new Error('No se pudieron cargar tus favoritos.');
+
+                allFavorites = await response.json();
+                console.log("Favoritos cargados:", allFavorites);
+
+                updateStats(allFavorites);
+
+                if (allFavorites.length === 0) {
+                    productsGrid.style.display = 'none';
+                    productsGrid.innerHTML = '';
+                    emptyState.style.display = 'block';
+                    hideSkeletonLoading();
+                } else {
+                    emptyState.style.display = 'none';
+                    productsGrid.style.display = 'grid';
+                    renderFavorites(allFavorites);
+                    hideSkeletonLoading();
+                }
+
+            } catch (error) {
+                console.error("Error cargando favoritos:", error);
+                productsGrid.innerHTML = `<p style="color:red;grid-column:1/-1;">Error al cargar tus favoritos: ${error.message}</p>`;
+                hideSkeletonLoading();
+            }
+        }
+
+        // ---------- ACTUALIZAR ESTADÍSTICAS ----------
+        function updateStats(favorites) {
+            const stats = {
+                total: favorites.length,
+                drumkits: favorites.filter(f => f.product_type === 'drumkit').length,
+                beats: favorites.filter(f => ['beat', 'sample'].includes(f.product_type)).length,
+                presets: favorites.filter(f => f.product_type === 'preset').length
+            };
+
+            const statElements = document.querySelectorAll('.stat-value');
+            if (statElements[0]) statElements[0].textContent = stats.total;
+            if (statElements[1]) statElements[1].textContent = stats.drumkits;
+            if (statElements[2]) statElements[2].textContent = stats.beats;
+            if (statElements[3]) statElements[3].textContent = stats.presets;
+        }
+
+        // ---------- RENDERIZAR FAVORITOS ----------
+        function renderFavorites(favorites) {
+            const productHTML = favorites.map(product => `
+                <div class="product-card fade-in">
+                    <div class="product-image" style="${product.image_url ? `background-image: url(${product.image_url}); background-size:cover; background-position:center;` : ''}">
+                        ${!product.image_url ? '<i class="fas fa-music"></i>' : ''}
+                        <span class="favorite-badge">
+                            <i class="fas fa-heart"></i> Favorito
+                        </span>
+                        <span class="product-badge">${product.product_type || 'Kit'}</span>
+                    </div>
+                    <div class="product-info">
+                        <div class="product-title">${product.name}</div>
+                        <div class="product-creator">
+                            <i class="fas fa-user"></i> por ${product.creator_name || 'Productor'}
+                        </div>
+                        <div class="product-meta">
+                            ${product.bpm ? `<span><i class="fas fa-tachometer-alt"></i> ${product.bpm} BPM</span>` : ''}
+                            ${product.key ? `<span><i class="fas fa-music"></i> ${product.key}</span>` : ''}
+                            ${!product.bpm && !product.key ? `<span><i class="fas fa-calendar"></i> ${new Date(product.created_at).toLocaleDateString()}</span>` : ''}
+                        </div>
+                        <div class="product-price">${parseFloat(product.price || 0).toFixed(2)}</div>
+                        <div class="product-stats">
+                            <span><i class="fas fa-eye"></i> ${product.views || 0}</span>
+                            <span><i class="fas fa-shopping-bag"></i> ${product.sales || 0}</span>
+                            <span><i class="fas fa-heart"></i> ${product.likes || 0}</span>
+                        </div>
+                    </div>
+                    <div class="product-actions">
+                        <button class="action-btn" onclick="viewProduct(${product.id})">
+                            <i class="fas fa-eye"></i> Ver
+                        </button>
+                        <button class="action-btn" onclick="addToCart(${product.id})">
+                            <i class="fas fa-shopping-cart"></i> Añadir
+                        </button>
+                        <button class="action-btn remove" onclick="removeFavorite(${product.id}, '${product.name}')">
+                            <i class="fas fa-heart-broken"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+
+            productsGrid.innerHTML = productHTML;
+        }
+
+        // ---------- FUNCIONES DE ACCIONES ----------
+        window.viewProduct = function(id) {
+            console.log('Ver producto:', id);
+            window.location.href = `producto.html?id=${id}`;
+        };
+
+        window.addToCart = function(id) {
+            console.log('Añadir al carrito:', id);
+            // Implementar lógica de añadir al carrito
+            alert('Producto añadido al carrito');
+        };
+
+        window.removeFavorite = async function(id, name) {
+            if (!confirm(`¿Quitar "${name}" de favoritos?`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/favorites/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (!response.ok) throw new Error('No se pudo quitar de favoritos.');
+
+                alert('Eliminado de favoritos');
+                loadFavorites();
+
+            } catch (error) {
+                console.error('Error eliminando favorito:', error);
+                alert('Error al quitar de favoritos: ' + error.message);
+            }
+        };
+
+        // ---------- BÚSQUEDA ----------
+        if (searchInput) {
+            searchInput.addEventListener('input', (e) => {
+                const query = e.target.value.toLowerCase();
+                const filtered = allFavorites.filter(p => 
+                    p.name.toLowerCase().includes(query) ||
+                    (p.creator_name && p.creator_name.toLowerCase().includes(query))
+                );
+                renderFavorites(filtered);
+            });
+        }
+
+        // ---------- FILTROS ----------
+        const filterType = document.getElementById('filter-type');
+        const filterSort = document.getElementById('filter-sort');
+
+        if (filterType) {
+            filterType.addEventListener('change', applyFilters);
+        }
+        if (filterSort) {
+            filterSort.addEventListener('change', applyFilters);
+        }
+
+        function applyFilters() {
+            let filtered = [...allFavorites];
+
+            const type = filterType?.value;
+            if (type && type !== 'all') {
+                filtered = filtered.filter(p => p.product_type === type);
+            }
+
+            const sort = filterSort?.value;
+            if (sort) {
+                switch(sort) {
+                    case 'recent':
+                        filtered.sort((a, b) => new Date(b.favorited_at) - new Date(a.favorited_at));
+                        break;
+                    case 'oldest':
+                        filtered.sort((a, b) => new Date(a.favorited_at) - new Date(b.favorited_at));
+                        break;
+                    case 'popular':
+                        filtered.sort((a, b) => (b.views || 0) - (a.views || 0));
+                        break;
+                    case 'price-high':
+                        filtered.sort((a, b) => parseFloat(b.price || 0) - parseFloat(a.price || 0));
+                        break;
+                    case 'price-low':
+                        filtered.sort((a, b) => parseFloat(a.price || 0) - parseFloat(b.price || 0));
+                        break;
+                }
+            }
+
+            renderFavorites(filtered);
+        }
+
+        // ---------- VIEW TOGGLE ----------
+        document.querySelectorAll('.view-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                const view = btn.dataset.view;
+                console.log('Cambiar vista a:', view);
+            });
+        });
+
+        // ---------- LOGOUT HANDLER ----------
+        function handleLogout(e) {
+            e.preventDefault();
+            console.log("Iniciando cierre de sesión...");
+
+            const overlay = document.getElementById('logout-overlay');
+            const messageEl = document.getElementById('logout-message');
+            const iconEl = overlay.querySelector('i');
+
+            if (!overlay || !messageEl || !iconEl) {
+                console.warn("Faltan elementos del DOM para el logout animado. Usando fallback.");
+                localStorage.removeItem('authToken');
+                window.location.replace('/index.html');
+                return;
+            }
+
+            messageEl.textContent = "Te veremos pronto...";
+            iconEl.className = 'fas fa-spinner fa-spin';
+            overlay.classList.add('active');
+
+            setTimeout(() => {
+                localStorage.removeItem('authToken');
+                console.log("Sesión cerrada. Mostrando mensaje de despedida.");
+                messageEl.textContent = "¡Cerraste sesión!";
+                iconEl.className = 'fas fa-check-circle';
+            }, 1500);
+
+            setTimeout(() => {
+                console.log("Desvaneciendo overlay...");
+                overlay.classList.add('fading-out');
+            }, 3000);
+
+            setTimeout(() => {
+                console.log("Redirigiendo a index.html");
+                window.location.replace('/index.html');
+            }, 3500);
+        }
+
+        // ---------- DROPDOWN TOGGLE ----------
+        window.toggleUserDropdown = function() {
+            const dropdown = document.querySelector('.user-dropdown');
+            dropdown.classList.toggle('active');
+        };
+
+        // Close dropdown on outside click
+        document.addEventListener('click', e => {
+            const userDropdown = document.querySelector('.user-dropdown');
+            const userBtn = document.querySelector('.user-dropdown .navbar-icon-button');
+            if (!userDropdown.contains(e.target) && e.target !== userBtn) {
+                userDropdown.classList.remove('active');
+            }
+        });
+
+        // ---------- INICIALIZACIÓN ----------
+        document.addEventListener('DOMContentLoaded', () => {
+            // Attach logout handlers
+            const sidebarLogoutButton = document.getElementById('sidebar-logout-btn');
+            if (sidebarLogoutButton) {
+                sidebarLogoutButton.addEventListener('click', handleLogout);
+            }
+
+            const navbarLogoutButton = document.getElementById('navbar-logout-btn');
+            if (navbarLogoutButton) {
+                navbarLogoutButton.addEventListener('click', handleLogout);
+            }
+
+            showSkeletonLoading();
+            loadCachedUser();
+            loadDashboardData();
+        });
+    </script>
+
 </body>
+
 </html>
