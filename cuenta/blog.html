@@ -324,6 +324,23 @@
             overflow-y: auto;
         }
 
+        /* ===== CSS DE SCROLLBAR AÑADIDO (LA CORRECCIÓN) ===== */
+        .sidebar::-webkit-scrollbar {
+            width: 5px;
+        }
+        .sidebar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .sidebar::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, .1);
+            border-radius: 3px;
+        }
+        .sidebar::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, .2);
+        }
+        /* ===== FIN DE CSS SCROLLBAR ===== */
+
+
         /* Profile Header (con Skeletons) */
         .profile-header {
             padding: 24px 20px;
@@ -596,6 +613,7 @@
             display: flex;
             gap: 12px;
             align-items: center;
+            flex-wrap: wrap; /* Para responsive */
         }
         .file-input-wrapper {
             position: relative;
@@ -645,6 +663,36 @@
         .hashtags-input:focus {
             border-color: rgba(139, 92, 246, 0.5);
         }
+        
+        /* ===== CONTADOR DE CARACTERES (NUEVO) ===== */
+        .form-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: -8px;
+        }
+        .error-message {
+            color: #fca5a5;
+            font-size: 0.8rem;
+            display: none;
+            align-items: center;
+            gap: 6px;
+        }
+        .error-message.show {
+            display: flex;
+        }
+        #char-counter {
+            font-size: 0.8rem;
+            color: #666;
+            margin-left: auto; /* Mueve el contador a la derecha */
+            padding-right: 5px;
+        }
+        #char-counter.limit-reached {
+            color: #ef4444;
+            font-weight: 600;
+        }
+        /* ===== FIN CONTADOR ===== */
+
         .btn-publish {
             background: #8b5cf6;
             color: #fff;
@@ -669,18 +717,6 @@
             cursor: not-allowed;
         }
 
-        /* ===== MENSAJE DE ERROR ===== */
-        .error-message {
-            color: #fca5a5;
-            font-size: 0.8rem;
-            margin-top: 8px;
-            display: none;
-            align-items: center;
-            gap: 6px;
-        }
-        .error-message.show {
-            display: flex;
-        }
 
         /* ===== POSTS LIST ===== */
         .posts-list {
@@ -1156,11 +1192,12 @@
             <div class="create-post-form" id="create-post-form">
                 <div class="form-left">
                     <textarea class="post-textarea" id="post-content"
-                        placeholder="¿Qué estás pensando?"></textarea>
+                        placeholder="¿Qué estás pensando?" maxlength="1000"></textarea>
+                    
                     <div class="form-actions">
                         <div class="file-input-wrapper">
                             <input type="file" class="file-input" id="post-file"
-                                accept="image/*,video/*,.pdf,.zip,.rar">
+                                accept="image/*,video/*">
                             <label for="post-file" class="file-label">
                                 <i class="fas fa-paperclip"></i>
                                 <span>Archivo</span>
@@ -1170,9 +1207,13 @@
                         <input type="text" class="hashtags-input" id="post-hashtags"
                             placeholder="#produccion #beats">
                     </div>
-                    <div class="error-message" id="post-error">
-                        <i class="fas fa-exclamation-triangle"></i>
-                        <span></span>
+                    
+                    <div class="form-footer">
+                        <div class="error-message" id="post-error">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <span></span>
+                        </div>
+                        <span id="char-counter">0 / 1000</span>
                     </div>
                 </div>
                 <button class="btn-publish" id="btn-publish">
@@ -1212,9 +1253,13 @@
         // ---------- CLOSE DROPDOWNS ON OUTSIDE CLICK (Estándar) ----------
         document.addEventListener('click', e => {
             const userDropdown = document.querySelector('.user-dropdown');
-            const userBtn = document.querySelector('.user-dropdown .navbar-icon-button');
-            if (userDropdown && !userDropdown.contains(e.target) && e.target !== userBtn) {
-                userDropdown.classList.remove('active');
+            // Asegurarse que userDropdown existe antes de llamar a .contains
+            if (userDropdown && !userDropdown.contains(e.target)) {
+                // Asegurarse que el botón existe antes de compararlo
+                const userBtn = document.querySelector('.user-dropdown .navbar-icon-button');
+                if (userBtn && e.target !== userBtn && !userBtn.contains(e.target)) {
+                    userDropdown.classList.remove('active');
+                }
             }
         });
 
@@ -1239,6 +1284,7 @@
             const fileNameEl = document.getElementById('file-name');
             const errorEl = document.getElementById('post-error');
             const successEl = document.getElementById('success-animation');
+            const charCounterEl = document.getElementById('char-counter'); // CONTADOR
 
             // ---------- ESTADO Y API (Estándar) ----------
             const STORAGE_KEY = 'offszn_giftcards_state';
@@ -1370,7 +1416,6 @@
                 emptyState.classList.remove('show');
 
                 try {
-                    // Asumimos este endpoint para las publicaciones del usuario logueado
                     const response = await fetch(`${API_URL}/me/blog`, {
                         headers: { 'Authorization': `Bearer ${token}` }
                     });
@@ -1402,7 +1447,7 @@
                     <div class="post-card" data-id="${post.id}">
                         <div class="post-header">
                             <div class="post-author-info">
-                                <div class="post-author-avatar">${post.author.nickname[0]}</div>
+                                <div class="post-author-avatar">${post.author.nickname[0].toUpperCase()}</div>
                                 <div>
                                     <div class="post-author-name">${post.author.nickname}</div>
                                     <div class="post-date">${formatDate(post.created_at)}</div>
@@ -1418,7 +1463,7 @@
                         <div class="post-content">${escapeHtml(post.content)}</div>
                         ${post.attachment_url ? `
                             <a class="post-attachment" href="${post.attachment_url}" target="_blank">
-                                <div class="attachment-icon"><i class="fas fa-file"></i></div>
+                                <div class="attachment-icon"><i class="fas ${post.attachment_url.includes('video') ? 'fa-video' : 'fa-image'}"></i></div>
                                 <div class="attachment-name">${post.attachment_name || 'Archivo Adjunto'}</div>
                                 <div class="attachment-size">${formatBytes(post.attachment_size || 0)}</div>
                             </a>
@@ -1450,19 +1495,15 @@
                     return;
                 }
                 
-                // Validar archivo (si existe)
+                // La validación de tipo y tamaño ya se hizo en el 'change' listener
+                // Pero podemos re-validar por si acaso
                 if (file) {
-                    const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
-                    if (file.size > MAX_FILE_SIZE) {
-                        showError('El archivo es demasiado grande. Máximo 10 MB.');
-                        return;
-                    }
+                    if (!isFileValid(file)) return;
                 }
 
                 btnPublish.disabled = true;
                 btnPublish.querySelector('span').textContent = 'Publicando...';
 
-                // Usar FormData para enviar texto y archivo
                 const formData = new FormData();
                 formData.append('content', content);
                 formData.append('hashtags', hashtagsInput.value.trim());
@@ -1475,14 +1516,24 @@
                         method: 'POST',
                         headers: {
                             'Authorization': `Bearer ${token}`,
-                            // No 'Content-Type', FormData lo maneja
                         },
                         body: formData
                     });
 
+                    // MANEJO DEL ERROR DOCTYPE
                     if (!response.ok) {
-                        const errData = await response.json();
-                        throw new Error(errData.message || 'Error al publicar.');
+                        // Intentamos leer como JSON primero
+                        try {
+                            const errData = await response.json();
+                            throw new Error(errData.message || 'Error al publicar.');
+                        } catch (jsonError) {
+                            // Si falla (porque es HTML/DOCTYPE), mostramos el error que viste
+                            const textError = await response.text();
+                            if(textError.includes('<!DOCTYPE')) {
+                                throw new Error('Error de conexión con el servidor (Respuesta HTML). Revisa el endpoint de la API.');
+                            }
+                            throw new Error('Error desconocido al publicar.');
+                        }
                     }
                     
                     showSuccess();
@@ -1490,7 +1541,8 @@
                     await loadBlogPosts(); // Recargar la lista de posts
 
                 } catch (error) {
-                    showError(error.message);
+                    console.error(error); // Log completo en consola
+                    showError(error.message); // Muestra el error al usuario
                 } finally {
                     btnPublish.disabled = false;
                     btnPublish.querySelector('span').textContent = 'Publicar';
@@ -1518,32 +1570,26 @@
             
             // 6. Favorito (a API)
             window.toggleFavorite = async function(id) {
-                // Optimistic UI update
                 const favButton = document.querySelector(`.post-card[data-id="${id}"] .post-favorite`);
                 const isActivating = !favButton.classList.contains('active');
-                favButton.classList.toggle('active');
+                favButton.classList.toggle('active'); // Actualización optimista
 
                 try {
-                    // Asumimos un endpoint para favoritos
                     const response = await fetch(`${API_URL}/blog/${id}/favorite`, {
                         method: isActivating ? 'POST' : 'DELETE',
                         headers: { 'Authorization': `Bearer ${token}` }
                     });
                     
                     if (!response.ok) {
-                        // Revertir si falla
-                        favButton.classList.toggle('active');
+                        favButton.classList.toggle('active'); // Revertir si falla
                     }
-                    // No es necesario recargar todo, la UI ya se actualizó
-                    
                 } catch (error) {
                     console.error('Error al dar favorito:', error);
-                    // Revertir si falla
-                    favButton.classList.toggle('active');
+                    favButton.classList.toggle('active'); // Revertir si falla
                 }
             }
 
-            // ---------- FUNCIONES AUXILIARES (del HTML original) ----------
+            // ---------- FUNCIONES AUXILIARES (del HTML original + Mejoras) ----------
             function toggleCreateForm() {
                 createPostForm.classList.toggle('active');
                 if (createPostForm.classList.contains('active')) {
@@ -1558,6 +1604,8 @@
                 fileNameEl.textContent = '';
                 errorEl.classList.remove('show');
                 createPostForm.classList.remove('active');
+                charCounterEl.textContent = '0 / 1000'; // Resetear contador
+                charCounterEl.classList.remove('limit-reached');
             }
 
             function showError(message) {
@@ -1594,23 +1642,52 @@
                 return div.innerHTML;
             }
 
+            // Función de validación de archivo reutilizable
+            function isFileValid(file) {
+                 if (!file) return true; // No hay archivo, es válido
+
+                // 1. Validar Tipo
+                const allowedTypes = ['image/', 'video/'];
+                const isTypeAllowed = allowedTypes.some(type => file.type.startsWith(type));
+                if (!isTypeAllowed) {
+                    showError('Tipo de archivo no permitido. Solo se aceptan imágenes y videos.');
+                    fileInput.value = '';
+                    fileNameEl.textContent = '';
+                    return false;
+                }
+                
+                // 2. Validar Tamaño
+                const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
+                if (file.size > MAX_FILE_SIZE) {
+                    showError('El archivo es demasiado grande. Máximo 10 MB.');
+                    fileInput.value = '';
+                    fileNameEl.textContent = '';
+                    return false;
+                }
+
+                return true; // Es válido
+            }
+
             // ---------- EVENT LISTENERS (Estándar + Blog) ----------
             btnCreatePost.addEventListener('click', toggleCreateForm);
             btnPublish.addEventListener('click', handlePublishPost);
 
+            // Listener del contador de caracteres (NUEVO)
+            contentInput.addEventListener('input', () => {
+                const count = contentInput.value.length;
+                charCounterEl.textContent = `${count} / 1000`;
+                charCounterEl.classList.toggle('limit-reached', count >= 1000);
+            });
+
+            // Listener de validación de archivo (MEJORADO)
             fileInput.addEventListener('change', (e) => {
                 const file = e.target.files[0];
                 fileNameEl.textContent = '';
                 showError('');
-                if (!file) return;
-
-                const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
-                if (file.size > MAX_FILE_SIZE) {
-                    showError('El archivo es demasiado grande. Máximo 10 MB.');
-                    e.target.value = '';
-                    return;
+                
+                if (file && isFileValid(file)) {
+                    fileNameEl.textContent = `${file.name} (${formatBytes(file.size)})`;
                 }
-                fileNameEl.textContent = `${file.name} (${formatBytes(file.size)})`;
             });
             
             // Logout
