@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mis Favoritos - OFFSZN Productor</title>
+    <title>Colaboraciones - OFFSZN Productor</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
@@ -20,13 +20,16 @@
             background: #0a0a0a;
             color: #e5e5e5;
             overflow-x: hidden;
-            /* opacity: 0; <-- ELIMINADO PARA QUITAR PANTALLA NEGRA */
+            /* Se mantiene para el efecto de inicio si se desea */
+            opacity: 0;
             transition: opacity 0.3s ease-in;
         }
 
-        /* body.loaded { opacity: 1; } <-- ELIMINADO */
+        body.loaded {
+            opacity: 1;
+        }
 
-        /* ---------- NAVBAR ---------- */
+        /* ---------- NAVBAR (Común) ---------- */
         .navbar {
             display: flex;
             justify-content: space-between;
@@ -140,6 +143,8 @@
         .dropdown-item i {
             width: 18px;
             text-align: center;
+            direction: ltr;
+            display: inline-block;
         }
 
         .dropdown-divider {
@@ -203,6 +208,7 @@
             font-size: 16px;
             transition: all .2s;
             text-decoration: none;
+            position: relative;
         }
 
         .navbar-icon-button:hover {
@@ -326,7 +332,7 @@
             background: rgba(239, 68, 68, .1);
         }
 
-        /* ---------- DASHBOARD LAYOUT ---------- */
+        /* ---------- DASHBOARD LAYOUT (Común) ---------- */
         .dashboard-container {
             display: grid;
             grid-template-columns: 260px 1fr;
@@ -488,6 +494,7 @@
             text-decoration: none;
             font-size: .88rem;
             transition: all .2s;
+            position: relative;
             cursor: pointer;
             font-weight: 500;
         }
@@ -563,102 +570,125 @@
             border-color: rgba(239, 68, 68, .3);
         }
 
-        /* ---------- MAIN CONTENT ---------- */
+        /* ---------- MAIN CONTENT (Adaptado de favoritos) ---------- */
         .main-content {
             padding: 36px 48px;
-            background: #0a0a0a;
+            background: linear-gradient(180deg, #0a0a0a 0%, #0d0d0f 100%);
+            min-height: calc(100vh - 57px);
         }
 
+        /* Page Header */
         .page-header {
-            margin-bottom: 40px;
+            margin-bottom: 32px;
             display: flex;
             justify-content: space-between;
-            align-items: flex-start;
-            background: linear-gradient(135deg, rgba(239, 68, 68, .08), rgba(244, 63, 94, .05));
-            border: 1px solid rgba(239, 68, 68, .2);
-            border-radius: 16px;
-            padding: 32px;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .page-header::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            right: -10%;
-            width: 300px;
-            height: 300px;
-            background: radial-gradient(circle, rgba(239, 68, 68, .15), transparent);
-            border-radius: 50%;
-            pointer-events: none;
-        }
-
-        .page-title-section {
-            position: relative;
-            z-index: 1;
+            align-items: center;
         }
 
         .page-title-section h1 {
-            font-size: 2.5rem;
-            font-weight: 800;
-            color: #fff;
-            margin-bottom: 8px;
-            letter-spacing: -.8px;
-            background: linear-gradient(135deg, #fff, #fca5a5);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: #f5f5f5;
+            margin-bottom: 4px;
         }
 
         .page-subtitle {
+            font-size: .95rem;
             color: #999;
-            font-size: 1rem;
-            font-weight: 400;
         }
 
         .header-actions {
             display: flex;
             gap: 12px;
-            position: relative;
-            z-index: 1;
         }
 
         .header-btn {
-            padding: 12px 24px;
+            padding: 10px 18px;
             border-radius: 10px;
             font-weight: 600;
-            font-size: .9rem;
-            border: none;
             cursor: pointer;
-            transition: all .2s;
             display: flex;
             align-items: center;
             gap: 8px;
+            transition: all .2s;
+            font-size: .9rem;
+            border: none;
+            text-decoration: none;
         }
 
         .header-btn.primary {
-            background: #ef4444;
+            background: #8b5cf6;
             color: #fff;
         }
 
         .header-btn.primary:hover {
-            background: #dc2626;
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(239, 68, 68, .3);
+            background: #7c3aed;
+            transform: translateY(-1px);
         }
 
         .header-btn.secondary {
-            background: rgba(255, 255, 255, .05);
+            background: rgba(255, 255, 255, .08);
             color: #fff;
-            border: 1px solid rgba(255, 255, 255, .1);
+            border: 1px solid rgba(255, 255, 255, .15);
         }
 
         .header-btn.secondary:hover {
-            background: rgba(255, 255, 255, .08);
+            background: rgba(255, 255, 255, .12);
         }
 
-        /* ---------- FILTERS ---------- */
+        /* Stats Cards */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .stat-card {
+            background: #1a1a1a;
+            border: 1px solid rgba(255, 255, 255, .1);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, .3);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .stat-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(139, 92, 246, .15);
+            color: #8b5cf6;
+            font-size: 1rem;
+        }
+
+        .stat-value {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: #fff;
+            transition: opacity .3s, transform .3s;
+        }
+
+        .stat-label {
+            font-size: .85rem;
+            color: #999;
+            font-weight: 500;
+        }
+
+
+        /* Filters Bar */
         .filters-bar {
             display: flex;
             gap: 12px;
@@ -689,11 +719,13 @@
             outline: none;
             transition: all .2s;
             min-width: 150px;
+            appearance: none;
+            cursor: pointer;
         }
 
         .filter-select:focus {
             background: rgba(255, 255, 255, .08);
-            border-color: rgba(239, 68, 68, .5);
+            border-color: rgba(139, 92, 246, .5);
         }
 
         .filter-select option {
@@ -701,274 +733,183 @@
             color: #fff;
         }
 
-        .view-toggle {
-            margin-left: auto;
-            display: flex;
-            gap: 8px;
-            background: rgba(255, 255, 255, .05);
-            padding: 4px;
-            border-radius: 8px;
-        }
-
-        .view-btn {
-            padding: 8px 12px;
-            background: transparent;
-            border: none;
-            color: #999;
-            cursor: pointer;
-            border-radius: 6px;
-            transition: all .2s;
-            font-size: .9rem;
-        }
-
-        .view-btn:hover {
-            color: #fff;
-        }
-
-        .view-btn.active {
-            background: rgba(239, 68, 68, .2);
-            color: #fff;
-        }
-
-        /* ---------- STATS CARDS ---------- */
-        .stats-row {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 16px;
-            margin-bottom: 32px;
-        }
-
-        .stat-card {
-            background: rgba(255, 255, 255, .02);
-            border: 1px solid rgba(255, 255, 255, .08);
-            border-radius: 12px;
-            padding: 20px;
-            transition: all .2s;
-        }
-
-        .stat-card:hover {
-            border-color: rgba(255, 255, 255, .15);
-            background: rgba(255, 255, 255, .04);
-        }
-
-        .stat-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 12px;
-        }
-
-        .stat-icon {
-            width: 40px;
-            height: 40px;
-            background: rgba(239, 68, 68, .1);
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.1rem;
-            color: #ef4444;
-        }
-
-        .stat-value {
-            font-size: 1.8rem;
-            font-weight: 700;
-            color: #fff;
-            margin-bottom: 4px;
-        }
-
-        .stat-label {
-            color: #666;
-            font-size: .85rem;
-            font-weight: 500;
-        }
-
-        /* ---------- PRODUCTS GRID ---------- */
-        .products-grid {
+        /* Colaboraciones Grid */
+        .colaboraciones-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 20px;
-            min-height: calc(100vh - 500px);
+            gap: 24px;
         }
 
-        .product-card {
-            background: rgba(255, 255, 255, .02);
-            border: 1px solid rgba(255, 255, 255, .08);
+        /* Colaboración Card (Similar a Product Card) */
+        .colaboracion-card {
+            background: #1a1a1a;
+            border: 1px solid rgba(255, 255, 255, .1);
             border-radius: 12px;
             overflow: hidden;
+            position: relative;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, .4);
             transition: all .2s;
-            position: relative;
+            display: flex;
+            flex-direction: column;
+            min-height: 380px;
+            cursor: pointer;
         }
 
-        .product-card:hover {
-            transform: translateY(-4px);
-            border-color: rgba(255, 255, 255, .15);
-            box-shadow: 0 8px 30px rgba(0, 0, 0, .3);
+        .colaboracion-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, .6);
+            border-color: #8b5cf6;
         }
 
-        .product-image {
-            width: 100%;
+        .colaboracion-image-container {
             height: 180px;
-            background: linear-gradient(135deg, #ef4444, #f43f5e);
-            display: flex;
-            align-items: center;
-            justify-content: center;
             position: relative;
+            overflow: hidden;
         }
 
-        .product-image i.fa-music {
-            font-size: 3rem;
-            color: rgba(255, 255, 255, .9);
+        .colaboracion-image-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform .3s;
         }
 
-        .product-badge {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background: rgba(0, 0, 0, .7);
-            backdrop-filter: blur(10px);
-            padding: 5px 10px;
-            border-radius: 12px;
-            font-size: .65rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: .3px;
+        .colaboracion-card:hover .colaboracion-image-container img {
+            transform: scale(1.05);
         }
 
-        .favorite-badge {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            background: rgba(239, 68, 68, .2);
-            color: #ef4444;
-            padding: 5px 10px;
-            border-radius: 12px;
-            font-size: .65rem;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            gap: 5px;
+        .colaboracion-content {
+            padding: 16px 18px;
+            flex-grow: 1;
         }
 
-        .product-info {
-            padding: 18px;
-        }
-
-        .product-title {
-            font-size: 1rem;
+        .colaboracion-title {
+            font-size: 1.1rem;
             font-weight: 600;
             color: #fff;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
-        .product-creator {
-            font-size: .8rem;
-            color: #666;
-            margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .product-meta {
+        .colaboracion-meta {
             display: flex;
             gap: 12px;
             margin-bottom: 12px;
             font-size: .8rem;
-            color: #666;
+            color: #999;
         }
 
-        .product-meta span {
+        .colaboracion-meta span {
             display: flex;
             align-items: center;
             gap: 4px;
         }
 
-        .product-price {
-            font-size: 1.3rem;
-            font-weight: 700;
-            color: #ef4444;
+        .colaboracion-status-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             margin-bottom: 12px;
         }
 
-        .product-stats {
-            display: flex;
-            gap: 16px;
-            padding-top: 12px;
-            border-top: 1px solid rgba(255, 255, 255, .08);
-            font-size: .8rem;
-            color: #666;
+        .colaboracion-artist {
+            font-size: 0.95rem;
+            color: #ccc;
+            font-weight: 500;
         }
 
-        .product-stats span {
-            display: flex;
-            align-items: center;
-            gap: 4px;
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: .7rem;
+            font-weight: 700;
+            text-transform: uppercase;
         }
 
-        .product-actions {
-            display: flex;
-            gap: 8px;
+        .status-en-curso {
+            background: rgba(250, 204, 21, .2);
+            color: #facc15;
+        }
+
+        .status-finalizada {
+            background: rgba(34, 197, 94, .2);
+            color: #22c55e;
+        }
+
+        .status-pendiente {
+            background: rgba(139, 92, 246, .2);
+            color: #8b5cf6;
+        }
+
+        .colaboracion-actions {
             padding: 12px 18px;
             border-top: 1px solid rgba(255, 255, 255, .08);
+            display: flex;
+            gap: 8px;
+            margin-top: auto; /* Empuja las acciones al final */
         }
 
         .action-btn {
             flex: 1;
-            padding: 8px;
+            padding: 10px;
             background: rgba(255, 255, 255, .05);
             border: 1px solid rgba(255, 255, 255, .1);
             border-radius: 8px;
-            color: #999;
+            color: #fff;
+            font-size: .85rem;
+            font-weight: 600;
             cursor: pointer;
             transition: all .2s;
-            font-size: .85rem;
+            text-align: center;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 6px;
+            text-decoration: none;
+        }
+        
+        .action-btn.primary {
+            background: #8b5cf6;
+            border-color: #8b5cf6;
+        }
+
+        .action-btn.primary:hover {
+            background: #7c3aed;
+            border-color: #7c3aed;
         }
 
         .action-btn:hover {
-            background: rgba(239, 68, 68, .1);
-            color: #fff;
-            border-color: rgba(239, 68, 68, .3);
+            background: rgba(255, 255, 255, .08);
+            border-color: rgba(255, 255, 255, .15);
         }
 
-        .action-btn.remove {
-            color: #ef4444;
-        }
-
-        .action-btn.remove:hover {
-            background: rgba(239, 68, 68, .15);
-            border-color: rgba(239, 68, 68, .4);
-        }
-
-        /* ---------- EMPTY STATE ---------- */
+        /* ---------- EMPTY STATE (Copiado de favoritos) ---------- */
         .empty-state {
             text-align: center;
-            padding: 80px 20px;
-            background: rgba(255, 255, 255, .02);
+            padding: 60px 30px;
+            margin-top: 40px;
             border: 1px dashed rgba(255, 255, 255, .15);
-            border-radius: 12px;
+            border-radius: 16px;
         }
 
-        .empty-state i.fa-heart-broken {
+        .empty-state i {
             font-size: 4rem;
             margin-bottom: 24px;
             opacity: .3;
-            color: #ef4444;
+            color: #8b5cf6;
         }
 
         .empty-state h3 {
             color: #fff;
             margin-bottom: 12px;
-            font-size: 1.3rem;
+            font-size: 1.4rem;
             font-weight: 600;
         }
 
         .empty-state p {
-            color: #666;
+            color: #999;
             margin-bottom: 28px;
             line-height: 1.6;
             font-size: .95rem;
@@ -977,16 +918,11 @@
             margin-right: auto;
         }
 
-        .empty-state p i.fa-heart {
-            color: #ef4444;
-            font-size: .95rem;
-        }
-
         .empty-state-btn {
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            background: #ef4444;
+            background: #8b5cf6;
             color: #fff;
             padding: 14px 32px;
             border-radius: 10px;
@@ -999,30 +935,15 @@
         }
 
         .empty-state-btn:hover {
-            background: #dc2626;
+            background: #7c3aed;
             transform: translateY(-2px);
         }
 
-        /* ---------- LOADING ---------- */
+        /* ---------- LOADING SKELETON (Copiado de favoritos) ---------- */
         .skeleton {
             background: linear-gradient(90deg, rgba(255, 255, 255, .03) 25%, rgba(255, 255, 255, .08) 50%, rgba(255, 255, 255, .03) 75%);
             background-size: 200% 100%;
             animation: skeleton-loading 1.5s ease-in-out infinite;
-            border-radius: 8px;
-            /* AÑADIDO para que el skeleton se vea bien en línea */
-            color: transparent !important;
-            display: inline-block;
-            user-select: none;
-        }
-        
-        /* AÑADIDO para que el avatar se vea redondo */
-        .profile-avatar.skeleton {
-            border-radius: 50%;
-        }
-        
-        /* AÑADIDO para espaciado de stats */
-        .stat-value.skeleton {
-            margin-bottom: 4px;
         }
 
         @keyframes skeleton-loading {
@@ -1051,71 +972,65 @@
             }
         }
 
-        /* ---------- LOGOUT OVERLAY ---------- */
-        #logout-overlay {
+        /* Oculta los Skeletons si ya hay contenido cargado */
+        .colaboraciones-grid.loaded .skeleton {
             display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(10, 10, 10, 0.9);
-            backdrop-filter: blur(8px);
-            z-index: 10001;
-            align-items: center;
-            justify-content: center;
-            opacity: 0;
-            transition: opacity 0.5s ease;
         }
 
-        #logout-overlay.active {
+        /* Skeleton para las tarjetas de colaboración */
+        .colaboracion-card.skeleton {
+            height: 380px;
+            padding: 0;
             display: flex;
-            opacity: 1;
+            flex-direction: column;
+            border: 1px solid rgba(255, 255, 255, .08);
         }
 
-        #logout-overlay.fading-out {
-            opacity: 0;
+        .colaboracion-card.skeleton .colaboracion-image-container {
+            height: 180px;
+            background: rgba(255, 255, 255, .05);
         }
 
-        .logout-content {
-            text-align: center;
-            color: #fff;
+        .colaboracion-card.skeleton .colaboracion-content {
+            padding: 16px 18px;
+            flex-grow: 1;
         }
 
-        .logout-content i {
-            font-size: 2.5rem;
-            margin-bottom: 1.5rem;
-            color: #ef4444;
+        .colaboracion-card.skeleton .colaboracion-title-sk {
+            height: 20px;
+            width: 80%;
+            margin-bottom: 10px;
+            border-radius: 4px;
         }
 
-        .logout-content h2 {
-            font-size: 1.8rem;
-            font-weight: 600;
-            color: #e5e5e5;
+        .colaboracion-card.skeleton .colaboracion-meta-sk {
+            height: 14px;
+            width: 50%;
+            margin-bottom: 20px;
+            border-radius: 4px;
         }
 
-        @keyframes fa-spin {
-            0% {
-                transform: rotate(0deg);
-            }
-
-            100% {
-                transform: rotate(360deg);
-            }
+        .colaboracion-card.skeleton .colaboracion-status-sk {
+            height: 18px;
+            width: 40%;
+            margin-bottom: 12px;
+            border-radius: 4px;
         }
 
-        .fa-spin {
-            animation: fa-spin 1.5s linear infinite;
+        .colaboracion-card.skeleton .colaboracion-actions {
+            border-top: 1px solid rgba(255, 255, 255, .08);
         }
 
-        /* ---------- RESPONSIVE ---------- */
+        .colaboracion-card.skeleton .action-btn-sk {
+            height: 40px;
+            border-radius: 8px;
+            flex: 1;
+        }
+
+        /* ---------- RESPONSIVE (Copiado de favoritos) ---------- */
         @media (max-width:1400px) {
             .stats-row {
                 grid-template-columns: repeat(2, 1fr);
-            }
-
-            .products-grid {
-                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
             }
         }
 
@@ -1125,41 +1040,46 @@
             }
 
             .sidebar {
-                position: relative;
-                top: 0;
-                height: auto;
-            }
-
-            .navbar-search {
-                width: 300px;
+                display: none;
             }
         }
 
         @media (max-width:768px) {
-            .navbar {
-                padding: .75rem 1.5rem;
+            .main-content {
+                padding: 24px 20px;
             }
 
-            .navbar-center {
+            .navbar {
+                padding: 0.75rem 1.5rem;
+            }
+
+            .navbar-center,
+            .navbar-search {
                 display: none;
             }
 
-            .main-content {
-                padding: 20px;
+            .page-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 16px;
             }
 
-            .stats-row,
-            .products-grid {
+            .header-actions {
+                width: 100%;
+                justify-content: stretch;
+            }
+
+            .header-btn {
+                flex: 1;
+            }
+
+            .stats-row {
                 grid-template-columns: 1fr;
             }
 
             .filters-bar {
                 flex-direction: column;
                 align-items: stretch;
-            }
-
-            .view-toggle {
-                margin-left: 0;
             }
         }
     </style>
@@ -1169,7 +1089,6 @@
 
     <nav class="navbar">
         <div class="logo"><a href="index">OFFSZN</a></div>
-
         <div class="navbar-center">
             <ul class="navbar-links">
                 <li><a href="index">INICIO</a></li>
@@ -1177,25 +1096,20 @@
                     <a>RECURSOS <i class="fas fa-chevron-down"></i></a>
                     <div class="dropdown-menu">
                         <a href="beats" class="dropdown-item">
-                            <i class="fas fa-music"></i>
-                            <span>Beats & Instrumentales</span>
+                            <i class="fas fa-music"></i> <span>Beats & Instrumentales</span>
                         </a>
                         <a href="drum-kits" class="dropdown-item">
-                            <i class="fas fa-drum"></i>
-                            <span>Drum Kits</span>
+                            <i class="fas fa-drum"></i> <span>Drum Kits</span>
                         </a>
                         <a href="presets" class="dropdown-item">
-                            <i class="fas fa-sliders-h"></i>
-                            <span>Presets & Plugins</span>
+                            <i class="fas fa-sliders-h"></i> <span>Presets & Plugins</span>
                         </a>
                         <a href="samples" class="dropdown-item">
-                            <i class="fas fa-wave-square"></i>
-                            <span>Samples & Loops</span>
+                            <i class="fas fa-wave-square"></i> <span>Samples & Loops</span>
                         </a>
                         <div class="dropdown-divider"></div>
                         <a href="free-resources" class="dropdown-item">
-                            <i class="fas fa-gift"></i>
-                            <span>Recursos Gratis</span>
+                            <i class="fas fa-gift"></i> <span>Recursos Gratis</span>
                         </a>
                     </div>
                 </li>
@@ -1203,36 +1117,29 @@
                     <a>COMUNIDAD <i class="fas fa-chevron-down"></i></a>
                     <div class="dropdown-menu">
                         <a href="feed" class="dropdown-item">
-                            <i class="fas fa-home"></i>
-                            <span>Feed</span>
+                            <i class="fas fa-home"></i> <span>Feed</span>
                         </a>
                         <a href="productores" class="dropdown-item">
-                            <i class="fas fa-users"></i>
-                            <span>Productores</span>
+                            <i class="fas fa-users"></i> <span>Productores</span>
                         </a>
-                        <a href="colaboraciones" class="dropdown-item">
-                            <i class="fas fa-handshake"></i>
-                            <span>Colaboraciones</span>
+                        <a href="colaboraciones" class="dropdown-item active">
+                            <i class="fas fa-handshake"></i> <span>Colaboraciones</span>
                         </a>
                         <div class="dropdown-divider"></div>
-                        <a href="foros" class="dropdown-item">
-                            <i class="fas fa-comments"></i>
-                            <span>Foros</span>
+                        <a href="foros" class="dropdown-item disabled">
+                            <i class="fas fa-comments"></i> <span>Foros</span> <span class="soon-badge">Pronto</span>
                         </a>
-                        <a href="eventos" class="dropdown-item">
-                            <i class="fas fa-calendar"></i>
-                            <span>Eventos</span>
+                        <a href="eventos" class="dropdown-item disabled">
+                            <i class="fas fa-calendar"></i> <span>Eventos</span> <span class="soon-badge">Pronto</span>
                         </a>
                     </div>
                 </li>
             </ul>
-
             <div class="navbar-search">
                 <input type="text" placeholder="Buscar beats, kits, productores...">
                 <i class="fas fa-search"></i>
             </div>
         </div>
-
         <div class="navbar-right">
             <a href="notifications" class="navbar-icon-button"><i class="fas fa-bell"></i></a>
             <a href="cart" class="navbar-icon-button"><i class="fas fa-shopping-cart"></i></a>
@@ -1240,102 +1147,71 @@
                 <div class="navbar-icon-button" onclick="toggleUserDropdown()"><i class="fas fa-user"></i></div>
                 <div class="user-dropdown-menu">
                     <div class="user-dropdown-header">
-                        <div class="user-dropdown-avatar">?</div>
+                        <div class="user-dropdown-avatar" id="navbar-avatar">?</div>
                         <div class="user-dropdown-info">
-                            <div class="user-dropdown-name">Usuario</div>
-                            <div class="user-dropdown-email">usuario@offszn.com</div>
+                            <div class="user-dropdown-name" id="navbar-name">Cargando...</div>
+                            <div class="user-dropdown-email" id="navbar-email"></div>
                         </div>
                     </div>
-                    <a href="profile" class="user-dropdown-item"><i class="fas fa-user-circle"></i><span>Mi
-                            Perfil</span></a>
-                    <a href="dashboard" class="user-dropdown-item"><i
-                            class="fas fa-th-large"></i><span>Dashboard</span></a>
+                    <a href="profile" class="user-dropdown-item"><i class="fas fa-user-circle"></i><span>Mi Perfil</span></a>
+                    <a href="dashboard" class="user-dropdown-item"><i class="fas fa-th-large"></i><span>Dashboard</span></a>
                     <a href="wallet" class="user-dropdown-item"><i class="fas fa-wallet"></i><span>Billetera</span></a>
-                    <a href="mis-compras" class="user-dropdown-item"><i class="fas fa-shopping-bag"></i><span>Mis
-                            Compras</span></a>
-                    <a href="#" class="user-dropdown-item disabled"><i
-                            class="fas fa-chart-line"></i><span>Analíticas</span><span
-                            class="soon-badge">Pronto</span></a>
-                    <a href="account-settings" class="user-dropdown-item"><i
-                            class="fas fa-cog"></i><span>Configuración</span></a>
-                    <a href="help" class="user-dropdown-item"><i
-                            class="fas fa-question-circle"></i><span>Ayuda</span></a>
-                    <a href="#" id="navbar-logout-btn" class="user-dropdown-item logout"><i
-                            class="fas fa-sign-out-alt"></i><span>Cerrar Sesión</span></a>
+                    <a href="mis-compras" class="user-dropdown-item"><i class="fas fa-shopping-bag"></i><span>Mis Compras</span></a>
+                    <a href="account-settings" class="user-dropdown-item"><i class="fas fa-cog"></i><span>Configuración</span></a>
+                    <a href="#" id="navbar-logout-btn" class="user-dropdown-item logout"><i class="fas fa-sign-out-alt"></i><span>Cerrar Sesión</span></a>
                 </div>
             </div>
         </div>
     </nav>
 
     <div class="dashboard-container">
-
         <aside class="sidebar">
             <div class="profile-header">
                 <div class="profile-info">
-                    <div class="profile-avatar skeleton" style="opacity: 1;">&nbsp;</div>
+                    <div class="profile-avatar skeleton" id="sidebar-avatar" style="opacity: 1;">&nbsp;</div>
                     <div>
-                        <div class="profile-name skeleton"
-                            style="height: 20px; width: 120px; border-radius: 6px; opacity: 1;">&nbsp;</div>
+                        <div class="profile-name skeleton" id="sidebar-name" style="height: 18px; width: 100px;">&nbsp;</div>
+                        <span class="profile-name" id="profile-role">Productor</span>
                     </div>
                 </div>
             </div>
-
             <div class="wallet-section">
-                <div class="wallet-label">Saldo Disponible</div>
-                <div class="wallet-amount skeleton"
-                    style="height: 30px; width: 100px; border-radius: 6px; opacity: 1;">&nbsp;</div>
+                <div class="wallet-label">Balance de Billetera</div>
+                <div class="wallet-amount skeleton" id="wallet-amount-el" style="height: 25px; width: 60px;">&nbsp;</div>
             </div>
-
-            <button class="upload-btn" onclick="window.location.href='subir-kit.html'">
-                <i class="fas fa-cloud-upload-alt"></i> Subir Kit
-            </button>
-
+            <a href="upload" class="upload-btn"><i class="fas fa-upload"></i> Subir Beat/Recurso</a>
             <div class="sidebar-search">
-                <input type="text" placeholder="Buscar en favoritos..." id="search-favorites">
+                <input type="text" placeholder="Buscar en Dashboard...">
                 <i class="fas fa-search"></i>
             </div>
-
             <div class="sidebar-menu">
-                <div class="menu-section-title">Principal</div>
                 <a href="dashboard" class="menu-item"><i class="fas fa-th-large"></i><span>Dashboard</span></a>
-                <a href="mis-kits" class="menu-item"><i class="fas fa-music"></i><span>Mis Kits</span></a>
-                <a href="#" class="menu-item disabled"><i class="fas fa-chart-line"></i><span>Analíticas</span><span
-                        class="soon-badge">Pronto</span></a>
-                <a href="favoritos" class="menu-item active"><i class="fas fa-heart"></i><span>Favoritos</span></a>
-                <a href="#" class="menu-item"><i class="fas fa-history"></i><span>Historial</span></a>
-
-                <div class="menu-divider"></div>
-
-                <div class="menu-section-title">Colaboración</div>
-                <a href="colaboraciones" class="menu-item"><i class="fas fa-users"></i><span>Colaboraciones</span></a>
-
-                <div class="menu-divider"></div>
-
-                <div class="menu-section-title">Compras</div>
+                <a href="mis-beats" class="menu-item"><i class="fas fa-music"></i><span>Mis Beats</span></a>
+                <a href="mis-recursos" class="menu-item"><i class="fas fa-box-open"></i><span>Mis Recursos</span></a>
+                <a href="favoritos" class="menu-item"><i class="fas fa-heart"></i><span>Favoritos</span></a>
+                <a href="colaboraciones" class="menu-item active"><i class="fas fa-handshake"></i><span>Colaboraciones</span></a>
                 <a href="mis-compras" class="menu-item"><i class="fas fa-shopping-bag"></i><span>Mis Compras</span></a>
-                <a href="gift-cards" class="menu-item"><i class="fas fa-gift"></i><span>Gift Cards</span></a>
                 <a href="messages" class="menu-item"><i class="fas fa-envelope"></i><span>Mensajes</span></a>
-
                 <div class="menu-divider"></div>
-
                 <div class="menu-section-title">Configuración</div>
                 <a href="account-settings" class="menu-item"><i class="fas fa-cog"></i><span>Configuración</span></a>
-                <a href="blog" class="menu-item"><i class="fas fa-book-open"></i><span>Blog</span></a>
+                <a href="blog" class="menu-item disabled"><i class="fas fa-book-open"></i><span>Blog</span><span class="soon-badge">Pronto</span></a>
             </div>
-
-            <a href="#" id="sidebar-logout-btn" class="logout-btn"><i class="fas fa-sign-out-alt"></i><span>Cerrar
-                    Sesión</span></a>
+            <a href="#" id="sidebar-logout-btn" class="logout-btn"><i class="fas fa-sign-out-alt"></i><span>Cerrar Sesión</span></a>
         </aside>
 
         <main class="main-content">
             <div class="page-header">
                 <div class="page-title-section">
-                    <h1>Mis Favoritos ❤️</h1>
-                    <p class="page-subtitle">Tu colección de productos guardados</p>
+                    <h1>Mis Colaboraciones 🤝</h1>
+                    <p class="page-subtitle">Gestiona tus proyectos activos, finalizados y pendientes.</p>
                 </div>
                 <div class="header-actions">
-                    <button class="header-btn secondary" onclick="window.location.href='drum-kits'">
-                        <i class="fas fa-compass"></i> Explorar Más
+                    <a href="productores" class="header-btn secondary">
+                        <i class="fas fa-compass"></i> Explorar Productores
+                    </a>
+                    <button class="header-btn primary" onclick="alert('Funcionalidad de crear nueva colaboración')">
+                        <i class="fas fa-plus"></i> Nueva Colaboración
                     </button>
                 </div>
             </div>
@@ -1343,609 +1219,498 @@
             <div class="stats-row">
                 <div class="stat-card">
                     <div class="stat-header">
-                        <div class="stat-icon"><i class="fas fa-heart"></i></div>
+                        <div class="stat-icon"><i class="fas fa-handshake"></i></div>
                     </div>
-                    <div class="stat-value skeleton"
-                        style="height: 34px; width: 60px; border-radius: 6px; opacity: 1;">&nbsp;</div>
-                    <div class="stat-label">Total de Favoritos</div>
+                    <div class="stat-value skeleton" data-stat-index="0" style="height: 38px; width: 60px; border-radius: 6px;">&nbsp;</div>
+                    <div class="stat-label">Colaboraciones Activas</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-header">
-                        <div class="stat-icon"><i class="fas fa-drum"></i></div>
+                        <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
                     </div>
-                    <div class="stat-value skeleton"
-                        style="height: 34px; width: 60px; border-radius: 6px; opacity: 1;">&nbsp;</div>
-                    <div class="stat-label">Drum Kits</div>
+                    <div class="stat-value skeleton" data-stat-index="1" style="height: 38px; width: 50px; border-radius: 6px;">&nbsp;</div>
+                    <div class="stat-label">Colaboraciones Finalizadas</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-header">
-                        <div class="stat-icon"><i class="fas fa-music"></i></div>
+                        <div class="stat-icon"><i class="fas fa-spinner"></i></div>
                     </div>
-                    <div class="stat-value skeleton"
-                        style="height: 34px; width: 60px; border-radius: 6px; opacity: 1;">&nbsp;</div>
-                    <div class="stat-label">Beats & Samples</div>
+                    <div class="stat-value skeleton" data-stat-index="2" style="height: 38px; width: 40px; border-radius: 6px;">&nbsp;</div>
+                    <div class="stat-label">Pendientes / Revisión</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-header">
-                        <div class="stat-icon"><i class="fas fa-sliders-h"></i></div>
+                        <div class="stat-icon"><i class="fas fa-trophy"></i></div>
                     </div>
-                    <div class="stat-value skeleton"
-                        style="height: 34px; width: 60px; border-radius: 6px; opacity: 1;">&nbsp;</div>
-                    <div class="stat-label">Presets</div>
+                    <div class="stat-value skeleton" data-stat-index="3" style="height: 38px; width: 70px; border-radius: 6px;">&nbsp;</div>
+                    <div class="stat-label">Total de Colaboraciones</div>
                 </div>
             </div>
 
             <div class="filters-bar">
                 <div class="filter-group">
-                    <span class="filter-label">Tipo:</span>
-                    <select class="filter-select" id="filter-type">
+                    <span class="filter-label">Estado:</span>
+                    <select class="filter-select" id="filter-status">
                         <option value="all">Todos</option>
-                        <option value="beat">Beats</option>
-                        <option value="drumkit">Drum Kits</option>
-                        <option value="preset">Presets</option>
-                        <option value="sample">Samples</option>
+                        <option value="en-curso">En Curso</option>
+                        <option value="finalizada">Finalizada</option>
+                        <option value="pendiente">Pendiente</option>
                     </select>
                 </div>
                 <div class="filter-group">
-                    <span class="filter-label">Ordenar:</span>
+                    <span class="filter-label">Ordenar por:</span>
                     <select class="filter-select" id="filter-sort">
-                        <option value="recent">Añadidos Recientemente</option>
-                        <option value="oldest">Más Antiguos</option>
-                        <option value="popular">Más Populares</option>
-                        <option value="price-high">Precio: Mayor a Menor</option>
-                        <option value="price-low">Precio: Menor a Mayor</option>
+                        <option value="recent">Recientes</option>
+                        <option value="oldest">Antiguas</option>
+                        <option value="popular">Popularidad (Views)</option>
                     </select>
                 </div>
-                <div class="view-toggle">
-                    <button class="view-btn active" data-view="grid"><i class="fas fa-th"></i></button>
-                    <button class="view-btn" data-view="list"><i class="fas fa-list"></i></button>
+                </div>
+
+            <div class="colaboraciones-grid" id="colaboraciones-grid">
+                <div class="colaboracion-card skeleton">
+                    <div class="colaboracion-image-container skeleton"></div>
+                    <div class="colaboracion-content">
+                        <div class="colaboracion-title-sk skeleton"></div>
+                        <div class="colaboracion-meta-sk skeleton"></div>
+                        <div class="colaboracion-status-sk skeleton"></div>
+                    </div>
+                    <div class="colaboracion-actions">
+                        <div class="action-btn-sk skeleton"></div>
+                        <div class="action-btn-sk skeleton"></div>
+                    </div>
+                </div>
+                <div class="colaboracion-card skeleton">
+                    <div class="colaboracion-image-container skeleton"></div>
+                    <div class="colaboracion-content">
+                        <div class="colaboracion-title-sk skeleton"></div>
+                        <div class="colaboracion-meta-sk skeleton"></div>
+                        <div class="colaboracion-status-sk skeleton"></div>
+                    </div>
+                    <div class="colaboracion-actions">
+                        <div class="action-btn-sk skeleton"></div>
+                        <div class="action-btn-sk skeleton"></div>
+                    </div>
+                </div>
+                <div class="colaboracion-card skeleton">
+                    <div class="colaboracion-image-container skeleton"></div>
+                    <div class="colaboracion-content">
+                        <div class="colaboracion-title-sk skeleton"></div>
+                        <div class="colaboracion-meta-sk skeleton"></div>
+                        <div class="colaboracion-status-sk skeleton"></div>
+                    </div>
+                    <div class="colaboracion-actions">
+                        <div class="action-btn-sk skeleton"></div>
+                        <div class="action-btn-sk skeleton"></div>
+                    </div>
+                </div>
+                <div class="colaboracion-card skeleton">
+                    <div class="colaboracion-image-container skeleton"></div>
+                    <div class="colaboracion-content">
+                        <div class="colaboracion-title-sk skeleton"></div>
+                        <div class="colaboracion-meta-sk skeleton"></div>
+                        <div class="colaboracion-status-sk skeleton"></div>
+                    </div>
+                    <div class="colaboracion-actions">
+                        <div class="action-btn-sk skeleton"></div>
+                        <div class="action-btn-sk skeleton"></div>
+                    </div>
                 </div>
             </div>
 
             <div class="empty-state" id="empty-state" style="display: none;">
-                <i class="fas fa-heart-broken"></i>
-                <h3>Aún no tienes favoritos</h3>
+                <i class="fas fa-handshake-slash"></i>
+                <h3>¡Aún no tienes colaboraciones!</h3>
                 <p>
-                    Explora nuestro marketplace y guarda tus productos favoritos para acceder a ellos fácilmente.
-                    Haz click en el ícono de corazón <i class="fas fa-heart"></i> en cualquier producto para agregarlo
-                    aquí.
+                    Explora nuestra comunidad de productores y artistas para empezar un nuevo proyecto.
                 </p>
-                <a href="drum-kits" class="empty-state-btn">
-                    <i class="fas fa-compass"></i> Explorar Productos
+                <a href="productores" class="empty-state-btn">
+                    <i class="fas fa-compass"></i> Explorar Productores
                 </a>
-            </div>
-
-            <div class="products-grid" id="products-grid">
-                <div class="product-card">
-                    <div class="product-image skeleton" style="height: 180px; margin-bottom: 0;"></div>
-                    <div class="product-info">
-                        <div class="product-title skeleton"
-                            style="height: 20px; width: 80%; border-radius: 6px; margin-bottom: 12px;"></div>
-                        <div class="product-creator skeleton"
-                            style="height: 16px; width: 50%; border-radius: 6px; margin-bottom: 16px;"></div>
-                        <div class="product-price skeleton"
-                            style="height: 24px; width: 30%; border-radius: 6px; margin-bottom: 16px;"></div>
-                        <div class="product-stats" style="border-top: none; padding-top: 0; gap: 8px;">
-                            <span class="skeleton" style="height: 16px; width: 25%; border-radius: 6px;"></span>
-                            <span class="skeleton" style="height: 16px; width: 25%; border-radius: 6px;"></span>
-                            <span class="skeleton" style="height: 16px; width: 25%; border-radius: 6px;"></span>
-                        </div>
-                    </div>
-                    <div class="product-actions">
-                        <div class="action-btn skeleton" style="height: 36px; border-radius: 8px;"></div>
-                        <div class="action-btn skeleton" style="height: 36px; border-radius: 8px;"></div>
-                        <div class="action-btn skeleton" style="height: 36px; border-radius: 8px;"></div>
-                    </div>
-                </div>
-                <div class="product-card">
-                    <div class="product-image skeleton" style="height: 180px; margin-bottom: 0;"></div>
-                    <div class="product-info">
-                        <div class="product-title skeleton"
-                            style="height: 20px; width: 80%; border-radius: 6px; margin-bottom: 12px;"></div>
-                        <div class="product-creator skeleton"
-                            style="height: 16px; width: 50%; border-radius: 6px; margin-bottom: 16px;"></div>
-                        <div class="product-price skeleton"
-                            style="height: 24px; width: 30%; border-radius: 6px; margin-bottom: 16px;"></div>
-                        <div class="product-stats" style="border-top: none; padding-top: 0; gap: 8px;">
-                            <span class="skeleton" style="height: 16px; width: 25%; border-radius: 6px;"></span>
-                            <span class="skeleton" style="height: 16px; width: 25%; border-radius: 6px;"></span>
-                            <span class="skeleton" style="height: 16px; width: 25%; border-radius: 6px;"></span>
-                        </div>
-                    </div>
-                    <div class="product-actions">
-                        <div class="action-btn skeleton" style="height: 36px; border-radius: 8px;"></div>
-                        <div class="action-btn skeleton" style="height: 36px; border-radius: 8px;"></div>
-                        <div class="action-btn skeleton" style="height: 36px; border-radius: 8px;"></div>
-                    </div>
-                </div>
-                <div class="product-card">
-                    <div class="product-image skeleton" style="height: 180px; margin-bottom: 0;"></div>
-                    <div class="product-info">
-                        <div class="product-title skeleton"
-                            style="height: 20px; width: 80%; border-radius: 6px; margin-bottom: 12px;"></div>
-                        <div class="product-creator skeleton"
-                            style="height: 16px; width: 50%; border-radius: 6px; margin-bottom: 16px;"></div>
-                        <div class="product-price skeleton"
-                            style="height: 24px; width: 30%; border-radius: 6px; margin-bottom: 16px;"></div>
-                        <div class="product-stats" style="border-top: none; padding-top: 0; gap: 8px;">
-                            <span class="skeleton" style="height: 16px; width: 25%; border-radius: 6px;"></span>
-                            <span class="skeleton" style="height: 16px; width: 25%; border-radius: 6px;"></span>
-                            <span class="skeleton" style="height: 16px; width: 25%; border-radius: 6px;"></span>
-                        </div>
-                    </div>
-                    <div class="product-actions">
-                        <div class="action-btn skeleton" style="height: 36px; border-radius: 8px;"></div>
-                        <div class="action-btn skeleton" style="height: 36px; border-radius: 8px;"></div>
-                        <div class="action-btn skeleton" style="height: 36px; border-radius: 8px;"></div>
-                    </div>
-                </div>
             </div>
         </main>
     </div>
 
     <div id="logout-overlay">
         <div class="logout-content">
-            <i class="fas fa-spinner fa-spin"></i>
+            <i class="fas fa-spinner fa-spin" id="logout-icon"></i>
             <h2 id="logout-message">Te veremos pronto...</h2>
         </div>
     </div>
 
     <script>
-        // ---------- TOGGLE USER DROPDOWN ----------
+        // ---------- CONSTANTES Y ESTADO ----------
+        const API_URL = 'https://api.offszn.com/v1'; // URL de la API (Asumido del archivo de referencia)
+        const CACHE_KEY = 'userProfileCache';
+        const STORAGE_KEY = 'offsznGiftCardsState';
+        let allCollaborations = [];
+        let token = localStorage.getItem('authToken');
+
+        // ---------- ELEMENTOS DEL DOM ----------
+        const sidebarAvatar = document.getElementById('sidebar-avatar');
+        const sidebarName = document.getElementById('sidebar-name');
+        const walletAmountEl = document.getElementById('wallet-amount-el');
+        const navbarAvatar = document.getElementById('navbar-avatar');
+        const navbarName = document.getElementById('navbar-name');
+        const navbarEmail = document.getElementById('navbar-email');
+        const statsRowElements = document.querySelectorAll('.stat-value');
+        const colaboracionesGrid = document.getElementById('colaboraciones-grid');
+        const emptyState = document.getElementById('empty-state');
+        const filterStatus = document.getElementById('filter-status');
+        const filterSort = document.getElementById('filter-sort');
+
+        // Estado inicial de la billetera
+        let appState = {
+            totalBalance: 0
+        };
+        let userData = null;
+
+
+        // ---------- UTILIDADES DE UI Y CÁCHÉ (Copiado y adaptado de favoritos) ----------
+
+        function showSkeletonLoading() {
+            if (colaboracionesGrid) {
+                // Asegurar que el grid tiene espacio para los skeletons (ya añadidos en HTML)
+                colaboracionesGrid.style.display = 'grid'; 
+                colaboracionesGrid.classList.remove('loaded');
+            }
+            if (emptyState) emptyState.style.display = 'none';
+        }
+
+        function hideSkeletonLoading() {
+            if (colaboracionesGrid) {
+                colaboracionesGrid.classList.add('loaded'); // Esto oculta los divs .skeleton via CSS
+            }
+        }
+
         function toggleUserDropdown() {
             const dropdown = document.querySelector('.user-dropdown');
             dropdown.classList.toggle('active');
         }
 
-        // ---------- CLOSE DROPDOWNS ON OUTSIDE CLICK ----------
+        // Close dropdown on outside click
         document.addEventListener('click', e => {
             const userDropdown = document.querySelector('.user-dropdown');
             const userBtn = document.querySelector('.user-dropdown .navbar-icon-button');
-            if (!userDropdown.contains(e.target) && e.target !== userBtn) {
+            if (userDropdown && !userDropdown.contains(e.target) && e.target !== userBtn) {
                 userDropdown.classList.remove('active');
             }
         });
 
-        // ---------- VIEW TOGGLE ----------
-        document.querySelectorAll('.view-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-            });
-        });
+        function loadCachedUser() {
+            try {
+                const cached = localStorage.getItem(CACHE_KEY);
+                if (cached) {
+                    const cachedData = JSON.parse(cached);
+                    console.log('Cargando datos desde caché...');
+                    updateUserUI(cachedData, true);
+                    return true;
+                }
+            } catch (err) {
+                console.error('Error al cargar caché:', err);
+            }
+            return false;
+        }
 
-        document.addEventListener('DOMContentLoaded', async () => {
+        function saveUserCache(data) {
+            try {
+                localStorage.setItem(CACHE_KEY, JSON.stringify(data));
+            } catch (err) {
+                console.error('Error al guardar caché:', err);
+            }
+        }
 
-            // ---------- ELEMENTOS DEL DOM ----------
-            const profileAvatar = document.querySelector('.profile-avatar');
-            const profileName = document.querySelector('.profile-name');
-            const walletAmount = document.querySelector('.wallet-amount');
-            const statsValues = document.querySelectorAll('.stat-value');
-            const productsGrid = document.getElementById('products-grid');
-            const emptyState = document.getElementById('empty-state');
-            const searchInput = document.getElementById('search-favorites');
-            const token = localStorage.getItem('authToken');
-            let userData = null;
-            let allFavorites = [];
+        function updateUserUI(data, fromCache = false) {
+            const initial = (data.first_name || data.nickname || 'U').charAt(0).toUpperCase();
 
-            // ---------- GIFT CARDS STATE ----------
-            const STORAGE_KEY = 'offszn_giftcards_state';
-            const CACHE_KEY = 'offszn_user_cache';
-            let appState = { totalBalance: 0, giftCards: [] };
-
-            // ---------- API URL ----------
-            let API_URL = '';
-            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-                API_URL = 'http://localhost:3000/api';
-            } else {
-                API_URL = 'https://offszn-academy.onrender.com/api';
+            // Sidebar
+            if (sidebarName) {
+                sidebarName.textContent = `${data.first_name || ''} ${data.lastName || ''}`.trim() || data.nickname;
+                sidebarName.classList.remove('skeleton');
+                sidebarName.removeAttribute('style');
+            }
+            if (sidebarAvatar) {
+                sidebarAvatar.textContent = initial;
+                sidebarAvatar.classList.remove('skeleton');
+                sidebarAvatar.removeAttribute('style');
+                sidebarAvatar.classList.add('fade-in');
             }
 
-            // ---------- VERIFICAR TOKEN ----------
-            if (!token) {
-                console.error("Favoritos: No hay token, redirigiendo al login.");
-                window.location.replace('/pages/login.html');
+            // Navbar Dropdown
+            if (navbarName) {
+                navbarName.textContent = `${data.first_name || ''} ${data.lastName || ''}`.trim() || data.nickname;
+            }
+            if (navbarEmail) {
+                navbarEmail.textContent = data.email || 'usuario@offszn.com';
+            }
+            if (navbarAvatar) {
+                navbarAvatar.textContent = initial;
+            }
+
+            // Cargar wallet si no viene de caché (para evitar doble llamada si loadDashboardData es posterior)
+            if (!fromCache) {
+                loadGiftCardsState();
+            }
+        }
+
+        function loadGiftCardsState() {
+            try {
+                const saved = localStorage.getItem(STORAGE_KEY);
+                if (saved) {
+                    appState = JSON.parse(saved);
+                }
+                updateWalletAmount();
+            } catch (err) {
+                console.error('Error al cargar estado de gift cards:', err);
+                updateWalletAmount();
+            }
+        }
+
+        function updateWalletAmount() {
+            if (walletAmountEl) {
+                const formattedBalance = `$${appState.totalBalance.toFixed(2)}`;
+                walletAmountEl.textContent = formattedBalance;
+                walletAmountEl.classList.remove('skeleton');
+                walletAmountEl.removeAttribute('style');
+                walletAmountEl.classList.add('fade-in');
+            }
+        }
+
+
+        // ---------- LOGOUT (Copiado de favoritos) ----------
+        function handleLogout() {
+            const overlay = document.getElementById('logout-overlay');
+            const messageEl = document.getElementById('logout-message');
+            const iconEl = document.getElementById('logout-icon');
+
+            if (!overlay || !messageEl || !iconEl) {
+                console.warn("Faltan elementos del DOM para el logout animado. Usando fallback.");
+                localStorage.removeItem('authToken');
+                window.location.replace('/index.html');
                 return;
             }
 
-            // ---------- SKELETON LOADING (MODIFICADO) ----------
-            function showSkeletonLoading() {
-                // El skeleton HTML ya está en la página.
-                // Solo nos aseguramos de que el empty state esté oculto.
-                if (emptyState) {
-                    emptyState.style.display = 'none';
-                }
-                // Y que la cuadrícula esté visible (display: grid)
-                if (productsGrid) {
-                    productsGrid.style.display = 'grid';
-                }
-            }
+            overlay.classList.add('active');
+            messageEl.textContent = "Cerrando sesión...";
+            iconEl.className = 'fas fa-spinner fa-spin';
 
-            // ---------- hideSkeletonLoading() FUE ELIMINADA ----------
-            // function hideSkeletonLoading() { ... }
+            // 1. Quitar token y mostrar mensaje de éxito
+            setTimeout(() => {
+                localStorage.removeItem('authToken');
+                messageEl.textContent = "¡Cerraste sesión!";
+                iconEl.className = 'fas fa-check-circle';
+            }, 1500);
 
-            // ---------- CACHÉ DE USUARIO ----------
-            function loadCachedUser() {
-                try {
-                    const cached = localStorage.getItem(CACHE_KEY);
-                    if (cached) {
-                        const cachedData = JSON.parse(cached);
-                        console.log('Cargando datos desde caché...');
-                        updateUserUI(cachedData, true);
-                        return true;
-                    }
-                } catch (err) {
-                    console.error('Error al cargar caché:', err);
-                }
-                return false;
-            }
+            // 2. Desvanecer overlay
+            setTimeout(() => {
+                overlay.classList.add('fading-out');
+            }, 3000);
 
-            function saveUserCache(userData) {
-                try {
-                    localStorage.setItem(CACHE_KEY, JSON.stringify(userData));
-                } catch (err) {
-                    console.error('Error al guardar caché:', err);
-                }
-            }
+            // 3. Redirigir
+            setTimeout(() => {
+                window.location.replace('/index.html');
+            }, 3500);
+        }
 
-            // ---------- ACTUALIZAR UI DE USUARIO (MODIFICADO) ----------
-            function updateUserUI(userData, fromCache = false) {
-                if (profileName) {
-                    profileName.textContent = `${userData.first_name || ''} ${userData.lastName || ''}`.trim() || userData.nickname;
-                    // Quitamos el skeleton
-                    profileName.classList.remove('skeleton');
-                    profileName.removeAttribute('style');
-                }
 
-                if (profileAvatar) {
-                    const initial = (userData.first_name || userData.nickname || 'U').charAt(0).toUpperCase();
-                    profileAvatar.textContent = initial;
-                    // Quitamos el skeleton
-                    profileAvatar.classList.remove('skeleton');
-                    profileAvatar.removeAttribute('style');
-                    profileAvatar.classList.add('fade-in');
-                }
+        // ---------- MANEJO DE DATOS PRINCIPALES (Adaptado de favoritos) ----------
 
-                // Ya no se llama a hideSkeletonLoading()
-            }
-
-            // ---------- GIFT CARDS (MODIFICADO) ----------
-            function loadGiftCardsState() {
-                try {
-                    const saved = localStorage.getItem(STORAGE_KEY);
-                    if (saved) {
-                        appState = JSON.parse(saved);
-                    }
-                    updateWalletAmount();
-                } catch (err) {
-                    console.error('Error al cargar estado de gift cards:', err);
-                    updateWalletAmount();
-                }
-            }
-
-            function updateWalletAmount() {
-                if (walletAmount) {
-                    walletAmount.textContent = `$${appState.totalBalance.toFixed(2)}`;
-                    // Quitamos el skeleton
-                    walletAmount.classList.remove('skeleton');
-                    walletAmount.removeAttribute('style');
-                    walletAmount.classList.add('fade-in');
-                }
-            }
-
-            // ---------- CARGAR DATOS DEL DASHBOARD (MODIFICADO) ----------
-            async function loadDashboardData() {
-                try {
-                    const userResponse = await fetch(`${API_URL}/me`, {
-                        headers: { 'Authorization': `Bearer ${token}` }
-                    });
-
-                    if (!userResponse.ok) {
-                        localStorage.removeItem('authToken');
-                        throw new Error(`Error ${userResponse.status}: No se pudieron obtener los datos del usuario.`);
-                    }
-
-                    userData = await userResponse.json();
-                    console.log("Datos del usuario:", userData);
-
-                    localStorage.setItem('userId', userData.id);
-                    saveUserCache(userData);
-                    updateUserUI(userData, false);
-                    loadGiftCardsState();
-
-                    await loadFavorites();
-
-                    // Ya no se necesita añadir 'loaded' al body
-
-                } catch (error) {
-                    console.error("Error al cargar datos:", error);
-                    // Ya no se llama a hideSkeletonLoading()
-                    // La página ya es visible, así que el usuario verá los skeletons
-
-                    if (error.message.includes('401') || error.message.includes('403')) {
-                        localStorage.removeItem('authToken');
-                        localStorage.removeItem(CACHE_KEY);
-                        window.location.replace('/pages/login.html');
-                    }
-                }
-            }
-
-            // ---------- CARGAR FAVORITOS (MODIFICADO) ----------
-            async function loadFavorites() {
-                if (!productsGrid || !emptyState) return;
-
-                try {
-                    const response = await fetch(`${API_URL}/me/favorites`, {
-                        headers: { 'Authorization': `Bearer ${token}` }
-                    });
-
-                    if (!response.ok) {
-                        console.warn('No se pudieron cargar favoritos, mostrando empty state');
-                        allFavorites = [];
-                        updateStats([]); // Actualiza stats a 0 y quita skeletons
-                        productsGrid.style.display = 'none';
-                        productsGrid.innerHTML = ''; // Limpia los skeletons
-                        emptyState.style.display = 'block';
-                        // No se llama a hideSkeletonLoading()
-                        return;
-                    }
-
-                    const favorites = await response.json();
-                    console.log("Favoritos cargados:", favorites);
-
-                    allFavorites = favorites;
-                    updateStats(favorites); // Actualiza stats y quita skeletons
-
-                    if (favorites.length === 0) {
-                        productsGrid.style.display = 'none';
-                        productsGrid.innerHTML = ''; // Limpia los skeletons
-                        emptyState.style.display = 'block';
-                        // No se llama a hideSkeletonLoading()
-                    } else {
-                        emptyState.style.display = 'none';
-                        productsGrid.style.display = 'grid';
-                        renderFavorites(favorites); // Reemplaza skeletons con datos reales
-                        // No se llama a hideSkeletonLoading()
-                    }
-
-                } catch (error) {
-                    console.error("Error cargando favoritos:", error);
-                    allFavorites = [];
-                    updateStats([]); // Actualiza stats a 0 y quita skeletons
-                    productsGrid.style.display = 'none';
-                    productsGrid.innerHTML = ''; // Limpia los skeletons
-                    emptyState.style.display = 'block';
-                    // No se llama a hideSkeletonLoading()
-                }
-            }
-
-            // ---------- ACTUALIZAR ESTADÍSTICAS (MODIFICADO) ----------
-            function updateStats(favorites) {
-                const stats = {
-                    total: favorites.length,
-                    drumkits: favorites.filter(f => f.product_type === 'drumkit').length,
-                    beats: favorites.filter(f => f.product_type === 'beat' || f.product_type === 'sample').length,
-                    presets: favorites.filter(f => f.product_type === 'preset').length
-                };
-
-                const statElements = document.querySelectorAll('.stat-value');
-
-                // Función interna para actualizar cada stat y quitar skeleton
-                const updateStatEl = (el, value) => {
-                    if (el) {
-                        el.textContent = value;
-                        el.classList.remove('skeleton');
-                        el.removeAttribute('style');
-                        el.classList.add('fade-in');
-                    }
-                };
-
-                updateStatEl(statElements[0], stats.total);
-                updateStatEl(statElements[1], stats.drumkits);
-                updateStatEl(statElements[2], stats.beats);
-                updateStatEl(statElements[3], stats.presets);
-            }
-
-            // ---------- RENDERIZAR FAVORITOS (sin cambios) ----------
-            // Esta función ya reemplaza el .innerHTML, por lo que
-            // automáticamente elimina los skeletons.
-            function renderFavorites(favorites) {
-                const productHTML = favorites.map(fav => `
-                    <div class="product-card fade-in">
-                        <div class="product-image" style="${fav.image_url ? `background-image: url(${fav.image_url}); background-size:cover; background-position:center;` : ''}">
-                            ${!fav.image_url ? '<i class="fas fa-music"></i>' : ''}
-                            <span class="product-badge">${fav.product_type || 'Kit'}</span>
-                            <span class="favorite-badge">
-                                <i class="fas fa-heart"></i> Favorito
-                            </span>
-                        </div>
-                        <div class="product-info">
-                            <div class="product-title">${fav.name}</div>
-                            <div class="product-creator">
-                                <i class="fas fa-user"></i> ${fav.creator_name || 'Productor'}
-                            </div>
-                            <div class="product-meta">
-                                ${fav.bpm ? `<span><i class="fas fa-tachometer-alt"></i> ${fav.bpm} BPM</span>` : ''}
-                                ${fav.key ? `<span><i class="fas fa-music"></i> ${fav.key}</span>` : ''}
-                                ${!fav.bpm && !fav.key ? `<span><i class="fas fa-calendar"></i> ${new Date(fav.created_at).toLocaleDateString()}</span>` : ''}
-                            </div>
-                            <div class="product-price">${parseFloat(fav.price || 0).toFixed(2)}</div>
-                            <div class="product-stats">
-                                <span><i class="fas fa-eye"></i> ${fav.views || 0}</span>
-                                <span><i class="fas fa-shopping-bag"></i> ${fav.sales || 0}</span>
-                                <span><i class="fas fa-heart"></i> ${fav.likes || 0}</span>
-                            </div>
-                        </div>
-                        <div class="product-actions">
-                            <button class="action-btn" onclick="viewProduct(${fav.product_id})">
-                                <i class="fas fa-eye"></i> Ver
-                            </button>
-                            <button class="action-btn" onclick="addToCart(${fav.product_id})">
-                                <i class="fas fa-shopping-cart"></i> Comprar
-                            </button>
-                            <button class="action-btn remove" onclick="removeFavorite(${fav.product_id}, '${fav.name}')">
-                                <i class="fas fa-heart-broken"></i>
-                            </button>
-                        </div>
-                    </div>
-                `).join('');
-
-                productsGrid.innerHTML = productHTML;
-            }
-
-            // ---------- FUNCIONES DE ACCIONES ----------
-            window.viewProduct = function (id) {
-                console.log('Ver producto:', id);
-                window.location.href = `producto.html?id=${id}`;
-            };
-
-            window.addToCart = function (id) {
-                console.log('Agregar al carrito:', id);
-                // Implementar lógica de carrito
-                alert('Producto agregado al carrito');
-            };
-
-            window.removeFavorite = async function (id, name) {
-                if (!confirm(`¿Deseas quitar "${name}" de tus favoritos?`)) {
-                    return;
-                }
-
-                try {
-                    const response = await fetch(`${API_URL}/favorites/${id}`, {
-                        method: 'DELETE',
-                        headers: { 'Authorization': `Bearer ${token}` }
-                    });
-
-                    if (!response.ok) throw new Error('No se pudo quitar de favoritos.');
-
-                    alert('Producto quitado de favoritos');
-                    await loadFavorites(); // Recarga la lista
-
-                } catch (error) {
-                    console.error('Error quitando favorito:', error);
-                    alert('Error al quitar de favoritos: ' + error.message);
-                }
-            };
-
-            // ---------- FILTROS ----------
-            const filterType = document.getElementById('filter-type');
-            const filterSort = document.getElementById('filter-sort');
-
-            if (filterType) {
-                filterType.addEventListener('change', applyFilters);
-            }
-            if (filterSort) {
-                filterSort.addEventListener('change', applyFilters);
-            }
-
-            function applyFilters() {
-                let filtered = [...allFavorites];
-
-                // Filtrar por tipo
-                const typeFilter = filterType?.value;
-                if (typeFilter && typeFilter !== 'all') {
-                    filtered = filtered.filter(f => f.product_type === typeFilter);
-                }
-
-                // Ordenar
-                const sortFilter = filterSort?.value;
-                if (sortFilter) {
-                    switch (sortFilter) {
-                        case 'recent':
-                            filtered.sort((a, b) => new Date(b.favorited_at || b.created_at) - new Date(a.favorited_at || a.created_at));
-                            break;
-                        case 'oldest':
-                            filtered.sort((a, b) => new Date(a.favorited_at || a.created_at) - new Date(b.favorited_at || b.created_at));
-                            break;
-                        case 'popular':
-                            filtered.sort((a, b) => (b.views || 0) - (a.views || 0));
-                            break;
-                        case 'price-high':
-                            filtered.sort((a, b) => parseFloat(b.price || 0) - parseFloat(a.price || 0));
-                            break;
-                        case 'price-low':
-                            filtered.sort((a, b) => parseFloat(a.price || 0) - parseFloat(b.price || 0));
-                            break;
-                    }
-                }
-
-                if (filtered.length === 0) {
-                    productsGrid.innerHTML = ''; // Limpia skeletons si los hay
-                    productsGrid.style.display = 'none';
-                    emptyState.style.display = 'block';
-                } else {
-                    emptyState.style.display = 'none';
-                    productsGrid.style.display = 'grid';
-                    renderFavorites(filtered);
-                }
-            }
-
-            // ---------- BÚSQUEDA ----------
-            if (searchInput) {
-                searchInput.addEventListener('input', (e) => {
-                    const searchTerm = e.target.value.toLowerCase().trim();
-
-                    if (searchTerm === '') {
-                        applyFilters(); // Vuelve a los filtros si la búsqueda está vacía
-                        return;
-                    }
-
-                    const filtered = allFavorites.filter(f =>
-                        f.name.toLowerCase().includes(searchTerm) ||
-                        (f.creator_name && f.creator_name.toLowerCase().includes(searchTerm)) ||
-                        (f.product_type && f.product_type.toLowerCase().includes(searchTerm))
-                    );
-
-                    if (filtered.length === 0) {
-                        productsGrid.innerHTML = ''; // Limpia skeletons si los hay
-                        productsGrid.style.display = 'none';
-                        emptyState.style.display = 'block';
-                    } else {
-                        emptyState.style.display = 'none';
-                        productsGrid.style.display = 'grid';
-                        renderFavorites(filtered);
+        async function loadDashboardData() {
+            try {
+                // 1. Cargar datos del usuario
+                const userResponse = await fetch(`${API_URL}/me`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
                     }
                 });
-            }
 
-            // ---------- LOGOUT HANDLER ----------
-            function handleLogout(e) {
-                e.preventDefault();
-                console.log("Iniciando cierre de sesión...");
-
-                const overlay = document.getElementById('logout-overlay');
-                const messageEl = document.getElementById('logout-message');
-                const iconEl = overlay.querySelector('i');
-
-                if (!overlay || !messageEl || !iconEl) {
-                    console.warn("Faltan elementos del DOM para el logout animado. Usando fallback.");
+                if (!userResponse.ok) {
                     localStorage.removeItem('authToken');
-                    window.location.replace('/index.html');
-                    return;
+                    throw new Error(`Error ${userResponse.status}: No se pudieron obtener los datos del usuario. Redirigiendo...`);
+                }
+                userData = await userResponse.json();
+                localStorage.setItem('userId', userData.id);
+                saveUserCache(userData);
+                updateUserUI(userData, false); // Actualizar UI con datos frescos y cargar Wallet
+
+                // 2. Cargar colaboraciones
+                await loadCollaborations();
+
+            } catch (error) {
+                console.error("Error al cargar datos:", error);
+                // Asegurar que los skeletons de la UI principal se quiten o muestren error
+                if (sidebarName) sidebarName.classList.remove('skeleton');
+                if (sidebarAvatar) sidebarAvatar.classList.remove('skeleton');
+                if (walletAmountEl) walletAmountEl.classList.remove('skeleton');
+
+                // Si la carga falla, forzar el empty state o mostrar error en el grid
+                if (colaboracionesGrid) colaboracionesGrid.innerHTML = '';
+                if (emptyState) emptyState.style.display = 'block';
+                hideSkeletonLoading();
+            }
+        }
+
+        async function loadCollaborations() {
+            try {
+                // Endpoint adaptado para colaboraciones
+                const response = await fetch(`${API_URL}/collaborations`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (!response.ok) {
+                    if (response.status === 404 || response.status === 204) {
+                        // 404/204 puede significar que no hay colaboraciones, no necesariamente un error fatal.
+                        allCollaborations = [];
+                    } else {
+                        throw new new Error(`Error ${response.status}: No se pudieron obtener las colaboraciones.`);
+                    }
+                } else {
+                    allCollaborations = await response.json();
                 }
 
-                messageEl.textContent = "Te veremos pronto...";
-                iconEl.className = 'fas fa-spinner fa-spin';
-                overlay.classList.add('active');
+                updateStats(allCollaborations);
+                applyFilters(); // Renderiza el contenido real (o empty state)
 
-                setTimeout(() => {
-                    localStorage.removeItem('authToken');
-                    console.log("Sesión cerrada. Mostrando mensaje de despedida.");
-                    messageEl.textContent = "¡Cerraste sesión!";
-                    iconEl.className = 'fas fa-check-circle';
-                }, 1500);
+            } catch (error) {
+                console.error("Error cargando colaboraciones:", error);
+                allCollaborations = [];
+                updateStats([]); // Pone stats a 0 y quita skeletons
 
-                setTimeout(() => {
-                    console.log("Desvaneciendo overlay...");
-                    overlay.classList.add('fading-out');
-                }, 3000);
+                colaboracionesGrid.style.display = 'none';
+                colaboracionesGrid.innerHTML = ''; // Limpia los skeletons
+                emptyState.style.display = 'block'; // Muestra el empty state
+                hideSkeletonLoading();
+            }
+        }
 
-                setTimeout(() => {
-                    console.log("Redirigiendo a index.html");
-                    window.location.replace('/index.html');
-                }, 3500);
+        function updateStats(collaborations) {
+            const stats = {
+                active: collaborations.filter(c => c.status === 'en-curso' || c.status === 'pendiente').length,
+                finalized: collaborations.filter(c => c.status === 'finalizada').length,
+                pending: collaborations.filter(c => c.status === 'pendiente').length, // Usamos pending/revision
+                total: collaborations.length
+            };
+
+            const statElements = document.querySelectorAll('.stat-value');
+
+            const updateStatEl = (el, value) => {
+                if (el) {
+                    el.textContent = value;
+                    el.classList.remove('skeleton');
+                    el.removeAttribute('style');
+                    el.classList.add('fade-in');
+                }
+            };
+
+            updateStatEl(statElements[0], stats.active);
+            updateStatEl(statElements[1], stats.finalized);
+            updateStatEl(statElements[2], stats.pending);
+            updateStatEl(statElements[3], stats.total);
+        }
+
+        function getStatusBadge(status) {
+            switch (status) {
+                case 'en-curso':
+                    return `<span class="status-badge status-en-curso"><i class="fas fa-hammer"></i> En Curso</span>`;
+                case 'finalizada':
+                    return `<span class="status-badge status-finalizada"><i class="fas fa-check"></i> Finalizada</span>`;
+                case 'pendiente':
+                    return `<span class="status-badge status-pendiente"><i class="fas fa-clock"></i> Pendiente</span>`;
+                default:
+                    return `<span class="status-badge">Desconocido</span>`;
+            }
+        }
+
+
+        function renderColaboraciones(colaboraciones) {
+            if (colaboraciones.length === 0) {
+                colaboracionesGrid.style.display = 'none';
+                colaboracionesGrid.innerHTML = '';
+                emptyState.style.display = 'block';
+                return;
             }
 
+            emptyState.style.display = 'none';
+            colaboracionesGrid.style.display = 'grid';
+
+            const colaboracionesHTML = colaboraciones.map(colab => {
+                const statusBadge = getStatusBadge(colab.status);
+                const defaultImage = 'https://picsum.photos/seed/' + colab.id + '/400/200'; // Placeholder dinámico
+
+                return `
+                    <div class="colaboracion-card fade-in" onclick="window.location.href='colaboracion-detalle?id=${colab.id}'">
+                        <div class="colaboracion-image-container">
+                            <img src="${colab.cover_image_url || defaultImage}" alt="${colab.title}">
+                        </div>
+                        <div class="colaboracion-content">
+                            <div class="colaboracion-status-section">
+                                <h3 class="colaboracion-title">${colab.title}</h3>
+                                ${statusBadge}
+                            </div>
+                            <div class="colaboracion-artist">
+                                <i class="fas fa-user-friends"></i> Colaborando con: ${colab.collaborator_name || 'Artista Anónimo'}
+                            </div>
+                            <div class="colaboracion-meta">
+                                <span><i class="fas fa-calendar"></i> Iniciado: ${new Date(colab.created_at).toLocaleDateString()}</span>
+                                <span><i class="fas fa-eye"></i> Views: ${colab.views || 0}</span>
+                            </div>
+                        </div>
+                        <div class="colaboracion-actions">
+                            <a href="messages?colab_id=${colab.id}" class="action-btn">
+                                <i class="fas fa-envelope"></i> Mensajes
+                            </a>
+                            <a href="colaboracion-detalle?id=${colab.id}" class="action-btn primary">
+                                <i class="fas fa-arrow-right"></i> Ver Proyecto
+                            </a>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            colaboracionesGrid.innerHTML = colaboracionesHTML;
+            hideSkeletonLoading();
+        }
+
+        function applyFilters() {
+            let filtered = [...allCollaborations];
+            const status = filterStatus?.value;
+            const sort = filterSort?.value;
+
+            // Filtrar por Estado
+            if (status && status !== 'all') {
+                filtered = filtered.filter(colab => colab.status === status);
+            }
+
+            // Ordenar
+            if (sort) {
+                switch (sort) {
+                    case 'recent':
+                        filtered.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+                        break;
+                    case 'oldest':
+                        filtered.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+                        break;
+                    case 'popular':
+                        filtered.sort((a, b) => (b.views || 0) - (a.views || 0));
+                        break;
+                }
+            }
+
+            renderColaboraciones(filtered);
+        }
+
+        // ---------- EVENT LISTENERS ----------
+        if (filterStatus) {
+            filterStatus.addEventListener('change', applyFilters);
+        }
+        if (filterSort) {
+            filterSort.addEventListener('change', applyFilters);
+        }
+
+        // ---------- INICIALIZACIÓN ----------
+        document.addEventListener('DOMContentLoaded', () => {
             // Attach logout handlers
             const sidebarLogoutButton = document.getElementById('sidebar-logout-btn');
             if (sidebarLogoutButton) {
@@ -1957,11 +1722,17 @@
                 navbarLogoutButton.addEventListener('click', handleLogout);
             }
 
-            // ---------- INICIALIZACIÓN ----------
-            showSkeletonLoading(); // Prepara la UI (oculta empty state, muestra grid)
-            loadCachedUser(); // Intenta cargar caché (y quita skeletons si lo logra)
-            loadDashboardData(); // Inicia la carga principal de datos
+            // Mostrar skeletons al inicio
+            showSkeletonLoading();
 
+            // Cargar caché si existe
+            loadCachedUser();
+
+            // Cargar datos frescos del backend
+            loadDashboardData();
+
+            // Quitar el fade-in inicial del body
+            document.body.classList.add('loaded');
         });
     </script>
 
