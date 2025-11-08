@@ -1,263 +1,578 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Mis Kits | OFFSZN</title>
-    
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Icons and Fonts -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Montserrat:wght@700;800;900&display=swap" rel="stylesheet">
-    
-    <!-- Custom Styles -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - OFFSZN Productor</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
             font-family: 'Inter', sans-serif;
             background: #0a0a0a;
+            color: #e5e5e5;
+            overflow-x: hidden;
         }
-        .font-montserrat {
-            font-family: 'Montserrat', sans-serif;
+/* ---------- NAVBAR ---------- */
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 3rem;
+            background: rgba(0, 0, 0, .98);
+            position: sticky;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+            border-bottom: 1px solid rgba(255, 255, 255, .08);
+            backdrop-filter: blur(20px);
         }
-        .skeleton-loader {
-            background: linear-gradient(90deg, 
-                rgba(255, 255, 255, 0.03) 25%, 
-                rgba(255, 255, 255, 0.08) 50%, 
-                rgba(255, 255, 255, 0.03) 75%
-            );
-            background-size: 200% 100%;
-            animation: skeleton-loading 1.5s ease-in-out infinite;
-            color: transparent !important;
-            user-select: none;
-            border-radius: 4px;
+
+        .navbar .logo a {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #fff;
+            text-decoration: none;
+            letter-spacing: -.5px;
         }
-        .skeleton-avatar {
-            background: linear-gradient(90deg, 
-                rgba(255, 255, 255, 0.05) 25%, 
-                rgba(255, 255, 255, 0.1) 50%, 
-                rgba(255, 255, 255, 0.05) 75%
-            );
-            background-size: 200% 100%;
-            animation: skeleton-loading 1.5s ease-in-out infinite;
-            border-radius: 50% !important;
+
+        .navbar-center {
+            display: flex;
+            align-items: center;
+            gap: 2.5rem;
         }
-        .skeleton-text {
-            background: linear-gradient(90deg, 
-                rgba(255, 255, 255, 0.05) 25%, 
-                rgba(255, 255, 255, 0.1) 50%, 
-                rgba(255, 255, 255, 0.05) 75%
-            );
-            background-size: 200% 100%;
-            animation: skeleton-loading 1.5s ease-in-out infinite;
-            border-radius: 4px;
-            height: 1em;
-            min-width: 80px;
+
+        .navbar-links {
+            list-style: none;
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .navbar-links li {
+            position: relative;
+        }
+
+        .navbar-links a {
+            color: #999;
+            text-decoration: none;
+            transition: all .2s;
+            font-weight: 500;
+            font-size: .9rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+        }
+
+        .navbar-links a:hover {
+            color: #fff;
+        }
+
+        .navbar-links > li > a > i {
+            font-size: .7rem;
+            transition: transform .2s;
+        }
+
+        .dropdown-menu {
+            position: absolute;
+            top: calc(100% + 12px);
+            left: 50%;
+            transform: translateX(-50%) translateY(-10px);
+            background: rgba(20, 20, 20, .98);
+            border: 1px solid rgba(255, 255, 255, .1);
+            border-radius: 12px;
+            padding: 8px;
+            min-width: 240px;
+            opacity: 0;
+            visibility: hidden;
+            transition: all .3s ease;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, .5);
+            backdrop-filter: blur(20px);
+            z-index: 1001;
+        }
+        
+        .navbar-links li:hover .dropdown-menu {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(0);
+        }
+        
+        .navbar-links a i.fa-chevron-down {
+            transition: transform .2s;
+        }
+
+        .navbar-links a i.fa-chevron-down {
+            transition: transform .2s;
+        }
+
+        .navbar-links li:hover a i.fa-chevron-down {
+            transform: rotate(180deg);
+        }
+
+        .dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 14px;
+            color: #999;
+            text-decoration: none;
+            font-size: .85rem;
+            border-radius: 8px;
+            transition: all .2s;
+            font-weight: 500;
+        }
+
+        .dropdown-item:hover {
+            background: rgba(139, 92, 246, .1);
+            color: #fff;
+        }
+
+        .dropdown-item i {
+            width: 18px;
+            text-align: center;
+            direction: ltr;
             display: inline-block;
-            color: transparent !important;
         }
-        @keyframes skeleton-loading {
-            0% { background-position: 200% 0; }
-            100% { background-position: -200% 0; }
+
+        .dropdown-divider {
+            height: 1px;
+            background: rgba(255, 255, 255, .08);
+            margin: 8px 0;
         }
-        .scrollbar-thin {
-            scrollbar-width: thin;
-            scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+
+        .navbar-search {
+            position: relative;
+            width: 380px;
         }
-        .scrollbar-thin::-webkit-scrollbar {
+
+        .navbar-search input {
+            width: 100%;
+            padding: .6rem 2.5rem .6rem 1rem;
+            background: rgba(255, 255, 255, .05);
+            border: 1px solid rgba(255, 255, 255, .1);
+            border-radius: 8px;
+            color: #fff;
+            font-size: .85rem;
+            outline: none;
+            transition: all .2s;
+        }
+
+        .navbar-search input:focus {
+            background: rgba(255, 255, 255, .08);
+            border-color: rgba(139, 92, 246, .5);
+        }
+
+        .navbar-search input::placeholder {
+            color: #666;
+        }
+
+        .navbar-search i {
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #666;
+            font-size: .9rem;
+        }
+
+        .navbar-right {
+            display: flex;
+            gap: .75rem;
+            align-items: center;
+        }
+
+        .navbar-icon-button {
+            width: 36px;
+            height: 36px;
+            background: rgba(255, 255, 255, .05);
+            border: 1px solid rgba(255, 255, 255, .1);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #999;
+            font-size: 16px;
+            transition: all .2s;
+            text-decoration: none;
+            position: relative;
+        }
+
+        .navbar-icon-button:hover {
+            background: rgba(255, 255, 255, .08);
+            color: #fff;
+            border-color: rgba(255, 255, 255, .15);
+        }
+
+        .user-dropdown {
+            position: relative;
+        }
+
+        .user-dropdown-menu {
+            position: absolute;
+            top: calc(100%+12px);
+            right: 0;
+            background: rgba(20, 20, 20, .98);
+            border: 1px solid rgba(255, 255, 255, .1);
+            border-radius: 12px;
+            padding: 12px;
+            min-width: 260px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all .3s ease;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, .5);
+            backdrop-filter: blur(20px);
+        }
+
+        .user-dropdown.active .user-dropdown-menu {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .user-dropdown-header {
+            padding: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, .08);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .user-dropdown-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1rem;
+            color: #666;
+        }
+
+        .user-dropdown-info {
+            flex: 1;
+        }
+
+        .user-dropdown-name {
+            font-weight: 600;
+            color: #fff;
+            font-size: .9rem;
+            margin-bottom: 2px;
+        }
+
+        .user-dropdown-email {
+            font-size: .75rem;
+            color: #666;
+        }
+
+        .user-dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            color: #999;
+            text-decoration: none;
+            font-size: .85rem;
+            border-radius: 8px;
+            transition: all .2s;
+            font-weight: 500;
+        }
+
+        .user-dropdown-item:hover {
+            background: rgba(139, 92, 246, .1);
+            color: #fff;
+        }
+
+        .user-dropdown-item.disabled {
+            opacity: .4;
+            cursor: not-allowed;
+        }
+
+        .user-dropdown-item i {
+            width: 18px;
+            text-align: center;
+        }
+
+        .user-dropdown-item .soon-badge {
+            margin-left: auto;
+            background: rgba(255, 255, 255, .08);
+            color: #666;
+            padding: 2px 8px;
+            border-radius: 8px;
+            font-size: .6rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .user-dropdown-item.logout {
+            color: #ef4444;
+            margin-top: 8px;
+            border-top: 1px solid rgba(255, 255, 255, .08);
+            padding-top: 12px;
+        }
+
+        .user-dropdown-item.logout:hover {
+            background: rgba(239, 68, 68, .1);
+        }
+        /* ---------- DASHBOARD LAYOUT ---------- */
+        .dashboard-container {
+            display: grid;
+            grid-template-columns: 260px 1fr;
+            min-height: calc(100vh - 57px);
+        }
+
+        .sidebar {
+            background: rgba(15, 15, 15, .6);
+            border-right: 1px solid rgba(255, 255, 255, .08);
+            position: sticky;
+            top: 57px;
+            height: calc(100vh - 57px);
+            overflow-y: auto;
+        }
+
+        .sidebar::-webkit-scrollbar {
             width: 5px;
         }
-        .scrollbar-thin::-webkit-scrollbar-track {
+
+        .sidebar::-webkit-scrollbar-track {
             background: transparent;
         }
-        .scrollbar-thin::-webkit-scrollbar-thumb {
-            background-color: rgba(255, 255, 255, 0.1);
-            border-radius: 20px;
-            border: 3px solid transparent;
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, .1);
+            border-radius: 3px;
         }
-    </style>
-</head>
 
-<body class="bg-black text-[#e5e5e5] overflow-x-hidden">
-    <!-- Navbar -->
-    <nav class="sticky top-0 z-50 flex items-center justify-between px-6 sm:px-12 py-2 bg-[rgba(0,0,0,0.98)] border-b border-[rgba(255,255,255,0.08)] backdrop-blur-xl">
-        <div class="text-2xl font-extrabold tracking-tight text-white">
-            <a href="dashboard">OFFSZN</a>
-        </div>
-        
-        <div class="hidden lg:flex items-center gap-10">
-            <div class="relative w-96">
-                <input type="text" placeholder="Buscar beats, kits, productores..." class="w-full pl-4 pr-10 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white text-sm outline-none focus:bg-white/10 focus:border-violet-500/50 transition-all duration-200" />
-                <i class="fas fa-search absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 text-sm"></i>
-            </div>
-        </div>
+        .profile-header {
+            padding: 24px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, .08);
+        }
 
-        <div class="flex items-center gap-3">
-            <a href="notifications" class="flex items-center justify-center w-9 h-9 bg-white/5 border border-white/10 rounded-lg text-[#999] hover:bg-white/10 hover:text-white transition-all duration-200">
-                <i class="fas fa-bell"></i>
-            </a>
-            <a href="cart" class="flex items-center justify-center w-9 h-9 bg-white/5 border border-white/10 rounded-lg text-[#999] hover:bg-white/10 hover:text-white transition-all duration-200">
-                <i class="fas fa-shopping-cart"></i>
-            </a>
-            <div class="relative user-dropdown">
-                <button onclick="toggleUserDropdown()" class="flex items-center justify-center w-9 h-9 bg-white/5 border border-white/10 rounded-lg text-[#999] hover:bg-white/10 hover:text-white transition-all duration-200">
-                    <i class="fas fa-user"></i>
-                </button>
-                <div class="user-dropdown-menu absolute top-full right-0 mt-3 w-64 bg-[rgba(20,20,20,0.98)] border border-white/10 rounded-xl shadow-2xl backdrop-blur-lg p-3 opacity-0 invisible transition-all duration-300 transform -translate-y-2">
-                    <div class="flex items-center gap-3 p-3 border-b border-white/10 mb-2">
-                        <div class="user-dropdown-avatar flex items-center justify-center w-10 h-10 rounded-full bg-zinc-800 font-bold text-zinc-500 text-base skeleton-avatar"></div>
-                        <div class="flex-1 overflow-hidden">
-                            <p class="user-dropdown-name font-semibold text-sm text-white truncate skeleton-text">Cargando...</p>
-                            <p class="user-dropdown-email text-xs text-zinc-500 truncate skeleton-text">email@loading.com</p>
-                        </div>
-                    </div>
-                    <a href="profile" class="flex items-center gap-2.5 px-3 py-2 text-sm rounded-lg transition-colors text-zinc-400 hover:bg-violet-500/10 hover:text-white">
-                        <i class="fas fa-user-circle w-4 text-center"></i>
-                        <span>Mi Perfil</span>
-                    </a>
-                    <a href="dashboard" class="flex items-center gap-2.5 px-3 py-2 text-sm rounded-lg transition-colors text-zinc-400 hover:bg-violet-500/10 hover:text-white">
-                        <i class="fas fa-th-large w-4 text-center"></i>
-                        <span>Dashboard</span>
-                    </a>
-                    <a href="wallet" class="flex items-center gap-2.5 px-3 py-2 text-sm rounded-lg transition-colors text-zinc-400 hover:bg-violet-500/10 hover:text-white">
-                        <i class="fas fa-wallet w-4 text-center"></i>
-                        <span>Billetera</span>
-                    </a>
-                    <a href="mis-compras" class="flex items-center gap-2.5 px-3 py-2 text-sm rounded-lg transition-colors text-zinc-400 hover:bg-violet-500/10 hover:text-white">
-                        <i class="fas fa-shopping-bag w-4 text-center"></i>
-                        <span>Mis Compras</span>
-                    </a>
-                    <a href="favoritos" class="flex items-center gap-2.5 px-3 py-2 text-sm rounded-lg transition-colors text-zinc-400 hover:bg-violet-500/10 hover:text-white">
-                        <i class="fas fa-heart w-4 text-center"></i>
-                        <span>Favoritos</span>
-                    </a>
-                    <a href="#" class="flex items-center gap-2.5 px-3 py-2 text-sm rounded-lg transition-colors text-zinc-400 hover:bg-violet-500/10 hover:text-white opacity-40 cursor-not-allowed">
-                        <i class="fas fa-chart-line w-4 text-center"></i>
-                        <span>Analíticas</span>
-                        <span class="ml-auto bg-white/10 text-zinc-500 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase">Pronto</span>
-                    </a>
-                    <a href="account-settings" class="flex items-center gap-2.5 px-3 py-2 text-sm rounded-lg transition-colors text-zinc-400 hover:bg-violet-500/10 hover:text-white">
-                        <i class="fas fa-cog w-4 text-center"></i>
-                        <span>Configuración</span>
-                    </a>
-                    <a href="help" class="flex items-center gap-2.5 px-3 py-2 text-sm rounded-lg transition-colors text-zinc-400 hover:bg-violet-500/10 hover:text-white">
-                        <i class="fas fa-question-circle w-4 text-center"></i>
-                        <span>Ayuda</span>
-                    </a>
-                    <div class="mt-2 pt-2 border-t border-white/10">
-                        <a href="logout" class="flex items-center gap-2.5 px-3 py-2 text-sm rounded-lg transition-colors text-red-500 hover:bg-red-500/10">
-                            <i class="fas fa-sign-out-alt w-4 text-center"></i>
-                            <span>Cerrar Sesión</span>
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </nav>
+        .profile-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
 
-    <div class="flex-grow grid grid-cols-1 xl:grid-cols-[260px_1fr]">
-        <!-- Sidebar -->
-        <aside class="bg-[rgba(15,15,15,0.6)] border-b xl:border-b-0 xl:border-r border-white/10 xl:sticky xl:top-[57px] xl:h-[calc(100vh-57px)] xl:overflow-y-auto scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
-            <div class="p-5 border-b border-white/10">
-                <div class="flex items-center gap-3">
-                    <div class="profile-avatar flex items-center justify-center w-11 h-11 rounded-full bg-zinc-800 font-bold text-xl text-zinc-500 skeleton-avatar">?</div>
-                    <div class="flex-1 overflow-hidden">
-                        <div class="profile-name font-semibold text-white truncate skeleton-text">Cargando...</div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="p-5 border-b border-white/10 bg-violet-500/5">
-                <div class="text-xs text-zinc-400 uppercase tracking-wider font-semibold mb-1.5">Saldo Disponible</div>
-                <div class="wallet-amount text-3xl font-bold text-white skeleton-text">$0.00</div>
-            </div>
-            
-            <div class="p-5">
-                <button onclick="window.location.href='subir-kit.html'" class="w-full py-3.5 px-4.5 bg-violet-600 text-white rounded-lg font-semibold flex items-center justify-center gap-2 hover:bg-violet-700 hover:-translate-y-0.5 transition-all duration-200 text-sm">
-                    <i class="fas fa-cloud-upload-alt"></i>
-                    Subir Kit
-                </button>
-            </div>
-            
-            <div class="px-5 pb-2">
-                <div class="relative">
-                    <input type="text" placeholder="Buscar..." class="w-full pl-4 pr-10 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white text-sm outline-none focus:bg-white/10 focus:border-violet-500/50 transition-all duration-200" />
-                    <i class="fas fa-search absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 text-sm"></i>
-                </div>
-            </div>
-            
-            <nav class="py-3">
-                <div class="px-5 py-3 text-xs text-zinc-500 uppercase tracking-widest font-bold">Principal</div>
-                <a href="dashboard" class="flex items-center gap-3 px-5 py-2.5 text-sm font-medium text-zinc-400 hover:bg-white/5 hover:text-white transition-colors">
-                    <i class="fas fa-th-large w-4 text-center text-base"></i>
-                    <span>Dashboard</span>
-                </a>
-                <a href="mis-kits" class="flex items-center gap-3 px-5 py-2.5 text-sm font-medium bg-violet-500/10 text-white border-l-2 border-violet-500 transition-colors">
-                    <i class="fas fa-music w-4 text-center text-base"></i>
-                    <span>Mis Kits</span>
-                </a>
-                <a href="#" class="flex items-center gap-3 px-5 py-2.5 text-sm font-medium text-zinc-600 cursor-not-allowed opacity-40">
-                    <i class="fas fa-chart-line w-4 text-center text-base"></i>
-                    <span>Analíticas</span>
-                    <span class="ml-auto bg-white/10 text-zinc-500 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase">Pronto</span>
-                </a>
-                <a href="favoritos" class="flex items-center gap-3 px-5 py-2.5 text-sm font-medium text-zinc-400 hover:bg-white/5 hover:text-white transition-colors">
-                    <i class="fas fa-heart w-4 text-center text-base"></i>
-                    <span>Favoritos</span>
-                </a>
-                <a href="#" class="flex items-center gap-3 px-5 py-2.5 text-sm font-medium text-zinc-600 cursor-not-allowed opacity-40">
-                    <i class="fas fa-history w-4 text-center text-base"></i>
-                    <span>Historial</span>
-                    <span class="ml-auto bg-white/10 text-zinc-500 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase">Pronto</span>
-                </a>
-                
-                <div class="mx-5 my-3 border-t border-white/10"></div>
-                
-                <div class="px-5 py-3 text-xs text-zinc-500 uppercase tracking-widest font-bold">Colaboración</div>
-                <a href="colaboraciones" class="flex items-center gap-3 px-5 py-2.5 text-sm font-medium text-zinc-400 hover:bg-white/5 hover:text-white transition-colors">
-                    <i class="fas fa-users w-4 text-center text-base"></i>
-                    <span>Colaboraciones</span>
-                </a>
-                
-                <div class="mx-5 my-3 border-t border-white/10"></div>
-                
-                <div class="px-5 py-3 text-xs text-zinc-500 uppercase tracking-widest font-bold">Compras</div>
-                <a href="mis-compras" class="flex items-center gap-3 px-5 py-2.5 text-sm font-medium text-zinc-400 hover:bg-white/5 hover:text-white transition-colors">
-                    <i class="fas fa-shopping-bag w-4 text-center text-base"></i>
-                    <span>Mis Compras</span>
-                </a>
-                <a href="Gift-Cards" class="flex items-center gap-3 px-5 py-2.5 text-sm font-medium text-zinc-400 hover:bg-white/5 hover:text-white transition-colors">
-                    <i class="fas fa-gift w-4 text-center text-base"></i>
-                    <span>Gift Cards</span>
-                </a>
-                <a href="messages" class="flex items-center gap-3 px-5 py-2.5 text-sm font-medium text-zinc-400 hover:bg-white/5 hover:text-white transition-colors">
-                    <i class="fas fa-envelope w-4 text-center text-base"></i>
-                    <span>Mensajes</span>
-                </a>
-                
-                <div class="mx-5 my-3 border-t border-white/10"></div>
-                
-                <div class="px-5 py-3 text-xs text-zinc-500 uppercase tracking-widest font-bold">Configuración</div>
-                <a href="account-settings" class="flex items-center gap-3 px-5 py-2.5 text-sm font-medium text-zinc-400 hover:bg-white/5 hover:text-white transition-colors">
-                    <i class="fas fa-cog w-4 text-center text-base"></i>
-                    <span>Configuración</span>
-                </a>
-                <a href="#" class="flex items-center gap-3 px-5 py-2.5 text-sm font-medium text-zinc-600 cursor-not-allowed opacity-40">
-                    <i class="fas fa-book-open w-4 text-center text-base"></i>
-                    <span>Blog</span>
-                    <span class="ml-auto bg-white/10 text-zinc-500 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase">Pronto</span>
-                </a>
-            </nav>
-            
-            <div class="p-5 mt-4">
-                <a href="logout" class="logout-btn w-full py-3 bg-red-500/10 border border-red-500/20 text-red-500 rounded-lg font-semibold flex items-center justify-center gap-2 hover:bg-red-500/15 hover:border-red-500/30 transition-all duration-200 text-sm">
-                    <i class="fas fa-sign-out-alt w-5 text-center"></i>
-                    <span>Cerrar Sesión</span>
-                </a>
-            </div>
-        </aside>
+        .profile-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: #333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: #666;
+        }
+
+        .profile-name {
+            font-weight: 600;
+            color: #fff;
+            font-size: .95rem;
+        }
+
+        .wallet-section {
+            padding: 16px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, .08);
+            background: rgba(139, 92, 246, .05);
+        }
+
+        .producer-only {
+            display: none;
+        }
+
+        body.user-is-producer .producer-only {
+            display: block;
+        }
+
+        .wallet-label {
+            font-size: .7rem;
+            color: #999;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+            font-weight: 600;
+        }
+
+        .wallet-amount {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .upload-btn {
+            margin: 20px 20px 0;
+            padding: 14px 18px;
+            background: #8b5cf6;
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all .2s;
+            font-size: .9rem;
+            width: calc(100% - 40px);
+        }
+
+        .upload-btn:hover {
+            background: #7c3aed;
+            transform: translateY(-1px);
+        }
+
+        .sidebar-search {
+            margin: 16px 20px;
+            position: relative;
+        }
+
+        .sidebar-search input {
+            width: 100%;
+            padding: 10px 36px 10px 12px;
+            background: rgba(255, 255, 255, .05);
+            border: 1px solid rgba(255, 255, 255, .1);
+            border-radius: 8px;
+            color: #fff;
+            font-size: .85rem;
+            outline: none;
+            transition: all .2s;
+        }
+
+        .sidebar-search input:focus {
+            background: rgba(255, 255, 255, .08);
+            border-color: rgba(139, 92, 246, .5);
+        }
+
+        .sidebar-search input::placeholder {
+            color: #666;
+            font-size: .82rem;
+        }
+
+        .sidebar-search i {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #666;
+            font-size: .85rem;
+        }
+
+        .sidebar-menu {
+            padding: 12px 0;
+        }
+
+        .menu-section-title {
+            padding: 16px 20px 8px;
+            font-size: .65rem;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 700;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 11px 20px;
+            color: #999;
+            text-decoration: none;
+            font-size: .88rem;
+            transition: all .2s;
+            position: relative;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .menu-item:hover {
+            background: rgba(255, 255, 255, .05);
+            color: #fff;
+        }
+
+        .menu-item.active {
+            background: rgba(139, 92, 246, .1);
+            color: #fff;
+            border-left: 2px solid #8b5cf6;
+        }
+
+        .menu-item.disabled {
+            opacity: .4;
+            cursor: not-allowed;
+        }
+
+        .menu-item i {
+            width: 18px;
+            text-align: center;
+            font-size: .95rem;
+        }
+
+        .menu-item .badge {
+            margin-left: auto;
+            background: #8b5cf6;
+            color: #fff;
+            padding: 2px 7px;
+            border-radius: 10px;
+            font-size: .65rem;
+            font-weight: 700;
+        }
+
+        .menu-item .soon-badge {
+            margin-left: auto;
+            background: rgba(255, 255, 255, .08);
+            color: #666;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: .6rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .menu-divider {
+            height: 1px;
+            background: rgba(255, 255, 255, .08);
+            margin: 12px 20px;
+        }
+
+        .logout-btn {
+            margin: 20px;
+            background: rgba(239, 68, 68, .1);
+            border: 1px solid rgba(239, 68, 68, .2);
+            color: #ef4444;
+            padding: 11px 18px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            justify-content: center;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: .88rem;
+            transition: all .2s;
+        }
+
+        .logout-btn:hover {
+            background: rgba(239, 68, 68, .15);
+            border-color: rgba(239, 68, 68, .3);
+        }
+
 
         <!-- Main Content -->
         <main class="px-6 py-9 md:px-12 bg-[#0a0a0a]">
