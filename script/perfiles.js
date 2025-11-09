@@ -1,13 +1,12 @@
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
 
-// 👉 reemplaza con tus datos de Supabase
-const supabaseUrl = "https://TU_PROYECTO.supabase.co";
-const supabaseKey = "TU_CLAVE_ANON";
+const supabaseUrl = "https://qtjpvztpgfymjhhpoouq.supabase.co";
+const supabaseKey = "eyJhbGciOiJIJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0anB2enRwZ2Z5bWpoaHBvb3VxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3ODA5MTUsImV4cCI6MjA3NjM1NjkxNX0.YsItTFk3hSQaVuy707-z7Z-j34mXa03O0wWGAlAzjrw";
+
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-// obtiene el nombre de usuario desde la URL, por ejemplo: /WillieInspired
 const path = window.location.pathname;
-const nickname = path.split("/").filter(Boolean)[0]; // toma la primera parte
+const nickname = path.split("/").filter(Boolean)[0]; // ejemplo: "WillieInspired"
 
 async function cargarPerfil() {
   const contenedor = document.getElementById("perfil");
@@ -24,7 +23,7 @@ async function cargarPerfil() {
     .single();
 
   if (error || !data) {
-    contenedor.innerHTML = `<p>Usuario no encontrado</p>`;
+    contenedor.innerHTML = `<p>Usuario no encontrado.</p>`;
     console.error(error);
     return;
   }
@@ -34,7 +33,7 @@ async function cargarPerfil() {
       <h1>${data.first_name || ""} ${data.last_name || ""}</h1>
       <p><b>Nickname:</b> ${data.nickname}</p>
       <p><b>Rol:</b> ${data.role || "No definido"}</p>
-      <p><b>Estado:</b> ${data.Estado || "No definido"}</p>
+      <p><b>Estado:</b> ${data.estado || "No definido"}</p>
     </div>
   `;
 }
