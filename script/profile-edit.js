@@ -1,12 +1,13 @@
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
 
-// --- Configuración ---
+// --- Configuración real de Supabase ---
 const supabaseUrl = "https://qtjpvztpgfymjhhpoouq.supabase.co";
-const supabaseKey = "TU_KEY_DE_SUPABASE"; // Igual que antes
+const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0anB2enRwZ2Z5bWpoaHBvb3VxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3ODA5MTUsImV4cCI6MjA3NjM1NjkxNX0.YsItTFk3hSQaVuy707-z7Z-j34mXa03O0wWGAlAzjrw";
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-// Nickname del usuario logueado (puedes tomarlo desde sesión o query string)
-const nickname = "WillieInspired";
+// Nickname del usuario logueado (puedes cambiarlo dinámicamente según sesión o query string)
+const params = new URLSearchParams(window.location.search);
+const nickname = params.get("nickname") || "WillieInspired"; // Tu nickname real
 
 // --- Selección de plantillas ---
 const botones = document.querySelectorAll('#seleccion-template button');
