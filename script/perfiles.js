@@ -1,21 +1,20 @@
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
 
-// --- Supabase config ---
+// --- Configuración real de Supabase ---
 const supabaseUrl = "https://qtjpvztpgfymjhhpoouq.supabase.co";
-const supabaseKey = "eyJhbGciOiJIJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0anB2enRwZ2Z5bWpoaHBvb3VxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3ODA5MTUsImV4cCI6MjA3NjM1NjkxNX0.YsItTFk3hSQaVuy707-z7Z-j34mXa03O0wWGAlAzjrw";
-
+const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0anB2enRwZ2Z5bWpoaHBvb3VxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3ODA5MTUsImV4cCI6MjA3NjM1NjkxNX0.YsItTFk3hSQaVuy707-z7Z-j34mXa03O0wWGAlAzjrw";
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-// --- Obtener nickname de la URL ---
-const pathParts = window.location.pathname.split("/").filter(Boolean);
-const nickname = pathParts[0]; // Ej: /WillieInspired → "WillieInspired"
+// --- Obtener nickname desde query string ---
+const params = new URLSearchParams(window.location.search);
+const nickname = params.get("nickname"); // ejemplo: ?nickname=WillieInspired
 
-// --- Cargar perfil ---
+// --- Función para cargar perfil ---
 async function cargarPerfil() {
   const contenedor = document.getElementById("perfil");
 
   if (!nickname) {
-    contenedor.innerHTML = "<p>⚠️ Usuario no especificado.</p>";
+    contenedor.innerHTML = "<p>⚠️ No se indicó ningún usuario.</p>";
     return;
   }
 
@@ -41,4 +40,5 @@ async function cargarPerfil() {
   `;
 }
 
+// --- Ejecutar al cargar la página ---
 document.addEventListener("DOMContentLoaded", cargarPerfil);
