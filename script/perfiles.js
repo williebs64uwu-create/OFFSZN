@@ -11,6 +11,7 @@ const nickname = params.get("nickname") || "WillieInspired"; // si no hay query 
 
 async function cargarPerfil() {
     const contenedor = document.getElementById("perfil");
+    const productosCont = document.getElementById("productos-lista");
 
     if (!nickname) {
         contenedor.innerHTML = "<p>⚠️ No se indicó ningún usuario.</p>";
@@ -26,13 +27,13 @@ async function cargarPerfil() {
 
     if (error || !user) {
         contenedor.innerHTML = `<p>❌ Usuario "${nickname}" no encontrado.</p>`;
+        if (productosCont) productosCont.innerHTML = "";
         console.error(error);
         return;
     }
 
-    // --- Aplicar plantilla ---
-    const template = user.template || 'original';
-    contenedor.className = `perfil-container ${template}`;
+    // --- Aplicar plantilla ORIGINAL ---
+    contenedor.className = `perfil-container original`;
 
     // --- Renderizar perfil ---
     contenedor.innerHTML = `
@@ -41,13 +42,16 @@ async function cargarPerfil() {
             <p><b>Nickname:</b> ${user.nickname}</p>
             <p><b>Rol:</b> ${user.role || "No definido"}</p>
             <p><b>Estado:</b> ${user.estado || "No definido"}</p>
+            <p><b>Bio:</b> ${user.bio || "No hay descripción"}</p>
             <p><b>Redes:</b> ${user.socials ? Object.values(user.socials).join(' | ') : 'No hay'}</p>
+            <button onclick="window.location.href='/cuenta/messages.html?to=${user.nickname}'">
+                Enviar mensaje
+            </button>
         </div>
     `;
 
     // --- Cargar productos del usuario ---
-    const productosCont = document.getElementById("productos-lista");
-    if (!productosCont) return; // si no hay sección de productos, no hacer nada
+    if (!productosCont) return;
 
     const { data: productos, error: errProd } = await supabase
         .from("productos")
@@ -61,7 +65,7 @@ async function cargarPerfil() {
     }
 
     if (!productos || productos.length === 0) {
-        productosCont.innerHTML = "<p>No hay productos para este usuario.</p>";
+        productosCont.innerHTML = "<p>No tienes productos aún.</p>";
         return;
     }
 
