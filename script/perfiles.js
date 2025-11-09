@@ -2,101 +2,48 @@ import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js
 
 // --- Configuración real de Supabase ---
 const supabaseUrl = "https://qtjpvztpgfymjhhpoouq.supabase.co";
-const supabaseKey = "TU_SUPABASE_KEY_AQUI";
+const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0anB2enRwZ2Z5bWpoaHBvb3VxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3ODA5MTUsImV4cCI6MjA3NjM1NjkxNX0.YsItTFk3hSQaVuy707-z7Z-j34mXa03O0wWGAlAzjrw";
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 // --- Obtener nickname desde query string ---
 const params = new URLSearchParams(window.location.search);
 const nickname = params.get("nickname"); // ejemplo: ?nickname=WillieInspired
 
-// --- Funciones para renderizar productos y redes ---
-function renderProductos(productos = []) {
-  if (!productos.length) return "<p>No hay productos aún.</p>";
-  return productos.map(p => `<div class="producto-card">${p.nombre}</div>`).join("");
-}
+console.log("DEBUG: Nickname recibido ->", nickname);
 
-function renderRedes(redes = []) {
-  if (!redes.length) return "<p>No hay redes registradas.</p>";
-  return redes.map(r => `<a href="${r.link}" target="_blank">${r.nombre}</a>`).join(" | ");
-}
-
-// --- Plantillas de perfil ---
-const templates = {
-  original: (data) => `
-    <div class="perfil-card original">
-      <h1>${data.first_name || ""} ${data.last_name || ""}</h1>
-      <p><b>Nickname:</b> ${data.nickname}</p>
-      <p><b>Rol:</b> ${data.role || "No definido"}</p>
-      <p><b>Estado:</b> ${data.estado || "No definido"}</p>
-      <p>${data.descripcion || ""}</p>
-      <h3>Productos:</h3>
-      <div class="productos">${renderProductos(data.productos)}</div>
-      <h3>Redes:</h3>
-      <div class="redes">${renderRedes(data.redes)}</div>
-    </div>
-  `,
-  template1: (data) => `
-    <div class="perfil-card template1">
-      <h1>${data.first_name || ""} ${data.last_name || ""}</h1>
-      <p>${data.descripcion || ""}</p>
-      <div class="productos">${renderProductos(data.productos)}</div>
-      <div class="redes">${renderRedes(data.redes)}</div>
-    </div>
-  `,
-  template2: (data) => `
-    <div class="perfil-card template2">
-      <div class="header">
-        <h1>${data.first_name || ""} ${data.last_name || ""}</h1>
-        <p>${data.descripcion || ""}</p>
-      </div>
-      <div class="productos">${renderProductos(data.productos)}</div>
-      <div class="redes">${renderRedes(data.redes)}</div>
-    </div>
-  `
-};
-
-// --- Función para cargar perfil ---
 async function cargarPerfil() {
   const contenedor = document.getElementById("perfil");
 
   if (!nickname) {
     contenedor.innerHTML = "<p>⚠️ No se indicó ningún usuario.</p>";
+    console.warn("DEBUG: No hay nickname en la query string.");
     return;
   }
 
-  // --- Obtener datos del usuario ---
+  // --- Consultar Supabase ---
   const { data, error } = await supabase
     .from("users")
     .select("*")
     .eq("nickname", nickname)
     .single();
 
+  console.log("DEBUG: Data recibida ->", data);
+  console.log("DEBUG: Error ->", error);
+
   if (error || !data) {
     contenedor.innerHTML = `<p>❌ Usuario "${nickname}" no encontrado.</p>`;
-    console.error(error);
     return;
   }
 
-  // --- Obtener productos ---
-  const { data: productos } = await supabase
-    .from("productos")
-    .select("nombre")
-    .eq("owner_nickname", nickname);
-
-  data.productos = productos || [];
-
-  // --- Obtener redes ---
-  const { data: redes } = await supabase
-    .from("redes")
-    .select("nombre,link")
-    .eq("owner_nickname", nickname);
-
-  data.redes = redes || [];
-
-  // --- Elegir plantilla ---
-  const plantilla = data.template || "original"; // "original" si no tiene definida
-  contenedor.innerHTML = templates[plantilla](data);
+  contenedor.innerHTML = `
+    <div class="perfil-card">
+      <h1>${data.first_name || ""} ${data.last_name || ""}</h1>
+      <p><b>Nickname:</b> ${data.nickname}</p>
+      <p><b>Rol:</b> ${data.role || "No definido"}</p>
+      <p><b>Estado:</b> ${data.estado || "No definido"}</p>
+      <p><b>Plantilla:</b> ${data.template || "original"}</p>
+    </div>
+  `;
 }
 
-// --- Ejecutar al cargar la página ---
 document.addEventListener("DOMContentLoaded", cargarPerfil);
