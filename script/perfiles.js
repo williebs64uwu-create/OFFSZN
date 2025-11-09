@@ -1,21 +1,20 @@
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
 
-// --- CONFIGURACIÓN SUPABASE ---
+// --- Configuración de Supabase ---
 const supabaseUrl = "https://qtjpvztpgfymjhhpoouq.supabase.co";
-const supabaseKey = "eyJhbGciOiJIJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0anB2enRwZ2Z5bWpoaHBvb3VxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3ODA5MTUsImV4cCI6MjA3NjM1NjkxNX0.YsItTFk3hSQaVuy707-z7Z-j34mXa03O0wWGAlAzjrw";
+const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0anB2enRwZ2Z5bWpoaHBvb3VxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3ODA5MTUsImV4cCI6MjA3NjM1NjkxNX0.YsItTFk3hSQaVuy707-z7Z-j34mXa03O0wWGAlAzjrw";
+
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-// --- OBTENER NICKNAME DESDE LA URL ---
-// ejemplo: /WillieInspired
+// --- Obtener nickname desde la URL ---
 const pathParts = window.location.pathname.split("/").filter(Boolean);
-const nickname = pathParts[0]; // toma "WillieInspired"
+const nickname = pathParts[0]; // Ej: "WillieInspired"
 
-// --- FUNCION PARA CARGAR PERFIL ---
 async function cargarPerfil() {
   const contenedor = document.getElementById("perfil");
 
   if (!nickname) {
-    contenedor.innerHTML = "<p>Usuario no especificado.</p>";
+    contenedor.innerHTML = "<p>⚠️ Usuario no especificado.</p>";
     return;
   }
 
@@ -26,7 +25,7 @@ async function cargarPerfil() {
     .single();
 
   if (error || !data) {
-    contenedor.innerHTML = `<p>Usuario no encontrado.</p>`;
+    contenedor.innerHTML = `<p>❌ Usuario "${nickname}" no encontrado.</p>`;
     console.error(error);
     return;
   }
@@ -41,5 +40,5 @@ async function cargarPerfil() {
   `;
 }
 
-// --- EJECUTAR AL CARGAR LA PÁGINA ---
+// Ejecutar al cargar la página
 document.addEventListener("DOMContentLoaded", cargarPerfil);
