@@ -13,12 +13,15 @@ const params = new URLSearchParams(window.location.search);
 nickname = params.get("nickname");
 
 // 2️⃣ Si no hay query string, revisar ruta bonita: /WillieInspired
-if (!nickname || nickname === "usuarios.html") {
+if (!nickname || nickname.toLowerCase() === "usuarios.html") {
   const pathParts = window.location.pathname.split("/").filter(Boolean);
   if (pathParts.length > 0) {
     nickname = pathParts[pathParts.length - 1]; // último segmento
   }
 }
+
+// 3️⃣ Mostrar en consola para debug
+console.log("Nickname recibido:", nickname);
 
 // --- Función para cargar perfil ---
 async function cargarPerfil() {
@@ -32,7 +35,7 @@ async function cargarPerfil() {
   const { data, error } = await supabase
     .from("users")
     .select("*")
-    .eq("nickname", nickname)
+    .ilike("nickname", nickname) // ignorar mayúsculas/minúsculas
     .single();
 
   if (error || !data) {
@@ -51,4 +54,5 @@ async function cargarPerfil() {
   `;
 }
 
+// Ejecutar al cargar la página
 document.addEventListener("DOMContentLoaded", cargarPerfil);
