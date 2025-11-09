@@ -1,72 +1,1221 @@
-
 <!DOCTYPE html>
-<html lang="es" class="scroll-smooth">
+<html lang="es">
+
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>OFFSZN - El Primer Marketplace Musical Hecho en Perú 🇵🇪</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Montserrat:wght@700;800;900&display=swap" rel="stylesheet">
+  <!-- Google Fonts -->
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Montserrat:wght@700;800;900&display=swap"
+    rel="stylesheet">
+  <!-- Bootstrap Icons -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
   <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --purple-main: #7209b7;
+      --purple-dark: #560bad;
+      --purple-darker: #3c096c;
+      --purple-light: #c9a7eb;
+      --purple-glow: rgba(114, 9, 183, 0.4);
+      --green-verified: #0cbc87;
+      --text-primary: #ffffff;
+      --text-secondary: #e9d5ff;
+      --text-muted: #999;
+      --bg-black: #000000;
+      --bg-dark: #0a0118;
+      --bg-card: rgba(26, 10, 46, 0.4);
+    }
+
     body {
       font-family: 'Inter', sans-serif;
-      background-color: #000;
-      color: rgba(233, 213, 255, 0.9);
+      background: var(--bg-black);
+      color: var(--text-secondary);
+      line-height: 1.6;
       overflow-x: hidden;
     }
-    
-    .font-montserrat {
+
+    /* ==================== COUNTDOWN BANNER ==================== */
+    .countdown-banner {
+      background: linear-gradient(90deg, #7209b7 0%, #560bad 100%);
+      padding: 0.5rem 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      z-index: 1001;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .countdown-content {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      max-width: 1400px;
+      width: 100%;
+      padding: 0 1.5rem;
+      justify-content: center;
+    }
+
+    .countdown-text {
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: #fff;
+    }
+
+    .countdown-timer {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .time-block {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: rgba(0, 0, 0, 0.3);
+      padding: 0.375rem 0.625rem;
+      border-radius: 4px;
+      min-width: 40px;
+    }
+
+    .time-number {
+      font-size: 1rem;
+      font-weight: 800;
+      line-height: 1;
+      color: #fff;
+    }
+
+    .time-label {
+      font-size: 0.5rem;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.7);
+      margin-top: 0.125rem;
+      letter-spacing: 0.5px;
+    }
+
+    .countdown-btn {
+      background: #000;
+      color: #fff;
+      padding: 0.5rem 1.25rem;
+      border-radius: 6px;
+      text-decoration: none;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      transition: all 0.3s;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .countdown-btn:hover {
+      background: rgba(0, 0, 0, 0.8);
+      border-color: #fff;
+      transform: translateY(-1px);
+    }
+
+    .countdown-close {
+      position: absolute;
+      right: 1.5rem;
+      background: none;
+      border: none;
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 1.25rem;
+      cursor: pointer;
+      transition: color 0.3s;
+      padding: 0.25rem;
+      line-height: 1;
+    }
+
+    .countdown-close:hover {
+      color: #fff;
+    }
+
+    /* ==================== NAVBAR ==================== */
+    .navbar {
+      position: sticky;
+      top: 0;
+      background: rgba(0, 0, 0, 0.95);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 0.75rem 0;
+      z-index: 1000;
+    }
+
+    .navbar-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 2rem;
+    }
+
+    .logo {
+      font-size: 1.25rem;
+      font-weight: 900;
+      letter-spacing: 1px;
+      flex-shrink: 0;
+    }
+
+    .logo a {
+      color: #fff;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: opacity 0.3s;
+    }
+
+    .navbar-center {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      flex: 1;
+    }
+
+    .navbar-links {
+      display: flex;
+      list-style: none;
+      gap: 0.25rem;
+      align-items: center;
+    }
+
+    .navbar-links li {
+      position: relative;
+    }
+
+    .navbar-links>li>a {
+      color: rgba(255, 255, 255, 0.7);
+      text-decoration: none;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+      transition: all 0.3s;
+      padding: 0.5rem 0.875rem;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      gap: 0.375rem;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .navbar-links>li>a:hover,
+    .navbar-links>li>a.active {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .navbar-links>li>a i.bi-chevron-down {
+      font-size: 0.6rem;
+      transition: transform 0.3s;
+    }
+
+    .navbar-links>li.dropdown-active>a i.bi-chevron-down {
+      transform: rotate(180deg);
+    }
+
+    .nav-badge {
+      background: linear-gradient(135deg, #7209b7, #560bad);
+      color: #fff;
+      font-size: 0.5rem;
+      padding: 0.125rem 0.375rem;
+      border-radius: 3px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-left: 0.25rem;
+    }
+
+    .dropdown-menu {
+      position: absolute;
+      top: calc(100% + 0.5rem);
+      left: 0;
+      background: rgba(8, 8, 8, 0.98);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      padding: 0.5rem;
+      min-width: 240px;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(-10px);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7);
+      z-index: 1001;
+    }
+
+    .dropdown-active .dropdown-menu {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+
+    .dropdown-menu.dropdown-large {
+      min-width: 440px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.5rem;
+    }
+
+    .dropdown-section {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .dropdown-section-title {
+      font-size: 0.625rem;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.5);
+      font-weight: 700;
+      letter-spacing: 1px;
+      padding: 0.375rem 0.75rem 0.125rem;
+    }
+
+    .dropdown-item {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.625rem 0.75rem;
+      color: rgba(255, 255, 255, 0.75);
+      text-decoration: none;
+      border-radius: 6px;
+      transition: all 0.2s;
+      font-size: 0.8125rem;
+      font-weight: 500;
+    }
+
+    .dropdown-item:hover {
+      background: rgba(114, 9, 183, 0.12);
+      color: #fff;
+    }
+
+    .dropdown-item i {
+      font-size: 1rem;
+      color: #7209b7;
+      width: 18px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    .dropdown-item-content {
+      flex: 1;
+    }
+
+    .dropdown-item-title {
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    .dropdown-item-desc {
+      font-size: 0.6875rem;
+      color: rgba(255, 255, 255, 0.5);
+      margin-top: 0.125rem;
+    }
+
+    .dropdown-item.discord-link {
+      background: rgba(88, 101, 242, 0.08);
+      border: 1px solid rgba(88, 101, 242, 0.2);
+      margin-top: 0.5rem;
+    }
+
+    .dropdown-item.discord-link:hover {
+      background: rgba(88, 101, 242, 0.15);
+      border-color: rgba(88, 101, 242, 0.4);
+    }
+
+    .dropdown-item.discord-link i {
+      color: #5865F2;
+    }
+
+    .dropdown-divider {
+      height: 1px;
+      background: rgba(255, 255, 255, 0.08);
+      margin: 0.375rem 0;
+      grid-column: 1 / -1;
+    }
+
+    .navbar-right {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-shrink: 0;
+    }
+
+    .navbar-login-link {
+      color: rgba(255, 255, 255, 0.75);
+      text-decoration: none;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      padding: 0.5rem 0.75rem;
+      border-radius: 6px;
+      transition: all 0.3s;
+      white-space: nowrap;
+    }
+
+    .navbar-login-link:hover {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .btn-join {
+      background: linear-gradient(135deg, #7209b7 0%, #560bad 100%);
+      color: #fff;
+      padding: 0.5rem 1.25rem;
+      border-radius: 8px;
+      text-decoration: none;
+      font-size: 0.8125rem;
+      font-weight: 700;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      gap: 0.375rem;
+      border: none;
+      cursor: pointer;
+      letter-spacing: 0.3px;
+      white-space: nowrap;
+    }
+
+    .btn-join:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(114, 9, 183, 0.5);
+    }
+
+    .navbar-icon-button {
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: rgba(255, 255, 255, 0.75);
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      font-size: 1rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s;
+      text-decoration: none;
+      position: relative;
+    }
+
+    .navbar-icon-button:hover {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.05);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .menu-toggle {
+      display: none;
+      background: none;
+      border: none;
+      color: #fff;
+      font-size: 1.25rem;
+      cursor: pointer;
+      padding: 0.5rem;
+    }
+
+    /* ==================== BOTÓN DE NAV PRINCIPAL (CON GLOW) ==================== */
+    .btn-nav-primary {
+      /* --- 1. Estilos de Fondo y Color --- */
+      background: var(--purple-main) !important;
+      color: var(--text-primary) !important;
+      background-image: linear-gradient(135deg, var(--purple-main), var(--purple-dark)) !important;
+      border-radius: 8px !important;
+      transition: all 0.3s !important;
+
+      /* --- 2. Layout y centrado --- */
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      text-align: center !important;
+      padding: 0.5rem 1rem !important;
+      border: none !important;
+
+      /* --- 3. Ajustes de tamaño y posición --- */
+      line-height: 1.2 !important;
+      min-width: auto !important;
+      width: auto !important;
+      white-space: nowrap !important;
+      height: 36px !important;
+
+      position: relative;
+      overflow: hidden;
+
+      vertical-align: middle !important;
+      margin: 0 !important;
+    }
+
+    .btn-nav-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 30px rgba(114, 9, 183, 0.7);
+    }
+
+
+    /* ==================== SECCIONES PRINCIPALES ==================== */
+    section {
+      padding: 4rem 1.5rem;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .section-header {
+      text-align: center;
+      margin-bottom: 2.5rem;
+    }
+
+    .section-eyebrow {
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--purple-light);
+      margin-bottom: 0.75rem;
+      display: block;
+    }
+
+    .section-title {
+      font-size: clamp(2rem, 5vw, 3.5rem);
+      font-weight: 900;
+      color: var(--text-primary);
+      font-family: 'Montserrat', sans-serif;
+      line-height: 1.1;
+      margin-bottom: 1rem;
+    }
+
+    .section-subtitle {
+      font-size: 1rem;
+      color: var(--text-muted);
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    /* HERO */
+    .hero {
+      min-height: 80vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 3rem 1.5rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-container {
+      max-width: 1200px;
+      width: 100%;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2.5rem;
+      align-items: center;
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero-content {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      background: rgba(114, 9, 183, 0.15);
+      border: 1px solid rgba(114, 9, 183, 0.4);
+      border-radius: 50px;
+      font-size: 0.75rem;
+      color: var(--purple-light);
+      font-weight: 700;
+      width: fit-content;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .hero-title {
+      font-size: clamp(2.5rem, 6vw, 5rem);
+      font-weight: 900;
+      line-height: 0.95;
+      letter-spacing: -2px;
+      color: var(--text-primary);
+      font-family: 'Montserrat', sans-serif;
+      text-transform: uppercase;
+      margin: 0;
+    }
+
+    .hero-title .gradient-text {
+      background: linear-gradient(135deg, var(--purple-main), var(--purple-light));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero-subtitle {
+      font-size: 1rem;
+      color: var(--text-secondary);
+      line-height: 1.6;
+      max-width: 450px;
+    }
+
+    .hero-stats {
+      display: flex;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    .stat-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      background: rgba(114, 9, 183, 0.1);
+      border: 1px solid rgba(114, 9, 183, 0.3);
+      border-radius: 10px;
+      transition: all 0.3s;
+    }
+
+    .stat-number {
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: var(--text-primary);
+      font-family: 'Montserrat', sans-serif;
+      line-height: 1;
+    }
+
+    .stat-label {
+      font-size: 0.6875rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      margin-top: 0.125rem;
+    }
+
+    .hero-buttons {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .btn-hero {
+      padding: 0.875rem 2rem;
+      border-radius: 10px;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 0.9375rem;
+      transition: all 0.3s;
+      border: 2px solid transparent;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .btn-hero-primary {
+      background: linear-gradient(135deg, var(--purple-main), var(--purple-dark));
+      color: var(--text-primary);
+    }
+
+    .btn-hero-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px var(--purple-glow);
+    }
+
+    .btn-hero-secondary {
+      background: transparent;
+      color: var(--text-primary);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .btn-hero-secondary:hover {
+      border-color: rgba(255, 255, 255, 0.4);
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .hero-image img {
+      width: 100%;
+      border-radius: 16px;
+      box-shadow: 0 20px 60px rgba(114, 9, 183, 0.3);
+    }
+
+    /* DEMO INTERACTIVA */
+    .demo-interactive {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1.5rem;
+      margin-top: 2rem;
+    }
+
+    .demo-step {
+      background: var(--bg-card);
+      border: 1px solid rgba(114, 9, 183, 0.2);
+      border-radius: 16px;
+      padding: 1.5rem;
+      position: relative;
+      transition: all 0.3s;
+    }
+
+    .demo-step-number {
+      width: 48px;
+      height: 48px;
+      background: linear-gradient(135deg, var(--purple-main), var(--purple-dark));
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+      font-weight: 900;
+      color: var(--text-primary);
+      margin: 0 auto 1rem;
+      box-shadow: 0 6px 16px rgba(114, 9, 183, 0.4);
+    }
+
+    .demo-step-icon {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+      opacity: 0.3;
+      transition: all 0.3s;
+    }
+
+    .demo-step:hover .demo-step-icon {
+      opacity: 1;
+      transform: scale(1.1);
+    }
+
+    .demo-step-title {
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: var(--text-primary);
+      margin-bottom: 0.5rem;
+    }
+
+    .demo-step-desc {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    .demo-upload-zone {
+      margin-top: 2rem;
+      padding: 2.5rem 1.5rem;
+      background: rgba(114, 9, 183, 0.05);
+      border: 2px dashed rgba(114, 9, 183, 0.3);
+      border-radius: 16px;
+      transition: all 0.3s;
+      cursor: pointer;
+    }
+
+    .demo-upload-icon {
+      font-size: 2.5rem;
+      color: var(--purple-light);
+      margin-bottom: 0.75rem;
+    }
+
+    .demo-upload-text {
+      font-size: 1.125rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 0.25rem;
+    }
+
+    /* SIMULACIÓN DE VENTA */
+    #saleSimulation,
+    #saleSuccess {
+      display: none;
+      margin-top: 2rem;
+      padding: 1.5rem;
+      background: rgba(26, 10, 46, 0.4);
+      border-radius: 16px;
+      text-align: center;
+    }
+
+    #saleSuccess {
+      background: rgba(0, 255, 0, 0.1);
+      border: 2px solid #0cbc87;
+    }
+
+    .sale-checkmark {
+      font-size: 2.5rem;
+      color: #0cbc87;
+      margin-bottom: 0.75rem;
+    }
+
+    .btn-hero.sale-btn {
+      padding: 0.625rem 1.25rem;
+      font-size: 0.8125rem;
+    }
+
+    /* BEATS */
+    .beats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+      margin-top: 2rem;
+    }
+
+    .beat-card {
+      background: var(--bg-card);
+      border: 1px solid rgba(114, 9, 183, 0.2);
+      border-radius: 16px;
+      overflow: hidden;
+      transition: all 0.3s;
+    }
+
+    .beat-card:hover {
+      border-color: rgba(114, 9, 183, 0.6);
+      transform: translateY(-5px);
+      box-shadow: 0 10px 30px rgba(114, 9, 183, 0.3);
+    }
+
+    .beat-cover {
+      width: 100%;
+      height: 180px;
+      background: linear-gradient(135deg, var(--purple-dark), var(--purple-main));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .beat-play-btn {
+      width: 60px;
+      height: 60px;
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+      color: var(--purple-main);
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .beat-info {
+      padding: 1.25rem;
+    }
+
+    .beat-title {
+      font-size: 1.125rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 0.5rem;
+    }
+
+    .beat-producer {
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+      margin-bottom: 0.75rem;
+    }
+
+    .beat-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: 0.75rem;
+      border-top: 1px solid rgba(114, 9, 183, 0.2);
+    }
+
+    .beat-price {
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: var(--purple-light);
       font-family: 'Montserrat', sans-serif;
     }
 
-    .scrollbar-hide::-webkit-scrollbar {
-      display: none;
+    .beat-bpm {
+      font-size: 0.75rem;
+      color: var(--text-muted);
     }
 
-    .scrollbar-hide {
-      -ms-overflow-style: none;
-      scrollbar-width: none;
+    /* WHY */
+    .why-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+      margin-top: 2rem;
     }
 
-    /* Dropdown Animation */
-    .animate-fade-in {
-      animation: fadeIn 0.3s ease-in-out;
+    .why-card {
+      background: var(--bg-card);
+      border: 1px solid rgba(114, 9, 183, 0.2);
+      border-radius: 16px;
+      padding: 1.5rem;
+      transition: all 0.3s;
     }
 
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(-10px); }
-      to { opacity: 1; transform: translateY(0); }
+    .why-card:hover {
+      border-color: rgba(114, 9, 183, 0.6);
+      transform: translateY(-5px);
+      box-shadow: 0 10px 30px rgba(114, 9, 183, 0.3);
     }
-    
+
+    .why-icon {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+      display: block;
+      color: var(--purple-light);
+    }
+
+    .why-title {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: var(--text-primary);
+      margin-bottom: 0.75rem;
+      font-family: 'Montserrat', sans-serif;
+    }
+
+    .why-desc {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    /* TESTIMONIOS */
+    .testimonial-card {
+      background: var(--bg-card);
+      border: 1px solid rgba(114, 9, 183, 0.3);
+      border-radius: 16px;
+      padding: 2rem;
+      text-align: center;
+    }
+
+    .testimonial-avatar {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      border: 3px solid var(--purple-main);
+      margin: 0 auto 1rem;
+      object-fit: cover;
+    }
+
+    .testimonial-text {
+      font-size: 1rem;
+      color: var(--text-secondary);
+      line-height: 1.7;
+      margin-bottom: 1rem;
+      font-style: italic;
+    }
+
+    .testimonial-author {
+      font-size: 1.125rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 0.25rem;
+    }
+
+    .testimonial-role {
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+      margin-bottom: 1rem;
+    }
+
+    .testimonial-socials {
+      display: flex;
+      gap: 0.75rem;
+      justify-content: center;
+    }
+
+    .social-link {
+      width: 32px;
+      height: 32px;
+      background: rgba(114, 9, 183, 0.2);
+      border: 1px solid rgba(114, 9, 183, 0.4);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--purple-light);
+      text-decoration: none;
+      font-size: 1rem;
+      transition: all 0.3s;
+    }
+
+    .social-link:hover {
+      background: rgba(114, 9, 183, 0.4);
+      border-color: rgba(114, 9, 183, 0.6);
+      transform: translateY(-2px);
+    }
+
+    /* FAQ */
+    .faq-list {
+      margin-top: 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .faq-item {
+      background: var(--bg-card);
+      border: 1px solid rgba(114, 9, 183, 0.2);
+      border-radius: 10px;
+      overflow: hidden;
+      transition: all 0.3s;
+    }
+
+    .faq-question {
+      padding: 1.25rem;
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .faq-icon {
+      font-size: 1rem;
+      color: var(--purple-main);
+      transition: transform 0.3s;
+    }
+
+    .faq-item.active .faq-icon {
+      transform: rotate(180deg);
+    }
+
+    .faq-answer {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+    }
+
     .faq-item.active .faq-answer {
-        max-height: 200px; /* Or a sufficiently large value */
+      max-height: 500px;
     }
 
-    /* Sparkle button animation */
+    .faq-answer-content {
+      padding: 0 1.25rem 1.25rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    /* CTA */
+    .cta-section {
+      padding: 6rem 1.5rem;
+      background: linear-gradient(180deg, var(--bg-black) 0%, var(--bg-dark) 100%);
+      text-align: center;
+    }
+
+    .cta-container {
+      max-width: 700px;
+      margin: 0 auto;
+    }
+
+    .cta-title {
+      font-size: clamp(2rem, 5vw, 3.5rem);
+      font-weight: 900;
+      color: var(--text-primary);
+      font-family: 'Montserrat', sans-serif;
+      margin-bottom: 1rem;
+      line-height: 1.1;
+    }
+
+    .cta-subtitle {
+      font-size: 1rem;
+      color: var(--text-muted);
+      margin-bottom: 2rem;
+    }
+
+    /* FOOTER */
+    .footer {
+      background: var(--bg-black);
+      padding: 2.5rem 1.5rem 1.5rem;
+      border-top: 1px solid rgba(114, 9, 183, 0.2);
+    }
+
+    .footer-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 2rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .footer-section h4 {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 1rem;
+      font-family: 'Montserrat', sans-serif;
+    }
+
+    .footer-links {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .footer-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.875rem;
+      transition: all 0.3s;
+    }
+
+    .footer-links a:hover {
+      color: var(--purple-light);
+      padding-left: 0.25rem;
+    }
+
+    .footer-socials {
+      display: flex;
+      gap: 0.75rem;
+      margin-top: 1rem;
+    }
+
+    .footer-social-link {
+      width: 32px;
+      height: 32px;
+      background: rgba(114, 9, 183, 0.2);
+      border: 1px solid rgba(114, 9, 183, 0.4);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--purple-light);
+      text-decoration: none;
+      font-size: 1rem;
+      transition: all 0.3s;
+    }
+
+    .footer-social-link:hover {
+      background: rgba(114, 9, 183, 0.4);
+      border-color: rgba(114, 9, 183, 0.6);
+      transform: translateY(-2px);
+    }
+
+    .footer-bottom {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding-top: 1.5rem;
+      border-top: 1px solid rgba(114, 9, 183, 0.2);
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.8125rem;
+    }
+
+    /* ==================== RESPONSIVE ==================== */
+    @media (max-width: 968px) {
+      .countdown-content {
+        gap: 1rem;
+        flex-wrap: wrap;
+        padding: 0 1rem;
+      }
+
+      .navbar-container {
+        padding: 0 1rem;
+        gap: 1rem;
+      }
+
+      .navbar-center {
+        display: none;
+      }
+
+      .menu-toggle {
+        display: block;
+      }
+
+      .hero-container {
+        grid-template-columns: 1fr;
+        text-align: center;
+        gap: 2rem;
+      }
+
+      .hero-content {
+        align-items: center;
+      }
+
+      .hero-buttons {
+        justify-content: center;
+      }
+
+      .demo-interactive {
+        grid-template-columns: 1fr;
+      }
+
+      .beats-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .why-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .countdown-banner {
+        padding: 0.4rem 0;
+      }
+
+      .time-block {
+        min-width: 32px;
+        padding: 0.25rem 0.375rem;
+      }
+
+      .time-number {
+        font-size: 0.875rem;
+      }
+
+      .hero {
+        padding: 2rem 1rem;
+      }
+
+      .hero-title {
+        font-size: 2rem;
+      }
+
+      .btn-hero {
+        width: 100%;
+        justify-content: center;
+      }
+    }
+
     @property --k {
       syntax: '<number>';
       initial-value: -1;
       inherits: true;
     }
 
+    /* 2. Define la animación 'k' que pulsa la propiedad '--k' */
     @keyframes k {
+
       0%,
       33.3% {
         --k: 1;
       }
     }
 
+    /* 3. Estilo del contenedor de las partículas */
     .sparkle-wrap {
       position: absolute;
+      /* ¡Sácalo del flujo! */
       top: 0;
       left: 0;
       width: 100%;
       height: 100%;
       z-index: 0;
+      /* Detrás del texto */
       pointer-events: none;
+      /* No puede ser clickeado */
     }
 
+    /* 4. Lógica de cada partícula */
     .particle {
       --f: 1;
       --pos-k: max(0, var(--k));
@@ -95,10 +1244,12 @@
       transform: skew(var(--sa), var(--sa));
       opacity: var(--low-c);
       filter: Saturate(var(--low-c));
-      background: radial-gradient(at 85% 85%, #ffffff, #D69CFF 75%);
+      /* ¡Color adaptado a tu diseño! */
+      background: radial-gradient(at 85% 85%, #ffffff, var(--purple-light) 75%);
       content: '';
     }
 
+    /* 6. La "estrella" o "brillo" principal (el ::after) */
     .particle::after {
       grid-area: 1/ 1;
       translate: -50% -50%;
@@ -106,796 +1257,664 @@
       text-align: center;
       filter: blur(.5px);
       color: #fff;
+      /* Color del brillo */
       content: '✦';
+      /* El símbolo del brillo */
     }
   </style>
-<link rel="stylesheet" href="/index.css">
 </head>
-<body>
-  <canvas id="particle-canvas" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none;"></canvas>
 
-  <!-- Countdown Banner -->
-  <div id="countdown-banner" class="bg-gradient-to-r from-[#A429FF] to-[#7A1FBF] p-2 flex items-center justify-center relative z-[1001] border-b border-white/10">
-    <div class="flex items-center justify-center gap-4 sm:gap-6 max-w-7xl w-full px-4 sm:px-6 flex-wrap">
-      <span class="text-white text-xs font-bold tracking-wider uppercase text-center">🎁 ¡REGÍSTRATE AHORA Y RECIBE $5 USD GRATIS!</span>
-      <div class="flex items-center gap-2">
-        <div class="flex flex-col items-center bg-black/30 px-2 py-1.5 rounded min-w-[40px]">
-          <span id="days" class="text-white text-base font-extrabold leading-none">30</span>
-          <span class="text-white/70 text-[0.5rem] uppercase tracking-widest">day</span>
+<body>
+
+  <!-- ==================== COUNTDOWN BANNER ==================== -->
+  <div class="countdown-banner" id="countdownBanner">
+    <div class="countdown-content">
+      <span class="countdown-text">🎁 ¡REGÍSTRATE AHORA Y RECIBE $5 USD GRATIS PARA TU PRIMERA COMPRA!</span>
+      <div class="countdown-timer">
+        <div class="time-block">
+          <span class="time-number" id="days">30</span>
+          <span class="time-label">Días</span>
         </div>
-        <div class="flex flex-col items-center bg-black/30 px-2 py-1.5 rounded min-w-[40px]">
-          <span id="hours" class="text-white text-base font-extrabold leading-none">00</span>
-          <span class="text-white/70 text-[0.5rem] uppercase tracking-widest">hou</span>
+        <div class="time-block">
+          <span class="time-number" id="hours">00</span>
+          <span class="time-label">Hrs</span>
         </div>
-        <div class="flex flex-col items-center bg-black/30 px-2 py-1.5 rounded min-w-[40px]">
-          <span id="minutes" class="text-white text-base font-extrabold leading-none">00</span>
-          <span class="text-white/70 text-[0.5rem] uppercase tracking-widest">min</span>
+        <div class="time-block">
+          <span class="time-number" id="minutes">00</span>
+          <span class="time-label">Min</span>
         </div>
-        <div class="flex flex-col items-center bg-black/30 px-2 py-1.5 rounded min-w-[40px]">
-          <span id="seconds" class="text-white text-base font-extrabold leading-none">00</span>
-          <span class="text-white/70 text-[0.5rem] uppercase tracking-widest">sec</span>
+        <div class="time-block">
+          <span class="time-number" id="seconds">00</span>
+          <span class="time-label">Seg</span>
         </div>
       </div>
-      <a href="#register" class="bg-black text-white px-5 py-2 rounded-md text-xs font-bold tracking-wider uppercase transition-all duration-300 border border-white/20 hover:bg-black/80 hover:border-white hover:-translate-y-0.5">Reclamar Bonificación</a>
+      <a href="/pages/register" class="countdown-btn">Reclamar Tu Bonificación</a>
+      <button class="countdown-close" id="countdownClose" aria-label="Cerrar">×</button>
     </div>
-    <button id="countdown-close-btn" class="absolute right-4 sm:right-6 text-white/70 text-2xl hover:text-white transition-colors">×</button>
   </div>
 
-  <!-- Header -->
-  <header id="header-nav" class="sticky top-0 bg-black/95 backdrop-blur-2xl border-b border-white/10 p-3 z-[1000]">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between gap-8">
-          <a href="#inicio" class="text-2xl font-black text-white tracking-wider font-montserrat">OFFSZN</a>
-          <nav class="hidden lg:flex items-center gap-8 flex-1">
-              <ul class="flex items-center gap-2">
-                  <li><a href="#inicio" class="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-xl bg-white/10 text-white">Inicio</a></li>
-                  <li class="relative">
-                      <button id="recursos-btn" class="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold text-white/70 hover:text-white transition-colors">
-                          Recursos <i id="recursos-chevron" class="bi bi-chevron-down text-xs transition-transform"></i>
-                      </button>
-                      <div id="recursos-dropdown" class="absolute top-full mt-3 w-64 bg-[#11051e] border border-white/10 rounded-xl shadow-2xl p-2 animate-fade-in hidden">
-                          <a href="#" class="flex items-center gap-3 p-2.5 rounded-lg text-white/80 hover:bg-white/5 hover:text-white transition-colors">
-                              <i class="bi bi-sliders text-lg text-purple-400"></i>
-                              <div>
-                                  <div class="text-sm font-semibold">Presets & Plugins</div>
-                                  <div class="text-xs text-white/50">Chains profesionales</div>
-                              </div>
-                          </a>
-                          <a href="#" class="flex items-center gap-3 p-2.5 rounded-lg text-white/80 hover:bg-white/5 hover:text-white transition-colors">
-                              <i class="bi bi-music-note-beamed text-lg text-purple-400"></i>
-                              <div>
-                                  <div class="text-sm font-semibold">Beats & Instrumentales</div>
-                                  <div class="text-xs text-white/50">Licencias disponibles</div>
-                              </div>
-                          </a>
-                          <a href="#" class="flex items-center gap-3 p-2.5 rounded-lg text-white/80 hover:bg-white/5 hover:text-white transition-colors">
-                              <i class="bi bi-disc text-lg text-purple-400"></i>
-                              <div>
-                                  <div class="text-sm font-semibold">Drum Kits</div>
-                                  <div class="text-xs text-white/50">Samples únicos</div>
-                              </div>
-                          </a>
-                          <a href="#" class="flex items-center gap-3 p-2.5 rounded-lg text-white/80 hover:bg-white/5 hover:text-white transition-colors">
-                              <i class="bi bi-soundwave text-lg text-purple-400"></i>
-                              <div>
-                                  <div class="text-sm font-semibold">Samples & Loops</div>
-                                  <div class="text-xs text-white/50">Loops de calidad</div>
-                              </div>
-                          </a>
-                      </div>
-                  </li>
-                  <li class="relative">
-                       <button id="comunidad-btn" class="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold text-white/70 hover:text-white transition-colors">
-                          Comunidad <i id="comunidad-chevron" class="bi bi-chevron-down text-xs transition-transform"></i>
-                      </button>
-                      <div id="comunidad-dropdown" class="absolute top-full mt-3 w-64 bg-[#11051e] border border-white/10 rounded-xl shadow-2xl p-2 animate-fade-in hidden">
-                          <a href="#" class="flex items-center gap-3 p-2.5 rounded-lg text-white/80 hover:bg-white/5 hover:text-white transition-colors">
-                              <i class="bi bi-house text-lg text-purple-400"></i>
-                              <div>
-                                  <div class="text-sm font-semibold">Feed</div>
-                              </div>
-                          </a>
-                          <a href="#" class="flex items-center gap-3 p-2.5 rounded-lg text-white/80 hover:bg-white/5 hover:text-white transition-colors">
-                              <i class="bi bi-people text-lg text-purple-400"></i>
-                              <div>
-                                  <div class="text-sm font-semibold">Productores</div>
-                              </div>
-                          </a>
-                          <a href="#" class="flex items-center gap-3 p-2.5 rounded-lg text-white/80 hover:bg-white/5 hover:text-white transition-colors">
-                              <i class="bi bi-hand-index-thumb text-lg text-purple-400"></i>
-                              <div>
-                                  <div class="text-sm font-semibold">Colaboraciones</div>
-                              </div>
-                          </a>
-                          <a href="#" class="flex items-center gap-3 p-2.5 rounded-lg text-white/80 hover:bg-white/5 hover:text-white transition-colors">
-                              <i class="bi bi-chat-dots text-lg text-purple-400"></i>
-                              <div>
-                                  <div class="text-sm font-semibold">Foros</div>
-                              </div>
-                          </a>
-                      </div>
-                  </li>
-                  <li>
-                    <a href="#marketplace" class="relative inline-flex items-center justify-center text-center no-underline text-white text-sm font-bold h-9 w-auto px-6 rounded-xl bg-[#A429FF] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-2xl hover:shadow-[#A429FF]/50">
-                        Marketplace
-                        <span class="sparkle-wrap" aria-hidden="true">
-                            <span class="particle" style="--a: -45deg; --x: 53%; --y: 15%; --d: 4em; --f: .7; --t: .15"></span>
-                            <span class="particle" style="--a: 150deg; --x: 40%; --y: 70%; --d: 7.5em; --f: .8; --t: .08"></span>
-                            <span class="particle" style="--a: 10deg; --x: 90%; --y: 65%; --d: 7em; --f: .6; --t: .25"></span>
-                            <span class="particle" style="--a: -120deg; --x: 15%; --y: 10%; --d: 4em"></span>
-                            <span class="particle" style="--a: -175deg; --x: 10%; --y: 25%; --d: 5.25em; --f: .6; --t: .32"></span>
-                        </span>
-                    </a>
-                  </li>
-                  <li><a href="#cursos" class="flex items-center gap-2 px-3.5 py-2 text-sm font-semibold text-white/70 hover:text-white">Cursos <span class="text-xs bg-[#A429FF] text-white font-bold px-2 py-1 rounded-md">SOON</span></a></li>
-              </ul>
-          </nav>
-          <div class="flex items-center gap-2">
-              <a href="#login" class="hidden sm:block text-white/75 hover:text-white text-sm font-semibold px-4 py-2 rounded-md transition-colors">Iniciar Sesión</a>
-              <a href="#register" class="hidden sm:flex items-center gap-2 bg-[#A429FF] text-white px-5 py-2 rounded-xl text-sm font-bold transition hover:-translate-y-0.5 hover:shadow-lg hover:shadow-[#A429FF]/50">Únete <i class="bi bi-rocket-takeoff"></i></a>
-              <a href="#cart" class="border border-white/20 text-white/75 hover:text-white hover:bg-white/5 w-10 h-10 flex items-center justify-center rounded-xl transition-colors text-lg"><i class="bi bi-cart3"></i></a>
-              <button class="lg:hidden border border-white/20 text-white/75 hover:text-white hover:bg-white/5 w-10 h-10 flex items-center justify-center rounded-lg transition-colors text-lg">
-                  <i class="bi bi-list"></i>
-              </button>
-          </div>
+  <!-- ==================== NAVBAR ==================== -->
+  <header class="navbar">
+    <div class="navbar-container">
+      <div class="logo">
+        <a href="/index">
+          <img src="/images/LOGO-OFFSZN.png" alt="OFFSZN" style="height: 45px;">
+        </a>
       </div>
+      <div class="navbar-center">
+        <ul class="navbar-links">
+          <li><a href="/index" class="active">Inicio</a></li>
+          <li class="dropdown-parent">
+            <a onclick="toggleDropdown(this)">
+              Recursos <i class="bi bi-chevron-down"></i>
+            </a>
+            <div class="dropdown-menu dropdown-large">
+              <div class="dropdown-section">
+                <span class="dropdown-section-title">PRODUCTOS DIGITALES</span>
+                <a href="/recursos/presets" class="dropdown-item">
+                  <i class="bi bi-sliders"></i>
+                  <div class="dropdown-item-content">
+                    <div class="dropdown-item-title">Presets & Plugins</div>
+                    <div class="dropdown-item-desc">Chains profesionales</div>
+                  </div>
+                </a>
+                <a href="/recursos/beats-instrumentales" class="dropdown-item">
+                  <i class="bi bi-music-note-beamed"></i>
+                  <div class="dropdown-item-content">
+                    <div class="dropdown-item-title">Beats & Instrumentales</div>
+                    <div class="dropdown-item-desc">Licencias disponibles</div>
+                  </div>
+                </a>
+                <a href="/recursos/drum-kits" class="dropdown-item">
+                  <i class="bi bi-disc"></i>
+                  <div class="dropdown-item-content">
+                    <div class="dropdown-item-title">Drum Kits</div>
+                    <div class="dropdown-item-desc">Samples únicos</div>
+                  </div>
+                </a>
+              </div>
+              <div class="dropdown-section">
+                <span class="dropdown-section-title">CONTENIDO</span>
+                <a href="/recursos/samples-loops" class="dropdown-item">
+                  <i class="bi bi-soundwave"></i>
+                  <div class="dropdown-item-content">
+                    <div class="dropdown-item-title">Samples & Loops</div>
+                    <div class="dropdown-item-desc">Loops de calidad</div>
+                  </div>
+                </a>
+                <a href="/recursos/tutoriales" class="dropdown-item">
+                  <i class="bi bi-play-circle"></i>
+                  <div class="dropdown-item-content">
+                    <div class="dropdown-item-title">Tutoriales</div>
+                    <div class="dropdown-item-desc">Guías y videos</div>
+                  </div>
+                </a>
+              </div>
+              <div class="dropdown-divider"></div>
+              <a href="/recursos/recursos-gratis" class="dropdown-item" style="grid-column: 1 / -1;">
+                <i class="bi bi-gift"></i>
+                <div class="dropdown-item-content">
+                  <div class="dropdown-item-title">Recursos Gratis</div>
+                  <div class="dropdown-item-desc">Descarga sin costo</div>
+                </div>
+              </a>
+            </div>
+          </li>
+          <li class="dropdown-parent">
+            <a onclick="toggleDropdown(this)">
+              Comunidad <i class="bi bi-chevron-down"></i>
+            </a>
+            <div class="dropdown-menu">
+              <a href="/comunidad/feed" class="dropdown-item">
+                <i class="bi bi-house"></i>
+                <div class="dropdown-item-content">
+                  <div class="dropdown-item-title">Feed</div>
+                </div>
+              </a>
+              <a href="/comunidad/productores" class="dropdown-item">
+                <i class="bi bi-people"></i>
+                <div class="dropdown-item-content">
+                  <div class="dropdown-item-title">Productores</div>
+                </div>
+              </a>
+              <a href="/comunidad/colaboraciones" class="dropdown-item">
+                <i class="bi bi-hand-index-thumb"></i>
+                <div class="dropdown-item-content">
+                  <div class="dropdown-item-title">Colaboraciones</div>
+                </div>
+              </a>
+              <div class="dropdown-divider"></div>
+              <a href="/comunidad/foros" class="dropdown-item">
+                <i class="bi bi-chat-dots"></i>
+                <div class="dropdown-item-content">
+                  <div class="dropdown-item-title">Foros</div>
+                </div>
+              </a>
+              <a href="/comunidad/eventos" class="dropdown-item">
+                <i class="bi bi-calendar-event"></i>
+                <div class="dropdown-item-content">
+                  <div class="dropdown-item-title">Eventos</div>
+                </div>
+              </a>
+              <a href="https://discord.gg/vX7XktMeBU" target="_blank" class="dropdown-item discord-link">
+                <i class="bi bi-discord"></i>
+                <div class="dropdown-item-content">
+                  <div class="dropdown-item-title">Únete a Discord</div>
+                  <div class="dropdown-item-desc">Comunidad activa</div>
+                </div>
+              </a>
+            </div>
+          </li>
+          <li>
+            <a href="/pages/marketplace" class="btn-nav-primary">
+              Marketplace
+              <span class="sparkle-wrap" aria-hidden="true">
+                <span class="particle" style="--a: -45deg; --x: 53%; --y: 15%; --d: 4em; --f: .7; --t: .15"></span>
+                <span class="particle" style="--a: 150deg; --x: 40%; --y: 70%; --d: 7.5em; --f: .8; --t: .08"></span>
+                <span class="particle" style="--a: 10deg; --x: 90%; --y: 65%; --d: 7em; --f: .6; --t: .25"></span>
+                <span class="particle" style="--a: -120deg; --x: 15%; --y: 10%; --d: 4em"></span>
+                <span class="particle" style="--a: -175deg; --x: 10%; --y: 25%; --d: 5.25em; --f: .6; --t: .32"></span>
+                <span class="particle" style="--a: -18deg; --x: 80%; --y: 25%; --d: 4.75em; --f: .5; --t: .4"></span>
+                <span class="particle" style="--a: -160deg; --x: 30%; --y: 5%; --d: 9em; --f: .9; --t: .5"></span>
+                <span class="particle" style="--a: 175deg; --x: 9%; --y: 30%; --d: 6em; --f: .95; --t: .6"></span>
+                <span class="particle" style="--a: -10deg; --x: 89%; --y: 25%; --d: 4.5em; --f: .55; --t: .67"></span>
+                <span class="particle" style="--a: -140deg; --x: 40%; --y: 10%; --d: 5em; --f: .85; --t: .75"></span>
+                <span class="particle" style="--a: 90deg; --x: 45%; --y: 65%; --d: 4em; --f: .5; --t: .83"></span>
+                <span class="particle" style="--a: 30deg; --x: 70%; --y: 80%; --d: 6.5em; --f: .75; --t: .92"></span>
+              </span>
+            </a>
+          </li>
+          <li>
+            <a href="/cursos/inicio">
+              Cursos
+              <span class="nav-badge">SOON</span>
+            </a>
+          </li>
+
+        </ul>
+      </div>
+      <button class="menu-toggle" id="menuToggle">
+        <i class="bi bi-list"></i>
+      </button>
+      <div class="navbar-right">
+        <a href="/pages/login" class="navbar-login-link">Iniciar Sesión</a>
+        <a href="/pages/register" class="btn-join">
+          Únete <i class="bi bi-rocket-takeoff"></i>
+        </a>
+        <a href="/pages/cart" class="navbar-icon-button" title="Carrito">
+          <i class="bi bi-cart3"></i>
+          <!-- SIN cart-badge -->
+        </a>
+      </div>
+    </div>
   </header>
 
-  <main>
-    <!-- Hero Section -->
-    <section id="inicio" class="min-h-[80vh] flex items-center py-16 md:py-24 relative overflow-hidden">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center relative z-10">
-        <div class="flex flex-col gap-6 text-center lg:text-left items-center lg:items-start">
-          <div class="inline-flex items-center gap-2 px-4 py-2 bg-[#A429FF]/15 border border-[#A429FF]/40 rounded-full text-sm font-bold text-[#D69CFF] tracking-wider uppercase">
-            🇵🇪 100% Peruano • Beta Abierta
+  <!-- ==================== HERO SECTION ==================== -->
+  <section class="hero" id="inicio">
+    <div class="hero-container">
+      <div class="hero-content">
+        <div class="hero-badge">
+          🇵🇪 100% Peruano • Beta Abierta
+        </div>
+        <h1 class="hero-title">
+          EL PRIMER<br>
+          <span class="gradient-text">MARKETPLACE</span><br>
+          MUSICAL DE PERÚ
+        </h1>
+        <p class="hero-subtitle">
+          Donde productores peruanos venden beats, kits y presets al mundo entero.
+        </p>
+        <div class="hero-stats">
+          <div class="stat-item">
+            <span class="stat-number">+100</span>
+            <span class="stat-label">Productores</span>
           </div>
-          <h1 class="text-5xl sm:text-6xl md:text-7xl font-black leading-[0.95] tracking-tighter text-white uppercase font-montserrat">
-            El Primer<br />
-            <span class="bg-gradient-to-r from-[#A429FF] to-[#D69CFF] text-transparent bg-clip-text">Marketplace</span><br />
-            Musical de Perú
-          </h1>
-          <p class="text-lg text-purple-200/90 max-w-md">Donde productores peruanos venden beats, kits y presets al mundo entero.</p>
-          <div class="flex gap-4 flex-wrap justify-center lg:justify-start">
-            <div class="flex items-center gap-3 px-4 py-2 bg-[#A429FF]/10 border border-[#A429FF]/30 rounded-xl">
-              <span class="text-2xl font-bold text-white font-montserrat">+100</span>
-              <span class="text-sm text-gray-400 uppercase">Productores</span>
-            </div>
-            <div class="flex items-center gap-3 px-4 py-2 bg-[#A429FF]/10 border border-[#A429FF]/30 rounded-xl">
-              <span class="text-2xl font-bold text-white font-montserrat">+500</span>
-              <span class="text-sm text-gray-400 uppercase">Descargas</span>
-            </div>
-             <div class="hidden sm:flex items-center gap-3 px-4 py-2 bg-[#A429FF]/10 border border-[#A429FF]/30 rounded-xl">
-              <span class="text-2xl font-bold text-white font-montserrat">5.0</span>
-              <span class="text-sm text-gray-400 uppercase">Valoración</span>
-            </div>
+          <div class="stat-item">
+            <span class="stat-number">+500</span>
+            <span class="stat-label">Descargas</span>
           </div>
-          <div class="flex gap-4 mt-4 flex-wrap justify-center lg:justify-start">
-            <a href="#beats" class="px-8 py-4 rounded-xl text-white font-bold bg-gradient-to-r from-[#A429FF] to-[#7A1FBF] transition hover:-translate-y-1 hover:shadow-2xl hover:shadow-[#A429FF]/40 flex items-center gap-2">Explorar Recursos <i class="bi bi-arrow-right"></i></a>
-            <a href="#demo" class="px-8 py-4 rounded-xl text-white font-bold bg-transparent border-2 border-white/20 transition hover:bg-white/5 hover:border-white/40 flex items-center gap-2">Empezar a Vender <i class="bi bi-upload"></i></a>
+          <div class="stat-item">
+            <span class="stat-number">5.0</span>
+            <span class="stat-label">Valoración</span>
           </div>
         </div>
-        <div class="hero-image">
-          <img src="https://picsum.photos/seed/musicprod/600/600" alt="OFFSZN Platform" class="rounded-2xl shadow-2xl shadow-[#A429FF]/30 w-full" />
+        <div class="hero-buttons">
+          <a href="#beats" class="btn-hero btn-hero-primary">
+            <span>Explorar Recursos</span>
+            <i class="bi bi-arrow-right"></i>
+          </a>
+          <a href="#demo" class="btn-hero btn-hero-secondary">
+            <span>Empezar a Vender</span>
+            <i class="bi bi-upload"></i>
+          </a>
         </div>
       </div>
-    </section>
+      <div class="hero-image">
+        <img src="https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?w=600&h=600&fit=crop"
+          alt="OFFSZN Platform">
+      </div>
+    </div>
+  </section>
 
-    <!-- Interactive Demo Section -->
-    <section class="demo-section" id="demo">
-        <div class="max-w-4xl mx-auto px-4 sm:px-6">
-          <div class="text-center mb-10">
-            <span class="block text-sm font-bold tracking-[2px] uppercase text-[#D69CFF] mb-3">✨ AHORA TE TOCA A TI</span>
-            <h2 class="text-4xl md:text-5xl font-black text-white font-montserrat leading-tight mb-4">Simula Tu Primera Venta</h2>
-            <p class="text-lg text-gray-400 max-w-2xl mx-auto">
-              En 3 simples pasos, convierte tu música en ingresos.
-            </p>
+  <!-- ==================== DEMO INTERACTIVA ==================== -->
+  <section class="demo-section" id="demo">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-eyebrow">✨ AHORA TE TOCA A TI</span>
+        <h2 class="section-title">Simula Tu Primera Venta</h2>
+        <p class="section-subtitle">
+          En 3 simples pasos, convierte tu música en ingresos.
+        </p>
+      </div>
+      <div class="demo-interactive">
+        <div class="demo-step">
+          <div class="demo-step-number">1</div>
+          <div class="demo-step-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" viewBox="0 0 16 16">
+              <path
+                d="M4 3.5A1.5 1.5 0 0 1 5.5 2h5A1.5 1.5 0 0 1 12 3.5v9a1.5 1.5 0 0 1-1.5 1.5H5.5A1.5 1.5 0 0 1 4 12.5v-9z" />
+            </svg>
           </div>
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div class="bg-[#1a0a2e]/40 border border-[#A429FF]/20 rounded-2xl p-6 text-center">
-              <div class="w-12 h-12 bg-gradient-to-br from-[#A429FF] to-[#7A1FBF] rounded-full flex items-center justify-center text-xl font-black text-white mx-auto mb-4 shadow-lg shadow-[#A429FF]/40">1</div>
-              <h3 class="text-xl font-bold text-white mb-2">Sube tu archivo</h3>
-              <p class="text-sm text-purple-200/80">Beat, Kit o Preset. Formatos WAV, MP3, ZIP aceptados.</p>
-            </div>
-            <div class="bg-[#1a0a2e]/40 border border-[#A429FF]/20 rounded-2xl p-6 text-center">
-              <div class="w-12 h-12 bg-gradient-to-br from-[#A429FF] to-[#7A1FBF] rounded-full flex items-center justify-center text-xl font-black text-white mx-auto mb-4 shadow-lg shadow-[#A429FF]/40">2</div>
-              <h3 class="text-xl font-bold text-white mb-2">Define tu precio</h3>
-              <p class="text-sm text-purple-200/80">Tú decides cuánto vale tu trabajo.</p>
-            </div>
-             <div class="bg-[#1a0a2e]/40 border border-[#A429FF]/20 rounded-2xl p-6 text-center">
-              <div class="w-12 h-12 bg-gradient-to-br from-[#A429FF] to-[#7A1FBF] rounded-full flex items-center justify-center text-xl font-black text-white mx-auto mb-4 shadow-lg shadow-[#A429FF]/40">3</div>
-              <h3 class="text-xl font-bold text-white mb-2">¡Publica y cobra!</h3>
-              <p class="text-sm text-purple-200/80">Recibe pagos en Yape o PayPal. Instantáneo.</p>
-            </div>
+          <h3 class="demo-step-title">Sube tu archivo</h3>
+          <p class="demo-step-desc">Beat, Kit o Preset. Formatos WAV, MP3, ZIP aceptados.</p>
+        </div>
+        <div class="demo-step">
+          <div class="demo-step-number">2</div>
+          <div class="demo-step-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" viewBox="0 0 16 16">
+              <path d="M8 0a8 8 0 1 1 0 16A8 8 0 0 1 8 0zM5.5 7.5a2.5 2.5 0 1 1 5 0 2.5 2.5 0 0 1-5 0z" />
+              <path d="M8 10a2 2 0 1 1 0 4 2 2 0 0 1 0-4z" />
+            </svg>
           </div>
-          <div id="drop-zone" class="mt-8 p-10 bg-[#A429FF]/5 border-2 border-dashed rounded-2xl text-center transition-all duration-300 border-[#A429FF]/30 hover:bg-[#A429FF]/10 hover:border-[#A429FF]/50 cursor-pointer">
-            <input type="file" id="file-input" accept=".mp3,.wav,audio/mpeg,audio/wav" class="hidden"/>
-            <div id="drop-zone-icon" class="text-4xl text-[#D69CFF] mb-3">
-                <i class="bi bi-cloud-upload"></i>
-            </div>
-            <div id="drop-zone-text" class="text-lg font-bold text-white mb-1">Arrastra tu archivo aquí</div>
-            <div id="drop-zone-hint" class="text-sm text-purple-200/80">o haz clic para seleccionar (MP3 o WAV)</div>
+          <h3 class="demo-step-title">Define tu precio</h3>
+          <p class="demo-step-desc">Tú decides cuánto vale tu trabajo.</p>
+        </div>
+        <div class="demo-step">
+          <div class="demo-step-number">3</div>
+          <div class="demo-step-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" viewBox="0 0 16 16">
+              <path d="M10 0l-1.5 1.5L12 5H0v2h12l-3.5 3.5L10 12l6-6L10 0z" />
+            </svg>
           </div>
-          
-          <div id="sale-prompt" class="hidden mt-8 p-6 bg-[#1a0a2e]/60 rounded-2xl text-center animate-fade-in">
-            <h3 class="text-lg text-white font-bold mb-2">🎉 ¡Una venta está por cerrarse!</h3>
-            <p id="sale-prompt-text" class="text-purple-200/90 mb-4">
-              <strong>Willie Inspired</strong> quiere comprar tu producto <strong>"archivo.mp3"</strong> por <strong>$25</strong>.
-            </p>
-            <div class="flex gap-4 justify-center">
-              <button id="accept-sale-btn" class="px-6 py-2 rounded-lg text-white font-bold bg-gradient-to-r from-green-500 to-emerald-600 transition hover:-translate-y-0.5 hover:shadow-lg hover:shadow-green-500/40 flex items-center gap-2">
-                <i class="bi bi-check2"></i> Aceptar
-              </button>
-              <button id="reject-sale-btn" class="px-6 py-2 rounded-lg text-white font-bold bg-transparent border-2 border-white/20 transition hover:bg-white/5 hover:border-white/40 flex items-center gap-2">
-                <i class="bi bi-x-lg"></i> Rechazar
-              </button>
-            </div>
-          </div>
+          <h3 class="demo-step-title">¡Publica y cobra!</h3>
+          <p class="demo-step-desc">Recibe pagos en Yape o PayPal. Instantáneo.</p>
+        </div>
+      </div>
+      <div class="demo-upload-zone">
+        <div class="demo-upload-icon">
+          <i class="bi bi-cloud-upload"></i>
+        </div>
+        <div class="demo-upload-text">Arrastra tu archivo aquí</div>
+        <div class="demo-upload-hint">o haz clic para seleccionar</div>
+      </div>
+      <!-- Simulación de Venta -->
+      <div id="saleSimulation">
+        <h3 style="color: var(--text-primary); margin-bottom: 0.75rem;">🎉 ¡Una venta está por cerrarse!</h3>
+        <p style="font-size: 1rem; color: var(--text-secondary); margin-bottom: 1rem;">
+          <strong>Willie Inspired</strong> quiere comprar tu producto <strong>"Trap Dark 2025"</strong> por
+          <strong>$25</strong>.
+        </p>
+        <div style="display: flex; gap: 0.75rem; justify-content: center;">
+          <button id="acceptSale" class="btn-hero btn-hero-primary sale-btn">
+            <i class="bi bi-check2"></i> Aceptar
+          </button>
+          <button id="rejectSale" class="btn-hero btn-hero-secondary sale-btn">
+            <i class="bi bi-x-lg"></i> Rechazar
+          </button>
+        </div>
+      </div>
+      <div id="saleSuccess">
+        <div class="sale-checkmark">✅</div>
+        <h3 style="color: var(--text-primary); margin-bottom: 0.5rem;">¡Venta Exitosa!</h3>
+        <p style="color: var(--text-secondary);">
+          $25 han sido transferidos a tu cuenta.
+        </p>
+      </div>
+    </div>
+  </section>
 
-          <div id="sale-success" class="hidden mt-8 p-6 bg-green-500/10 border-2 border-green-500/30 rounded-2xl text-center animate-fade-in">
-              <div class="text-4xl text-green-400 mb-2">✅</div>
-              <h3 class="text-lg text-white font-bold mb-1">¡Venta Exitosa!</h3>
-              <p class="text-purple-200/90">$25 han sido transferidos a tu cuenta.</p>
+  <!-- ==================== BEATS PLAYER ==================== -->
+  <section class="beats-section" id="beats">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-eyebrow">🎧 ESCUCHA LO QUE OTROS VENDEN</span>
+        <h2 class="section-title">Beats en Venta Ahora</h2>
+        <p class="section-subtitle">
+          De productores peruanos, para el mundo. Calidad profesional garantizada.
+        </p>
+      </div>
+      <div class="beats-grid">
+        <div class="beat-card">
+          <div class="beat-cover">
+            <div class="beat-play-btn">
+              <i class="bi bi-play-fill"></i>
+            </div>
+          </div>
+          <div class="beat-info">
+            <h3 class="beat-title">Trap Dark 2025</h3>
+            <p class="beat-producer">by Producer_PE</p>
+            <div class="beat-meta">
+              <span class="beat-price">$25</span>
+              <span class="beat-bpm">140 BPM</span>
+            </div>
           </div>
         </div>
-      </section>
-
-    <!-- Beats Section -->
-    <section class="py-16 md:py-24" id="beats">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6">
-            <div class="text-center mb-12">
-                <span class="block text-sm font-bold tracking-[2px] uppercase text-[#D69CFF] mb-3">🎧 ESCUCHA LO QUE OTROS VENDEN</span>
-                <h2 class="text-4xl md:text-5xl font-black text-white font-montserrat leading-tight mb-4">Beats en Venta Ahora</h2>
-                <p class="text-lg text-gray-400 max-w-2xl mx-auto">De productores peruanos, para el mundo. Calidad profesional garantizada.</p>
+        <div class="beat-card">
+          <div class="beat-cover">
+            <div class="beat-play-btn">
+              <i class="bi bi-play-fill"></i>
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                <div class="beat-card bg-[#1a0a2e]/40 border border-[#A429FF]/20 rounded-2xl overflow-hidden transition-all duration-300 hover:border-[#A429FF]/60 hover:-translate-y-1.5 hover:shadow-2xl hover:shadow-[#A429FF]/30">
-                    <div class="relative aspect-video bg-cover bg-center" style="background-image: url(https://picsum.photos/seed/trap/400/225)">
-                        <div class="absolute inset-0 bg-black/40 flex items-center justify-center">
-                            <button class="play-btn w-16 h-16 bg-white/95 rounded-full flex items-center justify-center text-3xl text-[#A429FF] cursor-pointer transition-transform duration-300 hover:scale-110 shadow-lg">
-                                <i class="bi bi-play-fill"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="p-5">
-                        <h3 class="text-xl font-bold text-white truncate">Trap Dark 2025</h3>
-                        <p class="text-sm text-purple-200/80 mb-4">by Producer_PE</p>
-                        <div class="flex items-center justify-between pt-4 border-t border-[#A429FF]/20">
-                            <span class="text-2xl font-black text-[#D69CFF] font-montserrat">$25</span>
-                            <span class="text-sm text-purple-200/80">140 BPM</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="beat-card bg-[#1a0a2e]/40 border border-[#A429FF]/20 rounded-2xl overflow-hidden transition-all duration-300 hover:border-[#A429FF]/60 hover:-translate-y-1.5 hover:shadow-2xl hover:shadow-[#A429FF]/30">
-                    <div class="relative aspect-video bg-cover bg-center" style="background-image: url(https://picsum.photos/seed/reggaeton/400/225)">
-                        <div class="absolute inset-0 bg-black/40 flex items-center justify-center">
-                            <button class="play-btn w-16 h-16 bg-white/95 rounded-full flex items-center justify-center text-3xl text-[#A429FF] cursor-pointer transition-transform duration-300 hover:scale-110 shadow-lg">
-                                <i class="bi bi-play-fill"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="p-5">
-                        <h3 class="text-xl font-bold text-white truncate">Reggaeton Vibes</h3>
-                        <p class="text-sm text-purple-200/80 mb-4">by Lima_Beats</p>
-                        <div class="flex items-center justify-between pt-4 border-t border-[#A429FF]/20">
-                            <span class="text-2xl font-black text-[#D69CFF] font-montserrat">$30</span>
-                            <span class="text-sm text-purple-200/80">95 BPM</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="beat-card bg-[#1a0a2e]/40 border border-[#A429FF]/20 rounded-2xl overflow-hidden transition-all duration-300 hover:border-[#A429FF]/60 hover:-translate-y-1.5 hover:shadow-2xl hover:shadow-[#A429FF]/30">
-                    <div class="relative aspect-video bg-cover bg-center" style="background-image: url(https://picsum.photos/seed/drill/400/225)">
-                        <div class="absolute inset-0 bg-black/40 flex items-center justify-center">
-                            <button class="play-btn w-16 h-16 bg-white/95 rounded-full flex items-center justify-center text-3xl text-[#A429FF] cursor-pointer transition-transform duration-300 hover:scale-110 shadow-lg">
-                                <i class="bi bi-play-fill"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="p-5">
-                        <h3 class="text-xl font-bold text-white truncate">Drill Essence</h3>
-                        <p class="text-sm text-purple-200/80 mb-4">by Peru_Drillz</p>
-                        <div class="flex items-center justify-between pt-4 border-t border-[#A429FF]/20">
-                            <span class="text-2xl font-black text-[#D69CFF] font-montserrat">$20</span>
-                            <span class="text-sm text-purple-200/80">150 BPM</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Why OFFSZN Section -->
-    <section class="py-16 md:py-24 bg-black/20">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6">
-        <div class="text-center mb-12">
-          <span class="block text-sm font-bold tracking-[2px] uppercase text-[#D69CFF] mb-3">💜 ¿POR QUÉ OFFSZN?</span>
-          <h2 class="text-4xl md:text-5xl font-black text-white font-montserrat leading-tight">No es solo un marketplace.<br />Es tu comunidad.</h2>
-        </div>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div class="bg-[#1a0a2e]/40 border border-[#A429FF]/20 rounded-2xl p-8 transition-all duration-300 hover:border-[#A429FF]/60 hover:-translate-y-1.5 hover:shadow-2xl hover:shadow-[#A429FF]/30 text-center">
-            <div class="h-[56px] flex items-center justify-center mb-4 text-5xl font-bold tracking-tighter text-purple-200/80">PE</div>
-            <h3 class="text-2xl font-bold text-white mb-3">Hecho en Perú, para el mundo</h3>
-            <p class="text-purple-200/80">La primera plataforma donde productores peruanos venden su música globalmente.</p>
           </div>
-          <div class="bg-[#1a0a2e]/40 border border-[#A429FF]/20 rounded-2xl p-8 transition-all duration-300 hover:border-[#A429FF]/60 hover:-translate-y-1.5 hover:shadow-2xl hover:shadow-[#A429FF]/30 text-center">
-            <div class="h-[56px] flex items-center justify-center mb-4">
-              <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <g>
-                      <path d="M8 24C8 23.4477 8.44772 23 9 23H32C32.5523 23 33 23.4477 33 24V32C33 32.5523 32.5523 33 32 33H9C8.44772 33 8 32.5523 8 32V24Z" fill="#10B981"/>
-                      <path d="M12 20C12 19.4477 12.4477 19 13 19H35C35.5523 19 36 19.4477 36 20V28C36 28.5523 35.5523 29 35 29H33V32C33 32.5523 32.5523 33 32 33H13C12.4477 33 12 32.5523 12 32V20Z" fill="#34D399"/>
-                      <circle cx="24" cy="24" r="3" fill="white"/>
-                      <text x="22.5" y="26.5" fill="#10B981" fontSize="5" fontWeight="bold">$</text>
-                      <path d="M36 19L44 15" stroke="white" strokeWidth="2" strokeLinecap="round"/>
-                      <path d="M36 29L44 33" stroke="white" strokeWidth="2" strokeLinecap="round"/>
-                  </g>
-              </svg>
+          <div class="beat-info">
+            <h3 class="beat-title">Reggaeton Vibes</h3>
+            <p class="beat-producer">by Lima_Beats</p>
+            <div class="beat-meta">
+              <span class="beat-price">$30</span>
+              <span class="beat-bpm">95 BPM</span>
             </div>
-            <h3 class="text-2xl font-bold text-white mb-3">Pagos locales sin complicaciones</h3>
-            <p class="text-purple-200/80">Cobra en soles con Yape o dólares con PayPal. Sin restricciones, sin demoras.</p>
           </div>
-          <div class="bg-[#1a0a2e]/40 border border-[#A429FF]/20 rounded-2xl p-8 transition-all duration-300 hover:border-[#A429FF]/60 hover:-translate-y-1.5 hover:shadow-2xl hover:shadow-[#A429FF]/30 text-center">
-            <div class="h-[56px] flex items-center justify-center mb-4">
-               <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <g>
-                      <circle cx="30" cy="15" r="5" fill="#C4B5FD"/>
-                      <path d="M38 36V32C38 29.2386 34.4183 27 30 27C25.5817 27 22 29.2386 22 32V36H38Z" fill="#C4B5FD"/>
-                      <circle cx="18" cy="17" r="6" fill="#A429FF"/>
-                      <path d="M28 36V31C28 27.134 23.5228 24 18 24C12.4772 24 8 27.134 8 31V36H28Z" fill="#A429FF"/>
-                  </g>
-                </svg>
+        </div>
+        <div class="beat-card">
+          <div class="beat-cover">
+            <div class="beat-play-btn">
+              <i class="bi bi-play-fill"></i>
             </div>
-            <h3 class="text-2xl font-bold text-white mb-3">Comunidad integrada</h3>
-            <p class="text-purple-200/80">Foros, Discord activo, colaboraciones. Esto no es mío, es de todos nosotros.</p>
+          </div>
+          <div class="beat-info">
+            <h3 class="beat-title">Drill Essence</h3>
+            <p class="beat-producer">by Peru_Drillz</p>
+            <div class="beat-meta">
+              <span class="beat-price">$20</span>
+              <span class="beat-bpm">150 BPM</span>
+            </div>
           </div>
         </div>
       </div>
-    </section>
+    </div>
+  </section>
 
-    <!-- Testimonials Section -->
-    <section class="py-16 md:py-24" id="testimonios">
-        <div class="max-w-3xl mx-auto px-4 sm:px-6">
-            <div class="text-center mb-12">
-                <span class="block text-sm font-bold tracking-[2px] uppercase text-[#D69CFF] mb-3">💬 LO QUE DICEN</span>
-                <h2 class="text-4xl md:text-5xl font-black text-white font-montserrat leading-tight">Historias Reales</h2>
-            </div>
-            <div class="bg-[#1a0a2e]/40 border border-[#A429FF]/30 rounded-2xl p-8 sm:p-12 text-center">
-                <img src="https://picsum.photos/seed/producer/200/200" alt="Producer" class="w-24 h-24 rounded-full border-4 border-[#A429FF] mx-auto mb-6 object-cover"/>
-                <p class="text-lg sm:text-xl text-purple-200/90 leading-relaxed italic mb-6">
-                    "Gracias a OFFSZN pude vender mi primer beat a un artista internacional. La plataforma es súper fácil de usar y los pagos llegan al instante."
-                </p>
-                <h4 class="text-xl font-bold text-white">J Wolf La Bestia</h4>
-                <p class="text-sm text-purple-200/80 mb-6">Artista · Lima, Perú</p>
-                <div class="flex gap-4 justify-center">
-                    <a href="#" class="w-10 h-10 flex items-center justify-center bg-[#A429FF]/20 border border-[#A429FF]/40 rounded-full text-[#D69CFF] hover:bg-[#A429FF]/40 hover:text-white transition-all duration-300 hover:-translate-y-0.5"><i class="bi bi-instagram"></i></a>
-                    <a href="#" class="w-10 h-10 flex items-center justify-center bg-[#A429FF]/20 border border-[#A429FF]/40 rounded-full text-[#D69CFF] hover:bg-[#A429FF]/40 hover:text-white transition-all duration-300 hover:-translate-y-0.5"><i class="bi bi-spotify"></i></a>
-                    <a href="#" class="w-10 h-10 flex items-center justify-center bg-[#A429FF]/20 border border-[#A429FF]/40 rounded-full text-[#D69CFF] hover:bg-[#A429FF]/40 hover:text-white transition-all duration-300 hover:-translate-y-0.5"><i class="bi bi-tiktok"></i></a>
-                </div>
-            </div>
+  <!-- ==================== WHY OFFSZN ==================== -->
+  <section class="why-section">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-eyebrow">💜 ¿POR QUÉ OFFSZN?</span>
+        <h2 class="section-title">No es solo un marketplace.<br>Es tu comunidad.</h2>
+      </div>
+      <div class="why-grid">
+        <div class="why-card">
+          <span class="why-icon">🇵🇪</span>
+          <h3 class="why-title">Hecho en Perú, para el mundo</h3>
+          <p class="why-desc">
+            La primera plataforma donde productores peruanos venden su música globalmente.
+          </p>
         </div>
-    </section>
+        <div class="why-card">
+          <span class="why-icon">💸</span>
+          <h3 class="why-title">Pagos locales sin complicaciones</h3>
+          <p class="why-desc">
+            Cobra en soles con Yape o dólares con PayPal. Sin restricciones, sin demoras.
+          </p>
+        </div>
+        <div class="why-card">
+          <span class="why-icon">👥</span>
+          <h3 class="why-title">Comunidad integrada</h3>
+          <p class="why-desc">
+            Foros, Discord activo, colaboraciones. Esto no es mío, es de todos nosotros.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
 
-    <!-- Creators Carousel Section -->
-    <section class="py-16 md:py-24">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6">
-            <div class="text-center mb-10">
-                <span class="block text-sm font-bold tracking-[2px] uppercase text-[#D69CFF] mb-3">COMUNIDAD GLOBAL</span>
-                <h2 class="text-4xl md:text-5xl font-black text-white font-montserrat leading-tight mb-4">Creadores Originales</h2>
-                <p class="text-lg text-gray-400 max-w-2xl mx-auto">Los sonidos de nuestros productores han sido usados por los nombres más grandes de la industria.</p>
-            </div>
-            <div class="relative mt-12">
-                <button id="scroll-left" class="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-gradient-to-r from-[#A429FF] to-[#7A1FBF] text-white rounded-full flex items-center justify-center transition-all duration-300 hover:shadow-lg hover:shadow-[#A429FF]/50 opacity-30 pointer-events-none">
-                    <i class="bi bi-chevron-left"></i>
-                </button>
-                <div id="creators-container" class="flex gap-8 overflow-x-auto scrollbar-hide scroll-smooth px-12">
-                    <div class="flex flex-col items-center gap-4 text-center flex-shrink-0 w-28"><img src="https://picsum.photos/seed/nicki/128/128" alt="Nicki Minaj" class="w-28 h-28 rounded-full object-cover border-4 border-white/10 shadow-lg" /><span class="font-bold text-white text-md">Nicki Minaj</span></div>
-                    <div class="flex flex-col items-center gap-4 text-center flex-shrink-0 w-28"><img src="https://picsum.photos/seed/ksi/128/128" alt="KSI" class="w-28 h-28 rounded-full object-cover border-4 border-white/10 shadow-lg" /><span class="font-bold text-white text-md">KSI</span></div>
-                    <div class="flex flex-col items-center gap-4 text-center flex-shrink-0 w-28"><img src="https://picsum.photos/seed/montana/128/128" alt="French Montana" class="w-28 h-28 rounded-full object-cover border-4 border-white/10 shadow-lg" /><span class="font-bold text-white text-md">French Montana</span></div>
-                    <div class="flex flex-col items-center gap-4 text-center flex-shrink-0 w-28"><img src="https://picsum.photos/seed/mello/128/128" alt="Marshmello" class="w-28 h-28 rounded-full object-cover border-4 border-white/10 shadow-lg" /><span class="font-bold text-white text-md">Marshmello</span></div>
-                    <div class="flex flex-col items-center gap-4 text-center flex-shrink-0 w-28"><img src="https://picsum.photos/seed/bunny/128/128" alt="Bad Bunny" class="w-28 h-28 rounded-full object-cover border-4 border-white/10 shadow-lg" /><span class="font-bold text-white text-md">Bad Bunny</span></div>
-                    <div class="flex flex-col items-center gap-4 text-center flex-shrink-0 w-28"><img src="https://picsum.photos/seed/drake/128/128" alt="Drake" class="w-28 h-28 rounded-full object-cover border-4 border-white/10 shadow-lg" /><span class="font-bold text-white text-md">Drake</span></div>
-                    <div class="flex flex-col items-center gap-4 text-center flex-shrink-0 w-28"><img src="https://picsum.photos/seed/roddy/128/128" alt="Roddy Ricch" class="w-28 h-28 rounded-full object-cover border-4 border-white/10 shadow-lg" /><span class="font-bold text-white text-md">Roddy Ricch</span></div>
-                    <div class="flex flex-col items-center gap-4 text-center flex-shrink-0 w-28"><img src="https://picsum.photos/seed/travis/128/128" alt="Travis Scott" class="w-28 h-28 rounded-full object-cover border-4 border-white/10 shadow-lg" /><span class="font-bold text-white text-md">Travis Scott</span></div>
-                    <div class="flex flex-col items-center gap-4 text-center flex-shrink-0 w-28"><img src="https://picsum.photos/seed/post/128/128" alt="Post Malone" class="w-28 h-28 rounded-full object-cover border-4 border-white/10 shadow-lg" /><span class="font-bold text-white text-md">Post Malone</span></div>
-                    <div class="flex flex-col items-center gap-4 text-center flex-shrink-0 w-28"><img src="https://picsum.photos/seed/uzi/128/128" alt="Lil Uzi Vert" class="w-28 h-28 rounded-full object-cover border-4 border-white/10 shadow-lg" /><span class="font-bold text-white text-md">Lil Uzi Vert</span></div>
-                    <div class="flex flex-col items-center gap-4 text-center flex-shrink-0 w-28"><img src="https://picsum.photos/seed/weeknd/128/128" alt="The Weeknd" class="w-28 h-28 rounded-full object-cover border-4 border-white/10 shadow-lg" /><span class="font-bold text-white text-md">The Weeknd</span></div>
-                    <div class="flex flex-col items-center gap-4 text-center flex-shrink-0 w-28"><img src="https://picsum.photos/seed/cardi/128/128" alt="Cardi B" class="w-28 h-28 rounded-full object-cover border-4 border-white/10 shadow-lg" /><span class="font-bold text-white text-md">Cardi B</span></div>
-                    <div class="flex flex-col items-center gap-4 text-center flex-shrink-0 w-28"><img src="https://picsum.photos/seed/future/128/128" alt="Future" class="w-28 h-28 rounded-full object-cover border-4 border-white/10 shadow-lg" /><span class="font-bold text-white text-md">Future</span></div>
-                    <div class="flex flex-col items-center gap-4 text-center flex-shrink-0 w-28"><img src="https://picsum.photos/seed/migos/128/128" alt="Migos" class="w-28 h-28 rounded-full object-cover border-4 border-white/10 shadow-lg" /><span class="font-bold text-white text-md">Migos</span></div>
-                    <div class="flex flex-col items-center gap-4 text-center flex-shrink-0 w-28"><img src="https://picsum.photos/seed/savage/128/128" alt="21 Savage" class="w-28 h-28 rounded-full object-cover border-4 border-white/10 shadow-lg" /><span class="font-bold text-white text-md">21 Savage</span></div>
-                </div>
-                <button id="scroll-right" class="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-gradient-to-r from-[#A429FF] to-[#7A1FBF] text-white rounded-full flex items-center justify-center transition-all duration-300 hover:shadow-lg hover:shadow-[#A429FF]/50 opacity-100">
-                    <i class="bi bi-chevron-right"></i>
-                </button>
-            </div>
+  <!-- ==================== TESTIMONIOS ==================== -->
+  <section class="testimonials-section" id="testimonios">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-eyebrow">💬 LO QUE DICEN</span>
+        <h2 class="section-title">Historias Reales</h2>
+      </div>
+      <div class="testimonial-card">
+        <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&h=200&fit=crop" alt="Producer"
+          class="testimonial-avatar">
+        <p class="testimonial-text">
+          "Gracias a OFFSZN pude vender mi primer beat a un artista internacional.
+          La plataforma es súper fácil de usar y los pagos llegan al instante."
+        </p>
+        <h4 class="testimonial-author">J Wolf La Bestia</h4>
+        <p class="testimonial-role">Artista · Lima, Perú</p>
+        <div class="testimonial-socials">
+          <a href="#" class="social-link"><i class="bi bi-instagram"></i></a>
+          <a href="#" class="social-link"><i class="bi bi-spotify"></i></a>
+          <a href="#" class="social-link"><i class="bi bi-tiktok"></i></a>
         </div>
-    </section>
+      </div>
+    </div>
+  </section>
 
-    <!-- FAQ Section -->
-    <section class="py-16 md:py-24 bg-black/20">
-        <div class="max-w-4xl mx-auto px-4 sm:px-6">
-            <div class="text-center mb-12">
-                <span class="block text-sm font-bold tracking-[2px] uppercase text-[#D69CFF] mb-3">❓ PREGUNTAS FRECUENTES</span>
-                <h2 class="text-4xl md:text-5xl font-black text-white font-montserrat leading-tight">Todo lo que necesitas saber</h2>
+  <!-- ==================== FAQ ==================== -->
+  <section class="faq-section">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-eyebrow">❓ PREGUNTAS FRECUENTES</span>
+        <h2 class="section-title">Todo lo que necesitas saber</h2>
+      </div>
+      <div class="faq-list">
+        <div class="faq-item">
+          <div class="faq-question">
+            <span>¿Cómo empiezo a vender en OFFSZN?</span>
+            <i class="bi bi-chevron-down faq-icon"></i>
+          </div>
+          <div class="faq-answer">
+            <div class="faq-answer-content">
+              Crea tu cuenta gratis, configura tus métodos de pago (Yape o PayPal) y sube tus productos.
+              En minutos estarás vendiendo.
             </div>
-            <div class="flex flex-col gap-4">
-                <div class="faq-item bg-[#1a0a2e]/40 border border-[#A429FF]/20 rounded-xl overflow-hidden transition-all duration-300">
-                    <div class="faq-question flex justify-between items-center p-5 cursor-pointer">
-                        <h3 class="text-lg font-semibold text-white">¿Cómo empiezo a vender en OFFSZN?</h3>
-                        <i class="bi bi-chevron-down text-xl text-[#D69CFF] transition-transform duration-300"></i>
-                    </div>
-                    <div class="faq-answer overflow-hidden transition-[max-height] duration-500 ease-in-out max-h-0">
-                        <p class="text-purple-200/80 p-5 pt-0">Crea tu cuenta gratis, configura tus métodos de pago (Yape o PayPal) y sube tus productos. En minutos estarás vendiendo.</p>
-                    </div>
-                </div>
-                 <div class="faq-item bg-[#1a0a2e]/40 border border-[#A429FF]/20 rounded-xl overflow-hidden transition-all duration-300">
-                    <div class="faq-question flex justify-between items-center p-5 cursor-pointer">
-                        <h3 class="text-lg font-semibold text-white">¿Qué comisión cobra OFFSZN?</h3>
-                        <i class="bi bi-chevron-down text-xl text-[#D69CFF] transition-transform duration-300"></i>
-                    </div>
-                    <div class="faq-answer overflow-hidden transition-[max-height] duration-500 ease-in-out max-h-0">
-                        <p class="text-purple-200/80 p-5 pt-0">Solo cobramos 5% por transacción completada. Sin costos ocultos, sin mensualidades.</p>
-                    </div>
-                </div>
-                 <div class="faq-item bg-[#1a0a2e]/40 border border-[#A429FF]/20 rounded-xl overflow-hidden transition-all duration-300">
-                    <div class="faq-question flex justify-between items-center p-5 cursor-pointer">
-                        <h3 class="text-lg font-semibold text-white">¿Puedo vender beats, kits y presets?</h3>
-                        <i class="bi bi-chevron-down text-xl text-[#D69CFF] transition-transform duration-300"></i>
-                    </div>
-                    <div class="faq-answer overflow-hidden transition-[max-height] duration-500 ease-in-out max-h-0">
-                        <p class="text-purple-200/80 p-5 pt-0">¡Sí! Puedes vender cualquier tipo de contenido musical: beats, drum kits, presets de vocal, samples, loops y más.</p>
-                    </div>
-                </div>
-                 <div class="faq-item bg-[#1a0a2e]/40 border border-[#A429FF]/20 rounded-xl overflow-hidden transition-all duration-300">
-                    <div class="faq-question flex justify-between items-center p-5 cursor-pointer">
-                        <h3 class="text-lg font-semibold text-white">¿Cómo recibo mis pagos?</h3>
-                        <i class="bi bi-chevron-down text-xl text-[#D69CFF] transition-transform duration-300"></i>
-                    </div>
-                    <div class="faq-answer overflow-hidden transition-[max-height] duration-500 ease-in-out max-h-0">
-                        <p class="text-purple-200/80 p-5 pt-0">Puedes configurar Yape (para pagos en soles) o PayPal (para pagos internacionales). Los pagos son instantáneos.</p>
-                    </div>
-                </div>
-                 <div class="faq-item bg-[#1a0a2e]/40 border border-[#A429FF]/20 rounded-xl overflow-hidden transition-all duration-300">
-                    <div class="faq-question flex justify-between items-center p-5 cursor-pointer">
-                        <h3 class="text-lg font-semibold text-white">¿Necesito ser productor profesional?</h3>
-                        <i class="bi bi-chevron-down text-xl text-[#D69CFF] transition-transform duration-300"></i>
-                    </div>
-                    <div class="faq-answer overflow-hidden transition-[max-height] duration-500 ease-in-out max-h-0">
-                        <p class="text-purple-200/80 p-5 pt-0">No. OFFSZN es para todos los niveles. Desde principiantes hasta profesionales. Lo importante es la calidad de tu trabajo.</p>
-                    </div>
-                </div>
-            </div>
+          </div>
         </div>
-    </section>
+        <div class="faq-item">
+          <div class="faq-question">
+            <span>¿Qué comisión cobra OFFSZN?</span>
+            <i class="bi bi-chevron-down faq-icon"></i>
+          </div>
+          <div class="faq-answer">
+            <div class="faq-answer-content">
+              Solo cobramos 5% por transacción completada. Sin costos ocultos, sin mensualidades.
+            </div>
+          </div>
+        </div>
+        <div class="faq-item">
+          <div class="faq-question">
+            <span>¿Puedo vender beats, kits y presets?</span>
+            <i class="bi bi-chevron-down faq-icon"></i>
+          </div>
+          <div class="faq-answer">
+            <div class="faq-answer-content">
+              ¡Sí! Puedes vender cualquier tipo de contenido musical: beats, drum kits, presets de vocal,
+              samples, loops y más.
+            </div>
+          </div>
+        </div>
+        <div class="faq-item">
+          <div class="faq-question">
+            <span>¿Cómo recibo mis pagos?</span>
+            <i class="bi bi-chevron-down faq-icon"></i>
+          </div>
+          <div class="faq-answer">
+            <div class="faq-answer-content">
+              Puedes configurar Yape (para pagos en soles) o PayPal (para pagos internacionales).
+              Los pagos son instantáneos.
+            </div>
+          </div>
+        </div>
+        <div class="faq-item">
+          <div class="faq-question">
+            <span>¿Necesito ser productor profesional?</span>
+            <i class="bi bi-chevron-down faq-icon"></i>
+          </div>
+          <div class="faq-answer">
+            <div class="faq-answer-content">
+              No. OFFSZN es para todos los niveles. Desde principiantes hasta profesionales.
+              Lo importante es la calidad de tu trabajo.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
 
-    <!-- Final CTA Section -->
-    <section class="py-20 md:py-32" id="register">
-        <div class="max-w-3xl mx-auto px-4 sm:px-6 text-center">
-            <h2 class="text-4xl sm:text-5xl md:text-6xl font-black text-white font-montserrat leading-tight mb-6">
-                ¿Listo para vender tu música?
-            </h2>
-            <p class="text-lg text-gray-400 mb-10 max-w-xl mx-auto">
-                Únete a +100 productores peruanos que ya están generando ingresos con su música.
-            </p>
-            <a href="#register" class="inline-flex items-center gap-3 px-8 py-4 rounded-xl text-white text-lg font-bold bg-gradient-to-r from-[#A429FF] to-[#7A1FBF] transition hover:-translate-y-1 hover:shadow-2xl hover:shadow-[#A429FF]/40">
-                Crear Cuenta Gratis <i class="bi bi-arrow-right"></i>
-            </a>
-        </div>
-    </section>
-  </main>
+  <!-- ==================== CTA FINAL ==================== -->
+  <section class="cta-section">
+    <div class="cta-container">
+      <h2 class="cta-title">¿Listo para vender tu música?</h2>
+      <p class="cta-subtitle">
+        Únete a +100 productores peruanos que ya están generando ingresos con su música.
+      </p>
+      <a href="/pages/register" class="btn-hero btn-hero-primary">
+        <span>Crear Cuenta Gratis</span>
+        <i class="bi bi-arrow-right"></i>
+      </a>
+    </div>
+  </section>
+
   
-  <!-- Footer -->
-  <footer class="bg-black/50 border-t border-white/10 pt-16 pb-8">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6">
-          <div class="grid grid-cols-2 md:grid-cols-5 gap-8 mb-12">
-              <div class="col-span-2 md:col-span-2">
-                  <h3 class="text-2xl font-black text-white tracking-wider font-montserrat mb-4">OFFSZN</h3>
-                  <p class="text-gray-400 text-sm mb-6 max-w-xs">El primer marketplace musical hecho en Perú 🇵🇪</p>
-                  <div class="flex gap-3">
-                      <a href="#" class="w-9 h-9 flex items-center justify-center bg-white/5 border border-white/10 rounded-full text-purple-300 hover:bg-white/10 hover:text-white transition"><i class="bi bi-instagram"></i></a>
-                      <a href="#" class="w-9 h-9 flex items-center justify-center bg-white/5 border border-white/10 rounded-full text-purple-300 hover:bg-white/10 hover:text-white transition"><i class="bi bi-discord"></i></a>
-                      <a href="#" class="w-9 h-9 flex items-center justify-center bg-white/5 border border-white/10 rounded-full text-purple-300 hover:bg-white/10 hover:text-white transition"><i class="bi bi-youtube"></i></a>
-                  </div>
-              </div>
-              <div>
-                  <h4 class="font-bold text-white mb-4">Recursos</h4>
-                  <ul class="space-y-2">
-                      <li><a href="#" class="text-gray-400 hover:text-white text-sm transition">Beats</a></li>
-                      <li><a href="#" class="text-gray-400 hover:text-white text-sm transition">Drum Kits</a></li>
-                      <li><a href="#" class="text-gray-400 hover:text-white text-sm transition">Presets</a></li>
-                      <li><a href="#" class="text-gray-400 hover:text-white text-sm transition">Recursos Gratis</a></li>
-                  </ul>
-              </div>
-              <div>
-                  <h4 class="font-bold text-white mb-4">Comunidad</h4>
-                  <ul class="space-y-2">
-                      <li><a href="#" class="text-gray-400 hover:text-white text-sm transition">Productores</a></li>
-                      <li><a href="#" class="text-gray-400 hover:text-white text-sm transition">Colaboraciones</a></li>
-                      <li><a href="#" class="text-gray-400 hover:text-white text-sm transition">Foros</a></li>
-                      <li><a href="#" class="text-gray-400 hover:text-white text-sm transition">Discord</a></li>
-                  </ul>
-              </div>
-               <div>
-                  <h4 class="font-bold text-white mb-4">Legal</h4>
-                  <ul class="space-y-2">
-                      <li><a href="#" class="text-gray-400 hover:text-white text-sm transition">Términos de Uso</a></li>
-                      <li><a href="#" class="text-gray-400 hover:text-white text-sm transition">Privacidad</a></li>
-                      <li><a href="#" class="text-gray-400 hover:text-white text-sm transition">Contacto</a></li>
-                  </ul>
-              </div>
-          </div>
-          <div class="border-t border-white/10 pt-6 text-center text-gray-500 text-sm">
-              <p>© 2025 OFFSZN. Hecho con 💜 en Perú.</p>
-          </div>
+<!-- ==================== FOOTER ==================== -->
+<footer class="footer">
+  <div class="footer-container">
+    <div class="footer-section">
+      <h4>OFFSZN</h4>
+      <p style="color: var(--text-muted); font-size: 0.875rem; line-height: 1.6;">
+        El primer marketplace musical<br>hecho en Perú 🇵🇪
+      </p>
+      <div class="footer-socials">
+        <a href="https://www.instagram.com/willieinspired/" target="_blank" rel="noopener noreferrer" class="footer-social-link"><i class="bi bi-instagram"></i></a>
+        <a href="https://discord.gg/vX7XktMeBU" target="_blank" rel="noopener noreferrer" class="footer-social-link"><i class="bi bi-discord"></i></a>
+        <a href="https://www.youtube.com/@willieinspired" target="_blank" rel="noopener noreferrer" class="footer-social-link"><i class="bi bi-youtube"></i></a>
+        <a href="https://wa.link/vhlxuj" target="_blank" rel="noopener noreferrer" class="footer-social-link"><i class="bi bi-whatsapp"></i></a>
       </div>
-  </footer>
+    </div>
+    
+    <div class="footer-section">
+      <h4>Recursos</h4>
+      <div class="footer-links">
+        <a href="/recursos/beats-instrumentales">Beats & Instrumentales</a>
+        <a href="/recursos/drum-kits">Drum Kits</a>
+        <a href="/recursos/presets">Presets & Plugins</a>
+        <a href="/recursos/samples-loops">Samples & Loops</a>
+        <a href="/recursos/recursos-gratis">Recursos Gratis</a>
+      </div>
+    </div>
+    
+    <div class="footer-section">
+      <h4>Comunidad</h4>
+      <div class="footer-links">
+        <a href="/comunidad/feed">Feed</a>
+        <a href="/comunidad/productores">Productores</a>
+        <a href="/comunidad/colaboraciones">Colaboraciones</a>
+        <a href="/comunidad/foros">Foros</a>
+        <a href="https://discord.gg/vX7XktMeBU" target="_blank" rel="noopener noreferrer">Discord</a>
+      </div>
+    </div>
+    
+    <div class="footer-section">
+      <h4>Legal</h4>
+      <div class="footer-links">
+        <a href="/legal/terminos-de-uso" target="_blank">Términos de Uso</a>
+        <a href="/legal/politica-de-privacidad" target="_blank">Política de Privacidad</a>
+        <a href="/legal/terminos-de-servicio" target="_blank">Términos de Servicio</a>
+        <a href="/legal/contacto" target="_blank">Contacto</a>
+      </div>
+    </div>
+  </div>
+  
+  <div class="footer-bottom">
+    <p>© 2025 OFFSZN. Hecho con 💜 en Perú.</p>
+  </div>
+</footer>
 
+
+  <!-- ==================== SCRIPTS ==================== -->
   <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        // Particle Canvas
-        const canvas = document.getElementById('particle-canvas');
-        const ctx = canvas.getContext('2d');
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
+    // Countdown (NO se oculta al recargar)
+    function updateCountdown() {
+      const targetDate = new Date();
+      targetDate.setDate(targetDate.getDate() + 30);
+      setInterval(() => {
+        const now = new Date().getTime();
+        const distance = targetDate - now;
+        document.getElementById('days').textContent = Math.floor(distance / (1000 * 60 * 60 * 24));
+        document.getElementById('hours').textContent = String(Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))).padStart(2, '0');
+        document.getElementById('minutes').textContent = String(Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60))).padStart(2, '0');
+        document.getElementById('seconds').textContent = String(Math.floor((distance % (1000 * 60)) / 1000)).padStart(2, '0');
+      }, 1000);
+    }
+    updateCountdown();
 
-        let particlesArray;
+    // Solo se oculta si el usuario hace clic en la X
+    document.getElementById('countdownClose').addEventListener('click', function () {
+      document.getElementById('countdownBanner').style.display = 'none';
+    });
 
-        class Particle {
-            constructor(x, y, size, speedX, speedY) {
-                this.x = x;
-                this.y = y;
-                this.size = size;
-                this.speedX = speedX;
-                this.speedY = speedY;
-            }
-            update() {
-                if (this.x > canvas.width || this.x < 0) this.speedX = -this.speedX;
-                if (this.y > canvas.height || this.y < 0) this.speedY = -this.speedY;
-                this.x += this.speedX;
-                this.y += this.speedY;
-            }
-            draw() {
-                ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                ctx.closePath();
-                ctx.fill();
-            }
-        }
-
-        function initParticles() {
-            particlesArray = [];
-            const numberOfParticles = 50;
-            for (let i = 0; i < numberOfParticles; i++) {
-                const size = Math.random() * 1.5 + 0.5;
-                const x = Math.random() * canvas.width;
-                const y = Math.random() * canvas.height;
-                const speedX = (Math.random() * 0.4) - 0.2;
-                const speedY = (Math.random() * 0.4) - 0.2;
-                particlesArray.push(new Particle(x, y, size, speedX, speedY));
-            }
-        }
-
-        function animateParticles() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            particlesArray.forEach(p => {
-                p.update();
-                p.draw();
-            });
-            requestAnimationFrame(animateParticles);
-        }
-
-        initParticles();
-        animateParticles();
-
-        window.addEventListener('resize', () => {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-            initParticles();
+    // Dropdowns
+    function toggleDropdown(element) {
+      const parent = element.closest('.dropdown-parent');
+      const isActive = parent.classList.contains('dropdown-active');
+      document.querySelectorAll('.dropdown-parent').forEach(p => {
+        p.classList.remove('dropdown-active');
+      });
+      if (!isActive) {
+        parent.classList.add('dropdown-active');
+      }
+    }
+    document.addEventListener('click', function (e) {
+      if (!e.target.closest('.dropdown-parent')) {
+        document.querySelectorAll('.dropdown-parent').forEach(p => {
+          p.classList.remove('dropdown-active');
         });
-        
-        // Countdown Banner
-        const countdownBanner = document.getElementById('countdown-banner');
-        const countdownCloseBtn = document.getElementById('countdown-close-btn');
-        if (countdownCloseBtn) {
-            countdownCloseBtn.addEventListener('click', () => {
-                if(countdownBanner) countdownBanner.style.display = 'none';
-            });
-        }
-        
-        const targetDate = new Date();
-        targetDate.setDate(targetDate.getDate() + 30);
-        
-        setInterval(() => {
-          const now = new Date().getTime();
-          const distance = targetDate.getTime() - now;
-          if (distance < 0) return;
-          
-          document.getElementById('days').textContent = String(Math.floor(distance / (1000 * 60 * 60 * 24))).padStart(2, '0');
-          document.getElementById('hours').textContent = String(Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))).padStart(2, '0');
-          document.getElementById('minutes').textContent = String(Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60))).padStart(2, '0');
-          document.getElementById('seconds').textContent = String(Math.floor((distance % (1000 * 60)) / 1000)).padStart(2, '0');
-        }, 1000);
+      }
+    });
 
-        // Header Dropdowns
-        const header = document.getElementById('header-nav');
-        const recursosBtn = document.getElementById('recursos-btn');
-        const comunidadBtn = document.getElementById('comunidad-btn');
-        const recursosDropdown = document.getElementById('recursos-dropdown');
-        const comunidadDropdown = document.getElementById('comunidad-dropdown');
-        const recursosChevron = document.getElementById('recursos-chevron');
-        const comunidadChevron = document.getElementById('comunidad-chevron');
+    // Simulación de Venta
+    document.querySelector('.btn-hero[href="#demo"]').addEventListener('click', function (e) {
+      e.preventDefault();
+      document.getElementById('saleSimulation').style.display = 'block';
+    });
+    document.getElementById('acceptSale').addEventListener('click', function () {
+      document.getElementById('saleSimulation').style.display = 'none';
+      document.getElementById('saleSuccess').style.display = 'block';
+    });
+    document.getElementById('rejectSale').addEventListener('click', function () {
+      document.getElementById('saleSimulation').style.display = 'none';
+      alert("La venta ha sido rechazada.");
+    });
 
-        let openDropdown = null;
-        
-        const toggleDropdown = (menu) => {
-            if (openDropdown === menu) {
-                openDropdown = null;
-            } else {
-                openDropdown = menu;
-            }
-            
-            if (recursosDropdown && recursosChevron) {
-                const isRecursosOpen = openDropdown === 'recursos';
-                recursosDropdown.classList.toggle('hidden', !isRecursosOpen);
-                recursosChevron.classList.toggle('rotate-180', isRecursosOpen);
-            }
-            if (comunidadDropdown && comunidadChevron) {
-                const isComunidadOpen = openDropdown === 'comunidad';
-                comunidadDropdown.classList.toggle('hidden', !isComunidadOpen);
-                comunidadChevron.classList.toggle('rotate-180', isComunidadOpen);
-            }
-        };
-        
-        if (recursosBtn) recursosBtn.addEventListener('click', (e) => { e.stopPropagation(); toggleDropdown('recursos'); });
-        if (comunidadBtn) comunidadBtn.addEventListener('click', (e) => { e.stopPropagation(); toggleDropdown('comunidad'); });
-        
-        document.addEventListener('click', (e) => {
-            if (header && !header.contains(e.target)) {
-                 openDropdown = null;
-                 if (recursosDropdown) recursosDropdown.classList.add('hidden');
-                 if (comunidadDropdown) comunidadDropdown.classList.add('hidden');
-                 if (recursosChevron) recursosChevron.classList.remove('rotate-180');
-                 if (comunidadChevron) comunidadChevron.classList.remove('rotate-180');
-            }
+    // FAQ
+    document.querySelectorAll('.faq-question').forEach(question => {
+      question.addEventListener('click', function () {
+        const faqItem = this.parentElement;
+        faqItem.classList.toggle('active');
+      });
+    });
+
+    // Smooth Scroll
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        document.querySelector(this.getAttribute('href')).scrollIntoView({
+          behavior: 'smooth'
         });
+      });
+    });
 
-        // Interactive Demo
-        const dropZone = document.getElementById('drop-zone');
-        const fileInput = document.getElementById('file-input');
-        const salePrompt = document.getElementById('sale-prompt');
-        const saleSuccess = document.getElementById('sale-success');
-        const acceptSaleBtn = document.getElementById('accept-sale-btn');
-        const rejectSaleBtn = document.getElementById('reject-sale-btn');
-        
-        let saleState = 'idle';
-        let currentFileName = '';
-
-        const handleFileSelect = (files) => {
-            if (!files || files.length === 0) return;
-            const file = files[0];
-            const isAudio = file.type.startsWith('audio/') || file.name.endsWith('.mp3') || file.name.endsWith('.wav');
-            if (isAudio) {
-                currentFileName = file.name;
-                startSimulation();
-            } else {
-                alert('Por favor, sube un archivo MP3 o WAV.');
-            }
-        };
-
-        const updateUI = () => {
-            dropZone.classList.toggle('cursor-not-allowed', saleState !== 'idle');
-            dropZone.classList.toggle('opacity-60', saleState !== 'idle');
-            fileInput.disabled = saleState !== 'idle';
-            
-            const iconEl = document.querySelector('#drop-zone-icon i');
-            const textEl = document.getElementById('drop-zone-text');
-            const hintEl = document.getElementById('drop-zone-hint');
-
-            if(saleState !== 'idle' && currentFileName) {
-                iconEl.className = 'bi bi-file-earmark-music';
-                textEl.textContent = `¡${currentFileName} listo!`;
-                hintEl.textContent = 'Hemos detectado un posible comprador.';
-            } else {
-                iconEl.className = 'bi bi-cloud-upload';
-                textEl.textContent = 'Arrastra tu archivo aquí';
-                hintEl.textContent = 'o haz clic para seleccionar (MP3 o WAV)';
-            }
-
-            salePrompt.classList.toggle('hidden', saleState !== 'prompt');
-            saleSuccess.classList.toggle('hidden', saleState !== 'success');
-        };
-        
-        const startSimulation = () => {
-            saleState = 'prompt';
-            document.getElementById('sale-prompt-text').innerHTML = `<strong>Willie Inspired</strong> quiere comprar tu producto <strong>"${currentFileName}"</strong> por <strong>$25</strong>.`;
-            updateUI();
-        };
-
-        const acceptSale = () => {
-            saleState = 'success';
-            updateUI();
-        };
-
-        const rejectSale = () => {
-            alert("La venta ha sido rechazada.");
-            saleState = 'idle';
-            currentFileName = '';
-            updateUI();
-        };
-
-        dropZone.addEventListener('click', () => fileInput.click());
-        fileInput.addEventListener('change', (e) => handleFileSelect(e.target.files));
-        dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('bg-[#A429FF]/20', 'border-[#A429FF]/80'); });
-        dropZone.addEventListener('dragleave', (e) => { e.preventDefault(); dropZone.classList.remove('bg-[#A429FF]/20', 'border-[#A429FF]/80'); });
-        dropZone.addEventListener('drop', (e) => { 
-            e.preventDefault();
-            dropZone.classList.remove('bg-[#A429FF]/20', 'border-[#A429FF]/80');
-            handleFileSelect(e.dataTransfer.files);
-        });
-        acceptSaleBtn.addEventListener('click', acceptSale);
-        rejectSaleBtn.addEventListener('click', rejectSale);
-        
-        // Beats Player
-        document.querySelectorAll('.play-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const icon = btn.querySelector('i');
-                const isPlaying = icon.classList.contains('bi-pause-fill');
-                icon.classList.toggle('bi-play-fill', isPlaying);
-                icon.classList.toggle('bi-pause-fill', !isPlaying);
-            });
-        });
-        
-        // Creators Carousel
-        const container = document.getElementById('creators-container');
-        const leftBtn = document.getElementById('scroll-left');
-        const rightBtn = document.getElementById('scroll-right');
-
-        function checkScroll() {
-          if (!container) return;
-          const { scrollLeft, scrollWidth, clientWidth } = container;
-          leftBtn.classList.toggle('opacity-30', scrollLeft <= 0);
-          leftBtn.classList.toggle('pointer-events-none', scrollLeft <= 0);
-          rightBtn.classList.toggle('opacity-30', scrollLeft >= scrollWidth - clientWidth - 1);
-          rightBtn.classList.toggle('pointer-events-none', scrollLeft >= scrollWidth - clientWidth - 1);
-        }
-
-        if (container) {
-            leftBtn.addEventListener('click', () => container.scrollBy({ left: -300, behavior: 'smooth' }));
-            rightBtn.addEventListener('click', () => container.scrollBy({ left: 300, behavior: 'smooth' }));
-            container.addEventListener('scroll', checkScroll);
-            window.addEventListener('resize', checkScroll);
-            checkScroll();
-        }
-
-        // FAQ Accordion
-        const faqItems = document.querySelectorAll('.faq-item');
-        faqItems.forEach((item, index) => {
-            const question = item.querySelector('.faq-question');
-            const answer = item.querySelector('.faq-answer');
-            const icon = question.querySelector('i');
-
-            if (index === 0) {
-                item.classList.add('active');
-                answer.style.maxHeight = answer.scrollHeight + "px";
-                icon.classList.add('rotate-180');
-            }
-
-            question.addEventListener('click', () => {
-                const wasActive = item.classList.contains('active');
-                
-                faqItems.forEach(otherItem => {
-                    otherItem.classList.remove('active');
-                    otherItem.querySelector('.faq-answer').style.maxHeight = '0px';
-                    otherItem.querySelector('.faq-question i').classList.remove('rotate-180');
-                });
-
-                if (!wasActive) {
-                    item.classList.add('active');
-                    answer.style.maxHeight = answer.scrollHeight + "px";
-                    icon.classList.add('rotate-180');
-                }
-            });
-        });
+    // Beat Play Buttons
+    document.querySelectorAll('.beat-play-btn').forEach(btn => {
+      btn.addEventListener('click', function () {
+        const icon = this.querySelector('i');
+        icon.classList.toggle('bi-play-fill');
+        icon.classList.toggle('bi-pause-fill');
+      });
     });
   </script>
-<script type="module" src="/index.tsx"></script>
+
 </body>
+
 </html>
