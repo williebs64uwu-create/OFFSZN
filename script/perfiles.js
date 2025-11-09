@@ -7,8 +7,9 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 
 // --- Obtener nickname desde query string ---
 const params = new URLSearchParams(window.location.search);
-const nickname = params.get("nickname"); // Debe ser EXACTO
+const nickname = params.get("nickname"); // ejemplo: ?nickname=WillieInspired
 
+// --- Función para cargar perfil ---
 async function cargarPerfil() {
   const contenedor = document.getElementById("perfil");
 
@@ -20,10 +21,10 @@ async function cargarPerfil() {
   const { data, error } = await supabase
     .from("users")
     .select("*")
-    .eq("nickname", nickname) // EXACTO
+    .eq("nickname", nickname)
     .single();
 
-  if (error) {
+  if (error || !data) {
     contenedor.innerHTML = `<p>❌ Usuario "${nickname}" no encontrado.</p>`;
     console.error(error);
     return;
@@ -39,4 +40,5 @@ async function cargarPerfil() {
   `;
 }
 
+// --- Ejecutar al cargar la página ---
 document.addEventListener("DOMContentLoaded", cargarPerfil);
