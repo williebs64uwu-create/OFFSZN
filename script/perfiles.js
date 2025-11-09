@@ -7,11 +7,10 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 
 // --- Nickname real del usuario o query string ---
 const params = new URLSearchParams(window.location.search);
-const nickname = params.get("nickname") || "WillieInspired"; // si no hay query string, carga tu usuario real
+const nickname = params.get("nickname") || "WillieInspired"; // usuario por defecto
 
 async function cargarPerfil() {
     const contenedor = document.getElementById("perfil");
-    const productosCont = document.getElementById("productos-lista");
 
     if (!nickname) {
         contenedor.innerHTML = "<p>⚠️ No se indicó ningún usuario.</p>";
@@ -21,19 +20,19 @@ async function cargarPerfil() {
     // --- Traer datos reales del usuario ---
     const { data: user, error } = await supabase
         .from("users")
-        .select("*")
-        .ilike("nickname", nickname) // ignora mayúsculas/minúsculas
+        .select('nickname, first_name, last_name, role, "Estado", socials, template')
+        .ilike("nickname", nickname)
         .single();
 
     if (error || !user) {
         contenedor.innerHTML = `<p>❌ Usuario "${nickname}" no encontrado.</p>`;
-        if (productosCont) productosCont.innerHTML = "";
         console.error(error);
         return;
     }
 
-    // --- Aplicar plantilla ORIGINAL ---
-    contenedor.className = `perfil-container original`;
+    // --- Aplicar plantilla ---
+    const template = user.template || 'original';
+    contenedor.className = `perfil-container ${template}`;
 
     // --- Renderizar perfil ---
     contenedor.innerHTML = `
@@ -41,22 +40,19 @@ async function cargarPerfil() {
             <h1>${user.first_name || ""} ${user.last_name || ""}</h1>
             <p><b>Nickname:</b> ${user.nickname}</p>
             <p><b>Rol:</b> ${user.role || "No definido"}</p>
-            <p><b>Estado:</b> ${user.estado || "No definido"}</p>
-            <p><b>Bio:</b> ${user.bio || "No hay descripción"}</p>
+            <p><b>Estado:</b> ${user.Estado || "No definido"}</p>
             <p><b>Redes:</b> ${user.socials ? Object.values(user.socials).join(' | ') : 'No hay'}</p>
-            <button onclick="window.location.href='/cuenta/messages.html?to=${user.nickname}'">
-                Enviar mensaje
-            </button>
         </div>
     `;
 
     // --- Cargar productos del usuario ---
-    if (!productosCont) return;
+    const productosCont = document.getElementById("productos-lista");
+    if (!productosCont) return; // si no hay sección de productos, no hacer nada
 
     const { data: productos, error: errProd } = await supabase
-        .from("productos")
+        .from("products")
         .select("*")
-        .eq("usuario", user.nickname);
+        .eq("usuario", user.nickname); // cambiar "usuario" si la columna real es distinta
 
     if (errProd) {
         productosCont.innerHTML = "<p>❌ No se pudieron cargar los productos.</p>";
@@ -65,7 +61,7 @@ async function cargarPerfil() {
     }
 
     if (!productos || productos.length === 0) {
-        productosCont.innerHTML = "<p>No tienes productos aún.</p>";
+        productosCont.innerHTML = "<p>No hay productos para este usuario.</p>";
         return;
     }
 
