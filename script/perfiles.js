@@ -1,44 +1,44 @@
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
 
-// 🔹 Reemplaza con tus datos reales
-const supabaseUrl = "https://TU_PROYECTO.supabase.co";
-const supabaseKey = "TU_CLAVE_ANON";
-const supabase = createClient(supabaseUrl, supabaseKey);
+// --- 1. CONFIGURACIÓN ---
+const SUPABASE_URL = "https://qtjpvztpgfymjhhpoouq.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0anB2enRwZ2Z5bWpoaHBvb3VxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3ODA5MTUsImV4cCI6MjA3NjM1NjkxNX0.YsItTFk3hSQaVuy707-z7Z-j34mXa03O0wWGAlAzjrw";
 
-// 🔹 Leer usuario de la URL: /pagina.html?user=willieinspired
-const params = new URLSearchParams(window.location.search);
-const nickname = params.get("user");
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+// --- 2. OBTENER NICKNAME DESDE LA URL ---
+// Ejemplo: https://offszn1.onrender.com/WillieInspired
+const pathParts = window.location.pathname.split("/");
+const nickname = pathParts[pathParts.length - 1] || null;
+
+// --- 3. FUNCIÓN PARA CARGAR PERFIL ---
 async function cargarPerfil() {
+  const perfilDiv = document.getElementById("perfil");
+
   if (!nickname) {
-    document.getElementById("perfil").innerHTML = "<p>Falta el nombre de usuario.</p>";
+    perfilDiv.innerHTML = "<p>⚠️ No se indicó ningún usuario en la URL.</p>";
     return;
   }
 
-  // 🔹 Consultar tu tabla 'users'
   const { data, error } = await supabase
     .from("users")
     .select("*")
     .eq("nickname", nickname)
     .single();
 
-  if (error) {
-    console.error(error);
-    document.getElementById("perfil").innerHTML = `<p>Usuario no encontrado</p>`;
+  if (error || !data) {
+    console.error("Error al cargar perfil:", error);
+    perfilDiv.innerHTML = `<p>❌ Usuario "${nickname}" no encontrado.</p>`;
     return;
   }
 
-  console.log("Datos del usuario:", data);
-
-  // 🔹 Muestra los datos que quieras
-  document.getElementById("perfil").innerHTML = `
+  perfilDiv.innerHTML = `
     <h1>${data.first_name || ""} ${data.last_name || ""}</h1>
     <p><b>Nickname:</b> ${data.nickname}</p>
-    <p><b>Email:</b> ${data.email || "No disponible"}</p>
-    <p><b>Rol:</b> ${data.role || "No especificado"}</p>
-    <p><b>Productor:</b> ${data.is_producer ? "Sí" : "No"}</p>
+    <p><b>Rol:</b> ${data.role || "No definido"}</p>
     <p><b>Estado:</b> ${data.Estado || "No definido"}</p>
   `;
 }
 
-cargarPerfil();
+// --- 4. EJECUTAR AL CARGAR LA PÁGINA ---
+document.addEventListener("DOMContentLoaded", cargarPerfil);
