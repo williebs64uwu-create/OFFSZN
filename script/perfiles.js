@@ -30,14 +30,52 @@ async function cargarPerfil() {
     return;
   }
 
-  contenedor.innerHTML = `
-    <div class="perfil-card">
-      <h1>${data.first_name || ""} ${data.last_name || ""}</h1>
-      <p><b>Nickname:</b> ${data.nickname}</p>
-      <p><b>Rol:</b> ${data.role || "No definido"}</p>
-      <p><b>Estado:</b> ${data.estado || "No definido"}</p>
-    </div>
-  `;
+  // --- Aquí verificamos la plantilla ---
+  const template = data.template || "original";
+
+  let html = "";
+
+  if (template === "original") {
+    html = `
+      <div class="perfil-card original">
+        <h1>${data.first_name || ""} ${data.last_name || ""}</h1>
+        <p><b>Nickname:</b> ${data.nickname}</p>
+        <p><b>Rol:</b> ${data.role || "No definido"}</p>
+        <p><b>Estado:</b> ${data.estado || "No definido"}</p>
+      </div>
+    `;
+  } else if (template === "template1") {
+    html = `
+      <div class="perfil-card template1">
+        <h2>${data.nickname}</h2>
+        <p><b>Nombre:</b> ${data.first_name || ""} ${data.last_name || ""}</p>
+        <p><b>Rol:</b> ${data.role || "No definido"}</p>
+        <p><b>Estado:</b> ${data.estado || "No definido"}</p>
+        <div class="redes">
+          <p><b>Redes:</b> ${JSON.stringify(data.socials)}</p>
+        </div>
+      </div>
+    `;
+  } else if (template === "template2") {
+    html = `
+      <div class="perfil-card template2">
+        <h1>${data.nickname}</h1>
+        <p><b>Descripción:</b> Este es un perfil público tipo template2</p>
+        <p><b>Rol:</b> ${data.role || "No definido"}</p>
+        <p><b>Estado:</b> ${data.estado || "No definido"}</p>
+      </div>
+    `;
+  } else {
+    // fallback
+    html = `
+      <div class="perfil-card original">
+        <h1>${data.first_name || ""} ${data.last_name || ""}</h1>
+        <p><b>Nickname:</b> ${data.nickname}</p>
+      </div>
+    `;
+  }
+
+  contenedor.innerHTML = html;
 }
 
 // --- Ejecutar al cargar la página ---
