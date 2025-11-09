@@ -2,7 +2,8 @@ import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js
 
 // --- Supabase config ---
 const supabaseUrl = "https://qtjpvztpgfymjhhpoouq.supabase.co";
-const supabaseKey = "TU_CLAVE_ANON"; // reemplaza con tu clave real
+const supabaseKey = "eyJhbGciOiJIJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0anB2enRwZ2Z5bWpoaHBvb3VxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3ODA5MTUsImV4cCI6MjA3NjM1NjkxNX0.YsItTFk3hSQaVuy707-z7Z-j34mXa03O0wWGAlAzjrw";
+
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 // --- Obtener nickname de la URL ---
