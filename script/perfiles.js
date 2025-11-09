@@ -18,10 +18,11 @@ async function cargarPerfil() {
     return;
   }
 
+  // --- Búsqueda case-insensitive ---
   const { data, error } = await supabase
     .from("users")
     .select("*")
-    .eq("nickname", nickname)
+    .ilike("nickname", nickname) // case-insensitive
     .single();
 
   if (error || !data) {
@@ -30,14 +31,12 @@ async function cargarPerfil() {
     return;
   }
 
-  // Mostrar perfil básico + template
   contenedor.innerHTML = `
     <div class="perfil-card">
       <h1>${data.first_name || ""} ${data.last_name || ""}</h1>
       <p><b>Nickname:</b> ${data.nickname}</p>
       <p><b>Rol:</b> ${data.role || "No definido"}</p>
       <p><b>Estado:</b> ${data.estado || "No definido"}</p>
-      <p><b>Template:</b> ${data.template || "Original"}</p>
     </div>
   `;
 }
