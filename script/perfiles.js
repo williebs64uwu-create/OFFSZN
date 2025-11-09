@@ -5,13 +5,14 @@ const supabaseUrl = "https://qtjpvztpgfymjhhpoouq.supabase.co";
 const supabaseKey = "eyJhbGciOiJIJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0anB2enRwZ2Z5bWpoaHBvb3VxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3ODA5MTUsImV4cCI6MjA3NjM1NjkxNX0.YsItTFk3hSQaVuy707-z7Z-j34mXa03O0wWGAlAzjrw";
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-// --- Obtener nickname desde query string ---
-const params = new URLSearchParams(window.location.search);
-const nickname = params.get("nickname"); // ejemplo: ?nickname=WillieInspired
+// --- Obtener nickname desde la URL bonita o query string ---
+const pathParts = window.location.pathname.split("/").filter(Boolean);
+let nickname = pathParts[0]; // ejemplo: /WillieInspired
 
-// ✅ Cambiar URL visible a /WillieInspired
-if (nickname) {
-  window.history.replaceState({}, '', `/${nickname}`);
+// Si es la URL con query string
+if (!nickname) {
+  const params = new URLSearchParams(window.location.search);
+  nickname = params.get("nickname");
 }
 
 // --- Función para cargar perfil ---
@@ -19,7 +20,7 @@ async function cargarPerfil() {
   const contenedor = document.getElementById("perfil");
 
   if (!nickname) {
-    contenedor.innerHTML = "<p>⚠️ No se indicó ningún usuario.</p>";
+    contenedor.innerHTML = `<p class="mensaje-error">⚠️ No se indicó ningún usuario.</p>`;
     return;
   }
 
@@ -30,7 +31,7 @@ async function cargarPerfil() {
     .single();
 
   if (error || !data) {
-    contenedor.innerHTML = `<p>❌ Usuario "${nickname}" no encontrado.</p>`;
+    contenedor.innerHTML = `<p class="mensaje-error">❌ Usuario "${nickname}" no encontrado.</p>`;
     console.error(error);
     return;
   }
@@ -45,5 +46,4 @@ async function cargarPerfil() {
   `;
 }
 
-// --- Ejecutar al cargar la página ---
 document.addEventListener("DOMContentLoaded", cargarPerfil);
