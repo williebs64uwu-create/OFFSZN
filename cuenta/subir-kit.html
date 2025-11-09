@@ -3,62 +3,230 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Subir Curso - OFFSZN</title>
+    <title>¿Qué quieres subir? - OFFSZN</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <script>
+        // Comprueba si el token existe al cargar la página.
+        // Si no, redirige a la página de login.
         if (!localStorage.getItem('authToken')) {
+            console.log('OFFSZN: No se encontró authToken. Redirigiendo a login...');
+            // Ruta de login (ajústala si es necesario, basado en tus otros archivos)
             window.location.replace('/pages/login.html'); 
         }
     </script>
-
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
         body {
             font-family: 'Inter', sans-serif;
             background: #0a0a0a;
             color: #e5e5e5;
             padding: 60px 20px;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
+            /* Nuevas propiedades para el fondo animado */
             position: relative;
-            overflow: hidden;
+            overflow-x: hidden; 
+            min-height: 100vh;
         }
+
+        /* FONDO ANIMADO SUTIL */
         body::before {
-            content: ''; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1;
-            background: radial-gradient(circle at 20% 30%, rgba(239, 68, 68, 0.1), transparent 35%),
-                        radial-gradient(circle at 80% 70%, rgba(239, 68, 68, 0.05), transparent 35%);
+            content: '';
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            /* Gradientes sutiles de los colores de la marca */
+            background: radial-gradient(circle at 20% 30%, rgba(139, 92, 246, 0.1), transparent 35%),
+                        radial-gradient(circle at 80% 70%, rgba(59, 130, 246, 0.1), transparent 35%);
             animation: subtle-glow 20s ease-in-out infinite;
         }
+
         @keyframes subtle-glow {
-            0% { background: radial-gradient(circle at 20% 30%, rgba(239, 68, 68, 0.1), transparent 35%), radial-gradient(circle at 80% 70%, rgba(239, 68, 68, 0.05), transparent 35%); }
-            50% { background: radial-gradient(circle at 30% 80%, rgba(239, 68, 68, 0.15), transparent 35%), radial-gradient(circle at 70% 20%, rgba(239, 68, 68, 0.1), transparent 35%); }
-            100% { background: radial-gradient(circle at 20% 30%, rgba(239, 68, 68, 0.1), transparent 35%), radial-gradient(circle at 80% 70%, rgba(239, 68, 68, 0.05), transparent 35%); }
+            0% {
+                background: radial-gradient(circle at 20% 30%, rgba(139, 92, 246, 0.1), transparent 35%),
+                            radial-gradient(circle at 80% 70%, rgba(59, 130, 246, 0.1), transparent 35%);
+            }
+            50% {
+                background: radial-gradient(circle at 30% 80%, rgba(139, 92, 246, 0.15), transparent 35%),
+                            radial-gradient(circle at 70% 20%, rgba(59, 130, 246, 0.15), transparent 35%);
+            }
+            100% {
+                background: radial-gradient(circle at 20% 30%, rgba(139, 92, 246, 0.1), transparent 35%),
+                            radial-gradient(circle at 80% 70%, rgba(59, 130, 246, 0.1), transparent 35%);
+            }
         }
-        .container { max-width: 600px; margin: 0 auto; }
-        .header h1 { font-size: 2.5rem; font-weight: 700; color: #fff; margin-bottom: 10px; }
-        .header i { font-size: 3.5rem; color: #ef4444; margin-bottom: 20px; }
-        .header p { color: #999; font-size: 1rem; line-height: 1.6; margin-bottom: 30px; }
+        /* FIN FONDO ANIMADO */
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            color: #999; /* Color de subtexto actualizado */
+            font-size: 1rem;
+            line-height: 1.6;
+        }
+        
+        .upload-options {
+            display: grid;
+            /* UI Mejorada: 3 columnas, pero se ajusta a menos */
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+            /* Centrar las 2 últimas tarjetas si son 5 */
+            justify-content: center;
+        }
+        
+        .upload-option {
+            background: rgba(255, 255, 255, .02);
+            border: 1px solid rgba(255, 255, 255, .08);
+            border-radius: 12px;
+            padding: 30px;
+            text-align: center;
+            transition: all .2s;
+            cursor: pointer;
+        }
+        
+        .upload-option:hover {
+            border-color: rgba(255, 255, 255, .15);
+            background: rgba(255, 255, 255, .04);
+            transform: translateY(-4px);
+        }
+        
+        .upload-option i {
+            font-size: 3.5rem;
+            margin-bottom: 20px;
+        }
+        
+        /* --- UI MEJORADA: Iconos de Colores --- */
+        .upload-option.beat i { color: #8b5cf6; } /* Morado */
+        .upload-option.drumkit i { color: #3b82f6; } /* Azul */
+        .upload-option.preset i { color: #f59e0b; } /* Amarillo */
+        .upload-option.loopkit i { color: #22c55e; } /* Verde */
+        .upload-option.curso i { color: #ef4444; } /* Rojo */
+
+        .upload-option h3 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 15px;
+        }
+        
+        .upload-option p {
+            color: #888; /* Color de descripción actualizado */
+            font-size: .9rem;
+            line-height: 1.6;
+        }
+        
+        /* --- UI MEJORADA: Aviso de "En Desarrollo" --- */
+        .upload-option p.development-notice {
+            color: #f59e0b; /* Amarillo/Naranja advertencia */
+            font-weight: 500;
+            font-size: .85rem;
+            margin-top: 10px;
+        }
+
         .back-btn {
-            display: inline-flex; align-items: center; gap: 8px; color: #ef4444;
-            text-decoration: none; font-size: .9rem; font-weight: 600; transition: all .2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #8b5cf6;
+            text-decoration: none;
+            font-size: .9rem;
+            font-weight: 600;
+            margin-top: 40px; /* Más espacio */
+            transition: all .2s;
         }
-        .back-btn:hover { color: #f87171; }
+        
+        .back-btn:hover {
+            color: #a78bfa;
+        }
+        
+        @media (max-width: 1024px) {
+             /* A 5 tarjetas, mejor que se pongan de a 2 */
+            .upload-options {
+                grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            }
+        }
+
+        @media (max-width: 768px) {
+            .upload-options {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <i class="fas fa-graduation-cap"></i>
-            <h1>Subir Curso</h1>
-            <p>Esta funcionalidad estará disponible muy pronto. Prepara tu material para convertirte en un instructor de OFFSZN.</p>
+            <h1>¿Qué quieres subir hoy?</h1>
+            <p>Selecciona el tipo de contenido que deseas subir a OFFSZN.</p>
         </div>
-        <a href="subir-kit.html" class="back-btn">
-            <i class="fas fa-arrow-left"></i> Volver a Opciones
+        
+        <div class="upload-options">
+            
+            <div class="upload-option beat" onclick="window.location.href='/cuenta/Upload/Beats.html'">
+                <i class="fas fa-music"></i>
+                <h3>Subir Beat</h3>
+                <p>Comparte tu música con miles de artistas alrededor del mundo.</p>
+                <p class="development-notice">Esta funcionalidad está en desarrollo.</p>
+            </div>
+            
+            <div class="upload-option drumkit" onclick="window.location.href='/cuenta/Upload/Drum-Kits.html'">
+                <i class="fas fa-drum"></i>
+                <h3>Subir Drum Kit</h3>
+                <p>Comparte tus kits de batería con miles de productores.</p>
+                <p class="development-notice">Esta funcionalidad está en desarrollo.</p>
+            </div>
+
+            <div class="upload-option preset" onclick="window.location.href='/cuenta/Upload/Presets.html'">
+                <i class="fas fa-sliders-h"></i>
+                <h3>Subir Preset</h3>
+                <p>Comparte tus presets y plugins con la comunidad OFFSZN.</p>
+                <p class="development-notice">Esta funcionalidad está en desarrollo.</p>
+            </div>
+
+            <div class="upload-option loopkit" onclick="window.location.href='subir-loopkit.html'">
+                <i class="fas fa-wave-square"></i>
+                <h3>Subir Loop Kit</h3>
+                <p>Sube tus loops y samples para que otros productores los usen.</p>
+                <p class="development-notice">Esta funcionalidad está en desarrollo.</p>
+            </div>
+
+            <div class="upload-option curso" onclick="window.location.href='subir-curso.html'">
+                <i class="fas fa-graduation-cap"></i>
+                <h3>Subir Curso</h3>
+                <p>Enseña tus técnicas y comparte tu conocimiento con la comunidad.</p>
+                <p class="development-notice">Esta funcionalidad está en desarrollo.</p>
+            </div>
+
+        </div>
+        
+        <a href="/cuenta/dashboard" class="back-btn">
+            <i class="fas fa-arrow-left"></i> Volver al Dashboard
         </a>
     </div>
 </body>
