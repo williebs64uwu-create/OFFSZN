@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Producto - OFFSZN</title>
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Montserrat:wght@700;800;900&display=swap" rel="stylesheet">
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --purple-main: #7209b7;
+      --purple-dark: #560bad;
+      --green-success: #0cbc87;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #000;
+      color: #fff;
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem;
+    }
+
+    .back-button {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: rgba(255, 255, 255, 0.7);
+      text-decoration: none;
+      font-size: 0.875rem;
+      padding: 0.5rem 0;
+      margin-bottom: 2rem;
+      transition: color 0.3s;
+    }
+
+    .back-button:hover {
+      color: #fff;
+    }
+
+    .product-container {
+      display: grid;
+      grid-template-columns: 450px 1fr;
+      gap: 3rem;
+      margin-bottom: 4rem;
+    }
+
+    .product-image-section {
+      position: sticky;
+      top: 2rem;
+      height: fit-content;
+    }
+
+    .product-image {
+      width: 100%;
+      aspect-ratio: 1;
+      border-radius: 12px;
+      overflow: hidden;
+      background: #1a1a1a;
+      margin-bottom: 1rem;
+    }
+
+    .product-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .product-producer {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 1rem;
+      background: #1a1a1a;
+      border-radius: 12px;
+      text-decoration: none;
+      transition: background 0.3s;
+    }
+
+    .product-producer:hover {
+      background: #222;
+    }
+
+    .producer-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      overflow: hidden;
+    }
+
+    .producer-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .producer-info h4 {
+      color: #fff;
+      font-size: 0.9375rem;
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+    }
+
+    .producer-info p {
+      color: #999;
+      font-size: 0.8125rem;
+    }
+
+    .product-info-section {
+      padding-top: 1rem;
+    }
+
+    .product-title {
+      font-size: 2.5rem;
+      font-weight: 900;
+      font-family: 'Montserrat', sans-serif;
+      margin-bottom: 1rem;
+    }
+
+    .product-meta {
+      display: flex;
+      gap: 2rem;
+      margin-bottom: 2rem;
+      padding-bottom: 2rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .meta-item {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .meta-label {
+      font-size: 0.75rem;
+      color: #999;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .meta-value {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .product-description {
+      margin-bottom: 2rem;
+      padding-bottom: 2rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .product-description h3 {
+      font-size: 1.125rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+    }
+
+    .product-description p {
+      color: rgba(255, 255, 255, 0.8);
+      line-height: 1.8;
+    }
+
+    .product-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .tag {
+      padding: 0.5rem 1rem;
+      background: rgba(114, 9, 183, 0.2);
+      border: 1px solid rgba(114, 9, 183, 0.4);
+      border-radius: 6px;
+      font-size: 0.875rem;
+      color: rgba(255, 255, 255, 0.9);
+    }
+
+    .licenses-section {
+      background: #1a1a1a;
+      border-radius: 12px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+    }
+
+    .licenses-section h3 {
+      font-size: 1.5rem;
+      font-weight: 800;
+      margin-bottom: 1.5rem;
+      font-family: 'Montserrat', sans-serif;
+    }
+
+    .license-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1rem;
+    }
+
+    .license-card {
+      background: #0a0a0a;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 1.5rem;
+      transition: all 0.3s;
+      cursor: pointer;
+    }
+
+    .license-card:hover {
+      border-color: var(--purple-main);
+      transform: translateY(-2px);
+    }
+
+    .license-card.free {
+      border-color: var(--green-success);
+    }
+
+    .license-name {
+      font-size: 1.125rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+
+    .license-price {
+      font-size: 2rem;
+      font-weight: 900;
+      font-family: 'Montserrat', sans-serif;
+      margin-bottom: 1rem;
+      color: var(--purple-main);
+    }
+
+    .license-card.free .license-price {
+      color: var(--green-success);
+    }
+
+    .license-features {
+      list-style: none;
+      margin-bottom: 1rem;
+    }
+
+    .license-features li {
+      padding: 0.5rem 0;
+      font-size: 0.875rem;
+      color: rgba(255, 255, 255, 0.7);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .license-features li i {
+      color: var(--green-success);
+      font-size: 0.75rem;
+    }
+
+    .btn-license {
+      width: 100%;
+      padding: 0.875rem;
+      background: linear-gradient(135deg, var(--purple-main), var(--purple-dark));
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .btn-license:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(114, 9, 183, 0.5);
+    }
+
+    .license-card.free .btn-license {
+      background: linear-gradient(135deg, var(--green-success), #0a9d72);
+    }
+
+    .audio-player {
+      background: #1a1a1a;
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .audio-player h4 {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+    }
+
+    .player-controls {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .play-btn {
+      width: 48px;
+      height: 48px;
+      background: var(--purple-main);
+      border: none;
+      border-radius: 50%;
+      color: #fff;
+      font-size: 1.25rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s;
+    }
+
+    .play-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 15px rgba(114, 9, 183, 0.5);
+    }
+
+    .waveform {
+      flex: 1;
+      height: 48px;
+      background: rgba(114, 9, 183, 0.1);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #999;
+      font-size: 0.875rem;
+    }
+
+    @media (max-width: 968px) {
+      .product-container {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+      }
+
+      .product-image-section {
+        position: static;
+      }
+
+      .license-cards {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <a href="javascript:history.back()" class="back-button">
+      <i class="bi bi-arrow-left"></i>
+      Volver al perfil
+    </a>
+
+    <div class="product-container">
+      <!-- Sección de imagen (izquierda) -->
+      <div class="product-image-section">
+        <div class="product-image" id="productImage">
+          <img src="" alt="Producto">
+        </div>
+        <a href="#" class="product-producer" id="producerLink">
+          <div class="producer-avatar">
+            <img src="" alt="Producer">
+          </div>
+          <div class="producer-info">
+            <h4 id="producerName">Cargando...</h4>
+            <p>Ver perfil del productor</p>
+          </div>
+        </a>
+      </div>
+
+      <!-- Sección de información (derecha) -->
+      <div class="product-info-section">
+        <h1 class="product-title" id="productTitle">Cargando producto...</h1>
+
+        <div class="product-meta" id="productMeta">
+          <div class="meta-item">
+            <span class="meta-label">BPM</span>
+            <span class="meta-value" id="productBpm">---</span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-label">Key</span>
+            <span class="meta-value" id="productKey">--</span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-label">Tipo</span>
+            <span class="meta-value" id="productType">---</span>
+          </div>
+        </div>
+
+        <!-- Audio Player -->
+        <div class="audio-player">
+          <h4><i class="bi bi-music-note"></i> Preview del Beat</h4>
+          <div class="player-controls">
+            <button class="play-btn" id="playBtn">
+              <i class="bi bi-play-fill"></i>
+            </button>
+            <div class="waveform">
+              <span>Cargando audio...</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="product-description">
+          <h3>Descripción</h3>
+          <p id="productDescription">Cargando descripción...</p>
+        </div>
+
+        <div class="product-tags" id="productTags">
+          <!-- Tags se cargarán dinámicamente -->
+        </div>
+
+        <!-- Sección de Licencias -->
+        <div class="licenses-section">
+          <h3>Selecciona una Licencia</h3>
+          <div class="license-cards" id="licenseCards">
+            <!-- Licencias se cargarán dinámicamente -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
+
+    const supabaseUrl = "https://qtjpvztpgfymjhhpoouq.supabase.co";
+    const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0anB2enRwZ2Z5bWpoaHBvb3VxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3ODA5MTUsImV4cCI6MjA3NjM1NjkxNX0.YsItTFk3hSQaVuy707-z7Z-j34mXa03O0wWGAlAzjrw";
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    // Obtener ID del producto desde URL
+    function getProductId() {
+      const params = new URLSearchParams(window.location.search);
+      return params.get('id');
+    }
+
+    // Cargar producto
+    async function cargarProducto() {
+      const productId = getProductId();
+      
+      if (!productId) {
+        alert('ID de producto no encontrado');
+        window.history.back();
+        return;
+      }
+
+      try {
+        // Obtener producto
+        const { data: product, error: productError } = await supabase
+          .from('products')
+          .select('*')
+          .eq('id', productId)
+          .single();
+
+        if (productError) throw productError;
+
+        // Obtener datos del productor
+        const { data: producer, error: producerError } = await supabase
+          .from('users')
+          .select('*')
+          .eq('id', product.producer_id)
+          .single();
+
+        if (producerError) throw producerError;
+
+        // Actualizar UI
+        actualizarProductoUI(product, producer);
+        
+      } catch (error) {
+        console.error('Error cargando producto:', error);
+        alert('Error al cargar el producto');
+      }
+    }
+
+    // Actualizar UI con datos del producto
+    function actualizarProductoUI(product, producer) {
+      // Título
+      document.getElementById('productTitle').textContent = product.name || 'Sin título';
+      
+      // Imagen
+      const productImg = document.querySelector('#productImage img');
+      productImg.src = product.image_url || 'https://ui-avatars.com/api/?name=Music&size=400&background=7209b7&color=ffffff&bold=true';
+      productImg.alt = product.name;
+
+      // Meta
+      document.getElementById('productBpm').textContent = product.bpm || '---';
+      document.getElementById('productKey').textContent = product.key || '--';
+      document.getElementById('productType').textContent = product.product_type || 'Beat';
+
+      // Descripción
+      document.getElementById('productDescription').textContent = product.description || 'Sin descripción disponible.';
+
+      // Tags (géneros)
+      const tagsContainer = document.getElementById('productTags');
+      if (product.genres && product.genres.length > 0) {
+        tagsContainer.innerHTML = product.genres.map(genre => 
+          `<span class="tag">${genre}</span>`
+        ).join('');
+      }
+
+      // Productor
+      const producerAvatar = document.querySelector('.producer-avatar img');
+      producerAvatar.src = producer.avatar_url || 'https://ui-avatars.com/api/?name=U&size=100&background=7209b7&color=ffffff&bold=true';
+      
+      const producerName = document.getElementById('producerName');
+      producerName.textContent = `${producer.first_name || ''} ${producer.last_name || ''}`.trim() || producer.nickname;
+      
+      const producerLink = document.getElementById('producerLink');
+      producerLink.href = `/usuarios.html?nickname=${producer.nickname}`;
+
+      // Licencias
+      cargarLicencias(product);
+    }
+
+    // Cargar licencias disponibles
+    function cargarLicencias(product) {
+      const container = document.getElementById('licenseCards');
+      const licenses = [];
+
+      // Producto gratis - descarga directa
+      if (product.is_free) {
+        licenses.push({
+          id: 'free',
+          name: 'Descarga Gratis',
+          price: 'GRATIS',
+          priceValue: 0,
+          features: ['MP3 con tag', 'Uso no comercial', 'Streaming permitido'],
+          isFree: true,
+          downloadUrl: product.download_url_mp3
+        });
+      }
+
+      // Licencias de pago - desde la BD
+      if (product.price_basic && parseFloat(product.price_basic) > 0) {
+        licenses.push({
+          id: 'basic',
+          name: 'Licencia Básica',
+          price: `${parseFloat(product.price_basic).toFixed(2)}`,
+          priceValue: parseFloat(product.price_basic),
+          features: ['MP3 sin tag', 'Uso comercial', 'Streaming ilimitado', '5,000 ventas'],
+          isFree: false
+        });
+      }
+
+      if (product.price_premium && parseFloat(product.price_premium) > 0) {
+        licenses.push({
+          id: 'premium',
+          name: 'Licencia Premium',
+          price: `${parseFloat(product.price_premium).toFixed(2)}`,
+          priceValue: parseFloat(product.price_premium),
+          features: ['WAV sin tag', 'Uso comercial', 'Streaming ilimitado', '50,000 ventas'],
+          isFree: false
+        });
+      }
+
+      if (product.price_stems && parseFloat(product.price_stems) > 0) {
+        licenses.push({
+          id: 'stems',
+          name: 'Stems Trackout',
+          price: `${parseFloat(product.price_stems).toFixed(2)}`,
+          priceValue: parseFloat(product.price_stems),
+          features: ['Todos los stems', 'Uso comercial', 'Streaming ilimitado', '100,000 ventas'],
+          isFree: false
+        });
+      }
+
+      if (product.price_exclusive && parseFloat(product.price_exclusive) > 0) {
+        licenses.push({
+          id: 'exclusive',
+          name: 'Licencia Exclusiva',
+          price: `${parseFloat(product.price_exclusive).toFixed(2)}`,
+          priceValue: parseFloat(product.price_exclusive),
+          features: ['Derechos completos', 'Ventas ilimitadas', 'Beat removido de venta'],
+          isFree: false
+        });
+      }
+
+      // Renderizar licencias
+      container.innerHTML = licenses.map(license => `
+        <div class="license-card ${license.isFree ? 'free' : ''}" data-license-id="${license.id}">
+          <div class="license-name">${license.name}</div>
+          <div class="license-price">${license.price}</div>
+          <ul class="license-features">
+            ${license.features.map(f => `<li><i class="bi bi-check-circle-fill"></i> ${f}</li>`).join('')}
+          </ul>
+          <button class="btn-license" onclick='${license.isFree ? `descargarGratis("${license.downloadUrl}")` : `agregarAlCarrito(${JSON.stringify(product).replace(/'/g, "&#39;")}, "${license.id}", "${license.name}", ${license.priceValue})`}'>
+            ${license.isFree ? 'Descargar Ahora' : 'Agregar al Carrito'}
+          </button>
+        </div>
+      `).join('');
+    }
+
+    // Descargar gratis
+    window.descargarGratis = function(url) {
+      if (url) {
+        window.open(url, '_blank');
+      } else {
+        alert('URL de descarga no disponible');
+      }
+    };
+
+    // Agregar al carrito
+    window.agregarAlCarrito = function(product, licenseId, licenseName, price) {
+      // Obtener carrito actual del localStorage
+      let cart = JSON.parse(localStorage.getItem('offszn_cart') || '[]');
+      
+      // Crear item del carrito
+      const cartItem = {
+        id: `${product.id}_${licenseId}`,
+        productId: product.id,
+        productName: product.name,
+        productImage: product.image_url,
+        licenseId: licenseId,
+        licenseName: licenseName,
+        price: price,
+        producerName: document.getElementById('producerName').textContent,
+        addedAt: new Date().toISOString()
+      };
+      
+      // Verificar si ya existe en el carrito
+      const existingIndex = cart.findIndex(item => item.id === cartItem.id);
+      
+      if (existingIndex >= 0) {
+        alert('Este producto con esta licencia ya está en tu carrito');
+        return;
+      }
+      
+      // Agregar al carrito
+      cart.push(cartItem);
+      
+      // Guardar en localStorage
+      localStorage.setItem('offszn_cart', JSON.stringify(cart));
+      
+      // Mostrar confirmación
+      alert(`✅ "${licenseName}" agregada al carrito!\n\nProducto: ${product.name}\nPrecio: ${price.toFixed(2)}`);
+      
+      // Actualizar contador del carrito en navbar (si existe)
+      actualizarContadorCarrito();
+    };
+
+    // Actualizar contador del carrito
+    function actualizarContadorCarrito() {
+      const cart = JSON.parse(localStorage.getItem('offszn_cart') || '[]');
+      const cartCount = cart.length;
+      
+      // Si hay un badge de contador en el navbar
+      const cartBadge = document.querySelector('.cart-count');
+      if (cartBadge) {
+        cartBadge.textContent = cartCount;
+        cartBadge.style.display = cartCount > 0 ? 'block' : 'none';
+      }
+    }
+
+    // Inicializar
+    document.addEventListener('DOMContentLoaded', cargarProducto);
+  </script>
+
+</body>
+</html>
