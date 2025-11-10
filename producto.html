@@ -4,9 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Producto - OFFSZN</title>
-  <!-- Google Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Montserrat:wght@700;800;900&display=swap" rel="stylesheet">
-  <!-- Bootstrap Icons -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
   <style>
     * {
@@ -355,7 +353,7 @@
 <body>
 
   <div class="container">
-    <a href="javascript:history.back()" class="back-button">
+    <a href="#" onclick="volverAlPerfil(); return false;" class="back-button">
       <i class="bi bi-arrow-left"></i>
       Volver al perfil
     </a>
@@ -436,11 +434,23 @@
     const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0anB2enRwZ2Z5bWpoaHBvb3VxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3ODA5MTUsImV4cCI6MjA3NjM1NjkxNX0.YsItTFk3hSQaVuy707-z7Z-j34mXa03O0wWGAlAzjrw";
     const supabase = createClient(supabaseUrl, supabaseKey);
 
+    // Variable global para el productor
+    let currentProducerNickname = null;
+
     // Obtener ID del producto desde URL
     function getProductId() {
       const params = new URLSearchParams(window.location.search);
       return params.get('id');
     }
+
+    // Volver al perfil del productor
+    window.volverAlPerfil = function() {
+      if (currentProducerNickname) {
+        window.location.href = `usuarios.html?nickname=${currentProducerNickname}`;
+      } else {
+        history.back();
+      }
+    };
 
     // Cargar producto
     async function cargarProducto() {
@@ -471,6 +481,9 @@
 
         if (producerError) throw producerError;
 
+        // Guardar nickname del productor
+        currentProducerNickname = producer.nickname;
+
         // Actualizar UI
         actualizarProductoUI(product, producer);
         
@@ -487,8 +500,10 @@
       
       // Imagen
       const productImg = document.querySelector('#productImage img');
-      productImg.src = product.image_url || 'https://ui-avatars.com/api/?name=Music&size=400&background=7209b7&color=ffffff&bold=true';
+      const defaultImg = 'https://ui-avatars.com/api/?name=Music&size=400&background=7209b7&color=ffffff&bold=true';
+      productImg.src = (product.image_url && product.image_url.startsWith('http')) ? product.image_url : defaultImg;
       productImg.alt = product.name;
+      productImg.onerror = function() { this.src = defaultImg; };
 
       // Meta
       document.getElementById('productBpm').textContent = product.bpm || '---';
@@ -507,14 +522,18 @@
       }
 
       // Productor
+      const inicial = producer.first_name ? producer.first_name.charAt(0).toUpperCase() : 'U';
+      const defaultAvatar = `https://ui-avatars.com/api/?name=${inicial}&size=100&background=7209b7&color=ffffff&bold=true`;
+      
       const producerAvatar = document.querySelector('.producer-avatar img');
-      producerAvatar.src = producer.avatar_url || 'https://ui-avatars.com/api/?name=U&size=100&background=7209b7&color=ffffff&bold=true';
+      producerAvatar.src = (producer.avatar_url && producer.avatar_url.startsWith('http')) ? producer.avatar_url : defaultAvatar;
+      producerAvatar.onerror = function() { this.src = defaultAvatar; };
       
       const producerName = document.getElementById('producerName');
       producerName.textContent = `${producer.first_name || ''} ${producer.last_name || ''}`.trim() || producer.nickname;
       
       const producerLink = document.getElementById('producerLink');
-      producerLink.href = `/usuarios.html?nickname=${producer.nickname}`;
+      producerLink.href = `usuarios.html?nickname=${producer.nickname}`;
 
       // Licencias
       cargarLicencias(product);
@@ -538,12 +557,12 @@
         });
       }
 
-      // Licencias de pago - desde la BD
+      // Licencias de pago
       if (product.price_basic && parseFloat(product.price_basic) > 0) {
         licenses.push({
           id: 'basic',
           name: 'Licencia Básica',
-          price: `${parseFloat(product.price_basic).toFixed(2)}`,
+          price: `$${parseFloat(product.price_basic).toFixed(2)}`,
           priceValue: parseFloat(product.price_basic),
           features: ['MP3 sin tag', 'Uso comercial', 'Streaming ilimitado', '5,000 ventas'],
           isFree: false
@@ -554,7 +573,7 @@
         licenses.push({
           id: 'premium',
           name: 'Licencia Premium',
-          price: `${parseFloat(product.price_premium).toFixed(2)}`,
+          price: `$${parseFloat(product.price_premium).toFixed(2)}`,
           priceValue: parseFloat(product.price_premium),
           features: ['WAV sin tag', 'Uso comercial', 'Streaming ilimitado', '50,000 ventas'],
           isFree: false
@@ -565,7 +584,7 @@
         licenses.push({
           id: 'stems',
           name: 'Stems Trackout',
-          price: `${parseFloat(product.price_stems).toFixed(2)}`,
+          price: `$${parseFloat(product.price_stems).toFixed(2)}`,
           priceValue: parseFloat(product.price_stems),
           features: ['Todos los stems', 'Uso comercial', 'Streaming ilimitado', '100,000 ventas'],
           isFree: false
@@ -576,7 +595,7 @@
         licenses.push({
           id: 'exclusive',
           name: 'Licencia Exclusiva',
-          price: `${parseFloat(product.price_exclusive).toFixed(2)}`,
+          price: `$${parseFloat(product.price_exclusive).toFixed(2)}`,
           priceValue: parseFloat(product.price_exclusive),
           features: ['Derechos completos', 'Ventas ilimitadas', 'Beat removido de venta'],
           isFree: false
@@ -609,10 +628,8 @@
 
     // Agregar al carrito
     window.agregarAlCarrito = function(product, licenseId, licenseName, price) {
-      // Obtener carrito actual del localStorage
       let cart = JSON.parse(localStorage.getItem('offszn_cart') || '[]');
       
-      // Crear item del carrito
       const cartItem = {
         id: `${product.id}_${licenseId}`,
         productId: product.id,
@@ -625,7 +642,6 @@
         addedAt: new Date().toISOString()
       };
       
-      // Verificar si ya existe en el carrito
       const existingIndex = cart.findIndex(item => item.id === cartItem.id);
       
       if (existingIndex >= 0) {
@@ -633,16 +649,11 @@
         return;
       }
       
-      // Agregar al carrito
       cart.push(cartItem);
-      
-      // Guardar en localStorage
       localStorage.setItem('offszn_cart', JSON.stringify(cart));
       
-      // Mostrar confirmación
-      alert(`✅ "${licenseName}" agregada al carrito!\n\nProducto: ${product.name}\nPrecio: ${price.toFixed(2)}`);
+      alert(`✅ "${licenseName}" agregada al carrito!\n\nProducto: ${product.name}\nPrecio: $${price.toFixed(2)}`);
       
-      // Actualizar contador del carrito en navbar (si existe)
       actualizarContadorCarrito();
     };
 
@@ -651,7 +662,6 @@
       const cart = JSON.parse(localStorage.getItem('offszn_cart') || '[]');
       const cartCount = cart.length;
       
-      // Si hay un badge de contador en el navbar
       const cartBadge = document.querySelector('.cart-count');
       if (cartBadge) {
         cartBadge.textContent = cartCount;
