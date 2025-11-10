@@ -7,12 +7,16 @@ const supabaseUrl = "https://qtjpvztpgfymjhhpoouq.supabase.co";
 const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0anB2enRwZ2Z5bWpoaHBvb3VxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3ODA5MTUsImV4cCI6MjA3NjM1NjkxNX0.YsItTFk3hSQaVuy707-z7Z-j34mXa03O0wWGAlAzjrw";
 const supabase = createClient(supabaseUrl, supabaseKey);
 
+console.log('🔌 Supabase conectado correctamente');
+
 // ============================================
 // OBTENER NICKNAME DE LA URL
 // ============================================
 function getNicknameFromURL() {
   const params = new URLSearchParams(window.location.search);
-  return params.get('nickname') || 'WillieInspired';
+  const nickname = params.get('nickname') || 'WillieInspired';
+  console.log('📌 Nickname desde URL:', nickname);
+  return nickname;
 }
 
 // ============================================
@@ -20,6 +24,8 @@ function getNicknameFromURL() {
 // ============================================
 async function cargarPerfil() {
   const nickname = getNicknameFromURL();
+  
+  console.log('🔍 Buscando usuario:', nickname);
   
   try {
     // Obtener datos del usuario
@@ -29,14 +35,21 @@ async function cargarPerfil() {
       .eq('nickname', nickname)
       .single();
 
-    if (userError) throw userError;
+    console.log('📦 Respuesta de Supabase:', { user, error: userError });
+
+    if (userError) {
+      console.error('❌ Error de Supabase:', userError);
+      throw userError;
+    }
+    
     if (!user) {
+      console.error('❌ Usuario no encontrado');
       document.querySelector('.profile-header-container').innerHTML = 
         '<p style="color: red; text-align: center; padding: 2rem;">❌ Usuario no encontrado</p>';
       return;
     }
 
-    console.log('✅ Usuario cargado:', user);
+    console.log('✅ Usuario cargado correctamente:', user);
 
     // Actualizar el DOM con los datos del usuario
     actualizarHeaderPerfil(user);
@@ -57,29 +70,36 @@ async function cargarPerfil() {
 // ACTUALIZAR HEADER DEL PERFIL
 // ============================================
 function actualizarHeaderPerfil(user) {
+  console.log('🎨 Actualizando header con datos:', user);
+
   // Avatar - Actualizar imagen
   const avatarImg = document.querySelector('.profile-avatar img');
   if (avatarImg) {
-    avatarImg.src = user.avatar_url || `https://via.placeholder.com/400x400/7209b7/ffffff?text=${user.first_name.charAt(0)}`;
+    const avatarUrl = user.avatar_url || `https://via.placeholder.com/400x400/7209b7/ffffff?text=${user.first_name?.charAt(0) || 'U'}`;
+    console.log('🖼️ Avatar URL:', avatarUrl);
+    
+    avatarImg.src = avatarUrl;
     avatarImg.alt = user.nickname;
     avatarImg.onerror = function() {
-      this.src = `https://via.placeholder.com/400x400/7209b7/ffffff?text=${user.first_name.charAt(0)}`;
+      console.warn('⚠️ Error cargando avatar, usando placeholder');
+      this.src = `https://via.placeholder.com/400x400/7209b7/ffffff?text=${user.first_name?.charAt(0) || 'U'}`;
     };
   }
 
   // Username - Actualizar nombre completo
   const usernameEl = document.querySelector('.profile-username');
   if (usernameEl) {
-    usernameEl.innerHTML = `
-      ${user.first_name.toUpperCase()} ${user.last_name.toUpperCase()}
-      ${user.is_verified ? '<span class="verified-badge"><i class="bi bi-check-lg"></i></span>' : ''}
-    `;
+    const fullName = `${user.first_name || ''} ${user.last_name || ''}`.trim().toUpperCase();
+    const verifiedBadge = user.is_verified ? '<span class="verified-badge"><i class="bi bi-check-lg"></i></span>' : '';
+    usernameEl.innerHTML = `${fullName} ${verifiedBadge}`;
+    console.log('👤 Username actualizado:', fullName);
   }
 
   // Role - Actualizar rol
   const roleEl = document.querySelector('.profile-role');
   if (roleEl) {
     roleEl.textContent = `${user.role || 'Usuario'} • Lima, Perú`;
+    console.log('💼 Role actualizado:', user.role);
   }
 
   // Sidebar - Username (@nickname)
@@ -90,7 +110,7 @@ function actualizarHeaderPerfil(user) {
 
   // Sidebar - Bio/Role
   if (sidebarContent[1]) {
-    if (user.bio) {
+    if (user.bio && user.bio.trim() !== '') {
       sidebarContent[1].innerHTML = `<p>${user.bio}</p>`;
     } else {
       sidebarContent[1].innerHTML = '<p class="empty-state">Sin biografía</p>';
@@ -98,6 +118,7 @@ function actualizarHeaderPerfil(user) {
   }
 
   // Redes sociales
+  console.log('🌐 Redes sociales:', user.socials);
   actualizarRedesSociales(user.socials);
 }
 
@@ -106,21 +127,37 @@ function actualizarHeaderPerfil(user) {
 // ============================================
 function actualizarRedesSociales(socials) {
   const socialsContainer = document.querySelector('.profile-socials');
-  if (!socialsContainer) return;
+  if (!socialsContainer) {
+    console.warn('⚠️ No se encontró el contenedor de redes sociales');
+    return;
+  }
 
   // Limpiar redes existentes
   socialsContainer.innerHTML = '';
 
-  if (!socials) return;
+  if (!socials || Object.keys(socials).length === 0) {
+    console.warn('⚠️ No hay redes sociales configuradas');
+    return;
+  }
+
+  console.log('🔗 Procesando redes sociales:', socials);
 
   const redesMap = {
     instagram: { 
       icon: 'bi-instagram', 
-      url: (handle) => `https://instagram.com/${handle.replace('@', '')}` 
+      url: (handle) => {
+        if (!handle) return null;
+        if (handle.startsWith('http')) return handle;
+        return `https://instagram.com/${handle.replace('@', '')}`;
+      }
     },
     youtube: { 
       icon: 'bi-youtube', 
-      url: (handle) => handle.startsWith('http') ? handle : `https://youtube.com/${handle}` 
+      url: (handle) => {
+        if (!handle) return null;
+        if (handle.startsWith('http')) return handle;
+        return `https://youtube.com/${handle.replace('@', '')}`;
+      }
     },
     spotify: { 
       icon: 'bi-spotify', 
@@ -132,15 +169,25 @@ function actualizarRedesSociales(socials) {
     },
     tiktok: { 
       icon: 'bi-tiktok', 
-      url: (handle) => `https://tiktok.com/${handle}` 
+      url: (handle) => {
+        if (!handle) return null;
+        if (handle.startsWith('http')) return handle;
+        return `https://tiktok.com/${handle.replace('@', '')}`;
+      }
     }
   };
 
   Object.entries(socials).forEach(([red, valor]) => {
     if (valor && redesMap[red]) {
       const { icon, url } = redesMap[red];
+      const finalUrl = url(valor);
+      
+      if (!finalUrl) return;
+      
+      console.log(`✅ Agregando red: ${red} -> ${finalUrl}`);
+      
       const link = document.createElement('a');
-      link.href = url(valor);
+      link.href = finalUrl;
       link.target = '_blank';
       link.rel = 'noopener noreferrer';
       link.className = 'social-btn';
@@ -155,6 +202,8 @@ function actualizarRedesSociales(socials) {
 // CARGAR PRODUCTOS DEL USUARIO
 // ============================================
 async function cargarProductos(userId) {
+  console.log('📦 Cargando productos para user_id:', userId);
+  
   try {
     const { data: products, error } = await supabase
       .from('products')
@@ -163,14 +212,20 @@ async function cargarProductos(userId) {
       .eq('status', 'approved')
       .order('created_at', { ascending: false });
 
-    if (error) throw error;
+    if (error) {
+      console.error('❌ Error cargando productos:', error);
+      throw error;
+    }
 
-    console.log('📦 Productos cargados:', products.length);
+    console.log(`✅ ${products?.length || 0} productos cargados`);
 
     const productsGrid = document.getElementById('productsGrid');
-    if (!productsGrid) return;
+    if (!productsGrid) {
+      console.warn('⚠️ No se encontró el grid de productos');
+      return;
+    }
 
-    if (products.length === 0) {
+    if (!products || products.length === 0) {
       productsGrid.innerHTML = `
         <div class="products-empty">
           <div class="empty-icon">
@@ -188,7 +243,7 @@ async function cargarProductos(userId) {
     }
 
   } catch (error) {
-    console.error('❌ Error cargando productos:', error);
+    console.error('❌ Error en cargarProductos:', error);
   }
 }
 
@@ -239,20 +294,25 @@ function crearCardProducto(product) {
 // CARGAR ESTADÍSTICAS
 // ============================================
 async function cargarEstadisticas(userId) {
+  console.log('📊 Cargando estadísticas para user_id:', userId);
+  
   try {
     // Contar productos
-    const { count: productCount } = await supabase
+    const { count: productCount, error } = await supabase
       .from('products')
       .select('*', { count: 'exact', head: true })
       .eq('producer_id', userId)
       .eq('status', 'approved');
 
+    if (error) {
+      console.error('❌ Error contando productos:', error);
+    }
+
     const productsCountEl = document.getElementById('productsCount');
     if (productsCountEl) {
       productsCountEl.textContent = productCount || 0;
+      console.log('✅ Productos contados:', productCount);
     }
-
-    console.log('📊 Estadísticas cargadas: ', productCount, 'productos');
 
     // TODO: Implementar contadores de seguidores cuando tengas esas tablas
     const followersCountEl = document.getElementById('followersCount');
@@ -262,7 +322,7 @@ async function cargarEstadisticas(userId) {
     if (followingCountEl) followingCountEl.textContent = '0';
 
   } catch (error) {
-    console.error('❌ Error cargando estadísticas:', error);
+    console.error('❌ Error en cargarEstadisticas:', error);
   }
 }
 
@@ -271,5 +331,6 @@ async function cargarEstadisticas(userId) {
 // ============================================
 document.addEventListener('DOMContentLoaded', () => {
   console.log('🚀 Iniciando carga de perfil...');
+  console.log('🌍 URL actual:', window.location.href);
   cargarPerfil();
 });
