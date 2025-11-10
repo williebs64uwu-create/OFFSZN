@@ -280,7 +280,7 @@ function crearCardProducto(product) {
   // Precio formateado
   const precio = product.is_free 
     ? '<span style="color: #0cbc87; font-weight: 700;">GRATIS</span>' 
-    : `S/ ${parseFloat(product.price_basic || 0).toFixed(0)}`;
+    : `${parseFloat(product.price_basic || 0).toFixed(0)}`;
 
   // Géneros limitados a 3
   const generos = product.genres && Array.isArray(product.genres) && product.genres.length > 0
@@ -297,12 +297,12 @@ function crearCardProducto(product) {
   const key = product.key || '--';
 
   return `
-    <div style="background: #1a1a1a; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; overflow: hidden; transition: all 0.3s; cursor: pointer;" 
+    <div style="background: #1a1a1a; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; overflow: hidden; transition: all 0.3s;" 
          onmouseover="this.style.transform='translateY(-4px)'; this.style.borderColor='rgba(114, 9, 183, 0.4)'" 
          onmouseout="this.style.transform='translateY(0)'; this.style.borderColor='rgba(255, 255, 255, 0.08)'"
-         onclick="window.location.href='/producto?id=${product.id}'"
          data-product-id="${product.id}">
-      <div style="position: relative; width: 100%; padding-top: 100%; overflow: hidden; background: #000;">
+      <div style="position: relative; width: 100%; padding-top: 100%; overflow: hidden; background: #000; cursor: pointer;"
+           onclick="window.location.href='/producto.html?id=${product.id}'">
         <img src="${imagenUrl}" 
              alt="${product.name || 'Producto'}" 
              style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover;"
@@ -313,15 +313,24 @@ function crearCardProducto(product) {
         </div>
       </div>
       <div style="padding: 1rem;">
-        <h3 style="font-size: 1rem; font-weight: 700; color: #fff; margin-bottom: 0.5rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${product.name || 'Sin título'}</h3>
+        <h3 style="font-size: 1rem; font-weight: 700; color: #fff; margin-bottom: 0.5rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer;"
+            onclick="window.location.href='/producto.html?id=${product.id}'">${product.name || 'Sin título'}</h3>
         <p style="font-size: 0.875rem; color: #999; margin-bottom: 0.75rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${product.description || 'Sin descripción'}</p>
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
           <span style="font-size: 1.125rem; font-weight: 800; color: #fff;">${precio}</span>
           <span style="font-size: 0.875rem; color: #999;">${bpm} BPM • ${key}</span>
         </div>
-        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.75rem;">
           ${generos}
         </div>
+        <button 
+          onclick="window.location.href='/producto.html?id=${product.id}'"
+          style="width: 100%; padding: 0.75rem; background: linear-gradient(135deg, #7209b7, #560bad); color: #fff; border: none; border-radius: 8px; font-weight: 700; font-size: 0.875rem; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; justify-content: center; gap: 0.5rem;"
+          onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(114, 9, 183, 0.5)'"
+          onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
+          <i class="bi bi-cart-plus"></i>
+          ${product.is_free ? 'Descargar Gratis' : 'Ver Licencias'}
+        </button>
       </div>
     </div>
   `;
