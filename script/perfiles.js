@@ -20,7 +20,7 @@ async function cargarPerfil() {
     // --- Traer datos reales del usuario ---
     const { data: user, error } = await supabase
         .from("users")
-        .select('nickname, first_name, last_name, role, "Estado", socials, template')
+        .select('id, nickname, first_name, last_name, role, "Estado", socials, template')
         .ilike("nickname", nickname)
         .single();
 
@@ -41,7 +41,7 @@ async function cargarPerfil() {
             <p><b>Nickname:</b> ${user.nickname}</p>
             <p><b>Rol:</b> ${user.role || "No definido"}</p>
             <p><b>Estado:</b> ${user.Estado || "No definido"}</p>
-            <p><b>Redes:</b> ${user.socials ? Object.values(user.socials).join(' | ') : 'No hay'}</p>
+            <p><b>Redes:</b> ${user.socials ? Object.entries(user.socials).map(([k,v]) => `${k}: ${v}`).join(' | ') : 'No hay'}</p>
         </div>
     `;
 
@@ -52,7 +52,7 @@ async function cargarPerfil() {
     const { data: productos, error: errProd } = await supabase
         .from("products")
         .select("*")
-        .eq("usuario", user.nickname); // cambiar "usuario" si la columna real es distinta
+        .eq("producer_id", user.id); // usamos el ID real del usuario
 
     if (errProd) {
         productosCont.innerHTML = "<p>❌ No se pudieron cargar los productos.</p>";
@@ -67,9 +67,10 @@ async function cargarPerfil() {
 
     productosCont.innerHTML = productos.map(p => `
         <div class="producto-card">
-            <h4>${p.nombre}</h4>
-            <p>${p.descripcion || ""}</p>
-            <p><b>Precio:</b> $${p.precio || "0"}</p>
+            <img src="${p.image_url}" alt="${p.name}" />
+            <h4>${p.name}</h4>
+            <p>${p.description || ""}</p>
+            <p><b>Precio:</b> ${p.is_free ? "Gratis" : "$" + (p.price_basic || "0")}</p>
         </div>
     `).join('');
 }
