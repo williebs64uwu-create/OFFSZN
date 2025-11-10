@@ -86,28 +86,41 @@ function mostrarError(mensaje) {
 }
 
 // ============================================
+// FUNCIÓN PARA GENERAR AVATAR PLACEHOLDER
+// ============================================
+function getAvatarPlaceholder(user) {
+  const inicial = user.first_name ? user.first_name.charAt(0).toUpperCase() : 
+                  user.nickname ? user.nickname.charAt(0).toUpperCase() : 'U';
+  return `https://ui-avatars.com/api/?name=${inicial}&size=400&background=7209b7&color=ffffff&bold=true`;
+}
+
+// ============================================
 // ACTUALIZAR HEADER DEL PERFIL
 // ============================================
 function actualizarHeaderPerfil(user) {
   console.log('🎨 Actualizando header con datos:', user);
 
-  // Avatar - Usar imagen por defecto si no hay avatar_url
+  // Avatar - Manejar correctamente la URL
   const avatarImg = document.querySelector('.profile-avatar img');
   if (avatarImg) {
-    // Si hay avatar_url, úsalo. Si no, genera uno con iniciales
-    const inicial = user.first_name ? user.first_name.charAt(0).toUpperCase() : 'U';
-    const avatarUrl = user.avatar_url || 
-                     `https://ui-avatars.com/api/?name=${inicial}&size=400&background=7209b7&color=ffffff&bold=true`;
+    const placeholder = getAvatarPlaceholder(user);
     
-    console.log('🖼️ Avatar URL:', avatarUrl);
+    // Si hay avatar_url Y es una URL válida
+    if (user.avatar_url && user.avatar_url.startsWith('http')) {
+      console.log('🖼️ Avatar URL válida:', user.avatar_url);
+      avatarImg.src = user.avatar_url;
+    } else {
+      console.log('🖼️ Usando avatar placeholder');
+      avatarImg.src = placeholder;
+    }
     
-    avatarImg.src = avatarUrl;
     avatarImg.alt = user.nickname || 'Usuario';
     
     // Fallback si falla la carga
     avatarImg.onerror = function() {
-      console.warn('⚠️ Error cargando avatar, usando generado');
-      this.src = `https://ui-avatars.com/api/?name=${inicial}&size=400&background=7209b7&color=ffffff&bold=true`;
+      console.warn('⚠️ Error cargando avatar, usando placeholder');
+      this.src = placeholder;
+      this.onerror = null; // Prevenir loop infinito
     };
   }
 
@@ -280,7 +293,7 @@ function crearCardProducto(product) {
   // Precio formateado
   const precio = product.is_free 
     ? '<span style="color: #0cbc87; font-weight: 700;">GRATIS</span>' 
-    : `${parseFloat(product.price_basic || 0).toFixed(0)}`;
+    : `$${parseFloat(product.price_basic || 0).toFixed(0)}`;
 
   // Géneros limitados a 3
   const generos = product.genres && Array.isArray(product.genres) && product.genres.length > 0
@@ -290,19 +303,21 @@ function crearCardProducto(product) {
     : '<span style="color: #666; font-size: 0.75rem;">Sin géneros</span>';
 
   // Imagen con fallback
-  const imagenUrl = product.image_url || 'https://ui-avatars.com/api/?name=Music&size=400&background=7209b7&color=ffffff&bold=true';
+  const imagenUrl = product.image_url && product.image_url.startsWith('http') 
+    ? product.image_url 
+    : 'https://ui-avatars.com/api/?name=Music&size=400&background=7209b7&color=ffffff&bold=true';
 
   // BPM y Key con valores por defecto
   const bpm = product.bpm || '---';
   const key = product.key || '--';
 
   return `
-    <div style="background: #1a1a1a; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; overflow: hidden; transition: all 0.3s;" 
+    <div style="background: #1a1a1a; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; overflow: hidden; transition: all 0.3s; cursor: pointer;" 
          onmouseover="this.style.transform='translateY(-4px)'; this.style.borderColor='rgba(114, 9, 183, 0.4)'" 
          onmouseout="this.style.transform='translateY(0)'; this.style.borderColor='rgba(255, 255, 255, 0.08)'"
+         onclick="window.location.href='producto.html?id=${product.id}'"
          data-product-id="${product.id}">
-      <div style="position: relative; width: 100%; padding-top: 100%; overflow: hidden; background: #000; cursor: pointer;"
-           onclick="window.location.href='/producto.html?id=${product.id}'">
+      <div style="position: relative; width: 100%; padding-top: 100%; overflow: hidden; background: #000;">
         <img src="${imagenUrl}" 
              alt="${product.name || 'Producto'}" 
              style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover;"
@@ -313,8 +328,7 @@ function crearCardProducto(product) {
         </div>
       </div>
       <div style="padding: 1rem;">
-        <h3 style="font-size: 1rem; font-weight: 700; color: #fff; margin-bottom: 0.5rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer;"
-            onclick="window.location.href='/producto.html?id=${product.id}'">${product.name || 'Sin título'}</h3>
+        <h3 style="font-size: 1rem; font-weight: 700; color: #fff; margin-bottom: 0.5rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${product.name || 'Sin título'}</h3>
         <p style="font-size: 0.875rem; color: #999; margin-bottom: 0.75rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${product.description || 'Sin descripción'}</p>
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
           <span style="font-size: 1.125rem; font-weight: 800; color: #fff;">${precio}</span>
@@ -324,7 +338,7 @@ function crearCardProducto(product) {
           ${generos}
         </div>
         <button 
-          onclick="window.location.href='/producto.html?id=${product.id}'"
+          onclick="event.stopPropagation(); window.location.href='producto.html?id=${product.id}'"
           style="width: 100%; padding: 0.75rem; background: linear-gradient(135deg, #7209b7, #560bad); color: #fff; border: none; border-radius: 8px; font-weight: 700; font-size: 0.875rem; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; justify-content: center; gap: 0.5rem;"
           onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(114, 9, 183, 0.5)'"
           onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
