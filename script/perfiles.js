@@ -1,78 +1,275 @@
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
 
-// --- Configuración real de Supabase ---
+// ============================================
+// CONFIGURACIÓN DE SUPABASE
+// ============================================
 const supabaseUrl = "https://qtjpvztpgfymjhhpoouq.supabase.co";
 const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0anB2enRwZ2Z5bWpoaHBvb3VxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3ODA5MTUsImV4cCI6MjA3NjM1NjkxNX0.YsItTFk3hSQaVuy707-z7Z-j34mXa03O0wWGAlAzjrw";
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-// --- Nickname real del usuario o query string ---
-const params = new URLSearchParams(window.location.search);
-const nickname = params.get("nickname") || "WillieInspired"; // usuario por defecto
-
-async function cargarPerfil() {
-    const contenedor = document.getElementById("perfil");
-
-    if (!nickname) {
-        contenedor.innerHTML = "<p>⚠️ No se indicó ningún usuario.</p>";
-        return;
-    }
-
-    // --- Traer datos reales del usuario ---
-    const { data: user, error } = await supabase
-        .from("users")
-        .select('id, nickname, first_name, last_name, role, "Estado", socials, template')
-        .ilike("nickname", nickname)
-        .single();
-
-    if (error || !user) {
-        contenedor.innerHTML = `<p>❌ Usuario "${nickname}" no encontrado.</p>`;
-        console.error(error);
-        return;
-    }
-
-    // --- Aplicar plantilla ---
-    const template = user.template || 'original';
-    contenedor.className = `perfil-container ${template}`;
-
-    // --- Renderizar perfil ---
-    contenedor.innerHTML = `
-        <div class="perfil-card">
-            <h1>${user.first_name || ""} ${user.last_name || ""}</h1>
-            <p><b>Nickname:</b> ${user.nickname}</p>
-            <p><b>Rol:</b> ${user.role || "No definido"}</p>
-            <p><b>Estado:</b> ${user.Estado || "No definido"}</p>
-            <p><b>Redes:</b> ${user.socials ? Object.entries(user.socials).map(([k,v]) => `${k}: ${v}`).join(' | ') : 'No hay'}</p>
-        </div>
-    `;
-
-    // --- Cargar productos del usuario ---
-    const productosCont = document.getElementById("productos-lista");
-    if (!productosCont) return; // si no hay sección de productos, no hacer nada
-
-    const { data: productos, error: errProd } = await supabase
-        .from("products")
-        .select("*")
-        .eq("producer_id", user.id); // usamos el ID real del usuario
-
-    if (errProd) {
-        productosCont.innerHTML = "<p>❌ No se pudieron cargar los productos.</p>";
-        console.error(errProd);
-        return;
-    }
-
-    if (!productos || productos.length === 0) {
-        productosCont.innerHTML = "<p>No hay productos para este usuario.</p>";
-        return;
-    }
-
-    productosCont.innerHTML = productos.map(p => `
-        <div class="producto-card">
-            <img src="${p.image_url}" alt="${p.name}" />
-            <h4>${p.name}</h4>
-            <p>${p.description || ""}</p>
-            <p><b>Precio:</b> ${p.is_free ? "Gratis" : "$" + (p.price_basic || "0")}</p>
-        </div>
-    `).join('');
+// ============================================
+// OBTENER NICKNAME DE LA URL
+// ============================================
+function getNicknameFromURL() {
+  const params = new URLSearchParams(window.location.search);
+  return params.get('nickname') || 'WillieInspired';
 }
 
-document.addEventListener("DOMContentLoaded", cargarPerfil);
+// ============================================
+// CARGAR PERFIL DEL USUARIO
+// ============================================
+async function cargarPerfil() {
+  const nickname = getNicknameFromURL();
+  
+  try {
+    // Obtener datos del usuario
+    const { data: user, error: userError } = await supabase
+      .from('users')
+      .select('*')
+      .eq('nickname', nickname)
+      .single();
+
+    if (userError) throw userError;
+    if (!user) {
+      document.querySelector('.profile-header-container').innerHTML = 
+        '<p style="color: red; text-align: center; padding: 2rem;">❌ Usuario no encontrado</p>';
+      return;
+    }
+
+    console.log('✅ Usuario cargado:', user);
+
+    // Actualizar el DOM con los datos del usuario
+    actualizarHeaderPerfil(user);
+    
+    // Cargar productos del usuario
+    await cargarProductos(user.id);
+    
+    // Cargar estadísticas
+    await cargarEstadisticas(user.id);
+
+  } catch (error) {
+    console.error('❌ Error cargando perfil:', error);
+    alert('Error al cargar el perfil: ' + error.message);
+  }
+}
+
+// ============================================
+// ACTUALIZAR HEADER DEL PERFIL
+// ============================================
+function actualizarHeaderPerfil(user) {
+  // Avatar - Actualizar imagen
+  const avatarImg = document.querySelector('.profile-avatar img');
+  if (avatarImg) {
+    avatarImg.src = user.avatar_url || `https://via.placeholder.com/400x400/7209b7/ffffff?text=${user.first_name.charAt(0)}`;
+    avatarImg.alt = user.nickname;
+    avatarImg.onerror = function() {
+      this.src = `https://via.placeholder.com/400x400/7209b7/ffffff?text=${user.first_name.charAt(0)}`;
+    };
+  }
+
+  // Username - Actualizar nombre completo
+  const usernameEl = document.querySelector('.profile-username');
+  if (usernameEl) {
+    usernameEl.innerHTML = `
+      ${user.first_name.toUpperCase()} ${user.last_name.toUpperCase()}
+      ${user.is_verified ? '<span class="verified-badge"><i class="bi bi-check-lg"></i></span>' : ''}
+    `;
+  }
+
+  // Role - Actualizar rol
+  const roleEl = document.querySelector('.profile-role');
+  if (roleEl) {
+    roleEl.textContent = `${user.role || 'Usuario'} • Lima, Perú`;
+  }
+
+  // Sidebar - Username (@nickname)
+  const sidebarContent = document.querySelectorAll('.sidebar-content');
+  if (sidebarContent[0]) {
+    sidebarContent[0].innerHTML = `<p>@${user.nickname}</p>`;
+  }
+
+  // Sidebar - Bio/Role
+  if (sidebarContent[1]) {
+    if (user.bio) {
+      sidebarContent[1].innerHTML = `<p>${user.bio}</p>`;
+    } else {
+      sidebarContent[1].innerHTML = '<p class="empty-state">Sin biografía</p>';
+    }
+  }
+
+  // Redes sociales
+  actualizarRedesSociales(user.socials);
+}
+
+// ============================================
+// ACTUALIZAR REDES SOCIALES
+// ============================================
+function actualizarRedesSociales(socials) {
+  const socialsContainer = document.querySelector('.profile-socials');
+  if (!socialsContainer) return;
+
+  // Limpiar redes existentes
+  socialsContainer.innerHTML = '';
+
+  if (!socials) return;
+
+  const redesMap = {
+    instagram: { 
+      icon: 'bi-instagram', 
+      url: (handle) => `https://instagram.com/${handle.replace('@', '')}` 
+    },
+    youtube: { 
+      icon: 'bi-youtube', 
+      url: (handle) => handle.startsWith('http') ? handle : `https://youtube.com/${handle}` 
+    },
+    spotify: { 
+      icon: 'bi-spotify', 
+      url: (url) => url 
+    },
+    discord: { 
+      icon: 'bi-discord', 
+      url: (url) => url 
+    },
+    tiktok: { 
+      icon: 'bi-tiktok', 
+      url: (handle) => `https://tiktok.com/${handle}` 
+    }
+  };
+
+  Object.entries(socials).forEach(([red, valor]) => {
+    if (valor && redesMap[red]) {
+      const { icon, url } = redesMap[red];
+      const link = document.createElement('a');
+      link.href = url(valor);
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      link.className = 'social-btn';
+      link.title = red.charAt(0).toUpperCase() + red.slice(1);
+      link.innerHTML = `<i class="bi ${icon}"></i>`;
+      socialsContainer.appendChild(link);
+    }
+  });
+}
+
+// ============================================
+// CARGAR PRODUCTOS DEL USUARIO
+// ============================================
+async function cargarProductos(userId) {
+  try {
+    const { data: products, error } = await supabase
+      .from('products')
+      .select('*')
+      .eq('producer_id', userId)
+      .eq('status', 'approved')
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+
+    console.log('📦 Productos cargados:', products.length);
+
+    const productsGrid = document.getElementById('productsGrid');
+    if (!productsGrid) return;
+
+    if (products.length === 0) {
+      productsGrid.innerHTML = `
+        <div class="products-empty">
+          <div class="empty-icon">
+            <i class="bi bi-music-note-list"></i>
+          </div>
+          <h3 class="empty-title">Aún no tiene productos</h3>
+          <p class="empty-description">
+            Este usuario aún no ha subido ningún beat, kit o preset a la plataforma.
+            ¡Vuelve pronto para ver sus creaciones!
+          </p>
+        </div>
+      `;
+    } else {
+      productsGrid.innerHTML = products.map(product => crearCardProducto(product)).join('');
+    }
+
+  } catch (error) {
+    console.error('❌ Error cargando productos:', error);
+  }
+}
+
+// ============================================
+// CREAR CARD DE PRODUCTO
+// ============================================
+function crearCardProducto(product) {
+  const precio = product.is_free 
+    ? '<span style="color: #0cbc87; font-weight: 700;">GRATIS</span>' 
+    : `$${product.price_basic || '0'}`;
+
+  const generos = product.genres && product.genres.length > 0
+    ? product.genres.slice(0, 2).map(g => `<span style="background: rgba(114, 9, 183, 0.2); padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem;">${g}</span>`).join(' ')
+    : '';
+
+  return `
+    <div style="background: #1a1a1a; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; overflow: hidden; transition: all 0.3s; cursor: pointer;" 
+         onmouseover="this.style.transform='translateY(-4px)'; this.style.borderColor='rgba(114, 9, 183, 0.4)'" 
+         onmouseout="this.style.transform='translateY(0)'; this.style.borderColor='rgba(255, 255, 255, 0.08)'"
+         data-product-id="${product.id}">
+      <div style="position: relative; width: 100%; padding-top: 100%; overflow: hidden; background: #000;">
+        <img src="${product.image_url}" 
+             alt="${product.name}" 
+             style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover;"
+             onerror="this.src='https://via.placeholder.com/400x400/7209b7/ffffff?text=🎵'">
+        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 50px; height: 50px; background: rgba(114, 9, 183, 0.9); border-radius: 50%; display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s;"
+             onmouseover="this.style.opacity='1'"
+             onmouseout="this.style.opacity='0'">
+          <i class="bi bi-play-fill" style="font-size: 1.5rem; color: #fff; margin-left: 3px;"></i>
+        </div>
+      </div>
+      <div style="padding: 1rem;">
+        <h3 style="font-size: 1rem; font-weight: 700; color: #fff; margin-bottom: 0.5rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${product.name}</h3>
+        <p style="font-size: 0.875rem; color: #999; margin-bottom: 0.75rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${product.description || 'Sin descripción'}</p>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+          <span style="font-size: 1.125rem; font-weight: 800; color: #fff;">${precio}</span>
+          <span style="font-size: 0.875rem; color: #999;">${product.bpm} BPM • ${product.key}</span>
+        </div>
+        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+          ${generos}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// ============================================
+// CARGAR ESTADÍSTICAS
+// ============================================
+async function cargarEstadisticas(userId) {
+  try {
+    // Contar productos
+    const { count: productCount } = await supabase
+      .from('products')
+      .select('*', { count: 'exact', head: true })
+      .eq('producer_id', userId)
+      .eq('status', 'approved');
+
+    const productsCountEl = document.getElementById('productsCount');
+    if (productsCountEl) {
+      productsCountEl.textContent = productCount || 0;
+    }
+
+    console.log('📊 Estadísticas cargadas: ', productCount, 'productos');
+
+    // TODO: Implementar contadores de seguidores cuando tengas esas tablas
+    const followersCountEl = document.getElementById('followersCount');
+    const followingCountEl = document.getElementById('followingCount');
+    
+    if (followersCountEl) followersCountEl.textContent = '0';
+    if (followingCountEl) followingCountEl.textContent = '0';
+
+  } catch (error) {
+    console.error('❌ Error cargando estadísticas:', error);
+  }
+}
+
+// ============================================
+// INICIALIZAR AL CARGAR LA PÁGINA
+// ============================================
+document.addEventListener('DOMContentLoaded', () => {
+  console.log('🚀 Iniciando carga de perfil...');
+  cargarPerfil();
+});
