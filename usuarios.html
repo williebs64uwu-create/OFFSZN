@@ -1189,124 +1189,6 @@
     function toggleDropdown(element) {
       const parent = element.closest('.dropdown-parent');
       const isActive = parent.classList.contains('dropdown-active');
-      // Cerrar todos los dropdowns
-      document.querySelectorAll('.dropdown-parent').forEach(p => {
-        p.classList.remove('dropdown-active');
-      });
-      // Abrir el dropdown clickeado si no estaba activo
-      if (!isActive) {
-        parent.classList.add('dropdown-active');
-      }
-    }
-
-    // Cerrar dropdowns al hacer click fuera
-    document.addEventListener('click', function (e) {
-      if (!e.target.closest('.dropdown-parent')) {
-        document.querySelectorAll('.dropdown-parent').forEach(p => {
-          p.classList.remove('dropdown-active');
-        });
-      }
-    });
-
-    // ============================================
-    // TODO: INTEGRACIÓN CON SUPABASE
-    // ============================================
-    
-    // Función para cargar datos del usuario desde Supabase
-    // async function loadUserProfile(username) {
-    //   try {
-    //     // Obtener datos del usuario
-    //     const { data: user, error } = await supabase
-    //       .from('users')
-    //       .select('*')
-    //       .eq('username', username)
-    //       .single();
-    //     
-    //     if (error) throw error;
-    //     
-    //     // Actualizar el DOM con los datos del usuario
-    //     document.querySelector('.profile-username').textContent = user.display_name || user.username;
-    //     document.querySelector('.profile-role').textContent = user.bio_title || 'Producer';
-    //     // ... más actualizaciones
-    //     
-    //     // Cargar productos del usuario
-    //     await loadUserProducts(user.id);
-    //   } catch (error) {
-    //     console.error('Error loading user profile:', error);
-    //   }
-    // }
-
-    // Función para cargar productos del usuario
-    // async function loadUserProducts(userId) {
-    //   try {
-    //     const { data: products, error } = await supabase
-    //       .from('products')
-    //       .select('*')
-    //       .eq('user_id', userId)
-    //       .eq('is_published', true);
-    //     
-    //     if (error) throw error;
-    //     
-    //     const productsGrid = document.getElementById('productsGrid');
-    //     
-    //     if (products.length === 0) {
-    //       // Mostrar estado vacío
-    //       productsGrid.innerHTML = `
-    //         <div class="products-empty">
-    //           <div class="empty-icon"><i class="bi bi-music-note-list"></i></div>
-    //           <h3 class="empty-title">Aún no tiene productos</h3>
-    //           <p class="empty-description">
-    //             Este usuario aún no ha subido ningún beat, kit o preset a la plataforma.
-    //           </p>
-    //         </div>
-    //       `;
-    //     } else {
-    //       // Renderizar productos
-    //       productsGrid.innerHTML = products.map(product => `
-    //         <div class="beat-card">
-    //           <div class="beat-cover">
-    //             <img src="${product.cover_url}" alt="${product.title}">
-    //             <div class="beat-play-btn">
-    //               <i class="bi bi-play-fill"></i>
-    //             </div>
-    //           </div>
-    //           <div class="beat-info">
-    //             <h3 class="beat-title">${product.title}</h3>
-    //             <p class="beat-producer">by ${product.producer_name}</p>
-    //             <div class="beat-meta">
-    //               <span class="beat-price">${product.price}</span>
-    //               <span class="beat-bpm">${product.bpm} BPM</span>
-    //             </div>
-    //           </div>
-    //         </div>
-    //       `).join('');
-    //     }
-    //     
-    //     // Actualizar contador de productos
-    //     document.getElementById('productsCount').textContent = products.length;
-    //   } catch (error) {
-    //     console.error('Error loading products:', error);
-    //   }
-    // }
-
-    // Inicializar la página
-    // document.addEventListener('DOMContentLoaded', function() {
-    //   // Obtener el username desde la URL
-    //   const urlParams = new URLSearchParams(window.location.search);
-    //   const username = urlParams.get('user') || 'willieinspired';
-    //   
-    //   // Cargar perfil del usuario
-    //   loadUserProfile(username);
-    // });
-
-<!-- ==================== SCRIPTS ==================== -->
-  <script>
-    // ============================================
-    // DROPDOWN MENU NAVIGATION
-    // ============================================
-    function toggleDropdown(element) {
-      const parent = element.closest('.dropdown-parent');
-      const isActive = parent.classList.contains('dropdown-active');
       document.querySelectorAll('.dropdown-parent').forEach(p => {
         p.classList.remove('dropdown-active');
       });
@@ -1314,7 +1196,6 @@
         parent.classList.add('dropdown-active');
       }
     }
-
     document.addEventListener('click', function (e) {
       if (!e.target.closest('.dropdown-parent')) {
         document.querySelectorAll('.dropdown-parent').forEach(p => {
@@ -1325,7 +1206,7 @@
   </script>
   
   <!-- CARGAR PERFIL CON SUPABASE -->
-  <script type="module" src="js/perfiles.js"></script>
+  <script type="module" src="script/perfiles.js"></script>
 
 </body>
 </html>
