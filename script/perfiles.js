@@ -153,7 +153,12 @@ function actualizarHeaderPerfil(user) {
   // Sidebar - Bio/Role
   if (sidebarContent[1]) {
     const bio = user.bio && user.bio.trim() !== '' ? user.bio : user.role || 'Usuario de OFFSZN';
-    sidebarContent[1].innerHTML = `<p>${bio}</p>`;
+    // Si la bio está vacía, mostrar estado vacío
+    if (!user.bio || user.bio.trim() === '') {
+      sidebarContent[1].innerHTML = `<p class="empty-state">(bio)</p>`;
+    } else {
+      sidebarContent[1].innerHTML = `<p>${bio}</p>`;
+    }
   }
 
   // Redes sociales
