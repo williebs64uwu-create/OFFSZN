@@ -15,7 +15,7 @@ console.log('🔌 Supabase conectado correctamente');
 function getNicknameFromURL() {
   const params = new URLSearchParams(window.location.search);
   const nickname = params.get('nickname') || 'WillieInspired';
-  console.log('📌 Nickname desde URL:', nickname);
+  console.log('🔌 Nickname desde URL:', nickname);
   return nickname;
 }
 
@@ -62,7 +62,26 @@ async function cargarPerfil() {
 
   } catch (error) {
     console.error('❌ Error cargando perfil:', error);
-    alert('Error al cargar el perfil: ' + error.message);
+    mostrarError('Error al cargar el perfil. Por favor, intenta de nuevo.');
+  }
+}
+
+// ============================================
+// MOSTRAR ERROR
+// ============================================
+function mostrarError(mensaje) {
+  const container = document.querySelector('.profile-header-container');
+  if (container) {
+    container.innerHTML = `
+      <div style="text-align: center; padding: 3rem; color: #fff;">
+        <i class="bi bi-exclamation-triangle" style="font-size: 3rem; color: #ff4444; margin-bottom: 1rem;"></i>
+        <h3 style="margin-bottom: 0.5rem;">¡Ups! Algo salió mal</h3>
+        <p style="color: #999;">${mensaje}</p>
+        <button onclick="location.reload()" style="margin-top: 1rem; padding: 0.75rem 1.5rem; background: #7209b7; color: #fff; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">
+          Reintentar
+        </button>
+      </div>
+    `;
   }
 }
 
@@ -72,49 +91,56 @@ async function cargarPerfil() {
 function actualizarHeaderPerfil(user) {
   console.log('🎨 Actualizando header con datos:', user);
 
-  // Avatar - Actualizar imagen
+  // Avatar - Usar imagen por defecto si no hay avatar_url
   const avatarImg = document.querySelector('.profile-avatar img');
   if (avatarImg) {
-    const avatarUrl = user.avatar_url || `https://via.placeholder.com/400x400/7209b7/ffffff?text=${user.first_name?.charAt(0) || 'U'}`;
+    // Si hay avatar_url, úsalo. Si no, genera uno con iniciales
+    const inicial = user.first_name ? user.first_name.charAt(0).toUpperCase() : 'U';
+    const avatarUrl = user.avatar_url || 
+                     `https://ui-avatars.com/api/?name=${inicial}&size=400&background=7209b7&color=ffffff&bold=true`;
+    
     console.log('🖼️ Avatar URL:', avatarUrl);
     
     avatarImg.src = avatarUrl;
-    avatarImg.alt = user.nickname;
+    avatarImg.alt = user.nickname || 'Usuario';
+    
+    // Fallback si falla la carga
     avatarImg.onerror = function() {
-      console.warn('⚠️ Error cargando avatar, usando placeholder');
-      this.src = `https://via.placeholder.com/400x400/7209b7/ffffff?text=${user.first_name?.charAt(0) || 'U'}`;
+      console.warn('⚠️ Error cargando avatar, usando generado');
+      this.src = `https://ui-avatars.com/api/?name=${inicial}&size=400&background=7209b7&color=ffffff&bold=true`;
     };
   }
 
   // Username - Actualizar nombre completo
   const usernameEl = document.querySelector('.profile-username');
   if (usernameEl) {
-    const fullName = `${user.first_name || ''} ${user.last_name || ''}`.trim().toUpperCase();
+    const firstName = user.first_name || '';
+    const lastName = user.last_name || '';
+    const fullName = `${firstName} ${lastName}`.trim() || user.nickname || 'Usuario';
     const verifiedBadge = user.is_verified ? '<span class="verified-badge"><i class="bi bi-check-lg"></i></span>' : '';
-    usernameEl.innerHTML = `${fullName} ${verifiedBadge}`;
+    usernameEl.innerHTML = `${fullName.toUpperCase()} ${verifiedBadge}`;
     console.log('👤 Username actualizado:', fullName);
   }
 
   // Role - Actualizar rol
   const roleEl = document.querySelector('.profile-role');
   if (roleEl) {
-    roleEl.textContent = `${user.role || 'Usuario'} • Lima, Perú`;
-    console.log('💼 Role actualizado:', user.role);
+    const role = user.role || 'Usuario';
+    roleEl.textContent = `${role} • Lima, Perú`;
+    console.log('💼 Role actualizado:', role);
   }
 
   // Sidebar - Username (@nickname)
   const sidebarContent = document.querySelectorAll('.sidebar-content');
   if (sidebarContent[0]) {
-    sidebarContent[0].innerHTML = `<p>@${user.nickname}</p>`;
+    const nickname = user.nickname || 'usuario';
+    sidebarContent[0].innerHTML = `<p>@${nickname}</p>`;
   }
 
   // Sidebar - Bio/Role
   if (sidebarContent[1]) {
-    if (user.bio && user.bio.trim() !== '') {
-      sidebarContent[1].innerHTML = `<p>${user.bio}</p>`;
-    } else {
-      sidebarContent[1].innerHTML = '<p class="empty-state">Sin biografía</p>';
-    }
+    const bio = user.bio && user.bio.trim() !== '' ? user.bio : user.role || 'Usuario de OFFSZN';
+    sidebarContent[1].innerHTML = `<p>${bio}</p>`;
   }
 
   // Redes sociales
@@ -135,7 +161,7 @@ function actualizarRedesSociales(socials) {
   // Limpiar redes existentes
   socialsContainer.innerHTML = '';
 
-  if (!socials || Object.keys(socials).length === 0) {
+  if (!socials || typeof socials !== 'object' || Object.keys(socials).length === 0) {
     console.warn('⚠️ No hay redes sociales configuradas');
     return;
   }
@@ -172,7 +198,7 @@ function actualizarRedesSociales(socials) {
       url: (handle) => {
         if (!handle) return null;
         if (handle.startsWith('http')) return handle;
-        return `https://tiktok.com/${handle.replace('@', '')}`;
+        return `https://tiktok.com/@${handle.replace('@', '')}`;
       }
     }
   };
@@ -251,36 +277,47 @@ async function cargarProductos(userId) {
 // CREAR CARD DE PRODUCTO
 // ============================================
 function crearCardProducto(product) {
+  // Precio formateado
   const precio = product.is_free 
     ? '<span style="color: #0cbc87; font-weight: 700;">GRATIS</span>' 
-    : `${parseFloat(product.price_basic || 0).toFixed(0)}`;
+    : `S/ ${parseFloat(product.price_basic || 0).toFixed(0)}`;
 
-  const generos = product.genres && product.genres.length > 0
-    ? product.genres.slice(0, 3).map(g => `<span style="background: rgba(114, 9, 183, 0.2); padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; color: rgba(255,255,255,0.9);">${g}</span>`).join(' ')
+  // Géneros limitados a 3
+  const generos = product.genres && Array.isArray(product.genres) && product.genres.length > 0
+    ? product.genres.slice(0, 3).map(g => 
+        `<span style="background: rgba(114, 9, 183, 0.2); padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; color: rgba(255,255,255,0.9);">${g}</span>`
+      ).join(' ')
     : '<span style="color: #666; font-size: 0.75rem;">Sin géneros</span>';
+
+  // Imagen con fallback
+  const imagenUrl = product.image_url || 'https://ui-avatars.com/api/?name=Music&size=400&background=7209b7&color=ffffff&bold=true';
+
+  // BPM y Key con valores por defecto
+  const bpm = product.bpm || '---';
+  const key = product.key || '--';
 
   return `
     <div style="background: #1a1a1a; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; overflow: hidden; transition: all 0.3s; cursor: pointer;" 
          onmouseover="this.style.transform='translateY(-4px)'; this.style.borderColor='rgba(114, 9, 183, 0.4)'" 
          onmouseout="this.style.transform='translateY(0)'; this.style.borderColor='rgba(255, 255, 255, 0.08)'"
+         onclick="window.location.href='/producto?id=${product.id}'"
          data-product-id="${product.id}">
       <div style="position: relative; width: 100%; padding-top: 100%; overflow: hidden; background: #000;">
-        <img src="${product.image_url}" 
-             alt="${product.name}" 
+        <img src="${imagenUrl}" 
+             alt="${product.name || 'Producto'}" 
              style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover;"
-             onerror="this.src='https://via.placeholder.com/400x400/7209b7/ffffff?text=🎵'">
+             onerror="this.src='https://ui-avatars.com/api/?name=Music&size=400&background=7209b7&color=ffffff&bold=true'">
         <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 50px; height: 50px; background: rgba(114, 9, 183, 0.9); border-radius: 50%; display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s;"
-             onmouseover="this.style.opacity='1'"
-             onmouseout="this.style.opacity='0'">
+             class="play-overlay">
           <i class="bi bi-play-fill" style="font-size: 1.5rem; color: #fff; margin-left: 3px;"></i>
         </div>
       </div>
       <div style="padding: 1rem;">
-        <h3 style="font-size: 1rem; font-weight: 700; color: #fff; margin-bottom: 0.5rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${product.name}</h3>
+        <h3 style="font-size: 1rem; font-weight: 700; color: #fff; margin-bottom: 0.5rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${product.name || 'Sin título'}</h3>
         <p style="font-size: 0.875rem; color: #999; margin-bottom: 0.75rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${product.description || 'Sin descripción'}</p>
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
           <span style="font-size: 1.125rem; font-weight: 800; color: #fff;">${precio}</span>
-          <span style="font-size: 0.875rem; color: #999;">${product.bpm} BPM • ${product.key}</span>
+          <span style="font-size: 0.875rem; color: #999;">${bpm} BPM • ${key}</span>
         </div>
         <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
           ${generos}
@@ -327,10 +364,33 @@ async function cargarEstadisticas(userId) {
 }
 
 // ============================================
+// AGREGAR HOVER EFFECT PARA PLAY BUTTON
+// ============================================
+document.addEventListener('mouseover', function(e) {
+  const card = e.target.closest('[data-product-id]');
+  if (card) {
+    const playOverlay = card.querySelector('.play-overlay');
+    if (playOverlay) {
+      playOverlay.style.opacity = '1';
+    }
+  }
+});
+
+document.addEventListener('mouseout', function(e) {
+  const card = e.target.closest('[data-product-id]');
+  if (card) {
+    const playOverlay = card.querySelector('.play-overlay');
+    if (playOverlay) {
+      playOverlay.style.opacity = '0';
+    }
+  }
+});
+
+// ============================================
 // INICIALIZAR AL CARGAR LA PÁGINA
 // ============================================
 document.addEventListener('DOMContentLoaded', () => {
   console.log('🚀 Iniciando carga de perfil...');
-  console.log('🌍 URL actual:', window.location.href);
+  console.log('🌐 URL actual:', window.location.href);
   cargarPerfil();
 });
