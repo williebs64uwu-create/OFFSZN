@@ -253,11 +253,11 @@ async function cargarProductos(userId) {
 function crearCardProducto(product) {
   const precio = product.is_free 
     ? '<span style="color: #0cbc87; font-weight: 700;">GRATIS</span>' 
-    : `$${product.price_basic || '0'}`;
+    : `${parseFloat(product.price_basic || 0).toFixed(0)}`;
 
   const generos = product.genres && product.genres.length > 0
-    ? product.genres.slice(0, 2).map(g => `<span style="background: rgba(114, 9, 183, 0.2); padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem;">${g}</span>`).join(' ')
-    : '';
+    ? product.genres.slice(0, 3).map(g => `<span style="background: rgba(114, 9, 183, 0.2); padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; color: rgba(255,255,255,0.9);">${g}</span>`).join(' ')
+    : '<span style="color: #666; font-size: 0.75rem;">Sin géneros</span>';
 
   return `
     <div style="background: #1a1a1a; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; overflow: hidden; transition: all 0.3s; cursor: pointer;" 
