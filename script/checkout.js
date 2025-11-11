@@ -7,7 +7,7 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 // ============================================
 // CARGAR CARRITO EN PÁGINA
 // ============================================
-function cargarCarrito() {
+async function cargarCarrito() {
   const cart = JSON.parse(localStorage.getItem('offszn_cart') || '[]');
   const container = document.getElementById('cartContent');
   const subtitle = document.getElementById('cartSubtitle');
@@ -31,11 +31,107 @@ function cargarCarrito() {
     return;
   }
 
-  // Calcular total
-  const total = cart.reduce((sum, item) => sum + item.price, 0);
+  // ============================================
+  // 🔐 VERIFICAR USUARIO LOGUEADO ANTES DE MOSTRAR PAYPAL
+  // ============================================
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  
+  if (userError || !user) {
+    // Usuario NO logueado - Mostrar mensaje
+    container.innerHTML = `
+      <div class="cart-items">${renderCartItems(cart)}</div>
+      <div class="cart-summary">
+        <h3 class="summary-title">Resumen del pedido</h3>
+        <div class="summary-row">
+          <span>Subtotal</span>
+          <span>$${calculateTotal(cart).toFixed(2)}</span>
+        </div>
+        <div class="summary-row">
+          <span>Impuestos</span>
+          <span>$0.00</span>
+        </div>
+        <div class="summary-row total">
+          <span>Total</span>
+          <span>$${calculateTotal(cart).toFixed(2)}</span>
+        </div>
+        
+        <!-- MENSAJE PARA CREAR CUENTA -->
+        <div style="background: rgba(114, 9, 183, 0.1); border: 1px solid rgba(114, 9, 183, 0.3); border-radius: 8px; padding: 1.5rem; margin-top: 1.5rem; text-align: center;">
+          <i class="bi bi-person-plus" style="font-size: 2.5rem; color: #7209b7; display: block; margin-bottom: 0.75rem;"></i>
+          <h4 style="color: #fff; margin-bottom: 0.5rem; font-size: 1.125rem; font-weight: 700;">Crea tu cuenta para continuar</h4>
+          <p style="color: #999; font-size: 0.875rem; margin-bottom: 1.25rem;">Es gratis y toma menos de 1 minuto</p>
+          <a href="/pages/register?redirect=carrito" style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.875rem 1.5rem; background: linear-gradient(135deg, #7209b7, #560bad); color: #fff; text-decoration: none; border-radius: 8px; font-weight: 600; transition: all 0.3s; margin-bottom: 1rem;">
+            <i class="bi bi-person-plus"></i>
+            Crear cuenta gratis
+          </a>
+          <p style="color: #666; font-size: 0.8125rem; margin-top: 1rem;">¿Ya tienes cuenta? <a href="/pages/login?redirect=carrito" style="color: #7209b7; text-decoration: none; font-weight: 600;">Iniciar sesión</a></p>
+        </div>
+        
+        <div style="text-align: center; margin-top: 1rem;">
+          <a href="/index.html" style="color: #999; text-decoration: none; font-size: 0.875rem;">
+            <i class="bi bi-arrow-left"></i> Continuar comprando
+          </a>
+        </div>
+      </div>
+    `;
+    return;
+  }
 
-  // Renderizar items
-  const itemsHTML = cart.map((item, index) => `
+  // ============================================
+  // Usuario SÍ está logueado - Mostrar PayPal normal
+  // ============================================
+  const total = calculateTotal(cart);
+
+  container.innerHTML = `
+    <div class="cart-items">${renderCartItems(cart)}</div>
+    <div class="cart-summary">
+      <h3 class="summary-title">Resumen del pedido</h3>
+      <div class="summary-row">
+        <span>Subtotal</span>
+        <span>$${total.toFixed(2)}</span>
+      </div>
+      <div class="summary-row">
+        <span>Impuestos</span>
+        <span>$0.00</span>
+      </div>
+      <div class="summary-row total">
+        <span>Total</span>
+        <span>$${total.toFixed(2)}</span>
+      </div>
+      
+      <!-- Usuario logueado: Mostrar info -->
+      <div style="background: rgba(12, 188, 135, 0.1); border: 1px solid rgba(12, 188, 135, 0.3); border-radius: 8px; padding: 1rem; margin-top: 1rem; display: flex; align-items: center; gap: 0.75rem;">
+        <i class="bi bi-check-circle" style="color: #0cbc87; font-size: 1.25rem;"></i>
+        <div style="flex: 1;">
+          <div style="font-size: 0.875rem; color: #0cbc87; font-weight: 600;">Sesión iniciada</div>
+          <div style="font-size: 0.8125rem; color: #999;">${user.email}</div>
+        </div>
+      </div>
+      
+      <!-- BOTÓN PAYPAL -->
+      <div id="paypal-button-container" style="margin-top: 1.5rem;"></div>
+      
+      <div style="text-align: center; margin-top: 1rem;">
+        <a href="/index.html" style="color: #999; text-decoration: none; font-size: 0.875rem;">
+          <i class="bi bi-arrow-left"></i> Continuar comprando
+        </a>
+      </div>
+    </div>
+  `;
+
+  // Inicializar PayPal después de renderizar
+  inicializarPayPal(cart, total);
+}
+
+// ============================================
+// FUNCIONES AUXILIARES
+// ============================================
+function calculateTotal(cart) {
+  return cart.reduce((sum, item) => sum + item.price, 0);
+}
+
+function renderCartItems(cart) {
+  return cart.map((item, index) => `
     <div class="cart-item">
       <div class="item-image">
         <img src="${item.productImage || 'https://ui-avatars.com/api/?name=Music&size=200&background=7209b7&color=ffffff&bold=true'}" alt="${item.productName}">
@@ -57,52 +153,14 @@ function cargarCarrito() {
       </div>
     </div>
   `).join('');
-
-  // Renderizar resumen con PayPal
-  const summaryHTML = `
-    <div class="cart-summary">
-      <h3 class="summary-title">Resumen del pedido</h3>
-      <div class="summary-row">
-        <span>Subtotal</span>
-        <span>$${total.toFixed(2)}</span>
-      </div>
-      <div class="summary-row">
-        <span>Impuestos</span>
-        <span>$0.00</span>
-      </div>
-      <div class="summary-row total">
-        <span>Total</span>
-        <span>$${total.toFixed(2)}</span>
-      </div>
-      
-      <!-- BOTÓN PAYPAL -->
-      <div id="paypal-button-container" style="margin-top: 1.5rem;"></div>
-      
-      <div style="text-align: center; margin-top: 1rem;">
-        <a href="/index.html" style="color: #999; text-decoration: none; font-size: 0.875rem;">
-          <i class="bi bi-arrow-left"></i> Continuar comprando
-        </a>
-      </div>
-    </div>
-  `;
-
-  container.innerHTML = `
-    <div class="cart-items">${itemsHTML}</div>
-    ${summaryHTML}
-  `;
-
-  // Inicializar PayPal después de renderizar
-  inicializarPayPal(cart, total);
 }
 
 // ============================================
 // INICIALIZAR PAYPAL
 // ============================================
 function inicializarPayPal(cart, total) {
-  // Cargar SDK de PayPal
   if (!window.paypal) {
     const script = document.createElement('script');
-    // REEMPLAZA 'TU_CLIENT_ID' con tu Client ID real de PayPal
     script.src = 'https://www.paypal.com/sdk/js?client-id=AWlu0poB0pM31ozZz7Cg8Tc2-2PSdq9lyjWQfGg-0Ckk0s-v3BZknJo6qM8RdTcMuX0bZkZ0qkseYFDV&currency=USD';
     script.onload = () => renderPayPalButton(cart, total);
     document.head.appendChild(script);
@@ -120,7 +178,6 @@ function renderPayPalButton(cart, total) {
       label: 'pay'
     },
     
-    // Crear orden
     createOrder: function(data, actions) {
       return actions.order.create({
         purchase_units: [{
@@ -140,13 +197,11 @@ function renderPayPalButton(cart, total) {
       });
     },
 
-    // Cuando se aprueba el pago
     onApprove: async function(data, actions) {
       const order = await actions.order.capture();
       await procesarCompra(order, cart);
     },
 
-    // Si hay error
     onError: function(err) {
       console.error('Error de PayPal:', err);
       alert('❌ Error al procesar el pago. Intenta de nuevo.');
@@ -163,11 +218,10 @@ async function procesarCompra(order, cart) {
     
     if (!user) {
       alert('Debes iniciar sesión para completar la compra');
-      window.location.href = '/pages/login';
+      window.location.href = '/pages/login?redirect=carrito';
       return;
     }
 
-    // Guardar cada compra en la base de datos
     const purchases = cart.map(item => ({
       user_id: user.id,
       product_id: item.productId,
@@ -183,10 +237,7 @@ async function procesarCompra(order, cart) {
 
     if (error) throw error;
 
-    // Limpiar carrito
     localStorage.removeItem('offszn_cart');
-
-    // Redirigir a página de éxito
     window.location.href = `/pages/purchase-success.html?order=${order.id}`;
 
   } catch (error) {
