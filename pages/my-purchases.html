@@ -54,7 +54,7 @@
       border-radius: 12px;
       padding: 1.5rem;
       display: grid;
-      grid-template-columns: 100px 1fr auto;
+      grid-template-columns: 120px 1fr auto;
       gap: 1.5rem;
       align-items: center;
       transition: all 0.3s;
@@ -66,8 +66,8 @@
     }
 
     .purchase-image {
-      width: 100px;
-      height: 100px;
+      width: 120px;
+      height: 120px;
       border-radius: 8px;
       overflow: hidden;
       background: #000;
@@ -84,17 +84,25 @@
     }
 
     .purchase-name {
-      font-size: 1.25rem;
+      font-size: 1.5rem;
       font-weight: 700;
-      margin-bottom: 0.5rem;
+      margin-bottom: 0.75rem;
       color: #fff;
     }
 
-    .purchase-license {
-      font-size: 0.9375rem;
-      color: #7209b7;
+    .purchase-meta {
+      display: flex;
+      gap: 2rem;
       margin-bottom: 0.5rem;
+    }
+
+    .purchase-license {
+      font-size: 1rem;
+      color: #7209b7;
       font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
     }
 
     .purchase-date {
@@ -105,14 +113,21 @@
       gap: 0.5rem;
     }
 
+    .purchase-order {
+      font-size: 0.8125rem;
+      color: #666;
+      margin-top: 0.25rem;
+    }
+
     .purchase-actions {
       display: flex;
       flex-direction: column;
       gap: 0.75rem;
+      min-width: 180px;
     }
 
     .btn-download {
-      padding: 0.75rem 1.5rem;
+      padding: 0.875rem 1.5rem;
       background: linear-gradient(135deg, #0cbc87, #0a9d72);
       color: #fff;
       border: none;
@@ -134,7 +149,7 @@
     }
 
     .btn-license {
-      padding: 0.75rem 1.5rem;
+      padding: 0.875rem 1.5rem;
       background: transparent;
       color: #999;
       border: 1px solid rgba(255, 255, 255, 0.2);
@@ -146,16 +161,17 @@
       align-items: center;
       justify-content: center;
       gap: 0.5rem;
-      text-decoration: none;
       font-size: 0.875rem;
     }
 
     .btn-license:hover {
       background: rgba(255, 255, 255, 0.05);
       color: #fff;
+      border-color: rgba(255, 255, 255, 0.3);
     }
 
-    .btn-license:disabled {
+    .btn-license:disabled,
+    .btn-download:disabled {
       opacity: 0.5;
       cursor: not-allowed;
     }
@@ -202,10 +218,15 @@
       box-shadow: 0 6px 20px rgba(114, 9, 183, 0.5);
     }
 
-    @media (max-width: 768px) {
+    @media (max-width: 968px) {
       .purchase-card {
-        grid-template-columns: 80px 1fr;
+        grid-template-columns: 100px 1fr;
         gap: 1rem;
+      }
+
+      .purchase-image {
+        width: 100px;
+        height: 100px;
       }
 
       .purchase-actions {
@@ -213,9 +234,9 @@
         flex-direction: row;
       }
 
-      .purchase-image {
-        width: 80px;
-        height: 80px;
+      .purchase-meta {
+        flex-direction: column;
+        gap: 0.5rem;
       }
     }
   </style>
@@ -288,9 +309,14 @@
           return;
         }
 
-        count.textContent = `${purchases.length} ${purchases.length === 1 ? 'compra' : 'compras'} realizadas`;
+        // AGRUPAR POR PRODUCTO (eliminar duplicados)
+        const uniquePurchases = Array.from(
+          new Map(purchases.map(p => [p.product_id, p])).values()
+        );
 
-        const purchasesHTML = purchases.map(p => {
+        count.textContent = `${uniquePurchases.length} ${uniquePurchases.length === 1 ? 'producto' : 'productos'} comprados`;
+
+        const purchasesHTML = uniquePurchases.map(p => {
           const downloadUrl = getDownloadUrl(p);
           const img = p.products.image_url || 'https://ui-avatars.com/api/?name=Music&size=200&background=7209b7&color=ffffff&bold=true';
           
@@ -301,20 +327,32 @@
               </div>
               <div class="purchase-info">
                 <div class="purchase-name">${p.products.name}</div>
-                <div class="purchase-license">${getLicenseName(p.license_type)}</div>
-                <div class="purchase-date">
-                  <i class="bi bi-calendar"></i>
-                  ${new Date(p.created_at).toLocaleDateString('es-ES')}
+                <div class="purchase-meta">
+                  <div class="purchase-license">
+                    <i class="bi bi-file-earmark-check"></i>
+                    ${getLicenseName(p.license_type)}
+                  </div>
+                  <div class="purchase-date">
+                    <i class="bi bi-calendar"></i>
+                    ${new Date(p.created_at).toLocaleDateString('es-ES')}
+                  </div>
+                </div>
+                <div class="purchase-order">
+                  Orden: ${p.paypal_transaction_id.substring(0, 16)}...
                 </div>
               </div>
               <div class="purchase-actions">
-                <a href="${downloadUrl}" target="_blank" class="btn-download">
-                  <i class="bi bi-download"></i>
-                  Descargar
+                <a href="${downloadUrl}" 
+                   download 
+                   target="_blank" 
+                   class="btn-download"
+                   ${!downloadUrl ? 'style="opacity:0.5;pointer-events:none;"' : ''}>
+                  <i class="bi bi-music-note-beamed"></i>
+                  Descargar Beat
                 </a>
                 <button class="btn-license" onclick="verLicencia('${p.id}')">
                   <i class="bi bi-file-earmark-text"></i>
-                  Ver licencia
+                  Ver Licencia
                 </button>
               </div>
             </div>
@@ -340,7 +378,7 @@
         'stems': purchase.products.download_url_stems,
         'exclusive': purchase.products.download_url_stems
       };
-      return urls[purchase.license_type] || purchase.products.download_url_mp3;
+      return urls[purchase.license_type] || purchase.products.download_url_mp3 || '#';
     }
 
     function getLicenseName(licenseId) {
@@ -357,16 +395,14 @@
       console.log('🔄 Generando licencia para:', purchaseId);
       
       try {
-        // Obtener usuario actual
         const { data: { user }, error: userError } = await supabase.auth.getUser();
         
         if (userError || !user) {
-          alert('❌ Debes iniciar sesión para descargar tu licencia');
+          alert('❌ Debes iniciar sesión');
           window.location.href = '/pages/login';
           return;
         }
 
-        // Obtener datos completos de la compra
         const { data: purchase, error: purchaseError } = await supabase
           .from('purchases')
           .select(`
@@ -379,11 +415,7 @@
           .eq('user_id', user.id)
           .single();
 
-        if (purchaseError) {
-          console.error('Error obteniendo compra:', purchaseError);
-          throw purchaseError;
-        }
-
+        if (purchaseError) throw purchaseError;
         if (!purchase) {
           alert('❌ Compra no encontrada');
           return;
@@ -391,12 +423,10 @@
 
         console.log('✅ Compra encontrada:', purchase);
 
-        // Preparar nombre del comprador
         const buyerName = user.user_metadata?.full_name || 
                           `${user.user_metadata?.first_name || ''} ${user.user_metadata?.last_name || ''}`.trim() || 
                           user.email.split('@')[0];
 
-        // Preparar datos para el generador
         const purchaseData = {
           productName: purchase.products.name,
           producerName: 'Willie Inspired',
@@ -408,9 +438,6 @@
           orderId: purchase.paypal_transaction_id
         };
 
-        console.log('📋 Datos para licencia:', purchaseData);
-
-        // Buscar el botón y mostrar estado de carga
         const buttons = document.querySelectorAll('.btn-license');
         let targetButton = null;
         
@@ -426,26 +453,20 @@
           targetButton.disabled = true;
 
           try {
-            // Generar y descargar licencia
             await generarLicencia(purchaseData);
-            
-            // Mensaje de éxito
-            alert('✅ ¡Licencia descargada exitosamente!\n\nRevisa tu carpeta de Descargas.');
-            
+            alert('✅ ¡Licencia descargada!\n\nRevisa tu carpeta de Descargas.');
           } finally {
-            // Restaurar botón
             targetButton.innerHTML = originalHTML;
             targetButton.disabled = false;
           }
         } else {
-          // Si no hay referencia al botón, generar directamente
           await generarLicencia(purchaseData);
-          alert('✅ ¡Licencia descargada exitosamente!');
+          alert('✅ ¡Licencia descargada!');
         }
 
       } catch (error) {
-        console.error('❌ Error generando licencia:', error);
-        alert('❌ Error al generar la licencia.\n\nPor favor, intenta de nuevo o contacta a soporte.\n\nError: ' + error.message);
+        console.error('❌ Error:', error);
+        alert('❌ Error al generar la licencia.\n\n' + error.message);
       }
     };
 
@@ -454,3 +475,33 @@
 
 </body>
 </html>
+```
+
+---
+
+## ✅ **CAMBIOS REALIZADOS:**
+
+1. ✅ **Agrupado por producto** (elimina duplicados de licencias)
+2. ✅ **Botón "Descargar Beat"** ahora descarga el audio
+3. ✅ **Botón "Ver Licencia"** genera el PDF
+4. ✅ **Diseño mejorado** con más info visible
+5. ✅ **URLs de descarga** funcionan con `download` attribute
+
+---
+
+## 🧪 **PRUEBA AHORA:**
+
+1. Recarga `/pages/my-purchases.html`
+2. Deberías ver:
+   - ✅ Un solo card por producto (TEST 1)
+   - ✅ Botón verde "Descargar Beat"
+   - ✅ Botón gris "Ver Licencia"
+
+---
+
+## 📊 **RESUMEN DE PASOS:**
+```
+✅ PASO 1-5: Sistema de checkout completo
+✅ PASO 6: Arreglar "Mis Compras" (ESTE)
+🔜 PASO 7: Verificar URLs de descarga en BD
+🔜 PASO 8: Pasar a producción PayPal Live
