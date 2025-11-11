@@ -142,7 +142,6 @@
       font-size: 0.8125rem;
     }
 
-    /* BOTÓN MENSAJE */
     .btn-message-producer {
       width: 100%;
       padding: 0.875rem;
@@ -203,118 +202,119 @@
       color: #fff;
     }
 
-    /* AUDIO PLAYER */
-    .audio-player {
-      background: #1a1a1a;
-      border-radius: 12px;
+    /* ==================== REPRODUCTOR MEJORADO ==================== */
+    .audio-player-enhanced {
+      background: linear-gradient(135deg, rgba(114, 9, 183, 0.1), rgba(86, 11, 173, 0.05));
+      border: 1px solid rgba(114, 9, 183, 0.3);
+      border-radius: 16px;
       padding: 1.5rem;
       margin-bottom: 2rem;
     }
 
-    .audio-player h4 {
-      font-size: 1rem;
-      font-weight: 700;
-      margin-bottom: 1rem;
-    }
-
-    .player-controls {
+    .player-header {
       display: flex;
       align-items: center;
-      gap: 1rem;
-      margin-bottom: 0.75rem;
+      gap: 0.5rem;
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #7209b7;
+      margin-bottom: 1rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
 
-    .play-btn {
-      width: 48px;
-      height: 48px;
-      background: var(--purple-main);
+    .player-main {
+      display: grid;
+      grid-template-columns: 60px 1fr 120px;
+      gap: 1rem;
+      align-items: center;
+    }
+
+    .player-play-btn {
+      width: 60px;
+      height: 60px;
+      background: linear-gradient(135deg, #7209b7, #560bad);
       border: none;
       border-radius: 50%;
       color: #fff;
-      font-size: 1.25rem;
+      font-size: 1.75rem;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
       transition: all 0.3s;
-      flex-shrink: 0;
+      box-shadow: 0 4px 15px rgba(114, 9, 183, 0.3);
     }
 
-    .play-btn:hover {
+    .player-play-btn:hover:not(:disabled) {
       transform: scale(1.05);
-      box-shadow: 0 4px 15px rgba(114, 9, 183, 0.5);
+      box-shadow: 0 6px 25px rgba(114, 9, 183, 0.5);
     }
 
-    .play-btn:disabled {
+    .player-play-btn:disabled {
       opacity: 0.5;
       cursor: not-allowed;
     }
 
-    .progress-container {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-    }
-
-    .progress-bar {
-      width: 100%;
-      height: 6px;
-      background: rgba(114, 9, 183, 0.2);
-      border-radius: 3px;
-      cursor: pointer;
+    .player-waveform {
       position: relative;
+      height: 80px;
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 8px;
       overflow: hidden;
+      cursor: pointer;
     }
 
-    .progress-fill {
+    #waveformCanvas {
+      width: 100%;
       height: 100%;
-      background: linear-gradient(90deg, var(--purple-main), var(--purple-dark));
-      border-radius: 3px;
+      display: block;
+    }
+
+    .player-progress-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100%;
       width: 0%;
+      background: linear-gradient(90deg, rgba(114, 9, 183, 0.4), rgba(114, 9, 183, 0.2));
+      pointer-events: none;
       transition: width 0.1s linear;
     }
 
-    .time-display {
+    .player-controls-secondary {
       display: flex;
-      justify-content: space-between;
-      font-size: 0.75rem;
-      color: #999;
-    }
-
-    .volume-control {
-      display: flex;
-      align-items: center;
+      flex-direction: column;
       gap: 0.5rem;
+      align-items: flex-end;
     }
 
-    .volume-btn {
-      background: none;
-      border: none;
-      color: #999;
+    .player-control-btn {
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: rgba(255, 255, 255, 0.7);
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
       font-size: 1rem;
       cursor: pointer;
-      transition: color 0.3s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s;
     }
 
-    .volume-btn:hover {
+    .player-control-btn:hover {
+      background: rgba(114, 9, 183, 0.2);
       color: #fff;
+      border-color: rgba(114, 9, 183, 0.4);
     }
 
-    .volume-slider {
-      width: 80px;
-      height: 4px;
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 2px;
-      cursor: pointer;
-      position: relative;
-    }
-
-    .volume-fill {
-      height: 100%;
-      background: var(--purple-main);
-      border-radius: 2px;
-      width: 100%;
+    .player-time {
+      font-size: 0.8125rem;
+      color: #999;
+      display: flex;
+      gap: 0.25rem;
     }
 
     .product-description {
@@ -350,7 +350,7 @@
       color: rgba(255, 255, 255, 0.9);
     }
 
-    /* LICENCIAS CON BOTONES DOBLES */
+    /* LICENCIAS */
     .licenses-section {
       background: #1a1a1a;
       border-radius: 12px;
@@ -425,7 +425,6 @@
       font-size: 0.75rem;
     }
 
-    /* BOTONES DOBLES EN LICENCIA */
     .license-actions {
       display: flex;
       gap: 0.5rem;
@@ -623,6 +622,17 @@
         position: static;
       }
 
+      .player-main {
+        grid-template-columns: 50px 1fr;
+        gap: 0.75rem;
+      }
+
+      .player-controls-secondary {
+        grid-column: 1 / -1;
+        flex-direction: row;
+        justify-content: space-between;
+      }
+
       .license-cards {
         grid-template-columns: 1fr;
       }
@@ -688,28 +698,31 @@
           </div>
         </div>
 
-        <!-- AUDIO PLAYER -->
-        <div class="audio-player">
-          <h4><i class="bi bi-music-note"></i> Preview del Beat</h4>
-          <div class="player-controls">
-            <button class="play-btn" id="playBtn" disabled>
+        <!-- REPRODUCTOR MEJORADO -->
+        <div class="audio-player-enhanced">
+          <div class="player-header">
+            <i class="bi bi-music-note-beamed"></i>
+            <span>Preview del Beat</span>
+          </div>
+          
+          <div class="player-main">
+            <button class="player-play-btn" id="playBtn" disabled>
               <i class="bi bi-play-fill"></i>
             </button>
-            <div class="progress-container">
-              <div class="progress-bar" id="progressBar">
-                <div class="progress-fill" id="progressFill"></div>
-              </div>
-              <div class="time-display">
-                <span id="currentTime">0:00</span>
-                <span id="duration">0:00</span>
-              </div>
+            
+            <div class="player-waveform" id="waveformContainer">
+              <canvas id="waveformCanvas" width="800" height="80"></canvas>
+              <div class="player-progress-overlay" id="progressOverlay"></div>
             </div>
-            <div class="volume-control">
-              <button class="volume-btn" id="volumeBtn">
+            
+            <div class="player-controls-secondary">
+              <button class="player-control-btn" id="volumeBtn">
                 <i class="bi bi-volume-up"></i>
               </button>
-              <div class="volume-slider" id="volumeSlider">
-                <div class="volume-fill" id="volumeFill"></div>
+              <div class="player-time">
+                <span id="currentTime">0:00</span>
+                <span>/</span>
+                <span id="duration">0:00</span>
               </div>
             </div>
           </div>
@@ -722,7 +735,7 @@
 
         <div class="product-tags" id="productTags"></div>
 
-        <!-- LICENCIAS CON BOTONES DOBLES -->
+        <!-- LICENCIAS -->
         <div class="licenses-section">
           <h3>Selecciona una Licencia</h3>
           <div class="license-cards" id="licenseCards"></div>
@@ -733,9 +746,7 @@
           <div class="reviews-header">
             <h3>Reseñas</h3>
             <div class="rating-summary">
-              <div class="stars" id="avgRating">
-                ★★★★★
-              </div>
+              <div class="stars" id="avgRating">★★★★★</div>
               <span id="reviewCount">(0)</span>
             </div>
           </div>
