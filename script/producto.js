@@ -461,13 +461,106 @@ async function cargarProductosRelacionados(producerId, currentProductId) {
 }
 
 // ============================================
-// DESCARGAR GRATIS
+// DESCARGAR GRATIS CON MODAL DE EMAIL
 // ============================================
-window.descargarGratis = function(url) {
-  if (url) {
-    window.open(url, '_blank');
-  } else {
+window.descargarGratis = function(downloadUrl) {
+  if (!downloadUrl) {
     alert('URL de descarga no disponible');
+    return;
+  }
+
+  // Mostrar modal para capturar email
+  const modalHTML = `
+    <div id="freeDownloadModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); display: flex; align-items: center; justify-content: center; z-index: 10000;">
+      <div style="background: #1a1a1a; border: 1px solid rgba(114, 9, 183, 0.3); border-radius: 16px; padding: 2.5rem; max-width: 500px; width: 90%; position: relative;">
+        <button onclick="cerrarModalDescarga()" style="position: absolute; top: 1rem; right: 1rem; background: none; border: none; color: #999; font-size: 1.5rem; cursor: pointer; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 50%; transition: all 0.3s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'; this.style.color='#fff'" onmouseout="this.style.background='none'; this.style.color='#999'">
+          <i class="bi bi-x"></i>
+        </button>
+        
+        <div style="text-align: center; margin-bottom: 2rem;">
+          <i class="bi bi-gift" style="font-size: 3rem; color: #0cbc87; display: block; margin-bottom: 1rem;"></i>
+          <h3 style="font-size: 1.5rem; font-weight: 800; color: #fff; margin-bottom: 0.5rem;">¡Descarga Gratis!</h3>
+          <p style="color: #999; font-size: 0.9375rem;">Ingresa tu email para recibir el enlace de descarga</p>
+        </div>
+
+        <form id="freeDownloadForm" onsubmit="procesarDescargaGratis(event, '${downloadUrl}')" style="display: flex; flex-direction: column; gap: 1rem;">
+          <input 
+            type="email" 
+            id="freeDownloadEmail" 
+            placeholder="tu@email.com" 
+            required
+            style="width: 100%; padding: 1rem; background: #0a0a0a; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: #fff; font-size: 1rem; outline: none; transition: all 0.3s;"
+            onfocus="this.style.borderColor='#7209b7'; this.style.boxShadow='0 0 0 3px rgba(114, 9, 183, 0.1)'"
+            onblur="this.style.borderColor='rgba(255,255,255,0.1)'; this.style.boxShadow='none'"
+          >
+          
+          <button 
+            type="submit" 
+            style="width: 100%; padding: 1rem; background: linear-gradient(135deg, #0cbc87, #0a9d72); color: #fff; border: none; border-radius: 8px; font-weight: 700; font-size: 1rem; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; justify-content: center; gap: 0.5rem;"
+            onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(12, 188, 135, 0.5)'"
+            onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'"
+          >
+            <i class="bi bi-download"></i>
+            Descargar ahora
+          </button>
+        </form>
+
+        <p style="color: #666; font-size: 0.75rem; text-align: center; margin-top: 1rem;">
+          <i class="bi bi-shield-check"></i> Tu email está seguro. No enviamos spam.
+        </p>
+      </div>
+    </div>
+  `;
+
+  document.body.insertAdjacentHTML('beforeend', modalHTML);
+};
+
+// Cerrar modal
+window.cerrarModalDescarga = function() {
+  const modal = document.getElementById('freeDownloadModal');
+  if (modal) modal.remove();
+};
+
+// Procesar descarga gratuita
+window.procesarDescargaGratis = async function(event, downloadUrl) {
+  event.preventDefault();
+  
+  const email = document.getElementById('freeDownloadEmail').value;
+  const submitBtn = event.target.querySelector('button[type="submit"]');
+  
+  submitBtn.disabled = true;
+  submitBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Procesando...';
+
+  try {
+    // Guardar en Supabase
+    const { error } = await supabase
+      .from('free_downloads')
+      .insert({
+        product_id: currentProduct.id,
+        email: email
+      });
+
+    if (error && error.code !== '23505') { // 23505 = duplicate key (ya descargó antes)
+      throw error;
+    }
+
+    // TODO: Aquí enviaremos el email (próximo paso)
+    console.log('✅ Descarga registrada para:', email);
+    
+    // Abrir descarga
+    window.open(downloadUrl, '_blank');
+    
+    // Cerrar modal
+    cerrarModalDescarga();
+    
+    // Mostrar mensaje de éxito
+    alert(`✅ ¡Descarga iniciada!\n\nTe enviaremos una copia al email:\n${email}`);
+
+  } catch (error) {
+    console.error('Error en descarga gratuita:', error);
+    alert('❌ Error al procesar la descarga. Intenta de nuevo.');
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = '<i class="bi bi-download"></i> Descargar ahora';
   }
 };
 
