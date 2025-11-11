@@ -6,6 +6,7 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 
 // Variables globales
 let currentProducerNickname = null;
+let currentProducerId = null;
 let audioElement = null;
 let currentProduct = null;
 
@@ -48,6 +49,55 @@ window.compartirProducto = function() {
 };
 
 // ============================================
+// ABRIR MENSAJE AL PRODUCTOR
+// ============================================
+window.abrirMensaje = function() {
+  // Verificar si hay usuario logueado
+  const user = supabase.auth.getUser();
+  
+  if (!user) {
+    alert('Debes iniciar sesión para enviar mensajes');
+    window.location.href = '/pages/login';
+    return;
+  }
+  
+  // Por ahora un simple prompt
+  const mensaje = prompt(`Enviar mensaje al productor:\n\nProducto: ${currentProduct.name}`);
+  
+  if (mensaje && mensaje.trim()) {
+    enviarMensaje(mensaje.trim());
+  }
+};
+
+async function enviarMensaje(mensaje) {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      alert('Debes iniciar sesión');
+      return;
+    }
+
+    const { error } = await supabase
+      .from('messages')
+      .insert({
+        from_user_id: user.id,
+        to_user_id: currentProducerId,
+        product_id: currentProduct.id,
+        subject: `Consulta sobre: ${currentProduct.name}`,
+        message: mensaje
+      });
+
+    if (error) throw error;
+    
+    alert('✅ Mensaje enviado correctamente!');
+  } catch (error) {
+    console.error('Error enviando mensaje:', error);
+    alert('Error al enviar el mensaje. Intenta de nuevo.');
+  }
+}
+
+// ============================================
 // CARGAR PRODUCTO
 // ============================================
 async function cargarProducto() {
@@ -77,11 +127,13 @@ async function cargarProducto() {
     if (producerError) throw producerError;
 
     currentProducerNickname = producer.nickname;
+    currentProducerId = producer.id;
     currentProduct = product;
 
     actualizarProductoUI(product, producer);
     inicializarAudioPlayer(product.download_url_mp3);
     cargarProductosRelacionados(product.producer_id, productId);
+    cargarReviews(productId);
     
   } catch (error) {
     console.error('Error cargando producto:', error);
@@ -150,7 +202,6 @@ function inicializarAudioPlayer(audioUrl) {
 
   playBtn.disabled = false;
 
-  // Play/Pause
   playBtn.addEventListener('click', () => {
     if (audioElement.paused) {
       audioElement.play();
@@ -161,32 +212,27 @@ function inicializarAudioPlayer(audioUrl) {
     }
   });
 
-  // Actualizar progreso
   audioElement.addEventListener('timeupdate', () => {
     const percent = (audioElement.currentTime / audioElement.duration) * 100;
     progressFill.style.width = `${percent}%`;
     currentTimeEl.textContent = formatTime(audioElement.currentTime);
   });
 
-  // Duración cargada
   audioElement.addEventListener('loadedmetadata', () => {
     durationEl.textContent = formatTime(audioElement.duration);
   });
 
-  // Click en barra de progreso
   progressBar.addEventListener('click', (e) => {
     const rect = progressBar.getBoundingClientRect();
     const percent = (e.clientX - rect.left) / rect.width;
     audioElement.currentTime = percent * audioElement.duration;
   });
 
-  // Audio finalizado
   audioElement.addEventListener('ended', () => {
     playBtn.innerHTML = '<i class="bi bi-play-fill"></i>';
     progressFill.style.width = '0%';
   });
 
-  // Control de volumen
   volumeBtn.addEventListener('click', () => {
     if (audioElement.muted) {
       audioElement.muted = false;
@@ -199,7 +245,6 @@ function inicializarAudioPlayer(audioUrl) {
     }
   });
 
-  // Slider de volumen
   volumeSlider.addEventListener('click', (e) => {
     const rect = volumeSlider.getBoundingClientRect();
     const percent = (e.clientX - rect.left) / rect.width;
@@ -218,7 +263,7 @@ function formatTime(seconds) {
 }
 
 // ============================================
-// LICENCIAS
+// LICENCIAS CON BOTONES DOBLES
 // ============================================
 function cargarLicencias(product) {
   const container = document.getElementById('licenseCards');
@@ -287,11 +332,87 @@ function cargarLicencias(product) {
       <ul class="license-features">
         ${license.features.map(f => `<li><i class="bi bi-check-circle-fill"></i> ${f}</li>`).join('')}
       </ul>
-      <button class="btn-license" onclick='${license.isFree ? `descargarGratis("${license.downloadUrl}")` : `agregarAlCarrito(${JSON.stringify(product).replace(/'/g, "&#39;")}, "${license.id}", "${license.name}", ${license.priceValue})`}'>
-        ${license.isFree ? 'Descargar Ahora' : 'Agregar al Carrito'}
-      </button>
+      <div class="license-actions">
+        ${license.isFree 
+          ? `<button class="btn-license" onclick='descargarGratis("${license.downloadUrl}")'>
+               <i class="bi bi-download"></i> Descargar
+             </button>`
+          : `<button class="btn-license" onclick='comprarAhora(${JSON.stringify(product).replace(/'/g, "&#39;")}, "${license.id}", "${license.name}", ${license.priceValue})'>
+               <i class="bi bi-lightning-fill"></i> Comprar
+             </button>
+             <button class="btn-license-secondary" onclick='agregarAlCarrito(${JSON.stringify(product).replace(/'/g, "&#39;")}, "${license.id}", "${license.name}", ${license.priceValue})'>
+               <i class="bi bi-cart-plus"></i> Al carrito
+             </button>`
+        }
+      </div>
     </div>
   `).join('');
+}
+
+// ============================================
+// REVIEWS
+// ============================================
+async function cargarReviews(productId) {
+  try {
+    const { data: reviews, error } = await supabase
+      .from('reviews')
+      .select(`
+        *,
+        users (
+          first_name,
+          last_name,
+          nickname
+        )
+      `)
+      .eq('product_id', productId)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+
+    const reviewsList = document.getElementById('reviewsList');
+    const reviewCount = document.getElementById('reviewCount');
+    const avgRatingEl = document.getElementById('avgRating');
+
+    if (!reviews || reviews.length === 0) {
+      reviewsList.innerHTML = '<p style="color: #999; text-align: center; padding: 2rem;">Aún no hay reseñas</p>';
+      reviewCount.textContent = '(0)';
+      return;
+    }
+
+    // Calcular promedio
+    const avgRating = reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length;
+    const stars = '★'.repeat(Math.round(avgRating)) + '☆'.repeat(5 - Math.round(avgRating));
+    avgRatingEl.textContent = stars;
+    reviewCount.textContent = `(${reviews.length})`;
+
+    // Renderizar reviews
+    reviewsList.innerHTML = reviews.map(review => {
+      const userName = review.users 
+        ? `${review.users.first_name || ''} ${review.users.last_name || ''}`.trim() || review.users.nickname
+        : 'Usuario';
+      const inicial = userName.charAt(0).toUpperCase();
+      const reviewStars = '★'.repeat(review.rating) + '☆'.repeat(5 - review.rating);
+      
+      return `
+        <div class="review-item">
+          <div class="review-header">
+            <div class="review-author">
+              <div class="review-avatar">${inicial}</div>
+              <div>
+                <div style="font-weight: 600; color: #fff;">${userName}</div>
+                <div style="color: #ffc107; font-size: 0.875rem;">${reviewStars}</div>
+              </div>
+            </div>
+            <span style="color: #999; font-size: 0.875rem;">${new Date(review.created_at).toLocaleDateString()}</span>
+          </div>
+          <div class="review-text">${review.comment}</div>
+        </div>
+      `;
+    }).join('');
+
+  } catch (error) {
+    console.error('Error cargando reviews:', error);
+  }
 }
 
 // ============================================
@@ -348,6 +469,17 @@ window.descargarGratis = function(url) {
   } else {
     alert('URL de descarga no disponible');
   }
+};
+
+// ============================================
+// COMPRAR AHORA (CHECKOUT DIRECTO)
+// ============================================
+window.comprarAhora = function(product, licenseId, licenseName, price) {
+  // Por ahora redirige a carrito, después implementaremos checkout directo
+  agregarAlCarrito(product, licenseId, licenseName, price);
+  setTimeout(() => {
+    window.location.href = 'carrito.html';
+  }, 500);
 };
 
 // ============================================
