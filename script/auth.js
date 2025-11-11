@@ -3,7 +3,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const SUPABASE_URL = "https://qtjpvztpgfymjhhpoouq.supabase.co";
   const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0anB2enRwZ2Z5bWpoaHBvb3VxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3ODA5MTUsImV4cCI6MjA3NjM1NjkxNX0.YsItTFk3hSQaVuy707-z7Z-j34mXa03O0wWGAlAzjrw";
 
-
   if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
     console.error("Error: Las variables de Supabase no están configuradas...");
     alert("Error de configuración. Contacta al administrador.");
@@ -13,21 +12,19 @@ document.addEventListener('DOMContentLoaded', () => {
   const { createClient } = supabase;
   const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-  //url del backend
-  let API_URL = '';
-
-  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:') {
-    //para desarrollo local
-    API_URL = 'http://localhost:3000/api';
-  } else {
-    //para producción
-    API_URL = 'https://offszn-academy.onrender.com/api';
-  }
+  // ============================================
+  // 🆕 OBTENER PARÁMETRO REDIRECT DE LA URL
+  // ============================================
+  const urlParams = new URLSearchParams(window.location.search);
+  const redirectParam = urlParams.get('redirect');
 
   const registerForm = document.getElementById('register-form');
   const loginForm = document.getElementById('login-form');
   const messageDiv = document.getElementById('form-message');
 
+  // ============================================
+  // REGISTRO
+  // ============================================
   if (registerForm) {
     registerForm.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -53,7 +50,14 @@ document.addEventListener('DOMContentLoaded', () => {
         if (data.session && data.session.access_token) {
           localStorage.setItem('authToken', data.session.access_token);
           console.log("Registro exitoso, token de Supabase guardado.");
-          window.location.href = '/pages/welcome.html';
+          
+          // ✅ REDIRIGIR SEGÚN EL PARÁMETRO
+          if (redirectParam === 'carrito') {
+            console.log('Redirigiendo al carrito...');
+            window.location.href = '/carrito.html';
+          } else {
+            window.location.href = '/pages/welcome.html';
+          }
         } else {
           throw new Error('Registro exitoso pero no se recibió sesión.');
         }
@@ -67,6 +71,9 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // ============================================
+  // LOGIN
+  // ============================================
   if (loginForm) {
     loginForm.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -103,10 +110,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
         localStorage.setItem('authToken', loginData.session.access_token);
 
+        // ✅ PRIORIDAD 1: Redirect al carrito si viene de ahí
+        if (redirectParam === 'carrito') {
+          console.log('Redirigiendo al carrito...');
+          window.location.href = '/carrito.html';
+          return;
+        }
+
+        // ✅ PRIORIDAD 2: Si es admin, a dashboard admin
         if (profileData && profileData.is_admin === true) {
           console.log("Usuario es Admin, redirigiendo a /admin-frontend/admin_dashboard.html");
           window.location.href = '/admin-frontend/admin_dashboard.html';
         } else {
+          // ✅ PRIORIDAD 3: Usuario normal, a dashboard
           console.log("Usuario normal, redirigiendo a /cuenta/dashboard.html");
           window.location.href = '/cuenta/dashboard.html';
         }
@@ -123,11 +139,11 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function showMessage(element, message, isError = true) {
-    if (!element) return;
-    element.textContent = message;
-    element.className = 'message';
-    if (message) {
-      element.classList.add(isError ? 'error' : 'success');
-    }
-  }
+    if (!element) return;
+    element.textContent = message;
+    element.className = 'message';
+    if (message) {
+      element.classList.add(isError ? 'error' : 'success');
+    }
+  }
 });
