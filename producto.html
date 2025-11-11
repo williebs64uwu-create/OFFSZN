@@ -68,12 +68,37 @@
       overflow: hidden;
       background: #1a1a1a;
       margin-bottom: 1rem;
+      position: relative;
     }
 
     .product-image img {
       width: 100%;
       height: 100%;
       object-fit: cover;
+    }
+
+    .share-btn {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      width: 40px;
+      height: 40px;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      cursor: pointer;
+      transition: all 0.3s;
+      z-index: 10;
+    }
+
+    .share-btn:hover {
+      background: rgba(114, 9, 183, 0.9);
+      transform: scale(1.1);
     }
 
     .product-producer {
@@ -154,6 +179,120 @@
       color: #fff;
     }
 
+    /* AUDIO PLAYER MEJORADO */
+    .audio-player {
+      background: #1a1a1a;
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .audio-player h4 {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+    }
+
+    .player-controls {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .play-btn {
+      width: 48px;
+      height: 48px;
+      background: var(--purple-main);
+      border: none;
+      border-radius: 50%;
+      color: #fff;
+      font-size: 1.25rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s;
+      flex-shrink: 0;
+    }
+
+    .play-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 15px rgba(114, 9, 183, 0.5);
+    }
+
+    .play-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .progress-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 6px;
+      background: rgba(114, 9, 183, 0.2);
+      border-radius: 3px;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--purple-main), var(--purple-dark));
+      border-radius: 3px;
+      width: 0%;
+      transition: width 0.1s linear;
+    }
+
+    .time-display {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.75rem;
+      color: #999;
+    }
+
+    .volume-control {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .volume-btn {
+      background: none;
+      border: none;
+      color: #999;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: color 0.3s;
+    }
+
+    .volume-btn:hover {
+      color: #fff;
+    }
+
+    .volume-slider {
+      width: 80px;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 2px;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .volume-fill {
+      height: 100%;
+      background: var(--purple-main);
+      border-radius: 2px;
+      width: 100%;
+    }
+
     .product-description {
       margin-bottom: 2rem;
       padding-bottom: 2rem;
@@ -213,7 +352,6 @@
       border-radius: 12px;
       padding: 1.5rem;
       transition: all 0.3s;
-      cursor: pointer;
     }
 
     .license-card:hover {
@@ -283,55 +421,71 @@
       background: linear-gradient(135deg, var(--green-success), #0a9d72);
     }
 
-    .audio-player {
+    /* PRODUCTOS RELACIONADOS */
+    .related-section {
+      margin-top: 4rem;
+      padding-top: 2rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .related-section h3 {
+      font-size: 1.5rem;
+      font-weight: 800;
+      margin-bottom: 1.5rem;
+      font-family: 'Montserrat', sans-serif;
+    }
+
+    .related-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .related-card {
       background: #1a1a1a;
+      border: 1px solid rgba(255, 255, 255, 0.08);
       border-radius: 12px;
-      padding: 1.5rem;
-      margin-bottom: 2rem;
-    }
-
-    .audio-player h4 {
-      font-size: 1rem;
-      font-weight: 700;
-      margin-bottom: 1rem;
-    }
-
-    .player-controls {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-    }
-
-    .play-btn {
-      width: 48px;
-      height: 48px;
-      background: var(--purple-main);
-      border: none;
-      border-radius: 50%;
-      color: #fff;
-      font-size: 1.25rem;
+      overflow: hidden;
       cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
       transition: all 0.3s;
     }
 
-    .play-btn:hover {
-      transform: scale(1.05);
-      box-shadow: 0 4px 15px rgba(114, 9, 183, 0.5);
+    .related-card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(114, 9, 183, 0.4);
     }
 
-    .waveform {
-      flex: 1;
-      height: 48px;
-      background: rgba(114, 9, 183, 0.1);
-      border-radius: 6px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #999;
+    .related-image {
+      width: 100%;
+      aspect-ratio: 1;
+      overflow: hidden;
+      background: #000;
+    }
+
+    .related-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .related-info {
+      padding: 1rem;
+    }
+
+    .related-title {
       font-size: 0.875rem;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 0.25rem;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .related-price {
+      font-size: 1rem;
+      font-weight: 800;
+      color: var(--purple-main);
     }
 
     @media (max-width: 968px) {
@@ -347,6 +501,10 @@
       .license-cards {
         grid-template-columns: 1fr;
       }
+
+      .related-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
     }
   </style>
 </head>
@@ -359,10 +517,13 @@
     </a>
 
     <div class="product-container">
-      <!-- Sección de imagen (izquierda) -->
+      <!-- Imagen -->
       <div class="product-image-section">
         <div class="product-image" id="productImage">
           <img src="" alt="Producto">
+          <button class="share-btn" onclick="compartirProducto()" title="Compartir">
+            <i class="bi bi-share"></i>
+          </button>
         </div>
         <a href="#" class="product-producer" id="producerLink">
           <div class="producer-avatar">
@@ -375,7 +536,7 @@
         </a>
       </div>
 
-      <!-- Sección de información (derecha) -->
+      <!-- Info -->
       <div class="product-info-section">
         <h1 class="product-title" id="productTitle">Cargando producto...</h1>
 
@@ -394,15 +555,29 @@
           </div>
         </div>
 
-        <!-- Audio Player -->
+        <!-- AUDIO PLAYER MEJORADO -->
         <div class="audio-player">
           <h4><i class="bi bi-music-note"></i> Preview del Beat</h4>
           <div class="player-controls">
-            <button class="play-btn" id="playBtn">
+            <button class="play-btn" id="playBtn" disabled>
               <i class="bi bi-play-fill"></i>
             </button>
-            <div class="waveform">
-              <span>Cargando audio...</span>
+            <div class="progress-container">
+              <div class="progress-bar" id="progressBar">
+                <div class="progress-fill" id="progressFill"></div>
+              </div>
+              <div class="time-display">
+                <span id="currentTime">0:00</span>
+                <span id="duration">0:00</span>
+              </div>
+            </div>
+            <div class="volume-control">
+              <button class="volume-btn" id="volumeBtn">
+                <i class="bi bi-volume-up"></i>
+              </button>
+              <div class="volume-slider" id="volumeSlider">
+                <div class="volume-fill" id="volumeFill"></div>
+              </div>
             </div>
           </div>
         </div>
@@ -412,266 +587,23 @@
           <p id="productDescription">Cargando descripción...</p>
         </div>
 
-        <div class="product-tags" id="productTags">
-          <!-- Tags se cargarán dinámicamente -->
-        </div>
+        <div class="product-tags" id="productTags"></div>
 
-        <!-- Sección de Licencias -->
         <div class="licenses-section">
           <h3>Selecciona una Licencia</h3>
-          <div class="license-cards" id="licenseCards">
-            <!-- Licencias se cargarán dinámicamente -->
-          </div>
+          <div class="license-cards" id="licenseCards"></div>
+        </div>
+
+        <!-- PRODUCTOS RELACIONADOS -->
+        <div class="related-section" id="relatedSection">
+          <h3>Más del productor</h3>
+          <div class="related-grid" id="relatedGrid"></div>
         </div>
       </div>
     </div>
   </div>
 
-  <script type="module">
-    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
-
-    const supabaseUrl = "https://qtjpvztpgfymjhhpoouq.supabase.co";
-    const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0anB2enRwZ2Z5bWpoaHBvb3VxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3ODA5MTUsImV4cCI6MjA3NjM1NjkxNX0.YsItTFk3hSQaVuy707-z7Z-j34mXa03O0wWGAlAzjrw";
-    const supabase = createClient(supabaseUrl, supabaseKey);
-
-    // Variable global para el productor
-    let currentProducerNickname = null;
-
-    // Obtener ID del producto desde URL
-    function getProductId() {
-      const params = new URLSearchParams(window.location.search);
-      return params.get('id');
-    }
-
-    // Volver al perfil del productor
-    window.volverAlPerfil = function() {
-      if (currentProducerNickname) {
-        window.location.href = `usuarios.html?nickname=${currentProducerNickname}`;
-      } else {
-        history.back();
-      }
-    };
-
-    // Cargar producto
-    async function cargarProducto() {
-      const productId = getProductId();
-      
-      if (!productId) {
-        alert('ID de producto no encontrado');
-        window.history.back();
-        return;
-      }
-
-      try {
-        // Obtener producto
-        const { data: product, error: productError } = await supabase
-          .from('products')
-          .select('*')
-          .eq('id', productId)
-          .single();
-
-        if (productError) throw productError;
-
-        // Obtener datos del productor
-        const { data: producer, error: producerError } = await supabase
-          .from('users')
-          .select('*')
-          .eq('id', product.producer_id)
-          .single();
-
-        if (producerError) throw producerError;
-
-        // Guardar nickname del productor
-        currentProducerNickname = producer.nickname;
-
-        // Actualizar UI
-        actualizarProductoUI(product, producer);
-        
-      } catch (error) {
-        console.error('Error cargando producto:', error);
-        alert('Error al cargar el producto');
-      }
-    }
-
-    // Actualizar UI con datos del producto
-    function actualizarProductoUI(product, producer) {
-      // Título
-      document.getElementById('productTitle').textContent = product.name || 'Sin título';
-      
-      // Imagen
-      const productImg = document.querySelector('#productImage img');
-      const defaultImg = 'https://ui-avatars.com/api/?name=Music&size=400&background=7209b7&color=ffffff&bold=true';
-      productImg.src = (product.image_url && product.image_url.startsWith('http')) ? product.image_url : defaultImg;
-      productImg.alt = product.name;
-      productImg.onerror = function() { this.src = defaultImg; };
-
-      // Meta
-      document.getElementById('productBpm').textContent = product.bpm || '---';
-      document.getElementById('productKey').textContent = product.key || '--';
-      document.getElementById('productType').textContent = product.product_type || 'Beat';
-
-      // Descripción
-      document.getElementById('productDescription').textContent = product.description || 'Sin descripción disponible.';
-
-      // Tags (géneros)
-      const tagsContainer = document.getElementById('productTags');
-      if (product.genres && product.genres.length > 0) {
-        tagsContainer.innerHTML = product.genres.map(genre => 
-          `<span class="tag">${genre}</span>`
-        ).join('');
-      }
-
-      // Productor
-      const inicial = producer.first_name ? producer.first_name.charAt(0).toUpperCase() : 'U';
-      const defaultAvatar = `https://ui-avatars.com/api/?name=${inicial}&size=100&background=7209b7&color=ffffff&bold=true`;
-      
-      const producerAvatar = document.querySelector('.producer-avatar img');
-      producerAvatar.src = (producer.avatar_url && producer.avatar_url.startsWith('http')) ? producer.avatar_url : defaultAvatar;
-      producerAvatar.onerror = function() { this.src = defaultAvatar; };
-      
-      const producerName = document.getElementById('producerName');
-      producerName.textContent = `${producer.first_name || ''} ${producer.last_name || ''}`.trim() || producer.nickname;
-      
-      const producerLink = document.getElementById('producerLink');
-      producerLink.href = `usuarios.html?nickname=${producer.nickname}`;
-
-      // Licencias
-      cargarLicencias(product);
-    }
-
-    // Cargar licencias disponibles
-    function cargarLicencias(product) {
-      const container = document.getElementById('licenseCards');
-      const licenses = [];
-
-      // Producto gratis - descarga directa
-      if (product.is_free) {
-        licenses.push({
-          id: 'free',
-          name: 'Descarga Gratis',
-          price: 'GRATIS',
-          priceValue: 0,
-          features: ['MP3 con tag', 'Uso no comercial', 'Streaming permitido'],
-          isFree: true,
-          downloadUrl: product.download_url_mp3
-        });
-      }
-
-      // Licencias de pago
-      if (product.price_basic && parseFloat(product.price_basic) > 0) {
-        licenses.push({
-          id: 'basic',
-          name: 'Licencia Básica',
-          price: `$${parseFloat(product.price_basic).toFixed(2)}`,
-          priceValue: parseFloat(product.price_basic),
-          features: ['MP3 sin tag', 'Uso comercial', 'Streaming ilimitado', '5,000 ventas'],
-          isFree: false
-        });
-      }
-
-      if (product.price_premium && parseFloat(product.price_premium) > 0) {
-        licenses.push({
-          id: 'premium',
-          name: 'Licencia Premium',
-          price: `$${parseFloat(product.price_premium).toFixed(2)}`,
-          priceValue: parseFloat(product.price_premium),
-          features: ['WAV sin tag', 'Uso comercial', 'Streaming ilimitado', '50,000 ventas'],
-          isFree: false
-        });
-      }
-
-      if (product.price_stems && parseFloat(product.price_stems) > 0) {
-        licenses.push({
-          id: 'stems',
-          name: 'Stems Trackout',
-          price: `$${parseFloat(product.price_stems).toFixed(2)}`,
-          priceValue: parseFloat(product.price_stems),
-          features: ['Todos los stems', 'Uso comercial', 'Streaming ilimitado', '100,000 ventas'],
-          isFree: false
-        });
-      }
-
-      if (product.price_exclusive && parseFloat(product.price_exclusive) > 0) {
-        licenses.push({
-          id: 'exclusive',
-          name: 'Licencia Exclusiva',
-          price: `$${parseFloat(product.price_exclusive).toFixed(2)}`,
-          priceValue: parseFloat(product.price_exclusive),
-          features: ['Derechos completos', 'Ventas ilimitadas', 'Beat removido de venta'],
-          isFree: false
-        });
-      }
-
-      // Renderizar licencias
-      container.innerHTML = licenses.map(license => `
-        <div class="license-card ${license.isFree ? 'free' : ''}" data-license-id="${license.id}">
-          <div class="license-name">${license.name}</div>
-          <div class="license-price">${license.price}</div>
-          <ul class="license-features">
-            ${license.features.map(f => `<li><i class="bi bi-check-circle-fill"></i> ${f}</li>`).join('')}
-          </ul>
-          <button class="btn-license" onclick='${license.isFree ? `descargarGratis("${license.downloadUrl}")` : `agregarAlCarrito(${JSON.stringify(product).replace(/'/g, "&#39;")}, "${license.id}", "${license.name}", ${license.priceValue})`}'>
-            ${license.isFree ? 'Descargar Ahora' : 'Agregar al Carrito'}
-          </button>
-        </div>
-      `).join('');
-    }
-
-    // Descargar gratis
-    window.descargarGratis = function(url) {
-      if (url) {
-        window.open(url, '_blank');
-      } else {
-        alert('URL de descarga no disponible');
-      }
-    };
-
-    // Agregar al carrito
-    window.agregarAlCarrito = function(product, licenseId, licenseName, price) {
-      let cart = JSON.parse(localStorage.getItem('offszn_cart') || '[]');
-      
-      const cartItem = {
-        id: `${product.id}_${licenseId}`,
-        productId: product.id,
-        productName: product.name,
-        productImage: product.image_url,
-        licenseId: licenseId,
-        licenseName: licenseName,
-        price: price,
-        producerName: document.getElementById('producerName').textContent,
-        addedAt: new Date().toISOString()
-      };
-      
-      const existingIndex = cart.findIndex(item => item.id === cartItem.id);
-      
-      if (existingIndex >= 0) {
-        alert('Este producto con esta licencia ya está en tu carrito');
-        return;
-      }
-      
-      cart.push(cartItem);
-      localStorage.setItem('offszn_cart', JSON.stringify(cart));
-      
-      alert(`✅ "${licenseName}" agregada al carrito!\n\nProducto: ${product.name}\nPrecio: $${price.toFixed(2)}`);
-      
-      actualizarContadorCarrito();
-    };
-
-    // Actualizar contador del carrito
-    function actualizarContadorCarrito() {
-      const cart = JSON.parse(localStorage.getItem('offszn_cart') || '[]');
-      const cartCount = cart.length;
-      
-      const cartBadge = document.querySelector('.cart-count');
-      if (cartBadge) {
-        cartBadge.textContent = cartCount;
-        cartBadge.style.display = cartCount > 0 ? 'block' : 'none';
-      }
-    }
-
-    // Inicializar
-    document.addEventListener('DOMContentLoaded', cargarProducto);
-  </script>
+  <script type="module" src="script/producto.js"></script>
 
 </body>
 </html>
