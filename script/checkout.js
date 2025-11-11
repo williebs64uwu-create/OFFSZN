@@ -103,7 +103,7 @@ function inicializarPayPal(cart, total) {
   if (!window.paypal) {
     const script = document.createElement('script');
     // REEMPLAZA 'TU_CLIENT_ID' con tu Client ID real de PayPal
-    script.src = 'https://www.paypal.com/sdk/js?client-id=TU_CLIENT_ID&currency=USD';
+    script.src = 'https://www.paypal.com/sdk/js?client-id=AWlu0poB0pM31ozZz7Cg8Tc2-2PSdq9lyjWQfGg-0Ckk0s-v3BZknJo6qM8RdTcMuX0bZkZ0qkseYFDV&currency=USD';
     script.onload = () => renderPayPalButton(cart, total);
     document.head.appendChild(script);
   } else {
