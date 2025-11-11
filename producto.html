@@ -110,6 +110,7 @@
       border-radius: 12px;
       text-decoration: none;
       transition: background 0.3s;
+      margin-bottom: 1rem;
     }
 
     .product-producer:hover {
@@ -139,6 +140,29 @@
     .producer-info p {
       color: #999;
       font-size: 0.8125rem;
+    }
+
+    /* BOTÓN MENSAJE */
+    .btn-message-producer {
+      width: 100%;
+      padding: 0.875rem;
+      background: transparent;
+      border: 1px solid rgba(114, 9, 183, 0.4);
+      color: var(--purple-main);
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 0.875rem;
+      cursor: pointer;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+
+    .btn-message-producer:hover {
+      background: rgba(114, 9, 183, 0.1);
+      border-color: var(--purple-main);
     }
 
     .product-info-section {
@@ -179,7 +203,7 @@
       color: #fff;
     }
 
-    /* AUDIO PLAYER MEJORADO */
+    /* AUDIO PLAYER */
     .audio-player {
       background: #1a1a1a;
       border-radius: 12px;
@@ -326,6 +350,7 @@
       color: rgba(255, 255, 255, 0.9);
     }
 
+    /* LICENCIAS CON BOTONES DOBLES */
     .licenses-section {
       background: #1a1a1a;
       border-radius: 12px;
@@ -400,8 +425,14 @@
       font-size: 0.75rem;
     }
 
+    /* BOTONES DOBLES EN LICENCIA */
+    .license-actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+
     .btn-license {
-      width: 100%;
+      flex: 1;
       padding: 0.875rem;
       background: linear-gradient(135deg, var(--purple-main), var(--purple-dark));
       color: #fff;
@@ -410,6 +441,11 @@
       font-weight: 700;
       cursor: pointer;
       transition: all 0.3s;
+      font-size: 0.875rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
     }
 
     .btn-license:hover {
@@ -417,8 +453,97 @@
       box-shadow: 0 6px 20px rgba(114, 9, 183, 0.5);
     }
 
+    .btn-license-secondary {
+      flex: 1;
+      padding: 0.875rem;
+      background: transparent;
+      color: var(--purple-main);
+      border: 1px solid var(--purple-main);
+      border-radius: 8px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-size: 0.875rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+
+    .btn-license-secondary:hover {
+      background: rgba(114, 9, 183, 0.1);
+    }
+
     .license-card.free .btn-license {
       background: linear-gradient(135deg, var(--green-success), #0a9d72);
+    }
+
+    /* REVIEWS */
+    .reviews-section {
+      margin-top: 2rem;
+      padding-top: 2rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .reviews-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .reviews-header h3 {
+      font-size: 1.5rem;
+      font-weight: 800;
+      font-family: 'Montserrat', sans-serif;
+    }
+
+    .rating-summary {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .stars {
+      color: #ffc107;
+      font-size: 1.25rem;
+    }
+
+    .review-item {
+      background: #1a1a1a;
+      padding: 1.5rem;
+      border-radius: 12px;
+      margin-bottom: 1rem;
+    }
+
+    .review-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.75rem;
+    }
+
+    .review-author {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .review-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--purple-main);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-weight: 700;
+    }
+
+    .review-text {
+      color: rgba(255, 255, 255, 0.8);
+      line-height: 1.6;
     }
 
     /* PRODUCTOS RELACIONADOS */
@@ -502,6 +627,10 @@
         grid-template-columns: 1fr;
       }
 
+      .license-actions {
+        flex-direction: column;
+      }
+
       .related-grid {
         grid-template-columns: repeat(2, 1fr);
       }
@@ -534,6 +663,10 @@
             <p>Ver perfil del productor</p>
           </div>
         </a>
+        <button class="btn-message-producer" onclick="abrirMensaje()">
+          <i class="bi bi-envelope"></i>
+          Enviar mensaje
+        </button>
       </div>
 
       <!-- Info -->
@@ -555,7 +688,7 @@
           </div>
         </div>
 
-        <!-- AUDIO PLAYER MEJORADO -->
+        <!-- AUDIO PLAYER -->
         <div class="audio-player">
           <h4><i class="bi bi-music-note"></i> Preview del Beat</h4>
           <div class="player-controls">
@@ -589,9 +722,26 @@
 
         <div class="product-tags" id="productTags"></div>
 
+        <!-- LICENCIAS CON BOTONES DOBLES -->
         <div class="licenses-section">
           <h3>Selecciona una Licencia</h3>
           <div class="license-cards" id="licenseCards"></div>
+        </div>
+
+        <!-- REVIEWS -->
+        <div class="reviews-section">
+          <div class="reviews-header">
+            <h3>Reseñas</h3>
+            <div class="rating-summary">
+              <div class="stars" id="avgRating">
+                ★★★★★
+              </div>
+              <span id="reviewCount">(0)</span>
+            </div>
+          </div>
+          <div id="reviewsList">
+            <p style="color: #999; text-align: center; padding: 2rem;">Aún no hay reseñas</p>
+          </div>
         </div>
 
         <!-- PRODUCTOS RELACIONADOS -->
