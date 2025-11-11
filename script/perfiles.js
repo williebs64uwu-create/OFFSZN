@@ -16,8 +16,6 @@ let allProducts = [];
 let currentFilter = 'all';
 let currentSearchTerm = '';
 let currentUserId = null;
-let audioPlayer = null;
-let currentPlayingId = null;
 
 // ============================================
 // OBTENER NICKNAME DE LA URL
@@ -297,6 +295,7 @@ function crearCardProducto(product) {
     <div style="background: #1a1a1a; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; overflow: hidden; transition: all 0.3s; cursor: pointer;" 
          onmouseover="this.style.transform='translateY(-4px)'; this.style.borderColor='rgba(114, 9, 183, 0.4)'" 
          onmouseout="this.style.transform='translateY(0)'; this.style.borderColor='rgba(255, 255, 255, 0.08)'"
+         onclick="window.location.href='producto.html?id=${product.id}'"
          data-product-id="${product.id}">
       <div style="position: relative; width: 100%; padding-top: 100%; overflow: hidden; background: #000;">
         ${badges.join('')}
@@ -305,12 +304,11 @@ function crearCardProducto(product) {
              style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover;"
              onerror="this.src='https://ui-avatars.com/api/?name=Music&size=400&background=7209b7&color=ffffff&bold=true'">
         <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 50px; height: 50px; background: rgba(114, 9, 183, 0.9); border-radius: 50%; display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s;"
-             class="play-overlay"
-             onclick="event.stopPropagation(); reproducirAudio('${product.id}', '${product.download_url_mp3}', '${product.name}')">
-          <i class="bi bi-play-fill" style="font-size: 1.5rem; color: #fff; margin-left: 3px;"></i>
+             class="play-overlay">
+          <i class="bi bi-headphones" style="font-size: 1.5rem; color: #fff;"></i>
         </div>
       </div>
-      <div style="padding: 1rem;" onclick="window.location.href='producto.html?id=${product.id}'">
+      <div style="padding: 1rem;">
         <h3 style="font-size: 1rem; font-weight: 700; color: #fff; margin-bottom: 0.5rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${product.name || 'Sin título'}</h3>
         <p style="font-size: 0.875rem; color: #999; margin-bottom: 0.75rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${product.description || 'Sin descripción'}</p>
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
@@ -332,67 +330,9 @@ function crearCardProducto(product) {
 }
 
 // ============================================
-// REPRODUCIR AUDIO (SIMPLE PLAYER)
-// ============================================
-window.reproducirAudio = function(productId, audioUrl, productName) {
-  console.log('🎵 Reproducir:', productId, audioUrl);
-  
-  if (!audioUrl) {
-    alert('Este producto no tiene audio preview disponible');
-    return;
-  }
-
-  // Si ya está reproduciéndose, pausar
-  if (currentPlayingId === productId && audioPlayer && !audioPlayer.paused) {
-    audioPlayer.pause();
-    currentPlayingId = null;
-    actualizarIconoPlay(productId, true);
-    return;
-  }
-
-  // Pausar audio anterior si existe
-  if (audioPlayer) {
-    audioPlayer.pause();
-    if (currentPlayingId) {
-      actualizarIconoPlay(currentPlayingId, true);
-    }
-  }
-
-  // Crear nuevo audio
-  audioPlayer = new Audio(audioUrl);
-  currentPlayingId = productId;
-  
-  audioPlayer.addEventListener('ended', () => {
-    currentPlayingId = null;
-    actualizarIconoPlay(productId, true);
-  });
-
-  audioPlayer.addEventListener('error', (e) => {
-    console.error('Error reproduciendo audio:', e);
-    alert('Error al reproducir el audio');
-    currentPlayingId = null;
-    actualizarIconoPlay(productId, true);
-  });
-
-  audioPlayer.play();
-  actualizarIconoPlay(productId, false);
-};
-
-function actualizarIconoPlay(productId, esPause) {
-  const card = document.querySelector(`[data-product-id="${productId}"]`);
-  if (card) {
-    const playOverlay = card.querySelector('.play-overlay i');
-    if (playOverlay) {
-      playOverlay.className = esPause ? 'bi bi-play-fill' : 'bi bi-pause-fill';
-    }
-  }
-}
-
-// ============================================
 // FILTROS
 // ============================================
 function inicializarFiltros() {
-  // Crear botones de filtro si no existen
   const productsHeader = document.querySelector('.products-header');
   if (!productsHeader) return;
 
@@ -420,7 +360,6 @@ function inicializarFiltros() {
 
   productsHeader.appendChild(filterButtons);
 
-  // Event listeners
   document.querySelectorAll('.filter-btn').forEach(btn => {
     btn.addEventListener('click', function() {
       document.querySelectorAll('.filter-btn').forEach(b => {
@@ -444,7 +383,6 @@ function inicializarFiltros() {
 function aplicarFiltros() {
   let productosFiltrados = [...allProducts];
 
-  // Aplicar filtro de tipo
   if (currentFilter === 'free') {
     productosFiltrados = productosFiltrados.filter(p => p.is_free === true);
   } else if (currentFilter === 'paid') {
@@ -453,7 +391,6 @@ function aplicarFiltros() {
     productosFiltrados = productosFiltrados.filter(p => esProductoNuevo(p.created_at));
   }
 
-  // Aplicar búsqueda
   if (currentSearchTerm) {
     productosFiltrados = productosFiltrados.filter(p => {
       const searchLower = currentSearchTerm.toLowerCase();
