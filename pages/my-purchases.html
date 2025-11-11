@@ -155,6 +155,11 @@
       color: #fff;
     }
 
+    .btn-license:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
     .empty-state {
       text-align: center;
       padding: 4rem 2rem;
@@ -230,6 +235,7 @@
 
   <script type="module">
     import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
+    import { generarLicencia } from '../script/generate-license.js';
 
     const supabaseUrl = "https://qtjpvztpgfymjhhpoouq.supabase.co";
     const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0anB2enRwZ2Z5bWpoaHBvb3VxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3ODA5MTUsImV4cCI6MjA3NjM1NjkxNX0.YsItTFk3hSQaVuy707-z7Z-j34mXa03O0wWGAlAzjrw";
@@ -347,9 +353,100 @@
       return licenses[licenseId] || licenseId;
     }
 
-    window.verLicencia = function(purchaseId) {
-      // TODO: Implementar generación de PDF de licencia
-      alert('🚀 Próximamente: Descarga de licencia en PDF\n\nPurchase ID: ' + purchaseId);
+    window.verLicencia = async function(purchaseId) {
+      console.log('🔄 Generando licencia para:', purchaseId);
+      
+      try {
+        // Obtener usuario actual
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        
+        if (userError || !user) {
+          alert('❌ Debes iniciar sesión para descargar tu licencia');
+          window.location.href = '/pages/login';
+          return;
+        }
+
+        // Obtener datos completos de la compra
+        const { data: purchase, error: purchaseError } = await supabase
+          .from('purchases')
+          .select(`
+            *,
+            products (
+              name
+            )
+          `)
+          .eq('id', purchaseId)
+          .eq('user_id', user.id)
+          .single();
+
+        if (purchaseError) {
+          console.error('Error obteniendo compra:', purchaseError);
+          throw purchaseError;
+        }
+
+        if (!purchase) {
+          alert('❌ Compra no encontrada');
+          return;
+        }
+
+        console.log('✅ Compra encontrada:', purchase);
+
+        // Preparar nombre del comprador
+        const buyerName = user.user_metadata?.full_name || 
+                          `${user.user_metadata?.first_name || ''} ${user.user_metadata?.last_name || ''}`.trim() || 
+                          user.email.split('@')[0];
+
+        // Preparar datos para el generador
+        const purchaseData = {
+          productName: purchase.products.name,
+          producerName: 'Willie Inspired',
+          licenseType: purchase.license_type,
+          amount: purchase.amount,
+          buyerName: buyerName,
+          buyerEmail: user.email,
+          purchaseDate: purchase.created_at,
+          orderId: purchase.paypal_transaction_id
+        };
+
+        console.log('📋 Datos para licencia:', purchaseData);
+
+        // Buscar el botón y mostrar estado de carga
+        const buttons = document.querySelectorAll('.btn-license');
+        let targetButton = null;
+        
+        buttons.forEach(btn => {
+          if (btn.getAttribute('onclick').includes(purchaseId)) {
+            targetButton = btn;
+          }
+        });
+
+        if (targetButton) {
+          const originalHTML = targetButton.innerHTML;
+          targetButton.innerHTML = '<i class="bi bi-hourglass-split"></i> Generando...';
+          targetButton.disabled = true;
+
+          try {
+            // Generar y descargar licencia
+            await generarLicencia(purchaseData);
+            
+            // Mensaje de éxito
+            alert('✅ ¡Licencia descargada exitosamente!\n\nRevisa tu carpeta de Descargas.');
+            
+          } finally {
+            // Restaurar botón
+            targetButton.innerHTML = originalHTML;
+            targetButton.disabled = false;
+          }
+        } else {
+          // Si no hay referencia al botón, generar directamente
+          await generarLicencia(purchaseData);
+          alert('✅ ¡Licencia descargada exitosamente!');
+        }
+
+      } catch (error) {
+        console.error('❌ Error generando licencia:', error);
+        alert('❌ Error al generar la licencia.\n\nPor favor, intenta de nuevo o contacta a soporte.\n\nError: ' + error.message);
+      }
     };
 
     document.addEventListener('DOMContentLoaded', cargarCompras);
