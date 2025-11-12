@@ -4,13 +4,6 @@ const supabaseUrl = "https://qtjpvztpgfymjhhpoouq.supabase.co";
 const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0anB2enRwZ2Z5bWpoaHBvb3VxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3ODA5MTUsImV4cCI6MjA3NjM1NjkxNX0.YsItTFk3hSQaVuy707-z7Z-j34mXa03O0wWGAlAzjrw";
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-// 📧 CONFIGURACIÓN EMAILJS
-const EMAILJS_CONFIG = {
-  publicKey: 'If_WAVcuXiGSPp2SB',
-  serviceId: 'service_w50l62y',
-  templateCompra: 'template_dsmiidx'
-};
-
 // ============================================
 // CARGAR CARRITO EN PÁGINA
 // ============================================
@@ -116,7 +109,6 @@ async function cargarCarrito() {
     </div>
   `;
 
-  cargarEmailJS();
   inicializarPayPal(cart, total);
 }
 
@@ -150,71 +142,8 @@ function renderCartItems(cart) {
 }
 
 // ============================================
-// 📧 CARGAR SDK DE EMAILJS
+// INICIALIZAR PAYPAL
 // ============================================
-function cargarEmailJS() {
-  if (window.emailjs) {
-    console.log('📧 EmailJS ya cargado');
-    return;
-  }
-
-  const script = document.createElement('script');
-  script.src = 'https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js';
-  script.onload = () => {
-    emailjs.init(EMAILJS_CONFIG.publicKey);
-    console.log('✅ EmailJS inicializado');
-  };
-  script.onerror = () => {
-    console.error('❌ Error cargando EmailJS');
-  };
-  document.head.appendChild(script);
-}
-
-// ============================================
-// 📧 ENVIAR EMAIL DE COMPRA
-// ============================================
-async function enviarEmailCompra(emailData) {
-  try {
-    console.log('📧 Enviando email de compra...', emailData);
-
-    // Formatear productos para el template
-    const productosHTML = emailData.products.map((p, i) => 
-      `${i + 1}. ${p.name} - ${p.license} ($${p.price})`
-    ).join('\n');
-
-    const templateParams = {
-      to_email: emailData.buyerEmail,
-      buyer_name: emailData.buyerName,
-      order_id: emailData.orderId,
-      purchase_date: new Date().toLocaleDateString('es-ES', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      }),
-      products_list: productosHTML,
-      total_amount: `$${emailData.total.toFixed(2)}`,
-      products_count: emailData.products.length
-    };
-
-    console.log('📧 Parámetros del template:', templateParams);
-
-    const response = await emailjs.send(
-      EMAILJS_CONFIG.serviceId,
-      EMAILJS_CONFIG.templateCompra,
-      templateParams
-    );
-
-    console.log('✅ Email enviado correctamente:', response);
-    return { success: true, data: response };
-
-  } catch (error) {
-    console.error('❌ Error enviando email:', error);
-    return { success: false, error: error.message };
-  }
-}
-
 function inicializarPayPal(cart, total) {
   if (!window.paypal) {
     const script = document.createElement('script');
@@ -260,14 +189,16 @@ function renderPayPalButton(cart, total) {
     },
 
     onError: function(err) {
-      console.error('❌ Error de PayPal:', err);
-      window.toast?.error('Error al procesar el pago. Intenta de nuevo.');
+      console.error('Error de PayPal:', err);
+      if (window.toast) {
+        window.toast.error('Error al procesar el pago. Intenta de nuevo.');
+      }
     }
   }).render('#paypal-button-container');
 }
 
 // ============================================
-// 🔥 PROCESAR COMPRA EXITOSA + EMAIL
+// 📧 PROCESAR COMPRA EXITOSA + EMAIL
 // ============================================
 async function procesarCompra(order, cart) {
   try {
@@ -276,7 +207,9 @@ async function procesarCompra(order, cart) {
     const { data: { user } } = await supabase.auth.getUser();
     
     if (!user) {
-      window.toast?.error('Debes iniciar sesión para completar la compra');
+      if (window.toast) {
+        window.toast.error('Debes iniciar sesión para completar la compra');
+      }
       window.location.href = '/pages/login?redirect=carrito';
       return;
     }
@@ -306,8 +239,11 @@ async function procesarCompra(order, cart) {
 
     console.log('✅ Compras guardadas en DB');
 
-    // 2️⃣ ENVIAR EMAIL DE COMPRA CON EMAILJS
+    // 2️⃣ 📧 ENVIAR EMAIL DE COMPRA (IMPORTANDO email-service.js)
     try {
+      console.log('📧 Importando email-service.js...');
+      const { enviarEmailCompra } = await import('./email-service.js');
+      
       const buyerName = user.user_metadata?.full_name || 
                        `${user.user_metadata?.first_name || ''} ${user.user_metadata?.last_name || ''}`.trim() || 
                        user.email.split('@')[0];
@@ -320,8 +256,7 @@ async function procesarCompra(order, cart) {
         products: cart.map(item => ({
           name: item.productName,
           license: item.licenseName,
-          price: item.price.toFixed(2),
-          producer: item.producerName || 'Willie Inspired'
+          price: item.price.toFixed(2)
         }))
       };
 
@@ -333,13 +268,14 @@ async function procesarCompra(order, cart) {
         total: emailData.total
       });
 
-      const emailResult = await enviarEmailCompra(emailData);
-
-      if (emailResult.success) {
-        console.log('✅ Email de compra enviado correctamente');
-      } else {
-        console.warn('⚠️ Email no enviado:', emailResult.error);
-      }
+      // Enviar email (no bloqueante)
+      enviarEmailCompra(emailData).then(result => {
+        if (result.success) {
+          console.log('✅ Email de compra enviado correctamente');
+        } else {
+          console.warn('⚠️ Email no enviado:', result.error);
+        }
+      });
 
     } catch (emailError) {
       console.warn('⚠️ Error al enviar email (no crítico):', emailError);
@@ -355,10 +291,15 @@ async function procesarCompra(order, cart) {
 
   } catch (error) {
     console.error('❌ Error guardando compra:', error);
-    window.toast?.error('Error al guardar la compra. Contacta a soporte.');
+    if (window.toast) {
+      window.toast.error('Error al guardar la compra. Contacta a soporte.');
+    }
   }
 }
 
+// ============================================
+// ELIMINAR DEL CARRITO
+// ============================================
 window.eliminarDelCarrito = function(index) {
   if (!confirm('¿Eliminar este producto del carrito?')) return;
   
@@ -368,4 +309,7 @@ window.eliminarDelCarrito = function(index) {
   cargarCarrito();
 };
 
+// ============================================
+// INICIALIZAR
+// ============================================
 document.addEventListener('DOMContentLoaded', cargarCarrito);
