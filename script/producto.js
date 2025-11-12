@@ -71,7 +71,6 @@ window.abrirMensaje = async function() {
       return;
     }
     
-    // Crear modal personalizado para el mensaje
     const mensaje = await crearModalMensaje();
     
     if (mensaje && mensaje.trim()) {
@@ -285,7 +284,6 @@ function inicializarAudioPlayer(audioUrl) {
 
   playBtn.disabled = false;
 
-  // Dibujar waveform simple
   dibujarWaveform();
 
   playBtn.addEventListener('click', () => {
@@ -340,7 +338,6 @@ function dibujarWaveform() {
   
   ctx.clearRect(0, 0, width, height);
   
-  // Dibujar barras de waveform simuladas
   const barCount = 100;
   const barWidth = width / barCount;
   
@@ -559,16 +556,196 @@ async function cargarProductosRelacionados(producerId, currentProductId) {
 }
 
 // ============================================
-// DESCARGAR GRATIS
+// 📧 DESCARGAR GRATIS CON CAPTURA DE EMAIL
 // ============================================
-window.descargarGratis = function(url) {
-  if (url) {
-    window.open(url, '_blank');
-    window.toast.success('¡Descarga iniciada!');
-  } else {
+window.descargarGratis = async function(url) {
+  if (!url) {
     window.toast.error('URL de descarga no disponible');
+    return;
+  }
+
+  try {
+    // Verificar si el usuario está logueado
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (user) {
+      // Usuario logueado: Enviar email y descargar
+      await enviarEmailDescargaGratis(user.email, user);
+      iniciarDescarga(url);
+    } else {
+      // Usuario NO logueado: Pedir email
+      const email = await mostrarModalEmail();
+      
+      if (email && validarEmail(email)) {
+        await enviarEmailDescargaGratis(email, null);
+        iniciarDescarga(url);
+      }
+    }
+  } catch (error) {
+    console.error('Error en descarga gratis:', error);
+    window.toast.error('Error al procesar la descarga');
   }
 };
+
+// ============================================
+// MODAL PARA CAPTURAR EMAIL
+// ============================================
+function mostrarModalEmail() {
+  return new Promise((resolve) => {
+    const overlay = document.createElement('div');
+    overlay.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.9);
+      backdrop-filter: blur(8px);
+      z-index: 10000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: fadeIn 0.2s ease;
+    `;
+
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+      background: linear-gradient(135deg, #1a1a1a, #0a0a0a);
+      border: 1px solid rgba(114, 9, 183, 0.4);
+      border-radius: 20px;
+      padding: 2.5rem;
+      max-width: 450px;
+      width: 90%;
+      box-shadow: 0 25px 80px rgba(114, 9, 183, 0.3);
+    `;
+
+    modal.innerHTML = `
+      <div style="text-align: center; margin-bottom: 1.5rem;">
+        <i class="bi bi-download" style="font-size: 3rem; color: #7209b7; display: block; margin-bottom: 1rem;"></i>
+        <h3 style="color: #fff; font-size: 1.5rem; font-weight: 700; margin-bottom: 0.5rem;">
+          Descarga Gratis
+        </h3>
+        <p style="color: #999; font-size: 0.9375rem;">
+          Ingresa tu email para recibir el link de descarga
+        </p>
+      </div>
+      
+      <input 
+        type="email" 
+        id="emailInput" 
+        placeholder="tu@email.com"
+        style="width: 100%; padding: 1rem; background: rgba(0,0,0,0.4); border: 1px solid rgba(114, 9, 183, 0.3); border-radius: 10px; color: #fff; font-size: 1rem; margin-bottom: 1.5rem; outline: none; transition: all 0.3s;"
+        onfocus="this.style.borderColor='#7209b7'"
+        onblur="this.style.borderColor='rgba(114, 9, 183, 0.3)'"
+      />
+      
+      <div style="display: flex; gap: 0.75rem;">
+        <button id="cancelBtn" style="flex: 1; padding: 0.875rem; background: transparent; border: 1px solid rgba(255,255,255,0.2); border-radius: 10px; color: #fff; cursor: pointer; font-weight: 600; transition: all 0.3s;">
+          Cancelar
+        </button>
+        <button id="downloadBtn" style="flex: 1; padding: 0.875rem; background: linear-gradient(135deg, #7209b7, #560bad); border: none; border-radius: 10px; color: #fff; font-weight: 600; cursor: pointer; transition: all 0.3s;">
+          <i class="bi bi-download"></i> Descargar
+        </button>
+      </div>
+      
+      <p style="color: #666; font-size: 0.75rem; text-align: center; margin-top: 1rem;">
+        No spam. Solo el link de descarga.
+      </p>
+    `;
+
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+
+    const emailInput = modal.querySelector('#emailInput');
+    emailInput.focus();
+
+    const close = (result) => {
+      overlay.remove();
+      resolve(result);
+    };
+
+    modal.querySelector('#downloadBtn').addEventListener('click', () => {
+      const email = emailInput.value.trim();
+      if (!email) {
+        window.toast.warning('Por favor ingresa tu email');
+        emailInput.focus();
+        return;
+      }
+      if (!validarEmail(email)) {
+        window.toast.error('Email inválido');
+        emailInput.focus();
+        return;
+      }
+      close(email);
+    });
+
+    modal.querySelector('#cancelBtn').addEventListener('click', () => {
+      close(null);
+    });
+
+    emailInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        modal.querySelector('#downloadBtn').click();
+      }
+    });
+
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) close(null);
+    });
+  });
+}
+
+// ============================================
+// VALIDAR EMAIL
+// ============================================
+function validarEmail(email) {
+  const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return regex.test(email);
+}
+
+// ============================================
+// ENVIAR EMAIL DE DESCARGA GRATIS
+// ============================================
+async function enviarEmailDescargaGratis(email, user) {
+  try {
+    const { enviarEmailDescargaGratis: sendEmail } = await import('./email-service.js');
+    
+    const userName = user 
+      ? (user.user_metadata?.full_name || 
+         `${user.user_metadata?.first_name || ''} ${user.user_metadata?.last_name || ''}`.trim() || 
+         email.split('@')[0])
+      : email.split('@')[0];
+    
+    const emailData = {
+      userEmail: email,
+      userName: userName,
+      productName: currentProduct.name,
+      producerName: document.getElementById('producerName').textContent,
+      downloadUrl: currentProduct.download_url_mp3
+    };
+
+    console.log('📧 Enviando email de descarga gratis...', emailData);
+    
+    const result = await sendEmail(emailData);
+    
+    if (result.success) {
+      console.log('✅ Email enviado correctamente');
+    } else {
+      console.warn('⚠️ Email no enviado:', result.error);
+    }
+
+  } catch (error) {
+    console.warn('⚠️ Error al enviar email (no crítico):', error);
+  }
+}
+
+// ============================================
+// INICIAR DESCARGA
+// ============================================
+function iniciarDescarga(url) {
+  window.open(url, '_blank');
+  window.toast.success('¡Descarga iniciada! Revisa tu email.');
+}
 
 // ============================================
 // COMPRAR AHORA
