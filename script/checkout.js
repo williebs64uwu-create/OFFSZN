@@ -4,6 +4,13 @@ const supabaseUrl = "https://qtjpvztpgfymjhhpoouq.supabase.co";
 const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0anB2enRwZ2Z5bWpoaHBvb3VxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3ODA5MTUsImV4cCI6MjA3NjM1NjkxNX0.YsItTFk3hSQaVuy707-z7Z-j34mXa03O0wWGAlAzjrw";
 const supabase = createClient(supabaseUrl, supabaseKey);
 
+// 📧 CONFIGURACIÓN EMAILJS
+const EMAILJS_CONFIG = {
+  publicKey: 'If_WAVcuXiGSPp2SB',
+  serviceId: 'service_w50l62y',
+  templateCompra: 'template_dsmiidx'
+};
+
 // ============================================
 // CARGAR CARRITO EN PÁGINA
 // ============================================
@@ -109,6 +116,7 @@ async function cargarCarrito() {
     </div>
   `;
 
+  cargarEmailJS();
   inicializarPayPal(cart, total);
 }
 
@@ -139,6 +147,72 @@ function renderCartItems(cart) {
       </div>
     </div>
   `).join('');
+}
+
+// ============================================
+// 📧 CARGAR SDK DE EMAILJS
+// ============================================
+function cargarEmailJS() {
+  if (window.emailjs) {
+    console.log('📧 EmailJS ya cargado');
+    return;
+  }
+
+  const script = document.createElement('script');
+  script.src = 'https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js';
+  script.onload = () => {
+    emailjs.init(EMAILJS_CONFIG.publicKey);
+    console.log('✅ EmailJS inicializado');
+  };
+  script.onerror = () => {
+    console.error('❌ Error cargando EmailJS');
+  };
+  document.head.appendChild(script);
+}
+
+// ============================================
+// 📧 ENVIAR EMAIL DE COMPRA
+// ============================================
+async function enviarEmailCompra(emailData) {
+  try {
+    console.log('📧 Enviando email de compra...', emailData);
+
+    // Formatear productos para el template
+    const productosHTML = emailData.products.map((p, i) => 
+      `${i + 1}. ${p.name} - ${p.license} ($${p.price})`
+    ).join('\n');
+
+    const templateParams = {
+      to_email: emailData.buyerEmail,
+      buyer_name: emailData.buyerName,
+      order_id: emailData.orderId,
+      purchase_date: new Date().toLocaleDateString('es-ES', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      }),
+      products_list: productosHTML,
+      total_amount: `$${emailData.total.toFixed(2)}`,
+      products_count: emailData.products.length
+    };
+
+    console.log('📧 Parámetros del template:', templateParams);
+
+    const response = await emailjs.send(
+      EMAILJS_CONFIG.serviceId,
+      EMAILJS_CONFIG.templateCompra,
+      templateParams
+    );
+
+    console.log('✅ Email enviado correctamente:', response);
+    return { success: true, data: response };
+
+  } catch (error) {
+    console.error('❌ Error enviando email:', error);
+    return { success: false, error: error.message };
+  }
 }
 
 function inicializarPayPal(cart, total) {
@@ -186,25 +260,30 @@ function renderPayPalButton(cart, total) {
     },
 
     onError: function(err) {
-      console.error('Error de PayPal:', err);
-      window.toast.error('Error al procesar el pago. Intenta de nuevo.');
+      console.error('❌ Error de PayPal:', err);
+      window.toast?.error('Error al procesar el pago. Intenta de nuevo.');
     }
   }).render('#paypal-button-container');
 }
 
 // ============================================
-// PROCESAR COMPRA EXITOSA
+// 🔥 PROCESAR COMPRA EXITOSA + EMAIL
 // ============================================
 async function procesarCompra(order, cart) {
   try {
+    console.log('💰 Procesando compra...', order.id);
+    
     const { data: { user } } = await supabase.auth.getUser();
     
     if (!user) {
-      window.toast.error('Debes iniciar sesión para completar la compra');
+      window.toast?.error('Debes iniciar sesión para completar la compra');
       window.location.href = '/pages/login?redirect=carrito';
       return;
     }
 
+    console.log('👤 Usuario:', user.email);
+
+    // 1️⃣ Guardar compras en DB
     const purchases = cart.map(item => ({
       user_id: user.id,
       product_id: item.productId,
@@ -214,52 +293,69 @@ async function procesarCompra(order, cart) {
       status: 'completed'
     }));
 
-    const { error } = await supabase
+    console.log('💾 Guardando en DB...', purchases.length, 'productos');
+
+    const { error: dbError } = await supabase
       .from('purchases')
       .insert(purchases);
 
-    if (error) throw error;
+    if (dbError) {
+      console.error('❌ Error DB:', dbError);
+      throw dbError;
+    }
 
-    // ============================================
-    // 📧 ENVIAR EMAIL DE CONFIRMACIÓN
-    // ============================================
+    console.log('✅ Compras guardadas en DB');
+
+    // 2️⃣ ENVIAR EMAIL DE COMPRA CON EMAILJS
     try {
-      const { enviarEmailCompra } = await import('./email-service.js');
-      
+      const buyerName = user.user_metadata?.full_name || 
+                       `${user.user_metadata?.first_name || ''} ${user.user_metadata?.last_name || ''}`.trim() || 
+                       user.email.split('@')[0];
+
       const emailData = {
         buyerEmail: user.email,
-        buyerName: user.user_metadata?.full_name || 
-                   `${user.user_metadata?.first_name || ''} ${user.user_metadata?.last_name || ''}`.trim() || 
-                   user.email.split('@')[0],
+        buyerName: buyerName,
         orderId: order.id,
         total: calculateTotal(cart),
         products: cart.map(item => ({
           name: item.productName,
           license: item.licenseName,
-          price: item.price.toFixed(2)
+          price: item.price.toFixed(2),
+          producer: item.producerName || 'Willie Inspired'
         }))
       };
 
-      console.log('📧 Enviando email de confirmación...', emailData);
-      
-      enviarEmailCompra(emailData).then(result => {
-        if (result.success) {
-          console.log('✅ Email enviado correctamente');
-        } else {
-          console.warn('⚠️ Email no enviado:', result.error);
-        }
+      console.log('📧 Datos para email:', {
+        destinatario: emailData.buyerEmail,
+        nombre: emailData.buyerName,
+        orden: emailData.orderId,
+        productos: emailData.products.length,
+        total: emailData.total
       });
+
+      const emailResult = await enviarEmailCompra(emailData);
+
+      if (emailResult.success) {
+        console.log('✅ Email de compra enviado correctamente');
+      } else {
+        console.warn('⚠️ Email no enviado:', emailResult.error);
+      }
 
     } catch (emailError) {
       console.warn('⚠️ Error al enviar email (no crítico):', emailError);
+      // NO bloqueamos la compra si falla el email
     }
 
+    // 3️⃣ Limpiar carrito y redirigir
+    console.log('🧹 Limpiando carrito...');
     localStorage.removeItem('offszn_cart');
+    
+    console.log('🎉 ¡Compra completada! Redirigiendo...');
     window.location.href = `/pages/purchase-success.html?order=${order.id}`;
 
   } catch (error) {
-    console.error('Error guardando compra:', error);
-    window.toast.error('Error al guardar la compra. Contacta a soporte.');
+    console.error('❌ Error guardando compra:', error);
+    window.toast?.error('Error al guardar la compra. Contacta a soporte.');
   }
 }
 
