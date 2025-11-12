@@ -257,6 +257,10 @@
   <script type="module">
     import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
     import { generarLicencia } from '../script/generate-license.js';
+    import toast from '../script/toast.js';
+
+    // ✅ Hacer toast global
+    window.toast = toast;
 
     const supabaseUrl = "https://qtjpvztpgfymjhhpoouq.supabase.co";
     const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0anB2enRwZ2Z5bWpoaHBvb3VxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3ODA5MTUsImV4cCI6MjA3NjM1NjkxNX0.YsItTFk3hSQaVuy707-z7Z-j34mXa03O0wWGAlAzjrw";
@@ -363,6 +367,7 @@
 
       } catch (error) {
         console.error('Error cargando compras:', error);
+        toast.error('Error al cargar tus compras');
         document.getElementById('purchasesGrid').innerHTML = `
           <p style="text-align: center; color: #ff4444; padding: 2rem;">
             Error al cargar tus compras. Intenta de nuevo.
@@ -392,13 +397,16 @@
     }
 
     window.verLicencia = async function(purchaseId) {
-      console.log('🔄 Generando licencia para:', purchaseId);
+      console.log('📄 Generando licencia para:', purchaseId);
+      
+      const loading = toast.loading('Generando licencia...');
       
       try {
         const { data: { user }, error: userError } = await supabase.auth.getUser();
         
         if (userError || !user) {
-          alert('❌ Debes iniciar sesión');
+          loading.remove();
+          toast.error('Debes iniciar sesión');
           window.location.href = '/pages/login';
           return;
         }
@@ -416,8 +424,10 @@
           .single();
 
         if (purchaseError) throw purchaseError;
+        
         if (!purchase) {
-          alert('❌ Compra no encontrada');
+          loading.remove();
+          toast.error('Compra no encontrada');
           return;
         }
 
@@ -438,35 +448,15 @@
           orderId: purchase.paypal_transaction_id
         };
 
-        const buttons = document.querySelectorAll('.btn-license');
-        let targetButton = null;
+        await generarLicencia(purchaseData);
         
-        buttons.forEach(btn => {
-          if (btn.getAttribute('onclick').includes(purchaseId)) {
-            targetButton = btn;
-          }
-        });
-
-        if (targetButton) {
-          const originalHTML = targetButton.innerHTML;
-          targetButton.innerHTML = '<i class="bi bi-hourglass-split"></i> Generando...';
-          targetButton.disabled = true;
-
-          try {
-            await generarLicencia(purchaseData);
-            alert('✅ ¡Licencia descargada!\n\nRevisa tu carpeta de Descargas.');
-          } finally {
-            targetButton.innerHTML = originalHTML;
-            targetButton.disabled = false;
-          }
-        } else {
-          await generarLicencia(purchaseData);
-          alert('✅ ¡Licencia descargada!');
-        }
+        loading.remove();
+        toast.success('¡Licencia descargada! Revisa tu carpeta de Descargas.');
 
       } catch (error) {
+        loading.remove();
         console.error('❌ Error:', error);
-        alert('❌ Error al generar la licencia.\n\n' + error.message);
+        toast.error('Error al generar la licencia: ' + error.message);
       }
     };
 
@@ -475,4 +465,3 @@
 
 </body>
 </html>
-
