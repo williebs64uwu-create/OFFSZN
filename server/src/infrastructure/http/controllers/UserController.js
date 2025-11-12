@@ -131,3 +131,65 @@ export const getMyProducts = async (req, res) => {
          res.status(500).json({ error: err.message || 'Error al obtener mis productos' });
      }
 };
+
+export const updateMyProfile = async (req, res) => {
+    try {
+        const userId = req.user.userId;
+        
+        // Obtenemos los datos del formulario de "Información Personal"
+        const { 
+            firstName, 
+            lastName, 
+            nickname, 
+            bio,
+            socials // También podemos manejar las redes sociales aquí
+        } = req.body;
+
+        // Construimos el objeto de actualización
+        const updateData = {};
+        
+        // Solo añadimos los campos que el usuario envió
+        if (firstName !== undefined) updateData.first_name = firstName;
+        if (lastName !== undefined) updateData.last_name = lastName;
+        if (nickname !== undefined) updateData.nickname = nickname;
+        if (bio !== undefined) updateData.bio = bio; // Asumiendo que tienes una columna 'bio'
+        if (socials !== undefined) updateData.socials = socials; // Asumiendo columna 'socials' (jsonb)
+
+        // Validar que el nickname no esté en uso por OTRO usuario
+        if (nickname) {
+             const { data: existingUser, error: checkError } = await supabase
+                .from('users')
+                .select('id')
+                .eq('nickname', nickname)
+                .neq('id', userId) // .neq() = Not Equal (que no sea yo mismo)
+                .maybeSingle();
+            
+            if (checkError) throw checkError;
+            if (existingUser) {
+                return res.status(409).json({ error: 'Ese nickname ya está en uso. Elige otro.' });
+            }
+        }
+
+        const { data: updatedUser, error: updateError } = await supabase
+            .from('users')
+            .update(updateData)
+            .eq('id', userId)
+            .select(); // Devuelve el perfil actualizado
+
+        if (updateError) throw updateError;
+        if (!updatedUser || updatedUser.length === 0) {
+            return res.status(404).json({ error: 'Usuario no encontrado para actualizar.' });
+        }
+        
+        // ¡Importante! Actualizamos el caché del usuario en el frontend
+        // Enviando los nuevos datos.
+        res.status(200).json({ 
+            message: 'Perfil actualizado exitosamente.', 
+            user: updatedUser[0] 
+        });
+
+    } catch (err) {
+        console.error("Error en updateMyProfile:", err.message);
+        res.status(500).json({ error: err.message || 'Error al actualizar el perfil.' });
+    }
+};

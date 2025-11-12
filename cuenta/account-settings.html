@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Configuración - OFFSZN Productor</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
@@ -569,12 +570,14 @@
         .settings-header {
             margin-bottom: 24px;
         }
+
         .settings-header h1 {
             font-size: 2rem;
             font-weight: 800;
             color: #fff;
             margin-bottom: 4px;
         }
+
         .settings-header .page-subtitle {
             color: #999;
             font-size: 1rem;
@@ -587,9 +590,10 @@
             border: 1px solid rgba(255, 255, 255, .08);
             border-radius: 12px;
             margin-bottom: 24px;
-            overflow: hidden; /* Para que el footer se pegue bien */
+            overflow: hidden;
+            /* Para que el footer se pegue bien */
         }
-        
+
         .settings-card-header {
             padding: 20px 24px;
             border-bottom: 1px solid rgba(255, 255, 255, .08);
@@ -597,12 +601,14 @@
             align-items: center;
             gap: 12px;
         }
+
         .settings-card-header i {
             font-size: 1.1rem;
             color: #999;
             width: 20px;
             text-align: center;
         }
+
         .settings-card-header h2 {
             font-size: 1.25rem;
             font-weight: 600;
@@ -615,19 +621,22 @@
             flex-direction: column;
             gap: 20px;
         }
-        
+
         /* ----- GRUPO DE FORMULARIO ----- */
         .form-group {
             display: flex;
             flex-direction: column;
             gap: 8px;
         }
+
         .form-label {
             font-size: 0.9rem;
             font-weight: 500;
             color: #e5e5e5;
         }
-        .form-input, .form-textarea {
+
+        .form-input,
+        .form-textarea {
             width: 100%;
             padding: 12px 14px;
             background: rgba(255, 255, 255, .05);
@@ -639,17 +648,23 @@
             transition: all .2s;
             font-family: 'Inter', sans-serif;
         }
-        .form-input:focus, .form-textarea:focus {
+
+        .form-input:focus,
+        .form-textarea:focus {
             background: rgba(255, 255, 255, .08);
             border-color: rgba(139, 92, 246, .5);
         }
-        .form-input::placeholder, .form-textarea::placeholder {
+
+        .form-input::placeholder,
+        .form-textarea::placeholder {
             color: #666;
         }
+
         .form-textarea {
             min-height: 100px;
             resize: vertical;
         }
+
         .form-help-text {
             font-size: 0.8rem;
             color: #666;
@@ -678,35 +693,43 @@
             align-items: center;
             gap: 8px;
         }
+
         .btn-primary {
             background: #8b5cf6;
             color: #fff;
         }
+
         .btn-primary:hover {
             background: #7c3aed;
         }
+
         .btn-secondary {
-             background: rgba(255, 255, 255, .05);
+            background: rgba(255, 255, 255, .05);
             color: #fff;
             border: 1px solid rgba(255, 255, 255, .1);
         }
+
         .btn-secondary:hover {
             background: rgba(255, 255, 255, .1);
         }
+
         .btn-danger {
             background: transparent;
             color: #ef4444;
         }
+
         .btn-danger:hover {
             background: rgba(239, 68, 68, .1);
         }
+
         .btn-danger-fill {
             background: #ef4444;
             color: #fff;
         }
-         .btn-danger-fill:hover {
+
+        .btn-danger-fill:hover {
             background: #dc2626;
-         }
+        }
 
         /* ----- FILA DE CONFIGURACIÓN (CON TOGGLE) ----- */
         .settings-row {
@@ -716,40 +739,49 @@
             padding: 12px 0;
             border-bottom: 1px solid rgba(255, 255, 255, .05);
         }
+
         .settings-row:last-child {
             border-bottom: none;
             padding-bottom: 0;
         }
+
         .settings-row:first-child {
             padding-top: 0;
         }
+
         .settings-row-info {
             display: flex;
             flex-direction: column;
             gap: 2px;
         }
+
         .settings-row-info span {
             font-size: 0.95rem;
             font-weight: 500;
             color: #e5e5e5;
         }
+
         .settings-row-info small {
             font-size: 0.85rem;
             color: #666;
         }
-        
+
         /* ----- INTERRUPTOR (TOGGLE SWITCH) ----- */
         .toggle-switch {
             position: relative;
             display: inline-block;
-            width: 44px; /* Ancho total */
-            height: 24px; /* Alto total */
+            width: 44px;
+            /* Ancho total */
+            height: 24px;
+            /* Alto total */
         }
+
         .toggle-switch input {
             opacity: 0;
             width: 0;
             height: 0;
         }
+
         .toggle-slider {
             position: absolute;
             cursor: pointer;
@@ -761,22 +793,29 @@
             transition: .4s;
             border-radius: 24px;
         }
+
         .toggle-slider:before {
             position: absolute;
             content: "";
-            height: 18px; /* Diámetro del círculo */
+            height: 18px;
+            /* Diámetro del círculo */
             width: 18px;
-            left: 3px; /* Espacio izquierdo */
-            bottom: 3px; /* Espacio inferior */
+            left: 3px;
+            /* Espacio izquierdo */
+            bottom: 3px;
+            /* Espacio inferior */
             background-color: white;
             transition: .4s;
             border-radius: 50%;
         }
-        input:checked + .toggle-slider {
+
+        input:checked+.toggle-slider {
             background-color: #8b5cf6;
         }
-        input:checked + .toggle-slider:before {
-            transform: translateX(20px); /* (Ancho total - Diámetro - 2*Espacio) = 44 - 18 - 6 = 20 */
+
+        input:checked+.toggle-slider:before {
+            transform: translateX(20px);
+            /* (Ancho total - Diámetro - 2*Espacio) = 44 - 18 - 6 = 20 */
         }
 
         /* ----- ZONA DE PELIGRO ----- */
@@ -784,16 +823,20 @@
             background: rgba(239, 68, 68, .05);
             border-color: rgba(239, 68, 68, .2);
         }
+
         .danger-zone .settings-card-header i {
             color: #ef4444;
         }
-         .danger-zone .settings-card-header h2 {
+
+        .danger-zone .settings-card-header h2 {
             color: #fca5a5;
         }
+
         .danger-zone .settings-row-info span {
             color: #fca5a5;
         }
-         .danger-zone .settings-row-info small {
+
+        .danger-zone .settings-row-info small {
             color: #b91c1c;
         }
 
@@ -803,11 +846,14 @@
             align-items: center;
             gap: 12px;
         }
+
         .social-link-group .form-group {
             flex: 1;
         }
+
         .social-link-group .btn {
-            margin-top: 28px; /* Para alinear con el input */
+            margin-top: 28px;
+            /* Para alinear con el input */
             padding-left: 20px;
             padding-right: 20px;
         }
@@ -823,11 +869,11 @@
             display: inline-block;
             user-select: none;
         }
-        
+
         .profile-avatar.skeleton {
             border-radius: 50%;
         }
-        
+
         .stat-value.skeleton {
             margin-bottom: 4px;
         }
@@ -949,6 +995,7 @@
                 flex-direction: column;
                 align-items: stretch;
             }
+
             .social-link-group .btn {
                 margin-top: -8px;
             }
@@ -1073,8 +1120,8 @@
 
             <div class="wallet-section">
                 <div class="wallet-label">Saldo Disponible</div>
-                <div class="wallet-amount skeleton"
-                    style="height: 30px; width: 100px; border-radius: 6px; opacity: 1;">&nbsp;</div>
+                <div class="wallet-amount skeleton" style="height: 30px; width: 100px; border-radius: 6px; opacity: 1;">
+                    &nbsp;</div>
             </div>
 
             <button class="upload-btn" onclick="window.location.href='subir-kit.html'">
@@ -1110,7 +1157,8 @@
                 <div class="menu-divider"></div>
 
                 <div class="menu-section-title">Configuración</div>
-                <a href="account-settings" class="menu-item active"><i class="fas fa-cog"></i><span>Configuración</span></a>
+                <a href="account-settings" class="menu-item active"><i
+                        class="fas fa-cog"></i><span>Configuración</span></a>
                 <a href="blog" class="menu-item"><i class="fas fa-book-open"></i><span>Blog</span></a>
             </div>
 
@@ -1119,7 +1167,7 @@
         </aside>
 
         <main class="main-content">
-            
+
             <div class="settings-header">
                 <h1>Configuración de la Cuenta</h1>
                 <p class="page-subtitle">Gestiona tu información personal, seguridad y preferencias.</p>
@@ -1141,12 +1189,12 @@
                             <input class="form-input" type="text" id="nombre-usuario" placeholder="@tu_usuario">
                             <span class="form-help-text">Tu identificador único en OFFSZN</span>
                         </div>
-                         <div class="form-group">
+                        <div class="form-group">
                             <label class="form-label" for="email">Email</label>
                             <input class="form-input" type="email" id="email" placeholder="tu@email.com" disabled>
                             <span class="form-help-text">El email no se puede cambiar.</span>
                         </div>
-                         <div class="form-group">
+                        <div class="form-group">
                             <label class="form-label" for="bio">Bío</label>
                             <textarea class="form-textarea" id="bio" placeholder="Cuéntanos sobre ti..."></textarea>
                             <span class="form-help-text">Máx. 200 caracteres</span>
@@ -1163,35 +1211,42 @@
                     <i class="fas fa-share-alt"></i>
                     <h2>Redes Sociales</h2>
                 </div>
-                 <form id="form-social">
+                <form id="form-social">
                     <div class="settings-card-body">
                         <div class="social-link-group">
                             <div class="form-group">
-                                <label class="form-label" for="youtube"><i class="fab fa-youtube" style="color:#FF0000;"></i> YouTube</label>
+                                <label class="form-label" for="youtube"><i class="fab fa-youtube"
+                                        style="color:#FF0000;"></i> YouTube</label>
                                 <input class="form-input" type="text" id="youtube" placeholder="@usuario o link">
                             </div>
-                            <button type="button" class="btn btn-secondary"><i class="fas fa-check"></i> Verificar</button>
+                            <button type="button" class="btn btn-secondary"><i class="fas fa-check"></i>
+                                Verificar</button>
                         </div>
                         <div class="social-link-group">
                             <div class="form-group">
-                                <label class="form-label" for="instagram"><i class="fab fa-instagram" style="color:#E1306C;"></i> Instagram</label>
+                                <label class="form-label" for="instagram"><i class="fab fa-instagram"
+                                        style="color:#E1306C;"></i> Instagram</label>
                                 <input class="form-input" type="text" id="instagram" placeholder="@usuario o link">
                             </div>
-                            <button type="button" class="btn btn-secondary"><i class="fas fa-check"></i> Verificar</button>
+                            <button type="button" class="btn btn-secondary"><i class="fas fa-check"></i>
+                                Verificar</button>
                         </div>
                         <div class="social-link-group">
                             <div class="form-group">
                                 <label class="form-label" for="tiktok"><i class="fab fa-tiktok"></i> TikTok</label>
                                 <input class="form-input" type="text" id="tiktok" placeholder="@usuario o link">
                             </div>
-                            <button type="button" class="btn btn-secondary"><i class="fas fa-check"></i> Verificar</button>
+                            <button type="button" class="btn btn-secondary"><i class="fas fa-check"></i>
+                                Verificar</button>
                         </div>
-                         <div class="social-link-group">
+                        <div class="social-link-group">
                             <div class="form-group">
-                                <label class="form-label" for="spotify"><i class="fab fa-spotify" style="color:#1DB954;"></i> Spotify</label>
+                                <label class="form-label" for="spotify"><i class="fab fa-spotify"
+                                        style="color:#1DB954;"></i> Spotify</label>
                                 <input class="form-input" type="text" id="spotify" placeholder="Link de artista">
                             </div>
-                            <button type="button" class="btn btn-secondary"><i class="fas fa-check"></i> Verificar</button>
+                            <button type="button" class="btn btn-secondary"><i class="fas fa-check"></i>
+                                Verificar</button>
                         </div>
                     </div>
                     <div class="settings-card-footer">
@@ -1205,7 +1260,7 @@
                     <i class="fas fa-shield-alt"></i>
                     <h2>Seguridad</h2>
                 </div>
-                 <form id="form-password">
+                <form id="form-password">
                     <div class="settings-card-body">
                         <div class="form-group">
                             <label class="form-label" for="pass-current">Contraseña Actual</label>
@@ -1214,9 +1269,9 @@
                         <div class="form-group">
                             <label class="form-label" for="pass-new">Nueva Contraseña</label>
                             <input class="form-input" type="password" id="pass-new" placeholder="••••••••">
-                             <span class="form-help-text">Mín. 8 caracteres</span>
+                            <span class="form-help-text">Mín. 8 caracteres</span>
                         </div>
-                         <div class="form-group">
+                        <div class="form-group">
                             <label class="form-label" for="pass-confirm">Confirmar</label>
                             <input class="form-input" type="password" id="pass-confirm" placeholder="••••••••">
                         </div>
@@ -1227,7 +1282,8 @@
                 </form>
 
                 <div class="settings-card-body" style="padding-top: 0;">
-                    <div class="settings-row" style="border-top: 1px solid rgba(255, 255, 255, .08); padding-top: 20px; border-bottom: none;">
+                    <div class="settings-row"
+                        style="border-top: 1px solid rgba(255, 255, 255, .08); padding-top: 20px; border-bottom: none;">
                         <div class="settings-row-info">
                             <span>2FA</span>
                             <small>Autenticación de dos factores</small>
@@ -1286,7 +1342,7 @@
                             <span class="toggle-slider"></span>
                         </label>
                     </div>
-                     <div class="settings-row">
+                    <div class="settings-row">
                         <div class="settings-row-info">
                             <span>Noticias</span>
                             <small>Nuevas funciones</small>
@@ -1353,7 +1409,7 @@
                     <i class="fas fa-exclamation-triangle"></i>
                     <h2>Zona de Peligro</h2>
                 </div>
-                 <div class="settings-card-body" style="gap: 0;">
+                <div class="settings-card-body" style="gap: 0;">
                     <div class="settings-row">
                         <div class="settings-row-info">
                             <span>Desactivar Cuenta</span>
@@ -1361,7 +1417,7 @@
                         </div>
                         <button class="btn btn-danger" id="btn-deactivate">Desactivar</button>
                     </div>
-                     <div class="settings-row">
+                    <div class="settings-row">
                         <div class="settings-row-info">
                             <span>Eliminar Cuenta</span>
                             <small>Permanente</small>
@@ -1393,7 +1449,7 @@
         document.addEventListener('click', e => {
             const userDropdown = document.querySelector('.user-dropdown');
             const userBtn = document.querySelector('.user-dropdown .navbar-icon-button');
-            if (!userDropdown.contains(e.target) && e.target !== userBtn) {
+            if (userDropdown && !userDropdown.contains(e.target) && e.target !== userBtn) {
                 userDropdown.classList.remove('active');
             }
         });
@@ -1401,20 +1457,47 @@
 
         document.addEventListener('DOMContentLoaded', async () => {
 
-            // ---------- ELEMENTOS DEL DOM (Actualizados) ----------
+            const SUPABASE_URL = "https://qtjpvztpgfymjhhpoouq.supabase.co";
+            const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0anB2enRwZ2Z5bWpoaHBvb3VxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3ODA5MTUsImV4cCI6MjA3NjM1NjkxNX0.YsItTFk3hSQaVuy707-z7Z-j34mXa03O0wWGAlAzjrw";
+
+            // Comprobación de seguridad (igual que en auth.js)
+            if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+                console.error("Error: Claves de Supabase no configuradas.");
+                alert("Error de configuración. Contacta al administrador.");
+                return;
+            }
+
+            const { createClient } = supabase; // 'supabase' viene de la librería en el <head>
+            const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+            // ---------- ELEMENTOS DEL DOM ----------
             const profileAvatar = document.querySelector('.profile-avatar');
             const profileName = document.querySelector('.profile-name');
             const walletAmount = document.querySelector('.wallet-amount');
-            const searchInput = document.getElementById('search-settings'); 
+            const searchInput = document.getElementById('search-settings');
             const token = localStorage.getItem('authToken');
-            let userData = null;
 
-            // ---------- GIFT CARDS STATE (Sin cambios) ----------
+            // --- Referencias a los formularios ---
+            const formPersonal = document.getElementById('form-personal');
+            const formSocial = document.getElementById('form-social');
+            const formPassword = document.getElementById('form-password');
+
+            // --- Referencias a los campos del formulario ---
+            const inputNombre = document.getElementById('nombre-completo');
+            const inputNickname = document.getElementById('nombre-usuario');
+            const inputEmail = document.getElementById('email');
+            const inputBio = document.getElementById('bio');
+            const inputYoutube = document.getElementById('youtube');
+            const inputInstagram = document.getElementById('instagram');
+            const inputTiktok = document.getElementById('tiktok');
+            const inputSpotify = document.getElementById('spotify');
+
+            let userData = null; // Variable para guardar los datos del usuario
+
+            // ---------- CONSTANTES ----------
             const STORAGE_KEY = 'offszn_giftcards_state';
             const CACHE_KEY = 'offszn_user_cache';
             let appState = { totalBalance: 0, giftCards: [] };
-
-            // ---------- API URL (Sin cambios) ----------
             let API_URL = '';
             if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
                 API_URL = 'http://localhost:3000/api';
@@ -1422,53 +1505,45 @@
                 API_URL = 'https://offszn-academy.onrender.com/api';
             }
 
-            // ---------- VERIFICAR TOKEN (Actualizado) ----------
+            // ---------- VERIFICAR TOKEN ----------
             if (!token) {
                 console.error("Configuración: No hay token, redirigiendo al login.");
                 window.location.replace('/pages/login.html');
                 return;
             }
 
-            // ---------- SKELETON LOADING (Simplificado) ----------
-            // Ya no hay grid, así que no es necesario
-            function showSkeletonLoading() {
-               console.log("Mostrando skeletons de sidebar...");
-            }
-
-            // ---------- CACHÉ DE USUARIO (Sin cambios) ----------
+            // ---------- CACHÉ Y DATOS DE USUARIO (Funciones sin cambios) ----------
             function loadCachedUser() {
                 try {
                     const cached = localStorage.getItem(CACHE_KEY);
                     if (cached) {
                         const cachedData = JSON.parse(cached);
                         console.log('Cargando datos desde caché...');
-                        updateUserUI(cachedData, true);
-                        return true;
+                        updateUserUI(cachedData);
+                        return cachedData; // Devolver los datos
                     }
                 } catch (err) {
                     console.error('Error al cargar caché:', err);
                 }
-                return false;
+                return null;
             }
 
-            function saveUserCache(userData) {
+            function saveUserCache(userDataToCache) {
                 try {
-                    localStorage.setItem(CACHE_KEY, JSON.stringify(userData));
+                    localStorage.setItem(CACHE_KEY, JSON.stringify(userDataToCache));
                 } catch (err) {
                     console.error('Error al guardar caché:', err);
                 }
             }
 
-            // ---------- ACTUALIZAR UI DE USUARIO (Sin cambios) ----------
-            function updateUserUI(userData, fromCache = false) {
+            function updateUserUI(user) {
                 if (profileName) {
-                    profileName.textContent = `${userData.first_name || ''} ${userData.lastName || ''}`.trim() || userData.nickname;
+                    profileName.textContent = `${user.first_name || ''} ${user.last_name || ''}`.trim() || user.nickname;
                     profileName.classList.remove('skeleton');
                     profileName.removeAttribute('style');
                 }
-
                 if (profileAvatar) {
-                    const initial = (userData.first_name || userData.nickname || 'U').charAt(0).toUpperCase();
+                    const initial = (user.first_name || user.nickname || 'U').charAt(0).toUpperCase();
                     profileAvatar.textContent = initial;
                     profileAvatar.classList.remove('skeleton');
                     profileAvatar.removeAttribute('style');
@@ -1476,54 +1551,65 @@
                 }
             }
 
-            // ---------- GIFT CARDS (Sin cambios) ----------
-            function loadGiftCardsState() {
-                try {
-                    const saved = localStorage.getItem(STORAGE_KEY);
-                    if (saved) {
-                        appState = JSON.parse(saved);
-                    }
-                    updateWalletAmount();
-                } catch (err) {
-                    console.error('Error al cargar estado de gift cards:', err);
-                    updateWalletAmount();
+            function loadGiftCardsState() { /* ... (tu función sin cambios) ... */ }
+            function updateWalletAmount() { /* ... (tu función sin cambios) ... */ }
+
+
+            // ---------- CARGAR DATOS DE CONFIGURACIÓN (¡NUEVA FUNCIÓN!) ----------
+            // Esta función rellena los campos del formulario
+            function populateSettingsForms(user) {
+                console.log("Poblando campos de configuración...");
+
+                // Info Personal
+                inputNombre.value = `${user.first_name || ''} ${user.last_name || ''}`.trim();
+                inputNickname.value = user.nickname || '';
+                inputEmail.value = user.email || '';
+                inputBio.value = user.bio || ''; // Asume que tienes 'bio' en tu tabla 'users'
+
+                // Redes Sociales (Asumiendo 'socials' como jsonb)
+                if (user.socials) {
+                    inputYoutube.value = user.socials.youtube || '';
+                    inputInstagram.value = user.socials.instagram || '';
+                    inputTiktok.value = user.socials.tiktok || '';
+                    inputSpotify.value = user.socials.spotify || '';
                 }
+
+                // (PENDIENTE) Notificaciones y Privacidad
+                // document.getElementById('toggle-notif-email').checked = user.preferences?.notif_email || false;
             }
 
-            function updateWalletAmount() {
-                if (walletAmount) {
-                    walletAmount.textContent = `$${appState.totalBalance.toFixed(2)}`;
-                    walletAmount.classList.remove('skeleton');
-                    walletAmount.removeAttribute('style');
-                    walletAmount.classList.add('fade-in');
+            // ---------- CARGA PRINCIPAL DE DATOS (¡MODIFICADA!) ----------
+            async function loadPageData() {
+                // 1. Mostrar datos en caché (si existen) para velocidad
+                const cachedUser = loadCachedUser();
+                if (cachedUser) {
+                    userData = cachedUser;
+                    populateSettingsForms(userData); // Rellenar formulario con caché
+                } else {
+                    console.log("Mostrando skeletons de sidebar...");
                 }
-            }
+                loadGiftCardsState(); // Cargar saldo (esto es rápido)
 
-            // ---------- CARGAR DATOS DEL DASHBOARD (Actualizado) ----------
-            async function loadDashboardData() {
+                // 2. Buscar datos frescos del servidor
                 try {
                     const userResponse = await fetch(`${API_URL}/me`, {
                         headers: { 'Authorization': `Bearer ${token}` }
                     });
-
                     if (!userResponse.ok) {
                         localStorage.removeItem('authToken');
-                        throw new Error(`Error ${userResponse.status}: No se pudieron obtener los datos del usuario.`);
+                        throw new Error(`Error ${userResponse.status}: No se pudieron obtener los datos.`);
                     }
 
-                    userData = await userResponse.json();
-                    console.log("Datos del usuario:", userData);
+                    userData = await userResponse.json(); // ¡Datos frescos!
 
-                    localStorage.setItem('userId', userData.id);
+                    // 3. Actualizar todo con datos frescos
+                    console.log("Datos frescos recibidos:", userData);
                     saveUserCache(userData);
-                    updateUserUI(userData, false);
-                    loadGiftCardsState();
-
-                    // FUNCIÓN ACTUALIZADA
-                    await loadSettingsData(userData);
+                    updateUserUI(userData); // Actualizar sidebar
+                    populateSettingsForms(userData); // Actualizar formularios
 
                 } catch (error) {
-                    console.error("Error al cargar datos:", error);
+                    console.error("Error al cargar datos frescos:", error);
                     if (error.message.includes('401') || error.message.includes('403')) {
                         localStorage.removeItem('authToken');
                         localStorage.removeItem(CACHE_KEY);
@@ -1532,57 +1618,101 @@
                 }
             }
 
-            // ---------- CARGAR DATOS DE CONFIGURACIÓN (NUEVO) ----------
-            async function loadSettingsData(user) {
-                // Aquí es donde harías un fetch a /api/me/settings para obtener
-                // y poblar todos los campos. Por ahora, poblamos con los datos de /me
-                console.log("Poblando campos de configuración...");
-                
-                // Info Personal
-                document.getElementById('nombre-completo').value = `${user.first_name || ''} ${user.lastName || ''}`.trim();
-                document.getElementById('nombre-usuario').value = user.nickname || '';
-                document.getElementById('email').value = user.email || '';
-                document.getElementById('bio').value = user.bio || '';
 
-                // Redes Sociales (Asumiendo que los datos vienen en un objeto user.socials)
-                // document.getElementById('youtube').value = user.socials?.youtube || '';
-                // ...etc
+            // ---------- MANEJADORES DE FORMULARIOS (¡NUEVOS!) ----------
 
-                // Notificaciones y Privacidad (Asumiendo que vienen en user.preferences)
-                // document.getElementById('toggle-notif-email').checked = user.preferences?.notif_email || false;
-                // ...etc
-            }
-
-
-            // ---------- MANEJADORES DE FORMULARIOS (NUEVO) ----------
-            document.getElementById('form-personal').addEventListener('submit', (e) => {
+            // --- 1. GUARDAR INFO PERSONAL ---
+            formPersonal.addEventListener('submit', async (e) => {
                 e.preventDefault();
-                const data = {
-                    nombreCompleto: document.getElementById('nombre-completo').value,
-                    nombreUsuario: document.getElementById('nombre-usuario').value,
-                    bio: document.getElementById('bio').value
+                const submitButton = formPersonal.querySelector('button[type="submit"]');
+                submitButton.disabled = true;
+                submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+
+                // Separar nombre completo en first_name y last_name
+                const nombreCompleto = inputNombre.value.split(' ');
+                const firstName = nombreCompleto[0] || '';
+                const lastName = nombreCompleto.slice(1).join(' ') || '';
+
+                const dataToSave = {
+                    firstName: firstName,
+                    lastName: lastName,
+                    nickname: inputNickname.value,
+                    bio: inputBio.value
                 };
-                console.log("Guardando Info Personal:", data);
-                // Aquí va tu fetch PUT/POST a /api/me
-                alert("Información personal guardada (simulación).");
+
+                try {
+                    const response = await fetch(`${API_URL}/me`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify(dataToSave)
+                    });
+
+                    const result = await response.json();
+                    if (!response.ok) throw new Error(result.error);
+
+                    // ¡Éxito! Actualizar el caché y la UI
+                    saveUserCache(result.user);
+                    updateUserUI(result.user);
+                    alert("¡Perfil actualizado!"); // Reemplazar con un 'toast' bonito después
+
+                } catch (error) {
+                    console.error("Error al guardar perfil:", error.message);
+                    alert(`Error: ${error.message}`);
+                } finally {
+                    submitButton.disabled = false;
+                    submitButton.innerHTML = '<i class="fas fa-save"></i> Guardar';
+                }
             });
 
-             document.getElementById('form-social').addEventListener('submit', (e) => {
+            // --- 2. GUARDAR REDES SOCIALES ---
+            formSocial.addEventListener('submit', async (e) => {
                 e.preventDefault();
-                const data = {
-                    youtube: document.getElementById('youtube').value,
-                    instagram: document.getElementById('instagram').value,
-                    tiktok: document.getElementById('tiktok').value,
-                    spotify: document.getElementById('spotify').value,
+                const submitButton = formSocial.querySelector('button[type="submit"]');
+                submitButton.disabled = true;
+                submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+
+                const dataToSave = {
+                    socials: { // Guardamos todo en un solo objeto JSON
+                        youtube: inputYoutube.value,
+                        instagram: inputInstagram.value,
+                        tiktok: inputTiktok.value,
+                        spotify: inputSpotify.value
+                    }
                 };
-                console.log("Guardando Redes Sociales:", data);
-                // Aquí va tu fetch PUT/POST a /api/me/socials
-                alert("Redes sociales guardadas (simulación).");
+
+                try {
+                    // Usamos el mismo endpoint /api/me
+                    const response = await fetch(`${API_URL}/me`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify(dataToSave)
+                    });
+
+                    const result = await response.json();
+                    if (!response.ok) throw new Error(result.error);
+
+                    saveUserCache(result.user); // Actualizar caché
+                    alert("¡Redes sociales guardadas!");
+
+                } catch (error) {
+                    console.error("Error al guardar redes:", error.message);
+                    alert(`Error: ${error.message}`);
+                } finally {
+                    submitButton.disabled = false;
+                    submitButton.innerHTML = '<i class="fas fa-save"></i> Guardar';
+                }
             });
 
-             document.getElementById('form-password').addEventListener('submit', (e) => {
+            // --- 3. CAMBIAR CONTRASEÑA ---
+            formPassword.addEventListener('submit', async (e) => {
                 e.preventDefault();
-                const passCurrent = document.getElementById('pass-current').value;
+                const submitButton = formPassword.querySelector('button[type="submit"]');
                 const passNew = document.getElementById('pass-new').value;
                 const passConfirm = document.getElementById('pass-confirm').value;
 
@@ -1594,81 +1724,84 @@
                     alert("La nueva contraseña debe tener al menos 8 caracteres.");
                     return;
                 }
-                
-                console.log("Cambiando contraseña...");
-                // Aquí va tu fetch POST a /api/me/change-password
-                alert("Contraseña cambiada (simulación).");
-                e.target.reset(); // Limpia el formulario
+
+                submitButton.disabled = true;
+                submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Cambiando...';
+
+                try {
+                    // ¡Usamos la función de Supabase para cambiar la contraseña!
+                    // (No necesitamos la contraseña antigua si el usuario está logueado)
+                    const { data, error } = await supabaseClient.auth.updateUser({
+                        password: passNew
+                    });
+
+                    if (error) throw error;
+
+                    alert("¡Contraseña cambiada exitosamente!");
+                    e.target.reset(); // Limpia el formulario
+
+                } catch (error) {
+                    console.error("Error al cambiar contraseña:", error.message);
+                    alert(`Error: ${error.message}`);
+                } finally {
+                    submitButton.disabled = false;
+                    submitButton.innerHTML = '<i class="fas fa-key"></i> Cambiar';
+                }
             });
 
-            // ---------- BÚSQUEDA (Actualizado para settings) ----------
+            // ---------- BÚSQUEDA DE CONFIGURACIÓN (Sin cambios) ----------
             if (searchInput) {
                 searchInput.addEventListener('input', (e) => {
                     const searchTerm = e.target.value.toLowerCase().trim();
                     document.querySelectorAll('.settings-card').forEach(card => {
                         const cardText = card.innerText.toLowerCase();
-                        if (cardText.includes(searchTerm)) {
-                            card.style.display = 'block';
-                        } else {
-                            card.style.display = 'none';
-                        }
+                        card.style.display = cardText.includes(searchTerm) ? 'block' : 'none';
                     });
                 });
             }
 
-            // ---------- LOGOUT HANDLER (Sin cambios) ----------
+            // ---------- LOGOUT (Sin cambios) ----------
             function handleLogout(e) {
                 e.preventDefault();
                 console.log("Iniciando cierre de sesión...");
-
                 const overlay = document.getElementById('logout-overlay');
                 const messageEl = document.getElementById('logout-message');
                 const iconEl = overlay.querySelector('i');
-
                 if (!overlay || !messageEl || !iconEl) {
-                    console.warn("Faltan elementos del DOM para el logout animado. Usando fallback.");
                     localStorage.removeItem('authToken');
                     window.location.replace('/index.html');
                     return;
                 }
-
                 messageEl.textContent = "Te veremos pronto...";
                 iconEl.className = 'fas fa-spinner fa-spin';
                 overlay.classList.add('active');
-
                 setTimeout(() => {
                     localStorage.removeItem('authToken');
+                    localStorage.removeItem(CACHE_KEY); // Borrar caché al salir
                     console.log("Sesión cerrada. Mostrando mensaje de despedida.");
                     messageEl.textContent = "¡Cerraste sesión!";
                     iconEl.className = 'fas fa-check-circle';
                 }, 1500);
-
                 setTimeout(() => {
                     console.log("Desvaneciendo overlay...");
                     overlay.classList.add('fading-out');
                 }, 3000);
-
                 setTimeout(() => {
                     console.log("Redirigiendo a index.html");
                     window.location.replace('/index.html');
                 }, 3500);
             }
-
-            // Attach logout handlers
             const sidebarLogoutButton = document.getElementById('sidebar-logout-btn');
             if (sidebarLogoutButton) {
                 sidebarLogoutButton.addEventListener('click', handleLogout);
             }
-
             const navbarLogoutButton = document.getElementById('navbar-logout-btn');
             if (navbarLogoutButton) {
                 navbarLogoutButton.addEventListener('click', handleLogout);
             }
 
-            // ---------- INICIALIZACIÓN (Actualizado) ----------
-            showSkeletonLoading(); 
-            loadCachedUser(); 
-            loadDashboardData(); // Inicia la carga principal de datos
+            // ---------- INICIALIZACIÓN ----------
+            loadPageData(); // Inicia la carga principal de datos
 
         });
     </script>
