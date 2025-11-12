@@ -565,11 +565,10 @@ window.descargarGratis = async function(url) {
   }
 
   try {
-    // Verificar si el usuario está logueado
     const { data: { user } } = await supabase.auth.getUser();
     
     if (user) {
-      // Usuario logueado: Enviar email y descargar
+      // Usuario logueado
       await enviarEmailDescargaGratis(user.email, user);
       iniciarDescarga(url);
     } else {
@@ -593,63 +592,180 @@ window.descargarGratis = async function(url) {
 function mostrarModalEmail() {
   return new Promise((resolve) => {
     const overlay = document.createElement('div');
-    overlay.style.cssText = `
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.9);
-      backdrop-filter: blur(8px);
-      z-index: 10000;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      animation: fadeIn 0.2s ease;
-    `;
-
+    overlay.className = 'email-modal-overlay';
+    
     const modal = document.createElement('div');
-    modal.style.cssText = `
-      background: linear-gradient(135deg, #1a1a1a, #0a0a0a);
-      border: 1px solid rgba(114, 9, 183, 0.4);
-      border-radius: 20px;
-      padding: 2.5rem;
-      max-width: 450px;
-      width: 90%;
-      box-shadow: 0 25px 80px rgba(114, 9, 183, 0.3);
-    `;
+    modal.className = 'email-modal';
 
     modal.innerHTML = `
-      <div style="text-align: center; margin-bottom: 1.5rem;">
-        <i class="bi bi-download" style="font-size: 3rem; color: #7209b7; display: block; margin-bottom: 1rem;"></i>
-        <h3 style="color: #fff; font-size: 1.5rem; font-weight: 700; margin-bottom: 0.5rem;">
-          Descarga Gratis
-        </h3>
-        <p style="color: #999; font-size: 0.9375rem;">
-          Ingresa tu email para recibir el link de descarga
-        </p>
+      <style>
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        @keyframes slideUp {
+          from { opacity: 0; transform: translateY(30px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes pulse {
+          0%, 100% { transform: scale(1); }
+          50% { transform: scale(1.05); }
+        }
+        
+        .email-modal-overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background: rgba(0, 0, 0, 0.95);
+          backdrop-filter: blur(10px);
+          z-index: 10000;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          animation: fadeIn 0.3s ease;
+        }
+        
+        .email-modal {
+          background: linear-gradient(135deg, #1a1a1a, #0a0a0a);
+          border: 2px solid rgba(114, 9, 183, 0.5);
+          border-radius: 24px;
+          padding: 3rem;
+          max-width: 480px;
+          width: 90%;
+          box-shadow: 0 30px 100px rgba(114, 9, 183, 0.4);
+          animation: slideUp 0.3s ease;
+        }
+        
+        .modal-icon {
+          width: 80px;
+          height: 80px;
+          margin: 0 auto 1.5rem;
+          background: linear-gradient(135deg, #7209b7, #560bad);
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 0 10px 40px rgba(114, 9, 183, 0.5);
+          animation: pulse 2s ease-in-out infinite;
+        }
+        
+        .modal-title {
+          color: #fff;
+          font-size: 1.75rem;
+          font-weight: 900;
+          margin-bottom: 0.75rem;
+          font-family: 'Montserrat', sans-serif;
+          text-align: center;
+        }
+        
+        .modal-subtitle {
+          color: #999;
+          font-size: 1rem;
+          line-height: 1.6;
+          margin-bottom: 2rem;
+          text-align: center;
+        }
+        
+        .modal-input {
+          width: 100%;
+          padding: 1.125rem 1.25rem;
+          background: rgba(0,0,0,0.5);
+          border: 2px solid rgba(114, 9, 183, 0.3);
+          border-radius: 12px;
+          color: #fff;
+          font-size: 1.0625rem;
+          margin-bottom: 1.5rem;
+          outline: none;
+          transition: all 0.3s;
+          font-family: inherit;
+        }
+        
+        .modal-input:focus {
+          border-color: #7209b7;
+          box-shadow: 0 0 0 4px rgba(114, 9, 183, 0.1);
+        }
+        
+        .modal-buttons {
+          display: flex;
+          gap: 1rem;
+        }
+        
+        .modal-btn {
+          flex: 1;
+          padding: 1rem;
+          border-radius: 12px;
+          font-weight: 700;
+          font-size: 0.9375rem;
+          cursor: pointer;
+          transition: all 0.3s;
+          font-family: inherit;
+          border: none;
+        }
+        
+        .modal-btn-cancel {
+          background: transparent;
+          border: 2px solid rgba(255,255,255,0.15);
+          color: rgba(255,255,255,0.7);
+        }
+        
+        .modal-btn-cancel:hover {
+          background: rgba(255,255,255,0.05);
+          border-color: rgba(255,255,255,0.3);
+          color: #fff;
+        }
+        
+        .modal-btn-download {
+          flex: 2;
+          background: linear-gradient(135deg, #7209b7, #560bad);
+          color: #fff;
+          box-shadow: 0 4px 20px rgba(114, 9, 183, 0.4);
+        }
+        
+        .modal-btn-download:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 8px 30px rgba(114, 9, 183, 0.6);
+        }
+        
+        .modal-footer {
+          color: #666;
+          font-size: 0.8125rem;
+          text-align: center;
+          margin-top: 1.5rem;
+          line-height: 1.4;
+        }
+      </style>
+      
+      <div class="modal-icon">
+        <i class="bi bi-download" style="font-size: 2.5rem; color: #fff;"></i>
       </div>
+      
+      <h3 class="modal-title">¡Descarga Gratis!</h3>
+      <p class="modal-subtitle">
+        Ingresa tu email y recibe el link<br>de descarga al instante
+      </p>
       
       <input 
         type="email" 
         id="emailInput" 
+        class="modal-input"
         placeholder="tu@email.com"
-        style="width: 100%; padding: 1rem; background: rgba(0,0,0,0.4); border: 1px solid rgba(114, 9, 183, 0.3); border-radius: 10px; color: #fff; font-size: 1rem; margin-bottom: 1.5rem; outline: none; transition: all 0.3s;"
-        onfocus="this.style.borderColor='#7209b7'"
-        onblur="this.style.borderColor='rgba(114, 9, 183, 0.3)'"
+        autocomplete="email"
       />
       
-      <div style="display: flex; gap: 0.75rem;">
-        <button id="cancelBtn" style="flex: 1; padding: 0.875rem; background: transparent; border: 1px solid rgba(255,255,255,0.2); border-radius: 10px; color: #fff; cursor: pointer; font-weight: 600; transition: all 0.3s;">
+      <div class="modal-buttons">
+        <button id="cancelBtn" class="modal-btn modal-btn-cancel">
           Cancelar
         </button>
-        <button id="downloadBtn" style="flex: 1; padding: 0.875rem; background: linear-gradient(135deg, #7209b7, #560bad); border: none; border-radius: 10px; color: #fff; font-weight: 600; cursor: pointer; transition: all 0.3s;">
-          <i class="bi bi-download"></i> Descargar
+        <button id="downloadBtn" class="modal-btn modal-btn-download">
+          <i class="bi bi-download"></i> Descargar Ahora
         </button>
       </div>
       
-      <p style="color: #666; font-size: 0.75rem; text-align: center; margin-top: 1rem;">
-        No spam. Solo el link de descarga.
+      <p class="modal-footer">
+        <i class="bi bi-shield-check" style="color: #0cbc87;"></i>
+        Sin spam. Solo el link de descarga.
       </p>
     `;
 
@@ -657,35 +773,49 @@ function mostrarModalEmail() {
     document.body.appendChild(overlay);
 
     const emailInput = modal.querySelector('#emailInput');
+    const downloadBtn = modal.querySelector('#downloadBtn');
+    const cancelBtn = modal.querySelector('#cancelBtn');
+
     emailInput.focus();
 
     const close = (result) => {
-      overlay.remove();
-      resolve(result);
+      overlay.style.opacity = '0';
+      setTimeout(() => {
+        overlay.remove();
+        resolve(result);
+      }, 200);
     };
 
-    modal.querySelector('#downloadBtn').addEventListener('click', () => {
+    downloadBtn.addEventListener('click', () => {
       const email = emailInput.value.trim();
       if (!email) {
         window.toast.warning('Por favor ingresa tu email');
         emailInput.focus();
+        emailInput.style.borderColor = '#ff6b6b';
+        setTimeout(() => {
+          emailInput.style.borderColor = 'rgba(114, 9, 183, 0.3)';
+        }, 1500);
         return;
       }
       if (!validarEmail(email)) {
         window.toast.error('Email inválido');
         emailInput.focus();
+        emailInput.style.borderColor = '#ff6b6b';
+        setTimeout(() => {
+          emailInput.style.borderColor = 'rgba(114, 9, 183, 0.3)';
+        }, 1500);
         return;
       }
       close(email);
     });
 
-    modal.querySelector('#cancelBtn').addEventListener('click', () => {
+    cancelBtn.addEventListener('click', () => {
       close(null);
     });
 
     emailInput.addEventListener('keypress', (e) => {
       if (e.key === 'Enter') {
-        modal.querySelector('#downloadBtn').click();
+        downloadBtn.click();
       }
     });
 
@@ -730,12 +860,15 @@ async function enviarEmailDescargaGratis(email, user) {
     
     if (result.success) {
       console.log('✅ Email enviado correctamente');
+      window.toast.success('¡Email enviado! Revisa tu bandeja de entrada');
     } else {
       console.warn('⚠️ Email no enviado:', result.error);
+      window.toast.warning('Descarga iniciada (email no enviado)');
     }
 
   } catch (error) {
     console.warn('⚠️ Error al enviar email (no crítico):', error);
+    window.toast.warning('Descarga iniciada');
   }
 }
 
@@ -744,7 +877,44 @@ async function enviarEmailDescargaGratis(email, user) {
 // ============================================
 function iniciarDescarga(url) {
   window.open(url, '_blank');
-  window.toast.success('¡Descarga iniciada! Revisa tu email.');
+  
+  // Animación de éxito
+  const successMsg = document.createElement('div');
+  successMsg.style.cssText = `
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.8);
+    background: linear-gradient(135deg, #0cbc87, #0a9d72);
+    color: #fff;
+    padding: 2rem 3rem;
+    border-radius: 16px;
+    font-size: 1.25rem;
+    font-weight: 700;
+    z-index: 10001;
+    box-shadow: 0 20px 60px rgba(12, 188, 135, 0.5);
+    opacity: 0;
+    transition: all 0.3s ease;
+  `;
+  
+  successMsg.innerHTML = `
+    <i class="bi bi-check-circle-fill"></i> ¡Descarga iniciada!
+  `;
+  
+  document.body.appendChild(successMsg);
+  
+  // Animar entrada
+  setTimeout(() => {
+    successMsg.style.opacity = '1';
+    successMsg.style.transform = 'translate(-50%, -50%) scale(1)';
+  }, 10);
+  
+  // Animar salida
+  setTimeout(() => {
+    successMsg.style.opacity = '0';
+    successMsg.style.transform = 'translate(-50%, -50%) scale(0.9)';
+    setTimeout(() => successMsg.remove(), 300);
+  }, 2000);
 }
 
 // ============================================
@@ -802,4 +972,9 @@ function actualizarContadorCarrito() {
 // ============================================
 // INICIALIZAR
 // ============================================
-document.addEventListener('DOMContentLoaded', cargarProducto);
+document.addEventListener('DOMContentLoaded', () => {
+  cargarProducto();
+  actualizarContadorCarrito();
+});
+
+console.log('✅ producto.js cargado correctamente');
