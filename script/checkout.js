@@ -31,13 +31,9 @@ async function cargarCarrito() {
     return;
   }
 
-  // ============================================
-  // 🔐 VERIFICAR USUARIO LOGUEADO ANTES DE MOSTRAR PAYPAL
-  // ============================================
   const { data: { user }, error: userError } = await supabase.auth.getUser();
   
   if (userError || !user) {
-    // Usuario NO logueado - Mostrar mensaje
     container.innerHTML = `
       <div class="cart-items">${renderCartItems(cart)}</div>
       <div class="cart-summary">
@@ -55,7 +51,6 @@ async function cargarCarrito() {
           <span>$${calculateTotal(cart).toFixed(2)}</span>
         </div>
         
-        <!-- MENSAJE PARA CREAR CUENTA -->
         <div style="background: rgba(114, 9, 183, 0.1); border: 1px solid rgba(114, 9, 183, 0.3); border-radius: 8px; padding: 1.5rem; margin-top: 1.5rem; text-align: center;">
           <i class="bi bi-person-plus" style="font-size: 2.5rem; color: #7209b7; display: block; margin-bottom: 0.75rem;"></i>
           <h4 style="color: #fff; margin-bottom: 0.5rem; font-size: 1.125rem; font-weight: 700;">Crea tu cuenta para continuar</h4>
@@ -77,9 +72,6 @@ async function cargarCarrito() {
     return;
   }
 
-  // ============================================
-  // Usuario SÍ está logueado - Mostrar PayPal normal
-  // ============================================
   const total = calculateTotal(cart);
 
   container.innerHTML = `
@@ -99,7 +91,6 @@ async function cargarCarrito() {
         <span>$${total.toFixed(2)}</span>
       </div>
       
-      <!-- Usuario logueado: Mostrar info -->
       <div style="background: rgba(12, 188, 135, 0.1); border: 1px solid rgba(12, 188, 135, 0.3); border-radius: 8px; padding: 1rem; margin-top: 1rem; display: flex; align-items: center; gap: 0.75rem;">
         <i class="bi bi-check-circle" style="color: #0cbc87; font-size: 1.25rem;"></i>
         <div style="flex: 1;">
@@ -108,7 +99,6 @@ async function cargarCarrito() {
         </div>
       </div>
       
-      <!-- BOTÓN PAYPAL -->
       <div id="paypal-button-container" style="margin-top: 1.5rem;"></div>
       
       <div style="text-align: center; margin-top: 1rem;">
@@ -119,13 +109,9 @@ async function cargarCarrito() {
     </div>
   `;
 
-  // Inicializar PayPal después de renderizar
   inicializarPayPal(cart, total);
 }
 
-// ============================================
-// FUNCIONES AUXILIARES
-// ============================================
 function calculateTotal(cart) {
   return cart.reduce((sum, item) => sum + item.price, 0);
 }
@@ -155,9 +141,6 @@ function renderCartItems(cart) {
   `).join('');
 }
 
-// ============================================
-// INICIALIZAR PAYPAL
-// ============================================
 function inicializarPayPal(cart, total) {
   if (!window.paypal) {
     const script = document.createElement('script');
@@ -204,7 +187,7 @@ function renderPayPalButton(cart, total) {
 
     onError: function(err) {
       console.error('Error de PayPal:', err);
-      alert('❌ Error al procesar el pago. Intenta de nuevo.');
+      window.toast.error('Error al procesar el pago. Intenta de nuevo.');
     }
   }).render('#paypal-button-container');
 }
@@ -217,7 +200,7 @@ async function procesarCompra(order, cart) {
     const { data: { user } } = await supabase.auth.getUser();
     
     if (!user) {
-      alert('Debes iniciar sesión para completar la compra');
+      window.toast.error('Debes iniciar sesión para completar la compra');
       window.location.href = '/pages/login?redirect=carrito';
       return;
     }
@@ -237,18 +220,49 @@ async function procesarCompra(order, cart) {
 
     if (error) throw error;
 
+    // ============================================
+    // 📧 ENVIAR EMAIL DE CONFIRMACIÓN
+    // ============================================
+    try {
+      const { enviarEmailCompra } = await import('./email-service.js');
+      
+      const emailData = {
+        buyerEmail: user.email,
+        buyerName: user.user_metadata?.full_name || 
+                   `${user.user_metadata?.first_name || ''} ${user.user_metadata?.last_name || ''}`.trim() || 
+                   user.email.split('@')[0],
+        orderId: order.id,
+        total: calculateTotal(cart),
+        products: cart.map(item => ({
+          name: item.productName,
+          license: item.licenseName,
+          price: item.price.toFixed(2)
+        }))
+      };
+
+      console.log('📧 Enviando email de confirmación...', emailData);
+      
+      enviarEmailCompra(emailData).then(result => {
+        if (result.success) {
+          console.log('✅ Email enviado correctamente');
+        } else {
+          console.warn('⚠️ Email no enviado:', result.error);
+        }
+      });
+
+    } catch (emailError) {
+      console.warn('⚠️ Error al enviar email (no crítico):', emailError);
+    }
+
     localStorage.removeItem('offszn_cart');
     window.location.href = `/pages/purchase-success.html?order=${order.id}`;
 
   } catch (error) {
     console.error('Error guardando compra:', error);
-    alert('❌ Error al guardar la compra. Contacta a soporte.');
+    window.toast.error('Error al guardar la compra. Contacta a soporte.');
   }
 }
 
-// ============================================
-// ELIMINAR DEL CARRITO
-// ============================================
 window.eliminarDelCarrito = function(index) {
   if (!confirm('¿Eliminar este producto del carrito?')) return;
   
@@ -258,7 +272,4 @@ window.eliminarDelCarrito = function(index) {
   cargarCarrito();
 };
 
-// ============================================
-// INICIALIZAR
-// ============================================
 document.addEventListener('DOMContentLoaded', cargarCarrito);
