@@ -40,10 +40,18 @@ window.compartirProducto = function() {
     navigator.share({
       title: `${title} - OFFSZN`,
       url: url
-    }).catch(err => console.log('Error compartiendo:', err));
+    }).then(() => {
+      window.toast.success('¡Producto compartido!');
+    }).catch(err => {
+      if (err.name !== 'AbortError') {
+        console.log('Error compartiendo:', err);
+      }
+    });
   } else {
     navigator.clipboard.writeText(url).then(() => {
-      alert('✅ Link copiado al portapapeles!');
+      window.toast.success('Link copiado al portapapeles');
+    }).catch(() => {
+      window.toast.error('Error al copiar el link');
     });
   }
 };
@@ -51,33 +59,107 @@ window.compartirProducto = function() {
 // ============================================
 // ABRIR MENSAJE AL PRODUCTOR
 // ============================================
-window.abrirMensaje = function() {
-  // Verificar si hay usuario logueado
-  const user = supabase.auth.getUser();
-  
-  if (!user) {
-    alert('Debes iniciar sesión para enviar mensajes');
-    window.location.href = '/pages/login';
-    return;
-  }
-  
-  // Por ahora un simple prompt
-  const mensaje = prompt(`Enviar mensaje al productor:\n\nProducto: ${currentProduct.name}`);
-  
-  if (mensaje && mensaje.trim()) {
-    enviarMensaje(mensaje.trim());
-  }
-};
-
-async function enviarMensaje(mensaje) {
+window.abrirMensaje = async function() {
   try {
     const { data: { user } } = await supabase.auth.getUser();
     
     if (!user) {
-      alert('Debes iniciar sesión');
+      window.toast.warning('Debes iniciar sesión para enviar mensajes');
+      setTimeout(() => {
+        window.location.href = '/pages/login';
+      }, 1500);
       return;
     }
+    
+    // Crear modal personalizado para el mensaje
+    const mensaje = await crearModalMensaje();
+    
+    if (mensaje && mensaje.trim()) {
+      await enviarMensaje(mensaje.trim(), user);
+    }
+  } catch (error) {
+    console.error('Error:', error);
+    window.toast.error('Error al abrir el formulario de mensaje');
+  }
+};
 
+async function crearModalMensaje() {
+  return new Promise((resolve) => {
+    const overlay = document.createElement('div');
+    overlay.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(4px);
+      z-index: 10000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: fadeIn 0.2s ease;
+    `;
+
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+      background: linear-gradient(135deg, #1a1a1a, #0a0a0a);
+      border: 1px solid rgba(114, 9, 183, 0.3);
+      border-radius: 16px;
+      padding: 2rem;
+      max-width: 500px;
+      width: 90%;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    `;
+
+    modal.innerHTML = `
+      <h3 style="color: #fff; margin-bottom: 1rem; font-size: 1.25rem;">
+        Enviar mensaje a ${currentProduct ? currentProduct.name : 'productor'}
+      </h3>
+      <textarea 
+        id="mensajeTextarea" 
+        placeholder="Escribe tu mensaje aquí..."
+        style="width: 100%; min-height: 120px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 1rem; color: #fff; font-family: inherit; resize: vertical; margin-bottom: 1rem;"
+      ></textarea>
+      <div style="display: flex; gap: 0.75rem; justify-content: flex-end;">
+        <button id="cancelBtn" style="padding: 0.75rem 1.5rem; background: transparent; border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; color: #fff; cursor: pointer;">
+          Cancelar
+        </button>
+        <button id="sendBtn" style="padding: 0.75rem 1.5rem; background: linear-gradient(135deg, #7209b7, #560bad); border: none; border-radius: 8px; color: #fff; font-weight: 600; cursor: pointer;">
+          Enviar mensaje
+        </button>
+      </div>
+    `;
+
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+
+    const textarea = modal.querySelector('#mensajeTextarea');
+    textarea.focus();
+
+    const close = (result) => {
+      overlay.remove();
+      resolve(result);
+    };
+
+    modal.querySelector('#sendBtn').addEventListener('click', () => {
+      close(textarea.value);
+    });
+
+    modal.querySelector('#cancelBtn').addEventListener('click', () => {
+      close(null);
+    });
+
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) close(null);
+    });
+  });
+}
+
+async function enviarMensaje(mensaje, user) {
+  const loading = window.toast.loading('Enviando mensaje...');
+  
+  try {
     const { error } = await supabase
       .from('messages')
       .insert({
@@ -88,12 +170,15 @@ async function enviarMensaje(mensaje) {
         message: mensaje
       });
 
+    loading.remove();
+
     if (error) throw error;
     
-    alert('✅ Mensaje enviado correctamente!');
+    window.toast.success('¡Mensaje enviado correctamente!');
   } catch (error) {
+    loading.remove();
     console.error('Error enviando mensaje:', error);
-    alert('Error al enviar el mensaje. Intenta de nuevo.');
+    window.toast.error('Error al enviar el mensaje');
   }
 }
 
@@ -104,8 +189,8 @@ async function cargarProducto() {
   const productId = getProductId();
   
   if (!productId) {
-    alert('ID de producto no encontrado');
-    window.history.back();
+    window.toast.error('ID de producto no encontrado');
+    setTimeout(() => window.history.back(), 1500);
     return;
   }
 
@@ -137,7 +222,7 @@ async function cargarProducto() {
     
   } catch (error) {
     console.error('Error cargando producto:', error);
-    alert('Error al cargar el producto');
+    window.toast.error('Error al cargar el producto');
   }
 }
 
@@ -182,25 +267,26 @@ function actualizarProductoUI(product, producer) {
 }
 
 // ============================================
-// AUDIO PLAYER FUNCIONAL
+// AUDIO PLAYER CON WAVEFORM
 // ============================================
 function inicializarAudioPlayer(audioUrl) {
   if (!audioUrl) {
-    document.querySelector('.audio-player').innerHTML = '<p style="color: #999; text-align: center; padding: 2rem;">No hay preview disponible</p>';
+    document.querySelector('.audio-player-enhanced').innerHTML = '<p style="color: #999; text-align: center; padding: 2rem;">No hay preview disponible</p>';
     return;
   }
 
   audioElement = new Audio(audioUrl);
   const playBtn = document.getElementById('playBtn');
-  const progressBar = document.getElementById('progressBar');
-  const progressFill = document.getElementById('progressFill');
+  const waveformContainer = document.getElementById('waveformContainer');
+  const progressOverlay = document.getElementById('progressOverlay');
   const currentTimeEl = document.getElementById('currentTime');
   const durationEl = document.getElementById('duration');
   const volumeBtn = document.getElementById('volumeBtn');
-  const volumeSlider = document.getElementById('volumeSlider');
-  const volumeFill = document.getElementById('volumeFill');
 
   playBtn.disabled = false;
+
+  // Dibujar waveform simple
+  dibujarWaveform();
 
   playBtn.addEventListener('click', () => {
     if (audioElement.paused) {
@@ -214,7 +300,7 @@ function inicializarAudioPlayer(audioUrl) {
 
   audioElement.addEventListener('timeupdate', () => {
     const percent = (audioElement.currentTime / audioElement.duration) * 100;
-    progressFill.style.width = `${percent}%`;
+    progressOverlay.style.width = `${percent}%`;
     currentTimeEl.textContent = formatTime(audioElement.currentTime);
   });
 
@@ -222,37 +308,51 @@ function inicializarAudioPlayer(audioUrl) {
     durationEl.textContent = formatTime(audioElement.duration);
   });
 
-  progressBar.addEventListener('click', (e) => {
-    const rect = progressBar.getBoundingClientRect();
+  waveformContainer.addEventListener('click', (e) => {
+    const rect = waveformContainer.getBoundingClientRect();
     const percent = (e.clientX - rect.left) / rect.width;
     audioElement.currentTime = percent * audioElement.duration;
   });
 
   audioElement.addEventListener('ended', () => {
     playBtn.innerHTML = '<i class="bi bi-play-fill"></i>';
-    progressFill.style.width = '0%';
+    progressOverlay.style.width = '0%';
   });
 
   volumeBtn.addEventListener('click', () => {
     if (audioElement.muted) {
       audioElement.muted = false;
       volumeBtn.innerHTML = '<i class="bi bi-volume-up"></i>';
-      volumeFill.style.width = '100%';
     } else {
       audioElement.muted = true;
       volumeBtn.innerHTML = '<i class="bi bi-volume-mute"></i>';
-      volumeFill.style.width = '0%';
     }
   });
+}
 
-  volumeSlider.addEventListener('click', (e) => {
-    const rect = volumeSlider.getBoundingClientRect();
-    const percent = (e.clientX - rect.left) / rect.width;
-    audioElement.volume = percent;
-    volumeFill.style.width = `${percent * 100}%`;
-    audioElement.muted = false;
-    volumeBtn.innerHTML = '<i class="bi bi-volume-up"></i>';
-  });
+function dibujarWaveform() {
+  const canvas = document.getElementById('waveformCanvas');
+  if (!canvas) return;
+  
+  const ctx = canvas.getContext('2d');
+  const width = canvas.width;
+  const height = canvas.height;
+  
+  ctx.clearRect(0, 0, width, height);
+  
+  // Dibujar barras de waveform simuladas
+  const barCount = 100;
+  const barWidth = width / barCount;
+  
+  ctx.fillStyle = 'rgba(114, 9, 183, 0.3)';
+  
+  for (let i = 0; i < barCount; i++) {
+    const barHeight = Math.random() * height * 0.8 + height * 0.1;
+    const x = i * barWidth;
+    const y = (height - barHeight) / 2;
+    
+    ctx.fillRect(x, y, barWidth - 2, barHeight);
+  }
 }
 
 function formatTime(seconds) {
@@ -263,7 +363,7 @@ function formatTime(seconds) {
 }
 
 // ============================================
-// LICENCIAS CON BOTONES DOBLES
+// LICENCIAS
 // ============================================
 function cargarLicencias(product) {
   const container = document.getElementById('licenseCards');
@@ -379,13 +479,11 @@ async function cargarReviews(productId) {
       return;
     }
 
-    // Calcular promedio
     const avgRating = reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length;
     const stars = '★'.repeat(Math.round(avgRating)) + '☆'.repeat(5 - Math.round(avgRating));
     avgRatingEl.textContent = stars;
     reviewCount.textContent = `(${reviews.length})`;
 
-    // Renderizar reviews
     reviewsList.innerHTML = reviews.map(review => {
       const userName = review.users 
         ? `${review.users.first_name || ''} ${review.users.last_name || ''}`.trim() || review.users.nickname
@@ -461,114 +559,21 @@ async function cargarProductosRelacionados(producerId, currentProductId) {
 }
 
 // ============================================
-// DESCARGAR GRATIS CON MODAL DE EMAIL
+// DESCARGAR GRATIS
 // ============================================
-window.descargarGratis = function(downloadUrl) {
-  if (!downloadUrl) {
-    alert('URL de descarga no disponible');
-    return;
-  }
-
-  // Mostrar modal para capturar email
-  const modalHTML = `
-    <div id="freeDownloadModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); display: flex; align-items: center; justify-content: center; z-index: 10000;">
-      <div style="background: #1a1a1a; border: 1px solid rgba(114, 9, 183, 0.3); border-radius: 16px; padding: 2.5rem; max-width: 500px; width: 90%; position: relative;">
-        <button onclick="cerrarModalDescarga()" style="position: absolute; top: 1rem; right: 1rem; background: none; border: none; color: #999; font-size: 1.5rem; cursor: pointer; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 50%; transition: all 0.3s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'; this.style.color='#fff'" onmouseout="this.style.background='none'; this.style.color='#999'">
-          <i class="bi bi-x"></i>
-        </button>
-        
-        <div style="text-align: center; margin-bottom: 2rem;">
-          <i class="bi bi-gift" style="font-size: 3rem; color: #0cbc87; display: block; margin-bottom: 1rem;"></i>
-          <h3 style="font-size: 1.5rem; font-weight: 800; color: #fff; margin-bottom: 0.5rem;">¡Descarga Gratis!</h3>
-          <p style="color: #999; font-size: 0.9375rem;">Ingresa tu email para recibir el enlace de descarga</p>
-        </div>
-
-        <form id="freeDownloadForm" onsubmit="procesarDescargaGratis(event, '${downloadUrl}')" style="display: flex; flex-direction: column; gap: 1rem;">
-          <input 
-            type="email" 
-            id="freeDownloadEmail" 
-            placeholder="tu@email.com" 
-            required
-            style="width: 100%; padding: 1rem; background: #0a0a0a; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: #fff; font-size: 1rem; outline: none; transition: all 0.3s;"
-            onfocus="this.style.borderColor='#7209b7'; this.style.boxShadow='0 0 0 3px rgba(114, 9, 183, 0.1)'"
-            onblur="this.style.borderColor='rgba(255,255,255,0.1)'; this.style.boxShadow='none'"
-          >
-          
-          <button 
-            type="submit" 
-            style="width: 100%; padding: 1rem; background: linear-gradient(135deg, #0cbc87, #0a9d72); color: #fff; border: none; border-radius: 8px; font-weight: 700; font-size: 1rem; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; justify-content: center; gap: 0.5rem;"
-            onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(12, 188, 135, 0.5)'"
-            onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'"
-          >
-            <i class="bi bi-download"></i>
-            Descargar ahora
-          </button>
-        </form>
-
-        <p style="color: #666; font-size: 0.75rem; text-align: center; margin-top: 1rem;">
-          <i class="bi bi-shield-check"></i> Tu email está seguro. No enviamos spam.
-        </p>
-      </div>
-    </div>
-  `;
-
-  document.body.insertAdjacentHTML('beforeend', modalHTML);
-};
-
-// Cerrar modal
-window.cerrarModalDescarga = function() {
-  const modal = document.getElementById('freeDownloadModal');
-  if (modal) modal.remove();
-};
-
-// Procesar descarga gratuita
-window.procesarDescargaGratis = async function(event, downloadUrl) {
-  event.preventDefault();
-  
-  const email = document.getElementById('freeDownloadEmail').value;
-  const submitBtn = event.target.querySelector('button[type="submit"]');
-  
-  submitBtn.disabled = true;
-  submitBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Procesando...';
-
-  try {
-    // Guardar en Supabase
-    const { error } = await supabase
-      .from('free_downloads')
-      .insert({
-        product_id: currentProduct.id,
-        email: email
-      });
-
-    if (error && error.code !== '23505') { // 23505 = duplicate key (ya descargó antes)
-      throw error;
-    }
-
-    // TODO: Aquí enviaremos el email (próximo paso)
-    console.log('✅ Descarga registrada para:', email);
-    
-    // Abrir descarga
-    window.open(downloadUrl, '_blank');
-    
-    // Cerrar modal
-    cerrarModalDescarga();
-    
-    // Mostrar mensaje de éxito
-    alert(`✅ ¡Descarga iniciada!\n\nTe enviaremos una copia al email:\n${email}`);
-
-  } catch (error) {
-    console.error('Error en descarga gratuita:', error);
-    alert('❌ Error al procesar la descarga. Intenta de nuevo.');
-    submitBtn.disabled = false;
-    submitBtn.innerHTML = '<i class="bi bi-download"></i> Descargar ahora';
+window.descargarGratis = function(url) {
+  if (url) {
+    window.open(url, '_blank');
+    window.toast.success('¡Descarga iniciada!');
+  } else {
+    window.toast.error('URL de descarga no disponible');
   }
 };
 
 // ============================================
-// COMPRAR AHORA (CHECKOUT DIRECTO)
+// COMPRAR AHORA
 // ============================================
 window.comprarAhora = function(product, licenseId, licenseName, price) {
-  // Por ahora redirige a carrito, después implementaremos checkout directo
   agregarAlCarrito(product, licenseId, licenseName, price);
   setTimeout(() => {
     window.location.href = 'carrito.html';
@@ -596,14 +601,14 @@ window.agregarAlCarrito = function(product, licenseId, licenseName, price) {
   const existingIndex = cart.findIndex(item => item.id === cartItem.id);
   
   if (existingIndex >= 0) {
-    alert('Este producto con esta licencia ya está en tu carrito');
+    window.toast.warning('Este producto ya está en tu carrito');
     return;
   }
   
   cart.push(cartItem);
   localStorage.setItem('offszn_cart', JSON.stringify(cart));
   
-  alert(`✅ "${licenseName}" agregada al carrito!\n\nProducto: ${product.name}\nPrecio: $${price.toFixed(2)}`);
+  window.toast.success(`"${licenseName}" agregada al carrito`);
   
   actualizarContadorCarrito();
 };
