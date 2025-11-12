@@ -1,164 +1,127 @@
-// script/email-service.js
-// Sistema de emails usando EmailJS (no requiere backend)
+// ============================================
+// 📧 EMAIL SERVICE - EMAILJS
+// ============================================
 
-// ============================================
-// CONFIGURACIÓN - OFFSZN
-// ============================================
 const EMAILJS_CONFIG = {
-  publicKey: 'If_WAVcuXiGSPp2SB',
-  serviceId: 'service_w50l62y',
-  templates: {
-    freeDownload: 'template_bgp3zb5',     // Descarga gratis
-    purchaseConfirm: 'template_dsmiidx'   // Compra confirmada
+  PUBLIC_KEY: 'If_WAVcuXiGSPp2SB',
+  SERVICE_ID: 'service_w50l62y',
+  TEMPLATES: {
+    COMPRA: 'template_dsmiidx',
+    DESCARGA: 'template_bgp3zb5'
   }
 };
 
 // ============================================
 // INICIALIZAR EMAILJS
 // ============================================
-function initEmailJS() {
-  if (typeof emailjs === 'undefined') {
-    console.error('❌ EmailJS no está cargado');
-    return false;
-  }
-  
-  emailjs.init(EMAILJS_CONFIG.publicKey);
-  console.log('✅ EmailJS inicializado');
-  return true;
-}
-
-// ============================================
-// 1. EMAIL DE DESCARGA GRATIS
-// ============================================
-export async function enviarEmailDescargaGratis(data) {
-  try {
-    if (!initEmailJS()) {
-      throw new Error('EmailJS no disponible');
+function inicializarEmailJS() {
+  return new Promise((resolve, reject) => {
+    // Si ya está cargado
+    if (window.emailjs) {
+      try {
+        window.emailjs.init(EMAILJS_CONFIG.PUBLIC_KEY);
+        console.log('✅ EmailJS inicializado');
+        resolve(true);
+      } catch (error) {
+        console.error('❌ Error inicializando EmailJS:', error);
+        reject(error);
+      }
+      return;
     }
 
-    const templateParams = {
-      to_email: data.email,
-      product_name: data.productName,
-      producer_name: data.producerName,
-      download_url: data.downloadUrl,
-      product_image: data.productImage || '',
-      user_name: data.email.split('@')[0]
-    };
-
-    console.log('📧 Enviando email de descarga gratis...', templateParams);
-
-    const response = await emailjs.send(
-      EMAILJS_CONFIG.serviceId,
-      EMAILJS_CONFIG.templates.freeDownload,
-      templateParams
-    );
-
-    console.log('✅ Email enviado:', response);
-    return { success: true, data: response };
-
-  } catch (error) {
-    console.error('❌ Error enviando email:', error);
-    return { success: false, error: error.message };
-  }
+    // Si no está cargado, esperar hasta 5 segundos
+    let intentos = 0;
+    const maxIntentos = 50; // 5 segundos (50 x 100ms)
+    
+    console.log('⏳ Esperando a que EmailJS se cargue...');
+    
+    const intervalo = setInterval(() => {
+      intentos++;
+      
+      if (window.emailjs) {
+        clearInterval(intervalo);
+        try {
+          window.emailjs.init(EMAILJS_CONFIG.PUBLIC_KEY);
+          console.log('✅ EmailJS inicializado correctamente');
+          resolve(true);
+        } catch (error) {
+          console.error('❌ Error inicializando EmailJS:', error);
+          reject(error);
+        }
+      } else if (intentos >= maxIntentos) {
+        clearInterval(intervalo);
+        console.error('❌ EmailJS no se cargó después de 5 segundos');
+        reject(new Error('EmailJS no se pudo cargar - Verifica que el SDK esté en el HTML'));
+      }
+    }, 100);
+  });
 }
 
 // ============================================
-// 2. EMAIL DE CONFIRMACIÓN DE COMPRA
+// ENVIAR EMAIL DE COMPRA
 // ============================================
 export async function enviarEmailCompra(data) {
   try {
-    if (!initEmailJS()) {
-      throw new Error('EmailJS no disponible');
-    }
-
-    // Formatear lista de productos
-    const productsList = data.products.map((p, i) => 
-      `${i + 1}. ${p.name} - ${p.license} ($${p.price})`
-    ).join('\n');
+    // Esperar a que EmailJS esté listo
+    await inicializarEmailJS();
 
     const templateParams = {
       to_email: data.buyerEmail,
-      buyer_name: data.buyerName,
+      to_name: data.buyerName,
       order_id: data.orderId,
-      order_date: new Date().toLocaleDateString('es-ES'),
-      total_amount: data.total,
-      products_list: productsList,
-      my_purchases_url: `https://offszn.com/pages/my-purchases.html`
+      total: data.total.toFixed(2),
+      products_list: data.products.map(p => 
+        `${p.name} - ${p.license} ($${p.price})`
+      ).join('\n')
     };
 
-    console.log('📧 Enviando email de compra...', templateParams);
-
-    const response = await emailjs.send(
-      EMAILJS_CONFIG.serviceId,
-      EMAILJS_CONFIG.templates.purchaseConfirm,
+    const response = await window.emailjs.send(
+      EMAILJS_CONFIG.SERVICE_ID,
+      EMAILJS_CONFIG.TEMPLATES.COMPRA,
       templateParams
     );
 
-    console.log('✅ Email de compra enviado:', response);
-    return { success: true, data: response };
+    return { success: true, response };
 
   } catch (error) {
-    console.error('❌ Error enviando email de compra:', error);
+    console.error('Error enviando email de compra:', error);
     return { success: false, error: error.message };
   }
 }
 
 // ============================================
-// 3. EMAIL DE NUEVA VENTA (AL PRODUCTOR)
+// ENVIAR EMAIL DE DESCARGA GRATIS
 // ============================================
-export async function enviarEmailNuevaVenta(data) {
+export async function enviarEmailDescargaGratis(data) {
   try {
-    if (!initEmailJS()) {
-      throw new Error('EmailJS no disponible');
-    }
+    // Esperar a que EmailJS esté listo
+    await inicializarEmailJS();
 
     const templateParams = {
-      to_email: data.producerEmail,
-      producer_name: data.producerName,
+      to_email: data.userEmail,
+      to_name: data.userName,
       product_name: data.productName,
-      license_name: data.licenseName,
-      sale_amount: data.amount,
-      buyer_name: data.buyerName || 'Cliente',
-      sale_date: new Date().toLocaleDateString('es-ES'),
-      dashboard_url: 'https://offszn.com/dashboard/ventas'
+      producer_name: data.producerName,
+      download_url: data.downloadUrl
     };
 
-    console.log('📧 Enviando email de nueva venta...', templateParams);
-
-    const response = await emailjs.send(
-      EMAILJS_CONFIG.serviceId,
-      EMAILJS_CONFIG.templates.newSale,
+    const response = await window.emailjs.send(
+      EMAILJS_CONFIG.SERVICE_ID,
+      EMAILJS_CONFIG.TEMPLATES.DESCARGA,
       templateParams
     );
 
-    console.log('✅ Email de venta enviado:', response);
-    return { success: true, data: response };
+    return { success: true, response };
 
   } catch (error) {
-    console.error('❌ Error enviando email de venta:', error);
+    console.error('Error enviando email de descarga:', error);
     return { success: false, error: error.message };
   }
 }
 
 // ============================================
-// FUNCIÓN GENÉRICA PARA ENVIAR EMAILS
+// VERIFICAR SI EMAILJS ESTÁ DISPONIBLE
 // ============================================
-export async function enviarEmail(type, data) {
-  switch (type) {
-    case 'free_download':
-      return await enviarEmailDescargaGratis(data);
-    
-    case 'purchase_confirmation':
-      return await enviarEmailCompra(data);
-    
-    case 'new_sale':
-      return await enviarEmailNuevaVenta(data);
-    
-    default:
-      console.error('❌ Tipo de email desconocido:', type);
-      return { success: false, error: 'Tipo de email no válido' };
-  }
+export function emailJSDisponible() {
+  return typeof window.emailjs !== 'undefined';
 }
-
-// Exportar configuración para debugging
-export { EMAILJS_CONFIG };
