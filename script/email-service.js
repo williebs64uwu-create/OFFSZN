@@ -12,21 +12,50 @@ const EMAILJS_CONFIG = {
 };
 
 // ============================================
-// INICIALIZAR EMAILJS
+// INICIALIZAR EMAILJS INMEDIATAMENTE
 // ============================================
-function inicializarEmailJS() {
+let emailJSInicializado = false;
+
+function inicializarEmailJSInmediato() {
+  if (emailJSInicializado) return;
+  
+  if (typeof window.emailjs !== 'undefined') {
+    try {
+      window.emailjs.init(EMAILJS_CONFIG.PUBLIC_KEY);
+      emailJSInicializado = true;
+      console.log('✅ EmailJS inicializado al cargar');
+    } catch (error) {
+      console.error('❌ Error inicializando EmailJS:', error);
+    }
+  }
+}
+
+// Intentar inicializar inmediatamente
+inicializarEmailJSInmediato();
+
+// Intentar de nuevo cuando el DOM esté listo
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', inicializarEmailJSInmediato);
+} else {
+  inicializarEmailJSInmediato();
+}
+
+// ============================================
+// ESPERAR A QUE EMAILJS ESTÉ LISTO
+// ============================================
+function esperarEmailJS() {
   return new Promise((resolve, reject) => {
-    // Si ya está cargado e inicializado
-    if (window.emailjs && window.emailjs.send) {
-      console.log('✅ EmailJS ya está inicializado');
+    // Si ya está inicializado
+    if (emailJSInicializado && window.emailjs && window.emailjs.send) {
       resolve(true);
       return;
     }
 
     // Si emailjs existe pero no está inicializado
-    if (window.emailjs) {
+    if (window.emailjs && !emailJSInicializado) {
       try {
         window.emailjs.init(EMAILJS_CONFIG.PUBLIC_KEY);
+        emailJSInicializado = true;
         console.log('✅ EmailJS inicializado correctamente');
         resolve(true);
       } catch (error) {
@@ -36,9 +65,9 @@ function inicializarEmailJS() {
       return;
     }
 
-    // Si no está cargado, esperar hasta 5 segundos
+    // Esperar a que se cargue
     let intentos = 0;
-    const maxIntentos = 50; // 5 segundos (50 x 100ms)
+    const maxIntentos = 50;
     
     console.log('⏳ Esperando a que EmailJS se cargue...');
     
@@ -49,6 +78,7 @@ function inicializarEmailJS() {
         clearInterval(intervalo);
         try {
           window.emailjs.init(EMAILJS_CONFIG.PUBLIC_KEY);
+          emailJSInicializado = true;
           console.log('✅ EmailJS inicializado correctamente');
           resolve(true);
         } catch (error) {
@@ -57,7 +87,7 @@ function inicializarEmailJS() {
         }
       } else if (intentos >= maxIntentos) {
         clearInterval(intervalo);
-        const error = new Error('EmailJS no se cargó después de 5 segundos. Verifica que el SDK esté en el HTML.');
+        const error = new Error('EmailJS no se cargó después de 5 segundos');
         console.error('❌', error.message);
         reject(error);
       }
@@ -72,8 +102,7 @@ export async function enviarEmailDescargaGratis(emailData) {
   try {
     console.log('📧 Enviando email de descarga gratis...', emailData);
 
-    // Esperar a que EmailJS esté listo
-    await inicializarEmailJS();
+    await esperarEmailJS();
 
     const templateParams = {
       to_email: emailData.userEmail,
@@ -107,8 +136,7 @@ export async function enviarEmailCompra(emailData) {
   try {
     console.log('📧 Enviando email de compra confirmada...', emailData);
 
-    // Esperar a que EmailJS esté listo
-    await inicializarEmailJS();
+    await esperarEmailJS();
 
     const templateParams = {
       to_email: emailData.buyerEmail,
@@ -116,7 +144,7 @@ export async function enviarEmailCompra(emailData) {
       order_id: emailData.orderId,
       total: emailData.total.toFixed(2),
       products_list: emailData.products.map(p => 
-        `${p.name} - ${p.license} (${p.price})`
+        `${p.name} - ${p.license} ($${p.price})`
       ).join('\n')
     };
 
@@ -140,27 +168,13 @@ export async function enviarEmailCompra(emailData) {
 // ============================================
 // 🛠️ UTILITIES
 // ============================================
-
-// Formatear lista de productos para email
-export function formatearListaProductos(cartItems) {
-  return cartItems.map(item => `
-    <div style="margin-bottom: 1rem; padding: 1rem; background: #f5f5f5; border-radius: 8px;">
-      <strong>${item.productName}</strong><br>
-      Licencia: ${item.licenseName}<br>
-      Precio: ${item.price.toFixed(2)}
-    </div>
-  `).join('');
-}
-
-// Validar email
 export function validarEmail(email) {
   const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return regex.test(email);
 }
 
-// Verificar si EmailJS está disponible
 export function emailJSDisponible() {
-  return typeof window.emailjs !== 'undefined';
+  return emailJSInicializado && typeof window.emailjs !== 'undefined';
 }
 
 console.log('✅ Email Service cargado correctamente');
