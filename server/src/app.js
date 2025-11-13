@@ -22,7 +22,7 @@ app.use('/api', orderRoutes);
 app.use('/api', userRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api', chatbotRouter);
-app.use('/api/profile', profileRoutes);
+app.use('/api', profileRoutes); // ✅ CAMBIADO: antes era '/api/profile'
 
 checkConnection()
 
