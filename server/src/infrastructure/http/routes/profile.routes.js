@@ -3,7 +3,6 @@ import { getUserProfile, getUserProducts } from '../controllers/ProfileControlle
 
 const router = express.Router();
 
-// Rutas públicas (sin autenticación)
 router.get('/profile/:nickname', getUserProfile);
 router.get('/profile/:nickname/products', getUserProducts);
 
