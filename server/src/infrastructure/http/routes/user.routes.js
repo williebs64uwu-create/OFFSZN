@@ -1,21 +1,35 @@
+// server/src/infrastructure/http/routes/user.routes.js
+
 import { Router } from 'express';
 import { authenticateTokenMiddleware } from '../../middlewares/authenticateTokenMiddleware.js';
-import { getMyPurchasedProducts, completeOnboarding, getCurrentUser, getMyProducts, updateMyProfile } from '../controllers/UserController.js'; 
+
+// ¡YA NO IMPORTAMOS NADA PÚBLICO AQUÍ!
+import { 
+    getMyPurchasedProducts, 
+    completeOnboarding,
+    getCurrentUser, 
+    getMyProducts,
+    updateMyProfile
+} from '../controllers/UserController.js'; 
 
 const router = Router();
 
-router.use(authenticateTokenMiddleware);
+// ===================================
+// --- ¡APLICA EL MIDDLEWARE AL INICIO! ---
+// (Ahora TODO en este archivo es PRIVADO)
+// ===================================
+router.use(authenticateTokenMiddleware); 
 
-router.get('/my-products', getMyPurchasedProducts);
-
-router.put('/complete-onboarding', completeOnboarding);
-
+// ===================================
+// --- RUTAS PRIVADAS (AUTENTICADAS) ---
+// ===================================
 router.get('/me', getCurrentUser);
-
+router.put('/me', updateMyProfile);
+router.get('/my-products', getMyPurchasedProducts);
+router.get('/me/products', getMyProducts);
+router.put('/complete-onboarding', completeOnboarding); 
 router.put('/me/onboarding', completeOnboarding);
 
-router.get('/me/products', getMyProducts);
-
-router.put('/me', updateMyProfile);
+// ¡YA NO ESTÁN LAS RUTAS PÚBLICAS AQUÍ!
 
 export default router;

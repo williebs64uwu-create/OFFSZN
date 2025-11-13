@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perfil de Usuario - OFFSZN</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Montserrat:wght@700;800;900&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <link rel="stylesheet" href="/css/marketplace.css">
+    <link rel="stylesheet" href="/css/usuarios.css">
+</head>
+
+<body>
+
+    <header class="navbar">
+        <div class="navbar-container">
+        </div>
+    </header>
+
+    <main class="profile-page-container">
+
+        <header class="profile-header-card">
+            <div class="profile-avatar" id="profile-avatar">
+                <div class="skeleton"></div>
+            </div>
+            <div class="profile-info">
+                <h1 class="profile-name" id="profile-name">
+                    Cargando... <span class="skeleton-text"></span>
+                </h1>
+                <p class="profile-join-date" id="profile-join-date"></p>
+                <p class="profile-bio" id="profile-bio">
+                    <span class="skeleton-text"></span>
+                    <span class="skeleton-text" style="width: 80%;"></span>
+                </p>
+            </div>
+            <div class="profile-socials" id="profile-socials">
+            </div>
+        </header>
+
+        <section class="profile-products-section">
+            <h2 class="section-title-small" id="products-title">Productos de este productor</h2>
+            <div class="products-grid" id="product-grid">
+                <div class="product-card-placeholder">Cargando productos...</div>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        function toggleDropdown(element) {
+            const parent = element.closest('.dropdown-parent');
+            const isActive = parent.classList.contains('dropdown-active');
+            document.querySelectorAll('.dropdown-parent').forEach(p => {
+                p.classList.remove('dropdown-active');
+            });
+            if (!isActive) {
+                parent.classList.add('dropdown-active');
+            }
+        }
+
+        document.addEventListener('click', function (e) {
+            if (!e.target.closest('.dropdown-parent')) {
+                document.querySelectorAll('.dropdown-parent').forEach(p => {
+                    p.classList.remove('dropdown-active');
+                });
+            }
+        })
+    </script>
+    <script src="/cuenta/usuarios.js"></script>
+</body>
+
+</html>

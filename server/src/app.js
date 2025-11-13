@@ -3,6 +3,7 @@ import cors from 'cors'
 import { PORT } from '../src/shared/config/config.js'
 import { checkConnection } from './infrastructure/database/connection.js'
 import authRoutes from './infrastructure/http/routes/auth.routes.js';
+import publicRoutes from './infrastructure/http/routes/public.routes.js';
 import productRoutes from './infrastructure/http/routes/product.routes.js';
 import cartRoutes from './infrastructure/http/routes/cart.routes.js';
 import orderRoutes from './infrastructure/http/routes/order.routes.js';
@@ -15,6 +16,7 @@ app.use(cors())
 app.use(express.json())
 
 app.use('/api/auth', authRoutes);
+app.use('/api', publicRoutes);
 app.use('/api', productRoutes);
 app.use('/api', cartRoutes);
 app.use('/api', orderRoutes);

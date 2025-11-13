@@ -3,8 +3,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- 1. CONFIGURACIÓN ---
     // (Asegúrate de que la librería de Supabase <script src=...> esté en el <head> de marketplace.html)
     const SUPABASE_URL = "https://qtjpvztpgfymjhhpoouq.supabase.co";
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0anB2enRwZ2Z5bWpoaHBvb3VxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3ODA5MTUsImV4cCI6MjA3NjM1NjkxNX0.YsItTFk3hSQaVuy707-z7Z-j34mXa03O0wWGAlAzjrw";
-    
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0anB2enRwZ2Z5bWpoaHBvb3VxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3ODA5MTUsImV4cCI6MjA3NjM1NjkxNX0.YsItTFk3hSQaVuy707-z7Z-j34mXa03O0wWGAlAzjrw";
+
     const { createClient } = supabase;
     const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- 3. FUNCIÓN PRINCIPAL DE CARGA ---
     async function fetchAndRenderProducts() {
         productGrid.innerHTML = '<div class="product-card-placeholder">Cargando productos...</div>';
-        
+
         try {
             // Obtener productos del backend
             const response = await fetch(`${API_URL}/products`);
@@ -33,6 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 throw new Error(`Error ${response.status}: No se pudieron cargar los productos.`);
             }
             const products = await response.json();
+            //console.log("PRODUCTOS RECIBIDOS:", JSON.stringify(products, null, 2));
 
             // (Esta lógica es de tu 'presets.js' anterior, la mantenemos)
             const token = localStorage.getItem('authToken');
@@ -62,7 +63,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- 4. FUNCIÓN DE RENDERIZADO (SEGURA) ---
     function renderProducts(products, purchasedIds) {
         productGrid.innerHTML = ''; // Limpiar el "Cargando..."
-        
+
         if (!products || products.length === 0) {
             productGrid.innerHTML = '<div class="product-card-placeholder">No se encontraron productos.</div>';
             return;
@@ -78,8 +79,21 @@ document.addEventListener('DOMContentLoaded', () => {
             const imageContainer = document.createElement('div');
             imageContainer.className = 'product-card-image';
             const img = document.createElement('img');
-            img.src = product.image_url; 
-            img.alt = product.name; 
+
+            // --- ¡OPTIMIZACIÓN CORREGIDA! ---
+            if (product.image_url) {
+                // 1. Reemplazamos '/object/' por '/render/image/'
+                const optimizedUrlBase = product.image_url.replace(
+                    '/object/',
+                    '/render/image/'
+                );
+
+                // 2. Añadimos solo los parámetros que SÍ funcionan
+                img.src = `${optimizedUrlBase}?width=400&quality=80&resize=contain`;
+            } else {
+                console.warn(`Producto ${product.id} no tiene image_url.`);
+            }
+            img.alt = product.name;
             imageContainer.append(img);
             card.append(imageContainer);
 
@@ -94,9 +108,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const producer = document.createElement('p');
             producer.className = 'product-card-producer';
-            // ¡¡IMPORTANTE!! Necesitamos el 'nickname' del productor.
-            // Lo arreglaremos en el backend en el siguiente paso.
-            producer.textContent = `Por ${product.producer_nickname || 'Usuario Anónimo'}`; 
+            producer.textContent = `Por ${product.producer_nickname || 'Usuario Anónimo'}`;
             content.append(producer);
 
             const description = document.createElement('p');
@@ -117,7 +129,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 priceEl.classList.add('free');
             } else {
                 const prices = [product.price_basic, product.price_premium, product.price_stems, product.price_exclusive].filter(p => p > 0);
-                
+
                 if (prices.length > 0) {
                     const lowestPrice = Math.min(...prices);
                     priceEl.textContent = `Desde $${parseFloat(lowestPrice).toFixed(2)}`;
@@ -141,7 +153,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 cartButton.innerHTML = '<i class="bi bi-cart-plus"></i> Añadir';
                 footer.append(cartButton);
             }
-            
+
             content.append(footer);
             card.append(content);
             productGrid.append(card);
