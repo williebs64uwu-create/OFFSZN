@@ -9,7 +9,7 @@ import orderRoutes from './infrastructure/http/routes/order.routes.js';
 import userRoutes from './infrastructure/http/routes/user.routes.js';
 import adminRoutes from './infrastructure/http/routes/admin.routes.js';
 import chatbotRouter from './routes/chatbot.js';
-import profileRoutes from './infrastructure/http/routes/profile.routes.js'; // ⬅️ AGREGAR ESTA LÍNEA
+import profileRoutes from './infrastructure/http/routes/profile.routes.js';
 
 const app = express()
 app.use(cors())
@@ -22,10 +22,10 @@ app.use('/api', orderRoutes);
 app.use('/api', userRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api', chatbotRouter);
-app.use('/api/profile', profileRoutes); // ⬅️ AGREGAR ESTA LÍNEA
+app.use('/api/profile', profileRoutes);
 
 checkConnection()
 
 app.listen(PORT, () => {
-  console.log(`Servidor corriendo en el puerto ${PORT}`) // ⬅️ También faltaban las comillas aquí
+  console.log(`Servidor corriendo en el puerto ${PORT}`)
 })
