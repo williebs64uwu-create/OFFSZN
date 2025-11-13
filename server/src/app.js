@@ -10,6 +10,7 @@ import orderRoutes from './infrastructure/http/routes/order.routes.js';
 import userRoutes from './infrastructure/http/routes/user.routes.js';
 import adminRoutes from './infrastructure/http/routes/admin.routes.js';
 import chatbotRouter from './routes/chatbot.js';
+import profileRoutes from './infrastructure/http/routes/profile.routes.js';
 
 const app = express()
 app.use(cors())
@@ -23,6 +24,7 @@ app.use('/api', orderRoutes);
 app.use('/api', userRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api', chatbotRouter);
+app.use('/api', profileRoutes); // ✅ CAMBIADO: antes era '/api/profile'
 
 checkConnection()
 
