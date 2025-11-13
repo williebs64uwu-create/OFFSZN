@@ -5,16 +5,13 @@ services:
     
     rewrites:
       # Regla 1: Si la URL empieza con /@ (ej: /@willieinspired)
-      # Sírvele el archivo /pages/usuarios.html (o la ruta correcta a tu usuarios.html)
       - source: "/@:nickname"
-        destination: "/cuenta/usuarios.html"
+        destination: "/usuarios.html"
         
       # Regla 2 (para el Owner): Si la URL es /producto/nombre-del-beat
-      # Sírvele el archivo /pages/articulo.html (¡necesitaremos crear esta página!)
       - source: "/producto/:slug"
         destination: "/pages/articulo.html" # (Lo haremos después)
         
       # Regla 3 (Fallback): Si nada coincide, sirve el index.
-      # Esto es bueno para que rutas como /login o /register sigan funcionando.
       - source: "/*"
         destination: "/index.html"
