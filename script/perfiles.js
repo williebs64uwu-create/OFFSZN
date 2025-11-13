@@ -7,7 +7,7 @@ async function cargarPerfil() {
   console.log('🔍 Buscando usuario:', nickname);
   
   try {
-    // CAMBIO: Usar la API pública en lugar de consultar Supabase directamente
+    // ESTO DEBE DECIR "Usando API pública"
     const response = await fetch(`https://offszn1.onrender.com/api/profile/${nickname}`);
     
     if (!response.ok) {
