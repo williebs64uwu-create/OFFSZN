@@ -1,10 +1,10 @@
-import { Router } from 'express';
+import express from 'express';
 import { getUserProfile, getUserProducts } from '../controllers/ProfileController.js';
 
-const router = Router();
+const router = express.Router();
 
-// Rutas PÚBLICAS - NO requieren autenticación
-router.get('/:nickname', getUserProfile);
-router.get('/:nickname/products', getUserProducts);
+// Rutas públicas (sin autenticación)
+router.get('/profile/:nickname', getUserProfile);
+router.get('/profile/:nickname/products', getUserProducts);
 
 export default router;
