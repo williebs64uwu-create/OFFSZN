@@ -13,7 +13,26 @@ import chatbotRouter from './routes/chatbot.js';
 import profileRoutes from './infrastructure/http/routes/profile.routes.js';
 
 const app = express()
-app.use(cors())
+// --- CONFIGURACIÓN DE CORS ---
+// Lista de dominios que SÍ tienen permiso de hablar con tu API
+const allowedOrigins = [
+    'http://localhost:5500',    // Para tus pruebas locales con Live Server
+    'http://127.0.0.1:5500',   // Para tus pruebas locales
+    'https://offszn.onrender.com' // ¡TU FRONTEND EN PRODUCCIÓN!
+];
+
+const corsOptions = {
+    origin: function (origin, callback) {
+        // Permitir si el origen está en la lista
+        if (allowedOrigins.indexOf(origin) !== -1 || !origin) {
+            callback(null, true);
+        } else {
+            callback(new Error('No permitido por CORS'));
+        }
+    }
+};
+
+app.use(cors(corsOptions));
 app.use(express.json())
 
 app.use('/api/auth', authRoutes);
