@@ -19,27 +19,19 @@ export const createMercadoPagoPreference = async (req, res) => {
             return res.status(400).json({ error: 'El carrito está vacío.' });
         }
 
-        // --- 1. VALIDACIÓN DE PRECIOS ---
-        const productIds = cartItems.map(item => item.id);
-        const { data: productsInDB, error: dbError } = await supabase
-            .from('products')
-            .select('id, name, price_basic, is_free, image_url')
-            .in('id', productIds);
-        if (dbError) throw new Error('Error al verificar productos: ' + dbError.message);
-
-        // --- 2. TRANSFORMAR ITEMS (FORZADO A COP) ---
-        const line_items = productsInDB.map(product => {
-            if (product.is_free) return null;
+        // --- ITEMS EN COP ---
+        const line_items = cartItems.map(item => {
+            if (item.is_free) return null;
             
             return {
-                id: product.id.toString(),
-                title: product.name,
+                id: item.id.toString(),
+                title: item.name.substring(0, 100),
                 description: 'Producto digital - OFFSZN',
-                picture_url: product.image_url,
+                picture_url: item.image_url,
                 category_id: 'art',
                 quantity: 1,
-                currency_id: 'COP', // ¡COLOMBIA!
-                unit_price: 10000 // 10,000 COP para pruebas
+                currency_id: 'COP',
+                unit_price: 10000 // 10,000 COP
             };
         }).filter(item => item !== null);
 
@@ -47,7 +39,6 @@ export const createMercadoPagoPreference = async (req, res) => {
             return res.status(400).json({ error: 'No hay items pagables.' });
         }
 
-        // --- 3. CREAR LA PREFERENCIA DE PAGO ---
         const preference = new Preference(client);
         const preferenceData = {
             body: {
@@ -55,12 +46,22 @@ export const createMercadoPagoPreference = async (req, res) => {
                 payer: { 
                     email: userEmail,
                 },
-                // 🔥 CONFIGURACIÓN CRÍTICA PARA COLOMBIA
+                // 🔥 CONFIGURACIÓN CRÍTICA - FORZAR TARJETA
                 payment_methods: {
-                    excluded_payment_types: [],
+                    excluded_payment_types: [
+                        { id: 'digital_currency' }
+                    ],
+                    excluded_payment_methods: [
+                        { id: 'amex' }
+                    ],
+                    default_payment_method_id: null, // No forzar método específico
                     installments: 1,
                     default_installments: 1
                 },
+                // 🔥 CONFIGURACIÓN DE SITIO EXPLÍCITA
+                site_id: 'MCO',
+                purpose: 'onboarding_credits',
+                
                 back_urls: {
                     success: `https://offszn.onrender.com/pago-exitoso`,
                     failure: `https://offszn.onrender.com/pages/marketplace.html`,
@@ -69,31 +70,30 @@ export const createMercadoPagoPreference = async (req, res) => {
                 auto_return: 'approved',
                 notification_url: `https://offszn-academy.onrender.com/api/orders/mercadopago-webhook?userId=${userId}`,
                 external_reference: userId.toString(),
-                purpose: 'wallet_purchase',
-                // 🔥 FORZAR SITIO COLOMBIA
-                site_id: 'MCO'
             }
         };
 
-        console.log("🎯 Preferencia Colombia:", JSON.stringify({
-            items: preferenceData.body.items,
+        console.log("🎯 Preferencia Colombia CONFIGURADA:", {
             site_id: preferenceData.body.site_id,
-            currency: preferenceData.body.items[0]?.currency_id
-        }, null, 2));
+            currency: 'COP',
+            items_count: line_items.length,
+            total: line_items.reduce((sum, item) => sum + item.unit_price, 0)
+        });
 
         const result = await preference.create(preferenceData);
 
-        console.log("✅ Preferencia creada exitosamente");
-        console.log("🔗 URL de checkout:", result.sandbox_init_point);
+        console.log("✅ Preferencia creada:", result.id);
+        console.log("🔗 Sandbox URL:", result.sandbox_init_point);
 
         res.status(200).json({ 
-            url: result.sandbox_init_point || result.init_point 
+            url: result.sandbox_init_point 
         });
 
     } catch (err) {
         console.error("❌ Error en createMercadoPagoPreference:", {
             message: err.message,
-            api_response: err.api_response
+            api_response: err.api_response,
+            stack: err.stack
         });
         res.status(500).json({
             error: 'Error al crear la preferencia de pago.',
