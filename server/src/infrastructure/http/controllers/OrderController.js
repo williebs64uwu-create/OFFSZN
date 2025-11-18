@@ -42,26 +42,8 @@ export const createMercadoPagoPreference = async (req, res) => {
         const preference = new Preference(client);
         const preferenceData = {
             body: {
-                items: line_items,
-                payer: { 
-                    email: userEmail,
-                },
-                // 🔥 CONFIGURACIÓN CRÍTICA - FORZAR TARJETA
-                payment_methods: {
-                    excluded_payment_types: [
-                        { id: 'digital_currency' }
-                    ],
-                    excluded_payment_methods: [
-                        { id: 'amex' }
-                    ],
-                    default_payment_method_id: null, // No forzar método específico
-                    installments: 1,
-                    default_installments: 1
-                },
-                // 🔥 CONFIGURACIÓN DE SITIO EXPLÍCITA
-                site_id: 'MCO',
-                purpose: 'onboarding_credits',
-                
+                items: line_items, // Tus items con precio en COP
+                // Quitamos 'payer', 'payment_methods', etc. Dejamos que MP lo maneje.
                 back_urls: {
                     success: `https://offszn.onrender.com/pago-exitoso`,
                     failure: `https://offszn.onrender.com/pages/marketplace.html`,
@@ -70,6 +52,9 @@ export const createMercadoPagoPreference = async (req, res) => {
                 auto_return: 'approved',
                 notification_url: `https://offszn-academy.onrender.com/api/orders/mercadopago-webhook?userId=${userId}`,
                 external_reference: userId.toString(),
+                // Mantenemos site_id si tu cuenta es de otro país, pero si tu token es de CO, no debería hacer falta.
+                // Por seguridad, déjalo si tu cuenta base es de Perú.
+                site_id: 'MCO' 
             }
         };
 
