@@ -6,12 +6,7 @@ const client = new MercadoPagoConfig({
     accessToken: process.env.MERCADOPAGO_ACCESS_TOKEN
 });
 
-
-// ==========================================================
-// FUNCIÓN PARA CREAR PREFERENCIA (¡FORZADA A COLOMBIA (COP)!)
-// ==========================================================
 export const createMercadoPagoPreference = async (req, res) => {
-    // Log para verificar que el .env está bien
     console.log("--- INICIANDO createMercadoPagoPreference ---");
     console.log("Token usado:", process.env.MERCADOPAGO_ACCESS_TOKEN.substring(0, 15) + "...");
 
@@ -35,15 +30,16 @@ export const createMercadoPagoPreference = async (req, res) => {
         // --- 2. TRANSFORMAR ITEMS (FORZADO A COP) ---
         const line_items = productsInDB.map(product => {
             if (product.is_free) return null;
-            const precioPruebaCOP = 5000; // 5,000 COP (para probar)
-
+            
             return {
+                id: product.id.toString(),
                 title: product.name,
+                description: 'Producto digital - OFFSZN',
                 picture_url: product.image_url,
                 category_id: 'art',
                 quantity: 1,
                 currency_id: 'COP', // ¡COLOMBIA!
-                unit_price: precioPruebaCOP // ¡PRECIO EN COP!
+                unit_price: 10000 // 10,000 COP para pruebas
             };
         }).filter(item => item !== null);
 
@@ -55,9 +51,16 @@ export const createMercadoPagoPreference = async (req, res) => {
         const preference = new Preference(client);
         const preferenceData = {
             body: {
-                // ¡SIN site_id! Dejamos que la clave de prueba de COP decida.
                 items: line_items,
-                payer: { email: userEmail },
+                payer: { 
+                    email: userEmail,
+                },
+                // 🔥 CONFIGURACIÓN CRÍTICA PARA COLOMBIA
+                payment_methods: {
+                    excluded_payment_types: [],
+                    installments: 1,
+                    default_installments: 1
+                },
                 back_urls: {
                     success: `https://offszn.onrender.com/pago-exitoso`,
                     failure: `https://offszn.onrender.com/pages/marketplace.html`,
@@ -66,25 +69,31 @@ export const createMercadoPagoPreference = async (req, res) => {
                 auto_return: 'approved',
                 notification_url: `https://offszn-academy.onrender.com/api/orders/mercadopago-webhook?userId=${userId}`,
                 external_reference: userId.toString(),
-                purpose: 'wallet_purchase' // (Esto puede ayudar)
+                purpose: 'wallet_purchase',
+                // 🔥 FORZAR SITIO COLOMBIA
+                site_id: 'MCO'
             }
         };
 
-        // ¡NUEVO CONSOLE LOG!
-        console.log("Enviando preferencia a Mercado Pago (FORZADO A COP):", JSON.stringify(preferenceData.body.items, null, 2));
+        console.log("🎯 Preferencia Colombia:", JSON.stringify({
+            items: preferenceData.body.items,
+            site_id: preferenceData.body.site_id,
+            currency: preferenceData.body.items[0]?.currency_id
+        }, null, 2));
 
         const result = await preference.create(preferenceData);
 
         console.log("✅ Preferencia creada exitosamente");
-        const checkoutUrl = result.sandbox_init_point || result.init_point;
-        console.log("🎯 URL de checkout:", checkoutUrl);
+        console.log("🔗 URL de checkout:", result.sandbox_init_point);
 
-        res.status(200).json({ url: checkoutUrl });
+        res.status(200).json({ 
+            url: result.sandbox_init_point || result.init_point 
+        });
 
     } catch (err) {
         console.error("❌ Error en createMercadoPagoPreference:", {
             message: err.message,
-            api_response: err.response?.data // Captura la respuesta de error de MP
+            api_response: err.api_response
         });
         res.status(500).json({
             error: 'Error al crear la preferencia de pago.',
@@ -93,9 +102,8 @@ export const createMercadoPagoPreference = async (req, res) => {
     }
 };
 
-
 // ==========================================================
-// FUNCIÓN DE WEBHOOK (Sin cambios, ya estaba bien)
+// WEBHOOK (sin cambios)
 // ==========================================================
 export const handleMercadoPagoWebhook = async (req, res) => {
     console.log("🔔 ¡Webhook de Mercado Pago recibido!");
@@ -127,7 +135,7 @@ export const handleMercadoPagoWebhook = async (req, res) => {
             console.log(`✅ Pago aprobado para usuario: ${userId}`);
             console.log(`   Items:`, itemsComprados.map(item => item.title));
 
-            // --- 4. Buscar los IDs de los productos de Supabase ---
+            // Buscar los IDs de los productos de Supabase
             const productNames = itemsComprados.map(item => item.title);
             const { data: products, error: pError } = await supabase
                 .from('products')
@@ -135,21 +143,20 @@ export const handleMercadoPagoWebhook = async (req, res) => {
                 .in('name', productNames);
             if (pError) throw new Error(`Error buscando IDs de productos: ${pError.message}`);
 
-            // --- 5. Crear la orden en nuestra tabla 'orders' ---
+            // Crear la orden en nuestra tabla 'orders'
             const { data: newOrder, error: oError } = await supabase
                 .from('orders')
                 .insert({
                     user_id: userId,
-                    paypal_order_id: orderId, // (Deberíamos renombrar esta columna)
+                    paypal_order_id: orderId,
                     status: 'completed',
                     total_price: totalPagado
-
                 })
                 .select('id')
                 .single();
             if (oError) throw new Error(`Error creando orden: ${oError.message}`);
 
-            // --- 6. Registrar los items comprados en 'order_items' ---
+            // Registrar los items comprados en 'order_items'
             const orderItemsData = products.map(product => {
                 const purchasedItem = itemsComprados.find(item => item.title === product.name);
                 return {
@@ -175,33 +182,5 @@ export const handleMercadoPagoWebhook = async (req, res) => {
     } catch (err) {
         console.error("Error en handleMercadoPagoWebhook:", err.message);
         res.status(500).json({ error: err.message || 'Error al procesar el webhook.' });
-    }
-};
-
-// Agrega esta función de diagnóstico en tu OrderController.js
-export const checkMercadoPagoAccount = async (req, res) => {
-    try {
-        const client = new MercadoPagoConfig({
-            accessToken: process.env.MERCADOPAGO_ACCESS_TOKEN
-        });
-
-        // Verificar información de la cuenta
-        const response = await fetch('https://api.mercadopago.com/users/me', {
-            headers: {
-                'Authorization': `Bearer ${process.env.MERCADOPAGO_ACCESS_TOKEN}`
-            }
-        });
-
-        const accountInfo = await response.json();
-        console.log("Información de la cuenta Mercado Pago:", {
-            country_id: accountInfo.country_id,
-            site_id: accountInfo.site_id,
-            email: accountEmail
-        });
-
-        res.json(accountInfo);
-    } catch (error) {
-        console.error("Error al verificar cuenta:", error);
-        res.status(500).json({ error: error.message });
     }
 };
