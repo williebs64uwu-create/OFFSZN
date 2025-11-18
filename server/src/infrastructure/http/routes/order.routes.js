@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { authenticateTokenMiddleware } from '../../middlewares/authenticateTokenMiddleware.js';
 import { 
-    createMercadoPagoPreference
+    createMercadoPagoPreference, handleMercadoPagoWebhook
 } from '../controllers/OrderController.js';
 
 const router = Router();
