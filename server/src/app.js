@@ -12,13 +12,16 @@ import adminRoutes from './infrastructure/http/routes/admin.routes.js';
 import chatbotRouter from './routes/chatbot.js';
 import profileRoutes from './infrastructure/http/routes/profile.routes.js';
 
+import { handleMercadoPagoWebhook } from './infrastructure/http/controllers/OrderController.js';
+
 const app = express()
 // --- CONFIGURACIÓN DE CORS ---
 // Lista de dominios que SÍ tienen permiso de hablar con tu API
 const allowedOrigins = [
     'http://localhost:5500',    // Para tus pruebas locales con Live Server
     'http://127.0.0.1:5500',   // Para tus pruebas locales
-    'https://offszn.onrender.com' // ¡TU FRONTEND EN PRODUCCIÓN!
+    'http://127.0.0.1:5501',
+    'https://offszn.onrender.com' // ¡TU FRONTEND EN PRODUCCIÓN! 
 ];
 
 const corsOptions = {
@@ -33,6 +36,11 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
+
+app.post('/api/orders/mercadopago-webhook', 
+    express.raw({type: 'application/json'}),
+    handleMercadoPagoWebhook
+);
 app.use(express.json())
 
 app.use('/api/auth', authRoutes);

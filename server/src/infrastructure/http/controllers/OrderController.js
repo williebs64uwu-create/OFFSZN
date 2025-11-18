@@ -1,189 +1,207 @@
 import { supabase } from '../../database/connection.js';
-import { client as paypalClient } from '../../services/paypal/paypalClient.js';
-import paypal from '@paypal/checkout-server-sdk';
+import { MercadoPagoConfig, Preference, Payment } from 'mercadopago';
 
-export const createOrder = async (req, res) => {
+// --- CONFIGURACIÓN DE MERCADO PAGO ---
+const client = new MercadoPagoConfig({
+    accessToken: process.env.MERCADOPAGO_ACCESS_TOKEN
+});
+
+
+// ==========================================================
+// FUNCIÓN PARA CREAR PREFERENCIA (¡FORZADA A COLOMBIA (COP)!)
+// ==========================================================
+export const createMercadoPagoPreference = async (req, res) => {
+    // Log para verificar que el .env está bien
+    console.log("--- INICIANDO createMercadoPagoPreference ---");
+    console.log("Token usado:", process.env.MERCADOPAGO_ACCESS_TOKEN.substring(0, 15) + "...");
+
     try {
-        const { cartItems, productId, description } = req.body; // Aceptamos 'productId' O 'cartItems'
         const userId = req.user.userId;
+        const userEmail = req.user.email;
+        const { cartItems } = req.body;
 
-        let itemsParaGuardar = [];
-        let precioTotalCalculado = 0;
-        let descripcionOrden;
+        if (!cartItems || cartItems.length === 0) {
+            return res.status(400).json({ error: 'El carrito está vacío.' });
+        }
 
-        if (productId) {
-            // --- LÓGICA DE "COMPRAR AHORA" (UN SOLO PRODUCTO) ---
+        // --- 1. VALIDACIÓN DE PRECIOS ---
+        const productIds = cartItems.map(item => item.id);
+        const { data: productsInDB, error: dbError } = await supabase
+            .from('products')
+            .select('id, name, price_basic, is_free, image_url')
+            .in('id', productIds);
+        if (dbError) throw new Error('Error al verificar productos: ' + dbError.message);
 
-            // 1. OBTENER EL PRECIO REAL DESDE LA BASE DE DATOS
-            const { data: product, error } = await supabase
-                .from('products')
-                .select('id, name, price_usd')
-                .eq('id', productId)
-                .single();
+        // --- 2. TRANSFORMAR ITEMS (FORZADO A COP) ---
+        const line_items = productsInDB.map(product => {
+            if (product.is_free) return null;
+            const precioPruebaCOP = 5000; // 5,000 COP (para probar)
 
-            if (error || !product) {
-                return res.status(404).json({ error: 'Producto no encontrado.' });
-            }
-
-            // 2. Armar los datos del pedido
-            precioTotalCalculado = parseFloat(product.price_usd);
-            descripcionOrden = description || product.name;
-            itemsParaGuardar = [{
-                productId: product.id,
+            return {
+                title: product.name,
+                picture_url: product.image_url,
+                category_id: 'art',
                 quantity: 1,
-                price: precioTotalCalculado // Precio real de la BBDD
-            }];
+                currency_id: 'COP', // ¡COLOMBIA!
+                unit_price: precioPruebaCOP // ¡PRECIO EN COP!
+            };
+        }).filter(item => item !== null);
 
-        } else if (cartItems && cartItems.length > 0) {
-            // --- LÓGICA DE CARRITO (LA QUE TENÍAS PENSADA) ---
-
-            // 1. OBTENER PRECIOS REALES DEL CARRITO (¡NUNCA CONFÍES EN EL PRECIO DEL CLIENTE!)
-            const productIds = cartItems.map(item => item.productId);
-            const { data: products, error } = await supabase
-                .from('products')
-                .select('id, price_usd')
-                .in('id', productIds);
-
-            if (error) throw new Error('Error al verificar precios del carrito.');
-
-            // 2. Calcular el total en el servidor
-            precioTotalCalculado = 0;
-            itemsParaGuardar = cartItems.map(item => {
-                const product = products.find(p => p.id === item.productId);
-                if (!product) throw new Error(`Producto ID ${item.productId} no encontrado.`);
-
-                const itemPrice = parseFloat(product.price_usd);
-                precioTotalCalculado += itemPrice * (item.quantity || 1);
-
-                return {
-                    productId: item.productId,
-                    quantity: item.quantity || 1,
-                    price: itemPrice // Precio real de la BBDD
-                };
-            });
-            descripcionOrden = description || 'Compra de varios items';
-
-        } else {
-            return res.status(400).json({ error: 'No se proporcionaron items para comprar.' });
+        if (line_items.length === 0) {
+            return res.status(400).json({ error: 'No hay items pagables.' });
         }
 
-        // --- LÓGICA DE PAYPAL (USA LOS DATOS CALCULADOS) ---
-        const request = new paypal.orders.OrdersCreateRequest();
-        request.prefer("return=representation");
-        request.requestBody({
-            intent: 'CAPTURE',
-            purchase_units: [{
-                description: descripcionOrden,
-                amount: {
-                    currency_code: 'USD',
-                    value: precioTotalCalculado.toFixed(2) // Usamos el precio 100% seguro del servidor
-                }
-            }]
-        });
+        // --- 3. CREAR LA PREFERENCIA DE PAGO ---
+        const preference = new Preference(client);
+        const preferenceData = {
+            body: {
+                // ¡SIN site_id! Dejamos que la clave de prueba de COP decida.
+                items: line_items,
+                payer: { email: userEmail },
+                back_urls: {
+                    success: `https://offszn.onrender.com/pago-exitoso`,
+                    failure: `https://offszn.onrender.com/pages/marketplace.html`,
+                    pending: `https://offszn.onrender.com/pages/marketplace.html`
+                },
+                auto_return: 'approved',
+                notification_url: `https://offszn-academy.onrender.com/api/orders/mercadopago-webhook?userId=${userId}`,
+                external_reference: userId.toString(),
+                purpose: 'wallet_purchase' // (Esto puede ayudar)
+            }
+        };
 
-        const order = await paypalClient().execute(request);
-        const paypalOrderId = order.result.id;
+        // ¡NUEVO CONSOLE LOG!
+        console.log("Enviando preferencia a Mercado Pago (FORZADO A COP):", JSON.stringify(preferenceData.body.items, null, 2));
 
-        // --- GUARDAR EN BASE DE DATOS (USA LOS DATOS CALCULADOS) ---
-        const { data: newOrderData, error: orderInsertError } = await supabase
-            .from('orders')
-            .insert({
-                user_id: userId,
-                paypal_order_id: paypalOrderId,
-                status: 'created',
-                total_price: precioTotalCalculado // Precio seguro del servidor
-            })
-            .select('id')
-            .single();
+        const result = await preference.create(preferenceData);
 
-        if (orderInsertError || !newOrderData) {
-            throw new Error('Error al guardar la orden: ' + orderInsertError?.message);
-        }
-        const newOrderId = newOrderData.id;
+        console.log("✅ Preferencia creada exitosamente");
+        const checkoutUrl = result.sandbox_init_point || result.init_point;
+        console.log("🎯 URL de checkout:", checkoutUrl);
 
-        // Mapear los items para guardar en 'order_items'
-        const itemsToInsert = itemsParaGuardar.map(item => ({
-            order_id: newOrderId,
-            product_id: item.productId,
-            quantity: item.quantity,
-            price_at_purchase: item.price // Precio seguro del servidor
-        }));
-
-        const { error: itemsInsertError } = await supabase
-            .from('order_items')
-            .insert(itemsToInsert);
-
-        if (itemsInsertError) {
-            throw new Error('Error al guardar los items de la orden: ' + itemsInsertError?.message);
-        }
-
-        res.status(201).json({ orderID: paypalOrderId });
+        res.status(200).json({ url: checkoutUrl });
 
     } catch (err) {
-        console.error("Error en createOrder:", err.message);
-        res.status(500).json({ error: err.message || 'Error al crear la orden' });
+        console.error("❌ Error en createMercadoPagoPreference:", {
+            message: err.message,
+            api_response: err.response?.data // Captura la respuesta de error de MP
+        });
+        res.status(500).json({
+            error: 'Error al crear la preferencia de pago.',
+            details: err.message
+        });
     }
 };
 
-export const captureOrder = async (req, res) => {
+
+// ==========================================================
+// FUNCIÓN DE WEBHOOK (Sin cambios, ya estaba bien)
+// ==========================================================
+export const handleMercadoPagoWebhook = async (req, res) => {
+    console.log("🔔 ¡Webhook de Mercado Pago recibido!");
+
+    const paymentId = req.query['data.id'];
+    const type = req.query.type;
+
+    if (type !== 'payment') {
+        console.log("No es un evento de pago, ignorando.");
+        return res.status(200).send('Webhook ignorado (no es de tipo pago).');
+    }
+    if (!paymentId) {
+        console.warn("No se recibió 'data.id' en el webhook.");
+        return res.status(400).send("Falta el ID del pago.");
+    }
+
     try {
-        const { orderID } = req.body;
+        const payment = new Payment(client);
+        const paymentInfo = await payment.get({ id: paymentId });
 
-        const userId = req.user.userId;
+        console.log("Información del pago obtenida:", paymentInfo);
 
-        if (!orderID) {
-            return res.status(400).json({ error: 'PayPal Order ID es requerido.' });
-        }
+        if (paymentInfo.status === 'approved') {
+            const userId = paymentInfo.external_reference;
+            const orderId = paymentInfo.id;
+            const itemsComprados = paymentInfo.additional_info.items;
+            const totalPagado = paymentInfo.transaction_amount;
 
-        const request = new paypal.orders.OrdersCaptureRequest(orderID);
-        request.requestBody({});
+            console.log(`✅ Pago aprobado para usuario: ${userId}`);
+            console.log(`   Items:`, itemsComprados.map(item => item.title));
 
-        const capture = await paypalClient().execute(request);
-        const captureStatus = capture.result.status;
+            // --- 4. Buscar los IDs de los productos de Supabase ---
+            const productNames = itemsComprados.map(item => item.title);
+            const { data: products, error: pError } = await supabase
+                .from('products')
+                .select('id, name')
+                .in('name', productNames);
+            if (pError) throw new Error(`Error buscando IDs de productos: ${pError.message}`);
 
-        if (captureStatus === 'COMPLETED') {
-            const { error: updateError } = await supabase
+            // --- 5. Crear la orden en nuestra tabla 'orders' ---
+            const { data: newOrder, error: oError } = await supabase
                 .from('orders')
-                .update({ status: 'completed' })
-                .eq('paypal_order_id', orderID);
+                .insert({
+                    user_id: userId,
+                    paypal_order_id: orderId, // (Deberíamos renombrar esta columna)
+                    status: 'completed',
+                    total_price: totalPagado
 
-            if (updateError) {
-                console.error("ALERTA: Error al actualizar la orden en Supabase después del pago:", updateError);
-            } else {
-                try {
-                    console.log(`Pago completado para orden ${orderID}. Vaciando carrito para usuario ${userId}...`);
-                    const { error: deleteCartError } = await supabase
-                        .from('cart_items')
-                        .delete()
-                        .eq('user_id', userId);
+                })
+                .select('id')
+                .single();
+            if (oError) throw new Error(`Error creando orden: ${oError.message}`);
 
-                    if (deleteCartError) {
-                        console.error(`ALERTA: Error al vaciar el carrito para user ${userId} después de orden ${orderID}:`, deleteCartError.message);
-                    } else {
-                        console.log(`Carrito vaciado exitosamente para user ${userId}.`);
-                    }
-                } catch (cartClearErr) {
-                    console.error(`ALERTA: Excepción al vaciar carrito para user ${userId}:`, cartClearErr.message);
-                }
-            }
+            // --- 6. Registrar los items comprados en 'order_items' ---
+            const orderItemsData = products.map(product => {
+                const purchasedItem = itemsComprados.find(item => item.title === product.name);
+                return {
+                    order_id: newOrder.id,
+                    product_id: product.id,
+                    quantity: 1,
+                    price_at_purchase: purchasedItem ? parseFloat(purchasedItem.unit_price) : 0
+                };
+            });
 
-            res.status(200).json({ status: 'COMPLETED', capture: capture.result });
+            const { error: oiError } = await supabase
+                .from('order_items')
+                .insert(orderItemsData);
+            if (oiError) throw new Error(`Error guardando items: ${oiError.message}`);
 
+            console.log(`🎉 Orden ${newOrder.id} guardada exitosamente en la BBDD.`);
         } else {
-            console.warn("Captura de PayPal no completada:", capture.result);
-            res.status(400).json({ status: 'NOT_COMPLETED', capture: capture.result });
+            console.log(`⚠️ Estado del pago: ${paymentInfo.status}`);
         }
+
+        res.status(200).send('Webhook recibido correctamente.');
 
     } catch (err) {
-        console.error("Error en captureOrder:", err.message);
-        if (err.statusCode && err.message) {
-            try {
-                const errorDetails = JSON.parse(err.message);
-                return res.status(err.statusCode).json({ error: 'Error de PayPal', details: errorDetails });
-            } catch (parseError) {
-                return res.status(err.statusCode || 500).json({ error: 'Error al capturar el pago', details: err.message });
+        console.error("Error en handleMercadoPagoWebhook:", err.message);
+        res.status(500).json({ error: err.message || 'Error al procesar el webhook.' });
+    }
+};
+
+// Agrega esta función de diagnóstico en tu OrderController.js
+export const checkMercadoPagoAccount = async (req, res) => {
+    try {
+        const client = new MercadoPagoConfig({
+            accessToken: process.env.MERCADOPAGO_ACCESS_TOKEN
+        });
+
+        // Verificar información de la cuenta
+        const response = await fetch('https://api.mercadopago.com/users/me', {
+            headers: {
+                'Authorization': `Bearer ${process.env.MERCADOPAGO_ACCESS_TOKEN}`
             }
-        }
-        res.status(500).json({ error: err.message || 'Error al capturar el pago' });
+        });
+
+        const accountInfo = await response.json();
+        console.log("Información de la cuenta Mercado Pago:", {
+            country_id: accountInfo.country_id,
+            site_id: accountInfo.site_id,
+            email: accountEmail
+        });
+
+        res.json(accountInfo);
+    } catch (error) {
+        console.error("Error al verificar cuenta:", error);
+        res.status(500).json({ error: error.message });
     }
 };

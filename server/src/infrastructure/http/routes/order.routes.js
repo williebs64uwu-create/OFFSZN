@@ -1,12 +1,20 @@
 import { Router } from 'express';
 import { authenticateTokenMiddleware } from '../../middlewares/authenticateTokenMiddleware.js';
-import { createOrder, captureOrder } from '../controllers/OrderController.js'; 
+import { 
+    createMercadoPagoPreference
+} from '../controllers/OrderController.js';
 
 const router = Router();
 
-router.use(authenticateTokenMiddleware);
+//router.post('/orders/mercadopago-webhook', handleMercadoPagoWebhook);
 
-router.post('/orders/create', createOrder);
-router.post('/orders/capture', captureOrder);
+//router.use(authenticateTokenMiddleware);
+
+// Ruta de Mercado Pago
+router.post(
+    '/orders/create-mercadopago-preference', 
+    authenticateTokenMiddleware, // <--- Aplicamos el middleware aquí
+    createMercadoPagoPreference
+);
 
 export default router;

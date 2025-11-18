@@ -1,7 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
 
     // --- 1. CONFIGURACIÓN ---
-    // (Asegúrate de que la librería de Supabase <script src=...> esté en el <head> de marketplace.html)
     const SUPABASE_URL = "https://qtjpvztpgfymjhhpoouq.supabase.co";
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0anB2enRwZ2Z5bWpoaHBvb3VxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3ODA5MTUsImV4cCI6MjA3NjM1NjkxNX0.YsItTFk3hSQaVuy707-z7Z-j34mXa03O0wWGAlAzjrw";
 
@@ -15,44 +14,50 @@ document.addEventListener('DOMContentLoaded', () => {
         API_URL = 'https://offszn-academy.onrender.com/api';
     }
 
-    // --- 2. SELECTORES DEL DOM ---
+    // --- 2. ESTADO GLOBAL ---
+    let allProducts = []; // Guardamos todos los productos aquí
+    let cart = []; // Nuestro carrito de compras
+
+    // --- 3. SELECTORES DEL DOM ---
     const productGrid = document.getElementById('product-grid');
-    const searchInput = document.getElementById('searchInput');
-    const searchButton = document.getElementById('searchButton');
-    // (Añadiremos los filtros y ordenamiento después)
+    // ... (selectores de filtros) ...
 
+    // Selectores del Carrito
+    const cartOverlay = document.getElementById('cart-overlay');
+    const cartPanel = document.getElementById('cart-panel');
+    const cartCloseBtn = document.getElementById('cart-close-btn');
+    const cartItemsList = document.getElementById('cart-items-list');
+    const cartTotalPriceEl = document.getElementById('cart-total-price');
+    const cartEmptyMessage = document.getElementById('cart-empty-message');
+    const navbarCartButton = document.querySelector('a[href="/pages/cart.html"]'); // El botón del carrito en el navbar
 
-    // --- 3. FUNCIÓN PRINCIPAL DE CARGA ---
+    // --- 4. FUNCIONES PRINCIPALES DE CARGA ---
     async function fetchAndRenderProducts() {
+        // ... (Tu función fetchAndRenderProducts se queda EXACTAMENTE IGUAL que antes)
+        // ... (No la pego aquí para no hacer el bloque tan largo, no la toques)
         productGrid.innerHTML = '<div class="product-card-placeholder">Cargando productos...</div>';
 
         try {
-            // Obtener productos del backend
             const response = await fetch(`${API_URL}/products`);
-            if (!response.ok) {
-                throw new Error(`Error ${response.status}: No se pudieron cargar los productos.`);
-            }
-            const products = await response.json();
-            //console.log("PRODUCTOS RECIBIDOS:", JSON.stringify(products, null, 2));
+            if (!response.ok) throw new Error(`Error ${response.status}: No se pudieron cargar los productos.`);
 
-            // (Esta lógica es de tu 'presets.js' anterior, la mantenemos)
+            allProducts = await response.json(); // Guardamos en el estado global
+
             const token = localStorage.getItem('authToken');
             let purchasedProductIds = new Set();
             if (token) {
-                try {
-                    const purchasedResponse = await fetch(`${API_URL}/my-products`, {
-                        headers: { 'Authorization': `Bearer ${token}` }
-                    });
-                    if (purchasedResponse.ok) {
-                        const purchasedProducts = await purchasedResponse.json();
-                        purchasedProducts.forEach(p => p && p.id && purchasedProductIds.add(p.id));
-                    }
-                } catch (e) {
-                    console.warn("No se pudo obtener la lista de productos comprados.", e.message);
+                // (Opcional pero recomendado: cargar el carrito existente del usuario desde la API)
+                // await loadUserCart(token); 
+
+                const purchasedResponse = await fetch(`${API_URL}/my-products`, { headers: { 'Authorization': `Bearer ${token}` } });
+                if (purchasedResponse.ok) {
+                    const purchasedProducts = await purchasedResponse.json();
+                    purchasedProducts.forEach(p => p && p.id && purchasedProductIds.add(p.id));
                 }
             }
 
-            renderProducts(products, purchasedProductIds);
+            renderProducts(allProducts, purchasedProductIds);
+            renderCartUI(); // Renderizar el carrito (estará vacío al inicio)
 
         } catch (error) {
             console.error(error);
@@ -60,10 +65,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- 4. FUNCIÓN DE RENDERIZADO (SEGURA) ---
+    // --- 5. RENDERIZADO DE PRODUCTOS (¡CON LISTENER DE CARRITO!) ---
     function renderProducts(products, purchasedIds) {
-        productGrid.innerHTML = ''; // Limpiar el "Cargando..."
-
+        productGrid.innerHTML = '';
         if (!products || products.length === 0) {
             productGrid.innerHTML = '<div class="product-card-placeholder">No se encontraron productos.</div>';
             return;
@@ -71,39 +75,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
         products.forEach(product => {
             const isPurchased = purchasedIds.has(product.id);
-
             const card = document.createElement('div');
             card.className = 'product-card';
 
-            // --- Imagen ---
+            // --- Imagen (Corregida con la optimización) ---
             const imageContainer = document.createElement('div');
             imageContainer.className = 'product-card-image';
             const img = document.createElement('img');
-
-            // --- ¡OPTIMIZACIÓN CORREGIDA! ---
             if (product.image_url) {
-                // 1. Reemplazamos '/object/' por '/render/image/'
-                const optimizedUrlBase = product.image_url.replace(
-                    '/object/',
-                    '/render/image/'
-                );
-
-                // 2. Añadimos solo los parámetros que SÍ funcionan
+                const optimizedUrlBase = product.image_url.replace('/object/', '/render/image/');
                 img.src = `${optimizedUrlBase}?width=400&quality=80&resize=contain`;
-            } else {
-                console.warn(`Producto ${product.id} no tiene image_url.`);
             }
             img.alt = product.name;
             imageContainer.append(img);
             card.append(imageContainer);
 
-            // --- Contenido ---
+            // --- Contenido (Seguro) ---
             const content = document.createElement('div');
             content.className = 'product-card-content';
 
             const title = document.createElement('h3');
             title.className = 'product-card-title';
-            title.textContent = product.name; // <-- SEGURO
+            title.textContent = product.name;
             content.append(title);
 
             const producer = document.createElement('p');
@@ -113,7 +106,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const description = document.createElement('p');
             description.className = 'product-card-description';
-            description.textContent = product.description; // <-- SEGURO
+            description.textContent = product.description;
             content.append(description);
 
             // --- Footer de la Tarjeta ---
@@ -122,14 +115,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const priceEl = document.createElement('div');
             priceEl.className = 'product-card-price';
-
-            // Lógica de precios que arreglamos
             if (product.is_free) {
                 priceEl.textContent = 'Gratis';
                 priceEl.classList.add('free');
             } else {
                 const prices = [product.price_basic, product.price_premium, product.price_stems, product.price_exclusive].filter(p => p > 0);
-
                 if (prices.length > 0) {
                     const lowestPrice = Math.min(...prices);
                     priceEl.textContent = `Desde $${parseFloat(lowestPrice).toFixed(2)}`;
@@ -139,10 +129,10 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             footer.append(priceEl);
 
-            // Botón de Añadir al Carrito (o Adquirido)
+            // --- Botón de Carrito (¡AHORA CON LISTENER!) ---
             if (isPurchased) {
                 const purchasedBadge = document.createElement('span');
-                purchasedBadge.className = 'btn-add-to-cart'; // Reutilizamos el estilo
+                purchasedBadge.className = 'btn-add-to-cart';
                 purchasedBadge.style.background = 'var(--green-verified)';
                 purchasedBadge.innerHTML = '<i class="bi bi-check-circle-fill"></i> Adquirido';
                 footer.append(purchasedBadge);
@@ -151,6 +141,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 cartButton.className = 'btn-add-to-cart';
                 cartButton.dataset.productId = product.id;
                 cartButton.innerHTML = '<i class="bi bi-cart-plus"></i> Añadir';
+
+                // ¡¡AQUÍ CONECTAMOS EL BOTÓN!!
+                cartButton.addEventListener('click', (e) => {
+                    e.stopPropagation(); // Evita que se haga clic en la tarjeta
+                    addToCart(product.id, cartButton);
+                });
+
                 footer.append(cartButton);
             }
 
@@ -158,11 +155,237 @@ document.addEventListener('DOMContentLoaded', () => {
             card.append(content);
             productGrid.append(card);
         });
-
-        // 5. --- (PENDIENTE) Inicializar Botones ---
-        // addCartButtonListeners(); 
     }
 
-    // --- 6. --- Carga Inicial ---
+    // --- 6. LÓGICA DEL CARRITO (¡NUEVO!) ---
+
+    function openCart() {
+        if (cartPanel) cartPanel.classList.add('active');
+        if (cartOverlay) cartOverlay.classList.add('active');
+    }
+
+    function closeCart() {
+        if (cartPanel) cartPanel.classList.remove('active');
+        if (cartOverlay) cartOverlay.classList.remove('active');
+    }
+
+    async function addToCart(productId, button) {
+        const token = localStorage.getItem('authToken');
+
+        // --- ¡EL AUTH WALL QUE PIDIÓ EL OWNER! ---
+        if (!token) {
+            alert('Debes crear una cuenta para comprar o añadir al carrito.');
+            window.location.href = '/pages/register.html'; // Lo mandamos a registrarse
+            return;
+        }
+
+        // Evitar duplicados
+        if (cart.find(item => item.id === productId)) {
+            showToast('Este producto ya está en tu carrito.', 'info');
+            openCart();
+            return;
+        }
+
+        if (button) {
+            button.disabled = true;
+            button.innerHTML = '<i class="bi bi-hourglass-split"></i>';
+        }
+
+        try {
+            // (Opcional) Aquí puedes llamar a tu API /api/cart para guardarlo en la BBDD
+
+            // Encontrar el producto completo de nuestra lista global
+            const productToAdd = allProducts.find(p => p.id === productId);
+            if (!productToAdd) throw new Error('Producto no encontrado');
+
+            // Añadir al carrito local
+            cart.push(productToAdd);
+            console.log("Carrito actualizado:", cart);
+
+            // Actualizar la UI
+            renderCartUI();
+            openCart();
+
+            if (button) {
+                setTimeout(() => {
+                    button.innerHTML = '<i class="bi bi-check-lg"></i> Añadido';
+                    button.disabled = false;
+                }, 1000);
+            }
+
+        } catch (error) {
+            console.error(error);
+            showToast(error.message, 'error');
+            if (button) {
+                button.disabled = false;
+                button.innerHTML = '<i class="bi bi-cart-plus"></i> Añadir';
+            }
+        }
+    }
+
+    function removeFromCart(productId) {
+        cart = cart.filter(item => item.id !== productId);
+        renderCartUI();
+    }
+
+    function renderCartUI() {
+        if (!cartItemsList) return; // Salir si no estamos en la página del marketplace
+
+        cartItemsList.innerHTML = ''; // Limpiar la lista
+
+        if (cart.length === 0) {
+            cartEmptyMessage.style.display = 'flex';
+        } else {
+            cartEmptyMessage.style.display = 'none';
+            cart.forEach(product => {
+                const itemEl = document.createElement('div');
+                itemEl.className = 'cart-item';
+
+                let imgUrl = ''; // Placeholder
+                if (product.image_url) {
+                    const optimizedUrlBase = product.image_url.replace('/object/', '/render/image/');
+                    imgUrl = `${optimizedUrlBase}?width=160&quality=75&resize=contain`;
+                }
+
+                // Usamos el precio más bajo (basic) como precio del carrito
+                // Esto lo mejoraremos cuando implementemos selección de licencia
+                const price = (product.is_free ? 0 : (product.price_basic || 0)).toFixed(2);
+
+                itemEl.innerHTML = `
+                    <img src="${imgUrl}" alt="${product.name}" class="cart-item-image">
+                    <div class="cart-item-info">
+                        <span class="cart-item-title">${product.name}</span>
+                        <span class="cart-item-producer">Por ${product.producer_nickname || 'Anónimo'}</span>
+                        <span class="cart-item-price">$${price}</span> 
+                    </div>
+                    <button class="cart-item-remove-btn" data-product-id="${product.id}">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                `;
+                cartItemsList.append(itemEl);
+            });
+        }
+
+        // Asignar listeners a los botones de borrar
+        cartItemsList.querySelectorAll('.cart-item-remove-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const id = e.currentTarget.dataset.productId;
+                removeFromCart(parseInt(id)); // Asegurarse de que sea un número
+            });
+        });
+
+        updateCartTotal();
+    }
+
+    function updateCartTotal() {
+        if (!cartTotalPriceEl) return;
+
+        const total = cart.reduce((sum, product) => {
+            // (Simplificado: asume el precio 'basic')
+            return sum + (product.is_free ? 0 : (parseFloat(product.price_basic) || 0));
+        }, 0);
+
+        cartTotalPriceEl.textContent = `$${total.toFixed(2)}`;
+    }
+
+    async function handleCheckout() {
+        const token = localStorage.getItem('authToken');
+        const checkoutButton = document.getElementById('btn-checkout');
+
+        // 1. Auth Wall (ya lo teníamos)
+        if (!token) {
+            alert('Debes crear una cuenta para poder pagar.');
+            window.location.href = '/pages/register.html';
+            return;
+        }
+
+        if (cart.length === 0) {
+            showToast('Tu carrito está vacío.', 'error');
+            return;
+        }
+
+        checkoutButton.disabled = true;
+        checkoutButton.innerHTML = '<i class="bi bi-hourglass-split"></i> Procesando...';
+
+        try {
+            // 2. Llamar al backend para crear la preferencia de Mercado Pago
+            // ¡¡ESTA ES LA LÍNEA MÁS IMPORTANTE!!
+            const response = await fetch(`${API_URL}/orders/create-mercadopago-preference`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                // ¡Importante! El backend espera 'cartItems', y tu carrito local se llama 'cart'
+                body: JSON.stringify({ cartItems: cart })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || 'No se pudo iniciar el pago.');
+            }
+
+            // 3. Redirigir al usuario a la página de pago de Mercado Pago
+            if (data.url) {
+                window.location.href = data.url; // data.url es el 'init_point' que generó el backend
+            } else {
+                throw new Error('No se recibió la URL de pago.');
+            }
+
+        } catch (error) {
+            console.error("Error en handleCheckout:", error.message);
+            showToast(error.message, 'error');
+            checkoutButton.disabled = false;
+            checkoutButton.innerHTML = '<i class="bi bi-shield-check"></i> Pagar Ahora';
+        }
+    }
+
+    // --- 7. INICIALIZAR LISTENERS DEL CARRITO ---
+    if (cartOverlay) cartOverlay.addEventListener('click', closeCart);
+    if (cartCloseBtn) cartCloseBtn.addEventListener('click', closeCart);
+
+    if (navbarCartButton) {
+        navbarCartButton.href = "#"; // Sobrescribir el enlace a cart.html
+        navbarCartButton.addEventListener('click', (e) => {
+            e.preventDefault();
+            openCart();
+        });
+    }
+
+    const checkoutButton = document.getElementById('btn-checkout');
+    if (checkoutButton) {
+        checkoutButton.addEventListener('click', handleCheckout);
+    }
+
+    // --- 8. CARGA INICIAL ---
     fetchAndRenderProducts();
+
+    // --- 9. FUNCIÓN DE TOAST (para notificaciones) ---
+    function showToast(message, type = 'info') {
+        // (Necesitas añadir los estilos de 'toast' a tu marketplace.css,
+        // puedes copiarlos de 'beats.js' o 'toast.js')
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        toast.innerHTML = `<i class="bi bi-${type === 'success' ? 'check-circle' : (type === 'error' ? 'exclamation-triangle' : 'info-circle')}"></i> ${message}`;
+
+        // Estilos rápidos para el toast si no los tienes
+        toast.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 1rem 1.5rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color-light);
+            color: var(--text-primary);
+            border-radius: 8px;
+            z-index: 9999;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+        `;
+        if (type === 'error') toast.style.borderColor = '#ef4444';
+        if (type === 'success') toast.style.borderColor = 'var(--green-verified)';
+
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 3000);
+    }
 });
