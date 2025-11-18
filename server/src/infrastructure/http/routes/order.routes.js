@@ -7,6 +7,7 @@ import {
 const router = Router();
 
 //router.post('/orders/mercadopago-webhook', handleMercadoPagoWebhook);
+router.post('/orders/mercadopago-webhook', handleMercadoPagoWebhook);
 
 //router.use(authenticateTokenMiddleware);
 

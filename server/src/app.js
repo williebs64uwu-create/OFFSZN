@@ -37,11 +37,13 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 
+app.use(express.json())
+
 app.post('/api/orders/mercadopago-webhook', 
     express.raw({type: 'application/json'}),
     handleMercadoPagoWebhook
 );
-app.use(express.json())
+
 
 app.use('/api/auth', authRoutes);
 app.use('/api', publicRoutes);
