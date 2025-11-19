@@ -110,9 +110,15 @@ export const handleMercadoPagoWebhook = async (req, res) => {
 
     console.log(`🔔 [Webhook] Recibido. Topic: ${topic}, ID: ${id}`);
 
-    if (topic !== 'payment') return res.status(200).send('OK');
+    if (topic !== 'payment') {
+        return res.status(200).send('OK');
+    }
 
     try {
+        await new Promise(resolve => setTimeout(resolve, 3000));
+
+        console.log(`⏳ [Webhook] Consultando pago ${id} después de la espera...`);
+
         const payment = new Payment(client);
         const paymentInfo = await payment.get({ id: id });
 
@@ -120,52 +126,60 @@ export const handleMercadoPagoWebhook = async (req, res) => {
         console.log(`Paper Reference: ${paymentInfo.external_reference}`);
 
         if (paymentInfo.status === 'approved') {
-            // external_reference viene como "USERID_TIMESTAMP". Extraemos el ID del usuario.
-            const externalRefParts = paymentInfo.external_reference.split('_');
+            const externalRefParts = paymentInfo.external_reference ? paymentInfo.external_reference.split('_') : [];
             const userId = externalRefParts[0];
             const totalPaid = paymentInfo.transaction_amount;
             const itemsMP = paymentInfo.additional_info.items;
 
-            console.log(`✅ [Webhook] Aprobado para UserID: ${userId}`);
+            if (!userId) {
+                console.error("🔴 [Webhook] No vino external_reference (UserID).");
+                return res.status(200).send('OK'); // Respondemos OK para que no reintente infinitamente
+            }
 
-            // Guardar Orden
+            console.log(`✅ [Webhook] Procesando orden para UserID: ${userId}`);
+
+            // 1. Guardar Orden
             const { data: newOrder, error: orderError } = await supabase
                 .from('orders')
                 .insert({
                     user_id: userId,
-                    paypal_order_id: paymentInfo.id.toString(), // Guardamos ID de MP
+                    paypal_order_id: paymentInfo.id.toString(),
                     status: 'completed',
-                    total_price: totalPaid,
-                    // Guardamos la referencia completa para que el frontend pueda encontrarla
-                    // (Asegúrate de tener una columna para notas o usar el campo paypal_order_id temporalmente si no tienes otro)
-                    // Ojo: Para simplificar, usamos el paypal_order_id para el match, 
-                    // pero el polling buscará por "última orden del usuario".
+                    total_price: totalPaid
                 })
                 .select('id')
                 .single();
 
             if (orderError) {
-                console.error("🔴 [Webhook] Error guardando orden:", orderError);
+                // Si la orden ya existe (duplicado), no es un error fatal
+                if (orderError.code === '23505') {
+                    console.log("⚠️ [Webhook] La orden ya fue procesada anteriormente.");
+                    return res.status(200).send('OK');
+                }
                 throw orderError;
             }
 
-            // Guardar Items (Lógica simplificada por ID)
-            const orderItemsData = itemsMP.map(item => ({
-                order_id: newOrder.id,
-                product_id: parseInt(item.id),
-                quantity: 1,
-                price_at_purchase: parseFloat(item.unit_price)
-            }));
+            // 2. Guardar Items
+            if (itemsMP && itemsMP.length > 0) {
+                const orderItemsData = itemsMP.map(item => ({
+                    order_id: newOrder.id,
+                    product_id: parseInt(item.id),
+                    quantity: 1,
+                    price_at_purchase: parseFloat(item.unit_price)
+                }));
 
-            await supabase.from('order_items').insert(orderItemsData);
-            console.log("🎉 [Webhook] Orden y items guardados en DB.");
+                const { error: itemsError } = await supabase.from('order_items').insert(orderItemsData);
+                if (itemsError) throw itemsError;
+            }
+
+            console.log("🎉 [Webhook] ¡Orden guardada exitosamente en Supabase!");
         }
 
         res.status(200).send('OK');
 
     } catch (error) {
         console.error("🔴 [Webhook] Error procesando:", error);
-        res.status(500).json({ error: error.message });
+        res.status(200).json({ error: error.message });
     }
 };
 
