@@ -101,6 +101,9 @@ const processPaymentWithRetries = async (paymentId) => {
         
         await new Promise(resolve => setTimeout(resolve, delay));
 
+        const tokenUsed = process.env.MERCADOPAGO_ACCESS_TOKEN;
+        console.log(`🔑 Token usado: ${tokenUsed ? tokenUsed.substring(0, 15) + '...' : 'NO DEFINIDO'}`);
+
         try {
             // 1. Intentar buscar por ID
             const response = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
