@@ -201,3 +201,80 @@ export const checkPaymentStatus = async (req, res) => {
         res.status(200).json({ status: 'pending' });
     } catch (err) { res.status(500).json({ error: 'Error' }); }
 };
+
+export const forceCheckPayment = async (req, res) => {
+    const { paymentId } = req.params;
+    console.log(`🚨 [MANUAL FORCE] Forzando verificación para ID: ${paymentId}`);
+
+    try {
+        // Usamos la misma lógica de búsqueda directa
+        const response = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${process.env.MERCADOPAGO_ACCESS_TOKEN}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            return res.status(404).json({ error: 'Pago no encontrado en API MP', details: await response.json() });
+        }
+
+        const paymentInfo = await response.json();
+
+        if (paymentInfo.status === 'approved') {
+            const externalRefParts = paymentInfo.external_reference ? paymentInfo.external_reference.split('_') : [];
+            const userId = externalRefParts[0];
+
+            if (!userId) return res.status(400).json({ error: 'Sin UserID' });
+
+            // Guardar Orden
+            const { data: newOrder, error: orderError } = await supabase
+                .from('orders')
+                .insert({
+                    user_id: userId,
+                    paypal_order_id: paymentInfo.id.toString(),
+                    status: 'completed',
+                    total_price: paymentInfo.transaction_amount
+                })
+                .select('id')
+                .single();
+            
+            // Si ya existe, no pasa nada, buscamos la existente
+            let finalOrderId = newOrder?.id;
+            
+            if (orderError) {
+                if (orderError.code === '23505') {
+                    // Ya existe, buscamos el ID para asegurar items
+                    const { data: existing } = await supabase.from('orders').select('id').eq('paypal_order_id', paymentInfo.id.toString()).single();
+                    finalOrderId = existing.id;
+                    console.log("⚠️ Orden ya existía, verificando items...");
+                } else {
+                    throw orderError;
+                }
+            }
+
+            // Guardar Items
+            const itemsMP = paymentInfo.additional_info.items;
+            if (itemsMP && itemsMP.length > 0) {
+                const orderItemsData = itemsMP.map(item => ({
+                    order_id: finalOrderId,
+                    product_id: parseInt(item.id),
+                    quantity: 1,
+                    price_at_purchase: parseFloat(item.unit_price)
+                }));
+                // Insertar ignorando duplicados si es posible (o dejar que falle si ya están)
+                await supabase.from('order_items').insert(orderItemsData).catch(e => console.log("Items ya existían o error:", e.message));
+            }
+
+            return res.status(200).json({ message: '¡Orden recuperada y guardada manualmente!', orderId: finalOrderId });
+        }
+
+        res.status(200).json({ message: 'El pago existe pero no está aprobado', status: paymentInfo.status });
+
+    } catch (error) {
+        console.error("🔴 Error manual:", error);
+        res.status(500).json({ error: error.message });
+    }
+};
+

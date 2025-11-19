@@ -3,7 +3,8 @@ import { authenticateTokenMiddleware } from '../../middlewares/authenticateToken
 import { 
     createMercadoPagoPreference, 
     handleMercadoPagoWebhook,
-    checkPaymentStatus // <--- IMPORTAR ESTO
+    checkPaymentStatus,
+    forceCheckPayment
 } from '../controllers/OrderController.js';
 
 const router = Router();
@@ -22,5 +23,7 @@ router.get(
     authenticateTokenMiddleware, 
     checkPaymentStatus
 );
+
+router.get('/orders/debug/force/:paymentId', forceCheckPayment);
 
 export default router;
