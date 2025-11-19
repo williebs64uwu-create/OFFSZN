@@ -1,59 +1,45 @@
 import { supabase } from '../../database/connection.js';
 import { MercadoPagoConfig, Preference, Payment } from 'mercadopago';
 
-// --- CONFIGURACIÓN DE MERCADO PAGO ---
 const client = new MercadoPagoConfig({
     accessToken: process.env.MERCADOPAGO_ACCESS_TOKEN
 });
 
-// 1. CREAR PREFERENCIA (CON LOGS DETALLADOS)
+// --- 1. CREAR PREFERENCIA (Tu código actual, sin cambios grandes) ---
 export const createMercadoPagoPreference = async (req, res) => {
     console.log("🔵 [OrderController] Iniciando createMercadoPagoPreference");
-
     try {
         const userId = req.user.userId;
         const { cartItems } = req.body;
 
-        if (!cartItems || cartItems.length === 0) {
-            return res.status(400).json({ error: 'El carrito está vacío.' });
-        }
+        if (!cartItems || cartItems.length === 0) return res.status(400).json({ error: 'Carrito vacío.' });
 
-        // --- A. Validar precios en DB ---
+        // Validar precios
         const productIds = cartItems.map(item => item.id);
-        const { data: dbProducts, error } = await supabase
-            .from('products')
-            .select('id, name, price_basic, image_url')
-            .in('id', productIds);
+        const { data: dbProducts, error } = await supabase.from('products').select('id, name, price_basic, image_url').in('id', productIds);
+        if (error) throw new Error('Error DB');
 
-        if (error) throw new Error('Error consultando DB.');
-
-        // --- B. Construir Items ---
         const line_items = [];
         cartItems.forEach(cartItem => {
             const product = dbProducts.find(p => p.id === cartItem.id);
             if (product) {
-                // ⚠️ CORRECCIÓN DE PRECIO: 
-                // Si el precio es muy bajo (ej. pruebas), lo forzamos a 10.000 COP
-                // para que Mercado Pago no lo rechace.
                 let finalPrice = parseFloat(product.price_basic);
                 if (finalPrice < 1000) {
-                    console.warn(`⚠️ Precio muy bajo (${finalPrice}). Ajustando a 10000 para prueba.`);
+                    console.warn(`⚠️ Precio bajo (${finalPrice}). Ajustando a 10000.`);
                     finalPrice = 10000;
                 }
-
                 line_items.push({
                     id: product.id.toString(),
                     title: product.name.substring(0, 250),
-                    description: 'Producto Digital - OFFSZN',
+                    description: 'Producto OFFSZN',
                     picture_url: product.image_url,
                     quantity: 1,
                     currency_id: 'COP',
-                    unit_price: finalPrice // Usamos el precio corregido
+                    unit_price: finalPrice
                 });
             }
         });
 
-        // --- C. Crear Preferencia ---
         const preference = new Preference(client);
         const uniqueExternalReference = `${userId}_${Date.now()}`;
 
@@ -61,181 +47,138 @@ export const createMercadoPagoPreference = async (req, res) => {
             body: {
                 items: line_items,
                 binary_mode: true,
-                // Importante: Deja payer vacío o pon un email válido
-                payer: {
-                    // email: "test_user_..." // Opcional, a veces ayuda pre-llenarlo
-                },
-                payment_methods: {
-                    excluded_payment_types: [{ id: "ticket" }, { id: "atm" }],
-                    installments: 1
-                },
+                payment_methods: { excluded_payment_types: [{ id: "ticket" }, { id: "atm" }], installments: 1 },
                 back_urls: {
-                    success: `https://offszn.onrender.com/pages/success.html`,
+                    success: `https://offszn.onrender.com/pages/success.html`, // ¡Asegúrate de crear este archivo!
                     failure: `https://offszn.onrender.com/pages/marketplace.html`,
                     pending: `https://offszn.onrender.com/pages/marketplace.html`
                 },
                 auto_return: 'approved',
                 notification_url: `https://offszn-academy.onrender.com/api/orders/mercadopago-webhook`,
                 external_reference: uniqueExternalReference,
-                statement_descriptor: "OFFSZN MARKET"
+                statement_descriptor: "OFFSZN"
             }
         };
 
-        console.log("🚀 [OrderController] Enviando a MP...");
         const result = await preference.create(preferenceData);
-
-        // ⚠️ CORRECCIÓN DE URL:
-        // El SDK devuelve 'init_point' (Prod) y 'sandbox_init_point' (Test).
-        // Si estamos usando un token TEST, deberíamos usar sandbox_init_point.
         const paymentUrl = result.sandbox_init_point || result.init_point;
 
-        console.log("✅ [OrderController] Preferencia Creada.");
-        console.log("🔗 [OrderController] URL enviada al front:", paymentUrl);
-
-        res.status(200).json({
-            url: paymentUrl, // Enviamos la de Sandbox explícitamente
-            externalReference: uniqueExternalReference
-        });
+        console.log("✅ Preferencia creada:", uniqueExternalReference);
+        res.status(200).json({ url: paymentUrl, externalReference: uniqueExternalReference });
 
     } catch (err) {
-        console.error("🔴 [OrderController] ERROR:", err);
-        res.status(500).json({ error: 'Error creando pago.' });
+        console.error("🔴 Error creando preferencia:", err);
+        res.status(500).json({ error: 'Error iniciando pago' });
     }
 };
 
-// 2. WEBHOOK (CON LOGS DETALLADOS)
+// --- 2. WEBHOOK MEJORADO (CON REINTENTOS) ---
 export const handleMercadoPagoWebhook = async (req, res) => {
     const id = req.query.id || req.query['data.id'];
     const topic = req.query.topic || req.query.type;
 
-    // Responder rápido a Mercado Pago para que no se quede esperando
-    // (Técnica: respondemos el request HTTP inmediatamente, y procesamos en segundo plano)
     if (topic === 'payment') {
-        res.status(200).send('OK');
-        processPaymentAsync(id); // Llamamos a la función async sin await para no bloquear
+        res.status(200).send('OK'); // Responder OK rápido
+        processPaymentWithRetries(id); // Procesar en background
     } else {
         res.status(200).send('OK');
     }
 };
 
-// Función separada para procesar con paciencia
-const processPaymentAsync = async (paymentId) => {
-    console.log(`🔔 [Webhook Background] Iniciando proceso para ID: ${paymentId}`);
+// Función de Reintento Inteligente
+const processPaymentWithRetries = async (paymentId) => {
+    console.log(`🔔 [Background] Iniciando reintentos para pago ID: ${paymentId}`);
+    
+    const maxRetries = 3;
+    let attempt = 0;
+    let paymentInfo = null;
 
-    try {
-        // ⏳ ESPERA DE 10 SEGUNDOS (Para vencer al lag de Sandbox)
-        console.log("⏳ [Webhook] Esperando 10 segundos para consultar MP...");
-        await new Promise(resolve => setTimeout(resolve, 10000));
+    while (attempt < maxRetries) {
+        attempt++;
+        const delay = attempt * 3000; // 3s, 6s, 9s...
+        console.log(`⏳ Intento ${attempt}/${maxRetries}: Esperando ${delay/1000}s...`);
+        
+        await new Promise(resolve => setTimeout(resolve, delay));
 
-        // USAMOS FETCH DIRECTO (Bypaseamos el SDK para descartar errores de librería)
-        console.log(`🔍 [Webhook] Consultando API directa para ID: ${paymentId}`);
-
-        const response = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
-            method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${process.env.MERCADOPAGO_ACCESS_TOKEN}`,
-                'Content-Type': 'application/json'
-            }
-        });
-
-        if (!response.ok) {
-            const errorData = await response.json();
-            console.error("🔴 [Webhook] Error API MP:", JSON.stringify(errorData));
-            return;
-        }
-
-        const paymentInfo = await response.json();
-        console.log(`💳 [Webhook] Estado del pago: ${paymentInfo.status}`);
-
-        if (paymentInfo.status === 'approved') {
-            // Extraer UserID de external_reference
-            const externalRefParts = paymentInfo.external_reference ? paymentInfo.external_reference.split('_') : [];
-            const userId = externalRefParts[0];
-            const totalPaid = paymentInfo.transaction_amount;
-            const itemsMP = paymentInfo.additional_info.items;
-
-            if (!userId) {
-                console.error("🔴 [Webhook] Payment sin UserID (external_reference).");
-                return;
-            }
-
-            console.log(`✅ [Webhook] Guardando orden para UserID: ${userId}`);
-
-            // 1. Guardar Orden en Supabase
-            const { data: newOrder, error: orderError } = await supabase
-                .from('orders')
-                .insert({
-                    user_id: userId,
-                    paypal_order_id: paymentInfo.id.toString(),
-                    status: 'completed',
-                    total_price: totalPaid
-                })
-                .select('id')
-                .single();
-
-            if (orderError) {
-                if (orderError.code === '23505') {
-                    console.log("⚠️ [Webhook] Orden duplicada, ignorando.");
-                    return;
+        try {
+            // Fetch directo a API
+            const response = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${process.env.MERCADOPAGO_ACCESS_TOKEN}`,
+                    'Content-Type': 'application/json'
                 }
-                console.error("🔴 [Webhook] Error DB Orden:", orderError);
-                return;
+            });
+
+            if (response.ok) {
+                paymentInfo = await response.json();
+                console.log(`🔎 Intento ${attempt}: Estado encontrado: ${paymentInfo.status}`);
+                break; // ¡Éxito! Salimos del bucle
+            } else {
+                console.warn(`⚠️ Intento ${attempt}: Pago no encontrado (404).`);
             }
+        } catch (e) {
+            console.error(`🔴 Intento ${attempt} falló:`, e.message);
+        }
+    }
 
-            // 2. Guardar Items
-            if (itemsMP && itemsMP.length > 0) {
-                const orderItemsData = itemsMP.map(item => ({
-                    order_id: newOrder.id,
-                    product_id: parseInt(item.id),
-                    quantity: 1,
-                    price_at_purchase: parseFloat(item.unit_price)
-                }));
+    if (!paymentInfo) {
+        console.error("❌ [Background] Se agotaron los intentos. No se pudo recuperar el pago.");
+        return;
+    }
 
-                const { error: itemsError } = await supabase.from('order_items').insert(orderItemsData);
-                if (itemsError) console.error("🔴 [Webhook] Error DB Items:", itemsError);
-            }
+    // --- LÓGICA DE GUARDADO (Solo si encontramos el pago) ---
+    if (paymentInfo.status === 'approved') {
+        const externalRefParts = paymentInfo.external_reference ? paymentInfo.external_reference.split('_') : [];
+        const userId = externalRefParts[0];
+        
+        if (!userId) return console.error("❌ No hay UserID en external_reference");
 
-            console.log("🎉 [Webhook] ¡PROCESO COMPLETADO EXITOSAMENTE!");
+        console.log(`✅ Guardando orden para User: ${userId}`);
+
+        // Guardar Orden
+        const { data: newOrder, error: orderError } = await supabase
+            .from('orders')
+            .insert({
+                user_id: userId,
+                paypal_order_id: paymentInfo.id.toString(),
+                status: 'completed',
+                total_price: paymentInfo.transaction_amount
+            })
+            .select('id')
+            .single();
+
+        if (orderError) {
+            if (orderError.code === '23505') return console.log("⚠️ Orden ya existe.");
+            return console.error("🔴 Error DB Orden:", orderError);
         }
 
-    } catch (error) {
-        console.error("🔴 [Webhook Background] Error Fatal:", error);
+        // Guardar Items
+        const itemsMP = paymentInfo.additional_info.items;
+        if (itemsMP && itemsMP.length > 0) {
+            const orderItemsData = itemsMP.map(item => ({
+                order_id: newOrder.id,
+                product_id: parseInt(item.id),
+                quantity: 1,
+                price_at_purchase: parseFloat(item.unit_price)
+            }));
+            const { error: iErr } = await supabase.from('order_items').insert(orderItemsData);
+            if (iErr) console.error("🔴 Error DB Items:", iErr);
+        }
+        console.log("🎉 ¡TODO COMPLETADO EXITOSAMENTE!");
     }
 };
 
-// 3. NUEVO ENDPOINT: CONSULTAR ESTADO (POLLING)
+// 3. POLLING (Igual que antes)
 export const checkPaymentStatus = async (req, res) => {
     try {
         const userId = req.user.userId;
-        // Buscamos la orden completada más reciente de este usuario (últimos 5 minutos)
-        const { data, error } = await supabase
-            .from('orders')
-            .select('id, status, created_at')
-            .eq('user_id', userId)
-            .eq('status', 'completed')
-            .order('created_at', { ascending: false })
-            .limit(1)
-            .single();
-
-        if (error && error.code !== 'PGRST116') { // Error real (no "no encontrado")
-            throw error;
-        }
-
+        const { data } = await supabase.from('orders').select('id, status, created_at').eq('user_id', userId).eq('status', 'completed').order('created_at', { ascending: false }).limit(1).single();
+        
         if (data) {
-            // Verificamos que la orden sea RECIENTE (menos de 5 minutos) para no traer órdenes viejas
-            const orderTime = new Date(data.created_at).getTime();
-            const fiveMinutesAgo = Date.now() - 5 * 60 * 1000;
-
-            if (orderTime > fiveMinutesAgo) {
-                return res.status(200).json({ status: 'completed', orderId: data.id });
-            }
+             const isRecent = new Date(data.created_at).getTime() > (Date.now() - 5 * 60 * 1000);
+             if (isRecent) return res.status(200).json({ status: 'completed', orderId: data.id });
         }
-
-        // Si no hay orden reciente completada
         res.status(200).json({ status: 'pending' });
-
-    } catch (err) {
-        console.error("Error polling status:", err);
-        res.status(500).json({ error: 'Error verificando estado' });
-    }
+    } catch (err) { res.status(500).json({ error: 'Error' }); }
 };
