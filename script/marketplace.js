@@ -292,53 +292,142 @@ document.addEventListener('DOMContentLoaded', () => {
         const token = localStorage.getItem('authToken');
         const checkoutButton = document.getElementById('btn-checkout');
 
-        // 1. Auth Wall (ya lo teníamos)
         if (!token) {
-            alert('Debes crear una cuenta para poder pagar.');
-            window.location.href = '/pages/register.html';
+            alert('Debes iniciar sesión.');
+            window.location.href = '/pages/login';
             return;
         }
 
-        if (cart.length === 0) {
-            showToast('Tu carrito está vacío.', 'error');
-            return;
-        }
+        if (cart.length === 0) return;
 
+        // 1. Feedback visual inmediato
         checkoutButton.disabled = true;
-        checkoutButton.innerHTML = '<i class="bi bi-hourglass-split"></i> Procesando...';
+        checkoutButton.innerHTML = '<i class="bi bi-hourglass-split"></i> Iniciando pago...';
 
         try {
-            // 2. Llamar al backend para crear la preferencia de Mercado Pago
-            // ¡¡ESTA ES LA LÍNEA MÁS IMPORTANTE!!
+            // 2. Preparar la nueva pestaña ANTES del fetch para evitar bloqueo de popups
+            // (Abrimos una ventana en blanco que luego redirigiremos)
+            const paymentWindow = window.open('', '_blank');
+
+            if (paymentWindow) {
+                paymentWindow.document.write(`
+                    <html>
+                        <head><title>Procesando...</title></head>
+                        <body style="background:#0a0118; color:white; display:flex; justify-content:center; align-items:center; height:100vh; font-family:sans-serif;">
+                            <h2>Cargando pasarela de Mercado Pago...</h2>
+                        </body>
+                    </html>
+                `);
+            } else {
+                alert("Por favor permite las ventanas emergentes para pagar.");
+                checkoutButton.disabled = false;
+                return;
+            }
+
+            // 3. Pedir la URL al backend
             const response = await fetch(`${API_URL}/orders/create-mercadopago-preference`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
                 },
-                // ¡Importante! El backend espera 'cartItems', y tu carrito local se llama 'cart'
                 body: JSON.stringify({ cartItems: cart })
             });
 
             const data = await response.json();
 
             if (!response.ok) {
-                throw new Error(data.error || 'No se pudo iniciar el pago.');
+                if (paymentWindow) paymentWindow.close(); // Cerrar si falla
+                throw new Error(data.error || 'Error al iniciar pago');
             }
 
-            // 3. Redirigir al usuario a la página de pago de Mercado Pago
-            if (data.url) {
-                window.location.href = data.url; // data.url es el 'init_point' que generó el backend
-            } else {
-                throw new Error('No se recibió la URL de pago.');
+            // 4. Redirigir la nueva pestaña a Mercado Pago
+            if (paymentWindow) {
+                paymentWindow.location.href = data.url;
             }
+
+            // 5. CAMBIAR LA UI DEL MARKETPLACE A "ESPERANDO PAGO"
+            showWaitingScreen();
+
+            // 6. INICIAR EL MONITOREO (POLLING)
+            startPollingPayment(paymentWindow);
 
         } catch (error) {
-            console.error("Error en handleCheckout:", error.message);
-            showToast(error.message, 'error');
+            console.error(error);
             checkoutButton.disabled = false;
-            checkoutButton.innerHTML = '<i class="bi bi-shield-check"></i> Pagar Ahora';
+            checkoutButton.innerHTML = 'Pagar Ahora';
+            showToast(error.message, 'error');
         }
+    }
+
+    function showWaitingScreen() {
+        // Puedes reemplazar el contenido del carrito o poner un overlay
+        const cartPanel = document.getElementById('cart-panel');
+        cartPanel.innerHTML = `
+            <div style="padding: 2rem; text-align: center; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+                <div class="spinner" style="border: 4px solid rgba(255,255,255,0.1); border-left-color: #7209b7; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin-bottom: 20px;"></div>
+                <h3>Estamos verificando tu pago</h3>
+                <p style="color: #999; margin-top: 10px;">Por favor completa el pago en la otra pestaña. Esta ventana se actualizará automáticamente.</p>
+                <style>@keyframes spin { to { transform: rotate(360deg); } }</style>
+            </div>
+        `;
+    }
+
+    let pollingInterval;
+
+    function startPollingPayment(paymentWindow) {
+        const token = localStorage.getItem('authToken');
+        let attempts = 0;
+        const maxAttempts = 60; // 3 minutos aprox (60 * 3s)
+
+        pollingInterval = setInterval(async () => {
+            attempts++;
+            
+            // Si el usuario cierra la ventana de pago manualmente, podríamos parar, 
+            // pero mejor seguimos preguntando por si pagó justo antes de cerrar.
+            if (paymentWindow.closed && attempts > 10) {
+                 // Opcional: avisar que se cerró la ventana
+            }
+
+            if (attempts >= maxAttempts) {
+                clearInterval(pollingInterval);
+                alert("Tiempo de espera agotado. Si pagaste, revisa 'Mis Cursos'.");
+                window.location.reload();
+                return;
+            }
+
+            try {
+                const res = await fetch(`${API_URL}/orders/status/latest`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const statusData = await res.json();
+
+                console.log("Estado del pago:", statusData.status);
+
+                if (statusData.status === 'completed') {
+                    clearInterval(pollingInterval);
+                    if (paymentWindow) paymentWindow.close(); // Cerramos MP
+                    
+                    // ÉXITO!! Limpiamos carrito y mostramos confetti o mensaje
+                    cart = [];
+                    localStorage.removeItem('cart'); // Si usas persistencia
+                    
+                    document.getElementById('cart-panel').innerHTML = `
+                        <div style="padding: 2rem; text-align: center; color: #0cbc87;">
+                            <i class="bi bi-check-circle-fill" style="font-size: 3rem;"></i>
+                            <h3 style="margin-top: 1rem; color: white;">¡Pago Exitoso!</h3>
+                            <p style="color: #ddd;">Tus productos ya están disponibles.</p>
+                            <button onclick="window.location.reload()" style="margin-top: 1rem; padding: 10px 20px; background: #7209b7; border: none; color: white; border-radius: 8px; cursor: pointer;">Ver mis productos</button>
+                        </div>
+                    `;
+                    showToast('¡Compra completada!', 'success');
+                }
+
+            } catch (err) {
+                console.error("Error polling:", err);
+            }
+
+        }, 3000); // Preguntar cada 3 segundos
     }
 
     // --- 7. INICIALIZAR LISTENERS DEL CARRITO ---
