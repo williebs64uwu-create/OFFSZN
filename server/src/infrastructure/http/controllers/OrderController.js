@@ -108,37 +108,60 @@ export const handleMercadoPagoWebhook = async (req, res) => {
     const id = req.query.id || req.query['data.id'];
     const topic = req.query.topic || req.query.type;
 
-    console.log(`🔔 [Webhook] Recibido. Topic: ${topic}, ID: ${id}`);
-
-    if (topic !== 'payment') {
-        return res.status(200).send('OK');
+    // Responder rápido a Mercado Pago para que no se quede esperando
+    // (Técnica: respondemos el request HTTP inmediatamente, y procesamos en segundo plano)
+    if (topic === 'payment') {
+        res.status(200).send('OK');
+        processPaymentAsync(id); // Llamamos a la función async sin await para no bloquear
+    } else {
+        res.status(200).send('OK');
     }
+};
+
+// Función separada para procesar con paciencia
+const processPaymentAsync = async (paymentId) => {
+    console.log(`🔔 [Webhook Background] Iniciando proceso para ID: ${paymentId}`);
 
     try {
-        await new Promise(resolve => setTimeout(resolve, 3000));
+        // ⏳ ESPERA DE 10 SEGUNDOS (Para vencer al lag de Sandbox)
+        console.log("⏳ [Webhook] Esperando 10 segundos para consultar MP...");
+        await new Promise(resolve => setTimeout(resolve, 10000));
 
-        console.log(`⏳ [Webhook] Consultando pago ${id} después de la espera...`);
+        // USAMOS FETCH DIRECTO (Bypaseamos el SDK para descartar errores de librería)
+        console.log(`🔍 [Webhook] Consultando API directa para ID: ${paymentId}`);
 
-        const payment = new Payment(client);
-        const paymentInfo = await payment.get({ id: id });
+        const response = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${process.env.MERCADOPAGO_ACCESS_TOKEN}`,
+                'Content-Type': 'application/json'
+            }
+        });
 
+        if (!response.ok) {
+            const errorData = await response.json();
+            console.error("🔴 [Webhook] Error API MP:", JSON.stringify(errorData));
+            return;
+        }
+
+        const paymentInfo = await response.json();
         console.log(`💳 [Webhook] Estado del pago: ${paymentInfo.status}`);
-        console.log(`Paper Reference: ${paymentInfo.external_reference}`);
 
         if (paymentInfo.status === 'approved') {
+            // Extraer UserID de external_reference
             const externalRefParts = paymentInfo.external_reference ? paymentInfo.external_reference.split('_') : [];
             const userId = externalRefParts[0];
             const totalPaid = paymentInfo.transaction_amount;
             const itemsMP = paymentInfo.additional_info.items;
 
             if (!userId) {
-                console.error("🔴 [Webhook] No vino external_reference (UserID).");
-                return res.status(200).send('OK'); // Respondemos OK para que no reintente infinitamente
+                console.error("🔴 [Webhook] Payment sin UserID (external_reference).");
+                return;
             }
 
-            console.log(`✅ [Webhook] Procesando orden para UserID: ${userId}`);
+            console.log(`✅ [Webhook] Guardando orden para UserID: ${userId}`);
 
-            // 1. Guardar Orden
+            // 1. Guardar Orden en Supabase
             const { data: newOrder, error: orderError } = await supabase
                 .from('orders')
                 .insert({
@@ -151,12 +174,12 @@ export const handleMercadoPagoWebhook = async (req, res) => {
                 .single();
 
             if (orderError) {
-                // Si la orden ya existe (duplicado), no es un error fatal
                 if (orderError.code === '23505') {
-                    console.log("⚠️ [Webhook] La orden ya fue procesada anteriormente.");
-                    return res.status(200).send('OK');
+                    console.log("⚠️ [Webhook] Orden duplicada, ignorando.");
+                    return;
                 }
-                throw orderError;
+                console.error("🔴 [Webhook] Error DB Orden:", orderError);
+                return;
             }
 
             // 2. Guardar Items
@@ -169,17 +192,14 @@ export const handleMercadoPagoWebhook = async (req, res) => {
                 }));
 
                 const { error: itemsError } = await supabase.from('order_items').insert(orderItemsData);
-                if (itemsError) throw itemsError;
+                if (itemsError) console.error("🔴 [Webhook] Error DB Items:", itemsError);
             }
 
-            console.log("🎉 [Webhook] ¡Orden guardada exitosamente en Supabase!");
+            console.log("🎉 [Webhook] ¡PROCESO COMPLETADO EXITOSAMENTE!");
         }
 
-        res.status(200).send('OK');
-
     } catch (error) {
-        console.error("🔴 [Webhook] Error procesando:", error);
-        res.status(200).json({ error: error.message });
+        console.error("🔴 [Webhook Background] Error Fatal:", error);
     }
 };
 
