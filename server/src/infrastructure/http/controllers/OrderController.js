@@ -9,13 +9,10 @@ const client = new MercadoPagoConfig({
 // 1. CREAR PREFERENCIA (CON LOGS DETALLADOS)
 export const createMercadoPagoPreference = async (req, res) => {
     console.log("🔵 [OrderController] Iniciando createMercadoPagoPreference");
-    
+
     try {
         const userId = req.user.userId;
         const { cartItems } = req.body;
-
-        console.log(`👤 [OrderController] Usuario: ${userId}`);
-        console.log(`🛒 [OrderController] Items recibidos: ${cartItems?.length}`);
 
         if (!cartItems || cartItems.length === 0) {
             return res.status(400).json({ error: 'El carrito está vacío.' });
@@ -28,75 +25,81 @@ export const createMercadoPagoPreference = async (req, res) => {
             .select('id, name, price_basic, image_url')
             .in('id', productIds);
 
-        if (error) {
-            console.error("🔴 [OrderController] Error DB:", error);
-            throw new Error('Error consultando DB.');
-        }
+        if (error) throw new Error('Error consultando DB.');
 
         // --- B. Construir Items ---
         const line_items = [];
         cartItems.forEach(cartItem => {
             const product = dbProducts.find(p => p.id === cartItem.id);
-            if (product && product.price_basic > 0) {
+            if (product) {
+                // ⚠️ CORRECCIÓN DE PRECIO: 
+                // Si el precio es muy bajo (ej. pruebas), lo forzamos a 10.000 COP
+                // para que Mercado Pago no lo rechace.
+                let finalPrice = parseFloat(product.price_basic);
+                if (finalPrice < 1000) {
+                    console.warn(`⚠️ Precio muy bajo (${finalPrice}). Ajustando a 10000 para prueba.`);
+                    finalPrice = 10000;
+                }
+
                 line_items.push({
                     id: product.id.toString(),
                     title: product.name.substring(0, 250),
                     description: 'Producto Digital - OFFSZN',
                     picture_url: product.image_url,
                     quantity: 1,
-                    currency_id: 'COP', 
-                    unit_price: parseFloat(product.price_basic)
+                    currency_id: 'COP',
+                    unit_price: finalPrice // Usamos el precio corregido
                 });
             }
         });
 
-        console.log("📦 [OrderController] Items procesados para MP:", JSON.stringify(line_items, null, 2));
-
         // --- C. Crear Preferencia ---
         const preference = new Preference(client);
-        
-        // Usamos un ID de referencia único para monitorear este intento de pago específico
-        // Concatenamos ID usuario + Timestamp
         const uniqueExternalReference = `${userId}_${Date.now()}`;
 
         const preferenceData = {
             body: {
                 items: line_items,
-                binary_mode: true, // Pago inmediato (Aprueba o Rechaza, sin pendientes)
+                binary_mode: true,
+                // Importante: Deja payer vacío o pon un email válido
                 payer: {
-                    email: req.user.email // Ayuda a pre-llenar, pero NO bloquea si es diferente
+                    // email: "test_user_..." // Opcional, a veces ayuda pre-llenarlo
                 },
                 payment_methods: {
-                    excluded_payment_types: [{ id: "ticket" }, { id: "atm" }], // Solo tarjetas
+                    excluded_payment_types: [{ id: "ticket" }, { id: "atm" }],
                     installments: 1
                 },
                 back_urls: {
-                    // Estas URLs son a donde vuelve la PESTAÑA NUEVA.
-                    success: `https://offszn.onrender.com/pages/success.html`, 
+                    success: `https://offszn.onrender.com/pages/success.html`,
                     failure: `https://offszn.onrender.com/pages/marketplace.html`,
                     pending: `https://offszn.onrender.com/pages/marketplace.html`
                 },
                 auto_return: 'approved',
                 notification_url: `https://offszn-academy.onrender.com/api/orders/mercadopago-webhook`,
-                external_reference: uniqueExternalReference, // CLAVE PARA EL MONITOREO
+                external_reference: uniqueExternalReference,
                 statement_descriptor: "OFFSZN MARKET"
             }
         };
 
-        console.log("🚀 [OrderController] Enviando a Mercado Pago...");
+        console.log("🚀 [OrderController] Enviando a MP...");
         const result = await preference.create(preferenceData);
-        
-        console.log("✅ [OrderController] Respuesta MP Exitosa. ID Preferencia:", result.id);
-        console.log("🔗 [OrderController] Init Point:", result.init_point);
 
-        res.status(200).json({ 
-            url: result.init_point, // URL para abrir en nueva pestaña
-            externalReference: uniqueExternalReference // ID para que el frontend monitoree
+        // ⚠️ CORRECCIÓN DE URL:
+        // El SDK devuelve 'init_point' (Prod) y 'sandbox_init_point' (Test).
+        // Si estamos usando un token TEST, deberíamos usar sandbox_init_point.
+        const paymentUrl = result.sandbox_init_point || result.init_point;
+
+        console.log("✅ [OrderController] Preferencia Creada.");
+        console.log("🔗 [OrderController] URL enviada al front:", paymentUrl);
+
+        res.status(200).json({
+            url: paymentUrl, // Enviamos la de Sandbox explícitamente
+            externalReference: uniqueExternalReference
         });
 
     } catch (err) {
-        console.error("🔴 [OrderController] CRITICAL ERROR:", err);
-        res.status(500).json({ error: 'Error interno al crear pago.', details: err.message });
+        console.error("🔴 [OrderController] ERROR:", err);
+        res.status(500).json({ error: 'Error creando pago.' });
     }
 };
 
@@ -119,7 +122,7 @@ export const handleMercadoPagoWebhook = async (req, res) => {
         if (paymentInfo.status === 'approved') {
             // external_reference viene como "USERID_TIMESTAMP". Extraemos el ID del usuario.
             const externalRefParts = paymentInfo.external_reference.split('_');
-            const userId = externalRefParts[0]; 
+            const userId = externalRefParts[0];
             const totalPaid = paymentInfo.transaction_amount;
             const itemsMP = paymentInfo.additional_info.items;
 
@@ -181,7 +184,7 @@ export const checkPaymentStatus = async (req, res) => {
             .single();
 
         if (error && error.code !== 'PGRST116') { // Error real (no "no encontrado")
-             throw error;
+            throw error;
         }
 
         if (data) {
