@@ -61,23 +61,29 @@ export const createMercadoPagoPreference = async (req, res) => {
         const preferenceData = {
             body: {
                 items: line_items,
+                // Esto fuerza a que el pago sea inmediato (sin estados "pendientes")
+                binary_mode: true, 
                 payer: {
-                    email: req.user.email // Pre-llenar el email del usuario ayuda a MP
+                     // NO pongas el email del usuario real, deja esto vacío o pon el del test user si lo tienes a mano
+                     // email: 'test_user_12345@testuser.com' 
+                },
+                payment_methods: {
+                    // En Sandbox, deshabilitemos pagos en efectivo (Efecty, etc) para evitar errores
+                    excluded_payment_types: [
+                        { id: "ticket" },
+                        { id: "atm" }
+                    ],
+                    installments: 1 // Forzar 1 cuota para probar rápido
                 },
                 back_urls: {
-                    // Asegúrate que estas URLs existan en tu frontend o router
-                    success: `https://offszn.onrender.com/pages/success.html`, 
+                    success: `https://offszn.onrender.com/pages/marketplace.html?status=success`,
                     failure: `https://offszn.onrender.com/pages/marketplace.html?status=failure`,
                     pending: `https://offszn.onrender.com/pages/marketplace.html?status=pending`
                 },
                 auto_return: 'approved',
-                // Tu URL de producción para el webhook
                 notification_url: `https://offszn-academy.onrender.com/api/orders/mercadopago-webhook`,
-                external_reference: userId.toString(), // Guardamos el ID del usuario aquí
-                statement_descriptor: "OFFSZN MARKET",
-                metadata: {
-                    user_id: userId // Metadata extra por si acaso
-                }
+                external_reference: userId.toString(),
+                statement_descriptor: "OFFSZN"
             }
         };
 
