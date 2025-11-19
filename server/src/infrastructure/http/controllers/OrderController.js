@@ -89,19 +89,20 @@ export const handleMercadoPagoWebhook = async (req, res) => {
 const processPaymentWithRetries = async (paymentId) => {
     console.log(`🔔 [Background] Iniciando reintentos para pago ID: ${paymentId}`);
     
-    const maxRetries = 3;
+    const maxRetries = 5; // Aumentamos a 5 intentos
     let attempt = 0;
     let paymentInfo = null;
 
     while (attempt < maxRetries) {
         attempt++;
-        const delay = attempt * 3000; // 3s, 6s, 9s...
+        // Espera progresiva más agresiva: 5s, 10s, 15s, 20s, 25s
+        const delay = attempt * 5000; 
         console.log(`⏳ Intento ${attempt}/${maxRetries}: Esperando ${delay/1000}s...`);
         
         await new Promise(resolve => setTimeout(resolve, delay));
 
         try {
-            // Fetch directo a API
+            // 1. Intentar buscar por ID
             const response = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
                 method: 'GET',
                 headers: {
@@ -112,13 +113,32 @@ const processPaymentWithRetries = async (paymentId) => {
 
             if (response.ok) {
                 paymentInfo = await response.json();
-                console.log(`🔎 Intento ${attempt}: Estado encontrado: ${paymentInfo.status}`);
-                break; // ¡Éxito! Salimos del bucle
+                console.log(`🔎 [POR ID] Estado encontrado: ${paymentInfo.status}`);
+                break;
             } else {
-                console.warn(`⚠️ Intento ${attempt}: Pago no encontrado (404).`);
+                console.warn(`⚠️ Intento ${attempt}: Búsqueda por ID falló (404). Intentando búsqueda alternativa...`);
+                
+                // 2. PLAN B: Buscar en la lista de pagos recientes
+                // A veces el GET /payments/ID falla, pero el GET /payments/search funciona
+                const searchResponse = await fetch(`https://api.mercadopago.com/v1/payments/search?id=${paymentId}`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${process.env.MERCADOPAGO_ACCESS_TOKEN}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (searchResponse.ok) {
+                    const searchData = await searchResponse.json();
+                    if (searchData.results && searchData.results.length > 0) {
+                        paymentInfo = searchData.results[0];
+                        console.log(`🔎 [POR SEARCH] Estado encontrado: ${paymentInfo.status}`);
+                        break;
+                    }
+                }
             }
         } catch (e) {
-            console.error(`🔴 Intento ${attempt} falló:`, e.message);
+            console.error(`🔴 Intento ${attempt} falló por red:`, e.message);
         }
     }
 
@@ -127,8 +147,9 @@ const processPaymentWithRetries = async (paymentId) => {
         return;
     }
 
-    // --- LÓGICA DE GUARDADO (Solo si encontramos el pago) ---
+    // --- LÓGICA DE GUARDADO (Idéntica a la anterior) ---
     if (paymentInfo.status === 'approved') {
+        // ... (Tu código de guardar en Supabase va aquí, igual que antes)
         const externalRefParts = paymentInfo.external_reference ? paymentInfo.external_reference.split('_') : [];
         const userId = externalRefParts[0];
         
@@ -136,7 +157,6 @@ const processPaymentWithRetries = async (paymentId) => {
 
         console.log(`✅ Guardando orden para User: ${userId}`);
 
-        // Guardar Orden
         const { data: newOrder, error: orderError } = await supabase
             .from('orders')
             .insert({
@@ -153,7 +173,6 @@ const processPaymentWithRetries = async (paymentId) => {
             return console.error("🔴 Error DB Orden:", orderError);
         }
 
-        // Guardar Items
         const itemsMP = paymentInfo.additional_info.items;
         if (itemsMP && itemsMP.length > 0) {
             const orderItemsData = itemsMP.map(item => ({
