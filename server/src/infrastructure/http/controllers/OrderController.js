@@ -88,7 +88,7 @@ export const handleMercadoPagoWebhook = async (req, res) => {
 // Función de Reintento Inteligente
 const processPaymentWithRetries = async (paymentId) => {
     console.log(`🔔 [Background] Iniciando reintentos para pago ID: ${paymentId}`);
-    
+
     const maxRetries = 5; // Aumentamos a 5 intentos
     let attempt = 0;
     let paymentInfo = null;
@@ -96,15 +96,17 @@ const processPaymentWithRetries = async (paymentId) => {
     while (attempt < maxRetries) {
         attempt++;
         // Espera progresiva más agresiva: 5s, 10s, 15s, 20s, 25s
-        const delay = attempt * 5000; 
-        console.log(`⏳ Intento ${attempt}/${maxRetries}: Esperando ${delay/1000}s...`);
-        
+        const delay = attempt * 5000;
+        console.log(`⏳ Intento ${attempt}/${maxRetries}: Esperando ${delay / 1000}s...`);
+
         await new Promise(resolve => setTimeout(resolve, delay));
 
-        const tokenUsed = process.env.MERCADOPAGO_ACCESS_TOKEN;
-        console.log(`🔑 Token usado: ${tokenUsed ? tokenUsed.substring(0, 15) + '...' : 'NO DEFINIDO'}`);
 
         try {
+
+            const tokenUsed = process.env.MERCADOPAGO_ACCESS_TOKEN;
+            console.log(`🔑 Token usado: ${tokenUsed ? tokenUsed.substring(0, 15) + '...' : 'NO DEFINIDO'}`);
+
             // 1. Intentar buscar por ID
             const response = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
                 method: 'GET',
@@ -120,7 +122,7 @@ const processPaymentWithRetries = async (paymentId) => {
                 break;
             } else {
                 console.warn(`⚠️ Intento ${attempt}: Búsqueda por ID falló (404). Intentando búsqueda alternativa...`);
-                
+
                 // 2. PLAN B: Buscar en la lista de pagos recientes
                 // A veces el GET /payments/ID falla, pero el GET /payments/search funciona
                 const searchResponse = await fetch(`https://api.mercadopago.com/v1/payments/search?id=${paymentId}`, {
@@ -155,7 +157,7 @@ const processPaymentWithRetries = async (paymentId) => {
         // ... (Tu código de guardar en Supabase va aquí, igual que antes)
         const externalRefParts = paymentInfo.external_reference ? paymentInfo.external_reference.split('_') : [];
         const userId = externalRefParts[0];
-        
+
         if (!userId) return console.error("❌ No hay UserID en external_reference");
 
         console.log(`✅ Guardando orden para User: ${userId}`);
@@ -196,10 +198,10 @@ export const checkPaymentStatus = async (req, res) => {
     try {
         const userId = req.user.userId;
         const { data } = await supabase.from('orders').select('id, status, created_at').eq('user_id', userId).eq('status', 'completed').order('created_at', { ascending: false }).limit(1).single();
-        
+
         if (data) {
-             const isRecent = new Date(data.created_at).getTime() > (Date.now() - 5 * 60 * 1000);
-             if (isRecent) return res.status(200).json({ status: 'completed', orderId: data.id });
+            const isRecent = new Date(data.created_at).getTime() > (Date.now() - 5 * 60 * 1000);
+            if (isRecent) return res.status(200).json({ status: 'completed', orderId: data.id });
         }
         res.status(200).json({ status: 'pending' });
     } catch (err) { res.status(500).json({ error: 'Error' }); }
@@ -242,10 +244,10 @@ export const forceCheckPayment = async (req, res) => {
                 })
                 .select('id')
                 .single();
-            
+
             // Si ya existe, no pasa nada, buscamos la existente
             let finalOrderId = newOrder?.id;
-            
+
             if (orderError) {
                 if (orderError.code === '23505') {
                     // Ya existe, buscamos el ID para asegurar items
