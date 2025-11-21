@@ -168,7 +168,7 @@ export const createMercadoPagoPreference = async (req, res) => {
 
         const result = await preference.create(preferenceData);
 
-        const paymentUrl = result.sandbox_init_point || result.init_point;
+        const paymentUrl = result.init_point;
 
 
 
