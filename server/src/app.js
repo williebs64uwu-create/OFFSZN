@@ -15,33 +15,6 @@ import { handleMercadoPagoWebhook } from './infrastructure/http/controllers/Orde
 
 const app = express()
 
-// --- 1. AUDITORÍA DE ARRANQUE (Verificar Credenciales) ---
-const mpToken = process.env.MERCADOPAGO_ACCESS_TOKEN;
-console.log("\n==================================================");
-console.log("⚡ INICIANDO SERVIDOR - AUDITORÍA DE ENTORNO");
-console.log("==================================================");
-if (mpToken) {
-    console.log(`🔑 MP TOKEN CARGADO: ${mpToken.substring(0, 10)}...${mpToken.substring(mpToken.length - 5)}`);
-    console.log(`📏 LONGITUD TOKEN: ${mpToken.length} caracteres`);
-} else {
-    console.error("❌ ERROR FATAL: MERCADOPAGO_ACCESS_TOKEN NO ESTÁ DEFINIDO EN ENV");
-}
-console.log("==================================================\n");
-
-// --- 2. MIDDLEWARE DE INTERCEPTACIÓN (Verificar Tráfico) ---
-app.use((req, res, next) => {
-    // Ignoramos logs de health checks o estáticos si los hubiera
-    if (req.url.includes('favicon')) return next();
-
-    console.log(`📥 [INCOMING] ${req.method} ${req.url}`);
-    // Si es el webhook, queremos ver quién lo envía (Headers)
-    if (req.url.includes('webhook')) {
-        console.log(`🕵️ [Webhook Headers] User-Agent: ${req.headers['user-agent']}`);
-        console.log(`🕵️ [Webhook IP] X-Forwarded-For: ${req.headers['x-forwarded-for'] || req.socket.remoteAddress}`);
-    }
-    next();
-});
-
 const allowedOrigins = [
     'http://localhost:5500',
     'http://127.0.0.1:5500',

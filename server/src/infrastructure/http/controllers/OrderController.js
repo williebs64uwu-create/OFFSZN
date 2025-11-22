@@ -1,134 +1,59 @@
 import { supabase } from '../../database/connection.js';
-
 import { MercadoPagoConfig, Preference } from 'mercadopago';
-
-
-
 // Validar cliente al inicio
-
 const token = process.env.MERCADOPAGO_ACCESS_TOKEN;
-
 if (!token) console.error("🔥 [CRITICAL] NO TOKEN FOUND IN CONTROLLER INIT");
-
-
-
 const client = new MercadoPagoConfig({ accessToken: token });
-
-
-
 // ------------------------------------------------------------------
-
 // 1. CREAR PREFERENCIA (CON DEBUG DE PRECIO Y URL)
-
 // ------------------------------------------------------------------
-
 export const createMercadoPagoPreference = async (req, res) => {
-
     const traceId = Date.now(); // ID para rastrear logs de esta petición
-
-    console.log(`🔵 [${traceId}] START: createMercadoPagoPreference`);
-
-
-
     try {
-
         const userId = req.user.userId;
-
         const { cartItems } = req.body;
 
-
-
         if (!cartItems?.length) {
-
             console.warn(`⚠️ [${traceId}] Carrito vacío recibido`);
-
             return res.status(400).json({ error: 'Carrito vacío.' });
 
         }
 
-
-
-        console.log(`🛒 [${traceId}] User: ${userId} | Items: ${cartItems.length}`);
-
-
-
         // Validar en DB
-
         const productIds = cartItems.map(item => item.id);
-
         const { data: dbProducts, error } = await supabase
-
             .from('products')
-
             .select('id, name, price_basic, image_url')
-
             .in('id', productIds);
 
-
-
         if (error) {
-
             console.error(`🔴 [${traceId}] Error DB:`, error);
-
             throw new Error('Error DB');
-
         }
 
-
-
         const line_items = [];
-
         cartItems.forEach(cartItem => {
-
             const product = dbProducts.find(p => p.id === cartItem.id);
-
             if (product) {
-
                 let finalPrice = parseFloat(product.price_basic);
-
-                // LOG DE PRECIO
-
-                console.log(`💲 [${traceId}] Prod ID ${product.id}: Precio DB ${finalPrice}`);
-
-
-
                 if (finalPrice < 1000) {
-
                     console.warn(`⚠️ [${traceId}] Precio bajo detectado. Ajustando a 10000.`);
-
                     finalPrice = 10000;
-
                 }
 
                 line_items.push({
-
                     id: product.id.toString(),
-
                     title: product.name.substring(0, 250),
-
                     description: 'Producto OFFSZN',
-
                     picture_url: product.image_url,
-
                     quantity: 1,
-
                     currency_id: 'COP',
-
                     unit_price: finalPrice
-
                 });
-
             }
-
         });
 
-
-
         const uniqueRef = `${userId}_${traceId}`;
-
-        console.log(`🔑 [${traceId}] External Reference generado: ${uniqueRef}`);
-
-
 
         const preference = new Preference(client);
 
