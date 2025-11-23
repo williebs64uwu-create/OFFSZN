@@ -247,3 +247,20 @@ export const getProductsByNickname = async (req, res) => {
         res.status(404).json({ error: err.message || 'Error al obtener datos' });
     }
 };
+
+export const getAllProducers = async (req, res) => {
+    try {
+        const { data: producers, error } = await supabase
+            .from('users')
+            .select('id, nickname, first_name, last_name, avatar_url, bio, role')
+            .eq('is_producer', true) // Asegúrate de tener esta columna o filtra por rol
+            .limit(20); // Limitamos para no cargar miles
+
+        if (error) throw error;
+
+        res.status(200).json(producers);
+    } catch (err) {
+        console.error("Error getAllProducers:", err.message);
+        res.status(500).json({ error: 'Error al cargar productores' });
+    }
+};

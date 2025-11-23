@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -320,11 +321,25 @@
             position: relative;
         }
 
-        .avatar-gradient-1 { background: linear-gradient(135deg, #f59e0b, #ef4444); }
-        .avatar-gradient-2 { background: linear-gradient(135deg, #3b82f6, #2563eb); }
-        .avatar-gradient-3 { background: linear-gradient(135deg, #10b981, #059669); }
-        .avatar-gradient-4 { background: linear-gradient(135deg, #a855f7, #7e22ce); }
-        .avatar-gradient-5 { background: linear-gradient(135deg, #ec4899, #be185d); }
+        .avatar-gradient-1 {
+            background: linear-gradient(135deg, #f59e0b, #ef4444);
+        }
+
+        .avatar-gradient-2 {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+        }
+
+        .avatar-gradient-3 {
+            background: linear-gradient(135deg, #10b981, #059669);
+        }
+
+        .avatar-gradient-4 {
+            background: linear-gradient(135deg, #a855f7, #7e22ce);
+        }
+
+        .avatar-gradient-5 {
+            background: linear-gradient(135deg, #ec4899, #be185d);
+        }
 
         .online-badge {
             position: absolute;
@@ -470,8 +485,15 @@
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .message-group.sent {
@@ -1057,6 +1079,7 @@
         }
     </style>
 </head>
+
 <body>
 
     <nav class="navbar">
@@ -1090,7 +1113,7 @@
 
     <div class="dashboard-container">
         <div class="chat-container">
-            
+
             <div class="conversations-panel">
                 <div class="conversations-header">
                     <a href="#" class="back-btn" title="Regresar" onclick="goToDashboard(); return false;">
@@ -1121,7 +1144,8 @@
                     <div class="empty-chat-icon">💬</div>
                     <h3>Selecciona una conversación</h3>
                     <p>Elige una conversación de la lista o inicia una nueva</p>
-                    <a href="#" class="empty-chat-btn" onclick="alert('Explorar'); return false;">
+
+                    <a href="/pages/comunidad/productores.html" class="empty-chat-btn">
                         <i class="fas fa-users"></i>
                         Explorar Productores
                     </a>
@@ -1156,7 +1180,8 @@
                 </div>
                 <p class="file-upload-text">Click o arrastra un archivo aquí</p>
                 <p class="file-types-allowed">Audio (MP3, WAV) e Imágenes (JPG, PNG, GIF)</p>
-                <input type="file" id="fileInput" style="display: none;" accept="audio/*,image/*" onchange="handleFileSelect(event)">
+                <input type="file" id="fileInput" style="display: none;" accept="audio/*,image/*"
+                    onchange="handleFileSelect(event)">
             </div>
             <button class="file-upload-button" id="uploadButton" onclick="uploadFile()" disabled>
                 Enviar Archivo
@@ -1164,529 +1189,8 @@
         </div>
     </div>
 
-    <script>
-        const sampleConversations = [
-            {
-                id: 1,
-                name: 'Willie Inspired',
-                avatar: 'WI',
-                gradient: 'avatar-gradient-1',
-                lastMessage: 'Listo para colaborar cuando quieras',
-                time: 'Hoy',
-                unread: false,
-                online: true
-            }
-        ];
+    <script src="messages.js"></script>
 
-        const sampleMessages = [
-            {
-                id: 1,
-                sender: 'other',
-                text: 'Hey! Vi tu perfil y me encantaría trabajar contigo',
-                time: '14:30',
-                avatar: 'WI',
-                gradient: 'avatar-gradient-1'
-            },
-            {
-                id: 2,
-                sender: 'me',
-                text: '¡Claro! Me encantaría escuchar tus beats',
-                time: '14:32',
-                avatar: 'U',
-                gradient: 'avatar-gradient-4'
-            },
-            {
-                id: 3,
-                sender: 'other',
-                text: 'Perfecto, te envío algunos samples',
-                time: '14:33',
-                avatar: 'WI',
-                gradient: 'avatar-gradient-1'
-            }
-        ];
-
-        let currentConversation = null;
-        let selectedFile = null;
-        let currentAudio = null;
-        let audioUpdateInterval = null;
-        
-        const popularEmojis = ['😊', '😂', '❤️', '🔥', '👍', '🙏', '💯', '✨', '💪', '🎵', '🎧', '🎤', '🎹', '🎼', '🎶', '🔊', '📢', '💿', '🎙️', '🎚️', '🎛️', '📀', '💾', '📱', '💻', '⌨️', '🖱️', '🖥️', '📲', '☎️', '📞', '🔋', '🔌', '💡', '🔦', '💸', '💵', '💴', '💶', '💷', '💰', '💳', '🪙', '🏆', '🥇', '🥈', '🥉', '🏅', '🎖️', '⭐', '🌟', '✅', '☑️', '✔️', '❌', '⚠️', '🚫', '📍', '📌'];
-
-        function goToDashboard() {
-            alert('Navegando al Dashboard...');
-        }
-
-        function renderConversations(conversations) {
-            const list = document.getElementById('conversationsList');
-            
-            if (!conversations || conversations.length === 0) {
-                list.innerHTML = `
-                    <div style="padding: 40px 20px; text-align: center;">
-                        <i class="fas fa-inbox" style="font-size: 3rem; color: #333; margin-bottom: 16px;"></i>
-                        <p style="color: #666; font-size: 0.9rem; margin-bottom: 8px;">No tienes conversaciones</p>
-                        <p style="color: #555; font-size: 0.8rem;">Inicia una nueva conversación</p>
-                    </div>
-                `;
-                return;
-            }
-
-            list.innerHTML = conversations.map(conv => `
-                <div class="conversation-item ${conv.unread ? 'unread' : ''}" onclick="openConversation(${conv.id})">
-                    <div class="conversation-avatar ${conv.gradient}">
-                        ${conv.avatar}
-                        ${conv.online ? '<div class="online-badge"></div>' : ''}
-                    </div>
-                    <div class="conversation-info">
-                        <div class="conversation-name">${conv.name}</div>
-                        <div class="conversation-message">${conv.lastMessage}</div>
-                    </div>
-                    <div class="conversation-time">${conv.time}</div>
-                </div>
-            `).join('');
-        }
-
-        function renderChatMessages(messages, name, avatar, gradient, online) {
-            const chatArea = document.getElementById('chatArea');
-            
-            chatArea.innerHTML = `
-                <div class="chat-header">
-                    <div class="chat-header-info">
-                        <div class="chat-header-avatar ${gradient}">${avatar}</div>
-                        <div class="chat-header-details">
-                            <h3>${name}</h3>
-                            <div class="chat-header-status ${online ? 'online' : ''}">
-                                ${online ? 'En línea' : 'Desconectado'}
-                            </div>
-                        </div>
-                    </div>
-                    <div class="chat-header-actions">
-                        <button class="chat-action-btn" title="Información" onclick="showChatInfo()">
-                            <i class="fas fa-info-circle"></i>
-                        </button>
-                        <button class="chat-action-btn" title="Opciones" onclick="showChatOptions()">
-                            <i class="fas fa-ellipsis-v"></i>
-                        </button>
-                    </div>
-                </div>
-
-                <div class="chat-messages" id="chatMessages">${renderMessages(messages)}</div>
-
-                <div class="chat-input-container">
-                    <div class="chat-input-wrapper">
-                        <div class="chat-input-actions">
-                            <button class="input-action-btn" title="Adjuntar" onclick="openFileModal()">
-                                <i class="fas fa-paperclip"></i>
-                            </button>
-                            <button class="input-action-btn" title="Emojis" onclick="toggleEmojiPicker()">
-                                <i class="fas fa-smile"></i>
-                            </button>
-                        </div>
-                        <div class="chat-input-field">
-                            <textarea id="messageInput" placeholder="Mensaje" rows="1" onkeydown="handleEnter(event)"></textarea>
-                        </div>
-                        <button class="send-btn" id="sendBtn" onclick="sendMessage()" disabled>
-                            <i class="fas fa-paper-plane"></i>
-                        </button>
-                    </div>
-                </div>
-            `;
-
-            const textarea = document.getElementById('messageInput');
-            textarea.addEventListener('input', function() {
-                document.getElementById('sendBtn').disabled = !this.value.trim();
-            });
-
-            setTimeout(() => {
-                const msgs = document.getElementById('chatMessages');
-                if (msgs) msgs.scrollTop = msgs.scrollHeight;
-            }, 100);
-        }
-
-        function renderMessages(messages) {
-            if (!messages || messages.length === 0) {
-                return '<div class="date-divider"><span>Hoy</span></div>';
-            }
-
-            return messages.map(msg => {
-                let content = '';
-                
-                if (msg.type === 'audio') {
-                    content = `
-                        <div class="audio-preview">
-                            <button class="audio-play-btn" onclick="toggleAudioPlay(this, '${msg.audioSrc}')">
-                                <i class="fas fa-play"></i>
-                            </button>
-                            <div class="audio-info">
-                                <div class="audio-waveform">${generateWaveform()}</div>
-                                <div class="audio-controls">
-                                    <span class="audio-time">0:00</span>
-                                    <div class="audio-timeline" onclick="seekAudio(event, this)">
-                                        <div class="audio-progress" style="width: 0%"></div>
-                                    </div>
-                                    <span class="audio-time">${msg.duration || '2:49'}</span>
-                                    <button class="audio-loop-btn" onclick="toggleLoop(this)">
-                                        <i class="fas fa-redo"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                } else if (msg.type === 'image') {
-                    content = `
-                        <div class="image-preview" onclick="openLightbox('${msg.imageSrc}')">
-                            <img src="${msg.imageSrc}" alt="Imagen">
-                        </div>
-                    `;
-                } else {
-                    content = `<div class="message-bubble"><div class="message-text">${msg.text}</div></div>`;
-                }
-
-                return `
-                    <div class="message-group ${msg.sender === 'me' ? 'sent' : ''}">
-                        <div class="message-avatar ${msg.gradient}">${msg.avatar}</div>
-                        <div class="message-content">
-                            ${content}
-                            <div class="message-time">${msg.time}</div>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
-
-        function generateWaveform() {
-            let html = '';
-            for (let i = 0; i < 40; i++) {
-                const h = Math.random() * 24 + 8;
-                html += `<div class="waveform-bar" style="height: ${h}px"></div>`;
-            }
-            return html;
-        }
-
-        function openConversation(id) {
-            const conv = sampleConversations.find(c => c.id === id);
-            if (!conv) return;
-
-            currentConversation = id;
-
-            document.querySelectorAll('.conversation-item').forEach(item => {
-                item.classList.remove('active');
-            });
-            event.target.closest('.conversation-item').classList.add('active');
-
-            renderChatMessages(sampleMessages, conv.name, conv.avatar, conv.gradient, conv.online);
-
-            conv.unread = false;
-            updateUnreadCount();
-        }
-
-        function sendMessage() {
-            const textarea = document.getElementById('messageInput');
-            const msg = textarea.value.trim();
-
-            if (!msg || !currentConversation) return;
-
-            const newMsg = {
-                id: Date.now(),
-                sender: 'me',
-                text: msg,
-                time: new Date().toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' }),
-                avatar: 'U',
-                gradient: 'avatar-gradient-4'
-            };
-
-            sampleMessages.push(newMsg);
-            textarea.value = '';
-            document.getElementById('sendBtn').disabled = true;
-
-            const container = document.getElementById('chatMessages');
-            container.innerHTML += renderMessages([newMsg]);
-            container.scrollTop = container.scrollHeight;
-        }
-
-        function handleEnter(e) {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                sendMessage();
-            }
-        }
-
-        function updateUnreadCount() {
-            const count = sampleConversations.filter(c => c.unread).length;
-            const sub = document.querySelector('.conversations-subtitle');
-            if (sub) sub.textContent = `${count} mensajes sin leer`;
-        }
-
-        function showChatInfo() {
-            alert('Información del chat\n\n- Archivos compartidos\n- Fotos y videos\n- Enlaces');
-        }
-
-        function showChatOptions() {
-            alert('Opciones\n\n- Silenciar\n- Bloquear\n- Reportar\n- Eliminar');
-        }
-
-        function switchTab(e, tab) {
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            e.target.classList.add('active');
-
-            if (tab === 'inbox') {
-                renderConversations(sampleConversations);
-            } else {
-                renderConversations([]);
-            }
-        }
-
-        function searchConversations(term) {
-            const t = term.toLowerCase();
-            const filtered = sampleConversations.filter(c => 
-                c.name.toLowerCase().includes(t)
-            );
-            renderConversations(filtered);
-        }
-
-        function toggleEmojiPicker() {
-            const picker = document.getElementById('emojiPicker');
-            picker.classList.toggle('active');
-            
-            if (picker.classList.contains('active') && picker.children.length === 0) {
-                popularEmojis.forEach(emoji => {
-                    const el = document.createElement('div');
-                    el.className = 'emoji-item';
-                    el.textContent = emoji;
-                    el.onclick = () => insertEmoji(emoji);
-                    picker.appendChild(el);
-                });
-            }
-        }
-
-        function insertEmoji(emoji) {
-            const textarea = document.getElementById('messageInput');
-            textarea.value += emoji;
-            textarea.focus();
-            document.getElementById('sendBtn').disabled = false;
-            document.getElementById('emojiPicker').classList.remove('active');
-        }
-
-        document.addEventListener('click', (e) => {
-            const picker = document.getElementById('emojiPicker');
-            const btn = document.querySelector('[title="Emojis"]');
-            
-            if (picker && !picker.contains(e.target) && e.target !== btn && !btn?.contains(e.target)) {
-                picker.classList.remove('active');
-            }
-        });
-
-        function openFileModal() {
-            document.getElementById('fileModal').classList.add('active');
-        }
-
-        function closeFileModal() {
-            document.getElementById('fileModal').classList.remove('active');
-            selectedFile = null;
-            document.getElementById('fileInput').value = '';
-            document.getElementById('uploadButton').disabled = true;
-            document.getElementById('fileUploadArea').querySelector('.file-upload-text').textContent = 'Click o arrastra un archivo aquí';
-        }
-
-        function handleFileSelect(e) {
-            const file = e.target.files[0];
-            if (file) {
-                selectedFile = file;
-                document.getElementById('uploadButton').disabled = false;
-                const type = file.type.startsWith('audio/') ? '🎵' : '🖼️';
-                document.getElementById('fileUploadArea').querySelector('.file-upload-text').textContent = `${type} ${file.name}`;
-            }
-        }
-
-        function uploadFile() {
-            if (!selectedFile || !currentConversation) return;
-            
-            const type = selectedFile.type;
-            const time = new Date().toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' });
-            let fileMsg;
-            
-            if (type.startsWith('audio/')) {
-                fileMsg = {
-                    id: Date.now(),
-                    sender: 'me',
-                    type: 'audio',
-                    audioSrc: URL.createObjectURL(selectedFile),
-                    duration: '2:49',
-                    time: time,
-                    avatar: 'U',
-                    gradient: 'avatar-gradient-4'
-                };
-            } else if (type.startsWith('image/')) {
-                fileMsg = {
-                    id: Date.now(),
-                    sender: 'me',
-                    type: 'image',
-                    imageSrc: URL.createObjectURL(selectedFile),
-                    time: time,
-                    avatar: 'U',
-                    gradient: 'avatar-gradient-4'
-                };
-            }
-            
-            if (fileMsg) {
-                sampleMessages.push(fileMsg);
-                const container = document.getElementById('chatMessages');
-                container.innerHTML += renderMessages([fileMsg]);
-                container.scrollTop = container.scrollHeight;
-            }
-            
-            closeFileModal();
-        }
-
-        const uploadArea = document.getElementById('fileUploadArea');
-        
-        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(evt => {
-            uploadArea?.addEventListener(evt, e => {
-                e.preventDefault();
-                e.stopPropagation();
-            }, false);
-        });
-
-        ['dragenter', 'dragover'].forEach(evt => {
-            uploadArea?.addEventListener(evt, () => {
-                uploadArea.style.borderColor = 'rgba(139, 92, 246, .8)';
-                uploadArea.style.background = 'rgba(139, 92, 246, .1)';
-            });
-        });
-
-        ['dragleave', 'drop'].forEach(evt => {
-            uploadArea?.addEventListener(evt, () => {
-                uploadArea.style.borderColor = 'rgba(139, 92, 246, .3)';
-                uploadArea.style.background = 'transparent';
-            });
-        });
-
-        uploadArea?.addEventListener('drop', (e) => {
-            const files = e.dataTransfer.files;
-            if (files.length > 0) {
-                document.getElementById('fileInput').files = files;
-                handleFileSelect({ target: { files: files } });
-            }
-        });
-
-        function toggleAudioPlay(btn, src) {
-            const icon = btn.querySelector('i');
-            const preview = btn.closest('.audio-preview');
-            const progress = preview.querySelector('.audio-progress');
-            const time = preview.querySelectorAll('.audio-time')[0];
-            const bars = preview.querySelectorAll('.waveform-bar');
-
-            if (!currentAudio || currentAudio.src !== src) {
-                if (currentAudio) {
-                    currentAudio.pause();
-                    currentAudio = null;
-                }
-
-                currentAudio = new Audio(src);
-                currentAudio.addEventListener('ended', () => {
-                    icon.classList.remove('fa-pause');
-                    icon.classList.add('fa-play');
-                    progress.style.width = '0%';
-                    time.textContent = '0:00';
-                    bars.forEach(b => b.classList.remove('active'));
-                    
-                    if (audioUpdateInterval) {
-                        clearInterval(audioUpdateInterval);
-                        audioUpdateInterval = null;
-                    }
-
-                    const loop = preview.querySelector('.audio-loop-btn');
-                    if (loop.classList.contains('active')) {
-                        currentAudio.play();
-                        icon.classList.remove('fa-play');
-                        icon.classList.add('fa-pause');
-                        startAudioUpdate(preview);
-                    }
-                });
-
-                currentAudio.play();
-                icon.classList.remove('fa-play');
-                icon.classList.add('fa-pause');
-                startAudioUpdate(preview);
-            } else {
-                if (currentAudio.paused) {
-                    currentAudio.play();
-                    icon.classList.remove('fa-play');
-                    icon.classList.add('fa-pause');
-                    startAudioUpdate(preview);
-                } else {
-                    currentAudio.pause();
-                    icon.classList.remove('fa-pause');
-                    icon.classList.add('fa-play');
-                    if (audioUpdateInterval) {
-                        clearInterval(audioUpdateInterval);
-                        audioUpdateInterval = null;
-                    }
-                }
-            }
-        }
-
-        function startAudioUpdate(preview) {
-            const progress = preview.querySelector('.audio-progress');
-            const time = preview.querySelectorAll('.audio-time')[0];
-            const bars = preview.querySelectorAll('.waveform-bar');
-
-            audioUpdateInterval = setInterval(() => {
-                if (currentAudio) {
-                    const pct = (currentAudio.currentTime / currentAudio.duration) * 100;
-                    progress.style.width = pct + '%';
-                    
-                    const m = Math.floor(currentAudio.currentTime / 60);
-                    const s = Math.floor(currentAudio.currentTime % 60);
-                    time.textContent = `${m}:${s.toString().padStart(2, '0')}`;
-
-                    const idx = Math.floor((currentAudio.currentTime / currentAudio.duration) * bars.length);
-                    bars.forEach((bar, i) => {
-                        if (i <= idx) bar.classList.add('active');
-                        else bar.classList.remove('active');
-                    });
-                }
-            }, 100);
-        }
-
-        function seekAudio(e, timeline) {
-            if (!currentAudio) return;
-            const rect = timeline.getBoundingClientRect();
-            const pct = (e.clientX - rect.left) / rect.width;
-            currentAudio.currentTime = pct * currentAudio.duration;
-        }
-
-        function toggleLoop(btn) {
-            btn.classList.toggle('active');
-            if (currentAudio) {
-                currentAudio.loop = btn.classList.contains('active');
-            }
-        }
-
-        function openLightbox(src) {
-            const lightbox = document.getElementById('imageLightbox');
-            document.getElementById('lightboxImage').src = src;
-            lightbox.classList.add('active');
-            document.body.style.overflow = 'hidden';
-        }
-
-        function closeLightbox(e) {
-            if (e.target.id === 'imageLightbox' || e.target.closest('.image-lightbox-close')) {
-                document.getElementById('imageLightbox').classList.remove('active');
-                document.body.style.overflow = '';
-            }
-        }
-
-        window.addEventListener('DOMContentLoaded', () => {
-            console.log('💬 OFFSZN Mensajería iniciado');
-            renderConversations(sampleConversations);
-            updateUnreadCount();
-            
-            setTimeout(() => {
-                if (sampleConversations.length > 0) {
-                    openConversation(sampleConversations[0].id);
-                }
-            }, 500);
-        });
-    </script>
 </body>
+
 </html>

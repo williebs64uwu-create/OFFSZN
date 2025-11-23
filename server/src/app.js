@@ -12,6 +12,7 @@ import adminRoutes from './infrastructure/http/routes/admin.routes.js';
 import chatbotRouter from './routes/chatbot.js';
 import profileRoutes from './infrastructure/http/routes/profile.routes.js';
 import { handleMercadoPagoWebhook } from './infrastructure/http/controllers/OrderController.js';
+import chatRoutes from './infrastructure/http/routes/chat.routes.js';
 
 const app = express()
 
@@ -48,6 +49,7 @@ app.use('/api', userRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api', chatbotRouter);
 app.use('/api', profileRoutes);
+app.use('/api', chatRoutes);
 
 checkConnection()
 

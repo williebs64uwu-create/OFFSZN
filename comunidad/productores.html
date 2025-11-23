@@ -1195,60 +1195,11 @@
   </div>
 
   <div class="producers-grid" id="producersGrid">
+    <p style="text-align: center; grid-column: 1/-1; color: #888;">Cargando productores...</p>
     
     <!-- ==================== WILLIE INSPIRED - PRODUCTOR DESTACADO ==================== -->
     <article class="producer-card">
-      <div class="producer-header">
-        <div class="producer-avatar">
-          WI
-          <span class="online-indicator"></span>
-        </div>
-        <div class="producer-info">
-          <h3 class="producer-name">
-            Willie Inspired
-            <i class="bi bi-patch-check-fill verified-badge"></i>
-          </h3>
-          <p class="producer-role">Productor | Ingeniero de Mezcla</p>
-        </div>
-      </div>
-
-      <p class="producer-bio">
-        Productor musical especializado en trap latino y reggaeton. Creador de OFFSZN, el primer marketplace musical hecho en Perú 🇵🇪. Más de 5 años de experiencia creando beats y presets profesionales.
-      </p>
-
-      <div class="producer-stats">
-        <div class="stat-box">
-          <span class="stat-value">50+</span>
-          <span class="stat-label">Productos</span>
-        </div>
-        <div class="stat-box">
-          <span class="stat-value">1.2K</span>
-          <span class="stat-label">Seguidores</span>
-        </div>
-        <div class="stat-box">
-          <span class="stat-value">4.9</span>
-          <span class="stat-label">Rating</span>
-        </div>
-      </div>
-
-      <div class="producer-tags">
-        <span class="tag">Trap</span>
-        <span class="tag">Reggaeton</span>
-        <span class="tag">R&B</span>
-        <span class="tag">Mixing</span>
-        <span class="tag">FL Studio</span>
-      </div>
-
-      <div class="producer-actions">
-        <a href="#" class="btn-primary">
-          <i class="bi bi-person-plus"></i>
-          Seguir
-        </a>
-        <a href="#" class="btn-secondary">
-          <i class="bi bi-bag"></i>
-          Ver Tienda
-        </a>
-      </div>
+      
     </article>
 
   </div>
@@ -1318,283 +1269,149 @@
 
 <!-- ==================== SCRIPTS ==================== -->
 <script>
-/**
- * ==================== BASE DE DATOS DE PRODUCTORES ====================
- * Aquí se conectará con la API real en el futuro
- */
-const producersDatabase = [
-  {
-    id: 1,
-    name: "Willie Inspired",
-    username: "willieinspired",
-    role: "Productor | Ingeniero de Mezcla",
-    bio: "Productor musical especializado en trap latino y reggaeton. Creador de OFFSZN, el primer marketplace musical hecho en Perú 🇵🇪. Más de 5 años de experiencia creando beats y presets profesionales.",
-    avatar: "WI",
-    verified: true,
-    online: true,
-    stats: {
-      products: "50+",
-      followers: "1.2K",
-      rating: "4.9"
-    },
-    tags: ["Trap", "Reggaeton", "R&B", "Mixing", "FL Studio"],
-    genres: ["trap", "reggaeton", "r&b"]
-  }
-  // Más productores se agregarán aquí cuando tengas datos reales
-];
+    // 1. Configuración de API
+    const API_URL = window.location.hostname.includes('localhost') 
+        ? 'http://localhost:3000/api' 
+        : 'https://offszn-academy.onrender.com/api';
 
-/**
- * ==================== SISTEMA DE BÚSQUEDA IA ====================
- * Búsqueda inteligente con coincidencias flexibles
- */
-function aiSearch(query) {
-  const searchTerm = query.toLowerCase().trim();
-  
-  if (!searchTerm) {
-    return producersDatabase;
-  }
+    document.addEventListener('DOMContentLoaded', loadProducers);
 
-  return producersDatabase.filter(producer => {
-    // Búsqueda en nombre
-    if (producer.name.toLowerCase().includes(searchTerm)) return true;
-    
-    // Búsqueda en username
-    if (producer.username.toLowerCase().includes(searchTerm)) return true;
-    
-    // Búsqueda en bio
-    if (producer.bio.toLowerCase().includes(searchTerm)) return true;
-    
-    // Búsqueda en tags
-    if (producer.tags.some(tag => tag.toLowerCase().includes(searchTerm))) return true;
-    
-    // Búsqueda en géneros
-    if (producer.genres.some(genre => genre.includes(searchTerm))) return true;
-    
-    return false;
-  });
-}
+    // 2. Función para cargar desde la Base de Datos
+    async function loadProducers() {
+        const container = document.getElementById('producersGrid');
+        const countLabel = document.getElementById('resultsCount'); // Si tienes este elemento para mostrar el contador
 
-/**
- * ==================== RENDERIZAR PRODUCTORES ====================
- * Genera las tarjetas de productores dinámicamente
- */
-function renderProducers(producers) {
-  const grid = document.getElementById('producersGrid');
-  const noResults = document.getElementById('noResults');
-  const resultsCount = document.getElementById('resultsCount');
+        try {
+            const response = await fetch(`${API_URL}/producers`);
+            
+            if (!response.ok) throw new Error('Error al cargar datos');
 
-  if (producers.length === 0) {
-    grid.innerHTML = '';
-    noResults.style.display = 'block';
-    resultsCount.textContent = 'No se encontraron productores';
-    return;
-  }
+            const producers = await response.json();
 
-  noResults.style.display = 'none';
-  resultsCount.textContent = `Mostrando ${producers.length} productor${producers.length !== 1 ? 'es' : ''}`;
+            // Si no hay productores
+            if (producers.length === 0) {
+                container.innerHTML = `
+                    <div class="no-results" style="grid-column: 1/-1; text-align: center; padding: 40px;">
+                        <h3>No se encontraron productores</h3>
+                    </div>`;
+                return;
+            }
 
-  grid.innerHTML = producers.map(producer => `
-    <article class="producer-card">
-      <div class="producer-header">
-        <div class="producer-avatar">
-          ${producer.avatar}
-          ${producer.online ? '<span class="online-indicator"></span>' : ''}
-        </div>
-        <div class="producer-info">
-          <h3 class="producer-name">
-            ${producer.name}
-            ${producer.verified ? '<i class="bi bi-patch-check-fill verified-badge"></i>' : ''}
-          </h3>
-          <p class="producer-role">${producer.role}</p>
-        </div>
-      </div>
+            // Actualizar contador si existe el elemento
+            if (countLabel) countLabel.textContent = `Mostrando ${producers.length} productores`;
 
-      <p class="producer-bio">${producer.bio}</p>
+            // 3. Generar el HTML respetando TU DISEÑO original
+            container.innerHTML = producers.map(p => {
+                // Lógica para avatar (Inicial o Imagen)
+                const initial = (p.nickname || p.first_name || '?').charAt(0).toUpperCase();
+                const avatarContent = p.avatar_url 
+                    ? `<img src="${p.avatar_url}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">` 
+                    : initial;
 
-      <div class="producer-stats">
-        <div class="stat-box">
-          <span class="stat-value">${producer.stats.products}</span>
-          <span class="stat-label">Productos</span>
-        </div>
-        <div class="stat-box">
-          <span class="stat-value">${producer.stats.followers}</span>
-          <span class="stat-label">Seguidores</span>
-        </div>
-        <div class="stat-box">
-          <span class="stat-value">${producer.stats.rating}</span>
-          <span class="stat-label">Rating</span>
-        </div>
-      </div>
+                // Lógica para nombre y rol
+                const displayName = p.nickname || `${p.first_name} ${p.last_name}`.trim() || 'Usuario';
+                const displayRole = p.role || 'Productor';
+                const displayBio = p.bio || 'Sin biografía disponible.';
 
-      <div class="producer-tags">
-        ${producer.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
-      </div>
+                // HTML INYECTADO (Usa tus clases originales: producer-card, stat-box, etc.)
+                return `
+                <article class="producer-card">
+                    <div class="producer-header">
+                        <div class="producer-avatar">
+                            ${avatarContent}
+                            <span class="online-indicator"></span>
+                        </div>
+                        <div class="producer-info">
+                            <h3 class="producer-name">
+                                ${displayName}
+                                <i class="bi bi-patch-check-fill verified-badge"></i>
+                            </h3>
+                            <p class="producer-role">${displayRole}</p>
+                        </div>
+                    </div>
 
-      <div class="producer-actions">
-        <a href="#" class="btn-primary">
-          <i class="bi bi-person-plus"></i>
-          Seguir
-        </a>
-        <a href="#" class="btn-secondary">
-          <i class="bi bi-bag"></i>
-          Ver Tienda
-        </a>
-      </div>
-    </article>
-  `).join('');
+                    <p class="producer-bio">${displayBio}</p>
 
-  // Reaplica los event listeners después de renderizar
-  attachCardEventListeners();
-}
+                    <div class="producer-stats">
+                        <div class="stat-box">
+                            <span class="stat-value">0</span>
+                            <span class="stat-label">Productos</span>
+                        </div>
+                        <div class="stat-box">
+                            <span class="stat-value">0</span>
+                            <span class="stat-label">Seguidores</span>
+                        </div>
+                        <div class="stat-box">
+                            <span class="stat-value">5.0</span>
+                            <span class="stat-label">Rating</span>
+                        </div>
+                    </div>
 
-/**
- * ==================== SISTEMA DE FILTROS ====================
- * Filtra productores por categorías
- */
-function filterProducers(filterType) {
-  if (filterType === 'all') {
-    return producersDatabase;
-  }
+                    <div class="producer-actions">
+                        <a href="#" class="btn-primary" onclick="handleStartChat(event, '${p.id}')">
+                            <i class="bi bi-chat-dots-fill"></i>
+                            Mensaje
+                        </a>
+                        <a href="/users/${p.nickname}" class="btn-secondary">
+                            <i class="bi bi-shop"></i>
+                            Ver Tienda
+                        </a>
+                    </div>
+                </article>
+                `;
+            }).join('');
 
-  return producersDatabase.filter(producer => {
-    switch(filterType) {
-      case 'verified':
-        return producer.verified;
-      case 'online':
-        return producer.online;
-      default:
-        // Filtra por género
-        return producer.genres.includes(filterType);
+        } catch (error) {
+            console.error(error);
+            container.innerHTML = '<p style="text-align:center; grid-column: 1/-1; color: red;">Error de conexión con el servidor.</p>';
+        }
     }
-  });
-}
 
-/**
- * ==================== EVENT LISTENERS DE BÚSQUEDA ====================
- */
-const aiSearchInput = document.getElementById('aiSearchInput');
-const aiSearchButton = document.getElementById('aiSearchButton');
+    // 4. Función para Iniciar Chat (Conectada al botón "Mensaje")
+    window.handleStartChat = async function(event, targetId) {
+        event.preventDefault(); // Evitar que el enlace recargue la página
+        
+        const token = localStorage.getItem('authToken');
+        const btn = event.currentTarget;
 
-// Búsqueda al hacer click en el botón
-aiSearchButton.addEventListener('click', function() {
-  const query = aiSearchInput.value;
-  const results = aiSearch(query);
-  renderProducers(results);
-});
+        if (!token) {
+            alert("Debes iniciar sesión para enviar mensajes.");
+            window.location.href = '/pages/login.html';
+            return;
+        }
 
-// Búsqueda al presionar Enter
-aiSearchInput.addEventListener('keypress', function(e) {
-  if (e.key === 'Enter') {
-    const query = aiSearchInput.value;
-    const results = aiSearch(query);
-    renderProducers(results);
-  }
-});
+        // Feedback visual en el botón
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="bi bi-hourglass-split"></i> ...';
+        btn.style.opacity = "0.7";
 
-// Búsqueda en tiempo real (opcional, comentado por rendimiento)
-// aiSearchInput.addEventListener('input', function() {
-//   const query = this.value;
-//   const results = aiSearch(query);
-//   renderProducers(results);
-// });
+        try {
+            const response = await fetch(`${API_URL}/chat/start`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ targetUserId: targetId })
+            });
 
-/**
- * ==================== EVENT LISTENERS DE FILTROS ====================
- */
-const filterChips = document.querySelectorAll('.filter-chip');
+            const data = await response.json();
 
-filterChips.forEach(chip => {
-  chip.addEventListener('click', function() {
-    // Actualiza UI de chips activos
-    filterChips.forEach(c => c.classList.remove('active'));
-    this.classList.add('active');
+            if (response.ok) {
+                // Éxito: Vamos a la página de mensajes
+                window.location.href = '/cuenta/messages.html';
+            } else {
+                alert('Error: ' + (data.error || 'No se pudo iniciar el chat'));
+                btn.innerHTML = originalText;
+            }
 
-    // Aplica el filtro
-    const filterType = this.getAttribute('data-filter');
-    const results = filterProducers(filterType);
-    renderProducers(results);
-
-    // Limpia la búsqueda
-    aiSearchInput.value = '';
-  });
-});
-
-/**
- * ==================== ANIMACIONES DE TARJETAS ====================
- */
-function attachCardEventListeners() {
-  const cards = document.querySelectorAll('.producer-card');
-  
-  cards.forEach(card => {
-    card.addEventListener('mouseenter', function() {
-      this.style.transform = 'translateY(-8px)';
-    });
-    
-    card.addEventListener('mouseleave', function() {
-      this.style.transform = 'translateY(0)';
-    });
-  });
-}
-
-/**
- * ==================== DROPDOWNS DEL NAVBAR ====================
- */
-function toggleDropdown(element) {
-  const parent = element.closest('.dropdown-parent');
-  const isActive = parent.classList.contains('dropdown-active');
-  
-  document.querySelectorAll('.dropdown-parent').forEach(p => {
-    p.classList.remove('dropdown-active');
-  });
-  
-  if (!isActive) {
-    parent.classList.add('dropdown-active');
-  }
-}
-
-document.addEventListener('click', function(e) {
-  if (!e.target.closest('.dropdown-parent')) {
-    document.querySelectorAll('.dropdown-parent').forEach(p => {
-      p.classList.remove('dropdown-active');
-    });
-  }
-});
-
-/**
- * ==================== SMOOTH SCROLL ====================
- */
-document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-  anchor.addEventListener('click', function (e) {
-    e.preventDefault();
-    const target = document.querySelector(this.getAttribute('href'));
-    if (target) {
-      target.scrollIntoView({
-        behavior: 'smooth'
-      });
-    }
-  });
-});
-
-/**
- * ==================== INICIALIZACIÓN ====================
- */
-document.addEventListener('DOMContentLoaded', function() {
-  console.log('🎧 Productores Destacados cargado correctamente');
-  console.log(`Total de productores: ${producersDatabase.length}`);
-  
-  // Renderiza todos los productores al cargar
-  renderProducers(producersDatabase);
-  attachCardEventListeners();
-  
-  // Efecto de focus en el search
-  aiSearchInput.addEventListener('focus', function() {
-    this.parentElement.style.transform = 'scale(1.02)';
-  });
-  
-  aiSearchInput.addEventListener('blur', function() {
-    this.parentElement.style.transform = 'scale(1)';
-  });
-});
+        } catch (error) {
+            console.error(error);
+            alert('Error de conexión al intentar iniciar chat.');
+            btn.innerHTML = originalText;
+            btn.style.opacity = "1";
+        }
+    };
 </script>
 
 </body>
