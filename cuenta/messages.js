@@ -45,19 +45,33 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     async function loadMessages(convId) {
         try {
-            chatArea.innerHTML = '<div style="padding:20px; text-align:center; color:#666;">Cargando mensajes...</div>';
-            
+            // LÓGICA INTELIGENTE:
+            // Solo mostramos "Cargando..." si estamos cambiando de conversación.
+            // Si ya estamos en este chat (ej. actualizando o enviando), NO borramos nada.
+            if (currentConversationId != convId) {
+                chatArea.innerHTML = '<div style="padding:20px; text-align:center; color:#666;"><i class="fas fa-spinner fa-spin"></i> Cargando chat...</div>';
+            }
+
             const res = await fetch(`${API_URL}/chat/conversations/${convId}/messages`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             const messages = await res.json();
             
-            // Encontrar datos de la conversación actual para el header
             const convData = conversations.find(c => c.id == convId);
-            currentConversationData = convData;
-            currentConversationId = convId;
-
-            renderChatArea(messages, convData);
+            
+            // Si estamos en el mismo chat, solo actualizamos la lista de mensajes, NO todo el chatArea (para no perder el foco del input)
+            const messagesContainer = document.getElementById('chatMessages');
+            
+            if (currentConversationId == convId && messagesContainer) {
+                // Actualización silenciosa: Solo cambiamos el contenido de los mensajes
+                messagesContainer.innerHTML = renderMessagesList(messages);
+                messagesContainer.scrollTop = messagesContainer.scrollHeight; // Auto-scroll al final
+            } else {
+                // Es un chat nuevo: Renderizamos todo (Header, Lista, Input)
+                currentConversationData = convData;
+                currentConversationId = convId;
+                renderChatArea(messages, convData);
+            }
 
         } catch (err) {
             console.error(err);
