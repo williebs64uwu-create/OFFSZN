@@ -209,13 +209,37 @@ document.addEventListener('DOMContentLoaded', async () => {
     async function handleSendMessage() {
         const input = document.getElementById('messageInput');
         const text = input.value.trim();
+        
         if (!text || !currentConversationId) return;
 
+        // 1. UI OPTIMISTA: Crear el HTML del mensaje y mostrarlo YA MISMO
+        const tempId = Date.now(); // ID temporal
+        const timeNow = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        
+        // Construimos el HTML simulado de "Mí" mensaje
+        const optimisticHTML = `
+            <div class="message-group sent" id="msg-${tempId}" style="opacity: 0.7;"> 
+                <div class="message-avatar avatar-gradient-4">YO</div>
+                <div class="message-content">
+                    <div class="message-bubble" style="background: #8b5cf6;">
+                        <div class="message-text" style="color: #fff;">${text}</div>
+                    </div>
+                    <div class="message-time">${timeNow} <i class="fas fa-clock"></i></div>
+                </div>
+            </div>
+        `;
+
+        // Inyectamos visualmente al final del chat
+        const container = document.getElementById('chatMessages');
+        container.insertAdjacentHTML('beforeend', optimisticHTML);
+        container.scrollTop = container.scrollHeight; // Scroll abajo
+        
+        // Limpiamos el input inmediatamente
+        input.value = '';
+        document.getElementById('sendBtn').disabled = true;
+
         try {
-            // Limpiar input visualmente rápido
-            input.value = ''; 
-            
-            // Enviar a API
+            // 2. ENVIAR AL SERVIDOR (EN SEGUNDO PLANO)
             const res = await fetch(`${API_URL}/chat/messages`, {
                 method: 'POST',
                 headers: {
@@ -231,13 +255,28 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             if (!res.ok) throw new Error('Falló el envío');
 
-            // Recargar mensajes (Polling simple por ahora)
-            // Idealmente aquí agregaríamos el mensaje al DOM manualmente para sensación instantánea
-            await loadMessages(currentConversationId);
+            // 3. ÉXITO: El servidor ya lo guardó.
+            // Podemos dejar el mensaje optimista o recargar suavemente para confirmar.
+            // Quitamos la opacidad para indicar "Enviado"
+            const tempMsg = document.getElementById(`msg-${tempId}`);
+            if (tempMsg) {
+                tempMsg.style.opacity = '1';
+                const timeIcon = tempMsg.querySelector('.fa-clock');
+                if(timeIcon) timeIcon.className = 'fas fa-check'; // Cambiar reloj por check
+            }
+
+            // Opcional: Recargar en background para sincronizar IDs reales
+            // await loadMessages(currentConversationId); 
 
         } catch (err) {
             console.error(err);
-            alert('Error enviando mensaje');
+            // Si falla, avisar al usuario visualmente
+            const tempMsg = document.getElementById(`msg-${tempId}`);
+            if (tempMsg) {
+                tempMsg.style.opacity = '1';
+                tempMsg.querySelector('.message-bubble').style.background = '#ef4444'; // Rojo de error
+                alert('No se pudo enviar el mensaje. Revisa tu conexión.');
+            }
         }
     }
 
