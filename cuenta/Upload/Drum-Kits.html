@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -177,6 +178,7 @@
                 opacity: 0;
                 transform: translateY(10px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -858,6 +860,7 @@
                 opacity: 0;
                 transform: translateY(-20px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -1106,6 +1109,136 @@
         .verification-item-value.success {
             color: #00ff88;
         }
+
+        /* Exit Confirmation Modal */
+        .exit-modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(4px);
+            z-index: 10001;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .exit-modal-overlay.active {
+            display: flex;
+        }
+
+        .exit-modal {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 32px;
+            max-width: 450px;
+            width: 90%;
+            animation: modalSlideIn 0.3s ease;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .exit-modal-title {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .exit-modal-message {
+            color: var(--text-secondary);
+            margin-bottom: 24px;
+            line-height: 1.6;
+        }
+
+        .exit-modal-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+
+        .exit-modal-btn {
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            font-size: 14px;
+        }
+
+        .exit-modal-btn.cancel {
+            background: transparent;
+            color: var(--text-secondary);
+            border: 1px solid var(--border-color);
+        }
+
+        .exit-modal-btn.cancel:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--primary-color);
+        }
+
+        .exit-modal-btn.confirm {
+            background: var(--error-color);
+            color: white;
+        }
+
+        .exit-modal-btn.confirm:hover {
+            background: #dc2626;
+        }
+
+        .spinners {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            opacity: 0.6;
+            transition: opacity 0.2s;
+        }
+
+        .number-control:hover .spinners {
+            opacity: 1;
+        }
+
+        .spin-btn {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 0;
+            line-height: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 10px;
+        }
+
+        .spin-btn:hover {
+            color: var(--primary-color);
+        }
+
+        .spin-btn svg {
+            width: 10px;
+            height: 10px;
+        }
     </style>
 </head>
 
@@ -1157,7 +1290,9 @@
                             <img id="coverPreview" class="cover-preview">
                             <div class="cover-placeholder" id="coverPlaceholder">
                                 <svg class="upload-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z">
+                                    </path>
                                 </svg>
                                 <div class="upload-text">Subir Portada</div>
                                 <div class="upload-subtext">Formato: 1080x1080px</div>
@@ -1168,11 +1303,14 @@
                     <div>
                         <div class="grid-2" style="margin-bottom: 20px;">
                             <div class="form-group">
-                                <div class="label">Archivo del Drumkit (.rar, .zip) <span class="required">*</span></div>
+                                <div class="label">Archivo del Drumkit (.rar, .zip) <span class="required">*</span>
+                                </div>
                                 <div class="upload-zone" id="fileDropZone">
                                     <input type="file" id="fileInput" accept=".rar,.zip" hidden>
                                     <svg class="upload-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12">
+                                        </path>
                                     </svg>
                                     <div class="upload-text">Arrastra tu archivo aquí</div>
                                     <div class="upload-subtext">.rar o .zip</div>
@@ -1185,7 +1323,9 @@
                                 <div class="upload-zone" id="audioDropZone">
                                     <input type="file" id="audioInput" accept=".mp3,.wav" hidden>
                                     <svg class="upload-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3">
+                                        </path>
                                     </svg>
                                     <div class="upload-text">Subir Preview</div>
                                 </div>
@@ -1194,14 +1334,18 @@
                         </div>
 
                         <div class="form-group">
-                            <div class="label">Título <span class="required">*</span> <span class="char-count"><span id="titleCount">0</span>/60</span></div>
-                            <input type="text" class="input-field" id="titleInput" maxlength="60" placeholder="Nombre del Drumkit">
+                            <div class="label">Título <span class="required">*</span> <span class="char-count"><span
+                                        id="titleCount">0</span>/60</span></div>
+                            <input type="text" class="input-field" id="titleInput" maxlength="60"
+                                placeholder="Nombre del Drumkit">
                         </div>
 
                         <div class="grid-2">
                             <div class="form-group">
                                 <div class="label">Fecha de Lanzamiento <span class="required">*</span></div>
                                 <input type="datetime-local" class="input-field" id="dateInput">
+                                <div id="dateError" class="alert alert-error"
+                                    style="margin-top: 4px; font-size: 12px; display: none;"></div>
                             </div>
                             <div class="form-group">
                                 <div class="label">Visibilidad <span class="required">*</span></div>
@@ -1214,8 +1358,10 @@
                         </div>
 
                         <div class="form-group">
-                            <div class="label">Descripción <span class="char-count"><span id="descCount">0</span>/500</span></div>
-                            <textarea class="input-field" id="descInput" maxlength="500" placeholder="Describe tu drumkit..."></textarea>
+                            <div class="label">Descripción <span class="char-count"><span
+                                        id="descCount">0</span>/500</span></div>
+                            <textarea class="input-field" id="descInput" maxlength="500"
+                                placeholder="Describe tu drumkit..."></textarea>
                         </div>
                     </div>
                 </div>
@@ -1226,56 +1372,106 @@
                 <div class="grid-2">
                     <div>
                         <h3 class="section-title">Metadatos</h3>
+
+                        <!-- Tags -->
                         <div class="form-group">
                             <div class="label">Tags (Max 3)</div>
                             <div class="tags-container" id="tagsContainer">
-                                <input type="text" class="tags-input" id="tagInput" placeholder="Escribe y presiona Enter">
+                                <input type="text" class="tags-input" id="tagInput"
+                                    placeholder="Escribe y presiona Enter">
                             </div>
                         </div>
+
+                        <!-- Número de Sonidos con Spinners -->
                         <div class="form-group">
                             <div class="label">Número de Sonidos</div>
                             <div class="number-control">
-                                <input type="text" class="input-field" id="soundsInput" inputmode="numeric" pattern="[0-9]*" placeholder="Ej: 150">
+                                <input type="text" class="input-field" id="soundsInput" inputmode="numeric"
+                                    pattern="[0-9]*" placeholder="Ej: 150">
+                                <div class="spinners">
+                                    <button class="spin-btn up" type="button" onclick="adjustNumber('soundsInput', 1)">
+                                        <svg viewBox="0 0 24 24" fill="currentColor">
+                                            <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
+                                        </svg>
+                                    </button>
+                                    <button class="spin-btn down" type="button"
+                                        onclick="adjustNumber('soundsInput', -1)">
+                                        <svg viewBox="0 0 24 24" fill="currentColor">
+                                            <path d="M19 13H5v-2h14v2z" />
+                                        </svg>
+                                    </button>
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    <div>
-                        <h3 class="section-title">Precios</h3>
-                        <div class="pricing-card">
-                            <div class="form-group">
-                                <div class="label">Precio Original ($) <span class="required">*</span></div>
-                                <div class="number-control">
-                                    <input type="text" class="input-field" id="priceInput" inputmode="decimal" pattern="[0-9.]*" placeholder="0.00">
-                                </div>
-                            </div>
-
-                            <div class="form-group">
-                                <label class="toggle-switch">
-                                    <input type="checkbox" id="freeToggle" hidden>
-                                    <div class="toggle-track">
-                                        <div class="toggle-thumb"></div>
+                        <!-- Precios -->
+                        <div>
+                            <h3 class="section-title">Precios</h3>
+                            <div class="pricing-card">
+                                <div class="form-group">
+                                    <div class="label">Precio Original ($) <span class="required">*</span></div>
+                                    <div class="number-control">
+                                        <input type="text" class="input-field" id="priceInput" inputmode="decimal"
+                                            pattern="[0-9.]*" placeholder="0.00">
+                                        <div class="spinners">
+                                            <button class="spin-btn up" type="button"
+                                                onclick="adjustNumber('priceInput', 1)">
+                                                <svg viewBox="0 0 24 24" fill="currentColor">
+                                                    <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
+                                                </svg>
+                                            </button>
+                                            <button class="spin-btn down" type="button"
+                                                onclick="adjustNumber('priceInput', -1)">
+                                                <svg viewBox="0 0 24 24" fill="currentColor">
+                                                    <path d="M19 13H5v-2h14v2z" />
+                                                </svg>
+                                            </button>
+                                        </div>
                                     </div>
-                                    <span style="font-weight: 500;">Descarga Gratis (Captura de Email)</span>
-                                </label>
-                            </div>
+                                </div>
 
-                            <div id="freeInfo" class="alert alert-info" style="display: none;">
-                                Los usuarios deberán dejar su email para descargar. El precio se mostrará como $0.
-                            </div>
-
-                            <div id="offerSection">
-                                <div class="label" style="margin-top: 20px;">Oferta / Descuento</div>
-                                <div class="grid-2" style="margin-bottom: 12px;">
-                                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                                        <input type="radio" name="offerType" value="fixed" checked> Monto Fijo
-                                    </label>
-                                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                                        <input type="radio" name="offerType" value="percent"> Porcentaje
+                                <div class="form-group">
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="freeToggle" hidden>
+                                        <div class="toggle-track">
+                                            <div class="toggle-thumb"></div>
+                                        </div>
+                                        <span style="font-weight: 500;">Descarga Gratis (Captura de Email)</span>
                                     </label>
                                 </div>
-                                <div class="number-control">
-                                    <input type="text" class="input-field" id="offerInput" inputmode="decimal" pattern="[0-9.]*" placeholder="Monto de descuento">
+
+                                <div id="freeInfo" class="alert alert-info" style="display: none;">
+                                    Los usuarios deberán dejar su email para descargar. El precio se mostrará como $0.
+                                </div>
+
+                                <div id="offerSection">
+                                    <div class="label" style="margin-top: 20px;">Oferta / Descuento</div>
+                                    <div class="grid-2" style="margin-bottom: 12px;">
+                                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                            <input type="radio" name="offerType" value="fixed" checked> Monto Fijo
+                                        </label>
+                                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                            <input type="radio" name="offerType" value="percent"> Porcentaje
+                                        </label>
+                                    </div>
+                                    <div class="number-control">
+                                        <input type="text" class="input-field" id="offerInput" inputmode="decimal"
+                                            pattern="[0-9.]*" placeholder="Monto de descuento">
+                                        <div class="spinners">
+                                            <button class="spin-btn up" type="button"
+                                                onclick="adjustNumber('offerInput', 1)">
+                                                <svg viewBox="0 0 24 24" fill="currentColor">
+                                                    <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
+                                                </svg>
+                                            </button>
+                                            <button class="spin-btn down" type="button"
+                                                onclick="adjustNumber('offerInput', -1)">
+                                                <svg viewBox="0 0 24 24" fill="currentColor">
+                                                    <path d="M19 13H5v-2h14v2z" />
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
@@ -1294,7 +1490,8 @@
                 <h3 class="section-title">Colaboradores (Max 5)</h3>
                 <div class="form-group">
                     <div class="grid-1-2" style="grid-template-columns: 1fr 150px; gap: 12px; margin-bottom: 20px;">
-                        <input type="text" class="input-field" id="collabSearch" placeholder="Buscar usuario por nombre...">
+                        <input type="text" class="input-field" id="collabSearch"
+                            placeholder="Buscar usuario por nombre...">
                         <button type="button" class="btn btn-secondary" id="addCollabBtn">Añadir</button>
                     </div>
                 </div>
@@ -1307,7 +1504,8 @@
                         </div>
                         <div>Rol Principal</div>
                         <div style="display: flex; align-items: center; gap: 4px;">
-                            <input type="number" class="input-field" id="mainUserPercent" value="100" readonly style="text-align: right;">
+                            <input type="number" class="input-field" id="mainUserPercent" value="100" readonly
+                                style="text-align: right;">
                             <span>%</span>
                         </div>
                         <div></div>
@@ -1321,7 +1519,9 @@
                 <h3 class="section-title">Vista Previa del Drumkit</h3>
                 <div class="preview-layout">
                     <div class="marketplace-card-preview">
-                        <h4 style="margin-bottom: 16px; font-size: 14px; color: #888;">Cómo se verá en el marketplace</h4>
+                        <h4 style="margin-bottom: 16px; font-size: 14px; color: #888;">Cómo se verá en el
+                            marketplace
+                        </h4>
                         <div class="drumkit-card">
                             <div class="card-cover" id="previewCardCover">
                                 <span style="color: #666;">Sin portada</span>
@@ -1335,7 +1535,8 @@
                     </div>
 
                     <div class="verification-panel">
-                        <h4 style="margin-bottom: 20px; font-size: 18px; font-weight: 700;">Verificar Información</h4>
+                        <h4 style="margin-bottom: 20px; font-size: 18px; font-weight: 700;">Verificar Información
+                        </h4>
                         <div class="verification-section">
                             <div class="verification-label">Archivos</div>
                             <div class="verification-items" id="verifyFiles"></div>
@@ -1388,7 +1589,8 @@
                     </svg>
                 </button>
                 <div id="waveform" style="display: none;"></div>
-                <div id="playerPlaceholder" style="color: #666; font-size: 13px; font-weight: 500; flex: 1; text-align: center;">
+                <div id="playerPlaceholder"
+                    style="color: #666; font-size: 13px; font-weight: 500; flex: 1; text-align: center;">
                     Aquí se mostrará tu preview
                 </div>
             </div>
@@ -1409,6 +1611,9 @@
     </footer>
 
     <script>
+        // ========================================
+        // CONFIGURACIÓN INICIAL
+        // ========================================
         const SUPABASE_URL = "https://qtjpvztpgfymjhhpoouq.supabase.co";
         const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0anB2enRwZ2Z5bWpoaHBvb3VxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3ODA5MTUsImV4cCI6MjA3NjM1NjkxNX0.YsItTFk3hSQaVuy707-z7Z-j34mXa03O0wWGAlAzjrw";
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -1429,7 +1634,11 @@
 
         let tags = [];
         let collaborators = [];
+        let isDirty = false;
 
+        // ========================================
+        // INICIALIZACIÓN
+        // ========================================
         document.addEventListener('DOMContentLoaded', async () => {
             await checkAuth();
             initDateTime();
@@ -1437,14 +1646,20 @@
             initFileHandlers();
             initTagsInput();
             initPriceValidation();
+            initExitModal();
+            initAutosaveInterval();
             await loadDraft();
 
+            // Event listeners
             document.getElementById('titleInput').addEventListener('input', e => {
                 document.getElementById('titleCount').textContent = e.target.value.length;
+                isDirty = true;
                 saveDraftAuto();
             });
+
             document.getElementById('descInput').addEventListener('input', e => {
                 document.getElementById('descCount').textContent = e.target.value.length;
+                isDirty = true;
                 saveDraftAuto();
             });
 
@@ -1476,10 +1691,12 @@
                 document.querySelector('.dropdown-content').style.display = 'none';
             });
 
-            setInterval(saveDraftAuto, 30000);
             updateStepUI();
         });
 
+        // ========================================
+        // AUTENTICACIÓN
+        // ========================================
         async function checkAuth() {
             const { data: { user } } = await supabaseClient.auth.getUser();
             if (!user) {
@@ -1491,6 +1708,9 @@
             console.log('✅ Usuario autenticado:', userId);
         }
 
+        // ========================================
+        // FECHA Y HORA
+        // ========================================
         function initDateTime() {
             const now = new Date();
             const year = now.getFullYear();
@@ -1499,8 +1719,94 @@
             const hours = String(now.getHours()).padStart(2, '0');
             const minutes = String(now.getMinutes()).padStart(2, '0');
             document.getElementById('dateInput').value = `${year}-${month}-${day}T${hours}:${minutes}`;
+            document.getElementById('dateInput').addEventListener('change', validateReleaseDate);
         }
 
+        function validateReleaseDate() {
+            const dateInput = document.getElementById('dateInput');
+            const dateError = document.getElementById('dateError');
+            const selected = new Date(dateInput.value);
+            const now = new Date();
+            now.setSeconds(0, 0);
+
+            if (selected < now) {
+                if (dateError) {
+                    dateError.innerText = "La fecha no puede ser en el pasado. Ajusta la hora.";
+                    dateError.style.display = 'block';
+                }
+                dateInput.classList.add('error');
+                return false;
+            } else {
+                if (dateError) dateError.style.display = 'none';
+                dateInput.classList.remove('error');
+                return true;
+            }
+        }
+
+        // ========================================
+        // MODAL DE SALIDA
+        // ========================================
+        function initExitModal() {
+            if (!document.getElementById('exitModal')) {
+                const modalHTML = `
+            <div class="exit-modal-overlay" id="exitModal">
+                <div class="exit-modal">
+                    <div class="exit-modal-title">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <line x1="12" y1="8" x2="12" y2="12"/>
+                            <line x1="12" y1="16" x2="12.01" y2="16"/>
+                        </svg>
+                        ¿Salir sin guardar?
+                    </div>
+                    <div class="exit-modal-message">
+                        Tienes cambios sin guardar. Si sales ahora, perderás todo tu progreso. ¿Estás seguro?
+                    </div>
+                    <div class="exit-modal-actions">
+                        <button class="exit-modal-btn cancel" id="exitCancel">Cancelar</button>
+                        <button class="exit-modal-btn confirm" id="exitConfirm">Salir sin guardar</button>
+                    </div>
+                </div>
+            </div>
+        `;
+                document.body.insertAdjacentHTML('afterbegin', modalHTML);
+            }
+
+            document.getElementById('uploadForm').addEventListener('change', () => isDirty = true);
+            document.getElementById('uploadForm').addEventListener('input', () => isDirty = true);
+
+            window.addEventListener('beforeunload', (e) => {
+                if (isDirty) {
+                    e.preventDefault();
+                    e.returnValue = '';
+                }
+            });
+
+            document.getElementById('exitCancel')?.addEventListener('click', () => {
+                document.getElementById('exitModal').classList.remove('active');
+            });
+
+            document.getElementById('exitConfirm')?.addEventListener('click', () => {
+                isDirty = false;
+                window.location.href = '/';
+            });
+        }
+
+        // ========================================
+        // AUTOSAVE
+        // ========================================
+        function initAutosaveInterval() {
+            setInterval(() => {
+                if (isDirty && document.getElementById('titleInput').value.trim()) {
+                    saveDraftAuto();
+                    isDirty = false;
+                }
+            }, 30000);
+        }
+
+        // ========================================
+        // WAVESURFER
+        // ========================================
         function initWaveSurfer() {
             wavesurfer = WaveSurfer.create({
                 container: '#waveform',
@@ -1526,6 +1832,9 @@
             });
         }
 
+        // ========================================
+        // MANEJO DE ARCHIVOS
+        // ========================================
         function initFileHandlers() {
             setupFileUpload('coverDropZone', 'coverInput', 'cover');
             setupFileUpload('fileDropZone', 'fileInput', 'kit');
@@ -1581,6 +1890,7 @@
                 }
 
                 formData.files[type] = file;
+                isDirty = true;
 
                 if (type === 'audio') {
                     wavesurfer.load(URL.createObjectURL(file));
@@ -1591,14 +1901,14 @@
 
                 const containerId = type === 'kit' ? 'filePreviewContainer' : 'audioPreviewContainer';
                 document.getElementById(containerId).innerHTML = `
-                    <div class="file-preview">
-                        <div class="file-info">
-                            <div class="file-name">${file.name}</div>
-                            <div class="file-size">${(file.size / (1024 * 1024)).toFixed(2)} MB</div>
-                        </div>
-                        <button type="button" class="remove-file" onclick="removeFile('${type}')">✕</button>
-                    </div>
-                `;
+            <div class="file-preview">
+                <div class="file-info">
+                    <div class="file-name">${file.name}</div>
+                    <div class="file-size">${(file.size / (1024 * 1024)).toFixed(2)} MB</div>
+                </div>
+                <button type="button" class="remove-file" onclick="removeFile('${type}')">✕</button>
+            </div>
+        `;
 
                 dropZone.classList.remove('uploading');
                 saveDraftAuto();
@@ -1633,6 +1943,9 @@
             saveDraftAuto();
         };
 
+        // ========================================
+        // CROP MODAL
+        // ========================================
         const cropModal = document.getElementById('cropModal');
         const cropImage = document.getElementById('cropImage');
         const cropBox = document.getElementById('cropBox');
@@ -1654,7 +1967,7 @@
             reader.readAsDataURL(file);
         }
 
-        window.closeCropModal = function() {
+        window.closeCropModal = function () {
             cropModal.classList.remove('active');
             const dropZone = document.getElementById('coverDropZone');
             if (!formData.coverBlob) {
@@ -1778,6 +2091,9 @@
             }
         });
 
+        // ========================================
+        // TAGS
+        // ========================================
         function initTagsInput() {
             const input = document.getElementById('tagInput');
             input.addEventListener('keydown', e => {
@@ -1798,6 +2114,7 @@
             }
             if (tags.includes(tag)) return;
             tags.push(tag);
+            isDirty = true;
             renderTags();
             saveDraftAuto();
         }
@@ -1822,6 +2139,9 @@
             saveDraftAuto();
         };
 
+        // ========================================
+        // PRECIOS Y SPINNERS
+        // ========================================
         function initPriceValidation() {
             const priceInput = document.getElementById('priceInput');
             const freeToggle = document.getElementById('freeToggle');
@@ -1842,6 +2162,33 @@
             freeToggle.addEventListener('change', updatePrice);
             document.querySelectorAll('input[name="offerType"]').forEach(r => r.addEventListener('change', updatePrice));
         }
+
+        // 🔴 FUNCIÓN CRÍTICA: adjustNumber para spinners
+        window.adjustNumber = (id, delta) => {
+            const input = document.getElementById(id);
+            if (!input || input.disabled) return;
+
+            let val = parseFloat(input.value) || 0;
+            val += delta;
+
+            // Constraints
+            if (val < 0) val = 0;
+            if (id === 'soundsInput' && val > 1000000) val = 1000000;
+            if (id === 'priceInput' && val > 10000) val = 10000;
+            if (id === 'offerInput') {
+                const offerType = document.querySelector('input[name="offerType"]:checked').value;
+                if (offerType === 'percent' && val > 90) val = 90;
+            }
+
+            input.value = val;
+
+            // Trigger update logic
+            if (id === 'priceInput' || id === 'offerInput') {
+                updatePrice();
+            } else {
+                saveDraftAuto();
+            }
+        };
 
         function updatePrice() {
             const priceInput = document.getElementById('priceInput');
@@ -1891,6 +2238,9 @@
             saveDraftAuto();
         }
 
+        // ========================================
+        // COLABORADORES
+        // ========================================
         document.getElementById('addCollabBtn').addEventListener('click', () => {
             const name = document.getElementById('collabSearch').value.trim();
             if (name) addCollaborator(name);
@@ -1906,6 +2256,7 @@
                 return;
             }
             collaborators.push({ name, role: 'Productor', percent: 0 });
+            isDirty = true;
             renderCollabs();
             document.getElementById('collabSearch').value = '';
             saveDraftAuto();
@@ -1914,26 +2265,26 @@
         function renderCollabs() {
             const list = document.getElementById('collabList');
             while (list.children.length > 1) list.removeChild(list.lastChild);
-            
+
             collaborators.forEach((c, i) => {
                 const row = document.createElement('div');
                 row.className = 'collab-row';
                 row.innerHTML = `
-                    <div class="user-info">
-                        <div class="user-avatar"></div>
-                        <span>${c.name}</span>
-                    </div>
-                    <select class="input-field" onchange="updateCollab(${i}, 'role', this.value)">
-                        <option value="Productor">Productor</option>
-                        <option value="Ingeniero">Ingeniero</option>
-                        <option value="Artista">Artista</option>
-                    </select>
-                    <div style="display: flex; align-items: center; gap: 4px;">
-                        <input type="number" class="input-field" value="${c.percent}" onchange="updateCollab(${i}, 'percent', this.value)" min="0" max="100">
-                        <span>%</span>
-                    </div>
-                    <button type="button" class="remove-file" onclick="removeCollab(${i})">✕</button>
-                `;
+            <div class="user-info">
+                <div class="user-avatar"></div>
+                <span>${c.name}</span>
+            </div>
+            <select class="input-field" onchange="updateCollab(${i}, 'role', this.value)">
+                <option value="Productor">Productor</option>
+                <option value="Ingeniero">Ingeniero</option>
+                <option value="Artista">Artista</option>
+            </select>
+            <div style="display: flex; align-items: center; gap: 4px;">
+                <input type="number" class="input-field" value="${c.percent}" onchange="updateCollab(${i}, 'percent', this.value)" min="0" max="100">
+                <span>%</span>
+            </div>
+            <button type="button" class="remove-file" onclick="removeCollab(${i})">✕</button>
+        `;
                 list.appendChild(row);
             });
             updateMainUserPercent();
@@ -1955,13 +2306,32 @@
             saveDraftAuto();
         };
 
+        // 🔴 FUNCIÓN MEJORADA: updateMainUserPercent
         function updateMainUserPercent() {
             const total = collaborators.reduce((sum, c) => sum + c.percent, 0);
             const main = 100 - total;
-            document.getElementById('mainUserPercent').value = main;
-            document.getElementById('collabError').style.display = main < 0 || (main < 10 && collaborators.length > 0) ? 'block' : 'none';
+            const mainInput = document.getElementById('mainUserPercent');
+            const errorDiv = document.getElementById('collabError');
+
+            mainInput.value = main;
+
+            if (main < 0) {
+                errorDiv.innerText = "El porcentaje total no puede exceder 100%";
+                errorDiv.style.display = 'block';
+                mainInput.style.color = 'var(--error-color)';
+            } else if (main < 10 && collaborators.length > 0) {
+                errorDiv.innerText = "Tú (propietario) debes tener mínimo 10% de regalías";
+                errorDiv.style.display = 'block';
+                mainInput.style.color = 'var(--error-color)';
+            } else {
+                errorDiv.style.display = 'none';
+                mainInput.style.color = 'var(--primary-color)';
+            }
         }
 
+        // ========================================
+        // VISTA PREVIA (STEP 4)
+        // ========================================
         function renderPreview() {
             const cardCover = document.getElementById('previewCardCover');
             if (formData.coverBlob) {
@@ -1996,7 +2366,7 @@
             ['coverBlob', 'kit', 'audio'].forEach(type => {
                 const hasFile = type === 'coverBlob' ? formData.coverBlob : formData.files[type];
                 const label = type === 'coverBlob' ? 'Portada' : type === 'kit' ? 'Drumkit' : 'Preview Audio';
-                filesItems.push(hasFile 
+                filesItems.push(hasFile
                     ? `<div class="verification-item"><div class="verification-item-icon">✓</div><div class="verification-item-text">${label}</div><div class="verification-item-value success">✓</div></div>`
                     : `<div class="verification-item-missing" onclick="goToStep(1)"><div class="verification-item-text">${label} <span style="color: #ff4444;">(Falta)</span></div></div>`
                 );
@@ -2004,27 +2374,33 @@
             document.getElementById('verifyFiles').innerHTML = filesItems.join('');
 
             document.getElementById('verifyDetails').innerHTML = `
-                <div class="verification-item"><div class="verification-item-text">Sonidos</div><div class="verification-item-value">${document.getElementById('soundsInput').value || '0'}</div></div>
-                <div class="verification-item"><div class="verification-item-text">Precio</div><div class="verification-item-value">${isFree ? 'GRATIS' : `${price.toFixed(2)}`}</div></div>
-            `;
+        <div class="verification-item"><div class="verification-item-text">Sonidos</div><div class="verification-item-value">${document.getElementById('soundsInput').value || '0'}</div></div>
+        <div class="verification-item"><div class="verification-item-text">Precio</div><div class="verification-item-value">${isFree ? 'GRATIS' : `${price.toFixed(2)}`}</div></div>
+    `;
 
             if (collaborators.length > 0) {
                 const main = 100 - collaborators.reduce((sum, c) => sum + c.percent, 0);
                 document.getElementById('verifyCollabs').innerHTML = `
-                    <div class="verification-item"><div class="verification-item-text"><strong>Tú</strong></div><div class="verification-item-value">${main}%</div></div>
-                    ${collaborators.map(c => `<div class="verification-item"><div class="verification-item-text">${c.name}</div><div class="verification-item-value">${c.percent}%</div></div>`).join('')}
-                `;
+            <div class="verification-item"><div class="verification-item-text"><strong>Tú</strong></div><div class="verification-item-value">${main}%</div></div>
+            ${collaborators.map(c => `<div class="verification-item"><div class="verification-item-text">${c.name}</div><div class="verification-item-value">${c.percent}%</div></div>`).join('')}
+        `;
                 document.getElementById('verifyCollabSection').style.display = 'block';
             } else {
                 document.getElementById('verifyCollabSection').style.display = 'none';
             }
         }
 
-        window.goToStep = (step) => {
-            currentStep = step;
-            updateStepUI();
+        window.goToStep = (stepNumber) => {
+            if (stepNumber >= 1 && stepNumber <= totalSteps) {
+                currentStep = stepNumber;
+                updateStepUI();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
         };
 
+        // ========================================
+        // NAVEGACIÓN ENTRE STEPS
+        // ========================================
         function updateStepUI() {
             document.getElementById('stepsProgress').style.transform = `translate(-50%, -50%) scaleX(${(currentStep - 1) / (totalSteps - 1)})`;
             document.querySelectorAll('.step').forEach(s => {
@@ -2048,14 +2424,24 @@
             updateStepUI();
         }
 
+        // 🔴 FUNCIÓN MEJORADA: validateStep con Step 3
         function validateStep(step) {
             if (step === 1) {
                 if (!formData.files.kit) { showToast('Falta el archivo del kit', 'error'); return false; }
                 if (!formData.files.audio) { showToast('Falta el audio preview', 'error'); return false; }
                 if (!formData.coverBlob) { showToast('Falta la portada', 'error'); return false; }
                 if (!document.getElementById('titleInput').value.trim()) { showToast('Falta el título', 'error'); return false; }
+
+                const hasDate = document.getElementById('dateInput').value !== '';
+                const dateValid = validateReleaseDate();
+                if (!hasDate || !dateValid) {
+                    showToast('Debes establecer una fecha de lanzamiento válida', 'error');
+                    return false;
+                }
+
                 return true;
             }
+
             if (step === 2) {
                 const isFree = document.getElementById('freeToggle').checked;
                 const price = parseFloat(document.getElementById('priceInput').value);
@@ -2065,9 +2451,38 @@
                 }
                 return true;
             }
+
+            if (step === 3) {
+                const totalCollabPercent = collaborators.reduce((sum, c) => sum + c.percent, 0);
+                const mainUserPercent = 100 - totalCollabPercent;
+
+                if (mainUserPercent < 0) {
+                    showToast('El porcentaje total no puede exceder 100%', 'error');
+                    return false;
+                }
+
+                if (collaborators.length > 0) {
+                    const hasInvalidCollab = collaborators.some(c => c.percent > 0 && c.percent < 10);
+                    if (hasInvalidCollab) {
+                        showToast('Cada colaborador debe tener mínimo 10% de regalías', 'error');
+                        return false;
+                    }
+
+                    if (mainUserPercent < 10) {
+                        showToast('Tú (propietario) debes tener mínimo 10% de regalías', 'error');
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+
             return true;
         }
 
+        // ========================================
+        // CARGAR BORRADOR
+        // ========================================
         async function loadDraft() {
             try {
                 const { data, error } = await supabaseClient
@@ -2096,6 +2511,34 @@
                     document.getElementById('coverPreview').style.display = 'block';
                     document.getElementById('coverDropZone').classList.add('has-image');
                 }
+
+                if (data.file_metadata) {
+                    if (data.file_metadata.kit) {
+                        const meta = data.file_metadata.kit;
+                        document.getElementById('filePreviewContainer').innerHTML = `
+                    <div class="file-preview" style="opacity: 0.6; border: 1px dashed var(--border-color);">
+                        <div class="file-info">
+                            <div class="file-name">${meta.name}</div>
+                            <div class="file-size">${(meta.size / (1024 * 1024)).toFixed(2)} MB</div>
+                        </div>
+                        <span style="color: #888; font-size: 11px;">Debes volver a subir</span>
+                    </div>
+                `;
+                    }
+                    if (data.file_metadata.audio) {
+                        const meta = data.file_metadata.audio;
+                        document.getElementById('audioPreviewContainer').innerHTML = `
+                    <div class="file-preview" style="opacity: 0.6; border: 1px dashed var(--border-color);">
+                        <div class="file-info">
+                            <div class="file-name">${meta.name}</div>
+                            <div class="file-size">${(meta.size / (1024 * 1024)).toFixed(2)} MB</div>
+                        </div>
+                        <span style="color: #888; font-size: 11px;">Debes volver a subir</span>
+                    </div>
+                `;
+                    }
+                }
+
                 if (data.tags) {
                     tags = data.tags;
                     renderTags();
@@ -2122,6 +2565,9 @@
             }
         }
 
+        // ========================================
+        // GUARDAR BORRADOR
+        // ========================================
         async function saveDraftAuto() {
             try {
                 const draftData = {
@@ -2139,7 +2585,19 @@
                     collaborators: collaborators.length > 0 ? collaborators : null,
                     current_step: currentStep,
                     completed_steps: completedSteps,
-                    last_saved: new Date().toISOString()
+                    last_saved: new Date().toISOString(),
+                    file_metadata: {
+                        kit: formData.files.kit ? {
+                            name: formData.files.kit.name,
+                            size: formData.files.kit.size,
+                            type: formData.files.kit.type
+                        } : null,
+                        audio: formData.files.audio ? {
+                            name: formData.files.audio.name,
+                            size: formData.files.audio.size,
+                            type: formData.files.audio.type
+                        } : null
+                    }
                 };
 
                 if (formData.coverBlob && !draftData.cover_url) {
@@ -2147,7 +2605,7 @@
                     const { data: coverData, error: coverError } = await supabaseClient.storage
                         .from('drumkit-drafts')
                         .upload(coverPath, formData.coverBlob);
-                    
+
                     if (!coverError) {
                         draftData.cover_url = supabaseClient.storage.from('drumkit-drafts').getPublicUrl(coverData.path).data.publicUrl;
                     }
@@ -2182,6 +2640,9 @@
             }, 500);
         }
 
+        // ========================================
+        // PUBLICAR DRUMKIT
+        // ========================================
         async function handlePublish() {
             if (!validateStep(1) || !validateStep(2)) {
                 showToast('Completa todos los campos', 'error');
@@ -2254,19 +2715,23 @@
             }
         }
 
+        // ========================================
+        // TOAST NOTIFICATIONS
+        // ========================================
         function showToast(message, type = 'success') {
             const container = document.getElementById('toastContainer');
             const toast = document.createElement('div');
             toast.className = `toast ${type}`;
             toast.innerHTML = `
-                <svg class="toast-icon" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="${type === 'success' ? 'M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z' : 'M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z'}" clip-rule="evenodd"/>
-                </svg>
-                <div class="toast-message">${message}</div>
-            `;
+        <svg class="toast-icon" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="${type === 'success' ? 'M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z' : 'M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z'}" clip-rule="evenodd"/>
+        </svg>
+        <div class="toast-message">${message}</div>
+    `;
             container.appendChild(toast);
             setTimeout(() => toast.remove(), 3000);
         }
     </script>
 </body>
+
 </html>
