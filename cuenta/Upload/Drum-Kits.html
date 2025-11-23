@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -177,6 +178,7 @@
                 opacity: 0;
                 transform: translateY(10px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -858,6 +860,7 @@
                 opacity: 0;
                 transform: translateY(-20px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -1106,6 +1109,98 @@
         .verification-item-value.success {
             color: #00ff88;
         }
+
+        /* Exit Confirmation Modal */
+        .exit-modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(4px);
+            z-index: 10001;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .exit-modal-overlay.active {
+            display: flex;
+        }
+
+        .exit-modal {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 32px;
+            max-width: 450px;
+            width: 90%;
+            animation: modalSlideIn 0.3s ease;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .exit-modal-title {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .exit-modal-message {
+            color: var(--text-secondary);
+            margin-bottom: 24px;
+            line-height: 1.6;
+        }
+
+        .exit-modal-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+
+        .exit-modal-btn {
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            font-size: 14px;
+        }
+
+        .exit-modal-btn.cancel {
+            background: transparent;
+            color: var(--text-secondary);
+            border: 1px solid var(--border-color);
+        }
+
+        .exit-modal-btn.cancel:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--primary-color);
+        }
+
+        .exit-modal-btn.confirm {
+            background: var(--error-color);
+            color: white;
+        }
+
+        .exit-modal-btn.confirm:hover {
+            background: #dc2626;
+        }
     </style>
 </head>
 
@@ -1157,7 +1252,9 @@
                             <img id="coverPreview" class="cover-preview">
                             <div class="cover-placeholder" id="coverPlaceholder">
                                 <svg class="upload-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z">
+                                    </path>
                                 </svg>
                                 <div class="upload-text">Subir Portada</div>
                                 <div class="upload-subtext">Formato: 1080x1080px</div>
@@ -1168,11 +1265,14 @@
                     <div>
                         <div class="grid-2" style="margin-bottom: 20px;">
                             <div class="form-group">
-                                <div class="label">Archivo del Drumkit (.rar, .zip) <span class="required">*</span></div>
+                                <div class="label">Archivo del Drumkit (.rar, .zip) <span class="required">*</span>
+                                </div>
                                 <div class="upload-zone" id="fileDropZone">
                                     <input type="file" id="fileInput" accept=".rar,.zip" hidden>
                                     <svg class="upload-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12">
+                                        </path>
                                     </svg>
                                     <div class="upload-text">Arrastra tu archivo aquí</div>
                                     <div class="upload-subtext">.rar o .zip</div>
@@ -1185,7 +1285,9 @@
                                 <div class="upload-zone" id="audioDropZone">
                                     <input type="file" id="audioInput" accept=".mp3,.wav" hidden>
                                     <svg class="upload-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3">
+                                        </path>
                                     </svg>
                                     <div class="upload-text">Subir Preview</div>
                                 </div>
@@ -1194,14 +1296,18 @@
                         </div>
 
                         <div class="form-group">
-                            <div class="label">Título <span class="required">*</span> <span class="char-count"><span id="titleCount">0</span>/60</span></div>
-                            <input type="text" class="input-field" id="titleInput" maxlength="60" placeholder="Nombre del Drumkit">
+                            <div class="label">Título <span class="required">*</span> <span class="char-count"><span
+                                        id="titleCount">0</span>/60</span></div>
+                            <input type="text" class="input-field" id="titleInput" maxlength="60"
+                                placeholder="Nombre del Drumkit">
                         </div>
 
                         <div class="grid-2">
                             <div class="form-group">
                                 <div class="label">Fecha de Lanzamiento <span class="required">*</span></div>
                                 <input type="datetime-local" class="input-field" id="dateInput">
+                                <div id="dateError" class="alert alert-error"
+                                    style="margin-top: 4px; font-size: 12px; display: none;"></div>
                             </div>
                             <div class="form-group">
                                 <div class="label">Visibilidad <span class="required">*</span></div>
@@ -1214,8 +1320,10 @@
                         </div>
 
                         <div class="form-group">
-                            <div class="label">Descripción <span class="char-count"><span id="descCount">0</span>/500</span></div>
-                            <textarea class="input-field" id="descInput" maxlength="500" placeholder="Describe tu drumkit..."></textarea>
+                            <div class="label">Descripción <span class="char-count"><span
+                                        id="descCount">0</span>/500</span></div>
+                            <textarea class="input-field" id="descInput" maxlength="500"
+                                placeholder="Describe tu drumkit..."></textarea>
                         </div>
                     </div>
                 </div>
@@ -1229,13 +1337,15 @@
                         <div class="form-group">
                             <div class="label">Tags (Max 3)</div>
                             <div class="tags-container" id="tagsContainer">
-                                <input type="text" class="tags-input" id="tagInput" placeholder="Escribe y presiona Enter">
+                                <input type="text" class="tags-input" id="tagInput"
+                                    placeholder="Escribe y presiona Enter">
                             </div>
                         </div>
                         <div class="form-group">
                             <div class="label">Número de Sonidos</div>
                             <div class="number-control">
-                                <input type="text" class="input-field" id="soundsInput" inputmode="numeric" pattern="[0-9]*" placeholder="Ej: 150">
+                                <input type="text" class="input-field" id="soundsInput" inputmode="numeric"
+                                    pattern="[0-9]*" placeholder="Ej: 150">
                             </div>
                         </div>
                     </div>
@@ -1246,7 +1356,8 @@
                             <div class="form-group">
                                 <div class="label">Precio Original ($) <span class="required">*</span></div>
                                 <div class="number-control">
-                                    <input type="text" class="input-field" id="priceInput" inputmode="decimal" pattern="[0-9.]*" placeholder="0.00">
+                                    <input type="text" class="input-field" id="priceInput" inputmode="decimal"
+                                        pattern="[0-9.]*" placeholder="0.00">
                                 </div>
                             </div>
 
@@ -1275,7 +1386,8 @@
                                     </label>
                                 </div>
                                 <div class="number-control">
-                                    <input type="text" class="input-field" id="offerInput" inputmode="decimal" pattern="[0-9.]*" placeholder="Monto de descuento">
+                                    <input type="text" class="input-field" id="offerInput" inputmode="decimal"
+                                        pattern="[0-9.]*" placeholder="Monto de descuento">
                                 </div>
                             </div>
 
@@ -1294,7 +1406,8 @@
                 <h3 class="section-title">Colaboradores (Max 5)</h3>
                 <div class="form-group">
                     <div class="grid-1-2" style="grid-template-columns: 1fr 150px; gap: 12px; margin-bottom: 20px;">
-                        <input type="text" class="input-field" id="collabSearch" placeholder="Buscar usuario por nombre...">
+                        <input type="text" class="input-field" id="collabSearch"
+                            placeholder="Buscar usuario por nombre...">
                         <button type="button" class="btn btn-secondary" id="addCollabBtn">Añadir</button>
                     </div>
                 </div>
@@ -1307,7 +1420,8 @@
                         </div>
                         <div>Rol Principal</div>
                         <div style="display: flex; align-items: center; gap: 4px;">
-                            <input type="number" class="input-field" id="mainUserPercent" value="100" readonly style="text-align: right;">
+                            <input type="number" class="input-field" id="mainUserPercent" value="100" readonly
+                                style="text-align: right;">
                             <span>%</span>
                         </div>
                         <div></div>
@@ -1321,7 +1435,8 @@
                 <h3 class="section-title">Vista Previa del Drumkit</h3>
                 <div class="preview-layout">
                     <div class="marketplace-card-preview">
-                        <h4 style="margin-bottom: 16px; font-size: 14px; color: #888;">Cómo se verá en el marketplace</h4>
+                        <h4 style="margin-bottom: 16px; font-size: 14px; color: #888;">Cómo se verá en el marketplace
+                        </h4>
                         <div class="drumkit-card">
                             <div class="card-cover" id="previewCardCover">
                                 <span style="color: #666;">Sin portada</span>
@@ -1388,7 +1503,8 @@
                     </svg>
                 </button>
                 <div id="waveform" style="display: none;"></div>
-                <div id="playerPlaceholder" style="color: #666; font-size: 13px; font-weight: 500; flex: 1; text-align: center;">
+                <div id="playerPlaceholder"
+                    style="color: #666; font-size: 13px; font-weight: 500; flex: 1; text-align: center;">
                     Aquí se mostrará tu preview
                 </div>
             </div>
@@ -1429,6 +1545,7 @@
 
         let tags = [];
         let collaborators = [];
+        let isDirty = false; // <-- NUEVO
 
         document.addEventListener('DOMContentLoaded', async () => {
             await checkAuth();
@@ -1437,14 +1554,20 @@
             initFileHandlers();
             initTagsInput();
             initPriceValidation();
+            initExitModal(); // <-- AGREGAR AQUÍ
+            initAutosaveInterval(); // <-- AGREGAR AQUÍ
             await loadDraft();
 
+            // Event listeners existentes...
             document.getElementById('titleInput').addEventListener('input', e => {
                 document.getElementById('titleCount').textContent = e.target.value.length;
+                isDirty = true; // <-- NUEVO
                 saveDraftAuto();
             });
+
             document.getElementById('descInput').addEventListener('input', e => {
                 document.getElementById('descCount').textContent = e.target.value.length;
+                isDirty = true; // <-- NUEVO
                 saveDraftAuto();
             });
 
@@ -1499,9 +1622,96 @@
             const hours = String(now.getHours()).padStart(2, '0');
             const minutes = String(now.getMinutes()).padStart(2, '0');
             document.getElementById('dateInput').value = `${year}-${month}-${day}T${hours}:${minutes}`;
+
+            // NUEVO: Validar fecha en tiempo real
+            document.getElementById('dateInput').addEventListener('change', validateReleaseDate);
+        }
+
+        // 4. Función de validación de fecha:
+        function validateReleaseDate() {
+            const dateInput = document.getElementById('dateInput');
+            const dateError = document.getElementById('dateError');
+            const selected = new Date(dateInput.value);
+            const now = new Date();
+            now.setSeconds(0, 0); // Ignorar segundos
+
+            if (selected < now) {
+                if (dateError) {
+                    dateError.innerText = "La fecha no puede ser en el pasado. Ajusta la hora.";
+                    dateError.style.display = 'block';
+                }
+                dateInput.classList.add('error');
+                return false;
+            } else {
+                if (dateError) dateError.style.display = 'none';
+                dateInput.classList.remove('error');
+                return true;
+            }
+        } // <-- CIERRE CORRECTO de validateReleaseDate
+
+        // 5. Modal de confirmación de salida
+        function initExitModal() {
+            // Crear modal HTML si no existe
+            if (!document.getElementById('exitModal')) {
+                const modalHTML = `
+            <div class="exit-modal-overlay" id="exitModal">
+                <div class="exit-modal">
+                    <div class="exit-modal-title">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <line x1="12" y1="8" x2="12" y2="12"/>
+                            <line x1="12" y1="16" x2="12.01" y2="16"/>
+                        </svg>
+                        ¿Salir sin guardar?
+                    </div>
+                    <div class="exit-modal-message">
+                        Tienes cambios sin guardar. Si sales ahora, perderás todo tu progreso. ¿Estás seguro?
+                    </div>
+                    <div class="exit-modal-actions">
+                        <button class="exit-modal-btn cancel" id="exitCancel">Cancelar</button>
+                        <button class="exit-modal-btn confirm" id="exitConfirm">Salir sin guardar</button>
+                    </div>
+                </div>
+            </div>
+        `;
+                document.body.insertAdjacentHTML('afterbegin', modalHTML);
+            }
+
+            // Detectar cambios en el formulario
+            document.getElementById('uploadForm').addEventListener('change', () => isDirty = true);
+            document.getElementById('uploadForm').addEventListener('input', () => isDirty = true);
+
+            // Advertir antes de cerrar la ventana
+            window.addEventListener('beforeunload', (e) => {
+                if (isDirty) {
+                    e.preventDefault();
+                    e.returnValue = '';
+                }
+            });
+
+            // Botones del modal
+            document.getElementById('exitCancel')?.addEventListener('click', () => {
+                document.getElementById('exitModal').classList.remove('active');
+            });
+
+            document.getElementById('exitConfirm')?.addEventListener('click', () => {
+                isDirty = false;
+                window.location.href = '/';
+            });
+        }
+
+        // 6. Autosave automático cada 30 segundos
+        function initAutosaveInterval() {
+            setInterval(() => {
+                if (isDirty && document.getElementById('titleInput').value.trim()) {
+                    saveDraftAuto();
+                    isDirty = false; // Reset después de guardar
+                }
+            }, 30000); // 30 segundos
         }
 
         function initWaveSurfer() {
+            // ... tu código existente continúa aquí ...
             wavesurfer = WaveSurfer.create({
                 container: '#waveform',
                 waveColor: '#444',
@@ -1581,6 +1791,7 @@
                 }
 
                 formData.files[type] = file;
+                isDirty = true; // <-- AGREGAR ESTA LÍNEA
 
                 if (type === 'audio') {
                     wavesurfer.load(URL.createObjectURL(file));
@@ -1654,7 +1865,7 @@
             reader.readAsDataURL(file);
         }
 
-        window.closeCropModal = function() {
+        window.closeCropModal = function () {
             cropModal.classList.remove('active');
             const dropZone = document.getElementById('coverDropZone');
             if (!formData.coverBlob) {
@@ -1798,6 +2009,7 @@
             }
             if (tags.includes(tag)) return;
             tags.push(tag);
+            isDirty = true; // <-- AGREGAR ESTA LÍNEA
             renderTags();
             saveDraftAuto();
         }
@@ -1906,6 +2118,7 @@
                 return;
             }
             collaborators.push({ name, role: 'Productor', percent: 0 });
+            isDirty = true; // <-- AGREGAR ESTA LÍNEA
             renderCollabs();
             document.getElementById('collabSearch').value = '';
             saveDraftAuto();
@@ -1914,7 +2127,7 @@
         function renderCollabs() {
             const list = document.getElementById('collabList');
             while (list.children.length > 1) list.removeChild(list.lastChild);
-            
+
             collaborators.forEach((c, i) => {
                 const row = document.createElement('div');
                 row.className = 'collab-row';
@@ -1996,7 +2209,7 @@
             ['coverBlob', 'kit', 'audio'].forEach(type => {
                 const hasFile = type === 'coverBlob' ? formData.coverBlob : formData.files[type];
                 const label = type === 'coverBlob' ? 'Portada' : type === 'kit' ? 'Drumkit' : 'Preview Audio';
-                filesItems.push(hasFile 
+                filesItems.push(hasFile
                     ? `<div class="verification-item"><div class="verification-item-icon">✓</div><div class="verification-item-text">${label}</div><div class="verification-item-value success">✓</div></div>`
                     : `<div class="verification-item-missing" onclick="goToStep(1)"><div class="verification-item-text">${label} <span style="color: #ff4444;">(Falta)</span></div></div>`
                 );
@@ -2147,7 +2360,7 @@
                     const { data: coverData, error: coverError } = await supabaseClient.storage
                         .from('drumkit-drafts')
                         .upload(coverPath, formData.coverBlob);
-                    
+
                     if (!coverError) {
                         draftData.cover_url = supabaseClient.storage.from('drumkit-drafts').getPublicUrl(coverData.path).data.publicUrl;
                     }
@@ -2266,7 +2479,10 @@
             `;
             container.appendChild(toast);
             setTimeout(() => toast.remove(), 3000);
+
         }
+
     </script>
 </body>
+
 </html>
