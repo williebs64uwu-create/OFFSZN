@@ -1,5 +1,14 @@
 document.addEventListener('DOMContentLoaded', async () => {
     const token = localStorage.getItem('authToken');
+    
+    // 1. CONFIGURACIÓN SUPABASE (Tus credenciales públicas)
+    const SUPABASE_URL = "https://qtjpvztpgfymjhhpoouq.supabase.co";
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0anB2enRwZ2Z5bWpoaHBvb3VxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3ODA5MTUsImV4cCI6MjA3NjM1NjkxNX0.YsItTFk3hSQaVuy707-z7Z-j34mXa03O0wWGAlAzjrw";
+    
+    // Inicializar cliente Supabase solo para escuchar
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    // Configuración API Backend
     let API_URL = window.location.hostname.includes('localhost') 
         ? 'http://localhost:3000/api' 
         : 'https://offszn-academy.onrender.com/api';
@@ -12,17 +21,97 @@ document.addEventListener('DOMContentLoaded', async () => {
     // --- ESTADO GLOBAL ---
     let conversations = [];
     let currentConversationId = null;
-    let currentConversationData = null; // Guardar datos como nombre/avatar
-    let selectedFile = null;
-    let currentAudio = null;
-    let audioUpdateInterval = null;
+    let currentConversationData = null;
+    let activeSubscription = null; // Para guardar la suscripción actual
+    let currentUserId = null; // Necesitamos saber quién soy para alinear mensajes
+
+    // --- OBTENER MI USER ID (Decodificando token o del localStorage) ---
+    // Esto es vital para saber si el mensaje nuevo es "mío" (derecha) o "tuyo" (izquierda)
+    try {
+        const base64Url = token.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const payload = JSON.parse(window.atob(base64));
+        currentUserId = payload.userId || payload.sub; // Ajusta según tu JWT
+    } catch (e) { console.error("Error decodificando token", e); }
+
 
     // --- ELEMENTOS DOM ---
     const listContainer = document.getElementById('conversationsList');
     const chatArea = document.getElementById('chatArea');
-    const messageInput = document.getElementById('messageInput');
-    const sendBtn = document.getElementById('sendBtn');
     
+    // ============================================================
+    // 0. LÓGICA REALTIME (LA MAGIA) ✨
+    // ============================================================
+    function subscribeToConversation(convId) {
+        // 1. Si ya escuchábamos otro chat, nos desuscribimos para no mezclar
+        if (activeSubscription) {
+            supabase.removeChannel(activeSubscription);
+            activeSubscription = null;
+        }
+
+        console.log(`🔌 Suscribiéndose al chat: ${convId}`);
+
+        // 2. Crear nueva suscripción
+        activeSubscription = supabase
+            .channel(`chat_room_${convId}`)
+            .on(
+                'postgres_changes',
+                {
+                    event: 'INSERT', // Solo escuchar nuevos mensajes
+                    schema: 'public',
+                    table: 'messages',
+                    filter: `conversation_id=eq.${convId}`
+                },
+                (payload) => {
+                    console.log('⚡ ¡Nuevo mensaje recibido en tiempo real!', payload);
+                    handleNewRealtimeMessage(payload.new);
+                }
+            )
+            .subscribe();
+    }
+
+    function handleNewRealtimeMessage(msgRow) {
+        // Si el mensaje lo envié yo, el Optimistic UI ya lo mostró, así que lo ignoramos
+        // para no duplicarlo (o podríamos actualizar su estado a "leído")
+        if (msgRow.sender_id === currentUserId) {
+            console.log("Ignorando mensaje propio (ya mostrado por Optimistic UI)");
+            return;
+        }
+
+        // Formatear el mensaje crudo de la BD al formato que usa tu UI
+        const formattedMsg = {
+            id: msgRow.id,
+            sender: 'other', // Si llegó por realtime y no soy yo, es 'other'
+            text: msgRow.content,
+            type: msgRow.type,
+            time: new Date(msgRow.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            avatar: currentConversationData ? currentConversationData.avatar : '?',
+            gradient: `avatar-gradient-${(currentConversationId % 5) + 1}`
+        };
+
+        // Inyectar HTML
+        const container = document.getElementById('chatMessages');
+        if (container) {
+            // Usamos tu función renderMessagesList pero adaptada para un solo item
+            // O inyectamos directamente el HTML del mensaje
+            const html = `
+                <div class="message-group slide-in-bottom">
+                    <div class="message-avatar ${formattedMsg.gradient}">${formattedMsg.avatar}</div>
+                    <div class="message-content">
+                        <div class="message-bubble"><div class="message-text">${formattedMsg.text}</div></div>
+                        <div class="message-time">${formattedMsg.time}</div>
+                    </div>
+                </div>
+            `;
+            
+            container.insertAdjacentHTML('beforeend', html);
+            container.scrollTop = container.scrollHeight; // Auto scroll
+            
+            // Reproducir sonido de notificación suave (opcional)
+            // playNotificationSound();
+        }
+    }
+
     // ============================================================
     // 1. CARGA DE DATOS
     // ============================================================
@@ -39,15 +128,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             
         } catch (err) {
             console.error(err);
-            listContainer.innerHTML = '<p style="padding:20px; text-align:center; color:#666;">Error cargando conversaciones.</p>';
         }
     }
 
     async function loadMessages(convId) {
         try {
-            // LÓGICA INTELIGENTE:
-            // Solo mostramos "Cargando..." si estamos cambiando de conversación.
-            // Si ya estamos en este chat (ej. actualizando o enviando), NO borramos nada.
             if (currentConversationId != convId) {
                 chatArea.innerHTML = '<div style="padding:20px; text-align:center; color:#666;"><i class="fas fa-spinner fa-spin"></i> Cargando chat...</div>';
             }
@@ -58,20 +143,19 @@ document.addEventListener('DOMContentLoaded', async () => {
             const messages = await res.json();
             
             const convData = conversations.find(c => c.id == convId);
-            
-            // Si estamos en el mismo chat, solo actualizamos la lista de mensajes, NO todo el chatArea (para no perder el foco del input)
             const messagesContainer = document.getElementById('chatMessages');
             
             if (currentConversationId == convId && messagesContainer) {
-                // Actualización silenciosa: Solo cambiamos el contenido de los mensajes
                 messagesContainer.innerHTML = renderMessagesList(messages);
-                messagesContainer.scrollTop = messagesContainer.scrollHeight; // Auto-scroll al final
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
             } else {
-                // Es un chat nuevo: Renderizamos todo (Header, Lista, Input)
                 currentConversationData = convData;
                 currentConversationId = convId;
                 renderChatArea(messages, convData);
             }
+
+            // ✅ ACTIVAR REALTIME PARA ESTE CHAT
+            subscribeToConversation(convId);
 
         } catch (err) {
             console.error(err);
@@ -106,16 +190,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         `).join('');
     }
 
-    // Función puente para el onclick del HTML generado
     window.selectConversation = (id) => {
         loadMessages(id);
-        // Actualizar visualmente la lista para marcar activo
         document.querySelectorAll('.conversation-item').forEach(el => el.classList.remove('active'));
-        // (El rerender completo ocurre en loadMessages -> renderChatArea, pero esto da feedback instantáneo)
     };
 
     function renderChatArea(messages, convData) {
-        // Avatar gradient determinístico basado en ID
         const gradientClass = `avatar-gradient-${(convData.id % 5) + 1}`;
 
         chatArea.innerHTML = `
@@ -138,10 +218,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             <div class="chat-input-container">
                 <div class="chat-input-wrapper">
-                    <div class="chat-input-actions">
-                        <button class="input-action-btn" onclick="alert('Pronto: Subida de archivos')"><i class="fas fa-paperclip"></i></button>
-                        <button class="input-action-btn" onclick="toggleEmojiPicker()"><i class="fas fa-smile"></i></button>
-                    </div>
                     <div class="chat-input-field">
                         <textarea id="messageInput" placeholder="Escribe un mensaje..." rows="1"></textarea>
                     </div>
@@ -152,24 +228,18 @@ document.addEventListener('DOMContentLoaded', async () => {
             </div>
         `;
 
-        // Re-attachear eventos del input nuevo
         const input = document.getElementById('messageInput');
         const btn = document.getElementById('sendBtn');
         
-        input.addEventListener('input', () => {
-            btn.disabled = !input.value.trim();
-        });
-        
+        input.addEventListener('input', () => { btn.disabled = !input.value.trim(); });
         input.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
                 handleSendMessage();
             }
         });
-
         btn.addEventListener('click', handleSendMessage);
 
-        // Scroll al fondo
         const msgContainer = document.getElementById('chatMessages');
         msgContainer.scrollTop = msgContainer.scrollHeight;
     }
@@ -179,17 +249,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         return messages.map(msg => {
             const isMe = msg.sender === 'me';
-            // Si es 'me', usamos un gradiente fijo o del usuario, si es 'other', usamos el de la conversación
             const gradient = isMe ? 'avatar-gradient-4' : `avatar-gradient-${(currentConversationId % 5) + 1}`;
             const avatarLetter = isMe ? 'YO' : currentConversationData.avatar;
 
             let contentHtml = `<div class="message-bubble"><div class="message-text">${msg.text}</div></div>`;
             
-            // Soporte básico para tipos (expandiremos audio/imagen luego)
-            if (msg.type === 'audio') {
-                contentHtml = `<div class="audio-preview">Audio (Pronto)</div>`;
-            }
-
             return `
                 <div class="message-group ${isMe ? 'sent' : ''}">
                     <div class="message-avatar ${gradient}">${avatarLetter}</div>
@@ -209,14 +273,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     async function handleSendMessage() {
         const input = document.getElementById('messageInput');
         const text = input.value.trim();
-        
         if (!text || !currentConversationId) return;
 
-        // 1. UI OPTIMISTA: Crear el HTML del mensaje y mostrarlo YA MISMO
-        const tempId = Date.now(); // ID temporal
+        // UI OPTIMISTA
+        const tempId = Date.now();
         const timeNow = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         
-        // Construimos el HTML simulado de "Mí" mensaje
         const optimisticHTML = `
             <div class="message-group sent" id="msg-${tempId}" style="opacity: 0.7;"> 
                 <div class="message-avatar avatar-gradient-4">YO</div>
@@ -224,22 +286,20 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <div class="message-bubble" style="background: #8b5cf6;">
                         <div class="message-text" style="color: #fff;">${text}</div>
                     </div>
-                    <div class="message-time">${timeNow} <i class="fas fa-clock"></i></div>
+                    <div class="message-time">${timeNow}</div>
                 </div>
             </div>
         `;
 
-        // Inyectamos visualmente al final del chat
         const container = document.getElementById('chatMessages');
         container.insertAdjacentHTML('beforeend', optimisticHTML);
-        container.scrollTop = container.scrollHeight; // Scroll abajo
+        container.scrollTop = container.scrollHeight;
         
-        // Limpiamos el input inmediatamente
         input.value = '';
         document.getElementById('sendBtn').disabled = true;
 
         try {
-            // 2. ENVIAR AL SERVIDOR (EN SEGUNDO PLANO)
+            // ENVIAR AL SERVIDOR
             const res = await fetch(`${API_URL}/chat/messages`, {
                 method: 'POST',
                 headers: {
@@ -255,27 +315,17 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             if (!res.ok) throw new Error('Falló el envío');
 
-            // 3. ÉXITO: El servidor ya lo guardó.
-            // Podemos dejar el mensaje optimista o recargar suavemente para confirmar.
-            // Quitamos la opacidad para indicar "Enviado"
+            // Confirmar visualmente
             const tempMsg = document.getElementById(`msg-${tempId}`);
-            if (tempMsg) {
-                tempMsg.style.opacity = '1';
-                const timeIcon = tempMsg.querySelector('.fa-clock');
-                if(timeIcon) timeIcon.className = 'fas fa-check'; // Cambiar reloj por check
-            }
-
-            // Opcional: Recargar en background para sincronizar IDs reales
-            // await loadMessages(currentConversationId); 
+            if (tempMsg) tempMsg.style.opacity = '1';
 
         } catch (err) {
             console.error(err);
-            // Si falla, avisar al usuario visualmente
             const tempMsg = document.getElementById(`msg-${tempId}`);
             if (tempMsg) {
                 tempMsg.style.opacity = '1';
-                tempMsg.querySelector('.message-bubble').style.background = '#ef4444'; // Rojo de error
-                alert('No se pudo enviar el mensaje. Revisa tu conexión.');
+                tempMsg.querySelector('.message-bubble').style.background = '#ef4444';
+                alert('No se pudo enviar el mensaje.');
             }
         }
     }
@@ -284,15 +334,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 4. INICIALIZACIÓN
     // ============================================================
     
-    // Exponer funciones globales necesarias para el HTML (onclicks)
-    window.toggleEmojiPicker = () => {
-        const picker = document.getElementById('emojiPicker');
-        if(picker) picker.classList.toggle('active');
-    };
-    
-    // Cargar lista inicial
     loadConversations();
-    
-    // Polling para actualizar lista de conversaciones (cada 10s)
-    setInterval(loadConversations, 10000);
+    // Actualizamos la lista de chats cada 15s (no los mensajes, eso va por realtime)
+    setInterval(loadConversations, 15000);
 });
