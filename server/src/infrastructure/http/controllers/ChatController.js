@@ -9,10 +9,10 @@ export const getConversations = async (req, res) => {
         const { data: conversations, error } = await supabase
             .from('conversations')
             .select(`
-                *,
-                p1:participant_1 (id, nickname, first_name, last_name, avatar_url),
-                p2:participant_2 (id, nickname, first_name, last_name, avatar_url)
-            `)
+        *,
+        p1:users!conversations_participant_1_fkey (id, nickname, first_name, last_name, avatar_url),
+        p2:users!conversations_participant_2_fkey (id, nickname, first_name, last_name, avatar_url)
+    `)
             .or(`participant_1.eq.${userId},participant_2.eq.${userId}`)
             .order('updated_at', { ascending: false });
 
@@ -24,7 +24,7 @@ export const getConversations = async (req, res) => {
             const otherUser = c.participant_1 === userId ? c.p2 : c.p1;
             // Si el usuario no tiene datos (ej. borrado), ponemos placeholder
             const otherUserData = otherUser || { nickname: 'Usuario Desconocido' };
-            
+
             return {
                 id: c.id,
                 name: otherUserData.nickname || `${otherUserData.first_name} ${otherUserData.last_name}`,
@@ -48,7 +48,7 @@ export const getConversations = async (req, res) => {
 export const getMessages = async (req, res) => {
     try {
         const { conversationId } = req.params;
-        
+
         const { data: messages, error } = await supabase
             .from('messages')
             .select('*')
@@ -106,7 +106,7 @@ export const sendMessage = async (req, res) => {
         // 2. Actualizar "último mensaje" en la conversación
         await supabase
             .from('conversations')
-            .update({ 
+            .update({
                 last_message: type === 'text' ? content : `Envió un ${type}`,
                 updated_at: new Date()
             })
