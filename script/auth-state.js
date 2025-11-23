@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
     checkAuthState();
-    setupLogout();
+    handleLogout();
 });
 
 function checkAuthState() {
@@ -19,22 +19,67 @@ function checkAuthState() {
     }
 }
 
-function setupLogout() {
-    // Busca TODOS los botones de logout (puede haber en navbar, sidebar, móvil)
-    const logoutButtons = document.querySelectorAll('.logout-button, #global-logout-button, .logout-btn');
+function handleLogout(e) {
+    e.preventDefault();
+    
+    // 1. Buscar el overlay
+    const overlay = document.getElementById('logout-overlay');
+    
+    // Si no existe el overlay en esta página, hacemos logout directo
+    if (!overlay) {
+        if(confirm("¿Cerrar sesión?")) {
+            performLogout();
+        }
+        return;
+    }
 
-    logoutButtons.forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            e.preventDefault();
-            
-            // Confirmación suave (opcional)
-            if(confirm("¿Cerrar sesión?")) {
-                localStorage.removeItem('authToken');
-                localStorage.removeItem('offszn_user_cache'); // Limpiar caché si usas
-                
-                // Recargar para actualizar UI o ir al home
-                window.location.href = '/index.html'; 
-            }
-        });
-    });
+    // 2. Si existe, iniciamos la animación
+    const messageEl = document.getElementById('logout-message');
+    const iconEl = overlay.querySelector('i');
+
+    // Fase 1: Mostrar Overlay
+    overlay.style.display = 'flex'; // Asegurar que sea flexible
+    // Pequeño delay para permitir que el navegador renderice el display:flex antes de la opacidad
+    setTimeout(() => {
+        overlay.classList.add('active');
+    }, 10);
+
+    // Fase 2: Cambiar mensaje a "Éxito" después de 1.5s
+    setTimeout(() => {
+        localStorage.removeItem('authToken'); // Borramos token aquí
+        localStorage.removeItem('offszn_user_cache');
+        
+        if(messageEl) messageEl.textContent = "¡Sesión cerrada!";
+        if(iconEl) iconEl.className = "fas fa-check-circle"; // Cambiar icono a check
+    }, 1500);
+
+    // Fase 3: Desvanecer y Redirigir
+    setTimeout(() => {
+        overlay.classList.remove('active'); // Quitar opacidad
+        overlay.classList.add('fading-out'); // Clase opcional si tienes CSS extra
+        
+        setTimeout(() => {
+            window.location.href = '/index.html';
+        }, 500); // Esperar a que termine la transición de opacidad
+    }, 3000);
 }
+
+function performLogout() {
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('offszn_user_cache');
+    window.location.href = '/index.html';
+}
+
+// Asignar a todos los botones de logout
+document.addEventListener('click', function(e) {
+    // 1. Detectar si el clic fue en un botón de Logout (o dentro de uno)
+    // Buscamos por ID, por Clase, o por el texto del enlace
+    const logoutBtn = e.target.closest('#navbar-logout-btn, #sidebar-logout-btn, .logout-btn, .logout');
+
+    // 2. Si encontramos un botón de logout...
+    if (logoutBtn) {
+        e.preventDefault(); // ¡Alto! No navegues a ninguna parte
+        console.log("Botón de logout detectado:", logoutBtn);
+        handleLogout(e); // Ejecuta la animación
+    }
+});
