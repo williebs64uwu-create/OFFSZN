@@ -4,9 +4,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Upload Drumkit | OFFSZN</title>
+    <title>Subir Drumkit | OFFSZN</title>
     <link rel="icon"
-        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎵</text></svg>">
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%238b5cf6'><path d='M9 18V5l12-2v13M9 18c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 9l12-2'/></svg>">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -50,7 +50,7 @@
         }
 
         :root {
-            --bg-color: #0a0a0a;
+            --bg-color: #000000;
             --card-bg: #141414;
             --border-color: #2a2a2a;
             --primary-color: #fff;
@@ -65,6 +65,11 @@
             padding: 0;
             box-sizing: border-box;
             font-family: 'Inter', sans-serif;
+        }
+
+        html {
+            overflow-y: scroll;
+            /* 🔥 Evita que la UI salte al cambiar de step */
         }
 
         body {
@@ -225,7 +230,19 @@
 
         .form-step {
             display: none;
-            animation: fadeIn 0.4s ease;
+            animation: slideUpFade 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes slideUpFade {
+            from {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .form-step.active {
@@ -263,6 +280,57 @@
             gap: 10px;
         }
 
+        /* PRICE INPUTS ALIGNMENT */
+        .price-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            align-items: end;
+            /* Alinear al fondo para que coincidan con el label */
+        }
+
+        .price-input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            flex: 1;
+            min-width: 0;
+            /* Evitar desbordamiento en grid */
+        }
+
+        .price-input-container {
+            display: flex;
+            align-items: center;
+            height: 50px;
+            /* Altura fija para ambos */
+            background: #111;
+            border: 1px solid #333;
+            border-radius: 12px;
+            padding: 0 12px;
+            transition: border-color 0.2s;
+        }
+
+        .price-input-container:focus-within {
+            border-color: #8b5cf6;
+        }
+
+        .price-input-container input {
+            height: 100%;
+            border: none;
+            background: transparent;
+            width: 100%;
+            font-size: 15px;
+            color: #fff;
+        }
+
+        /* Ajuste específico para el contenedor de spinner vertical */
+        .spinner-container {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            margin-left: 8px;
+        }
+
         .grid-2 {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -273,6 +341,59 @@
             display: grid;
             grid-template-columns: 300px 1fr;
             gap: 32px;
+        }
+
+        @media (max-width: 768px) {
+            main {
+                padding: 20px 16px;
+                padding-bottom: 120px;
+            }
+
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+
+            .grid-1-2 {
+                grid-template-columns: 1fr;
+            }
+
+            .price-row {
+                grid-template-columns: 1fr;
+            }
+
+            .steps-container {
+                margin-bottom: 30px;
+            }
+
+            .step {
+                width: 36px;
+                height: 36px;
+                font-size: 14px;
+            }
+
+            footer {
+                padding: 12px 20px;
+                height: auto;
+                position: fixed;
+                /* Mantener fixed o cambiar a relative si molesta */
+            }
+
+            .footer-controls {
+                flex-direction: column;
+                gap: 12px;
+            }
+
+            .footer-player {
+                width: 100%;
+            }
+
+            /* Ocultar botones laterales en footer si falta espacio o reordenarlos */
+            .footer-action-left,
+            .footer-action-right {
+                width: 100%;
+                justify-content: space-between;
+                display: flex;
+            }
         }
 
         .form-group {
@@ -307,6 +428,7 @@
             outline: none;
             border-color: var(--primary-color);
             background: #1a1a1a;
+            box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.05);
         }
 
         .input-field:disabled {
@@ -411,6 +533,10 @@
         .file-name {
             font-size: 14px;
             font-weight: 500;
+            max-width: 200px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
         .file-size {
@@ -425,11 +551,22 @@
             background: none;
             border: none;
             cursor: pointer;
-            padding: 4px 8px;
-            /* ← Más padding para mejor clic */
-            font-size: 18px;
+            padding: 0;
+            line-height: 0;
+            font-size: 0;
             margin-left: 12px;
-            /* ← Separación del contenido */
+            transition: transform 0.2s ease;
+        }
+
+        .remove-file:hover {
+            transform: scale(1.1);
+        }
+
+        .remove-file svg {
+            width: 64px !important;
+            height: 64px !important;
+            min-width: 64px;
+            min-height: 64px;
         }
 
         .cover-upload {
@@ -439,7 +576,7 @@
             overflow: hidden;
             position: relative;
             cursor: pointer;
-            background: var(--card-bg);
+            background: rgba(255, 255, 255, 0.02);
         }
 
         .cover-upload.has-image .cover-placeholder,
@@ -471,11 +608,36 @@
             border: 2px dashed var(--border-color);
             transition: all 0.3s;
             z-index: 5;
-            background: var(--card-bg);
+            background: rgba(255, 255, 255, 0.02);
         }
 
-        .cover-upload:hover .cover-placeholder {
-            border-color: var(--text-secondary);
+
+        /* 🔥 NUEVO: Overlay de "Cambiar Portada" */
+        .cover-upload.has-image::after {
+            content: 'Cambiar Portada';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            z-index: 20;
+            backdrop-filter: blur(2px);
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            pointer-events: none;
+            font-size: 14px;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .cover-upload.has-image:hover::after {
+            opacity: 1;
         }
 
         .tags-container {
@@ -636,6 +798,8 @@
         .notify-collabs-btn svg {
             width: 18px;
             height: 18px;
+            flex-shrink: 0;
+            /* 🔥 EVITAR que se deforme */
         }
 
         .user-info {
@@ -801,6 +965,12 @@
         .btn-primary {
             background: var(--primary-color);
             color: #000;
+            min-width: 120px;
+            /* 🔥 Ancho mínimo consistente */
+            display: flex;
+            /* 🔥 Para centrar contenido si es necesario */
+            justify-content: center;
+            align-items: center;
         }
 
         .btn-primary:hover {
@@ -1164,13 +1334,9 @@
         }
 
         .marketplace-card-preview {
-            position: sticky;
-            top: 20px;
+            position: relative;
+            /* 🔥 CAMBIO DE sticky A relative */
             align-self: start;
-            max-height: calc(100vh - 120px);
-            /* 🔥 Ajustar altura máxima */
-            overflow-y: auto;
-            /* 🔥 Scroll interno si es muy alta */
         }
 
         /* 🔥 MEJORAR SCROLLBAR DE LA PREVIEW */
@@ -1236,10 +1402,17 @@
             font-size: 16px;
             font-weight: 600;
             margin-bottom: 8px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
             letter-spacing: -0.2px;
+            line-height: 1.3;
+            max-height: 2.6em;
+            /* ~2 lines */
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
         }
 
         .card-tags {
@@ -1303,8 +1476,16 @@
             display: flex;
             align-items: center;
             gap: 12px;
-            padding: 14px 0;
-            /* ← Aumentado de 10px a 14px */
+            padding: 10px 12px;
+            /* 🔥 Padding interno */
+            margin-bottom: 12px;
+            /* 🔥 Espaciado compacto */
+            background: rgba(255, 255, 255, 0.02);
+            /* 🔥 Fondo recuperado */
+            border-radius: 8px;
+            /* 🔥 Bordes redondeados recuperados */
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            /* 🔥 Borde sutil */
         }
 
         .verification-label {
@@ -1529,15 +1710,13 @@
         }
 
         .quick-btn:hover {
-            transform: translateY(-4px) scale(1.05);
-            border-color: rgba(59, 130, 246, 0.5);
-            box-shadow:
-                0 8px 24px rgba(59, 130, 246, 0.3),
-                0 0 0 4px rgba(59, 130, 246, 0.1),
-                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+            /* 🔥 Movimiento más sutil */
+            border-color: rgba(255, 255, 255, 0.25);
             background: linear-gradient(135deg,
-                    rgba(59, 130, 246, 0.2),
-                    rgba(0, 255, 136, 0.2));
+                    rgba(40, 40, 45, 0.95),
+                    rgba(30, 30, 35, 0.98));
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
         }
 
         .quick-btn:active {
@@ -1687,6 +1866,35 @@
             overflow: hidden;
         }
 
+        .btn {
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .btn-secondary:hover {
+            border-color: rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+        }
+
         .tag-suggestion::before {
             content: '';
             position: absolute;
@@ -1746,9 +1954,10 @@
         }
 
         .player-control-btn.active {
-            background: rgba(139, 92, 246, 0.2);
-            border-color: #8b5cf6;
-            color: #8b5cf6;
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.5);
+            color: #fff;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
         }
 
         .player-control-btn svg {
@@ -1826,13 +2035,16 @@
             border-radius: 50%;
             background: linear-gradient(135deg, #8b5cf6, #a78bfa);
             cursor: pointer;
-            box-shadow: 0 2px 8px rgba(139, 92, 246, 0.5);
+            box-shadow: none;
+            /* 🔥 Removed glow */
             transition: all 0.2s;
         }
 
         .volume-slider::-webkit-slider-thumb:hover {
-            transform: scale(1.2);
-            box-shadow: 0 4px 12px rgba(139, 92, 246, 0.7);
+            transform: scale(1.1);
+            transform: scale(1.1);
+            box-shadow: none;
+            /* 🔥 Removed glow */
         }
 
         .volume-slider::-moz-range-thumb {
@@ -1842,13 +2054,15 @@
             background: linear-gradient(135deg, #8b5cf6, #a78bfa);
             cursor: pointer;
             border: none;
-            box-shadow: 0 2px 8px rgba(139, 92, 246, 0.5);
+            box-shadow: none;
             transition: all 0.2s;
         }
 
         .volume-slider::-moz-range-thumb:hover {
-            transform: scale(1.2);
-            box-shadow: 0 4px 12px rgba(139, 92, 246, 0.7);
+            transform: scale(1.1);
+            transform: scale(1.1);
+            box-shadow: none;
+            /* 🔥 Removed glow */
         }
 
         .player-time {
@@ -1875,34 +2089,51 @@
         }
 
 
-        /* FILE QUALITY INDICATOR */
-        .file-quality {
-            display: inline-flex;
+        /* LOADING OVERLAY */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: #000000;
+            /* Fondo negro sólido */
+            display: flex;
+            flex-direction: column;
             align-items: center;
-            gap: 6px;
-            padding: 4px 10px;
-            border-radius: 12px;
-            font-size: 11px;
-            font-weight: 600;
-            margin-left: 8px;
+            justify-content: center;
+            z-index: 99999;
+            /* Z-index muy alto */
+            opacity: 1;
+            transition: opacity 0.5s ease;
         }
 
-        .file-quality.high {
-            background: rgba(34, 197, 94, 0.15);
-            color: #22c55e;
-            border: 1px solid rgba(34, 197, 94, 0.3);
+        .loading-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
         }
 
-        .file-quality.medium {
-            background: rgba(234, 179, 8, 0.15);
-            color: #eab308;
-            border: 1px solid rgba(234, 179, 8, 0.3);
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(139, 92, 246, 0.1);
+            border-top-color: #8b5cf6;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
         }
 
-        .file-quality.low {
-            background: rgba(239, 68, 68, 0.15);
-            color: #ef4444;
-            border: 1px solid rgba(239, 68, 68, 0.3);
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .loading-text {
+            margin-top: 24px;
+            font-size: 16px;
+            font-weight: 500;
+            color: #888;
+            letter-spacing: 0.5px;
         }
 
         /* ESTIMATED EARNINGS */
@@ -2106,9 +2337,9 @@
 
         .help-tooltip {
             position: absolute;
-            bottom: calc(100% + 8px);
-            left: 50%;
-            transform: translateX(-50%);
+            left: calc(100% + 12px);
+            top: 50%;
+            transform: translateY(-50%);
             background: #1a1a1a;
             border: 1px solid rgba(255, 255, 255, 0.15);
             padding: 8px 12px;
@@ -2131,11 +2362,11 @@
         .help-tooltip::after {
             content: '';
             position: absolute;
-            top: 100%;
-            left: 50%;
-            transform: translateX(-50%);
-            border: 4px solid transparent;
-            border-top-color: rgba(255, 255, 255, 0.15);
+            top: 50%;
+            right: 100%;
+            transform: translateY(-50%);
+            border: 6px solid transparent;
+            border-right-color: rgba(255, 255, 255, 0.15);
         }
 
         /* ========================================
@@ -2149,22 +2380,8 @@
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        /* Animación de iconos en Quick Actions */
-        @keyframes icon-float {
-
-            0%,
-            100% {
-                transform: translateY(0);
-            }
-
-            50% {
-                transform: translateY(-4px);
-            }
-        }
-
-        .quick-btn:hover svg {
-            animation: icon-float 1s ease-in-out infinite;
-        }
+        /* Animación de iconos en Quick Actions - REMOVED */
+        /* Icon animations disabled for instant feedback */
 
         /* Gradientes para todos los SVG de verificación */
         .verification-item-icon svg {
@@ -2335,15 +2552,360 @@
             opacity: 0.3;
             transform: scale(0.95);
         }
+
+        /* 🔥 FIXED WIDTH ACTIONS FOR FOOTER STABILITY */
+        .footer-action-left,
+        .footer-action-right {
+            width: 140px;
+            /* 🔥 Balanced width (140px) */
+            display: flex;
+            align-items: center;
+            flex-shrink: 0;
+            justify-content: center;
+        }
+
+        /* 🔥 Force ALL buttons to fill container */
+        .footer-action-right .btn,
+        .footer-action-right .dropdown,
+        .footer-action-right #publishBtn,
+        .footer-action-left .btn {
+            width: 100% !important;
+            justify-content: center;
+            min-width: unset !important;
+            display: flex;
+            align-items: center;
+        }
+
+        /* ========================================
+           HEADER MEJORADO
+           ======================================== */
+        .main-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 24px;
+            /* 🔥 Más compacto */
+            background: #000000;
+            backdrop-filter: blur(10px);
+            position: relative;
+            /* 🔥 YA NO ES STICKY */
+            z-index: 100;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            /* 🔥 Espacio entre logo y título */
+        }
+
+        .header-logo {
+            height: 34px;
+            /* 🔥 Más grande como se solicitó */
+            width: auto;
+            display: block;
+            transition: opacity 0.2s;
+        }
+
+        .header-logo:hover {
+            opacity: 0.8;
+        }
+
+        .header-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #888;
+            padding-left: 16px;
+            border-left: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-dashboard {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #888;
+            padding: 6px 12px;
+            /* 🔥 Más pequeño */
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            transition: all 0.2s;
+        }
+
+        .btn-dashboard:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        /* RESPONSIBLE HEADER */
+        @media (max-width: 768px) {
+            .main-header {
+                padding: 12px 16px;
+            }
+
+            .header-center h1 {
+                font-size: 16px;
+            }
+
+            .btn-dashboard span {
+                display: none;
+            }
+
+            .btn-dashboard svg {
+                margin-right: 0 !important;
+            }
+        }
+
+        /* 🔥 TOAST POSITION FIX */
+        .toast-container {
+            top: 24px !important;
+            right: 24px !important;
+            bottom: auto !important;
+        }
+
+        /* 🔥 TOAST PREMIUM STYLE */
+        .toast-container {
+            position: fixed;
+            top: 24px !important;
+            right: 24px !important;
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            pointer-events: none;
+        }
+
+        .toast {
+            background: rgba(18, 18, 18, 0.95);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: #fff;
+            padding: 14px 18px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            opacity: 0;
+            transform: translateX(20px) scale(0.95);
+            transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+            pointer-events: auto;
+            min-width: 300px;
+            max-width: 400px;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateX(0) scale(1);
+        }
+
+        /* 🔥 PREVENT TOAST DUPLICATION ANIMATION */
+        .toast.shake {
+            animation: shake 0.3s ease;
+        }
+
+        .toast-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.05);
+            flex-shrink: 0;
+        }
+
+        .toast.success .toast-icon {
+            color: #22c55e;
+            background: rgba(34, 197, 94, 0.1);
+        }
+
+        .toast.error .toast-icon {
+            color: #ef4444;
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        .toast.info .toast-icon {
+            color: #8b5cf6;
+            background: rgba(139, 92, 246, 0.1);
+        }
+
+        .toast-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .toast-title {
+            font-weight: 600;
+            font-size: 13px;
+            letter-spacing: 0.3px;
+            text-transform: uppercase;
+            opacity: 0.8;
+        }
+
+        .toast-message {
+            font-weight: 400;
+            color: rgba(255, 255, 255, 0.9);
+            line-height: 1.4;
+        }
+
+        /* ========================================
+           INLINE VALIDATION STYLES
+           ======================================== */
+        .error-message {
+            color: #ef4444;
+            font-size: 13px;
+            margin-top: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            animation: slideDown 0.2s ease forwards;
+            font-weight: 500;
+        }
+
+        .error-message::before {
+            content: '';
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ef4444' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cline x1='12' y1='8' x2='12' y2='12'/%3E%3Cline x1='12' y1='16' x2='12.01' y2='16'/%3E%3C/svg%3E");
+            background-size: contain;
+            background-repeat: no-repeat;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-4px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .input-field.error,
+        .upload-zone.error {
+            border-color: #ef4444 !important;
+            background: rgba(239, 68, 68, 0.05);
+            box-shadow: 0 0 0 1px rgba(239, 68, 68, 0.2);
+            animation: shake 0.3s ease;
+        }
+    </style>
+    <style>
+        /* 🔥 COLLAB ROW STYLES */
+        .collab-row {
+            display: grid;
+            grid-template-columns: 1fr 140px 125px 40px;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            margin-bottom: 8px;
+        }
+
+        .collab-delete-btn {
+            width: 40px !important;
+            height: 40px !important;
+            min-width: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-left: auto;
+            /* Pushes button to the far right if flex fails */
+            transform: scale(0.85);
+            /* Reduce size by 15-25% */
+        }
+
+        .collab-delete-btn:hover {
+            background: rgba(239, 68, 68, 0.2);
+            transform: scale(0.9);
+        }
+
+        .collab-delete-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        .collab-role-select {
+            flex: 0 0 140px;
+            width: 140px;
+            min-width: 140px;
+        }
+
+        /* 🔥 FIX REMOVE ICON SIZE */
+        .remove-file {
+            width: 28px !important;
+            height: 28px !important;
+            min-width: 28px !important;
+            font-size: 14px !important;
+            padding: 0 !important;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-size: 14px !important;
+            border-radius: 6px !important;
+        }
+
+        .remove-file svg {
+            width: 14px !important;
+            height: 14px !important;
+        }
     </style>
 </head>
 
 <body>
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay" style="display: none;">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">Cargando tu producto...</div>
+    </div>
+    <script>
+        // 🔥 INSTANT LOADING CHECK (Prevent Flash)
+        if (localStorage.getItem('offszn_has_draft') === 'true') {
+            document.getElementById('loadingOverlay').style.display = 'flex';
+        }
+    </script>
+
     <div class="toast-container" id="toastContainer"></div>
     </div>
 
-    <header>
-        <div class="header-title">DRUMKITS</div>
+    <header class="main-header">
+        <div class="header-left">
+            <a href="/" target="_blank">
+                <img src="../images/LOGO%20OFFSZN.webp" alt="OFFSZN" class="header-logo">
+            </a>
+            <div class="header-title">Subir Drumkit</div>
+        </div>
+        <div class="header-right">
+            <button class="btn-dashboard" onclick="confirmExit()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    style="margin-right: 8px;">
+                    <rect x="3" y="3" width="7" height="7"></rect>
+                    <rect x="14" y="3" width="7" height="7"></rect>
+                    <rect x="14" y="14" width="7" height="7"></rect>
+                    <rect x="3" y="14" width="7" height="7"></rect>
+                </svg>
+                <span>Volver al Dashboard</span>
+            </button>
+        </div>
     </header>
 
     <main>
@@ -2369,6 +2931,8 @@
             </div>
         </div>
 
+
+
         <form id="uploadForm">
             <!-- STEP 1 -->
             <div class="form-step active" id="step1">
@@ -2385,6 +2949,7 @@
                                         d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                 </svg>
                                 <div class="upload-subtext">Formato:1080x1080px</div>
+                                <div class="upload-subtext" style="margin-top: 4px; opacity: 0.7;">(Máx. 10MB)</div>
                             </div>
                         </div>
                     </div>
@@ -2401,7 +2966,7 @@
                                         </path>
                                     </svg>
                                     <div class="upload-text">Arrastra tu archivo aquí</div>
-                                    <div class="upload-subtext">.rar o .zip</div>
+                                    <div class="upload-subtext">.rar o .zip (50mb max)</div>
                                 </div>
                                 <div id="filePreviewContainer"></div>
                             </div>
@@ -2434,17 +2999,21 @@
                         <div class="grid-2">
                             <div class="form-group">
                                 <div class="label">Fecha de Lanzamiento <span class="required">*</span></div>
-                                <input type="datetime-local" class="input-field" id="dateInput">
+                                <input type="date" class="input-field" id="dateInput" readonly
+                                    style="opacity: 0.7; cursor: not-allowed;">
                                 <div id="dateError" class="alert alert-error"
                                     style="margin-top: 4px; font-size: 12px; display: none;"></div>
                             </div>
                             <div class="form-group">
                                 <div class="label">Visibilidad <span class="required">*</span></div>
-                                <select class="input-field" id="visibilityInput">
-                                    <option value="private">Privado (Solo tú)</option>
-                                    <option value="public">Público (Todos)</option>
-                                    <option value="unlisted">No listado (Link)</option>
-                                </select>
+                                <div class="select-wrapper">
+                                    <select class="input-field skeleton" id="visibilityInput" disabled>
+                                        <option value="private">Privado (Solo tú)</option>
+                                        <option value="public">Público (Todos)</option>
+                                        <option value="unlisted">No listado (Link)</option>
+                                    </select>
+
+                                </div>
                             </div>
                         </div>
 
@@ -2469,7 +3038,7 @@
 
                         <!-- Tags -->
                         <div class="form-group">
-                            <div class="label" <div class="label">
+                            <div class="label">
                                 Tags (Max 3)
                             </div>
 
@@ -2478,7 +3047,7 @@
                             </div>
                             <!-- Sugerencias de tags -->
                             <div class="tags-suggestions" id="tagsSuggestions" style="display: none;">
-                                <small style="color: #666; width: 100%; margin-bottom: 4px;">💡 Sugerencias:</small>
+                                <small style="color: #666; width: 100%; margin-bottom: 4px;">Sugerencias:</small>
                             </div>
                         </div>
 
@@ -2509,12 +3078,12 @@
                     <!-- 🔥 COLUMNA DERECHA: Precios -->
                     <div>
                         <h3 class="section-title">Precios</h3>
-                        <div class="pricing-card">
+                        <div class="pricing-card" style="max-width: 440px;">
                             <div class="form-group">
                                 <div class="label">
                                     Precio Original ($) <span class="required">*</span>
                                 </div>
-                                <div class="number-control">
+                                <div class="number-control" style="width: 140px;">
                                     <input type="text" class="input-field" id="priceInput" inputmode="decimal"
                                         pattern="[0-9.]*" placeholder="0.00">
                                     <div class="spinners">
@@ -2548,8 +3117,19 @@
                             </div>
 
                             <div id="offerSection">
-                                <div class="label" style="margin-top: 20px;">Oferta / Descuento</div>
-                                <div class="grid-2" style="margin-bottom: 12px;">
+                                <div class="label"
+                                    style="margin-top: 20px; display: flex; align-items: center; gap: 8px;">
+                                    Oferta / Descuento
+                                    <div class="help-icon">
+                                        ?
+                                        <div class="help-tooltip">Aplica un descuento fijo o porcentual</div>
+                                    </div>
+                                    <!-- 🔥 MENSAJE VISIBLE CUANDO ESTÁ DESHABILITADO -->
+                                    <span id="offerDisabledMsg"
+                                        style="display: none; color: #888; font-size: 13px; font-weight: normal; margin-left: auto;">
+                                    </span>
+                                </div>
+                                <div class="grid-2" style="margin-bottom: 8px; margin-top: 20px;">
                                     <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
                                         <input type="radio" name="offerType" value="fixed" checked> Monto Fijo
                                     </label>
@@ -2557,9 +3137,9 @@
                                         <input type="radio" name="offerType" value="percent"> Porcentaje
                                     </label>
                                 </div>
-                                <div class="number-control">
+                                <div class="number-control" style="width: 140px;">
                                     <input type="text" class="input-field" id="offerInput" inputmode="decimal"
-                                        pattern="[0-9.]*" placeholder="Monto de descuento">
+                                        pattern="[0-9.]*" placeholder="0">
                                     <div class="spinners">
                                         <!-- DESPUÉS (BIEN) -->
                                         <button class="spin-btn up" type="button">
@@ -2577,7 +3157,7 @@
                             </div>
                         </div>
 
-                        <div class="price-display" id="priceDisplay">
+                        <div class="price-display" id="priceDisplay" style="margin-top: 24px;">
                             <span>Precio Final:</span>
                             <span class="old-price" id="displayOldPrice"></span>
                             <span class="new-price" id="displayNewPrice">$0.00</span>
@@ -2718,22 +3298,10 @@
             </svg>
             <span class="quick-btn-tooltip">Guardar Borrador</span>
         </button>
-        <button class="quick-btn" onclick="quickPreview()" title="Preview">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                <circle cx="12" cy="12" r="3"></circle>
-            </svg>
-            <span class="quick-btn-tooltip">Vista Previa</span>
-        </button>
-        <button class="quick-btn" onclick="showEstimate()" title="Estimación">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <line x1="12" y1="1" x2="12" y2="23"></line>
-                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
-            </svg>
-            <span class="quick-btn-tooltip">Ventas Estimadas</span>
-        </button>
-        <button class="quick-btn" onclick="quickAutoFillTags()" title="Tags IA">
 
+
+
+        <button class="quick-btn" onclick="quickAutoFillTags()" title="Tags IA">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
             </svg>
@@ -2742,8 +3310,10 @@
     </div>
     <footer>
         <div class="footer-controls">
-            <!-- 🔥 BOTÓN ANTERIOR FUERA -->
-            <button class="btn btn-secondary" id="prevBtn" style="visibility: hidden;">Anterior</button>
+            <!-- 🔥 LEFT ACTION WRAPPER -->
+            <div class="footer-action-left">
+                <button class="btn btn-secondary" id="prevBtn" style="visibility: hidden;">Anterior</button>
+            </div>
 
             <!-- PLAYER EN EL CENTRO -->
             <div class="footer-player" id="footerPlayer">
@@ -2783,20 +3353,22 @@
                 </div>
             </div>
 
-            <!-- 🔥 BOTÓN SIGUIENTE FUERA -->
-            <button class="btn btn-primary" id="nextBtn">Siguiente</button>
+            <!-- 🔥 RIGHT ACTION WRAPPER -->
+            <div class="footer-action-right">
+                <button class="btn btn-primary" id="nextBtn">Siguiente</button>
 
-            <!-- 🔥 DROPDOWN FUERA -->
-            <div class="dropdown" id="publishDropdown" style="display: none;">
-                <button class="btn btn-primary" id="publishBtn">
-                    Publicar
-                    <svg style="width: 12px; height: 12px; margin-left: 6px;" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M7 10l5 5 5-5z" />
-                    </svg>
-                </button>
-                <div class="dropdown-content">
-                    <button id="saveDraft">Guardar Borrador</button>
-                    <button id="publishNow">Publicar Ahora</button>
+                <div class="dropdown" id="publishDropdown" style="display: none;">
+                    <button class="btn btn-primary" id="publishBtn">
+                        Publicar
+                        <svg style="width: 16px; height: 16px; margin-left: 6px;" viewBox="0 0 24 24"
+                            fill="currentColor">
+                            <path d="M7 10l5 5 5-5z" />
+                        </svg>
+                    </button>
+                    <div class="dropdown-content">
+                        <button id="saveDraft">Guardar Borrador</button>
+                        <button id="publishNow">Publicar Ahora</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -2809,7 +3381,144 @@
         const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0anB2enRwZ2Z5bWpoaHBvb3VxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3ODA5MTUsImV4cCI6MjA3NjM1NjkxNX0.YsItTFk3hSQaVuy707-z7Z-j34mXa03O0wWGAlAzjrw";
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+
         let API_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000/api' : 'https://offszn-academy.onrender.com/api';
+
+        // 🎯 SISTEMA DE TAGS INTELIGENTE (sin IA externa)
+        // Tag system initialized
+        // 🎵 ANALIZAR AUDIO (BPM, duración, energía)
+        async function analyzeAudio(audioFile) {
+            return new Promise((resolve) => {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const reader = new FileReader();
+
+                reader.onload = async (e) => {
+                    try {
+                        const audioBuffer = await audioContext.decodeAudioData(e.target.result);
+
+                        // Duración
+                        const duration = Math.floor(audioBuffer.duration);
+
+                        // Calcular energía promedio (volumen)
+                        const channelData = audioBuffer.getChannelData(0);
+                        let sum = 0;
+                        for (let i = 0; i < channelData.length; i++) {
+                            sum += Math.abs(channelData[i]);
+                        }
+                        const avgEnergy = sum / channelData.length;
+
+                        // Estimar BPM (simplificado)
+                        const peaks = detectPeaks(channelData, audioBuffer.sampleRate);
+                        const bpm = Math.round((peaks.length / duration) * 60);
+
+                        // Clasificar mood por energía
+                        let mood = 'chill';
+                        if (avgEnergy > 0.15) mood = 'hard';
+                        else if (avgEnergy > 0.08) mood = 'melodic';
+                        else if (avgEnergy > 0.04) mood = 'ambient';
+
+                        resolve({
+                            duration,
+                            bpm: Math.max(60, Math.min(180, bpm)), // Limitar a rango realista
+                            energy: avgEnergy,
+                            mood
+                        });
+                    } catch (error) {
+                        // Silent error handling
+                        resolve({ duration: 0, bpm: 0, energy: 0, mood: 'unknown' });
+                    }
+                };
+
+                reader.readAsArrayBuffer(audioFile);
+            });
+        }
+
+        // Detectar picos de amplitud (para BPM)
+        function detectPeaks(data, sampleRate) {
+            const peaks = [];
+            const threshold = 0.15;
+            const minDistance = Math.floor(sampleRate * 0.3); // Mínimo 300ms entre picos
+
+            for (let i = minDistance; i < data.length - minDistance; i++) {
+                if (Math.abs(data[i]) > threshold) {
+                    let isPeak = true;
+                    for (let j = i - minDistance; j < i + minDistance; j++) {
+                        if (j !== i && Math.abs(data[j]) > Math.abs(data[i])) {
+                            isPeak = false;
+                            break;
+                        }
+                    }
+                    if (isPeak) {
+                        peaks.push(i);
+                        i += minDistance; // Saltar para evitar duplicados
+                    }
+                }
+            }
+            return peaks;
+        }
+
+        // 🔄 FALLBACK: Keyword matching inteligente & REPERTORIO MASIVO
+        async function generateTagsSmart(title, description, audioParams) {
+            console.log('🤖 Generando tags fallback...');
+            const stopWords = ['de', 'la', 'que', 'el', 'en', 'y', 'a', 'los', 'del', 'se', 'las', 'por', 'un', 'para', 'con', 'no', 'una', 'su', 'al', 'lo', 'como', 'más', 'pero', 'sus', 'le', 'ya', 'o', 'fue', 'este', 'ha', 'sido', 'porque', 'muy', 'sin', 'sobre', 'ser', 'me', 'hasta', 'hay', 'donde', 'quien', 'desde', 'todo', 'nos', 'durante', 'estados', 'todos', 'uno', 'les', 'ni', 'contra', 'otros', 'fueron', 'ese', 'eso', 'había', 'ante', 'unos', 'ella', 'entre', 'poco'];
+
+            let candidates = new Set();
+
+            // 1. Estrategia por Audio (BPM y Mood)
+            if (audioParams) {
+                if (audioParams.bpm > 140) candidates.add('trap');
+                if (audioParams.bpm > 120 && audioParams.bpm < 130) candidates.add('house');
+                if (audioParams.bpm > 80 && audioParams.bpm < 100) candidates.add('classic hiphop');
+                if (audioParams.bpm < 80) candidates.add('lofi');
+                if (audioParams.mood) candidates.add(audioParams.mood);
+            }
+
+            // 2. Estrategia por Palabras Clave del Título
+            const words = (title + ' ' + description).toLowerCase()
+                .replace(/[^\w\s]/g, '')
+                .split(/\s+/)
+                .filter(w => w.length > 2 && !stopWords.includes(w));
+
+            words.forEach(w => candidates.add(w));
+
+            // 3. Estrategia: REPERTORIO MASIVO (User provided)
+            const megaTagPool = [
+                // Genres
+                'Trap', 'Drill', 'Rage', 'Hyperpop', 'RnB', 'Afrobeats', 'Dancehall', 'Reggaeton', 'Boom Bap', 'Lo-Fi', 'Phonk', 'Dark Trap', 'EDM', 'House', 'Deep House', 'Techno', 'Dubstep', 'Pop', 'Latin Trap', 'Jersey Club', 'Footwork', 'Trance', 'Cloud Rap', 'Alternative', 'Synthwave', 'DnB', 'Future Bass', 'Ambient', 'Cinematic', 'Hardstyle',
+                // Moods
+                'Dark', 'Emotional', 'Melodic', 'Aggressive', 'Chill', 'Atmospheric', 'Spacey', 'Bouncy', 'Sad', 'Mystery', 'Energetic', 'Smooth', 'Vintage', 'Retro', 'Futuristic', 'Epic', 'Uplifting', 'Minimal', 'Dreamy', 'Gritty', 'Warm', 'Cold', 'Organic', 'Digital', 'Punchy', 'Clean', 'Dirty', 'Distorted',
+                // Artists
+                'Drake', 'Travis Scott', 'Future', 'Metro Boomin', 'Kanye West', 'Lil Uzi Vert', 'Playboi Carti', 'Yeat', 'Ken Carson', 'Destroy Lonely', 'Baby Keem', 'The Weeknd', 'Bryson Tiller', 'Bad Bunny', 'Feid', 'Jhayco', 'Anuel AA', 'Myke Towers', 'Peso Pluma', 'Natanael Cano', 'Rosalía', 'Billie Eilish', 'SZA', 'Doja Cat', 'Skrillex', 'Kaytranada', 'Fred again..', 'Lil Durk', 'Pop Smoke', 'Ice Spice', 'Don Toliver', 'Juice WRLD', 'XXXTentacion', 'Cordae', 'J. Cole', 'Kendrick Lamar', 'Rauw Alejandro', 'Mora', 'Quevedo',
+                // Sound Types
+                '808s', 'Kicks', 'Snares', 'Hi-hats', 'Open hats', 'Cymbals', 'Percs', 'Fills', 'Loops', 'Vox samples', 'FX', 'Risers', 'Impacts', 'Sweeps', 'One shots', 'Melody loops', 'Chord stabs', 'Drum loops', 'Basslines', 'Breaks', 'Transitions', 'Ambient textures', 'Guitar loops', 'Piano loops', 'Synth loops', 'Brass hits', 'Strings', 'Pads', 'Arps',
+                // Quality/Descriptors
+                'High quality', 'Analog', 'Digital', 'Clean', 'Dark', 'Hard hitting', 'Crisp', 'Warm', 'Glitchy', 'Processed', 'Raw', 'Mastered', 'Unmastered', 'Distorted', 'Layered', 'Dry', 'Wet', 'Stereo', 'Mono', 'Punchy', 'Vintage', 'Modern', 'Saturated', 'Looped', 'Chopped',
+                // Usage
+                'Beatmaking', 'Vocal processing', 'Trap beats', 'Drill beats', 'Emotional beats', 'Club tracks', 'Industry beats', 'Type beats', 'Film scoring', 'Game Audio', 'Live performance', 'Remixes', 'Sound design', 'TikTok edits', 'Reels content', 'YouTube beats', 'Background music', 'Freestyles', 'Cyphers',
+                // Subgenres/Styles
+                'Hard Trap', 'Detroit style', 'NY Drill', 'UK Drill', 'Club vibes', 'Emotional trap', 'Dark rage', 'PluggnB', 'West Coast', 'Miami bass', 'Phonk cowbell', 'Memphis style', 'Latin trap club', 'Afro chill', 'Afro fusion', 'Jersey bounce', 'Rage glitch', 'Ambient score', 'Cyberpunk', 'Ethereal', 'Slow + Reverb',
+                // DAWs
+                'FL Studio', 'Ableton Live', 'Logic Pro', 'Pro Tools', 'Studio One', 'Cubase', 'Reason', 'Bitwig', 'Reaper'
+            ];
+
+            // Normalizar a minúsculas para evitar duplicados visuales
+            const normalizedPool = megaTagPool.map(t => t.toLowerCase());
+
+            // Mezclar pool aleatoriamente
+            normalizedPool.sort(() => Math.random() - 0.5);
+
+            // Agregar al set de candidatos
+            normalizedPool.forEach(tag => candidates.add(tag));
+
+            // Convertir a array
+            let finalTags = Array.from(candidates);
+
+            // 🔥 MEZCLAR EL RESULTADO FINAL PARA QUE LAS KEYWORDS NO SIEMPRE SALGAN PRIMERO
+            finalTags.sort(() => Math.random() - 0.5);
+
+            // Devolver una cantidad generosa
+            return finalTags.slice(0, 60);
+        }
 
         let currentStep = 1;
         const totalSteps = 4;
@@ -2849,6 +3558,29 @@
         // INICIALIZACIÓN
         // ========================================
         document.addEventListener('DOMContentLoaded', async () => {
+            // 🔥 MARKER: Inline script handled loading visibility
+
+            // 🔥 LIMPIAR TODO SI NO VIENE UN ?edit=ID
+            const urlParams = new URLSearchParams(window.location.search);
+            const editingProductId = urlParams.get('edit');
+
+            if (!editingProductId) {
+                // ✅ Estamos creando un NUEVO drumkit - limpiar todo
+                currentDraftId = null;
+                formData.files = { kit: null, audio: null };
+                formData.coverBlob = null;
+                filesUploaded = { cover: false, kit: false, audio: false };
+                tags = [];
+                collaborators = [];
+                isDirty = false;
+
+                // 🔥 HABILITAR VISIBILIDAD PARA NUEVOS UPLOADS
+                const visibilityInput = document.getElementById('visibilityInput');
+                if (visibilityInput) {
+                    visibilityInput.disabled = false;
+                    visibilityInput.classList.remove('skeleton');
+                }
+            }
             await checkAuth();
             await loadUserProfile();
             initDateTime();
@@ -2864,7 +3596,7 @@
             document.getElementById('titleInput').addEventListener('input', e => {
                 document.getElementById('titleCount').textContent = e.target.value.length;
                 isDirty = true;
-                autoFillTags();
+                // autoFillTags(); // 🔥 ELIMINADO: Usuario pidió que no sea automático
                 clearTimeout(autosaveTimeout);
                 autosaveTimeout = setTimeout(() => saveDraftAuto(), 2000);
             });
@@ -2898,7 +3630,7 @@
                     for (let i = currentStep; i < targetStep; i++) {
                         if (!validateStep(i)) {
                             canProceed = false;
-                            showToast(`Completa el paso ${i} primero`, 'error');
+                            // validation already shows inline errors
                             break;
                         }
                     }
@@ -2927,9 +3659,6 @@
                 if (currentStep > 1) {
                     currentStep--;
                     updateStepUI();
-                    if (currentStep === 2) {
-                        setTimeout(() => autoFillTags(), 300);
-                    }
                 }
             });
 
@@ -2944,13 +3673,11 @@
 
                 btn.disabled = true;
                 btn.innerHTML = 'Guardando...';
-
                 try {
                     await saveDraftAuto();
-                    showToast('Borrador guardado exitosamente', 'success');
+                    showToast('Borrador guardado', 'success');
                     isDirty = false;
                 } catch (error) {
-                    console.error('❌ Error guardando draft:', error);
                     showToast('Error al guardar: ' + error.message, 'error');
                 } finally {
                     btn.disabled = false;
@@ -2970,7 +3697,7 @@
 
             // Inicializar spinners
             setTimeout(() => {
-                document.querySelectorAll('.spin-btn').forEach(btn => {
+                document.querySelectorAll('.spin-btn:not(.collab-spin)').forEach(btn => {
                     const isUp = btn.classList.contains('up');
                     const control = btn.closest('.number-control');
                     if (!control) return;
@@ -3012,8 +3739,8 @@
         async function checkAuth() {
             const { data: { user } } = await supabaseClient.auth.getUser();
             if (!user) {
-                showToast('Debes iniciar sesión', 'error');
-                setTimeout(() => window.location.href = '/login.html', 2000);
+                // Redirect instantly without delay
+                window.location.href = 'pages/login.html';
                 return;
             }
             userId = user.id;
@@ -3039,13 +3766,14 @@
         }
 
         function initDateTime() {
+            // 🔥 Force current date (User's timezone)
             const now = new Date();
             const year = now.getFullYear();
             const month = String(now.getMonth() + 1).padStart(2, '0');
             const day = String(now.getDate()).padStart(2, '0');
-            const hours = String(now.getHours()).padStart(2, '0');
-            const minutes = String(now.getMinutes()).padStart(2, '0');
-            document.getElementById('dateInput').value = `${year}-${month}-${day}T${hours}:${minutes}`;
+
+            // Set current date (no time)
+            document.getElementById('dateInput').value = `${year}-${month}-${day}`;
 
             document.getElementById('dateInput').addEventListener('change', () => {
                 validateReleaseDate();
@@ -3062,16 +3790,33 @@
         function validateReleaseDate() {
             const dateInput = document.getElementById('dateInput');
             const dateError = document.getElementById('dateError');
-            const selected = new Date(dateInput.value);
+
+            if (!dateInput.value) return false;
+
+            // 🔥 FIX: Parse date parts manually to ensure local time midnight
+            // "2025-12-18" -> [2025, 12, 18]
+            const parts = dateInput.value.split('-');
+            const selected = new Date(parts[0], parts[1] - 1, parts[2]); // Year, Month(0-11), Day
+
+            // Normalize "now" to midnight today
             const now = new Date();
+            now.setHours(0, 0, 0, 0);
 
-            // 🔥 REDONDEAR AMBAS FECHAS AL MINUTO MÁS CERCANO
-            selected.setSeconds(0, 0);
-            now.setSeconds(0, 0);
+            // 🔥 PROGRAMACIÓN DE FECHA: Validar SOLO si el usuario intenta cambiar la fecha
+            // Si ya existe una fecha válida y no la está cambiando, NO validar contra el presente
+            const isEditingExistingDate = dateInput.dataset.originalDate && dateInput.value === dateInput.dataset.originalDate;
 
+            if (isEditingExistingDate) {
+                // ✅ La fecha ya fue guardada antes - NO validar contra presente
+                if (dateError) dateError.style.display = 'none';
+                dateInput.classList.remove('error');
+                return true;
+            }
+
+            // ✅ Comparar timestamps (ambos están a las 00:00:00)
             if (selected.getTime() < now.getTime()) {
                 if (dateError) {
-                    dateError.innerText = "La fecha no puede ser en el pasado. Ajusta la hora.";
+                    dateError.innerText = "La fecha de lanzamiento no puede ser en el pasado";
                     dateError.style.display = 'block';
                 }
                 dateInput.classList.add('error');
@@ -3087,21 +3832,21 @@
             if (!document.getElementById('exitModal')) {
                 const modalHTML = `
                 <div class="exit-modal-overlay" id="exitModal">
-                    <div class="exit-modal">
-                        <div class="exit-modal-title">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2">
-                                <circle cx="12" cy="12" r="10"/>
-                                <line x1="12" y1="8" x2="12" y2="12"/>
-                                <line x1="12" y1="16" x2="12.01" y2="16"/>
+                    <div class="exit-modal" style="text-align: center; border: 1px solid rgba(255,255,255,0.1); background: #0a0a0a;">
+                        <div class="exit-modal-title" style="justify-content: center; color: #fff;">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2">
+                                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                                <line x1="12" y1="9" x2="12" y2="13"></line>
+                                <line x1="12" y1="17" x2="12.01" y2="17"></line>
                             </svg>
                             ¿Salir sin guardar?
                         </div>
-                        <div class="exit-modal-message">
-                            Tienes cambios sin guardar. Si sales ahora, perderás todo tu progreso. ¿Estás seguro?
+                        <div class="exit-modal-message" style="color: #aaa; margin-bottom: 32px;">
+                            Tienes cambios sin guardar. Si sales ahora, perderás todo tu progreso.
                         </div>
-                        <div class="exit-modal-actions">
-                            <button class="exit-modal-btn cancel" id="exitCancel">Cancelar</button>
-                            <button class="exit-modal-btn confirm" id="exitConfirm">Salir sin guardar</button>
+                        <div class="exit-modal-actions" style="justify-content: center; gap: 16px;">
+                             <button class="exit-modal-btn cancel" id="exitConfirm" style="color: #ef4444; border: none; font-weight: 500;">Salir sin guardar</button>
+                            <button class="exit-modal-btn confirm" id="exitCancel" style="background: #fff; color: #000; hover: background: #ddd;">Seguir Editando</button>
                         </div>
                     </div>
                 </div>
@@ -3223,32 +3968,37 @@
             dropZone.classList.add('uploading');
 
             try {
+                // 🔥 Limpiar errores previos del dropzone
+                dropZone.classList.remove('error');
+                const existingError = dropZone.parentNode.querySelector('.error-message');
+                if (existingError) existingError.remove();
+
                 // Validaciones básicas
                 if (type === 'kit' && !file.name.match(/\.(rar|zip)$/i)) {
-                    showToast('Solo archivos .rar o .zip', 'error');
+                    showInlineError(dropZone.id, 'Solo archivos .rar o .zip');
                     return;
                 }
 
                 if (type === 'audio' && !file.name.match(/\.(mp3|wav)$/i)) {
-                    showToast('Solo archivos .mp3 o .wav', 'error');
+                    showInlineError(dropZone.id, 'Solo archivos .mp3 o .wav');
                     return;
                 }
 
                 if (type === 'cover' && !file.type.startsWith('image/')) {
-                    showToast('Solo imágenes', 'error');
+                    showInlineError(dropZone.id, 'Solo imágenes válidas');
                     return;
                 }
 
                 // Límites de tamaño
                 const MAX_SIZES = {
                     cover: 10 * 1024 * 1024,
-                    kit: 100 * 1024 * 1024,
+                    kit: 50 * 1024 * 1024,
                     audio: 20 * 1024 * 1024
                 };
 
                 if (file.size > MAX_SIZES[type]) {
                     const sizeMB = (MAX_SIZES[type] / (1024 * 1024)).toFixed(0);
-                    showToast(`El archivo excede el límite de ${sizeMB}MB`, 'error');
+                    showInlineError(dropZone.id, `El archivo excede el límite de ${sizeMB}MB`);
                     return;
                 }
 
@@ -3275,10 +4025,10 @@
                             await supabaseClient.storage
                                 .from('drumkit-drafts')
                                 .remove([oldUrl]);
-                            console.log(`🗑️ ${type} anterior eliminado:`, oldUrl);
+                            // File removed
                         }
                     } catch (e) {
-                        console.warn('⚠️ Error eliminando archivo anterior:', e);
+                        // Silent error handling
                     }
                 }
 
@@ -3291,13 +4041,6 @@
                 // Procesar según tipo
                 if (type === 'audio') {
                     wavesurfer.load(URL.createObjectURL(file));
-
-                    const qualityInfo = await validateAudioQuality(file);
-                    console.log('Calidad detectada:', qualityInfo);
-
-                    setTimeout(() => {
-                        addQualityBadge('audioPreviewContainer', qualityInfo.quality, qualityInfo.message);
-                    }, 500);
 
                     document.getElementById('waveform').style.display = 'block';
                     document.getElementById('playerPlaceholder').style.display = 'none';
@@ -3315,18 +4058,15 @@
                         <div class="file-name">${file.name}</div>
                         <div class="file-size">${(file.size / (1024 * 1024)).toFixed(2)} MB</div>
                     </div>
-                    <button type="button" class="remove-file" onclick="removeFile('${type}')">✕</button>
+                    <button type="button" class="remove-file" onclick="removeFile('${type}')" title="Eliminar archivo">✕</button>
                 </div>
             `;
                 }
-
-                console.log(`✅ ${type} cargado en memoria (no subido aún)`);
 
                 // Guardar draft automáticamente (esto subirá el archivo)
                 await saveDraftAuto();
 
             } catch (error) {
-                console.error(`❌ Error procesando ${type}:`, error);
                 showToast(`Error: ${error.message}`, 'error');
             } finally {
                 // 🔥 Liberar upload después de 2 segundos
@@ -3735,6 +4475,17 @@
             isDirty = true;
             renderTags();
             saveDraftAuto();
+
+            // 🔥 CLEAR ERROR: Si había error de validación, quitarlo al agregar un tag
+            const tInput = document.getElementById('tagInput');
+            if (tInput) {
+                tInput.classList.remove('error');
+                const container = tInput.closest('.form-group');
+                if (container) {
+                    const errorMsg = container.querySelector('.error-message');
+                    if (errorMsg) errorMsg.remove();
+                }
+            }
         }
         function renderTags() {
             const container = document.getElementById('tagsContainer');
@@ -3752,7 +4503,12 @@
                 chip.style.cursor = 'pointer';
                 chip.innerHTML = `
                 <span onclick="editTag('${tag}')" style="flex: 1;">${tag}</span>
-                <span class="tag-remove" onclick="removeTag('${tag}')">✕</span>
+                <span class="tag-remove" onclick="removeTag('${tag}')" title="Eliminar etiqueta" style="display: flex; align-items: center; justify-content: center;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </span>
             `;
                 container.insertBefore(chip, input);
             });
@@ -3815,13 +4571,39 @@
             const offerInput = document.getElementById('offerInput');
 
             // 🔥 PRECIO ORIGINAL: solo números enteros
+            // 🔥 PRECIO ORIGINAL: solo números enteros
             priceInput.addEventListener('input', e => {
-                // Solo números enteros (sin punto decimal)
                 let value = e.target.value.replace(/[^0-9]/g, '');
 
-                // Prevenir leading zeros
+                // 🔥 LÓGICA AUTOMÁTICA DE GRATIS/PRECIO
+                const freeToggle = document.getElementById('freeToggle');
+
+                // Si borra todo o pone 0
+                if (value === '' || value === '0') {
+                    // Solo si no estaba ya marcado como gratis para evitar bucles visuales raros
+                    if (!freeToggle.checked) {
+                        freeToggle.checked = true;
+                        // Forzar evento change para que se actualice la UI
+                        const event = new Event('change');
+                        freeToggle.dispatchEvent(event);
+                    }
+                }
+                // Si escribe un número mayor a 0
+                else if (parseInt(value) > 0) {
+                    // 🔥 CLEAR ERROR IMMEDIATELY
+                    clearInlineError('priceInput');
+
+                    if (freeToggle.checked) {
+                        freeToggle.checked = false;
+                        // Forzar evento change para que se actualice la UI
+                        const event = new Event('change');
+                        freeToggle.dispatchEvent(event);
+                    }
+                }
+
+                // 🔥 NO PERMITIR leading zeros después del primer 0
                 if (value.startsWith('0') && value.length > 1) {
-                    value = value.replace(/^0+/, '');
+                    value = value.substring(1);
                 }
 
                 // Máximo 10,000
@@ -3901,7 +4683,29 @@
         // 🔴 FUNCIÓN CRÍTICA: adjustNumber para spinners
         window.adjustNumber = (id, delta) => {
             const input = document.getElementById(id);
-            if (!input || input.disabled) return;
+            if (!input) return;
+
+            // 🔥 CASO ESPECIAL: Si es priceInput y está en modo GRATIS, permitir subir
+            if (id === 'priceInput') {
+                const freeToggle = document.getElementById('freeToggle');
+
+                // Si está en modo gratis, cualquier interacción libera el modo
+                if (freeToggle.checked) {
+                    // Desactivar el modo gratis
+                    freeToggle.checked = false;
+                    const event = new Event('change');
+                    freeToggle.dispatchEvent(event);
+
+                    // 🔥 NO reiniciar a 1. Dejar que fluya la lógica normal abajo
+                    // para que tome el valor actual (ej: 5) y le sume 1 (6)
+                }
+
+                // Si está deshabilitado por otra razón, no hacer nada
+                if (input.disabled) return;
+            } else {
+                // Para otros inputs, respetar el disabled normal
+                if (input.disabled) return;
+            }
 
             let val = parseFloat(input.value) || 0;
             val += delta;
@@ -3918,13 +4722,32 @@
             }
 
             if (id === 'priceInput') {
-                if (val < 1) val = 1;
+                // 🔥 PERMITIR 0 para activar "Gratis"
+                if (val < 0) val = 0;
                 if (val > 10000) {
                     val = 10000;
                     input.classList.add('limit-reached');
                     setTimeout(() => input.classList.remove('limit-reached'), 300);
                 }
                 val = Math.floor(val);
+
+                // 🔥 LÓGICA AUTOMÁTICA: Activar/desactivar toggle de gratis
+                const freeToggle = document.getElementById('freeToggle');
+                if (val === 0) {
+                    if (!freeToggle.checked) {
+                        freeToggle.checked = true;
+                        const event = new Event('change');
+                        freeToggle.dispatchEvent(event);
+                    }
+                } else if (val > 0) {
+                    if (freeToggle.checked) {
+                        freeToggle.checked = false;
+                        const event = new Event('change');
+                        freeToggle.dispatchEvent(event);
+                    }
+                    // 🔥 CLEAR ERROR ON SPINNER CHANGE IF > 0
+                    clearInlineError('priceInput');
+                }
             }
 
             if (id === 'offerInput') {
@@ -3962,89 +4785,122 @@
 
         function updatePrice() {
             const priceInput = document.getElementById('priceInput');
-            const freeToggle = document.getElementById('freeToggle');
             const offerInput = document.getElementById('offerInput');
+            const freeToggle = document.getElementById('freeToggle');
+            const finalPriceEl = document.querySelector('#finalPriceContainer span') || document.getElementById('displayNewPrice') || document.getElementById('finalPrice');
             const displayOldPrice = document.getElementById('displayOldPrice');
             const displayNewPrice = document.getElementById('displayNewPrice');
             const offerSection = document.getElementById('offerSection');
+            const freeInfo = document.getElementById('freeInfo');
 
-            let original = parseInt(priceInput.value) || 0;
-
-            // 🔥 Validar rango de precio original
-            if (original > 10000) {
-                original = 10000;
-                priceInput.value = '10000';
-            }
-
-            if (original < 1) {
-                original = 1;
-                priceInput.value = '1';
-            }
-
+            const price = parseFloat(priceInput.value) || 0;
             const isFree = freeToggle.checked;
+            let final = price;
+            let offerVal = 0;
 
+            // LOGICA DESCAGA GRATIS
             if (isFree) {
-                offerSection.style.display = 'none';
+                // Si es gratis, deshabilitar todo y mostrar GRATIS
                 priceInput.disabled = true;
-                const freeInfo = document.getElementById('freeInfo');
-                freeInfo.style.display = 'block';
-                freeInfo.style.color = '#ddd';
-                displayOldPrice.innerText = original > 0 ? `$${original}` : '';
-                displayNewPrice.innerText = '$0.00';
-            } else {
-                // 🔥 BLOQUEAR OFERTAS SI PRECIO ES $1
-                if (original === 1) {
-                    offerSection.style.display = 'none';
-                    offerInput.value = '0';
-                    displayOldPrice.innerText = '';
-                    displayNewPrice.innerText = '$1';
-                } else {
-                    offerSection.style.display = 'block';
 
-                    let offerVal = parseInt(offerInput.value) || 0;
-                    const offerType = document.querySelector('input[name="offerType"]:checked').value;
-
-                    if (offerVal > 0) {
-                        let final;
-                        if (offerType === 'fixed') {
-                            const maxDiscount = Math.max(0, original - 1);
-
-                            if (offerVal > maxDiscount) {
-                                offerVal = maxDiscount;
-                                offerInput.value = maxDiscount.toString();
-                            }
-
-                            if (offerVal < 1 && offerVal > 0) {
-                                offerVal = 1;
-                                offerInput.value = '1';
-                            }
-                            final = Math.max(0, original - offerVal);
-                        } else {
-                            if (offerVal > 90) {
-                                offerVal = 90;
-                                offerInput.value = '90';
-                            }
-
-                            if (offerVal < 1 && offerVal > 0) {
-                                offerVal = 1;
-                                offerInput.value = '1';
-                            }
-                            final = Math.max(0, original * (1 - offerVal / 100));
-                        }
-
-                        displayOldPrice.innerText = `$${original}`;
-                        displayNewPrice.innerText = `$${Math.floor(final)}`;
-                    } else {
-                        displayOldPrice.innerText = '';
-                        displayNewPrice.innerText = `$${original}`;
-                    }
+                // 🔥 LIMPIAR ERRORES SI EXISTEN
+                priceInput.classList.remove('error');
+                const formGroup = priceInput.closest('.form-group');
+                if (formGroup) {
+                    const error = formGroup.querySelector('.error-message');
+                    if (error) error.remove();
                 }
 
-                priceInput.disabled = false;
-                document.getElementById('freeInfo').style.display = 'none';
+                if (offerInput) {
+                    offerInput.disabled = true;
+                    offerInput.value = '';
+                }
+                document.querySelectorAll('input[name="offerType"]').forEach(r => r.disabled = true);
+
+                if (finalPriceEl) finalPriceEl.textContent = 'GRATIS';
+
+                if (displayOldPrice) displayOldPrice.innerText = (price > 0 && priceInput.value !== '') ? `$${price}` : '';
+                if (displayNewPrice) displayNewPrice.innerText = 'GRATIS';
+
+                // 🔥 OCULTAR SECCION OFERTAS Y MOSTRAR INFO DE EMAIL
+                if (offerSection) offerSection.style.display = 'none';
+                if (freeInfo) freeInfo.style.display = 'block';
+
+                return;
             }
 
-            saveDraftAuto();
+            // Si NO es gratis...
+            priceInput.disabled = false;
+
+            // 🔥 MOSTRAR SECCION OFERTAS Y OCULTAR INFO DE EMAIL
+            const offerMsg = document.getElementById('offerDisabledMsg');
+
+            if (offerSection) {
+                offerSection.style.display = 'block';
+                if (price < 5) {
+                    offerSection.classList.add('disabled'); // Visualmente deshabilitado si < 5
+                    if (offerMsg) offerMsg.style.display = 'block'; // Mostrar mensaje
+                } else {
+                    offerSection.classList.remove('disabled');
+                    if (offerMsg) offerMsg.style.display = 'none'; // Ocultar mensaje
+                }
+            }
+            if (freeInfo) freeInfo.style.display = 'none';
+
+            // LOGICA DESCUENTOS (Solo si precio >= 5)
+            if (price < 5) {
+                if (offerInput) {
+                    offerInput.disabled = true;
+                    offerInput.value = '';
+                }
+                document.querySelectorAll('input[name="offerType"]').forEach(r => r.disabled = true);
+            } else {
+                if (offerInput) offerInput.disabled = false;
+                document.querySelectorAll('input[name="offerType"]').forEach(r => r.disabled = false);
+            }
+
+            // CALCULO FINAL
+            if (offerInput) {
+                offerVal = parseFloat(offerInput.value) || 0;
+            }
+
+            const offerType = document.querySelector('input[name="offerType"]:checked')?.value || 'fixed';
+
+            if (price >= 5 && offerVal > 0) {
+                if (offerType === 'fixed') {
+                    final = price - offerVal;
+                } else {
+                    final = price - (price * (offerVal / 100));
+                }
+            }
+
+            // 🔥 LOGICA AUTOMÁTICA: Si el precio final baja a 0 (o menos) por descuento
+            if (final <= 0 && priceInput.value !== '' && parseFloat(priceInput.value) > 0) {
+                // Activar modo gratis automáticamente
+                freeToggle.checked = true;
+
+                // Limpiar oferta para "reiniciar" lógica
+                if (offerInput) offerInput.value = '';
+
+                // Forzar actualización de UI
+                const event = new Event('change');
+                freeToggle.dispatchEvent(event);
+                return; // Salir para que el dispatchEvent maneje la UI
+            }
+
+            // Asegurar que no sea negativo
+            final = Math.max(0, final);
+
+            // ACTUALIZAR VISUALIZACION
+            if (displayOldPrice && displayNewPrice) {
+                if (price >= 5 && offerVal > 0) {
+                    displayOldPrice.innerText = `$${price.toFixed(2)}`;
+                    displayNewPrice.innerText = `$${final.toFixed(2)}`;
+                } else {
+                    displayOldPrice.innerText = '';
+                    displayNewPrice.innerText = `$${price.toFixed(2)}`;
+                }
+            }
         }
 
         // ========================================
@@ -4057,7 +4913,7 @@
                 return;
             }
 
-            console.log('✅ Inicializando colaboradores');
+
 
             collabSearch.addEventListener('input', e => {
                 clearTimeout(searchTimeout);
@@ -4120,7 +4976,8 @@
                 availableUsers = (users || []).map(u => ({
                     id: u.id,
                     name: u.nickname || 'Usuario sin nombre',
-                    avatar_url: u.avatar_url || ('https://ui-avatars.com/api/?name=' + encodeURIComponent(u.nickname || 'U') + '&background=333&color=fff')
+                    // Asegurar URL válida sin caracteres raros
+                    avatar_url: u.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(u.nickname || 'U')}&background=333&color=fff`
                 }));
 
                 renderCollabDropdown();
@@ -4174,7 +5031,8 @@
                 name: user.name,
                 avatar_url: user.avatar_url,
                 role: 'Productor',
-                percent: 0
+                percent: 0,
+                description: ''
             });
 
             isDirty = true;
@@ -4205,11 +5063,12 @@
                     onerror="this.src='https://ui-avatars.com/api/?name=U&background=333&color=fff'"
                     <span>${c.name}</span>
                 </div>
-                <select class="input-field" onchange="updateCollab(${i}, 'role', this.value)">
+                <select class="input-field collab-role-select" onchange="updateCollab(${i}, 'role', this.value)">
                     <option value="Productor" ${c.role === 'Productor' ? 'selected' : ''}>Productor</option>
                     <option value="Ingeniero" ${c.role === 'Ingeniero' ? 'selected' : ''}>Ingeniero</option>
                     <option value="Artista" ${c.role === 'Artista' ? 'selected' : ''}>Artista</option>
                 </select>
+
     <div class="number-control" style="max-width: 120px;">
         <input type="text" class="input-field" id="collabPercent${i}" 
             value="${c.percent}" 
@@ -4230,13 +5089,15 @@
             </button>
         </div>
     </div>
-             <button type="button" class="remove-file" onclick="removeCollab(${i})" style="display: flex; align-items: center; justify-content: center;">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <line x1="18" y1="6" x2="6" y2="18"></line>
-        <line x1="6" y1="6" x2="18" y2="18"></line>
-    </svg>
-</button>
-            `;
+    
+    <button type="button" class="collab-delete-btn" onclick="removeCollab(${i})" title="Eliminar colaborador">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M3 6h18"></path>
+            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+        </svg>
+    </button>
+`;
                 list.appendChild(row);
             });
             // 🔥 INICIALIZAR SPINNERS DE COLABORADORES
@@ -4342,13 +5203,18 @@
         // 🔥 NUEVA FUNCIÓN: Actualizar porcentaje de colaborador
         // 🔥 FUNCIÓN MEJORADA: Actualizar porcentaje de colaborador
         window.updateCollabPercent = (index, value) => {
-            let cleanValue = value.replace(/[^0-9]/g, '');
+            // Permitir solo números y guion para validar correctamente
+            let cleanValue = value.toString().replace(/[^0-9-]/g, '');
 
-            if (cleanValue.startsWith('0') && cleanValue.length > 1) {
-                cleanValue = cleanValue.replace(/^0+/, '');
+            // Evitar múltiples guiones
+            if ((cleanValue.match(/-/g) || []).length > 1) {
+                cleanValue = cleanValue.replace(/-/g, '');
             }
 
-            let percent = parseInt(cleanValue) || 0;
+            let percent = parseInt(cleanValue);
+
+            // Si es NaN (vacío o inválido), tratar como 0 temporalmente pero no sobrescribir si está escribiendo
+            if (isNaN(percent)) percent = 0;
 
             // 🔥 LÍMITE INFERIOR: No permitir negativos
             if (percent < 0) percent = 0;
@@ -4359,7 +5225,7 @@
                 .reduce((sum, c) => sum + c.percent, 0);
 
             // El propietario SIEMPRE debe tener mínimo 10%
-            const maxAllowed = 90 - totalWithoutCurrent;
+            const maxAllowed = Math.max(0, 90 - totalWithoutCurrent);
 
             // 🔥 LÍMITE SUPERIOR: No exceder el máximo permitido
             if (percent > maxAllowed) {
@@ -4371,31 +5237,41 @@
 
             // Actualizar input visual
             const input = document.getElementById(`collabPercent${index}`);
-            if (input) input.value = percent;
+            if (input) {
+                input.value = percent;
+                // Si el valor era negativo y se corrigió, forzar actualización visual
+                if (value.includes('-')) input.value = percent;
+            }
 
             updateMainUserPercent();
             isDirty = true;
             saveDraftAuto();
         };
         // 🔥 FUNCIÓN MEJORADA: Ajustar porcentaje con spinners
+        // 🔥 FUNCIÓN MEJORADA: Ajustar porcentaje con spinners
         window.adjustCollabPercent = (index, delta) => {
-            let currentPercent = collaborators[index].percent || 0;
+            // Asegurar que trabajamos con números
+            let currentPercent = parseInt(collaborators[index].percent);
+            if (isNaN(currentPercent)) currentPercent = 0;
+
             let newPercent = currentPercent + delta;
 
             // 🔥 CALCULAR LÍMITES DINÁMICOS
             const totalWithoutCurrent = collaborators
                 .filter((_, i) => i !== index)
-                .reduce((sum, c) => sum + c.percent, 0);
+                .reduce((sum, c) => sum + (parseInt(c.percent) || 0), 0);
 
-            const maxAllowed = 90 - totalWithoutCurrent;
+            const maxAllowed = Math.max(0, 90 - totalWithoutCurrent);
 
-            // 🔥 APLICAR LÍMITES
+            // 🔥 APLICAR LÍMITES ESTRICTOS
             if (newPercent < 0) newPercent = 0;
             if (newPercent > maxAllowed) newPercent = maxAllowed;
 
-            // Actualizar usando la función principal
+            // Actualizar usando la función principal con el valor seguro
             updateCollabPercent(index, newPercent.toString());
         };
+
+
         // ========================================
         // DESCARGAR PRODUCTO (KIT)
         // ========================================
@@ -4623,7 +5499,7 @@
 
             if (collaborators.length > 0) {
                 collabHTML += collaborators.map(c => `
-            <div class="verification-item">
+            <div class="verification-item" style="align-items: center;">
                 <div class="verification-item-icon">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
@@ -4633,7 +5509,7 @@
                     </svg>
                 </div>
                 <div class="verification-item-text">${c.name}</div>
-                <div class="verification-item-value" style="color: #00ff88;">${c.percent}%</div>
+                <div class="verification-item-value" style="color: #ddd;">${c.percent}%</div>
             </div>
         `).join('');
             }
@@ -4645,7 +5521,7 @@
         // NAVEGACIÓN ENTRE STEPS
         // ========================================
         function updateStepUI() {
-            console.log('🔄 Actualizando UI - Paso actual:', currentStep);
+
 
             // 🔥 BARRA DE PROGRESO: Solo hasta el círculo activo
             // Paso 1: 0% (sin barra)
@@ -4704,7 +5580,7 @@
             const activeStep = document.getElementById(`step${currentStep}`);
             if (activeStep) {
                 activeStep.classList.add('active');
-                console.log('✅ Mostrando step', currentStep);
+
             } else {
                 console.error('❌ No se encontró #step' + currentStep);
             }
@@ -4716,7 +5592,7 @@
             document.getElementById('nextBtn').style.display = currentStep === 4 ? 'none' : 'block';
             document.getElementById('publishDropdown').style.display = currentStep === 4 ? 'inline-block' : 'none';
 
-            console.log('✅ UI actualizada correctamente');
+
         }
         // 🔥 NUEVA FUNCIÓN: Ir a un step específico desde la preview
         window.goToStep = function (stepNumber) {
@@ -4727,7 +5603,7 @@
         function handleNext() {
             // Validar el paso actual
             if (!validateStep(currentStep)) {
-                console.log('❌ Validación fallida en paso:', currentStep);
+
                 return;
             }
 
@@ -4736,17 +5612,17 @@
                 completedSteps.push(currentStep);
             }
 
-            console.log('✅ Paso', currentStep, 'completado');
+
 
             // 🔥 Auto-generar tags al llegar al Step 2
             if (currentStep === 1 && tags.length === 0) {
                 setTimeout(() => {
-                    console.log('🏷️ Generando tags automáticos...');
+
                     autoFillTags();
 
                     setTimeout(() => {
                         const suggestions = document.querySelectorAll('.tag-suggestion');
-                        console.log('📋 Sugerencias encontradas:', suggestions.length);
+
 
                         if (suggestions.length >= 3) {
                             for (let i = 0; i < 3; i++) {
@@ -4772,7 +5648,7 @@
 
             // Avanzar al siguiente paso
             currentStep++;
-            console.log('➡️ Avanzando a paso:', currentStep);
+
 
             updateStepUI();
 
@@ -4800,35 +5676,72 @@
                 }
             }, 100); // ← Aumentado a 100ms para dar tiempo al DOM
         }
-        // 🔴 FUNCIÓN MEJORADA: validateStep con Step 3
+        // 🔴 FUNCIÓN MEJORADA: validateStep con Inline Validation
         function validateStep(step) {
-            if (step === 1) {
-                if (!formData.files.kit) { showToast('Falta el archivo del kit', 'error'); return false; }
-                if (!formData.files.audio) { showToast('Falta el audio preview', 'error'); return false; }
-                if (!formData.coverBlob) { showToast('Falta la portada', 'error'); return false; }
-                if (!document.getElementById('titleInput').value.trim()) { showToast('Falta el título', 'error'); return false; }
+            clearInlineErrors(); // Limpiar errores previos
+            let isValid = true;
+            let errors = [];
 
+            if (step === 1) {
+                // 1. Kit File
+                if (!formData.files.kit) {
+                    showInlineError('filePreviewContainer', 'Debes subir el archivo del Drumkit<div style="margin-top: 4px; font-size: 13px; font-weight: 400; opacity: 0.9;">(.rar o .zip)</div>');
+                    errors.push('Falta el archivo del Drumkit');
+                    isValid = false;
+                }
+
+                // 2. Audio Preview
+                if (!formData.files.audio) {
+                    showInlineError('audioPreviewContainer', 'Debes subir un preview de audio');
+                    errors.push('Falta el preview de audio');
+                    isValid = false;
+                }
+
+                // 3. Cover Image
+                if (!formData.coverBlob) {
+                    showInlineError('coverDropZone', 'Debes subir una portada (1080x1080px)');
+                    errors.push('Falta la imagen de portada');
+                    isValid = false;
+                }
+
+                // 4. Title
+                const titleInput = document.getElementById('titleInput');
+                if (!titleInput.value.trim()) {
+                    showInlineError('titleInput', 'El título es obligatorio');
+                    errors.push('Falta el título del producto');
+                    isValid = false;
+                }
+
+                // 5. Release Date
                 const hasDate = document.getElementById('dateInput').value !== '';
                 const dateValid = validateReleaseDate();
                 if (!hasDate || !dateValid) {
-                    showToast('Debes establecer una fecha de lanzamiento válida', 'error');
-                    return false;
+                    // validateReleaseDate ya muestra sus propios errores si es inválida, 
+                    // pero aquí aseguramos que si está vacío también marque error.
+                    if (!hasDate) showInlineError('dateInput', 'La fecha de lanzamiento es obligatoria');
+                    errors.push('Fecha de lanzamiento inválida o faltante');
+                    isValid = false;
                 }
-
-                return true;
             }
 
             if (step === 2) {
                 const isFree = document.getElementById('freeToggle').checked;
-                const price = parseInt(document.getElementById('priceInput').value);
+                const priceInput = document.getElementById('priceInput');
+                const price = parseInt(priceInput.value);
 
                 // 🔥 Validar precio mínimo
                 if (!isFree && (!price || price < 1)) {
-                    showToast('El precio mínimo es $1', 'error');
-                    return false;
+                    showInlineError('priceInput', 'El precio mínimo es $1');
+                    errors.push('El precio debe ser mayor a $0');
+                    isValid = false;
                 }
 
-                return true;
+                // 🔥 Validar Tags (Mínimo 1)
+                if (tags.length === 0) {
+                    showInlineError('tagInput', 'Debes agregar al menos 1 tag');
+                    errors.push('Faltan los tags');
+                    isValid = false;
+                }
             }
 
             if (step === 3) {
@@ -4837,24 +5750,215 @@
 
                 // VALIDACIÓN 1: Suma total no puede exceder 100%
                 if (mainUserPercent < 0) {
-                    showToast('El porcentaje total no puede exceder 100%', 'error');
+                    showToast('El porcentaje total excede 100%', 'error');
                     return false;
                 }
 
                 // VALIDACIÓN 2: Si hay colaboradores, propietario debe tener mínimo 10%
                 if (collaborators.length > 0 && mainUserPercent < 10) {
-                    showToast('Tú (propietario) debes tener mínimo 10% de regalías', 'error');
+                    showToast('Debes conservar mínimo 10% de regalías', 'error');
                     return false;
                 }
+            }
 
-                return true;
+            if (!isValid) {
+                // Scroll al primer error
+                const firstError = document.querySelector('.error-message, .input-field.error, .upload-zone.error');
+                if (firstError) {
+                    firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+                return false;
+            }
+
+            return true;
+        }
+
+        // ========================================
+        // INLINE VALIDATION HELPERS
+        // ========================================
+        function showInlineError(elementId, message) {
+            const element = document.getElementById(elementId);
+            if (!element) return;
+
+            // 1. Agregar clase de error al elemento (input, dropzone, etc)
+            element.classList.add('error');
+
+            // 🔥 FIX: Determinar contenedor correcto para el mensaje
+            // Si el padre es .number-control (flex) O es tagInput, el error debe ir afuera (en el abuelo/form-group)
+            let targetContainer = element.parentNode;
+
+            if (element.parentNode.classList.contains('number-control') ||
+                element.id === 'tagInput' ||
+                element.classList.contains('tags-input') ||
+                element.parentNode.classList.contains('tags-container')) {
+                // Intentar ir al .form-group más cercano, sino subir dos niveles
+                targetContainer = element.closest('.form-group') || element.parentNode.parentNode;
+            }
+
+            // 2. Crear mensaje de error si no existe EN EL CONTENEDOR CORRECTO
+            let errorDiv = targetContainer.querySelector('.error-message');
+
+            // Si no existe, crearlo
+            if (!errorDiv) {
+                errorDiv = document.createElement('div');
+                errorDiv.className = 'error-message';
+                targetContainer.appendChild(errorDiv);
+            }
+
+            // Usar innerHTML para permitir saltos de línea y formateo
+            errorDiv.innerHTML = message;
+            errorDiv.style.display = 'block'; // Changed from flex to block for better multi-line handling
+        }
+
+        function clearInlineError(elementId) {
+            const element = document.getElementById(elementId);
+            if (!element) return;
+
+            element.classList.remove('error');
+
+            let targetContainer = element.parentNode;
+            if (element.parentNode.classList.contains('number-control') ||
+                element.id === 'tagInput' ||
+                element.classList.contains('tags-input') ||
+                element.parentNode.classList.contains('tags-container')) {
+                targetContainer = element.closest('.form-group') || element.parentNode.parentNode;
+            }
+
+            const errorDiv = targetContainer.querySelector('.error-message');
+            if (errorDiv) errorDiv.remove();
+        }
+
+        function clearInlineErrors() {
+            // 1. Quitar clases de error
+            document.querySelectorAll('.error').forEach(el => el.classList.remove('error'));
+
+            // 2. Remover mensajes de error
+            document.querySelectorAll('.error-message').forEach(el => el.remove());
+        }
+
+        // ========================================
+        // LOADING OVERLAY
+        // ========================================
+        function showLoading() {
+            const overlay = document.getElementById('loadingOverlay');
+            if (overlay) {
+                overlay.style.display = 'flex';
+                // Forzar reflow para que la transición funcione
+                overlay.offsetHeight;
+                overlay.classList.remove('hidden');
+
+                // 🔥 SAFETY TIMEOUT: Quitar loading después de 10s pase lo que pase
+                setTimeout(() => {
+                    hideLoading();
+                }, 10000);
+            }
+        }
+
+        function hideLoading() {
+            const overlay = document.getElementById('loadingOverlay');
+            if (overlay) {
+                overlay.classList.add('hidden');
+                // Esperar a que termine la transición y ocultar
+                setTimeout(() => {
+                    overlay.style.display = 'none';
+                }, 500);
             }
         }
 
         // ========================================
+        // UNIQUE LINK GENERATION
+        // ========================================
+        function generatePreviewToken() {
+            // Generate secure random token for preview links
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+            let token = '';
+            for (let i = 0; i < 32; i++) {
+                token += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return token;
+        }
+
+        function generatePublicSlug(title) {
+            // Generate clean URL-safe slug from title
+            return title
+                .toLowerCase()
+                .trim()
+                .replace(/[^\w\s-]/g, '') // Remove special characters
+                .replace(/\s+/g, '-') // Spaces to hyphens
+                .replace(/-+/g, '-') // Multiple hyphens to single
+                .substring(0, 60); // Max 60 characters
+        }
+
+        // Copy unique link to clipboard
+        function copyUniqueLink() {
+            const linkInput = document.getElementById('uniqueLinkInput');
+            linkInput.select();
+            linkInput.setSelectionRange(0, 99999); // For mobile
+
+            navigator.clipboard.writeText(linkInput.value).then(() => {
+                showToast('Link copiado', 'success');
+            }).catch(() => {
+                // Fallback for older browsers
+                document.execCommand('copy');
+                showToast('Link copiado', 'success');
+            });
+        }
+
+        // ========================================
+        // TAGS GENERATION FALLBACK
+        // ========================================
+        async function generateTagsFallback(title, description, audioAnalysis) {
+            // Simular "pensamiento" de IA
+            await new Promise(resolve => setTimeout(resolve, 800));
+
+            const keywords = [];
+            const text = (title + ' ' + description).toLowerCase();
+
+            // 1. Análisis de Texto Básico
+            const genreKeywords = {
+                'trap': ['trap', 'dark', 'hard', '808', 'metro', 'future'],
+                'drill': ['drill', 'uk drill', 'ny drill', 'slide', 'gliding'],
+                'lofi': ['lofi', 'chill', 'relax', 'study', 'jazz'],
+                'rnb': ['rnb', 'soul', 'smooth', 'love', 'emotional'],
+                'reggaeton': ['reggaeton', 'latino', 'perreo', 'dembow'],
+                'hiphop': ['hiphop', 'boombap', 'oldschool', 'classic'],
+                'rage': ['rage', 'yeat', 'synth', 'playboi', 'energetic']
+            };
+
+            for (const [genre, tags] of Object.entries(genreKeywords)) {
+                if (text.includes(genre)) {
+                    keywords.push(...tags);
+                }
+            }
+
+            // 2. Análisis de Audio (Simulado si no hay real)
+            if (audioAnalysis) {
+                if (audioAnalysis.bpm > 130) keywords.push('fast', 'energetic', 'club');
+                if (audioAnalysis.bpm < 100) keywords.push('slow', 'mellow', 'vibe');
+            }
+
+            // 3. Defaults universales si no encontramos nada
+            if (keywords.length === 0) {
+                keywords.push('drumkit', 'samplepack', 'loops', 'oneshots', 'producer', 'sounds');
+            }
+
+            // Garantizar al menos 6 tags únicos
+            const uniqueTags = [...new Set(keywords)];
+            while (uniqueTags.length < 6) {
+                const defaults = ['trap', 'hiphop', 'loop', 'sound', 'kit', 'drums', 'wav'];
+                const random = defaults[Math.floor(Math.random() * defaults.length)];
+                if (!uniqueTags.includes(random)) uniqueTags.push(random);
+            }
+
+            return uniqueTags;
+        }
+        // ========================================
         // CARGAR BORRADOR (VERSIÓN MEJORADA)
         // ========================================
         async function loadDraft() {
+            // ✅ SHOW LOADING IMMEDIATELY (to prevent flash)
+            showLoading();
+
             try {
                 const { data, error } = await supabaseClient
                     .from('drumkit_drafts')
@@ -4862,43 +5966,80 @@
                     .eq('user_id', userId)
                     .order('last_saved', { ascending: false })
                     .limit(1)
-                    .single();
+                    .maybeSingle();
 
-                if (error && error.code !== 'PGRST116') {
-                    console.error('Error:', error);
+                if (error) {
+                    console.error('Error cargando borrador:', error);
+                    hideLoading(); // Error -> Hide
                     return;
                 }
 
                 if (!data) {
-                    console.log('📋 No hay borradores previos');
+                    // No hay borrador -> Ocultar inmediatamente
+                    console.log('ℹ️ No hay borradores previos');
+                    localStorage.removeItem('offszn_has_draft'); // Limpiar flag si no hay borrador
+                    hideLoading();
                     return;
                 }
 
                 currentDraftId = data.id;
-                console.log('✅ Borrador encontrado:', currentDraftId);
+
+                // 🔥 CHECK CONTENT (Prevent flashing for empty auto-saves)
+                const hasContent = data.title || data.description || data.cover_url || data.kit_url || data.audio_url || (data.price > 0 && !data.is_free);
+
+                if (!hasContent) {
+                    // Draft vacío -> Ocultar inmediatamente y limpiar marca
+                    console.log('ℹ️ Draft vacío, carga silenciosa.');
+                    localStorage.removeItem('offszn_has_draft'); // 🔥 False positive cleanup
+                    hideLoading();
+                }
+                // ELSE: Keep loading visible while we restore fields...
+
+                // 🔥 SYNC marker for next time (in case it was missing)
+                localStorage.setItem('offszn_has_draft', 'true');
+
+                const product = data; // Rename for clarity
+
+                // 2. Preparar datos para UI
+                const draftData = {
+                    title: product.title, // Changed from product.name to product.title based on original code's data.title
+                    description: product.description,
+                    release_date: product.release_date,
+                    visibility: product.visibility,
+                    price: product.price, // Changed from product.price_basic to product.price based on original code's data.price
+                    is_free: product.is_free,
+                    sounds_count: product.sounds_count,
+                };
 
                 // ✅ Restaurar campos de texto (con validación)
                 const titleInput = document.getElementById('titleInput');
-                if (data.title && titleInput) {
-                    titleInput.value = data.title;
-                    document.getElementById('titleCount').textContent = data.title.length;
+                if (draftData.title) {
+                    if (titleInput) {
+                        titleInput.value = draftData.title;
+                        document.getElementById('titleCount').textContent = draftData.title.length;
+                    }
+                } else {
+
                 }
 
                 const descInput = document.getElementById('descInput');
-                if (data.description && descInput) {
-                    descInput.value = data.description;
-                    document.getElementById('descCount').textContent = data.description.length;
+                if (draftData.description) {
+                    if (descInput) {
+                        descInput.value = data.description;
+                        document.getElementById('descCount').textContent = data.description.length;
+                    }
                 }
 
                 const dateInput = document.getElementById('dateInput');
-                if (data.release_date && dateInput) {
-                    dateInput.value = data.release_date.slice(0, 16);
+                if (dateInput) {
+                    // 🔥 SIEMPRE usar fecha actual, ignorar la del draft
+                    const now = new Date();
+                    const year = now.getFullYear();
+                    const month = String(now.getMonth() + 1).padStart(2, '0');
+                    const day = String(now.getDate()).padStart(2, '0');
+                    dateInput.value = `${year}-${month}-${day}`;
                 }
 
-                const visibilityInput = document.getElementById('visibilityInput');
-                if (data.visibility && visibilityInput) {
-                    visibilityInput.value = data.visibility;
-                }
 
                 // ========================================
                 // 🔥 COVER
@@ -4923,7 +6064,7 @@
                                     preview.style.display = 'block';
                                     dropZone.classList.add('has-image');
                                     filesUploaded.cover = true;
-                                    console.log('✅ Cover restaurado');
+
                                 }
                             }
                         }
@@ -5021,7 +6162,7 @@
                     </div>
                 `;
                                     filesUploaded.audio = true;
-                                    console.log('✅ Audio restaurado');
+
                                 }
                             }
                         }
@@ -5033,6 +6174,27 @@
                             .eq('id', currentDraftId);
                     }
                 }
+                // 🔥 ESPERAR A QUE EL DOM ESTÉ LISTO
+                setTimeout(() => {
+                    const titleInput = document.getElementById('titleInput');
+                    const descInput = document.getElementById('descInput');
+
+                    if (data.title && titleInput) {
+                        titleInput.value = data.title;
+                        const titleCount = document.getElementById('titleCount');
+                        const previewAuthor = document.getElementById('previewCardProducer');
+                        if (previewAuthor) previewAuthor.textContent = 'Willie Inspired'; // 🔥 FIXED: Sin "por"
+                        if (titleCount) titleCount.textContent = data.title.length;
+                    }
+
+                    if (data.description && descInput) {
+                        descInput.value = data.description;
+                        const descCount = document.getElementById('descCount');
+                        if (descCount) descCount.textContent = data.description.length;
+                    }
+
+                    hideLoading(); // 🔥 HIDE LOADING AFTER RESTORE
+                }, 500); // ← Esperar 500ms para que el DOM esté listo
                 // Restaurar tags
                 if (data.tags && Array.isArray(data.tags)) {
                     tags = [...new Set(data.tags)]; // 🔥 Eliminar duplicados
@@ -5067,6 +6229,14 @@
 
                 updatePrice();
 
+                // Restaurar visibilidad y asegurar que esté habilitado
+                const visibilityInput = document.getElementById('visibilityInput');
+                if (visibilityInput) {
+                    if (data.visibility) visibilityInput.value = data.visibility;
+                    visibilityInput.disabled = false;
+                    visibilityInput.classList.remove('skeleton');
+                }
+
                 // Restaurar colaboradores
                 if (data.collaborators && Array.isArray(data.collaborators)) {
                     collaborators = data.collaborators;
@@ -5078,7 +6248,7 @@
                 if (data.completed_steps) completedSteps = data.completed_steps;
                 updateStepUI();
 
-                console.log('✅ Borrador restaurado');
+
 
             } catch (e) {
                 console.error('❌ Error:', e);
@@ -5152,13 +6322,12 @@
         /// AQUI EMEPIEZA LA FUNCION saveDraftAuto
         async function saveDraftAuto() {
             if (isSaving) {
-                console.log('⏳ Ya hay un guardado en progreso, saltando...');
+                // console.log('⏳ Ya hay un guardado en progreso, saltando...'); // Silenciado
                 return;
             }
 
             try {
                 isSaving = true;
-                console.log('💾 Guardando draft...');
 
                 const titleInput = document.getElementById('titleInput');
                 const descInput = document.getElementById('descInput');
@@ -5192,7 +6361,7 @@
                 // 🔥 SUBIR COVER (SI HAY UNO NUEVO)
                 // ========================================
                 if (formData.coverBlob && !filesUploaded.cover) {
-                    console.log('📤 Subiendo cover...');
+
 
                     const coverPath = `${userId}/covers/${Date.now()}_${crypto.randomUUID()}.jpg`;
 
@@ -5206,7 +6375,7 @@
                     if (!coverError) {
                         draftData.cover_url = coverPath;
                         filesUploaded.cover = true;
-                        console.log('✅ Cover subido:', coverPath);
+
                     } else {
                         console.error('❌ Error subiendo cover:', coverError);
 
@@ -5221,7 +6390,7 @@
                 // 🔥 SUBIR KIT (SI HAY UNO NUEVO)
                 // ========================================
                 if (formData.files.kit && !filesUploaded.kit) {
-                    console.log('📤 Subiendo kit...');
+
 
                     const cleanKitName = sanitizeFileName(formData.files.kit.name);
                     const kitPath = `${userId}/kits/${Date.now()}_${crypto.randomUUID()}_${cleanKitName}`;
@@ -5236,7 +6405,7 @@
                     if (!kitError) {
                         draftData.kit_url = kitPath;
                         filesUploaded.kit = true;
-                        console.log('✅ Kit subido:', kitPath);
+
                     } else {
                         console.error('❌ Error subiendo kit:', kitError);
 
@@ -5251,7 +6420,7 @@
                 // 🔥 SUBIR AUDIO (SI HAY UNO NUEVO)
                 // ========================================
                 if (formData.files.audio && !filesUploaded.audio) {
-                    console.log('📤 Subiendo audio...');
+
 
                     const cleanAudioName = sanitizeFileName(formData.files.audio.name);
                     const audioPath = `${userId}/audio/${Date.now()}_${crypto.randomUUID()}_${cleanAudioName}`;
@@ -5266,7 +6435,7 @@
                     if (!audioError) {
                         draftData.audio_url = audioPath;
                         filesUploaded.audio = true;
-                        console.log('✅ Audio subido:', audioPath);
+
                     } else {
                         console.error('❌ Error subiendo audio:', audioError);
 
@@ -5290,7 +6459,7 @@
                         console.error('❌ Error actualizando draft:', updateError);
                         throw updateError;
                     }
-                    console.log('✅ Draft actualizado:', currentDraftId);
+                    // console.log('✅ Draft actualizado:', currentDraftId); // Silenciado
                 } else {
                     const { data, error: insertError } = await supabaseClient
                         .from('drumkit_drafts')
@@ -5303,15 +6472,19 @@
                         throw insertError;
                     }
                     currentDraftId = data.id;
-                    console.log('✅ Draft creado:', currentDraftId);
+
+                    currentDraftId = data.id;
                 }
+
+                // 🔥 MARKER: Tenemos un borrador guardado
+                localStorage.setItem('offszn_has_draft', 'true');
 
             } catch (e) {
                 console.error('❌ Error guardando draft:', e);
 
-                // 🔥 NO mostrar toast si es error de duplicado
+                // 🔥 NO mostrar toast si es error de duplicado (muy común en auto-save)
                 if (!e.message.includes('duplicate') && !e.message.includes('already exists')) {
-                    showToast('Error al guardar: ' + e.message, 'error');
+                    // showToast('Error al guardar: ' + e.message, 'error'); // Opcional: Silenciar toast de error también si es auto-save
                 }
             } finally {
                 isSaving = false;
@@ -5349,6 +6522,26 @@
             return cleanName + ext;
         }
         async function handlePublish() {
+            // 🔥 COOLDOWN: Prevenir spam (5 minutos)
+            const lastPublish = localStorage.getItem('lastPublishTime');
+            if (lastPublish) {
+                const diff = Date.now() - parseInt(lastPublish);
+                const COOLDOWN_TIME = 5 * 60 * 1000; // 5 minutos
+
+                if (diff < COOLDOWN_TIME) {
+                    const remaining = Math.ceil((COOLDOWN_TIME - diff) / 60000);
+                    showToast(`Debes esperar ${remaining} minutos para publicar otro kit.`, 'error');
+                    return;
+                }
+            }
+
+            // 🔥 Force current date on publish
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            document.getElementById('dateInput').value = `${year}-${month}-${day}`;
+
             // Validar todos los steps
             if (!validateStep(1) || !validateStep(2) || !validateStep(3)) {
                 showToast('Completa todos los campos correctamente', 'error');
@@ -5439,7 +6632,7 @@
 
                 // 4. Calcular precio final
                 const basePrice = parseInt(document.getElementById('priceInput').value) || 0;
-                const isFree = document.getElementById('freeToggle').checked;
+                // const isFree = document.getElementById('freeToggle').checked; // Already defined above
                 let finalPrice = basePrice;
 
                 if (!isFree) {
@@ -5486,9 +6679,42 @@
 
                 if (insertError) throw new Error(`Error guardando producto: ${insertError.message}`);
 
-                console.log('✅ Drumkit publicado:', product);
+                // Product published successfully
 
-                // 6. Eliminar draft
+                // 5.5. Generate unique link based on visibility and release date
+                const releaseDate = new Date(document.getElementById('dateInput').value);
+                const now = new Date();
+                const isScheduled = releaseDate > now;
+                const visibility = document.getElementById('visibilityInput').value;
+
+                let uniqueLink = '';
+                let linkType = '';
+
+                // Generate preview token for scheduled or private releases
+                if (isScheduled || visibility === 'private' || visibility === 'unlisted') {
+                    const previewToken = generatePreviewToken();
+                    uniqueLink = `${window.location.origin}/preview/${previewToken}`;
+                    linkType = 'preview';
+
+                    // Save preview token to database
+                    await supabaseClient
+                        .from('products')
+                        .update({ preview_token: previewToken })
+                        .eq('id', product.id);
+                } else {
+                    // Generate public slug for immediate public releases
+                    const publicSlug = generatePublicSlug(document.getElementById('titleInput').value);
+                    uniqueLink = `${window.location.origin}/drumkit/${publicSlug}`;
+                    linkType = 'public';
+
+                    // Save public slug to database
+                    await supabaseClient
+                        .from('products')
+                        .update({ public_slug: publicSlug })
+                        .eq('id', product.id);
+                }
+
+                // 6. Eliminar draft Y LIMPIAR TODO EL ESTADO
                 if (currentDraftId) {
                     const { error: deleteError } = await supabaseClient
                         .from('drumkit_drafts')
@@ -5497,14 +6723,50 @@
 
                     if (deleteError) console.warn('⚠️ No se pudo eliminar draft:', deleteError);
                 }
+                // 🔥 GUARDAR TIMESTAMP PARA COOLDOWN
+                localStorage.setItem('lastPublishTime', Date.now());
 
-                showToast('¡Drumkit publicado exitosamente!', 'success');
+                // 🔥 CLEANUP HAS DRAFT MARKER
+                localStorage.removeItem('offszn_has_draft');
+
+                // 🔥 LIMPIAR TODO EL ESTADO LOCAL
+
+                currentDraftId = null;
+                formData.files = { kit: null, audio: null };
+                formData.coverBlob = null;
+                filesUploaded = { cover: false, kit: false, audio: false };
+                tags = [];
+                collaborators = [];
                 isDirty = false;
 
-                setTimeout(() => {
-                    window.location.href = '/cuenta/mis-kits.html';
-                }, 2000);
+                // 🔥 LIMPIAR TODOS LOS INPUTS Y ESTADO
+                document.getElementById('titleInput').value = '';
+                document.getElementById('descInput').value = '';
+                document.getElementById('dateInput').value = '';
+                document.getElementById('soundsInput').value = '';
+                document.getElementById('priceInput').value = '';
+                document.getElementById('offerInput').value = '';
+                document.getElementById('freeToggle').checked = false;
+                document.getElementById('coverPreview').style.display = 'none';
+                document.getElementById('coverDropZone').classList.remove('has-image');
+                document.getElementById('filePreviewContainer').innerHTML = '';
+                document.getElementById('audioPreviewContainer').innerHTML = '';
+                document.getElementById('collabList').innerHTML = '';
+                renderTags();
 
+                // Show success modal with unique link
+                const modal = document.getElementById('publishSuccessModal');
+                const linkInput = document.getElementById('uniqueLinkInput');
+                const message = document.getElementById('publishMessage');
+
+                linkInput.value = uniqueLink;
+
+                // 🔥 HIDE MESSAGE AS REQUESTED
+                if (message) message.style.display = 'none';
+
+                modal.classList.add('active');
+                btn.disabled = false;
+                btn.innerHTML = 'Publicar Ahora';
             } catch (error) {
                 console.error('❌ Error al publicar:', error);
                 showToast(error.message || 'Error al publicar', 'error');
@@ -5524,293 +6786,153 @@
         // ========================================
         async function quickSave() {
             const btn = event.target.closest('.quick-btn');
-            btn.style.transform = 'scale(0.9)';
+            if (btn) btn.style.transform = 'scale(0.9)';
             await saveDraftAuto();
             showToast('Borrador guardado', 'success');
-            setTimeout(() => btn.style.transform = '', 200);
+            if (btn) setTimeout(() => btn.style.transform = '', 200);
         }
 
-        function quickPreview() {
-            if (currentStep !== 4) {
-                currentStep = 4;
-                updateStepUI();
-                renderPreview();
+        // AI ESTIMATE REMOVED AS REQUESTED below
 
-            }
-        }
-
-        function showEstimate() {
-            const price = parseFloat(document.getElementById('priceInput').value) || 0;
-            const isFree = document.getElementById('freeToggle').checked;
-            const soundsCount = parseInt(document.getElementById('soundsInput').value) || 0;
-            const hasTags = tags.length > 0;
-
-            if (price === 0 && !isFree) {
-                showToast('⚠️ Configura un precio primero', 'error');
-                return;
-            }
-
-            // 🔥 CÁLCULO MEJORADO basado en múltiples factores
-            let baseSales = 30;
-
-            // Bonus por precio competitivo ($15-$40)
-            if (price >= 15 && price <= 40) baseSales += 15;
-
-            // Bonus por cantidad de sonidos
-            if (soundsCount >= 100) baseSales += 10;
-            if (soundsCount >= 200) baseSales += 15;
-
-            // Bonus por tags optimizados
-            if (hasTags) baseSales += 10;
-
-            // Variación aleatoria ±20%
-            const variance = baseSales * (Math.random() * 0.4 - 0.2);
-            baseSales = Math.floor(baseSales + variance);
-
-            const estimatedEarnings = isFree ? 0 : (price * baseSales * 0.85); // 85% después de fees
-            const modal = document.createElement('div');
-            modal.className = 'modal-overlay active';
-            modal.innerHTML = `
-        <div class="modal" style="max-width: 550px;">
-            <div class="modal-header">
-                <h2 class="modal-title">💰 Estimación de Ingresos</h2>
-                <button type="button" class="remove-file" onclick="this.closest('.modal-overlay').remove()">✕</button>
-            </div>
-            <div class="modal-body">
-                <div class="earnings-estimate">
-                    <div class="earnings-title">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="2">
-                            <line x1="12" y1="1" x2="12" y2="23"></line>
-                            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
-                        </svg>
-                        Ganancia Estimada (Primer Mes)
-                    </div>
-                    <div class="earnings-amount">$${estimatedEarnings.toFixed(2)}</div>
-                    <div class="earnings-subtitle">
-                        ~${baseSales} ventas × $${price.toFixed(2)} = $${(baseSales * price).toFixed(2)}
-                    </div>
-                </div>
-                
-                <div style="background: rgba(139, 92, 246, 0.1); padding: 16px; border-radius: 8px; margin-top: 16px; border: 1px solid rgba(139, 92, 246, 0.3);">
-                    <h4 style="font-size: 14px; margin-bottom: 8px; color: #a78bfa;">Factores considerados:</h4>
-                    <div style="font-size: 13px; color: #888; line-height: 1.8;">
-                        ${price >= 15 && price <= 40 ? '✓ Precio competitivo<br>' : ''}
-                        ${soundsCount >= 100 ? '✓ Cantidad de sonidos atractiva<br>' : ''}
-                        ${hasTags ? '✓ Tags optimizados<br>' : ''}
-                        ✓ Comisión de plataforma: 15%
-                    </div>
-                </div>
-                
-                <p style="color: #666; font-size: 12px; margin-top: 16px; line-height: 1.6;">
-                    💡 <strong>Tip:</strong> Los mejores resultados se logran con marketing activo, 
-                    precios entre $15-$40, y al menos 150+ sonidos de calidad.
-                </p>
-            </div>
-        `;
-            document.body.appendChild(modal);
-        }
         // ========================================
-        // SMART TAGS BEATSTARS STYLE (CORREGIDO)
+        // SMART TAGS MANUALES (SOLO CLICK)
         // ========================================
-        let isGeneratingTags = false;
+        let currentSuggestionIndex = 0;
+        let cachedSuggestions = [];
+        let lastAnalyzedTitle = '';
 
-        function autoFillTags() {
-            if (isGeneratingTags) return;
-            isGeneratingTags = true;
-
-            const title = document.getElementById('titleInput').value.toLowerCase();
+        async function autoFillTags() {
+            // Esta función ahora solo es llamada manualmente por el botón
+            const title = document.getElementById('titleInput').value.toLowerCase().trim();
+            const description = document.getElementById('descInput').value.toLowerCase().trim();
             const container = document.getElementById('tagsSuggestions');
+            const btn = document.querySelector('.quick-btn[title="Tags IA"]'); // Botón de sugerir (SELECTOR POR ATRIBUTO)
 
-            // Si no hay título o container, salir
-            if (!title || title.length < 3 || !container) {
-                if (container) container.style.display = 'none';
-                isGeneratingTags = false;
+            if (!title || title.length < 3) {
+
                 return;
             }
 
-            // Tags profesionales
-            const professionalTags = {
-                genres: ['trap', 'drill', 'hyperpop', 'rage', 'plugg', 'jersey club', 'boom bap', 'lo-fi'],
-                moods: ['dark', 'melodic', 'hard', 'ambient', 'chill', 'aggressive', 'emotional', 'wavy'],
-                sounds: ['808', 'vintage', 'analog', 'synth', 'sample', 'foley', 'vocal', 'percussion'],
-                styles: ['modern', 'vintage', 'experimental', 'minimalist', 'layered', 'organic'],
-                others: ['afrobeat', 'soul', 'rnb', 'pop', 'indie', 'electronic']
-            };
+            if (!container) return;
 
-            let suggestions = [];
-            const allTags = [...professionalTags.genres, ...professionalTags.moods, ...professionalTags.sounds, ...professionalTags.styles, ...professionalTags.others];
-
-            // Matching tags
-            const matchingTags = allTags.filter(tag =>
-                title.includes(tag.toLowerCase()) || tag.toLowerCase().includes(title)
-            );
-
-            // Context tags
-            const contextTags = [];
-            if (title.includes('dark') || title.includes('evil')) {
-                contextTags.push('dark', 'trap', 'drill');
-            }
-            if (title.includes('808')) {
-                contextTags.push('808', 'trap', 'hard');
-            }
-            if (title.includes('melodic') || title.includes('melody')) {
-                contextTags.push('melodic', 'emotional', 'ambient');
-            }
-            if (title.includes('vintage') || title.includes('retro')) {
-                contextTags.push('vintage', 'boom bap', 'analog');
-            }
-            if (title.includes('rage')) {
-                contextTags.push('rage', 'hyperpop', 'plugg');
+            // 🔥 INVALIDAR CACHÉ SI CAMBIA EL TÍTULO
+            if (title !== lastAnalyzedTitle) {
+                cachedSuggestions = [];
+                currentSuggestionIndex = 0;
+                lastAnalyzedTitle = title;
             }
 
-            // Combinar y eliminar duplicados
-            suggestions = [...new Set([...matchingTags, ...contextTags])];
-
-            // Si no hay suficientes, agregar populares
-            if (suggestions.length < 6) {
-                const popularTags = ['trap', 'dark', '808', 'melodic', 'drill', 'hard'];
-                const additionalTags = popularTags.filter(tag => !suggestions.includes(tag));
-                suggestions.push(...additionalTags);
+            // Animación de carga en el botón (mantener ícono, solo deshabilitar)
+            if (btn) {
+                btn.style.opacity = '0.6';
+                btn.disabled = true;
             }
 
-            suggestions = suggestions.slice(0, 6);
+            try {
+                // 🔥 RETRASO ARTIFICIAL PARA FEEDBACK VISUAL (500ms)
+                await new Promise(resolve => setTimeout(resolve, 500));
 
-            // Limpiar sugerencias anteriores
-            const existingSuggestions = container.querySelectorAll('.tag-suggestion');
-            existingSuggestions.forEach(el => el.remove());
-
-            if (suggestions.length > 0) {
-                // Filtrar tags ya agregados
-                const availableSuggestions = suggestions.filter(tag => !tags.includes(tag));
-
-                if (availableSuggestions.length > 0) {
-                    availableSuggestions.forEach(tag => {
-                        const chip = document.createElement('div');
-                        chip.className = 'tag-suggestion';
-                        chip.innerHTML = `
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <line x1="12" y1="5" x2="12" y2="19"></line>
-                            <line x1="5" y1="12" x2="19" y2="12"></line>
-                        </svg>
-                        ${tag}
-                    `;
-
-                        chip.onclick = (e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-
-                            if (tags.length < 3) {
-                                addTag(tag);
-                                chip.remove();
-                                setTimeout(() => autoFillTags(), 100);
-                            } else {
-                                const tagsContainer = document.getElementById('tagsContainer');
-                                tagsContainer.classList.add('full');
-                                setTimeout(() => tagsContainer.classList.remove('full'), 300);
-                            }
-                        };
-
-                        container.appendChild(chip);
-                    });
-
-                    container.style.display = 'flex';
-                } else {
-                    container.style.display = 'none';
+                // 1. Generar sugerencias SI no tenemos cacheadas
+                if (cachedSuggestions.length === 0) {
+                    // 🎵 ANALIZAR AUDIO SI EXISTE
+                    let audioAnalysis = { duration: 0, bpm: 0, energy: 0, mood: 'unknown' };
+                    if (formData.files.audio) {
+                        try {
+                            audioAnalysis = await analyzeAudio(formData.files.audio);
+                        } catch (e) { console.log('Audio analysis skip'); }
+                    }
+                    cachedSuggestions = await generateTagsSmart(title, description, audioAnalysis);
                 }
-            } else {
-                container.style.display = 'none';
-            }
 
-            isGeneratingTags = false;
+                // 2. Filtrar las que ya están puestas
+                const availableSuggestions = cachedSuggestions.filter(tag => !tags.includes(tag));
+
+                if (availableSuggestions.length === 0) {
+                    showToast('No hay más sugerencias disponibles', 'info');
+                    container.style.display = 'none';
+                } else {
+                    container.style.display = 'flex';
+                    // 🔥 EFECTO DE FADE PARA NOTAR EL CAMBIO
+                    container.style.opacity = '0';
+                    container.style.transition = 'opacity 0.2s';
+
+                    setTimeout(() => {
+                        container.innerHTML = '';
+
+                        // Mostrar título pequeño
+                        const label = document.createElement('div');
+                        label.style.cssText = 'font-size: 11px; color: #666; width: 100%; margin-bottom: 4px;';
+                        label.textContent = 'Sugerencias (Click para agregar):';
+                        container.appendChild(label);
+
+                        // 3. Tomar las siguientes 3 de forma cíclica
+                        const batch = [];
+                        for (let i = 0; i < 3; i++) {
+                            if (availableSuggestions.length > 0) {
+                                const index = (currentSuggestionIndex + i) % availableSuggestions.length;
+                                batch.push(availableSuggestions[index]);
+                            }
+                        }
+
+                        // Avanzar índice para el próximo click
+                        currentSuggestionIndex = (currentSuggestionIndex + 3) % availableSuggestions.length;
+
+                        // 🔥 SI DIMOS LA VUELTA COMPLETA: LIMPIAR CACHÉ
+                        // Esto fuerza a que el próximo click genere 60 tags NUEVOS desde el master pool
+                        if (currentSuggestionIndex < 3) {
+                            console.log('🔄 Ciclo completado. Limpiando caché para traer tags frescos.');
+                            cachedSuggestions = [];
+                            currentSuggestionIndex = 0;
+                        }
+
+                        // 4. Renderizar
+                        batch.forEach(tag => {
+                            const chip = document.createElement('div');
+                            chip.className = 'tag-suggestion';
+                            chip.textContent = tag;
+                            chip.onclick = () => {
+                                if (tags.length < 3) {
+                                    addTag(tag);
+                                    chip.remove(); // Quitar visualmente al clickar
+                                    // Si ya no quedan sugerencias visibles, ocultar container
+                                    if (container.querySelectorAll('.tag-suggestion').length === 0) {
+                                        container.style.display = 'none';
+                                    }
+                                } else {
+                                    showToast('Límite de 3 tags alcanzado', 'info');
+                                }
+                            };
+                            container.appendChild(chip);
+                        });
+
+                        // Aparecer de nuevo
+                        container.style.opacity = '1';
+                    }, 200);
+                }
+
+            } catch (error) {
+                console.warn('⚠️ Error sugerencias:', error);
+                showToast('Error generando sugerencias', 'error');
+            } finally {
+                if (btn) {
+                    btn.style.opacity = '1';
+                    btn.disabled = false;
+
+                }
+            }
         }
 
         async function quickAutoFillTags() {
-            const title = document.getElementById('titleInput').value;
-
-            if (!title || title.length < 3) {
-                showToast('Escribe un título primero', 'error');
-                return;
+            // Si no estamos en el paso 2, ir al paso 2 primero
+            if (currentStep !== 2) {
+                // Navegar inmediatamente al paso 2
+                window.goToStep(2);
+                // Esperar un momento a que la UI se actualice
+                await new Promise(resolve => setTimeout(resolve, 300));
             }
-
-            const btn = event.target.closest('.quick-btn');
-            const originalHTML = btn.innerHTML;
-
-            // Mostrar loading
-            btn.innerHTML = `
-        <svg style="width:24px;height:24px;animation:spin 1s linear infinite" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="10" opacity="0.25"/>
-            <path d="M12 2 A10 10 0 0 1 22 12" opacity="1"/>
-        </svg>
-    `;
-            btn.disabled = true;
-
-            await new Promise(resolve => setTimeout(resolve, 800));
-
-            // Generar sugerencias
+            // Wrapper para el botón que llama a la lógica principal
             autoFillTags();
-
-            await new Promise(resolve => setTimeout(resolve, 300));
-
-            const suggestions = document.querySelectorAll('.tag-suggestion');
-
-            if (suggestions.length === 0) {
-                showToast('No se encontraron sugerencias', 'error');
-                btn.innerHTML = originalHTML;
-                btn.disabled = false;
-                return;
-            }
-
-            // 🔥 SI HAY 3 TAGS: Mostrar modal de confirmación
-            if (tags.length === 3) {
-                const modal = document.createElement('div');
-                modal.className = 'modal-overlay active';
-                modal.innerHTML = `
-            <div class="modal" style="max-width: 500px;">
-                <div class="modal-header">
-                    <h2 class="modal-title">🏷️ Reemplazar Tags</h2>
-                    <button type="button" class="remove-file" onclick="this.closest('.modal-overlay').remove()">✕</button>
-                </div>
-                <div class="modal-body">
-                    <p style="color: #888; margin-bottom: 20px;">Ya tienes 3 tags. ¿Quieres reemplazarlos con sugerencias nuevas?</p>
-                    
-                    <div style="background: rgba(239, 68, 68, 0.1); padding: 16px; border-radius: 8px; margin-bottom: 16px;">
-                        <h4 style="font-size: 14px; margin-bottom: 12px; color: #ef4444;">Tags Actuales:</h4>
-                        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                            ${tags.map(tag => `<div class="tag-chip">${tag}</div>`).join('')}
-                        </div>
-                    </div>
-                    
-                    <div style="background: rgba(34, 197, 94, 0.1); padding: 16px; border-radius: 8px;">
-                        <h4 style="font-size: 14px; margin-bottom: 12px; color: #22c55e;">Sugerencias IA:</h4>
-                        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                            ${Array.from(suggestions).slice(0, 3).map(s =>
-                    `<div class="tag-chip" style="background: rgba(34, 197, 94, 0.2);">${s.textContent.trim()}</div>`
-                ).join('')}
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">Cancelar</button>
-                    <button class="btn btn-primary" onclick="replaceTagsWithAI()">Reemplazar Tags</button>
-                </div>
-            </div>
-        `;
-                document.body.appendChild(modal);
-            } else {
-                // Si hay menos de 3, agregar directamente
-                const slotsAvailable = 3 - tags.length;
-                for (let i = 0; i < Math.min(slotsAvailable, suggestions.length); i++) {
-                    if (suggestions[i]) {
-                        suggestions[i].click();
-                    }
-                }
-                showToast(`${Math.min(slotsAvailable, suggestions.length)} tags agregadas`, 'success');
-            }
-
-            btn.innerHTML = originalHTML;
-            btn.disabled = false;
         }
-
         // 🔥 NUEVA FUNCIÓN: Reemplazar tags con confirmación
         window.replaceTagsWithAI = function () {
             const modal = document.querySelector('.modal-overlay');
@@ -5828,7 +6950,7 @@
             }
 
             modal.remove();
-            showToast('Tags reemplazados exitosamente', 'success');
+            showToast('Tags reemplazados', 'success');
             saveDraftAuto();
         };
         // ========================================
@@ -5850,12 +6972,11 @@
             if (btn) {
                 if (isLooping) {
                     btn.classList.add('active');
-                    btn.style.background = 'rgba(0, 255, 136, 0.2)';
-                    btn.style.borderColor = '#00ff88';
                 } else {
                     btn.classList.remove('active');
-                    btn.style.background = 'rgba(255, 255, 255, 0.05)';
-                    btn.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                    // Restaurar estilos por defecto si los hubiera
+                    btn.style.background = '';
+                    btn.style.borderColor = '';
                 }
             }
 
@@ -5869,7 +6990,7 @@
             const formatTime = (seconds) => {
                 const mins = Math.floor(seconds / 60);
                 const secs = Math.floor(seconds % 60);
-                return `${mins}:${secs.toString().padStart(2, '0')}`;
+                return `${mins}:${secs.toString().padStart(2, '0')} `;
             };
 
             const timeEl = document.getElementById('playerTime');
@@ -5999,7 +7120,7 @@
         let collabSpinnerInterval = null;
         let collabSpinnerTimeout = null;
 
-        function startCollabSpinner(index, delta) {
+        window.startCollabSpinner = function (index, delta) {
             adjustCollabPercent(index, delta);
             collabSpinnerTimeout = setTimeout(() => {
                 collabSpinnerInterval = setInterval(() => {
@@ -6008,7 +7129,7 @@
             }, 400);
         }
 
-        function stopCollabSpinner() {
+        window.stopCollabSpinner = function () {
             if (collabSpinnerTimeout) clearTimeout(collabSpinnerTimeout);
             if (collabSpinnerInterval) clearInterval(collabSpinnerInterval);
             collabSpinnerTimeout = null;
@@ -6133,25 +7254,83 @@
                 currentStep = 1;
                 updateStepUI();
 
+                // 🔥 HABILITAR SELECT DE VISIBILIDAD
+                const visibilityInput = document.getElementById('visibilityInput');
+                if (visibilityInput) {
+                    visibilityInput.disabled = false;
+                    visibilityInput.classList.remove('skeleton'); // Por si acaso
+                }
+
                 showToast('Producto cargado - Ahora puedes editarlo', 'success');
+
+                // ========================================
+                // ✅ FINALIZAR: OCULTAR LOADING SIEMPRE
+                // ========================================
+                console.log('✅ Draft cargado correctamente');
 
             } catch (error) {
                 console.error('❌ Error cargando producto:', error);
-                showToast('Error al cargar producto: ' + error.message, 'error');
+
+                // Si es un error crítico, mostrar toast
+                if (error.message && !error.message.includes('JSON')) {
+                    showToast('Error al cargar producto: ' + error.message, 'error');
+                }
+
                 // Deshabilitar/habilitar input según cantidad de tags
                 if (tags.length >= 3) {
-                    input.disabled = true;
-                    input.placeholder = '';
-                    input.style.cursor = 'not-allowed';
-                    container.classList.add('full'); // 🔥 AGREGAR
-                } else {
-                    input.disabled = false;
-                    input.placeholder = 'Escribe un tag...';
-                    input.style.cursor = 'text';
-                    container.classList.remove('full'); // 🔥 AGREGAR
+                    const input = document.getElementById('tagInput');
+                    const container = document.getElementById('tagsContainer');
+                    if (input) {
+                        input.disabled = true;
+                        input.placeholder = '';
+                        input.style.cursor = 'not-allowed';
+                    }
+                    if (container) container.classList.add('full');
                 }
+            } finally {
+                // 🔥 ESTO ASEGURA QUE EL LOADING SE QUITE PASE LO QUE PASE
+                setTimeout(() => {
+                    hideLoading();
+                }, 500);
             }
         }
+
+        // ========================================
+        // 🔥 SETUP VALIDATION LISTENERS (CLEAR ON INPUT)
+        // ========================================
+        function setupValidationListeners() {
+            const inputs = ['titleInput', 'dateInput', 'priceInput'];
+
+            inputs.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.addEventListener('input', () => {
+                        el.classList.remove('error');
+                        const errorMsg = el.parentNode.querySelector('.error-message');
+                        if (errorMsg) errorMsg.remove();
+                    });
+                }
+            });
+
+            // Para archivos es más complejo, lo hacemos en sus respectivas funciones de drop/change
+            // Pero agregamos listener genérico para clicks en dropzones
+            const zones = ['coverDropZone', 'kitDropZone', 'audioDropZone']; // Ajustar IDs según existan
+            zones.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.onclick = () => {
+                        el.classList.remove('error');
+                        const errorMsg = el.parentNode.querySelector('.error-message');
+                        if (errorMsg) errorMsg.remove();
+                    };
+                }
+            });
+        }
+
+        // Llamar al inicio
+        document.addEventListener('DOMContentLoaded', () => {
+            setupValidationListeners();
+        });
 
         // Función para detectar si viene un productId en la URL
         window.addEventListener('DOMContentLoaded', async () => {
@@ -6207,6 +7386,28 @@
                 console.warn('No se pudo guardar preferencia:', e);
             }
         };
+        // ========================================
+        // 🔥 CERRAR MODALES AL CLICK FUERA
+        // ========================================
+        document.addEventListener('click', (e) => {
+            // 1. MODAL OVERLAY (crop, draft saved, first time)
+            if (e.target.classList.contains('modal-overlay')) {
+                // 🔥 Evitar cerrar el modal de éxito al hacer clic fuera
+                if (e.target.id === 'publishSuccessModal') return;
+
+                e.target.classList.remove('active');
+            }
+
+            // 2. HELP MODAL OVERLAY
+            if (e.target.classList.contains('help-modal-overlay')) {
+                e.target.classList.remove('active');
+            }
+
+            // 3. EXIT MODAL OVERLAY
+            if (e.target.classList.contains('exit-modal-overlay')) {
+                e.target.classList.remove('active');
+            }
+        });
         // 🔥 Abrir modal de ayuda
         window.openHelpModal = function (modalId) {
             const modal = document.getElementById(modalId);
@@ -6295,6 +7496,133 @@
                 }
             });
         }
+        // ========================================
+        // CONFIRMACIÓN DE SALIDA
+        // ========================================
+        window.confirmExit = function () {
+            if (isDirty) {
+                document.getElementById('exitConfirmModal').classList.add('active');
+            } else {
+                window.location.href = '/dashboard.html';
+            }
+        };
+
+        window.exitWithoutSaving = function () {
+            isDirty = false; // Evitar trigger de beforeunload
+            window.location.href = '/dashboard.html';
+        };
+
+        window.saveAndExit = async function () {
+            const btn = document.getElementById('saveExitBtn');
+            btn.innerHTML = 'Guardando...';
+            btn.disabled = true;
+
+            await saveDraftAuto();
+
+            btn.innerHTML = 'Guardar y Salir';
+            btn.disabled = false;
+
+            isDirty = false;
+            window.location.href = '/dashboard.html';
+        };
+
+        window.closeExitModal = function () {
+            document.getElementById('exitConfirmModal').classList.remove('active');
+        };
+
+        // 🔥 BEFOREUNLOAD: Prevenir salida accidental
+        window.addEventListener('beforeunload', (e) => {
+            if (isDirty) {
+                e.preventDefault();
+                e.returnValue = '';
+            }
+        });
+
+        // 🔥 FUNCION FALTANTE: showEstimate
+        window.showEstimate = function () {
+            // Cálculo simple de ejemplo o modal informativo
+            const price = parseFloat(document.getElementById('priceInput').value) || 0;
+            const sales = 100; // Ejemplo
+            const total = (price * sales * 0.9).toFixed(2); // 10% fee
+
+            showToast(`Estimado: 100 ventas = $${total} (neto)`, 'success');
+        };
+        // 🔥 TOAST PREMIUM FUNCTION (OVERRIDE - NO DUPLICATES)
+        window.showToast = function (message, type = 'info') {
+            let container = document.getElementById('toastContainer');
+            if (!container) {
+                container = document.createElement('div');
+                container.id = 'toastContainer';
+                container.className = 'toast-container';
+                document.body.appendChild(container);
+            }
+
+            // 🔥 CHECK FOR DUPLICATES
+            const existingToasts = container.querySelectorAll('.toast-message');
+            for (let t of existingToasts) {
+                if (t.textContent === message) {
+                    // Si ya existe, hacer vibrar o resaltar el existente y salir
+                    const parent = t.closest('.toast');
+                    parent.classList.remove('shake');
+                    void parent.offsetWidth; // Trigger reflow
+                    parent.classList.add('shake');
+                    return;
+                }
+            }
+
+            const icons = {
+                success: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>`,
+                error: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`,
+                info: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>`
+            };
+
+            const titles = {
+                success: 'Borrador Guardado',
+                error: 'Error',
+                info: 'Información'
+            };
+
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `
+            <div class="toast-icon">
+                ${icons[type] || icons.info}
+            </div>
+            <div class="toast-content">
+                <span class="toast-message" style="font-weight: 500;">${message}</span>
+            </div>
+        `;
+
+            container.appendChild(toast);
+
+            // Trigger reflow
+            void toast.offsetWidth;
+            toast.classList.add('show');
+
+            // Eliminar después de 4s
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 400);
+            }, 4000);
+
+        };
+
+        // 🔥 LOADING FUNCTIONS (FALTANTES)
+        window.showLoading = function () {
+            const overlay = document.getElementById('loadingOverlay');
+            if (overlay) {
+                overlay.style.display = 'flex';
+                overlay.classList.add('active');
+            }
+        };
+
+        window.hideLoading = function () {
+            const overlay = document.getElementById('loadingOverlay');
+            if (overlay) {
+                overlay.style.display = 'none';
+                overlay.classList.remove('active');
+            }
+        };
     </script>
 
 
@@ -6305,7 +7633,7 @@
                 <h2 class="modal-title">Borrador Guardado</h2>
             </div>
             <div class="modal-body" style="text-align: center; padding: 32px;">
-                <p style="color: #888; margin-bottom: 24px;">Tu progreso ha sido guardado exitosamente</p>
+                <p style="color: #888; margin-bottom: 24px;">Tu progreso ha sido guardado</p>
                 <div style="display: flex; flex-direction: column; gap: 12px;">
                     <button class="btn btn-primary" onclick="window.location.href='/dashboard.html'">
                         Dashboard
@@ -6317,12 +7645,49 @@
             </div>
         </div>
     </div>
+
+    <!-- Modal Confirmación Salida -->
+    <div class="modal-overlay" id="exitConfirmModal">
+        <div class="modal" style="max-width: 400px;">
+            <div class="modal-header">
+                <h2 class="modal-title">¿Salir sin guardar?</h2>
+                <button type="button" class="remove-file" onclick="closeExitModal()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body" style="text-align: center; padding: 24px;">
+                <p style="color: #bbb; margin-bottom: 24px; font-size: 15px;">
+                    Tienes cambios sin guardar. Si sales ahora, tu progreso se perderá (o quedará en una versión
+                    anterior).
+                </p>
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <button id="saveExitBtn" class="btn btn-primary" onclick="saveAndExit()"
+                        style="width: 100%; justify-content: center;">
+                        Guardar Borrador y Salir
+                    </button>
+                    <button class="btn btn-secondary" onclick="exitWithoutSaving()"
+                        style="width: 100%; justify-content: center; border-color: #ef4444; color: #ef4444; background: rgba(239, 68, 68, 0.05);">
+                        Salir sin Guardar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
     <!-- Modal Primera Vez -->
     <div class="modal-overlay" id="firstTimeModal">
         <div class="modal" style="max-width: 700px;">
             <div class="modal-header">
-                <h2 class="modal-title">🎵 Bienvenido a OFFSZN Upload</h2>
-                <button type="button" class="remove-file" onclick="closeFirstTimeModal()">✕</button>
+                <h2 class="modal-title">Bienvenido a OFFSZN Upload</h2>
+                <button type="button" class="remove-file" onclick="closeFirstTimeModal()" title="Cerrar tutorial"
+                    style="display: flex; align-items: center; justify-content: center;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
             </div>
             <div class="modal-body" style="text-align: center; padding: 32px;">
                 <p style="color: #888; margin-bottom: 24px; line-height: 1.6;">
@@ -6331,17 +7696,17 @@
 
                 <div
                     style="background: rgba(255,255,255,0.03); padding: 24px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.08); margin-bottom: 24px;">
-                    <h3 style="font-size: 16px; margin-bottom: 16px; color: #fff;">📋 Proceso rápido en 4 pasos:</h3>
+                    <h3 style="font-size: 16px; margin-bottom: 16px; color: #fff;">Proceso rápido en 4 pasos:</h3>
                     <div style="text-align: left; color: #aaa; font-size: 14px; line-height: 2;">
-                        <div>✓ <strong>Paso 1:</strong> Sube tus archivos (cover, drumkit .zip, audio preview)</div>
-                        <div>✓ <strong>Paso 2:</strong> Configura precio y tags</div>
-                        <div>✓ <strong>Paso 3:</strong> Agrega colaboradores (opcional)</div>
-                        <div>✓ <strong>Paso 4:</strong> Revisa y publica</div>
+                        <div><strong>Paso 1:</strong> Sube tus archivos (cover, drumkit .zip, audio preview)</div>
+                        <div><strong>Paso 2:</strong> Configura precio y tags</div>
+                        <div><strong>Paso 3:</strong> Agrega colaboradores (opcional)</div>
+                        <div><strong>Paso 4:</strong> Revisa y publica</div>
                     </div>
                 </div>
 
                 <p style="color: #666; font-size: 13px; margin-bottom: 24px;">
-                    💡 Tip: Usa los íconos <span
+                    Tip: Usa los íconos <span
                         style="display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; border-radius: 50%; background: rgba(255,255,255,0.1); font-size: 11px; margin: 0 4px;">?</span>
                     para obtener ayuda en cada campo
                 </p>
@@ -6356,7 +7721,12 @@
     <!-- Modal de Ayuda Metadata & Tags -->
     <div class="help-modal-overlay" id="helpModalMetadata">
         <div class="help-modal">
-            <button class="help-modal-close" onclick="closeHelpModal('helpModalMetadata')">✕</button>
+            <button class="help-modal-close" onclick="closeHelpModal('helpModalMetadata')" title="Cerrar ayuda">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
             <h3 class="help-modal-title">Metadata & Tags help</h3>
             <p class="help-modal-text">
                 Critical data that helps listeners and algorithms find your music.
@@ -6375,7 +7745,12 @@
     <!-- Modal de Ayuda Precio -->
     <div class="help-modal-overlay" id="helpModalPrice">
         <div class="help-modal">
-            <button class="help-modal-close" onclick="closeHelpModal('helpModalPrice')">✕</button>
+            <button class="help-modal-close" onclick="closeHelpModal('helpModalPrice')" title="Cerrar ayuda">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
             <h3 class="help-modal-title">Pricing Strategy</h3>
             <p class="help-modal-text">
                 Set competitive prices to maximize sales while valuing your work.
@@ -6390,6 +7765,98 @@
             </div>
         </div>
     </div>
+
+    <!-- Modal de Éxito de Publicación -->
+    <div class="modal-overlay" id="publishSuccessModal">
+        <div class="modal" style="max-width: 500px;">
+            <div class="modal-header">
+                <h2 class="modal-title">Drumkit Publicado</h2>
+            </div>
+            <div class="modal-body" style="text-align: center; padding: 32px;">
+
+                <p style="color: #888; margin-bottom: 24px; display: none;" id="publishMessage">Tu drumkit ha sido
+                    publicado</p>
+
+                <div id="uniqueLinkContainer"
+                    style="background: rgba(255,255,255,0.03); padding: 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.08); margin-bottom: 24px;">
+                    <p style="color: #aaa; font-size: 13px; margin-bottom: 12px;">Link a tu producto:</p>
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <input type="text" id="uniqueLinkInput" readonly
+                            style="flex: 1; background: #1a1a1a; border: 1px solid #2a2a2a; padding: 12px; border-radius: 8px; color: #fff; font-size: 14px; font-family: monospace;">
+                        <button class="btn btn-secondary" onclick="copyUniqueLink()" style="padding: 12px 20px;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <button class="btn btn-primary" onclick="window.location.href='/dashboard.html'">
+                        Ir al Dashboard
+                    </button>
+                    <button class="btn btn-secondary" onclick="window.location.href='/cuenta/mis-kits.html'">
+                        Ver Mis Productos
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        // ========================================
+        // 🔥 FIX: QUICK ACTIONS & PREVIEW TEXT
+        // ========================================
+
+        // 1. Scroll to Tags
+        function scrollToTags() {
+            // Cambiar al paso 2 si no estamos ahí
+            if (currentStep !== 2) {
+                // Navegar al paso 2 (simulando clic en stepper o lógica interna)
+                const step2Btn = document.querySelector('.step[data-step="2"]');
+                if (step2Btn) step2Btn.click();
+            }
+
+            // Esperar un poco para que el DOM se actualice si hubo cambio de paso
+            setTimeout(() => {
+                const tagsContainer = document.getElementById('tagsContainer');
+                if (tagsContainer) {
+                    tagsContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    // Resaltar visualmente
+                    tagsContainer.style.transition = 'box-shadow 0.3s';
+                    tagsContainer.style.boxShadow = '0 0 0 2px var(--primary-color)';
+                    setTimeout(() => tagsContainer.style.boxShadow = 'none', 1000);
+                }
+            }, 100);
+        }
+
+        // 2. Attach Listener to TAGS Quick Action
+        document.addEventListener('DOMContentLoaded', () => {
+            // Buscar el botón de TAGS (asumiendo que tiene un tooltip o texto "TAGS")
+            const quickBtns = document.querySelectorAll('.quick-btn');
+            quickBtns.forEach(btn => {
+                const tooltip = btn.querySelector('.quick-btn-tooltip');
+                if (tooltip && tooltip.textContent.trim() === 'TAGS') {
+                    btn.onclick = scrollToTags; // Attach handler
+                }
+            });
+        });
+
+        // 3. Fix Preview Text (Remove "por ")
+        // Observar cambios en el preview para corregir el texto dinámicamente
+        const observer = new MutationObserver((mutations) => {
+            const producerEl = document.getElementById('previewCardProducer');
+            if (producerEl && producerEl.textContent.includes('por Willie Inspired')) {
+                producerEl.textContent = 'Willie Inspired';
+            }
+        });
+
+        const previewCard = document.querySelector('.drumkit-card');
+        if (previewCard) {
+            observer.observe(previewCard, { childList: true, subtree: true, characterData: true });
+        }
+    </script>
 </body>
 
 </html>
