@@ -248,7 +248,7 @@ function mostrarProductos(products) {
                     <span class="beat-price ${product.is_free ? 'free' : ''}">${priceText}</span>
                     ${product.bpm ? `<span class="beat-bpm">${product.bpm} BPM</span>` : ''}
                 </div>
-                <a href="/producto/${product.id}" class="btn-view-product">Ver Producto</a>
+                <a href="/producto.html?id=${product.id}" class="btn-view-product">Ver Producto</a>
             </div>
         </div>
         `;
