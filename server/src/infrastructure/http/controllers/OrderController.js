@@ -7,114 +7,85 @@ const client = new MercadoPagoConfig({ accessToken: token });
 // ------------------------------------------------------------------
 // 1. CREAR PREFERENCIA (CON DEBUG DE PRECIO Y URL)
 // ------------------------------------------------------------------
+const TASA_CAMBIO_USD_PEN = 3.80; 
+
 export const createMercadoPagoPreference = async (req, res) => {
-    const traceId = Date.now(); // ID para rastrear logs de esta petición
     try {
-        const userId = req.user.userId;
+        const userId = req.user.userId; // Asumiendo que tu middleware pone esto aquí
         const { cartItems } = req.body;
 
-        if (!cartItems?.length) {
-            console.warn(`⚠️ [${traceId}] Carrito vacío recibido`);
-            return res.status(400).json({ error: 'Carrito vacío.' });
+        if (!cartItems?.length) return res.status(400).json({ error: 'Carrito vacío' });
 
-        }
-
-        // Validar en DB
+        // 1. Obtener productos reales de la BD para seguridad (no confiar en el frontend)
         const productIds = cartItems.map(item => item.id);
+        
+        // OJO: Tu ID es bigint (numero), asegurate que productIds sean numeros
         const { data: dbProducts, error } = await supabase
             .from('products')
-            .select('id, name, price_basic, image_url')
+            .select('id, name, price_basic, image_url, currency') // Traemos la moneda original
             .in('id', productIds);
 
-        if (error) {
-            console.error(`🔴 [${traceId}] Error DB:`, error);
-            throw new Error('Error DB');
-        }
+        if (error) throw error;
 
         const line_items = [];
-        cartItems.forEach(cartItem => {
-            const product = dbProducts.find(p => p.id === cartItem.id);
-            if (product) {
-                let finalPrice = parseFloat(product.price_basic);
-                if (finalPrice < 1000) {
-                    console.warn(`⚠️ [${traceId}] Precio bajo detectado. Ajustando a 10000.`);
-                    finalPrice = 10000;
-                }
+        let totalEnSoles = 0;
 
-                line_items.push({
-                    id: product.id.toString(),
-                    title: product.name.substring(0, 250),
-                    description: 'Producto OFFSZN',
-                    picture_url: product.image_url,
-                    quantity: 1,
-                    currency_id: 'COP',
-                    unit_price: finalPrice
-                });
+        dbProducts.forEach(product => {
+            let unitPrice = parseFloat(product.price_basic);
+            
+            // --- CONVERSIÓN DE MONEDA ---
+            // Si el producto está en USD, lo pasamos a PEN
+            if (product.currency === 'USD') {
+                unitPrice = unitPrice * TASA_CAMBIO_USD_PEN;
+            }
+            // Si el producto ya está en PEN, lo dejamos igual.
+
+            // Validación de mínimo de Mercado Pago Perú (aprox 1 Sol)
+            if (unitPrice < 1) unitPrice = 1;
+
+            totalEnSoles += unitPrice;
+
+            line_items.push({
+                id: product.id.toString(),
+                title: product.name,
+                picture_url: product.image_url,
+                quantity: 1,
+                currency_id: 'PEN', // ¡SIEMPRE PEN PORQUE TU CUENTA ES PERUANA!
+                unit_price: Number(unitPrice.toFixed(2))
+            });
+        });
+
+        // Referencia externa para saber quién compró cuando llegue el Webhook
+        // Usamos JSON string para pasar metadata útil
+        const externalRef = JSON.stringify({
+            u_id: userId,
+            ts: Date.now()
+        });
+
+        const preference = new Preference(client);
+        
+        const result = await preference.create({
+            body: {
+                items: line_items,
+                // URLs a las que MP redirige al usuario
+                back_urls: {
+                    success: "https://offszn.onrender.com/pages/pago-exitoso.html",
+                    failure: "https://offszn.onrender.com/pages/cart.html",
+                    pending: "https://offszn.onrender.com/pages/cart.html"
+                },
+                auto_return: "approved",
+                external_reference: externalRef, // Aquí guardamos el ID del usuario
+                statement_descriptor: "OFFSZN",
+                binary_mode: true // Solo acepta pagos aprobados o rechazados (no pendientes)
             }
         });
 
-        const uniqueRef = `${userId}_${traceId}`;
-
-        const preference = new Preference(client);
-
-        const preferenceData = {
-
-            body: {
-
-                items: line_items,
-
-                binary_mode: true,
-
-                payment_methods: { excluded_payment_types: [{ id: "ticket" }, { id: "atm" }], installments: 1 },
-
-                back_urls: {
-
-                    success: `https://offszn.onrender.com/pages/success.html`,
-
-                    failure: `https://offszn.onrender.com/pages/marketplace.html`,
-
-                    pending: `https://offszn.onrender.com/pages/marketplace.html`
-
-                },
-
-                auto_return: 'approved',
-
-                notification_url: `https://offszn-academy.onrender.com/api/orders/mercadopago-webhook`,
-
-                external_reference: uniqueRef,
-
-                statement_descriptor: "OFFSZN"
-
-            }
-
-        };
-
-
-
-        const result = await preference.create(preferenceData);
-
-        const paymentUrl = result.init_point;
-
-
-
-        console.log(`✅ [${traceId}] Preferencia Creada OK`);
-
-        console.log(`🔗 [${traceId}] URL: ${paymentUrl}`);
-
-
-
-        res.status(200).json({ url: paymentUrl, externalReference: uniqueRef });
-
-
+        res.status(200).json({ url: result.init_point });
 
     } catch (err) {
-
-        console.error(`🔴 [${traceId}] EXCEPTION:`, err);
-
+        console.error("Error creando preferencia:", err);
         res.status(500).json({ error: err.message });
-
     }
-
 };
 
 
@@ -285,90 +256,49 @@ const processPaymentAudit = async (paymentId) => {
 
 // ------------------------------------------------------------------
 
-async function saveOrderToDB(paymentInfo) {
+async function saveOrderToDB(paymentData) {
+    // paymentData viene de la API de Mercado Pago
+    
+    // Decodificar referencia para sacar el User ID
+    const metadata = JSON.parse(paymentData.external_reference);
+    const userId = metadata.u_id;
 
-    const userId = paymentInfo.external_reference?.split('_')[0];
-
-    if (!userId) {
-
-        console.error("❌ [DB] No UserID in reference");
-
-        return;
-
-    }
-
-
-
-    console.log(`💾 [DB] Guardando orden para User: ${userId}`);
-
-
-
-    const { data: order, error: errOrder } = await supabase
-
+    // 1. Insertar Orden
+    const { data: order, error: orderError } = await supabase
         .from('orders')
-
         .insert({
-
             user_id: userId,
-
-            paypal_order_id: paymentInfo.id.toString(),
-
-            status: 'completed',
-
-            total_price: paymentInfo.transaction_amount
-
+            transaction_id: paymentData.id.toString(), // ID de Mercado Pago
+            status: paymentData.status, // 'approved'
+            total_price: paymentData.transaction_amount
         })
-
-        .select('id')
-
+        .select()
         .single();
 
-
-
-    if (errOrder) {
-
-        if (errOrder.code === '23505') {
-
-            console.log("⚠️ [DB] Orden ya existía (Duplicado controlado).");
-
-            return;
-
-        }
-
-        console.error("🔴 [DB] Error insertando orden:", errOrder);
-
+    if (orderError) {
+        console.error("Error guardando orden:", orderError);
         return;
-
     }
 
-
-
-    // Items
-
-    const items = paymentInfo.additional_info?.items || [];
-
-    if (items.length) {
-
-        const itemsData = items.map(i => ({
-
-            order_id: order.id,
-
-            product_id: parseInt(i.id),
-
+    // 2. Insertar Items (Necesitamos saber qué compró)
+    // Mercado Pago a veces no devuelve los items en el webhook de pago simple.
+    // ESTRATEGIA: Como ya cobramos, asumimos que son los items de la preferencia.
+    // O mejor: Guardar los items en una tabla 'pending_orders' antes de ir a MP y moverlos aquí.
+    
+    // PARA MVP RÁPIDO:
+    // El 'paymentData.additional_info.items' suele traer la info si se configuró bien.
+    const items = paymentData.additional_info?.items || [];
+    
+    if (items.length > 0) {
+        const orderItems = items.map(item => ({
+            order_id: order.id, // ID bigint generado
+            product_id: parseInt(item.id),
             quantity: 1,
-
-            price_at_purchase: parseFloat(i.unit_price)
-
+            price_at_purchase: item.unit_price
         }));
 
-        const { error: errItems } = await supabase.from('order_items').insert(itemsData);
-
-        if (errItems) console.error("🔴 [DB] Error insertando items:", errItems);
-
-        else console.log("🎉 [DB] Items guardados correctamente.");
-
+        await supabase.from('order_items').insert(orderItems);
     }
-
 }
 
 
