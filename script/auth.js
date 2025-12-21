@@ -138,6 +138,55 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // ============================================
+  // 🆕 OAUTH - GOOGLE
+  // ============================================
+  window.signUpWithGoogle = async function() {
+    try {
+      const redirectTo = redirectParam === 'carrito' 
+        ? `${window.location.origin}/carrito.html`
+        : `${window.location.origin}/pages/welcome.html`;
+
+      const { data, error } = await supabaseClient.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: redirectTo
+        }
+      });
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error con Google OAuth:', error);
+      showMessage(messageDiv, 'Error al iniciar sesión con Google', true);
+    }
+  };
+
+  // ============================================
+  // 🆕 OAUTH - APPLE
+  // ============================================
+  window.signUpWithApple = async function() {
+    try {
+      const redirectTo = redirectParam === 'carrito' 
+        ? `${window.location.origin}/carrito.html`
+        : `${window.location.origin}/pages/welcome.html`;
+
+      const { data, error } = await supabaseClient.auth.signInWithOAuth({
+        provider: 'apple',
+        options: {
+          redirectTo: redirectTo
+        }
+      });
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error con Apple OAuth:', error);
+      showMessage(messageDiv, 'Error al iniciar sesión con Apple', true);
+    }
+  };
+
+  // ============================================
+  // HELPER: Mostrar mensajes
+  // ============================================
   function showMessage(element, message, isError = true) {
     if (!element) return;
     element.textContent = message;
