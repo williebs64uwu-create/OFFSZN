@@ -16,7 +16,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const userData = {
     nickname: '',
     firstName: '',
-    lastName: '',
     role: '',
     genres: [],
     daws: [],
@@ -39,12 +38,35 @@ document.addEventListener('DOMContentLoaded', () => {
   // ELEMENTOS DEL DOM
   // ============================================
   const nicknameInput = document.getElementById('nickname');
+  const firstNameInput = document.getElementById('firstName');
+  const roleSelect = document.getElementById('role');
   const nicknameStatus = document.getElementById('nicknameStatus');
   const nextBtn = document.getElementById('nextBtn');
   const backBtn = document.getElementById('backBtn');
   const skipBtn = document.getElementById('skipTop');
   const successModal = document.getElementById('successModal');
   const goToDashboardBtn = document.getElementById('goToDashboard');
+
+  // ============================================
+  // UTILIDADES
+  // ============================================
+  function normalizeSpaces(str) {
+    return str.replace(/\s+/g, ' ').trim();
+  }
+
+  function isValidYouTubeURL(url) {
+    if (!url) return true; // Opcional
+    const patterns = [
+      /^https?:\/\/(www\.)?youtube\.com\/.+$/,
+      /^https?:\/\/youtu\.be\/.+$/
+    ];
+    return patterns.some(pattern => pattern.test(url));
+  }
+
+  function isValidSpotifyURL(url) {
+    if (!url) return true; // Opcional
+    return /^https?:\/\/open\.spotify\.com\/.+$/.test(url);
+  }
 
   // ============================================
   // FUNCIONES DE CHIPS
@@ -57,11 +79,9 @@ document.addEventListener('DOMContentLoaded', () => {
     chip.onclick = () => {
       const idx = userData[category].indexOf(text);
       if (idx === -1) {
-        // Agregar
         userData[category].push(text);
         chip.classList.add('selected');
       } else {
-        // Quitar
         userData[category].splice(idx, 1);
         chip.classList.remove('selected');
       }
@@ -86,9 +106,31 @@ document.addEventListener('DOMContentLoaded', () => {
     nicknameAvailable = false;
     nextBtn.disabled = true;
 
-    if (nickname.length < 3 || nickname.includes(' ')) {
-      nicknameStatus.textContent = 'Inválido (mínimo 3 caracteres, sin espacios).';
+    if (nickname.length === 0) {
+      nicknameStatus.textContent = '';
+      nicknameStatus.className = 'nickname-status';
+      validateCurrentStep();
+      return;
+    }
+
+    if (nickname.length < 3) {
+      nicknameStatus.textContent = 'Debe tener al menos 3 caracteres';
       nicknameStatus.className = 'nickname-status taken';
+      validateCurrentStep();
+      return;
+    }
+
+    if (/\s/.test(nickname)) {
+      nicknameStatus.textContent = 'No puede contener espacios';
+      nicknameStatus.className = 'nickname-status taken';
+      validateCurrentStep();
+      return;
+    }
+
+    if (!/^[a-zA-Z0-9_-]+$/.test(nickname)) {
+      nicknameStatus.textContent = 'Solo puede contener letras, números, guiones y guiones bajos';
+      nicknameStatus.className = 'nickname-status taken';
+      validateCurrentStep();
       return;
     }
 
@@ -106,30 +148,34 @@ document.addEventListener('DOMContentLoaded', () => {
         const data = await response.json();
 
         if (response.ok && data.available) {
-          nicknameStatus.textContent = '¡Nickname disponible!';
+          nicknameStatus.textContent = 'Nickname disponible';
           nicknameStatus.className = 'nickname-status available';
           nicknameAvailable = true;
-          nextBtn.disabled = false;
         } else {
-          nicknameStatus.textContent = data.message || 'Nickname no disponible.';
+          nicknameStatus.textContent = 'Este nombre de usuario ya está en uso';
           nicknameStatus.className = 'nickname-status taken';
+          nicknameAvailable = false;
         }
+        validateCurrentStep();
       } catch (error) {
         console.error("Error verificando nickname:", error);
-        nicknameStatus.textContent = 'Error al verificar.';
+        nicknameStatus.textContent = 'Error al verificar. Intenta nuevamente';
         nicknameStatus.className = 'nickname-status taken';
+        nicknameAvailable = false;
+        validateCurrentStep();
       }
-    }, 500);
+    }, 600);
   }
 
   // ============================================
   // MANEJO DE ERRORES
   // ============================================
-  function showError(id) {
-    const el = document.getElementById(id);
-    if (el) {
-      el.classList.add('show');
-      setTimeout(() => el.classList.remove('show'), 3000);
+  function showError(message) {
+    const errorEl = document.getElementById('step1Error');
+    if (errorEl) {
+      errorEl.textContent = message;
+      errorEl.classList.add('show');
+      setTimeout(() => errorEl.classList.remove('show'), 4000);
     }
   }
 
@@ -137,12 +183,20 @@ document.addEventListener('DOMContentLoaded', () => {
     const errorMap = {
       genres: 'genresError',
       daws: 'dawsError',
-      experience: 'expError',
-      nickname: 'step1Error'
+      experience: 'expError'
     };
     const id = errorMap[category];
     if (id) {
       document.getElementById(id)?.classList.remove('show');
+    }
+  }
+
+  function showStepError(id, message) {
+    const el = document.getElementById(id);
+    if (el) {
+      el.textContent = message;
+      el.classList.add('show');
+      setTimeout(() => el.classList.remove('show'), 4000);
     }
   }
 
@@ -153,16 +207,14 @@ document.addEventListener('DOMContentLoaded', () => {
     let isValid = false;
 
     if (currentStep === 1) {
-      // Validar nickname
-      isValid = nicknameAvailable;
+      const firstName = normalizeSpaces(firstNameInput.value);
+      const role = roleSelect.value;
+      isValid = nicknameAvailable && firstName.length > 0 && role !== '';
     } else if (currentStep === 2) {
-      // Validar géneros y DAWs
       isValid = userData.genres.length > 0 && userData.daws.length > 0;
     } else if (currentStep === 3) {
-      // Opcional, siempre válido
-      isValid = true;
+      isValid = true; // Paso opcional
     } else if (currentStep === 4) {
-      // Validar experiencia
       isValid = userData.experience.length > 0;
     }
 
@@ -173,21 +225,53 @@ document.addEventListener('DOMContentLoaded', () => {
   function validateStep() {
     if (currentStep === 1) {
       if (!nicknameAvailable) {
-        showError('step1Error');
+        showError('Debes elegir un nombre de usuario válido y disponible');
         return false;
       }
+      
+      const firstName = normalizeSpaces(firstNameInput.value);
+      if (firstName.length === 0) {
+        showError('El nombre es obligatorio');
+        return false;
+      }
+
+      if (firstName.length > 30) {
+        showError('El nombre no puede tener más de 30 caracteres');
+        return false;
+      }
+
+      const role = roleSelect.value;
+      if (!role || role === '') {
+        showError('Debes seleccionar tu rol principal');
+        return false;
+      }
+
+      // Validar URLs opcionales
+      const youtube = document.getElementById('youtube')?.value.trim();
+      const spotify = document.getElementById('spotify')?.value.trim();
+
+      if (youtube && !isValidYouTubeURL(youtube)) {
+        showError('La URL de YouTube no es válida. Debe comenzar con https://youtube.com/ o https://youtu.be/');
+        return false;
+      }
+
+      if (spotify && !isValidSpotifyURL(spotify)) {
+        showError('La URL de Spotify no es válida. Debe comenzar con https://open.spotify.com/');
+        return false;
+      }
+
     } else if (currentStep === 2) {
       if (userData.genres.length === 0) {
-        showError('genresError');
+        showStepError('genresError', 'Selecciona al menos un género musical');
         return false;
       }
       if (userData.daws.length === 0) {
-        showError('dawsError');
+        showStepError('dawsError', 'Selecciona al menos un DAW');
         return false;
       }
     } else if (currentStep === 4) {
       if (userData.experience.length === 0) {
-        showError('expError');
+        showStepError('expError', 'Selecciona tu nivel de experiencia');
         return false;
       }
     }
@@ -234,10 +318,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Guardar datos del paso actual
     if (currentStep === 1) {
       userData.nickname = nicknameInput.value.trim();
-      userData.firstName = document.getElementById('firstName').value.trim();
-      userData.lastName = document.getElementById('lastName').value.trim();
-      userData.role = document.getElementById('role').value;
-    } else if (currentStep === 4) {
+      userData.firstName = normalizeSpaces(firstNameInput.value);
+      userData.role = roleSelect.value;
+
       // Guardar redes sociales
       const instagram = document.getElementById('instagram')?.value.trim();
       const tiktok = document.getElementById('tiktok')?.value.trim();
@@ -254,7 +337,6 @@ document.addEventListener('DOMContentLoaded', () => {
       currentStep++;
       showStep(currentStep);
     } else {
-      // Finalizar onboarding
       finishOnboarding();
     }
   }
@@ -289,11 +371,11 @@ document.addEventListener('DOMContentLoaded', () => {
         throw new Error(data.error || 'Error al guardar el perfil.');
       }
 
-      console.log('✅ Onboarding completado');
+      console.log('Onboarding completado');
       successModal.classList.add('show');
 
     } catch (error) {
-      console.error('❌ Error al finalizar onboarding:', error);
+      console.error('Error al finalizar onboarding:', error);
       alert(`Error: ${error.message}`);
       nextBtn.disabled = false;
       nextBtn.textContent = 'Finalizar';
@@ -305,6 +387,20 @@ document.addEventListener('DOMContentLoaded', () => {
   // ============================================
   if (nicknameInput) {
     nicknameInput.addEventListener('input', checkNicknameAvailability);
+  }
+
+  if (firstNameInput) {
+    firstNameInput.addEventListener('input', () => {
+      const normalized = normalizeSpaces(firstNameInput.value);
+      if (firstNameInput.value !== normalized) {
+        firstNameInput.value = normalized;
+      }
+      validateCurrentStep();
+    });
+  }
+
+  if (roleSelect) {
+    roleSelect.addEventListener('change', validateCurrentStep);
   }
 
   nextBtn.addEventListener('click', nextStep);
@@ -335,5 +431,5 @@ document.addEventListener('DOMContentLoaded', () => {
   updateProgress();
   validateCurrentStep();
 
-  console.log('✅ Welcome onboarding inicializado');
+  console.log('Welcome onboarding inicializado');
 });
