@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
     checkAuthState();
-    handleLogout();
+    // handleLogout();
 });
 
 function checkAuthState() {
@@ -20,7 +20,10 @@ function checkAuthState() {
 }
 
 function handleLogout(e) {
-    e.preventDefault();
+    // ✅ CORRECCIÓN: Validamos que 'e' exista antes de usarlo
+    if (e && typeof e.preventDefault === 'function') {
+        e.preventDefault();
+    }
     
     // 1. Buscar el overlay
     const overlay = document.getElementById('logout-overlay');
@@ -38,29 +41,28 @@ function handleLogout(e) {
     const iconEl = overlay.querySelector('i');
 
     // Fase 1: Mostrar Overlay
-    overlay.style.display = 'flex'; // Asegurar que sea flexible
-    // Pequeño delay para permitir que el navegador renderice el display:flex antes de la opacidad
+    overlay.style.display = 'flex'; 
     setTimeout(() => {
         overlay.classList.add('active');
     }, 10);
 
     // Fase 2: Cambiar mensaje a "Éxito" después de 1.5s
     setTimeout(() => {
-        localStorage.removeItem('authToken'); // Borramos token aquí
+        localStorage.removeItem('authToken'); 
         localStorage.removeItem('offszn_user_cache');
         
         if(messageEl) messageEl.textContent = "¡Sesión cerrada!";
-        if(iconEl) iconEl.className = "fas fa-check-circle"; // Cambiar icono a check
+        if(iconEl) iconEl.className = "fas fa-check-circle"; 
     }, 1500);
 
     // Fase 3: Desvanecer y Redirigir
     setTimeout(() => {
-        overlay.classList.remove('active'); // Quitar opacidad
-        overlay.classList.add('fading-out'); // Clase opcional si tienes CSS extra
+        overlay.classList.remove('active'); 
+        overlay.classList.add('fading-out'); 
         
         setTimeout(() => {
             window.location.href = '/index.html';
-        }, 500); // Esperar a que termine la transición de opacidad
+        }, 500); 
     }, 3000);
 }
 
@@ -72,14 +74,13 @@ function performLogout() {
 
 // Asignar a todos los botones de logout
 document.addEventListener('click', function(e) {
-    // 1. Detectar si el clic fue en un botón de Logout (o dentro de uno)
-    // Buscamos por ID, por Clase, o por el texto del enlace
+    // 1. Detectar si el clic fue en un botón de Logout
     const logoutBtn = e.target.closest('#navbar-logout-btn, #sidebar-logout-btn, .logout-btn, .logout');
 
     // 2. Si encontramos un botón de logout...
     if (logoutBtn) {
-        e.preventDefault(); // ¡Alto! No navegues a ninguna parte
+        e.preventDefault(); 
         console.log("Botón de logout detectado:", logoutBtn);
-        handleLogout(e); // Ejecuta la animación
+        handleLogout(e); 
     }
 });

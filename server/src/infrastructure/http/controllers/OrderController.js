@@ -7,84 +7,98 @@ const client = new MercadoPagoConfig({ accessToken: token });
 // ------------------------------------------------------------------
 // 1. CREAR PREFERENCIA (CON DEBUG DE PRECIO Y URL)
 // ------------------------------------------------------------------
-const TASA_CAMBIO_USD_PEN = 3.80; 
+const TASA_CAMBIO_USD_COP = 4200; 
 
 export const createMercadoPagoPreference = async (req, res) => {
     try {
-        const userId = req.user.userId; // Asumiendo que tu middleware pone esto aquí
+        const userId = req.user.userId;
         const { cartItems } = req.body;
 
         if (!cartItems?.length) return res.status(400).json({ error: 'Carrito vacío' });
 
-        // 1. Obtener productos reales de la BD para seguridad (no confiar en el frontend)
         const productIds = cartItems.map(item => item.id);
         
-        // OJO: Tu ID es bigint (numero), asegurate que productIds sean numeros
         const { data: dbProducts, error } = await supabase
             .from('products')
-            .select('id, name, price_basic, image_url, currency') // Traemos la moneda original
+            .select('id, name, price_basic, image_url, currency')
             .in('id', productIds);
 
         if (error) throw error;
 
         const line_items = [];
-        let totalEnSoles = 0;
+        let totalEnPesos = 0;
 
         dbProducts.forEach(product => {
             let unitPrice = parseFloat(product.price_basic);
             
-            // --- CONVERSIÓN DE MONEDA ---
-            // Si el producto está en USD, lo pasamos a PEN
-            if (product.currency === 'USD') {
-                unitPrice = unitPrice * TASA_CAMBIO_USD_PEN;
+            if (isNaN(unitPrice)) unitPrice = 10; // Protección contra NaN
+
+            if (product.currency === 'USD' || !product.currency) {
+                unitPrice = unitPrice * TASA_CAMBIO_USD_COP;
             }
-            // Si el producto ya está en PEN, lo dejamos igual.
+            
+            if (unitPrice < 500) unitPrice = 500;
 
-            // Validación de mínimo de Mercado Pago Perú (aprox 1 Sol)
-            if (unitPrice < 1) unitPrice = 1;
-
-            totalEnSoles += unitPrice;
+            totalEnPesos += unitPrice;
 
             line_items.push({
                 id: product.id.toString(),
                 title: product.name,
                 picture_url: product.image_url,
                 quantity: 1,
-                currency_id: 'PEN', // ¡SIEMPRE PEN PORQUE TU CUENTA ES PERUANA!
-                unit_price: Number(unitPrice.toFixed(2))
+                currency_id: 'COP', 
+                unit_price: Number(unitPrice.toFixed(2)) // Aseguramos que sea número
             });
         });
 
-        // Referencia externa para saber quién compró cuando llegue el Webhook
-        // Usamos JSON string para pasar metadata útil
         const externalRef = JSON.stringify({
             u_id: userId,
             ts: Date.now()
         });
 
-        const preference = new Preference(client);
+        // --- DETECCIÓN DE URL ---
+        let clientURL = req.headers.origin || req.headers.referer;
         
-        const result = await preference.create({
-            body: {
-                items: line_items,
-                // URLs a las que MP redirige al usuario
-                back_urls: {
-                    success: "https://offszn.onrender.com/pages/pago-exitoso.html",
-                    failure: "https://offszn.onrender.com/pages/cart.html",
-                    pending: "https://offszn.onrender.com/pages/cart.html"
-                },
-                auto_return: "approved",
-                external_reference: externalRef, // Aquí guardamos el ID del usuario
-                statement_descriptor: "OFFSZN",
-                binary_mode: true // Solo acepta pagos aprobados o rechazados (no pendientes)
-            }
-        });
+        // Si no detecta URL o es localhost, usamos una por defecto limpia
+        if (!clientURL || clientURL.includes('localhost') || clientURL.includes('127.0.0.1')) {
+            // NOTA: Asegúrate de que este es el puerto donde ves tu página web
+            clientURL = "http://127.0.0.1:5501"; 
+        }
+
+        // Limpiar trailing slash
+        if (clientURL.endsWith('/')) clientURL = clientURL.slice(0, -1);
+
+        console.log("🔗 URL Base:", clientURL);
+
+        // --- CONSTRUCCIÓN DEL OBJETO ---
+        const preferenceBody = {
+            items: line_items,
+            back_urls: {
+                success: `${clientURL}/pages/purchase-succes.html`, // Tu archivo con 's' simple
+                failure: `${clientURL}/pages/cart.html`,
+                pending: `${clientURL}/pages/cart.html`
+            },
+            auto_return: "approved",
+            external_reference: externalRef,
+            statement_descriptor: "OFFSZN",
+            binary_mode: true
+        };
+
+        // 🕵️ DEBUG: Imprimir lo que enviamos a MP
+        console.log("📦 Enviando a MP:", JSON.stringify(preferenceBody, null, 2));
+
+        const preference = new Preference(client);
+        const result = await preference.create({ body: preferenceBody });
 
         res.status(200).json({ url: result.init_point });
 
     } catch (err) {
-        console.error("Error creando preferencia:", err);
-        res.status(500).json({ error: err.message });
+        // Logueamos el error completo
+        console.error("❌ Error MP Detallado:", JSON.stringify(err, null, 2));
+        res.status(500).json({ 
+            error: err.message, 
+            details: err.cause || err 
+        });
     }
 };
 

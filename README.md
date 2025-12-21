@@ -180,6 +180,8 @@ script/
 
 - welcome.js
 
+- utils.js
+
 recursos/
 
 - beats-instrumentales.html
