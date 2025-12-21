@@ -145,20 +145,21 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ============================================
-  // 🆕 OAUTH - GOOGLE
+  // 🆕 OAUTH - GOOGLE (con callback)
   // ============================================
   window.signUpWithGoogle = async function() {
     try {
-      const redirectTo = redirectParam === 'carrito' 
-        ? `${baseURL}/carrito.html`
-        : `${baseURL}/pages/welcome.html`;
+      // Construir URL de callback con parámetro de redirect si existe
+      const callbackURL = redirectParam === 'carrito'
+        ? `${baseURL}/pages/auth-callback.html?redirect=carrito`
+        : `${baseURL}/pages/auth-callback.html`;
 
-      console.log('🔍 OAuth Google - Redirigiendo a:', redirectTo);
+      console.log('🔍 OAuth Google - Callback URL:', callbackURL);
 
       const { data, error } = await supabaseClient.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: redirectTo
+          redirectTo: callbackURL
         }
       });
 
@@ -172,20 +173,21 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   // ============================================
-  // 🆕 OAUTH - APPLE
+  // 🆕 OAUTH - APPLE (con callback)
   // ============================================
   window.signUpWithApple = async function() {
     try {
-      const redirectTo = redirectParam === 'carrito' 
-        ? `${baseURL}/carrito.html`
-        : `${baseURL}/pages/welcome.html`;
+      // Construir URL de callback con parámetro de redirect si existe
+      const callbackURL = redirectParam === 'carrito'
+        ? `${baseURL}/pages/auth-callback.html?redirect=carrito`
+        : `${baseURL}/pages/auth-callback.html`;
 
-      console.log('🔍 OAuth Apple - Redirigiendo a:', redirectTo);
+      console.log('🔍 OAuth Apple - Callback URL:', callbackURL);
 
       const { data, error } = await supabaseClient.auth.signInWithOAuth({
         provider: 'apple',
         options: {
-          redirectTo: redirectTo
+          redirectTo: callbackURL
         }
       });
 
