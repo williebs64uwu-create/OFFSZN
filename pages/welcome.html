@@ -1,364 +1,276 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>¡Bienvenido! - OFFSZN</title>
-    <link rel="stylesheet" href="/css/style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
-
-    <style>
-        body {
-            background-color: #050505;
-            overflow-x: hidden;
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-        }
-
-        .simple-navbar {
-            padding: 1rem 3rem;
-            background: rgba(0, 0, 0, 0.95);
-            border-bottom: 1px solid rgba(114, 9, 183, 0.3);
-            text-align: left;
-        }
-
-        .simple-navbar .logo a {
-            font-family: "Montserrat", sans-serif;
-            font-size: 1.8rem;
-            font-weight: 700;
-            color: #fff;
-            text-decoration: none;
-            text-shadow: 0 0 10px rgba(114, 9, 183, 0.3);
-        }
-
-        .onboarding-container {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-grow: 1;
-            padding: 20px;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .step-wrapper {
-            width: 100%;
-            max-width: 450px;
-            position: relative;
-            min-height: 400px;
-        }
-
-        .onboarding-step {
-            background: rgba(26, 10, 46, 0.3);
-            border: 1px solid rgba(114, 9, 183, 0.2);
-            border-radius: 15px;
-            padding: 2.5rem 2rem;
-            backdrop-filter: blur(10px);
-            text-align: center;
-            /* position: absolute; */
-            width: 100%;
-            /* top: 0; */
-            /* left: 0; */
-            transition: transform 0.5s ease-in-out, opacity 0.5s ease-in-out;
-            opacity: 1;
-            transform: translateX(0);
-            display: none;
-        }
-
-        .onboarding-step.hidden-left {
-            opacity: 0;
-            transform: translateX(-110%);
-            pointer-events: none;
-        }
-
-        .onboarding-step.hidden-right {
-            opacity: 0;
-            transform: translateX(110%);
-            pointer-events: none;
-            position: absolute;
-            top: 0;
-        }
-
-        .onboarding-step h2 {
-            font-family: 'Montserrat', sans-serif;
-            color: #fff;
-            font-size: 1.6rem;
-            margin-bottom: 0.8rem;
-        }
-
-        .onboarding-step p {
-            color: #b0b0b0;
-            margin-bottom: 1.8rem;
-            font-size: 0.9rem;
-        }
-
-        .onboarding-step label {
-            display: block;
-            text-align: left;
-            margin-bottom: 6px;
-            font-weight: 500;
-            color: #c9a7eb;
-            font-size: 0.85em;
-        }
-
-        .onboarding-step input,
-        .onboarding-step select {
-            font-family: "Poppins", sans-serif;
-            width: 100%;
-            padding: 12px 15px;
-            margin-bottom: 1rem;
-            font-size: 0.95rem;
-            background: rgba(0, 0, 0, 0.4);
-            border: 1px solid rgba(114, 9, 183, 0.4);
-            color: #fff;
-            border-radius: 8px;
-            transition: all 0.3s;
-            outline: none;
-        }
-
-        .onboarding-step input:focus,
-        .onboarding-step select:focus {
-            border-color: rgba(201, 167, 235, 0.8);
-            box-shadow: 0 0 15px rgba(114, 9, 183, 0.3);
-        }
-
-        .onboarding-step select {
-            appearance: none;
-            background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23c9a7eb%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E');
-            background-repeat: no-repeat;
-            background-position: right 1rem center;
-            background-size: 0.65em auto;
-            padding-right: 2.5rem;
-        }
-
-        .onboarding-step select option {
-            background-color: #1a0a2e;
-            color: #e9d5ff;
-        }
-
-        .onboarding-step .input-hint {
-            font-size: 0.75em;
-            color: #888;
-            text-align: left;
-            margin-top: -0.8rem;
-            margin-bottom: 1rem;
-            display: block;
-        }
-
-        .nickname-status {
-            font-size: 0.8em;
-            text-align: left;
-            margin-top: -0.8rem;
-            margin-bottom: 1rem;
-            height: 1.2em;
-            transition: color 0.3s;
-        }
-
-        .nickname-status.checking {
-            color: #f59e0b;
-        }
-
-        .nickname-status.taken {
-            color: #ef4444;
-        }
-
-        .nickname-status.available {
-            color: #22c55e;
-        }
-
-        .step-buttons {
-            margin-top: 1.5rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .step-buttons button {
-            flex: 1;
-        }
-
-        @media (max-width: 600px) {
-            .step-buttons {
-                flex-direction: column;
-            }
-
-            .step-buttons button {
-                width: 100%;
-            }
-        }
-
-        .btn-next,
-        .btn-finish {
-            padding: 12px 30px;
-            font-size: 0.95rem;
-        }
-
-        .btn-skip {
-            background: none;
-            border: 1px solid rgba(114, 9, 183, 0.4);
-            color: #c9a7eb;
-            padding: 10px 20px;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.3s;
-            font-size: 0.9rem;
-        }
-
-        .btn-skip:hover {
-            background: rgba(114, 9, 183, 0.1);
-            color: #fff;
-        }
-
-        .btn-next:disabled {
-            background: #555;
-            cursor: not-allowed;
-            opacity: 0.6;
-            box-shadow: none;
-            transform: none;
-        }
-
-        .btn-next:disabled::after {
-            display: none;
-        }
-
-        .message {
-            margin-top: 15px;
-            font-size: 0.9em;
-        }
-
-        .message.error {
-            color: #ffbaba;
-            background-color: rgba(140, 2, 2, 0.3);
-            border: 1px solid rgba(255, 100, 100, 0.4);
-            padding: 10px;
-            border-radius: 6px;
-        }
-
-        .message.success {
-            color: #bcffc7;
-            background-color: rgba(2, 140, 50, 0.3);
-            border: 1px solid rgba(100, 255, 150, 0.4);
-            padding: 10px;
-            border-radius: 6px;
-        }
-
-        /* Footer Mínimo */
-        .minimal-footer {
-            background: #050505;
-            padding: 1rem;
-            text-align: center;
-            color: #666;
-            font-size: 0.8em;
-            margin-top: auto;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Personaliza tu perfil — offszn</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Inter',sans-serif}
+body{background:#000;height:100vh;display:flex;flex-direction:column;color:#fff;overflow:hidden}
+header{display:flex;align-items:center;justify-content:space-between;padding:1rem 1.5rem;flex-shrink:0}
+.logo{font-size:1.5rem;font-weight:700;color:#fff}
+.skip-btn{padding:.375rem 1rem;font-size:.875rem;color:#fff;border:1px solid #3f3f46;border-radius:.375rem;background:transparent;cursor:pointer;transition:all .2s;text-decoration:none;display:inline-block}
+.skip-btn:hover{background:#18181b}
+main{flex:1;display:flex;align-items:center;justify-content:center;padding:0 1.5rem 2rem;overflow:hidden;min-height:0}
+.container{width:100%;max-width:700px;display:flex;flex-direction:column;max-height:calc(100vh - 120px)}
+.progress-bar{margin-bottom:2rem;flex-shrink:0}
+.progress-steps{display:flex;justify-content:space-between;align-items:center;position:relative;padding:0 1rem}
+.progress-line{position:absolute;top:50%;left:1rem;right:1rem;height:1px;background:#27272a;transform:translateY(-50%);z-index:0}
+.progress-fill{height:100%;background:#fff;transition:width .4s ease}
+.step{display:flex;flex-direction:column;align-items:center;gap:.5rem;position:relative;z-index:1}
+.step-num{width:32px;height:32px;border-radius:50%;background:#18181b;border:2px solid #27272a;display:flex;align-items:center;justify-content:center;font-size:.875rem;font-weight:600;color:#52525b;transition:all .3s ease}
+.step.active .step-num{background:#fff;border-color:#fff;color:#000}
+.step.completed .step-num{background:#fff;border-color:#fff;color:#000}
+.step-label{font-size:.6875rem;color:#52525b;font-weight:500;text-transform:uppercase;letter-spacing:.05em;transition:color .3s;position:absolute;top:40px;white-space:nowrap}
+.step.active .step-label{color:#fff}
+.step.completed .step-label{color:#71717a}
+.content-area{flex:1;overflow-y:auto;min-height:0;padding-right:.5rem}
+.content-area::-webkit-scrollbar{width:6px}
+.content-area::-webkit-scrollbar-track{background:#18181b;border-radius:3px}
+.content-area::-webkit-scrollbar-thumb{background:#3f3f46;border-radius:3px}
+.content-area::-webkit-scrollbar-thumb:hover{background:#52525b}
+.step-view{display:none}
+.step-view.active{display:block;animation:fadeIn .3s ease}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.step-header{margin-bottom:1.5rem;text-align:center}
+.step-title{font-size:1.625rem;font-weight:700;margin-bottom:.5rem;letter-spacing:-.025em}
+.step-desc{color:#71717a;font-size:.875rem;line-height:1.5}
+.section{margin-bottom:1.5rem}
+.section-title{font-size:.875rem;font-weight:600;color:#e4e4e7;margin-bottom:.875rem;display:flex;align-items:center;gap:.5rem}
+.hint{color:#71717a;font-size:.75rem;font-weight:400;margin-left:.25rem}
+.optional{font-size:.6875rem;color:#71717a;font-weight:500;background:#18181b;padding:.125rem .5rem;border-radius:.25rem;margin-left:auto}
+.form-group{margin-bottom:1rem}
+.form-group label{display:block;font-size:.875rem;font-weight:500;color:#e4e4e7;margin-bottom:.5rem}
+.form-group input,.form-group select{width:100%;padding:.75rem 1rem;background:#18181b;border:1px solid #27272a;border-radius:.5rem;color:#fff;font-size:.9375rem;transition:all .2s}
+.form-group input:focus,.form-group select:focus{outline:none;border-color:#52525b;background:#1f1f23}
+.form-group input::placeholder{color:#52525b}
+.form-group select{appearance:none;background-image:url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%2371717a%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E');background-repeat:no-repeat;background-position:right 1rem center;background-size:.65em auto;padding-right:2.5rem;cursor:pointer}
+.nickname-status{font-size:.75rem;margin-top:.375rem;min-height:1rem}
+.nickname-status.checking{color:#f59e0b}
+.nickname-status.available{color:#22c55e}
+.nickname-status.taken{color:#ef4444}
+.chips{display:flex;flex-wrap:wrap;gap:.5rem}
+.chip{padding:.5rem 1rem;background:#18181b;border:1px solid #27272a;border-radius:.5rem;font-size:.8125rem;font-weight:500;color:#a1a1aa;cursor:pointer;transition:all .2s ease;white-space:nowrap}
+.chip:hover{background:#27272a;border-color:#3f3f46;color:#e4e4e7}
+.chip.selected{background:#fff;border-color:#fff;color:#000}
+.chip:active{transform:scale(.98)}
+.error-hint{display:none;color:#ef4444;font-size:.75rem;margin-top:.5rem;font-weight:500}
+.error-hint.show{display:block;animation:shake .4s ease}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+.actions{display:flex;gap:.75rem;margin-top:2rem;padding-top:1.5rem;border-top:1px solid #27272a;flex-shrink:0}
+.btn{flex:1;padding:.75rem 1.5rem;border-radius:.5rem;font-size:.9375rem;font-weight:600;cursor:pointer;transition:all .2s ease;border:none;font-family:inherit}
+.btn-back{background:#18181b;color:#a1a1aa;border:1px solid #27272a}
+.btn-back:hover{background:#27272a;color:#e4e4e7}
+.btn-next{background:#fff;color:#000}
+.btn-next:hover{background:#e4e4e7}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);backdrop-filter:blur(8px);z-index:100;align-items:center;justify-content:center;padding:1.5rem}
+.modal.show{display:flex}
+.modal-content{background:#18181b;border:1px solid #27272a;border-radius:1rem;padding:3rem 2rem;max-width:400px;width:100%;text-align:center;animation:scaleIn .3s ease}
+@keyframes scaleIn{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
+.modal-icon{width:56px;height:56px;margin:0 auto 1.25rem;background:#22c55e;border-radius:50%;display:flex;align-items:center;justify-content:center}
+.modal-icon svg{width:28px;height:28px;color:#fff;stroke-width:3}
+.modal-title{font-size:1.375rem;font-weight:700;margin-bottom:.625rem}
+.modal-desc{color:#a1a1aa;margin-bottom:1.75rem;line-height:1.6;font-size:.875rem}
+.modal-btn{width:100%;padding:.875rem;background:#fff;color:#000;border:none;border-radius:.5rem;font-weight:600;cursor:pointer;transition:background .2s;font-size:.9375rem}
+.modal-btn:hover{background:#e4e4e7}
+@media(max-width:640px){
+body{height:100dvh}
+.container{max-height:calc(100dvh - 100px)}
+.step-title{font-size:1.375rem}
+.step-desc{font-size:.8125rem}
+.step-num{width:28px;height:28px;font-size:.75rem}
+.step-label{font-size:.625rem;top:36px}
+.actions{flex-direction:column-reverse;gap:.625rem}
+.chip{font-size:.75rem;padding:.4375rem .875rem}
+.section{margin-bottom:1.25rem}
+}
+</style>
 </head>
 <body>
-    <script>
-        const welcomeToken = localStorage.getItem('authToken');
-        if (!welcomeToken) {
-             console.log("Guardia Welcome: No hay token, al login.");
-             window.location.replace('/pages/login.html');
-        } else {
-             try {
-                 const base64Url = welcomeToken.split('.')[1];
-                 const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-                 const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
-                     return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-                 }).join(''));
-                 const payload = JSON.parse(jsonPayload);
-                 if (payload.nickname && !payload.nickname.startsWith('user_')) {
-                      console.log("Guardia Welcome: Usuario ya completó onboarding, al dashboard.");
-                      window.location.replace('/cuenta/dashboard.html');
-                 }
 
-             } catch(e) {
-                  console.error("Guardia Welcome: Token inválido.", e);
-                  localStorage.removeItem('authToken');
-                  window.location.replace('/pages/login.html');
-             }
-        }
-    </script>
-    <header class="simple-navbar">
-        <div class="logo"><a href="/index">OFFSZN</a></div>
-    </header>
+<script>
+// Guard: verificar autenticación
+const welcomeToken = localStorage.getItem('authToken');
+if (!welcomeToken) {
+  console.log("No hay token, redirigiendo al login.");
+  window.location.replace('/pages/login.html');
+}
+</script>
 
-    <div class="onboarding-container">
-        <div class="step-wrapper">
+<header>
+<div class="logo">offszn</div>
+<a href="#" class="skip-btn" id="skipTop">Saltar</a>
+</header>
 
-            <div id="step-1" class="onboarding-step">
-                <h2>¡Bienvenido/a a OFFSZN! ✨</h2>
-                <p>Elige tu nombre de usuario público (nickname).</p>
-                <form id="step-1-form">
-                    <label for="nickname">Nickname *</label>
-                    <input type="text" id="nickname" name="nickname" required placeholder="Ej: ProducerKing" autocomplete="off">
-                    <div class="nickname-status" id="nickname-status"></div> <span class="input-hint">Mínimo 3 caracteres, sin espacios. Este será tu @ en la comunidad.</span>
-                    <div class="step-buttons">
-                        <span></span> <button type="submit" class="btn btn-next" id="btn-step1-next" disabled>Siguiente</button>
-                    </div>
-                </form>
-            </div>
+<main>
+<div class="container">
+<div class="progress-bar">
+<div class="progress-steps">
+<div class="progress-line"><div class="progress-fill" id="progressFill"></div></div>
+<div class="step active">
+<div class="step-num">1</div>
+<div class="step-label">Perfil</div>
+</div>
+<div class="step">
+<div class="step-num">2</div>
+<div class="step-label">Esenciales</div>
+</div>
+<div class="step">
+<div class="step-num">3</div>
+<div class="step-label">Preferencias</div>
+</div>
+<div class="step">
+<div class="step-num">4</div>
+<div class="step-label">Objetivos</div>
+</div>
+</div>
+</div>
 
-            <div id="step-2" class="onboarding-step hidden-right">
-                <h2>Cuéntanos sobre ti (Opcional)</h2>
-                <p>Ayúdanos a personalizar tu experiencia.</p>
-                <form id="step-2-form">
-                    <label for="firstName">Nombre:</label>
-                    <input type="text" id="firstName" name="firstName" placeholder="Ej: Alex">
+<div class="content-area">
+<!-- PASO 1: Datos Personales -->
+<div class="step-view active" data-step="1">
+<div class="step-header">
+<h1 class="step-title">¡Bienvenido/a a offszn! ✨</h1>
+<p class="step-desc">Empecemos configurando tu perfil básico</p>
+</div>
 
-                    <label for="lastName">Apellido:</label>
-                    <input type="text" id="lastName" name="lastName" placeholder="Ej: Garcia">
+<div class="section">
+<div class="form-group">
+<label for="nickname">Nombre de usuario (nickname) *</label>
+<input type="text" id="nickname" placeholder="Ej: ProducerKing" autocomplete="off" required>
+<div class="nickname-status" id="nicknameStatus"></div>
+</div>
 
-                    <label for="role">Rol Principal:</label>
-                    <select id="role" name="role">
-                        <option value="">-- Selecciona uno --</option>
-                        <option value="Productor">Productor Musical</option>
-                        <option value="Artista">Artista / Cantante</option>
-                        <option value="Compositor">Compositor / Songwriter</option>
-                        <option value="Ingeniero">Ingeniero de Mezcla/Master</option>
-                        <option value="Musico">Músico / Instrumentista</option>
-                        <option value="Fan">Fan / Consumidor</option>
-                        <option value="Otro">Otro Rol Musical</option>
-                    </select>
+<div class="form-group">
+<label for="firstName">Nombre <span class="optional">Opcional</span></label>
+<input type="text" id="firstName" placeholder="Ej: Alex">
+</div>
 
-                    <div class="step-buttons">
-                        <button type="button" class="btn-skip" id="btn-step2-skip">Omitir</button>
-                        <button type="submit" class="btn btn-next" id="btn-step2-next">Siguiente</button>
-                    </div>
-                </form>
-            </div>
+<div class="form-group">
+<label for="lastName">Apellido <span class="optional">Opcional</span></label>
+<input type="text" id="lastName" placeholder="Ej: García">
+</div>
 
-            <div id="step-3" class="onboarding-step hidden-right">
-                <h2>Conecta tus Redes (Opcional)</h2>
-                <p>Comparte tus perfiles con la comunidad.</p>
-                <form id="step-3-form">
-                    <label for="social-instagram">Instagram:</label>
-                    <input type="text" id="social-instagram" name="instagram" placeholder="Tu usuario (ej: willieinspired)">
+<div class="form-group">
+<label for="role">Rol Principal <span class="optional">Opcional</span></label>
+<select id="role">
+<option value="">-- Selecciona uno --</option>
+<option value="Productor">Productor Musical</option>
+<option value="Artista">Artista / Cantante</option>
+<option value="Compositor">Compositor / Songwriter</option>
+<option value="Ingeniero">Ingeniero de Mezcla/Master</option>
+<option value="Musico">Músico / Instrumentista</option>
+<option value="Fan">Fan / Consumidor</option>
+<option value="Otro">Otro Rol Musical</option>
+</select>
+</div>
+</div>
+<div class="error-hint" id="step1Error">El nickname es requerido</div>
+</div>
 
-                    <label for="social-tiktok">TikTok:</label>
-                    <input type="text" id="social-tiktok" name="tiktok" placeholder="Tu usuario (ej: @willieinspired)">
-                    
-                    <label for="social-youtube">YouTube:</label>
-                    <input type="text" id="social-youtube" name="youtube" placeholder="URL de tu canal">
+<!-- PASO 2: Géneros y DAW -->
+<div class="step-view" data-step="2">
+<div class="step-header">
+<h1 class="step-title">Empecemos con lo básico</h1>
+<p class="step-desc">Selecciona las opciones que mejor te representen</p>
+</div>
 
-                    <label for="social-spotify">Spotify:</label>
-                    <input type="text" id="social-spotify" name="spotify" placeholder="URL de tu perfil">
+<div class="section">
+<div class="section-title">¿Qué géneros produces o te interesan?</div>
+<div class="chips" id="genres"></div>
+<div class="error-hint" id="genresError">Selecciona al menos un género</div>
+</div>
 
-                    <div class="step-buttons">
-                        <button type="button" class="btn-skip" id="btn-step3-skip">Omitir</button>
-                        <button type="submit" class="btn btn-finish" id="btn-step3-finish">Finalizar</button>
-                    </div>
-                </form>
-                <div id="final-message" class="message" role="alert"></div> </div>
+<div class="section">
+<div class="section-title">¿Cuál es tu DAW principal?</div>
+<div class="chips" id="daws"></div>
+<div class="error-hint" id="dawsError">Selecciona al menos un DAW</div>
+</div>
+</div>
 
-        </div> </div> <footer class="minimal-footer">
-        <p>© 2025 OFFSZN</p>
-    </footer>
+<!-- PASO 3: Habilidades e Intereses -->
+<div class="step-view" data-step="3">
+<div class="step-header">
+<h1 class="step-title">Tus habilidades e intereses</h1>
+<p class="step-desc">Elige las áreas que más te interesan (opcional)</p>
+</div>
 
-    <script src="/script/welcome.js"></script> 
+<div class="section">
+<div class="section-title">¿En qué áreas tienes experiencia?<span class="optional">Opcional</span></div>
+<div class="chips" id="skills"></div>
+</div>
 
+<div class="section">
+<div class="section-title">¿Qué te gustaría encontrar aquí?<span class="optional">Opcional</span></div>
+<div class="chips" id="interests"></div>
+</div>
+</div>
+
+<!-- PASO 4: Experiencia y Objetivos -->
+<div class="step-view" data-step="4">
+<div class="step-header">
+<h1 class="step-title">Última parte</h1>
+<p class="step-desc">Ayúdanos a conocerte mejor</p>
+</div>
+
+<div class="section">
+<div class="section-title">¿Cuál es tu nivel de experiencia?</div>
+<div class="chips" id="experience"></div>
+<div class="error-hint" id="expError">Selecciona tu nivel de experiencia</div>
+</div>
+
+<div class="section">
+<div class="section-title">¿Cuál es tu objetivo principal?<span class="optional">Opcional</span></div>
+<div class="chips" id="goals"></div>
+</div>
+
+<div class="section">
+<div class="section-title">¿Cómo nos conociste?<span class="optional">Opcional</span></div>
+<div class="chips" id="source"></div>
+</div>
+
+<div class="section">
+<div class="section-title">Conecta tus Redes <span class="optional">Opcional</span></div>
+<div class="form-group">
+<label for="instagram">Instagram</label>
+<input type="text" id="instagram" placeholder="Tu usuario (ej: willieinspired)">
+</div>
+<div class="form-group">
+<label for="tiktok">TikTok</label>
+<input type="text" id="tiktok" placeholder="Tu usuario (ej: @willieinspired)">
+</div>
+<div class="form-group">
+<label for="youtube">YouTube</label>
+<input type="text" id="youtube" placeholder="URL de tu canal">
+</div>
+<div class="form-group">
+<label for="spotify">Spotify</label>
+<input type="text" id="spotify" placeholder="URL de tu perfil">
+</div>
+</div>
+</div>
+</div>
+
+<div class="actions">
+<button class="btn btn-back" id="backBtn" style="display:none">Atrás</button>
+<button class="btn btn-next" id="nextBtn" disabled>Continuar</button>
+</div>
+</div>
+</main>
+
+<div class="modal" id="successModal">
+<div class="modal-content">
+<div class="modal-icon">
+<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+</div>
+<h2 class="modal-title">¡Todo listo!</h2>
+<p class="modal-desc">Tu perfil ha sido configurado. Ahora puedes disfrutar de una experiencia personalizada en offszn.</p>
+<button class="modal-btn" id="goToDashboard">Empezar a explorar</button>
+</div>
+</div>
+
+<script src="/script/welcome.js"></script>
 </body>
 </html>
