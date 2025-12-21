@@ -3,14 +3,26 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Autenticando...</title>
+  <title>Autenticando... — offszn</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      font-family: 'Inter', sans-serif;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    .spinner {
+      animation: spin 1s linear infinite;
+    }
+  </style>
 </head>
 <body class="bg-black min-h-screen flex items-center justify-center">
   
   <div class="text-center">
-    <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-zinc-700 border-t-white mb-4"></div>
-    <p class="text-white text-lg">Completando autenticación...</p>
+    <div class="inline-block spinner rounded-full h-12 w-12 border-4 border-zinc-700 border-t-white mb-4"></div>
+    <p class="text-white text-lg font-medium">Completando autenticación...</p>
     <p class="text-zinc-500 text-sm mt-2">Serás redirigido en un momento</p>
   </div>
 
@@ -23,25 +35,37 @@
       const { createClient } = supabase;
       const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-      // Obtener el parámetro de redirect si existe
+      // Obtener el parámetro de redirect de la URL
       const urlParams = new URLSearchParams(window.location.search);
       const redirectParam = urlParams.get('redirect');
 
+      console.log('🔍 Auth Callback - Parámetro redirect:', redirectParam);
+
       try {
-        // Obtener la sesión actual de Supabase
+        // Obtener la sesión actual de Supabase desde el hash de la URL
         const { data: { session }, error } = await supabaseClient.auth.getSession();
 
-        if (error) throw error;
+        console.log('📦 Sesión recibida:', session ? 'Sí' : 'No');
+
+        if (error) {
+          console.error('❌ Error obteniendo sesión:', error);
+          throw error;
+        }
 
         if (session && session.access_token) {
           // Guardar token en localStorage
           localStorage.setItem('authToken', session.access_token);
-          console.log('✅ OAuth exitoso, token guardado');
+          console.log('✅ OAuth exitoso, token guardado en localStorage');
+
+          // Pequeño delay para asegurar que el token se guardó
+          await new Promise(resolve => setTimeout(resolve, 500));
 
           // Redirigir según el parámetro
           if (redirectParam === 'carrito') {
+            console.log('🛒 Redirigiendo al carrito...');
             window.location.replace('/carrito.html');
           } else {
+            console.log('👋 Redirigiendo a welcome...');
             window.location.replace('/pages/welcome.html');
           }
         } else {
@@ -51,7 +75,9 @@
       } catch (error) {
         console.error('❌ Error en callback de OAuth:', error);
         alert('Error al completar autenticación. Redirigiendo al registro...');
-        window.location.replace('/pages/register.html');
+        setTimeout(() => {
+          window.location.replace('/pages/register.html');
+        }, 1000);
       }
     })();
   </script>
