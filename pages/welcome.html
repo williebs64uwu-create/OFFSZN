@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Personaliza tu perfil — offszn</title>
+<title>Personaliza tu perfil – offszn</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Inter',sans-serif}
@@ -19,7 +19,7 @@ main{flex:1;display:flex;align-items:center;justify-content:center;padding:0 1.5
 .progress-line{position:absolute;top:50%;left:1rem;right:1rem;height:1px;background:#27272a;transform:translateY(-50%);z-index:0}
 .progress-fill{height:100%;background:#fff;transition:width .4s ease}
 .step{display:flex;flex-direction:column;align-items:center;gap:.5rem;position:relative;z-index:1}
-.step-num{width:32px;height:32px;border-radius:50%;background:#18181b;border:2px solid #27272a;display:flex;align-items:center;justify-content:center;font-size:.875rem;font-weight:600;color:#52525b;transition:all .3s ease}
+.step-num{width:32px;height:32px;border-radius:50%;background:#18181b;border:2px solid #27272a;display:flex;align-items:center;justify-content:center;font-size:.875rem;font-weight:600;color:#52525b;transition:all .3s ease;cursor:default;pointer-events:none}
 .step.active .step-num{background:#fff;border-color:#fff;color:#000}
 .step.completed .step-num{background:#fff;border-color:#fff;color:#000}
 .step-label{font-size:.6875rem;color:#52525b;font-weight:500;text-transform:uppercase;letter-spacing:.05em;transition:color .3s;position:absolute;top:40px;white-space:nowrap}
@@ -129,33 +129,28 @@ if (!welcomeToken) {
 </div>
 
 <div class="content-area">
-<!-- PASO 1: Datos Personales -->
+<!-- PASO 1: Datos Personales y Redes -->
 <div class="step-view active" data-step="1">
 <div class="step-header">
-<h1 class="step-title">¡Bienvenido/a a offszn! ✨</h1>
+<h1 class="step-title">Bienvenido/a a offszn</h1>
 <p class="step-desc">Empecemos configurando tu perfil básico</p>
 </div>
 
 <div class="section">
 <div class="form-group">
 <label for="nickname">Nombre de usuario (nickname) *</label>
-<input type="text" id="nickname" placeholder="Ej: ProducerKing" autocomplete="off" required>
+<input type="text" id="nickname" placeholder="Ej: ProducerKing" autocomplete="off" required maxlength="20">
 <div class="nickname-status" id="nicknameStatus"></div>
 </div>
 
 <div class="form-group">
-<label for="firstName">Nombre <span class="optional">Opcional</span></label>
-<input type="text" id="firstName" placeholder="Ej: Alex">
+<label for="firstName">Nombre *</label>
+<input type="text" id="firstName" placeholder="Ej: Alex" required maxlength="30">
 </div>
 
 <div class="form-group">
-<label for="lastName">Apellido <span class="optional">Opcional</span></label>
-<input type="text" id="lastName" placeholder="Ej: García">
-</div>
-
-<div class="form-group">
-<label for="role">Rol Principal <span class="optional">Opcional</span></label>
-<select id="role">
+<label for="role">Rol Principal *</label>
+<select id="role" required>
 <option value="">-- Selecciona uno --</option>
 <option value="Productor">Productor Musical</option>
 <option value="Artista">Artista / Cantante</option>
@@ -166,8 +161,28 @@ if (!welcomeToken) {
 <option value="Otro">Otro Rol Musical</option>
 </select>
 </div>
+
+<div class="section">
+<div class="section-title">Conecta tus Redes <span class="optional">Opcional</span></div>
+<div class="form-group">
+<label for="instagram">Instagram</label>
+<input type="text" id="instagram" placeholder="Tu usuario (ej: willieinspired)">
 </div>
-<div class="error-hint" id="step1Error">El nickname es requerido</div>
+<div class="form-group">
+<label for="tiktok">TikTok</label>
+<input type="text" id="tiktok" placeholder="Tu usuario (ej: @willieinspired)">
+</div>
+<div class="form-group">
+<label for="youtube">YouTube</label>
+<input type="url" id="youtube" placeholder="URL de tu canal (https://youtube.com/...)">
+</div>
+<div class="form-group">
+<label for="spotify">Spotify</label>
+<input type="url" id="spotify" placeholder="URL de tu perfil (https://open.spotify.com/...)">
+</div>
+</div>
+</div>
+<div class="error-hint" id="step1Error"></div>
 </div>
 
 <!-- PASO 2: Géneros y DAW -->
@@ -230,26 +245,6 @@ if (!welcomeToken) {
 <div class="section-title">¿Cómo nos conociste?<span class="optional">Opcional</span></div>
 <div class="chips" id="source"></div>
 </div>
-
-<div class="section">
-<div class="section-title">Conecta tus Redes <span class="optional">Opcional</span></div>
-<div class="form-group">
-<label for="instagram">Instagram</label>
-<input type="text" id="instagram" placeholder="Tu usuario (ej: willieinspired)">
-</div>
-<div class="form-group">
-<label for="tiktok">TikTok</label>
-<input type="text" id="tiktok" placeholder="Tu usuario (ej: @willieinspired)">
-</div>
-<div class="form-group">
-<label for="youtube">YouTube</label>
-<input type="text" id="youtube" placeholder="URL de tu canal">
-</div>
-<div class="form-group">
-<label for="spotify">Spotify</label>
-<input type="text" id="spotify" placeholder="URL de tu perfil">
-</div>
-</div>
 </div>
 </div>
 
@@ -265,7 +260,7 @@ if (!welcomeToken) {
 <div class="modal-icon">
 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
 </div>
-<h2 class="modal-title">¡Todo listo!</h2>
+<h2 class="modal-title">Todo listo</h2>
 <p class="modal-desc">Tu perfil ha sido configurado. Ahora puedes disfrutar de una experiencia personalizada en offszn.</p>
 <button class="modal-btn" id="goToDashboard">Empezar a explorar</button>
 </div>
