@@ -23,10 +23,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const messageDiv = document.getElementById('form-message');
 
   // ============================================
-  // 🔥 DETECTAR ENTORNO (LOCAL O PRODUCCIÓN)
+  // 🔥 URL BASE FIJA PARA PRODUCCIÓN
   // ============================================
-  const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-  const baseURL = isLocal ? 'http://localhost:3000' : 'https://offszn1.onrender.com';
+  const baseURL = 'https://offszn1.onrender.com';
 
   // ============================================
   // REGISTRO
@@ -145,11 +144,10 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ============================================
-  // 🆕 OAUTH - GOOGLE (con callback)
+  // 🆕 OAUTH - GOOGLE
   // ============================================
   window.signUpWithGoogle = async function() {
     try {
-      // Construir URL de callback con parámetro de redirect si existe
       const callbackURL = redirectParam === 'carrito'
         ? `${baseURL}/pages/auth-callback.html?redirect=carrito`
         : `${baseURL}/pages/auth-callback.html`;
@@ -173,11 +171,10 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   // ============================================
-  // 🆕 OAUTH - APPLE (con callback)
+  // 🆕 OAUTH - APPLE
   // ============================================
   window.signUpWithApple = async function() {
     try {
-      // Construir URL de callback con parámetro de redirect si existe
       const callbackURL = redirectParam === 'carrito'
         ? `${baseURL}/pages/auth-callback.html?redirect=carrito`
         : `${baseURL}/pages/auth-callback.html`;
