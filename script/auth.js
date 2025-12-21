@@ -23,6 +23,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const messageDiv = document.getElementById('form-message');
 
   // ============================================
+  // 🔥 DETECTAR ENTORNO (LOCAL O PRODUCCIÓN)
+  // ============================================
+  const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+  const baseURL = isLocal ? 'http://localhost:3000' : 'https://offszn1.onrender.com';
+
+  // ============================================
   // REGISTRO
   // ============================================
   if (registerForm) {
@@ -144,8 +150,10 @@ document.addEventListener('DOMContentLoaded', () => {
   window.signUpWithGoogle = async function() {
     try {
       const redirectTo = redirectParam === 'carrito' 
-        ? `${window.location.origin}/carrito.html`
-        : `${window.location.origin}/pages/welcome.html`;
+        ? `${baseURL}/carrito.html`
+        : `${baseURL}/pages/welcome.html`;
+
+      console.log('🔍 OAuth Google - Redirigiendo a:', redirectTo);
 
       const { data, error } = await supabaseClient.auth.signInWithOAuth({
         provider: 'google',
@@ -156,8 +164,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (error) throw error;
     } catch (error) {
-      console.error('Error con Google OAuth:', error);
-      showMessage(messageDiv, 'Error al iniciar sesión con Google', true);
+      console.error('❌ Error con Google OAuth:', error);
+      if (messageDiv) {
+        showMessage(messageDiv, 'Error al iniciar sesión con Google: ' + error.message, true);
+      }
     }
   };
 
@@ -167,8 +177,10 @@ document.addEventListener('DOMContentLoaded', () => {
   window.signUpWithApple = async function() {
     try {
       const redirectTo = redirectParam === 'carrito' 
-        ? `${window.location.origin}/carrito.html`
-        : `${window.location.origin}/pages/welcome.html`;
+        ? `${baseURL}/carrito.html`
+        : `${baseURL}/pages/welcome.html`;
+
+      console.log('🔍 OAuth Apple - Redirigiendo a:', redirectTo);
 
       const { data, error } = await supabaseClient.auth.signInWithOAuth({
         provider: 'apple',
@@ -179,8 +191,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (error) throw error;
     } catch (error) {
-      console.error('Error con Apple OAuth:', error);
-      showMessage(messageDiv, 'Error al iniciar sesión con Apple', true);
+      console.error('❌ Error con Apple OAuth:', error);
+      if (messageDiv) {
+        showMessage(messageDiv, 'Error al iniciar sesión con Apple: ' + error.message, true);
+      }
     }
   };
 
@@ -190,7 +204,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function showMessage(element, message, isError = true) {
     if (!element) return;
     element.textContent = message;
-    element.className = 'message';
+    element.className = 'form-message';
     if (message) {
       element.classList.add(isError ? 'error' : 'success');
     }
