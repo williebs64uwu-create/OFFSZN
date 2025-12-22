@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Avatar Uploader with Crop</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0a0a0a;
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        /* Avatar Display */
+        .avatar-container {
+            text-align: center;
+        }
+
+        .avatar-wrapper {
+            position: relative;
+            display: inline-block;
+        }
+
+        .avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid #2a2a2a;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: #1a1a1a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            font-weight: 700;
+            color: #666;
+        }
+
+        .avatar:hover {
+            opacity: 0.8;
+            border-color: #fff;
+        }
+
+        .avatar-img {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid #2a2a2a;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .avatar-img:hover {
+            opacity: 0.8;
+            border-color: #fff;
+        }
+
+        .upload-hint {
+            margin-top: 12px;
+            font-size: 14px;
+            color: #999;
+        }
+
+        /* Modal Overlay */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.9);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        /* Modal */
+        .modal {
+            background: #1a1a1a;
+            border: 1px solid #2a2a2a;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow: hidden;
+            position: relative;
+            transform: scale(0.9);
+            transition: transform 0.3s ease;
+        }
+
+        .modal-overlay.active .modal {
+            transform: scale(1);
+        }
+
+        /* Modal Header */
+        .modal-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid #2a2a2a;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .modal-close {
+            background: transparent;
+            border: none;
+            color: #888;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 6px;
+            transition: all 0.2s;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: #2a2a2a;
+            color: #fff;
+        }
+
+        /* Modal Body */
+        .modal-body {
+            padding: 24px;
+            max-height: 60vh;
+            overflow-y: auto;
+        }
+
+        /* Upload Area */
+        .upload-area {
+            border: 2px dashed #3a3a3a;
+            border-radius: 12px;
+            padding: 40px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: #0f0f0f;
+        }
+
+        .upload-area:hover {
+            border-color: #fff;
+            background: #1a1a1a;
+        }
+
+        .upload-area.dragover {
+            border-color: #fff;
+            background: #1a1a1a;
+        }
+
+        .upload-icon {
+            width: 48px;
+            height: 48px;
+            margin: 0 auto 16px;
+            opacity: 0.6;
+        }
+
+        .upload-text {
+            font-size: 16px;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .upload-hint-text {
+            font-size: 13px;
+            color: #888;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        /* Crop Area */
+        .crop-container {
+            display: none;
+        }
+
+        .crop-container.active {
+            display: block;
+        }
+
+        .crop-area {
+            position: relative;
+            width: 100%;
+            height: 400px;
+            background: #000;
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 20px;
+            cursor: default;
+        }
+
+        .crop-image {
+            position: absolute;
+            max-width: none;
+            transform-origin: top left;
+        }
+
+        .crop-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .crop-circle {
+            position: absolute;
+            border: 3px solid #fff;
+            border-radius: 50%;
+            box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.6);
+            cursor: move;
+            pointer-events: all;
+        }
+
+        /* Zoom Control */
+        .zoom-control {
+            display: none;
+        }
+
+        /* Error Message */
+        .error-message {
+            background: #ff4444;
+            color: #fff;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .error-message.active {
+            display: block;
+        }
+
+        /* Modal Footer */
+        .modal-footer {
+            padding: 16px 24px;
+            border-top: 1px solid #2a2a2a;
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: all 0.3s;
+            flex: 1;
+        }
+
+        .btn-primary {
+            background: #fff;
+            color: #000;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: #f0f0f0;
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: #999;
+            border: 1px solid #2a2a2a;
+        }
+
+        .btn-secondary:hover {
+            color: #fff;
+            border-color: #3a3a3a;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Loading */
+        .loading {
+            display: none;
+        }
+
+        .loading.active {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border: 2px solid #000;
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Avatar Display -->
+    <div class="avatar-container">
+        <div class="avatar-wrapper">
+            <div class="avatar" id="avatarPreview">
+                <span>JD</span>
+            </div>
+        </div>
+        <p class="upload-hint">Haz clic para subir o cambiar avatar</p>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal">
+            <!-- Header -->
+            <div class="modal-header">
+                <h2 class="modal-title">Subir Imagen</h2>
+                <button class="modal-close" id="closeModal">✕</button>
+            </div>
+
+            <!-- Body -->
+            <div class="modal-body">
+                <div class="error-message" id="errorMessage"></div>
+
+                <!-- Upload Area -->
+                <div class="upload-area" id="uploadArea">
+                    <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="17 8 12 3 7 8"/>
+                        <line x1="12" y1="3" x2="12" y2="15"/>
+                    </svg>
+                    <p class="upload-text">Haz clic para subir o arrastra y suelta</p>
+                    <p class="upload-hint-text">JPG, PNG o WEBP (Máx. 5MB)</p>
+                    <p class="upload-hint-text" style="margin-top: 8px; color: #666;">Recomendado: 400x400px o mayor</p>
+                    <input type="file" id="fileInput" class="file-input" accept="image/jpeg,image/jpg,image/png,image/webp">
+                </div>
+
+                <!-- Crop Area -->
+                <div class="crop-container" id="cropContainer">
+                    <p class="upload-hint-text" style="margin-bottom: 12px; text-align: center; color: #999;">
+                        Arrastra el círculo para ajustar - Usa la rueda del mouse para hacer zoom
+                    </p>
+                    <div class="crop-area" id="cropArea">
+                        <img id="cropImage" class="crop-image">
+                        <div class="crop-overlay">
+                            <div class="crop-circle" id="cropCircle"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="cancelBtn">Cancelar</button>
+                <button class="btn btn-primary" id="updateBtn" disabled>
+                    <span id="btnText">Actualizar</span>
+                    <span class="loading" id="btnLoading"></span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // CONFIGURACIÓN
+        // ============================================
+        const MAX_SIZE_MB = 5;
+        const ACCEPTED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+        const OUTPUT_SIZE = 400; // Tamaño final de salida en píxeles
+        let CROP_SIZE = 300; // Tamaño visual del círculo (se ajustará dinámicamente)
+
+        // ============================================
+        // ELEMENTOS DEL DOM
+        // ============================================
+        const avatarPreview = document.getElementById('avatarPreview');
+        const modalOverlay = document.getElementById('modalOverlay');
+        const closeModalBtn = document.getElementById('closeModal');
+        const cancelBtn = document.getElementById('cancelBtn');
+        const updateBtn = document.getElementById('updateBtn');
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const cropContainer = document.getElementById('cropContainer');
+        const cropArea = document.getElementById('cropArea');
+        const cropImage = document.getElementById('cropImage');
+        const cropCircle = document.getElementById('cropCircle');
+        let currentZoom = 1;
+        const errorMessage = document.getElementById('errorMessage');
+        const btnText = document.getElementById('btnText');
+        const btnLoading = document.getElementById('btnLoading');
+
+        // ============================================
+        // ESTADO
+        // ============================================
+        let currentImage = null;
+        let imageScale = 1;
+        let imageX = 0;
+        let imageY = 0;
+        let isDragging = false;
+        let dragStartX = 0;
+        let dragStartY = 0;
+        let circleX = 0;
+        let circleY = 0;
+
+        // ============================================
+        // ABRIR/CERRAR MODAL
+        // ============================================
+        avatarPreview.addEventListener('click', openModal);
+        closeModalBtn.addEventListener('click', closeModal);
+        cancelBtn.addEventListener('click', closeModal);
+
+        modalOverlay.addEventListener('click', (e) => {
+            if (e.target === modalOverlay) closeModal();
+        });
+
+        function openModal() {
+            modalOverlay.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal() {
+            modalOverlay.classList.remove('active');
+            document.body.style.overflow = '';
+            resetModal();
+        }
+
+        function resetModal() {
+            currentImage = null;
+            cropContainer.classList.remove('active');
+            uploadArea.style.display = 'block';
+            updateBtn.disabled = true;
+            errorMessage.classList.remove('active');
+            fileInput.value = '';
+        }
+
+        // ============================================
+        // SUBIR ARCHIVO
+        // ============================================
+        uploadArea.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', handleFileSelect);
+
+        // Drag & Drop
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const file = e.dataTransfer.files[0];
+            if (file) handleFile(file);
+        });
+
+        function handleFileSelect(e) {
+            const file = e.target.files[0];
+            if (file) handleFile(file);
+        }
+
+        function handleFile(file) {
+            // Validar tipo
+            if (!ACCEPTED_TYPES.includes(file.type)) {
+                showError('Formato no válido. Solo JPG, PNG o WEBP');
+                return;
+            }
+
+            // Validar tamaño
+            const sizeMB = file.size / (1024 * 1024);
+            if (sizeMB > MAX_SIZE_MB) {
+                showError(`La imagen es muy grande. Máximo ${MAX_SIZE_MB}MB`);
+                return;
+            }
+
+            // Cargar imagen
+            currentImage = file;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                loadImageForCrop(e.target.result);
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.classList.add('active');
+            setTimeout(() => {
+                errorMessage.classList.remove('active');
+            }, 5000);
+        }
+
+        // ============================================
+        // CROP DE IMAGEN
+        // ============================================
+        function loadImageForCrop(imageSrc) {
+            uploadArea.style.display = 'none';
+            cropContainer.classList.add('active');
+            updateBtn.disabled = false;
+
+            cropImage.src = imageSrc;
+            cropImage.onload = () => {
+                initializeCrop();
+            };
+        }
+
+        function initializeCrop() {
+            const containerWidth = cropArea.offsetWidth;
+            const containerHeight = cropArea.offsetHeight;
+            const imgWidth = cropImage.naturalWidth;
+            const imgHeight = cropImage.naturalHeight;
+
+            // El círculo ocupa el 70% del contenedor (más grande visualmente)
+            CROP_SIZE = Math.min(containerWidth, containerHeight) * 0.7;
+
+            // Calcular escala base para que la imagen llene el círculo de crop
+            const minDimension = Math.min(imgWidth, imgHeight);
+            baseScale = CROP_SIZE / minDimension;
+            imageScale = baseScale;
+
+            // Centrar imagen
+            const scaledWidth = imgWidth * imageScale;
+            const scaledHeight = imgHeight * imageScale;
+            imageX = (containerWidth - scaledWidth) / 2;
+            imageY = (containerHeight - scaledHeight) / 2;
+
+            // Posicionar círculo de crop en el centro
+            circleX = (containerWidth - CROP_SIZE) / 2;
+            circleY = (containerHeight - CROP_SIZE) / 2;
+
+            // Reset zoom
+            currentZoom = 1;
+
+            updateImageTransform();
+            updateCropCircle();
+            setupCropControls();
+        }
+
+        function updateImageTransform() {
+            cropImage.style.transform = `translate(${imageX}px, ${imageY}px) scale(${imageScale})`;
+        }
+
+        function updateCropCircle() {
+            cropCircle.style.width = CROP_SIZE + 'px';
+            cropCircle.style.height = CROP_SIZE + 'px';
+            cropCircle.style.left = circleX + 'px';
+            cropCircle.style.top = circleY + 'px';
+        }
+
+        function setupCropControls() {
+            // Zoom con rueda del mouse
+            cropArea.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                
+                const delta = e.deltaY > 0 ? -0.1 : 0.1;
+                currentZoom = Math.max(1, Math.min(3, currentZoom + delta));
+                
+                imageScale = baseScale * currentZoom;
+                
+                // SIEMPRE recentrar imagen al hacer zoom
+                const containerWidth = cropArea.offsetWidth;
+                const containerHeight = cropArea.offsetHeight;
+                const imgWidth = cropImage.naturalWidth;
+                const imgHeight = cropImage.naturalHeight;
+                const scaledWidth = imgWidth * imageScale;
+                const scaledHeight = imgHeight * imageScale;
+                
+                imageX = (containerWidth - scaledWidth) / 2;
+                imageY = (containerHeight - scaledHeight) / 2;
+                
+                // Recentrar círculo también
+                circleX = (containerWidth - CROP_SIZE) / 2;
+                circleY = (containerHeight - CROP_SIZE) / 2;
+                
+                // Verificar que el círculo no se salga de la imagen
+                const minX = imageX;
+                const maxX = imageX + scaledWidth - CROP_SIZE;
+                const minY = imageY;
+                const maxY = imageY + scaledHeight - CROP_SIZE;
+                
+                // Si la imagen es más pequeña que el círculo, ajustar
+                if (maxX < minX || maxY < minY) {
+                    circleX = minX;
+                    circleY = minY;
+                } else {
+                    circleX = Math.max(minX, Math.min(maxX, circleX));
+                    circleY = Math.max(minY, Math.min(maxY, circleY));
+                }
+                
+                updateImageTransform();
+                updateCropCircle();
+            }, { passive: false });
+
+            // Drag to move crop circle
+            cropCircle.addEventListener('mousedown', startDrag);
+            cropCircle.addEventListener('touchstart', startDrag);
+        }
+
+        function startDrag(e) {
+            isDragging = true;
+            const clientX = e.type === 'touchstart' ? e.touches[0].clientX : e.clientX;
+            const clientY = e.type === 'touchstart' ? e.touches[0].clientY : e.clientY;
+            dragStartX = clientX - circleX;
+            dragStartY = clientY - circleY;
+
+            document.addEventListener('mousemove', onDrag);
+            document.addEventListener('mouseup', stopDrag);
+            document.addEventListener('touchmove', onDrag);
+            document.addEventListener('touchend', stopDrag);
+        }
+
+        function onDrag(e) {
+            if (!isDragging) return;
+            e.preventDefault();
+
+            const clientX = e.type === 'touchmove' ? e.touches[0].clientX : e.clientX;
+            const clientY = e.type === 'touchmove' ? e.touches[0].clientY : e.clientY;
+
+            const containerWidth = cropArea.offsetWidth;
+            const containerHeight = cropArea.offsetHeight;
+
+            // Calcular nueva posición del círculo
+            let newCircleX = clientX - dragStartX;
+            let newCircleY = clientY - dragStartY;
+
+            // Calcular límites de la imagen escalada
+            const imgWidth = cropImage.naturalWidth;
+            const imgHeight = cropImage.naturalHeight;
+            const scaledWidth = imgWidth * imageScale;
+            const scaledHeight = imgHeight * imageScale;
+
+            // Límites: el círculo no puede salirse de donde está la imagen
+            const minX = imageX;
+            const maxX = imageX + scaledWidth - CROP_SIZE;
+            const minY = imageY;
+            const maxY = imageY + scaledHeight - CROP_SIZE;
+
+            // Aplicar límites
+            circleX = Math.max(minX, Math.min(maxX, newCircleX));
+            circleY = Math.max(minY, Math.min(maxY, newCircleY));
+
+            updateCropCircle();
+        }
+
+        function stopDrag() {
+            isDragging = false;
+            document.removeEventListener('mousemove', onDrag);
+            document.removeEventListener('mouseup', stopDrag);
+            document.removeEventListener('touchmove', onDrag);
+            document.removeEventListener('touchend', stopDrag);
+        }
+
+        // ============================================
+        // ACTUALIZAR AVATAR
+        // ============================================
+        updateBtn.addEventListener('click', async () => {
+            if (!currentImage) return;
+
+            btnText.style.display = 'none';
+            btnLoading.classList.add('active');
+            updateBtn.disabled = true;
+
+            try {
+                // Crear canvas para crop (tamaño de SALIDA final)
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                canvas.width = OUTPUT_SIZE;
+                canvas.height = OUTPUT_SIZE;
+
+                // Calcular posición de recorte
+                const scaleRatio = cropImage.naturalWidth / (cropImage.width * imageScale);
+
+                const sourceX = (circleX - imageX) * scaleRatio;
+                const sourceY = (circleY - imageY) * scaleRatio;
+                const sourceSize = CROP_SIZE * scaleRatio;
+
+                // Dibujar imagen recortada (escalar al tamaño de salida)
+                ctx.drawImage(
+                    cropImage,
+                    sourceX,
+                    sourceY,
+                    sourceSize,
+                    sourceSize,
+                    0,
+                    0,
+                    OUTPUT_SIZE,
+                    OUTPUT_SIZE
+                );
+
+                // Convertir a blob
+                canvas.toBlob(async (blob) => {
+                    const croppedFile = new File([blob], currentImage.name, {
+                        type: currentImage.type
+                    });
+
+                    // ⭐ AQUÍ VA TU LÓGICA DE SUBIDA - Descomenta y modifica:
+                    // await uploadToSupabase(croppedFile);
+
+                    console.log('Tamaño final:', OUTPUT_SIZE + 'x' + OUTPUT_SIZE + 'px');
+
+                    // Actualizar preview inmediatamente
+                    const url = canvas.toDataURL();
+                    updateAvatarPreview(url);
+
+                    closeModal();
+                }, currentImage.type);
+
+            } catch (error) {
+                console.error('Error al procesar imagen:', error);
+                showError('Error al procesar la imagen');
+            } finally {
+                btnText.style.display = 'inline';
+                btnLoading.classList.remove('active');
+                updateBtn.disabled = false;
+            }
+        });
+
+        function updateAvatarPreview(url) {
+            avatarPreview.innerHTML = `<img src="${url}" class="avatar-img" alt="Avatar">`;
+        }
+
+        // ============================================
+        // FUNCIÓN PARA SUPABASE (EJEMPLO)
+        // ============================================
+        /*
+        async function uploadToSupabase(file) {
+            const { data, error } = await supabase.storage
+                .from('avatars')
+                .upload(`${userId}/${file.name}`, file, {
+                    cacheControl: '3600',
+                    upsert: true
+                });
+
+            if (error) throw error;
+
+            // Obtener URL pública
+            const { data: urlData } = supabase.storage
+                .from('avatars')
+                .getPublicUrl(data.path);
+
+            // Actualizar perfil de usuario
+            await supabase
+                .from('users')
+                .update({ avatar_url: urlData.publicUrl })
+                .eq('id', userId);
+
+            return urlData.publicUrl;
+        }
+        */
+
+        // Cerrar con ESC
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && modalOverlay.classList.contains('active')) {
+                closeModal();
+            }
+        });
+    </script>
+</body>
+</html>
