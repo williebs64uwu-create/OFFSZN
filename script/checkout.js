@@ -1,315 +1,317 @@
-import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
 
-const supabaseUrl = "https://qtjpvztpgfymjhhpoouq.supabase.co";
-const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0anB2enRwZ2Z5bWpoaHBvb3VxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3ODA5MTUsImV4cCI6MjA3NjM1NjkxNX0.YsItTFk3hSQaVuy707-z7Z-j34mXa03O0wWGAlAzjrw";
-const supabase = createClient(supabaseUrl, supabaseKey);
+/**
+ * CHECKOUT MANAGER
+ * Handles Order Summary, Commission Calculation, and PayPal Integration.
+ */
 
-// ============================================
-// CARGAR CARRITO EN PÁGINA
-// ============================================
-async function cargarCarrito() {
-  const cart = JSON.parse(localStorage.getItem('offszn_cart') || '[]');
-  const container = document.getElementById('cartContent');
-  const subtitle = document.getElementById('cartSubtitle');
+const CheckoutManager = {
+  // CONFIGURATION
+  currency: 'USD',
 
-  subtitle.textContent = `${cart.length} ${cart.length === 1 ? 'producto' : 'productos'} en tu carrito`;
+  init: async function () {
+    console.log("Checkout Manager Initialized");
 
-  if (cart.length === 0) {
-    container.innerHTML = `
-      <div class="empty-cart">
-        <div class="empty-icon">
-          <i class="bi bi-cart-x"></i>
-        </div>
-        <h2 class="empty-title">Tu carrito está vacío</h2>
-        <p class="empty-text">Explora nuestro marketplace y encuentra beats increíbles</p>
-        <a href="/index.html" class="btn-continue">
-          <i class="bi bi-arrow-left"></i>
-          Continuar comprando
-        </a>
-      </div>
-    `;
-    return;
-  }
+    // Wait for CartManager to be ready (it loads async)
+    await this.waitForCart();
 
-  const { data: { user }, error: userError } = await supabase.auth.getUser();
-  
-  if (userError || !user) {
-    container.innerHTML = `
-      <div class="cart-items">${renderCartItems(cart)}</div>
-      <div class="cart-summary">
-        <h3 class="summary-title">Resumen del pedido</h3>
-        <div class="summary-row">
-          <span>Subtotal</span>
-          <span>$${calculateTotal(cart).toFixed(2)}</span>
-        </div>
-        <div class="summary-row">
-          <span>Impuestos</span>
-          <span>$0.00</span>
-        </div>
-        <div class="summary-row total">
-          <span>Total</span>
-          <span>$${calculateTotal(cart).toFixed(2)}</span>
-        </div>
-        
-        <div style="background: rgba(114, 9, 183, 0.1); border: 1px solid rgba(114, 9, 183, 0.3); border-radius: 8px; padding: 1.5rem; margin-top: 1.5rem; text-align: center;">
-          <i class="bi bi-person-plus" style="font-size: 2.5rem; color: #7209b7; display: block; margin-bottom: 0.75rem;"></i>
-          <h4 style="color: #fff; margin-bottom: 0.5rem; font-size: 1.125rem; font-weight: 700;">Crea tu cuenta para continuar</h4>
-          <p style="color: #999; font-size: 0.875rem; margin-bottom: 1.25rem;">Es gratis y toma menos de 1 minuto</p>
-          <a href="/pages/register?redirect=carrito" style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.875rem 1.5rem; background: linear-gradient(135deg, #7209b7, #560bad); color: #fff; text-decoration: none; border-radius: 8px; font-weight: 600; transition: all 0.3s; margin-bottom: 1rem;">
-            <i class="bi bi-person-plus"></i>
-            Crear cuenta gratis
-          </a>
-          <p style="color: #666; font-size: 0.8125rem; margin-top: 1rem;">¿Ya tienes cuenta? <a href="/pages/login?redirect=carrito" style="color: #7209b7; text-decoration: none; font-weight: 600;">Iniciar sesión</a></p>
-        </div>
-        
-        <div style="text-align: center; margin-top: 1rem;">
-          <a href="/index.html" style="color: #999; text-decoration: none; font-size: 0.875rem;">
-            <i class="bi bi-arrow-left"></i> Continuar comprando
-          </a>
-        </div>
-      </div>
-    `;
-    return;
-  }
+    this.renderOrderSummary();
+    this.initPayPal();
+  },
 
-  const total = calculateTotal(cart);
+  waitForCart: async function () {
+    return new Promise(resolve => {
+      const check = () => {
+        if (window.CartManager && window.CartManager.state.items) {
+          resolve();
+        } else {
+          setTimeout(check, 100);
+        }
+      };
+      check();
+    });
+  },
 
-  container.innerHTML = `
-    <div class="cart-items">${renderCartItems(cart)}</div>
-    <div class="cart-summary">
-      <h3 class="summary-title">Resumen del pedido</h3>
-      <div class="summary-row">
-        <span>Subtotal</span>
-        <span>$${total.toFixed(2)}</span>
-      </div>
-      <div class="summary-row">
-        <span>Impuestos</span>
-        <span>$0.00</span>
-      </div>
-      <div class="summary-row total">
-        <span>Total</span>
-        <span>$${total.toFixed(2)}</span>
-      </div>
-      
-      <div style="background: rgba(12, 188, 135, 0.1); border: 1px solid rgba(12, 188, 135, 0.3); border-radius: 8px; padding: 1rem; margin-top: 1rem; display: flex; align-items: center; gap: 0.75rem;">
-        <i class="bi bi-check-circle" style="color: #0cbc87; font-size: 1.25rem;"></i>
-        <div style="flex: 1;">
-          <div style="font-size: 0.875rem; color: #0cbc87; font-weight: 600;">Sesión iniciada</div>
-          <div style="font-size: 0.8125rem; color: #999;">${user.email}</div>
-        </div>
-      </div>
-      
-      <div id="paypal-button-container" style="margin-top: 1.5rem;"></div>
-      
-      <div style="text-align: center; margin-top: 1rem;">
-        <a href="/index.html" style="color: #999; text-decoration: none; font-size: 0.875rem;">
-          <i class="bi bi-arrow-left"></i> Continuar comprando
-        </a>
-      </div>
-    </div>
-  `;
+  // --- LOGIC: COMMISSION & TOTALS ---
+  // Keep this for UI display, but backend will re-calculate for security
+  calculateTotals: function () {
+    const items = CartManager.state.items;
+    let subtotal = 0;
+    let serviceFee = 0;
+    let total = 0;
 
-  inicializarPayPal(cart, total);
-}
+    const processedItems = items.map(item => {
+      // FIX: Use variant_price (License Price) if available
+      const price = parseFloat(item.variant_price) > 0
+        ? parseFloat(item.variant_price)
+        : (parseFloat(item.product.price_basic) || 0);
 
-function calculateTotal(cart) {
-  return cart.reduce((sum, item) => sum + item.price, 0);
-}
+      let commission = 0;
 
-function renderCartItems(cart) {
-  return cart.map((item, index) => `
-    <div class="cart-item">
-      <div class="item-image">
-        <img src="${item.productImage || 'https://ui-avatars.com/api/?name=Music&size=200&background=7209b7&color=ffffff&bold=true'}" alt="${item.productName}">
-      </div>
-      <div class="item-info">
-        <div class="item-title">${item.productName}</div>
-        <div class="item-license">${item.licenseName}</div>
-        <div class="item-producer">
-          <i class="bi bi-person-circle"></i>
-          ${item.producerName}
-        </div>
-      </div>
-      <div class="item-actions">
-        <div class="item-price">$${item.price.toFixed(2)}</div>
-        <button class="btn-remove" onclick="eliminarDelCarrito(${index})">
-          <i class="bi bi-trash"></i>
-          Eliminar
-        </button>
-      </div>
-    </div>
-  `).join('');
-}
-
-// ============================================
-// INICIALIZAR PAYPAL
-// ============================================
-function inicializarPayPal(cart, total) {
-  if (!window.paypal) {
-    const script = document.createElement('script');
-    script.src = 'https://www.paypal.com/sdk/js?client-id=AWlu0poB0pM31ozZz7Cg8Tc2-2PSdq9lyjWQfGg-0Ckk0s-v3BZknJo6qM8RdTcMuX0bZkZ0qkseYFDV&currency=USD';
-    script.onload = () => renderPayPalButton(cart, total);
-    document.head.appendChild(script);
-  } else {
-    renderPayPalButton(cart, total);
-  }
-}
-
-function renderPayPalButton(cart, total) {
-  paypal.Buttons({
-    style: {
-      layout: 'vertical',
-      color: 'blue',
-      shape: 'rect',
-      label: 'pay'
-    },
-    
-    createOrder: function(data, actions) {
-      return actions.order.create({
-        purchase_units: [{
-          amount: {
-            value: total.toFixed(2),
-            currency_code: 'USD'
-          },
-          description: `OFFSZN - ${cart.length} producto(s)`,
-          custom_id: JSON.stringify({
-            cart: cart.map(item => ({
-              productId: item.productId,
-              licenseId: item.licenseId,
-              price: item.price
-            }))
-          })
-        }]
-      });
-    },
-
-    onApprove: async function(data, actions) {
-      const order = await actions.order.capture();
-      await procesarCompra(order, cart);
-    },
-
-    onError: function(err) {
-      console.error('Error de PayPal:', err);
-      if (window.toast) {
-        window.toast.error('Error al procesar el pago. Intenta de nuevo.');
+      if (price > 0) {
+        if (price < 20) {
+          commission = 1.00;
+        } else {
+          commission = price * 0.05;
+        }
       }
-    }
-  }).render('#paypal-button-container');
-}
 
-// ============================================
-// 📧 PROCESAR COMPRA EXITOSA + EMAIL
-// ============================================
-async function procesarCompra(order, cart) {
-  try {
-    console.log('💰 Procesando compra...', order.id);
-    
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    if (!user) {
-      if (window.toast) {
-        window.toast.error('Debes iniciar sesión para completar la compra');
-      }
-      window.location.href = '/pages/login?redirect=carrito';
+      subtotal += price;
+      serviceFee += commission;
+
+      return {
+        ...item,
+        price: price,
+        commission: commission,
+        lineTotal: price + commission
+      };
+    });
+
+    total = subtotal + serviceFee;
+
+    return {
+      items: processedItems,
+      subtotal: subtotal.toFixed(2),
+      serviceFee: serviceFee.toFixed(2),
+      total: total.toFixed(2)
+    };
+  },
+
+  // --- UI: RENDER SUMMARY ---
+  renderOrderSummary: function () {
+    const container = document.getElementById('checkout-order-summary');
+    if (!container) return;
+
+    const { items, subtotal, serviceFee, total } = this.calculateTotals();
+
+    if (items.length === 0) {
+      container.innerHTML = `<div class="empty-cart-msg" style="text-align: center; padding: 40px; color: #666;">Tu carrito está vacío. <a href="explorar.html" style="color: #8b5cf6;">Ir a explorar</a></div>`;
       return;
     }
 
-    console.log('👤 Usuario:', user.email);
+    let itemsHtml = items.map(item => `
+            <div class="checkout-item">
+                <div class="checkout-item-img">
+                    <img src="${item.product.image_url || '/images/default-cover.png'}" alt="Cover">
+                </div>
+                <div class="checkout-item-details">
+                    <div class="checkout-item-name">${item.product.name}</div>
+                    <div class="checkout-item-meta">${item.license_name || item.product.product_type}</div>
+                </div>
+                <div class="checkout-item-price">
+                    <div class="price-breakdown">
+                        <span>$${item.price.toFixed(2)}</span>
+                        <span class="fee-tag">+ $${item.commission.toFixed(2)} fee</span>
+                    </div>
+                </div>
+            </div>
+        `).join('');
 
-    // 1️⃣ Guardar compras en DB
-    const purchases = cart.map(item => ({
-      user_id: user.id,
-      product_id: item.productId,
-      license_type: item.licenseId,
-      amount: item.price,
-      paypal_transaction_id: order.id,
-      status: 'completed'
-    }));
+    const html = `
+            <div class="checkout-items-list">
+                ${itemsHtml}
+            </div>
+            
+            <div class="checkout-totals">
+                <div class="total-row">
+                    <span>Subtotal (Productores)</span>
+                    <span>$${subtotal}</span>
+                </div>
+                <div class="total-row">
+                    <span>Tarifa de Servicio (Plataforma)</span>
+                    <span>$${serviceFee}</span>
+                </div>
+                <div class="total-row grand-total">
+                    <span>TOTAL A PAGAR</span>
+                    <span>$${total}</span>
+                </div>
+            </div>
+        `;
 
-    console.log('💾 Guardando en DB...', purchases.length, 'productos');
+    container.innerHTML = html;
+  },
 
-    const { error: dbError } = await supabase
-      .from('purchases')
-      .insert(purchases);
-
-    if (dbError) {
-      console.error('❌ Error DB:', dbError);
-      throw dbError;
+  // --- PAYPAL INTEGRATION ---
+  initPayPal: function () {
+    if (!window.paypal) {
+      console.error("PayPal SDK not loaded.");
+      return;
     }
 
-    console.log('✅ Compras guardadas en DB');
+    const self = this;
 
-    // 2️⃣ 📧 ENVIAR EMAIL DE COMPRA (IMPORTANDO email-service.js)
-    try {
-      console.log('📧 Importando email-service.js...');
-      const { enviarEmailCompra } = await import('./email-service.js');
-      
-      const buyerName = user.user_metadata?.full_name || 
-                       `${user.user_metadata?.first_name || ''} ${user.user_metadata?.last_name || ''}`.trim() || 
-                       user.email.split('@')[0];
+    window.paypal.Buttons({
+      style: {
+        layout: 'vertical',
+        color: 'gold',
+        shape: 'rect',
+        label: 'pay'
+      },
 
-      const emailData = {
-        buyerEmail: user.email,
-        buyerName: buyerName,
-        orderId: order.id,
-        total: calculateTotal(cart),
-        products: cart.map(item => ({
-          name: item.productName,
-          license: item.licenseName,
-          price: item.price.toFixed(2)
-        }))
-      };
-
-      console.log('📧 Datos para email:', {
-        destinatario: emailData.buyerEmail,
-        nombre: emailData.buyerName,
-        orden: emailData.orderId,
-        productos: emailData.products.length,
-        total: emailData.total
-      });
-
-      // Enviar email (no bloqueante)
-      enviarEmailCompra(emailData).then(result => {
-        if (result.success) {
-          console.log('✅ Email de compra enviado correctamente');
-        } else {
-          console.warn('⚠️ Email no enviado:', result.error);
+      createOrder: function (data, actions) {
+        const body = {};
+        if (!CartManager.state.user) {
+          body.cartItems = CartManager.state.items;
         }
-      });
 
-    } catch (emailError) {
-      console.warn('⚠️ Error al enviar email (no crítico):', emailError);
-      // NO bloqueamos la compra si falla el email
+        return supabaseClient.auth.getSession().then(({ data: { session } }) => {
+          return fetch('/api/orders/paypal/create', {
+            method: 'post',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': session ? `Bearer ${session.access_token}` : ''
+            },
+            body: JSON.stringify(body)
+          });
+        }).then(async function (res) {
+          const orderData = await res.json();
+          if (orderData.error === 'MISSING_PRODUCER_PAYPAL') {
+            self.handleBlockedOrder(orderData.details);
+            throw new Error('Some producers have no payment method.');
+          }
+          if (orderData.error) throw new Error(orderData.error);
+          return orderData.id;
+        });
+      },
+
+      onApprove: function (data, actions) {
+        self.showProcessingState(true);
+
+        const body = { orderID: data.orderID };
+        if (!CartManager.state.user) {
+          body.cartItems = CartManager.state.items;
+        }
+
+        return supabaseClient.auth.getSession().then(({ data: { session } }) => {
+          return fetch('/api/orders/paypal/capture', {
+            method: 'post',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': session ? `Bearer ${session.access_token}` : ''
+            },
+            body: JSON.stringify(body)
+          });
+        }).then(function (res) {
+          return res.json();
+        }).then(function (details) {
+          if (details.error) throw new Error(details.error);
+          self.handleSuccess(details.supabaseOrder?.id);
+        }).catch(err => {
+          console.error(err);
+          alert("Error al procesar el pago: " + err.message);
+          self.showProcessingState(false);
+        });
+      },
+
+      onError: function (err) {
+        console.error(err);
+        alert("Ocurrió un error con PayPal. Intenta nuevamente.");
+      }
+    }).render('#paypal-button-container');
+  },
+
+  showProcessingState: function (isLoading) {
+    const overlay = document.getElementById('checkout-processing-overlay');
+    if (overlay) overlay.style.display = isLoading ? 'flex' : 'none';
+  },
+
+  handleBlockedOrder: function (blockedItems) {
+    console.warn("Blocked items detected:", blockedItems);
+    this.blockedItems = blockedItems;
+    this.renderOrderSummary();
+  },
+
+  renderOrderSummary: function () {
+    const container = document.getElementById('checkout-order-summary');
+    if (!container) return;
+
+    const { items, subtotal, serviceFee, total } = this.calculateTotals();
+
+    if (items.length === 0) {
+      container.innerHTML = `<div class="empty-cart-msg" style="text-align: center; padding: 40px; color: #666;">Tu carrito está vacío. <a href="explorar.html" style="color: #8b5cf6;">Ir a explorar</a></div>`;
+      return;
     }
 
-    // 3️⃣ Limpiar carrito y redirigir
-    console.log('🧹 Limpiando carrito...');
-    localStorage.removeItem('offszn_cart');
-    
-    console.log('🎉 ¡Compra completada! Redirigiendo...');
-    window.location.href = `/pages/purchase-success.html?order=${order.id}`;
+    let itemsHtml = items.map(item => {
+      const isBlocked = this.blockedItems?.some(b => b.productId == item.product.id);
 
-  } catch (error) {
-    console.error('❌ Error guardando compra:', error);
-    if (window.toast) {
-      window.toast.error('Error al guardar la compra. Contacta a soporte.');
+      return `
+            <div class="checkout-item ${isBlocked ? 'blocked' : ''}">
+                <div class="checkout-item-img">
+                    <img src="${item.product.image_url || '/images/default-cover.png'}" alt="Cover">
+                </div>
+                <div class="checkout-item-details">
+                    <div class="checkout-item-name">${item.product.name}</div>
+                    <div class="checkout-item-meta">${item.license_name || item.product.product_type}</div>
+                    ${isBlocked ? `
+                        <div class="blocked-warning" style="color: #ef4444; font-size: 0.75rem; margin-top: 8px; font-weight: 500;">
+                            <i class="bi bi-exclamation-triangle-fill"></i> No puedes comprar este producto aún porque el productor no ha activado su método de pago.
+                        </div>
+                    ` : ''}
+                </div>
+                <div class="checkout-item-price">
+                    ${isBlocked ? `
+                        <button onclick="CheckoutManager.contactProducer('${item.product.id}', '${item.product.name}', '${item.product.producer_id}')" 
+                                style="background: rgba(139, 92, 246, 0.1); border: 1px solid #8b5cf6; color: #8b5cf6; padding: 4px 10px; border-radius: 6px; font-size: 0.7rem; cursor: pointer; font-weight: 600;">
+                            Contactar Productor
+                        </button>
+                    ` : `
+                        <div class="price-breakdown">
+                            <span>$${item.price.toFixed(2)}</span>
+                            <span class="fee-tag">+ $${item.commission.toFixed(2)} fee</span>
+                        </div>
+                    `}
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    const html = `
+            <div class="checkout-items-list">
+                ${itemsHtml}
+            </div>
+            
+            <div class="checkout-totals">
+                <div class="total-row">
+                    <span>Subtotal (Productores)</span>
+                    <span>$${subtotal}</span>
+                </div>
+                <div class="total-row">
+                    <span>Tarifa de Servicio (Plataforma)</span>
+                    <span>$${serviceFee}</span>
+                </div>
+                <div class="total-row grand-total">
+                    <span>TOTAL A PAGAR</span>
+                    <span>$${total}</span>
+                </div>
+            </div>
+        `;
+
+    container.innerHTML = html;
+  },
+
+  contactProducer: function (prodId, prodName, producerId) {
+    const link = `${window.location.origin}/producto.html?id=${prodId}`;
+    const text = `Hola, quería comprar tu producto "${prodName}" (${link}) pero me sale que necesitas activar tus métodos de pago para recibir el dinero.`;
+
+    // Check if Messenger is available
+    if (window.ChatManager && window.ChatManager.openConversationWith) {
+      window.ChatManager.openConversationWith(producerId, text);
+    } else {
+      // Fallback to clipboard or simple alert for now
+      navigator.clipboard.writeText(text);
+      alert("Mensaje copiado al portapapeles. Contacta al productor para avisarle.");
     }
+  },
+
+  handleSuccess: function (orderId) {
+    if (window.CartManager) {
+      CartManager.clearCart();
+    }
+    window.location.href = `/pages/success.html${orderId ? '?order_id=' + orderId : ''}`;
   }
-}
-
-// ============================================
-// ELIMINAR DEL CARRITO
-// ============================================
-window.eliminarDelCarrito = function(index) {
-  if (!confirm('¿Eliminar este producto del carrito?')) return;
-  
-  let cart = JSON.parse(localStorage.getItem('offszn_cart') || '[]');
-  cart.splice(index, 1);
-  localStorage.setItem('offszn_cart', JSON.stringify(cart));
-  cargarCarrito();
 };
 
-// ============================================
-// INICIALIZAR
-// ============================================
-document.addEventListener('DOMContentLoaded', cargarCarrito);
+// Auto-Init
+document.addEventListener('DOMContentLoaded', () => {
+  CheckoutManager.init();
+});

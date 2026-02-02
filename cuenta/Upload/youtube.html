@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Automation Engine - OFFSZN</title>
+    <link rel="stylesheet" href="youtube.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <!-- Navbar styles from index.html -->
+    <style>
+        /* Minimalist Navbar Override */
+        .navbar-container {
+            max-width: 900px !important;
+            margin: 0 auto;
+            padding: 20px 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .nav-logo {
+            font-weight: 800;
+            font-size: 18px;
+            color: #fff;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nav-back {
+            color: #999;
+            text-decoration: none;
+            font-size: 14px;
+            transition: color 0.2s;
+        }
+
+        .nav-back:hover {
+            color: #fff;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Minimal Navbar -->
+    <nav>
+        <div class="navbar-container">
+            <a href="../../index.html" class="nav-logo">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+                    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+                    <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+                </svg>
+                YouTube Upload
+            </a>
+            <a href="../dashboard.html" class="nav-back">← Dashboard</a>
+        </div>
+    </nav>
+
+    <main class="main-container">
+
+        <!-- STEP 1: AUTHENTICATION -->
+        <section class="section-card" id="authSection">
+            <div class="section-header">
+                <h3>1. Conexión</h3>
+                <span class="status-badge pending" id="connectionStatus">No conectado</span>
+            </div>
+
+            <div id="authConnectView">
+                <p class="section-desc">Conecta tu canal de YouTube para permitir la subida automática.</p>
+                <button id="btnConnect" class="btn-youtube">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                        <path
+                            d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
+                    </svg>
+                    Conectar Canal de YouTube
+                </button>
+            </div>
+
+            <div id="authConnectedView" class="hidden auth-connected-container">
+                <div class="channel-info">
+                    <div class="channel-avatar"></div>
+                    <div>
+                        <strong id="channelName">Nombre del Canal</strong>
+                        <p id="channelHandle">@handle</p>
+                    </div>
+                </div>
+                <button id="btnDisconnect" class="btn-text">Desconectar</button>
+            </div>
+        </section>
+
+        <!-- STEP 2: COVER UPLOAD -->
+        <section class="section-card">
+            <div class="section-header">
+                <h3>2. Portada del Video</h3>
+            </div>
+            <p class="section-desc">Sube la imagen que se usará como miniatura y fondo del video (1280x720 recomendado).
+            </p>
+
+            <div class="cover-upload-zone" id="coverUploadZone">
+                <input type="file" id="coverInput" accept="image/*" hidden>
+                <div class="upload-placeholder" id="uploadPlaceholder">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                        <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                        <polyline points="21 15 16 10 5 21"></polyline>
+                    </svg>
+                    <span>Click para subir imagen</span>
+                    <small>JPG, PNG (Max 5MB)</small>
+                </div>
+                <img id="coverPreview" class="cover-preview hidden">
+                <button id="btnRemoveCover" class="btn-remove-cover hidden">×</button>
+            </div>
+        </section>
+
+        <!-- STEP 3: BEAT INFO -->
+        <section class="section-card">
+            <div class="section-header">
+                <h3>3. Información Básica</h3>
+            </div>
+
+            <div class="grid-2">
+                <div class="form-field">
+                    <label>Artista Principal *</label>
+                    <input type="text" id="artistInput" placeholder="Ej: Travis Scott, Drake">
+                </div>
+                <div class="form-field">
+                    <label>Género *</label>
+                    <select id="genreInput">
+                        <option value="" disabled selected>Seleccionar...</option>
+                        <option value="Trap">Trap</option>
+                        <option value="Drill">Drill</option>
+                        <option value="Reggaeton">Reggaeton</option>
+                        <option value="R&B">R&B</option>
+                        <option value="Boombap">Boombap</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="grid-2">
+                <div class="form-field">
+                    <label>Mood *</label>
+                    <select id="moodInput">
+                        <option value="" disabled selected>Seleccionar...</option>
+                        <option value="Dark">Dark</option>
+                        <option value="Energetic">Energetic</option>
+                        <option value="Sad">Sad</option>
+                        <option value="Chill">Chill</option>
+                        <option value="Aggressive">Aggressive</option>
+                    </select>
+                </div>
+                <div class="form-field">
+                    <label>BPM</label>
+                    <input type="number" id="bpmInput" placeholder="Ej: 140">
+                </div>
+            </div>
+
+            <div class="form-field">
+                <label>Link de la Tienda (OFFSZN)</label>
+                <input type="url" id="storeLinkInput" placeholder="https://offszn.com/beat/...">
+            </div>
+        </section>
+
+        <!-- STEP 4: YOUTUBE METADATA -->
+        <section class="section-card">
+            <div class="section-header">
+                <h3>4. Metadata de YouTube</h3>
+                <button id="btnAutocomplete" class="btn-secondary-sm">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path
+                            d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
+                    </svg>
+                    Autocompletar
+                </button>
+            </div>
+            <p class="section-desc">Escribe la información tal como aparecerá en YouTube. Usa autocompletar como ayuda
+                si lo deseas.</p>
+
+            <div class="form-field">
+                <label>Título del Video *</label>
+                <input type="text" id="titleInput" maxlength="100" placeholder="Título exacto del video...">
+                <div class="field-footer">
+                    <span id="titleCount">0/100</span>
+                </div>
+            </div>
+
+            <div class="form-field">
+                <label>Descripción *</label>
+                <textarea id="descriptionInput" rows="8" maxlength="5000"
+                    placeholder="Descripción completa del video..."></textarea>
+                <div class="field-footer">
+                    <span id="descCount">0/5000</span>
+                </div>
+            </div>
+
+            <div class="form-field">
+                <label>Tags (separados por coma)</label>
+                <textarea id="tagsInput" rows="3" placeholder="trap beat, free type beat, ..."></textarea>
+                <div class="field-footer">
+                    <span>Máximo 500 caracteres</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- SUBMIT -->
+        <div class="action-bar">
+            <button id="btnSubmit" class="btn-primary-lg">Subir a YouTube</button>
+        </div>
+
+    </main>
+
+    <!-- TOAST -->
+    <div id="toast" class="toast hidden"></div>
+
+    <script type="module" src="youtube.js"></script>
+</body>
+
+</html>

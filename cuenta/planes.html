@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Planes y Precios | OFFSZN</title>
+    <!-- Fonts -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap"
+        rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <!-- PayPal SDK (Placeholder Client ID - Update with LIVE ID) -->
+    <script src="https://www.paypal.com/sdk/js?client-id=sb&currency=USD"></script>
+
+    <script>
+        // ... (Existing Currency Logic) ...
+
+
+    </script>
+
+    <style>
+        :root {
+            --bg-dark: #000000;
+            --accent-purple: #8B5CF6;
+            --accent-glow: rgba(139, 92, 246, 0.4);
+            --text-main: #ffffff;
+            --text-secondary: #888888;
+            --card-bg: #0F0F0F;
+            --border-color: #1A1A1A;
+            --success: #10B981;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: #000;
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-x: hidden;
+        }
+
+        /* Nav Stub */
+        .nav-stub {
+            width: 100%;
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            z-index: 10;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            color: #fff;
+            font-weight: 700;
+            font-size: 20px;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        .btn-close {
+            background: rgba(255, 255, 255, 0.1);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            text-decoration: none;
+            transition: 0.2s;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .btn-close:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Radial Glow - Disabled */
+        .radial-glow {
+            display: none;
+        }
+
+        /* --- ENTRY ANIMATION --- */
+        .entry-anim {
+            opacity: 0;
+            animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+
+
+        /* Header */
+        .header {
+            text-align: center;
+            margin-top: 40px;
+            margin-bottom: 40px;
+            padding: 0 20px;
+        }
+
+        .header h1 {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 48px;
+            font-weight: 800;
+            margin-bottom: 16px;
+            background: linear-gradient(135deg, #fff 0%, #aaa 100%);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header p {
+            color: var(--text-secondary);
+            font-size: 18px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* Currency Toggle */
+        .currency-toggle-wrapper {
+            margin-bottom: 40px;
+            background: #111;
+            border: 1px solid #222;
+            padding: 4px;
+            border-radius: 100px;
+            display: inline-flex;
+            position: relative;
+        }
+
+        .currency-option {
+            padding: 8px 24px;
+            border-radius: 100px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            color: #666;
+            transition: 0.2s;
+            z-index: 2;
+            position: relative;
+        }
+
+        .currency-option.active {
+            color: #000;
+        }
+
+        .toggle-bg {
+            position: absolute;
+            top: 4px;
+            left: 4px;
+            width: calc(50% - 4px);
+            height: calc(100% - 8px);
+            background: #FFD700;
+            border-radius: 100px;
+            transition: none;
+            /* Instant toggle, no animation */
+            z-index: 1;
+        }
+
+        /* Prevent flicker on load */
+        .no-transition .toggle-bg {
+            transition: none !important;
+        }
+
+        /* Pricing Grid */
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 32px;
+            max-width: 900px;
+            width: 100%;
+            padding: 0 20px 80px 20px;
+        }
+
+        /* Card Styles */
+        .pricing-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            transition: 0.2s;
+            overflow: hidden;
+        }
+
+        /* Reduced Hover as requested */
+        .pricing-card:hover {
+            border-color: #333;
+        }
+
+        .pricing-card.pro {
+            border-color: var(--accent-purple);
+            background: linear-gradient(180deg, rgba(139, 92, 246, 0.05) 0%, rgba(15, 15, 15, 1) 100%);
+            box-shadow: 0 20px 40px -10px rgba(139, 92, 246, 0.15);
+        }
+
+        .card-header {
+            margin-bottom: 32px;
+        }
+
+        .plan-name {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .plan-price {
+            font-size: 42px;
+            font-weight: 800;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            color: #fff;
+        }
+
+        .plan-price span {
+            font-size: 16px;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .features-list {
+            list-style: none;
+            margin-bottom: 40px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .features-list li {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #ccc;
+            font-size: 15px;
+        }
+
+        .features-list li i {
+            color: var(--success);
+            font-size: 18px;
+        }
+
+        .pricing-card.pro .features-list li i {
+            color: var(--accent-purple);
+        }
+
+        .pricing-card.pro .features-list li i.bi-star-fill {
+            color: #FFD700;
+        }
+
+        .btn-plan {
+            width: 100%;
+            padding: 16px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 16px;
+            cursor: pointer;
+            transition: 0.2s;
+            border: none;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            text-align: center;
+            text-decoration: none;
+        }
+
+        .btn-basic {
+            background: transparent;
+            border: 1px solid #333;
+            color: #fff;
+        }
+
+        /* .btn-basic:hover { background: rgba(255, 255, 255, 0.05); } */
+
+        .btn-pro {
+            background: #FFD700;
+            color: #000;
+            box-shadow: 0 4px 15px rgba(255, 215, 0, 0.2);
+        }
+
+        .btn-pro:hover {
+            background: #e6c200;
+        }
+
+        .badge-recommended {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(139, 92, 246, 0.2);
+            color: #A78BFA;
+            font-size: 12px;
+            font-weight: 700;
+            padding: 6px 12px;
+            border-radius: 50px;
+            border: 1px solid rgba(139, 92, 246, 0.3);
+        }
+
+        /* PAYMENT MODAL */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+            animation: fadeIn 0.2s ease-out;
+        }
+
+        .payment-modal {
+            background: #0F0F0F;
+            border: 1px solid #333;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 600px;
+            padding: 0;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            max-height: 90vh;
+        }
+
+        .payment-header {
+            padding: 24px;
+            border-bottom: 1px solid #222;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #111;
+        }
+
+        .payment-body {
+            padding: 32px;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+            overflow-y: auto;
+        }
+
+        .payment-method-btn {
+            background: #161616;
+            border: 1px solid #333;
+            padding: 16px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            transition: 0.2s;
+            color: #fff;
+            text-align: left;
+        }
+
+        .payment-method-btn:hover {
+            border-color: #666;
+            background: #222;
+        }
+
+        .payment-method-btn.active {
+            border-color: var(--accent-purple);
+            background: rgba(139, 92, 246, 0.1);
+        }
+
+        .method-icon {
+            font-size: 24px;
+            margin-right: 16px;
+            width: 32px;
+            text-align: center;
+        }
+
+        .method-details {
+            display: none;
+            background: #000;
+            border: 1px solid #222;
+            padding: 24px;
+            border-radius: 12px;
+            margin-top: 12px;
+            margin-bottom: 12px;
+            position: relative;
+            z-index: 10;
+        }
+
+        .method-details.show {
+            display: block;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Glow Animation for Hook (Subtle) */
+        @keyframes textGlow {
+            0% {
+                text-shadow: 0 0 2px rgba(255, 215, 0, 0.2);
+            }
+
+            50% {
+                text-shadow: 0 0 8px rgba(255, 215, 0, 0.4);
+            }
+
+            100% {
+                text-shadow: 0 0 2px rgba(255, 215, 0, 0.2);
+            }
+        }
+
+        .hook-glow {
+            color: #FFD700;
+            font-weight: 800;
+            animation: textGlow 3s infinite ease-in-out;
+        }
+
+        /* WhatsApp Button */
+        .btn-whatsapp {
+            background: #25D366;
+            color: #fff;
+            border: none;
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            text-decoration: none;
+            margin-top: 15px;
+            font-size: 14px;
+            transition: 0.2s;
+        }
+
+        .btn-whatsapp:hover {
+            background: #128C7E;
+        }
+
+        @media (max-width: 768px) {
+            .pricing-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .yape-layout {
+                flex-direction: column;
+                text-align: center !important;
+            }
+
+            .yape-right {
+                text-align: center !important;
+            }
+        }
+
+        /* Yape Layout */
+        .yape-layout {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .yape-right {
+            flex: 1;
+            text-align: left;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="radial-glow"></div>
+
+    <div class="nav-stub">
+        <a href="/index.html" class="logo">
+            <img src="../images/LOGO-OFFSZN.png" alt="OFFSZN" style="width: 32px;"> OFFSZN
+        </a>
+        <a href="javascript:history.back()" class="btn-close">
+            <i class="bi bi-x-lg"></i>
+        </a>
+    </div>
+
+    <div class="header entry-anim" style="animation-delay: 0.1s;">
+        <h1>Elige tu potencia</h1>
+        <p>Precios ajustados a tu realidad. Cancela cuando quieras.</p>
+    </div>
+
+    <!-- Currency Toggle -->
+    <div class="currency-toggle-wrapper entry-anim" style="animation-delay: 0.2s;">
+        <div class="toggle-bg" id="toggleBg"></div>
+        <div class="currency-option active" onclick="setCurrency('USD')" id="opt-USD">USD $</div>
+        <div class="currency-option" onclick="setCurrency('PEN')" id="opt-PEN">PEN S/</div>
+    </div>
+
+    <div class="pricing-grid">
+
+        <!-- BASIC -->
+        <div class="pricing-card entry-anim" style="animation-delay: 0.3s;">
+            <div class="card-header">
+                <div class="plan-name">0$ Básico</div>
+                <div class="plan-price" id="price-basic">$0<span>/mes</span></div>
+                <p style="color:#666; font-size:14px; margin-top:8px;">Para arrancar con fuerza.</p>
+            </div>
+
+            <ul class="features-list">
+                <li style="color:#fff;"><i class="bi bi-check-circle-fill" style="color:#fff;"></i> <strong>100
+                        Subidas</strong></li>
+                <li style="opacity:0.6;"><i class="bi bi-check-circle-fill"></i> Analytics Básicas</li>
+                <li style="opacity:0.6;"><i class="bi bi-check-circle-fill"></i> Soporte por Email</li>
+                <li class="hook-glow" style="color:#fff;"><i class="bi bi-star-fill"></i> <strong>5% Comisión</strong>
+                </li>
+            </ul>
+
+            <button class="btn-plan btn-basic" disabled style="opacity:0.5; cursor:default;">Tu Plan Actual</button>
+        </div>
+
+        <!-- PRO -->
+        <div class="pricing-card pro entry-anim" style="animation-delay: 0.4s;">
+            <div class="badge-recommended">MÁS POPULAR</div>
+            <div class="card-header">
+                <div class="plan-name" style="color:#fff;">Pro</div>
+                <div class="plan-price" id="price-pro">$5<span>/mes</span></div>
+                <p style="color:#888; font-size:14px; margin-top:8px;">Todo ilimitado. 0 comisiones.</p>
+            </div>
+
+            <ul class="features-list">
+                <li style="color:#FFD700;"><i class="bi bi-check-circle-fill" style="color:#FFD700;"></i>
+                    <strong>Subidas Ilimitadas</strong></li>
+                <li style="color:#fff;"><i class="bi bi-palette-fill" style="color:#fff;"></i> <strong>Diseño de Tienda
+                        Premium</strong></li>
+                <li style="color:#fff;"><i class="bi bi-people-fill" style="color:#fff;"></i> <strong>Comunidad
+                        Exclusiva</strong></li>
+                <li style="color:#FFD700;"><i class="bi bi-patch-check-fill" style="color:#FFD700;"></i>
+                    <strong>Insignia PRO</strong></li>
+                <li style="color:#FFD700;"><i class="bi bi-star-fill" style="color:#FFD700;"></i> <strong>0%
+                        Comisión</strong></li>
+                <li style="opacity:0.6;"><i class="bi bi-check-circle-fill"></i> Analytics Avanzadas</li>
+                <li style="opacity:0.6;"><i class="bi bi-check-circle-fill"></i> Soporte Prioritario 24/7</li>
+            </ul>
+
+            <button onclick="openPaymentModal()" class="btn-plan btn-pro">Mejorar a Pro</button>
+        </div>
+
+    </div>
+
+    <!-- PAYMENT SELECTION MODAL -->
+    <div class="modal-overlay" id="paymentModal" onclick="if(event.target === this) closePaymentModal()">
+        <div class="payment-modal">
+            <div class="payment-header">
+                <h3 style="color:#fff; font-size:18px;">Elige Método de Pago</h3>
+                <button onclick="closePaymentModal()"
+                    style="background:none; border:none; color:#666; cursor:pointer; font-size:20px;"><i
+                        class="bi bi-x-lg"></i></button>
+            </div>
+            <div class="payment-body">
+                <p style="color:#888; font-size:14px; margin-bottom:10px;">Estás adquiriendo <strong>Pro</strong>
+                    por <span id="modalPriceDisplay" style="color:#fff; font-weight:700;">$5.00 / mes</span>.</p>
+
+                <!-- PayPal -->
+                <div id="cont-paypal">
+                    <button class="payment-method-btn" onclick="toggleMethod('paypal')">
+                        <div style="display:flex; align-items:center;">
+                            <i class="bi bi-paypal method-icon" style="color:#003087;"></i>
+                            <span>PayPal</span>
+                        </div>
+                        <i class="bi bi-chevron-down"></i>
+                    </button>
+                    <div id="details-paypal" class="method-details">
+                        <div id="paypal-button-container"></div>
+                        <p style="color:#666; font-size:12px; margin-top:10px; text-align:center;">¿Problemas? <a
+                                href="#" onclick="openWhatsApp('general')" style="color:#888;">Contáctanos</a></p>
+                    </div>
+                </div>
+
+                <!-- Mercado Pago / Yape -->
+                <div id="cont-mp">
+                    <button class="payment-method-btn" onclick="toggleMethod('mp')">
+                        <div style="display:flex; align-items:center;">
+                            <i class="bi bi-qr-code-scan method-icon" style="color:#009EE3;"></i>
+                            <span>Yape </span>
+                        </div>
+                        <i class="bi bi-chevron-down"></i>
+                    </button>
+                    <div id="details-mp" class="method-details">
+                        <div class="yape-layout">
+                            <!-- Left: QR -->
+                            <div class="yape-left" style="text-align: center;">
+                                <!-- Cropped Container -->
+                                <div
+                                    style="width: 180px; height: 180px; overflow: hidden; border-radius: 12px; display: inline-block; margin-bottom: 8px; border: 2px solid #fff; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
+                                    <!-- Scale up and move down more -->
+                                    <img src="../images/yape.jpg"
+                                        style="width: 100%; height: 100%; object-fit: cover; object-position: center; transform: scale(1.35) translateY(15px);"
+                                        alt="Yape/Plin QR">
+                                </div>
+                                <br>
+                                <a href="../images/yape.jpg" download="OFFSZN_Yape_QR.jpg"
+                                    style="color:#888; font-size:12px; text-decoration:none; display:inline-block; border-bottom:1px dotted #888;">
+                                    <i class="bi bi-download"></i> Descargar Imagen Completa
+                                </a>
+                            </div>
+
+                            <!-- Right: Instructions -->
+                            <div class="yape-right">
+                                <p style="color:#fff; font-size:15px; margin-bottom:8px;">Escanea para yapear <strong
+                                        id="yapeAmount" style="color:#00D79D; font-size:18px;">S/ 19.00</strong></p>
+                                <p style="color:#aaa; font-size:13px; line-height:1.4; margin-bottom:15px;">
+                                    1. Abre tu Yape o Plin.<br>
+                                    2. Escanea el QR o descarga la imagen.<br>
+                                    3. Envía la captura para activar tu cuenta.
+                                </p>
+                                <a href="#" onclick="openWhatsApp('yape')" class="btn-whatsapp">
+                                    <i class="bi bi-whatsapp"></i> Enviar Comprobante
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Western Union -->
+                <div id="cont-wu">
+                    <button class="payment-method-btn" onclick="toggleMethod('wu')">
+                        <div style="display:flex; align-items:center;">
+                            <i class="bi bi-bank method-icon" style="color:#FFD700;"></i>
+                            <span>Western Union</span>
+                        </div>
+                        <i class="bi bi-chevron-down"></i>
+                    </button>
+                    <div id="details-wu" class="method-details">
+                        <p style="color:#ccc; font-size:13px; line-height:1.6;">
+                            <strong>Nombre:</strong> Wilbert Garay Sosa<br>
+                            <strong>DNI:</strong> 23847731<br>
+                            <strong>Destino:</strong> Lima<br>
+                            <strong>País:</strong> Perú<br>
+                            <br>
+                            <em style="color:#e6c200; font-size:12px;">* Las comisiones de envío/agencia son
+                                cubiertas por el cliente.</em><br><br>
+                        </p>
+                        <a href="#" onclick="openWhatsApp('wu')" class="btn-whatsapp">
+                            <i class="bi bi-whatsapp"></i> Enviar MTCN / Soporte
+                        </a>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Supabase & Auth -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../script/auth-guard.js"></script>
+
+    <script>
+        // --- CURRENCY STATE ---
+        // Load saved currency or default to USD
+        let currentCurrency = localStorage.getItem('offszn_currency') || 'USD';
+
+        const rates = {
+            'USD': { symbol: '$', price: 5, basic: 0, label: 'USD $' },
+            'PEN': { symbol: 'S/', price: 19, basic: 0, label: 'PEN S/' }
+        };
+
+        // Initialize UI Immediately (No Flash)
+        const wrapper = document.querySelector('.currency-toggle-wrapper');
+        wrapper.classList.add('no-transition'); // Disable transition
+
+        setCurrency(currentCurrency);
+
+        // Re-enable transition after a small tick
+        setTimeout(() => {
+            wrapper.classList.remove('no-transition');
+        }, 50);
+
+        function setCurrency(curr) {
+            currentCurrency = curr;
+            localStorage.setItem('offszn_currency', curr);
+
+            // UI Toggle
+            document.querySelectorAll('.currency-option').forEach(el => el.classList.remove('active'));
+            document.getElementById('opt-' + curr).classList.add('active');
+
+            const bg = document.getElementById('toggleBg');
+            bg.style.transform = curr === 'PEN' ? 'translateX(100%)' : 'translateX(0)';
+
+            // Update Text
+            const data = rates[curr];
+            document.getElementById('price-pro').innerHTML = `${data.symbol}${data.price}<span>/mes</span>`;
+            document.getElementById('price-basic').innerHTML = `${data.symbol}${data.basic}<span>/mes</span>`;
+
+            // Update Yape Amount Text
+            if (curr === 'PEN') {
+                document.getElementById('yapeAmount').innerText = 'S/ 19.00';
+            } else {
+                document.getElementById('yapeAmount').innerText = '$5.00';
+            }
+        }
+
+        // --- PAYMENT MODAL ---
+        function openPaymentModal() {
+            // Update Modal Price Display
+            const data = rates[currentCurrency];
+            document.getElementById('modalPriceDisplay').innerText = `${data.symbol}${data.price.toFixed(2)} / mes`;
+
+            document.getElementById('paymentModal').classList.add('active');
+
+            // --- FILTER METHODS BY CURRENCY (Requested Logic) ---
+            if (currentCurrency === 'PEN') {
+                // Soles: Only Yape
+                document.getElementById('cont-mp').style.display = 'block';
+                document.getElementById('cont-paypal').style.display = 'none';
+                document.getElementById('cont-wu').style.display = 'none';
+            } else {
+                // USD: PayPal & WU (Hide Yape/MP to avoid confusion or keep as option? User implied specific separation)
+                // Let's hide MP for USD to be clean as per user's "when soles only yape" checks.
+                document.getElementById('cont-mp').style.display = 'none';
+                document.getElementById('cont-paypal').style.display = 'block';
+                document.getElementById('cont-wu').style.display = 'block';
+            }
+        }
+
+        function closePaymentModal() {
+            document.getElementById('paymentModal').classList.remove('active');
+            // Reset accordions
+            document.querySelectorAll('.method-details').forEach(el => el.classList.remove('show'));
+        }
+
+        function toggleMethod(methodId) {
+            // Close others
+            document.querySelectorAll('.method-details').forEach(el => {
+                if (el.id !== 'details-' + methodId) el.classList.remove('show');
+            });
+            // Toggle current
+            const target = document.getElementById('details-' + methodId);
+            target.classList.toggle('show');
+
+            // If PayPal, render only if empty
+            if (methodId === 'paypal' && target.classList.contains('show')) {
+                renderPayPal();
+            }
+        }
+
+        // --- PAYPAL RENDER (One-Time Payment Mode) ---
+        let paypalRendered = false;
+        function renderPayPal() {
+            if (paypalRendered) return;
+            document.getElementById('paypal-button-container').innerHTML = '';
+
+            if (window.paypal) {
+                paypal.Buttons({
+                    style: {
+                        shape: 'rect',
+                        color: 'gold',
+                        layout: 'vertical',
+                        label: 'pay'
+                    },
+                    createOrder: function (data, actions) {
+                        return actions.order.create({
+                            purchase_units: [{
+                                description: "OFFSZN Pro Artist (1 Mes)",
+                                amount: {
+                                    value: '5.00' // $5.00 USD Fixed
+                                }
+                            }]
+                        });
+                    },
+                    onApprove: async function (data, actions) {
+                        // Capture the transaction
+                        const orderData = await actions.order.capture();
+                        console.log("Pago Capturado:", orderData);
+
+                        // AUTOMATIC PROVISIONING LOGIC
+                        if (window.supabaseClient && window.currentUser) {
+                            try {
+                                const { error } = await window.supabaseClient
+                                    .from('subscriptions')
+                                    .insert({
+                                        user_id: window.currentUser.id,
+                                        plan_id: 'pro_monthly_manual',
+                                        status: 'active',
+                                        provider: 'paypal_onetime',
+                                        provider_subscription_id: orderData.id,
+                                        // Set expiration 30 days from now
+                                        current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+                                    });
+
+                                if (error) throw error;
+
+                                await window.supabaseClient
+                                    .from('profiles')
+                                    .update({ plan: 'pro' })
+                                    .eq('id', window.currentUser.id);
+
+                                alert("¡Pago Exitoso! Tu cuenta ahora es PRO por 30 días 🌟");
+                                window.location.href = 'dashboard.html';
+
+                            } catch (err) {
+                                console.error("Error provisioning:", err);
+                                alert("Pago recibido, pero hubo un error actualizando tu perfil. Contacta a soporte.");
+                            }
+                        } else {
+                            alert("Pago recibido. Por favor recarga la página.");
+                        }
+                    }
+                }).render('#paypal-button-container');
+                paypalRendered = true;
+            } else {
+                document.getElementById('paypal-button-container').innerText = "Error loading PayPal SDK";
+            }
+        }
+
+        // --- WHATSAPP SUPPORT ---
+        // --- WHATSAPP SUPPORT ---
+        function openWhatsApp(type) {
+            if (type === 'wu') {
+                window.open('https://wa.link/f6re2z', '_blank');
+            } else if (type === 'yape') {
+                window.open('https://wa.link/l31al5', '_blank');
+            } else {
+                // General contact (Calculated fallback or direct link)
+                window.open('https://wa.link/l31al5', '_blank');
+            }
+        }
+    </script>
+    <!-- Particles Background Script (Vanilla JS - No Dependencies) -->
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.style.position = 'fixed';
+            canvas.style.top = '0';
+            canvas.style.left = '0';
+            canvas.style.width = '100%';
+            canvas.style.height = '100%';
+            canvas.style.zIndex = '-1'; // Behind everything
+            canvas.style.pointerEvents = 'none';
+            document.body.prepend(canvas);
+
+            let particles = [];
+            const particleCount = 60; // Enough for subtle effect
+
+            function resize() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
+            window.addEventListener('resize', resize);
+            resize();
+
+            class Particle {
+                constructor() {
+                    this.x = Math.random() * canvas.width;
+                    this.y = Math.random() * canvas.height;
+                    this.vx = (Math.random() - 0.5) * 0.15; // Slow movement
+                    this.vy = (Math.random() - 0.5) * 0.15;
+                    this.size = Math.random() * 1.5;
+                    this.alpha = Math.random() * 0.4 + 0.1;
+                }
+                update() {
+                    this.x += this.vx;
+                    this.y += this.vy;
+                    if (this.x < 0) this.x = canvas.width;
+                    if (this.x > canvas.width) this.x = 0;
+                    if (this.y < 0) this.y = canvas.height;
+                    if (this.y > canvas.height) this.y = 0;
+                }
+                draw() {
+                    ctx.fillStyle = `rgba(255, 255, 255, ${this.alpha})`;
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+
+            // Init
+            for (let i = 0; i < particleCount; i++) {
+                particles.push(new Particle());
+            }
+
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                particles.forEach(p => {
+                    p.update();
+                    p.draw();
+                });
+                requestAnimationFrame(animate);
+            }
+            animate();
+        });
+    </script>
+</body>
+
+</html>

@@ -4,761 +4,411 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cursos - OFFSZN Academy | Mezcla Profesional desde Cero</title>
-  <meta name="description"
-    content="Aprende mezcla y masterización profesional con Willie Inspired. Cursos prácticos, presets exclusivos y acceso a comunidad privada.">
-
-  <link
-    href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Poppins:wght@300;400;500;600&display=swap"
-    rel="stylesheet">
+  <title>Checkout - OFFSZN</title>
+  <!-- Bootstrap Icons -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
-  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="/css/auth-ui.css">
+  <link rel="stylesheet" href="/css/global-overlays.css">
+  <link rel="stylesheet" href="/css/navbar.css">
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Plus+Jakarta+Sans:wght@400;500;700;800&display=swap"
+    rel="stylesheet">
+
+  <!-- 1. Cargar Supabase (Moved to Head for Global Access) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    // --- GLOBAL SUPABASE CONFIG ---
+    // Moved here so it is available for Search AND Auth scripts immediately.
+    window.SUPABASE_URL = "https://qtjpvztpgfymjhhpoouq.supabase.co";
+    window.SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0anB2enRwZ2Z5bWpoaHBvb3VxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3ODA5MTUsImV4cCI6MjA3NjM1NjkxNX0.YsItTFk3hSQaVuy707-z7Z-j34mXa03O0wWGAlAzjrw";
+
+    window.supabaseClient = null;
+
+    document.addEventListener('DOMContentLoaded', () => {
+      if (typeof window.supabase !== 'undefined' && window.supabase.createClient) {
+        window.supabaseClient = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
+        console.log("✅ Supabase Global Initialized");
+      } else {
+        console.warn("⚠️ Supabase CDN failed to load");
+      }
+    });
+  </script>
+  <script src="/script/notifications.js"></script>
 </head>
 
 <body>
 
-  <!-- COUNTDOWN BANNER - OCULTO EN CURSOS POR EL JS 
-<div class="countdown-banner" id="countdownBanner">
-  <div class="countdown-content">
-    <span class="countdown-text">CURSO COMPLETO 25% OFF - OFERTA LIMITADA</span>
-    <div class="countdown-timer">
-      <div class="time-block">
-        <span class="time-number" id="days">30</span>
-        <span class="time-label">DÍAS</span>
+
+
+  <!-- ==================== EXTRACTED NAVBAR ==================== -->
+  <header class="navbar">
+    <div class="navbar-container">
+      <div class="logo">
+        <a href="/index.html">
+          <img src="/images/LOGO OFFSZN.webp" alt="OFFSZN"
+            style="height: 80px; width: auto; display: block; transform: scale(1.5); transform-origin: left center;">
+        </a>
       </div>
-      <div class="time-block">
-        <span class="time-number" id="hours">00</span>
-        <span class="time-label">HORAS</span>
+      <div class="navbar-center">
+        <ul class="navbar-links">
+          <li><a href="explorar.html">Explorar</a></li>
+          <li class="dropdown-parent">
+            <a onclick="toggleDropdown(this)" class="nav-toggle-link noselect"
+              style="user-select: none; -webkit-user-select: none; cursor: pointer;" onselectstart="return false;">
+              Recursos <i class="bi bi-chevron-down"></i>
+            </a>
+            <div class="dropdown-menu mega-columns">
+              <!-- BOX 1: SONIDOS (Tools) -->
+              <div class="mega-column-box">
+                <span class="dropdown-section-title"
+                  style="font-size: 0.7rem; letter-spacing: 1.5px; color:#555; margin-bottom: 12px; display:block; font-weight:800; padding-left: 6px;">
+                  SONIDOS
+                </span>
+                <div class="dropdown-section">
+                  <a href="/recursos/drum-kits" class="mega-nav-link"><i class="bi bi-disc"></i> Drum
+                    Kits</a>
+                  <a href="/recursos/presets" class="mega-nav-link"><i class="bi bi-sliders"></i>
+                    Presets</a>
+                  <a href="/recursos/samples-loops" class="mega-nav-link"><i class="bi bi-soundwave"></i> Loops</a>
+                  <a href="/recursos/one-shots" class="mega-nav-link"><i class="bi bi-bullseye"></i>
+                    One-Shots</a>
+                  <a href="/recursos/recursos-gratis" class="mega-nav-link"><i class="bi bi-check-circle"></i>
+                    Gratis</a>
+                </div>
+              </div>
+
+              <!-- BOX 2: COMUNIDAD (Swapped to Middle) -->
+              <div class="mega-column-box">
+                <span class="dropdown-section-title"
+                  style="font-size: 0.7rem; letter-spacing: 1.5px; color:#555; margin-bottom: 12px; display:block; font-weight:800; padding-left: 6px;">
+                  COMUNIDAD
+                </span>
+                <div class="dropdown-section">
+                  <a href="/comunidad/productores" class="mega-nav-link"><i class="bi bi-people"></i>
+                    Productores</a>
+                  <a href="/comunidad/colaboraciones" class="mega-nav-link"><i class="bi bi-person-plus"></i>
+                    Collabs</a>
+                  <a href="/comunidad/eventos" class="mega-nav-link"><i class="bi bi-calendar-event"></i> Eventos</a>
+                  <a href="/comunidad/feed" class="mega-nav-link"><i class="bi bi-collection-play"></i> Feed</a>
+                  <a href="/cursos/inicio" class="mega-nav-link">
+                    <i class="bi bi-mortarboard"></i> Cursos <span
+                      style="background: rgba(139, 92, 246, 0.1); color: #a78bfa; font-size: 0.6rem; padding: 1px 4px; border-radius: 4px; margin-left: 6px; border: 1px solid rgba(139, 92, 246, 0.2);">SOON</span>
+                  </a>
+                </div>
+              </div>
+
+              <!-- BOX 3: GÉNEROS (Swapped to End) -->
+              <div class="mega-column-box">
+                <span class="dropdown-section-title"
+                  style="font-size: 0.7rem; letter-spacing: 1.5px; color:#555; margin-bottom: 12px; display:block; font-weight:800; padding-left: 6px;">
+                  GÉNEROS
+                </span>
+                <div class="dropdown-section">
+                  <a href="/recursos/beats" class="mega-nav-link">Hip-Hop</a>
+                  <a href="/recursos/beats" class="mega-nav-link">Trap</a>
+                  <a href="/recursos/beats" class="mega-nav-link">R&B</a>
+                  <a href="/recursos/beats" class="mega-nav-link">Reggaetón</a>
+                  <a href="/recursos/beats" class="mega-nav-link">Drill</a>
+                  <a href="/recursos/beats" class="mega-nav-link"
+                    style="color: rgba(255,255,255,0.6); font-size: 0.8rem; margin-top: 4px; transition: color 0.2s;">Ver
+                    todos &rarr;</a>
+                </div>
+              </div>
+            </div>
+          </li>
+
+          <!-- STUDIO / LAB (New Identity Feature) -->
+          <li class="dropdown-parent">
+            <a onclick="toggleDropdown(this)" class="nav-toggle-link noselect"
+              style="user-select: none; -webkit-user-select: none; cursor: pointer;" onselectstart="return false;">
+              Studio <span
+                style="background: rgba(139, 92, 246, 0.1); color: #a78bfa; font-size: 0.6rem; padding: 1px 4px; border-radius: 4px; margin-left: 4px; border: 1px solid rgba(139, 92, 246, 0.2);">BETA</span>
+              <i class="bi bi-chevron-down"></i>
+            </a>
+            <div class="dropdown-menu" style="min-width: 250px; padding: 8px;">
+              <div class="dropdown-section">
+                <span class="dropdown-section-title"
+                  style="font-size: 0.7rem; letter-spacing: 1.5px; color:#555; margin-bottom: 8px; display:block; font-weight:800; padding: 0 8px;">
+                  EXCLUSIVE TOOLS
+                </span>
+                <a href="/youtube.html" class="dropdown-item" style="border-radius: 8px;">
+                  <i class="bi bi-youtube" style="color: #ef4444;"></i>
+                  <div class="dropdown-item-content">
+                    <div class="dropdown-item-title">YouTube Upload</div>
+                    <div class="dropdown-item-desc" style="font-size: 0.7rem; color: #888;">
+                      Sube tu producto al marketplace y se publica automático en YouTube con tu
+                      miniatura.
+                    </div>
+                  </div>
+                </a>
+                <a href="/studio/reels" class="dropdown-item" style="border-radius: 8px;">
+                  <i class="bi bi-collection-play"></i>
+                  <div class="dropdown-item-content">
+                    <div class="dropdown-item-title">Reels</div>
+                    <div class="dropdown-item-desc" style="font-size: 0.7rem; color: #888;">Descubre
+                      tendencias visuales</div>
+                  </div>
+                </a>
+              </div>
+            </div>
+            <!-- Cursos moved to Dropdown -->
+
+        </ul>
+
+        <!-- NEW: NAVBAR SEARCH (Wavs Style) -->
+        <!-- NEW: NAVBAR SEARCH (Wavs Style) with Internal Filter & Trending Panel -->
+        <div class="navbar-search" style="margin-left: 24px; flex: 1; max-width: 440px; position: relative;">
+          <i class="bi bi-search"
+            style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: #666; font-size: 0.85rem; z-index: 10;"></i>
+          <input type="text" id="navbarSearchInput" placeholder="Buscar 'trap' o 'drill'..."
+            style="width: 100%; background: #0f0f0f; border: 1px solid rgba(255,255,255,0.08); padding: 11px 110px 11px 42px; border-radius: 12px; color: #fff; font-size: 0.9rem; outline: none; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);">
+
+          <!-- Internal Filter Trigger - Seamless Integration -->
+          <div class="search-filter-trigger" onclick="toggleSearchFilter(event)"
+            style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); display: flex; align-items: center; gap: 6px; cursor: pointer; padding: 4px 10px; background: rgba(255,255,255,0.05); border-radius: 8px; height: 28px; transition: background 0.2s;">
+            <span id="search-filter-label"
+              style="font-size: 0.75rem; color: #ccc; font-weight: 600; letter-spacing: 0.3px;">Todo</span>
+            <i class="bi bi-chevron-down" style="font-size: 0.65rem; color: #888;"></i>
+          </div>
+
+          <!-- Filter Dropdown (Glassmorphism) -->
+          <div id="search-filter-dropdown"
+            style="position: absolute; top: calc(100% + 8px); right: 0; background: rgba(15, 15, 15, 0.95); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 6px; width: 140px; display: none; flex-direction: column; box-shadow: 0 10px 40px rgba(0,0,0,0.5); z-index: 1002; transform-origin: top right; animation: scaleIn 0.2s ease;">
+            <div onclick="selectSearchFilter('Todo')" class="search-filter-item selected">Todo</div>
+            <div onclick="selectSearchFilter('Beats')" class="search-filter-item">Beats</div>
+            <div onclick="selectSearchFilter('Drum Kits')" class="search-filter-item">Drum Kits</div>
+            <div onclick="selectSearchFilter('Samples')" class="search-filter-item">Samples</div>
+            <div onclick="selectSearchFilter('Presets')" class="search-filter-item">Presets</div>
+            <div onclick="selectSearchFilter('Plantillas')" class="search-filter-item">Plantillas</div>
+            <div onclick="selectSearchFilter('Productores')" class="search-filter-item">Productores</div>
+          </div>
+
+          <!-- Trending / Intelligent Panel (Appears on Focus) -->
+          <!-- Trending / Intelligent Panel -->
+          <div id="search-trending-panel"
+            style="position: absolute; top: calc(100% + 4px); left: 0; width: 100%; background: #0a0a0a; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 12px; display: none; box-shadow: 0 20px 50px rgba(0,0,0,0.8); z-index: 1001;">
+
+            <!-- Recent Searches (New) -->
+            <div style="margin-bottom: 20px;">
+              <span
+                style="display: block; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 0.7rem; color: #555; font-weight: 700; letter-spacing: 0.5px; margin-bottom: 8px; text-transform: uppercase;">Búsquedas
+                Recientes</span>
+              <div style="display: flex; flex-direction: column; gap: 4px;">
+                <div class="recent-item" onclick="setSearch('Dark Piano')"><i class="bi bi-clock-history"></i>
+                  Dark
+                  Piano</div>
+                <div class="recent-item" onclick="setSearch('Tainy Drums')"><i class="bi bi-clock-history"></i>
+                  Tainy
+                  Drums</div>
+              </div>
+            </div>
+
+            <span
+              style="display: block; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 0.7rem; color: #555; font-weight: 700; letter-spacing: 0.5px; margin-bottom: 12px; text-transform: uppercase;">Tendencias
+              Ahora</span>
+            <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+              <span class="trend-tag"><i class="bi bi-graph-up-arrow"></i> Dark Trap</span>
+              <span class="trend-tag"><i class="bi bi-fire"></i> Reggaeton 2025</span>
+              <span class="trend-tag">Drill UK</span>
+            </div>
+          </div>
+        </div>
+        <!-- Search Overlay Backdrop -->
+        <div id="search-overlay"></div>
+
+        <!-- Active Tags Container (New) -->
+        <div id="active-search-tags"></div>
+        <!-- Logic moved to script/navbar.js -->
       </div>
-      <div class="time-block">
-        <span class="time-number" id="minutes">00</span>
-        <span class="time-label">MIN</span>
-      </div>
-      <div class="time-block">
-        <span class="time-number" id="seconds">00</span>
-        <span class="time-label">SEG</span>
-      </div>
-    </div>
-    <a href="#pricing" class="countdown-btn">APROVECHAR DESCUENTO</a>
-    <button class="countdown-close" id="countdownClose" aria-label="Cerrar">×</button>
-  </div>
-</div> -->
+      <button class="menu-toggle" id="menuToggle">
+      </button>
+      <div class="navbar-right">
 
-  <!-- ==================== NAVBAR ==================== -->
-  <header class="navbar" id="navbar">
-    <div class="logo">
-      <a href="/index">OFFSZN</a>
-    </div>
+        <!-- 1. CURRENCY (Always Visible) -->
+        <div class="currency-dropdown" style="position: relative;">
+          <button id="currency-toggle-btn" onclick="toggleCurrency(event)" class="nav-text-btn"
+            style="background:none; border:none; color:#bbb; font-size:0.8rem; font-weight:600; cursor:pointer; padding:6px 8px; display:flex; align-items:center; gap:4px; outline:none; transition: all 0.2s;">
+            <span id="current-currency">PEN</span> <i class="bi bi-caret-down-fill" style="font-size:0.6rem;"></i>
+          </button>
+          <div id="currency-menu"
+            style="position: absolute; top: 100%; left: 0; background: #141414; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 4px; display: none; flex-direction: column; min-width: 80px; box-shadow: 0 4px 12px rgba(0,0,0,0.5); z-index: 1005;">
+            <div onclick="setCurrency('PEN')" class="currency-item"
+              style="padding:6px 12px; font-size:0.8rem; color:#ccc; cursor:pointer; border-radius:4px;">
+              PEN</div>
+            <div onclick="setCurrency('USD')" class="currency-item"
+              style="padding:6px 12px; font-size:0.8rem; color:#ccc; cursor:pointer; border-radius:4px;">
+              USD</div>
+          </div>
+        </div>
 
-    <button class="menu-toggle" id="menuToggle" aria-label="Menú">
-      <i class="bi bi-list"></i>
-    </button>
-
-    <nav id="navMenu">
-      <button class="menu-close-btn" id="menuCloseBtn" aria-label="Cerrar menú">×</button>
-      <ul id="navbarLinks">
-        <li><a href="/index">Inicio</a></li>
-        <li><a href="/pages/cursos" class="active">Cursos</a></li>
-        <li><a href="/pages/presets-v2">Presets</a></li>
-        <li><a href="/pages/playlist">Playlist</a></li>
-        <li><a href="/pages/contacto">Contacto</a></li>
-      </ul>
-    </nav>
-
-    <!-- ICONOS DERECHA -->
-    <div class="right-icons">
-      <!-- Carrito -->
-      <a href="cart" class="cart-icon navbar-icon-button" title="Carrito">
-    <i class="bi bi-cart3"></i>
-  </a>
-
-      <!-- Iniciar Sesión -->
-      <div class="user-actions">
-        <a href="/pages/login" class="login-icon logged-out navbar-icon-button" title="Iniciar Sesión">
-          <i class="bi bi-person"></i>
+        <!-- 2. CART (Always Visible) -->
+        <a href="#" class="nav-icon-btn" title="Carrito" data-label="Carrito" onclick="toggleCartPanel(event)">
+          <i class="bi bi-cart3"></i>
+          <span id="cart-count-badge" class="cart-label-count" style="display:none;">0</span>
         </a>
 
-        <a href="/pages/my-products" class="account-icon logged-in navbar-icon-button" title="Mi Cuenta">
-          <i class="bi bi-person-check"></i>
-        </a>
+        <!-- 3. LOGGED IN ACTIONS (Hidden by default) -->
+        <div id="nav-auth-section" style="display: flex; align-items: center; gap: 0.5rem;">
 
-        <button id="global-logout-button" class="logout-button logged-in navbar-icon-button" title="Cerrar Sesión">
-          <i class="bi bi-box-arrow-right"></i>
-        </button>
+          <!-- NOTIFICACIONES -->
+          <div class="notification-dropdown">
+            <button class="nav-icon-btn" onclick="toggleNotificationDropdown(event)" data-label="Notificaciones"
+              style="user-select: none;" onselectstart="return false;">
+              <i class="bi bi-bell"></i>
+              <span class="notification-badge" id="notification-badge" style="display:none;">0</span>
+            </button>
+            <div class="notification-menu" id="notification-menu">
+              <div class="notification-header"
+                style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-bottom: 1px solid #222;">
+                <h4 style="margin: 0; font-size: 0.95rem; font-weight: 600; color: #fff;">Notificaciones
+                </h4>
+                <a href="/notificaciones.html" class="notif-view-all">Ver todos</a>
+              </div>
+              <div id="notification-list" style="max-height: 400px; overflow-y: auto;">
+                <div class="notif-empty" style="text-align: center; color: #fff; padding: 40px 20px;">
+                  <div style="font-size: 2rem; margin-bottom: 16px; color: #666;"><i class="bi bi-bell"></i></div>
+                  <h4 style="margin-bottom: 8px; font-size: 0.9rem; font-weight: 500;">Cargando...
+                  </h4>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- USER PROFILE -->
+          <div class="user-dropdown">
+            <div class="user-trigger" onclick="toggleUserDropdown(event)" style="cursor: pointer;">
+              <div id="user-avatar-display" class="user-avatar-placeholder">W</div>
+            </div>
+            <div class="user-dropdown-menu" style="width: 380px;">
+              <div class="user-dropdown-header" onclick="window.location.href='perfil-publico.html'"
+                style="display: flex; align-items: center; justify-content: space-between; gap: 12px; background-color: #232323; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 24px 16px; margin-bottom: 12px; cursor: pointer; transition: background-color 0.2s; user-select: none;"
+                onmouseover="this.style.backgroundColor='#2a2a2a'" onmouseout="this.style.backgroundColor='#232323'">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                  <div class="user-dropdown-avatar-lg"
+                    style="width: 48px; height: 48px; font-size: 1.2rem; border-radius: 50%;">W
+                  </div>
+                  <div style="display: flex; flex-direction: column;">
+                    <h4 id="dropdown-username" style="margin: 0; font-size: 1rem; color: #fff; font-weight: 600;">Willie
+                      Inspired</h4>
+                    <span style="color: #999; font-size: 0.85rem;">0 Créditos</span>
+                  </div>
+                </div>
+                <a href="/cuenta/planes.html" class="btn-subscribe-sm" onclick="event.stopPropagation();"
+                  style="padding: 6px 12px; font-size: 0.8rem;">
+                  <i class="bi bi-plus-circle-fill"></i> Suscribirse
+                </a>
+              </div>
+
+              <div class="w-grid">
+                <a href="/cuenta/dashboard.html" class="w-grid-item"><i class="fas fa-columns"
+                    style="transform: rotate(90deg);"></i><span>Dashboard</span></a>
+                <a href="mis-compras.html" class="w-grid-item"><i
+                    class="fas fa-layer-group"></i><span>Compras</span></a>
+                <a href="mensajes" class="w-grid-item"><i class="fas fa-envelope"></i><span>Mensajes</span></a>
+              </div>
+
+              <!-- LIST -->
+              <a href="/favoritos.html" class="w-list-item"><i class="fas fa-heart"></i> Mis Favoritos</a>
+              <a href="gift-cards" class="w-list-item"><i class="fas fa-gift"></i> Gift Cards</a>
+              <a href="historial" class="w-list-item"><i class="fas fa-history"></i> Historial</a>
+              <div style="height: 1px; background: rgba(255,255,255,0.1); margin: 8px 0;"></div>
+              <a href="account-settings" class="w-list-item"><i class="fas fa-sliders-h"></i>
+                Configuración</a>
+              <a href="ayuda.html" class="w-list-item"><i class="fas fa-question-circle"></i> Centro de
+                Ayuda</a>
+              <a href="#" id="navbar-logout-btn" class="w-list-item" style="color: #ef4444; margin-top: 8px;">
+                <i class="fas fa-sign-out-alt" style="color: #ef4444;"></i> Cerrar Sesión
+              </a>
+            </div>
+          </div>
+
+          <!-- UPLOAD BUTTON -->
+          <a href="/cuenta/subir-kit.html" target=_blank class="btn-upload"><i class="fas fa-cloud-upload-alt"></i>
+            Subir</a>
+        </div>
+
+        <!-- 4. GUEST ACTIONS (Shown when Logged Out) -->
+        <div id="nav-guest-section" style="display: none; align-items: center; gap: 0.5rem;">
+          <!-- Separtor -->
+          <div style="width:1px; height:24px; background:rgba(255,255,255,0.1); margin:0 4px;"></div>
+          <a href="/pages/login.html" class="navbar-login-link">Iniciar Sesión</a>
+          <a href="/pages/register.html" class="btn-join">Únete <i class="bi bi-rocket-takeoff"></i></a>
+        </div>
+
       </div>
+    </div>
   </header>
+  <!-- ==================== SIDE PANELS (INJECTED MANUALLY FOR ANALYSIS) ==================== -->
 
-  <!-- HERO SECTION -->
-  <section class="curso-hero">
-    <div class="curso-hero-content">
-      <div class="hero-badge">
-        <i class="bi bi-award-fill"></i>
-        <span>CURSO MÁS COMPLETO</span>
-      </div>
+  <!-- BACKDROP -->
+  <div class="overlay-backdrop" id="globalBackdrop" onclick="closeAllOverlays()"></div>
 
-      <h1 class="curso-hero-title">
-        MEZCLA Y MASTERIZA<br>
-        COMO LOS <span class="highlight-gradient">PROFESIONALES</span>
-      </h1>
-
-      <p class="curso-hero-subtitle">
-        El único curso donde aprendes TODO el proceso real de producción: desde grabar voces hasta la masterización
-        final lista para plataformas.
-      </p>
-
-      <div class="hero-stats">
-        <div class="stat-item">
-          <span class="stat-number">15+</span>
-          <span class="stat-label">Horas de contenido</span>
+  <!-- CART SIDE PANEL -->
+  <div class="side-panel" id="globalCartPanel">
+    <div class="panel-header">
+      <div class="panel-title" style="display: flex; align-items: center; gap: 8px;">
+        <div style="position: relative; display: flex;">
+          <i class="fas fa-shopping-cart"></i>
+          <span id="cart-panel-count" class="notification-badge"
+            style="position: absolute; top: -6px; right: -6px; display: flex;">1</span>
         </div>
-        <div class="stat-item">
-          <span class="stat-number">50+</span>
-          <span class="stat-label">Lecciones prácticas</span>
-        </div>
-        <div class="stat-item">
-          <span class="stat-number">100+</span>
-          <span class="stat-label">Alumnos satisfechos</span>
-        </div>
+        Tu Carrito
       </div>
-
-      <div class="hero-cta-group">
-        <a href="#pricing" class="btn">
-          <i class="bi bi-play-circle-fill"></i>
-          COMENZAR AHORA
-        </a>
-        <a href="#temario" class="btn btn-secondary">
-          <i class="bi bi-list-ul"></i>
-          VER TEMARIO COMPLETO
-        </a>
-      </div>
-
-      <div class="trust-avatars">
-        <img src="/images/avatar1.jpg" alt="Alumno" class="trust-avatar">
-        <img src="/images/avatar2.jpg" alt="Alumno" class="trust-avatar">
-        <img src="/images/avatar3.jpg" alt="Alumno" class="trust-avatar">
-        <span class="trust-more">+97</span>
-      </div>
-      <p class="trust-text">
-        <i class="bi bi-star-fill"></i>
-        <strong>4.9/5</strong> basado en 100+ reseñas
-      </p>
+      <button class="panel-close" onclick="closeAllOverlays()">&times;</button>
     </div>
+    <!-- ID CHANGED: globalCartItems -> cart-items-container to match script/cart.js -->
+    <div class="panel-content" id="cart-items-container">
+      <div style="text-align:center; padding: 40px 0; color: #666;">
+        <i class="fas fa-shopping-basket" style="font-size: 3rem; margin-bottom: 10px;"></i>
+        <p>Tu carrito está vacío</p>
+      </div>
+    </div>
+    <!-- ID ADDED: cart-summary (needed by script) -->
+    <div class="cart-total-section" id="cart-summary">
+      <div style="display:flex; justify-content:space-between; margin-bottom:1rem; color:#fff; font-weight:700;">
+        <span>Total:</span>
+        <!-- ID CHANGED for JS compatibility -->
+        <span id="cart-total-price">$0.00</span>
+      </div>
+      <!-- ID CHANGED for JS compatibility -->
+      <button class="btn-checkout-global" id="cart-checkout-btn" onclick="window.location.href='/pages/checkout.html'">
+        <i class="bi bi-lock-fill" style="margin-right:6px;"></i> Ir a Pagar Seguro
+      </button>
 
-    <div class="curso-hero-visual">
-      <div class="video-preview-container">
-        <div class="video-placeholder">
-          <i class="bi bi-play-circle"></i>
-          <span>VER PREVIEW DEL CURSO</span>
+      <!-- TRUST BADGES -->
+      <div
+        style="margin-top: 20px; text-align: center; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 15px;">
+        <p style="font-size: 0.65rem; color: #666; margin-bottom: 10px; letter-spacing: 1px; font-weight: 700;">
+          METODOS DE PAGO SEGUROS</p>
+
+        <div
+          style="display: flex; gap: 12px; justify-content: center; align-items: center; opacity: 0.8; filter: grayscale(100%); transition: filter 0.3s;"
+          onmouseover="this.style.filter='grayscale(0%)'" onmouseout="this.style.filter='grayscale(100%)'">
+          <!-- Global -->
+          <i class="fab fa-cc-paypal" style="font-size: 26px; color: #fff;"></i>
+          <i class="fab fa-cc-visa" style="font-size: 26px; color: #fff;"></i>
+          <i class="fab fa-cc-mastercard" style="font-size: 26px; color: #fff;"></i>
+
+          <!-- Local (Custom Badges) -->
+          <div
+            style="background: #742284; color: white; font-size: 0.7rem; font-weight: 800; padding: 2px 6px; border-radius: 4px; display: flex; align-items: center;">
+            YAPE</div>
+          <div
+            style="background: #00d3de; color: white; font-size: 0.7rem; font-weight: 800; padding: 2px 6px; border-radius: 4px; display: flex; align-items: center;">
+            PLIN</div>
         </div>
       </div>
     </div>
-  </section>
+  </div>
 
-  <!-- TRANSFORMATION SECTION -->
-  <section class="curso-transformation">
-    <div class="section-header-center">
-      <span class="section-eyebrow">TU EVOLUCIÓN</span>
-      <h2>De Amateur a Profesional en 8 Semanas</h2>
-      <p>Lo que vas a dominar completamente</p>
-    </div>
-
-    <div class="transformation-grid">
-      <div class="transformation-card">
-        <div class="transform-icon">
-          <i class="bi bi-mic-fill"></i>
-        </div>
-        <h3>Grabación Profesional</h3>
-        <p>Aprende a grabar voces con calidad de estudio desde tu casa. Técnicas de micro, acústica y cadena de señal.
-        </p>
-        <ul class="transform-list">
-          <li>Setup de home studio óptimo</li>
-          <li>Técnicas de microfonía</li>
-          <li>Tratamiento acústico básico</li>
-        </ul>
-      </div>
-
-      <div class="transformation-card">
-        <div class="transform-icon">
-          <i class="bi bi-sliders"></i>
-        </div>
-        <h3>Mezcla Avanzada</h3>
-        <p>Domina EQ, compresión, reverb y toda la cadena de efectos como los ingenieros de los hits que escuchas.</p>
-        <ul class="transform-list">
-          <li>Ecualización frecuencial perfecta</li>
-          <li>Compresión dinámica profesional</li>
-          <li>Espacialización y profundidad</li>
-        </ul>
-      </div>
-
-      <div class="transformation-card">
-        <div class="transform-icon">
-          <i class="bi bi-soundwave"></i>
-        </div>
-        <h3>Masterización Final</h3>
-        <p>Lleva tus tracks al nivel de Spotify, Apple Music y todas las plataformas con loudness y claridad
-          profesional.</p>
-        <ul class="transform-list">
-          <li>Loudness LUFS correcto</li>
-          <li>Mastering chain completa</li>
-          <li>Exportación para plataformas</li>
-        </ul>
-      </div>
-
-      <div class="transformation-card">
-        <div class="transform-icon">
-          <i class="bi bi-palette-fill"></i>
-        </div>
-        <h3>Tu Sonido Único</h3>
-        <p>Desarrolla tu identidad sonora. No copies, crea tu propio estilo que te distinga de todos los demás.</p>
-        <ul class="transform-list">
-          <li>Referencias y análisis</li>
-          <li>Firma sonora personal</li>
-          <li>Workflow optimizado</li>
-        </ul>
-      </div>
-    </div>
-  </section>
-
-  <!-- CURRICULUM SECTION -->
-  <section class="curso-curriculum" id="temario">
-    <div class="section-header-center">
-      <span class="section-eyebrow">CONTENIDO COMPLETO</span>
-      <h2>Todo lo que Aprenderás Paso a Paso</h2>
-      <p>15+ horas de contenido organizado en módulos progresivos</p>
-    </div>
-
-    <div class="curriculum-container">
-      <!-- MÓDULO 1 -->
-      <div class="curriculum-module">
-        <div class="module-header">
-          <div class="module-info">
-            <span class="module-number">MÓDULO 1</span>
-            <h3>Fundamentos y Setup Profesional</h3>
-            <span class="module-meta">8 lecciones · 1h 45min</span>
-          </div>
-          <i class="bi bi-chevron-down module-toggle"></i>
-        </div>
-
-        <div class="module-content">
-          <div class="lesson-item">
-            <i class="bi bi-play-circle"></i>
-            <div class="lesson-info">
-              <h4>Bienvenida y Filosofía del Curso</h4>
-              <span class="lesson-duration">12:30</span>
-            </div>
-          </div>
-          <div class="lesson-item">
-            <i class="bi bi-play-circle"></i>
-            <div class="lesson-info">
-              <h4>Setup Óptimo de FL Studio</h4>
-              <span class="lesson-duration">18:45</span>
-            </div>
-          </div>
-          <div class="lesson-item">
-            <i class="bi bi-play-circle"></i>
-            <div class="lesson-info">
-              <h4>Organización de Proyectos y Workflow</h4>
-              <span class="lesson-duration">15:20</span>
-            </div>
-          </div>
-          <div class="lesson-item">
-            <i class="bi bi-play-circle"></i>
-            <div class="lesson-info">
-              <h4>Cadena de Señal y Ganancia Staging</h4>
-              <span class="lesson-duration">22:10</span>
-            </div>
-          </div>
-          <div class="lesson-item">
-            <i class="bi bi-play-circle"></i>
-            <div class="lesson-info">
-              <h4>Monitoreo y Referencia Correcta</h4>
-              <span class="lesson-duration">16:35</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- MÓDULO 2 -->
-      <div class="curriculum-module">
-        <div class="module-header">
-          <div class="module-info">
-            <span class="module-number">MÓDULO 2</span>
-            <h3>Grabación de Voces Profesional</h3>
-            <span class="module-meta">10 lecciones · 2h 15min</span>
-          </div>
-          <i class="bi bi-chevron-down module-toggle"></i>
-        </div>
-
-        <div class="module-content">
-          <div class="lesson-item">
-            <i class="bi bi-play-circle"></i>
-            <div class="lesson-info">
-              <h4>Tipos de Micrófonos y Cuál Usar</h4>
-              <span class="lesson-duration">14:20</span>
-            </div>
-          </div>
-          <div class="lesson-item">
-            <i class="bi bi-play-circle"></i>
-            <div class="lesson-info">
-              <h4>Tratamiento Acústico DIY</h4>
-              <span class="lesson-duration">19:40</span>
-            </div>
-          </div>
-          <div class="lesson-item">
-            <i class="bi bi-play-circle"></i>
-            <div class="lesson-info">
-              <h4>Técnicas de Grabación Vocal</h4>
-              <span class="lesson-duration">25:15</span>
-            </div>
-          </div>
-          <div class="lesson-item">
-            <i class="bi bi-play-circle"></i>
-            <div class="lesson-info">
-              <h4>Capas Vocales y Armonías</h4>
-              <span class="lesson-duration">21:30</span>
-            </div>
-          </div>
-          <div class="lesson-item">
-            <i class="bi bi-play-circle"></i>
-            <div class="lesson-info">
-              <h4>Ad-libs y Efectos Creativos</h4>
-              <span class="lesson-duration">17:50</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- MÓDULO 3 -->
-      <div class="curriculum-module">
-        <div class="module-header">
-          <div class="module-info">
-            <span class="module-number">MÓDULO 3</span>
-            <h3>Ecualización Avanzada</h3>
-            <span class="module-meta">12 lecciones · 2h 40min</span>
-          </div>
-          <i class="bi bi-chevron-down module-toggle"></i>
-        </div>
-
-        <div class="module-content">
-          <div class="lesson-item">
-            <i class="bi bi-play-circle"></i>
-            <div class="lesson-info">
-              <h4>Teoría de Frecuencias</h4>
-              <span class="lesson-duration">16:25</span>
-            </div>
-          </div>
-          <div class="lesson-item">
-            <i class="bi bi-play-circle"></i>
-            <div class="lesson-info">
-              <h4>EQ Paramétrico Profesional</h4>
-              <span class="lesson-duration">24:10</span>
-            </div>
-          </div>
-          <div class="lesson-item">
-            <i class="bi bi-play-circle"></i>
-            <div class="lesson-info">
-              <h4>EQ en Voces - Técnica Completa</h4>
-              <span class="lesson-duration">28:35</span>
-            </div>
-          </div>
-          <div class="lesson-item">
-            <i class="bi bi-play-circle"></i>
-            <div class="lesson-info">
-              <h4>EQ en Beats y Instrumentales</h4>
-              <span class="lesson-duration">22:45</span>
-            </div>
-          </div>
-          <div class="lesson-item">
-            <i class="bi bi-play-circle"></i>
-            <div class="lesson-info">
-              <h4>EQ Dinámico y Multibanda</h4>
-              <span class="lesson-duration">19:20</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- MÓDULO 4 -->
-      <div class="curriculum-module">
-        <div class="module-header">
-          <div class="module-info">
-            <span class="module-number">MÓDULO 4</span>
-            <h3>Compresión y Dinámica</h3>
-            <span class="module-meta">10 lecciones · 2h 20min</span>
-          </div>
-          <i class="bi bi-chevron-down module-toggle"></i>
-        </div>
-
-        <div class="module-content">
-          <div class="lesson-item">
-            <i class="bi bi-play-circle"></i>
-            <div class="lesson-info">
-              <h4>¿Qué es la Compresión Realmente?</h4>
-              <span class="lesson-duration">18:30</span>
-            </div>
-          </div>
-          <div class="lesson-item">
-            <i class="bi bi-play-circle"></i>
-            <div class="lesson-info">
-              <h4>Parámetros: Attack, Release, Ratio</h4>
-              <span class="lesson-duration">22:15</span>
-            </div>
-          </div>
-          <div class="lesson-item">
-            <i class="bi bi-play-circle"></i>
-            <div class="lesson-info">
-              <h4>Compresión en Voces Principales</h4>
-              <span class="lesson-duration">26:40</span>
-            </div>
-          </div>
-          <div class="lesson-item">
-            <i class="bi bi-play-circle"></i>
-            <div class="lesson-info">
-              <h4>Compresión Paralela (Técnica NY)</h4>
-              <span class="lesson-duration">20:35</span>
-            </div>
-          </div>
-          <div class="lesson-item">
-            <i class="bi bi-play-circle"></i>
-            <div class="lesson-info">
-              <h4>De-Esser y Control de Sibilancias</h4>
-              <span class="lesson-duration">15:45</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- MÓDULO 5 -->
-      <div class="curriculum-module">
-        <div class="module-header">
-          <div class="module-info">
-            <span class="module-number">MÓDULO 5</span>
-            <h3>Espacialización y Efectos</h3>
-            <span class="module-meta">14 lecciones · 3h 10min</span>
-          </div>
-          <i class="bi bi-chevron-down module-toggle"></i>
-        </div>
-
-        <div class="module-content">
-          <div class="lesson-item">
-            <i class="bi bi-play-circle"></i>
-            <div class="lesson-info">
-              <h4>Reverb: Tipos y Usos</h4>
-              <span class="lesson-duration">24:20</span>
-            </div>
-          </div>
-          <div class="lesson-item">
-            <i class="bi bi-play-circle"></i>
-            <div class="lesson-info">
-              <h4>Delay y Ecos Creativos</h4>
-              <span class="lesson-duration">21:50</span>
-            </div>
-          </div>
-          <div class="lesson-item">
-            <i class="bi bi-play-circle"></i>
-            <div class="lesson-info">
-              <h4>Chorus, Flanger, Phaser</h4>
-              <span class="lesson-duration">18:30</span>
-            </div>
-          </div>
-          <div class="lesson-item">
-            <i class="bi bi-play-circle"></i>
-            <div class="lesson-info">
-              <h4>Distorsión y Saturación</h4>
-              <span class="lesson-duration">19:45</span>
-            </div>
-          </div>
-          <div class="lesson-item">
-            <i class="bi bi-play-circle"></i>
-            <div class="lesson-info">
-              <h4>Automatización Avanzada</h4>
-              <span class="lesson-duration">26:15</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- MÓDULO 6 -->
-      <div class="curriculum-module">
-        <div class="module-header">
-          <div class="module-info">
-            <span class="module-number">MÓDULO 6</span>
-            <h3>Mezcla Final y Balance</h3>
-            <span class="module-meta">8 lecciones · 2h 30min</span>
-          </div>
-          <i class="bi bi-chevron-down module-toggle"></i>
-        </div>
-
-        <div class="module-content">
-          <div class="lesson-item">
-            <i class="bi bi-play-circle"></i>
-            <div class="lesson-info">
-              <h4>Balance de Volúmenes Profesional</h4>
-              <span class="lesson-duration">23:40</span>
-            </div>
-          </div>
-          <div class="lesson-item">
-            <i class="bi bi-play-circle"></i>
-            <div class="lesson-info">
-              <h4>Panoramización Estratégica</h4>
-              <span class="lesson-duration">17:25</span>
-            </div>
-          </div>
-          <div class="lesson-item">
-            <i class="bi bi-play-circle"></i>
-            <div class="lesson-info">
-              <h4>Bus Processing y Grupos</h4>
-              <span class="lesson-duration">21:50</span>
-            </div>
-          </div>
-          <div class="lesson-item">
-            <i class="bi bi-play-circle"></i>
-            <div class="lesson-info">
-              <h4>Mezcla del Master Bus</h4>
-              <span class="lesson-duration">25:15</span>
-            </div>
-          </div>
-          <div class="lesson-item">
-            <i class="bi bi-play-circle"></i>
-            <div class="lesson-info">
-              <h4>Referenciando con Tracks Profesionales</h4>
-              <span class="lesson-duration">19:30</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- MÓDULO 7 -->
-      <div class="curriculum-module">
-        <div class="module-header">
-          <div class="module-info">
-            <span class="module-number">MÓDULO 7</span>
-            <h3>Masterización Profesional</h3>
-            <span class="module-meta">10 lecciones · 2h 45min</span>
-          </div>
-          <i class="bi bi-chevron-down module-toggle"></i>
-        </div>
-
-        <div class="module-content">
-          <div class="lesson-item">
-            <i class="bi bi-play-circle"></i>
-            <div class="lesson-info">
-              <h4>Diferencia entre Mezcla y Master</h4>
-              <span class="lesson-duration">16:20</span>
-            </div>
-          </div>
-          <div class="lesson-item">
-            <i class="bi bi-play-circle"></i>
-            <div class="lesson-info">
-              <h4>Cadena de Mastering Completa</h4>
-              <span class="lesson-duration">28:35</span>
-            </div>
-          </div>
-          <div class="lesson-item">
-            <i class="bi bi-play-circle"></i>
-            <div class="lesson-info">
-              <h4>Loudness LUFS para Plataformas</h4>
-              <span class="lesson-duration">22:10</span>
-            </div>
-          </div>
-          <div class="lesson-item">
-            <i class="bi bi-play-circle"></i>
-            <div class="lesson-info">
-              <h4>Limiters y Maximizers</h4>
-              <span class="lesson-duration">24:45</span>
-            </div>
-          </div>
-          <div class="lesson-item">
-            <i class="bi bi-play-circle"></i>
-            <div class="lesson-info">
-              <h4>Exportación Final para Distribución</h4>
-              <span class="lesson-duration">18:55</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- MÓDULO BONUS -->
-      <div class="curriculum-module">
-        <div class="module-header">
-          <div class="module-info">
-            <span class="module-number">BONUS</span>
-            <h3>Contenido Exclusivo</h3>
-            <span class="module-meta">20+ recursos · Valor $300</span>
-          </div>
-          <i class="bi bi-chevron-down module-toggle"></i>
-        </div>
-
-        <div class="module-content">
-          <div class="lesson-item">
-            <i class="bi bi-gift-fill"></i>
-            <div class="lesson-info">
-              <h4>Pack de Vocal Presets Premium</h4>
-              <span class="lesson-duration">15 presets</span>
-            </div>
-          </div>
-          <div class="lesson-item">
-            <i class="bi bi-gift-fill"></i>
-            <div class="lesson-info">
-              <h4>Stems de Canciones Profesionales</h4>
-              <span class="lesson-duration">10 proyectos</span>
-            </div>
-          </div>
-          <div class="lesson-item">
-            <i class="bi bi-gift-fill"></i>
-            <div class="lesson-info">
-              <h4>Plantillas de FL Studio Listas</h4>
-              <span class="lesson-duration">5 templates</span>
-            </div>
-          </div>
-          <div class="lesson-item">
-            <i class="bi bi-gift-fill"></i>
-            <div class="lesson-info">
-              <h4>Sesiones de Q&A en Vivo Mensuales</h4>
-              <span class="lesson-duration">Acceso ilimitado</span>
-            </div>
-          </div>
-          <div class="lesson-item">
-            <i class="bi bi-gift-fill"></i>
-            <div class="lesson-info">
-              <h4>Comunidad Discord Privada</h4>
-              <span class="lesson-duration">De por vida</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- PRICING SECTION -->
-  <section class="curso-pricing" id="pricing">
-    <div class="section-header-center">
-      <span class="section-eyebrow">INVERSIÓN</span>
-      <h2>Comienza Hoy con Acceso Completo</h2>
-      <p>Pago único · Sin suscripciones · Actualizaciones gratis de por vida</p>
-    </div>
-
-    <div class="pricing-container">
-      <div class="pricing-card">
-        <div class="pricing-badge">
-          <i class="bi bi-lightning-fill"></i>
-          MÁS POPULAR
-        </div>
-
-        <h3 class="pricing-title">Acceso Completo de por Vida</h3>
-
-        <div class="pricing-price">
-          <span class="price-currency">$</span>
-          <span class="price-amount">149</span>
-          <span class="price-original">$199</span>
-        </div>
-
-        <p class="pricing-subtitle">Pago único · Sin renovaciones</p>
-
-        <ul class="pricing-features">
-          <li>
-            <i class="bi bi-check-circle-fill"></i>
-            <span><strong>15+ horas</strong> de contenido en video</span>
-          </li>
-          <li>
-            <i class="bi bi-check-circle-fill"></i>
-            <span><strong>50+ lecciones</strong> prácticas paso a paso</span>
-          </li>
-          <li>
-            <i class="bi bi-check-circle-fill"></i>
-            <span><strong>Pack de Vocal Presets</strong> exclusivos ($50 valor)</span>
-          </li>
-          <li>
-            <i class="bi bi-check-circle-fill"></i>
-            <span><strong>Stems profesionales</strong> para practicar ($80 valor)</span>
-          </li>
-          <li>
-            <i class="bi bi-check-circle-fill"></i>
-            <span><strong>Plantillas de FL Studio</strong> optimizadas</span>
-          </li>
-          <li>
-            <i class="bi bi-check-circle-fill"></i>
-            <span><strong>Comunidad Discord</strong> privada de por vida</span>
-          </li>
-          <li>
-            <i class="bi bi-check-circle-fill"></i>
-            <span><strong>Feedback personalizado</strong> en tus mezclas</span>
-          </li>
-          <li>
-            <i class="bi bi-check-circle-fill"></i>
-            <span><strong>Q&A en vivo</strong> mensuales</span>
-          </li>
-          <li>
-            <i class="bi bi-check-circle-fill"></i>
-            <span><strong>Actualizaciones gratis</strong> para siempre</span>
-          </li>
-          <li>
-            <i class="bi bi-check-circle-fill"></i>
-            <span><strong>Certificado de finalización</strong></span>
-          </li>
-        </ul>
-
-        <button class="btn btn-block">
-          <i class="bi bi-cart-check-fill"></i>
-          COMPRAR AHORA - $149
-        </button>
-
-        <div class="pricing-guarantee">
-          <i class="bi bi-shield-check"></i>
-          <p><strong>Garantía de 30 días</strong> · Si no te gusta, te devolvemos el 100%</p>
-        </div>
-      </div>
-    </div>
-
-    <div class="pricing-footer">
-      <p class="pricing-note">
-        <i class="bi bi-info-circle-fill"></i>
-        <strong>¿Tienes dudas?</strong> Escríbeme directo a WhatsApp +51 993 525 005
-      </p>
-    </div>
-  </section>
-
-  <!-- FOOTER -->
-  <footer class="footer">
-    <div class="footer-content">
-      <p>© 2025 OFFSZN</p>
-      <ul>
-        <li><a href="/pages/politica-de-privacidad" target="_blank" rel="noopener noreferrer">Política de
-            Privacidad</a></li>
-        <li><a href="/pages/terminos-de-uso" target="_blank" rel="noopener noreferrer">Términos de Uso</a></li>
-        <li><a href="/pages/terminos-de-servicio" target="_blank" rel="noopener noreferrer">Términos de
-            Servicio</a></li>
-        <li><a href="/pages/contacto">Contacto</a></li>
-      </ul>
-      <div class="footer-social">
-        <a href="https://wa.link/t89kep" target="_blank" title="WhatsApp">
-          <i class="bi bi-whatsapp"></i>
-        </a>
-        <a href="https://www.instagram.com/willieinspired/" target="_blank" title="Instagram">
-          <i class="bi bi-instagram"></i>
-        </a>
-        <a href="https://www.youtube.com/@willieinspired" target="_blank" title="YouTube">
-          <i class="bi bi-youtube"></i>
-        </a>
-      </div>
-    </div>
-  </footer>
-
-  <script src="/css/countdown.js"></script>
-  <script src="/script/menu.js"></script>
-  <script>
-    document.addEventListener('DOMContentLoaded', function () {
-      const moduleHeaders = document.querySelectorAll('.module-header');
-
-      moduleHeaders.forEach(header => {
-        header.addEventListener('click', () => {
-          const module = header.parentElement;
-          module.classList.toggle('active');
-        });
-      });
-    });
-  </script>
-
+  <script src="/script/cart.js"></script>
+  <script src="/script/notifications.js"></script>
+  <script src="/script/navbar.js?v=7" type="module"></script>
+  <!-- Removed redundant inline script -->
 </body>
 
 </html>

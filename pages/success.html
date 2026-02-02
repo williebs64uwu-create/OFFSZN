@@ -1,64 +1,765 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>¡Pago Exitoso! - OFFSZN</title>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Plus+Jakarta+Sans:wght@400;500;700;800&display=swap"
+        rel="stylesheet">
+
+    <!-- 1. Cargar Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        window.SUPABASE_URL = "https://qtjpvztpgfymjhhpoouq.supabase.co";
+        window.SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0anB2enRwZ2Z5bWpoaHBvb3VxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3ODA5MTUsImV4cCI6MjA3NjM1NjkxNX0.YsItTFk3hSQaVuy707-z7Z-j34mXa03O0wWGAlAzjrw";
+        window.supabaseClient = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            if (typeof window.supabase !== 'undefined' && window.supabase.createClient) {
+                window.supabaseClient = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
+                initSuccessPage();
+            }
+        });
+    </script>
+
     <style>
+        :root {
+            --primary: #8b5cf6;
+            --primary-dark: #7c3aed;
+            --bg: #050505;
+            --card-bg: #111111;
+            --border: rgba(255, 255, 255, 0.08);
+            --text-main: #ffffff;
+            --text-dim: #888888;
+        }
+
         body {
-            background-color: #0a0118;
-            color: white;
-            font-family: 'Inter', sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            margin: 0;
+            min-height: 100vh;
+            background-image: radial-gradient(circle at 50% 50%, #1a0b2e 0%, #050505 100%);
+            background-attachment: fixed;
+        }
+
+        .success-wrapper {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 80px 20px;
+            display: grid;
+            grid-template-columns: 1fr 1.5fr;
+            gap: 40px;
+            align-items: start;
+        }
+
+        /* LEFT COLUMN: SIGN IN / WELCOME */
+        .portal-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 32px;
+            position: sticky;
+            top: 40px;
+        }
+
+        .portal-header h2 {
+            font-size: 1.8rem;
+            font-weight: 800;
+            margin-bottom: 12px;
+            background: linear-gradient(to right, #fff, #aaa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .portal-header p {
+            color: var(--text-dim);
+            font-size: 0.95rem;
+            line-height: 1.6;
+            margin-bottom: 24px;
+        }
+
+        .sign-in-box {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 20px;
+        }
+
+        .input-group {
+            margin-bottom: 16px;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-dim);
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
+
+        .input-group input {
+            width: 100%;
+            background: #000;
+            border: 1px solid var(--border);
+            padding: 12px 16px;
+            border-radius: 10px;
+            color: #fff;
+            outline: none;
+            box-sizing: border-box;
+        }
+
+        .btn-primary {
+            width: 100%;
+            background: var(--primary);
+            color: #fff;
+            border: none;
+            padding: 14px;
+            border-radius: 10px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+
+        /* RIGHT COLUMN: ORDER DETAILS */
+        .order-card {
+            background: #fff;
+            color: #111;
+            border-radius: 24px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+        }
+
+        .order-status-icon {
+            width: 60px;
+            height: 60px;
+            background: #f3f0ff;
+            color: var(--primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            margin: 0 auto 20px;
+        }
+
+        .order-meta {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .order-number {
+            font-size: 1.5rem;
+            font-weight: 800;
+            margin-bottom: 8px;
+        }
+
+        .order-badges {
             display: flex;
             justify-content: center;
+            gap: 16px;
+            font-size: 0.85rem;
+            color: #666;
+        }
+
+        .badge-paid {
+            color: #059669;
+            font-weight: 600;
+            display: flex;
             align-items: center;
-            height: 100vh;
-            margin: 0;
-            text-align: center;
+            gap: 4px;
         }
-        .card {
-            background: rgba(255, 255, 255, 0.05);
-            padding: 3rem;
-            border-radius: 20px;
-            border: 1px solid rgba(114, 9, 183, 0.3);
-            max-width: 500px;
-            box-shadow: 0 0 50px rgba(114, 9, 183, 0.2);
+
+        /* ACCORDIONS (Styled like Lemon Squeezy) */
+        .accordion-item {
+            border-bottom: 1px solid #eee;
         }
-        .icon {
-            font-size: 4rem;
-            color: #0cbc87;
-            margin-bottom: 1rem;
+
+        .accordion-header {
+            padding: 18px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            font-weight: 600;
+            color: #444;
         }
-        h1 { font-family: 'Montserrat', sans-serif; margin-bottom: 0.5rem; }
-        p { color: #ccc; margin-bottom: 2rem; }
-        .btn {
-            background: #7209b7;
-            color: white;
-            text-decoration: none;
-            padding: 1rem 2rem;
+
+        .accordion-header:hover {
+            color: #000;
+        }
+
+        .accordion-content {
+            padding-bottom: 18px;
+            display: none;
+        }
+
+        .item-row {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 12px;
+            background: #f9f9f9;
+            border-radius: 12px;
+            margin-bottom: 8px;
+        }
+
+        .item-img {
+            width: 48px;
+            height: 48px;
             border-radius: 8px;
-            font-weight: bold;
-            transition: all 0.3s;
+            object-fit: cover;
         }
-        .btn:hover { background: #560bad; transform: scale(1.05); }
+
+        .item-info {
+            flex: 1;
+        }
+
+        .item-name {
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+
+        .item-price {
+            font-weight: 600;
+            color: #666;
+            font-size: 0.85rem;
+        }
+
+        .download-btn {
+            background: var(--primary);
+            color: #fff;
+            padding: 6px 16px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 0.8rem;
+            font-weight: 700;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 850px) {
+            .success-wrapper {
+                grid-template-columns: 1fr;
+            }
+
+            .portal-card {
+                position: relative;
+                top: 0;
+            }
+        }
+
+        .loading-state {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
     </style>
 </head>
+
 <body>
-    <div class="card">
-        <div class="icon"><i class="bi bi-check-circle-fill"></i></div>
-        <h1>¡Pago Exitoso!</h1>
-        <p>Tu compra ha sido procesada correctamente. Ya tienes acceso a tus productos.</p>
-        <a href="/pages/marketplace.html" class="btn">Volver al Marketplace</a>
+
+    <div class="success-wrapper">
+        <!-- LEFT: PORTAL -->
+        <div class="portal-card" id="portal-container">
+            <div class="portal-header">
+                <h2 id="portal-title">¡Gracias por tu compra!</h2>
+                <p id="portal-desc">Tu pedido ha sido procesado. Los archivos ya están listos para descargar en la
+                    derecha.</p>
+            </div>
+
+            <!-- Conditional Content will be injected here -->
+            <div id="portal-content">
+                <div class="loading-state">
+                    <i class="bi bi-arrow-repeat spin"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT: ORDER DETAILS -->
+        <div class="order-card">
+            <div class="order-status-icon">
+                <i class="bi bi-check-lg"></i>
+            </div>
+
+            <div class="order-meta">
+                <div class="order-number" id="order-id-display">Pedido #-------</div>
+                <div class="order-badges">
+                    <span class="badge-paid"><i class="bi bi-check-circle-fill"></i> Pagado</span>
+                    <span id="order-date">-- ---, --:--</span>
+                </div>
+            </div>
+
+            <div class="order-details-sections">
+                <!-- Order Summary -->
+                <div class="accordion-item">
+                    <div class="accordion-header" onclick="toggleAccordion(this)">
+                        Resumen del pedido <span id="summary-count">(0)</span> <i class="bi bi-chevron-down"></i>
+                    </div>
+                    <div class="accordion-content" id="items-list" style="display: block;">
+                        <!-- Items list injected here -->
+                    </div>
+                </div>
+
+                <!-- Files -->
+                <div class="accordion-item">
+                    <div class="accordion-header" onclick="toggleAccordion(this)">
+                        Archivos <i class="bi bi-chevron-down"></i>
+                    </div>
+                    <div class="accordion-content" id="files-list">
+                        <!-- Redundant but fits the aesthetic -->
+                        <p style="font-size: 0.85rem; color: #888;">Utiliza los botones de descarga en el resumen
+                            arriba.</p>
+                    </div>
+                </div>
+
+                <!-- Timeline -->
+                <div class="accordion-item">
+                    <div class="accordion-header" onclick="toggleAccordion(this)">
+                        Línea de tiempo <i class="bi bi-chevron-down"></i>
+                    </div>
+                    <div class="accordion-content">
+                        <div style="border-left: 2px solid #eee; padding-left: 15px; margin-left: 5px;">
+                            <div style="margin-bottom: 15px; position: relative;">
+                                <div
+                                    style="position: absolute; left: -21px; top: 0; width: 10px; height: 10px; background: #22c55e; border-radius: 50%;">
+                                </div>
+                                <div style="font-weight: 700; font-size: 0.85rem;">Pedido completado</div>
+                                <div style="font-size: 0.75rem; color: #888;">Pago recibido vía PayPal</div>
+                            </div>
+                            <div style="position: relative;">
+                                <div
+                                    style="position: absolute; left: -21px; top: 0; width: 10px; height: 10px; background: #22c55e; border-radius: 50%;">
+                                </div>
+                                <div style="font-weight: 700; font-size: 0.85rem;">Correo enviado</div>
+                                <div style="font-size: 0.75rem; color: #888;">Recibo enviado a tu email</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="margin-top: 40px; text-align: center;">
+                <a href="/index.html" style="color: #666; font-size: 0.85rem; text-decoration: none; font-weight: 600;">
+                    &larr; Volver a la tienda
+                </a>
+            </div>
+        </div>
     </div>
+
     <script>
-        // Limpiar carrito local al llegar aquí
-        localStorage.removeItem('cart');
-        // Opcional: Cerrar ventana si se abrió como popup
-        if (window.opener) {
-            setTimeout(() => window.close(), 3000);
+        async function initSuccessPage() {
+            const params = new URLSearchParams(window.location.search);
+            const orderId = params.get('order_id');
+
+            // 1. Check Auth Status
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            renderPortal(session);
+
+            if (orderId) {
+                fetchOrderDetails(orderId);
+            } else {
+                renderDefaultOrderState();
+            }
+        }
+
+        function renderPortal(session) {
+            const container = document.getElementById('portal-content');
+
+            if (session) {
+                // LOGGED IN
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 20px;">
+                        <i class="bi bi-person-check" style="font-size: 3rem; color: var(--primary); display: block; margin-bottom: 20px;"></i>
+                        <p style="font-weight: 600; margin-bottom: 24px;">Has iniciado sesión como <b>${session.user.email}</b></p>
+                        <a href="/mis-compras2.html" class="btn-primary" style="display: inline-block; text-decoration: none; width: auto; padding: 14px 30px;">
+                            Ver todas mis compras
+                        </a>
+                    </div>
+                `;
+            } else {
+                // GUEST
+                container.innerHTML = `
+                    <div class="sign-in-box">
+                        <p style="font-size: 0.85rem; color: #bbb; margin-bottom: 20px;">
+                            Ingresa tu correo abajo para activar tu cuenta y acceder a tus descargas permanentes. Te enviaremos un enlace de acceso seguro.
+                        </p>
+                        <div class="input-group">
+                            <label>Tu Correo Electrónico</label>
+                            <input type="email" id="portal-email" placeholder="ejemplo@correo.com">
+                        </div>
+                        <button class="btn-primary" onclick="requestAccess()">Activar Cuenta</button>
+                    </div>
+                `;
+            }
+        }
+
+        async function fetchOrderDetails(id) {
+            try {
+                const { data: { session } } = await supabaseClient.auth.getSession();
+                const currentUser = session?.user;
+
+                // Fetch Order
+                const { data: order, error: orderErr } = await supabaseClient
+                    .from('orders')
+                    .select('*')
+                    .eq('id', id)
+                    .single();
+
+                if (orderErr) throw orderErr;
+
+                // --- SECURITY CHECK ---
+                // If order belongs to a user, verify it matches current session
+                if (order.user_id && (!currentUser || currentUser.id !== order.user_id)) {
+                    console.error("[Security] Access denied to order", id);
+                    document.getElementById('portal-content').innerHTML = `
+                        <div style="text-align: center; padding: 40px;">
+                            <i class="bi bi-shield-lock" style="font-size: 3rem; color: #ff6b6b; display: block; margin-bottom: 20px;"></i>
+                            <h3>Acceso Restringido</h3>
+                            <p>No tienes permiso para ver este pedido.</p>
+                            <a href="/" class="btn-primary" style="display:inline-block; margin-top:20px; text-decoration:none;">Volver al Inicio</a>
+                        </div>
+                    `;
+                    return;
+                }
+                // -----------------------
+
+                // Update UI Meta
+                document.getElementById('order-id-display').textContent = `Pedido #${order.id.toString().padStart(8, '0')}`;
+                document.getElementById('order-date').textContent = new Date(order.created_at).toLocaleString('es-ES', {
+                    day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'
+                });
+
+                const { data: items, error: itemsErr } = await supabaseClient
+                    .from('order_items')
+                    .select('*, product:products!inner(id, name, image_url, mp3_url, wav_url, stems_url, kit_url, producer_id, product_type)')
+                    .eq('order_id', id);
+
+                if (itemsErr) throw itemsErr;
+
+                const producerIds = [...new Set(items.map(i => i.product.producer_id))];
+                console.log("[DEBUG] Fetching producers for IDs:", producerIds);
+
+                const { data: producers, error: prodErr } = await supabaseClient
+                    .from('profiles')
+                    .select('id, user_id, license_settings')
+                    .or(`id.in.(${producerIds.join(',')}),user_id.in.(${producerIds.join(',')})`);
+
+                if (!prodErr && producers) {
+                    console.log("[DEBUG] Producers Found:", producers);
+                    items.forEach(item => {
+                        item.product.producer = producers.find(p => p.id === item.product.producer_id || p.user_id === item.product.producer_id);
+                    });
+                } else if (prodErr) {
+                    console.error("[DEBUG] Error fetching producers:", prodErr);
+                }
+
+                console.log("[DEBUG] RenderItems with:", items);
+                renderItems(items, order);
+
+            } catch (err) {
+                console.error("Error fetching order:", err);
+            }
+        }
+    </script>
+
+    <script type="module">
+        import { generarLicencia } from '../script/generate-license.js';
+        window.generarLicencia = generarLicencia;
+    </script>
+
+    <script>
+        const API_URL = '/api';
+
+        async function getAuthHeaders() {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            return {
+                'Content-Type': 'application/json',
+                'Authorization': session ? `Bearer ${session.access_token}` : ''
+            };
+        }
+
+        async function getSignedFileUrl(path, productId = null, forcedFileType = null) {
+            if (!path) return null;
+
+            // Normalize path: If it's a full Supabase URL, extract the path part
+            let cleanPath = path.trim();
+            if (cleanPath.startsWith('http')) {
+                if (cleanPath.includes('supabase.co')) {
+                    // Extract bucket/path from public URL
+                    const publicParts = cleanPath.split('/v1/object/public/');
+                    if (publicParts.length > 1) {
+                        cleanPath = publicParts[1];
+                    } else {
+                        // Try signed URL parts
+                        const signParts = cleanPath.split('/v1/object/sign/');
+                        if (signParts.length > 1) cleanPath = signParts[1].split('?')[0];
+                    }
+                } else {
+                    // External URL: return as is if not re-signing
+                    return path;
+                }
+            }
+
+            // Standardize: No leading slash, trim
+            cleanPath = cleanPath.startsWith('/') ? cleanPath.substring(1) : cleanPath;
+
+            // Determination of bucket (for fallback only)
+            let bucket = 'products';
+            const pathLower = cleanPath.toLowerCase();
+            if (pathLower.includes('kits/') || pathLower.includes('stems/') || pathLower.includes('wav_untagged/') || pathLower.startsWith('secure-products/')) {
+                bucket = 'secure-products';
+            }
+
+            // Remove bucket prefix if it exists in the path
+            if (cleanPath.startsWith('secure-products/')) {
+                cleanPath = cleanPath.replace('secure-products/', '');
+            } else if (cleanPath.startsWith('products/')) {
+                cleanPath = cleanPath.replace('products/', '');
+            }
+
+            // USE BACKEND SIGNING for all purchased assets to ensure DIRECT DOWNLOAD (Attachment Header)
+            if (productId) {
+                try {
+                    const orderId = new URLSearchParams(window.location.search).get('order_id');
+
+                    // Priority for forcedFileType, otherwise infer
+                    let fileType = forcedFileType;
+                    if (!fileType) {
+                        if (cleanPath.toLowerCase().includes('stems')) fileType = 'stems';
+                        else if (cleanPath.toLowerCase().includes('mp3')) fileType = 'mp3';
+                        else if (cleanPath.toLowerCase().includes('wav')) fileType = 'wav';
+                        else fileType = 'other';
+                    }
+
+                    console.log(`[DEBUG] Requesting backend signing: type=${fileType}, order=${orderId}, product=${productId}`);
+
+                    const headers = await getAuthHeaders();
+                    const response = await fetch(`${API_URL}/orders/download-link?orderId=${orderId}&productId=${productId}&fileType=${fileType}`, {
+                        headers
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data.signedUrl) {
+                            console.log(`[DEBUG] Backend signing SUCCESS for ${fileType}`);
+                            return data.signedUrl;
+                        }
+                    } else {
+                        console.warn(`[DEBUG] Backend signing FAILED (Status: ${response.status}) for ${fileType}`);
+                    }
+                } catch (err) {
+                    console.error(`[DEBUG] Backend signing error:`, err);
+                }
+            }
+
+            // FALLBACK to client-side signing
+            console.log(`[DEBUG] Falling back to client-side sign: bucket=${bucket}, path=${cleanPath}`);
+
+            const { data, error } = await supabaseClient
+                .storage
+                .from(bucket)
+                .createSignedUrl(cleanPath, 3600, {
+                    download: true
+                });
+
+            if (error) {
+                console.warn(`[DEBUG] Client-side signing FAILED (${bucket}):`, error.message);
+                return `${SUPABASE_URL}/storage/v1/object/public/${bucket}/${cleanPath}`;
+            }
+            return data.signedUrl;
+        }
+
+        async function getDownloadableFiles(item) {
+            const p = item.product;
+            const settings = item.product?.producer?.license_settings || {};
+            const purchasedLicenseName = item.license_name || 'Standard';
+            const files = [];
+
+            // 1. Find the license config in producer's settings
+            let config = null;
+            for (const key in settings) {
+                if (settings[key].name === purchasedLicenseName) {
+                    config = settings[key];
+                    break;
+                }
+            }
+
+            // 2. Resolve entitlements with Keyword Overrides (Industry Standards)
+            const nameLow = purchasedLicenseName.toLowerCase();
+            let hasWav = config?.files?.wav || false;
+            let hasStems = config?.files?.stems || false;
+
+            // Overrides: If license says "Unlimited" or "Exclusive", it ALWAYS includes everything.
+            if (nameLow.includes('unlimited') || nameLow.includes('exclusive')) {
+                hasWav = true;
+                hasStems = true;
+            } else if (nameLow.includes('premium') || nameLow.includes('wav') || nameLow.includes('stems')) {
+                hasWav = true;
+                if (nameLow.includes('stems')) hasStems = true;
+            }
+
+            const addFile = async (label, path, icon, fileType = null) => {
+                if (!path) return;
+                const url = await getSignedFileUrl(path, p.id, fileType);
+                if (url) files.push({ label, url, icon });
+            };
+
+            if (p.kit_url) {
+                const kitLabel = p.product_type === 'loopkit' ? 'Loop Kit' :
+                    p.product_type === 'preset' ? 'Preset' : 'Drum Kit';
+                await addFile(kitLabel, p.kit_url, 'bi-archive-fill', 'kit');
+            }
+            if (p.mp3_url) {
+                await addFile('MP3 (Tagged)', p.mp3_url, 'bi-file-earmark-music', 'mp3');
+            }
+            if (hasWav && p.wav_url) {
+                await addFile('WAV (Untagged)', p.wav_url, 'bi-filetype-wav', 'wav');
+            }
+            if (hasStems && p.stems_url) {
+                await addFile('Stems (Trackout)', p.stems_url, 'bi-layers', 'stems');
+            }
+
+            return files;
+        }
+
+        window.currentItems = [];
+        window.currentOrder = null;
+
+        async function downloadLicenseByIndex(idx) {
+            const item = window.currentItems[idx];
+            const order = window.currentOrder;
+            if (!item || !order) return;
+            await downloadLicense(item, order);
+        }
+
+        async function downloadLicense(item, order) {
+            try {
+                const btn = event.currentTarget;
+                const originalHtml = btn.innerHTML;
+                btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Generando...';
+                btn.disabled = true;
+
+                // Fetch from 'users' table because admin-licencias saves there
+                const { data: producer } = await supabaseClient.from('users').select('nickname, license_settings').eq('id', item.product.producer_id).single();
+                let buyerNickname = 'Cliente';
+                const { data: { user } } = await supabaseClient.auth.getUser();
+                if (user) {
+                    const { data: profile } = await supabaseClient.from('profiles').select('nickname').eq('id', user.id).single();
+                    buyerNickname = profile?.nickname || user.email.split('@')[0];
+                }
+
+                await window.generarLicencia({
+                    productName: item.product.name,
+                    productType: item.product.product_type,
+                    producerName: producer?.nickname || 'Productor',
+                    licenseType: (item.license_name || 'basic').toLowerCase(),
+                    amount: item.price_at_purchase,
+                    buyerName: buyerNickname,
+                    buyerEmail: user?.email || 'N/A',
+                    purchaseDate: order.created_at,
+                    orderId: order.transaction_id || order.id.toString(),
+                    licenseSettings: producer?.license_settings
+                });
+
+                btn.innerHTML = originalHtml;
+                btn.disabled = false;
+            } catch (err) {
+                console.error("Error generating license:", err);
+                alert("Error al generar la licencia. Inténtalo de nuevo.");
+            }
+        }
+
+        async function renderItems(items, order) {
+            const list = document.getElementById('items-list');
+            document.getElementById('summary-count').textContent = `(${items.length})`;
+
+            if (!items || items.length === 0) {
+                list.innerHTML = '<p style="text-align: center; padding: 20px; color: #999;">No se encontraron artículos.</p>';
+                return;
+            }
+
+            window.currentItems = items;
+            window.currentOrder = order;
+
+            const htmlArray = await Promise.all(items.map(async (item, idx) => {
+                const files = await getDownloadableFiles(item);
+                const licenseType = (item.license_name || 'Standard').toUpperCase();
+
+                return `
+            <div class="item-row" style="flex-wrap: wrap; gap: 15px;">
+                <div style="display: flex; align-items: center; flex: 1; min-width: 250px;">
+                    <img src="${item.product.image_url || '/images/default-cover.png'}" alt="Cover" class="item-img">
+                        <div class="item-info">
+                            <div class="item-name">${item.product.name}</div>
+                            <div class="item-price">$${item.price_at_purchase} <span style="font-size: 0.7rem; color: var(--primary); font-weight: 700;">(${licenseType})</span></div>
+                        </div>
+                </div>
+
+                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                    ${files.map(f => `
+                            <a href="${f.url}" download class="download-btn" target="_blank" title="Descargar ${f.label}">
+                                <i class="bi ${f.icon}"></i> ${f.label}
+                            </a>
+                        `).join('')}
+
+                    <button class="download-btn" style="background: var(--primary); border: 1px solid var(--primary); color: white; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 600;"
+                        onclick="downloadLicenseByIndex(${idx})">
+                    <i class="bi bi-file-earmark-text"></i> ${['drumkit', 'loopkit', 'preset'].includes(item.product.product_type) ? 'Descargar Boleta' : 'Descargar Contrato'}
+                </button>
+            </div>
+        </div>
+            `;
+            }));
+            list.innerHTML = htmlArray.join('');
+        }
+
+        function renderDefaultOrderState() {
+            document.getElementById('items-list').innerHTML = '<p style="text-align: center; padding: 20px; color: #999;">Pedido completado correctamente. Revisa tu correo para los detalles.</p>';
+        }
+
+        function toggleAccordion(header) {
+            const content = header.nextElementSibling;
+            const icon = header.querySelector('i');
+            const isOpen = content.style.display === 'block';
+
+            content.style.display = isOpen ? 'none' : 'block';
+            icon.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(180deg)';
+        }
+
+        async function requestAccess() {
+            const email = document.getElementById('portal-email').value;
+            if (!email) return alert("Por favor ingresa tu correo");
+
+            // Logic to send magic link or similar
+            const { error } = await supabaseClient.auth.signInWithOtp({
+                email: email,
+                options: {
+                    emailRedirectTo: window.location.origin + '/pages/mis-compras2.html',
+                }
+            });
+
+            if (error) {
+                alert("Error: " + error.message);
+            } else {
+                alert("Hemos enviado un enlace de acceso a tu correo. Revisa tu bandeja de entrada.");
+            }
         }
     </script>
 </body>
+
 </html>

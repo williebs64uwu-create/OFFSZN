@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OFFSZN | Academia</title>
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" type="image/png" href="../images/LOGO-OFFSZN.png">
+    <!-- Google Fonts: Plus Jakarta Sans (Numbers) & Inter (UI) -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap"
+        rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../script/auth-guard.js"></script>
+
+    <style>
+        :root {
+            /* Black background as requested */
+            --bg-dark: #000000;
+            --card-bg: #0F0F0F;
+            --text-main: #FFFFFF;
+            --text-secondary: #888888;
+            --accent-purple: #8B5CF6;
+            --accent-glow: rgba(139, 92, 246, 0.5);
+            --border-color: #1A1A1A;
+            --success: #10B981;
+
+            --font-ui: 'Inter', sans-serif;
+            --font-display: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-family: var(--font-ui);
+            min-height: 100vh;
+            overflow-x: hidden;
+            display: flex;
+        }
+
+        /* ===== SIDEBAR STUB (For layout consistency) ===== */
+        .sidebar-stub {
+            width: 80px;
+            /* Mini */
+            background: #000;
+            border-right: 1px solid var(--border-color);
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 20px;
+            gap: 10px;
+        }
+
+        /* RADIAL GLOW BACKGROUND - Kept subtle, but can be removed if strictly flat black needed. Keeping for consistency with Dashboard. */
+        .radial-glow {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: radial-gradient(circle at 50% 50%, rgba(139, 92, 246, 0.08), transparent 70%);
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .sidebar-icon-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+            font-size: 20px;
+            transition: 0.2s;
+            text-decoration: none;
+        }
+
+        .sidebar-icon-btn:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .sidebar-icon-btn.active {
+            color: #fff;
+            background: var(--accent-purple);
+            box-shadow: 0 0 10px var(--accent-glow);
+        }
+
+        /* ===== SIDEBAR TOOLTIPS ===== */
+        .sidebar-icon-btn {
+            position: relative;
+        }
+
+        .sidebar-icon-btn[data-title]:hover::after {
+            content: attr(data-title);
+            position: fixed;
+            left: 75px;
+            /* Sidebar width + gap */
+            background: #111;
+            border: 1px solid #333;
+            color: #fff;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            white-space: nowrap;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+            pointer-events: none;
+            opacity: 0;
+            animation: fadeInTooltip 0.2s forwards;
+            font-weight: 500;
+        }
+
+        @keyframes fadeInTooltip {
+            from {
+                opacity: 0;
+                transform: translateX(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        /* ===== MAIN CONTENT ===== */
+        .main-content-elite {
+            flex: 1;
+            margin-left: 80px;
+            padding: 40px;
+            width: calc(100% - 80px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .main-content-elite>* {
+            width: 100%;
+            max-width: 1400px;
+        }
+
+        /* ===== ELITE HEADER ===== */
+        .elite-header {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+        }
+
+        .elite-header h1 {
+            font-family: 'Plus Jakarta Sans';
+            font-size: 32px;
+            font-weight: 700;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 0;
+        }
+
+        /* ===== PRICING MODAL (Standardized) ===== */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        .elite-modal {
+            background: #0f0f0f;
+            border: 1px solid #333;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 450px;
+            padding: 24px;
+            transform: scale(0.95);
+            transition: transform 0.3s ease;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-overlay.active .elite-modal {
+            transform: scale(1);
+        }
+
+        /* Modal Header */
+        .modal-header-custom {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 20px;
+        }
+
+        .modal-header-custom h3 {
+            margin: 0;
+            font-size: 18px;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-modal-close {
+            background: transparent;
+            border: none;
+            color: #666;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        /* Plan Cards */
+        .plans-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .plan-card {
+            background: #111;
+            border: 1px solid #333;
+            border-radius: 12px;
+            padding: 16px;
+            cursor: pointer;
+            transition: 0.2s;
+            position: relative;
+        }
+
+        .plan-card:hover {
+            border-color: var(--accent-purple);
+            background: #161616;
+        }
+
+        .plan-card.selected {
+            border-color: var(--accent-purple);
+            background: rgba(139, 92, 246, 0.1);
+        }
+
+        .plan-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .plan-name {
+            font-size: 16px;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .plan-name small {
+            display: block;
+            font-size: 12px;
+            font-weight: 400;
+            color: #888;
+            margin-top: 2px;
+        }
+
+        .plan-price {
+            font-size: 18px;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .plan-price span {
+            font-size: 12px;
+            color: #888;
+            font-weight: 400;
+        }
+
+        .plan-features {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: #ccc;
+        }
+
+        .feature-item i {
+            color: var(--accent-purple);
+            font-size: 14px;
+        }
+
+        /* Footer Buttons */
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        .btn-cancel {
+            background: transparent;
+            border: 1px solid #333;
+            color: #888;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .btn-confirm {
+            background: #FFD700;
+            color: #000;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .btn-confirm:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(255, 215, 0, 0.2);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="radial-glow"></div>
+
+    <!-- Sidebar Stub -->
+    <div class="sidebar-stub" style="justify-content:flex-start; gap:15px;">
+        <!-- Brand/Home -->
+        <a href="/index.html" class="sidebar-logo-btn"
+            style="margin-bottom:10px; display:flex; align-items:center; justify-content:center; width:44px; height:44px;">
+            <img src="../images/LOGO-OFFSZN.png" style="width:38px; mix-blend-mode: screen;"></a>
+
+        <!-- 1. GESTIÓN -->
+        <div style="width:40px; border-bottom:1px solid #222; margin:5px 0;"></div>
+        <a href="/cuenta/dashboard.html" class="sidebar-icon-btn" data-title="Dashboard"><i
+                class="bi bi-grid-fill"></i></a>
+        <a href="/cuenta/mis-kits.html" class="sidebar-icon-btn" data-title="Mis Beats/Kits"><i
+                class="bi bi-disc-fill"></i></a>
+        <a href="/cuenta/subir-kit.html" class="sidebar-icon-btn" data-title="Subir"><i
+                class="bi bi-cloud-arrow-up-fill"></i></a>
+
+        <!-- 2. NEGOCIO -->
+        <div style="width:40px; border-bottom:1px solid #222; margin:5px 0;"></div>
+        <a href="/cuenta/admin-licencias.html" class="sidebar-icon-btn" data-title="Licencias"><i
+                class="bi bi-file-earmark-music-fill"></i></a>
+        <a href="/cuenta/cupones.html" class="sidebar-icon-btn" data-title="Cupones"><i
+                class="bi bi-ticket-perforated-fill"></i></a>
+        <a href="/cuenta/colaboraciones.html" class="sidebar-icon-btn" data-title="Colaboraciones"><i
+                class="bi bi-people-fill"></i></a>
+
+        <!-- 3. ACADEMIA -->
+        <div style="width:40px; border-bottom:1px solid #222; margin:5px 0;"></div>
+        <a href="/cuenta/cursos.html" class="sidebar-icon-btn active" data-title="Cursos"><i
+                class="bi bi-mortarboard-fill"></i></a>
+        <a href="/cuenta/analiticas.html" class="sidebar-icon-btn" data-title="Estadísticas"><i
+                class="bi bi-bar-chart-fill"></i></a>
+
+        <!-- 4. SOCIAL -->
+        <div style="width:40px; border-bottom:1px solid #222; margin:5px 0;"></div>
+        <a href="/cuenta/reels.html" class="sidebar-icon-btn" data-title="Reels"><i
+                class="bi bi-camera-reels-fill"></i></a>
+
+        <!-- UPGRADE BUTTON -->
+        <div>
+            <a href="/cuenta/planes.html" class="sidebar-icon-btn" data-title="Mejorar Plan" style="color:#FFD700;">
+                <i class="bi bi-rocket-takeoff-fill"></i>
+            </a>
+        </div>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content-elite">
+        <!-- Header -->
+        <div class="elite-header">
+            <!-- Icon Removed as requested -->
+            <h1>Academia</h1>
+            <a href="/blog.html" class="btn-blog"
+                style="color:#888; text-decoration:none; font-size:14px; font-weight:500; display:flex; align-items:center; gap:8px; border:1px solid #333; padding:8px 16px; border-radius:8px; transition:0.2s;">
+                Más Información
+            </a>
+            <style>
+                .btn-blog:hover {
+                    background: #111;
+                    color: #fff;
+                    border-color: #666;
+                }
+            </style>
+        </div>
+
+        <!-- CONTENT GRID (Now WIP State - Minimal Message) -->
+        <div id="coursesGrid"
+            style="display:flex; flex-direction:column; align-items:center; justify-content:center; width:100%; min-height:400px; text-align:center;">
+
+            <div style="max-width:600px; width:100%; padding:0 20px;">
+                <h2
+                    style="font-family:var(--font-display); font-size:28px; font-weight:700; color:#fff; margin-bottom:16px;">
+                    En Construcción
+                </h2>
+                <p style="color:#888; font-size:16px; line-height:1.6; margin-bottom:40px;">
+                    Aquí podrás subir tus cursos y experiencia para generar ingresos.
+                </p>
+
+                <a href="https://www.paypal.com/paypalme/Yeniaime" target="_blank" class="btn-support">
+                    Apóyanos a seguir creciendo
+                </a>
+
+                <style>
+                    .btn-support {
+                        display: inline-block;
+                        padding: 12px 32px;
+                        background: transparent;
+                        border: 1px solid #fff;
+                        color: #fff;
+                        text-decoration: none;
+                        border-radius: 50px;
+                        font-family: var(--font-display);
+                        font-weight: 500;
+                        font-size: 14px;
+                        transition: all 0.3s ease;
+                    }
+
+                    .btn-support:hover {
+                        background: #fff;
+                        color: #000;
+                        transform: translateY(-2px);
+                        box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
+                    }
+                </style>
+            </div>
+
+        </div>
+
+    </main>
+
+
+</body>
+
+</html>

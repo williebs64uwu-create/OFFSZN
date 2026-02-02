@@ -1,768 +1,543 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Producto - OFFSZN</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Montserrat:wght@700;800;900&display=swap" rel="stylesheet">
+  <title>Navbar Analysis</title>
+  <!-- Bootstrap Icons -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
-  
-  <!-- 📧 EMAILJS SDK - CRÍTICO PARA EMAILS -->
-  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
-  
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    :root {
-      --purple-main: #7209b7;
-      --purple-dark: #560bad;
-      --green-success: #0cbc87;
-    }
-
-    body {
-      font-family: 'Inter', sans-serif;
-      background: #000;
-      color: #fff;
-      line-height: 1.6;
-    }
-
-    .container {
-      max-width: 1400px;
-      margin: 0 auto;
-      padding: 2rem 1.5rem;
-    }
-
-    .back-button {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      color: rgba(255, 255, 255, 0.7);
-      text-decoration: none;
-      font-size: 0.875rem;
-      padding: 0.5rem 0;
-      margin-bottom: 2rem;
-      transition: color 0.3s;
-    }
-
-    .back-button:hover {
-      color: #fff;
-    }
-
-    .product-container {
-      display: grid;
-      grid-template-columns: 450px 1fr;
-      gap: 3rem;
-      margin-bottom: 4rem;
-    }
-
-    .product-image-section {
-      position: sticky;
-      top: 2rem;
-      height: fit-content;
-    }
-
-    .product-image {
-      width: 100%;
-      aspect-ratio: 1;
-      border-radius: 12px;
-      overflow: hidden;
-      background: #1a1a1a;
-      margin-bottom: 1rem;
-      position: relative;
-    }
-
-    .product-image img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
-    .share-btn {
-      position: absolute;
-      top: 1rem;
-      right: 1rem;
-      width: 40px;
-      height: 40px;
-      background: rgba(0, 0, 0, 0.7);
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #fff;
-      cursor: pointer;
-      transition: all 0.3s;
-      z-index: 10;
-    }
-
-    .share-btn:hover {
-      background: rgba(114, 9, 183, 0.9);
-      transform: scale(1.1);
-    }
-
-    .product-producer {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      padding: 1rem;
-      background: #1a1a1a;
-      border-radius: 12px;
-      text-decoration: none;
-      transition: background 0.3s;
-      margin-bottom: 1rem;
-    }
-
-    .product-producer:hover {
-      background: #222;
-    }
-
-    .producer-avatar {
-      width: 48px;
-      height: 48px;
-      border-radius: 50%;
-      overflow: hidden;
-    }
-
-    .producer-avatar img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
-    .producer-info h4 {
-      color: #fff;
-      font-size: 0.9375rem;
-      font-weight: 600;
-      margin-bottom: 0.25rem;
-    }
-
-    .producer-info p {
-      color: #999;
-      font-size: 0.8125rem;
-    }
-
-    .btn-message-producer {
-      width: 100%;
-      padding: 0.875rem;
-      background: transparent;
-      border: 1px solid rgba(114, 9, 183, 0.4);
-      color: var(--purple-main);
-      border-radius: 8px;
-      font-weight: 700;
-      font-size: 0.875rem;
-      cursor: pointer;
-      transition: all 0.3s;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.5rem;
-    }
-
-    .btn-message-producer:hover {
-      background: rgba(114, 9, 183, 0.1);
-      border-color: var(--purple-main);
-    }
-
-    .product-info-section {
-      padding-top: 1rem;
-    }
-
-    .product-title {
-      font-size: 2.5rem;
-      font-weight: 900;
-      font-family: 'Montserrat', sans-serif;
-      margin-bottom: 1rem;
-    }
-
-    .product-meta {
-      display: flex;
-      gap: 2rem;
-      margin-bottom: 2rem;
-      padding-bottom: 2rem;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    }
-
-    .meta-item {
-      display: flex;
-      flex-direction: column;
-      gap: 0.25rem;
-    }
-
-    .meta-label {
-      font-size: 0.75rem;
-      color: #999;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    .meta-value {
-      font-size: 1rem;
-      font-weight: 700;
-      color: #fff;
-    }
-
-    .audio-player-enhanced {
-      background: linear-gradient(135deg, rgba(114, 9, 183, 0.1), rgba(86, 11, 173, 0.05));
-      border: 1px solid rgba(114, 9, 183, 0.3);
-      border-radius: 16px;
-      padding: 1.5rem;
-      margin-bottom: 2rem;
-    }
-
-    .player-header {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      font-size: 0.875rem;
-      font-weight: 600;
-      color: #7209b7;
-      margin-bottom: 1rem;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    .player-main {
-      display: grid;
-      grid-template-columns: 60px 1fr 120px;
-      gap: 1rem;
-      align-items: center;
-    }
-
-    .player-play-btn {
-      width: 60px;
-      height: 60px;
-      background: linear-gradient(135deg, #7209b7, #560bad);
-      border: none;
-      border-radius: 50%;
-      color: #fff;
-      font-size: 1.75rem;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.3s;
-      box-shadow: 0 4px 15px rgba(114, 9, 183, 0.3);
-    }
-
-    .player-play-btn:hover:not(:disabled) {
-      transform: scale(1.05);
-      box-shadow: 0 6px 25px rgba(114, 9, 183, 0.5);
-    }
-
-    .player-play-btn:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-
-    .player-waveform {
-      position: relative;
-      height: 80px;
-      background: rgba(0, 0, 0, 0.3);
-      border-radius: 8px;
-      overflow: hidden;
-      cursor: pointer;
-    }
-
-    #waveformCanvas {
-      width: 100%;
-      height: 100%;
-      display: block;
-    }
-
-    .player-progress-overlay {
-      position: absolute;
-      top: 0;
-      left: 0;
-      height: 100%;
-      width: 0%;
-      background: linear-gradient(90deg, rgba(114, 9, 183, 0.4), rgba(114, 9, 183, 0.2));
-      pointer-events: none;
-      transition: width 0.1s linear;
-    }
-
-    .player-controls-secondary {
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-      align-items: flex-end;
-    }
-
-    .player-control-btn {
-      background: transparent;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      color: rgba(255, 255, 255, 0.7);
-      width: 36px;
-      height: 36px;
-      border-radius: 8px;
-      font-size: 1rem;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.3s;
-    }
-
-    .player-control-btn:hover {
-      background: rgba(114, 9, 183, 0.2);
-      color: #fff;
-      border-color: rgba(114, 9, 183, 0.4);
-    }
-
-    .player-time {
-      font-size: 0.8125rem;
-      color: #999;
-      display: flex;
-      gap: 0.25rem;
-    }
-
-    .product-description {
-      margin-bottom: 2rem;
-      padding-bottom: 2rem;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    }
-
-    .product-description h3 {
-      font-size: 1.125rem;
-      font-weight: 700;
-      margin-bottom: 1rem;
-    }
-
-    .product-description p {
-      color: rgba(255, 255, 255, 0.8);
-      line-height: 1.8;
-    }
-
-    .product-tags {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.5rem;
-      margin-bottom: 2rem;
-    }
-
-    .tag {
-      padding: 0.5rem 1rem;
-      background: rgba(114, 9, 183, 0.2);
-      border: 1px solid rgba(114, 9, 183, 0.4);
-      border-radius: 6px;
-      font-size: 0.875rem;
-      color: rgba(255, 255, 255, 0.9);
-    }
-
-    .licenses-section {
-      background: #1a1a1a;
-      border-radius: 12px;
-      padding: 2rem;
-      margin-bottom: 2rem;
-    }
-
-    .licenses-section h3 {
-      font-size: 1.5rem;
-      font-weight: 800;
-      margin-bottom: 1.5rem;
-      font-family: 'Montserrat', sans-serif;
-    }
-
-    .license-cards {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 1rem;
-    }
-
-    .license-card {
-      background: #0a0a0a;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 12px;
-      padding: 1.5rem;
-      transition: all 0.3s;
-    }
-
-    .license-card:hover {
-      border-color: var(--purple-main);
-      transform: translateY(-2px);
-    }
-
-    .license-card.free {
-      border-color: var(--green-success);
-    }
-
-    .license-name {
-      font-size: 1.125rem;
-      font-weight: 700;
-      margin-bottom: 0.5rem;
-    }
-
-    .license-price {
-      font-size: 2rem;
-      font-weight: 900;
-      font-family: 'Montserrat', sans-serif;
-      margin-bottom: 1rem;
-      color: var(--purple-main);
-    }
-
-    .license-card.free .license-price {
-      color: var(--green-success);
-    }
-
-    .license-features {
-      list-style: none;
-      margin-bottom: 1rem;
-    }
-
-    .license-features li {
-      padding: 0.5rem 0;
-      font-size: 0.875rem;
-      color: rgba(255, 255, 255, 0.7);
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .license-features li i {
-      color: var(--green-success);
-      font-size: 0.75rem;
-    }
-
-    .license-actions {
-      display: flex;
-      gap: 0.5rem;
-    }
-
-    .btn-license {
-      flex: 1;
-      padding: 0.875rem;
-      background: linear-gradient(135deg, var(--purple-main), var(--purple-dark));
-      color: #fff;
-      border: none;
-      border-radius: 8px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: all 0.3s;
-      font-size: 0.875rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.5rem;
-    }
-
-    .btn-license:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(114, 9, 183, 0.5);
-    }
-
-    .btn-license-secondary {
-      flex: 1;
-      padding: 0.875rem;
-      background: transparent;
-      color: var(--purple-main);
-      border: 1px solid var(--purple-main);
-      border-radius: 8px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: all 0.3s;
-      font-size: 0.875rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.5rem;
-    }
-
-    .btn-license-secondary:hover {
-      background: rgba(114, 9, 183, 0.1);
-    }
-
-    .license-card.free .btn-license {
-      background: linear-gradient(135deg, var(--green-success), #0a9d72);
-    }
-
-    .reviews-section {
-      margin-top: 2rem;
-      padding-top: 2rem;
-      border-top: 1px solid rgba(255, 255, 255, 0.1);
-    }
-
-    .reviews-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 1.5rem;
-    }
-
-    .reviews-header h3 {
-      font-size: 1.5rem;
-      font-weight: 800;
-      font-family: 'Montserrat', sans-serif;
-    }
-
-    .rating-summary {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .stars {
-      color: #ffc107;
-      font-size: 1.25rem;
-    }
-
-    .review-item {
-      background: #1a1a1a;
-      padding: 1.5rem;
-      border-radius: 12px;
-      margin-bottom: 1rem;
-    }
-
-    .review-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 0.75rem;
-    }
-
-    .review-author {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-    }
-
-    .review-avatar {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      background: var(--purple-main);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #fff;
-      font-weight: 700;
-    }
-
-    .review-text {
-      color: rgba(255, 255, 255, 0.8);
-      line-height: 1.6;
-    }
-
-    .related-section {
-      margin-top: 4rem;
-      padding-top: 2rem;
-      border-top: 1px solid rgba(255, 255, 255, 0.1);
-    }
-
-    .related-section h3 {
-      font-size: 1.5rem;
-      font-weight: 800;
-      margin-bottom: 1.5rem;
-      font-family: 'Montserrat', sans-serif;
-    }
-
-    .related-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-      gap: 1.5rem;
-    }
-
-    .related-card {
-      background: #1a1a1a;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 12px;
-      overflow: hidden;
-      cursor: pointer;
-      transition: all 0.3s;
-    }
-
-    .related-card:hover {
-      transform: translateY(-4px);
-      border-color: rgba(114, 9, 183, 0.4);
-    }
-
-    .related-image {
-      width: 100%;
-      aspect-ratio: 1;
-      overflow: hidden;
-      background: #000;
-    }
-
-    .related-image img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
-    .related-info {
-      padding: 1rem;
-    }
-
-    .related-title {
-      font-size: 0.875rem;
-      font-weight: 700;
-      color: #fff;
-      margin-bottom: 0.25rem;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    .related-price {
-      font-size: 1rem;
-      font-weight: 800;
-      color: var(--purple-main);
-    }
-
-    @media (max-width: 968px) {
-      .product-container {
-        grid-template-columns: 1fr;
-        gap: 2rem;
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="/css/auth-ui.css">
+  <link rel="stylesheet" href="/css/global-overlays.css">
+  <link rel="stylesheet" href="/css/navbar.css">
+  <link rel="stylesheet" href="/css/product-premium.css">
+  <link rel="stylesheet" href="/css/sticky-player.css">
+  <link rel="stylesheet" href="/css/hover-card.css">
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Plus+Jakarta+Sans:wght@400;500;700;800&display=swap"
+    rel="stylesheet">
+
+  <!-- 1. Cargar Supabase (Moved to Head for Global Access) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    // --- GLOBAL SUPABASE CONFIG ---
+    // Moved here so it is available for Search AND Auth scripts immediately.
+    window.SUPABASE_URL = "https://qtjpvztpgfymjhhpoouq.supabase.co";
+    window.SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0anB2enRwZ2Z5bWpoaHBvb3VxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3ODA5MTUsImV4cCI6MjA3NjM1NjkxNX0.YsItTFk3hSQaVuy707-z7Z-j34mXa03O0wWGAlAzjrw";
+
+    window.supabaseClient = null;
+
+    document.addEventListener('DOMContentLoaded', () => {
+      if (typeof window.supabase !== 'undefined' && window.supabase.createClient) {
+        window.supabaseClient = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
+        console.log("✅ Supabase Global Initialized");
+      } else {
+        console.warn("⚠️ Supabase CDN failed to load");
       }
-
-      .product-image-section {
-        position: static;
+    });
+  </script>
+  <script src="/script/notifications.js"></script>
+  <!-- EmailJS Library -->
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+  <script>
+    (function () {
+      if (typeof emailjs !== 'undefined') {
+        emailjs.init("If_WAVcuXiGSPp2SB");
       }
-
-      .player-main {
-        grid-template-columns: 50px 1fr;
-        gap: 0.75rem;
-      }
-
-      .player-controls-secondary {
-        grid-column: 1 / -1;
-        flex-direction: row;
-        justify-content: space-between;
-      }
-
-      .license-cards {
-        grid-template-columns: 1fr;
-      }
-
-      .license-actions {
-        flex-direction: column;
-      }
-
-      .related-grid {
-        grid-template-columns: repeat(2, 1fr);
-      }
-    }
-  </style>
+    })();
+  </script>
 </head>
+
 <body>
 
-  <div class="container">
-    <a href="#" onclick="volverAlPerfil(); return false;" class="back-button">
-      <i class="bi bi-arrow-left"></i>
-      Volver al perfil
-    </a>
 
-    <div class="product-container">
-      <div class="product-image-section">
-        <div class="product-image" id="productImage">
-          <img src="" alt="Producto">
-          <button class="share-btn" onclick="compartirProducto()" title="Compartir">
-            <i class="bi bi-share"></i>
-          </button>
-        </div>
-        <a href="#" class="product-producer" id="producerLink">
-          <div class="producer-avatar">
-            <img src="" alt="Producer">
-          </div>
-          <div class="producer-info">
-            <h4 id="producerName">Cargando...</h4>
-            <p>Ver perfil del productor</p>
-          </div>
+  <!-- ==================== EXTRACTED NAVBAR ==================== -->
+  <header class="navbar">
+    <div class="navbar-container">
+      <div class="logo">
+        <a href="/index.html">
+          <img src="/images/LOGO OFFSZN.webp" alt="OFFSZN"
+            style="height: 80px; width: auto; display: block; transform: scale(1.5); transform-origin: left center;">
         </a>
-        <button class="btn-message-producer" onclick="abrirMensaje()">
-          <i class="bi bi-envelope"></i>
-          Enviar mensaje
-        </button>
       </div>
+      <div class="navbar-center">
+        <ul class="navbar-links">
+          <li><a href="explorar.html">Explorar</a></li>
+          <li class="dropdown-parent">
+            <a onclick="toggleDropdown(this)" class="nav-toggle-link noselect"
+              style="user-select: none; -webkit-user-select: none; cursor: pointer;" onselectstart="return false;">
+              Recursos <i class="bi bi-chevron-down"></i>
+            </a>
+            <div class="dropdown-menu mega-columns">
+              <!-- BOX 1: SONIDOS (Tools) -->
+              <div class="mega-column-box">
+                <span class="dropdown-section-title"
+                  style="font-size: 0.7rem; letter-spacing: 1.5px; color:#555; margin-bottom: 12px; display:block; font-weight:800; padding-left: 6px;">
+                  SONIDOS
+                </span>
+                <div class="dropdown-section">
+                  <a href="/recursos/drum-kits" class="mega-nav-link"><i class="bi bi-disc"></i> Drum
+                    Kits</a>
+                  <a href="/recursos/presets" class="mega-nav-link"><i class="bi bi-sliders"></i>
+                    Presets</a>
+                  <a href="/recursos/samples-loops" class="mega-nav-link"><i class="bi bi-soundwave"></i> Loops</a>
+                  <a href="/recursos/one-shots" class="mega-nav-link"><i class="bi bi-bullseye"></i>
+                    One-Shots</a>
+                  <a href="/recursos/recursos-gratis" class="mega-nav-link"><i class="bi bi-check-circle"></i>
+                    Gratis</a>
+                </div>
+              </div>
 
-      <div class="product-info-section">
-        <h1 class="product-title" id="productTitle">Cargando producto...</h1>
+              <!-- BOX 2: COMUNIDAD (Swapped to Middle) -->
+              <div class="mega-column-box">
+                <span class="dropdown-section-title"
+                  style="font-size: 0.7rem; letter-spacing: 1.5px; color:#555; margin-bottom: 12px; display:block; font-weight:800; padding-left: 6px;">
+                  COMUNIDAD
+                </span>
+                <div class="dropdown-section">
+                  <a href="/comunidad/productores" class="mega-nav-link"><i class="bi bi-people"></i>
+                    Productores</a>
+                  <a href="/comunidad/colaboraciones" class="mega-nav-link"><i class="bi bi-person-plus"></i>
+                    Collabs</a>
+                  <a href="/comunidad/eventos" class="mega-nav-link"><i class="bi bi-calendar-event"></i> Eventos</a>
+                  <a href="/comunidad/feed" class="mega-nav-link"><i class="bi bi-collection-play"></i> Feed</a>
+                  <a href="/cursos/inicio" class="mega-nav-link">
+                    <i class="bi bi-mortarboard"></i> Cursos <span
+                      style="background: rgba(139, 92, 246, 0.1); color: #a78bfa; font-size: 0.6rem; padding: 1px 4px; border-radius: 4px; margin-left: 6px; border: 1px solid rgba(139, 92, 246, 0.2);">SOON</span>
+                  </a>
+                </div>
+              </div>
 
-        <div class="product-meta" id="productMeta">
-          <div class="meta-item">
-            <span class="meta-label">BPM</span>
-            <span class="meta-value" id="productBpm">---</span>
+              <!-- BOX 3: GÉNEROS (Swapped to End) -->
+              <div class="mega-column-box">
+                <span class="dropdown-section-title"
+                  style="font-size: 0.7rem; letter-spacing: 1.5px; color:#555; margin-bottom: 12px; display:block; font-weight:800; padding-left: 6px;">
+                  GÉNEROS
+                </span>
+                <div class="dropdown-section">
+                  <a href="/recursos/beats" class="mega-nav-link">Hip-Hop</a>
+                  <a href="/recursos/beats" class="mega-nav-link">Trap</a>
+                  <a href="/recursos/beats" class="mega-nav-link">R&B</a>
+                  <a href="/recursos/beats" class="mega-nav-link">Reggaetón</a>
+                  <a href="/recursos/beats" class="mega-nav-link">Drill</a>
+                  <a href="/recursos/beats" class="mega-nav-link"
+                    style="color: rgba(255,255,255,0.6); font-size: 0.8rem; margin-top: 4px; transition: color 0.2s;">Ver
+                    todos &rarr;</a>
+                </div>
+              </div>
+            </div>
+          </li>
+
+          <!-- STUDIO / LAB (New Identity Feature) -->
+          <li class="dropdown-parent">
+            <a onclick="toggleDropdown(this)" class="nav-toggle-link noselect"
+              style="user-select: none; -webkit-user-select: none; cursor: pointer;" onselectstart="return false;">
+              Studio <span
+                style="background: rgba(139, 92, 246, 0.1); color: #a78bfa; font-size: 0.6rem; padding: 1px 4px; border-radius: 4px; margin-left: 4px; border: 1px solid rgba(139, 92, 246, 0.2);">BETA</span>
+              <i class="bi bi-chevron-down"></i>
+            </a>
+            <div class="dropdown-menu" style="min-width: 250px; padding: 8px;">
+              <div class="dropdown-section">
+                <span class="dropdown-section-title"
+                  style="font-size: 0.7rem; letter-spacing: 1.5px; color:#555; margin-bottom: 8px; display:block; font-weight:800; padding: 0 8px;">
+                  EXCLUSIVE TOOLS
+                </span>
+                <a href="/youtube.html" class="dropdown-item" style="border-radius: 8px;">
+                  <i class="bi bi-youtube" style="color: #ef4444;"></i>
+                  <div class="dropdown-item-content">
+                    <div class="dropdown-item-title">YouTube Upload</div>
+                    <div class="dropdown-item-desc" style="font-size: 0.7rem; color: #888;">
+                      Sube tu producto al marketplace y se publica automático en YouTube con tu
+                      miniatura.
+                    </div>
+                  </div>
+                </a>
+                <a href="/studio/reels" class="dropdown-item" style="border-radius: 8px;">
+                  <i class="bi bi-collection-play"></i>
+                  <div class="dropdown-item-content">
+                    <div class="dropdown-item-title">Reels</div>
+                    <div class="dropdown-item-desc" style="font-size: 0.7rem; color: #888;">Descubre
+                      tendencias visuales</div>
+                  </div>
+                </a>
+              </div>
+            </div>
+            <!-- Cursos moved to Dropdown -->
+
+        </ul>
+
+        <!-- NEW: NAVBAR SEARCH (Wavs Style) -->
+        <!-- NEW: NAVBAR SEARCH (Wavs Style) with Internal Filter & Trending Panel -->
+        <div class="navbar-search" style="margin-left: 24px; flex: 1; max-width: 440px; position: relative;">
+          <i class="bi bi-search"
+            style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: #666; font-size: 0.85rem; z-index: 10;"></i>
+          <input type="text" id="navbarSearchInput" placeholder="Buscar 'trap' o 'drill'..."
+            style="width: 100%; background: #0f0f0f; border: 1px solid rgba(255,255,255,0.08); padding: 11px 110px 11px 42px; border-radius: 12px; color: #fff; font-size: 0.9rem; outline: none; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);">
+
+          <!-- Internal Filter Trigger - Seamless Integration -->
+          <div class="search-filter-trigger" onclick="toggleSearchFilter(event)"
+            style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); display: flex; align-items: center; gap: 6px; cursor: pointer; padding: 4px 10px; background: rgba(255,255,255,0.05); border-radius: 8px; height: 28px; transition: background 0.2s;">
+            <span id="search-filter-label"
+              style="font-size: 0.75rem; color: #ccc; font-weight: 600; letter-spacing: 0.3px;">Todo</span>
+            <i class="bi bi-chevron-down" style="font-size: 0.65rem; color: #888;"></i>
           </div>
-          <div class="meta-item">
-            <span class="meta-label">Key</span>
-            <span class="meta-value" id="productKey">--</span>
+
+          <!-- Filter Dropdown (Glassmorphism) -->
+          <div id="search-filter-dropdown"
+            style="position: absolute; top: calc(100% + 8px); right: 0; background: rgba(15, 15, 15, 0.95); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 6px; width: 140px; display: none; flex-direction: column; box-shadow: 0 10px 40px rgba(0,0,0,0.5); z-index: 1002; transform-origin: top right; animation: scaleIn 0.2s ease;">
+            <div onclick="selectSearchFilter('Todo')" class="search-filter-item selected">Todo</div>
+            <div onclick="selectSearchFilter('Beats')" class="search-filter-item">Beats</div>
+            <div onclick="selectSearchFilter('Drum Kits')" class="search-filter-item">Drum Kits</div>
+            <div onclick="selectSearchFilter('Samples')" class="search-filter-item">Samples</div>
+            <div onclick="selectSearchFilter('Presets')" class="search-filter-item">Presets</div>
+            <div onclick="selectSearchFilter('Plantillas')" class="search-filter-item">Plantillas</div>
+            <div onclick="selectSearchFilter('Productores')" class="search-filter-item">Productores</div>
           </div>
-          <div class="meta-item">
-            <span class="meta-label">Tipo</span>
-            <span class="meta-value" id="productType">---</span>
+
+          <!-- Trending / Intelligent Panel (Appears on Focus) -->
+          <!-- Trending / Intelligent Panel -->
+          <div id="search-trending-panel"
+            style="position: absolute; top: calc(100% + 4px); left: 0; width: 100%; background: #0a0a0a; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 12px; display: none; box-shadow: 0 20px 50px rgba(0,0,0,0.8); z-index: 1001;">
+
+            <!-- Recent Searches (New) -->
+            <div style="margin-bottom: 20px;">
+              <span
+                style="display: block; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 0.7rem; color: #555; font-weight: 700; letter-spacing: 0.5px; margin-bottom: 8px; text-transform: uppercase;">Búsquedas
+                Recientes</span>
+              <div style="display: flex; flex-direction: column; gap: 4px;">
+                <div class="recent-item" onclick="setSearch('Dark Piano')"><i class="bi bi-clock-history"></i>
+                  Dark
+                  Piano</div>
+                <div class="recent-item" onclick="setSearch('Tainy Drums')"><i class="bi bi-clock-history"></i>
+                  Tainy
+                  Drums</div>
+              </div>
+            </div>
+
+            <span
+              style="display: block; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 0.7rem; color: #555; font-weight: 700; letter-spacing: 0.5px; margin-bottom: 12px; text-transform: uppercase;">Tendencias
+              Ahora</span>
+            <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+              <span class="trend-tag"><i class="bi bi-graph-up-arrow"></i> Dark Trap</span>
+              <span class="trend-tag"><i class="bi bi-fire"></i> Reggaeton 2025</span>
+              <span class="trend-tag">Drill UK</span>
+            </div>
+          </div>
+        </div>
+        <!-- Search Overlay Backdrop -->
+        <div id="search-overlay"></div>
+
+        <!-- Active Tags Container (New) -->
+        <div id="active-search-tags"></div>
+        <!-- Logic moved to script/navbar.js -->
+      </div>
+      <button class="menu-toggle" id="menuToggle">
+      </button>
+      <div class="navbar-right">
+
+        <!-- 1. CURRENCY (Always Visible) -->
+        <div class="currency-dropdown" style="position: relative;">
+          <button id="currency-toggle-btn" onclick="toggleCurrency(event)" class="nav-text-btn"
+            style="background:none; border:none; color:#bbb; font-size:0.8rem; font-weight:600; cursor:pointer; padding:6px 8px; display:flex; align-items:center; gap:4px; outline:none; transition: all 0.2s;">
+            <span id="current-currency">PEN</span> <i class="bi bi-caret-down-fill" style="font-size:0.6rem;"></i>
+          </button>
+          <div id="currency-menu"
+            style="position: absolute; top: 100%; left: 0; background: #141414; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 4px; display: none; flex-direction: column; min-width: 80px; box-shadow: 0 4px 12px rgba(0,0,0,0.5); z-index: 1005;">
+            <div onclick="setCurrency('PEN')" class="currency-item"
+              style="padding:6px 12px; font-size:0.8rem; color:#ccc; cursor:pointer; border-radius:4px;">
+              PEN</div>
+            <div onclick="setCurrency('USD')" class="currency-item"
+              style="padding:6px 12px; font-size:0.8rem; color:#ccc; cursor:pointer; border-radius:4px;">
+              USD</div>
           </div>
         </div>
 
-        <div class="audio-player-enhanced">
-          <div class="player-header">
-            <i class="bi bi-music-note-beamed"></i>
-            <span>Preview del Beat</span>
-          </div>
-          
-          <div class="player-main">
-            <button class="player-play-btn" id="playBtn" disabled>
-              <i class="bi bi-play-fill"></i>
+        <!-- 2. CART (Always Visible) -->
+        <a href="#" class="nav-icon-btn" title="Carrito" data-label="Carrito" onclick="toggleCartPanel(event)">
+          <i class="bi bi-cart3"></i>
+          <span id="cart-count-badge" class="cart-label-count">0</span>
+        </a>
+
+        <!-- 3. LOGGED IN ACTIONS (Hidden by default) -->
+        <div id="nav-auth-section" style="display: flex; align-items: center; gap: 0.5rem;">
+
+          <!-- NOTIFICACIONES -->
+          <div class="notification-dropdown">
+            <button class="nav-icon-btn" onclick="toggleNotificationDropdown(event)" data-label="Notificaciones"
+              style="user-select: none;" onselectstart="return false;">
+              <i class="bi bi-bell"></i>
+              <span class="notification-badge" id="notification-badge" style="display:none;">0</span>
             </button>
-            
-            <div class="player-waveform" id="waveformContainer">
-              <canvas id="waveformCanvas" width="800" height="80"></canvas>
-              <div class="player-progress-overlay" id="progressOverlay"></div>
-            </div>
-            
-            <div class="player-controls-secondary">
-              <button class="player-control-btn" id="volumeBtn">
-                <i class="bi bi-volume-up"></i>
-              </button>
-              <div class="player-time">
-                <span id="currentTime">0:00</span>
-                <span>/</span>
-                <span id="duration">0:00</span>
+            <div class="notification-menu" id="notification-menu">
+              <div class="notification-header"
+                style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-bottom: 1px solid #222;">
+                <h4 style="margin: 0; font-size: 0.95rem; font-weight: 600; color: #fff;">Notificaciones
+                </h4>
+                <a href="/notificaciones.html" class="notif-view-all">Ver todos</a>
+              </div>
+              <div id="notification-list" style="max-height: 400px; overflow-y: auto;">
+                <div class="notif-empty" style="text-align: center; color: #fff; padding: 40px 20px;">
+                  <div style="font-size: 2rem; margin-bottom: 16px; color: #666;"><i class="bi bi-bell"></i></div>
+                  <h4 style="margin-bottom: 8px; font-size: 0.9rem; font-weight: 500;">Cargando...
+                  </h4>
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        <div class="product-description">
-          <h3>Descripción</h3>
-          <p id="productDescription">Cargando descripción...</p>
-        </div>
+          <!-- USER PROFILE -->
+          <div class="user-dropdown">
+            <div class="user-trigger" onclick="toggleUserDropdown(event)" style="cursor: pointer;">
+              <div id="user-avatar-display" class="user-avatar-placeholder">W</div>
+            </div>
+            <div class="user-dropdown-menu" style="width: 380px;">
+              <div class="user-dropdown-header" onclick="window.location.href='/perfil-publico.html'"
+                style="display: flex; align-items: center; justify-content: space-between; gap: 12px; background-color: #232323; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 24px 16px; margin-bottom: 12px; cursor: pointer; transition: background-color 0.2s; user-select: none;"
+                onmouseover="this.style.backgroundColor='#2a2a2a'" onmouseout="this.style.backgroundColor='#232323'">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                  <div class="user-dropdown-avatar-lg"
+                    style="width: 48px; height: 48px; font-size: 1.2rem; border-radius: 50%;">W
+                  </div>
+                  <div style="display: flex; flex-direction: column;">
+                    <h4 id="dropdown-username" style="margin: 0; font-size: 1rem; color: #fff; font-weight: 600;">Willie
+                      Inspired</h4>
+                    <span style="color: #999; font-size: 0.85rem;">0 Créditos</span>
+                  </div>
+                </div>
+                <a href="/cuenta/planes.html" class="btn-subscribe-sm" onclick="event.stopPropagation();"
+                  style="padding: 6px 12px; font-size: 0.8rem;">
+                  <i class="bi bi-plus-circle-fill"></i> Suscribirse
+                </a>
+              </div>
 
-        <div class="product-tags" id="productTags"></div>
+              <div class="w-grid">
+                <a href="/cuenta/dashboard.html" class="w-grid-item"><i class="fas fa-columns"
+                    style="transform: rotate(90deg);"></i><span>Dashboard</span></a>
+                <a href="/mis-compras2.html" class="w-grid-item"><i
+                    class="fas fa-layer-group"></i><span>Compras</span></a>
+                <a href="/mensajes.html" class="w-grid-item"><i class="fas fa-envelope"></i><span>Mensajes</span></a>
+              </div>
 
-        <div class="licenses-section">
-          <h3>Selecciona una Licencia</h3>
-          <div class="license-cards" id="licenseCards"></div>
-        </div>
-
-        <div class="reviews-section">
-          <div class="reviews-header">
-            <h3>Reseñas</h3>
-            <div class="rating-summary">
-              <div class="stars" id="avgRating">★★★★★</div>
-              <span id="reviewCount">(0)</span>
+              <!-- LIST -->
+              <a href="/favoritos.html" class="w-list-item"><i class="fas fa-heart"></i> Mis Favoritos</a>
+              <a href="/gift-cards.html" class="w-list-item"><i class="fas fa-gift"></i> Gift Cards</a>
+              <a href="/historial.html" class="w-list-item"><i class="fas fa-history"></i> Historial</a>
+              <div style="height: 1px; background: rgba(255,255,255,0.1); margin: 8px 0;"></div>
+              <a href="/account-settings.html" class="w-list-item"><i class="fas fa-sliders-h"></i>
+                Configuración</a>
+              <a href="/ayuda.html" class="w-list-item"><i class="fas fa-question-circle"></i> Centro de
+                Ayuda</a>
+              <a href="#" id="navbar-logout-btn" class="w-list-item" style="color: #ef4444; margin-top: 8px;">
+                <i class="fas fa-sign-out-alt" style="color: #ef4444;"></i> Cerrar Sesión
+              </a>
             </div>
           </div>
-          <div id="reviewsList">
-            <p style="color: #999; text-align: center; padding: 2rem;">Aún no hay reseñas</p>
-          </div>
+
+          <!-- UPLOAD BUTTON -->
+          <a href="/cuenta/subir-kit.html" target=_blank class="btn-upload"><i class="fas fa-cloud-upload-alt"></i>
+            Subir</a>
         </div>
 
-        <div class="related-section" id="relatedSection">
-          <h3>Más del productor</h3>
-          <div class="related-grid" id="relatedGrid"></div>
+        <!-- 4. GUEST ACTIONS (Shown when Logged Out) -->
+        <div id="nav-guest-section" style="display: none; align-items: center; gap: 0.5rem;">
+          <!-- Separtor -->
+          <div style="width:1px; height:24px; background:rgba(255,255,255,0.1); margin:0 4px;"></div>
+          <a href="/pages/login.html" class="navbar-login-link">Iniciar Sesión</a>
+          <a href="/pages/register.html" class="btn-join">Únete <i class="bi bi-rocket-takeoff"></i></a>
+        </div>
+
+      </div>
+    </div>
+  </header>
+
+  <main id="product-page-container">
+    <!-- Content dynamically injected by product-core.js -->
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <p>Cargando producto...</p>
+    </div>
+  </main>
+
+  <!-- GLOBAL FOOTER -->
+  <footer
+    style="background: #0a0a0a; border-top: 1px solid #222; padding: 60px 20px; color: #fff; font-family: 'Inter', sans-serif;">
+    <div class="container"
+      style="max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: 1.5fr 1fr 1fr 1fr; gap: 40px;">
+      <!-- Col 1: Brand -->
+      <div>
+        <h3 style="font-weight: 800; letter-spacing: -1px; margin-bottom: 20px;">OFFSZN</h3>
+        <p style="color: #666; font-size: 0.9rem; line-height: 1.6; margin-bottom: 24px;">
+          El primer marketplace musical hecho en Perú <span style="font-size: 1rem;">🇵🇪</span>
+        </p>
+        <div style="display: flex; gap: 16px;">
+          <a href="#" style="color: #444; font-size: 1.2rem; transition: color 0.2s;"
+            onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#444'"><i
+              class="fab fa-instagram"></i></a>
+          <a href="#" style="color: #444; font-size: 1.2rem; transition: color 0.2s;"
+            onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#444'"><i
+              class="fab fa-discord"></i></a>
+          <a href="#" style="color: #444; font-size: 1.2rem; transition: color 0.2s;"
+            onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#444'"><i
+              class="fab fa-youtube"></i></a>
+          <a href="#" style="color: #444; font-size: 1.2rem; transition: color 0.2s;"
+            onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#444'"><i
+              class="fab fa-whatsapp"></i></a>
+        </div>
+      </div>
+
+      <!-- Col 2: Explorar -->
+      <div>
+        <h4 style="font-size: 0.75rem; color: #444; font-weight: 700; letter-spacing: 1px; margin-bottom: 20px;">
+          EXPLORAR</h4>
+        <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px;">
+          <li><a href="/recursos/drum-kits"
+              style="color: #ccc; text-decoration: none; font-size: 0.9rem; transition: color 0.2s;"
+              onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#ccc'">Drum Kits</a></li>
+          <li><a href="/recursos/loops"
+              style="color: #ccc; text-decoration: none; font-size: 0.9rem; transition: color 0.2s;"
+              onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#ccc'">Loops & Samples</a></li>
+          <li><a href="/recursos/presets"
+              style="color: #ccc; text-decoration: none; font-size: 0.9rem; transition: color 0.2s;"
+              onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#ccc'">Presets</a></li>
+          <li><a href="/recursos/one-shots"
+              style="color: #ccc; text-decoration: none; font-size: 0.9rem; transition: color 0.2s;"
+              onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#ccc'">One-Shots</a></li>
+          <li><a href="/recursos/gratis"
+              style="color: #3b82f6; text-decoration: none; font-size: 0.9rem; font-weight: 500;">Descargas Gratis</a>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Col 3: Studio -->
+      <div>
+        <h4 style="font-size: 0.75rem; color: #444; font-weight: 700; letter-spacing: 1px; margin-bottom: 20px;">STUDIO
+          & COMUNIDAD</h4>
+        <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px;">
+          <li><a href="/vender" style="color: #fff; text-decoration: none; font-size: 0.9rem; font-weight: 600;">Vender
+              en OFFSZN</a></li>
+          <li><a href="/comunidad/productores"
+              style="color: #ccc; text-decoration: none; font-size: 0.9rem; transition: color 0.2s;"
+              onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#ccc'">Productores / Collabs</a></li>
+          <li><a href="/herramientas"
+              style="color: #ccc; text-decoration: none; font-size: 0.9rem; transition: color 0.2s;"
+              onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#ccc'">Herramientas & Upload</a></li>
+          <li><a href="/blog" style="color: #ccc; text-decoration: none; font-size: 0.9rem; transition: color 0.2s;"
+              onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#ccc'">Blog & Tips</a></li>
+        </ul>
+      </div>
+
+      <!-- Col 4: Soporte -->
+      <div>
+        <h4 style="font-size: 0.75rem; color: #444; font-weight: 700; letter-spacing: 1px; margin-bottom: 20px;">SOPORTE
+        </h4>
+        <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px;">
+          <li><a href="/licencias"
+              style="color: #ccc; text-decoration: none; font-size: 0.9rem; transition: color 0.2s;"
+              onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#ccc'">Información de Licencias</a>
+          </li>
+          <li><a href="/contacto" style="color: #ccc; text-decoration: none; font-size: 0.9rem; transition: color 0.2s;"
+              onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#ccc'">Centro de Ayuda / Contacto</a>
+          </li>
+          <li><a href="/reembolsos"
+              style="color: #ccc; text-decoration: none; font-size: 0.9rem; transition: color 0.2s;"
+              onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#ccc'">Política de Reembolsos</a></li>
+          <li><a href="/terminos" style="color: #ccc; text-decoration: none; font-size: 0.9rem; transition: color 0.2s;"
+              onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#ccc'">Términos de Servicio</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="container"
+      style="max-width: 1200px; margin: 40px auto 0; border-top: 1px solid #1a1a1a; padding-top: 30px; display: flex; justify-content: space-between; align-items: center;">
+      <p style="font-size: 0.8rem; color: #444;">&copy; 2026 OFFSZN. Todos los derechos reservados.</p>
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <span style="font-size: 0.8rem; color: #444; margin-right: 10px;">Hecho con ♥ en Perú</span>
+        <i class="fab fa-cc-visa" style="color: #444; font-size: 1.5rem;"></i>
+        <i class="fab fa-cc-mastercard" style="color: #444; font-size: 1.5rem;"></i>
+        <i class="fab fa-cc-paypal" style="color: #444; font-size: 1.5rem;"></i>
+        <span
+          style="background: #742284; color: #fff; font-size: 0.6rem; font-weight: 800; padding: 2px 4px; border-radius: 2px;">YAPE</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ==================== SIDE PANELS ==================== -->
+
+  <!-- BACKDROP -->
+  <div class="overlay-backdrop" id="globalBackdrop" onclick="closeAllOverlays()"></div>
+
+  <!-- CART SIDE PANEL -->
+  <div class="side-panel" id="globalCartPanel">
+    <div class="panel-header">
+      <div class="panel-title" style="display: flex; align-items: center; gap: 8px;">
+        <div style="position: relative; display: flex;">
+          <i class="fas fa-shopping-cart"></i>
+          <span id="cart-panel-count" class="notification-badge"
+            style="position: absolute; top: -6px; right: -6px; display: flex;">1</span>
+        </div>
+        Tu Carrito
+      </div>
+      <button class="panel-close" onclick="closeAllOverlays()">&times;</button>
+    </div>
+    <!-- ID CHANGED: globalCartItems -> cart-items-container to match script/cart.js -->
+    <div class="panel-content" id="cart-items-container">
+      <div style="text-align:center; padding: 40px 0; color: #666;">
+        <i class="fas fa-shopping-basket" style="font-size: 3rem; margin-bottom: 10px;"></i>
+        <p>Tu carrito está vacío</p>
+      </div>
+    </div>
+    <!-- ID ADDED: cart-summary (needed by script) -->
+    <div class="cart-total-section" id="cart-summary">
+      <div style="display:flex; justify-content:space-between; margin-bottom:1rem; color:#fff; font-weight:700;">
+        <span>Total:</span>
+        <!-- ID CHANGED for JS compatibility -->
+        <span id="cart-total-price">$0.00</span>
+      </div>
+      <!-- ID CHANGED for JS compatibility -->
+      <button class="btn-checkout-global" id="cart-checkout-btn" onclick="window.location.href='/pages/checkout.html'">
+        <i class="bi bi-lock-fill" style="margin-right:6px;"></i> Ir a Pagar Seguro
+      </button>
+
+      <!-- TRUST BADGES -->
+      <div
+        style="margin-top: 20px; text-align: center; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 15px;">
+        <p style="font-size: 0.65rem; color: #666; margin-bottom: 10px; letter-spacing: 1px; font-weight: 700;">
+          METODOS DE PAGO SEGUROS</p>
+
+        <div
+          style="display: flex; gap: 12px; justify-content: center; align-items: center; opacity: 0.8; filter: grayscale(100%); transition: filter 0.3s;"
+          onmouseover="this.style.filter='grayscale(0%)'" onmouseout="this.style.filter='grayscale(100%)'">
+          <!-- Global -->
+          <i class="fab fa-cc-paypal" style="font-size: 26px; color: #fff;"></i>
+          <i class="fab fa-cc-visa" style="font-size: 26px; color: #fff;"></i>
+          <i class="fab fa-cc-mastercard" style="font-size: 26px; color: #fff;"></i>
+
+          <!-- Local (Custom Badges) -->
+          <div
+            style="background: #742284; color: white; font-size: 0.7rem; font-weight: 800; padding: 2px 6px; border-radius: 4px; display: flex; align-items: center;">
+            YAPE</div>
+          <div
+            style="background: #00d3de; color: white; font-size: 0.7rem; font-weight: 800; padding: 2px 6px; border-radius: 4px; display: flex; align-items: center;">
+            PLIN</div>
         </div>
       </div>
     </div>
   </div>
 
-<script type="module">
-  import toast from './script/toast.js';
-  window.toast = toast;
-</script>
-<script type="module" src="script/producto.js"></script>
-
+  <script src="https://unpkg.com/wavesurfer.js@7"></script>
+  <script src="/script/toast.js" type="module"></script>
+  <script src="/script/cart.js"></script>
+  <script src="/script/notifications.js"></script>
+  <script src="/script/navbar.js?v=7" type="module"></script>
+  <script src="/script/id-obfuscator.js"></script>
+  <script src="/script/sticky-player.js"></script>
+  <script src="/script/hover-card.js"></script>
+  <script src="/script/favorites-manager.js"></script>
+  <script src="/script/product-core.js"></script>
 </body>
+
 </html>

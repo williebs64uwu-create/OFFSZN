@@ -1,34 +1,42 @@
 document.addEventListener('DOMContentLoaded', () => {
 
+    // 1. Determinar API_URL dinámicamente
+    let API_URL = '';
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        API_URL = 'http://localhost:3000/api';
+    } else {
+        API_URL = 'https://offszn-academy.onrender.com/api';
+    }
+
     const chatIcon = document.getElementById('chatIcon');
     const chatWindow = document.getElementById('chatWindow');
-    const chatMenu = document.getElementById('chatMenu'); 
-    const closeChat = document.getElementById('closeChat'); 
-    const closeMenuButton = document.getElementById('closeMenuButton'); 
-    const startChatButton = document.getElementById('startChatButton'); 
+    const chatMenu = document.getElementById('chatMenu');
+    const closeChat = document.getElementById('closeChat');
+    const closeMenuButton = document.getElementById('closeMenuButton');
+    const startChatButton = document.getElementById('startChatButton');
     const sendButton = document.getElementById('sendButton');
     const chatInput = document.getElementById('chatInput');
     const chatBody = document.getElementById('chatBody');
-    const predefinedQuestions = document.querySelectorAll('.predefined-question'); 
+    const predefinedQuestions = document.querySelectorAll('.predefined-question');
 
     chatIcon.addEventListener('click', () => {
-        chatMenu.classList.toggle('open'); 
-        chatWindow.classList.remove('open'); 
+        chatMenu.classList.toggle('open');
+        chatWindow.classList.remove('open');
     });
 
     closeChat.addEventListener('click', () => {
         chatWindow.classList.remove('open');
-        chatMenu.classList.add('open'); 
+        chatMenu.classList.add('open');
     });
 
     closeMenuButton.addEventListener('click', () => {
-        chatMenu.classList.remove('open'); 
+        chatMenu.classList.remove('open');
     });
 
     startChatButton.addEventListener('click', () => {
-        chatMenu.classList.remove('open'); 
-        chatWindow.classList.add('open');   
-        chatInput.focus(); 
+        chatMenu.classList.remove('open');
+        chatWindow.classList.add('open');
+        chatInput.focus();
     });
 
     sendButton.addEventListener('click', () => {
@@ -44,10 +52,10 @@ document.addEventListener('DOMContentLoaded', () => {
     predefinedQuestions.forEach(button => {
         button.addEventListener('click', () => {
             const questionText = button.textContent.trim();
-            chatInput.value = questionText; 
+            chatInput.value = questionText;
             chatMenu.classList.remove('open');
             chatWindow.classList.add('open');
-            sendMessage(); 
+            sendMessage();
         });
     });
 
@@ -62,12 +70,12 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             addMessageToChat('bot', 'Escribiendo...');
 
-            const response = await fetch('/api/chat', { 
+            const response = await fetch(`${API_URL}/chat`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ prompt: messageText }), 
+                body: JSON.stringify({ prompt: messageText }),
             });
 
             if (!response.ok) {
@@ -87,10 +95,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    
+
     function escapeHTML(str) {
-        return str.replace(/[&<>"']/g, function(m) {
-            return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[m];
+        return str.replace(/[&<>"']/g, function (m) {
+            return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m];
         });
     }
 

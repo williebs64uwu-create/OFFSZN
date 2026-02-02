@@ -15,6 +15,6 @@ export const checkConnection = async () => {
         }
 
     } catch (error) {
-        console.error('Error inesperado en la conexión a Supabase:', err.message)
+        console.error('Error inesperado en la conexión a Supabase:', error.message)
     }
 }

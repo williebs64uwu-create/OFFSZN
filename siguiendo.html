@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configuración - OFFSZN</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;700;800&display=swap"
+        rel="stylesheet">
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Global Styles -->
+    <link rel="stylesheet" href="/css/auth-ui.css">
+    <link rel="stylesheet" href="/css/global-overlays.css">
+    <link rel="stylesheet" href="/css/navbar.css">
+    <link rel="stylesheet" href="/css/marketplace.css">
+    <link rel="stylesheet" href="/css/sticky-player.css">
+    <link rel="stylesheet" href="/css/hover-card.css">
+    <link rel="stylesheet" href="/css/footer.css">
+    <link rel="stylesheet" href="/css/account-settings.css">
+    <style>
+        .producers-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+            gap: 20px;
+            width: 100%;
+        }
+
+        .mini-skeleton {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            aspect-ratio: 1 / 1.15;
+            position: relative;
+            overflow: hidden;
+            width: 100%;
+        }
+
+        .mini-skeleton::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 50%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.03), transparent);
+            animation: skeleton-wave 1.5s infinite;
+        }
+
+        @keyframes skeleton-wave {
+            0% {
+                left: -100%;
+            }
+
+            100% {
+                left: 200%;
+            }
+        }
+
+        .mini-skeleton::before {
+            content: "";
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.05);
+            margin-bottom: 8px;
+            flex-shrink: 0;
+        }
+
+        .mini-skeleton-text {
+            height: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+            width: 70%;
+        }
+    </style>
+
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        window.SUPABASE_URL = "https://qtjpvztpgfymjhhpoouq.supabase.co";
+        window.SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0anB2enRwZ2Z5bWpoaHBvb3VxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3ODA5MTUsImV4cCI6MjA3NjM1NjkxNX0.YsItTFk3hSQaVuy707-z7Z-j34mXa03O0wWGAlAzjrw";
+        window.supabaseClient = supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
+    </script>
+</head>
+
+<body>
+    <!-- Top Banner (Clickable) -->
+    <a href="/pages/register.html" class="promo-banner logged-out">
+        <span>🎉 <b>OFERTA EXCLUSIVA:</b> REGÍSTRATE Y OBTÉN <b>$5 USD GRATIS</b> EN TU PRIMERA COMPRA <i
+                class="bi bi-arrow-right-short" style="font-size: 1.1em; vertical-align: middle;"></i></span>
+    </a>
+
+    <!-- ==================== NAVBAR ==================== -->
+    <header class="navbar">
+        <div class="navbar-container">
+            <div class="logo">
+                <a href="/index.html">
+                    <img src="/images/LOGO OFFSZN.webp" alt="OFFSZN"
+                        style="height: 80px; width: auto; display: block; transform: scale(1.5); transform-origin: left center;">
+                </a>
+            </div>
+            <div class="navbar-center">
+                <ul class="navbar-links">
+                    <li><a href="explorar.html">Explorar</a></li>
+                    <li class="dropdown-parent">
+                        <a onclick="toggleDropdown(this)" class="nav-toggle-link noselect"
+                            style="user-select: none; -webkit-user-select: none; cursor: pointer;"
+                            onselectstart="return false;">
+                            Recursos <i class="bi bi-chevron-down"></i>
+                        </a>
+                        <div class="dropdown-menu mega-columns">
+                            <!-- BOX 1: SONIDOS (Tools) -->
+                            <div class="mega-column-box">
+                                <span class="dropdown-section-title"
+                                    style="font-size: 0.7rem; letter-spacing: 1.5px; color:#555; margin-bottom: 12px; display:block; font-weight:800; padding-left: 6px;">
+                                    SONIDOS
+                                </span>
+                                <div class="dropdown-section">
+                                    <a href="/recursos/drum-kits" class="mega-nav-link"><i class="bi bi-disc"></i> Drum
+                                        Kits</a>
+                                    <a href="/recursos/presets" class="mega-nav-link"><i class="bi bi-sliders"></i>
+                                        Presets</a>
+                                    <a href="/recursos/samples-loops" class="mega-nav-link"><i
+                                            class="bi bi-soundwave"></i> Loops</a>
+                                    <a href="/recursos/one-shots" class="mega-nav-link"><i class="bi bi-bullseye"></i>
+                                        One-Shots</a>
+                                    <a href="/recursos/recursos-gratis" class="mega-nav-link"><i
+                                            class="bi bi-check-circle"></i>
+                                        Gratis</a>
+                                </div>
+                            </div>
+
+                            <!-- BOX 2: COMUNIDAD (Swapped to Middle) -->
+                            <div class="mega-column-box">
+                                <span class="dropdown-section-title"
+                                    style="font-size: 0.7rem; letter-spacing: 1.5px; color:#555; margin-bottom: 12px; display:block; font-weight:800; padding-left: 6px;">
+                                    COMUNIDAD
+                                </span>
+                                <div class="dropdown-section">
+                                    <a href="/comunidad/productores" class="mega-nav-link"><i class="bi bi-people"></i>
+                                        Productores</a>
+                                    <a href="/comunidad/colaboraciones" class="mega-nav-link"><i
+                                            class="bi bi-person-plus"></i>
+                                        Collabs</a>
+                                    <a href="/comunidad/eventos" class="mega-nav-link"><i
+                                            class="bi bi-calendar-event"></i> Eventos</a>
+                                    <a href="/comunidad/feed" class="mega-nav-link"><i
+                                            class="bi bi-collection-play"></i> Feed</a>
+                                    <a href="/cursos/inicio" class="mega-nav-link">
+                                        <i class="bi bi-mortarboard"></i> Cursos <span
+                                            style="background: rgba(139, 92, 246, 0.1); color: #a78bfa; font-size: 0.6rem; padding: 1px 4px; border-radius: 4px; margin-left: 6px; border: 1px solid rgba(139, 92, 246, 0.2);">SOON</span>
+                                    </a>
+                                </div>
+                            </div>
+
+                            <!-- BOX 3: GÉNEROS (Swapped to End) -->
+                            <div class="mega-column-box">
+                                <span class="dropdown-section-title"
+                                    style="font-size: 0.7rem; letter-spacing: 1.5px; color:#555; margin-bottom: 12px; display:block; font-weight:800; padding-left: 6px;">
+                                    GÉNEROS
+                                </span>
+                                <div class="dropdown-section">
+                                    <a href="/recursos/beats" class="mega-nav-link">Hip-Hop</a>
+                                    <a href="/recursos/beats" class="mega-nav-link">Trap</a>
+                                    <a href="/recursos/beats" class="mega-nav-link">R&B</a>
+                                    <a href="/recursos/beats" class="mega-nav-link">Reggaetón</a>
+                                    <a href="/recursos/beats" class="mega-nav-link">Drill</a>
+                                    <a href="/recursos/beats" class="mega-nav-link"
+                                        style="color: rgba(255,255,255,0.6); font-size: 0.8rem; margin-top: 4px; transition: color 0.2s;">Ver
+                                        todos &rarr;</a>
+                                </div>
+                            </div>
+                        </div>
+                    </li>
+
+                    <!-- STUDIO / LAB (New Identity Feature) -->
+                    <li class="dropdown-parent">
+                        <a onclick="toggleDropdown(this)" class="nav-toggle-link noselect"
+                            style="user-select: none; -webkit-user-select: none; cursor: pointer;"
+                            onselectstart="return false;">
+                            Studio <span
+                                style="background: rgba(139, 92, 246, 0.1); color: #a78bfa; font-size: 0.6rem; padding: 1px 4px; border-radius: 4px; margin-left: 4px; border: 1px solid rgba(139, 92, 246, 0.2);">BETA</span>
+                            <i class="bi bi-chevron-down"></i>
+                        </a>
+                        <div class="dropdown-menu" style="min-width: 250px; padding: 8px;">
+                            <div class="dropdown-section">
+                                <span class="dropdown-section-title"
+                                    style="font-size: 0.7rem; letter-spacing: 1.5px; color:#555; margin-bottom: 8px; display:block; font-weight:800; padding: 0 8px;">
+                                    EXCLUSIVE TOOLS
+                                </span>
+                                <a href="/youtube.html" class="dropdown-item" style="border-radius: 8px;">
+                                    <i class="bi bi-youtube" style="color: #ef4444;"></i>
+                                    <div class="dropdown-item-content">
+                                        <div class="dropdown-item-title">YouTube Upload</div>
+                                        <div class="dropdown-item-desc" style="font-size: 0.7rem; color: #888;">
+                                            Sube tu producto al marketplace y se publica automático en YouTube con tu
+                                            miniatura.
+                                        </div>
+                                    </div>
+                                </a>
+                                <a href="/studio/reels" class="dropdown-item" style="border-radius: 8px;">
+                                    <i class="bi bi-collection-play"></i>
+                                    <div class="dropdown-item-content">
+                                        <div class="dropdown-item-title">Reels</div>
+                                        <div class="dropdown-item-desc" style="font-size: 0.7rem; color: #888;">Descubre
+                                            tendencias visuales</div>
+                                    </div>
+                                </a>
+                            </div>
+                        </div>
+                    </li>
+
+                </ul>
+
+                <!-- NEW: NAVBAR SEARCH (Wavs Style) -->
+                <div class="navbar-search" style="margin-left: 24px; flex: 1; max-width: 440px; position: relative;">
+                    <i class="bi bi-search"
+                        style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: #666; font-size: 0.85rem; z-index: 10;"></i>
+                    <input type="text" id="navbarSearchInput" placeholder="Buscar 'trap' o 'drill'..."
+                        style="width: 100%; background: #0f0f0f; border: 1px solid rgba(255,255,255,0.08); padding: 11px 110px 11px 42px; border-radius: 12px; color: #fff; font-size: 0.9rem; outline: none; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);">
+
+                    <!-- Internal Filter Trigger -->
+                    <div class="search-filter-trigger" onclick="toggleSearchFilter(event)"
+                        style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); display: flex; align-items: center; gap: 6px; cursor: pointer; padding: 4px 10px; background: rgba(255,255,255,0.05); border-radius: 8px; height: 28px; transition: background 0.2s;">
+                        <span id="search-filter-label"
+                            style="font-size: 0.75rem; color: #ccc; font-weight: 600; letter-spacing: 0.3px;">Todo</span>
+                        <i class="bi bi-chevron-down" style="font-size: 0.65rem; color: #888;"></i>
+                    </div>
+
+                    <!-- Filter Dropdown -->
+                    <div id="search-filter-dropdown"
+                        style="position: absolute; top: calc(100% + 8px); right: 0; background: rgba(15, 15, 15, 0.95); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 6px; width: 140px; display: none; flex-direction: column; box-shadow: 0 10px 40px rgba(0,0,0,0.5); z-index: 1002; transform-origin: top right; animation: scaleIn 0.2s ease;">
+                        <div onclick="selectSearchFilter('Todo')" class="search-filter-item selected">Todo</div>
+                        <div onclick="selectSearchFilter('Beats')" class="search-filter-item">Beats</div>
+                        <div onclick="selectSearchFilter('Drum Kits')" class="search-filter-item">Drum Kits</div>
+                        <div onclick="selectSearchFilter('Samples')" class="search-filter-item">Samples</div>
+                        <div onclick="selectSearchFilter('Presets')" class="search-filter-item">Presets</div>
+                        <div onclick="selectSearchFilter('Plantillas')" class="search-filter-item">Plantillas</div>
+                        <div onclick="selectSearchFilter('Productores')" class="search-filter-item">Productores</div>
+                    </div>
+
+                    <!-- Trending Panel -->
+                    <div id="search-trending-panel"
+                        style="position: absolute; top: calc(100% + 4px); left: 0; width: 100%; background: #0a0a0a; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 12px; display: none; box-shadow: 0 20px 50px rgba(0,0,0,0.8); z-index: 1001;">
+                        <div style="margin-bottom: 20px;">
+                            <span
+                                style="display: block; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 0.7rem; color: #555; font-weight: 700; letter-spacing: 0.5px; margin-bottom: 8px; text-transform: uppercase;">Búsquedas
+                                Recientes</span>
+                            <div style="display: flex; flex-direction: column; gap: 4px;">
+                                <div class="recent-item" onclick="setSearch('Dark Piano')"><i
+                                        class="bi bi-clock-history"></i> Dark Piano</div>
+                                <div class="recent-item" onclick="setSearch('Tainy Drums')"><i
+                                        class="bi bi-clock-history"></i> Tainy Drums</div>
+                            </div>
+                        </div>
+                        <span
+                            style="display: block; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 0.7rem; color: #555; font-weight: 700; letter-spacing: 0.5px; margin-bottom: 12px; text-transform: uppercase;">Tendencias
+                            Ahora</span>
+                        <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                            <span class="trend-tag"><i class="bi bi-graph-up-arrow"></i> Dark Trap</span>
+                            <span class="trend-tag"><i class="bi bi-fire"></i> Reggaeton 2025</span>
+                            <span class="trend-tag">Drill UK</span>
+                        </div>
+                    </div>
+                </div>
+                <div id="search-overlay"></div>
+                <div id="active-search-tags"></div>
+            </div>
+
+            <div class="navbar-right">
+                <div class="currency-dropdown" style="position: relative;">
+                    <button id="currency-toggle-btn" onclick="toggleCurrency(event)" class="nav-text-btn"
+                        style="background:none; border:none; color:#bbb; font-size:0.8rem; font-weight:600; cursor:pointer; padding:6px 8px; display:flex; align-items:center; gap:4px; outline:none; transition: all 0.2s;">
+                        <span id="current-currency">PEN</span> <i class="bi bi-caret-down-fill"
+                            style="font-size:0.6rem;"></i>
+                    </button>
+                    <div id="currency-menu"
+                        style="position: absolute; top: 100%; left: 0; background: #141414; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 4px; display: none; flex-direction: column; min-width: 80px; box-shadow: 0 4px 12px rgba(0,0,0,0.5); z-index: 1005;">
+                        <div onclick="setCurrency('PEN')" class="currency-item"
+                            style="padding:6px 12px; font-size:0.8rem; color:#ccc; cursor:pointer; border-radius:4px;">
+                            PEN</div>
+                        <div onclick="setCurrency('USD')" class="currency-item"
+                            style="padding:6px 12px; font-size:0.8rem; color:#ccc; cursor:pointer; border-radius:4px;">
+                            USD</div>
+                    </div>
+                </div>
+
+                <a href="#" class="nav-icon-btn" title="Carrito" data-label="Carrito" onclick="toggleCartPanel(event)">
+                    <i class="bi bi-cart3"></i>
+                    <span id="cart-count-badge" class="cart-label-count" style="display:none;">0</span>
+                </a>
+
+                <div id="nav-auth-section" style="display: flex; align-items: center; gap: 0.5rem;">
+                    <div class="notification-dropdown">
+                        <button class="nav-icon-btn" onclick="toggleNotificationDropdown(event)"
+                            data-label="Notificaciones" style="user-select: none;" onselectstart="return false;">
+                            <i class="bi bi-bell"></i>
+                            <span class="notification-badge" id="notification-badge" style="display:none;">0</span>
+                        </button>
+                        <div class="notification-menu" id="notification-menu">
+                            <div class="notification-header"
+                                style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-bottom: 1px solid #222;">
+                                <h4 style="margin: 0; font-size: 0.95rem; font-weight: 600; color: #fff;">Notificaciones
+                                </h4>
+                                <div style="display:flex; gap:10px; align-items:center;">
+                                    <a href="/notificaciones.html" class="notif-view-all">Ver todos</a>
+                                </div>
+                            </div>
+                            <div id="notification-list" style="max-height: 400px; overflow-y: auto;">
+                                <div class="notif-empty" style="text-align: center; color: #fff; padding: 40px 20px;">
+                                    <div style="font-size: 2rem; margin-bottom: 16px; color: #666;"><i
+                                            class="bi bi-bell"></i></div>
+                                    <h4 style="margin-bottom: 8px; font-size: 0.9rem; font-weight: 500;">Cargando...
+                                    </h4>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="user-dropdown">
+                        <div class="user-trigger" onclick="toggleUserDropdown(event)" style="cursor: pointer;">
+                            <div id="user-avatar-display" class="user-avatar-placeholder">W</div>
+                        </div>
+                        <div class="user-dropdown-menu" style="width: 380px;">
+                            <div class="user-dropdown-header" onclick="window.location.href='/perfil-publico.html'"
+                                style="display: flex; align-items: center; justify-content: space-between; gap: 12px; background-color: #232323; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 24px 16px; margin-bottom: 12px; cursor: pointer; transition: background-color 0.2s; user-select: none;">
+                                <div style="display: flex; align-items: center; gap: 12px;">
+                                    <div class="user-dropdown-avatar-lg"
+                                        style="width: 48px; height: 48px; font-size: 1.2rem; border-radius: 50%;">W
+                                    </div>
+                                    <div style="display: flex; flex-direction: column;">
+                                        <h4 id="dropdown-username"
+                                            style="margin: 0; font-size: 1rem; color: #fff; font-weight: 600;">Willie
+                                            Inspired</h4>
+                                        <span style="color: #999; font-size: 0.85rem;">0 Créditos</span>
+                                    </div>
+                                </div>
+                                <a href="/cuenta/planes.html" class="btn-subscribe-sm"
+                                    onclick="event.stopPropagation();" style="padding: 6px 12px; font-size: 0.8rem;">
+                                    <i class="bi bi-plus-circle-fill"></i> Suscribirse
+                                </a>
+                            </div>
+
+                            <div class="w-grid">
+                                <a href="/cuenta/dashboard.html" class="w-grid-item"><i class="fas fa-columns"
+                                        style="transform: rotate(90deg);"></i><span>Dashboard</span></a>
+                                <a href="/mis-compras2.html" class="w-grid-item"><i
+                                        class="fas fa-layer-group"></i><span>Compras</span></a>
+                                <a href="/mensajes.html" class="w-grid-item"><i
+                                        class="fas fa-envelope"></i><span>Mensajes</span></a>
+                            </div>
+
+                            <a href="/favoritos.html" class="w-list-item"><i class="fas fa-heart"></i> Mis Favoritos</a>
+                            <a href="/gift-cards.html" class="w-list-item"><i class="fas fa-gift"></i> Gift Cards</a>
+                            <a href="/historial.html" class="w-list-item"><i class="fas fa-history"></i> Historial</a>
+                            <div style="height: 1px; background: rgba(255,255,255,0.1); margin: 8px 0;"></div>
+                            <a href="/account-settings.html" class="w-list-item"><i class="fas fa-sliders-h"></i>
+                                Configuración</a>
+                            <a href="/ayuda.html" class="w-list-item"><i class="fas fa-question-circle"></i> Centro de
+                                Ayuda</a>
+                            <a href="#" id="navbar-logout-btn" class="w-list-item"
+                                style="color: #ef4444; margin-top: 8px;">
+                                <i class="fas fa-sign-out-alt" style="color: #ef4444;"></i> Cerrar Sesión
+                            </a>
+                        </div>
+                    </div>
+
+                    <a href="/cuenta/subir-kit.html" target=_blank class="btn-upload"><i
+                            class="fas fa-cloud-upload-alt"></i>
+                        Subir</a>
+                </div>
+
+                <div id="nav-guest-section" style="display: none; align-items: center; gap: 0.5rem;">
+                    <div style="width:1px; height:24px; background:rgba(255,255,255,0.1); margin:0 4px;"></div>
+                    <a href="/pages/login.html" class="navbar-login-link">Iniciar Sesión</a>
+                    <a href="/pages/register.html" class="btn-join">Únete <i class="bi bi-rocket-takeoff"></i></a>
+                </div>
+
+            </div>
+        </div>
+    </header>
+
+    <!-- Side Panels & Backdrops -->
+    <div class="overlay-backdrop" id="globalBackdrop" onclick="closeAllOverlays()"></div>
+
+    <div class="side-panel" id="globalCartPanel">
+        <div class="panel-header">
+            <div class="panel-title" style="display: flex; align-items: center; gap: 8px;">
+                <div style="position: relative; display: flex;">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span id="cart-panel-count" class="notification-badge"
+                        style="position: absolute; top: -6px; right: -6px; display: flex;">1</span>
+                </div>
+                Tu Carrito
+            </div>
+            <button class="panel-close" onclick="closeAllOverlays()">&times;</button>
+        </div>
+        <div class="panel-content" id="cart-items-container">
+            <div style="text-align:center; padding: 40px 0; color: #666;">
+                <i class="fas fa-shopping-basket" style="font-size: 3rem; margin-bottom: 10px;"></i>
+                <p>Tu carrito está vacío</p>
+            </div>
+        </div>
+        <div class="cart-total-section" id="cart-summary">
+            <div style="display:flex; justify-content:space-between; margin-bottom:1rem; color:#fff; font-weight:700;">
+                <span>Total:</span>
+                <span id="cart-total-price">$0.00</span>
+            </div>
+            <button class="btn-checkout-global" id="cart-checkout-btn"
+                onclick="window.location.href='/pages/checkout.html'">
+                <i class="bi bi-lock-fill" style="margin-right:6px;"></i> Ir a Pagar Seguro
+            </button>
+
+            <div
+                style="margin-top: 20px; text-align: center; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 15px;">
+                <p style="font-size: 0.65rem; color: #666; margin-bottom: 10px; letter-spacing: 1px; font-weight: 700;">
+                    METODOS DE PAGO SEGUROS</p>
+                <div style="display: flex; gap: 12px; justify-content: center; align-items: center; opacity: 0.8;">
+                    <i class="fab fa-cc-paypal" style="font-size: 26px; color: #fff;"></i>
+                    <i class="fab fa-cc-visa" style="font-size: 26px; color: #fff;"></i>
+                    <i class="fab fa-cc-mastercard" style="font-size: 26px; color: #fff;"></i>
+                    <div
+                        style="background: #742284; color: white; font-size: 0.7rem; font-weight: 800; padding: 2px 6px; border-radius: 4px; display: flex; align-items: center;">
+                        YAPE</div>
+                    <div
+                        style="background: #00d3de; color: white; font-size: 0.7rem; font-weight: 800; padding: 2px 6px; border-radius: 4px; display: flex; align-items: center;">
+                        PLIN</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <main class="settings-container">
+        <!-- Sidebar Navigation -->
+        <aside class="settings-sidebar">
+            <div class="profile-card">
+                <div class="profile-card-avatar" id="sidebarAvatar">W</div>
+                <div class="profile-card-name" id="sidebarName">Cargando...</div>
+                <div class="profile-card-role" id="sidebarRole">Productor</div>
+            </div>
+
+            <nav class="settings-nav">
+                <a href="/account-settings.html" class="settings-nav-item">
+                    <i class="bi bi-person-gear"></i> Ajustes de cuenta
+                </a>
+                <a href="/perfilpro.html" class="settings-nav-item">
+                    <i class="bi bi-person-badge"></i> Perfil
+                </a>
+                <a href="/transacciones.html" class="settings-nav-item">
+                    <i class="bi bi-currency-dollar"></i> Transacciones
+                </a>
+                <a href="/siguiendo.html" class="settings-nav-item active">
+                    <i class="bi bi-people"></i> Siguiendo
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Settings Content -->
+        <section class="settings-main">
+            <div class="settings-section">
+                <h1 class="settings-section-title">Siguiendo</h1>
+
+                <div id="followingSkeleton" class="producers-grid">
+                    <!-- 8 Mini Skeletons -->
+                    <div class="skeleton-card mini-skeleton">
+                        <div class="mini-skeleton-text" style="width: 70%; margin-top: 4px;"></div>
+                        <div class="mini-skeleton-text" style="width: 40%; margin-top: 4px;"></div>
+                    </div>
+                    <div class="skeleton-card mini-skeleton">
+                        <div class="mini-skeleton-text" style="width: 60%; margin-top: 4px;"></div>
+                        <div class="mini-skeleton-text" style="width: 35%; margin-top: 4px;"></div>
+                    </div>
+                    <div class="skeleton-card mini-skeleton">
+                        <div class="mini-skeleton-text" style="width: 75%; margin-top: 4px;"></div>
+                        <div class="mini-skeleton-text" style="width: 45%; margin-top: 4px;"></div>
+                    </div>
+                    <div class="skeleton-card mini-skeleton">
+                        <div class="mini-skeleton-text" style="width: 50%; margin-top: 4px;"></div>
+                        <div class="mini-skeleton-text" style="width: 30%; margin-top: 4px;"></div>
+                    </div>
+                    <div class="skeleton-card mini-skeleton">
+                        <div class="mini-skeleton-text" style="width: 65%; margin-top: 4px;"></div>
+                        <div class="mini-skeleton-text" style="width: 40%; margin-top: 4px;"></div>
+                    </div>
+                    <div class="skeleton-card mini-skeleton">
+                        <div class="mini-skeleton-text" style="width: 55%; margin-top: 4px;"></div>
+                        <div class="mini-skeleton-text" style="width: 35%; margin-top: 4px;"></div>
+                    </div>
+                    <div class="skeleton-card mini-skeleton">
+                        <div class="mini-skeleton-text" style="width: 70%; margin-top: 4px;"></div>
+                        <div class="mini-skeleton-text" style="width: 45%; margin-top: 4px;"></div>
+                    </div>
+                    <div class="skeleton-card mini-skeleton">
+                        <div class="mini-skeleton-text" style="width: 60%; margin-top: 4px;"></div>
+                        <div class="mini-skeleton-text" style="width: 30%; margin-top: 4px;"></div>
+                    </div>
+                </div>
+
+                <div id="followingList" class="producers-grid" style="display: none;">
+                    <!-- Profiles injected here -->
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="main-footer">
+        <div class="footer-content">
+            <!-- COLUMNA 1: IDENTIDAD -->
+            <div class="footer-col brand-col">
+                <div class="footer-logo">
+                    <span class="logo-text">OFFSZN</span>
+                </div>
+                <p class="footer-tagline">
+                    El primer marketplace musical <br>hecho en Perú <span class="pe-flag">PE</span>
+                </p>
+                <div class="footer-socials">
+                    <a href="https://instagram.com/offszn" target="_blank" class="social-icon" title="Instagram"><i
+                            class="bi bi-instagram"></i></a>
+                    <a href="https://discord.gg/offszn" target="_blank" class="social-icon" title="Discord"><i
+                            class="bi bi-discord"></i></a>
+                    <a href="https://youtube.com/@offszn" target="_blank" class="social-icon" title="YouTube"><i
+                            class="bi bi-youtube"></i></a>
+                    <a href="#" class="social-icon" title="WhatsApp"><i class="bi bi-whatsapp"></i></a>
+                </div>
+            </div>
+
+            <!-- COLUMNA 2: EXPLORAR -->
+            <div class="footer-col links-col">
+                <h4>EXPLORAR</h4>
+                <ul class="footer-links">
+                    <li><a href="/recursos/drum-kits">Drum Kits</a></li>
+                    <li><a href="/recursos/loops">Loops & Samples</a></li>
+                    <li><a href="/recursos/presets">Presets</a></li>
+                    <li><a href="/recursos/one-shots">One-Shots</a></li>
+                    <li><a href="/free" class="link-highlight">Descargas Gratis</a></li>
+                </ul>
+            </div>
+
+            <!-- COLUMNA 3: STUDIO & COMUNIDAD -->
+            <div class="footer-col links-col">
+                <h4>STUDIO & COMUNIDAD</h4>
+                <ul class="footer-links">
+                    <li><a href="/vender" class="link-cta">Vender en OFFSZN</a></li>
+                    <li><a href="/comunidad/productores">Productores / Collabs</a></li>
+                    <li><a href="/upload-youtube">Herramientas & Upload</a></li>
+                    <li><a href="/blog">Blog & Tips</a></li>
+                </ul>
+            </div>
+
+            <!-- COLUMNA 4: SOPORTE -->
+            <div class="footer-col links-col">
+                <h4>SOPORTE</h4>
+                <ul class="footer-links">
+                    <li><a href="/licencias">Información de Licencias</a></li>
+                    <li><a href="/contacto">Centro de Ayuda / Contacto</a></li>
+                    <li><a href="/reembolsos">Política de Reembolsos</a></li>
+                    <li><a href="/terminos">Términos de Servicio</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="footer-bottom">
+            <div class="f-bottom-left">
+                &copy; 2026 OFFSZN. Todos los derechos reservados.
+            </div>
+
+            <div class="f-bottom-center">
+                Hecho con <span style="color: #8b5cf6;">&hearts;</span> en Perú
+            </div>
+
+            <div class="f-bottom-right payment-icons">
+                <i class="fab fa-cc-visa" title="Visa"></i>
+                <i class="fab fa-cc-mastercard" title="Mastercard"></i>
+                <i class="fab fa-cc-paypal" title="PayPal"></i>
+                <span class="badge-yape">YAPE</span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Avatar Crop Modal -->
+    <div id="cropModal" class="modal-overlay" style="display: none;">
+        <div class="crop-modal-content">
+            <div class="crop-header">
+                <h3>Editar Avatar</h3>
+                <button class="close-modal" onclick="AvatarManager.closeCropModal()">&times;</button>
+            </div>
+            <div class="crop-body">
+                <div class="img-container">
+                    <img id="cropImage" src="" alt="Imagen para recortar">
+                </div>
+            </div>
+            <div class="crop-controls">
+                <button onclick="AvatarManager.rotate(-90)" class="btn-icon" title="Rotar Izquierda"><i
+                        class="bi bi-arrow-counterclockwise"></i></button>
+                <button onclick="AvatarManager.rotate(90)" class="btn-icon" title="Rotar Derecha"><i
+                        class="bi bi-arrow-clockwise"></i></button>
+                <button onclick="AvatarManager.zoom(0.1)" class="btn-icon" title="Acercar"><i
+                        class="bi bi-zoom-in"></i></button>
+                <button onclick="AvatarManager.zoom(-0.1)" class="btn-icon" title="Alejar"><i
+                        class="bi bi-zoom-out"></i></button>
+            </div>
+
+            <!-- PRO Upsell Banner -->
+            <div class="pro-upsell-banner">
+                <div class="pro-text">
+                    <span>Personaliza mucho más con <strong>PRO</strong> <i class="bi bi-stars"
+                            style="color:#fdc62e;"></i></span>
+                </div>
+                <button class="btn-get-pro" onclick="window.location.href='/cuenta/planes.html'">Obtener PRO</button>
+            </div>
+
+            <div class="crop-footer">
+                <button class="btn-secondary" onclick="AvatarManager.closeCropModal()">Cancelar</button>
+                <button class="btn-primary" onclick="AvatarManager.saveCrop()">Guardar Avatar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Premium "Nitro" Modal -->
+    <div id="premiumModal" class="modal-overlay" style="display: none;">
+        <div class="premium-modal-content">
+            <div class="premium-glow"></div>
+            <button class="close-modal-abs"
+                onclick="document.getElementById('premiumModal').style.display='none'">&times;</button>
+            <div class="premium-icon">
+                <i class="bi bi-stars"></i>
+            </div>
+            <h2>Desbloquea Avatares Animados</h2>
+            <p>Personaliza tu perfil con avatares GIF y marcos exclusivos con <strong>OFFSZN PRO</strong>.</p>
+            <div class="premium-actions">
+                <button class="btn-nitro" onclick="window.location.href='/cuenta/planes.html'">Obtener PRO</button>
+                <button class="btn-link" onclick="document.getElementById('premiumModal').style.display='none'">Quizás
+                    luego</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cropper.js -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
+
+    <!-- Global Scripts -->
+    <script src="/script/cart.js"></script>
+    <script src="/script/notifications.js"></script>
+    <script src="/script/navbar.js?v=7" type="module"></script>
+    <script src="/script/sticky-player.js"></script>
+    <script src="/script/siguiendo.js" type="module"></script>
+</body>
+
+</html>

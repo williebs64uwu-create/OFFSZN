@@ -148,8 +148,64 @@ document.addEventListener('DOMContentLoaded', () => {
                     addToCart(product.id, cartButton);
                 });
 
-                footer.append(cartButton);
+                // -- FAVORITES BUTTON --
+                const likeBtn = document.createElement('button');
+                likeBtn.className = 'btn-like-card';
+                likeBtn.dataset.productId = product.id; // Store ID for updates
+                likeBtn.innerHTML = '<i class="bi bi-heart"></i>';
+                likeBtn.style.marginRight = '8px';
+                likeBtn.style.background = 'transparent';
+                likeBtn.style.border = '1px solid rgba(255,255,255,0.1)';
+                likeBtn.style.color = '#ccc';
+                likeBtn.style.width = '32px';
+                likeBtn.style.height = '32px';
+                likeBtn.style.borderRadius = '8px';
+                likeBtn.style.cursor = 'pointer';
+                likeBtn.style.display = 'flex';
+                likeBtn.style.alignItems = 'center';
+                likeBtn.style.justifyContent = 'center';
+
+                // Initial State
+                if (window.FavoritesManager && window.FavoritesManager.isLiked(product.id)) {
+                    likeBtn.innerHTML = '<i class="bi bi-heart-fill"></i>';
+                    likeBtn.style.color = '#ef4444';
+                    likeBtn.style.borderColor = 'rgba(239, 68, 68, 0.2)';
+                }
+
+                likeBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    if (window.FavoritesManager) {
+                        // Pass product.user_id (producer)
+                        const ownerId = product.user_id;
+                        window.FavoritesManager.toggleLike(product.id, likeBtn, ownerId);
+
+                        // Local instant toggle (manager handles sync, but visual feedback is good)
+                        const isLiked = window.FavoritesManager.isLiked(product.id); // This will return NEW state if optimistic
+                        if (isLiked) { // Logic inside manager toggles set immediately
+                            likeBtn.innerHTML = '<i class="bi bi-heart-fill"></i>';
+                            likeBtn.style.color = '#ef4444';
+                        } else {
+                            likeBtn.innerHTML = '<i class="bi bi-heart"></i>';
+                            likeBtn.style.color = '#ccc';
+                        }
+                    }
+                };
+
+                // Add to container (creating a flex wrapper if needed, or just append)
+                // Existing structure appends cartButton directly to footer.
+                // Let's wrap buttons
+                const btnContainer = document.createElement('div');
+                btnContainer.style.display = 'flex';
+                btnContainer.style.alignItems = 'center';
+                btnContainer.append(likeBtn);
+                btnContainer.append(cartButton);
+
+                footer.append(btnContainer);
+                // footer.append(cartButton); // Removed original append
             }
+
+            // content.append(footer); // Existing
+            // card.append(content);   // Existing
 
             content.append(footer);
             card.append(content);
@@ -172,10 +228,10 @@ document.addEventListener('DOMContentLoaded', () => {
     async function addToCart(productId, button) {
         const token = localStorage.getItem('authToken');
 
-        // --- ¡EL AUTH WALL QUE PIDIÓ EL OWNER! ---
+        // --- AUTH WALL ---
         if (!token) {
             alert('Debes crear una cuenta para comprar o añadir al carrito.');
-            window.location.href = '/pages/register.html'; // Lo mandamos a registrarse
+            window.location.href = '/pages/register.html';
             return;
         }
 
@@ -192,33 +248,53 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         try {
-            // (Opcional) Aquí puedes llamar a tu API /api/cart para guardarlo en la BBDD
-
-            // Encontrar el producto completo de nuestra lista global
+            // Encontrar el producto completo
             const productToAdd = allProducts.find(p => p.id === productId);
             if (!productToAdd) throw new Error('Producto no encontrado');
 
-            // Añadir al carrito local
-            cart.push(productToAdd);
-            console.log("Carrito actualizado:", cart);
+            // --- SYNC DB (Fix for Checkout) ---
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (session?.user) {
+                const { error } = await supabaseClient
+                    .from('cart_items')
+                    .insert({
+                        user_id: session.user.id,
+                        product_id: productId,
+                        quantity: 1,
+                        license_name: 'Basic Lease', // Default for Grid Quick Add
+                        variant_price: productToAdd.price_basic
+                    });
 
-            // Actualizar la UI
-            renderCartUI();
-            openCart();
-
-            if (button) {
-                setTimeout(() => {
-                    button.innerHTML = '<i class="bi bi-check-lg"></i> Añadido';
-                    button.disabled = false;
-                }, 1000);
+                if (error) {
+                    // Check for duplicate key error (if somehow check missed)
+                    if (error.code !== '23505') throw error;
+                }
             }
 
-        } catch (error) {
-            console.error(error);
-            showToast(error.message, 'error');
+            // 3. Centralized Cart Addition
+            if (window.CartManager) {
+                window.CartManager.addToCart(productToAdd);
+
+                // UI Feedback (Specific to marketplace buttons)
+                if (button) {
+                    button.innerHTML = '<i class="bi bi-check-lg"></i> Añadido';
+                    button.classList.add('added');
+                    setTimeout(() => {
+                        button.innerHTML = '<i class="bi bi-cart-plus"></i> Añadir';
+                        button.classList.remove('added');
+                    }, 2000);
+                }
+            } else {
+                // Local fallback if Manager fails
+                cart.push(productToAdd);
+                localStorage.setItem('offszn_cart', JSON.stringify(cart));
+                if (window.toast) {
+                    window.toast.success("Agregado a tu carrito", 4000, productId);
+                }
+            }
+        } finally {
             if (button) {
                 button.disabled = false;
-                button.innerHTML = '<i class="bi bi-cart-plus"></i> Añadir';
             }
         }
     }
@@ -293,7 +369,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const checkoutButton = document.getElementById('btn-checkout');
 
         if (!token) {
-            alert('Debes iniciar sesión.');
+            if (window.toast) window.toast.error('Debes iniciar sesión.');
+            else alert('Debes iniciar sesión.');
             window.location.href = '/pages/login';
             return;
         }
@@ -319,7 +396,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     </html>
                 `);
             } else {
-                alert("Por favor permite las ventanas emergentes para pagar.");
+                if (window.toast) window.toast.error("Por favor permite las ventanas emergentes para pagar.");
+                else alert("Por favor permite las ventanas emergentes para pagar.");
                 checkoutButton.disabled = false;
                 return;
             }
@@ -356,7 +434,8 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error(error);
             checkoutButton.disabled = false;
             checkoutButton.innerHTML = 'Pagar Ahora';
-            showToast(error.message, 'error');
+            if (window.toast) window.toast.error(error.message);
+            else showToast(error.message, 'error');
         }
     }
 
@@ -382,16 +461,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
         pollingInterval = setInterval(async () => {
             attempts++;
-            
+
             // Si el usuario cierra la ventana de pago manualmente, podríamos parar, 
             // pero mejor seguimos preguntando por si pagó justo antes de cerrar.
             if (paymentWindow.closed && attempts > 10) {
-                 // Opcional: avisar que se cerró la ventana
+                // Opcional: avisar que se cerró la ventana
             }
 
             if (attempts >= maxAttempts) {
                 clearInterval(pollingInterval);
-                alert("Tiempo de espera agotado. Si pagaste, revisa 'Mis Cursos'.");
+                if (window.toast) window.toast.error("Tiempo de espera agotado. Si pagaste, revisa 'Mis Cursos'.");
+                else alert("Tiempo de espera agotado. Si pagaste, revisa 'Mis Cursos'.");
                 window.location.reload();
                 return;
             }
@@ -407,11 +487,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (statusData.status === 'completed') {
                     clearInterval(pollingInterval);
                     if (paymentWindow) paymentWindow.close(); // Cerramos MP
-                    
+
                     // ÉXITO!! Limpiamos carrito y mostramos confetti o mensaje
                     cart = [];
                     localStorage.removeItem('cart'); // Si usas persistencia
-                    
+
                     document.getElementById('cart-panel').innerHTML = `
                         <div style="padding: 2rem; text-align: center; color: #0cbc87;">
                             <i class="bi bi-check-circle-fill" style="font-size: 3rem;"></i>
@@ -420,7 +500,8 @@ document.addEventListener('DOMContentLoaded', () => {
                             <button onclick="window.location.reload()" style="margin-top: 1rem; padding: 10px 20px; background: #7209b7; border: none; color: white; border-radius: 8px; cursor: pointer;">Ver mis productos</button>
                         </div>
                     `;
-                    showToast('¡Compra completada!', 'success');
+                    if (window.toast) window.toast.success('¡Compra completada!');
+                    else showToast('¡Compra completada!', 'success');
                 }
 
             } catch (err) {
@@ -452,29 +533,32 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- 9. FUNCIÓN DE TOAST (para notificaciones) ---
     function showToast(message, type = 'info') {
-        // (Necesitas añadir los estilos de 'toast' a tu marketplace.css,
-        // puedes copiarlos de 'beats.js' o 'toast.js')
-        const toast = document.createElement('div');
-        toast.className = `toast ${type}`;
-        toast.innerHTML = `<i class="bi bi-${type === 'success' ? 'check-circle' : (type === 'error' ? 'exclamation-triangle' : 'info-circle')}"></i> ${message}`;
+        if (window.toast) {
+            window.toast.show(message, type);
+        } else {
+            console.log("[Marketplace Toast Fallback]", message);
+        }
+    }
 
-        // Estilos rápidos para el toast si no los tienes
-        toast.style.cssText = `
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 1rem 1.5rem;
-            background: var(--bg-card);
-            border: 1px solid var(--border-color-light);
-            color: var(--text-primary);
-            border-radius: 8px;
-            z-index: 9999;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
-        `;
-        if (type === 'error') toast.style.borderColor = '#ef4444';
-        if (type === 'success') toast.style.borderColor = 'var(--green-verified)';
+    // --- 10. FAVORITES SYNC ---
+    if (window.FavoritesManager) {
+        window.FavoritesManager.subscribe((likedIds) => {
+            const btns = document.querySelectorAll('.btn-like-card');
+            btns.forEach(btn => {
+                const id = btn.dataset.productId;
+                if (!id) return;
 
-        document.body.appendChild(toast);
-        setTimeout(() => toast.remove(), 3000);
+                const isLiked = likedIds.has(String(id));
+                if (isLiked) {
+                    btn.innerHTML = '<i class="bi bi-heart-fill"></i>';
+                    btn.style.color = '#ef4444';
+                    btn.style.borderColor = 'rgba(239, 68, 68, 0.2)';
+                } else {
+                    btn.innerHTML = '<i class="bi bi-heart"></i>';
+                    btn.style.color = '#ccc';
+                    btn.style.borderColor = 'rgba(255,255,255,0.1)';
+                }
+            });
+        });
     }
 });

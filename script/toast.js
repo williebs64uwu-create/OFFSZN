@@ -14,9 +14,9 @@ class ToastManager {
     this.container.id = 'toast-container';
     this.container.style.cssText = `
       position: fixed;
-      top: 1rem;
-      right: 1rem;
-      z-index: 9999;
+      bottom: 2rem;
+      right: 2rem;
+      z-index: 10002;
       display: flex;
       flex-direction: column;
       gap: 0.75rem;
@@ -26,13 +26,29 @@ class ToastManager {
     document.body.appendChild(this.container);
   }
 
-  show(message, type = 'info', duration = 4000) {
-    const toast = this.createToast(message, type);
+  show(message, type = 'info', duration = 4000, id = null) {
+    // SINGLETON CHECK: Prevents stacking identical messages/products
+    let existing = null;
+    if (id) {
+      existing = Array.from(this.container.children).find(t => t.dataset.toastId === String(id));
+    } else {
+      existing = Array.from(this.container.children).find(t => t.innerText.includes(message));
+    }
+
+    if (existing) {
+      // Refresh duration if already showing
+      existing.style.animation = 'none';
+      void existing.offsetWidth; // Trigger reflow
+      existing.style.animation = '';
+      return existing;
+    }
+
+    const toast = this.createToast(message, type, id);
     this.container.appendChild(toast);
 
     // Animación de entrada
     setTimeout(() => {
-      toast.style.transform = 'translateX(0)';
+      toast.style.transform = 'translateY(0)';
       toast.style.opacity = '1';
     }, 10);
 
@@ -44,40 +60,43 @@ class ToastManager {
     return toast;
   }
 
-  createToast(message, type) {
+  createToast(message, type, id) {
     const toast = document.createElement('div');
     toast.className = `toast toast-${type}`;
-    
+    if (id) toast.dataset.toastId = String(id);
+
     const config = this.getConfig(type);
-    
+
     toast.style.cssText = `
-      background: ${config.bg};
-      border: 1px solid ${config.border};
-      border-radius: 12px;
-      padding: 1rem 1.25rem;
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-      backdrop-filter: blur(10px);
-      transform: translateX(400px);
-      opacity: 0;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      pointer-events: auto;
-      cursor: pointer;
-      min-width: 300px;
-      max-width: 400px;
+        background: #111;
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 8px;
+        padding: 12px 16px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+        transform: translateY(20px);
+        opacity: 0;
+        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        pointer-events: auto;
+        cursor: pointer;
+        min-width: 280px;
+        max-width: 350px;
+        color: #ddd;
+        font-family: 'Inter', sans-serif;
+        font-size: 0.85rem;
     `;
 
     toast.innerHTML = `
-      <div style="flex-shrink: 0; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; background: ${config.iconBg}; border-radius: 50%;">
-        <i class="bi ${config.icon}" style="color: ${config.iconColor}; font-size: 0.875rem;"></i>
+      <div style="flex-shrink: 0; display: flex; align-items: center; justify-content: center;">
+        <i class="bi ${config.icon}" style="color: ${config.color}; font-size: 1rem;"></i>
       </div>
-      <div style="flex: 1; color: #fff; font-size: 0.875rem; font-weight: 500; line-height: 1.4;">
+      <div style="flex: 1; font-weight: 500;">
         ${message}
       </div>
-      <button onclick="event.stopPropagation(); this.closest('.toast').remove();" style="background: none; border: none; color: rgba(255,255,255,0.5); cursor: pointer; padding: 0; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; transition: color 0.2s;">
-        <i class="bi bi-x" style="font-size: 1.25rem;"></i>
+      <button onclick="event.stopPropagation(); this.closest('.toast').remove();" style="background: none; border: none; color: #666; cursor: pointer; padding: 0; display: flex; transition: color 0.2s;">
+        <i class="bi bi-x" style="font-size: 1.1rem;"></i>
       </button>
     `;
 
@@ -88,49 +107,19 @@ class ToastManager {
   }
 
   getConfig(type) {
+    // Minimalist Grey Theme only changing Icon
     const configs = {
-      success: {
-        bg: 'linear-gradient(135deg, rgba(12, 188, 135, 0.95), rgba(10, 157, 114, 0.95))',
-        border: 'rgba(12, 188, 135, 0.3)',
-        icon: 'bi-check-circle-fill',
-        iconBg: 'rgba(255, 255, 255, 0.2)',
-        iconColor: '#fff'
-      },
-      error: {
-        bg: 'linear-gradient(135deg, rgba(239, 68, 68, 0.95), rgba(220, 38, 38, 0.95))',
-        border: 'rgba(239, 68, 68, 0.3)',
-        icon: 'bi-x-circle-fill',
-        iconBg: 'rgba(255, 255, 255, 0.2)',
-        iconColor: '#fff'
-      },
-      warning: {
-        bg: 'linear-gradient(135deg, rgba(251, 191, 36, 0.95), rgba(245, 158, 11, 0.95))',
-        border: 'rgba(251, 191, 36, 0.3)',
-        icon: 'bi-exclamation-triangle-fill',
-        iconBg: 'rgba(255, 255, 255, 0.2)',
-        iconColor: '#fff'
-      },
-      info: {
-        bg: 'linear-gradient(135deg, rgba(114, 9, 183, 0.95), rgba(86, 11, 173, 0.95))',
-        border: 'rgba(114, 9, 183, 0.3)',
-        icon: 'bi-info-circle-fill',
-        iconBg: 'rgba(255, 255, 255, 0.2)',
-        iconColor: '#fff'
-      },
-      loading: {
-        bg: 'linear-gradient(135deg, rgba(59, 130, 246, 0.95), rgba(37, 99, 235, 0.95))',
-        border: 'rgba(59, 130, 246, 0.3)',
-        icon: 'bi-arrow-repeat',
-        iconBg: 'rgba(255, 255, 255, 0.2)',
-        iconColor: '#fff'
-      }
+      success: { icon: 'bi-check-circle-fill', color: '#10b981' }, // Green-ish
+      error: { icon: 'bi-exclamation-circle-fill', color: '#ef4444' }, // Red
+      warning: { icon: 'bi-exclamation-triangle-fill', color: '#f59e0b' }, // Amber
+      info: { icon: 'bi-info-circle-fill', color: '#8b5cf6' }, // Purple
+      loading: { icon: 'bi-arrow-repeat', color: '#3b82f6' } // Blue
     };
-
     return configs[type] || configs.info;
   }
 
   remove(toast) {
-    toast.style.transform = 'translateX(400px)';
+    toast.style.transform = 'translateY(20px)';
     toast.style.opacity = '0';
     setTimeout(() => {
       if (toast.parentNode) {
@@ -266,5 +255,11 @@ class ToastManager {
 // Instanciar el manager globalmente
 const toast = new ToastManager();
 
+// Expose globally
+if (typeof window !== 'undefined') {
+  window.toast = toast;
+}
+
 // Exportar para uso en módulos
-export default toast;
+// Exportar para uso en módulos (Opcional, comentado para evitar error en script tag normal)
+// export default toast;

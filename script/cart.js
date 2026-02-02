@@ -1,228 +1,296 @@
-document.addEventListener('DOMContentLoaded', () => {
+/**
+ * CART MANAGER (Hybrid: LocalStorage + Supabase)
+ * Handles cart logic for both Guest and Authenticated users.
+ * Replaces the old API-based implementation.
+ */
 
-    let API_URL = '';
-    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-        API_URL = 'http://localhost:3000/api';
-    } else {
-        API_URL = 'https://offszn-academy.onrender.com/api';
-    }
+const CartManager = {
+    state: {
+        items: [], // [{ product: {id, name, price, image_url...}, quantity: 1 }]
+        isOpen: false,
+        user: null
+    },
 
-    const authToken = localStorage.getItem('authToken');
-    const cartItemsContainer = document.getElementById('cart-items-container');
-    const cartSummaryDiv = document.getElementById('cart-summary');
-    const cartTotalSpan = document.getElementById('cart-total');
-    const checkoutButton = document.getElementById('checkout-button');
-    let currentCartItems = [];
+    init: async function () {
+        // UI Elements
+        this.ui = {
+            panel: document.getElementById('globalCartPanel'),
+            container: document.getElementById('cart-items-container'),
+            total: document.getElementById('cart-total-price'),
+            countBadge: document.getElementById('cart-count-badge'),
+            checkoutBtn: document.getElementById('cart-checkout-btn')
+        };
 
-    async function loadCart() {
-        if (!authToken) {
-            cartItemsContainer.innerHTML = '<p class="empty-cart-message">Debes iniciar sesión para ver tu carrito.</p>';
-            return;
+        // Auth Listener
+        if (typeof supabaseClient !== 'undefined') {
+            const { data } = await supabaseClient.auth.getSession();
+            this.state.user = data.session?.user || null;
+
+            supabaseClient.auth.onAuthStateChange(async (event, session) => {
+                const prevUser = this.state.user;
+                this.state.user = session?.user || null;
+
+                if (this.state.user && !prevUser) {
+                    // Login detected: Sync Guest -> DB
+                    await this.mergeGuestCartToDB();
+                }
+                this.loadCart();
+            });
         }
-        if (!cartItemsContainer) return;
 
-        cartItemsContainer.innerHTML = '<p class="loading-message">Cargando carrito...</p>';
+        // Initial Load
+        await this.loadCart();
+        this.updateBadge(); // Ensure badge is correct on load
+
+        // Expose to window for global access
+        window.CartManager = this;
+    },
+
+    // --- CORE LOGIC ---
+
+    loadCart: async function () {
+        this.state.items = [];
 
         try {
-            const response = await fetch(`${API_URL}/cart`, {
-                headers: { 'Authorization': `Bearer ${authToken}` }
-            });
+            if (this.state.user) {
+                // AUTH: Load from DB
+                const { data, error } = await supabaseClient
+                    .from('cart_items')
+                    .select('quantity, license_name, variant_price, product:products(id, name, price_basic, image_url, product_type, producer_id)')
+                    .eq('user_id', this.state.user.id);
 
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error || 'No se pudo cargar el carrito.');
-            }
+                if (error) {
+                    console.error("Error loading cart db:", error);
+                    // Fallback to local if DB fails? No, risky. Just empty.
+                } else if (data) {
+                    // Normalize data structure
+                    this.state.items = data.map(row => ({
+                        product: row.product,
+                        quantity: row.quantity,
+                        license_name: row.license_name,
+                        variant_price: row.variant_price
+                    })).filter(i => i.product); // Safety check
+                }
 
-            currentCartItems = await response.json();
-
-            if (currentCartItems.length === 0) {
-                cartItemsContainer.innerHTML = '<p class="empty-cart-message">Tu carrito está vacío.</p>';
-                cartSummaryDiv.style.display = 'none';
             } else {
-                renderCartItems(currentCartItems);
-                calculateTotal(currentCartItems);
-                cartSummaryDiv.style.display = 'block';
+                // GUEST: Load from LocalStorage
+                const local = localStorage.getItem('offszn_cart');
+                if (local) {
+                    this.state.items = JSON.parse(local);
+                }
+            }
+        } catch (err) {
+            console.error("Cart load error:", err);
+        }
+
+        this.render();
+    },
+
+    addToCart: async function (product) {
+        // Optimistic UI Update: Find index if exists
+        const existingIndex = this.state.items.findIndex(i => String(i.product.id) === String(product.id));
+
+        const newItem = {
+            product: product,
+            quantity: 1,
+            license_name: product.license?.name || null,
+            variant_price: product.price_basic || null
+        };
+
+        let message = "Agregado a tu carrito";
+        let type = "success";
+
+        if (existingIndex !== -1) {
+            const existingItem = this.state.items[existingIndex];
+
+            // Check if it's the SAME license
+            if (existingItem.license_name === newItem.license_name) {
+                if (window.toast) window.toast.info("Ya está en tu carrito", 3000, product.id);
+                this.openCart();
+                return; // Don't proceed with redundant add
             }
 
-        } catch (error) {
-            console.error('Error al cargar carrito:', error);
-            cartItemsContainer.innerHTML = `<p class="empty-cart-message">Error al cargar carrito: ${error.message}</p>`;
-            cartSummaryDiv.style.display = 'none';
+            // DIFFERENT License: Replace existing (updates license/price)
+            this.state.items[existingIndex] = newItem;
+            console.log("[Cart] Replaced license for item:", product.name);
+            message = "Licencia actualizada en tu carrito";
+        } else {
+            // New Addition
+            this.state.items.push(newItem);
         }
-    }
 
-    function renderCartItems(items) {
-        let html = '';
-        items.forEach(item => {
-            if (item.product) {
-                html += `
-                    <div class="cart-item">
-                        <div class="cart-item-image">
-                            <img src="${item.product.image_url || '/images/placeholder.jpg'}" alt="${item.product.name}">
+        // Trigger Toast (Unified System)
+        if (window.toast) {
+            window.toast.show(message, type, 4000, product.id);
+        }
+
+        this.render();
+        this.openCart(); // Auto-open on add
+
+        // BACKGROUND SYNC
+        if (this.state.user) {
+            // DB Sync: Use Upsert to handle replacements correctly in DB
+            const licenseName = product.license?.name || null;
+            const variantPrice = product.price_basic || null;
+
+            const { error } = await supabaseClient
+                .from('cart_items')
+                .upsert({
+                    user_id: this.state.user.id,
+                    product_id: product.id,
+                    quantity: 1,
+                    license_name: licenseName,
+                    variant_price: variantPrice
+                }, { onConflict: 'user_id, product_id' });
+
+            if (error) console.error("DB Sync Error:", error);
+        } else {
+            // Local Save
+            this.saveLocal();
+        }
+    },
+
+    removeFromCart: async function (productId) {
+        // Optimistic UI
+        this.state.items = this.state.items.filter(i => String(i.product.id) !== String(productId));
+        this.render();
+
+        if (this.state.user) {
+            // DB Delete
+            const { error } = await supabaseClient
+                .from('cart_items')
+                .delete()
+                .eq('user_id', this.state.user.id)
+                .eq('product_id', productId);
+
+            if (error) console.error("DB Remove Error:", error);
+        } else {
+            this.saveLocal();
+        }
+    },
+
+    saveLocal: function () {
+        localStorage.setItem('offszn_cart', JSON.stringify(this.state.items));
+        this.updateBadge(); // Update badge immediately for guests
+    },
+
+    mergeGuestCartToDB: async function () {
+        const local = JSON.parse(localStorage.getItem('offszn_cart') || '[]');
+        if (local.length === 0) return;
+
+        // Upsert logic
+        const upsertData = local.map(item => ({
+            user_id: this.state.user.id,
+            product_id: item.product.id,
+            quantity: 1,
+            license_name: item.product.license?.name || null,
+            variant_price: item.product.price_basic || null
+        }));
+
+        const { error } = await supabaseClient
+            .from('cart_items')
+            .upsert(upsertData, { onConflict: 'user_id, product_id', ignoreDuplicates: true });
+
+        if (!error) {
+            // Clear local after successful sync
+            localStorage.removeItem('offszn_cart');
+        } else {
+            console.error("Merge error:", error);
+        }
+    },
+
+    // --- UI RENDERING ---
+
+    render: function () {
+        if (!this.ui.container) return; // Cart UI not present
+
+        this.updateBadge();
+
+        // Calculate Total
+        let total = 0;
+        this.state.items.forEach(i => {
+            const price = parseFloat(i.variant_price) > 0 ? parseFloat(i.variant_price) : (parseFloat(i.product.price_basic) || 0);
+            total += price * i.quantity;
+        });
+
+        if (this.ui.total) this.ui.total.innerText = `$${total.toFixed(2)}`;
+
+        // Render Items
+        if (this.state.items.length === 0) {
+            this.ui.container.innerHTML = `
+                <div style="text-align:center; padding: 40px 20px; color: #666;">
+                    <i class="bi bi-cart-x" style="font-size: 2rem; display:block; margin-bottom:10px;"></i>
+                    <p>Tu carrito está vacío.</p>
+                </div>`;
+            if (this.ui.checkoutBtn) this.ui.checkoutBtn.disabled = true;
+        } else {
+            this.ui.container.innerHTML = this.state.items.map(item => {
+                const displayPrice = parseFloat(item.variant_price) > 0 ? item.variant_price : item.product.price_basic;
+                const licName = item.license_name || item.product.product_type || 'Licencia';
+
+                return `
+                <div class="cart-item-row" style="display:flex; flex-direction:column; gap:8px; margin-bottom:12px; padding-bottom:12px; border-bottom:1px solid #1a1a1a;">
+                    <div style="display:flex; gap:12px;">
+                        <img src="${item.product.image_url}" style="width:60px; height:60px; object-fit:cover; border-radius:6px; border:1px solid #222;">
+                        <div style="flex:1; display:flex; flex-direction:column; justify-content:center;">
+                            <h4 style="margin:0; font-size:0.9rem; font-weight:600; color:#eee;">${item.product.name}</h4>
+                            <span style="font-size:0.8rem; color:#888;">${licName}</span>
                         </div>
-                        <div class="cart-item-details">
-                            <h3>${item.product.name}</h3>
-                            <p class="cart-item-price">$${item.product.price}</p>
-                            </div>
-                        <div class="cart-item-actions">
-                            <button class="remove-item-btn" data-cart-item-id="${item.cartItemId}">Eliminar</button>
+                        <div style="display:flex; flex-direction:column; align-items:flex-end; justify-content:center; gap:4px;">
+                            <span style="font-size:0.95rem; font-weight:700; color:#fff;">$${parseFloat(displayPrice).toFixed(2)}</span>
+                            <button onclick="CartManager.removeFromCart('${item.product.id}')" style="background:none; border:none; color:#555; font-size:0.9rem; cursor:pointer; transition:color 0.2s;" onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='#555'">
+                                <i class="bi bi-trash"></i>
+                            </button>
                         </div>
                     </div>
-                `;
-            } else {
-                console.warn("Item de carrito encontrado sin producto asociado:", item);
-            }
+                </div>
+            `;
+            }).join('');
+            if (this.ui.checkoutBtn) this.ui.checkoutBtn.disabled = false;
+        }
+    },
 
+    updateBadge: function () {
+        // Also update navbar badge if it exists
+        const count = this.state.items.length;
+        if (this.ui.countBadge) {
+            this.ui.countBadge.innerText = count;
+            this.ui.countBadge.style.display = count > 0 ? 'flex' : 'none';
+        }
+
+        // Update Panel Title Count
+        const panelCount = document.getElementById('cart-panel-count');
+        if (panelCount) {
+            panelCount.innerText = count;
+            panelCount.style.display = count > 0 ? 'inline' : 'none'; // Hide if 0
+        }
+
+        // Fallback for independent navbar elements
+        const navBadges = document.querySelectorAll('.cart-count');
+        navBadges.forEach(b => {
+            b.innerText = count;
+            b.style.display = count > 0 ? 'flex' : 'none';
         });
-        cartItemsContainer.innerHTML = html;
+    },
 
-        addRemoveButtonListeners();
+    openCart: function () {
+        const panel = document.getElementById('globalCartPanel');
+        if (panel && panel.classList.contains('active')) return;
+
+        if (window.closeAllOverlays) window.closeAllOverlays();
+        if (window.toggleCartPanel) {
+            window.toggleCartPanel({ preventDefault: () => { }, stopPropagation: () => { } });
+        }
+    },
+
+    clearCart: function () {
+        this.state.items = [];
+        localStorage.removeItem('offszn_cart');
+        this.render();
+        this.updateBadge();
     }
+};
 
-    function calculateTotal(items) {
-        let total = 0;
-        items.forEach(item => {
-            if (item.product && item.product.price) {
-                total += parseFloat(item.product.price) * item.quantity;
-            }
-        });
-        cartTotalSpan.textContent = `$${total.toFixed(2)}`;
-    }
-
-    function addRemoveButtonListeners() {
-        document.querySelectorAll('.remove-item-btn').forEach(button => {
-            button.addEventListener('click', async (event) => {
-                const cartItemId = event.target.dataset.cartItemId;
-                if (!confirm('¿Seguro que quieres eliminar este item del carrito?')) {
-                    return;
-                }
-
-                try {
-                    const response = await fetch(`${API_URL}/cart/${cartItemId}`, {
-                        method: 'DELETE',
-                        headers: { 'Authorization': `Bearer ${authToken}` }
-                    });
-
-                    if (!response.ok) {
-                        const errorData = await response.json();
-                        throw new Error(errorData.error || 'No se pudo eliminar el item.');
-                    }
-
-                    alert('Item eliminado del carrito.');
-                    loadCart();
-
-                } catch (error) {
-                    console.error('Error al eliminar item:', error);
-                    alert(`Error al eliminar: ${error.message}`);
-                }
-            });
-        });
-    }
-
-    if (checkoutButton) {
-        checkoutButton.addEventListener('click', () => {
-            if (currentCartItems.length === 0) {
-                alert('Tu carrito está vacío.');
-                return;
-            }
-
-            let totalPrice = 0;
-            let itemDescriptions = [];
-            currentCartItems.forEach(item => {
-                if (item.product && item.product.price) {
-                    totalPrice += parseFloat(item.product.price) * item.quantity;
-                    itemDescriptions.push(item.product.name);
-                }
-            });
-            totalPrice = totalPrice.toFixed(2);
-            const descriptionForPaypal = itemDescriptions.join(', ');
-
-            checkoutButton.disabled = true;
-            checkoutButton.textContent = 'Procesando...';
-
-            const paypalContainer = document.createElement('div');
-            paypalContainer.id = 'paypal-checkout-button-container';
-            cartSummaryDiv.appendChild(paypalContainer);
-
-            paypal.Buttons({
-                createOrder: async () => {
-                    try {
-                        const calculatedTotalPrice = cartTotalSpan.textContent.replace('$', '');
-                        const calculatedDescription = currentCartItems.map(i => i.product.name).join(', ');
-
-                        const res = await fetch(`${API_URL}/orders/create`, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Authorization': `Bearer ${authToken}`
-                            },
-                            body: JSON.stringify({
-                                totalPrice: totalPrice,
-                                description: descriptionForPaypal,
-                                cartItems: currentCartItems.map(item => ({
-                                    productId: item.product.id,
-                                    quantity: item.quantity,
-                                    price: item.product.price
-                                }))
-                            })
-                        });
-
-                        const data = await res.json();
-                        if (!res.ok) throw new Error(data.error || 'Error al crear orden');
-                        return data.orderID;
-                    } catch (error) {
-                    
-                    }
-                },
-                onApprove: async (data, actions) => {
-                    try {
-                        const res = await fetch(`${API_URL}/orders/capture`, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Authorization': `Bearer ${authToken}`
-                            },
-                            body: JSON.stringify({ orderID: data.orderID })
-                        });
-                        const captureData = await res.json();
-                        if (!res.ok) throw new Error(captureData.error || 'Error al capturar');
-
-                        console.log('Pago capturado desde carrito:', captureData);
-                        alert('¡Gracias por tu compra!');
-                        window.location.href = '/pages/my-products.html';
-
-                    } catch (error) {
-                        console.error('Error al capturar pago desde carrito:', error);
-                        alert('Error al finalizar el pago.');
-                        checkoutButton.disabled = false;
-                        checkoutButton.textContent = 'Proceder al Pago (PayPal)';
-                        paypalContainer.remove();
-                    }
-                },
-                onError: (err) => {
-                    console.error('Error de PayPal:', err);
-                    alert('Ha ocurrido un error con PayPal.');
-                    checkoutButton.disabled = false;
-                    checkoutButton.textContent = 'Proceder al Pago (PayPal)';
-                    paypalContainer.remove();
-                },
-                onCancel: () => {
-                    console.log('Pago cancelado por el usuario.');
-                    checkoutButton.disabled = false;
-                    checkoutButton.textContent = 'Proceder al Pago (PayPal)';
-                    paypalContainer.remove();
-                }
-            }).render('#paypal-checkout-button-container').then(() => {
-                checkoutButton.style.display = 'none';
-            }).catch(err => {
-                console.error("Failed to render PayPal Buttons", err);
-                checkoutButton.disabled = false;
-                checkoutButton.textContent = 'Proceder al Pago (PayPal)';
-                paypalContainer.remove();
-            });
-        });
-    }
-
-    loadCart();
-
+document.addEventListener('DOMContentLoaded', () => {
+    CartManager.init();
 });

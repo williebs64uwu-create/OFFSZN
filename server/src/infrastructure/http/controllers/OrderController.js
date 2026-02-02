@@ -3,11 +3,11 @@ import { MercadoPagoConfig, Preference } from 'mercadopago';
 // Validar cliente al inicio
 const token = process.env.MERCADOPAGO_ACCESS_TOKEN;
 if (!token) console.error("🔥 [CRITICAL] NO TOKEN FOUND IN CONTROLLER INIT");
-const client = new MercadoPagoConfig({ accessToken: token });
+const client = token ? new MercadoPagoConfig({ accessToken: token }) : null;
 // ------------------------------------------------------------------
 // 1. CREAR PREFERENCIA (CON DEBUG DE PRECIO Y URL)
 // ------------------------------------------------------------------
-const TASA_CAMBIO_USD_COP = 4200; 
+const TASA_CAMBIO_USD_COP = 4200;
 
 export const createMercadoPagoPreference = async (req, res) => {
     try {
@@ -17,7 +17,7 @@ export const createMercadoPagoPreference = async (req, res) => {
         if (!cartItems?.length) return res.status(400).json({ error: 'Carrito vacío' });
 
         const productIds = cartItems.map(item => item.id);
-        
+
         const { data: dbProducts, error } = await supabase
             .from('products')
             .select('id, name, price_basic, image_url, currency')
@@ -30,13 +30,13 @@ export const createMercadoPagoPreference = async (req, res) => {
 
         dbProducts.forEach(product => {
             let unitPrice = parseFloat(product.price_basic);
-            
+
             if (isNaN(unitPrice)) unitPrice = 10; // Protección contra NaN
 
             if (product.currency === 'USD' || !product.currency) {
                 unitPrice = unitPrice * TASA_CAMBIO_USD_COP;
             }
-            
+
             if (unitPrice < 500) unitPrice = 500;
 
             totalEnPesos += unitPrice;
@@ -46,7 +46,7 @@ export const createMercadoPagoPreference = async (req, res) => {
                 title: product.name,
                 picture_url: product.image_url,
                 quantity: 1,
-                currency_id: 'COP', 
+                currency_id: 'COP',
                 unit_price: Number(unitPrice.toFixed(2)) // Aseguramos que sea número
             });
         });
@@ -58,11 +58,11 @@ export const createMercadoPagoPreference = async (req, res) => {
 
         // --- DETECCIÓN DE URL ---
         let clientURL = req.headers.origin || req.headers.referer;
-        
+
         // Si no detecta URL o es localhost, usamos una por defecto limpia
         if (!clientURL || clientURL.includes('localhost') || clientURL.includes('127.0.0.1')) {
             // NOTA: Asegúrate de que este es el puerto donde ves tu página web
-            clientURL = "http://127.0.0.1:5501"; 
+            clientURL = "http://127.0.0.1:5501";
         }
 
         // Limpiar trailing slash
@@ -95,9 +95,9 @@ export const createMercadoPagoPreference = async (req, res) => {
     } catch (err) {
         // Logueamos el error completo
         console.error("❌ Error MP Detallado:", JSON.stringify(err, null, 2));
-        res.status(500).json({ 
-            error: err.message, 
-            details: err.cause || err 
+        res.status(500).json({
+            error: err.message,
+            details: err.cause || err
         });
     }
 };
@@ -272,7 +272,7 @@ const processPaymentAudit = async (paymentId) => {
 
 async function saveOrderToDB(paymentData) {
     // paymentData viene de la API de Mercado Pago
-    
+
     // Decodificar referencia para sacar el User ID
     const metadata = JSON.parse(paymentData.external_reference);
     const userId = metadata.u_id;
@@ -298,11 +298,11 @@ async function saveOrderToDB(paymentData) {
     // Mercado Pago a veces no devuelve los items en el webhook de pago simple.
     // ESTRATEGIA: Como ya cobramos, asumimos que son los items de la preferencia.
     // O mejor: Guardar los items en una tabla 'pending_orders' antes de ir a MP y moverlos aquí.
-    
+
     // PARA MVP RÁPIDO:
     // El 'paymentData.additional_info.items' suele traer la info si se configuró bien.
     const items = paymentData.additional_info?.items || [];
-    
+
     if (items.length > 0) {
         const orderItems = items.map(item => ({
             order_id: order.id, // ID bigint generado
@@ -312,6 +312,26 @@ async function saveOrderToDB(paymentData) {
         }));
 
         await supabase.from('order_items').insert(orderItems);
+
+        // 3. Increment sales_count for each product
+        for (const item of orderItems) {
+            try {
+                const { data: prod } = await supabase
+                    .from('products')
+                    .select('sales_count')
+                    .eq('id', item.product_id)
+                    .single();
+
+                if (prod) {
+                    await supabase
+                        .from('products')
+                        .update({ sales_count: (prod.sales_count || 0) + 1 })
+                        .eq('id', item.product_id);
+                }
+            } catch (e) {
+                console.warn(`[SalesCount] Error incrementing for ${item.product_id}:`, e);
+            }
+        }
     }
 }
 
@@ -357,4 +377,69 @@ export const forceCheckPayment = async (req, res) => {
 
     res.json({ message: "Proceso forzado iniciado en background. Revisa logs." });
 
+};
+
+// ------------------------------------------------------------------
+// 7. ORDENES GRATUITAS (DASHBOARD PERSISTENCE)
+// ------------------------------------------------------------------
+export const createFreeOrder = async (req, res) => {
+    try {
+        const userId = req.user.userId;
+        const { productId } = req.body;
+
+        if (!productId) return res.status(400).json({ error: 'Falta ID del producto' });
+
+        // 1. Verificar que el producto sea gratis
+        const { data: product, error: fetchError } = await supabase
+            .from('products')
+            .select('id, name, is_free, price_basic, downloads_count')
+            .eq('id', productId)
+            .single();
+
+        if (fetchError || !product) {
+            return res.status(404).json({ error: 'Producto no encontrado' });
+        }
+
+        if (product.is_free !== true && parseFloat(product.price_basic) > 0) {
+            return res.status(403).json({ error: 'Este producto no es gratuito' });
+        }
+
+        // 2. Crear Orden $0
+        const { data: order, error: orderError } = await supabase
+            .from('orders')
+            .insert({
+                user_id: userId,
+                transaction_id: `FREE-${Date.now()}-${userId.substring(0, 5)}`,
+                status: 'completed',
+                total_price: 0
+            })
+            .select()
+            .single();
+
+        if (orderError) throw orderError;
+
+        // 3. Crear Item de Orden
+        const { error: itemError } = await supabase
+            .from('order_items')
+            .insert({
+                order_id: order.id,
+                product_id: product.id,
+                quantity: 1,
+                price_at_purchase: 0
+            });
+
+        if (itemError) throw itemError;
+
+        // 4. Incrementar contador de descargas
+        await supabase.rpc('increment_product_downloads', { row_id: product.id });
+
+        res.status(201).json({
+            message: 'Descarga registrada en tu dashboard correctamente',
+            orderId: order.id
+        });
+
+    } catch (err) {
+        console.error("Error creating free order:", err.message);
+        res.status(500).json({ error: 'Error al registrar la descarga gratuita' });
+    }
 };

@@ -1,0 +1,562 @@
+import paypal from '@paypal/checkout-server-sdk';
+import paypalClient from '../paypalClient.js';
+import { supabase } from '../../database/connection.js';
+import { PLATFORM_PAYPAL_EMAIL } from '../../../shared/config/config.js';
+import { sendReceiptEmail } from '../../../shared/utils/email.js';
+
+export const createPayPalOrder = async (req, res) => {
+    try {
+        console.log('[PayPalOrder] Auth Header:', req.headers['authorization'] ? req.headers['authorization'].substring(0, 20) + '...' : 'NONE');
+        const userId = req.user?.userId;
+        let cartItems = [];
+
+        // 1. Get Cart Items (From DB if logged in, from Body if guest)
+        if (userId) {
+            const { data, error: cartError } = await supabase
+                .from('cart_items')
+                .select('product:products(id, name, price_basic, producer_id, image_url, mp3_url, wav_url, stems_url, kit_url), license_name, variant_price')
+                .eq('user_id', userId);
+
+            if (cartError) throw cartError;
+            cartItems = data || [];
+        } else {
+            // GUEST FLOW: Expect items in body
+            cartItems = req.body.cartItems || [];
+            console.log('[PayPalOrder] Guest Checkout - Items received:', cartItems.length);
+        }
+
+        if (!cartItems || cartItems.length === 0) {
+            return res.status(400).json({ error: 'Carrito vacío' });
+        }
+
+        // 2. Fetch Producer details for PayPal Emails AND LICENSE SETTINGS
+        const producerIds = [...new Set(cartItems.map(item => item.product.producer_id))];
+        const { data: producers, error: producerError } = await supabase
+            .from('users')
+            .select('id, payment_methods, license_settings, nickname')
+            .in('id', producerIds);
+
+        if (producerError) console.error('[PayPalDebug] Error fetching producers:', producerError);
+
+        const producerMap = new Map();
+        producers?.forEach(u => {
+            producerMap.set(u.id, {
+                id: u.id,
+                email: u.payment_methods?.paypal,
+                settings: u.license_settings,
+                nickname: u.nickname
+            });
+        });
+
+        // --- NEW: Identify Producers without PayPal ---
+        const missingPaymentProducers = [];
+        cartItems.forEach(item => {
+            const p = producerMap.get(item.product.producer_id);
+            if (!p || !p.email || !p.email.includes('@')) {
+                missingPaymentProducers.push({
+                    productId: item.product.id,
+                    productName: item.product.name,
+                    producerId: item.product.producer_id,
+                    producerName: p?.nickname || 'Productor'
+                });
+            }
+        });
+
+        if (missingPaymentProducers.length > 0) {
+            // Trigger notifications for MISSING sales (one per producer)
+            const uniqueProducers = [...new Set(missingPaymentProducers.map(p => p.producerId))];
+
+            for (const prodId of uniqueProducers) {
+                const item = missingPaymentProducers.find(p => p.producerId === prodId);
+                const buyerName = req.user?.nickname || 'Un usuario';
+
+                await supabase.from('notifications').insert({
+                    user_id: prodId,
+                    type: 'system_alert',
+                    title: '¡Venta Perdida!',
+                    message: `<strong>${buyerName}</strong> intentó comprar tu producto <strong>"${item.productName}"</strong>, pero no tienes configurado tu PayPal. <a href="/cuenta/ajustes" style="color:#8b5cf6;">Configúralo ahora</a> para no perder más ventas.`,
+                    read: false,
+                    data: { action: 'open_paypal_settings' }
+                });
+            }
+
+            return res.status(400).json({
+                error: 'MISSING_PRODUCER_PAYPAL',
+                details: missingPaymentProducers
+            });
+        }
+
+        // 3. SECURE PRICE RE-CALCULATION
+        const FACTORY_DEFAULTS = {
+            basic: 20.00,
+            premium: 50.00,
+            trackout: 100.00,
+            unlimited: 300.00,
+            exclusive: 500.00
+        };
+
+        const productIds = cartItems.map(item => item.product.id);
+        const { data: dbProducts, error: dbError } = await supabase
+            .from('products')
+            .select('id, name, price_basic, price_premium, price_stems, price_exclusive, product_type, licenses, producer_id')
+            .in('id', productIds);
+
+        if (dbError) throw dbError;
+
+        let grandTotal = 0;
+        const verifiedCartItems = [];
+
+        cartItems.forEach(item => {
+            const prodIdToFind = String(item.product?.id);
+            const dbProd = dbProducts.find(p => String(p.id) === prodIdToFind);
+
+            if (!dbProd) return;
+
+            const producer = producerMap.get(dbProd.producer_id);
+            let verifiedPrice = 0;
+
+            if (dbProd.product_type === 'beat') {
+                const licKey = (item.license_name || 'basic').toLowerCase();
+                const productOverride = dbProd.licenses ? dbProd.licenses[licKey]?.price : null;
+                const producerPrice = producer?.settings ? producer.settings[licKey]?.price : null;
+                const dbFieldMap = {
+                    basic: dbProd.price_basic,
+                    premium: dbProd.price_premium,
+                    trackout: dbProd.price_stems,
+                    stems: dbProd.price_stems,
+                    unlimited: dbProd.price_exclusive,
+                    exclusive: dbProd.price_exclusive
+                };
+
+                // Fallback: If licKey doesn't match standard keys, search by name in licenses object
+                if (!verifiedPrice && dbProd.licenses) {
+                    const foundLicense = Object.values(dbProd.licenses).find(l =>
+                        String(l.name).toLowerCase() === licKey ||
+                        String(l.id).toLowerCase() === licKey
+                    );
+                    if (foundLicense) verifiedPrice = foundLicense.price;
+                }
+
+                // ULTIMATE FALLBACK: If still 0 for a beat, use price_basic from the product
+                if (!verifiedPrice || verifiedPrice === 0) {
+                    verifiedPrice = dbProd.price_basic || 0;
+                }
+            } else {
+                verifiedPrice = dbProd.price_basic || 0;
+            }
+
+            verifiedPrice = parseFloat(verifiedPrice);
+
+            let commission = 0;
+            if (verifiedPrice > 0) {
+                if (verifiedPrice < 20) {
+                    commission = 1.00;
+                } else {
+                    commission = verifiedPrice * 0.05;
+                }
+            }
+
+            grandTotal += (verifiedPrice + commission);
+
+            verifiedCartItems.push({
+                ...item,
+                variant_price: verifiedPrice
+            });
+        });
+
+        // Re-assign cartItems to verified version for capture phase (if using sessions)
+        // But for now, we just use grandTotal for the PayPal request.
+
+        const platformPayee = (!PLATFORM_PAYPAL_EMAIL || !PLATFORM_PAYPAL_EMAIL.includes('@'))
+            ? { merchant_id: PLATFORM_PAYPAL_EMAIL || 'BK7AFKN36JSWW' }
+            : { email_address: PLATFORM_PAYPAL_EMAIL };
+
+        const purchaseUnits = [{
+            reference_id: 'offszn_combined_order',
+            amount: {
+                currency_code: 'USD',
+                value: grandTotal.toFixed(2)
+            },
+            description: `OFFSZN Purchase - ${cartItems.length} items`,
+            payee: platformPayee
+        }];
+
+        console.log('[PayPalOrder] Grand Total:', grandTotal);
+        console.log('[PayPalDebug-V4] Single-Payee Purchase Units:', JSON.stringify(purchaseUnits, null, 2));
+
+        const request = new paypal.orders.OrdersCreateRequest();
+        request.prefer("return=representation");
+        request.requestBody({
+            intent: 'CAPTURE',
+            purchase_units: purchaseUnits
+        });
+
+        const response = await paypalClient.client().execute(request);
+        res.status(200).json({ id: response.result.id });
+
+    } catch (err) {
+        console.error("PayPal Create Error:", err);
+        res.status(500).json({ error: err.message });
+    }
+};
+
+export const capturePayPalOrder = async (req, res) => {
+    const { orderID, cartItems: guestItems } = req.body;
+    let userId = req.user?.userId;
+
+    try {
+        const request = new paypal.orders.OrdersCaptureRequest(orderID);
+        request.requestBody({});
+
+        const response = await paypalClient.client().execute(request);
+        console.log(`[PayPalCapture] Order ${orderID} Response Status: ${response.result.status}`);
+
+        if (response.result.status === 'COMPLETED' || response.result.status === 'APPROVED') {
+            // 1. Get Cart Items
+            let cartItems = [];
+            if (userId) {
+                const { data, error: cartFetchError } = await supabase
+                    .from('cart_items')
+                    .select('product:products(id, name, producer_id, image_url, mp3_url, wav_url, stems_url, kit_url), license_name, variant_price')
+                    .eq('user_id', userId);
+
+                if (cartFetchError) throw cartFetchError;
+                cartItems = data || [];
+            } else {
+                cartItems = guestItems || [];
+                // Try to find user by email from PayPal if they are guests
+                const payerEmail = response.result.payer?.email_address;
+                if (payerEmail) {
+                    const { data: existingUser } = await supabase
+                        .from('users')
+                        .select('id')
+                        .eq('email', payerEmail)
+                        .single();
+
+                    if (existingUser) {
+                        userId = existingUser.id;
+                        console.log(`[PayPalCapture] Guest matched with existing user: ${payerEmail}`);
+                    }
+                }
+            }
+
+            if (!cartItems || cartItems.length === 0) {
+                console.warn("[PayPalCapture] Warning: Cart is empty during capture.");
+            }
+
+            // 2. Create Order Record (Main Record)
+            const totalPaid = response.result.purchase_units.reduce((acc, unit) => {
+                const capture = unit.payments?.captures?.[0];
+                return acc + (capture ? parseFloat(capture.amount.value) : 0);
+            }, 0);
+
+            const { data: order, error: orderError } = await supabase
+                .from('orders')
+                .insert({
+                    user_id: userId,
+                    transaction_id: orderID,
+                    status: 'completed',
+                    total_price: totalPaid,
+                    amount: totalPaid
+                })
+                .select()
+                .single();
+
+            if (orderError) throw orderError;
+
+            // 3. Create Transactions and Order Items
+            const transactions = [];
+            const orderItems = [];
+
+            // SECURE PRICE RE-CALCULATION (CAPTURE PHASE)
+            const FACTORY_DEFAULTS = {
+                basic: 20.00,
+                premium: 50.00,
+                trackout: 100.00,
+                unlimited: 300.00,
+                exclusive: 500.00
+            };
+
+            const productIds = cartItems.map(item => item.product.id);
+            const { data: dbProducts } = await supabase
+                .from('products')
+                .select('id, price_basic, price_premium, price_stems, price_exclusive, product_type, licenses, producer_id')
+                .in('id', productIds);
+
+            const producerIds = [...new Set(dbProducts.map(p => p.producer_id))];
+            const { data: producerSettings } = await supabase
+                .from('users')
+                .select('id, license_settings')
+                .in('id', producerIds);
+
+            cartItems.forEach(item => {
+                const dbProd = dbProducts.find(p => p.id === item.product.id);
+                if (!dbProd) return;
+
+                const producer = producerSettings?.find(u => u.id === dbProd.producer_id);
+                let verifiedPrice = 0;
+
+                if (dbProd.product_type === 'beat') {
+                    const licKey = (item.license_name || 'basic').toLowerCase();
+                    const productOverride = dbProd.licenses ? dbProd.licenses[licKey]?.price : null;
+                    const producerPrice = producer?.license_settings ? producer.license_settings[licKey]?.price : null;
+                    const dbFieldMap = {
+                        basic: dbProd.price_basic,
+                        premium: dbProd.price_premium,
+                        trackout: dbProd.price_stems,
+                        stems: dbProd.price_stems,
+                        unlimited: dbProd.price_exclusive,
+                        exclusive: dbProd.price_exclusive
+                    };
+                    verifiedPrice = productOverride || dbFieldMap[licKey] || producerPrice || FACTORY_DEFAULTS[licKey] || 0;
+                } else {
+                    verifiedPrice = dbProd.price_basic || 0;
+                }
+
+                verifiedPrice = parseFloat(verifiedPrice);
+
+                let commission = 0;
+                if (verifiedPrice > 0) {
+                    if (verifiedPrice < 20) {
+                        commission = 1.00;
+                    } else {
+                        commission = verifiedPrice * 0.05;
+                    }
+                }
+
+                transactions.push({
+                    user_id: userId,
+                    related_order: order.id,
+                    amount: verifiedPrice + commission,
+                    currency: 'USD',
+                    type: 'sale'
+                });
+
+                orderItems.push({
+                    order_id: order.id,
+                    product_id: item.product.id,
+                    quantity: 1,
+                    price_at_purchase: verifiedPrice,
+                    license_name: item.license_name || 'Standard'
+                });
+            });
+
+            const { error: transError } = await supabase.from('transactions').insert(transactions);
+            if (transError) console.error("[PayPalCapture] Error recording transactions:", transError);
+
+            const { error: itemsError } = await supabase.from('order_items').insert(orderItems);
+            if (itemsError) console.error("[PayPalCapture] Error recording order items:", itemsError);
+
+            // 4. Update Sales Count
+            for (const item of cartItems) {
+                try {
+                    const { data: prod } = await supabase
+                        .from('products')
+                        .select('sales_count')
+                        .eq('id', item.product.id)
+                        .single();
+
+                    if (prod) {
+                        await supabase
+                            .from('products')
+                            .update({ sales_count: (prod.sales_count || 0) + 1 })
+                            .eq('id', item.product.id);
+                    }
+                } catch (e) {
+                    console.warn(`[SalesCount] Error incrementing for ${item.product.id}:`, e);
+                }
+            }
+
+            // 5. Clear Cart in DB
+            if (userId) {
+                const { error: clearError } = await supabase.from('cart_items').delete().eq('user_id', userId);
+                if (clearError) console.error("[PayPalCapture] Error clearing cart:", clearError);
+            }
+
+            // 6. Send Email Receipts (Async)
+            (async () => {
+                try {
+                    let userEmail = '';
+                    let userNickname = 'Cliente';
+
+                    if (userId) {
+                        const { data: userData } = await supabase.from('users').select('email, nickname').eq('id', userId).single();
+                        if (userData) {
+                            userEmail = userData.email;
+                            userNickname = userData.nickname || 'Cliente';
+                        }
+                    }
+
+                    // Fallback to PayPal Payer Email if guest or user record not found
+                    if (!userEmail) {
+                        userEmail = response.result.payer?.email_address;
+                        userNickname = (response.result.payer?.name?.given_name) || 'Cliente';
+                    }
+
+                    if (!userEmail) return;
+
+                    console.log(`[EmailJS] STARTING email flow for ${userEmail}`);
+
+                    for (const item of cartItems) {
+                        // A. Notify Client (Receipt)
+                        await sendReceiptEmail({
+                            to_email: userEmail,
+                            downloader_name: userNickname,
+                            product_name: item.product.name,
+                            activity_type: 'compra confirmada'
+                        });
+
+                        // B. Notify Producer (Sale Notification)
+                        const { data: prodData } = await supabase.from('users').select('email, nickname').eq('id', item.product.producer_id).single();
+                        if (prodData?.email) {
+                            await sendReceiptEmail({
+                                service_id: 'service_w50l62y',
+                                template_id: 'template_bgp3zb5', // Producer template
+                                to_email: prodData.email,
+                                to_name: prodData.nickname || 'Productor',
+                                product_name: item.product.name,
+                                downloader_name: userNickname,
+                                activity_type: 'Venta Confirmada',
+                                amount: `$${item.variant_price}`
+                            });
+                        }
+                    }
+                } catch (emailErr) {
+                    console.error("[EmailJS] Async flow error:", emailErr);
+                }
+            })();
+
+            return res.status(200).json({
+                ...response.result,
+                supabaseOrder: order
+            });
+        }
+
+        console.error(`[PayPalCapture] Payment not completed. Status: ${response.result.status}`, JSON.stringify(response.result, null, 2));
+        res.status(400).json({ error: 'Pago no completado', status: response.result.status, details: response.result });
+
+    } catch (err) {
+        console.error("PayPal Capture Error:", err);
+        res.status(500).json({ error: err.message });
+    }
+};
+
+/**
+ * Genera un enlace firmado para descargar archivos seguros (WAV/Stems)
+ * Valida que el usuario sea el comprador o que el pedido esté completado.
+ */
+export const getSecureDownloadUrl = async (req, res) => {
+    try {
+        const { orderId, productId, fileType } = req.query;
+        const userId = req.user?.userId;
+
+        console.log(`[SecureDownload] Request: order=${orderId}, product=${productId}, type=${fileType}, user=${userId}`);
+
+        if (!orderId || !productId || !fileType) {
+            return res.status(400).json({ error: 'Faltan parámetros' });
+        }
+
+        // 1. Verificar que el producto está en el pedido y obtener rutas
+        const { data: item, error: itemError } = await supabase
+            .from('order_items')
+            .select(`
+                id, 
+                order_id, 
+                product_id,
+                orders!inner(user_id, status),
+                products!inner(mp3_url, wav_url, stems_url, kit_url)
+            `)
+            .eq('order_id', orderId)
+            .eq('product_id', productId)
+            .single();
+
+        if (itemError || !item) {
+            console.error('[SecureDownload] Order item not found:', itemError);
+            return res.status(404).json({ error: 'Pedido o producto no encontrado' });
+        }
+
+        // 2. Verificación de Autorización
+        // Si el pedido tiene dueño, debe coincidir con el usuario logueado.
+        if (item.orders.user_id && item.orders.user_id !== userId) {
+            console.warn(`[SecureDownload] Access Denied: User ${userId} tried to access order ${orderId} owned by ${item.orders.user_id}`);
+            return res.status(403).json({ error: 'No tienes permiso para acceder a este archivo' });
+        }
+
+        if (item.orders.status !== 'completed' && item.orders.status !== 'approved') {
+            console.warn(`[SecureDownload] Order not completed: status=${item.orders.status}`);
+            return res.status(403).json({ error: 'El pedido no está completado' });
+        }
+
+        // 3. Obtener la ruta según el tipo
+        let path = '';
+        if (fileType === 'wav') path = item.products.wav_url;
+        else if (fileType === 'stems') path = item.products.stems_url;
+        else if (fileType === 'mp3') path = item.products.mp3_url;
+        else if (fileType === 'kit') path = item.products.kit_url;
+        else if (fileType === 'other') {
+            // Fallback: try to find any available path if type is ambiguous
+            path = item.products.mp3_url || item.products.wav_url || item.products.kit_url;
+        }
+
+        if (!path) {
+            console.warn(`[SecureDownload] Path empty for type ${fileType}`);
+            return res.status(404).json({ error: 'Archivo no disponible para este producto' });
+        }
+
+        // 4. Determinar bucket y limpiar ruta
+        let cleanPath = path.trim();
+
+        // Handle full Supabase URLs
+        if (cleanPath.startsWith('http')) {
+            if (cleanPath.includes('supabase.co')) {
+                const publicParts = cleanPath.split('/v1/object/public/');
+                if (publicParts.length > 1) {
+                    cleanPath = publicParts[1];
+                } else {
+                    const signParts = cleanPath.split('/v1/object/sign/');
+                    if (signParts.length > 1) cleanPath = signParts[1].split('?')[0];
+                }
+            }
+        }
+
+        // Standardize: No leading slash
+        cleanPath = cleanPath.startsWith('/') ? cleanPath.substring(1) : cleanPath;
+
+        let bucket = 'products';
+        const pathLower = cleanPath.toLowerCase();
+        if (pathLower.includes('wav_untagged/') || pathLower.includes('stems/') || pathLower.includes('kits/') || pathLower.startsWith('secure-products/')) {
+            bucket = 'secure-products';
+        }
+
+        // Final cleanup of bucket prefixes
+        if (cleanPath.startsWith('secure-products/')) {
+            cleanPath = cleanPath.replace('secure-products/', '');
+        } else if (cleanPath.startsWith('products/')) {
+            cleanPath = cleanPath.replace('products/', '');
+        }
+
+        console.log(`[SecureDownload] Final cleanPath: ${cleanPath} in bucket: ${bucket}`);
+
+        console.log(`[SecureDownload] Signing for buyer: bucket=${bucket}, path=${cleanPath}`);
+
+        // 5. Generar URL firmada usando el Master Key (Service Role) configurado en el backend
+        const { data, error: signError } = await supabase
+            .storage
+            .from(bucket)
+            .createSignedUrl(cleanPath, 3600, {
+                download: true
+            });
+
+        if (signError) {
+            console.error('[SecureDownload] Supabase Signing Error:', signError);
+            return res.status(500).json({ error: 'Error al generar enlace seguro' });
+        }
+
+        res.status(200).json({ signedUrl: data.signedUrl });
+
+    } catch (err) {
+        console.error('[SecureDownload] Internal Error:', err);
+        res.status(500).json({ error: 'Error interno al procesar la descarga' });
+    }
+};
+

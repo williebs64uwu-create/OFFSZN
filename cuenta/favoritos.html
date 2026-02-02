@@ -17,12 +17,97 @@
 
         body {
             font-family: 'Inter', sans-serif;
-            background: #0a0a0a;
+            background: #000;
             color: #e5e5e5;
             overflow-x: hidden;
-            /* opacity: 0; <-- ELIMINADO PARA QUITAR PANTALLA NEGRA */
-            transition: opacity 0.3s ease-in;
+            display: flex;
         }
+
+        /* ===== STANDARD SIDEBAR STUB ===== */
+        .sidebar-stub {
+            width: 80px;
+            background: #000;
+            border-right: 1px solid #1a1a1a;
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 20px;
+            gap: 10px;
+        }
+
+        .sidebar-icon-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+            font-size: 20px;
+            transition: 0.2s;
+            text-decoration: none;
+            position: relative;
+        }
+
+        .sidebar-icon-btn:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .sidebar-icon-btn.active {
+            color: #fff;
+            background: #8B5CF6;
+            box-shadow: 0 0 10px rgba(139, 92, 246, 0.5);
+        }
+
+        /* Tooltips */
+        .sidebar-icon-btn[data-title]:hover::after {
+            content: attr(data-title);
+            position: fixed;
+            left: 70px;
+            background: #111;
+            border: 1px solid #333;
+            color: #fff;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            z-index: 1000;
+            pointer-events: none;
+            animation: fadeInTooltip 0.2s forwards;
+        }
+
+        @keyframes fadeInTooltip {
+            from {
+                opacity: 0;
+                transform: translateX(-5px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        /* Main Layout Override */
+        .dashboard-container {
+            display: block !important;
+            min-height: 100vh !important;
+            width: 100%;
+        }
+
+        .main-content {
+            margin-left: 80px !important;
+            width: calc(100% - 80px) !important;
+            padding: 40px !important;
+            background: #000 !important;
+        }
+
+
 
         /* body.loaded { opacity: 1; } <-- ELIMINADO */
 
@@ -1014,12 +1099,12 @@
             display: inline-block;
             user-select: none;
         }
-        
+
         /* AÑADIDO para que el avatar se vea redondo */
         .profile-avatar.skeleton {
             border-radius: 50%;
         }
-        
+
         /* AÑADIDO para espaciado de stats */
         .stat-value.skeleton {
             margin-bottom: 4px;
@@ -1167,165 +1252,47 @@
 
 <body>
 
-    <nav class="navbar">
-        <div class="logo"><a href="index">OFFSZN</a></div>
+    <div class="radial-glow"
+        style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: radial-gradient(circle at 50% 50%, rgba(139, 92, 246, 0.08), transparent 70%); z-index: -1; pointer-events: none;">
+    </div>
 
-        <div class="navbar-center">
-            <ul class="navbar-links">
-                <li><a href="index">INICIO</a></li>
-                <li>
-                    <a>RECURSOS <i class="fas fa-chevron-down"></i></a>
-                    <div class="dropdown-menu">
-                        <a href="beats" class="dropdown-item">
-                            <i class="fas fa-music"></i>
-                            <span>Beats & Instrumentales</span>
-                        </a>
-                        <a href="drum-kits" class="dropdown-item">
-                            <i class="fas fa-drum"></i>
-                            <span>Drum Kits</span>
-                        </a>
-                        <a href="presets" class="dropdown-item">
-                            <i class="fas fa-sliders-h"></i>
-                            <span>Presets & Plugins</span>
-                        </a>
-                        <a href="samples" class="dropdown-item">
-                            <i class="fas fa-wave-square"></i>
-                            <span>Samples & Loops</span>
-                        </a>
-                        <div class="dropdown-divider"></div>
-                        <a href="free-resources" class="dropdown-item">
-                            <i class="fas fa-gift"></i>
-                            <span>Recursos Gratis</span>
-                        </a>
-                    </div>
-                </li>
-                <li>
-                    <a>COMUNIDAD <i class="fas fa-chevron-down"></i></a>
-                    <div class="dropdown-menu">
-                        <a href="feed" class="dropdown-item">
-                            <i class="fas fa-home"></i>
-                            <span>Feed</span>
-                        </a>
-                        <a href="productores" class="dropdown-item">
-                            <i class="fas fa-users"></i>
-                            <span>Productores</span>
-                        </a>
-                        <a href="colaboraciones" class="dropdown-item">
-                            <i class="fas fa-handshake"></i>
-                            <span>Colaboraciones</span>
-                        </a>
-                        <div class="dropdown-divider"></div>
-                        <a href="foros" class="dropdown-item">
-                            <i class="fas fa-comments"></i>
-                            <span>Foros</span>
-                        </a>
-                        <a href="eventos" class="dropdown-item">
-                            <i class="fas fa-calendar"></i>
-                            <span>Eventos</span>
-                        </a>
-                    </div>
-                </li>
-            </ul>
+    <!-- SIDEBAR STUB -->
+    <div class="sidebar-stub" style="justify-content:flex-start; gap:15px;">
+        <!-- Logo -->
+        <a href="/index.html" class="sidebar-logo-btn"
+            style="margin-bottom:10px; display:flex; align-items:center; justify-content:center; width:44px; height:44px;"><img
+                src="../images/LOGO-OFFSZN.png" style="width:38px; mix-blend-mode: screen;"></a>
 
-            <div class="navbar-search">
-                <input type="text" placeholder="Buscar beats, kits, productores...">
-                <i class="fas fa-search"></i>
-            </div>
-        </div>
+        <!-- 1. GESTIÓN -->
+        <div style="width:40px; border-bottom:1px solid #222; margin:5px 0;"></div>
+        <a href="/cuenta/dashboard.html" class="sidebar-icon-btn" title="Dashboard"><i class="bi bi-grid-fill"></i></a>
+        <a href="/cuenta/mis-kits.html" class="sidebar-icon-btn" title="Mis Beats/Kits"><i
+                class="bi bi-disc-fill"></i></a>
+        <a href="/cuenta/Upload/Drum-Kits.html" class="sidebar-icon-btn" title="Subir"><i
+                class="bi bi-cloud-arrow-up-fill"></i></a>
 
-        <div class="navbar-right">
-            <a href="notifications" class="navbar-icon-button"><i class="fas fa-bell"></i></a>
-            <a href="cart" class="navbar-icon-button"><i class="fas fa-shopping-cart"></i></a>
-            <div class="user-dropdown">
-                <div class="navbar-icon-button" onclick="toggleUserDropdown()"><i class="fas fa-user"></i></div>
-                <div class="user-dropdown-menu">
-                    <div class="user-dropdown-header">
-                        <div class="user-dropdown-avatar">?</div>
-                        <div class="user-dropdown-info">
-                            <div class="user-dropdown-name">Usuario</div>
-                            <div class="user-dropdown-email">usuario@offszn.com</div>
-                        </div>
-                    </div>
-                    <a href="profile" class="user-dropdown-item"><i class="fas fa-user-circle"></i><span>Mi
-                            Perfil</span></a>
-                    <a href="dashboard" class="user-dropdown-item"><i
-                            class="fas fa-th-large"></i><span>Dashboard</span></a>
-                    <a href="wallet" class="user-dropdown-item"><i class="fas fa-wallet"></i><span>Billetera</span></a>
-                    <a href="mis-compras" class="user-dropdown-item"><i class="fas fa-shopping-bag"></i><span>Mis
-                            Compras</span></a>
-                    <a href="#" class="user-dropdown-item disabled"><i
-                            class="fas fa-chart-line"></i><span>Analíticas</span><span
-                            class="soon-badge">Pronto</span></a>
-                    <a href="account-settings" class="user-dropdown-item"><i
-                            class="fas fa-cog"></i><span>Configuración</span></a>
-                    <a href="help" class="user-dropdown-item"><i
-                            class="fas fa-question-circle"></i><span>Ayuda</span></a>
-                    <a href="#" id="navbar-logout-btn" class="user-dropdown-item logout"><i
-                            class="fas fa-sign-out-alt"></i><span>Cerrar Sesión</span></a>
-                </div>
-            </div>
-        </div>
-    </nav>
+        <!-- 2. NEGOCIO -->
+        <div style="width:40px; border-bottom:1px solid #222; margin:5px 0;"></div>
+        <a href="/cuenta/admin-licencias.html" class="sidebar-icon-btn" title="Licencias"><i
+                class="bi bi-file-earmark-music-fill"></i></a>
+        <a href="#" class="sidebar-icon-btn" title="Cupones" onclick="openCouponModal(event)"><i
+                class="bi bi-ticket-perforated-fill"></i></a>
+        <a href="/cuenta/colaboraciones.html" class="sidebar-icon-btn" title="Colaboraciones"><i
+                class="bi bi-people-fill"></i></a>
+
+        <!-- 3. ACADEMIA -->
+        <div style="width:40px; border-bottom:1px solid #222; margin:5px 0;"></div>
+        <a href="/cuenta/cursos.html" class="sidebar-icon-btn" title="Cursos"><i class="bi bi-mortarboard-fill"></i></a>
+        <a href="/cuenta/analiticas.html" class="sidebar-icon-btn" title="Estadísticas"><i
+                class="bi bi-bar-chart-fill"></i></a>
+
+        <!-- 4. SOCIAL -->
+        <div style="width:40px; border-bottom:1px solid #222; margin:5px 0;"></div>
+        <a href="/cuenta/reels.html" class="sidebar-icon-btn" title="Reels"><i class="bi bi-camera-reels-fill"></i></a>
+    </div>
 
     <div class="dashboard-container">
 
-        <aside class="sidebar">
-            <div class="profile-header">
-                <div class="profile-info">
-                    <div class="profile-avatar skeleton" style="opacity: 1;">&nbsp;</div>
-                    <div>
-                        <div class="profile-name skeleton"
-                            style="height: 20px; width: 120px; border-radius: 6px; opacity: 1;">&nbsp;</div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="wallet-section">
-                <div class="wallet-label">Saldo Disponible</div>
-                <div class="wallet-amount skeleton"
-                    style="height: 30px; width: 100px; border-radius: 6px; opacity: 1;">&nbsp;</div>
-            </div>
-
-            <button class="upload-btn" onclick="window.location.href='subir-kit.html'">
-                <i class="fas fa-cloud-upload-alt"></i> Subir Kit
-            </button>
-
-            <div class="sidebar-search">
-                <input type="text" placeholder="Buscar en favoritos..." id="search-favorites">
-                <i class="fas fa-search"></i>
-            </div>
-
-            <div class="sidebar-menu">
-                <div class="menu-section-title">Principal</div>
-                <a href="dashboard" class="menu-item"><i class="fas fa-th-large"></i><span>Dashboard</span></a>
-                <a href="mis-kits" class="menu-item"><i class="fas fa-music"></i><span>Mis Kits</span></a>
-                <a href="#" class="menu-item disabled"><i class="fas fa-chart-line"></i><span>Analíticas</span><span
-                        class="soon-badge">Pronto</span></a>
-                <a href="favoritos" class="menu-item active"><i class="fas fa-heart"></i><span>Favoritos</span></a>
-                <a href="#" class="menu-item"><i class="fas fa-history"></i><span>Historial</span></a>
-
-                <div class="menu-divider"></div>
-
-                <div class="menu-section-title">Colaboración</div>
-                <a href="colaboraciones" class="menu-item"><i class="fas fa-users"></i><span>Colaboraciones</span></a>
-
-                <div class="menu-divider"></div>
-
-                <div class="menu-section-title">Compras</div>
-                <a href="mis-compras" class="menu-item"><i class="fas fa-shopping-bag"></i><span>Mis Compras</span></a>
-                <a href="gift-cards" class="menu-item"><i class="fas fa-gift"></i><span>Gift Cards</span></a>
-                <a href="messages" class="menu-item"><i class="fas fa-envelope"></i><span>Mensajes</span></a>
-
-                <div class="menu-divider"></div>
-
-                <div class="menu-section-title">Configuración</div>
-                <a href="account-settings" class="menu-item"><i class="fas fa-cog"></i><span>Configuración</span></a>
-                <a href="blog" class="menu-item"><i class="fas fa-book-open"></i><span>Blog</span></a>
-            </div>
-
-            <a href="#" id="sidebar-logout-btn" class="logout-btn"><i class="fas fa-sign-out-alt"></i><span>Cerrar
-                    Sesión</span></a>
-        </aside>
 
         <main class="main-content">
             <div class="page-header">
@@ -1345,32 +1312,32 @@
                     <div class="stat-header">
                         <div class="stat-icon"><i class="fas fa-heart"></i></div>
                     </div>
-                    <div class="stat-value skeleton"
-                        style="height: 34px; width: 60px; border-radius: 6px; opacity: 1;">&nbsp;</div>
+                    <div class="stat-value skeleton" style="height: 34px; width: 60px; border-radius: 6px; opacity: 1;">
+                        &nbsp;</div>
                     <div class="stat-label">Total de Favoritos</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-header">
                         <div class="stat-icon"><i class="fas fa-drum"></i></div>
                     </div>
-                    <div class="stat-value skeleton"
-                        style="height: 34px; width: 60px; border-radius: 6px; opacity: 1;">&nbsp;</div>
+                    <div class="stat-value skeleton" style="height: 34px; width: 60px; border-radius: 6px; opacity: 1;">
+                        &nbsp;</div>
                     <div class="stat-label">Drum Kits</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-header">
                         <div class="stat-icon"><i class="fas fa-music"></i></div>
                     </div>
-                    <div class="stat-value skeleton"
-                        style="height: 34px; width: 60px; border-radius: 6px; opacity: 1;">&nbsp;</div>
+                    <div class="stat-value skeleton" style="height: 34px; width: 60px; border-radius: 6px; opacity: 1;">
+                        &nbsp;</div>
                     <div class="stat-label">Beats & Samples</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-header">
                         <div class="stat-icon"><i class="fas fa-sliders-h"></i></div>
                     </div>
-                    <div class="stat-value skeleton"
-                        style="height: 34px; width: 60px; border-radius: 6px; opacity: 1;">&nbsp;</div>
+                    <div class="stat-value skeleton" style="height: 34px; width: 60px; border-radius: 6px; opacity: 1;">
+                        &nbsp;</div>
                     <div class="stat-label">Presets</div>
                 </div>
             </div>

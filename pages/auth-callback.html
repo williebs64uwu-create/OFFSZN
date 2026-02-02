@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,16 +11,21 @@
     * {
       font-family: 'Inter', sans-serif;
     }
+
     @keyframes spin {
-      to { transform: rotate(360deg); }
+      to {
+        transform: rotate(360deg);
+      }
     }
+
     .spinner {
       animation: spin 1s linear infinite;
     }
   </style>
 </head>
+
 <body class="bg-black min-h-screen flex items-center justify-center">
-  
+
   <div class="text-center">
     <div class="inline-block spinner rounded-full h-12 w-12 border-4 border-zinc-700 border-t-white mb-4"></div>
     <p class="text-white text-lg font-medium">Completando autenticación...</p>
@@ -55,18 +61,44 @@
         if (session && session.access_token) {
           // Guardar token en localStorage
           localStorage.setItem('authToken', session.access_token);
-          console.log('✅ OAuth exitoso, token guardado en localStorage');
 
-          // Pequeño delay para asegurar que el token se guardó
+          // --- SECURITY: Sync Token to Cookie for Server Validation ---
+          const token = session.access_token;
+          const maxAge = 60 * 60 * 24 * 7;
+          document.cookie = `sb-access-token=${token}; path=/; max-age=${maxAge}; SameSite=Strict; Secure`;
+
+          console.log('✅ OAuth exitoso, token guardado en localStorage y cookie');
+
+          // Pequeño delay
           await new Promise(resolve => setTimeout(resolve, 500));
 
-          // Redirigir según el parámetro
+          // 🧠 Lógica Inteligente de Redirección (V3)
+          // Verificar si el usuario ya tiene un perfil COMPLETO en la tabla 'users'
+          const user = session.user;
+          console.log('👤 Usuario:', user.email);
+
+          // Consultar perfil para ver si ya completó el onboarding (tiene nickname)
+          const { data: profile, error: profileError } = await supabaseClient
+            .from('users')
+            .select('nickname')
+            .eq('id', user.id)
+            .single();
+
+          const hasCompletedOnboarding = profile && profile.nickname;
+          console.log('📂 Perfil completado:', hasCompletedOnboarding);
+
           if (redirectParam === 'carrito') {
             console.log('🛒 Redirigiendo al carrito...');
             window.location.replace('/carrito.html');
-          } else {
-            console.log('👋 Redirigiendo a welcome...');
+          } else if (!hasCompletedOnboarding) {
+            // No tiene nickname -> Es Nuevo o Incompleto -> Welcome (Onboarding)
+            console.log('✨ Sin onboarding completo -> Welcome');
             window.location.replace('/pages/welcome.html');
+          } else {
+            // Ya tiene nickname -> Es Recurrente -> Perfil Público (Directo)
+            const profilePath = `/${profile.nickname}`;
+            console.log(`🏠 Con onboarding completo -> Redirigiendo a ${profilePath}`);
+            window.location.replace(profilePath);
           }
         } else {
           throw new Error('No se recibió sesión de OAuth');
@@ -83,4 +115,5 @@
   </script>
 
 </body>
+
 </html>

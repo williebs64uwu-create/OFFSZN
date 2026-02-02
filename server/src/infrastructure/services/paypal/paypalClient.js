@@ -6,15 +6,14 @@ function environment() {
     const clientSecret = PAYPAL_CLIENT_SECRET;
 
     if (!clientId || !clientSecret) {
-         console.error("ERROR: Faltan credenciales de PayPal en la configuración.");
-         throw new Error("Configuración de servidor incompleta para pagos.");
+        console.error("ERROR: Faltan credenciales de PayPal en la configuración.");
+        throw new Error("Configuración de servidor incompleta para pagos.");
     }
 
     if (PAYPAL_ENVIRONMENT === 'sandbox') {
         return new paypal.core.SandboxEnvironment(clientId, clientSecret);
     } else {
-        console.warn("ADVERTENCIA: Usando entorno Sandbox de PayPal.");
-        return new paypal.core.SandboxEnvironment(clientId, clientSecret);
+        return new paypal.core.LiveEnvironment(clientId, clientSecret);
     }
 }
 

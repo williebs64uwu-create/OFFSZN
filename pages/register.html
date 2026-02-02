@@ -4,13 +4,62 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Crear Cuenta — offszn</title>
+  <title>Crear Cuenta — OFFSZN</title>
+  <link rel="icon" type="image/webp" href="/images/LOGO OFFSZN.webp">
+  <meta name="description"
+    content="Únete a OFFSZN, la comunidad número 1 para productores musicales. Descarga sonidos premium y lleva tus beats al siguiente nivel.">
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700&display=swap"
+    rel="stylesheet">
   <style>
     * {
       font-family: 'Inter', sans-serif;
+    }
+
+    h1,
+    h2,
+    h3,
+    .btn-primary {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    /* Override Chrome/Edge Autofill Background */
+    input:-webkit-autofill,
+    input:-webkit-autofill:hover,
+    input:-webkit-autofill:focus,
+    input:-webkit-autofill:active {
+      -webkit-box-shadow: 0 0 0 30px #0f0f0f inset !important;
+      -webkit-text-fill-color: white !important;
+      caret-color: white;
+    }
+
+    /* Error Message Styling */
+    .form-message {
+      font-size: 0.875rem;
+      margin-top: 0.5rem;
+      display: none;
+      padding: 10px;
+      border-radius: 8px;
+    }
+
+    .form-message:not(:empty) {
+      display: block;
+    }
+
+    .form-message.error {
+      color: #ef4444;
+      /* red-500 */
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.2);
+    }
+
+    .form-message.success {
+      color: #22c55e;
+      /* green-500 */
+      background: rgba(34, 197, 94, 0.1);
+      border: 1px solid rgba(34, 197, 94, 0.2);
     }
   </style>
 </head>
@@ -18,56 +67,209 @@
 <body class="bg-black min-h-screen flex flex-col">
 
   <script>
-    // Redirigir si ya está autenticado
-    if (localStorage.getItem('authToken')) {
-      window.location.replace('/pages/my-products.html');
-    }
-  </script>
+    // 🚀 INSTANT GUARD: Hide page immediately while checking
+    document.body.style.opacity = '0';
+    document.body.style.pointerEvents = 'none';
 
-  <!-- Header -->
-  <header class="flex items-center justify-between px-6 py-4">
-    <a href="/" class="text-white font-semibold text-lg hover:text-zinc-300 transition-colors">offszn</a>
-    <a href="/pages/login.html"
-      class="px-4 py-1.5 text-sm text-white border border-zinc-700 rounded-md hover:bg-zinc-900 transition-colors">
-      Iniciar sesión
-    </a>
-  </header>
+    (async () => {
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        // No token - show page
+        document.body.style.opacity = '1';
+        document.body.style.pointerEvents = 'auto';
+        return;
+      }
+
+      // Verify with Supabase
+      const { createClient } = supabase;
+      const SUPABASE_URL = "https://qtjpvztpgfymjhhpoouq.supabase.co";
+      const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0anB2enRwZ2Z5bWpoaHBvb3VxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3ODA5MTUsImV4cCI6MjA3NjM1NjkxNX0.YsItTFk3hSQaVuy707-z7Z-j34mXa03O0wWGAlAzjrw";
+      const supabaseGuard = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+      const { data: { session } } = await supabaseGuard.auth.getSession();
+
+      if (session) {
+        // Already logged in - instant redirect
+        console.log("✅ Ya autenticado, redirigiendo...");
+        window.location.replace('/');
+      } else {
+        // Not logged in - show page
+        document.body.style.opacity = '1';
+        document.body.style.pointerEvents = 'auto';
+      }
+    })();
+  </script>
 
   <!-- Main Content -->
   <main class="flex-1 flex items-center justify-center px-4">
     <div class="w-full max-w-sm">
 
+      <!-- Logo (Clickable -> Home) -->
+      <div class="flex justify-center mb-6">
+        <a href="/index.html" class="hover:opacity-80 transition-opacity" title="Volver al inicio">
+          <img src="/images/LOGO OFFSZN.webp" alt="OFFSZN" style="height: 80px; width: auto;">
+        </a>
+      </div>
+
       <!-- Title -->
       <div class="text-center mb-8">
         <h1 class="text-white text-2xl font-semibold mb-2">Crear una cuenta</h1>
-        <p class="text-zinc-400 text-sm">Únete a offszn y accede a todo el contenido.</p>
+        <p class="text-zinc-400 text-sm">Empieza tu próxima temporada musical hoy mismo.</p>
       </div>
 
       <!-- Form -->
-      <form id="register-form" class="space-y-4">
+      <form id="register-form" class="space-y-4" novalidate>
 
         <!-- Email -->
         <div>
-          <label for="reg-email" class="block text-zinc-300 text-sm mb-2">Correo electrónico</label>
+          <label for="reg-email" class="block text-zinc-400 text-sm mb-2 font-medium">Correo electrónico</label>
           <input type="email" id="reg-email" name="email" placeholder="tu@email.com"
-            class="w-full px-4 py-3 bg-zinc-900 border border-zinc-800 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:border-zinc-600 transition-colors"
-            required>
+            class="w-full px-4 py-3 bg-[#0f0f0f] border border-white/10 rounded-xl text-white placeholder-zinc-600 focus:outline-none focus:border-purple-600/50 focus:ring-1 focus:ring-purple-600/50 transition-all"
+            required pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$">
+          <span id="email-error" class="text-red-500 text-xs mt-2 block hidden font-medium"></span>
         </div>
 
         <!-- Password -->
         <div>
-          <label for="reg-password" class="block text-zinc-300 text-sm mb-2">Contraseña</label>
-          <input type="password" id="reg-password" name="password" placeholder="Mínimo 6 caracteres"
-            class="w-full px-4 py-3 bg-zinc-900 border border-zinc-800 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:border-zinc-600 transition-colors"
-            required>
+          <label for="reg-password" class="block text-zinc-400 text-sm mb-2 font-medium">Contraseña</label>
+          <div class="relative">
+            <input type="password" id="reg-password" name="password" placeholder="Mínimo 6 caracteres"
+              class="w-full px-4 py-3 bg-[#0f0f0f] border border-white/10 rounded-xl text-white placeholder-zinc-600 focus:outline-none focus:border-purple-600/50 focus:ring-1 focus:ring-purple-600/50 transition-all pr-12"
+              required minlength="6" maxlength="15">
+            <button type="button" id="togglePassword"
+              class="absolute inset-y-0 right-0 px-4 flex items-center text-zinc-500 hover:text-white transition-colors cursor-pointer focus:outline-none">
+
+              <!-- Icon Logic Swapped per User Request: 
+                   Default (Hidden/Dots) -> Shows Slashed Eye ("It is hidden")
+                   Active (Visible/Text) -> Shows Open Eye ("It is visible") 
+              -->
+
+              <!-- Eye Slash (Hidden state - DEFAULT visible icon) -->
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor"
+                class="bi bi-eye-slash-fill" viewBox="0 0 16 16" id="eyeSlashIcon">
+                <path
+                  d="m10.79 12.912-1.614-1.615a3.5 3.5 0 0 1-4.474-4.474l-2.06-2.06C.938 6.278 0 8 0 8s3 5.5 8 5.5a7 7 0 0 0 2.79-.588M5.21 3.088A7 7 0 0 1 8 2.5c5 0 8 5.5 8 5.5s-.939 1.721-2.641 3.238l-2.062-2.062a3.5 3.5 0 0 0-4.474-4.474z" />
+                <path
+                  d="M5.525 7.646a2.5 2.5 0 0 0 2.829 2.829zm4.95.708-2.829-2.83a2.5 2.5 0 0 1 2.829 2.829zm3.171 6-12-12 .708-.708 12 12z" />
+              </svg>
+
+              <!-- Eye Open (Visible state - DEFAULT hidden icon) -->
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-eye-fill"
+                viewBox="0 0 16 16" id="eyeIcon" style="display: none;">
+                <path d="M10.5 8a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0" />
+                <path d="M0 8s3-5.5 8-5.5S16 8 16 8s-3 5.5-8 5.5S0 8 0 8m8 3.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7" />
+              </svg>
+            </button>
+          </div>
+          <span id="password-error" class="text-red-500 text-xs mt-2 block hidden font-medium"></span>
+
+          <script>
+            // --- UI LOGIC ---
+            const togglePassword = document.querySelector('#togglePassword');
+            const passwordInput = document.querySelector('#reg-password');
+            const eyeIcon = document.querySelector('#eyeIcon');
+            const eyeSlashIcon = document.querySelector('#eyeSlashIcon');
+
+            togglePassword.addEventListener('click', function (e) {
+              const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+              passwordInput.setAttribute('type', type);
+
+              if (type === 'text') {
+                eyeSlashIcon.style.display = 'none';
+                eyeIcon.style.display = 'block';
+              } else {
+                eyeIcon.style.display = 'none';
+                eyeSlashIcon.style.display = 'block';
+              }
+            });
+
+            // --- CUSTOM VALIDATION LOGIC ---
+            const emailInput = document.getElementById('reg-email');
+            const emailError = document.getElementById('email-error');
+            const passwordError = document.getElementById('password-error');
+            const form = document.getElementById('register-form');
+
+            const validateEmail = () => {
+              const emailValue = emailInput.value;
+              // Strict Regex: anything@anything.2+chars
+              const emailPattern = /^[^@\s]+@[^@\s]+\.[a-zA-Z]{2,}$/;
+
+              if (!emailValue) {
+                emailError.textContent = 'El correo es obligatorio.';
+                emailError.classList.remove('hidden');
+                return false;
+              }
+              // Check pattern manually to be 100% sure
+              else if (!emailPattern.test(emailValue)) {
+                emailError.textContent = 'Ingresa un correo válido (ej: usuario@gmail.com).';
+                emailError.classList.remove('hidden');
+                return false;
+              } else {
+                emailError.classList.add('hidden');
+                return true;
+              }
+            };
+
+            const validatePassword = () => {
+              const val = passwordInput.value;
+              if (!val) {
+                passwordError.textContent = 'La contraseña es obligatoria.';
+                passwordError.classList.remove('hidden');
+                return false;
+              } else if (val.length < 6) {
+                passwordError.textContent = `La contraseña debe tener al menos 6 caracteres (tienes ${val.length}).`;
+                passwordError.classList.remove('hidden');
+                return false;
+              } else if (val.length > 15) {
+                passwordError.textContent = 'La contraseña no puede exceder 15 caracteres.';
+                passwordError.classList.remove('hidden');
+                return false;
+              } else {
+                passwordError.classList.add('hidden');
+                return true;
+              }
+            };
+
+            // Real-time validation
+            emailInput.addEventListener('input', validateEmail);
+            passwordInput.addEventListener('input', validatePassword);
+
+            // Create global validation handler for form submission in auth.js to call
+            window.validateRegisterForm = () => {
+              const isEmailValid = validateEmail();
+              const isPasswordValid = validatePassword();
+              return isEmailValid && isPasswordValid;
+            }
+
+            // Global helper to show backend errors inline
+            window.showRegisterError = (field, message) => {
+              if (field === 'email') {
+                emailError.textContent = message;
+                emailError.classList.remove('hidden');
+                emailInput.classList.add('border-red-500', 'focus:border-red-500', 'focus:ring-red-500/50');
+                // Remove error style on next input
+                emailInput.addEventListener('input', () => {
+                  emailInput.classList.remove('border-red-500', 'focus:border-red-500', 'focus:ring-red-500/50');
+                }, { once: true });
+              } else if (field === 'password') {
+                passwordError.textContent = message;
+                passwordError.classList.remove('hidden');
+                passwordInput.classList.add('border-red-500', 'focus:border-red-500', 'focus:ring-red-500/50');
+                // Remove error style on next input
+                passwordInput.addEventListener('input', () => {
+                  passwordInput.classList.remove('border-red-500', 'focus:border-red-500', 'focus:ring-red-500/50');
+                }, { once: true });
+              }
+            }
+          </script>
         </div>
 
-        <!-- Error/Success Message -->
+        <!-- Error/Success Message (Supabase Global Errors) -->
         <div id="form-message" class="form-message" role="alert"></div>
 
         <!-- Submit Button -->
         <button type="submit"
-          class="w-full py-3 bg-white text-black font-medium rounded-lg hover:bg-zinc-200 transition-colors">
+          class="btn-primary w-full py-3.5 bg-violet-600 hover:bg-violet-700 text-white font-bold rounded-xl transition-colors shadow-[0_4px_20px_rgba(124,58,237,0.3)]">
           Crear cuenta
         </button>
 
@@ -83,7 +285,7 @@
       <!-- Social Buttons -->
       <div class="flex gap-3">
         <button type="button" onclick="signUpWithGoogle()"
-          class="flex-1 flex items-center justify-center gap-2 py-3 bg-zinc-900 border border-zinc-800 rounded-lg text-white hover:bg-zinc-800 transition-colors">
+          class="w-full flex items-center justify-center gap-2 py-3 bg-zinc-900 border border-zinc-800 rounded-lg text-white hover:bg-zinc-800 transition-colors">
           <svg class="w-5 h-5" viewBox="0 0 24 24">
             <path fill="#4285F4"
               d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -95,14 +297,6 @@
               d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
           </svg>
           Google
-        </button>
-        <button type="button" onclick="signUpWithApple()"
-          class="flex-1 flex items-center justify-center gap-2 py-3 bg-zinc-900 border border-zinc-800 rounded-lg text-white hover:bg-zinc-800 transition-colors">
-          <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-            <path
-              d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z" />
-          </svg>
-          Apple
         </button>
       </div>
 
@@ -117,8 +311,9 @@
 
   <!-- Footer -->
   <footer class="flex items-center justify-center gap-4 py-4 text-zinc-500 text-sm">
-    <a href="#" class="hover:text-zinc-300 transition-colors">Términos</a>
-    <a href="#" class="hover:text-zinc-300 transition-colors">Política de Privacidad</a>
+    <a href="/legal/terminos-de-servicio.html" class="hover:text-zinc-300 transition-colors">Términos</a>
+    <a href="/legal/politica-de-privacidad.html" class="hover:text-zinc-300 transition-colors">Política de
+      Privacidad</a>
   </footer>
 
   <!-- Scripts externos -->

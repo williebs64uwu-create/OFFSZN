@@ -1,5 +1,8 @@
 import express from 'express'
 import cors from 'cors'
+import path from 'path'
+import fs from 'fs'
+import { fileURLToPath } from 'url'
 import { PORT } from '../src/shared/config/config.js'
 import { checkConnection } from './infrastructure/database/connection.js'
 
@@ -13,49 +16,99 @@ import userRoutes from './infrastructure/http/routes/user.routes.js';
 import adminRoutes from './infrastructure/http/routes/admin.routes.js';
 import chatbotRouter from './routes/chatbot.js';
 import profileRoutes from './infrastructure/http/routes/profile.routes.js';
+import reelsRoutes from './infrastructure/http/routes/reels.routes.js';
 import { handleMercadoPagoWebhook } from './infrastructure/http/controllers/OrderController.js';
 import chatRoutes from './infrastructure/http/routes/chat.routes.js';
+import paypalRoutes from './infrastructure/http/routes/paypal.routes.js';
 
 const app = express()
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const rootPath = path.join(__dirname, '../../'); // Project Root
 
 // --- 1. CONFIGURACIÓN CORS ROBUSTA ---
 const allowedOrigins = [
     'https://offszn.onrender.com',       // Tu Frontend Producción
+    'https://offszn1.onrender.com',
     'https://offszn-academy.onrender.com', // Tu Backend
     'http://localhost:5500',             // Local
     'http://127.0.0.1:5500',             // Local IP
-    'http://127.0.0.1:5501'              // Local Live Server alt
+    'http://127.0.0.1:5501',              // Local Live Server alt
+    'http://127.0.0.1:5502',
+    'http://127.0.0.1:5503',
+    'http://127.0.0.1:5504',
+    'http://localhost:3000'              // Backend Self-Serving
 ];
 
 const corsOptions = {
     origin: function (origin, callback) {
-        console.log("📡 CORS Request from:", origin);
-
+        // Permitir requests sin origen (como mobile apps o curl) y self-origin
         if (!origin) return callback(null, true);
-
         if (allowedOrigins.indexOf(origin) !== -1) {
             callback(null, true);
         } else {
-            console.error("⛔ Bloqueado por CORS:", origin);
-            callback(new Error(`Origen ${origin} no permitido por CORS`));
+            console.log("⚠️ CORS Warning (dev):", origin);
+            // En desarrollo, a veces conviene ser permisivo si usas localhost:3000
+            callback(null, true);
         }
     },
-    credentials: true, 
+    credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
-    optionsSuccessStatus: 200 
+    optionsSuccessStatus: 200
 };
 
-// Aplicar CORS a todo (Esto ya maneja los OPTIONS automáticamente)
+// Aplicar CORS a todo
 app.use(cors(corsOptions));
 
-// ❌ LÍNEA ELIMINADA PORQUE CAUSABA EL ERROR EN NODE 22:
-// app.options('*', cors(corsOptions)); 
+// DEBUG LOGGER
+app.use((req, res, next) => {
+    console.log(`📡 Request: ${req.method} ${req.originalUrl}`);
+    next();
+});
 
 // --- 2. PARSEO DE JSON ---
-app.use(express.json())
+import cookieParser from 'cookie-parser'
+import jwt from 'jsonwebtoken'
+import { JWT_SECRET } from '../src/shared/config/config.js'
 
-// --- 3. RUTAS ---
+// ... imports ...
+
+// --- 2. PARSEO DE JSON & COOKIES ---
+app.use(express.json())
+app.use(cookieParser())
+
+// --- 2.5 SECURITY MIDDLEWARE (DISABLED PER USER REQUEST) ---
+/*
+app.use((req, res, next) => {
+    // Only protect dashboard routes
+    if (!req.path.startsWith('/cuenta')) return next();
+
+    // 1. Get Token from Cookie
+    const token = req.cookies['sb-access-token'];
+
+    if (!token) {
+        console.log(`⛔ Security Block: No Token for ${req.path}`);
+        return res.redirect('/index.html?error=unauthorized');
+    }
+
+    // 2. Verify Token (Server-Side)
+    try {
+        // Supabase signs with JWT_SECRET. We verify it here.
+        jwt.verify(token, JWT_SECRET);
+        // If valid, proceed
+        next();
+    } catch (err) {
+        console.error(`⛔ Security Block: Invalid Token for ${req.path}`, err.message);
+        // Clear the bad cookie
+        res.clearCookie('sb-access-token');
+        return res.redirect('/index.html?error=invalid_token');
+    }
+});
+*/
+
+// --- 4. RUTAS API ---
+app.use('/api/reels', reelsRoutes); // Isolated and High Priority
 app.post('/api/orders/mercadopago-webhook', handleMercadoPagoWebhook);
 
 app.use('/api/auth', authRoutes);
@@ -68,11 +121,111 @@ app.use('/api/admin', adminRoutes);
 app.use('/api', chatbotRouter);
 app.use('/api', profileRoutes);
 app.use('/api', chatRoutes);
+app.use('/api', chatRoutes);
+app.use('/api', paypalRoutes);
+
+// --- 3. CLEAN URLS & STATIC FILES (MIDDLEWARE) ---
+
+// A. Security Block (Prevent access to backend source & secrets)
+app.use((req, res, next) => {
+    const sensitiveStart = ['/server', '/.env', '/.git', '/render.yaml', '/node_modules', '/backend'];
+    if (sensitiveStart.some(s => req.path.startsWith(s))) {
+        return res.status(403).send('Forbidden');
+    }
+    next();
+});
+
+// B. Clean URLs (Strip .html)
+app.use((req, res, next) => {
+    // Skip API routes
+    if (req.path.startsWith('/api')) return next();
+
+    // Si la request termina en / (root), deja que express.static sirva index.html
+    if (req.path.endsWith('/')) return next();
+
+    // Si tiene extensión, servir normal
+    if (path.extname(req.path)) return next();
+
+    // Intenta encontrar el archivo .html
+    const possibleHtml = path.join(rootPath, req.path + '.html');
+
+    if (fs.existsSync(possibleHtml)) {
+        req.url += '.html'; // Reescribe la URL internamente
+    }
+    next();
+});
+
+// C. Serve Static Files from Root
+app.use(express.static(rootPath));
+
+// --- 3.4 PRODUCT SHORTCUT ROUTES (SEO Friendly) ---
+// Serve producto.html for /beat/slug, /kit/slug, etc.
+app.get([
+    '/beat/:slug',
+    '/kit/:slug',
+    '/drumkit/:slug',
+    '/loopkit/:slug',
+    '/preset/:slug',
+    '/plantilla/:slug',
+    '/sample/:slug',
+    '/instrumento/:slug',
+    '/plugin/:slug',
+    '/voces/:slug'
+], (req, res, next) => {
+    const { slug } = req.params;
+    // Serve Producto
+    const productPage = path.join(rootPath, 'producto.html');
+    if (fs.existsSync(productPage)) {
+        res.sendFile(productPage);
+    } else {
+        next();
+    }
+});
+
+// --- 3.5 PROFILE SHORTCUT ROUTE (/:username) ---
+// Supports both /@username and /username
+app.get(['/@:username', '/:username'], (req, res, next) => {
+    const { username } = req.params;
+
+    // 1. Reserved Words / Known Routes Exclusion
+    const reserved = [
+        'api', 'auth', 'dashboard', 'login', 'register', 'admin',
+        'css', 'script', 'images', 'favicon.ico', '404', 'robots.txt'
+    ];
+    if (reserved.includes(username)) return next();
+
+    // 2. Ignore file extensions (e.g. style.css)
+    if (username.includes('.')) return next();
+
+    // 3. Ignore if mapped to a real folder/file that static middleware missed
+    const localPath = path.join(rootPath, username);
+    if (fs.existsSync(localPath)) return next();
+
+    // Serve Profile
+    const profilePage = path.join(rootPath, 'perfil-publico.html');
+    if (fs.existsSync(profilePage)) {
+        res.sendFile(profilePage);
+    } else {
+        next();
+    }
+});
+
+// --- 5. 404 HANDLER (MUST BE LAST) ---
+app.use((req, res, next) => {
+    // Si llegamos aquí, no se encontró ninguna ruta anterior ni archivo estático
+    // Servimos 404.html si no es una petición API
+    if (req.path.startsWith('/api')) {
+        return res.status(404).json({ error: 'Endpoint Not Found' });
+    }
+
+    // Servir 404.html con status 404 real
+    res.status(404).sendFile(path.join(rootPath, '404.html'));
+});
 
 // Chequeo de BD
 checkConnection()
 
 app.listen(PORT, () => {
-  console.log(`🚀 Servidor corriendo en el puerto ${PORT}`)
-  console.log(`🛡️ Origenes permitidos:`, allowedOrigins)
+    console.log(`🚀 Servidor corriendo en el puerto ${PORT}`)
+    console.log(`🌐 Accede a tu web en: http://localhost:${PORT}`)
 })

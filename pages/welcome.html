@@ -1,271 +1,1120 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Personaliza tu perfil – offszn</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:'Inter',sans-serif}
-body{background:#000;height:100vh;display:flex;flex-direction:column;color:#fff;overflow:hidden}
-header{display:flex;align-items:center;justify-content:space-between;padding:1rem 1.5rem;flex-shrink:0}
-.logo{font-size:1.5rem;font-weight:700;color:#fff}
-.skip-btn{padding:.375rem 1rem;font-size:.875rem;color:#fff;border:1px solid #3f3f46;border-radius:.375rem;background:transparent;cursor:pointer;transition:all .2s;text-decoration:none;display:inline-block}
-.skip-btn:hover{background:#18181b}
-main{flex:1;display:flex;align-items:center;justify-content:center;padding:0 1.5rem 2rem;overflow:hidden;min-height:0}
-.container{width:100%;max-width:700px;display:flex;flex-direction:column;max-height:calc(100vh - 120px)}
-.progress-bar{margin-bottom:2rem;flex-shrink:0}
-.progress-steps{display:flex;justify-content:space-between;align-items:center;position:relative;padding:0 1rem}
-.progress-line{position:absolute;top:50%;left:1rem;right:1rem;height:1px;background:#27272a;transform:translateY(-50%);z-index:0}
-.progress-fill{height:100%;background:#fff;transition:width .4s ease}
-.step{display:flex;flex-direction:column;align-items:center;gap:.5rem;position:relative;z-index:1}
-.step-num{width:32px;height:32px;border-radius:50%;background:#18181b;border:2px solid #27272a;display:flex;align-items:center;justify-content:center;font-size:.875rem;font-weight:600;color:#52525b;transition:all .3s ease;cursor:default;pointer-events:none}
-.step.active .step-num{background:#fff;border-color:#fff;color:#000}
-.step.completed .step-num{background:#fff;border-color:#fff;color:#000}
-.step-label{font-size:.6875rem;color:#52525b;font-weight:500;text-transform:uppercase;letter-spacing:.05em;transition:color .3s;position:absolute;top:40px;white-space:nowrap}
-.step.active .step-label{color:#fff}
-.step.completed .step-label{color:#71717a}
-.content-area{flex:1;overflow-y:auto;min-height:0;padding-right:.5rem}
-.content-area::-webkit-scrollbar{width:6px}
-.content-area::-webkit-scrollbar-track{background:#18181b;border-radius:3px}
-.content-area::-webkit-scrollbar-thumb{background:#3f3f46;border-radius:3px}
-.content-area::-webkit-scrollbar-thumb:hover{background:#52525b}
-.step-view{display:none}
-.step-view.active{display:block;animation:fadeIn .3s ease}
-@keyframes fadeIn{from{opacity:0}to{opacity:1}}
-.step-header{margin-bottom:1.5rem;text-align:center}
-.step-title{font-size:1.625rem;font-weight:700;margin-bottom:.5rem;letter-spacing:-.025em}
-.step-desc{color:#71717a;font-size:.875rem;line-height:1.5}
-.section{margin-bottom:1.5rem}
-.section-title{font-size:.875rem;font-weight:600;color:#e4e4e7;margin-bottom:.875rem;display:flex;align-items:center;gap:.5rem}
-.hint{color:#71717a;font-size:.75rem;font-weight:400;margin-left:.25rem}
-.optional{font-size:.6875rem;color:#71717a;font-weight:500;background:#18181b;padding:.125rem .5rem;border-radius:.25rem;margin-left:auto}
-.form-group{margin-bottom:1rem}
-.form-group label{display:block;font-size:.875rem;font-weight:500;color:#e4e4e7;margin-bottom:.5rem}
-.form-group input,.form-group select{width:100%;padding:.75rem 1rem;background:#18181b;border:1px solid #27272a;border-radius:.5rem;color:#fff;font-size:.9375rem;transition:all .2s}
-.form-group input:focus,.form-group select:focus{outline:none;border-color:#52525b;background:#1f1f23}
-.form-group input::placeholder{color:#52525b}
-.form-group select{appearance:none;background-image:url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%2371717a%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E');background-repeat:no-repeat;background-position:right 1rem center;background-size:.65em auto;padding-right:2.5rem;cursor:pointer}
-.nickname-status{font-size:.75rem;margin-top:.375rem;min-height:1rem}
-.nickname-status.checking{color:#f59e0b}
-.nickname-status.available{color:#22c55e}
-.nickname-status.taken{color:#ef4444}
-.chips{display:flex;flex-wrap:wrap;gap:.5rem}
-.chip{padding:.5rem 1rem;background:#18181b;border:1px solid #27272a;border-radius:.5rem;font-size:.8125rem;font-weight:500;color:#a1a1aa;cursor:pointer;transition:all .2s ease;white-space:nowrap}
-.chip:hover{background:#27272a;border-color:#3f3f46;color:#e4e4e7}
-.chip.selected{background:#fff;border-color:#fff;color:#000}
-.chip:active{transform:scale(.98)}
-.error-hint{display:none;color:#ef4444;font-size:.75rem;margin-top:.5rem;font-weight:500}
-.error-hint.show{display:block;animation:shake .4s ease}
-@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
-.actions{display:flex;gap:.75rem;margin-top:2rem;padding-top:1.5rem;border-top:1px solid #27272a;flex-shrink:0}
-.btn{flex:1;padding:.75rem 1.5rem;border-radius:.5rem;font-size:.9375rem;font-weight:600;cursor:pointer;transition:all .2s ease;border:none;font-family:inherit}
-.btn-back{background:#18181b;color:#a1a1aa;border:1px solid #27272a}
-.btn-back:hover{background:#27272a;color:#e4e4e7}
-.btn-next{background:#fff;color:#000}
-.btn-next:hover{background:#e4e4e7}
-.btn:disabled{opacity:.5;cursor:not-allowed}
-.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);backdrop-filter:blur(8px);z-index:100;align-items:center;justify-content:center;padding:1.5rem}
-.modal.show{display:flex}
-.modal-content{background:#18181b;border:1px solid #27272a;border-radius:1rem;padding:3rem 2rem;max-width:400px;width:100%;text-align:center;animation:scaleIn .3s ease}
-@keyframes scaleIn{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
-.modal-icon{width:56px;height:56px;margin:0 auto 1.25rem;background:#22c55e;border-radius:50%;display:flex;align-items:center;justify-content:center}
-.modal-icon svg{width:28px;height:28px;color:#fff;stroke-width:3}
-.modal-title{font-size:1.375rem;font-weight:700;margin-bottom:.625rem}
-.modal-desc{color:#a1a1aa;margin-bottom:1.75rem;line-height:1.6;font-size:.875rem}
-.modal-btn{width:100%;padding:.875rem;background:#fff;color:#000;border:none;border-radius:.5rem;font-weight:600;cursor:pointer;transition:background .2s;font-size:.9375rem}
-.modal-btn:hover{background:#e4e4e7}
-@media(max-width:640px){
-body{height:100dvh}
-.container{max-height:calc(100dvh - 100px)}
-.step-title{font-size:1.375rem}
-.step-desc{font-size:.8125rem}
-.step-num{width:28px;height:28px;font-size:.75rem}
-.step-label{font-size:.625rem;top:36px}
-.actions{flex-direction:column-reverse;gap:.625rem}
-.chip{font-size:.75rem;padding:.4375rem .875rem}
-.section{margin-bottom:1.25rem}
-}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Personaliza tu perfil – offszn</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    window.SUPABASE_URL = "https://qtjpvztpgfymjhhpoouq.supabase.co";
+    window.SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0anB2enRwZ2Z5bWpoaHBvb3VxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3ODA5MTUsImV4cCI6MjA3NjM1NjkxNX0.YsItTFk3hSQaVuy707-z7Z-j34mXa03O0wWGAlAzjrw";
+    window.supabaseClient = null;
+  </script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Inter', sans-serif
+    }
+
+    /* ANIMATED BACKGROUND REMOVED - REVERTING TO BLACK */
+    body {
+      background: #000;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      color: #fff;
+      overflow: hidden
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 1.5rem;
+      flex-shrink: 0
+    }
+
+    .logo {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #fff
+    }
+
+    .skip-btn {
+      padding: .375rem 1rem;
+      font-size: .875rem;
+      color: #fff;
+      border: 1px solid #3f3f46;
+      border-radius: .375rem;
+      background: transparent;
+      cursor: pointer;
+      transition: all .2s;
+      text-decoration: none;
+      display: inline-block
+    }
+
+    .skip-btn:hover {
+      background: #18181b
+    }
+
+    main {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 1.5rem 2rem;
+      overflow: hidden;
+      min-height: 0
+    }
+
+    /* GLASS CONTAINER */
+    .container {
+      width: 100%;
+      max-width: 700px;
+      display: flex;
+      flex-direction: column;
+      max-height: calc(100vh - 80px);
+      /* Ajustado para dar aire */
+      position: relative;
+      z-index: 10;
+      /* Opcional: efecto tarjeta sutil si se desea, por ahora limpio */
+    }
+
+    .progress-bar {
+      margin-bottom: 2rem;
+      flex-shrink: 0
+    }
+
+    .progress-steps {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: relative;
+      padding: 0 1rem
+    }
+
+    .progress-line {
+      position: absolute;
+      top: 50%;
+      left: 1rem;
+      right: 1rem;
+      height: 1px;
+      background: #27272a;
+      transform: translateY(-50%);
+      z-index: 0
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: #fff;
+      transition: width .4s ease
+    }
+
+    .step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: .5rem;
+      position: relative;
+      z-index: 1
+    }
+
+    .step-num {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: #18181b;
+      border: 2px solid #27272a;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: .875rem;
+      font-weight: 600;
+      color: #52525b;
+      transition: all .3s ease;
+      cursor: default;
+      pointer-events: none
+    }
+
+    .step.active .step-num {
+      background: #fff;
+      border-color: #fff;
+      color: #000
+    }
+
+    .step.completed .step-num {
+      background: #fff;
+      border-color: #fff;
+      color: #000
+    }
+
+    .step-label {
+      font-size: .6875rem;
+      color: #52525b;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      transition: color .3s;
+      position: absolute;
+      top: 40px;
+      white-space: nowrap
+    }
+
+    .step.active .step-label {
+      color: #fff
+    }
+
+    .step.completed .step-label {
+      color: #71717a
+    }
+
+    .content-area {
+      flex: 1;
+      overflow-y: auto;
+      min-height: 0;
+      padding-right: .5rem
+    }
+
+    .content-area::-webkit-scrollbar {
+      width: 6px
+    }
+
+    .content-area::-webkit-scrollbar-track {
+      background: #18181b;
+      border-radius: 3px
+    }
+
+    .content-area::-webkit-scrollbar-thumb {
+      background: #3f3f46;
+      border-radius: 3px
+    }
+
+    .content-area::-webkit-scrollbar-thumb:hover {
+      background: #52525b
+    }
+
+    .step-view {
+      display: none
+    }
+
+    .step-view.active {
+      display: block;
+      animation: fadeIn .3s ease
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0
+      }
+
+      to {
+        opacity: 1
+      }
+    }
+
+    .step-header {
+      margin-bottom: 1.5rem;
+      text-align: center
+    }
+
+    .step-title {
+      font-size: 1.625rem;
+      font-weight: 700;
+      margin-bottom: .5rem;
+      letter-spacing: -.025em
+    }
+
+    .step-desc {
+      color: #71717a;
+      font-size: .875rem;
+      line-height: 1.5
+    }
+
+    .section {
+      margin-bottom: 1.5rem
+    }
+
+    .section-title {
+      font-size: .875rem;
+      font-weight: 600;
+      color: #e4e4e7;
+      margin-bottom: .875rem;
+      display: flex;
+      align-items: center;
+      gap: .5rem
+    }
+
+    .hint {
+      color: #71717a;
+      font-size: .75rem;
+      font-weight: 400;
+      margin-left: .25rem
+    }
+
+    .optional {
+      font-size: .6875rem;
+      color: #71717a;
+      font-weight: 500;
+      background: #18181b;
+      padding: .125rem .5rem;
+      border-radius: .25rem;
+      margin-left: auto
+    }
+
+    .form-group {
+      margin-bottom: 1rem
+    }
+
+    .form-group label {
+      display: block;
+      font-size: .875rem;
+      font-weight: 500;
+      color: #e4e4e7;
+      margin-bottom: .5rem
+    }
+
+    .form-group input,
+    .form-group select {
+      width: 100%;
+      padding: .75rem 1rem;
+      background: #18181b;
+      border: 1px solid #27272a;
+      border-radius: .5rem;
+      color: #fff;
+      font-size: .9375rem;
+      transition: all .2s
+    }
+
+    .form-group input:focus,
+    .form-group select:focus {
+      outline: none;
+      border-color: #52525b;
+      background: #1f1f23
+    }
+
+    .form-group input::placeholder {
+      color: #52525b
+    }
+
+    .form-group select {
+      appearance: none;
+      -webkit-appearance: none;
+      background: #18181b;
+      /* Removed image */
+      border: 1px solid #27272a;
+      border-radius: .5rem;
+      color: #fff;
+      font-size: .9375rem;
+      transition: border-color .2s, background-color .2s;
+    }
+
+    /* CUSTOM SELECT */
+    .custom-select {
+      position: relative;
+      width: 100%;
+    }
+
+    .select-trigger {
+      width: 100%;
+      padding: .75rem 1rem;
+      background: #18181b;
+      border: 1px solid #27272a;
+      border-radius: .5rem;
+      color: #71717a;
+      /* Placeholder */
+      font-size: .9375rem;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: all .2s;
+    }
+
+    .select-trigger.has-value {
+      color: #fff;
+    }
+
+    .select-trigger:focus,
+    .select-trigger:active {
+      outline: none;
+      border-color: #52525b;
+    }
+
+    .custom-select.open .select-trigger {
+      border-color: #52525b;
+      background: #1f1f23;
+    }
+
+    .select-arrow {
+      color: #71717a;
+      pointer-events: none;
+      /* Crucial for click handling */
+      display: flex;
+      align-items: center;
+      transition: transform 0.3s ease;
+      transform-origin: center;
+    }
+
+    /* Rotation Logic: Only rotate when explicitly open */
+    .custom-select.open .select-arrow {
+      transform: rotate(180deg);
+      color: #fff;
+    }
+
+    .select-options {
+      position: absolute;
+      top: calc(100% + 0.5rem);
+      left: 0;
+      right: 0;
+      background: #18181b;
+      border: 1px solid #27272a;
+      border-radius: .5rem;
+      overflow: hidden;
+      z-index: 50;
+      display: none;
+      max-height: 250px;
+      overflow-y: auto;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+    }
+
+    .custom-select.open .select-options {
+      display: block;
+      animation: fadeInSelect 0.2s ease;
+    }
+
+    @keyframes fadeInSelect {
+      from {
+        opacity: 0;
+        transform: translateY(-5px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .option {
+      padding: .75rem 1rem;
+      cursor: pointer;
+      color: #e4e4e7;
+      font-size: .9375rem;
+      transition: background .2s;
+    }
+
+    .option:hover {
+      background: #27272a;
+      color: #fff;
+    }
+
+    .option.selected {
+      background: #27272a;
+      color: #fff;
+      font-weight: 500;
+    }
+
+    .nickname-status {
+      font-size: .75rem;
+      margin-top: .375rem;
+      /* Removed min-height to fix spacing gap */
+    }
+
+    /* Collapse when empty */
+    .nickname-status:empty {
+      margin-top: 0;
+      display: none;
+    }
+
+    .nickname-status.checking {
+      color: #f59e0b;
+      display: block;
+    }
+
+    .nickname-status.available {
+      color: #22c55e;
+      display: block;
+    }
+
+    .nickname-status.taken {
+      color: #ef4444;
+      display: block;
+    }
+
+    .nickname-suggestions {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .nickname-suggestions:empty {
+      margin-top: 0;
+      display: none;
+    }
+
+    .suggestion-chip {
+      background: #27272a;
+      border: 1px solid #3f3f46;
+      border-radius: 999px;
+      padding: 0.25rem 0.75rem;
+      font-size: 0.75rem;
+      color: #a1a1aa;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .suggestion-chip:hover {
+      background: #3f3f46;
+      color: #fff;
+    }
+
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .5rem
+    }
+
+    .chip {
+      padding: .5rem 1rem;
+      background: #18181b;
+      border: 1px solid #27272a;
+      border-radius: .5rem;
+      font-size: .8125rem;
+      font-weight: 500;
+      color: #a1a1aa;
+      cursor: pointer;
+      transition: all .2s ease;
+      white-space: nowrap
+    }
+
+    .chip:hover {
+      background: #27272a;
+      border-color: #3f3f46;
+      color: #e4e4e7
+    }
+
+    .chip.selected {
+      background: #fff;
+      border-color: #fff;
+      color: #000
+    }
+
+    .chip:active {
+      transform: scale(.98)
+    }
+
+    .error-hint {
+      display: none;
+      color: #ef4444;
+      font-size: .75rem;
+      margin-top: .5rem;
+      font-weight: 500
+    }
+
+    .error-hint.show {
+      display: block;
+      animation: shake .4s ease
+    }
+
+    @keyframes shake {
+
+      0%,
+      100% {
+        transform: translateX(0)
+      }
+
+      25% {
+        transform: translateX(-4px)
+      }
+
+      75% {
+        transform: translateX(4px)
+      }
+    }
+
+    /* BUTTONS LAYOUT */
+    .actions {
+      display: flex;
+      gap: 1rem;
+      margin-top: 2rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid #27272a;
+      flex-shrink: 0;
+      justify-content: space-between;
+      width: 100%;
+    }
+
+    .btn {
+      flex: 1;
+      padding: .875rem 1.5rem;
+      /* Botones más altos */
+      border-radius: .5rem;
+      font-size: .9375rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all .2s ease;
+      border: none;
+      font-family: inherit;
+    }
+
+    /* Fix: "Atrás" visibility hack */
+    .btn-back {
+      background: transparent;
+      color: #71717a;
+      border: 1px solid #27272a;
+    }
+
+    .btn-back:hover {
+      border-color: #52525b;
+      color: #fff;
+    }
+
+    /* Hide back button visually but keep layout if needed, or JS toggles display:none */
+
+    .btn-next {
+      background: #fff;
+      color: #000;
+      box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
+    }
+
+    .btn-next:hover {
+      background: #e4e4e7;
+      box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    .skip-link-container {
+      text-align: center;
+    }
+
+    .skip-btn {
+      font-size: 0.8125rem;
+      color: #52525b;
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .skip-btn:hover {
+      color: #a1a1aa;
+      text-decoration: underline;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, .85);
+      backdrop-filter: blur(8px);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem
+    }
+
+    .modal.show {
+      display: flex
+    }
+
+    .modal-content {
+      background: #18181b;
+      border: 1px solid #27272a;
+      border-radius: 1rem;
+      padding: 3rem 2rem;
+      max-width: 400px;
+      width: 100%;
+      text-align: center;
+      animation: scaleIn .3s ease
+    }
+
+    @keyframes scaleIn {
+      from {
+        opacity: 0;
+        transform: scale(.95)
+      }
+
+      to {
+        opacity: 1;
+        transform: scale(1)
+      }
+    }
+
+    .modal-icon {
+      width: 56px;
+      height: 56px;
+      margin: 0 auto 1.25rem;
+      background: #22c55e;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center
+    }
+
+    .modal-icon svg {
+      width: 28px;
+      height: 28px;
+      color: #fff;
+      stroke-width: 3
+    }
+
+    .modal-title {
+      font-size: 1.375rem;
+      font-weight: 700;
+      margin-bottom: .625rem
+    }
+
+    .modal-desc {
+      color: #a1a1aa;
+      margin-bottom: 1.75rem;
+      line-height: 1.6;
+      font-size: .875rem
+    }
+
+    .modal-btn {
+      width: 100%;
+      padding: .875rem;
+      background: #fff;
+      color: #000;
+      border: none;
+      border-radius: .5rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .2s;
+      font-size: .9375rem
+    }
+
+    .modal-btn:hover {
+      background: #e4e4e7
+    }
+
+    @media(max-width:640px) {
+      body {
+        height: 100dvh
+      }
+
+      .container {
+        max-height: calc(100dvh - 100px)
+      }
+
+      .step-title {
+        font-size: 1.375rem
+      }
+
+      .step-desc {
+        font-size: .8125rem
+      }
+
+      .step-num {
+        width: 28px;
+        height: 28px;
+        font-size: .75rem
+      }
+
+      .step-label {
+        font-size: .625rem;
+        top: 36px
+      }
+
+      .actions {
+        flex-direction: column-reverse;
+        gap: .625rem
+      }
+
+      .chip {
+        font-size: .75rem;
+        padding: .4375rem .875rem
+      }
+
+      .section {
+        margin-bottom: 1.25rem
+      }
+    }
+
+    /* AVATAR & CROP STYLES */
+    .avatar-upload-container {
+      width: 140px;
+      height: 140px;
+      margin: 0 auto 1.5rem;
+      position: relative;
+    }
+
+    .avatar-upload {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background: #111;
+      border: 2px dashed #27272a;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      overflow: hidden;
+      transition: all 0.3s ease;
+      position: relative;
+    }
+
+    .avatar-upload:hover {
+      border-color: #52525b;
+      background: #161616;
+    }
+
+    .avatar-upload.has-image {
+      border-style: solid;
+      border-color: #3f3f46;
+    }
+
+    .avatar-preview {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: none;
+    }
+
+    .avatar-upload.has-image .avatar-preview {
+      display: block;
+    }
+
+    .avatar-upload.has-image .upload-placeholder {
+      display: none;
+    }
+
+    /* MODAL OVERLAY */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.9);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      backdrop-filter: blur(5px);
+    }
+
+    .modal-overlay.active {
+      display: flex;
+      opacity: 1;
+    }
+
+    .crop-modal {
+      background: #18181b;
+      border: 1px solid #27272a;
+      border-radius: 12px;
+      width: 100%;
+      max-width: 480px;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      animation: scaleIn 0.3s ease;
+    }
+
+    .crop-container {
+      height: 350px;
+      background: #000;
+      position: relative;
+    }
+
+    .crop-footer {
+      padding: 1rem;
+      border-top: 1px solid #27272a;
+      display: flex;
+      justify-content: flex-end;
+      gap: 1rem;
+    }
+  </style>
 </head>
+
 <body>
 
-<script>
-// Guard: verificar autenticación
-const welcomeToken = localStorage.getItem('authToken');
-if (!welcomeToken) {
-  console.log("No hay token, redirigiendo al login.");
-  window.location.replace('/pages/login.html');
-}
-</script>
+  <script>
+    // 🚀 INSTANT GUARD: Hide page immediately while checking
+    document.body.style.opacity = '0';
+    document.body.style.pointerEvents = 'none';
 
-<header>
-<div class="logo">offszn</div>
-<a href="#" class="skip-btn" id="skipTop">Saltar</a>
-</header>
+    // Guard: verificar autenticación
+    const welcomeToken = localStorage.getItem('authToken');
+    if (!welcomeToken) {
+      console.log("No hay token, redirigiendo al login.");
+      window.location.replace('/pages/login.html');
+    }
 
-<main>
-<div class="container">
-<div class="progress-bar">
-<div class="progress-steps">
-<div class="progress-line"><div class="progress-fill" id="progressFill"></div></div>
-<div class="step active">
-<div class="step-num">1</div>
-<div class="step-label">Perfil</div>
-</div>
-<div class="step">
-<div class="step-num">2</div>
-<div class="step-label">Esenciales</div>
-</div>
-<div class="step">
-<div class="step-num">3</div>
-<div class="step-label">Preferencias</div>
-</div>
-<div class="step">
-<div class="step-num">4</div>
-<div class="step-label">Objetivos</div>
-</div>
-</div>
-</div>
+    // Guard: Verificar si YA completó onboarding (tiene nickname)
+    (async () => {
+      if (typeof supabase === 'undefined') return;
+      const { createClient } = supabase;
+      const supabaseGuard = createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
+      window.supabaseClient = supabaseGuard; // 🌍 Expose for auth.js and welcome.js
 
-<div class="content-area">
-<!-- PASO 1: Datos Personales y Redes -->
-<div class="step-view active" data-step="1">
-<div class="step-header">
-<h1 class="step-title">Bienvenido/a a offszn</h1>
-<p class="step-desc">Empecemos configurando tu perfil básico</p>
-</div>
+      const { data: { session } } = await supabaseGuard.auth.getSession();
 
-<div class="section">
-<div class="form-group">
-<label for="nickname">Nombre de usuario (nickname) *</label>
-<input type="text" id="nickname" placeholder="Ej: ProducerKing" autocomplete="off" required maxlength="20">
-<div class="nickname-status" id="nicknameStatus"></div>
-</div>
+      if (!session) {
+        window.location.replace('/pages/login.html');
+        return;
+      }
 
-<div class="form-group">
-<label for="firstName">Nombre *</label>
-<input type="text" id="firstName" placeholder="Ej: Alex" required maxlength="30">
-</div>
+      // Check Profile (only nickname for speed)
+      const { data: profile } = await supabaseGuard
+        .from('users')
+        .select('nickname')
+        .eq('id', session.user.id)
+        .single();
 
-<div class="form-group">
-<label for="role">Rol Principal *</label>
-<select id="role" required>
-<option value="">-- Selecciona uno --</option>
-<option value="Productor">Productor Musical</option>
-<option value="Artista">Artista / Cantante</option>
-<option value="Compositor">Compositor / Songwriter</option>
-<option value="Ingeniero">Ingeniero de Mezcla/Master</option>
-<option value="Musico">Músico / Instrumentista</option>
-<option value="Fan">Fan / Consumidor</option>
-<option value="Otro">Otro Rol Musical</option>
-</select>
-</div>
+      if (profile && profile.nickname) {
+        // ✅ Already completed - redirect immediately
+        console.log("✅ Onboarding completado, redirigiendo...");
+        window.location.replace('/');
+      } else {
+        // ✅ New user - show the page
+        document.body.style.opacity = '1';
+        document.body.style.pointerEvents = 'auto';
+      }
+    })();
+  </script>
 
-<div class="section">
-<div class="section-title">Conecta tus Redes <span class="optional">Opcional</span></div>
-<div class="form-group">
-<label for="instagram">Instagram</label>
-<input type="text" id="instagram" placeholder="Tu usuario (ej: willieinspired)">
-</div>
-<div class="form-group">
-<label for="tiktok">TikTok</label>
-<input type="text" id="tiktok" placeholder="Tu usuario (ej: @willieinspired)">
-</div>
-<div class="form-group">
-<label for="youtube">YouTube</label>
-<input type="url" id="youtube" placeholder="URL de tu canal (https://youtube.com/...)">
-</div>
-<div class="form-group">
-<label for="spotify">Spotify</label>
-<input type="url" id="spotify" placeholder="URL de tu perfil (https://open.spotify.com/...)">
-</div>
-</div>
-</div>
-<div class="error-hint" id="step1Error"></div>
-</div>
 
-<!-- PASO 2: Géneros y DAW -->
-<div class="step-view" data-step="2">
-<div class="step-header">
-<h1 class="step-title">Empecemos con lo básico</h1>
-<p class="step-desc">Selecciona las opciones que mejor te representen</p>
-</div>
 
-<div class="section">
-<div class="section-title">¿Qué géneros produces o te interesan?</div>
-<div class="chips" id="genres"></div>
-<div class="error-hint" id="genresError">Selecciona al menos un género</div>
-</div>
+  <main>
+    <div class="container">
+      <div class="progress-bar">
+        <div class="progress-steps">
+          <div class="progress-line">
+            <div class="progress-fill" id="progressFill"></div>
+          </div>
+          <div class="step active">
+            <div class="step-num">1</div>
+            <div class="step-label">Perfil</div>
+          </div>
+          <div class="step">
+            <div class="step-num">2</div>
+            <div class="step-label">Avatar</div>
+          </div>
+          <div class="step">
+            <div class="step-num">3</div>
+            <div class="step-label">Esenciales</div>
+          </div>
+          <div class="step">
+            <div class="step-num">4</div>
+            <div class="step-label">Detalles</div>
+          </div>
+          <div class="step">
+            <div class="step-num">5</div>
+            <div class="step-label">Redes</div>
+          </div>
+        </div>
+      </div>
 
-<div class="section">
-<div class="section-title">¿Cuál es tu DAW principal?</div>
-<div class="chips" id="daws"></div>
-<div class="error-hint" id="dawsError">Selecciona al menos un DAW</div>
-</div>
-</div>
+      <div class="content-area">
+        <!-- PASO 1: Datos Personales (SOLO DATOS) -->
+        <div class="step-view active" data-step="1">
+          <div class="step-header">
+            <h1 class="step-title">Bienvenido/a a offszn</h1>
+            <p class="step-desc">Empecemos configurando tu perfil básico</p>
+          </div>
 
-<!-- PASO 3: Habilidades e Intereses -->
-<div class="step-view" data-step="3">
-<div class="step-header">
-<h1 class="step-title">Tus habilidades e intereses</h1>
-<p class="step-desc">Elige las áreas que más te interesan (opcional)</p>
-</div>
+          <div class="section">
+            <div class="form-group">
+              <label for="nickname" style="display: flex; justify-content: space-between;">
+                Nombre de usuario *
+                <span id="nicknameCounter" style="color: #52525b; font-size: 0.75rem;">0/30</span>
+              </label>
+              <input type="text" id="nickname" placeholder="Ej: ProducerKing" autocomplete="off" required
+                maxlength="30">
+              <div class="nickname-status" id="nicknameStatus"></div>
+              <div class="nickname-suggestions" id="nicknameSuggestions"></div>
+            </div>
 
-<div class="section">
-<div class="section-title">¿En qué áreas tienes experiencia?<span class="optional">Opcional</span></div>
-<div class="chips" id="skills"></div>
-</div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+              <div class="form-group">
+                <label for="firstName" style="display: flex; justify-content: space-between;">
+                  Nombre *
+                  <span id="firstNameCounter" style="color: #52525b; font-size: 0.75rem;">0/25</span>
+                </label>
+                <input type="text" id="firstName" placeholder="Ej: Alex" required maxlength="25">
+              </div>
+              <div class="form-group">
+                <label for="lastName" style="display: flex; justify-content: space-between;">
+                  Apellido *
+                  <span id="lastNameCounter" style="color: #52525b; font-size: 0.75rem;">0/25</span>
+                </label>
+                <input type="text" id="lastName" placeholder="Ej: Garay" required maxlength="25">
+              </div>
+            </div>
 
-<div class="section">
-<div class="section-title">¿Qué te gustaría encontrar aquí?<span class="optional">Opcional</span></div>
-<div class="chips" id="interests"></div>
-</div>
-</div>
+            <div class="form-group">
+              <label>Rol Principal *</label>
+              <div class="chips" id="roleChips"></div>
+              <input type="hidden" id="role" value="">
+            </div>
+          </div>
+          <div class="error-hint" id="step1Error"></div>
+        </div>
 
-<!-- PASO 4: Experiencia y Objetivos -->
-<div class="step-view" data-step="4">
-<div class="step-header">
-<h1 class="step-title">Última parte</h1>
-<p class="step-desc">Ayúdanos a conocerte mejor</p>
-</div>
+        <!-- PASO 2: AVATAR -->
+        <div class="step-view" data-step="2">
+          <div class="step-header">
+            <h1 class="step-title">Tu Imagen</h1>
+            <p class="step-desc">Sube un avatar para que te reconozcan.</p>
+          </div>
+          <div class="avatar-upload-container">
+            <div class="avatar-upload" id="avatarDropZone">
+              <img id="avatarPreview" class="avatar-preview" src="" alt="Avatar Preview">
+              <div class="upload-placeholder">
+                <div style="margin-bottom:8px; color:#52525b">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                    <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                    <polyline points="21 15 16 10 5 21"></polyline>
+                  </svg>
+                </div>
+                <span style="font-size:0.75rem; color:#71717a">Subir foto</span>
+              </div>
+            </div>
+            <input type="file" id="avatarInput" accept="image/*" style="display:none">
+          </div>
+          <div style="text-align:center; margin-bottom:1rem;">
+            <span class="nickname-status" id="avatarStatus"
+              style="display:none; color:#71717a; font-size:0.75rem;">Opcional, puedes hacerlo después.</span>
+          </div>
+        </div>
 
-<div class="section">
-<div class="section-title">¿Cuál es tu nivel de experiencia?</div>
-<div class="chips" id="experience"></div>
-<div class="error-hint" id="expError">Selecciona tu nivel de experiencia</div>
-</div>
+        <!-- PASO 3: Géneros y DAW -->
+        <div class="step-view" data-step="3">
+          <div class="step-header">
+            <h1 class="step-title">Empecemos con lo básico</h1>
+            <p class="step-desc">Selecciona las opciones que mejor te representen</p>
+          </div>
 
-<div class="section">
-<div class="section-title">¿Cuál es tu objetivo principal?<span class="optional">Opcional</span></div>
-<div class="chips" id="goals"></div>
-</div>
+          <div class="section">
+            <div class="section-title">¿Qué géneros produces o te interesan?</div>
+            <div class="chips" id="genres"></div>
+            <div class="error-hint" id="genresError">Selecciona al menos un género (Máx 5)</div>
+          </div>
 
-<div class="section">
-<div class="section-title">¿Cómo nos conociste?<span class="optional">Opcional</span></div>
-<div class="chips" id="source"></div>
-</div>
-</div>
-</div>
+          <div class="section">
+            <div class="section-title">¿Cuál es tu DAW principal?</div>
+            <div class="chips" id="daws"></div>
+            <div class="error-hint" id="dawsError">Selecciona un DAW</div>
+          </div>
+        </div>
 
-<div class="actions">
-<button class="btn btn-back" id="backBtn" style="display:none">Atrás</button>
-<button class="btn btn-next" id="nextBtn" disabled>Continuar</button>
-</div>
-</div>
-</main>
+        <!-- PASO 3: Detalles (FUSIÓN De Habilidades, Intereses, Experiencia, Objetivos) -->
+        <div class="step-view" data-step="4">
+          <div class="step-header">
+            <h1 class="step-title">Cuéntanos más</h1>
+            <p class="step-desc">Ayúdanos a personalizar tu experiencia</p>
+          </div>
 
-<div class="modal" id="successModal">
-<div class="modal-content">
-<div class="modal-icon">
-<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-</div>
-<h2 class="modal-title">Todo listo</h2>
-<p class="modal-desc">Tu perfil ha sido configurado. Ahora puedes disfrutar de una experiencia personalizada en offszn.</p>
-<button class="modal-btn" id="goToDashboard">Empezar a explorar</button>
-</div>
-</div>
+          <div class="section">
+            <div class="section-title">¿Cuál es tu nivel de experiencia? *</div>
+            <div class="chips" id="experience"></div>
+            <div class="error-hint" id="expError">Selecciona tu nivel de experiencia</div>
+          </div>
 
-<script src="/script/welcome.js"></script>
+          <div class="section">
+            <div class="section-title">¿Cuál es tu objetivo principal?<span class="optional">Opcional</span></div>
+            <div class="chips" id="goals"></div>
+          </div>
+
+
+
+          <div class="section">
+            <div class="section-title">¿Qué buscas aquí?<span class="optional">Opcional</span></div>
+            <div class="chips" id="interests"></div>
+          </div>
+
+          <div class="section">
+            <div class="section-title">¿Cómo nos conociste?<span class="optional">Opcional</span></div>
+            <div class="chips" id="source"></div>
+          </div>
+        </div>
+
+        <!-- PASO 4: Redes (FINAL) -->
+        <div class="step-view" data-step="5">
+          <div class="step-header">
+            <h1 class="step-title">Conecta tus Redes</h1>
+            <p class="step-desc">Comparte donde pueden encontrarte (Opcional)</p>
+          </div>
+
+          <div class="section">
+            <div class="form-group">
+              <label for="instagram">Instagram</label>
+              <input type="text" id="instagram" placeholder="Tu usuario (ej: offszn)">
+            </div>
+            <div class="form-group">
+              <label for="tiktok">TikTok</label>
+              <input type="text" id="tiktok" placeholder="Tu usuario (ej: @offszn)">
+            </div>
+            <div class="form-group">
+              <label for="youtube">YouTube</label>
+              <input type="url" id="youtube" placeholder="URL de tu canal (https://youtube.com/@offszn)">
+            </div>
+            <div class="form-group">
+              <label for="spotify">Spotify</label>
+              <input type="url" id="spotify" placeholder="URL de tu perfil (https://open.spotify.com/artist/offszn...)">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="btn btn-back" id="backBtn" style="display:none">Atrás</button>
+        <button class="btn btn-next" id="nextBtn" disabled>Continuar</button>
+      </div>
+    </div>
+  </main>
+
+  <!-- CROP MODAL -->
+  <div class="modal-overlay" id="cropModalOverlay">
+    <div class="crop-modal">
+      <div class="modal-header"
+        style="padding:1rem; border-bottom:1px solid #2a2a2a; display:flex; justify-content:space-between; align-items:center;">
+        <span style="font-weight:600; font-size:1rem;">Ajustar Imagen</span>
+        <button id="closeCropModal"
+          style="background:none; border:none; color:#71717a; cursor:pointer;">&times;</button>
+      </div>
+      <div class="crop-container">
+        <img id="cropImage" src="" style="max-width:100%;">
+      </div>
+      <div class="crop-footer">
+        <button class="btn btn-back" id="cancelCrop" style="padding:0.5rem 1rem; font-size:0.875rem;">Cancelar</button>
+        <button class="btn btn-next" id="confirmCrop" style="padding:0.5rem 1rem; font-size:0.875rem;">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="successModal">
+    <div class="modal-content">
+      <div class="modal-icon">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+        </svg>
+      </div>
+      <h2 class="modal-title">Todo listo</h2>
+      <p class="modal-desc">Tu perfil ha sido configurado. Ahora puedes disfrutar de una experiencia personalizada en
+        offszn.</p>
+      <button class="modal-btn" id="goToDashboard">Empezar a explorar</button>
+    </div>
+  </div>
+
+  <script src="/script/auth.js"></script>
+  <script src="/script/welcome.js"></script>
 </body>
+
 </html>

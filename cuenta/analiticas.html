@@ -1,254 +1,1153 @@
 <!DOCTYPE html>
 <html lang="es">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Analíticas - OFFSZN</title>
-    <!-- Tailwind CSS for styling -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Font Awesome for icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-    <style>
-      /* Google Font 'Inter' */
-      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
-      body {
-        font-family: 'Inter', sans-serif;
-      }
-      /* Custom scrollbar for a sleek, modern look */
-      .custom-scrollbar::-webkit-scrollbar {
-        width: 6px;
-      }
-      .custom-scrollbar::-webkit-scrollbar-track {
-        background: transparent;
-      }
-      .custom-scrollbar::-webkit-scrollbar-thumb {
-        background: rgba(255, 255, 255, 0.1);
-        border-radius: 3px;
-      }
-      .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-        background: rgba(255, 255, 255, 0.2);
-      }
-    </style>
-  <!-- Import Map to load React from a CDN -->
-  <script type="importmap">
-  {
-    "imports": {
-      "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
-      "react": "https://esm.sh/react@18.2.0"
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OFFSZN | Analíticas</title>
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="icon" type="image/png" href="../images/LOGO-OFFSZN.png">
+  <!-- Google Fonts: Plus Jakarta Sans (Numbers) & Inter (UI) -->
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap"
+    rel="stylesheet">
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../script/auth-guard.js"></script>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    :root {
+      --bg-dark: #000000;
+      --card-bg: #0F0F0F;
+      --text-main: #FFFFFF;
+      --text-secondary: #888888;
+      --accent-purple: #8B5CF6;
+      --accent-glow: rgba(139, 92, 246, 0.5);
+      --border-color: #1A1A1A;
+      --success: #10B981;
+
+      --font-ui: 'Inter', sans-serif;
+      --font-display: 'Plus Jakarta Sans', sans-serif;
     }
-  }
-  </script>
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      font-family: var(--font-ui);
+      min-height: 100vh;
+      overflow-x: hidden;
+      display: flex;
+    }
+
+    html {
+      overflow-y: scroll;
+      /* 🔥 PREVENTS LAYOUT SHIFT */
+    }
+
+    /* ===== SIDEBAR STUB ===== */
+    .sidebar-stub {
+      width: 80px;
+      /* Mini */
+      background: #000;
+      border-right: 1px solid var(--border-color);
+      height: 100vh;
+      position: fixed;
+      left: 0;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-top: 20px;
+      gap: 10px;
+    }
+
+    /* RADIAL GLOW BACKGROUND */
+    .radial-glow {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: radial-gradient(circle at 50% 50%, rgba(139, 92, 246, 0.04), transparent 70%);
+      /* Reduced opacity */
+      z-index: -1;
+      pointer-events: none;
+    }
+
+    .sidebar-icon-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #666;
+      font-size: 20px;
+      transition: 0.2s;
+      text-decoration: none;
+    }
+
+    .sidebar-icon-btn:hover {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .sidebar-icon-btn.active {
+      color: #fff;
+      background: var(--accent-purple);
+      box-shadow: 0 0 10px var(--accent-glow);
+    }
+
+    /* ===== SIDEBAR TOOLTIPS ===== */
+    .sidebar-icon-btn {
+      position: relative;
+    }
+
+    .sidebar-icon-btn[data-title]:hover::after {
+      content: attr(data-title);
+      position: fixed;
+      left: 75px;
+      background: #111;
+      border: 1px solid #333;
+      color: #fff;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      white-space: nowrap;
+      z-index: 1000;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+      pointer-events: none;
+      opacity: 0;
+      animation: fadeInTooltip 0.2s forwards;
+      font-weight: 500;
+    }
+
+    @keyframes fadeInTooltip {
+      from {
+        opacity: 0;
+        transform: translateX(-10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    /* ===== MAIN CONTENT ===== */
+    .main-content-elite {
+      flex: 1;
+      margin-left: 80px;
+      padding: 40px;
+      width: calc(100% - 80px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .main-content-elite>* {
+      width: 100%;
+      max-width: 1400px;
+    }
+
+    /* ===== ELITE HEADER ===== */
+    .elite-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 32px;
+      width: 100%;
+    }
+
+    .elite-header h1 {
+      font-family: var(--font-display);
+      font-size: 28px;
+      font-weight: 700;
+      color: #fff;
+      margin: 0;
+    }
+
+    /* Time Filters */
+    .time-filters {
+      display: flex;
+      background: #111;
+      padding: 4px;
+      border-radius: 10px;
+      border: 1px solid #222;
+    }
+
+    .filter-btn {
+      background: transparent;
+      border: none;
+      color: #666;
+      padding: 6px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .filter-btn:hover {
+      color: #fff;
+    }
+
+    .filter-btn.active {
+      background: var(--accent-purple);
+      color: #fff;
+      box-shadow: 0 2px 10px rgba(139, 92, 246, 0.3);
+    }
+
+    /* ===== ANALYTICS GRID ===== */
+    .analytics-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 24px;
+      width: 100%;
+    }
+
+    /* Conversion Card (Bento Style) */
+    .conversion-card {
+      grid-column: 1 / -1;
+      /* Full width or adjusting depending on design */
+      background: linear-gradient(135deg, rgba(139, 92, 246, 0.05), rgba(0, 0, 0, 0));
+      /* Reduced opacity */
+      border: 1px solid var(--border-color);
+      /* Removed accent border for cleaner look */
+      box-shadow: none;
+      /* Removed glow shadow */
+      margin-bottom: 24px;
+    }
+
+    /* Common Card Style */
+    .elite-card {
+      background: rgba(15, 15, 15, 0.6);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .card-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #eee;
+    }
+
+    /* Chart Container */
+    .chart-container {
+      flex: 1;
+      position: relative;
+      min-height: 350px;
+    }
+
+    /* Top Products List */
+    .top-products-list {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    .top-products-list::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    .top-products-list::-webkit-scrollbar-thumb {
+      background: #333;
+      border-radius: 4px;
+    }
+
+    .product-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 12px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid transparent;
+      transition: 0.2s;
+    }
+
+    .product-row:hover {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: #333;
+    }
+
+    .rank-badge {
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+      color: #666;
+      background: #111;
+      border-radius: 6px;
+      flex-shrink: 0;
+    }
+
+    .rank-1 {
+      color: #FFD700;
+      background: rgba(255, 215, 0, 0.1);
+    }
+
+    .rank-2 {
+      color: #C0C0C0;
+      background: rgba(192, 192, 192, 0.1);
+    }
+
+    .rank-3 {
+      color: #CD7F32;
+      background: rgba(205, 127, 50, 0.1);
+    }
+
+    .product-thumb {
+      width: 48px;
+      height: 48px;
+      border-radius: 8px;
+      object-fit: cover;
+      background: #222;
+      flex-shrink: 0;
+    }
+
+    .product-info {
+      flex: 1;
+      min-width: 0;
+      /* Text truncation fix */
+    }
+
+    .product-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: #fff;
+      margin-bottom: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .product-sales {
+      font-size: 12px;
+      color: #888;
+    }
+
+    .product-revenue {
+      font-family: var(--font-display);
+      font-weight: 700;
+      color: var(--success);
+      font-size: 14px;
+    }
+
+    /* Conversion Highlight */
+    .conversion-value {
+      font-family: var(--font-display);
+      font-size: 42px;
+      font-weight: 800;
+      color: #fff;
+      background: linear-gradient(90deg, #fff, #8B5CF6);
+      background-clip: text;
+      /* Standard property */
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .conversion-detail {
+      color: #888;
+      font-size: 14px;
+      margin-top: 8px;
+    }
+
+    /* SKELETONS */
+    .skeleton {
+      background: #1a1a1a;
+      position: relative;
+      overflow: hidden;
+      border-radius: 8px;
+    }
+
+    .skeleton::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.05), transparent);
+      animation: loading 1.5s infinite;
+    }
+
+    @keyframes loading {
+      0% {
+        transform: translateX(-100%);
+      }
+
+      100% {
+        transform: translateX(100%);
+      }
+    }
+
+    .skeleton-chart {
+      width: 100%;
+      height: 100%;
+      border-radius: 12px;
+    }
+
+    .skeleton-row {
+      height: 74px;
+      width: 100%;
+      border-radius: 12px;
+    }
+
+    .skeleton-text {
+      height: 20px;
+      width: 100px;
+      background: #222;
+      border-radius: 4px;
+    }
+
+    /* ===== PRICING MODAL (Standardized) ===== */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(5px);
+      z-index: 1000;
+      display: none;
+      justify-content: center;
+      align-items: center;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+      opacity: 1;
+    }
+
+    .elite-modal {
+      background: #0f0f0f;
+      border: 1px solid #333;
+      border-radius: 16px;
+      width: 90%;
+      max-width: 450px;
+      padding: 24px;
+      transform: scale(0.95);
+      transition: transform 0.3s ease;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+    }
+
+    .modal-overlay.active .elite-modal {
+      transform: scale(1);
+    }
+
+    /* Modal Header */
+    .modal-header-custom {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 20px;
+    }
+
+    .modal-header-custom h3 {
+      margin: 0;
+      font-size: 18px;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .btn-modal-close {
+      background: transparent;
+      border: none;
+      color: #666;
+      font-size: 20px;
+      cursor: pointer;
+    }
+
+    /* Plan Cards */
+    .plans-container {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .plan-card {
+      background: #111;
+      border: 1px solid #333;
+      border-radius: 12px;
+      padding: 16px;
+      cursor: pointer;
+      transition: 0.2s;
+      position: relative;
+    }
+
+    .plan-card:hover {
+      border-color: var(--accent-purple);
+      background: #161616;
+    }
+
+    .plan-card.selected {
+      border-color: var(--accent-purple);
+      background: rgba(139, 92, 246, 0.1);
+    }
+
+    .plan-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .plan-name {
+      font-size: 16px;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .plan-name small {
+      display: block;
+      font-size: 12px;
+      font-weight: 400;
+      color: #888;
+      margin-top: 2px;
+    }
+
+    .plan-price {
+      font-size: 18px;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .plan-price span {
+      font-size: 12px;
+      color: #888;
+      font-weight: 400;
+    }
+
+    .plan-features {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .feature-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: #ccc;
+    }
+
+    .feature-item i {
+      color: var(--accent-purple);
+      font-size: 14px;
+    }
+
+    /* Footer Buttons */
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      margin-top: 24px;
+    }
+
+    .btn-cancel {
+      background: transparent;
+      border: 1px solid #333;
+      color: #888;
+      padding: 8px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .btn-confirm {
+      background: #FFD700;
+      color: #000;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .btn-confirm:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(255, 215, 0, 0.2);
+    }
+  </style>
 </head>
-  <body class="bg-[#0a0a0a] text-[#e5e5e5]">
-    <!-- The root element where the React app will be mounted -->
-    <div id="root"></div>
 
-    <!-- The entire React application logic is contained within this script tag -->
-    <script type="module">
-      import React, { useState, useEffect, useMemo } from 'react';
-      import ReactDOM from 'react-dom/client';
+<body>
+  <div class="radial-glow"></div>
 
-      //================================================================
-      // SERVICES / MOCK API
-      //================================================================
-      const mockUser = {
-        id: 'user-123',
-        firstName: 'David',
-        lastName: 'Reyes',
-        nickname: 'davidreyes',
-        email: 'david.reyes@offszn.com',
-        walletBalance: 125.50,
-      };
+  <!-- Sidebar Stub -->
+  <div class="sidebar-stub" style="justify-content:flex-start; gap:15px;">
+    <a href="/index.html" class="sidebar-logo-btn"
+      style="margin-bottom:10px; display:flex; align-items:center; justify-content:center; width:44px; height:44px;">
+      <img src="../images/LOGO-OFFSZN.png" style="width:38px; mix-blend-mode: screen;"></a>
 
-      const fetchUserData = () => {
-        console.log('API Call: Fetching user data...');
-        return new Promise(resolve => setTimeout(() => {
-          console.log('API Response: User data received.');
-          resolve(mockUser);
-        }, 1500));
-      };
+    <div style="width:40px; border-bottom:1px solid #222; margin:5px 0;"></div>
+    <a href="/cuenta/dashboard.html" class="sidebar-icon-btn" data-title="Dashboard"><i class="bi bi-grid-fill"></i></a>
+    <a href="/cuenta/mis-kits.html" class="sidebar-icon-btn" data-title="Mis Beats/Kits"><i
+        class="bi bi-disc-fill"></i></a>
+    <a href="/cuenta/subir-kit.html" class="sidebar-icon-btn" data-title="Subir"><i
+        class="bi bi-cloud-arrow-up-fill"></i></a>
 
-      //================================================================
-      // SKELETON COMPONENTS
-      //================================================================
-      const UserInfoSkeleton = ({ type }) => {
-        const navbarSkeleton = React.createElement('div', { className: "flex items-center gap-3 animate-pulse" },
-          React.createElement('div', { className: "h-10 w-10 rounded-full bg-white/10" }),
-          React.createElement('div', { className: "flex-1 space-y-2" },
-            React.createElement('div', { className: "h-3 w-20 rounded bg-white/10" }),
-            React.createElement('div', { className: "h-2 w-28 rounded bg-white/10" })
-          )
-        );
-        const sidebarSkeleton = React.createElement('div', { className: "flex items-center gap-3 animate-pulse" },
-          React.createElement('div', { className: "h-11 w-11 rounded-full bg-white/10" }),
-          React.createElement('div', { className: "flex-1" },
-            React.createElement('div', { className: "h-4 w-32 rounded bg-white/10" })
-          )
-        );
-        return type === 'navbar' ? navbarSkeleton : sidebarSkeleton;
-      };
-      
-      //================================================================
-      // UI COMPONENTS
-      //================================================================
-      const menuSections = [
-        { title: 'Principal', items: [{ icon: 'fa-th-large', label: 'Dashboard', href: '/dashboard' }, { icon: 'fa-music', label: 'Mis Kits', href: '/mis-kits'}, { icon: 'fa-chart-line', label: 'Analíticas', href: '/analiticas', active: true }, { icon: 'fa-heart', label: 'Favoritos', href: '/favoritos' }, { icon: 'fa-history', label: 'Historial', href: '/historial', soon: true }] },
-        { title: 'Colaboración', items: [{ icon: 'fa-users', label: 'Colaboraciones', href: '/colaboraciones' }] },
-        { title: 'Compras', items: [{ icon: 'fa-shopping-bag', label: 'Mis Compras', href: '/mis-compras' }, { icon: 'fa-gift', label: 'Gift Cards', href: '/gift-cards' }, { icon: 'fa-envelope', label: 'Mensajes', href: '/mensajes' }] },
-        { title: 'Configuración', items: [{ icon: 'fa-cog', label: 'Configuración', href: '/configuracion' }, { icon: 'fa-book-open', label: 'Blog', href: '/blog', soon: true }] }
-      ];
+    <div style="width:40px; border-bottom:1px solid #222; margin:5px 0;"></div>
+    <a href="/cuenta/admin-licencias.html" class="sidebar-icon-btn" data-title="Licencias"><i
+        class="bi bi-file-earmark-music-fill"></i></a>
+    <a href="/cuenta/cupones.html" class="sidebar-icon-btn" data-title="Cupones"><i
+        class="bi bi-ticket-perforated-fill"></i></a>
+    <a href="/cuenta/colaboraciones.html" class="sidebar-icon-btn" data-title="Colaboraciones"><i
+        class="bi bi-people-fill"></i></a>
 
-      const Sidebar = ({ user, loading }) => {
-        const userInitial = user ? (user.firstName || user.nickname || 'U').charAt(0).toUpperCase() : '';
-        return React.createElement('aside', { className: "hidden md:flex flex-col sticky top-[65px] h-[calc(100vh-65px)] bg-[rgba(15,15,15,0.6)] border-r border-white/10" },
-          React.createElement('div', null,
-            React.createElement('div', { className: "p-5 border-b border-white/10" },
-              loading ? React.createElement(UserInfoSkeleton, { type: "sidebar" }) : React.createElement('div', { className: "flex items-center gap-3" },
-                React.createElement('div', { className: "flex h-11 w-11 items-center justify-center rounded-full bg-violet-600 font-bold text-white text-lg" }, userInitial),
-                React.createElement('div', null, React.createElement('p', { className: "font-semibold text-white" }, `${user?.firstName} ${user?.lastName}`))
-              )
-            ),
-            React.createElement('div', { className: "p-5 border-b border-white/10 bg-violet-600/5" },
-              React.createElement('div', { className: "text-xs font-semibold uppercase text-gray-400 mb-1.5" }, "Saldo Disponible"),
-              loading ? React.createElement('div', { className: "h-8 w-32 animate-pulse rounded-md bg-white/10" }) : React.createElement('div', { className: "text-3xl font-bold text-white" }, `$${user?.walletBalance.toFixed(2)}`)
-            )
-          ),
-          React.createElement('nav', { className: "flex-grow p-3 overflow-y-auto custom-scrollbar" },
-            menuSections.map((section, index) => React.createElement('div', { key: section.title },
-              index > 0 && React.createElement('div', { className: "my-3 h-px bg-white/10" }),
-              React.createElement('h3', { className: "px-2 pt-4 pb-2 text-xs font-bold uppercase text-gray-500 tracking-wider" }, section.title),
-              React.createElement('ul', null, section.items.map(item => React.createElement('li', { key: item.label },
-                React.createElement('a', { href: item.href, className: `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${item.active ? 'bg-violet-600/10 text-white' : 'text-gray-400 hover:bg-white/5 hover:text-white'} ${item.soon ? 'opacity-50 cursor-not-allowed' : ''}` },
-                  React.createElement('i', { className: `fas ${item.icon} w-5 text-center text-base` }),
-                  React.createElement('span', null, item.label),
-                  item.soon && React.createElement('span', { className: "ml-auto text-xs font-semibold bg-white/10 text-gray-400 px-2 py-0.5 rounded-full" }, "Pronto")
-                )
-              )))
-            ))
-          ),
-          React.createElement('div', { className: "p-4 border-t border-white/10" },
-            React.createElement('a', { href: "/logout", className: "flex items-center justify-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold text-red-400 border border-red-500/20 bg-red-500/5 transition-colors hover:bg-red-500/10 hover:border-red-500/40" },
-              React.createElement('i', { className: "fas fa-sign-out-alt w-5 text-center" }),
-              React.createElement('span', null, "Cerrar Sesión")
-            )
-          )
-        );
-      };
+    <div style="width:40px; border-bottom:1px solid #222; margin:5px 0;"></div>
+    <a href="/cuenta/cursos.html" class="sidebar-icon-btn" data-title="Cursos"><i
+        class="bi bi-mortarboard-fill"></i></a>
+    <a href="/cuenta/analiticas.html" class="sidebar-icon-btn active" data-title="Estadísticas"><i
+        class="bi bi-bar-chart-fill"></i></a>
 
-      const Navbar = ({ user, loading }) => {
-        const [userDropdownOpen, setUserDropdownOpen] = useState(false);
-        const userInitial = user ? (user.firstName || user.nickname || 'U').charAt(0).toUpperCase() : '';
-        const dropdownMenu = React.createElement('div', { className: "absolute right-0 mt-3 w-64 rounded-xl border border-white/10 bg-[rgba(20,20,20,0.98)] p-3 shadow-2xl backdrop-blur-xl" },
-          React.createElement('div', { className: "mb-2 flex items-center gap-3 border-b border-white/10 p-3" },
-            loading ? React.createElement(UserInfoSkeleton, { type: "navbar" }) : React.createElement(React.Fragment, null,
-              React.createElement('div', { className: "flex h-10 w-10 items-center justify-center rounded-full bg-violet-600 font-bold text-white" }, userInitial),
-              React.createElement('div', null,
-                React.createElement('p', { className: "text-sm font-semibold text-white" }, user?.nickname),
-                React.createElement('p', { className: "text-xs text-gray-500" }, user?.email)
-              )
-            )
-          ),
-          React.createElement('a', { href: "/perfil", className: "flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-gray-400 transition-colors hover:bg-white/5 hover:text-white" }, React.createElement('i', { className: "fas fa-user-circle w-5 text-center" }), " Mi Perfil"),
-          React.createElement('a', { href: "/dashboard", className: "flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-gray-400 transition-colors hover:bg-white/5 hover:text-white" }, React.createElement('i', { className: "fas fa-th-large w-5 text-center" }), " Dashboard"),
-          React.createElement('a', { href: "/configuracion", className: "flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-gray-400 transition-colors hover:bg-white/5 hover:text-white" }, React.createElement('i', { className: "fas fa-cog w-5 text-center" }), " Configuración"),
-          React.createElement('div', { className: "my-2 h-px bg-white/10" }),
-          React.createElement('a', { href: "/logout", className: "flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-red-500 transition-colors hover:bg-red-500/10" }, React.createElement('i', { className: "fas fa-sign-out-alt w-5 text-center" }), " Cerrar Sesión")
-        );
-        return React.createElement('nav', { className: "sticky top-0 z-50 flex items-center justify-between bg-[rgba(0,0,0,0.98)] px-6 py-3 md:px-12 backdrop-blur-xl border-b border-white/10" },
-          React.createElement('div', { className: "logo" }, React.createElement('a', { href: "/dashboard", className: "text-2xl font-extrabold tracking-tight text-white" }, "OFFSZN")),
-          React.createElement('div', { className: "hidden lg:flex items-center gap-10" },
-            React.createElement('div', { className: "relative w-96" },
-              React.createElement('input', { type: "text", placeholder: "Buscar beats, kits, productores...", className: "w-full rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm text-white outline-none transition-all placeholder:text-gray-500 focus:border-violet-500/50 focus:bg-white/[0.08]" }),
-              React.createElement('i', { className: "fas fa-search absolute right-4 top-1/2 -translate-y-1/2 text-gray-500" })
-            )
-          ),
-          React.createElement('div', { className: "flex items-center gap-3" },
-            React.createElement('a', { href: "/notificaciones", className: "flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-gray-400 transition-colors hover:bg-white/[0.08] hover:text-white" }, React.createElement('i', { className: "fas fa-bell" })),
-            React.createElement('a', { href: "/carrito", className: "flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-gray-400 transition-colors hover:bg-white/[0.08] hover:text-white" }, React.createElement('i', { className: "fas fa-shopping-cart" })),
-            React.createElement('div', { className: "relative" },
-              React.createElement('button', { onClick: () => setUserDropdownOpen(!userDropdownOpen), className: "flex h-9 w-9 items-center justify-center rounded-full bg-violet-600 text-white font-bold transition-transform hover:scale-105" }, loading ? React.createElement('i', { className: "fa-solid fa-spinner fa-spin" }) : userInitial),
-              userDropdownOpen && dropdownMenu
-            )
-          )
-        );
-      };
+    <div style="width:40px; border-bottom:1px solid #222; margin:5px 0;"></div>
+    <a href="/cuenta/reels.html" class="sidebar-icon-btn" data-title="Reels"><i class="bi bi-camera-reels-fill"></i></a>
 
-      const AnalyticsPage = () => {
-        const [email, setEmail] = useState('');
-        const [submitted, setSubmitted] = useState(false);
-        const handleSubmit = (e) => {
-          e.preventDefault();
-          if (email) {
-            console.log(`Email submitted for notification: ${email}`);
-            setSubmitted(true);
+    <div>
+      <a href="/cuenta/planes.html" class="sidebar-icon-btn" data-title="Mejorar Plan" style="color:#FFD700;">
+        <i class="bi bi-rocket-takeoff-fill"></i>
+      </a>
+    </div>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <main class="main-content-elite">
+
+    <!-- Header -->
+    <div class="elite-header">
+      <div>
+        <h1>Analíticas Avanzadas</h1>
+        <p style="color:#888; font-size:14px; margin-top:4px;">Monitoriza el rendimiento y conversiones en tiempo real
+        </p>
+      </div>
+
+      <div class="time-filters">
+        <button class="filter-btn" onclick="setFilter('7d')" id="btn-7d">Últimos 7 Días</button>
+        <button class="filter-btn active" onclick="setFilter('30d')" id="btn-30d">30 Días</button>
+        <button class="filter-btn" onclick="setFilter('all')" id="btn-all">Todo el tiempo</button>
+      </div>
+    </div>
+
+    <!-- Conversion Rate Card (Bento Feature) -->
+    <div class="elite-card conversion-card" id="conversionCard">
+      <h3 class="card-title" style="color:#8B5CF6; margin-bottom:12px;">Tasa de Conversión</h3>
+      <div id="conversionContent">
+        <div class="skeleton skeleton-text" style="width:80px; height:40px;"></div>
+        <div class="skeleton skeleton-text" style="width:200px; height:20px; margin-top:10px;"></div>
+      </div>
+    </div>
+
+    <!-- Analytics Grid -->
+    <div class="analytics-grid">
+
+      <!-- Dual Chart Section -->
+      <div class="elite-card">
+        <div class="card-header">
+          <span class="card-title">Tráfico vs. Ventas</span>
+          <div style="display:flex; gap:16px;">
+            <div style="display:flex; align-items:center; gap:6px; font-size:12px; color:#888;">
+              <span style="width:8px; height:8px; border-radius:50%; background:#8B5CF6;"></span> Visitas
+            </div>
+            <div style="display:flex; align-items:center; gap:6px; font-size:12px; color:#888;">
+              <span style="width:8px; height:8px; border-radius:50%; background:#10B981;"></span> Ventas ($)
+            </div>
+          </div>
+        </div>
+
+        <div class="chart-container" id="chartWrapper">
+          <div class="skeleton-chart" id="chartSkeleton" style="position:relative; overflow:hidden;">
+            <!-- Mock Chart Axis/Grid -->
+            <svg width="100%" height="100%" style="opacity:0.3;">
+              <line x1="0" y1="90%" x2="100%" y2="90%" stroke="#333" stroke-width="1" />
+              <line x1="0" y1="65%" x2="100%" y2="65%" stroke="#222" stroke-width="1" stroke-dasharray="4" />
+              <line x1="0" y1="40%" x2="100%" y2="40%" stroke="#222" stroke-width="1" stroke-dasharray="4" />
+              <line x1="0" y1="15%" x2="100%" y2="15%" stroke="#222" stroke-width="1" stroke-dasharray="4" />
+
+              <!-- Mock Path Pulse -->
+              <path d="M0,250 Q100,200 200,230 T400,180 T600,200 T800,150" fill="none" stroke="#444" stroke-width="3" />
+            </svg>
+            <!-- Overlay Shimmer -->
+            <div class="skeleton" style="position:absolute; top:0; left:0; width:100%; height:100%; opacity:0.1;"></div>
+          </div>
+          <canvas id="revenueChart" style="display:none;"></canvas>
+        </div>
+      </div>
+
+      <div class="elite-card">
+        <div class="card-header">
+          <span class="card-title">Top Productos</span>
+          <i class="bi bi-trophy-fill" style="color:var(--text-secondary);"></i> <!-- Neutral color -->
+        </div>
+
+        <div class="top-products-list" id="topProductsList">
+          <div class="skeleton skeleton-row"></div>
+          <div class="skeleton skeleton-row"></div>
+          <div class="skeleton skeleton-row"></div>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- PRICING MODAL -->
+
+
+  <script>
+    // --- AUTH & INIT ---
+    document.addEventListener('DOMContentLoaded', async () => {
+      // Wait a tick for stored auth to init
+      setTimeout(() => {
+        loadAnalyticsData('30d');
+      }, 500);
+    });
+
+    // --- CHART GLOBAL ---
+    let revenueChartInstance = null;
+
+    // --- FILTERS ---
+    function setFilter(period) {
+      document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+      document.getElementById(`btn-${period}`).classList.add('active');
+      loadAnalyticsData(period);
+    }
+
+    // --- DATA FETCHING (SUPABASE) ---
+    async function loadAnalyticsData(period) {
+      // 1. Loading UI
+      showSkeletons();
+
+      // 2. Auth Helper
+      let userId = null;
+      if (window.currentUser) {
+        userId = window.currentUser.id;
+      } else if (window.supabaseClient) {
+        const { data: { user } } = await window.supabaseClient.auth.getUser();
+        if (user) userId = user.id;
+      }
+
+      if (!userId) {
+        console.error("No authenticated user found for analytics.");
+        // Potentially could redirect or show error UI
+        return;
+      }
+
+      // 3. Determine Date Range
+      let startDate = null; // null means "all time"
+      const end = new Date();
+
+      if (period === '7d') {
+        startDate = new Date();
+        startDate.setDate(end.getDate() - 7);
+      } else if (period === '30d') {
+        startDate = new Date();
+        startDate.setDate(end.getDate() - 30);
+      }
+      // else 'all', remain null
+
+      try {
+        // --- A) PAGE VIEWS ---
+        let viewsQuery = window.supabaseClient
+          .from('page_views')
+          .select('viewed_at')
+          .eq('user_id', userId);
+
+        if (startDate) {
+          viewsQuery = viewsQuery.gte('viewed_at', startDate.toISOString());
+        }
+        const { data: rawViews, error: viewsError } = await viewsQuery;
+        if (viewsError) throw viewsError;
+
+        // --- B) ORDERS (Revenue) ---
+        let ordersQuery = window.supabaseClient
+          .from('orders')
+          .select('id, amount, created_at')
+          .eq('producer_id', userId);
+
+        if (startDate) {
+          ordersQuery = ordersQuery.gte('created_at', startDate.toISOString());
+        }
+        const { data: rawOrders, error: ordersError } = await ordersQuery;
+        if (ordersError) throw ordersError;
+
+        // --- C) TOP PRODUCTS ---
+        //    We need to relate orders to products. 'order_items' connects them. 
+        //    To calculate popular products in *this specific period*, filtering logic is needed.
+        //    Option 1: Fetch all order_items for these specific order IDs.
+
+        let topProductsData = [];
+        if (rawOrders && rawOrders.length > 0) {
+          const orderIds = rawOrders.map(o => o.id);
+
+          const { data: rawOrderItems, error: itemsError } = await window.supabaseClient
+            .from('order_items')
+            .select('product_id, price')
+            .in('order_id', orderIds);
+
+          if (!itemsError && rawOrderItems) {
+            // Aggregate by product_id
+            const productStats = {}; // { prodId: { count, revenue } }
+
+            rawOrderItems.forEach(item => {
+              if (!productStats[item.product_id]) productStats[item.product_id] = { count: 0, revenue: 0 };
+              productStats[item.product_id].count++;
+              productStats[item.product_id].revenue += (item.price || 0);
+            });
+
+            // Get top 5 IDs
+            const sortedIds = Object.keys(productStats)
+              .sort((a, b) => productStats[b].revenue - productStats[a].revenue) // Sort by revenue or count? User said "Mas vendidos" (sold), user also said "ganancias". Revenue is usually better key metric for sorting top.
+              .slice(0, 5);
+
+            // Fetch Product Details (Name, Image)
+            if (sortedIds.length > 0) {
+              const { data: productDetails } = await window.supabaseClient
+                .from('products')
+                .select('id, name, cover_url, image_url') // Fetch both possible columns
+                .in('id', sortedIds);
+
+              // Merge details
+              topProductsData = sortedIds.map(id => {
+                const details = productDetails?.find(p => p.id == id); // Loose equality
+                const stats = productStats[id];
+                return {
+                  name: details?.name || 'Producto Eliminado',
+                  sales: stats.count,
+                  revenue: stats.revenue,
+                  img: details?.cover_url || details?.image_url // Fallback handled in render
+                };
+              });
+            }
           }
+        }
+
+        // --- D) PROCESS DATA FOR CHART ---
+        const chartData = processChartData(rawViews || [], rawOrders || [], startDate, period);
+        const totalViews = rawViews ? rawViews.length : 0;
+        const totalOrders = rawOrders ? rawOrders.length : 0; // Or sum of counts?
+
+        // --- 4. RENDER UI ---
+        hideSkeletons();
+        renderConversion(totalViews, totalOrders);
+        renderChart(chartData.labels, chartData.views, chartData.sales);
+        renderTopProducts(topProductsData);
+
+      } catch (err) {
+        console.error("Analytics Error:", err);
+        // Fallback / Empty State could be shown here
+        hideSkeletons(); // Ensure UI unblocks
+      }
+    }
+
+    // --- HELPER: Process Date Buckets ---
+    function processChartData(viewsList, ordersList, startDate, period) {
+      // If startDate is null (all time), we need to find the earliest date in data to start array
+      // OR simpler: just group unique existing dates. ChartJS handles sparse data well if formatted, 
+      // but for a smooth Line/Area chart, '0' values for missing days are better.
+
+      // 1. Define Date Map
+      const dataMap = {};
+      const dateLabels = [];
+
+      // Generate Labels / Keys
+      let current = startDate ? new Date(startDate) : new Date(); // If all time, start logic is tricky. 
+      // For "All Time" simplification: 
+      // we will rely on data-driven dates or just last 90 days if 'all time' is huge.
+
+      if (!startDate) {
+        // Find min date
+        const vMin = viewsList.length > 0 ? new Date(viewsList[0].viewed_at) : new Date();
+        const oMin = ordersList.length > 0 ? new Date(ordersList[ordersList.length - 1].created_at) : new Date(); // orders sorted desc? dashboard was.
+        // Assuming unsorted data from simple select, let's just pick reasonable.
+        // If "All Time" is selected, let's just show actual data points present, 
+        // aggregating by day.
+
+        // Strategy: Iterate all data, populate map, then sort keys.
+
+        // Views
+        viewsList.forEach(v => {
+          const k = v.viewed_at.split('T')[0];
+          if (!dataMap[k]) dataMap[k] = { v: 0, s: 0 };
+          dataMap[k].v++;
+        });
+
+        // Orders
+        ordersList.forEach(o => {
+          const k = o.created_at.split('T')[0];
+          if (!dataMap[k]) dataMap[k] = { v: 0, s: 0 };
+          dataMap[k].s += (o.amount || 0);
+        });
+
+        // Sort keys
+        const sortedKeys = Object.keys(dataMap).sort();
+
+        // FALLBACK: If "All Time" has absolutely no data, show last 30 days of 0s
+        if (sortedKeys.length === 0) {
+          const fallbackDate = new Date();
+          fallbackDate.setDate(fallbackDate.getDate() - 30);
+          return processChartData([], [], fallbackDate, '30d');
+        }
+
+        return {
+          labels: sortedKeys, // Format nicely in render
+          views: sortedKeys.map(k => dataMap[k].v),
+          sales: sortedKeys.map(k => dataMap[k].s)
         };
-        const featureList = React.createElement('div', { className: "grid grid-cols-1 md:grid-cols-2 gap-6 text-left mb-10" },
-            React.createElement('div', { className: "flex items-start gap-3" }, React.createElement('i', { className: "fas fa-chart-bar text-violet-400 mt-1" }), React.createElement('div', null, React.createElement('h3', { className: "font-bold text-white" }, "Seguimiento de Ventas"), React.createElement('p', { className: "text-sm text-gray-500" }, "Visualiza tus ingresos y ventas en tiempo real."))),
-            React.createElement('div', { className: "flex items-start gap-3" }, React.createElement('i', { className: "fas fa-fire text-violet-400 mt-1" }), React.createElement('div', null, React.createElement('h3', { className: "font-bold text-white" }, "Kits Más Populares"), React.createElement('p', { className: "text-sm text-gray-500" }, "Descubre cuáles de tus productos son los más vendidos."))),
-            React.createElement('div', { className: "flex items-start gap-3" }, React.createElement('i', { className: "fas fa-globe-americas text-violet-400 mt-1" }), React.createElement('div', null, React.createElement('h3', { className: "font-bold text-white" }, "Datos Demográficos"), React.createElement('p', { className: "text-sm text-gray-500" }, "Conoce de dónde vienen tus compradores."))),
-            React.createElement('div', { className: "flex items-start gap-3" }, React.createElement('i', { className: "fas fa-users text-violet-400 mt-1" }), React.createElement('div', null, React.createElement('h3', { className: "font-bold text-white" }, "Perfil de Audiencia"), React.createElement('p', { className: "text-sm text-gray-500" }, "Entiende quiénes son tus fans más leales.")))
-        );
-        const emailForm = submitted ? 
-            React.createElement('div', { className: "bg-green-500/10 border border-green-500/30 text-green-300 font-semibold p-4 rounded-lg flex items-center justify-center gap-3" }, React.createElement('i', { className: "fas fa-check-circle" }), React.createElement('span', null, "¡Gracias! Te hemos añadido a la lista.")) :
-            React.createElement('form', { onSubmit: handleSubmit, className: "flex flex-col sm:flex-row gap-3" },
-                React.createElement('input', { type: "email", value: email, onChange: (e) => setEmail(e.target.value), placeholder: "tu-correo@ejemplo.com", required: true, className: "flex-grow w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-sm text-white outline-none transition-all placeholder:text-gray-500 focus:ring-2 focus:ring-violet-500" }),
-                React.createElement('button', { type: "submit", className: "bg-violet-600 text-white font-bold px-6 py-3 rounded-lg hover:bg-violet-700 transition-colors" }, "Notificarme")
-            );
 
-        return React.createElement('div', { className: "flex flex-col items-center justify-center w-full p-4" },
-            React.createElement('div', { className: "bg-white/5 border border-white/10 rounded-2xl p-8 md:p-12 max-w-3xl w-full text-center" },
-                React.createElement('div', { className: "mb-6" }, React.createElement('i', { className: "fas fa-rocket text-6xl text-violet-500" })),
-                React.createElement('h1', { className: "text-4xl md:text-5xl font-extrabold text-white tracking-tight mb-4" }, "Analíticas Avanzadas"),
-                React.createElement('p', { className: "text-lg text-gray-400 max-w-xl mx-auto mb-8" }, "Estamos construyendo una poderosa herramienta de analíticas para que puedas entender el rendimiento de tus kits, optimizar tus ventas y conectar con tu audiencia como nunca antes."),
-                featureList,
-                React.createElement('div', { className: "bg-black/20 p-6 rounded-xl border border-white/10" },
-                    React.createElement('h3', { className: "text-xl font-bold text-white mb-2" }, "¡Sé el primero en saberlo!"),
-                    React.createElement('p', { className: "text-gray-400 mb-6" }, "Déjanos tu correo y te notificaremos en cuanto lancemos esta función."),
-                    emailForm
-                ),
-                React.createElement('div', { className: "mt-10" },
-                    React.createElement('p', { className: "text-gray-400 mb-4" }, "Mientras esperas, únete a la conversación en nuestra comunidad:"),
-                    React.createElement('a', { href: "https://discord.gg/vX7XktMeBU", target: "_blank", rel: "noopener noreferrer", className: "inline-flex items-center gap-3 bg-[#5865F2] text-white font-bold px-8 py-3 rounded-lg hover:bg-[#4f5bda] transition-all transform hover:scale-105" },
-                        React.createElement('i', { className: "fab fa-discord text-xl" }),
-                        React.createElement('span', null, "Únete al Discord")
-                    )
-                )
-            )
-        );
-      };
-      
-      //================================================================
-      // APP ROOT & RENDERER
-      //================================================================
-      const App = () => {
-        const [user, setUser] = useState(null);
-        const [loading, setLoading] = useState(true);
+      } else {
+        // Fixed Range (7d, 30d) - Fill zeros for missing days
+        const now = new Date();
+        // Reset current to startDate (without time)
+        current = new Date(startDate);
+        current.setHours(0, 0, 0, 0);
 
-        useEffect(() => {
-          const loadUser = async () => {
-            setLoading(true);
-            const userData = await fetchUserData();
-            setUser(userData);
-            setLoading(false);
-          };
-          loadUser();
-        }, []);
+        while (current <= now) {
+          const k = current.toISOString().split('T')[0];
+          dateLabels.push(k);
+          dataMap[k] = { v: 0, s: 0 };
+          current.setDate(current.getDate() + 1);
+        }
 
-        return React.createElement('div', { className: "min-h-screen bg-[#0a0a0a]" },
-          React.createElement(Navbar, { user, loading }),
-          React.createElement('div', { className: "grid md:grid-cols-[260px_1fr]" },
-            React.createElement(Sidebar, { user, loading }),
-            React.createElement('main', { className: "main-content px-6 py-9 md:px-12 flex items-center justify-center" },
-              React.createElement(AnalyticsPage)
-            )
-          )
-        );
-      };
+        viewsList.forEach(v => {
+          const k = v.viewed_at.split('T')[0];
+          if (dataMap[k]) dataMap[k].v++;
+        });
 
-      const root = ReactDOM.createRoot(document.getElementById('root'));
-      root.render(React.createElement(React.StrictMode, null, React.createElement(App)));
+        ordersList.forEach(o => {
+          const k = o.created_at.split('T')[0];
+          if (dataMap[k]) dataMap[k].s += (o.amount || 0);
+        });
 
-    </script>
-  </body>
+        return {
+          labels: dateLabels,
+          views: dateLabels.map(k => dataMap[k].v),
+          sales: dateLabels.map(k => dataMap[k].s)
+        };
+      }
+    }
+
+
+    // --- UI ---
+    function showSkeletons() {
+      document.getElementById('chartSkeleton').style.display = 'block';
+      document.getElementById('revenueChart').style.display = 'none';
+      document.getElementById('conversionContent').innerHTML = `
+                <div class="skeleton skeleton-text" style="width:80px; height:40px;"></div>
+                <div class="skeleton skeleton-text" style="width:200px; height:20px; margin-top:10px;"></div>
+            `;
+      document.getElementById('topProductsList').innerHTML = `
+            <div class="product-row" style="pointer-events:none;">
+                <div class="skeleton" style="width:24px; height:24px; border-radius:6px; background:#1a1a1a; flex-shrink:0;"></div>
+                <div class="skeleton" style="width:48px; height:48px; border-radius:8px; background:#1a1a1a; flex-shrink:0;"></div>
+                <div style="flex:1; min-width:0;">
+                    <div class="skeleton" style="width:60%; height:14px; margin-bottom:6px; border-radius:4px; background:#1a1a1a;"></div>
+                    <div class="skeleton" style="width:40%; height:12px; border-radius:4px; background:#1a1a1a;"></div>
+                </div>
+                <div class="skeleton" style="width:60px; height:18px; border-radius:4px; background:#1a1a1a;"></div>
+            </div>
+            `.repeat(3);
+    }
+
+    function hideSkeletons() {
+      document.getElementById('chartSkeleton').style.display = 'none';
+      document.getElementById('revenueChart').style.display = 'block';
+    }
+
+    function renderConversion(views, orders) {
+      const rate = views > 0 ? ((orders / views) * 100).toFixed(1) : 0;
+      const html = `
+                <div style="display:flex; align-items:flex-end; gap:12px;">
+                    <div class="conversion-value">${rate}%</div>
+                    <div style="display:flex; flex-direction:column; margin-bottom:8px;">
+                        <span style="font-size:16px; font-weight:700; color:#fff;">${orders.toLocaleString()} ordenes</span>
+                        <span style="font-size:12px; color:#888;">de ${views.toLocaleString()} visitas únicas</span>
+                    </div>
+                </div>
+            `;
+      document.getElementById('conversionContent').innerHTML = html;
+    }
+
+    function renderChart(labels, viewsData, salesData) {
+      const ctx = document.getElementById('revenueChart').getContext('2d');
+      if (revenueChartInstance) revenueChartInstance.destroy();
+
+      // Nice formatting for labels
+      const formattedLabels = labels.map(l => {
+        const parts = l.split('-'); // YYYY-MM-DD
+        return `${parts[2]}/${parts[1]}`; // DD/MM
+      });
+
+      // Gradients
+      const gradientPurple = ctx.createLinearGradient(0, 0, 0, 400);
+      gradientPurple.addColorStop(0, 'rgba(139, 92, 246, 0.5)');
+      gradientPurple.addColorStop(1, 'rgba(139, 92, 246, 0.0)');
+
+      const gradientGreen = ctx.createLinearGradient(0, 0, 0, 400);
+      gradientGreen.addColorStop(0, 'rgba(16, 185, 129, 0.5)');
+      gradientGreen.addColorStop(1, 'rgba(16, 185, 129, 0.0)');
+
+      revenueChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: formattedLabels,
+          datasets: [
+            {
+              label: 'Visitas',
+              data: viewsData,
+              borderColor: '#8B5CF6',
+              backgroundColor: gradientPurple,
+              borderWidth: 2,
+              tension: 0.4,
+              fill: true,
+              pointRadius: viewsData.some(v => v > 0) ? 3 : 0, // Only show points if there is data
+              pointHoverRadius: 6,
+              yAxisID: 'y'
+            },
+            {
+              label: 'Ventas ($)',
+              data: salesData,
+              borderColor: '#10B981',
+              backgroundColor: gradientGreen,
+              borderWidth: 2,
+              tension: 0.4,
+              fill: true,
+              pointRadius: salesData.some(s => s > 0) ? 3 : 0,
+              pointHoverRadius: 6,
+              yAxisID: 'y1'
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: { mode: 'index', intersect: false },
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: '#111',
+              titleColor: '#fff',
+              bodyColor: '#ccc',
+              borderColor: '#333',
+              borderWidth: 1,
+              padding: 12,
+              displayColors: true,
+              callbacks: {
+                label: function (context) {
+                  let label = context.dataset.label || '';
+                  if (label) {
+                    label += ': ';
+                  }
+                  if (context.parsed.y !== null) {
+                    if (context.datasetIndex === 1) { // Sales
+                      label += new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(context.parsed.y);
+                    } else {
+                      label += context.parsed.y;
+                    }
+                  }
+                  return label;
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              grid: { display: false, drawBorder: false },
+              ticks: { color: '#666', font: { size: 10 } }
+            },
+            y: {
+              type: 'linear',
+              display: true,
+              position: 'left',
+              min: 0, // FORCE 0 BASE
+              suggestedMax: 10, // Avoid 0-1 single tick
+              grid: { color: '#222', drawBorder: false },
+              ticks: {
+                color: '#666',
+                precision: 0, // No decimals for views
+                maxTicksLimit: 6
+              }
+            },
+            y1: {
+              type: 'linear',
+              display: true,
+              position: 'right',
+              min: 0, // FORCE 0 BASE
+              suggestedMax: 100, // Reasonable default for money
+              grid: { display: false },
+              ticks: {
+                color: '#10B981',
+                callback: (val) => '$' + val,
+                maxTicksLimit: 6
+              }
+            }
+          }
+        }
+      });
+    }
+
+    function renderTopProducts(products) {
+      if (!products || products.length === 0) {
+        document.getElementById('topProductsList').innerHTML = `<p style="text-align:center; color:#666; padding:20px;">Sin datos de ventas en este periodo.</p>`;
+        return;
+      }
+
+      const html = products.map((prod, index) => `
+                <div class="product-row">
+                    <div class="rank-badge rank-${index + 1}">${index + 1}</div>
+                    <img src="${prod.img || '../images/PORTADA%20DEFAULT.png'}" class="product-thumb" alt="Cover" onerror="this.src='../images/PORTADA%20DEFAULT.png'">
+                    <div class="product-info">
+                        <div class="product-name" title="${prod.name}">${prod.name}</div>
+                        <div class="product-sales">${prod.sales} ventas</div>
+                    </div>
+                    <div class="product-revenue">$${prod.revenue.toLocaleString()}</div>
+                </div>
+            `).join('');
+      document.getElementById('topProductsList').innerHTML = html;
+    }
+
+
+
+  </script>
+</body>
+
 </html>

@@ -1,0 +1,2473 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OFFSZN | Reels</title>
+    <!-- Fonts & Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" type="image/png" href="../images/LOGO-OFFSZN.png">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../script/auth-guard.js"></script>
+
+    <style>
+        :root {
+            --bg-dark: #000000;
+            --accent-purple: #8B5CF6;
+            --font-ui: 'Inter', sans-serif;
+            --font-display: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            outline: none;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: #fff;
+            font-family: var(--font-ui);
+            display: flex;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* ===== SIDEBAR STUB ===== */
+        .sidebar-stub {
+            width: 80px;
+            /* Mini */
+            background: #000;
+            border-right: 1px solid #1A1A1A;
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 20px;
+            gap: 10px;
+        }
+
+        .sidebar-icon-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+            font-size: 20px;
+            transition: 0.2s;
+            text-decoration: none;
+            position: relative;
+        }
+
+        .sidebar-icon-btn:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .sidebar-icon-btn.active {
+            color: #fff;
+            background: var(--accent-purple);
+            box-shadow: 0 0 10px rgba(139, 92, 246, 0.5);
+        }
+
+        /* ===== SIDEBAR TOOLTIPS ===== */
+        .sidebar-icon-btn[data-title]:hover::after {
+            content: attr(data-title);
+            position: fixed;
+            left: 75px;
+            background: #111;
+            border: 1px solid #333;
+            color: #fff;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            white-space: nowrap;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+            pointer-events: none;
+            opacity: 0;
+            animation: fadeInTooltip 0.2s forwards;
+            font-weight: 500;
+        }
+
+        @keyframes fadeInTooltip {
+            from {
+                opacity: 0;
+                transform: translateX(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        /* --- MAIN --- */
+        .main-content-elite {
+            margin-left: 80px;
+            flex: 1;
+            padding: 40px;
+            width: calc(100% - 80px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .elite-header {
+            width: 100%;
+            max-width: 1400px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+        }
+
+        .elite-header h1 {
+            font-family: var(--font-display);
+            font-size: 32px;
+            font-weight: 700;
+        }
+
+        /* REEL VOLUME CONTROL */
+        .volume-control-container {
+            position: absolute;
+            bottom: 60px;
+            right: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            z-index: 20;
+            opacity: 0;
+            transition: 0.3s ease;
+            pointer-events: none;
+            /* Prevent clicks when hidden */
+        }
+
+        .reel-video-container:hover .volume-control-container {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        /* SLIDER WRAPPER - Hidden by default, reveals on hover of container */
+        .volume-slider-wrapper {
+            width: 30px;
+            height: 100px;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(5px);
+            border-radius: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 10px 0;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+
+            /* Animación Sutil */
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            visibility: hidden;
+            /* Evita interacción invisible */
+        }
+
+        /* SHOW SLIDER ON HOVER */
+        .volume-control-container:hover .volume-slider-wrapper {
+            opacity: 1;
+            transform: translateY(0);
+            visibility: visible;
+        }
+
+        .volume-slider {
+            -webkit-appearance: none;
+            appearance: none;
+            /* Standard property */
+            width: 80px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 2px;
+            outline: none;
+            transform: rotate(-90deg);
+            cursor: pointer;
+        }
+
+        .volume-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 12px;
+            height: 12px;
+            background: #fff;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+
+        .mute-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 16px;
+            transition: 0.2s;
+        }
+
+        .mute-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.1);
+        }
+
+        /* Initial Loading Stub */
+        .reels-grid-skeleton {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 24px;
+            width: 100%;
+            max-width: 1400px;
+        }
+
+        /* --- GRID --- */
+        .reels-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 24px;
+            width: 100%;
+            max-width: 1400px;
+        }
+
+        .reel-card {
+            background: #111;
+            border-radius: 20px;
+            overflow: hidden;
+            position: relative;
+            aspect-ratio: 9/16;
+            border: 1px solid #222;
+            transition: 0.2s ease-out;
+            /* Removed excessive glow/shadow per request */
+        }
+
+        .reel-card:hover {
+            border-color: #333;
+            /* Subtle border */
+            transform: translateY(-2px);
+            z-index: 10;
+        }
+
+        /* Video Container */
+        .reel-video-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            background: #000;
+            cursor: pointer;
+        }
+
+        .reel-video {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            /* Changed to contain for 16:9 support with black bars */
+            background: #000;
+            display: block;
+        }
+
+        .watermark {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            width: 24px;
+            opacity: 0.7;
+            pointer-events: none;
+            mix-blend-mode: screen;
+            z-index: 5;
+        }
+
+        /* PLAY OVERLAY */
+        .play-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 60px;
+            height: 60px;
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: 0.2s;
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Show play play button on hover if paused */
+        .reel-card:hover .reel-video-container:not(.playing) .play-overlay {
+            opacity: 1;
+        }
+
+        /* Floating Controls */
+        .mute-toggle {
+            position: absolute;
+            bottom: 40px;
+            /* moved up slightly to not overlap seek */
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            opacity: 0;
+            transition: 0.2s;
+            z-index: 10;
+        }
+
+        .reel-card:hover .mute-toggle {
+            opacity: 1;
+        }
+
+        .mute-toggle:hover {
+            background: #fff;
+            color: #000;
+        }
+
+        /* GRID CONTROLS OVERHAUL */
+
+
+        /* Allow volume popout overflow? No, card is overflow hidden usually. */
+        .reel-card {
+            overflow: hidden;
+            /* Keep hidden for border radius */
+        }
+
+        /* Custom Volume Control in Grid - Styles moved to 'REEL CARD LAYOUT REFINEMENT' section */
+
+
+        .grid-vol-slider-box {
+            width: 32px;
+            height: 90px;
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            margin-bottom: 5px;
+            animation: fadeIn 0.1s ease-out;
+        }
+
+        .grid-vol-wrapper:hover .grid-vol-slider-box {
+            display: flex;
+        }
+
+        .grid-vol-range {
+            writing-mode: bt-lr;
+            /* IE/Edge */
+            /* IE/Edge */
+            -webkit-appearance: none;
+            appearance: none;
+            width: 60px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.3);
+            transform: rotate(-90deg);
+            border-radius: 2px;
+            cursor: pointer;
+        }
+
+        .grid-vol-range::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 12px;
+            height: 12px;
+            background: #fff;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .grid-mute-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .grid-mute-btn:hover {
+            background: #fff;
+            color: #000;
+        }
+
+        /* REEL CARD LAYOUT REFINEMENT */
+
+        /* 1. Seek Bar (Full width, TikTok style) */
+        .seek-container {
+            position: absolute;
+            bottom: 10px;
+            left: 0;
+            right: 0;
+            height: 5px;
+            z-index: 15;
+            display: flex;
+            align-items: center;
+        }
+
+        .seek-slider {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 5px;
+            background: rgba(255, 255, 255, 0.3);
+            outline: none;
+            cursor: pointer;
+            margin: 0;
+            border-radius: 0;
+        }
+
+        .seek-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 14px;
+            height: 14px;
+            background: #fff;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .seek-slider::-moz-range-thumb {
+            width: 14px;
+            height: 14px;
+            background: #fff;
+            border-radius: 50%;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .reel-card:hover .seek-container {
+            height: 6px;
+        }
+
+        .reel-card:hover .seek-slider {
+            height: 6px;
+        }
+
+        .reel-card:hover .seek-slider::-webkit-slider-thumb {
+            width: 16px;
+            height: 16px;
+        }
+
+        .reel-card:hover .seek-slider::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+        }
+
+        /* 2. Info Overlay (Moved up slightly) */
+        .info-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            padding: 15px;
+            padding-bottom: 30px;
+            /* Space for content above seeker */
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.8) 0%, transparent 100%);
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        .reel-title {
+            font-family: 'Plus Jakarta Sans';
+            font-weight: 600;
+            font-size: 13px;
+            color: #fff;
+            margin-bottom: 0;
+            /* Restrict width to avoid volume button overlap */
+            width: calc(100% - 40px);
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+            line-height: 1.4;
+        }
+
+        /* 3. TikTok-Style Social Actions (Right Side) - Compact Size */
+        .social-actions {
+            position: absolute;
+            right: 10px;
+            bottom: 80px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            z-index: 20;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .reel-card:hover .social-actions {
+            opacity: 1;
+        }
+
+        .social-action-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 3px;
+            cursor: pointer;
+        }
+
+        .social-action-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(8px);
+            border: 1.5px solid rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 16px;
+            transition: all 0.2s;
+        }
+
+        .social-action-icon:hover {
+            background: rgba(255, 255, 255, 0.9);
+            color: #000;
+            transform: scale(1.08);
+        }
+
+        .social-action-icon.liked {
+            color: #ff2e63;
+            background: rgba(255, 46, 99, 0.15);
+        }
+
+        .social-action-count {
+            font-size: 10px;
+            font-weight: 600;
+            color: #fff;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+        }
+
+        .profile-action {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: 1.5px solid #fff;
+            overflow: hidden;
+            background: #333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .profile-action img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .profile-action i {
+            font-size: 18px;
+        }
+
+        /* 4. Volume Controls (Vertical Slider Style) */
+        .grid-vol-wrapper {
+            position: absolute;
+            bottom: 200px;
+            right: 12px;
+            width: 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            z-index: 20;
+            opacity: 0;
+            transition: 0.2s;
+        }
+
+        .reel-card:hover .grid-vol-wrapper {
+            opacity: 1;
+        }
+
+
+        .action-btns {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            display: flex;
+            gap: 8px;
+            opacity: 0;
+            transition: 0.2s;
+            z-index: 10;
+        }
+
+        .reel-card:hover .action-btns {
+            opacity: 1;
+        }
+
+        .mini-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .mini-btn:hover {
+            background: #fff;
+            color: #000;
+        }
+
+        .mini-btn.del:hover {
+            background: #ef4444;
+            color: #fff;
+            border-color: #ef4444;
+        }
+
+
+        /* --- NEW ELITE MODAL --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(12px);
+            z-index: 2000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transition: 0.4s ease;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        .pro-modal {
+            width: 950px;
+            max-width: 95vw;
+            height: 650px;
+            max-height: 90vh;
+            background: #0A0A0A;
+            border: 1px solid #222;
+            border-radius: 28px;
+            display: grid;
+            grid-template-columns: 360px 1fr;
+            overflow: hidden;
+            box-shadow: 0 40px 80px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(255, 255, 255, 0.05);
+        }
+
+        /* LEFT: PREVIEW */
+        .modal-left {
+            background: #000;
+            border-right: 1px solid #1A1A1A;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .modal-right {
+            background: #0A0A0A;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        /* ⭐ CUSTOM SCROLLBAR */
+        .modal-right::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .modal-right::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+        }
+
+        .modal-right::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            transition: 0.3s;
+        }
+
+        .modal-right::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .preview-video {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: none;
+        }
+
+        .preview-placeholder {
+            text-align: center;
+            color: #444;
+        }
+
+        /* MEDIA CONTROLS CONTAINER */
+        /* Nuevo diseño de control de volumen vertical */
+        .media-controls {
+            position: absolute;
+            left: 20px;
+            bottom: 25px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            z-index: 50;
+        }
+
+        .volume-slider-container {
+            width: 38px;
+            height: 120px;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(8px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            justify-content: center;
+            padding: 15px 0;
+            opacity: 0;
+            transition: 0.3s ease;
+            pointer-events: none;
+            transform: translateY(10px);
+        }
+
+        .media-controls:hover .volume-slider-container {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateY(0);
+        }
+
+        /* Icono de volumen */
+
+        /* TOAST NOTIFICATION STYLES */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10001;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            align-items: flex-end;
+        }
+
+        .toast {
+            background: rgba(15, 15, 15, 0.95);
+            border: 1px solid #333;
+            color: #fff;
+            padding: 14px 18px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 13px;
+            font-weight: 500;
+            transform: translateX(120%);
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s;
+            backdrop-filter: blur(10px);
+            pointer-events: auto;
+            max-width: 320px;
+        }
+
+        .toast.active {
+            transform: translateX(0);
+        }
+
+        .toast-icon {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 12px;
+        }
+
+        .toast-error .toast-icon {
+            background: rgba(255, 59, 48, 0.15);
+            color: #FF3B30;
+        }
+
+        .toast-success .toast-icon {
+            background: rgba(16, 185, 129, 0.15);
+            color: #10B981;
+        }
+
+        .toast-info .toast-icon {
+            background: rgba(59, 130, 246, 0.15);
+            color: #3B82F6;
+        }
+
+        #previewMuteBtn {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .volume-track {
+            width: 4px;
+            height: 80px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 2px;
+            position: relative;
+        }
+
+        .volume-level {
+            width: 100%;
+            background: #fff;
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            pointer-events: none;
+        }
+
+        .volume-input {
+            position: absolute;
+            width: 100px;
+            height: 40px;
+            transform: rotate(-90deg);
+            transform-origin: 50% 50%;
+            bottom: 20px;
+            left: -34px;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .preview-sound-btn {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .preview-sound-btn:hover {
+            background: #fff;
+            color: #000;
+        }
+
+        /* RIGHT: FORM */
+        .modal-right {
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow-y: auto;
+            background: #0A0A0A;
+        }
+
+        .input-elite {
+            width: 100%;
+            background: #141414;
+            border: 1px solid #2A2A2A;
+            color: #fff;
+            padding: 16px;
+            border-radius: 12px;
+            font-family: inherit;
+            font-size: 14px;
+            resize: none;
+            margin-top: 8px;
+            transition: 0.2s;
+        }
+
+        .input-elite:focus {
+            border-color: var(--accent-purple);
+            background: #1a1a1a;
+            box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.1);
+        }
+
+        .char-counter {
+            font-size: 11px;
+            color: #666;
+            text-align: right;
+            margin-top: 6px;
+        }
+
+        .upload-zone {
+            margin-top: 20px;
+            border: 2px dashed #333;
+            border-radius: 14px;
+            padding: 30px;
+            text-align: center;
+            color: #888;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            background: rgba(255, 255, 255, 0.01);
+        }
+
+        .upload-zone:hover {
+            border-color: var(--accent-purple);
+            background: rgba(139, 92, 246, 0.05);
+            color: #fff;
+        }
+
+        .btn-main {
+            margin-top: auto;
+            width: 100%;
+            background: #fff;
+            color: #000;
+            font-weight: 700;
+            padding: 16px;
+            border-radius: 12px;
+            border: none;
+            cursor: pointer;
+            font-size: 15px;
+            transition: 0.2s;
+        }
+
+        .btn-main:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-main:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .tag-pill {
+            background: #1A1A1A;
+            border: 1px solid #333;
+            color: #999;
+            padding: 6px 14px;
+            border-radius: 50px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .tag-pill:hover {
+            border-color: var(--accent-purple);
+            color: #fff;
+            background: rgba(139, 92, 246, 0.1);
+        }
+
+        /* TIMELINE EDITOR */
+        .timeline-container {
+            margin-top: 20px;
+            background: #111;
+            border: 1px solid #222;
+            border-radius: 12px;
+            padding: 15px;
+            user-select: none;
+        }
+
+        .timeline-track-container {
+            position: relative;
+            height: 40px;
+            background: #000;
+            border-radius: 6px;
+            overflow: hidden;
+            margin: 10px 0;
+            cursor: pointer;
+        }
+
+        .timeline-track-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(90deg, #222 0, #222 1px, transparent 1px, transparent 10px);
+            opacity: 0.3;
+        }
+
+        .timeline-selection {
+            position: absolute;
+            top: 0;
+            height: 100%;
+            background: rgba(139, 92, 246, 0.3);
+            /* No borders, just fill */
+            pointer-events: auto;
+            /* Enable dragging the window */
+            cursor: grab;
+            z-index: 20;
+            /* Above bg, below thumbs */
+        }
+
+        .timeline-selection:active {
+            cursor: grabbing;
+        }
+
+        .ranges-stack {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 30;
+        }
+
+        /* FIX: pointer-events: none on track, auto on thumb to allow stacked dragging */
+        .timeline-range {
+            position: absolute;
+            width: 100%;
+            top: 50%;
+            transform: translateY(-50%);
+            -webkit-appearance: none;
+            appearance: none;
+            background: transparent;
+            pointer-events: none;
+            margin: 0;
+        }
+
+        .timeline-range::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 40px;
+            width: 12px;
+            background: var(--accent-purple);
+            border: 1px solid #fff;
+            border-radius: 2px;
+            cursor: ew-resize;
+            pointer-events: auto;
+            /* Re-enable clicks on thumb */
+            position: relative;
+            z-index: 50;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+        }
+
+        .trim-inputs-row {
+            display: flex;
+            gap: 10px;
+            justify-content: space-between;
+            margin-top: 8px;
+        }
+
+        .trim-time-box {
+            background: #000;
+            border: 1px solid #333;
+            border-radius: 6px;
+            padding: 4px 8px;
+            font-size: 11px;
+            color: #888;
+            font-family: monospace;
+        }
+
+        .scroller {
+            width: 4px;
+            height: 100%;
+            background: #fff;
+            position: absolute;
+            top: 0;
+            z-index: 10;
+            pointer-events: none;
+            display: none;
+        }
+
+        /* Progress Modal */
+        .upload-progress {
+            height: 4px;
+            background: #222;
+            border-radius: 4px;
+            margin-top: 15px;
+            overflow: hidden;
+            display: none;
+        }
+
+        .upload-fill {
+            height: 100%;
+            width: 0%;
+            background: var(--accent-purple);
+            transition: width 0.1s;
+        }
+
+        /* SKELETON LOADING */
+        .skeleton {
+            background: #111;
+            border: 1px solid #222;
+            position: relative;
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        .skeleton::after {
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            transform: translateX(-100%);
+            background-image: linear-gradient(90deg, rgba(255, 255, 255, 0) 0, rgba(255, 255, 255, 0.03) 20%, rgba(255, 255, 255, 0.06) 60%, rgba(255, 255, 255, 0));
+            animation: shimmer 2.2s infinite;
+            content: '';
+        }
+
+        @keyframes shimmer {
+            100% {
+                transform: translateX(100%);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div
+        style="position:fixed; top:0; left:0; width:100vw; height:100vh; background:radial-gradient(circle at 50% 50%, rgba(139, 92, 246, 0.05), #000 80%); z-index:-1; pointer-events:none;">
+    </div>
+
+    <!-- SIDEBAR STUB -->
+    <div class="sidebar-stub" style="justify-content:flex-start; gap:15px;">
+        <a href="/index.html" class="sidebar-logo-btn"
+            style="margin-bottom:10px; display:flex; align-items:center; justify-content:center; width:44px; height:44px;">
+            <img src="../images/LOGO-OFFSZN.png" style="width:38px; mix-blend-mode: screen;"></a>
+
+        <div style="width:40px; border-bottom:1px solid #222; margin:5px 0;"></div>
+        <a href="/cuenta/dashboard.html" class="sidebar-icon-btn" data-title="Dashboard"><i
+                class="bi bi-grid-fill"></i></a>
+        <a href="/cuenta/mis-kits.html" class="sidebar-icon-btn" data-title="Mis Beats/Kits"><i
+                class="bi bi-disc-fill"></i></a>
+        <a href="/cuenta/subir-kit.html" class="sidebar-icon-btn" data-title="Subir"><i
+                class="bi bi-cloud-arrow-up-fill"></i></a>
+
+        <div style="width:40px; border-bottom:1px solid #222; margin:5px 0;"></div>
+        <a href="/cuenta/admin-licencias.html" class="sidebar-icon-btn" data-title="Licencias"><i
+                class="bi bi-file-earmark-music-fill"></i></a>
+        <a href="/cuenta/cupones.html" class="sidebar-icon-btn" data-title="Cupones"><i
+                class="bi bi-ticket-perforated-fill"></i></a>
+        <a href="/cuenta/colaboraciones.html" class="sidebar-icon-btn" data-title="Colaboraciones"><i
+                class="bi bi-people-fill"></i></a>
+
+        <div style="width:40px; border-bottom:1px solid #222; margin:5px 0;"></div>
+        <a href="/cuenta/cursos.html" class="sidebar-icon-btn" data-title="Cursos"><i
+                class="bi bi-mortarboard-fill"></i></a>
+        <a href="/cuenta/analiticas.html" class="sidebar-icon-btn" data-title="Estadísticas"><i
+                class="bi bi-bar-chart-fill"></i></a>
+
+        <div style="width:40px; border-bottom:1px solid #222; margin:5px 0;"></div>
+        <a href="/cuenta/reels.html" class="sidebar-icon-btn active" data-title="Reels"><i
+                class="bi bi-camera-reels-fill"></i></a>
+
+        <div>
+            <a href="/cuenta/planes.html" class="sidebar-icon-btn" data-title="Mejorar Plan" style="color:#FFD700;">
+                <i class="bi bi-rocket-takeoff-fill"></i>
+            </a>
+        </div>
+    </div>
+
+    <main class="main-content-elite">
+        <div class="elite-header">
+            <div>
+                <h1>Reels Studio <span id="headerUsername"
+                        style="font-size:18px; color:#888; font-weight:400; margin-left:5px;"></span></h1>
+                <p style="color:#888;">Gestiona tus videos verticales.</p>
+            </div>
+            <div style="display:flex; align-items:center; gap:12px;">
+                <!-- Buttons removed, moved to Grid Card -->
+            </div>
+        </div>
+
+        <div class="reels-grid" id="reelsContainer">
+            <!-- Initial Skeleton Card to avoid CLS (Matches 'Upload Card' dimensions) -->
+            <div class="reel-card skeleton"></div>
+            <div class="reel-card skeleton"></div>
+            <div class="reel-card skeleton"></div>
+        </div>
+    </main>
+
+    <!-- PRO MODAL -->
+    <div class="modal-overlay" id="reelModal">
+        <div class="pro-modal">
+            <!-- Left -->
+            <div class="modal-left" onclick="togglePreviewPlay()">
+                <div style="position:relative; width:100%; height:100%;">
+                    <video id="previewVideo" class="preview-video" loop playsinline crossorigin="anonymous"></video>
+
+                    <!-- Social Icons (RIGHT) -->
+                    <div id="socialIconsWatermark"
+                        style="position:absolute !important; top:auto; bottom:100px; left:auto !important; right:15px !important; width:40px; display:flex; flex-direction:column; gap:14px; pointer-events:none; opacity:0.9; z-index:30;">
+                        <!-- Profile -->
+                        <div style="display:flex; flex-direction:column; align-items:center; gap:3px;">
+                            <div
+                                style="width:40px; height:40px; border-radius:50%; border:2px solid #fff; background:#333; display:flex; align-items:center; justify-content:center;">
+                                <i class="bi bi-person-fill" style="color:#fff; font-size:20px;"></i>
+                            </div>
+                        </div>
+                        <!-- Like -->
+                        <div style="display:flex; flex-direction:column; align-items:center; gap:3px;">
+                            <div
+                                style="width:40px; height:40px; border-radius:50%; background:rgba(0,0,0,0.6); backdrop-filter:blur(8px); border:2px solid rgba(255,255,255,0.2); display:flex; align-items:center; justify-content:center;">
+                                <i class="bi bi-heart-fill" style="color:#fff; font-size:18px;"></i>
+                            </div>
+                            <span
+                                style="font-size:11px; font-weight:600; color:#fff; text-shadow:0 1px 2px rgba(0,0,0,0.8);">0</span>
+                        </div>
+                        <!-- Comment -->
+                        <div style="display:flex; flex-direction:column; align-items:center; gap:3px;">
+                            <div
+                                style="width:40px; height:40px; border-radius:50%; background:rgba(0,0,0,0.6); backdrop-filter:blur(8px); border:2px solid rgba(255,255,255,0.2); display:flex; align-items:center; justify-content:center;">
+                                <i class="bi bi-chat-fill" style="color:#fff; font-size:18px;"></i>
+                            </div>
+                            <span
+                                style="font-size:11px; font-weight:600; color:#fff; text-shadow:0 1px 2px rgba(0,0,0,0.8);">0</span>
+                        </div>
+                        <!-- Share -->
+                        <div style="display:flex; flex-direction:column; align-items:center; gap:3px;">
+                            <div
+                                style="width:40px; height:40px; border-radius:50%; background:rgba(0,0,0,0.6); backdrop-filter:blur(8px); border:2px solid rgba(255,255,255,0.2); display:flex; align-items:center; justify-content:center;">
+                                <i class="bi bi-share-fill" style="color:#fff; font-size:18px;"></i>
+                            </div>
+                            <span
+                                style="font-size:11px; font-weight:600; color:#fff; text-shadow:0 1px 2px rgba(0,0,0,0.8);">0</span>
+                        </div>
+                        <!-- Save -->
+                        <div style="display:flex; flex-direction:column; align-items:center; gap:3px;">
+                            <div
+                                style="width:40px; height:40px; border-radius:50%; background:rgba(0,0,0,0.6); backdrop-filter:blur(8px); border:2px solid rgba(255,255,255,0.2); display:flex; align-items:center; justify-content:center;">
+                                <i class="bi bi-bookmark-fill" style="color:#fff; font-size:18px;"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Editor Play Overlay -->
+                    <div id="editorPlayOverlay"
+                        style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); pointer-events:none; opacity:0; transition:0.2s;">
+                        <div
+                            style="width:70px; height:70px; background:rgba(0,0,0,0.5); border-radius:50%; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(4px); border:1px solid rgba(255,255,255,0.1);">
+                            <i class="bi bi-play-fill" style="color:#fff; font-size:40px; margin-left:4px;"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Volume Controls (Left Side - Bottom Corner) -->
+                <!-- Volume Controls (Left Side - Bottom Corner) -->
+                <div class="media-controls" id="mediaControls" onclick="event.stopPropagation()">
+                    <div class="volume-slider-container">
+                        <!-- Visual Track Wrapper (limited height) -->
+                        <div class="volume-track-wrapper" style="position:relative; width:4px; height:90px;">
+                            <!-- Gray Background -->
+                            <div
+                                style="width:100%; height:100%; background:rgba(255,255,255,0.2); border-radius:2px; position:absolute; top:0;">
+                            </div>
+
+                            <!-- White Fill (Absolute bottom) -->
+                            <div id="volLevel"
+                                style="position:absolute; bottom:0; width:100%; height:100%; background:#fff; border-radius:2px; transition: height 0.1s;">
+                            </div>
+
+                            <!-- Invisible Input (Rotated) -->
+                            <input type="range" min="0" max="1" step="0.1" value="1" oninput="setVolume(this.value)"
+                                style="position:absolute; top:50%; left:50%; width:100px; height:40px; transform:translate(-50%, -50%) rotate(-90deg); margin:0; opacity:0; cursor:pointer;">
+                        </div>
+                    </div>
+
+                    <button id="previewMuteBtn" onclick="togglePreviewMute()">
+                        <i class="bi bi-volume-up-fill"></i>
+                    </button>
+
+                </div>
+
+                <!-- Preview Placeholder Removed -->
+                <div id="previewPlaceholder" style="display:none;"></div>
+            </div>
+
+            <!-- Right -->
+            <div class="modal-right">
+                <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
+                    <h2 style="font-family:'Plus Jakarta Sans'; font-size:22px;">Nuevo Video</h2>
+                    <button onclick="closeModal()"
+                        style="background:none; border:none; color:#666; font-size:24px; cursor:pointer;"><i
+                            class="bi bi-x-lg"></i></button>
+                </div>
+
+                <input type="hidden" id="editReelId">
+                <input type="hidden" id="existingUrl">
+
+                <!-- SCHEDULE INFO -->
+                <div
+                    style="background:#111; border:1px solid #222; border-radius:8px; padding:12px; margin-bottom:20px; display:flex; align-items:flex-start; gap:12px;">
+                    <i class="bi bi-clock-history" style="color:var(--accent-purple); margin-top:2px;"></i>
+                    <div style="font-size:13px; color:#ccc;">
+                        <span style="font-weight:600; color:#fff;">Programación automática</span><br>
+                        <span style="font-size:12px; color:#666;">Se publicará ahora:</span> <span id="autoScheduleTime"
+                            style="color:#fff; font-weight:500;">--:--</span>
+                    </div>
+                </div>
+
+                <div>
+                    <label style="font-size:13px; font-weight:600; color:#ccc;">Descripción</label>
+                    <textarea id="reelTitle" class="input-elite" rows="3" maxlength="300"
+                        oninput="updateCharCount(this)"
+                        placeholder="Describe tu video (Máx 300 caracteres)..."></textarea>
+                    <div class="char-counter"><span id="charCount">0</span> / 300</div>
+
+                    <div style="display:flex; gap:8px; margin-top:10px; overflow-x:auto; padding-bottom:5px;">
+                        <button onclick="addHashtag('#TypeBeat')" class="tag-pill">#TypeBeat</button>
+                        <button onclick="addHashtag('#Producer')" class="tag-pill">#Producer</button>
+                        <button onclick="addHashtag('#Studio')" class="tag-pill">#Studio</button>
+                        <button onclick="addHashtag('#NewMusic')" class="tag-pill">#NewMusic</button>
+                    </div>
+                </div>
+
+                <div id="loadingTrimmer"
+                    style="display:none; text-align:center; padding:20px; color:#666; font-size:12px;">
+                    <i class="bi bi-arrow-repeat spin"></i> Cargando editor...
+                </div>
+
+                <div id="trimmerSection" style="display:none; display:none;">
+                    <div class="timeline-container">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <span style="font-size:11px; font-weight:600; color:#fff;"><i class="bi bi-scissors"></i>
+                                Editor</span>
+                            <span style="font-size:11px; color:#666;" id="totalDurationDisp">0s</span>
+                        </div>
+
+                        <div class="timeline-track-container" onclick="seekEditor(event)">
+                            <div class="timeline-track-bg"></div>
+                            <div class="timeline-selection" id="timelineSelection" style="left:0%; width:100%;"></div>
+                            <div class="scroller" id="playhead" style="left:0%; display:block;"></div>
+                            <div class="ranges-stack">
+                                <input type="range" class="timeline-range" id="rangeStart" min="0" max="100" step="0.1"
+                                    value="0" oninput="handleRangeInput(true)">
+                                <input type="range" class="timeline-range" id="rangeEnd" min="0" max="100" step="0.1"
+                                    value="100" oninput="handleRangeInput(false)">
+                            </div>
+                        </div>
+
+                        <div class="trim-inputs-row">
+                            <div class="trim-time-box">INICIO: <span id="dispStart">0</span>s</div>
+                            <div class="trim-time-box">FIN: <span id="dispEnd">0</span>s</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="uploadUi">
+                    <label class="upload-zone">
+                        <input type="file" id="videoFile" accept="video/mp4,video/mov,video/webm" hidden
+                            onchange="handleFileSelect(this)">
+                        <i class="bi bi-cloud-arrow-up-fill" style="font-size:24px; color:#666;"></i>
+                        <span id="fileName" style="font-size:14px; font-weight:500;">Seleccionar Video</span>
+                    </label>
+                </div>
+
+                <div class="upload-progress" id="progressBarContainer">
+                    <div class="upload-fill" id="progressBar"></div>
+                    <p style="font-size:11px; color:#666; text-align:center; margin-top:5px;">Subiendo y procesando...
+                    </p>
+                </div>
+                <!-- ⭐ MENSAJE DE ADVERTENCIA DURANTE SUBIDA -->
+                <div id="uploadWarning"
+                    style="display:none; background:rgba(255,152,0,0.1); border:1px solid rgba(255,152,0,0.3); border-radius:8px; padding:12px; margin-top:12px;">
+                    <p style="color:#FF9800; font-size:12px; margin:0; text-align:center;">
+                        <i class="bi bi-exclamation-triangle-fill"></i>
+                        <strong>No cierres ni recargues esta página</strong> - Subida en progreso
+                    </p>
+                </div>
+
+                <div style="display:flex; gap:12px; margin-top:20px;">
+                    <button id="btnCancel" onclick="closeModal()"
+                        style="flex:1; background:#222; color:#fff; border:1px solid #333; padding:12px; border-radius:8px; font-weight:600; cursor:pointer; transition:0.2s;"
+                        onmouseover="this.style.background='#2a2a2a'" onmouseout="this.style.background='#222'">
+                        Cancelar
+                    </button>
+                    <button id="btnSave" onclick="startUploadAndSave()" class="btn-main" style="flex:1;">
+                        Publicar Video
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- UPGRADE MODAL -->
+    <div class="modal-overlay" id="upgradeModal">
+        <div
+            style="background:#0F0F0F; padding:40px; border-radius:20px; border:1px solid #333; text-align:center; width:400px;">
+            <i class="bi bi-lock-fill" style="color:#FFD700; font-size:40px; margin-bottom:20px; display:block;"></i>
+            <h3 style="color:#fff; font-family:'Plus Jakarta Sans'; margin-bottom:10px;">Límite Alcanzado</h3>
+            <p style="color:#888; font-size:14px; margin-bottom:20px;">Actualiza a PRO para subir videos ilimitados.</p>
+            <button onclick="window.location.href='/cuenta/planes.html'" class="btn-main"
+                style="background:#FFD700;">Mejorar Plan</button>
+            <button onclick="document.getElementById('upgradeModal').classList.remove('active')"
+                style="background:none; border:none; color:#666; margin-top:15px; cursor:pointer;">Cerrar</button>
+        </div>
+    </div>
+
+    <!-- DELETE CONFIRMATION MODAL -->
+    <div class="modal-overlay" id="deleteModal">
+        <div class="pro-modal"
+            style="display: flex; flex-direction: column; align-items: center; width: 400px; height: auto; min-height: auto; padding: 30px; text-align: center;">
+            <div
+                style="width: 60px; height: 60px; background: rgba(255, 59, 48, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
+                <i class="bi bi-trash3-fill" style="color: #FF3B30; font-size: 24px;"></i>
+            </div>
+
+            <h3 style="font-family: 'Plus Jakarta Sans'; font-size: 20px; margin-bottom: 10px;">¿Eliminar Video?</h3>
+            <p style="color: #888; font-size: 14px; line-height: 1.5; margin-bottom: 25px;">
+                Esta acción eliminará el video de tu galería. <br>
+                <span style="font-size: 12px; color: #ff4444; font-weight: 600;">(Se eliminará
+                    permanentemente)</span>
+            </p>
+
+            <input type="hidden" id="deleteTargetId">
+
+            <div style="display: flex; gap: 10px; width: 100%;">
+                <button onclick="closeDeleteModal()"
+                    style="flex: 1; padding: 12px; background: #222; border: 1px solid #333; color: #fff; border-radius: 10px; font-weight: 600; cursor: pointer;">
+                    Cancelar
+                </button>
+                <button onclick="confirmDelete()"
+                    style="flex: 1; padding: 12px; background: #FF3B30; border: none; color: #fff; border-radius: 10px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 12px rgba(255, 59, 48, 0.3);">
+                    Eliminar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const CLOUD_NAME = "degtrrdqo";
+        const UPLOAD_PRESET = "offszn_reels_unsigned";
+        let userReels = [];
+        let userPlan = 'free';
+
+        // Trimming state
+        let videoDuration = 0;
+        let trimStartVal = 0;
+        let trimEndVal = 0;
+        // Upload state protection
+        let isUploading = false;
+
+
+        window.addEventListener('load', async () => {
+            let attempts = 0;
+            while (!window.currentUser && attempts < 20) { await new Promise(r => setTimeout(r, 100)); attempts++; }
+            if (window.currentUser) {
+                await fetchUserProfile();
+                loadReels();
+                updateAutoScheduleTime();
+                setInterval(updateAutoScheduleTime, 60000);
+            } else {
+                console.log("No user found after wait");
+            }
+        });
+
+        function updateAutoScheduleTime() {
+            const now = new Date();
+            const options = { year: 'numeric', month: '2-digit', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+            document.getElementById('autoScheduleTime').innerText = now.toLocaleDateString('es-ES', options);
+        }
+
+        async function fetchUserProfile() {
+            if (!window.currentUser) return;
+            // Use maybeSingle() to handle missing rows gracefully
+            const { data, error } = await window.supabaseClient.from('profiles').select('plan').eq('id', window.currentUser.id).maybeSingle();
+
+            // --- FETCH & DISPLAY NICKNAME (Consistency Fix) ---
+            try {
+                const { data: userData } = await window.supabaseClient.from('users').select('nickname, first_name').eq('id', window.currentUser.id).single();
+                let displayName = window.currentUser.email.split('@')[0]; // Fallback
+
+                if (userData) {
+                    if (userData.nickname) displayName = userData.nickname;
+                    else if (userData.first_name) displayName = userData.first_name;
+                } else if (window.currentUser.user_metadata && window.currentUser.user_metadata.full_name) {
+                    displayName = window.currentUser.user_metadata.full_name.split(' ')[0];
+                }
+
+                const headerSpan = document.getElementById('headerUsername');
+                if (headerSpan) headerSpan.textContent = "| @" + displayName;
+
+            } catch (err) {
+                console.warn("Error fetching profile for header:", err);
+            }
+
+            if (data) {
+                userPlan = data.plan;
+            } else {
+                // Lazy-create profile silently to prevent FK constraint issues
+                const { error: insError } = await window.supabaseClient.from('profiles').insert([{
+                    id: window.currentUser.id,
+                    plan: 'free'
+                }]);
+
+                userPlan = 'free';
+            }
+        }
+
+        async function loadReels() {
+            // Keep existing HTML skeletons (no innerHTML overwrite)
+            const container = document.getElementById('reelsContainer');
+
+            if (!window.currentUser) return;
+
+            // Wait for both Data AND Minimum Animation Time (2.2s - One clean pass)
+            const minTime = new Promise(resolve => setTimeout(resolve, 2200));
+            const fetchReels = window.supabaseClient.from('reels').select('*').eq('user_id', window.currentUser.id).order('created_at', { ascending: false });
+
+            const [_, { data }] = await Promise.all([minTime, fetchReels]);
+
+            userReels = data || [];
+            renderReels();
+        }
+
+        function renderReels() {
+            const container = document.getElementById('reelsContainer');
+
+            // --- LOGICA DE LÍMITE ---
+            const limit = userPlan === 'pro' ? 999999 : 10;
+            const currentCount = userReels.length;
+            const isLimitReached = currentCount >= limit;
+
+            // Texto para la tarjeta
+            let limitText = userPlan === 'pro' ? 'Ilimitado' : `${currentCount} / ${limit} Videos`;
+            let cardAction = isLimitReached
+                ? "window.location.href='/cuenta/planes.html'"
+                : "openAddModal()";
+
+            let cardSubtitle = isLimitReached
+                ? '<span style="color:#ff4444; font-weight:600;">Límite alcanzado</span>'
+                : '<span style="color:#666;">Crear nuevo</span>';
+
+            // --- TARJETA DE SUBIDA (Siempre primera) ---
+            const uploadCardHTML = `
+                <div class="reel-card" onclick="${cardAction}" style="cursor:pointer; border:1px dashed #333; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:15px; background:#0e0e0e;">
+                    <div style="width:50px; height:50px; border-radius:50%; background:#1a1a1a; display:flex; align-items:center; justify-content:center;">
+                        <i class="bi bi-plus-lg" style="color:#fff; font-size:24px;"></i>
+                    </div>
+                    <div style="text-align:center;">
+                        <h3 style="font-family:'Plus Jakarta Sans'; font-size:16px; margin-bottom:4px; color:#fff;">Subir Reel</h3>
+                        <p style="font-size:12px; margin:0; color:#888;">${limitText}</p>
+                        <div style="margin-top:8px; font-size:11px;">${cardSubtitle}</div>
+                    </div>
+                </div>
+            `;
+
+            // Generar HTML de los videos
+            const reelsHTML = userReels.map(reel => {
+                let isVideo = reel.url.includes('cloudinary') || reel.url.match(/\.(mp4|mov|webm)$/i);
+                if (!isVideo) return '';
+
+                return `
+                    <div class="reel-card">
+                        <div class="reel-video-container" onclick="togglePlay(this)">
+                            
+                            <video class="reel-video" loop muted playsinline preload="metadata">
+                                <source src="${reel.url}" type="video/mp4">
+                            </video>
+                            
+                            <!-- PLAY OVERLAY -->
+                            <div class="play-overlay"><i class="bi bi-play-fill" style="color:#fff; font-size:32px;"></i></div>
+
+                            <div class="info-overlay">
+                                <div class="reel-title">${reel.title || ''}</div>
+                            </div>
+
+                            <!-- VOLUME CONTROL -->
+                            <div class="volume-control-container" onclick="event.stopPropagation()">
+                                <div class="volume-slider-wrapper">
+                                    <input type="range" class="volume-slider" min="0" max="1" step="0.1" value="0" oninput="setGridVolume(this, event)">
+                                </div>
+                                <div class="mute-btn" onclick="toggleGridMute(this, event)">
+                                    <i class="bi bi-volume-mute-fill"></i>
+                                </div>
+                            </div>
+                            
+                            <div class="action-btns">
+                                <div class="mini-btn" onclick="openEditModal('${reel.id}'); event.stopPropagation()"><i class="bi bi-pencil-fill"></i></div>
+                                <div class="mini-btn del" onclick="openDeleteModal('${reel.id}'); event.stopPropagation()"><i class="bi bi-trash3-fill"></i></div>
+                            </div>
+
+                            <div class="seek-container" onclick="event.stopPropagation()">
+                                <input type="range" class="seek-slider" min="0" max="100" value="0" oninput="seekGrid(this, event)">
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            // Inyectar: Tarjeta de subida + Videos
+            container.innerHTML = uploadCardHTML + reelsHTML;
+
+            // Grid listeners setup
+            document.querySelectorAll('.reels-grid video').forEach(video => {
+                // Update seeker on timeupdate
+                video.addEventListener('timeupdate', () => {
+                    if (!video.duration) return;
+                    const pct = (video.currentTime / video.duration) * 100;
+                    const slider = video.closest('.reel-video-container').querySelector('.seek-slider');
+                    if (slider) {
+                        slider.value = pct;
+                        // Update visual gradient
+                        slider.style.background = `linear-gradient(to right, #FFFFFF ${pct}%, #FFFFFF ${pct}%, rgba(255,255,255,0.3) ${pct}%, rgba(255,255,255,0.3) 100%)`;
+                    }
+                });
+            });
+        }
+
+        function stopAllGridVideos() {
+            document.querySelectorAll('.reels-grid video').forEach(v => {
+                v.pause();
+                v.closest('.reel-video-container').classList.remove('playing');
+                // reset icon in overlay
+                const overlay = v.closest('.reel-video-container').querySelector('.play-overlay i');
+                if (overlay) overlay.className = 'bi bi-play-fill';
+            });
+        }
+
+        function togglePlay(container) {
+            const video = container.querySelector('video');
+            const overlay = container.querySelector('.play-overlay');
+
+            if (video.paused) {
+                stopAllGridVideos();
+                video.play().catch(e => console.log("Play error", e));
+                container.classList.add('playing');
+                overlay.style.opacity = '0';
+            } else {
+                video.pause();
+                container.classList.remove('playing');
+                overlay.style.opacity = '1';
+            }
+        }
+
+        function seekGrid(slider, e) {
+            const container = slider.closest('.reel-video-container');
+            const video = container.querySelector('video');
+            const pct = slider.value;
+            // Update gradient immediately
+            slider.style.background = `linear-gradient(to right, #FFFFFF ${pct}%, #FFFFFF ${pct}%, rgba(255,255,255,0.3) ${pct}%, rgba(255,255,255,0.3) 100%)`;
+
+            if (video.duration) {
+                const time = (pct / 100) * video.duration;
+                video.currentTime = time;
+            }
+
+            if (video.paused) {
+                stopAllGridVideos();
+                video.play();
+                container.classList.add('playing');
+                container.querySelector('.play-overlay i').className = 'bi bi-pause-fill';
+            }
+        }
+
+        window.toggleGridMute = (btn, event) => {
+            event.stopPropagation();
+            const container = btn.closest('.reel-video-container');
+            const video = container.querySelector('video');
+            const icon = btn.querySelector('i');
+            const slider = container.querySelector('.volume-slider');
+
+            if (video.muted) {
+                video.muted = false;
+                video.volume = 1; // Set to max if unmuted
+                slider.value = 1;
+                icon.className = 'bi bi-volume-up-fill';
+            } else {
+                video.muted = true;
+                video.volume = 0;
+                slider.value = 0;
+                icon.className = 'bi bi-volume-mute-fill';
+            }
+        };
+
+        window.setGridVolume = (slider, event) => {
+            event.stopPropagation();
+            const container = slider.closest('.reel-video-container');
+            const video = container.querySelector('video');
+            const icon = container.querySelector('.mute-btn i');
+
+            const val = parseFloat(slider.value);
+            video.volume = val;
+
+            if (val === 0) {
+                video.muted = true;
+                icon.className = 'bi bi-volume-mute-fill';
+            } else {
+                video.muted = false;
+                if (val < 0.5) icon.className = 'bi bi-volume-down-fill';
+                else icon.className = 'bi bi-volume-up-fill';
+            }
+        };
+
+        // --- PREVIEW LOGIC ---
+        function setVolume(val) {
+            const video = document.getElementById('previewVideo');
+            video.volume = val;
+            video.muted = (val == 0);
+
+            document.getElementById('volLevel').style.height = (val * 100) + '%';
+
+            const btn = document.getElementById('previewMuteBtn');
+            if (val == 0) btn.innerHTML = '<i class="bi bi-volume-mute-fill"></i>';
+            else if (val < 0.5) btn.innerHTML = '<i class="bi bi-volume-down-fill"></i>';
+            else btn.innerHTML = '<i class="bi bi-volume-up-fill"></i>';
+        }
+
+        function togglePreviewMute() {
+            const video = document.getElementById('previewVideo');
+            const btn = document.getElementById('previewMuteBtn');
+            const slider = document.querySelector('#mediaControls input[type="range"]');
+
+            if (video.muted || video.volume === 0) {
+                video.muted = false;
+                video.volume = 1;
+                slider.value = 1;
+                document.getElementById('volLevel').style.height = '100%';
+                btn.innerHTML = '<i class="bi bi-volume-up-fill"></i>';
+            } else {
+                video.muted = true;
+                video.volume = 0;
+                slider.value = 0;
+                document.getElementById('volLevel').style.height = '0%';
+                btn.innerHTML = '<i class="bi bi-volume-mute-fill"></i>';
+            }
+        }
+
+        async function togglePreviewPlay() {
+            const video = document.getElementById('previewVideo');
+            if (!video.src) return;
+
+            const overlay = document.getElementById('editorPlayOverlay');
+
+            if (video.paused) {
+                try {
+                    await video.play();
+                    overlay.style.opacity = '0';
+                } catch (e) {
+                    console.warn("Playback failed:", e);
+                }
+            } else {
+                video.pause();
+                overlay.style.opacity = '1';
+            }
+        }
+
+        // --- CORE PLAYER INIT (Corregido para carga inmediata) ---
+        function initializePlayer(url, savedStart = null, savedEnd = null) {
+            const video = document.getElementById('previewVideo');
+            const trimmer = document.getElementById('trimmerSection');
+            const loading = document.getElementById('loadingTrimmer');
+
+            // Reset UI state
+            document.getElementById('previewPlaceholder').style.display = 'none';
+            document.getElementById('uploadUi').style.display = 'none';
+            document.getElementById('mediaControls').style.display = 'flex';
+
+            loading.style.display = 'block';
+            trimmer.style.display = 'none';
+
+            video.src = url;
+            video.style.display = 'block';
+            setVolume(1);
+            video.load();
+
+            video.onloadedmetadata = () => {
+                loading.style.display = 'none';
+                trimmer.style.display = 'block';
+
+                videoDuration = video.duration || 0;
+
+                // USER REQUEST: Block if source video < 10s
+                if (videoDuration < 9.5) {
+                    showToast("El video debe durar mínimo 10 segundos.", "error");
+
+                    // Reset/Clear Player
+                    video.pause();
+                    video.src = "";
+                    document.getElementById('videoFile').value = ""; // Clear input
+                    document.getElementById('fileName').innerHTML = "Seleccionar Video";
+                    document.getElementById('uploadUi').style.display = 'block'; // Show upload UI again
+                    document.getElementById('mediaControls').style.display = 'none'; // Hide controls
+                    document.getElementById('previewPlaceholder').style.display = 'block';
+                    document.getElementById('trimmerSection').style.display = 'none';
+                    document.getElementById('loadingTrimmer').style.display = 'none';
+                    return;
+                }
+
+                document.getElementById('totalDurationDisp').innerText = videoDuration.toFixed(1) + 's';
+
+                // Parsing saved values
+                let sVal = parseFloat(savedStart);
+                let eVal = parseFloat(savedEnd);
+
+                // Validation Logic:
+                // If saved values exist and are valid numbers => Use them.
+                // Else => Default to 0 and Duration.
+                // Critical Fix: check for !isNaN AND ensure eVal is logical. 
+                const validSaved = !isNaN(sVal) && !isNaN(eVal) && eVal > sVal;
+
+                if (validSaved) {
+                    trimStartVal = sVal;
+                    trimEndVal = eVal;
+                } else {
+                    trimStartVal = 0;
+                    trimEndVal = videoDuration;
+                }
+
+                // Safety clamp just in case
+                if (trimStartVal < 0) trimStartVal = 0;
+                if (trimEndVal > videoDuration) trimEndVal = videoDuration;
+                if (trimEndVal <= trimStartVal + 0.1) trimEndVal = videoDuration; // fallback if range too small
+
+                // Set Visual UI
+                const sEl = document.getElementById('rangeStart');
+                const eEl = document.getElementById('rangeEnd');
+                if (sEl && eEl) {
+                    sEl.max = videoDuration;
+                    eEl.max = videoDuration;
+                    sEl.value = trimStartVal;
+                    eEl.value = trimEndVal;
+                }
+
+                updateTimelineUI();
+                video.currentTime = trimStartVal;
+
+                // Auto-play for preview
+                video.play()
+                    .then(() => {
+                        document.getElementById('editorPlayOverlay').style.opacity = '0';
+                    })
+                    .catch(console.warn);
+
+                // Loop Logic
+                video.ontimeupdate = () => {
+                    const current = video.currentTime;
+                    // Loop
+                    if (!video.paused) {
+                        if (current < trimStartVal || current >= trimEndVal) {
+                            video.currentTime = trimStartVal;
+                        }
+                    }
+                    // Visual Playhead
+                    if (videoDuration > 0) {
+                        const pct = (current / videoDuration) * 100;
+                        const head = document.getElementById('playhead');
+                        if (head) head.style.left = pct + '%';
+                    }
+                };
+            };
+        }
+
+
+        // --- MODAL ---
+        function openAddModal() {
+            if (userPlan !== 'pro' && userReels.length >= 10) { document.getElementById('upgradeModal').classList.add('active'); return; }
+            resetModal();
+            updateAutoScheduleTime();
+            stopAllGridVideos();
+            document.getElementById('reelModal').classList.add('active');
+        }
+
+        function openEditModal(id) {
+            stopAllGridVideos();
+            const reel = userReels.find(r => r.id === id);
+            if (!reel) return;
+
+            resetModal();
+            document.getElementById('editReelId').value = id;
+            document.getElementById('reelTitle').value = reel.title;
+            updateCharCount(document.getElementById('reelTitle'));
+
+            document.getElementById('uploadUi').style.display = 'none';
+            document.getElementById('btnSave').innerText = "Guardar Cambios";
+
+            // Cloudinary Transformation Stripper
+            // We want to load the FULL video, so we remove start_offset (so_) and end_offset (eo_) from the URL
+            let cleanUrl = reel.url;
+            if (cleanUrl.includes('cloudinary.com')) {
+                // Regex to remove /so_X.X,eo_X.X/ or similar patterns
+                // It usually looks like .../upload/so_1.5,eo_12.0/v1234...
+                // We'll simplisticly replace them.
+                cleanUrl = cleanUrl.replace(/so_[^,/]+,?/g, '').replace(/eo_[^,/]+,?/g, '');
+                // Clean up potential double slashes or trailing commas in transformation part
+                cleanUrl = cleanUrl.replace(/\/upload\/,+/g, '/upload/');
+                cleanUrl = cleanUrl.replace(/\/upload\/$/g, '/upload'); // rare
+            }
+
+            // Initialize Player with existing URL (Cleaned) and saved trim values
+            initializePlayer(cleanUrl, reel.trim_start, reel.trim_end);
+
+            document.getElementById('reelModal').classList.add('active');
+        }
+
+        function resetModal() {
+            document.getElementById('editReelId').value = "";
+            document.getElementById('reelTitle').value = "";
+            document.getElementById('charCount').innerText = "0";
+
+            document.getElementById('videoFile').value = "";
+            document.getElementById('uploadUi').style.display = 'block';
+            document.getElementById('fileName').innerText = "Seleccionar Video";
+
+            document.getElementById('progressBarContainer').style.display = 'none';
+            document.getElementById('progressBar').style.width = '0%';
+
+            // Reset Preview
+            const video = document.getElementById('previewVideo');
+            video.src = ""; video.style.display = 'none';
+            video.ontimeupdate = null; // Remove loop listener
+            setVolume(1);
+
+            document.getElementById('mediaControls').style.display = 'none';
+            document.getElementById('previewPlaceholder').style.display = 'block';
+
+            // Reset Trimmer
+            document.getElementById('trimmerSection').style.display = 'none';
+            document.getElementById('loadingTrimmer').style.display = 'none';
+
+            document.getElementById('btnSave').disabled = false;
+            document.getElementById('btnSave').innerText = "Publicar Video";
+        }
+
+        function closeModal() {
+            document.getElementById('reelModal').classList.remove('active');
+            document.getElementById('previewVideo').pause();
+        }
+
+        function updateCharCount(input) {
+            const text = input.value;
+            document.getElementById('charCount').innerText = text.length;
+
+            // ⭐ VALIDACIÓN EN TIEMPO REAL DE HASHTAGS
+            const hashtags = text.match(/#[a-zA-Z0-9_]+/g) || [];
+
+            // ⭐ DETECTAR DUPLICADOS (case-insensitive)
+            const hashtagsLower = hashtags.map(h => h.toLowerCase());
+            const uniqueHashtags = new Set(hashtagsLower);
+
+            if (uniqueHashtags.size < hashtags.length) {
+                // Hay duplicados! Encontrar el último y removerlo
+                const lastHashtagIndex = text.lastIndexOf('#');
+                if (lastHashtagIndex !== -1) {
+                    input.value = text.substring(0, lastHashtagIndex);
+                    document.getElementById('charCount').innerText = input.value.length;
+                }
+                showToast("Hashtag duplicado", "error");
+                return;
+            }
+
+            if (hashtags.length > 10) {
+                // BLOQUEO SILENCIOSO - Solo cortar sin Toast
+                const lastHashtagIndex = text.lastIndexOf('#');
+                if (lastHashtagIndex !== -1) {
+                    input.value = text.substring(0, lastHashtagIndex);
+                    document.getElementById('charCount').innerText = input.value.length;
+                }
+                // ⭐ NO TOAST - Bloqueo silencioso
+            }
+        }
+
+        function addHashtag(tag) {
+            const input = document.getElementById('reelTitle');
+            const currentText = input.value; // Case-sensitive now
+
+            // Check if exact hashtag already exists (case-sensitive)
+            const words = currentText.split(/\s+/);
+            if (words.includes(tag)) {
+                // Silent return if hashtag exists
+                return;
+            }
+
+            // Add hashtag if within character limit
+            if (input.value.length + tag.length + 1 <= 300) {
+                input.value += (input.value ? " " : "") + tag;
+                updateCharCount(input);
+            }
+        }
+
+        function handleFileSelect(input) {
+            const file = input.files[0];
+            if (file) {
+                document.getElementById('fileName').innerHTML = `<span style="color:#10B981;">${file.name}</span>`;
+                // Instead of URL.createObjectURL, we upload directly or use it for preview if needed
+                const url = URL.createObjectURL(file);
+                initializePlayer(url);
+            }
+        }
+        // ... (The rest of the file logic continues correctly from previous context)
+
+        // --- LÓGICA DE RECORTE (TRIMMER) & EDITOR INTERACTION ---
+        let isDraggingWindow = false;
+        let dragStartX = 0;
+        let initialStartVal = 0;
+        let initialEndVal = 0;
+
+        function seekEditor(e) {
+            if (isDraggingWindow) return;
+            const rect = e.currentTarget.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const pct = Math.max(0, Math.min(1, x / rect.width));
+            const time = pct * videoDuration;
+            const video = document.getElementById('previewVideo');
+            video.currentTime = time;
+        }
+
+        function initDragSelection() {
+            const bar = document.getElementById('timelineSelection');
+
+            bar.addEventListener('mousedown', (e) => {
+                e.stopPropagation();
+                isDraggingWindow = true;
+                dragStartX = e.clientX;
+                initialStartVal = trimStartVal;
+                initialEndVal = trimEndVal;
+                bar.style.cursor = 'grabbing';
+            });
+
+            window.addEventListener('mousemove', (e) => {
+                if (!isDraggingWindow) return;
+                e.preventDefault();
+
+                const track = document.querySelector('.timeline-track-container');
+                const rect = track.getBoundingClientRect();
+                const deltaX = e.clientX - dragStartX;
+                const deltaPct = deltaX / rect.width;
+                const deltaTime = deltaPct * videoDuration;
+
+                let newStart = initialStartVal + deltaTime;
+                let newEnd = initialEndVal + deltaTime;
+                const duration = initialEndVal - initialStartVal;
+
+                if (newStart < 0) {
+                    newStart = 0;
+                    newEnd = duration;
+                }
+                if (newEnd > videoDuration) {
+                    newEnd = videoDuration;
+                    newStart = videoDuration - duration;
+                }
+
+                trimStartVal = newStart;
+                trimEndVal = newEnd;
+
+                document.getElementById('rangeStart').value = trimStartVal;
+                document.getElementById('rangeEnd').value = trimEndVal;
+
+                updateTimelineUI();
+
+                const video = document.getElementById('previewVideo');
+                if (Math.abs(video.currentTime - trimStartVal) > 0.2) {
+                    video.currentTime = trimStartVal;
+                }
+            });
+
+            window.addEventListener('mouseup', () => {
+                if (isDraggingWindow) {
+                    isDraggingWindow = false;
+                    document.getElementById('timelineSelection').style.cursor = 'grab';
+                }
+            });
+        }
+
+        window.addEventListener('DOMContentLoaded', initDragSelection);
+
+        function handleRangeInput(isStart) {
+            const sEl = document.getElementById('rangeStart');
+            const eEl = document.getElementById('rangeEnd');
+            let sVal = parseFloat(sEl.value);
+            let eVal = parseFloat(eEl.value);
+            const minGap = 10; // ⭐ BLOQUEO INSTAGRAM - 10 SEGUNDOS MÍNIMO
+            if (isStart) {
+                // Moving Start: Must not get closer than 10s to End
+                if (sVal > eVal - minGap) {
+                    sVal = eVal - minGap;
+                }
+                if (sVal < 0) sVal = 0;
+            } else {
+                // Moving End: Must not get closer than 10s to Start
+                if (eVal < sVal + minGap) {
+                    eVal = sVal + minGap;
+                }
+                if (eVal > videoDuration) eVal = videoDuration;
+
+                // If End hit the wall, pull Start back
+                if (eVal - sVal < minGap) {
+                    sVal = eVal - minGap;
+                    if (sVal < 0) sVal = 0;
+                }
+            }
+            trimStartVal = sVal;
+            trimEndVal = eVal;
+
+            sEl.value = trimStartVal;
+            eEl.value = trimEndVal;
+            updateTimelineUI();
+            const video = document.getElementById('previewVideo');
+            if (isStart) video.currentTime = trimStartVal;
+            else video.currentTime = trimEndVal;
+        }
+        function updateTimelineUI() {
+            if (!videoDuration || isNaN(videoDuration)) {
+                // If invalid duration, show full bar
+                const sel = document.getElementById('timelineSelection');
+                if (sel) {
+                    sel.style.left = '0%';
+                    sel.style.width = '100%';
+                }
+                return;
+            }
+
+            const startPct = (trimStartVal / videoDuration) * 100;
+            const endPct = (trimEndVal / videoDuration) * 100;
+            let widthPct = endPct - startPct;
+
+            if (widthPct < 0) widthPct = 0;
+            if (widthPct > 100) widthPct = 100;
+
+            const selection = document.getElementById('timelineSelection');
+            if (selection) {
+                selection.style.left = startPct + "%";
+                selection.style.width = widthPct + "%";
+            }
+
+            const dStart = document.getElementById('dispStart');
+            const dEnd = document.getElementById('dispEnd');
+            if (dStart) dStart.innerText = trimStartVal.toFixed(1);
+            if (dEnd) dEnd.innerText = trimEndVal.toFixed(1);
+        }
+
+        // --- HELPER: Cloudinary Upload ---
+        function uploadToCloudinary(file) {
+            return new Promise((resolve, reject) => {
+                document.getElementById('progressBarContainer').style.display = 'block';
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('upload_preset', UPLOAD_PRESET);
+
+                const xhr = new XMLHttpRequest();
+                xhr.open('POST', `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/video/upload`, true);
+
+                xhr.upload.onprogress = (e) => {
+                    if (e.lengthComputable) {
+                        const pct = (e.loaded / e.total) * 100;
+
+                        // ⭐ MOSTRAR BARRA DE PROGRESO
+                        const progressBar = document.getElementById('progressBar');
+                        const progressContainer = document.getElementById('progressBarContainer');
+
+                        if (progressBar && progressContainer) {
+                            progressContainer.style.display = 'block';
+                            progressBar.style.width = pct + '%';
+                        }
+
+                        console.log(`Upload progress: ${pct.toFixed(1)}%`);
+                    }
+                };
+
+                xhr.onload = () => {
+                    if (xhr.status === 200) {
+                        const resp = JSON.parse(xhr.responseText);
+                        resolve(resp.secure_url);
+                    } else {
+                        reject(new Error("Error subiendo a Cloudinary: " + xhr.status));
+                    }
+                };
+
+                xhr.onerror = () => reject(new Error("Network Error"));
+                xhr.send(formData);
+            });
+            // ⭐ OCULTAR BARRA AL TERMINAR
+            document.getElementById('progressBarContainer').style.display = 'none';
+        }
+
+        async function startUploadAndSave() {
+            const file = document.getElementById('videoFile').files[0];
+            const title = document.getElementById('reelTitle').value.trim();
+            const editId = document.getElementById('editReelId').value;
+            const btn = document.getElementById('btnSave');
+            const btnCancel = document.getElementById('btnCancel');
+            const warningMsg = document.getElementById('uploadWarning');
+            // --- VALIDATION 1: Time Limit ---
+            if ((trimEndVal - trimStartVal) < 9.5) {
+                showToast("El corte debe ser de mínimo 10 segundos.", "error");
+                return;
+            }
+            // ⭐ BLOQUEAR INTERFAZ DURANTE SUBIDA
+            isUploading = true;
+            btn.innerText = "Subiendo...";
+            btn.disabled = true;
+            btnCancel.disabled = true;
+            btnCancel.style.opacity = '0.5';
+            btnCancel.style.cursor = 'not-allowed';
+            if (warningMsg) warningMsg.style.display = 'block';
+            // ⭐ PREVENIR CIERRE DE PESTAÑA
+            window.onbeforeunload = function () {
+                return "Hay una subida en progreso. ¿Estás seguro de que quieres salir?";
+            };
+            try {
+                let finalUrl = "";
+                // 1. Upload if new file
+                if (file) {
+                    finalUrl = await uploadToCloudinary(file);
+                } else if (editId) {
+                    const existing = userReels.find(r => r.id === editId);
+                    if (existing) finalUrl = existing.url;
+                }
+                if (!finalUrl) throw new Error("No se encontró video para procesar.");
+                // 3. Cloudinary Transformations
+                if (finalUrl.includes('cloudinary.com')) {
+                    let bgUrl = finalUrl;
+                    bgUrl = bgUrl.replace(/so_[^,/]+,?/g, '').replace(/eo_[^,/]+,?/g, '');
+                    bgUrl = bgUrl.replace(/\/upload\/,+/g, '/upload/');
+                    bgUrl = bgUrl.replace(/\/upload\/$/g, '/upload');
+                    const params = `so_${trimStartVal.toFixed(2)},eo_${trimEndVal.toFixed(2)}`;
+                    finalUrl = bgUrl.replace('/upload/', `/upload/${params}/`);
+                }
+                // 4. Save to Database
+                const payload = {
+                    title: title,
+                    url: finalUrl,
+                    trim_start: trimStartVal,
+                    trim_end: trimEndVal,
+                    platform: 'web'
+                };
+                let error = null;
+                if (editId) {
+                    const { error: err } = await window.supabaseClient.from('reels').update(payload).eq('id', editId);
+                    error = err;
+                } else {
+                    payload.user_id = window.currentUser.id;
+                    const { error: err } = await window.supabaseClient.from('reels').insert([payload]);
+                    error = err;
+                }
+                if (error) throw error;
+                // ⭐ SUCCESS - Desbloquear y cerrar
+                showToast("Reel publicado correctamente", "success");
+
+                // Esperar 500ms para que el usuario vea el toast de éxito
+                await new Promise(resolve => setTimeout(resolve, 500));
+
+                closeModal();
+                loadReels();
+            } catch (e) {
+                console.error(e);
+                showToast("Error: " + e.message, "error");
+            } finally {
+                // ⭐ DESBLOQUEAR INTERFAZ
+                isUploading = false;
+                window.onbeforeunload = null; // Remover protección
+                btn.innerText = "Publicar Video";
+                btn.disabled = false;
+                btnCancel.disabled = false;
+                btnCancel.style.opacity = '1';
+                btnCancel.style.cursor = 'pointer';
+                if (warningMsg) warningMsg.style.display = 'none';
+            }
+        }
+        // --- DELETE LOGIC (SIN CONFIRMACIÓN) ---
+        async function deleteReel(id) {
+            if (!id) return;
+
+            try {
+                // Get user ID and token
+                let userId = window.currentUser?.id;
+                let accessToken = null;
+
+                // Get Supabase session for token
+                if (window.supabaseClient) {
+                    const { data: { session } } = await window.supabaseClient.auth.getSession();
+                    userId = userId || session?.user?.id;
+                    accessToken = session?.access_token;
+                }
+
+                console.log('🔍 Delete attempt - User ID:', userId, 'Has Token:', !!accessToken);
+
+                if (!userId || !accessToken) {
+                    showToast("Error: Usuario no autenticado", "error");
+                    return;
+                }
+
+                // Llamar al backend con Authorization token
+                const response = await fetch(`/api/reels/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${accessToken}`,  // ⭐ TOKEN REQUERIDO
+                        'x-user-id': userId
+                    }
+                });
+
+                console.log('🔍 Delete response status:', response.status);
+
+                if (!response.ok) {
+                    const data = await response.json();
+                    throw new Error(data.error || "Error al eliminar video");
+                }
+
+                showToast("Video eliminado", "success");
+                loadReels();
+            } catch (e) {
+                console.error('❌ Delete error:', e);
+                showToast(e.message, "error");
+            }
+        }
+
+        function openDeleteModal(id) {
+            document.getElementById('deleteTargetId').value = id;
+            document.getElementById('deleteModal').classList.add('active');
+            stopAllGridVideos();
+        }
+
+        function closeDeleteModal() {
+            document.getElementById('deleteModal').classList.remove('active');
+            document.getElementById('deleteTargetId').value = "";
+        }
+
+        async function confirmDelete() {
+            const id = document.getElementById('deleteTargetId').value;
+            if (!id) return;
+
+            const btn = document.querySelector('#deleteModal button[onclick="confirmDelete()"]');
+            const originalText = btn.innerText;
+            btn.innerText = "Eliminando...";
+            btn.disabled = true;
+
+            try {
+                let userId = window.currentUser?.id;
+                let accessToken = null;
+
+                if (window.supabaseClient) {
+                    const { data: { session } } = await window.supabaseClient.auth.getSession();
+                    userId = userId || session?.user?.id;
+                    accessToken = session?.access_token;
+                }
+
+                if (!userId || !accessToken) throw new Error("Usuario no identificado o sin sesión");
+
+                // Call Backend API to handle both DB and Cloudinary deletion
+                const response = await fetch(`/api/reels/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${accessToken}`,
+                        'x-user-id': userId
+                    }
+                });
+
+                if (!response.ok) {
+                    const data = await response.json();
+                    throw new Error(data.error || "Error al eliminar video");
+                }
+
+                showToast("Video eliminado de la nube", "success");
+                loadReels();
+                closeDeleteModal();
+            } catch (e) {
+                console.error(e);
+                showToast("Error eliminando: " + e.message, "error");
+            } finally {
+                btn.innerText = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        // --- TOAST SYSTEM (APPENDED FIX) ---
+        const activeToastMessages = new Set(); // Track active messages to prevent duplicates
+        function showToast(msg, type = 'info') {
+            // Prevent duplicate toasts
+            const toastKey = `${type}:${msg}`;
+            if (activeToastMessages.has(toastKey)) return; // ⭐ ANTI-DUPLICADO
+
+            activeToastMessages.add(toastKey);
+            let container = document.getElementById('toastContainer');
+            if (!container) {
+                container = document.createElement('div');
+                container.id = 'toastContainer';
+                container.className = 'toast-container';
+                document.body.appendChild(container);
+            }
+            const el = document.createElement('div');
+            el.className = `toast toast-${type}`;
+
+            let icon = '<i class="bi bi-info-circle-fill"></i>';
+            if (type === 'error') icon = '<i class="bi bi-x-circle-fill"></i>';
+            if (type === 'success') icon = '<i class="bi bi-check-circle-fill"></i>';
+            el.innerHTML = `
+                <div class="toast-icon">${icon}</div>
+                <div>${msg}</div>
+            `;
+            const activeToasts = container.querySelectorAll('.toast').length;
+            if (activeToasts > 3) container.firstChild.remove();
+            container.appendChild(el);
+            // Animate in
+            requestAnimationFrame(() => el.classList.add('active'));
+            // Remove after 4s
+            setTimeout(() => {
+                el.classList.remove('active');
+                setTimeout(() => {
+                    el.remove();
+                    activeToastMessages.delete(toastKey); // ⭐ Permitir el mismo mensaje después
+                }, 400);
+            }, 4000);
+        }
+    </script>
+</body>
+
+</html>

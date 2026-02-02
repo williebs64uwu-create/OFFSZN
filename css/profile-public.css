@@ -1,0 +1,2063 @@
+/* Public Profile Styles - Spotify/Premium Style */
+:root {
+    --p-bg: #000000;
+    --p-card-bg: #121212;
+    --p-hover: #282828;
+    --p-accent: #8b5cf6;
+    --p-text: #ffffff;
+    --p-subtext: #b3b3b3;
+}
+
+body {
+    background-color: var(--p-bg);
+}
+
+/* HEADER */
+.profile-header {
+    background: linear-gradient(180deg, #111 0%, #000 100%);
+    padding: 60px 40px 20px;
+    /* Increased side padding */
+    border-bottom: none;
+    /* Removed separator */
+}
+
+.profile-header-content {
+    max-width: 1400px;
+    /* Match navbar width */
+    margin: 0 auto;
+    display: flex;
+    align-items: flex-end;
+    gap: 32px;
+}
+
+/* BODY */
+.profile-body {
+    max-width: 1400px;
+    /* Match navbar width */
+    margin: 0 auto;
+    padding: 20px 40px;
+}
+
+/* === PRO TOOLBAR === */
+.pro-toolbar-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #080808;
+    /* Very dark */
+    border: 1px solid #1a1a1a;
+    border-radius: 8px;
+    padding: 0 4px;
+    /* Minimal padding like Wavs */
+    margin-bottom: 24px;
+    height: 56px;
+}
+
+.toolbar-section.left {
+    display: flex;
+    height: 100%;
+    align-items: center;
+}
+
+.dropdown-wrapper {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    border-right: 1px solid #1a1a1a;
+    padding: 0 20px;
+}
+
+.filters-row {
+    display: flex;
+    height: 100%;
+}
+
+.pro-text-filter {
+    height: 100%;
+    background: transparent;
+    border: none;
+    border-right: 1px solid #1a1a1a;
+    color: #777;
+    font-size: 0.75rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 24px;
+    text-transform: uppercase;
+    transition: all 0.2s;
+}
+
+.pro-text-filter:hover {
+    background: #111;
+    color: #fff;
+}
+
+.toolbar-section.right {
+    padding-right: 12px;
+}
+
+/* === MAIN TRACK LIST (Wavs Style) === */
+.products-list-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    /* Seamless */
+}
+
+.list-row {
+    display: grid;
+    /* Cover | Play | Waveform | Duration | Title+Author | Tags/Badges | BPM | Key | Price */
+    grid-template-columns: 44px 32px 1.2fr 40px 2.2fr 1fr 60px 60px 70px;
+    /* Flattened waveform (1.2fr), more name space */
+    align-items: center;
+    gap: 12px;
+    padding: 8px 8px;
+    /* Start covers closer to left edge */
+    /* Ultra-compact horizontal/vertical padding */
+    /* Increased right padding to shift elements left */
+    border-bottom: 1px solid #1a1a1a;
+    transition: background 0.1s ease;
+    background: transparent;
+}
+
+.list-row:hover {
+    background: #0a0a0a;
+}
+
+.list-row:hover .list-actions {
+    opacity: 1;
+    /* Show actions on hover if desired, or keep visible */
+}
+
+/* 1. Cover */
+.list-cover img {
+    width: 44px;
+    /* Compact size */
+    height: 44px;
+    border-radius: 4px;
+    object-fit: cover;
+    filter: brightness(0.9);
+}
+
+/* 2. Play */
+.btn-list-play {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #1a1a1a;
+    border: 1px solid #333;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-list-play:hover {
+    background: #fff;
+    color: #000;
+    border-color: #fff;
+    transform: scale(1.05);
+}
+
+/* 3. Waveform */
+.list-waveform {
+    height: 24px;
+    opacity: 0.8;
+    /* Increased opacity */
+    background-size: cover;
+    background-position: center;
+    width: 100%;
+}
+
+/* 4. Duration */
+.list-duration {
+    font-size: 0.8rem;
+    color: #555;
+    font-family: monospace;
+}
+
+/* 5. Title & Author */
+.list-title {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.list-title h4 {
+    color: #eee;
+    font-size: 0.8rem;
+    /* Compact and sharp */
+    margin: 0 0 1px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.list-title p {
+    color: #444;
+    /* Darker to let title stand out */
+    font-size: 0.65rem;
+    /* Micro size */
+    margin: 0;
+}
+
+.list-row:hover .list-title h4 {
+    color: #fff;
+}
+
+/* 6. Tags / Badges (Stems/Royalty) */
+.list-badges {
+    display: flex;
+    gap: 6px;
+}
+
+.badge-outline {
+    border: 1px solid #333;
+    border-radius: 3px;
+    padding: 2px 6px;
+    font-size: 0.65rem;
+    color: #888;
+    text-transform: uppercase;
+    font-weight: 600;
+}
+
+/* 7. Meta (BPM/Key separated) */
+.list-meta-cell {
+    font-size: 0.8rem;
+    color: #777;
+    font-weight: 500;
+}
+
+/* 8. Price */
+.list-price {
+    font-size: 0.85rem;
+    /* Slightly smaller */
+    font-weight: 800;
+    /* Bolder for premium feel */
+    color: #fff;
+    text-align: right;
+}
+
+/* Mobile */
+@media (max-width: 1200px) {
+    .list-row {
+        /* Simplified grid for tablet */
+        grid-template-columns: 48px 40px 1fr 200px 80px;
+    }
+
+    .list-waveform,
+    .list-duration,
+    .list-badges {
+        display: block !important;
+    }
+}
+
+/* Small Mobile */
+@media (max-width: 768px) {
+
+    .profile-header,
+    .profile-body {
+        padding-left: 16px;
+        padding-right: 16px;
+    }
+
+    .list-row {
+        gap: 12px;
+        grid-template-columns: 48px 1fr 60px;
+    }
+
+    .btn-list-play,
+    .list-meta-cell {
+        display: none;
+    }
+}
+
+.profile-avatar-container {
+    flex-shrink: 0;
+}
+
+.profile-avatar-img {
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    background-color: #333;
+    overflow: hidden;
+    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 4rem;
+    font-weight: 800;
+    color: #555;
+    border: 4px solid #121212;
+}
+
+.profile-avatar-img img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.profile-details {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.profile-top-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.profile-details h1 {
+    font-size: 3.5rem;
+    /* Massive name like Spotify */
+    font-weight: 900;
+    margin: 0;
+    line-height: 1;
+    font-family: 'Montserrat', sans-serif;
+    color: #fff;
+    letter-spacing: -1px;
+}
+
+.verified-badge {
+    color: #3b82f6;
+    /* Blue tick */
+    font-size: 1.5rem;
+}
+
+.profile-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--p-subtext);
+    font-size: 0.95rem;
+    font-weight: 500;
+}
+
+.dot-separator {
+    font-size: 0.5rem;
+}
+
+.profile-bio {
+    color: #ccc;
+    font-size: 1rem;
+    max-width: 600px;
+    margin-top: 4px;
+    line-height: 1.5;
+}
+
+.profile-stats {
+    display: flex;
+    gap: 24px;
+    margin-top: 8px;
+    font-size: 0.95rem;
+    color: var(--p-subtext);
+}
+
+.profile-stats b {
+    color: #fff;
+    font-weight: 700;
+}
+
+.profile-actions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-top: 16px;
+}
+
+.btn-primary {
+    background: var(--p-accent);
+    color: #fff;
+    border: none;
+    padding: 10px 24px;
+    border-radius: 32px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.btn-primary:hover {
+    transform: scale(1.05);
+}
+
+.btn-secondary {
+    background: transparent;
+    color: #fff;
+    border: 1px solid #555;
+    padding: 9px 20px;
+    border-radius: 32px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: border-color 0.2s;
+}
+
+.btn-secondary:hover {
+    border-color: #fff;
+}
+
+.social-links {
+    display: flex;
+    gap: 12px;
+}
+
+.social-link {
+    color: var(--p-subtext);
+    font-size: 1.25rem;
+    transition: color 0.2s;
+}
+
+.social-link:hover {
+    color: #fff;
+}
+
+/* BODY */
+.profile-body {
+    max-width: 1200px;
+    margin: 40px auto;
+    padding: 0 20px;
+}
+
+/* === PRO TOOLBAR === */
+.pro-toolbar-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #0d0d0d;
+    border: 1px solid #1f1f1f;
+    border-radius: 8px;
+    /* Slightly tighter radius like reference */
+    padding: 8px 16px;
+    margin-bottom: 32px;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.toolbar-section {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.toolbar-section.left {
+    flex: 1;
+    overflow-x: auto;
+    scrollbar-width: none;
+    /* Hide scrollbar */
+}
+
+.divider-v {
+    width: 1px;
+    height: 20px;
+    background: #2a2a2a;
+}
+
+/* Primary Filter (Popular) */
+.pro-filter-btn.primary-filter {
+    background: transparent;
+    border: none;
+    color: #eab308;
+    /* Yellow/Gold for 'Popular' like reference idea or just accent */
+    font-size: 0.8rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Secondary Filters Row */
+.filters-row {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+}
+
+.pro-text-filter {
+    background: transparent;
+    border: none;
+    color: #888;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+    transition: color 0.2s;
+}
+
+.pro-text-filter:hover {
+    color: #fff;
+}
+
+.pro-text-filter i {
+    font-size: 0.65rem;
+    margin-top: -2px;
+}
+
+/* Search */
+.pro-search {
+    background: #111;
+    border-radius: 8px;
+    /* Standard radius, not pill */
+    padding: 0 12px;
+    display: flex;
+    align-items: center;
+    width: 240px;
+    border: 1px solid #333;
+    height: 40px;
+    /* Specific height */
+    transition: all 0.2s;
+}
+
+.pro-search:focus-within {
+    border-color: #666;
+    background: #161616;
+}
+
+.pro-search input {
+    background: transparent;
+    border: none;
+    outline: none;
+    color: #fff;
+    font-size: 0.9rem;
+    flex: 1;
+    height: 100%;
+}
+
+.pro-search i {
+    color: #555;
+    font-size: 0.9rem;
+}
+
+/* VERIFIED TOOLTIP */
+.verified-container {
+    position: relative;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+}
+
+.verified-tooltip {
+    visibility: hidden;
+    opacity: 0;
+    position: absolute;
+    top: 50%;
+    left: calc(100% + 12px);
+    transform: translateY(-50%) translateX(10px);
+    background: #111;
+    border: 1px solid #333;
+    width: 220px;
+    padding: 12px;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+    z-index: 1000;
+    transition: none;
+    /* Instant hide */
+    pointer-events: none;
+}
+
+.verified-container:hover .verified-tooltip {
+    visibility: visible;
+    opacity: 1;
+    transform: translateY(-50%) translateX(0);
+    transition: opacity 0.15s ease, transform 0.15s ease;
+    /* Smooth show */
+}
+
+.v-tooltip-header {
+    margin-bottom: 8px;
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 1px;
+    color: var(--p-accent);
+    /* Purple/Brand Color */
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.v-tooltip-body {
+    font-size: 0.85rem;
+    color: #ddd;
+    line-height: 1.4;
+}
+
+/* Arrow for tooltip (pointing left) */
+.verified-tooltip::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    right: 100%;
+    margin-top: -6px;
+    border-width: 6px;
+    border-style: solid;
+    border-color: transparent #333 transparent transparent;
+}
+
+/* Toggles */
+.view-toggles-minimal {
+    display: none;
+    gap: 8px;
+}
+
+.view-toggle-btn {
+    background: transparent;
+    border: none;
+    color: #555;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.view-toggle-btn:hover {
+    color: #999;
+}
+
+.view-toggle-btn.active {
+    color: #fff;
+}
+
+
+/* === TRENDING SECTION (Top Grid) === */
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.trending-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    /* Force 5 columns */
+    align-items: start;
+    /* Align all items to top */
+    gap: 20px;
+    justify-content: start;
+}
+
+/* Trending Card Style (Wavs/Kingsway Match) */
+.trending-card {
+    background: transparent;
+    /* Seamless */
+    border: none;
+    border-radius: 0;
+    padding: 0;
+    transition: all 0.2s;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+    /* Ensure it fills grid cell */
+    max-width: 100%;
+    /* Prevent expansion */
+    min-width: 0;
+    /* CRITICAL: Force grid to allow shrinking below min-content */
+    align-self: start;
+    /* Align to top of grid cell */
+}
+
+.t-card-cover {
+    width: 100%;
+    aspect-ratio: 1/1;
+    min-height: 0;
+    /* Allow flex to shrink properly */
+    flex-shrink: 0;
+    /* Prevent image from shrinking */
+    border-radius: 8px;
+    overflow: hidden;
+    position: relative;
+    background: #111;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    transition: transform 0.3s ease;
+}
+
+.trending-card:hover .t-card-cover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
+}
+
+.t-card-cover img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Overlay Badge (Count/Type) inside Image */
+.t-overlay-badge {
+    position: absolute;
+    bottom: 8px;
+    left: 8px;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(4px);
+    color: #fff;
+    font-size: 0.7rem;
+    padding: 4px 8px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-weight: 600;
+    z-index: 2;
+}
+
+.t-play-btn {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.8);
+    width: 50px;
+    height: 50px;
+    background: #ffffff;
+    color: #000000;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    opacity: 0;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 3;
+    pointer-events: auto;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+    border: none;
+    cursor: pointer;
+}
+
+.t-play-btn i {
+    margin-left: 3px;
+}
+
+.trending-card:hover .t-play-btn {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+}
+
+.t-play-btn:hover {
+    background: #f0f0f0;
+    transform: translate(-50%, -50%) scale(1.1) !important;
+}
+
+.t-play-btn:active {
+    transform: translate(-50%, -50%) scale(0.9) !important;
+}
+
+
+/* Info Container - Prevent text expansion */
+.t-card-info {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    /* Important for grid/flex children to allow ellipsis */
+    overflow: hidden;
+}
+
+.t-card-info h4 {
+    color: #fff;
+    font-size: 0.95rem;
+    margin: 0 0 4px;
+    font-weight: 700;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+    width: 100%;
+    display: block;
+}
+
+
+.t-card-info p {
+    color: #666;
+    font-size: 0.8rem;
+    margin: 0;
+}
+
+.t-card-info p:hover {
+    color: #888;
+    text-decoration: underline;
+}
+
+/* Author/Artist Names Truncation */
+.t-card-author {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+    width: 100%;
+    display: block;
+}
+
+.t-meta-row {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    margin-top: -8px;
+    /* Pull closer */
+    font-size: 0.75rem;
+    color: #555;
+    white-space: nowrap;
+    /* Prevent wrapping */
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.t-chip {
+    background: #1f1f1f;
+    border-radius: 4px;
+    padding: 2px 6px;
+    color: #999;
+}
+
+/* Trending Grid Responsive */
+@media (max-width: 1400px) {
+    .trending-grid {
+        grid-template-columns: repeat(4, 1fr);
+        /* 4 columns on tablets */
+    }
+}
+
+@media (max-width: 1000px) {
+    .trending-grid {
+        grid-template-columns: repeat(3, 1fr);
+        /* 3 columns on small tablets */
+    }
+}
+
+@media (max-width: 768px) {
+    .trending-grid {
+        grid-template-columns: repeat(2, 1fr);
+        /* 2 columns on mobile */
+        gap: 16px;
+    }
+}
+
+@media (max-width: 500px) {
+    .trending-grid {
+        grid-template-columns: 1fr;
+        /* 1 column on small mobile */
+        gap: 12px;
+    }
+}
+
+/* === MAIN TRACK LIST (Bottom) === */
+.products-list-container {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.list-row {
+    display: grid;
+    /* Cover | Info | Player | Tags | Price | Actions */
+    grid-template-columns: 60px 330px 2fr 210px 80px 110px;
+    /* Increased actions width to 140px to fix ovals */
+    align-items: center;
+    gap: 16px;
+    padding: 8px 8px;
+    border-bottom: 1px solid #141414;
+    transition: background 0.1s;
+}
+
+.list-row:hover {
+    background: #111;
+}
+
+/* Merged Player Column */
+.list-col-player {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    /* Tight gap between Play and Wave */
+    width: 100%;
+    min-width: 0;
+}
+
+.list-col-price {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.btn-list-play {
+    width: 32px;
+    /* Small pro look */
+    height: 32px;
+    border-radius: 50%;
+    background: #222;
+    border: 1px solid #333;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+    /* Don't shrink */
+}
+
+.btn-list-play:hover {
+    background: #fff;
+    color: #000;
+    transform: scale(1.05);
+    border-color: #fff;
+}
+
+.list-cover img {
+    width: 56px;
+    height: 56px;
+    border-radius: 8px;
+    object-fit: cover;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+/* COL: Info (Title + Author) */
+.list-col-info {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-width: 0;
+    gap: 2px;
+}
+
+.list-track-title {
+    color: #fff;
+    font-weight: 700;
+    font-size: 0.95rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.list-author-sub {
+    font-size: 0.85rem;
+    color: #888;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+
+.list-author-sub {
+    color: #666;
+    font-size: 0.8rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* COL: Waveform (Center) */
+.list-col-wave {
+    width: 100%;
+    height: 32px;
+    position: relative;
+    opacity: 0.8;
+    display: flex;
+    align-items: center;
+}
+
+.list-waveform-container {
+    flex: 1;
+    min-width: 0;
+    height: 100%;
+    margin-right: 12px;
+    /* Space between wave and duration */
+}
+
+.list-col-tags {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-start;
+    /* Align left */
+    align-items: center;
+}
+
+.badge-outline {
+    border: 1px solid #333;
+    color: #888;
+    font-size: 0.65rem;
+    padding: 2px 0;
+    /* Changed padding to rely on width for alignment or keep small */
+    padding-left: 8px;
+    padding-right: 8px;
+    border-radius: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+/* First Badge: Product Type (Fixed Width for Alignment) */
+.badge-type {
+    min-width: 80px;
+    text-align: center;
+    border-color: #444;
+    color: #bbb;
+}
+
+/* Second Badge: Meta Info (Variable) */
+.badge-meta {
+    border-color: #333;
+    color: #888;
+    min-width: 80px;
+    /* Optional: Make this fixed too if desired, but user focused on alignment */
+    text-align: center;
+}
+
+.list-col-meta {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+}
+
+.meta-item {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    line-height: 1.1;
+}
+
+.meta-item span {
+    color: #ccc;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.meta-item small {
+    color: #555;
+    font-size: 0.65rem;
+    font-weight: 700;
+}
+
+.list-col-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    align-items: center;
+    opacity: 0;
+    /* Hidden by default */
+    transition: opacity 0.2s ease;
+}
+
+.list-row:hover .list-col-actions {
+    opacity: 1;
+    /* Show on hover */
+}
+
+.btn-list-price {
+    background: var(--p-accent);
+    color: #fff;
+    border: none;
+    padding: 6px 14px;
+    border-radius: 4px;
+    font-weight: 700;
+    font-size: 0.85rem;
+    cursor: pointer;
+    min-width: 60px;
+    transition: filter 0.2s;
+
+}
+
+.btn-list-price:hover {
+    filter: brightness(1.1);
+}
+
+.btn-list-icon {
+    background: transparent;
+    border: 1px solid transparent;
+    color: #666;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    /* Centering fix */
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    /* Anti-oval fix */
+}
+
+.btn-list-icon:hover {
+    color: #fff;
+    border-color: #333;
+}
+
+/* Play Button Hover (List) */
+.btn-list-play {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 1px solid #333;
+    background: #111;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 1.1rem;
+    transition: all 0.2s;
+}
+
+.btn-list-play:hover {
+    background: #fff;
+    color: #000;
+    border-color: #fff;
+    transform: scale(1.1);
+}
+
+/* Mobile List Adjustments */
+/* Mobile List Adjustments */
+@media (max-width: 900px) {
+    .list-row {
+        /* Player | Info | Actions */
+        grid-template-columns: 46px 1fr 120px;
+        gap: 12px;
+        padding: 12px 16px;
+    }
+
+    /* Hide elements not needed on mobile */
+    .list-cover,
+    .list-col-tags,
+    .list-col-price,
+    .list-col-player span[id^="duration-"] {
+        display: none !important;
+    }
+
+    .list-waveform-container {
+        display: block !important;
+        opacity: 0.5;
+        /* Slightly dimmer on mobile to avoid clutter */
+    }
+
+    /* Move Player (Button) to first position */
+    .list-col-player {
+        order: -1;
+        width: 46px;
+        /* Restrict width since wave is gone */
+        justify-content: center;
+        gap: 0;
+    }
+
+    .list-col-info {
+        min-width: 0;
+        /* Enable truncation */
+    }
+
+    .list-track-title {
+        font-size: 0.9rem;
+    }
+
+    .list-author-sub {
+        font-size: 0.75rem;
+    }
+
+    .list-col-actions {
+        /* Adjust actions for mobile */
+        justify-content: flex-end;
+    }
+
+    /* Hide some action buttons on mobile if needed, or keep them */
+    .btn-list-icon {
+        width: 28px;
+        height: 28px;
+    }
+}
+
+
+/* === GRID FIXES === */
+/* Ensure grid items don't stretch weirdly */
+.products-grid {
+    /* 5 Columns on large screens roughly */
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    /* Slightly smaller minmax to fit more items if needed */
+    gap: 20px;
+}
+
+/* === LIST VIEW REFINEMENT === */
+.products-grid.list-view {
+    gap: 2px;
+    /* Super tight gap like a spreadsheet/playlist */
+}
+
+.products-grid.list-view .product-card {
+    border: none;
+    /* No border for seamless look */
+    border-bottom: 1px solid #1a1a1a;
+    /* Line separator only */
+    border-radius: 0;
+    background: transparent;
+    /* Transparent background */
+    padding: 12px 16px;
+    /* Reduced vertical padding */
+    height: 64px;
+    /* Compact height */
+}
+
+.products-grid.list-view .product-card:first-child {
+    border-top: 1px solid #1a1a1a;
+}
+
+.products-grid.list-view .product-card:hover {
+    background: #111;
+    /* Subtle highlight */
+    border-color: #1a1a1a;
+    /* Maintain separator */
+}
+
+.products-grid.list-view .product-cover {
+    width: 44px;
+    /* Smaller cover */
+    height: 44px;
+    border-radius: 4px;
+}
+
+.products-grid.list-view .product-title {
+    font-size: 0.9rem;
+    /* Slightly smaller text */
+    font-weight: 600;
+}
+
+.products-grid.list-view .list-waveform {
+    height: 24px;
+    opacity: 0.4;
+    /* More subtle */
+}
+
+/* Hide tags/meta earlier */
+@media (max-width: 900px) {
+    .filters-row {
+        gap: 12px;
+    }
+
+    .pro-text-filter {
+        font-size: 0.7rem;
+    }
+}
+
+@media (max-width: 700px) {
+    .filters-row {
+        display: none;
+        /* Hide advanced filters on mobile */
+    }
+}
+
+/* ADVANCED TOOLBAR */
+.profile-toolbar-advanced {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #0f0f0f;
+    /* Slightly lighter than pure black */
+    border: 1px solid #222;
+    border-radius: 16px;
+    padding: 12px 20px;
+    margin-bottom: 32px;
+    flex-wrap: wrap;
+    gap: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+.filter-group {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    flex: 1;
+}
+
+.adv-search {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #888;
+    background: #181818;
+    padding: 8px 16px;
+    border-radius: 10px;
+    border: 1px solid #222;
+    transition: all 0.2s;
+    height: 40px;
+}
+
+.adv-search:focus-within {
+    border-color: #555;
+    color: #fff;
+    background: #1f1f1f;
+}
+
+.adv-search input {
+    background: transparent;
+    border: none;
+    color: #fff;
+    outline: none;
+    font-size: 0.95rem;
+    width: 180px;
+    font-family: inherit;
+}
+
+.vertical-separator {
+    width: 1px;
+    height: 24px;
+    background: #222;
+}
+
+.filter-dropdown {
+    position: relative;
+    height: 40px;
+    display: flex;
+    align-items: center;
+}
+
+.filter-btn {
+    background: transparent;
+    border: none;
+    color: #999;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    letter-spacing: 0.5px;
+    transition: all 0.2s;
+    text-transform: uppercase;
+}
+
+.filter-btn:hover {
+    color: #fff;
+    background: #1f1f1f;
+}
+
+.filter-menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background: #111;
+    border: 1px solid #222;
+    border-radius: 8px;
+    min-width: 140px;
+    padding: 4px;
+    display: none;
+    z-index: 100;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.filter-dropdown:hover .filter-menu {
+    display: block;
+}
+
+.filter-opt {
+    padding: 8px 12px;
+    color: #888;
+    font-size: 0.85rem;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+.filter-opt:hover {
+    background: #222;
+    color: #fff;
+}
+
+.filter-opt.selected {
+    color: var(--p-accent);
+    background: rgba(139, 92, 246, 0.1);
+}
+
+.view-toggles-modern {
+    display: flex;
+    background: #181818;
+    padding: 4px;
+    border-radius: 10px;
+    border: 1px solid #222;
+    gap: 2px;
+}
+
+.view-btn.icon-only {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    color: #666;
+    transition: all 0.2s;
+}
+
+.view-btn.icon-only:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.view-btn.icon-only.active {
+    background: #333;
+    color: #fff;
+}
+
+/* PREMIUM LIST VIEW (Track Row Style) */
+.products-grid.list-view {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-width: 100%;
+}
+
+/* GRID VIEW DEFAULT */
+.products-grid {
+    display: grid;
+    /* STRICT WIDTH: Prevents cards from becoming giant */
+    grid-template-columns: repeat(auto-fill, 230px);
+    justify-content: start;
+    /* Align to start, not center (center looks weird with 1 item) */
+    gap: 24px;
+}
+
+/* Responsive Grid centering for small screens */
+@media (max-width: 550px) {
+    .products-grid {
+        justify-content: center;
+    }
+}
+
+.products-grid.list-view .product-card {
+    display: grid;
+    /* Adjusted Columns for better breathing room */
+    /* Play | Cover | Title/Author | Waveform | Tags | BPM/Key | Price/Action */
+    grid-template-columns: 50px 64px 2.5fr 2fr 0.8fr 120px 120px;
+    align-items: center;
+    gap: 24px;
+    padding: 10px 24px;
+    background: #111;
+    border: 1px solid #222;
+    border-radius: 12px;
+    height: 84px;
+    transition: background 0.2s, border-color 0.2s;
+}
+
+.products-grid.list-view .product-card:hover {
+    background: #161616;
+    border-color: #333;
+}
+
+/* List elements overrides */
+.products-grid.list-view .product-cover {
+    width: 64px;
+    height: 64px;
+    border-radius: 6px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+.products-grid.list-view .product-title {
+    font-size: 1rem;
+    margin-bottom: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.products-grid.list-view .product-author {
+    font-size: 0.85rem;
+    color: #666;
+}
+
+.products-grid.list-view .product-tags {
+    justify-content: flex-start;
+    flex-wrap: nowrap;
+    overflow: hidden;
+}
+
+.products-grid.list-view .product-footer {
+    justify-content: flex-end;
+    gap: 16px;
+    width: 100%;
+}
+
+/* New List-Only Elements */
+.list-play-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #181818;
+    color: #fff;
+    border: 1px solid #333;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: none;
+    /* Hidden in Grid */
+}
+
+.list-play-btn:hover {
+    border-color: #fff;
+    background: #222;
+}
+
+.products-grid.list-view .list-play-btn {
+    display: flex;
+}
+
+.list-meta-info {
+    display: none;
+    flex-direction: column;
+    font-size: 0.75rem;
+    color: #777;
+    text-align: right;
+}
+
+.products-grid.list-view .list-meta-info {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    font-size: 0.8rem;
+    color: #888;
+    line-height: 1.4;
+}
+
+.products-grid.list-view .list-meta-info b {
+    color: #ccc;
+    font-weight: 600;
+}
+
+.list-waveform {
+    display: block;
+    /* Forced visible */
+    height: 30px;
+    width: 100%;
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 40" preserveAspectRatio="none"><path d="M0,20 Q10,5 20,20 T40,20 T60,20 T80,20 T100,20 T120,20 T140,20 T160,20 T180,20 T200,20" stroke="%23333" stroke-width="2" fill="none"/></svg>');
+    background-size: cover;
+    opacity: 0.5;
+}
+
+.products-grid.list-view .list-waveform {
+    display: block;
+    height: 32px;
+    width: 100%;
+    /* Brighter waveform */
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 40" preserveAspectRatio="none"><path d="M0,20 Q10,10 20,20 T40,20 T60,20 T80,20 T100,5 T120,20 T140,20 T160,20 T180,20 T200,20" stroke="%23555" stroke-width="2" fill="none"/></svg>');
+    opacity: 0.7;
+}
+
+/* Responsive List */
+@media (max-width: 1024px) {
+    .products-grid.list-view .product-card {
+        grid-template-columns: 48px 60px 1fr 80px;
+        /* Hide waveform, tags, bpm on mobile/tablet to fit */
+    }
+
+    .products-grid.list-view .list-waveform,
+    .products-grid.list-view .product-tags,
+    .products-grid.list-view .list-meta-info {
+        display: none !important;
+    }
+}
+
+/* Hide Tags if screen starts getting tight */
+@media (max-width: 1200px) {
+    .products-grid.list-view .product-card {
+        grid-template-columns: 50px 64px 2fr 1.5fr 0px 100px 100px;
+    }
+
+    .products-grid.list-view .product-tags {
+        display: none;
+    }
+}
+
+/* TOOLBAR */
+.profile-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #222;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.profile-tabs {
+    display: flex;
+    gap: 24px;
+    /* Removed border-bottom from here since parent has it */
+    margin: 0;
+    border: none;
+}
+
+.profile-controls {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.search-wrapper {
+    position: relative;
+}
+
+.search-wrapper i {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.profile-search-input {
+    background: #111;
+    border: 1px solid #333;
+    border-radius: 20px;
+    padding: 8px 16px 8px 36px;
+    color: #fff;
+    font-size: 0.9rem;
+    width: 200px;
+    transition: all 0.2s;
+}
+
+.profile-search-input:focus {
+    width: 240px;
+    border-color: #555;
+    background: #161616;
+    outline: none;
+}
+
+.view-toggles {
+    display: flex;
+    background: #111;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 2px;
+}
+
+.view-btn {
+    background: transparent;
+    border: none;
+    color: #555;
+    padding: 6px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: all 0.2s;
+}
+
+.view-btn.active {
+    background: #333;
+    color: #fff;
+}
+
+/* LIST VIEW OVERRIDES */
+.products-grid.list-view {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.products-grid.list-view .product-card {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    padding: 12px;
+    height: auto;
+    gap: 16px;
+}
+
+.products-grid.list-view .product-cover {
+    width: 64px;
+    height: 64px;
+    border-radius: 6px;
+}
+
+.products-grid.list-view .product-title {
+    font-size: 1rem;
+    margin-bottom: 4px;
+    width: 200px;
+    /* Fixed width for title in list */
+}
+
+.products-grid.list-view .product-tags {
+    flex: 1;
+    /* Tags take available space */
+    justify-content: flex-start;
+}
+
+.products-grid.list-view .product-author {
+    display: none;
+    /* Hide author in list to save space */
+}
+
+.products-grid.list-view .product-footer {
+    width: auto;
+    gap: 24px;
+    margin-top: 0;
+    padding-top: 0;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .profile-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .profile-tabs {
+        overflow-x: auto;
+        padding-bottom: 8px;
+    }
+
+    .profile-controls {
+        justify-content: space-between;
+    }
+
+    .profile-search-input {
+        width: 100%;
+    }
+
+    .profile-search-input:focus {
+        width: 100%;
+    }
+}
+
+.product-card {
+    background-color: #121212;
+    border-radius: 16px;
+    padding: 16px;
+    border: 1px solid #222;
+    transition: transform 0.2s, border-color 0.2s, background-color 0.2s;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+}
+
+.product-card:hover {
+    background-color: #181818;
+    transform: translateY(-4px);
+    border-color: #333;
+}
+
+.product-cover {
+    width: 100%;
+    aspect-ratio: 1/1;
+    border-radius: 8px;
+    overflow: hidden;
+    background-color: #222;
+    position: relative;
+}
+
+.product-cover img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.4s ease;
+}
+
+.product-card:hover .product-cover img {
+    transform: scale(1.05);
+}
+
+.product-title {
+    color: #fff;
+    font-size: 1.1rem;
+    font-weight: 800;
+    margin: 0;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-transform: uppercase;
+    /* Match screenshot style */
+    letter-spacing: -0.5px;
+}
+
+.product-tags {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    /* Space for scrollbar if needed */
+    scrollbar-width: none;
+}
+
+.product-tags::-webkit-scrollbar {
+    display: none;
+}
+
+.product-tag {
+    background: #252528;
+    color: #a1a1aa;
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 4px 8px;
+    border-radius: 4px;
+    white-space: nowrap;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.product-author {
+    color: #666;
+    font-size: 0.85rem;
+    margin: 0;
+}
+
+.product-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: auto;
+    /* Push to bottom */
+    padding-top: 4px;
+}
+
+.product-price {
+    color: #fff;
+    font-size: 1.25rem;
+    font-weight: 800;
+}
+
+.btn-card-action {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: transparent;
+    border: 1px solid #444;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    transition: all 0.2s;
+}
+
+.product-card:hover .btn-card-action {
+    background: #fff;
+    color: #000;
+    border-color: #fff;
+}
+
+.empty-state {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 60px;
+    color: #555;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .profile-header-content {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+
+    .profile-avatar-img {
+        width: 160px;
+        height: 160px;
+        margin-bottom: 20px;
+    }
+
+    .profile-details {
+        align-items: center;
+    }
+
+    .profile-details h1 {
+        font-size: 2.2rem;
+    }
+
+    .profile-bio {
+        font-size: 0.9rem;
+    }
+}
+
+/* === ARTIST HOVER CARD === */
+.artist-hover-trigger {
+    cursor: pointer;
+    position: relative;
+    transition: color 0.2s;
+    border-bottom: 1px dotted rgba(255, 255, 255, 0.3);
+}
+
+.artist-hover-trigger:hover {
+    color: #fff;
+    border-bottom: 1px solid #fff;
+}
+
+#artist-hover-card {
+    position: fixed;
+    display: none;
+    background: #181818;
+    border: 1px solid #333;
+    border-radius: 12px;
+    padding: 12px;
+    /* Smaller padding */
+    width: 220px;
+    /* Mini Width */
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+    z-index: 9999;
+    color: #fff;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    transform: translateY(10px);
+}
+
+#artist-hover-card.active {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    /* Reduced gap */
+    pointer-events: auto;
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.ahc-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    /* Reduced gap */
+}
+
+.ahc-avatar {
+    width: 42px;
+    /* Mini Avatar */
+    height: 42px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1px solid #444;
+}
+
+.ahc-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.ahc-name {
+    font-weight: 700;
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.ahc-name i.bi-patch-check-fill {
+    color: #1DB954;
+    /* Verified Green */
+    font-size: 0.9rem;
+}
+
+.ahc-stats {
+    font-size: 0.75rem;
+    color: #999;
+    margin-top: 2px;
+}
+
+.ahc-btn-follow {
+    background: #333;
+    color: #fff;
+    border: none;
+    border-radius: 20px;
+    padding: 6px 0;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+    width: 100%;
+}
+
+.ahc-btn-follow:hover {
+    background: #444;
+}
+
+/* EMPTY STATE CTA (YouTube Studio Style) */
+.empty-state-cta {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    text-align: center;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px dashed rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    margin: 20px 0;
+}
+
+.empty-icon {
+    width: 64px;
+    height: 64px;
+    background: rgba(139, 92, 246, 0.1);
+    /* Purple tint */
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.empty-icon i {
+    font-size: 32px;
+    color: #8b5cf6;
+}
+
+.empty-state-cta h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: #fff;
+}
+
+.empty-state-cta p {
+    font-size: 0.9rem;
+    color: #888;
+    max-width: 400px;
+    margin-bottom: 24px;
+    line-height: 1.5;
+}
+
+.btn-upload-first {
+    background: #8b5cf6;
+    color: #fff;
+    border: none;
+    padding: 10px 24px;
+    border-radius: 30px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-upload-first:hover {
+    background: #7c3aed;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+}
+
+.list-waveform,
+.list-waveform-container {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    height: 28px !important;
+    min-width: 100px !important;
+    background: transparent !important;
+}

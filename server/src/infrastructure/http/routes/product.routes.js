@@ -3,16 +3,19 @@
 import { Router } from 'express';
 import { authenticateTokenMiddleware } from '../../middlewares/authenticateTokenMiddleware.js';
 // ¡YA NO IMPORTAMOS 'getAllProducts'!
-import { createProduct } from '../controllers/ProductController.js';
+import { createProduct, incrementPlayCount, incrementDownloadCount } from '../controllers/ProductController.js';
 
 const router = Router();
 
 // ¡YA NO ESTÁ LA RUTA 'GET /products' AQUÍ!
 
 // Esta ruta es privada y usa el middleware individualmente (¡perfecto!)
-router.post('/products', 
-    authenticateTokenMiddleware, 
-    createProduct 
+router.post('/products',
+    authenticateTokenMiddleware,
+    createProduct
 );
+
+router.post('/products/:id/play', incrementPlayCount);
+router.post('/products/:id/download', incrementDownloadCount);
 
 export default router;

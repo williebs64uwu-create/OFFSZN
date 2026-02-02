@@ -1,0 +1,1356 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout - OFFSZN</title>
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/auth-ui.css">
+    <link rel="stylesheet" href="/css/global-overlays.css">
+    <link rel="stylesheet" href="/css/navbar.css">
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Plus+Jakarta+Sans:wght@400;500;700;800&display=swap"
+        rel="stylesheet">
+
+    <!-- 1. Cargar Supabase (Moved to Head for Global Access) -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        // --- GLOBAL SUPABASE CONFIG ---
+        // Moved here so it is available for Search AND Auth scripts immediately.
+        window.SUPABASE_URL = "https://qtjpvztpgfymjhhpoouq.supabase.co";
+        window.SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0anB2enRwZ2Z5bWpoaHBvb3VxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3ODA5MTUsImV4cCI6MjA3NjM1NjkxNX0.YsItTFk3hSQaVuy707-z7Z-j34mXa03O0wWGAlAzjrw";
+
+        window.supabaseClient = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            if (typeof window.supabase !== 'undefined' && window.supabase.createClient) {
+                window.supabaseClient = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
+                console.log("✅ Supabase Global Initialized");
+            } else {
+                console.warn("⚠️ Supabase CDN failed to load");
+            }
+        });
+    </script>
+    <script src="/script/notifications.js"></script>
+    <script src="/script/id-obfuscator.js"></script>
+    <script src="/script/hover-card.js"></script>
+</head>
+
+<body>
+
+
+
+    <!-- ==================== EXTRACTED NAVBAR ==================== -->
+    <header class="navbar">
+        <div class="navbar-container">
+            <div class="logo">
+                <a href="/index.html">
+                    <img src="/images/LOGO OFFSZN.webp" alt="OFFSZN"
+                        style="height: 80px; width: auto; display: block; transform: scale(1.5); transform-origin: left center;">
+                </a>
+            </div>
+            <div class="navbar-center">
+                <ul class="navbar-links">
+                    <li><a href="explorar.html">Explorar</a></li>
+                    <li class="dropdown-parent">
+                        <a onclick="toggleDropdown(this)" class="nav-toggle-link noselect"
+                            style="user-select: none; -webkit-user-select: none; cursor: pointer;"
+                            onselectstart="return false;">
+                            Recursos <i class="bi bi-chevron-down"></i>
+                        </a>
+                        <div class="dropdown-menu mega-columns">
+                            <!-- BOX 1: SONIDOS (Tools) -->
+                            <div class="mega-column-box">
+                                <span class="dropdown-section-title"
+                                    style="font-size: 0.7rem; letter-spacing: 1.5px; color:#555; margin-bottom: 12px; display:block; font-weight:800; padding-left: 6px;">
+                                    SONIDOS
+                                </span>
+                                <div class="dropdown-section">
+                                    <a href="/recursos/drum-kits" class="mega-nav-link"><i class="bi bi-disc"></i> Drum
+                                        Kits</a>
+                                    <a href="/recursos/presets" class="mega-nav-link"><i class="bi bi-sliders"></i>
+                                        Presets</a>
+                                    <a href="/recursos/samples-loops" class="mega-nav-link"><i
+                                            class="bi bi-soundwave"></i> Loops</a>
+                                    <a href="/recursos/one-shots" class="mega-nav-link"><i class="bi bi-bullseye"></i>
+                                        One-Shots</a>
+                                    <a href="/recursos/recursos-gratis" class="mega-nav-link"><i
+                                            class="bi bi-check-circle"></i>
+                                        Gratis</a>
+                                </div>
+                            </div>
+
+                            <!-- BOX 2: COMUNIDAD (Swapped to Middle) -->
+                            <div class="mega-column-box">
+                                <span class="dropdown-section-title"
+                                    style="font-size: 0.7rem; letter-spacing: 1.5px; color:#555; margin-bottom: 12px; display:block; font-weight:800; padding-left: 6px;">
+                                    COMUNIDAD
+                                </span>
+                                <div class="dropdown-section">
+                                    <a href="/comunidad/productores" class="mega-nav-link"><i class="bi bi-people"></i>
+                                        Productores</a>
+                                    <a href="/comunidad/colaboraciones" class="mega-nav-link"><i
+                                            class="bi bi-person-plus"></i>
+                                        Collabs</a>
+                                    <a href="/comunidad/eventos" class="mega-nav-link"><i
+                                            class="bi bi-calendar-event"></i> Eventos</a>
+                                    <a href="/comunidad/feed" class="mega-nav-link"><i
+                                            class="bi bi-collection-play"></i> Feed</a>
+                                    <a href="/cursos/inicio" class="mega-nav-link">
+                                        <i class="bi bi-mortarboard"></i> Cursos <span
+                                            style="background: rgba(139, 92, 246, 0.1); color: #a78bfa; font-size: 0.6rem; padding: 1px 4px; border-radius: 4px; margin-left: 6px; border: 1px solid rgba(139, 92, 246, 0.2);">SOON</span>
+                                    </a>
+                                </div>
+                            </div>
+
+                            <!-- BOX 3: GÉNEROS (Swapped to End) -->
+                            <div class="mega-column-box">
+                                <span class="dropdown-section-title"
+                                    style="font-size: 0.7rem; letter-spacing: 1.5px; color:#555; margin-bottom: 12px; display:block; font-weight:800; padding-left: 6px;">
+                                    GÉNEROS
+                                </span>
+                                <div class="dropdown-section">
+                                    <a href="/recursos/beats" class="mega-nav-link">Hip-Hop</a>
+                                    <a href="/recursos/beats" class="mega-nav-link">Trap</a>
+                                    <a href="/recursos/beats" class="mega-nav-link">R&B</a>
+                                    <a href="/recursos/beats" class="mega-nav-link">Reggaetón</a>
+                                    <a href="/recursos/beats" class="mega-nav-link">Drill</a>
+                                    <a href="/recursos/beats" class="mega-nav-link"
+                                        style="color: rgba(255,255,255,0.6); font-size: 0.8rem; margin-top: 4px; transition: color 0.2s;">Ver
+                                        todos &rarr;</a>
+                                </div>
+                            </div>
+                        </div>
+                    </li>
+
+                    <!-- STUDIO / LAB (New Identity Feature) -->
+                    <li class="dropdown-parent">
+                        <a onclick="toggleDropdown(this)" class="nav-toggle-link noselect"
+                            style="user-select: none; -webkit-user-select: none; cursor: pointer;"
+                            onselectstart="return false;">
+                            Studio <span
+                                style="background: rgba(139, 92, 246, 0.1); color: #a78bfa; font-size: 0.6rem; padding: 1px 4px; border-radius: 4px; margin-left: 4px; border: 1px solid rgba(139, 92, 246, 0.2);">BETA</span>
+                            <i class="bi bi-chevron-down"></i>
+                        </a>
+                        <div class="dropdown-menu" style="min-width: 250px; padding: 8px;">
+                            <div class="dropdown-section">
+                                <span class="dropdown-section-title"
+                                    style="font-size: 0.7rem; letter-spacing: 1.5px; color:#555; margin-bottom: 8px; display:block; font-weight:800; padding: 0 8px;">
+                                    EXCLUSIVE TOOLS
+                                </span>
+                                <a href="/youtube.html" class="dropdown-item" style="border-radius: 8px;">
+                                    <i class="bi bi-youtube" style="color: #ef4444;"></i>
+                                    <div class="dropdown-item-content">
+                                        <div class="dropdown-item-title">YouTube Upload</div>
+                                        <div class="dropdown-item-desc" style="font-size: 0.7rem; color: #888;">
+                                            Sube tu producto al marketplace y se publica automático en YouTube con tu
+                                            miniatura.
+                                        </div>
+                                    </div>
+                                </a>
+                                <a href="/studio/reels" class="dropdown-item" style="border-radius: 8px;">
+                                    <i class="bi bi-collection-play"></i>
+                                    <div class="dropdown-item-content">
+                                        <div class="dropdown-item-title">Reels</div>
+                                        <div class="dropdown-item-desc" style="font-size: 0.7rem; color: #888;">Descubre
+                                            tendencias visuales</div>
+                                    </div>
+                                </a>
+                            </div>
+                        </div>
+                        <!-- Cursos moved to Dropdown -->
+
+                </ul>
+
+                <!-- NEW: NAVBAR SEARCH (Wavs Style) -->
+                <!-- NEW: NAVBAR SEARCH (Wavs Style) with Internal Filter & Trending Panel -->
+                <div class="navbar-search" style="margin-left: 24px; flex: 1; max-width: 440px; position: relative;">
+                    <i class="bi bi-search"
+                        style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: #666; font-size: 0.85rem; z-index: 10;"></i>
+                    <input type="text" id="navbarSearchInput" placeholder="Buscar 'trap' o 'drill'..."
+                        style="width: 100%; background: #0f0f0f; border: 1px solid rgba(255,255,255,0.08); padding: 11px 110px 11px 42px; border-radius: 12px; color: #fff; font-size: 0.9rem; outline: none; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);">
+
+                    <!-- Internal Filter Trigger - Seamless Integration -->
+                    <div class="search-filter-trigger" onclick="toggleSearchFilter(event)"
+                        style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); display: flex; align-items: center; gap: 6px; cursor: pointer; padding: 4px 10px; background: rgba(255,255,255,0.05); border-radius: 8px; height: 28px; transition: background 0.2s;">
+                        <span id="search-filter-label"
+                            style="font-size: 0.75rem; color: #ccc; font-weight: 600; letter-spacing: 0.3px;">Todo</span>
+                        <i class="bi bi-chevron-down" style="font-size: 0.65rem; color: #888;"></i>
+                    </div>
+
+                    <!-- Filter Dropdown (Glassmorphism) -->
+                    <div id="search-filter-dropdown"
+                        style="position: absolute; top: calc(100% + 8px); right: 0; background: rgba(15, 15, 15, 0.95); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 6px; width: 140px; display: none; flex-direction: column; box-shadow: 0 10px 40px rgba(0,0,0,0.5); z-index: 1002; transform-origin: top right; animation: scaleIn 0.2s ease;">
+                        <div onclick="selectSearchFilter('Todo')" class="search-filter-item selected">Todo</div>
+                        <div onclick="selectSearchFilter('Beats')" class="search-filter-item">Beats</div>
+                        <div onclick="selectSearchFilter('Drum Kits')" class="search-filter-item">Drum Kits</div>
+                        <div onclick="selectSearchFilter('Samples')" class="search-filter-item">Samples</div>
+                        <div onclick="selectSearchFilter('Presets')" class="search-filter-item">Presets</div>
+                        <div onclick="selectSearchFilter('Plantillas')" class="search-filter-item">Plantillas</div>
+                        <div onclick="selectSearchFilter('Productores')" class="search-filter-item">Productores</div>
+                    </div>
+
+                    <!-- Trending / Intelligent Panel (Appears on Focus) -->
+                    <!-- Trending / Intelligent Panel -->
+                    <div id="search-trending-panel"
+                        style="position: absolute; top: calc(100% + 4px); left: 0; width: 100%; background: #0a0a0a; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 12px; display: none; box-shadow: 0 20px 50px rgba(0,0,0,0.8); z-index: 1001;">
+
+                        <!-- Recent Searches (New) -->
+                        <div style="margin-bottom: 20px;">
+                            <span
+                                style="display: block; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 0.7rem; color: #555; font-weight: 700; letter-spacing: 0.5px; margin-bottom: 8px; text-transform: uppercase;">Búsquedas
+                                Recientes</span>
+                            <div style="display: flex; flex-direction: column; gap: 4px;">
+                                <div class="recent-item" onclick="setSearch('Dark Piano')"><i
+                                        class="bi bi-clock-history"></i>
+                                    Dark
+                                    Piano</div>
+                                <div class="recent-item" onclick="setSearch('Tainy Drums')"><i
+                                        class="bi bi-clock-history"></i>
+                                    Tainy
+                                    Drums</div>
+                            </div>
+                        </div>
+
+                        <span
+                            style="display: block; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 0.7rem; color: #555; font-weight: 700; letter-spacing: 0.5px; margin-bottom: 12px; text-transform: uppercase;">Tendencias
+                            Ahora</span>
+                        <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                            <span class="trend-tag"><i class="bi bi-graph-up-arrow"></i> Dark Trap</span>
+                            <span class="trend-tag"><i class="bi bi-fire"></i> Reggaeton 2025</span>
+                            <span class="trend-tag">Drill UK</span>
+                        </div>
+                    </div>
+                </div>
+                <!-- Search Overlay Backdrop -->
+                <div id="search-overlay"></div>
+
+                <!-- Active Tags Container (New) -->
+                <div id="active-search-tags"></div>
+                <!-- Logic moved to script/navbar.js -->
+            </div>
+            <button class="menu-toggle" id="menuToggle">
+            </button>
+            <div class="navbar-right">
+
+                <!-- 1. CURRENCY (Always Visible) -->
+                <div class="currency-dropdown" style="position: relative;">
+                    <button id="currency-toggle-btn" onclick="toggleCurrency(event)" class="nav-text-btn"
+                        style="background:none; border:none; color:#bbb; font-size:0.8rem; font-weight:600; cursor:pointer; padding:6px 8px; display:flex; align-items:center; gap:4px; outline:none; transition: all 0.2s;">
+                        <span id="current-currency">PEN</span> <i class="bi bi-caret-down-fill"
+                            style="font-size:0.6rem;"></i>
+                    </button>
+                    <div id="currency-menu"
+                        style="position: absolute; top: 100%; left: 0; background: #141414; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 4px; display: none; flex-direction: column; min-width: 80px; box-shadow: 0 4px 12px rgba(0,0,0,0.5); z-index: 1005;">
+                        <div onclick="setCurrency('PEN')" class="currency-item"
+                            style="padding:6px 12px; font-size:0.8rem; color:#ccc; cursor:pointer; border-radius:4px;">
+                            PEN</div>
+                        <div onclick="setCurrency('USD')" class="currency-item"
+                            style="padding:6px 12px; font-size:0.8rem; color:#ccc; cursor:pointer; border-radius:4px;">
+                            USD</div>
+                    </div>
+                </div>
+
+                <!-- 2. CART (Always Visible) -->
+                <a href="#" class="nav-icon-btn" title="Carrito" data-label="Carrito" onclick="toggleCartPanel(event)">
+                    <i class="bi bi-cart3"></i>
+                    <span id="cart-count-badge" class="cart-label-count" style="display:none;">0</span>
+                </a>
+
+                <!-- 3. LOGGED IN ACTIONS (Hidden by default) -->
+                <div id="nav-auth-section" style="display: flex; align-items: center; gap: 0.5rem;">
+
+                    <!-- NOTIFICACIONES -->
+                    <div class="notification-dropdown">
+                        <button class="nav-icon-btn" onclick="toggleNotificationDropdown(event)"
+                            data-label="Notificaciones" style="user-select: none;" onselectstart="return false;">
+                            <i class="bi bi-bell"></i>
+                            <span class="notification-badge" id="notification-badge" style="display:none;">0</span>
+                        </button>
+                        <div class="notification-menu" id="notification-menu">
+                            <div class="notification-header"
+                                style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-bottom: 1px solid #222;">
+                                <h4 style="margin: 0; font-size: 0.95rem; font-weight: 600; color: #fff;">Notificaciones
+                                </h4>
+                                <a href="/notificaciones.html" class="notif-view-all">Ver todos</a>
+                            </div>
+                            <div id="notification-list" style="max-height: 400px; overflow-y: auto;">
+                                <div class="notif-empty" style="text-align: center; color: #fff; padding: 40px 20px;">
+                                    <div style="font-size: 2rem; margin-bottom: 16px; color: #666;"><i
+                                            class="bi bi-bell"></i></div>
+                                    <h4 style="margin-bottom: 8px; font-size: 0.9rem; font-weight: 500;">Cargando...
+                                    </h4>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- USER PROFILE -->
+                    <div class="user-dropdown">
+                        <div class="user-trigger" onclick="toggleUserDropdown(event)" style="cursor: pointer;">
+                            <div id="user-avatar-display" class="user-avatar-placeholder">W</div>
+                        </div>
+                        <div class="user-dropdown-menu" style="width: 380px;">
+                            <div class="user-dropdown-header" onclick="window.location.href='perfil-publico.html'"
+                                style="display: flex; align-items: center; justify-content: space-between; gap: 12px; background-color: #232323; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 24px 16px; margin-bottom: 12px; cursor: pointer; transition: background-color 0.2s; user-select: none;"
+                                onmouseover="this.style.backgroundColor='#2a2a2a'"
+                                onmouseout="this.style.backgroundColor='#232323'">
+                                <div style="display: flex; align-items: center; gap: 12px;">
+                                    <div class="user-dropdown-avatar-lg"
+                                        style="width: 48px; height: 48px; font-size: 1.2rem; border-radius: 50%;">W
+                                    </div>
+                                    <div style="display: flex; flex-direction: column;">
+                                        <h4 id="dropdown-username"
+                                            style="margin: 0; font-size: 1rem; color: #fff; font-weight: 600;">Willie
+                                            Inspired</h4>
+                                        <span style="color: #999; font-size: 0.85rem;">0 Créditos</span>
+                                    </div>
+                                </div>
+                                <a href="/cuenta/planes.html" class="btn-subscribe-sm"
+                                    onclick="event.stopPropagation();" style="padding: 6px 12px; font-size: 0.8rem;">
+                                    <i class="bi bi-plus-circle-fill"></i> Suscribirse
+                                </a>
+                            </div>
+
+                            <div class="w-grid">
+                                <a href="/cuenta/dashboard.html" class="w-grid-item"><i class="fas fa-columns"
+                                        style="transform: rotate(90deg);"></i><span>Dashboard</span></a>
+                                <a href="mis-compras.html" class="w-grid-item"><i
+                                        class="fas fa-layer-group"></i><span>Compras</span></a>
+                                <a href="mensajes" class="w-grid-item"><i
+                                        class="fas fa-envelope"></i><span>Mensajes</span></a>
+                            </div>
+
+                            <!-- LIST -->
+                            <a href="/favoritos.html" class="w-list-item"><i class="fas fa-heart"></i> Mis Favoritos</a>
+                            <a href="gift-cards" class="w-list-item"><i class="fas fa-gift"></i> Gift Cards</a>
+                            <a href="historial" class="w-list-item"><i class="fas fa-history"></i> Historial</a>
+                            <div style="height: 1px; background: rgba(255,255,255,0.1); margin: 8px 0;"></div>
+                            <a href="account-settings" class="w-list-item"><i class="fas fa-sliders-h"></i>
+                                Configuración</a>
+                            <a href="ayuda.html" class="w-list-item"><i class="fas fa-question-circle"></i> Centro de
+                                Ayuda</a>
+                            <a href="#" id="navbar-logout-btn" class="w-list-item"
+                                style="color: #ef4444; margin-top: 8px;">
+                                <i class="fas fa-sign-out-alt" style="color: #ef4444;"></i> Cerrar Sesión
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- UPLOAD BUTTON -->
+                    <a href="/cuenta/subir-kit.html" target=_blank class="btn-upload"><i
+                            class="fas fa-cloud-upload-alt"></i>
+                        Subir</a>
+                </div>
+
+                <!-- 4. GUEST ACTIONS (Shown when Logged Out) -->
+                <div id="nav-guest-section" style="display: none; align-items: center; gap: 0.5rem;">
+                    <!-- Separtor -->
+                    <div style="width:1px; height:24px; background:rgba(255,255,255,0.1); margin:0 4px;"></div>
+                    <a href="/pages/login.html" class="navbar-login-link">Iniciar Sesión</a>
+                    <a href="/pages/register.html" class="btn-join">Únete <i class="bi bi-rocket-takeoff"></i></a>
+                </div>
+
+            </div>
+        </div>
+    </header>
+    <style>
+        :root {
+            --nav-height: 110px;
+            /* Adjust based on navbar + promo banner height */
+            --reel-width: 450px;
+            /* Standard mobile width for desktop view */
+        }
+
+        body {
+            overflow: hidden;
+            /* Prevent body scroll */
+            background: #000;
+        }
+
+        #reels-feed-container {
+            height: calc(100vh - var(--nav-height));
+            overflow-y: scroll;
+            scroll-snap-type: y mandatory;
+            scrollbar-width: none;
+            /* Firefox */
+            -ms-overflow-style: none;
+            /* IE/Edge */
+            background: #050505;
+            /* Dark grey backdrop for desktop */
+        }
+
+        #reels-feed-container::-webkit-scrollbar {
+            display: none;
+            /* Chrome/Safari */
+        }
+
+        .reel-item {
+            width: 100%;
+            height: calc(100vh - var(--nav-height));
+            scroll-snap-align: start;
+            scroll-snap-stop: always;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* The Centered Column */
+        .reels-column {
+            width: 100%;
+            max-width: var(--reel-width);
+            height: 100%;
+            position: relative;
+            background: #000;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 50px rgba(0, 0, 0, 1);
+            border-left: 1px solid rgba(255, 255, 255, 0.05);
+            border-right: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .reel-video {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            /* Don't crop FL Studio UI */
+            background: #000;
+        }
+
+        /* Overlays - Now relative to .reels-column */
+        .reel-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            background: linear-gradient(0deg, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0) 25%, rgba(0, 0, 0, 0) 75%, rgba(0, 0, 0, 0.4) 100%);
+        }
+
+        .reel-content {
+            position: absolute;
+            bottom: 30px;
+            left: 20px;
+            right: 80px;
+            color: #fff;
+            pointer-events: auto;
+            z-index: 10;
+        }
+
+        .reel-user-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 8px;
+            pointer-events: auto;
+        }
+
+        .reel-user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            width: fit-content;
+        }
+
+        .reel-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            border: 2px solid #fff;
+            object-fit: cover;
+            background: #222;
+            /* Fallback color */
+            flex-shrink: 0;
+        }
+
+        .reel-username {
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: #fff;
+            text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
+        }
+
+        .reel-title {
+            font-size: 0.9rem;
+            margin: 0;
+            line-height: 1.4;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
+            transition: all 0.3s ease;
+        }
+
+        .reel-title.expanded {
+            -webkit-line-clamp: unset !important;
+            line-clamp: unset !important;
+            display: block !important;
+            max-height: 300px;
+        }
+
+        .see-more-btn {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: rgba(255, 255, 255, 0.7);
+            cursor: pointer;
+            margin-top: 5px;
+            display: inline-block;
+        }
+
+        /* Action Layer - Snapped to right of column */
+        .reel-actions {
+            position: absolute;
+            bottom: 40px;
+            right: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+            align-items: center;
+            z-index: 11;
+        }
+
+        .action-btn {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: none;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .action-btn:hover {
+            transform: scale(1.1);
+            background: rgba(255, 255, 255, 0.2);
+            color: #a78bfa;
+        }
+
+        /* Mute Overlay - Locked to column center */
+        .mute-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.7);
+            padding: 12px 20px;
+            border-radius: 30px;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            z-index: 20;
+            pointer-events: auto;
+            transition: opacity 0.3s ease;
+            font-size: 0.85rem;
+            font-weight: 500;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            white-space: nowrap;
+        }
+
+        .mute-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* Play/Pause Center Icon */
+        .play-pause-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 5rem;
+            color: rgba(255, 255, 255, 0.6);
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s, transform 0.2s;
+            z-index: 15;
+        }
+
+        .reels-column.paused .play-pause-overlay {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1.1);
+        }
+
+        /* Progress Bar (Interactive Seeker) */
+        .reel-progress-container {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            cursor: pointer;
+            z-index: 25;
+            transition: height 0.2s;
+        }
+
+        .reel-progress-container:hover {
+            height: 6px;
+        }
+
+        .reel-progress-bar {
+            height: 100%;
+            background: #8b5cf6;
+            /* Main Purple */
+            width: 0%;
+            pointer-events: none;
+            box-shadow: 0 0 10px rgba(139, 92, 246, 0.5);
+        }
+
+        /* Double Tap Heart Animation */
+        .big-heart {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            font-size: 8rem;
+            color: #fff;
+            text-shadow: 0 0 20px rgba(255, 0, 0, 0.5);
+            pointer-events: none;
+            z-index: 30;
+            opacity: 0;
+        }
+
+        .big-heart.animate {
+            animation: heartFadeInUp 0.8s ease-out forwards;
+        }
+
+        @keyframes heartFadeInUp {
+            0% {
+                transform: translate(-50%, -50%) scale(0);
+                opacity: 0;
+            }
+
+            50% {
+                transform: translate(-50%, -50%) scale(1.2);
+                opacity: 0.9;
+            }
+
+            100% {
+                transform: translate(-50%, -60%) scale(1);
+                opacity: 0;
+            }
+        }
+
+        .big-heart.animate {
+            animation: heartFadeInUp 0.8s ease-out forwards;
+        }
+
+        /* Verified Badge */
+        .verified-badge {
+            color: #3b82f6;
+            font-size: 0.85rem;
+            margin-left: 4px;
+        }
+
+        /* Like Button Color */
+        .action-btn.liked {
+            color: #ef4444 !important;
+        }
+
+        .action-btn.liked i::before {
+            content: "\F415";
+            /* bi-heart-fill */
+        }
+
+        .action-btn i,
+        .views-item i {
+            font-size: 1.5rem;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+            transition: transform 0.2s;
+        }
+
+        .likes-count,
+        .views-count {
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+        }
+
+        .views-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: white;
+            cursor: default;
+        }
+
+        .views-item i {
+            margin-bottom: 4px;
+            opacity: 0.9;
+        }
+
+        .reel-follow-btn {
+            background: rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            padding: 4px 14px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            backdrop-filter: blur(4px);
+            text-transform: none;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .reel-follow-btn:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: scale(1.05);
+        }
+
+        .reel-follow-btn.following {
+            background: transparent;
+            border-color: rgba(255, 255, 255, 0.4);
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        /* --- SKELETON LOADER --- */
+        .reels-grid-skeleton {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #000;
+        }
+
+
+        .skeleton-reel {
+            width: var(--reel-width);
+            height: 100%;
+            background: #111;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .skeleton-reel::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.05), transparent);
+            animation: skeleton-shimmer 1.5s infinite;
+        }
+
+        @keyframes skeleton-shimmer {
+            100% {
+                left: 100%;
+            }
+        }
+
+        @media (max-width: 768px) {
+            :root {
+                --nav-height: 100px;
+                --reel-width: 100%;
+            }
+
+            .reels-column {
+                max-width: 100%;
+                border: none;
+            }
+        }
+    </style>
+    <!-- ==================== SIDE PANELS (INJECTED MANUALLY FOR ANALYSIS) ==================== -->
+
+    <div id="reels-feed-container">
+        <!-- Reels will be injected here -->
+        <div class="reels-grid-skeleton">
+            <div class="skeleton-reel"></div>
+        </div>
+    </div>
+
+    <!-- BACKDROP -->
+    <div class="overlay-backdrop" id="globalBackdrop" onclick="closeAllOverlays()"></div>
+
+    <!-- CART SIDE PANEL -->
+    <div class="side-panel" id="globalCartPanel">
+        <div class="panel-header">
+            <div class="panel-title" style="display: flex; align-items: center; gap: 8px;">
+                <div style="position: relative; display: flex;">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span id="cart-panel-count" class="notification-badge"
+                        style="position: absolute; top: -6px; right: -6px; display: flex;">1</span>
+                </div>
+                Tu Carrito
+            </div>
+            <button class="panel-close" onclick="closeAllOverlays()">&times;</button>
+        </div>
+        <!-- ID CHANGED: globalCartItems -> cart-items-container to match script/cart.js -->
+        <div class="panel-content" id="cart-items-container">
+            <div style="text-align:center; padding: 40px 0; color: #666;">
+                <i class="fas fa-shopping-basket" style="font-size: 3rem; margin-bottom: 10px;"></i>
+                <p>Tu carrito está vacío</p>
+            </div>
+        </div>
+        <!-- ID ADDED: cart-summary (needed by script) -->
+        <div class="cart-total-section" id="cart-summary">
+            <div style="display:flex; justify-content:space-between; margin-bottom:1rem; color:#fff; font-weight:700;">
+                <span>Total:</span>
+                <!-- ID CHANGED for JS compatibility -->
+                <span id="cart-total-price">$0.00</span>
+            </div>
+            <!-- ID CHANGED for JS compatibility -->
+            <button class="btn-checkout-global" id="cart-checkout-btn"
+                onclick="window.location.href='/pages/checkout.html'">
+                <i class="bi bi-lock-fill" style="margin-right:6px;"></i> Ir a Pagar Seguro
+            </button>
+
+            <!-- TRUST BADGES -->
+            <div
+                style="margin-top: 20px; text-align: center; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 15px;">
+                <p style="font-size: 0.65rem; color: #666; margin-bottom: 10px; letter-spacing: 1px; font-weight: 700;">
+                    METODOS DE PAGO SEGUROS</p>
+
+                <div style="display: flex; gap: 12px; justify-content: center; align-items: center; opacity: 0.8; filter: grayscale(100%); transition: filter 0.3s;"
+                    onmouseover="this.style.filter='grayscale(0%)'" onmouseout="this.style.filter='grayscale(100%)'">
+                    <!-- Global -->
+                    <i class="fab fa-cc-paypal" style="font-size: 26px; color: #fff;"></i>
+                    <i class="fab fa-cc-visa" style="font-size: 26px; color: #fff;"></i>
+                    <i class="fab fa-cc-mastercard" style="font-size: 26px; color: #fff;"></i>
+
+                    <!-- Local (Custom Badges) -->
+                    <div
+                        style="background: #742284; color: white; font-size: 0.7rem; font-weight: 800; padding: 2px 6px; border-radius: 4px; display: flex; align-items: center;">
+                        YAPE</div>
+                    <div
+                        style="background: #00d3de; color: white; font-size: 0.7rem; font-weight: 800; padding: 2px 6px; border-radius: 4px; display: flex; align-items: center;">
+                        PLIN</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+
+    <script src="/script/cart.js"></script>
+    <script src="/script/notifications.js"></script>
+    <script src="/script/navbar.js?v=7" type="module"></script>
+    <!-- Removed redundant inline script -->
+
+    <script>
+        // --- Reels JS Logic (Enhanced) ---
+        document.addEventListener('DOMContentLoaded', async () => {
+            let currentUser = null;
+            let userLikes = new Set(); // Storage for reel IDs the user liked
+
+            // Wait for Supabase to initialize
+            const checkSupabase = setInterval(async () => {
+                if (window.supabaseClient) {
+                    clearInterval(checkSupabase);
+                    initApp();
+                }
+            }, 100);
+
+            async function initApp() {
+                // 1. Get current user
+                const { data: { user } } = await window.supabaseClient.auth.getUser();
+                currentUser = user;
+
+                // 2. Load user likes (if logged in)
+                if (currentUser) {
+                    try {
+                        // Load Likes
+                        const { data: likes } = await window.supabaseClient
+                            .from('reel_likes')
+                            .select('reel_id')
+                            .eq('user_id', currentUser.id);
+                        if (likes) likes.forEach(l => userLikes.add(l.reel_id));
+
+                        // Load Following (Strict sync with profile cards)
+                        window.currentUserFollowing = window.currentUserFollowing || new Set();
+                        const { data: following } = await window.supabaseClient
+                            .from('followers')
+                            .select('user_id')
+                            .eq('follower_id', currentUser.id);
+                        if (following) following.forEach(f => window.currentUserFollowing.add(f.user_id));
+                    } catch (e) {
+                        console.warn("Could not fetch user state:", e);
+                    }
+                }
+
+                // 3. Fetch Reels
+                initReels();
+            }
+
+            async function initReels() {
+                const container = document.getElementById('reels-feed-container');
+
+                // Initial Skeleton
+                container.innerHTML = `
+                    <div class="reels-grid-skeleton">
+                        <div class="skeleton-reel"></div>
+                    </div>
+                `;
+
+                try {
+                    // Try to fetch reels. We handle cases where likes_count might also be missing.
+                    const { data: reels, error } = await window.supabaseClient
+                        .from('reels')
+                        .select('*, users(nickname, avatar_url, is_verified)')
+                        .order('created_at', { ascending: false })
+                        .limit(50);
+
+                    if (error) throw error;
+
+                    if (!reels || reels.length === 0) {
+                        container.innerHTML = '';
+                        return;
+                    }
+
+                    // --- THE OFFSZN ALGORITHM (Neutral & Fair) ---
+                    // 1. Give everyone a chance: Shuffle the recent batch
+                    // 2. Future-Proof: Reserved place for "Boosted" reels
+                    const shuffledReels = reels
+                        .map(r => ({ ...r, sort_score: Math.random() }))
+                        .sort((a, b) => b.sort_score - a.sort_score);
+
+                    // Remove skeleton
+                    container.innerHTML = '';
+
+                    shuffledReels.forEach(reel => {
+                        const reelElement = createReelElement(reel);
+                        container.appendChild(reelElement);
+                    });
+
+                    setupObserver();
+                    setupGlobalListeners();
+                    setupRealtimeMetrics(); // New: Listen for Live Numbers
+                } catch (err) {
+                    console.error('Error fetching reels:', err);
+                    container.innerHTML = '';
+                }
+            }
+
+            // --- REALTIME: Sync Numbers Across All Users ---
+            function setupRealtimeMetrics() {
+                if (!window.supabaseClient) return;
+
+                console.log("📡 Enabling Realtime Metrics listening...");
+
+                const channel = window.supabaseClient
+                    .channel('reels-metrics-sync')
+                    .on('postgres_changes', {
+                        event: 'UPDATE',
+                        schema: 'public',
+                        table: 'reels'
+                    }, (payload) => {
+                        const updatedReel = payload.new;
+
+                        // RECONCILIATION: Ignore update if we have a local action pending
+                        if (likeLocks.has(updatedReel.id)) {
+                            console.log(`⏳ Ignoring Realtime update for Reel ${updatedReel.id} due to local pending action.`);
+                            return;
+                        }
+
+                        console.log(`🔄 Realtime Update for Reel ${updatedReel.id}: Likes ${updatedReel.likes_count}, Views ${updatedReel.views_count}`);
+
+                        // Sync ALL instances of this reel in the UI
+                        const allReelInstances = document.querySelectorAll(`.reel-item[data-id="${updatedReel.id}"]`);
+                        allReelInstances.forEach(item => {
+                            const likeCountEl = item.querySelector('.likes-count');
+                            const viewCountEl = item.querySelector('.views-count');
+
+                            if (likeCountEl) {
+                                // Only update if the number is actually different to avoid unnecessary DOM noise
+                                if (likeCountEl.innerText !== String(updatedReel.likes_count)) {
+                                    likeCountEl.innerText = updatedReel.likes_count || 0;
+                                }
+                            }
+                            if (viewCountEl) {
+                                if (viewCountEl.innerText !== String(updatedReel.views_count)) {
+                                    viewCountEl.innerText = updatedReel.views_count || 0;
+                                }
+                            }
+                        });
+                    })
+                    .subscribe((status) => {
+                        if (status === 'SUBSCRIBED') {
+                            console.log('✅ Realtime metrics channel ready.');
+                        }
+                    });
+            }
+
+            function createReelElement(reel) {
+                const div = document.createElement('div');
+                div.className = 'reel-item';
+                div.id = `reel-${reel.id}`;
+                div.dataset.id = reel.id;
+
+                const isLiked = userLikes.has(reel.id);
+
+                div.innerHTML = `
+                    <div class="reels-column">
+                        <video class="reel-video" loop muted playsinline onclick="handleVideoClick(this)">
+                            <source src="${reel.url.includes('cloudinary') ? reel.url.replace('/upload/', '/upload/q_auto,f_auto/') : reel.url}" type="video/mp4">
+                        </video>
+                        <div class="reel-overlay" onclick="handleVideoClick(this)"></div>
+                        
+                        <div class="play-pause-overlay">
+                            <i class="bi bi-play-fill"></i>
+                        </div>
+
+                        <div class="big-heart">
+                            <i class="bi bi-heart-fill"></i>
+                        </div>
+
+                        <div class="mute-overlay" onclick="toggleMuteAll(this, event)">
+                            <i class="bi bi-volume-mute-fill"></i>
+                            <span>Click para activar sonido</span>
+                        </div>
+
+                        <div class="reel-content">
+                            <div class="reel-user-row">
+                                <a href="${window.createProfileLink ? window.createProfileLink(reel.users) : '/perfil-publico.html?id=' + reel.user_id}" class="reel-user-info">
+                                    <img src="${reel.users?.avatar_url && reel.users.avatar_url.trim() !== '' ? reel.users.avatar_url : 'https://ui-avatars.com/api/?name=' + (reel.users?.nickname || 'U') + '&background=random'}" 
+                                         class="reel-avatar" 
+                                         alt="${reel.users?.nickname}"
+                                         onerror="this.src='https://ui-avatars.com/api/?name=' + (reel.users?.nickname || 'U') + '&background=random'">
+                                    <span class="reel-username">@${reel.users?.nickname || 'user'}</span>
+                                    ${reel.users?.is_verified ? '<i class="bi bi-patch-check-fill verified-badge"></i>' : ''}
+                                </a>
+                                ${currentUser && reel.user_id !== currentUser.id ? `
+                                    <button class="reel-follow-btn ${window.currentUserFollowing?.has(reel.user_id) ? 'following' : ''}" 
+                                            data-user-id="${reel.user_id}"
+                                            onclick="handleReelFollow('${reel.user_id}', this, event)">
+                                        ${window.currentUserFollowing?.has(reel.user_id) ? 'Siguiendo' : 'Seguir'}
+                                    </button>
+                                ` : ''}
+                            </div>
+                            <div class="reel-description-container">
+                                <p class="reel-title">${reel.title || ''}</p>
+                                ${reel.title && reel.title.length > 60 ? '<span class="see-more-btn" onclick="toggleDescription(this)">ver más...</span>' : ''}
+                            </div>
+                        </div>
+
+                        <div class="reel-actions">
+                            <button class="action-btn like-btn ${isLiked ? 'liked' : ''}" onclick="toggleLike('${reel.id}', this)" title="Me gusta">
+                                <i class="bi bi-heart-fill"></i>
+                            </button>
+                            <span class="likes-count">${reel.likes_count || 0}</span>
+
+                            <button class="action-btn share-btn" onclick="copyReelLink('${reel.id}')" title="Compartir">
+                                <i class="bi bi-share-fill"></i>
+                            </button>
+
+                            <div class="action-item views-item" title="Reproducciones">
+                                <i class="bi bi-eye-fill"></i>
+                                <span class="views-count">${reel.views_count || 0}</span>
+                            </div>
+                            
+                            <button class="action-btn mute-toggle" onclick="toggleMuteAll(null, event)" title="Silencio">
+                                <i class="bi bi-volume-up-fill"></i>
+                            </button>
+                        </div>
+
+                        <!-- Progress Bar -->
+                        <div class="reel-progress-container" onclick="handleSeek(event, this)">
+                            <div class="reel-progress-bar"></div>
+                        </div>
+                    </div>
+                `;
+
+                // Handle Double Tap (Like)
+                let lastTap = 0;
+                div.querySelector('.reels-column').addEventListener('click', (e) => {
+                    const currentTime = new Date().getTime();
+                    const tapLength = currentTime - lastTap;
+                    if (tapLength < 300 && tapLength > 0) {
+                        handleDoubleTap(div, reel.id);
+                        e.preventDefault();
+                    }
+                    lastTap = currentTime;
+                });
+
+                // Update Progress Bar
+                const video = div.querySelector('video');
+                const progressBar = div.querySelector('.reel-progress-bar');
+                video.addEventListener('timeupdate', () => {
+                    const percent = (video.currentTime / video.duration) * 100;
+                    progressBar.style.width = percent + '%';
+                });
+
+                return div;
+            }
+
+            let isMutedGlobal = true;
+
+            window.toggleMuteAll = function (overlay = null, event = null) {
+                if (event) event.stopPropagation();
+
+                isMutedGlobal = !isMutedGlobal;
+                const videos = document.querySelectorAll('.reel-video');
+                const muteIcons = document.querySelectorAll('.mute-toggle i');
+                const muteOverlays = document.querySelectorAll('.mute-overlay');
+
+                videos.forEach(v => v.muted = isMutedGlobal);
+
+                muteIcons.forEach(icon => {
+                    icon.className = isMutedGlobal ? 'bi bi-volume-mute-fill' : 'bi bi-volume-up-fill';
+                });
+
+                muteOverlays.forEach(o => {
+                    if (isMutedGlobal) o.classList.remove('hidden');
+                    else o.classList.add('hidden');
+                });
+
+                if (overlay && !isMutedGlobal) {
+                    const currentReel = overlay.closest('.reel-item');
+                    const video = currentReel.querySelector('.reel-video');
+                    if (video) video.play().catch(e => console.warn("Autoplay blocked"));
+                }
+            };
+
+            window.toggleDescription = function (btn) {
+                const title = btn.previousElementSibling;
+                title.classList.toggle('expanded');
+                btn.innerText = title.classList.contains('expanded') ? 'ver menos' : 'ver más...';
+            };
+
+            window.handleVideoClick = function (el) {
+                const column = el.closest('.reels-column');
+                const video = column.querySelector('video');
+
+                if (video.paused) {
+                    video.play();
+                    column.classList.remove('paused');
+                } else {
+                    video.pause();
+                    column.classList.add('paused');
+                }
+            };
+
+            window.handleSeek = function (e, container) {
+                const rect = container.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const width = rect.width;
+                const percent = x / width;
+                const video = container.closest('.reels-column').querySelector('video');
+                video.currentTime = percent * video.duration;
+            };
+
+            window.handleDoubleTap = function (reelEl, reelId) {
+                // Show Animation
+                const heart = reelEl.querySelector('.big-heart');
+                heart.classList.remove('animate');
+                void heart.offsetWidth; // Trigger reflow
+                heart.classList.add('animate');
+
+                // Trigger Like if not already liked
+                const likeBtn = reelEl.querySelector('.like-btn');
+                if (!likeBtn.classList.contains('liked')) {
+                    toggleLike(reelId, likeBtn);
+                }
+            };
+
+            let likeLocks = new Set(); // Concurrency lock
+
+            window.toggleLike = async function (reelId, btn) {
+                if (!currentUser) {
+                    alert('Debes iniciar sesión para dar like.');
+                    return;
+                }
+
+                // Debounce/Lock to prevent rapid spam clicks
+                if (likeLocks.has(reelId)) return;
+                likeLocks.add(reelId);
+
+                const isLiking = !btn.classList.contains('liked');
+
+                // Find all instances of this reel in the feed for total sync
+                const allReelInstances = document.querySelectorAll(`.reel-item[data-id="${reelId}"]`);
+                const allBtns = Array.from(allReelInstances).map(el => el.querySelector('.like-btn'));
+                const allCounts = Array.from(allReelInstances).map(el => el.querySelector('.likes-count'));
+
+                const updateUI = (state, newCount) => {
+                    allBtns.forEach(b => b.classList.toggle('liked', state));
+                    allCounts.forEach(c => c.innerText = newCount);
+                };
+
+                const currentCount = parseInt(allCounts[0]?.innerText || "0");
+                const nextCount = isLiking ? currentCount + 1 : Math.max(0, currentCount - 1);
+
+                // OPTIMISTIC UPDATE (All instances)
+                updateUI(isLiking, nextCount);
+
+                try {
+                    if (isLiking) {
+                        const { error } = await window.supabaseClient.from('reel_likes').insert({
+                            user_id: currentUser.id,
+                            reel_id: reelId
+                        });
+                        if (error && error.code === '23505') {
+                            console.warn("User already liked this reel, syncing UI...");
+                        } else if (error) throw error;
+
+                        userLikes.add(reelId);
+                    } else {
+                        const { error } = await window.supabaseClient.from('reel_likes').delete().match({
+                            user_id: currentUser.id,
+                            reel_id: reelId
+                        });
+                        if (error) throw error;
+                        userLikes.delete(reelId);
+                    }
+                } catch (err) {
+                    console.error('Like error:', err);
+                    // Rollback all instances
+                    updateUI(!isLiking, currentCount);
+                } finally {
+                    // Extended lock to allow DB triggers to finish before accepting Realtime updates
+                    setTimeout(() => likeLocks.delete(reelId), 2000);
+                }
+            };
+
+            window.handleReelFollow = async function (targetId, btn, event) {
+                if (event) event.stopPropagation();
+                if (!currentUser) {
+                    window.location.href = '/pages/login.html';
+                    return;
+                }
+
+                const isFollowing = btn.classList.contains('following');
+                const newState = !isFollowing;
+
+                // --- Real-Time Sync (Optimistic) ---
+                // Find all follow buttons for this specific user in the current feed
+                const allUserBtns = document.querySelectorAll(`.reel-follow-btn[data-user-id="${targetId}"]`);
+
+                const updateUI = (state) => {
+                    allUserBtns.forEach(b => {
+                        b.classList.toggle('following', state);
+                        b.innerText = state ? 'Siguiendo' : 'Seguir';
+                    });
+                };
+
+                updateUI(newState);
+
+                try {
+                    const token = getAccessToken();
+                    const method = newState ? 'POST' : 'DELETE';
+                    const res = await fetch(`/api/users/${targetId}/follow`, {
+                        method,
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        }
+                    });
+
+                    if (!res.ok) throw new Error('Follow failed');
+
+                    // Sync Global State
+                    if (window.syncHC_FollowState) {
+                        window.syncHC_FollowState(targetId, newState);
+                    } else if (window.currentUserFollowing) {
+                        if (newState) window.currentUserFollowing.add(targetId);
+                        else window.currentUserFollowing.delete(targetId);
+                    }
+                } catch (err) {
+                    console.error('Follow error:', err);
+                    // Rollback all buttons
+                    updateUI(isFollowing);
+                }
+            };
+
+            window.copyReelLink = function (reelId) {
+                const shareUrl = `${window.location.origin}/studio/reels.html#reel-${reelId}`;
+                navigator.clipboard.writeText(shareUrl).then(() => {
+                    alert('¡Enlace del Reel copiado al portapapeles!');
+                });
+            };
+
+            function setupObserver() {
+                const options = { threshold: 0.6 };
+
+                const observer = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        const video = entry.target.querySelector('video');
+                        const column = entry.target.querySelector('.reels-column');
+                        if (entry.isIntersecting) {
+                            video.play().catch(e => console.log("Video interaction required"));
+                            column.classList.remove('paused');
+
+                            // --- VIEW TRACKING (Analytics) ---
+                            // Count a view if watched for more than 2 seconds
+                            const reelId = entry.target.dataset.id;
+                            if (reelId && !entry.target.dataset.viewed) {
+                                entry.target.viewTimeout = setTimeout(async () => {
+                                    try {
+                                        await fetch(`/api/reels/${reelId}/view`, { method: 'POST' });
+                                        entry.target.dataset.viewed = "true";
+                                    } catch (e) { }
+                                }, 2000);
+                            }
+                        } else {
+                            video.pause();
+                            video.currentTime = 0;
+                            column.classList.add('paused');
+
+                            // Cancel view tracking if scrolled away too fast
+                            if (entry.target.viewTimeout) {
+                                clearTimeout(entry.target.viewTimeout);
+                            }
+                        }
+                    });
+                }, options);
+
+                document.querySelectorAll('.reel-item').forEach(item => {
+                    observer.observe(item);
+                });
+            }
+
+            function setupGlobalListeners() {
+                // Handle keyboard shortcuts (space for play/pause, M for mute)
+                document.addEventListener('keydown', (e) => {
+                    if (e.code === 'Space') {
+                        e.preventDefault();
+                        const center = window.innerHeight / 2;
+                        const activeReel = document.elementFromPoint(window.innerWidth / 2, center)?.closest('.reel-item');
+                        if (activeReel) {
+                            handleVideoClick(activeReel.querySelector('video'));
+                        }
+                    }
+                    if (e.code === 'KeyM') {
+                        toggleMuteAll();
+                    }
+                });
+            }
+        });
+    </script>
+
+</body>
+
+</html>

@@ -17,11 +17,96 @@
 
         body {
             font-family: 'Inter', sans-serif;
-            background: #0a0a0a;
+            background: #000;
             color: #e5e5e5;
             overflow-x: hidden;
-            transition: opacity 0.3s ease-in;
+            display: flex;
         }
+
+        /* ===== STANDARD SIDEBAR STUB ===== */
+        .sidebar-stub {
+            width: 80px;
+            background: #000;
+            border-right: 1px solid #1a1a1a;
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 20px;
+            gap: 10px;
+        }
+
+        .sidebar-icon-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+            font-size: 20px;
+            transition: 0.2s;
+            text-decoration: none;
+            position: relative;
+        }
+
+        .sidebar-icon-btn:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .sidebar-icon-btn.active {
+            color: #fff;
+            background: #8B5CF6;
+            box-shadow: 0 0 10px rgba(139, 92, 246, 0.5);
+        }
+
+        /* Tooltips */
+        .sidebar-icon-btn[data-title]:hover::after {
+            content: attr(data-title);
+            position: fixed;
+            left: 70px;
+            background: #111;
+            border: 1px solid #333;
+            color: #fff;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            z-index: 1000;
+            pointer-events: none;
+            animation: fadeInTooltip 0.2s forwards;
+        }
+
+        @keyframes fadeInTooltip {
+            from {
+                opacity: 0;
+                transform: translateX(-5px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        /* Main Layout Override */
+        .dashboard-container {
+            display: block !important;
+            min-height: 100vh !important;
+            width: 100%;
+        }
+
+        .main-content {
+            margin-left: 80px !important;
+            width: calc(100% - 80px) !important;
+            padding: 40px !important;
+            background: #000 !important;
+        }
+
 
         /* ---------- NAVBAR (ESTANDARIZADA) ---------- */
         .navbar {
@@ -328,16 +413,20 @@
         .sidebar::-webkit-scrollbar {
             width: 5px;
         }
+
         .sidebar::-webkit-scrollbar-track {
             background: transparent;
         }
+
         .sidebar::-webkit-scrollbar-thumb {
             background: rgba(255, 255, 255, .1);
             border-radius: 3px;
         }
+
         .sidebar::-webkit-scrollbar-thumb:hover {
             background: rgba(255, 255, 255, .2);
         }
+
         /* ===== FIN DE CSS SCROLLBAR ===== */
 
 
@@ -372,7 +461,7 @@
             color: #fff;
             font-size: .95rem;
         }
-        
+
         /* Wallet Section (con Skeletons) */
         .wallet-section {
             padding: 16px 20px;
@@ -423,6 +512,7 @@
             margin: 16px 20px;
             position: relative;
         }
+
         .sidebar-search input {
             width: 100%;
             padding: 10px 36px 10px 12px;
@@ -433,7 +523,11 @@
             font-size: .85rem;
             outline: none;
         }
-        .sidebar-search input::placeholder { color: #666; }
+
+        .sidebar-search input::placeholder {
+            color: #666;
+        }
+
         .sidebar-search i {
             position: absolute;
             right: 12px;
@@ -447,6 +541,7 @@
         .sidebar-menu {
             padding: 12px 0;
         }
+
         .menu-section-title {
             padding: 16px 20px 8px;
             font-size: .65rem;
@@ -455,6 +550,7 @@
             letter-spacing: 1px;
             font-weight: 700;
         }
+
         .menu-item {
             display: flex;
             align-items: center;
@@ -467,25 +563,30 @@
             font-weight: 500;
             cursor: pointer;
         }
+
         .menu-item:hover {
             background: rgba(255, 255, 255, .05);
             color: #fff;
         }
+
         .menu-item.active {
             background: rgba(139, 92, 246, .1);
             color: #fff;
             border-left: 2px solid #8b5cf6;
         }
+
         .menu-item i {
             width: 18px;
             text-align: center;
             font-size: .95rem;
         }
+
         .menu-divider {
             height: 1px;
             background: rgba(255, 255, 255, .08);
             margin: 12px 20px;
         }
+
         .logout-btn {
             margin: 20px;
             background: rgba(239, 68, 68, .1);
@@ -516,14 +617,17 @@
             font-size: 0.85rem;
             color: #666;
         }
+
         .breadcrumb a {
             color: #666;
             text-decoration: none;
             transition: all 0.2s;
         }
+
         .breadcrumb a:hover {
             color: #8b5cf6;
         }
+
         .breadcrumb .active {
             color: #fff;
             font-weight: 600;
@@ -535,12 +639,14 @@
             justify-content: space-between;
             align-items: center;
         }
+
         .page-title {
             font-size: 2rem;
             font-weight: 800;
             color: #fff;
             letter-spacing: -0.5px;
         }
+
         .btn-create-post {
             background: #8b5cf6;
             color: #fff;
@@ -556,6 +662,7 @@
             cursor: pointer;
             border: none;
         }
+
         .btn-create-post:hover {
             background: #7c3aed;
             transform: translateY(-1px);
@@ -574,24 +681,29 @@
             align-items: end;
             animation: slideDown 0.3s ease;
         }
+
         .create-post-form.active {
             display: grid;
         }
+
         @keyframes slideDown {
             from {
                 opacity: 0;
                 transform: translateY(-10px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
             }
         }
+
         .form-left {
             display: flex;
             flex-direction: column;
             gap: 12px;
         }
+
         .post-textarea {
             width: 100%;
             padding: 12px;
@@ -605,27 +717,33 @@
             outline: none;
             transition: all 0.2s;
         }
+
         .post-textarea:focus {
             border-color: rgba(139, 92, 246, 0.5);
             background: rgba(255, 255, 255, 0.08);
         }
+
         .form-actions {
             display: flex;
             gap: 12px;
             align-items: center;
-            flex-wrap: wrap; /* Para responsive */
+            flex-wrap: wrap;
+            /* Para responsive */
         }
+
         .file-input-wrapper {
             position: relative;
             display: inline-block;
             cursor: pointer;
         }
+
         .file-input {
             position: absolute;
             opacity: 0;
             width: 0.1px;
             height: 0.1px;
         }
+
         .file-label {
             display: flex;
             align-items: center;
@@ -640,9 +758,11 @@
             cursor: pointer;
             transition: all 0.2s;
         }
+
         .file-label:hover {
             background: rgba(139, 92, 246, 0.15);
         }
+
         .file-name {
             color: #aaa;
             font-size: 0.75rem;
@@ -651,6 +771,7 @@
             text-overflow: ellipsis;
             max-width: 200px;
         }
+
         .hashtags-input {
             padding: 8px 12px;
             background: rgba(255, 255, 255, 0.05);
@@ -660,10 +781,11 @@
             font-size: 0.85rem;
             outline: none;
         }
+
         .hashtags-input:focus {
             border-color: rgba(139, 92, 246, 0.5);
         }
-        
+
         /* ===== CONTADOR DE CARACTERES (NUEVO) ===== */
         .form-footer {
             display: flex;
@@ -671,6 +793,7 @@
             align-items: center;
             margin-top: -8px;
         }
+
         .error-message {
             color: #fca5a5;
             font-size: 0.8rem;
@@ -678,19 +801,24 @@
             align-items: center;
             gap: 6px;
         }
+
         .error-message.show {
             display: flex;
         }
+
         #char-counter {
             font-size: 0.8rem;
             color: #666;
-            margin-left: auto; /* Mueve el contador a la derecha */
+            margin-left: auto;
+            /* Mueve el contador a la derecha */
             padding-right: 5px;
         }
+
         #char-counter.limit-reached {
             color: #ef4444;
             font-weight: 600;
         }
+
         /* ===== FIN CONTADOR ===== */
 
         .btn-publish {
@@ -708,10 +836,12 @@
             width: 100%;
             justify-content: center;
         }
+
         .btn-publish:hover {
             background: #7c3aed;
             transform: translateY(-1px);
         }
+
         .btn-publish:disabled {
             background: #555;
             cursor: not-allowed;
@@ -724,6 +854,7 @@
             flex-direction: column;
             gap: 20px;
         }
+
         .post-card {
             background: rgba(255, 255, 255, 0.02);
             border: 1px solid rgba(255, 255, 255, 0.08);
@@ -731,23 +862,27 @@
             padding: 24px;
             transition: all 0.3s ease;
         }
+
         .post-card:hover {
             border-color: rgba(139, 92, 246, 0.3);
             background: rgba(255, 255, 255, 0.05);
             transform: translateY(-4px);
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
         }
+
         .post-header {
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
             margin-bottom: 16px;
         }
+
         .post-author-info {
             display: flex;
             align-items: center;
             gap: 10px;
         }
+
         .post-author-avatar {
             width: 40px;
             height: 40px;
@@ -759,19 +894,23 @@
             font-weight: 700;
             color: #fff;
         }
+
         .post-author-name {
             font-weight: 600;
             color: #fff;
             font-size: 1rem;
         }
+
         .post-date {
             font-size: 0.8rem;
             color: #666;
         }
+
         .post-actions {
             display: flex;
             gap: 8px;
         }
+
         .post-action-btn {
             background: none;
             border: none;
@@ -781,19 +920,24 @@
             padding: 4px;
             transition: color 0.2s;
         }
+
         .post-action-btn:hover {
             color: #8b5cf6;
         }
+
         .post-action-btn.delete:hover {
             color: #ef4444;
         }
+
         .post-content {
             color: #ccc;
             font-size: 0.95rem;
             line-height: 1.6;
             margin-bottom: 16px;
-            white-space: pre-wrap; /* Para respetar saltos de línea */
+            white-space: pre-wrap;
+            /* Para respetar saltos de línea */
         }
+
         .post-attachment {
             margin: 16px 0;
             padding: 12px;
@@ -807,6 +951,7 @@
             cursor: pointer;
             text-decoration: none;
         }
+
         .attachment-icon {
             width: 36px;
             height: 36px;
@@ -817,6 +962,7 @@
             justify-content: center;
             color: #8b5cf6;
         }
+
         .attachment-name {
             flex: 1;
             color: #ccc;
@@ -824,16 +970,19 @@
             overflow: hidden;
             text-overflow: ellipsis;
         }
+
         .attachment-size {
             color: #666;
             font-size: 0.75rem;
         }
+
         .post-hashtags {
             margin: 12px 0;
             display: flex;
             flex-wrap: wrap;
             gap: 8px;
         }
+
         .hashtag {
             background: rgba(139, 92, 246, 0.1);
             color: #8b5cf6;
@@ -844,10 +993,12 @@
             text-decoration: none;
             transition: all 0.2s;
         }
+
         .hashtag:hover {
             background: rgba(139, 92, 246, 0.2);
             color: #a78bfa;
         }
+
         .post-footer {
             display: flex;
             justify-content: space-between;
@@ -856,19 +1007,23 @@
             color: #666;
             margin-top: 16px;
         }
+
         .post-views {
             display: flex;
             align-items: center;
             gap: 6px;
         }
+
         .post-views i {
             font-size: 1rem;
             color: #8b5cf6;
         }
+
         .post-favorite {
             cursor: pointer;
             transition: color 0.2s;
         }
+
         .post-favorite.active {
             color: #ef4444;
         }
@@ -879,8 +1034,10 @@
             padding: 60px 20px;
             color: #666;
             font-size: 1rem;
-            display: none; /* Oculto por defecto */
+            display: none;
+            /* Oculto por defecto */
         }
+
         .empty-state.show {
             display: block;
         }
@@ -896,30 +1053,47 @@
             display: inline-block;
             user-select: none;
         }
-        .profile-avatar.skeleton { border-radius: 50%; }
-        
+
+        .profile-avatar.skeleton {
+            border-radius: 50%;
+        }
+
         /* Skeleton Específico para Posts */
         .post-card.skeleton .post-author-avatar {
             border-radius: 50%;
         }
+
         .post-card.skeleton .post-author-name {
-            height: 18px; width: 120px;
+            height: 18px;
+            width: 120px;
         }
+
         .post-card.skeleton .post-date {
-            height: 14px; width: 80px; margin-top: 4px;
+            height: 14px;
+            width: 80px;
+            margin-top: 4px;
         }
+
         .post-card.skeleton .line {
             height: 16px;
             margin-bottom: 8px;
             border-radius: 6px;
         }
+
         .post-card.skeleton .footer {
-             height: 16px; width: 150px; border-radius: 6px;
+            height: 16px;
+            width: 150px;
+            border-radius: 6px;
         }
 
         @keyframes skeleton-loading {
-            0% { background-position: 200% 0; }
-            100% { background-position: -200% 0; }
+            0% {
+                background-position: 200% 0;
+            }
+
+            100% {
+                background-position: -200% 0;
+            }
         }
 
         /* ===== ANIMACIÓN ÉXITO ===== */
@@ -942,11 +1116,13 @@
             align-items: center;
             gap: 10px;
         }
+
         .success-animation.show {
             opacity: 1;
             visibility: visible;
             transform: translateX(-50%) translateY(0);
         }
+
         .success-animation i {
             font-size: 1.2rem;
         }
@@ -967,33 +1143,132 @@
             opacity: 0;
             transition: opacity 0.5s ease;
         }
-        #logout-overlay.active { display: flex; opacity: 1; }
-        #logout-overlay.fading-out { opacity: 0; }
-        .logout-content { text-align: center; color: #fff; }
-        .logout-content i { font-size: 2.5rem; margin-bottom: 1.5rem; color: #ef4444; }
-        .logout-content h2 { font-size: 1.8rem; font-weight: 600; color: #e5e5e5; }
-        @keyframes fa-spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .fa-spin { animation: fa-spin 1.5s linear infinite; }
+
+        #logout-overlay.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        #logout-overlay.fading-out {
+            opacity: 0;
+        }
+
+        .logout-content {
+            text-align: center;
+            color: #fff;
+        }
+
+        .logout-content i {
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+            color: #ef4444;
+        }
+
+        .logout-content h2 {
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: #e5e5e5;
+        }
+
+        @keyframes fa-spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .fa-spin {
+            animation: fa-spin 1.5s linear infinite;
+        }
 
         /* ===== RESPONSIVE ===== */
         @media (max-width: 1200px) {
-            .dashboard-container { grid-template-columns: 1fr; }
-            .sidebar { position: relative; top: 0; height: auto; }
+            .dashboard-container {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar {
+                position: relative;
+                top: 0;
+                height: auto;
+            }
         }
+
         @media (max-width: 992px) {
-            .create-post-form { grid-template-columns: 1fr; }
-            .btn-publish { margin-top: 12px; }
+            .create-post-form {
+                grid-template-columns: 1fr;
+            }
+
+            .btn-publish {
+                margin-top: 12px;
+            }
         }
+
         @media (max-width: 768px) {
-            .navbar { padding: 0.75rem 1.5rem; }
-            .navbar-center { display: none; }
-            .main-content { padding: 20px; }
-            .page-header { flex-direction: column; align-items: flex-start; gap: 16px; }
+            .navbar {
+                padding: 0.75rem 1.5rem;
+            }
+
+            .navbar-center {
+                display: none;
+            }
+
+            .main-content {
+                padding: 20px;
+            }
+
+            .page-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 16px;
+            }
         }
     </style>
 </head>
 
 <body>
+    <div class="radial-glow"
+        style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: radial-gradient(circle at 50% 50%, rgba(139, 92, 246, 0.08), transparent 70%); z-index: -1; pointer-events: none;">
+    </div>
+
+    <!-- SIDEBAR STUB -->
+    <div class="sidebar-stub" style="justify-content:flex-start; gap:15px;">
+        <!-- Logo -->
+        <a href="/index.html" class="sidebar-logo-btn"
+            style="margin-bottom:10px; display:flex; align-items:center; justify-content:center; width:44px; height:44px;"><img
+                src="../images/LOGO-OFFSZN.png" style="width:38px; mix-blend-mode: screen;"></a>
+
+        <!-- 1. GESTIÓN -->
+        <div style="width:40px; border-bottom:1px solid #222; margin:5px 0;"></div>
+        <a href="/cuenta/dashboard.html" class="sidebar-icon-btn" title="Dashboard"><i class="bi bi-grid-fill"></i></a>
+        <a href="/cuenta/mis-kits.html" class="sidebar-icon-btn" title="Mis Beats/Kits"><i
+                class="bi bi-disc-fill"></i></a>
+        <a href="/cuenta/Upload/Drum-Kits.html" class="sidebar-icon-btn" title="Subir"><i
+                class="bi bi-cloud-arrow-up-fill"></i></a>
+
+        <!-- 2. NEGOCIO -->
+        <div style="width:40px; border-bottom:1px solid #222; margin:5px 0;"></div>
+        <a href="/cuenta/admin-licencias.html" class="sidebar-icon-btn" title="Licencias"><i
+                class="bi bi-file-earmark-music-fill"></i></a>
+        <a href="#" class="sidebar-icon-btn" title="Cupones" onclick="openCouponModal(event)"><i
+                class="bi bi-ticket-perforated-fill"></i></a>
+        <a href="/cuenta/colaboraciones.html" class="sidebar-icon-btn" title="Colaboraciones"><i
+                class="bi bi-people-fill"></i></a>
+
+        <!-- 3. ACADEMIA -->
+        <div style="width:40px; border-bottom:1px solid #222; margin:5px 0;"></div>
+        <a href="/cuenta/cursos.html" class="sidebar-icon-btn" title="Cursos"><i class="bi bi-mortarboard-fill"></i></a>
+        <a href="/cuenta/analiticas.html" class="sidebar-icon-btn" title="Estadísticas"><i
+                class="bi bi-bar-chart-fill"></i></a>
+
+        <!-- 4. SOCIAL -->
+        <div style="width:40px; border-bottom:1px solid #222; margin:5px 0;"></div>
+        <a href="/cuenta/reels.html" class="sidebar-icon-btn" title="Reels"><i class="bi bi-camera-reels-fill"></i></a>
+    </div>
+
     <nav class="navbar">
         <div class="logo"><a href="index">OFFSZN</a></div>
 
@@ -1092,88 +1367,7 @@
     </nav>
 
     <div class="dashboard-container">
-        <aside class="sidebar">
-            <div class="profile-header">
-                <div class="profile-info">
-                    <div class="profile-avatar skeleton" style="opacity: 1;">&nbsp;</div>
-                    <div>
-                        <div class="profile-name skeleton"
-                            style="height: 20px; width: 120px; border-radius: 6px; opacity: 1;">&nbsp;</div>
-                    </div>
-                </div>
-            </div>
 
-            <div class="wallet-section">
-                <div class="wallet-label">Saldo Disponible</div>
-                <div class="wallet-amount skeleton"
-                    style="height: 30px; width: 100px; border-radius: 6px; opacity: 1;">&nbsp;</div>
-            </div>
-
-            <button class="upload-btn" onclick="window.location.href='subir-kit.html'">
-                <i class="fas fa-cloud-upload-alt"></i> Subir Kit
-            </button>
-            
-            <div class="sidebar-search">
-                <input type="text" placeholder="Buscar en mi blog...">
-            </div>
-
-            <div class="sidebar-menu">
-                <div class="menu-section-title">Principal</div>
-                <a href="dashboard" class="menu-item">
-                    <i class="fas fa-th-large"></i>
-                    <span>Dashboard</span>
-                </a>
-                <a href="mis-kits" class="menu-item">
-                    <i class="fas fa-music"></i>
-                    <span>Mis Kits</span>
-                </a>
-                <a href="#" class="menu-item">
-                    <i class="fas fa-chart-line"></i>
-                    <span>Analíticas</span>
-                </a>
-                <a href="favoritos" class="menu-item">
-                    <i class="fas fa-heart"></i>
-                    <span>Favoritos</span>
-                </a>
-                <a href="#" class="menu-item">
-                    <i class="fas fa-history"></i>
-                    <span>Historial</span>
-                </a>
-                <div class="menu-divider"></div>
-                <div class="menu-section-title">Colaboración</div>
-                <a href="colaboraciones" class="menu-item">
-                    <i class="fas fa-users"></i>
-                    <span>Colaboraciones</span>
-                </a>
-                <div class="menu-divider"></div>
-                <div class="menu-section-title">Compras</div>
-                <a href="mis-compras" class="menu-item">
-                    <i class="fas fa-shopping-bag"></i>
-                    <span>Mis Compras</span>
-                </a>
-                <a href="gift-cards" class="menu-item">
-                    <i class="fas fa-gift"></i>
-                    <span>Gift Cards</span>
-                </a>
-                <a href="messages" class="menu-item">
-                    <i class="fas fa-envelope"></i>
-                    <span>Mensajes</span>
-                </a>
-                <div class="menu-divider"></div>
-                <div class="menu-section-title">Configuración</div>
-                <a href="account-settings" class="menu-item">
-                    <i class="fas fa-cog"></i>
-                    <span>Configuración</span>
-                </a>
-                <a href="blog" class="menu-item active">
-                    <i class="fas fa-book-open"></i>
-                    <span>Blog</span>
-                </a>
-            </div>
-            <a href="#" id="sidebar-logout-btn" class="logout-btn">
-                <i class="fas fa-sign-out-alt"></i>
-                <span>Cerrar Sesión</span>
-            </a>
         </aside>
 
         <main class="main-content">
@@ -1191,23 +1385,21 @@
 
             <div class="create-post-form" id="create-post-form">
                 <div class="form-left">
-                    <textarea class="post-textarea" id="post-content"
-                        placeholder="¿Qué estás pensando?" maxlength="1000"></textarea>
-                    
+                    <textarea class="post-textarea" id="post-content" placeholder="¿Qué estás pensando?"
+                        maxlength="1000"></textarea>
+
                     <div class="form-actions">
                         <div class="file-input-wrapper">
-                            <input type="file" class="file-input" id="post-file"
-                                accept="image/*,video/*">
+                            <input type="file" class="file-input" id="post-file" accept="image/*,video/*">
                             <label for="post-file" class="file-label">
                                 <i class="fas fa-paperclip"></i>
                                 <span>Archivo</span>
                             </label>
                         </div>
                         <div class="file-name" id="file-name"></div>
-                        <input type="text" class="hashtags-input" id="post-hashtags"
-                            placeholder="#produccion #beats">
+                        <input type="text" class="hashtags-input" id="post-hashtags" placeholder="#produccion #beats">
                     </div>
-                    
+
                     <div class="form-footer">
                         <div class="error-message" id="post-error">
                             <i class="fas fa-exclamation-triangle"></i>
@@ -1223,8 +1415,8 @@
             </div>
 
             <div class="posts-list" id="posts-list">
-                </div>
-            
+            </div>
+
             <div class="empty-state" id="empty-state">
                 Agrega tu primera publicación para empezar.
             </div>
@@ -1369,7 +1561,7 @@
                     saveUserCache(userData);
                     updateUserUI(userData, false);
                     loadGiftCardsState();
-                    
+
                     // Cargar publicaciones del blog
                     await loadBlogPosts();
 
@@ -1383,7 +1575,7 @@
             }
 
             // ---------- LÓGICA DEL BLOG (Refactorizada) ----------
-            
+
             // 1. Mostrar Skeletons
             function generateSkeletonPost() {
                 return `
@@ -1411,7 +1603,7 @@
             // 2. Cargar Publicaciones (desde API)
             async function loadBlogPosts() {
                 if (!postsList || !emptyState) return;
-                
+
                 postsList.innerHTML = generateSkeletonPost() + generateSkeletonPost(); // Mostrar skeletons
                 emptyState.classList.remove('show');
 
@@ -1433,7 +1625,7 @@
                     emptyState.classList.add('show');
                 }
             }
-            
+
             // 3. Renderizar Publicaciones
             function renderPosts(posts) {
                 if (!posts || posts.length === 0) {
@@ -1454,8 +1646,8 @@
                                 </div>
                             </div>
                             <div class="post-actions">
-                                ${post.author.id === userData.id ? 
-                                    `<button class="post-action-btn delete" onclick="deletePost(${post.id})">
+                                ${post.author.id === userData.id ?
+                        `<button class="post-action-btn delete" onclick="deletePost(${post.id})">
                                         <i class="fas fa-trash"></i>
                                      </button>` : ''}
                             </div>
@@ -1488,13 +1680,13 @@
                 e.preventDefault();
                 const content = contentInput.value.trim();
                 const file = fileInput.files[0];
-                
+
                 showError(''); // Limpiar errores
                 if (!content) {
                     showError('El contenido no puede estar vacío.');
                     return;
                 }
-                
+
                 // La validación de tipo y tamaño ya se hizo en el 'change' listener
                 // Pero podemos re-validar por si acaso
                 if (file) {
@@ -1529,13 +1721,13 @@
                         } catch (jsonError) {
                             // Si falla (porque es HTML/DOCTYPE), mostramos el error que viste
                             const textError = await response.text();
-                            if(textError.includes('<!DOCTYPE')) {
+                            if (textError.includes('<!DOCTYPE')) {
                                 throw new Error('Error de conexión con el servidor (Respuesta HTML). Revisa el endpoint de la API.');
                             }
                             throw new Error('Error desconocido al publicar.');
                         }
                     }
-                    
+
                     showSuccess();
                     resetForm();
                     await loadBlogPosts(); // Recargar la lista de posts
@@ -1550,7 +1742,7 @@
             }
 
             // 5. Eliminar Post (de API)
-            window.deletePost = async function(id) {
+            window.deletePost = async function (id) {
                 if (!confirm('¿Estás seguro de que quieres eliminar esta publicación?')) {
                     return;
                 }
@@ -1560,16 +1752,16 @@
                         headers: { 'Authorization': `Bearer ${token}` }
                     });
                     if (!response.ok) throw new Error('No se pudo eliminar.');
-                    
+
                     await loadBlogPosts(); // Recargar la lista
 
                 } catch (error) {
                     alert('Error al eliminar: ' + error.message);
                 }
             }
-            
+
             // 6. Favorito (a API)
-            window.toggleFavorite = async function(id) {
+            window.toggleFavorite = async function (id) {
                 const favButton = document.querySelector(`.post-card[data-id="${id}"] .post-favorite`);
                 const isActivating = !favButton.classList.contains('active');
                 favButton.classList.toggle('active'); // Actualización optimista
@@ -1579,7 +1771,7 @@
                         method: isActivating ? 'POST' : 'DELETE',
                         headers: { 'Authorization': `Bearer ${token}` }
                     });
-                    
+
                     if (!response.ok) {
                         favButton.classList.toggle('active'); // Revertir si falla
                     }
@@ -1644,7 +1836,7 @@
 
             // Función de validación de archivo reutilizable
             function isFileValid(file) {
-                 if (!file) return true; // No hay archivo, es válido
+                if (!file) return true; // No hay archivo, es válido
 
                 // 1. Validar Tipo
                 const allowedTypes = ['image/', 'video/'];
@@ -1655,7 +1847,7 @@
                     fileNameEl.textContent = '';
                     return false;
                 }
-                
+
                 // 2. Validar Tamaño
                 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
                 if (file.size > MAX_FILE_SIZE) {
@@ -1684,12 +1876,12 @@
                 const file = e.target.files[0];
                 fileNameEl.textContent = '';
                 showError('');
-                
+
                 if (file && isFileValid(file)) {
                     fileNameEl.textContent = `${file.name} (${formatBytes(file.size)})`;
                 }
             });
-            
+
             // Logout
             const sidebarLogoutButton = document.getElementById('sidebar-logout-btn');
             if (sidebarLogoutButton) {
@@ -1705,20 +1897,20 @@
                 e.preventDefault();
                 const overlay = document.getElementById('logout-overlay');
                 if (!overlay) return;
-                
+
                 overlay.classList.add('active');
-                
+
                 setTimeout(() => {
                     localStorage.removeItem('authToken');
                     localStorage.removeItem(CACHE_KEY);
                     overlay.querySelector('h2').textContent = "¡Cerraste sesión!";
                     overlay.querySelector('i').className = 'fas fa-check-circle';
                 }, 1500);
-                
+
                 setTimeout(() => {
                     overlay.classList.add('fading-out');
                 }, 3000);
-                
+
                 setTimeout(() => {
                     window.location.replace('/index.html');
                 }, 3500);

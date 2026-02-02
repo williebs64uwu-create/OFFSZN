@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verifica tu correo — offszn</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+
+        h1,
+        h2,
+        h3,
+        .btn-primary {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+    </style>
+</head>
+
+<body class="bg-black min-h-screen flex flex-col">
+
+    <script>
+        // � INSTANT GUARD: Hide page immediately while checking
+        document.body.style.opacity = '0';
+        document.body.style.pointerEvents = 'none';
+
+        (async () => {
+            // Check if user is already authenticated
+            const { createClient } = supabase;
+            const SUPABASE_URL = "https://qtjpvztpgfymjhhpoouq.supabase.co";
+            const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0anB2enRwZ2Z5bWpoaHBvb3VxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3ODA5MTUsImV4cCI6MjA3NjM1NjkxNX0.YsItTFk3hSQaVuy707-z7Z-j34mXa03O0wWGAlAzjrw";
+            const supabaseGuard = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+            const { data: { session } } = await supabaseGuard.auth.getSession();
+
+            if (session) {
+                // Already authenticated - redirect home
+                console.log("✅ Ya autenticado, redirigiendo...");
+                window.location.replace('/');
+            } else if (!sessionStorage.getItem('pendingEmailVerification')) {
+                // Not from registration flow - redirect to login
+                console.log("⚠️ Acceso directo sin registro, redirigiendo...");
+                window.location.replace('/pages/login.html');
+            } else {
+                // Valid state - show page
+                document.body.style.opacity = '1';
+                document.body.style.pointerEvents = 'auto';
+            }
+        })();
+    </script>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex items-center justify-center px-4">
+        <div class="w-full max-w-sm text-center">
+
+            <!-- Logo (Clickable -> Home) -->
+            <div class="flex justify-center mb-6">
+                <a href="/index.html" class="hover:opacity-80 transition-opacity" title="Volver al inicio">
+                    <img src="/images/LOGO OFFSZN.webp" alt="OFFSZN" style="height: 80px; width: auto;">
+                </a>
+            </div>
+
+            <!-- Icon -->
+            <div class="flex justify-center mb-6">
+                <div class="w-16 h-16 rounded-2xl bg-violet-600/10 flex items-center justify-center">
+                    <i class="bi bi-envelope text-2xl text-violet-500"></i>
+                </div>
+            </div>
+
+            <!-- Title -->
+            <div class="mb-4">
+                <h1 class="text-white text-2xl font-semibold mb-2">Revisa tu correo</h1>
+            </div>
+
+            <!-- Email Display -->
+            <div class="mb-8">
+                <p class="text-zinc-400 text-sm leading-relaxed mb-4">
+                    Hemos enviado un enlace de confirmación a:
+                </p>
+                <div
+                    class="bg-zinc-900 border border-zinc-800 rounded-lg py-3 px-4 inline-block max-w-full overflow-hidden">
+                    <span id="user-email-display" class="text-white font-medium block truncate">tu@email.com</span>
+                </div>
+                <p class="text-zinc-500 text-xs mt-4">
+                    Por favor, confírmalo para activar tu cuenta.
+                </p>
+            </div>
+
+            <script>
+                const emailSpan = document.getElementById('user-email-display');
+                const storedEmail = sessionStorage.getItem('pendingEmail');
+                if (storedEmail) {
+                    emailSpan.textContent = storedEmail;
+                }
+            </script>
+
+            <!-- Back to Login Button -->
+            <a href="/pages/login.html"
+                class="btn-primary w-full block py-3.5 bg-white hover:bg-zinc-200 text-black font-bold rounded-xl transition-colors mb-6">
+                Volver a Iniciar Sesión
+            </a>
+
+            <!-- Spam Hint -->
+            <div class="bg-zinc-900/50 border border-white/5 rounded-lg p-3 text-left flex gap-3 mb-6">
+                <i class="bi bi-info-circle text-zinc-400 mt-0.5 shrink-0"></i>
+                <p class="text-zinc-400 text-xs leading-5">
+                    Si no encuentras el correo en tu bandeja de entrada, revisa la carpeta de <strong>Spam</strong> o
+                    <strong>Correo no deseado</strong>.
+                </p>
+            </div>
+
+            <!-- Footer Links -->
+            <footer class="flex items-center justify-center gap-4 text-zinc-500 text-sm">
+                <a href="/" class="hover:text-zinc-300 transition-colors">Volver al Inicio</a>
+                <span>|</span>
+                <a href="mailto:support@offszn.com" class="hover:text-zinc-300 transition-colors">¿Necesitas ayuda?</a>
+            </footer>
+
+        </div>
+    </main>
+
+</body>
+
+</html>
