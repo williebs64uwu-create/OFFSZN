@@ -899,6 +899,16 @@
                 initReels();
             }
 
+            function getAccessToken() {
+                // Fallback to cookie or localStorage if needed,
+                // but ideally we just use window.supabaseClient.auth.getSession()
+                // However, for sync fetch calls, let's grab it from session or cookie
+                // Simple helper:
+                const match = document.cookie.match(new RegExp('(^| )sb-access-token=([^;]+)'));
+                if (match) return match[2];
+                return localStorage.getItem('authToken');
+            }
+
             async function initReels() {
                 const container = document.getElementById('reels-feed-container');
 
@@ -1254,7 +1264,11 @@
                 try {
                     const token = getAccessToken();
                     const method = newState ? 'POST' : 'DELETE';
-                    const res = await fetch(`/api/users/${targetId}/follow`, {
+                    const API_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+                        ? 'http://localhost:3000/api'
+                        : 'https://offszn-oc7c.onrender.com/api';
+
+                    const res = await fetch(`${API_URL}/users/${targetId}/follow`, {
                         method,
                         headers: {
                             'Content-Type': 'application/json',
@@ -1302,7 +1316,11 @@
                             if (reelId && !entry.target.dataset.viewed) {
                                 entry.target.viewTimeout = setTimeout(async () => {
                                     try {
-                                        await fetch(`/api/reels/${reelId}/view`, { method: 'POST' });
+                                        const API_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+                                            ? 'http://localhost:3000/api'
+                                            : 'https://offszn-oc7c.onrender.com/api';
+
+                                        await fetch(`${API_URL}/reels/${reelId}/view`, { method: 'POST' });
                                         entry.target.dataset.viewed = "true";
                                     } catch (e) { }
                                 }, 2000);
@@ -1347,7 +1365,3 @@
 </body>
 
 </html>
-
-
-
-
