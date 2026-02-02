@@ -5,7 +5,7 @@ let cropper = null; // Store cropper instance
 
 document.addEventListener("DOMContentLoaded", async () => {
     // 1. Initial State Check
-    const { data: { session } } = await supabaseClient.auth.getSession();
+    const { data: { session } } = await window.supabaseClient.auth.getSession();
 
     if (!session) {
         window.location.href = '/pages/login.html';
@@ -29,7 +29,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 async function loadUserData() {
     try {
-        const { data, error } = await supabaseClient
+        const { data, error } = await window.supabaseClient
             .from('users')
             .select('*')
             .eq('id', currentUser.id)
@@ -264,7 +264,7 @@ function setupFormListeners() {
             if (!currentUser || !currentUser.email) return;
 
             if (confirm(`¿Enviar un correo de recuperación a ${currentUser.email}?`)) {
-                const { error } = await supabaseClient.auth.resetPasswordForEmail(currentUser.email, {
+                const { error } = await window.supabaseClient.auth.resetPasswordForEmail(currentUser.email, {
                     redirectTo: window.location.origin + '/pages/update-password.html',
                 });
                 if (error) alert("Error: " + error.message);
@@ -377,13 +377,13 @@ window.AvatarManager = {
                 if (segments.length > 1) {
                     const oldFileName = segments[1].split('?')[0]; // Remove query params
                     // console.log("Deleting old avatar:", oldFileName);
-                    await supabaseClient.storage.from('avatars').remove([oldFileName]);
+                    await window.supabaseClient.storage.from('avatars').remove([oldFileName]);
                 }
             }
 
             // 2. UPLOAD NEW
             const fileName = `${currentUser.id}_${Date.now()}.jpg`; // Force JPG from crop
-            const { error: uploadError } = await supabaseClient.storage
+            const { error: uploadError } = await window.supabaseClient.storage
                 .from('avatars')
                 .upload(fileName, fileBlob, {
                     contentType: 'image/jpeg',
@@ -400,10 +400,10 @@ window.AvatarManager = {
                 throw uploadError;
             }
 
-            const { data: { publicUrl } } = supabaseClient.storage.from('avatars').getPublicUrl(fileName);
+            const { data: { publicUrl } } = window.supabaseClient.storage.from('avatars').getPublicUrl(fileName);
 
             // 3. UPDATE DB
-            const { error: updateError } = await supabaseClient
+            const { error: updateError } = await window.supabaseClient
                 .from('users')
                 .update({ avatar_url: publicUrl })
                 .eq('id', currentUser.id);
@@ -482,7 +482,7 @@ async function saveProfileChanges(e, type) {
                     throw new Error("Has alcanzado el límite de 3 cambios de nombre por día.");
                 }
 
-                const { data: existing } = await supabaseClient
+                const { data: existing } = await window.supabaseClient
                     .from('users')
                     .select('id')
                     .eq('nickname', nickname)
@@ -490,7 +490,7 @@ async function saveProfileChanges(e, type) {
 
                 if (existing) throw new Error("Este nombre de usuario ya está ocupado.");
 
-                await supabaseClient.auth.updateUser({
+                await window.supabaseClient.auth.updateUser({
                     data: {
                         last_nick_change: today,
                         nick_changes_today: (nick_changes_today || 0) + 1
@@ -532,7 +532,7 @@ async function saveProfileChanges(e, type) {
         }
 
         // EXECUTE UPDATE
-        const { error } = await supabaseClient
+        const { error } = await window.supabaseClient
             .from('users')
             .update(updates)
             .eq('id', currentUser.id);
@@ -589,7 +589,7 @@ async function changePassword(e) {
 
     try {
         // VERIFY CURRENT PASSWORD via Re-Auth
-        const { error: authError } = await supabaseClient.auth.signInWithPassword({
+        const { error: authError } = await window.supabaseClient.auth.signInWithPassword({
             email: currentUser.email,
             password: currentPass
         });
@@ -600,7 +600,7 @@ async function changePassword(e) {
         }
 
         // UPDATE PASSWORD
-        await supabaseClient.auth.updateUser({ password: newPass });
+        await window.supabaseClient.auth.updateUser({ password: newPass });
 
         // Success feedback
         const form = document.getElementById('passwordForm');
@@ -664,7 +664,7 @@ async function checkNickname(nick, submitBtn) {
     if (submitBtn) submitBtn.disabled = true;
 
     try {
-        const { data } = await supabaseClient
+        const { data } = await window.supabaseClient
             .from('users')
             .select('id')
             .ilike('nickname', nick)
