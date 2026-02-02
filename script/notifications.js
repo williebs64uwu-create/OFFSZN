@@ -267,56 +267,58 @@
 
         render: function (notifications) {
             if (notifications) this.renderedIds = notifications.map(n => n.id);
-            const list = document.getElementById('notification-list');
+
+            // 🛡️ TARGETS: Check for both Global Dropdown AND Main Page List
+            const dropdownList = document.getElementById('notification-list');
+            const mainList = document.getElementById('full-notification-list'); // Main Page ID
+
             const badge = document.getElementById('notification-badge');
 
             if (notifications) {
                 const unreadCount = notifications.filter(n => !n.read).length;
                 localStorage.setItem('notificationCount', unreadCount);
+                if (badge) {
+                    badge.innerText = unreadCount;
+                    badge.style.display = unreadCount > 0 ? 'flex' : 'none';
+                }
             }
 
-            if (!list) return;
+            // Exit only if NEITHER list exists
+            if (!dropdownList && !mainList) return;
 
-            const unreadCount = notifications ? notifications.filter(n => !n.read).length : 0;
-
-            if (badge) {
-                badge.innerText = unreadCount;
-                badge.style.display = unreadCount > 0 ? 'flex' : 'none';
-            }
-
-            if (!notifications || notifications.length === 0) {
-                list.innerHTML = `
+            const html = (!notifications || notifications.length === 0)
+                ? `
                 <div class="notif-empty" style="text-align: center; color: #fff; padding: 40px 20px;">
                     <div style="font-size: 2rem; margin-bottom: 16px; color: #333;"><i class="bi bi-bell-slash"></i></div>
                     <h4 style="margin-bottom: 8px; font-size: 0.9rem; font-weight: 500; color:#666;">Sin notificaciones</h4>
                     <p style="font-size:0.75rem; color:#444;">Te avisaremos cuando haya actividad.</p>
-                </div>`;
-                return;
-            }
+                </div>`
+                : notifications.map(n => {
+                    const isReal = !n.id.startsWith('invite-') && !n.id.startsWith('accepted-');
+                    let extraId = '';
+                    if (n.type === 'product_like') extraId = n.data?.product_id || '';
+                    else if (n.type === 'new_follower') extraId = n.data?.follower_id || '';
 
-            list.innerHTML = notifications.map(n => {
-                const isReal = !n.id.startsWith('invite-') && !n.id.startsWith('accepted-');
-
-                // Determine extraId properly
-                let extraId = '';
-                if (n.type === 'product_like') extraId = n.data?.product_id || '';
-                else if (n.type === 'new_follower') extraId = n.data?.follower_id || '';
-
-                return `
-                    <div class="notification-item ${n.read ? '' : 'unread'}" onclick="handleNotificationClick('${n.id}', '${n.type}', '${extraId}')">
-                        <div class="notif-icon ${n.type}">
-                            <i class="fas ${this.getIcon(n.type)}"></i>
+                    return `
+                        <div class="notification-item ${n.read ? '' : 'unread'}" onclick="handleNotificationClick('${n.id}', '${n.type}', '${extraId}')">
+                            <div class="notif-icon ${n.type}">
+                                <i class="fas ${this.getIcon(n.type)}"></i>
+                            </div>
+                            <div class="notif-content">
+                                <div class="notif-title">${n.title || 'Notificación'}</div>
+                                <div class="notif-message">${n.message}</div>
+                                <div class="notif-time">${timeAgo(n.created_at)}</div>
+                            </div>
                         </div>
-                        <div class="notif-content">
-                            <div class="notif-title">${n.title || 'Notificación'}</div>
-                            <div class="notif-message">${n.message}</div>
-                            <div class="notif-time">${timeAgo(n.created_at)}</div>
-                        </div>
-                    </div>
-                `;
-            }).join('');
+                    `;
+                }).join('');
 
-            // --- Re-Init Hover Cards for Dropped Down Items ---
+
+            // ✅ Populates BOTH lists if they exist
+            if (dropdownList) dropdownList.innerHTML = html;
+            if (mainList) mainList.innerHTML = html;
+
+            // --- Re-Init Hover Cards ---
             if (window.HoverCardManager) {
                 setTimeout(() => window.HoverCardManager.initTriggers(), 50);
             }

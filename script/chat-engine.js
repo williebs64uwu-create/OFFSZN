@@ -7,9 +7,33 @@ const supabase = window.supabaseClient || (window.supabase ? window.supabase.cre
 let currentUser = null;
 let currentConversationId = null;
 let emojiPicker = null;
+let isInitialized = false; // Flag to prevent re-initialization
 
 // ===== INITIALIZATION =====
-document.addEventListener('DOMContentLoaded', async () => {
+// 🛡️ SPA SAFEGUARD
+function isChatPage() {
+    return !!document.getElementById('chatSystemRoot');
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    if (!isChatPage()) return; // 🛑 Stop if not on chat page
+    initChat();
+});
+
+// SPA Navigation Listener
+document.addEventListener('offszn:page-changed', (e) => {
+    if (isChatPage()) {
+        initChat();
+    }
+});
+
+async function initChat() {
+    if (isInitialized) return;
+    isInitialized = true;
+
+    console.log("💬 Chat Engine Initialized");
+    // initUI(); // Assuming initUI() is defined elsewhere or will be added.
+
     const { data: { session } } = await supabase.auth.getSession();
 
     if (!session) {

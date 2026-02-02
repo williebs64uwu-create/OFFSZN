@@ -19,6 +19,25 @@ let currentUserFollowing = new Set();
 let heroProducts = [];
 let currentHeroIndex = 0;
 let heroTimer = null;
+
+// 🛡️ SPA SAFEGUARD: Only run if we are on the Explore page
+function isExplorePage() {
+    return !!document.getElementById('explore-rows-container');
+}
+
+// ------------------- INITIALIZATION -------------------
+
+document.addEventListener('DOMContentLoaded', () => {
+    if (!isExplorePage()) return; // 🛑 STOP EXECUTION ON OTHER PAGES
+    initExplore();
+});
+
+// Also listen for SPA navigation events
+document.addEventListener('offszn:page-changed', (e) => {
+    if (isExplorePage()) {
+        initExplore();
+    }
+});
 let usedProductIds = new Set(); // To prevent repetition
 let currentCategory = 'Todo';
 window.activeWavesurfers = [];
