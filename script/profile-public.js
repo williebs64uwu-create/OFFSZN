@@ -8,6 +8,9 @@ window.activeWavesurfers = window.activeWavesurfers || [];
 window.currentlyPlaying = window.currentlyPlaying || null;
 
 document.addEventListener('DOMContentLoaded', async () => {
+    // 0. SAFETY CHECK: Only run if on Profile Page
+    if (!document.getElementById('profile-root')) return;
+
     // 1. Get Username from URL
     // 1. Get Username from URL
     // Supports: /@willie, /u/willie, and /willie
