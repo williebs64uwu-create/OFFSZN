@@ -1,6 +1,14 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
+    <!-- Supabase Config & Auth Utils -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        window.SUPABASE_URL = "https://qtjpvztpgfymjhhpoouq.supabase.co";
+        window.SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0anB2enRwZ2Z5bWpoaHBvb3VxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3ODA5MTUsImV4cCI6MjA3NjM1NjkxNX0.YsItTFk3hSQaVuy707-z7Z-j34mXa03O0wWGAlAzjrw";
+        window.supabaseClient = null;
+    </script>
+    <script src="/script/auth-utils.js?v=11"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Feed - OFFSZN</title>
@@ -462,9 +470,9 @@
         </div>
 
         <div class="navbar-right">
-            <a href="#" class="navbar-icon-button">🔔</a>
-            <a href="Gift-Cards" class="navbar-icon-button">🛒</a>
-            <a href="/account-settings.html" class="navbar-icon-button">👤</a>
+            <a href="#" class="navbar-icon-button">ðŸ””</a>
+            <a href="Gift-Cards" class="navbar-icon-button">ðŸ›’</a>
+            <a href="/account-settings.html" class="navbar-icon-button">ðŸ‘¤</a>
         </div>
     </nav>
 
@@ -484,47 +492,47 @@
         <!-- MAIN FEED -->
         <main class="feed-main">
             <div class="section-header">
-                <h2 class="section-title">🔥 Para ti</h2>
-                <a href="#" class="section-link">Ver más</a>
+                <h2 class="section-title">ðŸ”¥ Para ti</h2>
+                <a href="#" class="section-link">Ver mÃ¡s</a>
             </div>
             <div class="empty-section">
-                <div class="empty-icon">✨</div>
-                <h3 class="empty-title">Pronto verás contenido personalizado</h3>
-                <p class="empty-description">Basado en tus gustos, seguidos y actividad, aquí aparecerá música y creadores que te interesen.</p>
+                <div class="empty-icon">âœ¨</div>
+                <h3 class="empty-title">Pronto verÃ¡s contenido personalizado</h3>
+                <p class="empty-description">Basado en tus gustos, seguidos y actividad, aquÃ­ aparecerÃ¡ mÃºsica y creadores que te interesen.</p>
             </div>
 
             <div class="section-header">
-                <h2 class="section-title">🎧 Beats Populares</h2>
+                <h2 class="section-title">ðŸŽ§ Beats Populares</h2>
                 <a href="#" class="section-link">Explorar</a>
             </div>
             <div class="products-grid">
                 <div class="empty-card">
-                    <div class="empty-card-icon">🎚️</div>
-                    <div class="empty-card-text">Próximamente</div>
+                    <div class="empty-card-icon">ðŸŽšï¸</div>
+                    <div class="empty-card-text">PrÃ³ximamente</div>
                 </div>
                 <div class="empty-card">
-                    <div class="empty-card-icon">🥁</div>
-                    <div class="empty-card-text">Próximamente</div>
+                    <div class="empty-card-icon">ðŸ¥</div>
+                    <div class="empty-card-text">PrÃ³ximamente</div>
                 </div>
             </div>
 
             <div class="section-header">
-                <h2 class="section-title">👥 Productores en Tendencia</h2>
+                <h2 class="section-title">ðŸ‘¥ Productores en Tendencia</h2>
                 <a href="#" class="section-link">Ver todos</a>
             </div>
             <div class="producers-list">
                 <div class="empty-producer">
                     <div class="empty-avatar"></div>
                     <div class="empty-producer-info">
-                        <div class="empty-producer-name">Próximamente</div>
-                        <div class="empty-producer-genre">Creadores destacados aparecerán aquí</div>
+                        <div class="empty-producer-name">PrÃ³ximamente</div>
+                        <div class="empty-producer-genre">Creadores destacados aparecerÃ¡n aquÃ­</div>
                     </div>
                 </div>
                 <div class="empty-producer">
                     <div class="empty-avatar"></div>
                     <div class="empty-producer-info">
-                        <div class="empty-producer-name">Próximamente</div>
-                        <div class="empty-producer-genre">Basado en tu región y estilo</div>
+                        <div class="empty-producer-name">PrÃ³ximamente</div>
+                        <div class="empty-producer-genre">Basado en tu regiÃ³n y estilo</div>
                     </div>
                 </div>
             </div>
@@ -533,30 +541,31 @@
         <!-- RIGHT SIDEBAR -->
         <aside class="feed-sidebar-right">
             <div class="sidebar-widget">
-                <h3 class="widget-title">🎯 Tu Perfil Musical</h3>
+                <h3 class="widget-title">ðŸŽ¯ Tu Perfil Musical</h3>
                 <div class="stats-list">
                     <div class="stat-item">
-                        <span class="stat-label">Géneros</span>
-                        <span class="stat-value">—</span>
+                        <span class="stat-label">GÃ©neros</span>
+                        <span class="stat-value">â€”</span>
                     </div>
                     <div class="stat-item">
                         <span class="stat-label">BPM preferido</span>
-                        <span class="stat-value">—</span>
+                        <span class="stat-value">â€”</span>
                     </div>
                     <div class="stat-item">
                         <span class="stat-label">Instrumentos</span>
-                        <span class="stat-value">—</span>
+                        <span class="stat-value">â€”</span>
                     </div>
                 </div>
             </div>
 
             <div class="cta-widget">
-                <div class="cta-icon">💡</div>
+                <div class="cta-icon">ðŸ’¡</div>
                 <h3 class="cta-title">Mejora tus recomendaciones</h3>
-                <p class="cta-text">Sigue productores, marca beats favoritos y completa tu perfil para una experiencia más personalizada.</p>
+                <p class="cta-text">Sigue productores, marca beats favoritos y completa tu perfil para una experiencia mÃ¡s personalizada.</p>
                 <a href="/account-settings.html" class="cta-button" style="display:block;width:100%;padding:10px 16px;background:#8b5cf6;color:#fff;text-decoration:none;border-radius:8px;font-weight:600;font-size:0.85rem;text-align:center;">Editar Perfil</a>
             </div>
         </aside>
     </div>
 </body>
 </html>
+

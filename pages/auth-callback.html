@@ -1,7 +1,15 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 
 <head>
+  <!-- Supabase Config & Auth Utils -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    window.SUPABASE_URL = "https://qtjpvztpgfymjhhpoouq.supabase.co";
+    window.SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0anB2enRwZ2Z5bWpoaHBvb3VxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3ODA5MTUsImV4cCI6MjA3NjM1NjkxNX0.YsItTFk3hSQaVuy707-z7Z-j34mXa03O0wWGAlAzjrw";
+    window.supabaseClient = null;
+  </script>
+  <script src="/script/auth-utils.js?v=11"></script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Autenticando... — offszn</title>
@@ -32,14 +40,15 @@
     <p class="text-zinc-500 text-sm mt-2">Serás redirigido en un momento</p>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
     (async () => {
-      const SUPABASE_URL = "https://qtjpvztpgfymjhhpoouq.supabase.co";
-      const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0anB2enRwZ2Z5bWpoaHBvb3VxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3ODA5MTUsImV4cCI6MjA3NjM1NjkxNX0.YsItTFk3hSQaVuy707-z7Z-j34mXa03O0wWGAlAzjrw";
+      // Use the global client initialized by auth-utils.js
+      const supabaseClient = window.supabaseClient;
 
-      const { createClient } = supabase;
-      const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      if (!supabaseClient) {
+        console.error("Critical: Global Supabase not found. Ensure auth-utils.js is loaded.");
+        return;
+      }
 
       // Obtener el parámetro de redirect de la URL
       const urlParams = new URLSearchParams(window.location.search);
@@ -117,6 +126,3 @@
 </body>
 
 </html>
-
-
-

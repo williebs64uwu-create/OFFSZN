@@ -12,7 +12,7 @@
     window.SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0anB2enRwZ2Z5bWpoaHBvb3VxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3ODA5MTUsImV4cCI6MjA3NjM1NjkxNX0.YsItTFk3hSQaVuy707-z7Z-j34mXa03O0wWGAlAzjrw";
     window.supabaseClient = null;
   </script>
-    <script src="/script/auth-utils.js?v=11"></script>
+  <script src="/script/auth-utils.js?v=11"></script>
 
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
@@ -858,10 +858,14 @@
 
     // Guard: Verificar si YA completó onboarding (tiene nickname)
     (async () => {
-      if (typeof supabase === 'undefined') return;
-      const { createClient } = supabase;
-      const supabaseGuard = createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
-      window.supabaseClient = supabaseGuard; // 🌍 Expose for auth.js and welcome.js
+
+      // Use global client
+      const supabaseGuard = window.supabaseClient;
+      if (!supabaseGuard) {
+        console.error("Critical: Supabase client not initialized.");
+        return;
+      }
+
 
       const { data: { session } } = await supabaseGuard.auth.getSession();
 
@@ -1120,6 +1124,3 @@
 </body>
 
 </html>
-
-
-

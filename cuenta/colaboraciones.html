@@ -1,7 +1,15 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 
 <head>
+    <!-- Supabase Config & Auth Utils -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        window.SUPABASE_URL = "https://qtjpvztpgfymjhhpoouq.supabase.co";
+        window.SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0anB2enRwZ2Z5bWpoaHBvb3VxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3ODA5MTUsImV4cCI6MjA3NjM1NjkxNX0.YsItTFk3hSQaVuy707-z7Z-j34mXa03O0wWGAlAzjrw";
+        window.supabaseClient = null;
+    </script>
+    <script src="/script/auth-utils.js?v=11"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Colaboraciones - OFFSZN</title>
@@ -35,7 +43,7 @@
 
         html {
             overflow-y: scroll;
-            /* 🔥 PREVENTS LAYOUT SHIFT */
+            /* ðŸ”¥ PREVENTS LAYOUT SHIFT */
         }
 
         body {
@@ -933,7 +941,7 @@
             <img src="../images/LOGO-OFFSZN.png" style="width:38px; mix-blend-mode: screen;">
         </a>
 
-        <!-- 1. GESTIÓN -->
+        <!-- 1. GESTIÃ“N -->
         <div style="width:40px; border-bottom:1px solid #222; margin:5px 0;"></div>
         <a href="/cuenta/dashboard.html" class="sidebar-icon-btn" data-title="Dashboard"><i
                 class="bi bi-grid-fill"></i></a>
@@ -955,7 +963,7 @@
         <div style="width:40px; border-bottom:1px solid #222; margin:5px 0;"></div>
         <a href="/cuenta/cursos.html" class="sidebar-icon-btn" data-title="Cursos"><i
                 class="bi bi-mortarboard-fill"></i></a>
-        <a href="/cuenta/analiticas.html" class="sidebar-icon-btn" data-title="Estadísticas"><i
+        <a href="/cuenta/analiticas.html" class="sidebar-icon-btn" data-title="EstadÃ­sticas"><i
                 class="bi bi-bar-chart-fill"></i></a>
 
         <!-- 4. SOCIAL -->
@@ -985,7 +993,7 @@
                     <p>Gestiona tus invitaciones y proyectos compartidos</p>
                 </div>
                 <!-- <button class="btn-new-collab" onclick="openInviteModal()">
-                    <i class="bi bi-plus-lg"></i> Nueva Invitación
+                    <i class="bi bi-plus-lg"></i> Nueva InvitaciÃ³n
                 </button> -->
             </div>
 
@@ -1035,7 +1043,7 @@
                     <div id="tab-sent" class="tab-content" style="display:none;">
                         <div id="list-sent">
                             <div class="empty-state"><i class="bi bi-send"></i>
-                                <p>No has enviado invitaciones aún</p>
+                                <p>No has enviado invitaciones aÃºn</p>
                             </div>
                         </div>
                     </div>
@@ -1064,7 +1072,7 @@
                 <div class="collab-sidebar">
                     <div
                         style="background:#111; border:1px solid #222; border-radius:12px; padding:20px; margin-bottom:20px;">
-                        <h3 style="font-size:16px; margin-bottom:15px;">Estadísticas Generales</h3>
+                        <h3 style="font-size:16px; margin-bottom:15px;">EstadÃ­sticas Generales</h3>
 
                         <div style="display:flex; justify-content:space-between; margin-bottom:12px;">
                             <span style="color:#aaa; font-size:14px;">Total Obtenido</span>
@@ -1085,10 +1093,10 @@
                     <div
                         style="background:rgba(139, 92, 246, 0.05); border:1px dashed #333; border-radius:12px; padding:20px;">
                         <h3 style="font-size:14px; color:#8B5CF6; margin-bottom:10px;"><i class="bi bi-info-circle"></i>
-                            ¿Cómo funciona?</h3>
+                            Â¿CÃ³mo funciona?</h3>
                         <p style="font-size:12px; color:#888; line-height:1.5;">Invita a otros productores a colaborar
-                            en tus beats. Define el porcentaje de regalías (split) y cuando acepten, se reflejará
-                            automáticamente en los contratos de licencia.</p>
+                            en tus beats. Define el porcentaje de regalÃ­as (split) y cuando acepten, se reflejarÃ¡
+                            automÃ¡ticamente en los contratos de licencia.</p>
                     </div>
                 </div>
 
@@ -1097,12 +1105,12 @@
         </div>
     </div>
 
-    <!-- MODAL: Nueva Invitación -->
+    <!-- MODAL: Nueva InvitaciÃ³n -->
     <div class="modal-overlay" id="inviteModal">
         <div class="modal-content" style="max-width: 600px;">
             <div class="modal-header">
-                <h2>Gestión de Royalties</h2>
-                <p>Define cómo se reparten los ingresos de este beat.</p>
+                <h2>GestiÃ³n de Royalties</h2>
+                <p>Define cÃ³mo se reparten los ingresos de este beat.</p>
             </div>
 
             <style>
@@ -1235,7 +1243,7 @@
             const { data: { session } } = await supabaseClient.auth.getSession();
             if (session) {
                 window.currentUser = session.user;
-                console.log("✅ Collabs Page: User confirmed", window.currentUser.email);
+                console.log("âœ… Collabs Page: User confirmed", window.currentUser.email);
                 loadProducts();
                 loadCollaborations();
             }
@@ -1366,7 +1374,7 @@
             ownerRow.innerHTML = `
                 <div style="display:flex; align-items:center; gap:10px;">
                     <i class="bi bi-person-circle" style="color:#8B5CF6; font-size:20px;"></i>
-                    <span style="color:#fff; font-weight:500;">Tú (Propietario)</span>
+                    <span style="color:#fff; font-weight:500;">TÃº (Propietario)</span>
                 </div>
                 <div class="split-percent-wrapper">
                     <input type="number" class="split-input" value="100" min="0" max="100" 
@@ -1446,7 +1454,7 @@
                 const percent = parseInt(row.querySelector('.col-percent').value);
 
                 if (!email || !email.includes('@')) {
-                    showToast("Correo inválido en una de las filas", "error");
+                    showToast("Correo invÃ¡lido en una de las filas", "error");
                     errorFound = true;
                     return;
                 }
@@ -1611,7 +1619,7 @@
                 // Badges/Stats skeletons are handled by updating innerText in updateStats or manually here
                 // Note: updateStats will overwrite the innerHTML of badges, removing skeleton markup, which is what we want.
 
-                // 🔥 FILTER LOGIC: HIDE PRIVATE/DRAFT INVITATIONS
+                // ðŸ”¥ FILTER LOGIC: HIDE PRIVATE/DRAFT INVITATIONS
                 // Only show if visibility is 'public' or 'unlisted'
                 const isVisible = (p) => p && (p.visibility === 'public' || p.visibility === 'unlisted');
 
@@ -1736,7 +1744,7 @@
             if (error) {
                 showToast("Error al actualizar: " + error.message, "error");
             } else {
-                showToast(status === 'accepted' ? "¡Colaboración aceptada!" : "Colaboración rechazada");
+                showToast(status === 'accepted' ? "Â¡ColaboraciÃ³n aceptada!" : "ColaboraciÃ³n rechazada");
                 loadCollaborations(); // Refresh
             }
         }
@@ -1762,8 +1770,8 @@
 
         function cancelCollab(id) {
             openConfirmModal(
-                "Cancelar Invitación",
-                "¿Seguro que quieres cancelar esta invitación? El usuario ya no podrá aceptarla.",
+                "Cancelar InvitaciÃ³n",
+                "Â¿Seguro que quieres cancelar esta invitaciÃ³n? El usuario ya no podrÃ¡ aceptarla.",
                 async () => {
                     // 1. Try Hard Delete
                     const resDelete = await supabaseClient
@@ -1772,7 +1780,7 @@
                         .eq('id', id);
 
                     if (!resDelete.error && resDelete.count > 0) {
-                        showToast("Invitación eliminada");
+                        showToast("InvitaciÃ³n eliminada");
                         loadCollaborations();
                         return;
                     }
@@ -1789,7 +1797,7 @@
                     if (resUpdate.error) {
                         showToast("Error: " + resUpdate.error.message, "error");
                     } else {
-                        showToast("Invitación cancelada (Soft delete)");
+                        showToast("InvitaciÃ³n cancelada (Soft delete)");
                         loadCollaborations();
                     }
                 }
@@ -1846,7 +1854,7 @@
             if (error) {
                 showToast("Error al editar: " + error.message, "error");
             } else {
-                showToast("Invitación actualizada");
+                showToast("InvitaciÃ³n actualizada");
                 closeEditModal();
                 loadCollaborations();
             }
@@ -1897,7 +1905,7 @@
                     const audioSrc = prod ? (prod.audio_url || prod.mp3_url || prod.demo_url) : null;
 
 
-                    // 🔥 DYNAMIC EDIT URL BASED ON PRODUCT TYPE
+                    // ðŸ”¥ DYNAMIC EDIT URL BASED ON PRODUCT TYPE
                     const pType = prod.product_type || 'beat';
                     let uploadFile = 'Beats.html';
 
@@ -1978,7 +1986,7 @@
                 // --- STANDARD LIST FOR RECEIVED / ACTIVE ---
                 items.forEach(item => {
                     const product = item.products;
-                    const productName = product ? product.name : '⚠️ Producto Eliminado';
+                    const productName = product ? product.name : 'âš ï¸ Producto Eliminado';
                     const productImg = (product && product.image_url) ? product.image_url : '../images/PORTADA%20DEFAULT.png';
                     const split = item.royalty_percent || 0;
 
@@ -2019,7 +2027,7 @@
                     } else {
                         // Active
                         const isOwner = item.inviter_id === window.currentUser.id;
-                        const roleLabel = isOwner ? 'Dueño (Tú)' : 'Colaborador (Tú)';
+                        const roleLabel = isOwner ? 'DueÃ±o (TÃº)' : 'Colaborador (TÃº)';
 
                         actionsHTML = `
                             <div class="card-actions">
@@ -2127,7 +2135,7 @@
     <div class="modal-overlay" id="editModal">
         <div class="elite-modal">
             <div class="modal-header" style="display:flex; justify-content:space-between; align-items:center;">
-                <h2>Editar Colaboración</h2>
+                <h2>Editar ColaboraciÃ³n</h2>
                 <button class="btn-close-modal" onclick="closeEditModal()"><i class="bi bi-x"></i></button>
             </div>
             <div class="modal-body">
@@ -2137,7 +2145,7 @@
                         style="opacity:0.6; cursor:not-allowed;">
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Porcentaje de Regalías</label>
+                    <label class="form-label">Porcentaje de RegalÃ­as</label>
                     <div class="slider-container">
                         <div class="slider-val">
                             <span>Royalties</span>
@@ -2159,10 +2167,10 @@
     <div class="modal-overlay" id="confirmModal">
         <div class="elite-modal" style="max-width: 400px;">
             <div class="modal-header">
-                <h2 id="confirmTitle" style="font-size:18px;">Confirmar Acción</h2>
+                <h2 id="confirmTitle" style="font-size:18px;">Confirmar AcciÃ³n</h2>
             </div>
             <div class="modal-body">
-                <p id="confirmMessage" style="color:#ccc; font-size:14px; line-height:1.5;">¿Estás seguro?</p>
+                <p id="confirmMessage" style="color:#ccc; font-size:14px; line-height:1.5;">Â¿EstÃ¡s seguro?</p>
             </div>
             <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:10px;">
                 <button class="btn-modal-cancel" onclick="closeConfirmModal()">Cancelar</button>
@@ -2194,7 +2202,7 @@
                 </div>
                 <div class="plan-features">
                     <div class="feature-item"><i class="bi bi-check-circle-fill"></i> 5 Subidas Mensuales</div>
-                    <div class="feature-item"><i class="bi bi-check-circle-fill"></i> Analytics Básicas</div>
+                    <div class="feature-item"><i class="bi bi-check-circle-fill"></i> Analytics BÃ¡sicas</div>
                     <div class="feature-item"><i class="bi bi-check-circle-fill"></i> Soporte 24/7</div>
                 </div>
             </div>
@@ -2208,7 +2216,7 @@
                 <div class="plan-features">
                     <div class="feature-item"><i class="bi bi-check-circle-fill"></i> Subidas Ilimitadas</div>
                     <div class="feature-item"><i class="bi bi-check-circle-fill"></i> Analytics Avanzadas</div>
-                    <div class="feature-item"><i class="bi bi-check-circle-fill"></i> 0% Comisión</div>
+                    <div class="feature-item"><i class="bi bi-check-circle-fill"></i> 0% ComisiÃ³n</div>
                 </div>
             </div>
         </div>
@@ -2233,3 +2241,4 @@
 </script>
 
 </html>
+

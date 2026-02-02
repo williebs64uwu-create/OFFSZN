@@ -1,7 +1,15 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 
 <head>
+    <!-- Supabase Config & Auth Utils -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        window.SUPABASE_URL = "https://qtjpvztpgfymjhhpoouq.supabase.co";
+        window.SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0anB2enRwZ2Z5bWpoaHBvb3VxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3ODA5MTUsImV4cCI6MjA3NjM1NjkxNX0.YsItTFk3hSQaVuy707-z7Z-j34mXa03O0wWGAlAzjrw";
+        window.supabaseClient = null;
+    </script>
+    <script src="/script/auth-utils.js?v=11"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Administrador de Licencias | OFFSZN</title>
@@ -75,7 +83,7 @@
 
         html {
             overflow-y: scroll;
-            /* 🔥 PREVENTS LAYOUT SHIFT */
+            /* ðŸ”¥ PREVENTS LAYOUT SHIFT */
         }
 
         body {
@@ -817,7 +825,7 @@
             <img src="../images/LOGO-OFFSZN.png" style="width:38px; mix-blend-mode: screen;">
         </a>
 
-        <!-- 1. GESTIÓN -->
+        <!-- 1. GESTIÃ“N -->
         <div style="width:40px; border-bottom:1px solid #222; margin:5px 0;"></div>
         <a href="/cuenta/dashboard.html" class="sidebar-icon-btn" data-title="Dashboard"><i
                 class="bi bi-grid-fill"></i></a>
@@ -839,7 +847,7 @@
         <div style="width:40px; border-bottom:1px solid #222; margin:5px 0;"></div>
         <a href="/cuenta/cursos.html" class="sidebar-icon-btn" data-title="Cursos"><i
                 class="bi bi-mortarboard-fill"></i></a>
-        <a href="/cuenta/analiticas.html" class="sidebar-icon-btn" data-title="Estadísticas"><i
+        <a href="/cuenta/analiticas.html" class="sidebar-icon-btn" data-title="EstadÃ­sticas"><i
                 class="bi bi-bar-chart-fill"></i></a>
 
         <!-- 4. SOCIAL -->
@@ -1002,7 +1010,7 @@
 
         <!-- REAL CONTENT WRAPPER -->
         <div id="real-content" class="main-layout-wrapper">
-            <h1 style="margin-top: 0;">Configuración de Licencias</h1>
+            <h1 style="margin-top: 0;">ConfiguraciÃ³n de Licencias</h1>
 
             <div class="license-tabs">
                 <button class="tab-btn active" onclick="switchTab('basic')">Basic Lease</button>
@@ -1068,7 +1076,7 @@
 
                     <!-- SECTION 2: LIMITS -->
                     <div class="form-section">
-                        <div class="form-section-title">Límites de Uso</div>
+                        <div class="form-section-title">LÃ­mites de Uso</div>
                         <div class="form-grid">
                             <div class="form-group">
                                 <label>Streams Monetizados <i class="bi bi-question-circle-fill info-icon"
@@ -1169,12 +1177,12 @@
     <!-- CUSTOM MODAL -->
     <div class="custom-modal-overlay" id="confirmModal">
         <div class="custom-modal">
-            <h3>¿Estás seguro?</h3>
-            <p>Se restablecerán los valores por defecto para esta licencia. Esto no guardará los cambios
-                automáticamente.</p>
+            <h3>Â¿EstÃ¡s seguro?</h3>
+            <p>Se restablecerÃ¡n los valores por defecto para esta licencia. Esto no guardarÃ¡ los cambios
+                automÃ¡ticamente.</p>
             <div class="modal-actions">
                 <button class="btn-modal-cancel" onclick="closeModal()">Cancelar</button>
-                <button class="btn-modal-confirm" onclick="confirmReset()">Sí, Restablecer</button>
+                <button class="btn-modal-confirm" onclick="confirmReset()">SÃ­, Restablecer</button>
             </div>
         </div>
     </div>
@@ -1220,14 +1228,14 @@
             const { data: { session } } = await window.supabaseClient.auth.getSession();
 
             if (!session) {
-                // 🔒 SEGURIDAD: Si no hay sesión, fuera de aquí.
+                // ðŸ”’ SEGURIDAD: Si no hay sesiÃ³n, fuera de aquÃ­.
                 window.location.href = '/login.html';
                 return;
             }
 
             window.currentUser = session.user;
 
-            // 🔥 Minimum 2s Loading Time + Data Fetch
+            // ðŸ”¥ Minimum 2s Loading Time + Data Fetch
             await Promise.all([
                 loadLicenseSettings(),
                 new Promise(resolve => setTimeout(resolve, 500))
@@ -1237,7 +1245,7 @@
             document.getElementById('skeleton-container').style.display = 'none';
             document.getElementById('real-content').style.display = 'flex'; // Use flex to match original definition if any, or block
 
-            // 🔥 PERSISTENCIA DE TAB: Recuperamos la última pestaña visitada
+            // ðŸ”¥ PERSISTENCIA DE TAB: Recuperamos la Ãºltima pestaÃ±a visitada
             const lastTab = localStorage.getItem('adminLastTab') || 'basic';
             switchTab(lastTab);
 
@@ -1249,7 +1257,7 @@
             updateCurrentState(); // Guardamos el estado del tab anterior
             currentTab = tab;
 
-            // 🔥 RETENCIÓN: Guardamos dónde estamos para si recarga
+            // ðŸ”¥ RETENCIÃ“N: Guardamos dÃ³nde estamos para si recarga
             localStorage.setItem('adminLastTab', tab);
 
             document.querySelectorAll('.tab-btn').forEach(b => {
@@ -1262,7 +1270,7 @@
 
             const data = currentLicenses[tab];
 
-            // 🔥 CORRECCIÓN CRÍTICA: Asegurar que los inputs reciban valores válidos
+            // ðŸ”¥ CORRECCIÃ“N CRÃTICA: Asegurar que los inputs reciban valores vÃ¡lidos
             els.name.value = data.name || defaults[tab].name;
             els.price.value = data.price || defaults[tab].price;
             els.enabled.checked = (data.enabled !== false);
@@ -1439,16 +1447,16 @@
                             currentLicenses[key] = {
                                 ...defaults[key],
                                 ...saved[key],
-                                // Validación extra de precio: si es null, vacío o NaN, forzar default
+                                // ValidaciÃ³n extra de precio: si es null, vacÃ­o o NaN, forzar default
                                 price: (saved[key].price !== null && saved[key].price !== undefined && saved[key].price !== '' && !isNaN(saved[key].price)) ? saved[key].price : defaults[key].price,
                                 name: (saved[key].name && saved[key].name.trim() !== "") ? saved[key].name : defaults[key].name
                             };
                         }
                     }
-                    // console.log("Sincronización Elite Completada ✅"); // 🧹 CLEANUP
+                    // console.log("SincronizaciÃ³n Elite Completada âœ…"); // ðŸ§¹ CLEANUP
                 }
             } catch (err) {
-                console.error("Error cargando configuración:", err);
+                console.error("Error cargando configuraciÃ³n:", err);
             }
         }
 
@@ -1576,9 +1584,9 @@
                     .update({ license_settings: currentLicenses })
                     .eq('id', window.currentUser.id);
 
-                // 🧹 CLEANUP: Logs eliminados para producción
+                // ðŸ§¹ CLEANUP: Logs eliminados para producciÃ³n
 
-                btn.innerHTML = '<i class="bi bi-check-lg"></i> ¡Guardado!';
+                btn.innerHTML = '<i class="bi bi-check-lg"></i> Â¡Guardado!';
                 btn.style.background = "#0cbc87";
                 showToast("Cambios guardados exitosamente");
 
@@ -1601,3 +1609,4 @@
 </body>
 
 </html>
+

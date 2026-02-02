@@ -1,9 +1,11 @@
 import { PDFDocument, rgb, StandardFonts } from 'https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/+esm';
-import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
+// Use the global client initialized by auth-utils.js
+const supabase = window.supabaseClient;
 
-const supabaseUrl = "https://qtjpvztpgfymjhhpoouq.supabase.co";
-const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0anB2enRwZ2Z5bWpoaHBvb3VxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3ODA5MTUsImV4cCI6MjA3NjM1NjkxNX0.YsItTFk3hSQaVuy707-z7Z-j34mXa03O0wWGAlAzjrw";
-const supabase = createClient(supabaseUrl, supabaseKey);
+// Safety check
+if (!supabase) {
+  console.error("Critical: Global Supabase not found. Ensure auth-utils.js is loaded.");
+}
 
 export async function generarLicencia(purchaseData) {
   try {

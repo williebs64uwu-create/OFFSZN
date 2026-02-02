@@ -1,11 +1,13 @@
 document.addEventListener('DOMContentLoaded', () => {
 
     // --- 1. CONFIGURACIÓN ---
-    const SUPABASE_URL = "https://qtjpvztpgfymjhhpoouq.supabase.co";
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0anB2enRwZ2Z5bWpoaHBvb3VxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3ODA5MTUsImV4cCI6MjA3NjM1NjkxNX0.YsItTFk3hSQaVuy707-z7Z-j34mXa03O0wWGAlAzjrw";
+    // Use the global client initialized by auth-utils.js
+    const supabaseClient = window.supabaseClient;
 
-    const { createClient } = supabase;
-    const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    // Safety check
+    if (!supabaseClient) {
+        console.error("Critical: Global Supabase not found. Ensure auth-utils.js is loaded.");
+    }
 
     let API_URL = '';
     if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {

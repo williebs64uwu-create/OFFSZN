@@ -1,7 +1,15 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 
 <head>
+    <!-- Supabase Config & Auth Utils -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        window.SUPABASE_URL = "https://qtjpvztpgfymjhhpoouq.supabase.co";
+        window.SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0anB2enRwZ2Z5bWpoaHBvb3VxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3ODA5MTUsImV4cCI6MjA3NjM1NjkxNX0.YsItTFk3hSQaVuy707-z7Z-j34mXa03O0wWGAlAzjrw";
+        window.supabaseClient = null;
+    </script>
+    <script src="/script/auth-utils.js?v=11"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Subir Preset| OFFSZN</title>
@@ -13,7 +21,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         /* ========================================
-    BOTÓN DE DESCARGA EN PREVIEW CARD
+    BOTÃ“N DE DESCARGA EN PREVIEW CARD
     ======================================== */
         .card-download-btn {
             width: 40px;
@@ -68,7 +76,7 @@
 
         html {
             overflow-y: scroll;
-            /* 🔥 Evita que la UI salte al cambiar de step */
+            /* ðŸ”¥ Evita que la UI salte al cambiar de step */
         }
 
         body {
@@ -139,9 +147,9 @@
             position: absolute;
             top: 50%;
             left: 20px;
-            /* 🔥 COMIENZA EN EL CENTRO DEL PRIMER CÍRCULO */
+            /* ðŸ”¥ COMIENZA EN EL CENTRO DEL PRIMER CÃRCULO */
             width: calc(100% - 40px);
-            /* 🔥 TERMINA EN EL CENTRO DEL ÚLTIMO */
+            /* ðŸ”¥ TERMINA EN EL CENTRO DEL ÃšLTIMO */
             height: 2px;
             background: var(--border-color);
             z-index: 0;
@@ -152,27 +160,27 @@
             position: absolute;
             top: 50%;
             left: 20px;
-            /* 🔥 Empieza en el centro del círculo 1 */
+            /* ðŸ”¥ Empieza en el centro del cÃ­rculo 1 */
             width: 0%;
-            /* 🔥 Empieza en 0 */
+            /* ðŸ”¥ Empieza en 0 */
             max-width: calc(100% - 40px);
-            /* 🔥 Termina en el centro del círculo 4 */
+            /* ðŸ”¥ Termina en el centro del cÃ­rculo 4 */
             height: 3px;
             background: linear-gradient(90deg, #8b5cf6, #a78bfa);
             z-index: 1;
             transform: translateY(-50%);
             transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-            /* 🔥 Animación suave */
+            /* ðŸ”¥ AnimaciÃ³n suave */
             box-shadow: 0 0 12px rgba(139, 92, 246, 0.6);
         }
 
         .step {
             background: var(--bg-color);
-            /* 🔥 Fondo oscuro por defecto */
+            /* ðŸ”¥ Fondo oscuro por defecto */
             border: 2px solid var(--border-color);
-            /* 🔥 Borde gris por defecto */
+            /* ðŸ”¥ Borde gris por defecto */
             color: var(--text-secondary);
-            /* 🔥 Número gris por defecto */
+            /* ðŸ”¥ NÃºmero gris por defecto */
             width: 40px;
             height: 40px;
             border-radius: 50%;
@@ -187,29 +195,29 @@
             cursor: pointer;
         }
 
-        /* 🔥 CÍRCULO ACTIVO: Fondo morado sólido, número blanco, borde morado */
+        /* ðŸ”¥ CÃRCULO ACTIVO: Fondo morado sÃ³lido, nÃºmero blanco, borde morado */
         .step.active {
             background: #8b5cf6 !important;
-            /* 🔥 FONDO MORADO SÓLIDO */
+            /* ðŸ”¥ FONDO MORADO SÃ“LIDO */
             border-color: #8b5cf6 !important;
             color: #fff !important;
-            /* 🔥 NÚMERO BLANCO */
+            /* ðŸ”¥ NÃšMERO BLANCO */
             box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.3);
             z-index: 3;
         }
 
-        /* 🔥 CÍRCULOS COMPLETADOS: Relleno morado sólido, número blanco */
+        /* ðŸ”¥ CÃRCULOS COMPLETADOS: Relleno morado sÃ³lido, nÃºmero blanco */
         .step.completed {
             background: #8b5cf6 !important;
-            /* 🔥 FONDO MORADO SÓLIDO */
+            /* ðŸ”¥ FONDO MORADO SÃ“LIDO */
             border-color: #8b5cf6 !important;
             color: #fff !important;
-            /* 🔥 NÚMERO BLANCO */
+            /* ðŸ”¥ NÃšMERO BLANCO */
             box-shadow: 0 4px 16px rgba(139, 92, 246, 0.5);
             z-index: 3;
         }
 
-        /* 🔥 Etiquetas debajo de los círculos */
+        /* ðŸ”¥ Etiquetas debajo de los cÃ­rculos */
         .step-label {
             position: absolute;
             top: 50px;
@@ -441,7 +449,7 @@
             color: #fff;
         }
 
-        /* Ajuste específico para el contenedor de spinner vertical */
+        /* Ajuste especÃ­fico para el contenedor de spinner vertical */
         .spinner-container {
             display: flex;
             flex-direction: column;
@@ -557,10 +565,10 @@
         textarea.input-field {
             min-height: 120px;
             max-height: 120px;
-            /* 🔥 FIJO - NO CRECE NI SE ACHICA */
+            /* ðŸ”¥ FIJO - NO CRECE NI SE ACHICA */
             resize: none;
             overflow-y: auto;
-            /* 🔥 SCROLL cuando excede */
+            /* ðŸ”¥ SCROLL cuando excede */
             line-height: 1.5;
         }
 
@@ -596,7 +604,7 @@
             justify-content: center;
             min-height: 200px;
             max-height: 200px;
-            /* 🔥 FIJO */
+            /* ðŸ”¥ FIJO */
         }
 
         .upload-zone.dragover {
@@ -645,7 +653,7 @@
             align-items: center;
             gap: 12px;
             flex: 1;
-            /* ← Esto hace que ocupe el espacio disponible */
+            /* â† Esto hace que ocupe el espacio disponible */
         }
 
         .file-name {
@@ -661,7 +669,7 @@
             font-size: 12px;
             color: var(--text-secondary);
             margin-left: auto;
-            /* ← Empuja el tamaño a la derecha */
+            /* â† Empuja el tamaÃ±o a la derecha */
         }
 
         .remove-file {
@@ -730,7 +738,7 @@
         }
 
 
-        /* 🔥 NUEVO: Overlay de "Cambiar Portada" */
+        /* ðŸ”¥ NUEVO: Overlay de "Cambiar Portada" */
         .cover-upload.has-image::after {
             content: 'Cambiar Portada';
             position: absolute;
@@ -917,7 +925,7 @@
             width: 18px;
             height: 18px;
             flex-shrink: 0;
-            /* 🔥 EVITAR que se deforme */
+            /* ðŸ”¥ EVITAR que se deforme */
         }
 
         .user-info {
@@ -935,7 +943,7 @@
 
         footer {
             padding: 16px 40px;
-            /* 🔥 MÁS PADDING (de 12px a 16px) */
+            /* ðŸ”¥ MÃS PADDING (de 12px a 16px) */
             border-top: 1px solid var(--border-color);
             display: flex;
             align-items: center;
@@ -947,7 +955,7 @@
             right: 0;
             z-index: 100;
             height: 80px;
-            /* 🔥 MÁS ALTO (de 60px a 80px) */
+            /* ðŸ”¥ MÃS ALTO (de 60px a 80px) */
         }
 
         .footer-controls {
@@ -966,40 +974,40 @@
             align-items: center;
             gap: 16px;
             background: transparent;
-            /* 🔥 SIN FONDO */
+            /* ðŸ”¥ SIN FONDO */
             padding: 0;
-            /* 🔥 SIN PADDING */
+            /* ðŸ”¥ SIN PADDING */
             border-radius: 0;
-            /* 🔥 SIN BORDER RADIUS */
+            /* ðŸ”¥ SIN BORDER RADIUS */
             border: none;
-            /* 🔥 SIN BORDE */
+            /* ðŸ”¥ SIN BORDE */
             backdrop-filter: none;
-            /* 🔥 SIN BLUR */
+            /* ðŸ”¥ SIN BLUR */
             box-shadow: none;
-            /* 🔥 SIN SOMBRA */
+            /* ðŸ”¥ SIN SOMBRA */
             transition: none;
             pointer-events: auto;
         }
 
-        /* 🔥 WAVEFORM SIN FONDO BLANCO */
+        /* ðŸ”¥ WAVEFORM SIN FONDO BLANCO */
         #waveform {
             flex: 1;
             height: 60px;
-            /* 🔥 MÁS ALTO (de 40px a 60px) */
+            /* ðŸ”¥ MÃS ALTO (de 40px a 60px) */
             position: relative;
             transition: opacity 0.2s ease;
             border-radius: 0;
             overflow: visible;
-            /* 🔥 SIN OVERFLOW */
+            /* ðŸ”¥ SIN OVERFLOW */
             background: transparent;
-            /* 🔥 SIN FONDO */
+            /* ðŸ”¥ SIN FONDO */
         }
 
         #waveform:hover {
             opacity: 0.9;
         }
 
-        /* 🔥 SOLO HOVER EN ELEMENTOS ESPECÍFICOS */
+        /* ðŸ”¥ SOLO HOVER EN ELEMENTOS ESPECÃFICOS */
         .play-btn:hover,
         .player-control-btn:hover {
             background: rgba(255, 255, 255, 0.12);
@@ -1025,7 +1033,7 @@
         .play-btn:hover {
             background: rgba(255, 255, 255, 0.12);
             transform: scale(1.05);
-            /* 🔥 ELIMINADO: box-shadow innecesario */
+            /* ðŸ”¥ ELIMINADO: box-shadow innecesario */
         }
 
         .play-btn:active {
@@ -1046,7 +1054,7 @@
             filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
         }
 
-        /* 🔥 SKELETON LOADER para cambio de audio */
+        /* ðŸ”¥ SKELETON LOADER para cambio de audio */
         .waveform-loader {
             position: absolute;
             top: 0;
@@ -1136,7 +1144,7 @@
             }
         }
 
-        /* 🔥 Contenedor para ambas ondas */
+        /* ðŸ”¥ Contenedor para ambas ondas */
         .waveform-container {
             flex: 1;
             height: 50px;
@@ -1192,9 +1200,9 @@
             background: var(--primary-color);
             color: #000;
             min-width: 120px;
-            /* 🔥 Ancho mínimo consistente */
+            /* ðŸ”¥ Ancho mÃ­nimo consistente */
             display: flex;
-            /* 🔥 Para centrar contenido si es necesario */
+            /* ðŸ”¥ Para centrar contenido si es necesario */
             justify-content: center;
             align-items: center;
         }
@@ -1553,11 +1561,11 @@
 
         .marketplace-card-preview {
             position: relative;
-            /* 🔥 CAMBIO DE sticky A relative */
+            /* ðŸ”¥ CAMBIO DE sticky A relative */
             align-self: start;
         }
 
-        /* 🔥 MEJORAR SCROLLBAR DE LA PREVIEW */
+        /* ðŸ”¥ MEJORAR SCROLLBAR DE LA PREVIEW */
         .marketplace-card-preview::-webkit-scrollbar {
             width: 6px;
         }
@@ -1695,15 +1703,15 @@
             align-items: center;
             gap: 12px;
             padding: 10px 12px;
-            /* 🔥 Padding interno */
+            /* ðŸ”¥ Padding interno */
             margin-bottom: 12px;
-            /* 🔥 Espaciado compacto */
+            /* ðŸ”¥ Espaciado compacto */
             background: rgba(255, 255, 255, 0.02);
-            /* 🔥 Fondo recuperado */
+            /* ðŸ”¥ Fondo recuperado */
             border-radius: 8px;
-            /* 🔥 Bordes redondeados recuperados */
+            /* ðŸ”¥ Bordes redondeados recuperados */
             border: 1px solid rgba(255, 255, 255, 0.05);
-            /* 🔥 Borde sutil */
+            /* ðŸ”¥ Borde sutil */
         }
 
         .verification-label {
@@ -1711,7 +1719,7 @@
             font-weight: 700;
             color: #888;
             margin-bottom: 8px;
-            /* ← Reducir margen */
+            /* â† Reducir margen */
             text-transform: uppercase;
             letter-spacing: 1px;
         }
@@ -1882,13 +1890,13 @@
             display: flex;
             flex-direction: column;
             gap: 20px;
-            /* 🔥 Cambiado de 12px a 20px */
+            /* ðŸ”¥ Cambiado de 12px a 20px */
             z-index: 999;
         }
 
         .quick-btn {
             width: 64px;
-            /* 🔥 Cambiado de 60px a 64px */
+            /* ðŸ”¥ Cambiado de 60px a 64px */
             height: 64px;
             border-radius: 16px;
             background: linear-gradient(135deg,
@@ -1929,7 +1937,7 @@
 
         .quick-btn:hover {
             transform: translateY(-2px);
-            /* 🔥 Movimiento más sutil */
+            /* ðŸ”¥ Movimiento mÃ¡s sutil */
             border-color: rgba(255, 255, 255, 0.25);
             background: linear-gradient(135deg,
                     rgba(40, 40, 45, 0.95),
@@ -1983,7 +1991,7 @@
                 inset 0 1px 0 rgba(255, 255, 255, 0.1);
             transform: translateX(10px);
             color: #fff;
-            /* 🔥 CORRECCIÓN: Color blanco fijo */
+            /* ðŸ”¥ CORRECCIÃ“N: Color blanco fijo */
         }
 
         .quick-btn:hover .quick-btn-tooltip {
@@ -2008,7 +2016,7 @@
             opacity: 1;
         }
 
-        /* 🔥 AUTO TAG BUTTON STYLE */
+        /* ðŸ”¥ AUTO TAG BUTTON STYLE */
         .quick-tag-btn {
             background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(139, 92, 246, 0.05));
             border: 1px solid rgba(139, 92, 246, 0.2);
@@ -2098,10 +2106,10 @@
             background: linear-gradient(135deg,
                     rgba(139, 92, 246, 0.15),
                     rgba(167, 139, 250, 0.15));
-            /* 🔥 MORADO SUAVE */
+            /* ðŸ”¥ MORADO SUAVE */
             border: 1px solid rgba(139, 92, 246, 0.3);
             color: #a78bfa;
-            /* 🔥 TEXTO MORADO CLARO */
+            /* ðŸ”¥ TEXTO MORADO CLARO */
             padding: 8px 14px;
             border-radius: 20px;
             font-size: 13px;
@@ -2221,11 +2229,11 @@
             align-items: center;
         }
 
-        /* 🔥 SLIDER VERTICAL (NO HORIZONTAL) */
+        /* ðŸ”¥ SLIDER VERTICAL (NO HORIZONTAL) */
         .volume-slider-container {
             position: absolute;
             bottom: calc(100% + 12px);
-            /* 🔥 ARRIBA DEL BOTÓN */
+            /* ðŸ”¥ ARRIBA DEL BOTÃ“N */
             left: 50%;
             transform: translateX(-50%);
             background: linear-gradient(135deg, rgba(30, 30, 35, 0.98), rgba(20, 20, 25, 0.98));
@@ -2255,20 +2263,20 @@
             border-top-color: rgba(30, 30, 35, 0.98);
         }
 
-        /* 🔥 SLIDER VERTICAL */
+        /* ðŸ”¥ SLIDER VERTICAL */
         .volume-slider {
             writing-mode: vertical-lr;
             direction: rtl;
-            /* 🔥 CRITICAL */
+            /* ðŸ”¥ CRITICAL */
             width: 6px;
             height: 100px;
-            /* 🔥 ALTURA VERTICAL */
+            /* ðŸ”¥ ALTURA VERTICAL */
             background: rgba(255, 255, 255, 0.15);
             border-radius: 4px;
             outline: none;
             cursor: pointer;
             writing-mode: bt-lr;
-            /* 🔥 VERTICAL */
+            /* ðŸ”¥ VERTICAL */
             transition: background 0.2s;
         }
 
@@ -2276,7 +2284,7 @@
             background: rgba(255, 255, 255, 0.2);
         }
 
-        /* 🔥 THUMB VERTICAL */
+        /* ðŸ”¥ THUMB VERTICAL */
         .volume-slider::-webkit-slider-thumb {
             -webkit-appearance: none;
             appearance: none;
@@ -2286,7 +2294,7 @@
             background: linear-gradient(135deg, #8b5cf6, #a78bfa);
             cursor: pointer;
             box-shadow: none;
-            /* 🔥 Removed glow */
+            /* ðŸ”¥ Removed glow */
             transition: all 0.2s;
         }
 
@@ -2294,7 +2302,7 @@
             transform: scale(1.1);
             transform: scale(1.1);
             box-shadow: none;
-            /* 🔥 Removed glow */
+            /* ðŸ”¥ Removed glow */
         }
 
         .volume-slider::-moz-range-thumb {
@@ -2312,7 +2320,7 @@
             transform: scale(1.1);
             transform: scale(1.1);
             box-shadow: none;
-            /* 🔥 Removed glow */
+            /* ðŸ”¥ Removed glow */
         }
 
         .player-time {
@@ -2347,7 +2355,7 @@
             right: 0;
             bottom: 0;
             background: #000000;
-            /* Fondo negro sólido */
+            /* Fondo negro sÃ³lido */
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -2505,7 +2513,7 @@
 
         #offerInput {
             max-width: 100%;
-            /* ← Ocupará todo el ancho disponible */
+            /* â† OcuparÃ¡ todo el ancho disponible */
         }
 
         .collab-row input[type="number"] {
@@ -2517,7 +2525,7 @@
             transition: all 0.2s ease;
         }
 
-        /* Hover effects para items de verificación */
+        /* Hover effects para items de verificaciÃ³n */
         .file-item-ok:hover {
             background: rgba(34, 197, 94, 0.2) !important;
         }
@@ -2630,10 +2638,10 @@
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        /* Animación de iconos en Quick Actions - REMOVED */
+        /* AnimaciÃ³n de iconos en Quick Actions - REMOVED */
         /* Icon animations disabled for instant feedback */
 
-        /* Gradientes para todos los SVG de verificación */
+        /* Gradientes para todos los SVG de verificaciÃ³n */
         .verification-item-icon svg {
             filter: drop-shadow(0 2px 4px rgba(0, 255, 136, 0.2));
         }
@@ -2773,7 +2781,7 @@
     FEEDBACK VISUAL SIN TOASTS
     ======================================== */
 
-        /* Animación sutil cuando el input alcanza límite */
+        /* AnimaciÃ³n sutil cuando el input alcanza lÃ­mite */
         .input-field.limit-reached {
             animation: limitPulse 0.3s ease;
         }
@@ -2796,25 +2804,25 @@
             background: rgba(239, 68, 68, 0.05);
         }
 
-        /* Animación para botones cuando están en límite */
+        /* AnimaciÃ³n para botones cuando estÃ¡n en lÃ­mite */
         .spin-btn:disabled {
             cursor: not-allowed;
             opacity: 0.3;
             transform: scale(0.95);
         }
 
-        /* 🔥 FIXED WIDTH ACTIONS FOR FOOTER STABILITY */
+        /* ðŸ”¥ FIXED WIDTH ACTIONS FOR FOOTER STABILITY */
         .footer-action-left,
         .footer-action-right {
             width: 140px;
-            /* 🔥 Balanced width (140px) */
+            /* ðŸ”¥ Balanced width (140px) */
             display: flex;
             align-items: center;
             flex-shrink: 0;
             justify-content: center;
         }
 
-        /* 🔥 Force ALL buttons to fill container */
+        /* ðŸ”¥ Force ALL buttons to fill container */
         .footer-action-right .btn,
         .footer-action-right .dropdown,
         .footer-action-right #publishBtn,
@@ -2834,11 +2842,11 @@
             justify-content: space-between;
             align-items: center;
             padding: 12px 24px;
-            /* 🔥 Más compacto */
+            /* ðŸ”¥ MÃ¡s compacto */
             background: #000000;
             backdrop-filter: blur(10px);
             position: relative;
-            /* 🔥 YA NO ES STICKY */
+            /* ðŸ”¥ YA NO ES STICKY */
             z-index: 100;
             border-bottom: 1px solid rgba(255, 255, 255, 0.05);
         }
@@ -2847,12 +2855,12 @@
             display: flex;
             align-items: center;
             gap: 16px;
-            /* 🔥 Espacio entre logo y título */
+            /* ðŸ”¥ Espacio entre logo y tÃ­tulo */
         }
 
         .header-logo {
             height: 34px;
-            /* 🔥 Más grande como se solicitó */
+            /* ðŸ”¥ MÃ¡s grande como se solicitÃ³ */
             width: auto;
             display: block;
             transition: opacity 0.2s;
@@ -2875,7 +2883,7 @@
             border: 1px solid rgba(255, 255, 255, 0.1);
             color: #888;
             padding: 6px 12px;
-            /* 🔥 Más pequeño */
+            /* ðŸ”¥ MÃ¡s pequeÃ±o */
             border-radius: 6px;
             font-size: 12px;
             font-weight: 500;
@@ -2910,14 +2918,14 @@
             }
         }
 
-        /* 🔥 TOAST POSITION FIX */
+        /* ðŸ”¥ TOAST POSITION FIX */
         .toast-container {
             top: 24px !important;
             right: 24px !important;
             bottom: auto !important;
         }
 
-        /* 🔥 TOAST PREMIUM STYLE */
+        /* ðŸ”¥ TOAST PREMIUM STYLE */
         .toast-container {
             position: fixed;
             top: 24px !important;
@@ -2955,7 +2963,7 @@
             transform: translateX(0) scale(1);
         }
 
-        /* 🔥 PREVENT TOAST DUPLICATION ANIMATION */
+        /* ðŸ”¥ PREVENT TOAST DUPLICATION ANIMATION */
         .toast.shake {
             animation: shake 0.3s ease;
         }
@@ -3052,12 +3060,12 @@
         }
     </style>
     <style>
-        /* 🔥 FIX: ALIGN TABS LEFT */
+        /* ðŸ”¥ FIX: ALIGN TABS LEFT */
         .audio-tabs-container {
             justify-content: flex-start !important;
         }
 
-        /* 🔥 COLLAB ROW STYLES */
+        /* ðŸ”¥ COLLAB ROW STYLES */
         .collab-row {
             display: grid;
             grid-template-columns: 1fr 140px 125px 40px;
@@ -3105,7 +3113,7 @@
             min-width: 140px;
         }
 
-        /* 🔥 FIX REMOVE ICON SIZE */
+        /* ðŸ”¥ FIX REMOVE ICON SIZE */
         .remove-file {
             width: 28px !important;
             height: 28px !important;
@@ -3124,7 +3132,7 @@
             height: 14px !important;
         }
 
-        /* 🔥 PUBLISH OVERLAY STYLES */
+        /* ðŸ”¥ PUBLISH OVERLAY STYLES */
         #publishOverlay {
             position: fixed;
             top: 0;
@@ -3179,7 +3187,7 @@
         <p>Por favor espera un momento.</p>
     </div>
 
-    <!-- 🔥 IMMEDIATE LOADER SCRIPT: Shows loader instantly if there's data to load -->
+    <!-- ðŸ”¥ IMMEDIATE LOADER SCRIPT: Shows loader instantly if there's data to load -->
     <script>
         (function () {
             const params = new URLSearchParams(window.location.search);
@@ -3199,7 +3207,7 @@
     </script>
 
     <style>
-        /* 🔥 LOADING OVERLAY STYLE (Dark Theme - Matches Reference) */
+        /* ðŸ”¥ LOADING OVERLAY STYLE (Dark Theme - Matches Reference) */
         .loading-overlay {
             position: fixed;
             top: 0;
@@ -3250,6 +3258,14 @@
     <div class="toast-container" id="toastContainer"></div>
 
     <header class="main-header">
+        <!-- Supabase Config & Auth Utils -->
+        <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+        <script>
+            window.SUPABASE_URL = "https://qtjpvztpgfymjhhpoouq.supabase.co";
+            window.SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0anB2enRwZ2Z5bWpoaHBvb3VxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3ODA5MTUsImV4cCI6MjA3NjM1NjkxNX0.YsItTFk3hSQaVuy707-z7Z-j34mXa03O0wWGAlAzjrw";
+            window.supabaseClient = null;
+        </script>
+        <script src="/script/auth-utils.js?v=11"></script>
         <div class="header-left">
             <a href="/" target="_blank">
                 <img src="../../images/LOGO-OFFSZN.png" alt="OFFSZN" class="header-logo">
@@ -3359,7 +3375,7 @@
                                         d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                 </svg>
                                 <div class="upload-subtext">Formato:1080x1080px</div>
-                                <div class="upload-subtext" style="margin-top: 4px; opacity: 0.7;">(Máx. 10MB)</div>
+                                <div class="upload-subtext" style="margin-top: 4px; opacity: 0.7;">(MÃ¡x. 10MB)</div>
                             </div>
                         </div>
                     </div>
@@ -3375,7 +3391,7 @@
                                             d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12">
                                         </path>
                                     </svg>
-                                    <div class="upload-text">Arrastra tu archivo aquí</div>
+                                    <div class="upload-text">Arrastra tu archivo aquÃ­</div>
                                     <div class="upload-subtext">.rar o .zip (50mb max)</div>
                                 </div>
                                 <div id="filePreviewContainer"></div>
@@ -3386,7 +3402,7 @@
                                 <div class="audio-tabs-container" id="audioTabsContainer">
                                     <div class="audio-tabs-header">
                                         <button type="button" class="audio-tab active" data-tab="before">Antes</button>
-                                        <button type="button" class="audio-tab" data-tab="after">Después</button>
+                                        <button type="button" class="audio-tab" data-tab="after">DespuÃ©s</button>
                                     </div>
                                 </div>
 
@@ -3409,7 +3425,7 @@
 
                                 <!-- Audio Content: After -->
                                 <div id="audioContent-after" class="audio-upload-content">
-                                    <div class="label">Audio Después (.mp3, .wav)</div>
+                                    <div class="label">Audio DespuÃ©s (.mp3, .wav)</div>
                                     <div class="upload-zone" id="audioDropZoneAfter">
                                         <input type="file" id="audioInputAfter" accept=".mp3,.wav" hidden>
                                         <svg class="upload-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -3417,7 +3433,7 @@
                                                 d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3">
                                             </path>
                                         </svg>
-                                        <div class="upload-text">Subir Audio Después</div>
+                                        <div class="upload-text">Subir Audio DespuÃ©s</div>
                                         <div class="upload-subtext">.mp3 o .wav (20mb max)</div>
                                     </div>
                                     <div id="audioPreviewContainerAfter"></div>
@@ -3427,7 +3443,7 @@
 
                         <div class="form-group">
                             <div class="label">
-                                Título <span class="required">*</span>
+                                TÃ­tulo <span class="required">*</span>
                                 <span class="char-count"><span id="titleCount">0</span>/60</span>
                             </div>
                             <input type="text" class="input-field" id="titleInput" maxlength="60"
@@ -3446,8 +3462,8 @@
                                 <div class="label">Visibilidad <span class="required">*</span></div>
                                 <div class="select-wrapper">
                                     <select class="input-field skeleton" id="visibilityInput" disabled>
-                                        <option value="private">Privado (Solo tú)</option>
-                                        <option value="public">Público (Todos)</option>
+                                        <option value="private">Privado (Solo tÃº)</option>
+                                        <option value="public">PÃºblico (Todos)</option>
                                         <option value="unlisted">No listado (Link)</option>
                                     </select>
 
@@ -3457,7 +3473,7 @@
 
                         <div class="form-group">
                             <div class="label">
-                                Descripción
+                                DescripciÃ³n
                                 <span class="char-count"><span id="descCount">0</span>/500</span>
                             </div>
                             <textarea class="input-field" id="descInput" maxlength="500"
@@ -3470,7 +3486,7 @@
             <!-- STEP 2 -->
             <div class="form-step" id="step2">
                 <div class="grid-2">
-                    <!-- 🔥 COLUMNA IZQUIERDA: Metadatos -->
+                    <!-- ðŸ”¥ COLUMNA IZQUIERDA: Metadatos -->
                     <div>
                         <h3 class="section-title">Metadatos</h3>
 
@@ -3499,15 +3515,15 @@
                             </div>
                         </div>
 
-                        <!-- Número de Presets -->
+                        <!-- NÃºmero de Presets -->
                         <div class="form-group">
-                            <div class="label">Número de Presets</div>
+                            <div class="label">NÃºmero de Presets</div>
                             <div class="number-control">
                                 <input type="text" class="input-field" id="soundsInput" inputmode="numeric"
                                     pattern="[0-9]*" placeholder="Ej: 150">
                                 <div class="spinners">
-                                    <!-- Para el botón UP -->
-                                    <!-- DESPUÉS (BIEN) -->
+                                    <!-- Para el botÃ³n UP -->
+                                    <!-- DESPUÃ‰S (BIEN) -->
                                     <button class="spin-btn up" type="button">
                                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                             <polyline points="18 15 12 9 6 15"></polyline>
@@ -3523,7 +3539,7 @@
                         </div>
                     </div>
 
-                    <!-- 🔥 COLUMNA DERECHA: Precios -->
+                    <!-- ðŸ”¥ COLUMNA DERECHA: Precios -->
                     <div>
                         <h3 class="section-title">Precios</h3>
                         <div class="pricing-card" style="max-width: 440px;">
@@ -3536,7 +3552,7 @@
                                         pattern="[0-9.]*" placeholder="0.00"
                                         onblur="this.value = parseFloat(this.value || 0).toFixed(2)">
                                     <div class="spinners">
-                                        <!-- DESPUÉS (BIEN) -->
+                                        <!-- DESPUÃ‰S (BIEN) -->
                                         <button class="spin-btn up" type="button">
                                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                                 <polyline points="18 15 12 9 6 15"></polyline>
@@ -3562,7 +3578,7 @@
                             </div>
 
                             <div id="freeInfo" class="alert alert-info" style="display: none;">
-                                Los usuarios deberán dejar su email para descargar. El precio se mostrará como $0.
+                                Los usuarios deberÃ¡n dejar su email para descargar. El precio se mostrarÃ¡ como $0.
                             </div>
 
                         </div>
@@ -3593,7 +3609,7 @@
                             <img id="mainUserAvatar"
                                 src="https://ui-avatars.com/api/?name=User&background=333&color=fff" class="user-avatar"
                                 style="object-fit: cover;" onerror="this.src='/default-avatar.png'">
-                            <span style="font-weight: 600;">Tú (Propietario)</span>
+                            <span style="font-weight: 600;">TÃº (Propietario)</span>
                         </div>
                         <div>Rol Principal</div>
                         <div style="display: flex; align-items: center; gap: 4px;">
@@ -3613,7 +3629,7 @@
                 <h3 class="section-title">Vista Previa del Preset</h3>
                 <div class="preview-layout">
                     <div class="marketplace-card-preview">
-                        <h4 style="margin-bottom: 16px; font-size: 14px; color: #888;">Cómo se verá en el
+                        <h4 style="margin-bottom: 16px; font-size: 14px; color: #888;">CÃ³mo se verÃ¡ en el
                             marketplace
                         </h4>
                         <div class="drumkit-card">
@@ -3621,18 +3637,18 @@
                                 <span style="color: #666;">Sin portada</span>
                             </div>
                             <div class="card-content">
-                                <h3 id="previewCardTitle">Sin título</h3>
+                                <h3 id="previewCardTitle">Sin tÃ­tulo</h3>
                                 <div class="card-tags" id="previewCardTags"></div>
                                 <div class="card-producer" style="font-size: 13px; color: #888; margin-bottom: 8px;">
                                     <span id="previewCardProducer">Productor</span>
                                 </div>
-                                <!-- El precio se genera dinámicamente en renderPreview() -->
+                                <!-- El precio se genera dinÃ¡micamente en renderPreview() -->
                             </div>
                         </div>
                     </div>
 
                     <div class="verification-panel">
-                        <h4 style="margin-bottom: 20px; font-size: 18px; font-weight: 700;">Verificar Información
+                        <h4 style="margin-bottom: 20px; font-size: 18px; font-weight: 700;">Verificar InformaciÃ³n
                         </h4>
                         <div class="verification-section">
                             <div class="verification-label">Archivos</div>
@@ -3656,7 +3672,7 @@
         <div class="modal">
             <div class="modal-header">
                 <h2 class="modal-title">Ajustar Portada</h2>
-                <button type="button" class="remove-file" onclick="closeCropModal()">✕</button>
+                <button type="button" class="remove-file" onclick="closeCropModal()">âœ•</button>
             </div>
             <div class="modal-body">
                 <p style="color: #888; font-size: 13px; margin-bottom: 12px; text-align: center;">
@@ -3705,7 +3721,7 @@
     </div>
     <footer>
         <div class="footer-controls">
-            <!-- 🔥 LEFT ACTION WRAPPER -->
+            <!-- ðŸ”¥ LEFT ACTION WRAPPER -->
             <div class="footer-action-left">
                 <button class="btn btn-secondary" id="prevBtn" style="visibility: hidden;">Anterior</button>
             </div>
@@ -3731,7 +3747,7 @@
                 </div>
 
                 <div id="waveform" style="display: none;"></div>
-                <div id="playerPlaceholder">Aquí se mostrará tu preview</div>
+                <div id="playerPlaceholder">AquÃ­ se mostrarÃ¡ tu preview</div>
 
                 <!-- REEMPLAZA TODO EL .volume-control -->
                 <div class="volume-control">
@@ -3742,13 +3758,13 @@
                         </svg>
                     </button>
                     <div class="volume-slider-container">
-                        <!-- 🔥 AHORA ES HORIZONTAL -->
+                        <!-- ðŸ”¥ AHORA ES HORIZONTAL -->
                         <input type="range" class="volume-slider" id="volumeSlider" min="0" max="100" value="100">
                     </div>
                 </div>
             </div>
 
-            <!-- 🔥 RIGHT ACTION WRAPPER -->
+            <!-- ðŸ”¥ RIGHT ACTION WRAPPER -->
             <div class="footer-action-right">
                 <button class="btn btn-primary" id="nextBtn">Siguiente</button>
 
@@ -3769,18 +3785,23 @@
     </footer>
     <script>
         // ========================================
-        // CONFIGURACIÓN INICIAL
+        // CONFIGURACIÃ“N INICIAL
         // ========================================
-        const SUPABASE_URL = "https://qtjpvztpgfymjhhpoouq.supabase.co";
-        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0anB2enRwZ2Z5bWpoaHBvb3VxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3ODA5MTUsImV4cCI6MjA3NjM1NjkxNX0.YsItTFk3hSQaVuy707-z7Z-j34mXa03O0wWGAlAzjrw";
-        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        // Use the global client initialized by auth-utils.js
+        const supabaseClient = window.supabaseClient;
+
+        if (!supabaseClient) {
+            console.error("Critical: Global Supabase not found. Ensure auth-utils.js is loaded.");
+            return;
+        }
+
 
 
         let API_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000/api' : 'https://offszn-academy.onrender.com/api';
 
-        // 🎯 SISTEMA DE TAGS INTELIGENTE (sin IA externa)
+        // ðŸŽ¯ SISTEMA DE TAGS INTELIGENTE (sin IA externa)
         // Tag system initialized
-        // 🎵 ANALIZAR AUDIO (BPM, duración, energía)
+        // ðŸŽµ ANALIZAR AUDIO (BPM, duraciÃ³n, energÃ­a)
         async function analyzeAudio(audioFile) {
             return new Promise((resolve) => {
                 const audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -3790,10 +3811,10 @@
                     try {
                         const audioBuffer = await audioContext.decodeAudioData(e.target.result);
 
-                        // Duración
+                        // DuraciÃ³n
                         const duration = Math.floor(audioBuffer.duration);
 
-                        // Calcular energía promedio (volumen)
+                        // Calcular energÃ­a promedio (volumen)
                         const channelData = audioBuffer.getChannelData(0);
                         let sum = 0;
                         for (let i = 0; i < channelData.length; i++) {
@@ -3805,7 +3826,7 @@
                         const peaks = detectPeaks(channelData, audioBuffer.sampleRate);
                         const bpm = Math.round((peaks.length / duration) * 60);
 
-                        // Clasificar mood por energía
+                        // Clasificar mood por energÃ­a
                         let mood = 'chill';
                         if (avgEnergy > 0.15) mood = 'hard';
                         else if (avgEnergy > 0.08) mood = 'melodic';
@@ -3831,7 +3852,7 @@
         function detectPeaks(data, sampleRate) {
             const peaks = [];
             const threshold = 0.15;
-            const minDistance = Math.floor(sampleRate * 0.3); // Mínimo 300ms entre picos
+            const minDistance = Math.floor(sampleRate * 0.3); // MÃ­nimo 300ms entre picos
 
             for (let i = minDistance; i < data.length - minDistance; i++) {
                 if (Math.abs(data[i]) > threshold) {
@@ -3851,10 +3872,10 @@
             return peaks;
         }
 
-        // 🔄 FALLBACK: Keyword matching inteligente & REPERTORIO MASIVO
+        // ðŸ”„ FALLBACK: Keyword matching inteligente & REPERTORIO MASIVO
         async function generateTagsSmart(title, description, audioParams) {
-            console.log('🤖 Generando tags fallback...');
-            const stopWords = ['de', 'la', 'que', 'el', 'en', 'y', 'a', 'los', 'del', 'se', 'las', 'por', 'un', 'para', 'con', 'no', 'una', 'su', 'al', 'lo', 'como', 'más', 'pero', 'sus', 'le', 'ya', 'o', 'fue', 'este', 'ha', 'sido', 'porque', 'muy', 'sin', 'sobre', 'ser', 'me', 'hasta', 'hay', 'donde', 'quien', 'desde', 'todo', 'nos', 'durante', 'estados', 'todos', 'uno', 'les', 'ni', 'contra', 'otros', 'fueron', 'ese', 'eso', 'había', 'ante', 'unos', 'ella', 'entre', 'poco'];
+            console.log('ðŸ¤– Generando tags fallback...');
+            const stopWords = ['de', 'la', 'que', 'el', 'en', 'y', 'a', 'los', 'del', 'se', 'las', 'por', 'un', 'para', 'con', 'no', 'una', 'su', 'al', 'lo', 'como', 'mÃ¡s', 'pero', 'sus', 'le', 'ya', 'o', 'fue', 'este', 'ha', 'sido', 'porque', 'muy', 'sin', 'sobre', 'ser', 'me', 'hasta', 'hay', 'donde', 'quien', 'desde', 'todo', 'nos', 'durante', 'estados', 'todos', 'uno', 'les', 'ni', 'contra', 'otros', 'fueron', 'ese', 'eso', 'habÃ­a', 'ante', 'unos', 'ella', 'entre', 'poco'];
 
             let candidates = new Set();
 
@@ -3867,7 +3888,7 @@
                 if (audioParams.mood) candidates.add(audioParams.mood);
             }
 
-            // 2. Estrategia por Palabras Clave del Título
+            // 2. Estrategia por Palabras Clave del TÃ­tulo
             const words = (title + ' ' + description).toLowerCase()
                 .replace(/[^\w\s]/g, '')
                 .split(/\s+/)
@@ -3882,7 +3903,7 @@
                 // Moods
                 'Dark', 'Emotional', 'Melodic', 'Aggressive', 'Chill', 'Atmospheric', 'Spacey', 'Bouncy', 'Sad', 'Mystery', 'Energetic', 'Smooth', 'Vintage', 'Retro', 'Futuristic', 'Epic', 'Uplifting', 'Minimal', 'Dreamy', 'Gritty', 'Warm', 'Cold', 'Organic', 'Digital', 'Punchy', 'Clean', 'Dirty', 'Distorted',
                 // Artists
-                'Drake', 'Travis Scott', 'Future', 'Metro Boomin', 'Kanye West', 'Lil Uzi Vert', 'Playboi Carti', 'Yeat', 'Ken Carson', 'Destroy Lonely', 'Baby Keem', 'The Weeknd', 'Bryson Tiller', 'Bad Bunny', 'Feid', 'Jhayco', 'Anuel AA', 'Myke Towers', 'Peso Pluma', 'Natanael Cano', 'Rosalía', 'Billie Eilish', 'SZA', 'Doja Cat', 'Skrillex', 'Kaytranada', 'Fred again..', 'Lil Durk', 'Pop Smoke', 'Ice Spice', 'Don Toliver', 'Juice WRLD', 'XXXTentacion', 'Cordae', 'J. Cole', 'Kendrick Lamar', 'Rauw Alejandro', 'Mora', 'Quevedo',
+                'Drake', 'Travis Scott', 'Future', 'Metro Boomin', 'Kanye West', 'Lil Uzi Vert', 'Playboi Carti', 'Yeat', 'Ken Carson', 'Destroy Lonely', 'Baby Keem', 'The Weeknd', 'Bryson Tiller', 'Bad Bunny', 'Feid', 'Jhayco', 'Anuel AA', 'Myke Towers', 'Peso Pluma', 'Natanael Cano', 'RosalÃ­a', 'Billie Eilish', 'SZA', 'Doja Cat', 'Skrillex', 'Kaytranada', 'Fred again..', 'Lil Durk', 'Pop Smoke', 'Ice Spice', 'Don Toliver', 'Juice WRLD', 'XXXTentacion', 'Cordae', 'J. Cole', 'Kendrick Lamar', 'Rauw Alejandro', 'Mora', 'Quevedo',
                 // Sound Types
                 '808s', 'Kicks', 'Snares', 'Hi-hats', 'Open hats', 'Cymbals', 'Percs', 'Fills', 'Loops', 'Vox samples', 'FX', 'Risers', 'Impacts', 'Sweeps', 'One shots', 'Melody loops', 'Chord stabs', 'Drum loops', 'Basslines', 'Breaks', 'Transitions', 'Ambient textures', 'Guitar loops', 'Piano loops', 'Synth loops', 'Brass hits', 'Strings', 'Pads', 'Arps',
                 // Quality/Descriptors
@@ -3895,7 +3916,7 @@
                 'FL Studio', 'Ableton Live', 'Logic Pro', 'Pro Tools', 'Studio One', 'Cubase', 'Reason', 'Bitwig', 'Reaper'
             ];
 
-            // Normalizar a minúsculas para evitar duplicados visuales
+            // Normalizar a minÃºsculas para evitar duplicados visuales
             const normalizedPool = megaTagPool.map(t => t.toLowerCase());
 
             // Mezclar pool aleatoriamente
@@ -3907,7 +3928,7 @@
             // Convertir a array
             let finalTags = Array.from(candidates);
 
-            // 🔥 MEZCLAR EL RESULTADO FINAL PARA QUE LAS KEYWORDS NO SIEMPRE SALGAN PRIMERO
+            // ðŸ”¥ MEZCLAR EL RESULTADO FINAL PARA QUE LAS KEYWORDS NO SIEMPRE SALGAN PRIMERO
             finalTags.sort(() => Math.random() - 0.5);
 
             // Devolver una cantidad generosa
@@ -3919,11 +3940,11 @@
         let completedSteps = [];
         let currentDraftId = null;
         let userId = null;
-        let originalVisibility = 'private'; // 🔥 GLOBAL STATE FOR VISIBILITY TRACKING
-        let wavesurferBefore; // 🔥 WaveSurfer para "Antes"
-        let wavesurferAfter;  // 🔥 WaveSurfer para "Después"
+        let originalVisibility = 'private'; // ðŸ”¥ GLOBAL STATE FOR VISIBILITY TRACKING
+        let wavesurferBefore; // ðŸ”¥ WaveSurfer para "Antes"
+        let wavesurferAfter;  // ðŸ”¥ WaveSurfer para "DespuÃ©s"
         let isPlaying = false;
-        let globalVolume = 1.0; // 🔥 Volumen maestro (0.0 a 1.0)
+        let globalVolume = 1.0; // ðŸ”¥ Volumen maestro (0.0 a 1.0)
 
         const formData = {
             files: { kit: null, audio: null, audio_after: null },
@@ -3931,8 +3952,8 @@
         };
         let selectedCategory = 'audio';
         let currentAudioTab = 'before';
-        let currentPlaybackTime = 0; // 🔥 Guardar posición del tiempo
-        let isLoadingAudio = false; // 🔥 Prevenir clicks múltiples
+        let currentPlaybackTime = 0; // ðŸ”¥ Guardar posiciÃ³n del tiempo
+        let isLoadingAudio = false; // ðŸ”¥ Prevenir clicks mÃºltiples
 
         let filesUploaded = {
             cover: false,
@@ -3941,7 +3962,7 @@
             audio_after: false
         };
 
-        // 🔥 NUEVO: Prevenir uploads duplicados
+        // ðŸ”¥ NUEVO: Prevenir uploads duplicados
         let uploadsInProgress = {
             cover: false,
             kit: false,
@@ -3955,21 +3976,21 @@
         let isSaving = false;
         let autosaveTimeout = null;
 
-        // 🔥 NUEVO: Cache de handlers para evitar duplicados
+        // ðŸ”¥ NUEVO: Cache de handlers para evitar duplicados
         let fileHandlersInitialized = false;
 
         // ========================================
-        // INICIALIZACIÓN
+        // INICIALIZACIÃ“N
         // ========================================
         document.addEventListener('DOMContentLoaded', async () => {
-            // 🔥 MARKER: Inline script handled loading visibility
+            // ðŸ”¥ MARKER: Inline script handled loading visibility
 
-            // 🔥 LIMPIAR TODO SI NO VIENE UN ?edit=ID
+            // ðŸ”¥ LIMPIAR TODO SI NO VIENE UN ?edit=ID
             const urlParams = new URLSearchParams(window.location.search);
             const editingProductId = urlParams.get('edit');
 
             if (!editingProductId) {
-                // ✅ Estamos creando un NUEVO Preset- limpiar todo
+                // âœ… Estamos creando un NUEVO Preset- limpiar todo
                 currentDraftId = null;
                 formData.files = { kit: null, audio: null };
                 formData.coverBlob = null;
@@ -3978,7 +3999,7 @@
                 collaborators = [];
                 isDirty = false;
 
-                // 🔥 HABILITAR VISIBILIDAD PARA NUEVOS UPLOADS
+                // ðŸ”¥ HABILITAR VISIBILIDAD PARA NUEVOS UPLOADS
                 const visibilityInput = document.getElementById('visibilityInput');
                 if (visibilityInput) {
                     visibilityInput.disabled = false;
@@ -3992,43 +4013,43 @@
                 initCategorySelector();
                 initAudioTabs();
                 initWaveSurfer();
-                initFileHandlers(); // ✅ SIN setTimeout
+                initFileHandlers(); // âœ… SIN setTimeout
                 initTagsInput();
                 initPriceValidation();
                 initExitModal();
-                // initAutosaveInterval(); // 🔥 AUTOSAVE DISABLED
+                // initAutosaveInterval(); // ðŸ”¥ AUTOSAVE DISABLED
 
-                // 🔥 Ensure loadDraft exists before calling AND checks if needed
+                // ðŸ”¥ Ensure loadDraft exists before calling AND checks if needed
                 if (typeof loadDraft === 'function' && (editingProductId || localStorage.getItem('offszn_has_draft'))) {
-                    // 🔥 LOAD DRAFT HANDLES LOADING UI INTERNALLY
+                    // ðŸ”¥ LOAD DRAFT HANDLES LOADING UI INTERNALLY
                     await loadDraft();
                 } else {
-                    console.log('✨ New upload session - No draft loaded');
+                    console.log('âœ¨ New upload session - No draft loaded');
                     hideLoading(); // Only hide if NOT loading draft
                 }
             } catch (error) {
                 console.error("Initialization error:", error);
                 hideLoading();
             }
-            // 🔥 REMOVED global finally { hideLoading() } to prevent premature hiding
+            // ðŸ”¥ REMOVED global finally { hideLoading() } to prevent premature hiding
 
-            // Event listeners básicos
+            // Event listeners bÃ¡sicos
             document.getElementById('titleInput').addEventListener('input', e => {
                 document.getElementById('titleCount').textContent = e.target.value.length;
                 isDirty = true;
-                // autoFillTags(); // 🔥 ELIMINADO: Usuario pidió que no sea automático
+                // autoFillTags(); // ðŸ”¥ ELIMINADO: Usuario pidiÃ³ que no sea automÃ¡tico
                 clearTimeout(autosaveTimeout);
-                // autosaveTimeout = setTimeout(() => saveDraftAuto(), 2000); // 🔥 AUTOSAVE DISABLED
+                // autosaveTimeout = setTimeout(() => saveDraftAuto(), 2000); // ðŸ”¥ AUTOSAVE DISABLED
             });
 
             document.getElementById('descInput').addEventListener('input', e => {
                 document.getElementById('descCount').textContent = e.target.value.length;
                 isDirty = true;
                 clearTimeout(autosaveTimeout);
-                // autosaveTimeout = setTimeout(() => saveDraftAuto(), 2000); // 🔥 AUTOSAVE DISABLED
+                // autosaveTimeout = setTimeout(() => saveDraftAuto(), 2000); // ðŸ”¥ AUTOSAVE DISABLED
             });
 
-            // 🔥 REAL-TIME VALIDATION: Sounds Input
+            // ðŸ”¥ REAL-TIME VALIDATION: Sounds Input
             const soundsInput = document.getElementById('soundsInput');
             if (soundsInput) {
                 soundsInput.addEventListener('input', function () {
@@ -4046,7 +4067,7 @@
                 });
             }
 
-            // Navegación entre steps
+            // NavegaciÃ³n entre steps
             document.querySelectorAll('.step').forEach(step => {
                 step.addEventListener('click', () => {
                     const targetStep = parseInt(step.dataset.step);
@@ -4091,7 +4112,7 @@
                 });
             });
 
-            // Botones de navegación
+            // Botones de navegaciÃ³n
             document.getElementById('nextBtn').addEventListener('click', handleNext);
             document.getElementById('prevBtn').addEventListener('click', () => {
                 if (currentStep > 1) {
@@ -4120,7 +4141,7 @@
                     showToast('Borrador guardado', 'success');
                     isDirty = false;
 
-                    // 🔥 REDIRECCIÓN A MIS-KITS (Solicitud del usuario)
+                    // ðŸ”¥ REDIRECCIÃ“N A MIS-KITS (Solicitud del usuario)
                     setTimeout(() => {
                         window.location.href = '/cuenta/mis-kits.html';
                     }, 1000);
@@ -4173,13 +4194,13 @@
                 });
             }, 100);
 
-            // 🔥 COLABORADORES Y NOTIFICACIONES (ORDEN CORRECTO)
+            // ðŸ”¥ COLABORADORES Y NOTIFICACIONES (ORDEN CORRECTO)
             const notifyBtn = document.getElementById('notifyCollabsBtn');
             if (notifyBtn) {
                 notifyBtn.addEventListener('click', notifyCollaborators);
             }
 
-            initCollaborators(); // ✅ AHORA SÍ FUNCIONA PORQUE EL DOM YA EXISTE
+            initCollaborators(); // âœ… AHORA SÃ FUNCIONA PORQUE EL DOM YA EXISTE
         });
 
         // ========================================
@@ -4210,12 +4231,12 @@
                     }
                 }
             } catch (e) {
-                console.warn('⚠️ Error cargando perfil:', e);
+                console.warn('âš ï¸ Error cargando perfil:', e);
             }
         }
 
         function initDateTime() {
-            // 🔥 Force current date (User's timezone)
+            // ðŸ”¥ Force current date (User's timezone)
             const now = new Date();
             const year = now.getFullYear();
             const month = String(now.getMonth() + 1).padStart(2, '0');
@@ -4227,12 +4248,12 @@
             document.getElementById('dateInput').addEventListener('change', () => {
                 validateReleaseDate();
                 isDirty = true;
-                // saveDraftAuto(); // 🔥 AUTOSAVE DISABLED
+                // saveDraftAuto(); // ðŸ”¥ AUTOSAVE DISABLED
             });
 
             document.getElementById('visibilityInput').addEventListener('change', () => {
                 isDirty = true;
-                // saveDraftAuto(); // 🔥 AUTOSAVE DISABLED
+                // saveDraftAuto(); // ðŸ”¥ AUTOSAVE DISABLED
             });
         }
 
@@ -4242,7 +4263,7 @@
 
             if (!dateInput.value) return false;
 
-            // 🔥 FIX: String Comparison for Robustness (YYYY-MM-DD vs YYYY-MM-DD)
+            // ðŸ”¥ FIX: String Comparison for Robustness (YYYY-MM-DD vs YYYY-MM-DD)
             // This avoids all timezone/midnight confusions for "Today"
 
             // 1. Get Selected Date String (already YYYY-MM-DD)
@@ -4255,8 +4276,8 @@
             const day = String(now.getDate()).padStart(2, '0');
             const todayStr = `${year}-${month}-${day}`;
 
-            // 🔥 PROGRAMACIÓN DE FECHA: Validar SOLO si el usuario intenta cambiar la fecha
-            // Si ya existe una fecha válida y no la está cambiando, NO validar contra el presente
+            // ðŸ”¥ PROGRAMACIÃ“N DE FECHA: Validar SOLO si el usuario intenta cambiar la fecha
+            // Si ya existe una fecha vÃ¡lida y no la estÃ¡ cambiando, NO validar contra el presente
             const isEditingExistingDate = dateInput.dataset.originalDate && dateInput.value === dateInput.dataset.originalDate;
 
             if (isEditingExistingDate) {
@@ -4265,9 +4286,9 @@
                 return true;
             }
 
-            // ✅ Logic: If equal -> Valid (Today). If Selected < Today -> Invalid (UNLESS EDITING).
+            // âœ… Logic: If equal -> Valid (Today). If Selected < Today -> Invalid (UNLESS EDITING).
 
-            // 🔥 EDIT MODE EXCEPTION: Allow past dates if we are editing an existing product
+            // ðŸ”¥ EDIT MODE EXCEPTION: Allow past dates if we are editing an existing product
             // This is crucial because an existing product might have been released in the past.
             if (window.currentEditId) {
                 if (dateError) dateError.style.display = 'none';
@@ -4300,10 +4321,10 @@
                                 <line x1="12" y1="9" x2="12" y2="13"></line>
                                 <line x1="12" y1="17" x2="12.01" y2="17"></line>
                             </svg>
-                            ¿Salir sin guardar?
+                            Â¿Salir sin guardar?
                         </div>
                         <div class="exit-modal-message" style="color: #aaa; margin-bottom: 32px;">
-                            Tienes cambios sin guardar. Si sales ahora, perderás todo tu progreso.
+                            Tienes cambios sin guardar. Si sales ahora, perderÃ¡s todo tu progreso.
                         </div>
                         <div class="exit-modal-actions" style="justify-content: center; gap: 16px;">
                              <button class="exit-modal-btn cancel" id="exitConfirm" style="color: #ef4444; border: none; font-weight: 500;">Salir sin guardar</button>
@@ -4318,7 +4339,7 @@
             document.getElementById('uploadForm').addEventListener('change', () => isDirty = true);
             document.getElementById('uploadForm').addEventListener('input', () => isDirty = true);
 
-            // 🔥 BEFOREUNLOAD REMOVED: Cannot execute async cleanup code
+            // ðŸ”¥ BEFOREUNLOAD REMOVED: Cannot execute async cleanup code
             // Use the custom exitConfirmModal instead via "Volver al Dashboard" button
 
             document.getElementById('exitCancel')?.addEventListener('click', () => {
@@ -4328,9 +4349,9 @@
             document.getElementById('exitConfirm')?.addEventListener('click', async () => {
                 isDirty = false;
 
-                // 🔥 CLEANUP DRAFT IF EDITING AND NOT SAVED
+                // ðŸ”¥ CLEANUP DRAFT IF EDITING AND NOT SAVED
                 if (window.currentEditId && currentDraftId) {
-                    console.log('🧹 Limpiando borrador temporal de edición...');
+                    console.log('ðŸ§¹ Limpiando borrador temporal de ediciÃ³n...');
                     try {
                         await supabaseClient
                             .from('preset_drafts')
@@ -4355,12 +4376,12 @@
         }
 
         // ========================================
-        // 🔥 QUICK SAVE (HEADER BUTTON)
+        // ðŸ”¥ QUICK SAVE (HEADER BUTTON)
         // ========================================
         window.quickSave = async function () {
             try {
                 showLoading('Guardando borrador...');
-                await new Promise(r => setTimeout(r, 800)); // 🔥 UX DELAY
+                await new Promise(r => setTimeout(r, 800)); // ðŸ”¥ UX DELAY
                 if (typeof saveDraftAuto === 'function') {
                     await saveDraftAuto();
                 } else {
@@ -4369,7 +4390,7 @@
                 }
 
                 isDirty = false;
-                // showToast('Borrador guardado correctamente', 'success'); // 🔥 REMOVED TOAST PER USER REQUEST
+                // showToast('Borrador guardado correctamente', 'success'); // ðŸ”¥ REMOVED TOAST PER USER REQUEST
 
                 setTimeout(() => {
                     window.location.href = '/cuenta/mis-kits.html';
@@ -4383,13 +4404,13 @@
             }
         };
 
-        // 🔥 Función helper global para obtener el wavesurfer activo
+        // ðŸ”¥ FunciÃ³n helper global para obtener el wavesurfer activo
         function getActiveWavesurfer() {
             return currentAudioTab === 'before' ? wavesurferBefore : wavesurferAfter;
         }
 
         function initWaveSurfer() {
-            // 🔥 Crear contenedor wrapper si no existe
+            // ðŸ”¥ Crear contenedor wrapper si no existe
             const oldWaveform = document.getElementById('waveform');
             if (oldWaveform && !oldWaveform.classList.contains('waveform-container')) {
                 // Convertir el div actual en contenedor
@@ -4403,7 +4424,7 @@
                 `;
             }
 
-            // Configuración compartida
+            // ConfiguraciÃ³n compartida
             const waveConfig = {
                 waveColor: 'rgba(255, 255, 255, 0.4)',
                 progressColor: '#8b5cf6',
@@ -4420,25 +4441,25 @@
                 hideScrollbar: true
             };
 
-            // 🔥 Crear instancia para "Antes"
+            // ðŸ”¥ Crear instancia para "Antes"
             wavesurferBefore = WaveSurfer.create({
                 ...waveConfig,
                 container: '#waveformBefore'
             });
 
-            // 🔥 Crear instancia para "Después"
+            // ðŸ”¥ Crear instancia para "DespuÃ©s"
             wavesurferAfter = WaveSurfer.create({
                 ...waveConfig,
                 container: '#waveformAfter'
             });
 
-            // 🔥 Event listeners compartidos (SINCRONIZACIÓN TOTAL)
+            // ðŸ”¥ Event listeners compartidos (SINCRONIZACIÃ“N TOTAL)
             const setupSharedListeners = (ws) => {
                 const otherWs = () => ws === wavesurferBefore ? wavesurferAfter : wavesurferBefore;
 
                 ws.on('play', () => {
                     const other = otherWs();
-                    // 🔥 FIX: Solo sincronizar si el otro tiene audio cargado (duración > 0)
+                    // ðŸ”¥ FIX: Solo sincronizar si el otro tiene audio cargado (duraciÃ³n > 0)
                     if (other && !other.isPlaying() && other.getDuration() > 0) other.play();
 
                     if (ws === getActiveWavesurfer()) {
@@ -4456,7 +4477,7 @@
                 });
 
                 ws.on('finish', () => {
-                    // Si uno termina, el otro también debería (si tienen misma duración)
+                    // Si uno termina, el otro tambiÃ©n deberÃ­a (si tienen misma duraciÃ³n)
                     if (isLooping) {
                         ws.play();
                     } else if (ws === getActiveWavesurfer()) {
@@ -4472,12 +4493,12 @@
                     }
                 });
 
-                // 🔥 Sincronizar SEEK (Crucial para el timing)
+                // ðŸ”¥ Sincronizar SEEK (Crucial para el timing)
                 // Se dispara al hacer click o arrastrar en la onda
                 ws.on('interaction', () => {
                     const other = otherWs();
                     if (other) {
-                        // Sincronizar al tiempo exacto del que recibió el click
+                        // Sincronizar al tiempo exacto del que recibiÃ³ el click
                         const currentTime = ws.getCurrentTime();
                         other.setTime(currentTime);
                     }
@@ -4493,8 +4514,8 @@
             setupSharedListeners(wavesurferBefore);
             setupSharedListeners(wavesurferAfter);
 
-            // 🔥 Botón play/pause (Controla AMBOS)
-            // 🔥 Botón play/pause (Controla AMBOS de forma segura)
+            // ðŸ”¥ BotÃ³n play/pause (Controla AMBOS)
+            // ðŸ”¥ BotÃ³n play/pause (Controla AMBOS de forma segura)
             document.getElementById('playPauseBtn').addEventListener('click', () => {
                 const activeWs = getActiveWavesurfer();
 
@@ -4527,7 +4548,7 @@
             const cards = document.querySelectorAll('.category-card');
             cards.forEach(c => c.classList.toggle('active', c.dataset.category === category));
 
-            // 🔥 Lógica de Tabs de Audio según Categoría
+            // ðŸ”¥ LÃ³gica de Tabs de Audio segÃºn CategorÃ­a
             const tabsContainer = document.getElementById('audioTabsContainer');
             const labelBefore = document.getElementById('labelBefore');
             const textBefore = document.getElementById('textBefore');
@@ -4535,7 +4556,7 @@
 
             const audioFormGroup = document.getElementById('audioFormGroup');
             if (category === 'plugin_vst' || category === 'instrumento') {
-                // Ocultar Tabs y "Después" para Plugin/Instrumento
+                // Ocultar Tabs y "DespuÃ©s" para Plugin/Instrumento
                 if (tabsContainer) tabsContainer.style.display = 'none';
                 if (contentAfter) contentAfter.classList.remove('active');
 
@@ -4543,11 +4564,11 @@
                 currentAudioTab = 'before';
                 document.getElementById('audioContent-before').classList.add('active');
 
-                // Cambiar Labels a Genérico
+                // Cambiar Labels a GenÃ©rico
                 if (labelBefore) labelBefore.innerHTML = `Audio (.mp3, .wav) <span class="required">*</span>`;
                 if (textBefore) textBefore.innerText = "Subir Audio";
 
-                // Ocultar waveform "Después" si existía
+                // Ocultar waveform "DespuÃ©s" si existÃ­a
                 const waveformAfter = document.getElementById('waveformAfter');
                 if (waveformAfter) waveformAfter.classList.add('hidden');
                 const waveformBefore = document.getElementById('waveformBefore');
@@ -4592,7 +4613,7 @@
                     const targetTab = tab.dataset.tab;
                     const isSameTab = currentAudioTab === targetTab;
 
-                    // 🔥 Si es el MISMO tab, funciona como PLAY/PAUSE
+                    // ðŸ”¥ Si es el MISMO tab, funciona como PLAY/PAUSE
                     if (isSameTab) {
                         const activeWs = targetTab === 'before' ? wavesurferBefore : wavesurferAfter;
                         const playPauseBtn = document.getElementById('playPauseBtn');
@@ -4617,11 +4638,11 @@
                         return;
                     }
 
-                    // 🔥 Si es DIFERENTE tab, cambiar visibilidad
+                    // ðŸ”¥ Si es DIFERENTE tab, cambiar visibilidad
                     const oldWs = currentAudioTab === 'before' ? wavesurferBefore : wavesurferAfter;
                     const newWs = targetTab === 'before' ? wavesurferBefore : wavesurferAfter;
 
-                    // 🔥 CAMBIO DE VOLUMEN (Instantáneo, sin pausa)
+                    // ðŸ”¥ CAMBIO DE VOLUMEN (InstantÃ¡neo, sin pausa)
                     if (oldWs) oldWs.setVolume(0);
                     if (newWs) newWs.setVolume(isMuted ? 0 : globalVolume);
 
@@ -4637,7 +4658,7 @@
                         c.classList.toggle('active', isActive);
                     });
 
-                    // 🔥 TOGGLE WAVEFORM VISIBILITY (Instantáneo y Forzado)
+                    // ðŸ”¥ TOGGLE WAVEFORM VISIBILITY (InstantÃ¡neo y Forzado)
                     const waveformBefore = document.getElementById('waveformBefore');
                     const waveformAfter = document.getElementById('waveformAfter');
 
@@ -4693,26 +4714,26 @@
 
         async function handleFile(file, type, dropZone) {
             if (!file) {
-                console.warn('⚠️ No se recibió archivo');
+                console.warn('âš ï¸ No se recibiÃ³ archivo');
                 return;
             }
 
-            // 🔥 Prevenir uploads duplicados
+            // ðŸ”¥ Prevenir uploads duplicados
             if (uploadsInProgress[type]) {
-                console.warn(`⚠️ Ya hay un upload de ${type} en progreso`);
-                return; // ✅ NO mostrar toast, solo prevenir silenciosamente
+                console.warn(`âš ï¸ Ya hay un upload de ${type} en progreso`);
+                return; // âœ… NO mostrar toast, solo prevenir silenciosamente
             }
 
             uploadsInProgress[type] = true;
             dropZone.classList.add('uploading');
 
             try {
-                // 🔥 Limpiar errores previos usando helper
+                // ðŸ”¥ Limpiar errores previos usando helper
                 if (typeof clearInlineError === 'function') {
                     clearInlineError(dropZone.id);
                 }
 
-                // 🔥 FORCE REMOVE any local error message safely
+                // ðŸ”¥ FORCE REMOVE any local error message safely
                 const parent = dropZone.closest('.form-group') || dropZone.parentNode;
                 const errorMsg = parent.querySelector('.error-message');
                 if (errorMsg) errorMsg.style.display = 'none';
@@ -4734,13 +4755,13 @@
 
 
                 if (type === 'cover' && !file.type.startsWith('image/')) {
-                    showInlineError(dropZone.id, 'Solo imágenes válidas');
+                    showInlineError(dropZone.id, 'Solo imÃ¡genes vÃ¡lidas');
                     dropZone.classList.remove('uploading');
                     delete uploadsInProgress[type];
                     return;
                 }
 
-                // Límites de tamaño
+                // LÃ­mites de tamaÃ±o
                 const MAX_SIZES = {
                     cover: 10 * 1024 * 1024,
                     kit: 50 * 1024 * 1024,
@@ -4750,19 +4771,19 @@
 
                 if (file.size > MAX_SIZES[type]) {
                     const sizeMB = (MAX_SIZES[type] / (1024 * 1024)).toFixed(0);
-                    showInlineError(dropZone.id, `El archivo excede el límite de ${sizeMB}MB`);
+                    showInlineError(dropZone.id, `El archivo excede el lÃ­mite de ${sizeMB}MB`);
                     dropZone.classList.remove('uploading');
                     delete uploadsInProgress[type];
                     return;
                 }
 
-                // 🔥 Cover: abrir modal de crop
+                // ðŸ”¥ Cover: abrir modal de crop
                 if (type === 'cover') {
                     openCropModal(file);
                     return;
                 }
 
-                // 🔥 CRÍTICO: Borrar archivo anterior SOLO si ya fue subido a Supabase
+                // ðŸ”¥ CRÃTICO: Borrar archivo anterior SOLO si ya fue subido a Supabase
                 if (currentDraftId && filesUploaded[type]) {
                     try {
                         let columnName = 'preset_url';
@@ -4790,16 +4811,16 @@
 
                 // Guardar archivo en memoria
                 formData.files[type] = file;
-                filesUploaded[type] = false; // ✅ Marcar como NO subido aún
+                filesUploaded[type] = false; // âœ… Marcar como NO subido aÃºn
 
                 isDirty = true;
 
-                // Procesar según tipo
+                // Procesar segÃºn tipo
                 if (type === 'audio' || type === 'audio_after') {
                     const ws = type === 'audio' ? wavesurferBefore : wavesurferAfter;
                     ws.load(URL.createObjectURL(file));
 
-                    // Mostrar el contenedor principal y el específico
+                    // Mostrar el contenedor principal y el especÃ­fico
                     const container = document.getElementById('waveformContainer');
                     const before = document.getElementById('waveformBefore');
                     const after = document.getElementById('waveformAfter');
@@ -4808,7 +4829,7 @@
                     document.getElementById('playerPlaceholder').style.display = 'none';
                     document.getElementById('playPauseBtn').disabled = false;
 
-                    // Ajustar visibilidad según el tab actual
+                    // Ajustar visibilidad segÃºn el tab actual
                     if (type === 'audio' && currentAudioTab === 'before') {
                         before.classList.remove('hidden');
                         after.classList.add('hidden');
@@ -4817,7 +4838,7 @@
                         after.classList.remove('hidden');
                     }
 
-                    // Asegurar botón de Play al cargar nuevo audio
+                    // Asegurar botÃ³n de Play al cargar nuevo audio
                     const playPauseBtn = document.getElementById('playPauseBtn');
                     if (playPauseBtn) {
                         const playIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>`;
@@ -4840,25 +4861,25 @@
                         <div class="file-name">${file.name}</div>
                         <div class="file-size">${(file.size / (1024 * 1024)).toFixed(2)} MB</div>
                     </div>
-                    <button type="button" class="remove-file" onclick="removeFile('${type}')" title="Eliminar archivo">✕</button>
+                    <button type="button" class="remove-file" onclick="removeFile('${type}')" title="Eliminar archivo">âœ•</button>
                 </div>
             `;
                 }
 
-                // Guardar draft automáticamente (esto subirá el archivo)
+                // Guardar draft automÃ¡ticamente (esto subirÃ¡ el archivo)
                 await saveDraftAuto();
 
             } catch (error) {
                 showToast(`Error: ${error.message}`, 'error');
             } finally {
-                // 🔥 Liberar upload después de 2 segundos
+                // ðŸ”¥ Liberar upload despuÃ©s de 2 segundos
                 setTimeout(() => {
                     uploadsInProgress[type] = false;
                     dropZone.classList.remove('uploading');
                 }, 2000);
             }
         }
-        // 🔥 CAMBIO 1: Eliminar archivo del Storage cuando se reemplaza
+        // ðŸ”¥ CAMBIO 1: Eliminar archivo del Storage cuando se reemplaza
         window.removeFile = async (type) => {
             // Si el archivo ya estaba subido, eliminarlo del Storage
             if (type === 'kit' && filesUploaded.kit && currentDraftId) {
@@ -4873,10 +4894,10 @@
                         await supabaseClient.storage
                             .from('preset-drafts')
                             .remove([draft.preset_url]);
-                        console.log('🗑️ Kit anterior eliminado del Storage');
+                        console.log('ðŸ—‘ï¸ Kit anterior eliminado del Storage');
                     }
                 } catch (e) {
-                    console.warn('⚠️ Error eliminando kit:', e);
+                    console.warn('âš ï¸ Error eliminando kit:', e);
                 }
             }
 
@@ -4892,10 +4913,10 @@
                         await supabaseClient.storage
                             .from('preset-drafts')
                             .remove([draft.audio_before_url]);
-                        console.log('🗑️ Audio anterior eliminado del Storage');
+                        console.log('ðŸ—‘ï¸ Audio anterior eliminado del Storage');
                     }
                 } catch (e) {
-                    console.warn('⚠️ Error eliminando audio:', e);
+                    console.warn('âš ï¸ Error eliminando audio:', e);
                 }
             }
 
@@ -4911,14 +4932,14 @@
                         await supabaseClient.storage
                             .from('preset-drafts')
                             .remove([draft.cover_url]);
-                        console.log('🗑️ Cover anterior eliminado del Storage');
+                        console.log('ðŸ—‘ï¸ Cover anterior eliminado del Storage');
                     }
                 } catch (e) {
-                    console.warn('⚠️ Error eliminando cover:', e);
+                    console.warn('âš ï¸ Error eliminando cover:', e);
                 }
             }
 
-            // 🔥 AUDIO AFTER STORAGE REMOVAL
+            // ðŸ”¥ AUDIO AFTER STORAGE REMOVAL
             if (type === 'audio_after' && filesUploaded.audio_after && currentDraftId) {
                 try {
                     const { data: draft } = await supabaseClient
@@ -4931,10 +4952,10 @@
                         await supabaseClient.storage
                             .from('preset-drafts')
                             .remove([draft.audio_after_url]);
-                        console.log('🗑️ Audio After anterior eliminado del Storage');
+                        console.log('ðŸ—‘ï¸ Audio After anterior eliminado del Storage');
                     }
                 } catch (e) {
-                    console.warn('⚠️ Error eliminando audio_after:', e);
+                    console.warn('âš ï¸ Error eliminando audio_after:', e);
                 }
             }
 
@@ -4964,7 +4985,7 @@
                 }
                 filesUploaded.audio = false;
             }
-            // 🔥 AUDIO AFTER REMOVAL
+            // ðŸ”¥ AUDIO AFTER REMOVAL
             if (type === 'audio_after') {
                 document.getElementById('audioInputAfter').value = '';
                 document.getElementById('audioPreviewContainerAfter').innerHTML = '';
@@ -4998,11 +5019,11 @@
                 filesUploaded.cover = false;
             }
 
-            // saveDraftAuto(); // 🔥 DISABLED AUTO-SAVE
+            // saveDraftAuto(); // ðŸ”¥ DISABLED AUTO-SAVE
             updateCompletionProgress();
         };
         // ========================================
-        // NUEVA FUNCIÓN: Borrar Cover
+        // NUEVA FUNCIÃ“N: Borrar Cover
         // ========================================
         window.removeCover = async () => {
             // Eliminar del Storage si existe
@@ -5018,10 +5039,10 @@
                         await supabaseClient.storage
                             .from('preset-drafts')
                             .remove([draft.cover_url]);
-                        console.log('🗑️ Cover eliminado del Storage');
+                        console.log('ðŸ—‘ï¸ Cover eliminado del Storage');
                     }
                 } catch (e) {
-                    console.warn('⚠️ Error eliminando cover:', e);
+                    console.warn('âš ï¸ Error eliminando cover:', e);
                 }
             }
 
@@ -5048,7 +5069,7 @@
             }
 
             document.getElementById('coverInput').value = '';
-            // saveDraftAuto(); // 🔥 DISABLED AUTO-SAVE
+            // saveDraftAuto(); // ðŸ”¥ DISABLED AUTO-SAVE
         };
         // ========================================
         // CROP MODAL
@@ -5188,10 +5209,10 @@
                             await supabaseClient.storage
                                 .from('preset-drafts')
                                 .remove([draft.cover_url]);
-                            console.log('🗑️ Cover anterior eliminado');
+                            console.log('ðŸ—‘ï¸ Cover anterior eliminado');
                         }
                     } catch (e) {
-                        console.warn('⚠️ Error eliminando cover anterior:', e);
+                        console.warn('âš ï¸ Error eliminando cover anterior:', e);
                     }
                 }
 
@@ -5216,12 +5237,12 @@
                 preview.style.display = 'block';
                 document.getElementById('coverDropZone').classList.add('has-image');
 
-                // ✅ MOSTRAR BOTÓN DE BORRAR
+                // âœ… MOSTRAR BOTÃ“N DE BORRAR
                 const removeBtn = document.getElementById('removeCoverBtn');
                 if (removeBtn) removeBtn.style.display = 'block';
 
                 closeCropModal();
-                // saveDraftAuto(); // 🔥 DISABLED AUTO-SAVE
+                // saveDraftAuto(); // ðŸ”¥ DISABLED AUTO-SAVE
             } catch (e) {
                 showToast('Error: ' + e.message, 'error');
             } finally {
@@ -5235,7 +5256,7 @@
         function initTagsInput() {
             const input = document.getElementById('tagInput');
 
-            // 🔥 NUEVO: Limitar caracteres MIENTRAS ESCRIBE
+            // ðŸ”¥ NUEVO: Limitar caracteres MIENTRAS ESCRIBE
             input.addEventListener('input', e => {
                 if (e.target.value.length > 15) {
                     e.target.value = e.target.value.substring(0, 15);
@@ -5253,7 +5274,7 @@
                 }
             });
 
-            // 🔥 NUEVO: Agregar tag al hacer click fuera
+            // ðŸ”¥ NUEVO: Agregar tag al hacer click fuera
             input.addEventListener('blur', () => {
                 const value = input.value.trim();
                 if (value && tags.length < 3) {
@@ -5275,7 +5296,7 @@
         function addTag(tag) {
             if (!tag) return;
 
-            // Validar máximo 3 tags
+            // Validar mÃ¡ximo 3 tags
             if (tags.length >= 3) {
                 return;
             }
@@ -5288,12 +5309,12 @@
                 return;
             }
 
-            // 🔥 NUEVO: Restaurar posición si estamos editando
+            // ðŸ”¥ NUEVO: Restaurar posiciÃ³n si estamos editando
             const input = document.getElementById('tagInput');
             const editingIndex = input.dataset.editingIndex;
 
             if (editingIndex !== undefined) {
-                // Insertar en la posición original
+                // Insertar en la posiciÃ³n original
                 const index = parseInt(editingIndex);
                 tags.splice(index, 0, tag);
                 delete input.dataset.editingIndex;
@@ -5304,9 +5325,9 @@
 
             isDirty = true;
             renderTags();
-            // saveDraftAuto(); // 🔥 DISABLED AUTO-SAVE
+            // saveDraftAuto(); // ðŸ”¥ DISABLED AUTO-SAVE
 
-            // 🔥 CLEAR ERROR: Si había error de validación, quitarlo al agregar un tag
+            // ðŸ”¥ CLEAR ERROR: Si habÃ­a error de validaciÃ³n, quitarlo al agregar un tag
             const tInput = document.getElementById('tagInput');
             if (tInput) {
                 tInput.classList.remove('error');
@@ -5343,7 +5364,7 @@
                 container.insertBefore(chip, input);
             });
 
-            // Deshabilitar/habilitar input según cantidad de tags
+            // Deshabilitar/habilitar input segÃºn cantidad de tags
             if (tags.length >= 3) {
                 input.disabled = true;
                 input.placeholder = '';
@@ -5362,18 +5383,18 @@
             tags = tags.filter(t => t !== tagToRemove);
             isDirty = true;
             renderTags();
-            // saveDraftAuto(); // 🔥 DISABLED AUTO-SAVE
+            // saveDraftAuto(); // ðŸ”¥ DISABLED AUTO-SAVE
         };
 
         // ========================================
         // EDITAR TAGS (FUERA DE renderTags)
         // ========================================
         window.editTag = (oldTag) => {
-            // Encontrar el índice del tag
+            // Encontrar el Ã­ndice del tag
             const tagIndex = tags.indexOf(oldTag);
             if (tagIndex === -1) return;
 
-            // Remover el tag PERO guardar su posición
+            // Remover el tag PERO guardar su posiciÃ³n
             tags.splice(tagIndex, 1);
 
             // Renderizar ANTES de poner el valor en el input
@@ -5383,10 +5404,10 @@
             const input = document.getElementById('tagInput');
             input.value = oldTag;
 
-            // Guardar el índice para restaurar posición
+            // Guardar el Ã­ndice para restaurar posiciÃ³n
             input.dataset.editingIndex = tagIndex;
 
-            // Focus y seleccionar después de renderizar
+            // Focus y seleccionar despuÃ©s de renderizar
             setTimeout(() => {
                 input.focus();
                 input.select();
@@ -5400,12 +5421,12 @@
             const freeToggle = document.getElementById('freeToggle');
             const offerInput = document.getElementById('offerInput');
 
-            // 🔥 PRECIO ORIGINAL: solo números enteros
-            // 🔥 PRECIO ORIGINAL: solo números enteros
+            // ðŸ”¥ PRECIO ORIGINAL: solo nÃºmeros enteros
+            // ðŸ”¥ PRECIO ORIGINAL: solo nÃºmeros enteros
             priceInput.addEventListener('input', e => {
                 let value = e.target.value.replace(/[^0-9]/g, '');
 
-                // 🔥 LÓGICA AUTOMÁTICA DE GRATIS/PRECIO
+                // ðŸ”¥ LÃ“GICA AUTOMÃTICA DE GRATIS/PRECIO
                 const freeToggle = document.getElementById('freeToggle');
 
                 // Si borra todo o pone 0
@@ -5418,9 +5439,9 @@
                         freeToggle.dispatchEvent(event);
                     }
                 }
-                // Si escribe un número mayor a 0
+                // Si escribe un nÃºmero mayor a 0
                 else if (parseInt(value) > 0) {
-                    // 🔥 CLEAR ERROR IMMEDIATELY
+                    // ðŸ”¥ CLEAR ERROR IMMEDIATELY
                     clearInlineError('priceInput');
 
                     if (freeToggle.checked) {
@@ -5431,12 +5452,12 @@
                     }
                 }
 
-                // 🔥 NO PERMITIR leading zeros después del primer 0
+                // ðŸ”¥ NO PERMITIR leading zeros despuÃ©s del primer 0
                 if (value.startsWith('0') && value.length > 1) {
                     value = value.substring(1);
                 }
 
-                // Máximo 10,000
+                // MÃ¡ximo 10,000
                 if (parseInt(value) > 10000) {
                     value = '10000';
                 }
@@ -5445,14 +5466,14 @@
                 updatePrice();
             });
 
-            // 🔥 PRESETS: validación mejorada
+            // ðŸ”¥ PRESETS: validaciÃ³n mejorada
             document.getElementById('soundsInput').addEventListener('input', e => {
                 let value = e.target.value.replace(/[^0-9]/g, '');
 
-                // Máximo 1,000,000
+                // MÃ¡ximo 1,000,000
                 if (parseInt(value) > 1000000) {
                     value = '1000000';
-                    // ✅ Sin toast - el límite se aplica silenciosamente
+                    // âœ… Sin toast - el lÃ­mite se aplica silenciosamente
                 }
 
                 // Prevenir leading zeros
@@ -5461,13 +5482,13 @@
                 }
 
                 e.target.value = value;
-                // saveDraftAuto(); // 🔥 DISABLED AUTO-SAVE
+                // saveDraftAuto(); // ðŸ”¥ DISABLED AUTO-SAVE
             });
 
             freeToggle.addEventListener('change', updatePrice);
 
 
-            // 🔥 INITIAL SYMBOL CHECK
+            // ðŸ”¥ INITIAL SYMBOL CHECK
             const initialType = document.querySelector('input[name="offerType"]:checked');
             const symbol = document.getElementById('offerSymbol');
             if (initialType && symbol) {
@@ -5475,27 +5496,27 @@
             }
         }
 
-        // 🔴 FUNCIÓN CRÍTICA: adjustNumber para spinners
+        // ðŸ”´ FUNCIÃ“N CRÃTICA: adjustNumber para spinners
         window.adjustNumber = (id, delta) => {
             const input = document.getElementById(id);
             if (!input) return;
 
-            // 🔥 CASO ESPECIAL: Si es priceInput y está en modo GRATIS, permitir subir
+            // ðŸ”¥ CASO ESPECIAL: Si es priceInput y estÃ¡ en modo GRATIS, permitir subir
             if (id === 'priceInput') {
                 const freeToggle = document.getElementById('freeToggle');
 
-                // Si está en modo gratis, cualquier interacción libera el modo
+                // Si estÃ¡ en modo gratis, cualquier interacciÃ³n libera el modo
                 if (freeToggle.checked) {
                     // Desactivar el modo gratis
                     freeToggle.checked = false;
                     const event = new Event('change');
                     freeToggle.dispatchEvent(event);
 
-                    // 🔥 NO reiniciar a 1. Dejar que fluya la lógica normal abajo
+                    // ðŸ”¥ NO reiniciar a 1. Dejar que fluya la lÃ³gica normal abajo
                     // para que tome el valor actual (ej: 5) y le sume 1 (6)
                 }
 
-                // Si está deshabilitado por otra razón, no hacer nada
+                // Si estÃ¡ deshabilitado por otra razÃ³n, no hacer nada
                 if (input.disabled) return;
             } else {
                 // Para otros inputs, respetar el disabled normal
@@ -5517,7 +5538,7 @@
             }
 
             if (id === 'priceInput') {
-                // 🔥 PERMITIR 0 para activar "Gratis"
+                // ðŸ”¥ PERMITIR 0 para activar "Gratis"
                 if (val < 0) val = 0;
                 if (val > 10000) {
                     val = 10000;
@@ -5526,7 +5547,7 @@
                 }
                 val = Math.floor(val);
 
-                // 🔥 LÓGICA AUTOMÁTICA: Activar/desactivar toggle de gratis
+                // ðŸ”¥ LÃ“GICA AUTOMÃTICA: Activar/desactivar toggle de gratis
                 const freeToggle = document.getElementById('freeToggle');
                 if (val === 0) {
                     if (!freeToggle.checked) {
@@ -5540,7 +5561,7 @@
                         const event = new Event('change');
                         freeToggle.dispatchEvent(event);
                     }
-                    // 🔥 CLEAR ERROR ON SPINNER CHANGE IF > 0
+                    // ðŸ”¥ CLEAR ERROR ON SPINNER CHANGE IF > 0
                     clearInlineError('priceInput');
                 }
             }
@@ -5550,7 +5571,7 @@
             if (id === 'priceInput') {
                 updatePrice();
             } else {
-                // saveDraftAuto(); // 🔥 DISABLED AUTO-SAVE
+                // saveDraftAuto(); // ðŸ”¥ DISABLED AUTO-SAVE
             }
         };
 
@@ -5574,7 +5595,7 @@
                 // Si es gratis, deshabilitar todo y mostrar GRATIS
                 priceInput.disabled = true;
 
-                // 🔥 LIMPIAR ERRORES SI EXISTEN
+                // ðŸ”¥ LIMPIAR ERRORES SI EXISTEN
                 priceInput.classList.remove('error');
                 const formGroup = priceInput.closest('.form-group');
                 if (formGroup) {
@@ -5593,7 +5614,7 @@
                 if (displayOldPrice) displayOldPrice.innerText = (price > 0 && priceInput.value !== '') ? `$${price}` : '';
                 if (displayNewPrice) displayNewPrice.innerText = 'GRATIS';
 
-                // 🔥 OCULTAR SECCION OFERTAS Y MOSTRAR INFO DE EMAIL
+                // ðŸ”¥ OCULTAR SECCION OFERTAS Y MOSTRAR INFO DE EMAIL
                 if (offerSection) offerSection.style.display = 'none';
                 if (freeInfo) freeInfo.style.display = 'block';
 
@@ -5603,7 +5624,7 @@
             // Si NO es gratis...
             priceInput.disabled = false;
 
-            // 🔥 MOSTRAR SECCION OFERTAS Y OCULTAR INFO DE EMAIL
+            // ðŸ”¥ MOSTRAR SECCION OFERTAS Y OCULTAR INFO DE EMAIL
             const offerMsg = document.getElementById('offerDisabledMsg');
 
             if (offerSection) {
@@ -5634,7 +5655,7 @@
         function initCollaborators() {
             const collabSearch = document.getElementById('collabSearch');
             if (!collabSearch) {
-                console.warn('⚠️ #collabSearch no existe aún');
+                console.warn('âš ï¸ #collabSearch no existe aÃºn');
                 return;
             }
 
@@ -5673,14 +5694,14 @@
                 return;
             }
 
-            // ✅ VALIDAR userId
+            // âœ… VALIDAR userId
             if (!userId) {
                 showToast('Usuario no autenticado', 'error');
                 return;
             }
 
             try {
-                console.log('🔍 Buscando:', query);
+                console.log('ðŸ” Buscando:', query);
 
                 const { data: users, error } = await supabaseClient
                     .from('users')
@@ -5690,32 +5711,32 @@
                     .limit(5);
 
                 if (error) {
-                    console.error('❌ Error query:', error);
+                    console.error('âŒ Error query:', error);
                     document.getElementById('collabDropdown').style.display = 'none';
-                    showToast('Error buscando usuarios', 'error'); // ✅ AGREGAR
+                    showToast('Error buscando usuarios', 'error'); // âœ… AGREGAR
                     return;
                 }
 
-                console.log('✅ Resultados:', users);
+                console.log('âœ… Resultados:', users);
 
                 availableUsers = (users || []).map(u => ({
                     id: u.id,
                     name: u.nickname || 'Usuario sin nombre',
-                    // Asegurar URL válida sin caracteres raros
+                    // Asegurar URL vÃ¡lida sin caracteres raros
                     avatar_url: u.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(u.nickname || 'U')}&background=333&color=fff`
                 }));
 
                 renderCollabDropdown();
             } catch (e) {
-                console.error('❌ Error en searchUsers:', e);
-                showToast('Error en búsqueda: ' + e.message, 'error');
+                console.error('âŒ Error en searchUsers:', e);
+                showToast('Error en bÃºsqueda: ' + e.message, 'error');
             }
         }
         // Renderizar dropdown de colaboradores
         function renderCollabDropdown() {
             const dropdown = document.getElementById('collabDropdown');
 
-            // 🔥 FILTRAR usuarios que ya están agregados
+            // ðŸ”¥ FILTRAR usuarios que ya estÃ¡n agregados
             const filteredUsers = availableUsers.filter(user =>
                 !collaborators.some(c => c.id === user.id)
             );
@@ -5747,7 +5768,7 @@
             if (!user) return;
 
             if (collaborators.length >= 4) {
-                showToast("Máximo 5 colaboradores (tú + 4)", 'error');
+                showToast("MÃ¡ximo 5 colaboradores (tÃº + 4)", 'error');
                 return;
             }
 
@@ -5767,9 +5788,9 @@
             saveDraftAuto();
         };
 
-        // ELIMINAR la función addCollaborator antigua y reemplazar por:
+        // ELIMINAR la funciÃ³n addCollaborator antigua y reemplazar por:
         function addCollaborator(name) {
-            // Esta función ya no se usa, se usa selectCollaborator
+            // Esta funciÃ³n ya no se usa, se usa selectCollaborator
         }
 
         // Renderizar colaboradores con avatares
@@ -5825,11 +5846,11 @@
 `;
                 list.appendChild(row);
             });
-            // 🔥 INICIALIZAR SPINNERS DE COLABORADORES
-            // 🔥 ANTES de agregar nuevos listeners, limpiar los anteriores
+            // ðŸ”¥ INICIALIZAR SPINNERS DE COLABORADORES
+            // ðŸ”¥ ANTES de agregar nuevos listeners, limpiar los anteriores
             setTimeout(() => {
                 document.querySelectorAll('.collab-spin').forEach(btn => {
-                    // 🔥 CLONAR para eliminar listeners anteriores
+                    // ðŸ”¥ CLONAR para eliminar listeners anteriores
                     const newBtn = btn.cloneNode(true);
                     btn.parentNode.replaceChild(newBtn, btn);
 
@@ -5864,7 +5885,7 @@
             errorDiv.style.display = 'none';
             errorDiv.innerText = '';
 
-            // VALIDACIÓN 1: Suma excede 100%
+            // VALIDACIÃ“N 1: Suma excede 100%
             if (main < 0) {
                 errorDiv.innerHTML = `
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 6px;">
@@ -5881,7 +5902,7 @@
                 return;
             }
 
-            // VALIDACIÓN 2: Propietario menos de 10% (SIEMPRE APLICA SI HAY COLABORADORES)
+            // VALIDACIÃ“N 2: Propietario menos de 10% (SIEMPRE APLICA SI HAY COLABORADORES)
             if (main < 10 && collaborators.length > 0) {
                 errorDiv.innerHTML = `
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 6px;">
@@ -5889,7 +5910,7 @@
                 <line x1="12" y1="9" x2="12" y2="13"></line>
                 <line x1="12" y1="17" x2="12.01" y2="17"></line>
             </svg>
-            Tú (propietario) debes tener mínimo 10% de regalías
+            TÃº (propietario) debes tener mÃ­nimo 10% de regalÃ­as
         `;
                 errorDiv.style.display = 'flex';
                 errorDiv.style.alignItems = 'center';
@@ -5921,34 +5942,34 @@
             isDirty = true;
             saveDraftAuto();
         };
-        // 🔥 NUEVA FUNCIÓN: Actualizar porcentaje de colaborador
-        // 🔥 FUNCIÓN MEJORADA: Actualizar porcentaje de colaborador
+        // ðŸ”¥ NUEVA FUNCIÃ“N: Actualizar porcentaje de colaborador
+        // ðŸ”¥ FUNCIÃ“N MEJORADA: Actualizar porcentaje de colaborador
         window.updateCollabPercent = (index, value) => {
-            // Permitir solo números y guion para validar correctamente
+            // Permitir solo nÃºmeros y guion para validar correctamente
             let cleanValue = value.toString().replace(/[^0-9-]/g, '');
 
-            // Evitar múltiples guiones
+            // Evitar mÃºltiples guiones
             if ((cleanValue.match(/-/g) || []).length > 1) {
                 cleanValue = cleanValue.replace(/-/g, '');
             }
 
             let percent = parseInt(cleanValue);
 
-            // Si es NaN (vacío o inválido), tratar como 0 temporalmente pero no sobrescribir si está escribiendo
+            // Si es NaN (vacÃ­o o invÃ¡lido), tratar como 0 temporalmente pero no sobrescribir si estÃ¡ escribiendo
             if (isNaN(percent)) percent = 0;
 
-            // 🔥 LÍMITE INFERIOR: No permitir negativos
+            // ðŸ”¥ LÃMITE INFERIOR: No permitir negativos
             if (percent < 0) percent = 0;
 
-            // 🔥 CALCULAR MÁXIMO PERMITIDO
+            // ðŸ”¥ CALCULAR MÃXIMO PERMITIDO
             const totalWithoutCurrent = collaborators
                 .filter((_, i) => i !== index)
                 .reduce((sum, c) => sum + c.percent, 0);
 
-            // El propietario SIEMPRE debe tener mínimo 10%
+            // El propietario SIEMPRE debe tener mÃ­nimo 10%
             const maxAllowed = Math.max(0, 90 - totalWithoutCurrent);
 
-            // 🔥 LÍMITE SUPERIOR: No exceder el máximo permitido
+            // ðŸ”¥ LÃMITE SUPERIOR: No exceder el mÃ¡ximo permitido
             if (percent > maxAllowed) {
                 percent = maxAllowed;
             }
@@ -5960,7 +5981,7 @@
             const input = document.getElementById(`collabPercent${index}`);
             if (input) {
                 input.value = percent;
-                // Si el valor era negativo y se corrigió, forzar actualización visual
+                // Si el valor era negativo y se corrigiÃ³, forzar actualizaciÃ³n visual
                 if (value.includes('-')) input.value = percent;
             }
 
@@ -5968,27 +5989,27 @@
             isDirty = true;
             saveDraftAuto();
         };
-        // 🔥 FUNCIÓN MEJORADA: Ajustar porcentaje con spinners
-        // 🔥 FUNCIÓN MEJORADA: Ajustar porcentaje con spinners
+        // ðŸ”¥ FUNCIÃ“N MEJORADA: Ajustar porcentaje con spinners
+        // ðŸ”¥ FUNCIÃ“N MEJORADA: Ajustar porcentaje con spinners
         window.adjustCollabPercent = (index, delta) => {
-            // Asegurar que trabajamos con números
+            // Asegurar que trabajamos con nÃºmeros
             let currentPercent = parseInt(collaborators[index].percent);
             if (isNaN(currentPercent)) currentPercent = 0;
 
             let newPercent = currentPercent + delta;
 
-            // 🔥 CALCULAR LÍMITES DINÁMICOS
+            // ðŸ”¥ CALCULAR LÃMITES DINÃMICOS
             const totalWithoutCurrent = collaborators
                 .filter((_, i) => i !== index)
                 .reduce((sum, c) => sum + (parseInt(c.percent) || 0), 0);
 
             const maxAllowed = Math.max(0, 90 - totalWithoutCurrent);
 
-            // 🔥 APLICAR LÍMITES ESTRICTOS
+            // ðŸ”¥ APLICAR LÃMITES ESTRICTOS
             if (newPercent < 0) newPercent = 0;
             if (newPercent > maxAllowed) newPercent = maxAllowed;
 
-            // Actualizar usando la función principal con el valor seguro
+            // Actualizar usando la funciÃ³n principal con el valor seguro
             updateCollabPercent(index, newPercent.toString());
         };
 
@@ -6021,9 +6042,9 @@
         // VISTA PREVIA (STEP 4)
         // ========================================
         function renderPreview() {
-            const filesItems = []; // ✅ Declarar al inicio
+            const filesItems = []; // âœ… Declarar al inicio
 
-            // Cover y título
+            // Cover y tÃ­tulo
             const cardCover = document.getElementById('previewCardCover');
             if (formData.coverBlob) {
                 cardCover.innerHTML = `<img src="${URL.createObjectURL(formData.coverBlob)}" alt="Cover">`;
@@ -6031,8 +6052,8 @@
                 cardCover.innerHTML = '<span style="color: #666;">Sin portada</span>';
             }
 
-            document.getElementById('previewCardTitle').innerText = document.getElementById('titleInput').value || 'Sin título';
-            // 🔥 NUEVO: Mostrar nombre del productor
+            document.getElementById('previewCardTitle').innerText = document.getElementById('titleInput').value || 'Sin tÃ­tulo';
+            // ðŸ”¥ NUEVO: Mostrar nombre del productor
             const producerNameEl = document.getElementById('previewCardProducer');
             if (producerNameEl) {
                 supabaseClient
@@ -6048,7 +6069,7 @@
             }
             document.getElementById('previewCardTags').innerHTML = tags.map(tag => `<div class="card-tag">#${tag}</div>`).join('');
 
-            // 🔥 REEMPLAZAR TODA LA SECCIÓN DE PRECIOS (línea ~2440):
+            // ðŸ”¥ REEMPLAZAR TODA LA SECCIÃ“N DE PRECIOS (lÃ­nea ~2440):
             const isFree = document.getElementById('freeToggle').checked;
             const price = parseFloat(document.getElementById('priceInput').value) || 0;
             // const offer = parseFloat(document.getElementById('offerInput').value) || 0; // Removed: Offer functionality removed
@@ -6059,7 +6080,7 @@
             //     finalPrice = offerType === 'fixed' ? price - offer : price * (1 - offer / 100); // Removed: Offer functionality removed
             // } // Removed: Offer functionality removed
 
-            // 🔥 CREAR EL CONTENEDOR DE PRECIO + BOTÓN
+            // ðŸ”¥ CREAR EL CONTENEDOR DE PRECIO + BOTÃ“N
             const cardPriceContainer = document.querySelector('.card-content');
             const existingPriceRow = cardPriceContainer.querySelector('.card-price-row');
 
@@ -6083,25 +6104,25 @@
     `;
 
             cardPriceContainer.insertAdjacentHTML('beforeend', priceRowHTML);
-            // 🔥 SECCIÓN DE ARCHIVOS CON ICONOS SVG
+            // ðŸ”¥ SECCIÃ“N DE ARCHIVOS CON ICONOS SVG
             const fileTypes = [
                 {
                     key: 'coverBlob',
                     label: 'Portada',
                     icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>',
-                    fileName: formData.coverBlob ? 'cover.jpg' : null // 🔥 NUEVO
+                    fileName: formData.coverBlob ? 'cover.jpg' : null // ðŸ”¥ NUEVO
                 },
                 {
                     key: 'kit',
                     label: 'Preset',
                     icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>',
-                    fileName: formData.files.kit ? formData.files.kit.name : null // 🔥 NUEVO
+                    fileName: formData.files.kit ? formData.files.kit.name : null // ðŸ”¥ NUEVO
                 },
                 {
                     key: 'audio',
                     label: 'Preview Audio',
                     icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>',
-                    fileName: formData.files.audio ? formData.files.audio.name : null // 🔥 NUEVO
+                    fileName: formData.files.audio ? formData.files.audio.name : null // ðŸ”¥ NUEVO
                 }
             ];
 
@@ -6126,8 +6147,8 @@
             style="cursor: pointer; background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; border-radius: 8px; padding: 12px; transition: all 0.2s;">
                         <div class="verification-item-icon">${icon}</div>
                         <div class="verification-item-text">${label}
-                            <span style="color: #ef4444; font-size: 12px; font-weight: 600;">✗ Falta subir - Click para ir</span>
-                            <span style="margin-left: 8px; color: #ef4444;">→</span>
+                            <span style="color: #ef4444; font-size: 12px; font-weight: 600;">âœ— Falta subir - Click para ir</span>
+                            <span style="margin-left: 8px; color: #ef4444;">â†’</span>
                         </div>
                     </div>
                 `);
@@ -6136,13 +6157,13 @@
 
             document.getElementById('verifyFiles').innerHTML = filesItems.join('');
 
-            // 🔥 DETALLES con iconos
+            // ðŸ”¥ DETALLES con iconos
             // DETALLES con iconos
 
-            // 🔥 DETALLES con iconos
+            // ðŸ”¥ DETALLES con iconos
             // DETALLES con iconos
             const releaseDate = document.getElementById('dateInput').value;
-            // 🔥 FIX: Manual Date Parse to avoid UTC shift
+            // ðŸ”¥ FIX: Manual Date Parse to avoid UTC shift
             let formattedDate = 'No especificada';
             if (releaseDate) {
                 const parts = releaseDate.split('-');
@@ -6160,7 +6181,7 @@
             const visibility = document.getElementById('visibilityInput').value;
             const visibilityLabel = {
                 'private': 'Privado',
-                'public': 'Público',
+                'public': 'PÃºblico',
                 'unlisted': 'No listado'
             }[visibility] || visibility;
 
@@ -6213,7 +6234,7 @@
         <div class="verification-item-value" style="color: #ddd;">${visibilityLabel}</div>
     </div>
 `;
-            // 🔥 COLABORADORES: Siempre mostrar propietario
+            // ðŸ”¥ COLABORADORES: Siempre mostrar propietario
             const main = 100 - collaborators.reduce((sum, c) => sum + c.percent, 0);
             let collabHTML = `
         <div class="verification-item">
@@ -6223,7 +6244,7 @@
                     <circle cx="12" cy="7" r="4"></circle>
                 </svg>
             </div>
-            <div class="verification-item-text"><strong>Tú (Propietario)</strong></div>
+            <div class="verification-item-text"><strong>TÃº (Propietario)</strong></div>
             <div class="verification-item-value" style="color: #00ff88;">${main}%</div>
         </div>
     `;
@@ -6249,20 +6270,20 @@
             document.getElementById('verifyCollabSection').style.display = 'block';
         }
         // ========================================
-        // NAVEGACIÓN ENTRE STEPS
+        // NAVEGACIÃ“N ENTRE STEPS
         // ========================================
         function updateStepUI() {
 
 
-            // 🔥 BARRA DE PROGRESO: Solo hasta el círculo activo
+            // ðŸ”¥ BARRA DE PROGRESO: Solo hasta el cÃ­rculo activo
             // Paso 1: 0% (sin barra)
-            // Paso 2: 33.33% (hasta el centro del círculo 2)
-            // Paso 3: 66.66% (hasta el centro del círculo 3)
-            // Paso 4: 100% (hasta el centro del círculo 4)
-            // 🔥 NUEVO CÁLCULO: La barra llega HASTA el círculo activo (no más allá)
-            // 🔥 CALCULAR POSICIÓN EXACTA DE CADA CÍRCULO
-            // 🔥 BARRA DE PROGRESO: Llega COMPLETA hasta el círculo activo
-            // 🔥 BARRA DE PROGRESO: Posiciones EXACTAS de cada círculo
+            // Paso 2: 33.33% (hasta el centro del cÃ­rculo 2)
+            // Paso 3: 66.66% (hasta el centro del cÃ­rculo 3)
+            // Paso 4: 100% (hasta el centro del cÃ­rculo 4)
+            // ðŸ”¥ NUEVO CÃLCULO: La barra llega HASTA el cÃ­rculo activo (no mÃ¡s allÃ¡)
+            // ðŸ”¥ CALCULAR POSICIÃ“N EXACTA DE CADA CÃRCULO
+            // ðŸ”¥ BARRA DE PROGRESO: Llega COMPLETA hasta el cÃ­rculo activo
+            // ðŸ”¥ BARRA DE PROGRESO: Posiciones EXACTAS de cada cÃ­rculo
             const progressBar = document.getElementById('stepsProgress');
             const stepsContainer = document.querySelector('.steps-container');
 
@@ -6270,41 +6291,41 @@
                 const circles = document.querySelectorAll('.step');
 
                 if (currentStep === 1) {
-                    // Paso 1: Barra hasta el CENTRO del círculo 1
+                    // Paso 1: Barra hasta el CENTRO del cÃ­rculo 1
                     const circle1 = circles[0];
                     const circle1Center = circle1.offsetLeft + (circle1.offsetWidth / 2);
                     progressBar.style.width = `${circle1Center - 20}px`; // -20 por el left inicial
                 } else if (currentStep === 2) {
-                    // Paso 2: Barra hasta el CENTRO del círculo 2
+                    // Paso 2: Barra hasta el CENTRO del cÃ­rculo 2
                     const circle2 = circles[1];
                     const circle2Center = circle2.offsetLeft + (circle2.offsetWidth / 2);
                     progressBar.style.width = `${circle2Center - 20}px`;
                 } else if (currentStep === 3) {
-                    // Paso 3: Barra hasta el CENTRO del círculo 3
+                    // Paso 3: Barra hasta el CENTRO del cÃ­rculo 3
                     const circle3 = circles[2];
                     const circle3Center = circle3.offsetLeft + (circle3.offsetWidth / 2);
                     progressBar.style.width = `${circle3Center - 20}px`;
                 } else if (currentStep === 4) {
                     // Paso 4: Barra COMPLETA hasta el final
-                    progressBar.style.width = `calc(100% - 40px)`; // 🔥 Llega hasta el borde derecho
+                    progressBar.style.width = `calc(100% - 40px)`; // ðŸ”¥ Llega hasta el borde derecho
                 }
             }
 
-            // 🔥 ACTUALIZAR CÍRCULOS
+            // ðŸ”¥ ACTUALIZAR CÃRCULOS
             document.querySelectorAll('.step').forEach(s => {
                 const num = parseInt(s.dataset.step);
 
-                // 🔥 LIMPIAR CLASES ANTERIORES
+                // ðŸ”¥ LIMPIAR CLASES ANTERIORES
                 s.classList.remove('active', 'completed');
 
                 if (num === currentStep) {
-                    // 🔥 CÍRCULO ACTIVO: Borde morado, sin relleno
+                    // ðŸ”¥ CÃRCULO ACTIVO: Borde morado, sin relleno
                     s.classList.add('active');
                 } else if (num < currentStep) {
-                    // 🔥 CÍRCULOS COMPLETADOS: Fondo morado, número blanco
+                    // ðŸ”¥ CÃRCULOS COMPLETADOS: Fondo morado, nÃºmero blanco
                     s.classList.add('completed');
                 }
-                // 🔥 Los círculos futuros quedan grises por defecto (no necesitan clase)
+                // ðŸ”¥ Los cÃ­rculos futuros quedan grises por defecto (no necesitan clase)
             });
             // Mostrar/ocultar form-steps
             document.querySelectorAll('.form-step').forEach(f => f.classList.remove('active'));
@@ -6313,19 +6334,19 @@
                 activeStep.classList.add('active');
 
             } else {
-                console.error('❌ No se encontró #step' + currentStep);
+                console.error('âŒ No se encontrÃ³ #step' + currentStep);
             }
 
-            // Botón "Anterior"
+            // BotÃ³n "Anterior"
             document.getElementById('prevBtn').style.visibility = currentStep === 1 ? 'hidden' : 'visible';
 
-            // Botón "Siguiente" / "Publicar"
+            // BotÃ³n "Siguiente" / "Publicar"
             document.getElementById('nextBtn').style.display = currentStep === 4 ? 'none' : 'block';
             document.getElementById('publishDropdown').style.display = currentStep === 4 ? 'inline-block' : 'none';
 
 
         }
-        // 🔥 NUEVA FUNCIÓN: Ir a un step específico desde la preview
+        // ðŸ”¥ NUEVA FUNCIÃ“N: Ir a un step especÃ­fico desde la preview
         window.goToStep = function (stepNumber) {
             if (stepNumber < 1 || stepNumber > totalSteps) return;
             currentStep = stepNumber;
@@ -6345,7 +6366,7 @@
 
 
 
-            // 🔥 Auto-generar tags al llegar al Step 2 - DISABLED PER USER REQUEST
+            // ðŸ”¥ Auto-generar tags al llegar al Step 2 - DISABLED PER USER REQUEST
             // if (currentStep === 1 && tags.length === 0) { ... }
 
             // Si vamos al step 4, renderizar preview
@@ -6365,7 +6386,7 @@
 
             updateStepUI();
 
-            // 🔥 FORZAR actualización de la barra DESPUÉS de updateStepUI
+            // ðŸ”¥ FORZAR actualizaciÃ³n de la barra DESPUÃ‰S de updateStepUI
             setTimeout(() => {
                 const progressBar = document.getElementById('stepsProgress');
                 const circles = document.querySelectorAll('.step');
@@ -6387,9 +6408,9 @@
                 } else if (currentStep === 4) {
                     progressBar.style.width = `calc(100% - 40px)`;
                 }
-            }, 100); // ← Aumentado a 100ms para dar tiempo al DOM
+            }, 100); // â† Aumentado a 100ms para dar tiempo al DOM
         }
-        // 🔴 FUNCIÓN MEJORADA: validateStep con Inline Validation
+        // ðŸ”´ FUNCIÃ“N MEJORADA: validateStep con Inline Validation
         function validateStep(step) {
             clearInlineErrors(); // Limpiar errores previos
             let isValid = true;
@@ -6420,8 +6441,8 @@
                 // 4. Title
                 const titleInput = document.getElementById('titleInput');
                 if (!titleInput.value.trim()) {
-                    showInlineError('titleInput', 'El título es obligatorio');
-                    errors.push('Falta el título del producto');
+                    showInlineError('titleInput', 'El tÃ­tulo es obligatorio');
+                    errors.push('Falta el tÃ­tulo del producto');
                     isValid = false;
                 }
 
@@ -6429,10 +6450,10 @@
                 const hasDate = document.getElementById('dateInput').value !== '';
                 const dateValid = validateReleaseDate();
                 if (!hasDate || !dateValid) {
-                    // validateReleaseDate ya muestra sus propios errores si es inválida,
-                    // pero aquí aseguramos que si está vacío también marque error.
+                    // validateReleaseDate ya muestra sus propios errores si es invÃ¡lida,
+                    // pero aquÃ­ aseguramos que si estÃ¡ vacÃ­o tambiÃ©n marque error.
                     if (!hasDate) showInlineError('dateInput', 'La fecha de lanzamiento es obligatoria');
-                    errors.push('Fecha de lanzamiento inválida o faltante');
+                    errors.push('Fecha de lanzamiento invÃ¡lida o faltante');
                     isValid = false;
                 }
             }
@@ -6442,27 +6463,27 @@
                 const priceInput = document.getElementById('priceInput');
                 const price = parseFloat(priceInput.value);
 
-                // 🔥 Validar precio mínimo
+                // ðŸ”¥ Validar precio mÃ­nimo
                 if (!isFree && (!price || price < 1)) {
-                    showInlineError('priceInput', 'El precio mínimo es $1');
+                    showInlineError('priceInput', 'El precio mÃ­nimo es $1');
                     errors.push('El precio debe ser mayor a $0');
                     isValid = false;
                 }
 
-                // 🔥 Validar Tags (Mínimo 1)
+                // ðŸ”¥ Validar Tags (MÃ­nimo 1)
                 if (tags.length === 0) {
                     showInlineError('tagInput', 'Debes agregar al menos 1 tag');
                     errors.push('Faltan los tags');
                     isValid = false;
                 }
 
-                // 🔥 Validar Presets (Min 1)
+                // ðŸ”¥ Validar Presets (Min 1)
                 const soundsInput = document.getElementById('soundsInput');
                 const soundsVal = parseInt(soundsInput.value) || 0;
 
                 if (soundsVal < 1) {
                     showInlineError('soundsInput', 'Debe haber al menos 1 preset');
-                    errors.push('El número de presets debe ser mayor a 0');
+                    errors.push('El nÃºmero de presets debe ser mayor a 0');
                     isValid = false;
                 }
             }
@@ -6471,15 +6492,15 @@
                 const totalCollabPercent = collaborators.reduce((sum, c) => sum + c.percent, 0);
                 const mainUserPercent = 100 - totalCollabPercent;
 
-                // VALIDACIÓN 1: Suma total no puede exceder 100%
+                // VALIDACIÃ“N 1: Suma total no puede exceder 100%
                 if (mainUserPercent < 0) {
                     showToast('El porcentaje total excede 100%', 'error');
                     return false;
                 }
 
-                // VALIDACIÓN 2: Si hay colaboradores, propietario debe tener mínimo 10%
+                // VALIDACIÃ“N 2: Si hay colaboradores, propietario debe tener mÃ­nimo 10%
                 if (collaborators.length > 0 && mainUserPercent < 10) {
-                    showToast('Debes conservar mínimo 10% de regalías', 'error');
+                    showToast('Debes conservar mÃ­nimo 10% de regalÃ­as', 'error');
                     return false;
                 }
             }
@@ -6506,7 +6527,7 @@
             // 1. Agregar clase de error al elemento (input, dropzone, etc)
             element.classList.add('error');
 
-            // 🔥 FIX: Determinar contenedor correcto para el mensaje
+            // ðŸ”¥ FIX: Determinar contenedor correcto para el mensaje
             // Si el padre es .number-control (flex) O es tagInput, el error debe ir afuera (en el abuelo/form-group)
             let targetContainer = element.parentNode;
 
@@ -6514,7 +6535,7 @@
                 element.id === 'tagInput' ||
                 element.classList.contains('tags-input') ||
                 element.parentNode.classList.contains('tags-container')) {
-                // Intentar ir al .form-group más cercano, sino subir dos niveles
+                // Intentar ir al .form-group mÃ¡s cercano, sino subir dos niveles
                 targetContainer = element.closest('.form-group') || element.parentNode.parentNode;
             }
 
@@ -6528,7 +6549,7 @@
                 targetContainer.appendChild(errorDiv);
             }
 
-            // Usar innerHTML para permitir saltos de línea y formateo
+            // Usar innerHTML para permitir saltos de lÃ­nea y formateo
             errorDiv.innerHTML = message;
             errorDiv.style.display = 'block'; // Changed from flex to block for better multi-line handling
         }
@@ -6631,7 +6652,7 @@
             const keywords = [];
             const text = (title + ' ' + description).toLowerCase();
 
-            // 1. Análisis de Texto Básico
+            // 1. AnÃ¡lisis de Texto BÃ¡sico
             const genreKeywords = {
                 'trap': ['trap', 'dark', 'hard', '808', 'metro', 'future'],
                 'drill': ['drill', 'uk drill', 'ny drill', 'slide', 'gliding'],
@@ -6648,7 +6669,7 @@
                 }
             }
 
-            // 2. Análisis de Audio (Simulado si no hay real)
+            // 2. AnÃ¡lisis de Audio (Simulado si no hay real)
             if (audioAnalysis) {
                 if (audioAnalysis.bpm > 130) keywords.push('fast', 'energetic', 'club');
                 if (audioAnalysis.bpm < 100) keywords.push('slow', 'mellow', 'vibe');
@@ -6659,7 +6680,7 @@
                 keywords.push('drumkit', 'samplepack', 'loops', 'oneshots', 'producer', 'sounds');
             }
 
-            // Garantizar al menos 6 tags únicos
+            // Garantizar al menos 6 tags Ãºnicos
             const uniqueTags = [...new Set(keywords)];
             while (uniqueTags.length < 6) {
                 const defaults = ['trap', 'hiphop', 'loop', 'sound', 'kit', 'drums', 'wav'];
@@ -6670,9 +6691,9 @@
             return uniqueTags;
         }
         // ========================================
-        // CARGAR BORRADOR (VERSIÓN MEJORADA)
+        // CARGAR BORRADOR (VERSIÃ“N MEJORADA)
         // ========================================
-        let isRestoringDraft = false; // 🔥 PREVENT DOUBLE CALLS
+        let isRestoringDraft = false; // ðŸ”¥ PREVENT DOUBLE CALLS
 
         async function loadDraft() {
             if (isRestoringDraft) return;
@@ -6715,10 +6736,10 @@
 
                 localStorage.setItem('offszn_has_draft', 'true');
 
-                // 🔥 SYNC marker for next time (in case it was missing)
+                // ðŸ”¥ SYNC marker for next time (in case it was missing)
                 localStorage.setItem('offszn_has_draft', 'true');
 
-                // ✅ SHOW LOADING NOW (Verified content exists)
+                // âœ… SHOW LOADING NOW (Verified content exists)
                 showLoading();
 
                 const product = data; // Rename for clarity
@@ -6735,12 +6756,12 @@
                     category: product.category,
                 };
 
-                // ✅ Restaurar categoría
+                // âœ… Restaurar categorÃ­a
                 if (draftData.category) {
                     updateCategoryUI(draftData.category);
                 }
 
-                // ✅ Restaurar campos de texto (con validación)
+                // âœ… Restaurar campos de texto (con validaciÃ³n)
                 const titleInput = document.getElementById('titleInput');
                 if (draftData.title) {
                     if (titleInput) {
@@ -6761,7 +6782,7 @@
 
                 const dateInput = document.getElementById('dateInput');
                 if (dateInput) {
-                    // 🔥 SIEMPRE usar fecha actual, ignorar la del draft
+                    // ðŸ”¥ SIEMPRE usar fecha actual, ignorar la del draft
                     const now = new Date();
                     const year = now.getFullYear();
                     const month = String(now.getMonth() + 1).padStart(2, '0');
@@ -6771,7 +6792,7 @@
 
 
                 // ========================================
-                // 🔥 COVER
+                // ðŸ”¥ COVER
                 // ========================================
                 if (data.cover_url) {
                     try {
@@ -6798,7 +6819,7 @@
                             }
                         }
                     } catch (e) {
-                        console.warn('⚠️ Error con cover:', e.message);
+                        console.warn('âš ï¸ Error con cover:', e.message);
                         await supabaseClient
                             .from('preset_drafts')
                             .update({ cover_url: null })
@@ -6807,7 +6828,7 @@
                 }
 
                 // ========================================
-                // 🔥 KIT - CORREGIDO
+                // ðŸ”¥ KIT - CORREGIDO
                 // ========================================
                 if (data.preset_url) {
                     try {
@@ -6820,7 +6841,7 @@
                             if (response.ok) {
                                 const blob = await response.blob();
 
-                                // 🔥 EXTRAER NOMBRE LIMPIO (sin timestamp ni UUID)
+                                // ðŸ”¥ EXTRAER NOMBRE LIMPIO (sin timestamp ni UUID)
                                 let displayName = data.preset_url.split('/').pop();
                                 displayName = displayName.replace(/^\d+_[a-f0-9-]+_/, ''); // Remover timestamp_uuid_
 
@@ -6835,16 +6856,16 @@
                             <div class="file-name">${displayName}</div>
                             <div class="file-size">${(blob.size / (1024 * 1024)).toFixed(2)} MB</div>
                         </div>
-                        <button type="button" class="remove-file" onclick="removeFile('kit')">✕</button>
+                        <button type="button" class="remove-file" onclick="removeFile('kit')">âœ•</button>
                     </div>
                 `;
                                     filesUploaded.kit = true;
-                                    console.log('✅ Preset restaurado');
+                                    console.log('âœ… Preset restaurado');
                                 }
                             }
                         }
                     } catch (e) {
-                        console.warn('⚠️ Error con preset:', e.message);
+                        console.warn('âš ï¸ Error con preset:', e.message);
                         await supabaseClient
                             .from('preset_drafts')
                             .update({ preset_url: null })
@@ -6853,7 +6874,7 @@
                 }
 
                 // ========================================
-                // 🔥 AUDIO - CORREGIDO
+                // ðŸ”¥ AUDIO - CORREGIDO
                 // ========================================
                 if (data.audio_before_url) {
                     try {
@@ -6866,7 +6887,7 @@
                             if (response.ok) {
                                 const blob = await response.blob();
 
-                                // 🔥 EXTRAER NOMBRE LIMPIO (sin timestamp ni UUID)
+                                // ðŸ”¥ EXTRAER NOMBRE LIMPIO (sin timestamp ni UUID)
                                 let displayName = data.audio_before_url.split('/').pop();
                                 displayName = displayName.replace(/^\d+_[a-f0-9-]+_/, ''); // Remover timestamp_uuid_
 
@@ -6898,7 +6919,7 @@
                             <div class="file-name">${displayName}</div>
                             <div class="file-size">${(blob.size / (1024 * 1024)).toFixed(2)} MB</div>
                         </div>
-                        <button type="button" class="remove-file" onclick="removeFile('audio')">✕</button>
+                        <button type="button" class="remove-file" onclick="removeFile('audio')">âœ•</button>
                     </div>
                 `;
                                     filesUploaded.audio = true;
@@ -6907,7 +6928,7 @@
                             }
                         }
                     } catch (e) {
-                        console.warn('⚠️ Error con audio:', e.message);
+                        console.warn('âš ï¸ Error con audio:', e.message);
                         await supabaseClient
                             .from('preset_drafts')
                             .update({ audio_before_url: null })
@@ -6916,7 +6937,7 @@
                 }
 
                 // ========================================
-                // 🔥 AUDIO AFTER (NUEVO)
+                // ðŸ”¥ AUDIO AFTER (NUEVO)
                 // ========================================
                 if (data.audio_after_url) {
                     try {
@@ -6942,13 +6963,13 @@
                                                 <div class="file-name">${displayName}</div>
                                                 <div class="file-size">${(blob.size / (1024 * 1024)).toFixed(2)} MB</div>
                                             </div>
-                                            <button type="button" class="remove-file" onclick="removeFile('audio_after')">✕</button>
+                                            <button type="button" class="remove-file" onclick="removeFile('audio_after')">âœ•</button>
                                         </div>
                                         `;
                                     filesUploaded.audio_after = true;
                                 }
 
-                                // 🔥 Cargar en WaveSurfer After
+                                // ðŸ”¥ Cargar en WaveSurfer After
                                 if (wavesurferAfter) {
                                     wavesurferAfter.load(URL.createObjectURL(blob));
 
@@ -6968,14 +6989,14 @@
                             }
                         }
                     } catch (e) {
-                        console.warn('⚠️ Error con audio_after:', e.message);
+                        console.warn('âš ï¸ Error con audio_after:', e.message);
                         // Optional: clean up DB if needed, but safe to ignore for now
                     }
                 }
-                // 🔥 ESPERAR A QUE EL DOM ESTÉ LISTO
-                // 🔥 RESTORE TEXT DATA IMMEDIATELY (Don't wait for audio)
-                // const titleInput = document.getElementById('titleInput'); // 🔥 REMOVED REDECLARATION
-                // const descInput = document.getElementById('descInput'); // 🔥 REMOVED REDECLARATION
+                // ðŸ”¥ ESPERAR A QUE EL DOM ESTÃ‰ LISTO
+                // ðŸ”¥ RESTORE TEXT DATA IMMEDIATELY (Don't wait for audio)
+                // const titleInput = document.getElementById('titleInput'); // ðŸ”¥ REMOVED REDECLARATION
+                // const descInput = document.getElementById('descInput'); // ðŸ”¥ REMOVED REDECLARATION
 
                 if (data.title && titleInput) {
                     titleInput.value = data.title;
@@ -6991,7 +7012,7 @@
                     if (descCount) descCount.textContent = data.description.length;
                 }
 
-                // 🔥 ESPERAR A QUE EL DOM ESTÉ LISTO & AUDIO READY
+                // ðŸ”¥ ESPERAR A QUE EL DOM ESTÃ‰ LISTO & AUDIO READY
                 setTimeout(async () => {
                     try {
                         // Wait for audio if loaded
@@ -7016,11 +7037,11 @@
                 }, 100);
                 // Restaurar tags
                 if (data.tags && Array.isArray(data.tags)) {
-                    tags = [...new Set(data.tags)]; // 🔥 Eliminar duplicados
+                    tags = [...new Set(data.tags)]; // ðŸ”¥ Eliminar duplicados
                     renderTags();
                 }
 
-                // Restaurar precios (con validación)
+                // Restaurar precios (con validaciÃ³n)
                 const soundsInput = document.getElementById('soundsInput');
                 if (data.sounds_count && soundsInput) {
                     soundsInput.value = data.sounds_count;
@@ -7044,7 +7065,7 @@
 
                 updatePrice();
 
-                // Restaurar visibilidad y asegurar que esté habilitado
+                // Restaurar visibilidad y asegurar que estÃ© habilitado
                 const visibilityInput = document.getElementById('visibilityInput');
                 if (visibilityInput) {
                     if (data.visibility) visibilityInput.value = data.visibility;
@@ -7058,7 +7079,7 @@
                     renderCollabs();
                 }
 
-                // Restaurar navegación
+                // Restaurar navegaciÃ³n
                 if (data.current_step) currentStep = data.current_step;
                 if (data.completed_steps) completedSteps = data.completed_steps;
                 updateStepUI();
@@ -7066,9 +7087,9 @@
 
 
             } catch (e) {
-                console.error('❌ Error:', e);
+                console.error('âŒ Error:', e);
                 showToast('Error al restaurar', 'error');
-                hideLoading(); // 🔥 FIX: Ensure overlay is hidden on error
+                hideLoading(); // ðŸ”¥ FIX: Ensure overlay is hidden on error
             }
         }
         // ========================================
@@ -7093,15 +7114,15 @@
             try {
                 const productTitle = document.getElementById('titleInput').value || 'Nuevo Preset';
 
-                // 🔥 USAR LA TABLA 'notifications' EN LUGAR DE 'messages'
+                // ðŸ”¥ USAR LA TABLA 'notifications' EN LUGAR DE 'messages'
                 for (const collab of collaborators) {
                     const { error } = await supabaseClient
                         .from('notifications')
                         .insert({
                             user_id: collab.id,
                             type: 'collaboration_invite',
-                            title: '🎵 Nueva Colaboración',
-                            message: `Has sido agregado como ${collab.role} en "${productTitle}" con ${collab.percent}% de regalías.`,
+                            title: 'ðŸŽµ Nueva ColaboraciÃ³n',
+                            message: `Has sido agregado como ${collab.role} en "${productTitle}" con ${collab.percent}% de regalÃ­as.`,
                             data: {
                                 product_id: currentDraftId,
                                 producer_id: userId,
@@ -7113,24 +7134,24 @@
                         });
 
                     if (error) {
-                        console.error('Error insertando notificación:', error);
+                        console.error('Error insertando notificaciÃ³n:', error);
                         throw error;
                     }
                 }
 
                 showToast('Colaboradores notificados', 'success');
             } catch (error) {
-                console.error('❌ Error completo:', error);
+                console.error('âŒ Error completo:', error);
 
-                // 🔥 MOSTRAR ERROR ESPECÍFICO
+                // ðŸ”¥ MOSTRAR ERROR ESPECÃFICO
                 if (error.message.includes('relation') || error.message.includes('does not exist')) {
-                    showToast('⚠️ Tabla de notificaciones no existe. Creándola...', 'error');
-                    console.log('🔧 Necesitas crear la tabla "notifications" en Supabase');
+                    showToast('âš ï¸ Tabla de notificaciones no existe. CreÃ¡ndola...', 'error');
+                    console.log('ðŸ”§ Necesitas crear la tabla "notifications" en Supabase');
                 } else {
                     showToast('Error: ' + error.message, 'error');
                 }
             } finally {
-                // 🔥 HIDE OVERLAY ALWAYS
+                // ðŸ”¥ HIDE OVERLAY ALWAYS
                 const overlay = document.getElementById('publishOverlay');
                 if (overlay) overlay.style.display = 'none';
 
@@ -7139,11 +7160,11 @@
             }
         }
 
-        /// 🔥 AQUI EMEPIEZA LA FUNCION saveDraftAuto
+        /// ðŸ”¥ AQUI EMEPIEZA LA FUNCION saveDraftAuto
         async function saveDraftAuto() {
             if (isSaving || window.isPublishing) return;
 
-            // 🔥 Check for actual content
+            // ðŸ”¥ Check for actual content
             const title = document.getElementById('titleInput')?.value.trim();
             const hasFiles = formData.files.kit || formData.files.audio || formData.coverBlob;
             const hasTags = tags.length > 0;
@@ -7153,7 +7174,7 @@
                 return;
             }
 
-            // 🔥 EXIT IF IN EDIT MODE
+            // ðŸ”¥ EXIT IF IN EDIT MODE
             if (window.currentEditId) {
                 return;
             }
@@ -7200,10 +7221,10 @@
 
 
                 // ========================================
-                // 🔥 SUBIR COVER (SI HAY UNO NUEVO)
+                // ðŸ”¥ SUBIR COVER (SI HAY UNO NUEVO)
                 // ========================================
                 if (formData.coverBlob && !filesUploaded.cover) {
-                    // 🔥 DELETE OLD BEFORE UPLOAD
+                    // ðŸ”¥ DELETE OLD BEFORE UPLOAD
                     if (existingFiles.cover_url) await deleteFileFromStorage(existingFiles.cover_url, bucket);
 
                     const coverPath = `${userId}/covers/${Date.now()}_${crypto.randomUUID()}.jpg`;
@@ -7211,7 +7232,7 @@
                     const { error: coverError } = await supabaseClient.storage
                         .from('preset-drafts')
                         .upload(coverPath, formData.coverBlob, {
-                            upsert: false, // ✅ NO sobrescribir
+                            upsert: false, // âœ… NO sobrescribir
                             contentType: 'image/jpeg'
                         });
 
@@ -7220,9 +7241,9 @@
                         filesUploaded.cover = true;
 
                     } else {
-                        console.error('❌ Error subiendo cover:', coverError);
+                        console.error('âŒ Error subiendo cover:', coverError);
 
-                        // 🔥 Si el error es "duplicate", ignorarlo
+                        // ðŸ”¥ Si el error es "duplicate", ignorarlo
                         if (!coverError.message.includes('duplicate') && !coverError.message.includes('already exists')) {
                             showToast('Error subiendo cover: ' + coverError.message, 'error');
                         }
@@ -7230,10 +7251,10 @@
                 }
 
                 // ========================================
-                // 🔥 SUBIR KIT (SI HAY UNO NUEVO)
+                // ðŸ”¥ SUBIR KIT (SI HAY UNO NUEVO)
                 // ========================================
                 if (formData.files.kit && !filesUploaded.kit) {
-                    // 🔥 DELETE OLD BEFORE UPLOAD
+                    // ðŸ”¥ DELETE OLD BEFORE UPLOAD
                     if (existingFiles.preset_url) await deleteFileFromStorage(existingFiles.preset_url, bucket);
 
                     const cleanKitName = sanitizeFileName(formData.files.kit.name);
@@ -7242,7 +7263,7 @@
                     const { error: kitError } = await supabaseClient.storage
                         .from('preset-drafts')
                         .upload(kitPath, formData.files.kit, {
-                            upsert: false, // ✅ NO sobrescribir
+                            upsert: false, // âœ… NO sobrescribir
                             contentType: formData.files.kit.type || 'application/zip'
                         });
 
@@ -7251,9 +7272,9 @@
                         filesUploaded.kit = true;
 
                     } else {
-                        console.error('❌ Error subiendo kit:', kitError);
+                        console.error('âŒ Error subiendo kit:', kitError);
 
-                        // 🔥 Si el error es "duplicate", ignorarlo
+                        // ðŸ”¥ Si el error es "duplicate", ignorarlo
                         if (!kitError.message.includes('duplicate') && !kitError.message.includes('already exists')) {
                             showToast('Error subiendo kit: ' + kitError.message, 'error');
                         }
@@ -7261,10 +7282,10 @@
                 }
 
                 // ========================================
-                // 🔥 SUBIR AUDIO (SI HAY UNO NUEVO)
+                // ðŸ”¥ SUBIR AUDIO (SI HAY UNO NUEVO)
                 // ========================================
                 if (formData.files.audio && !filesUploaded.audio) {
-                    // 🔥 DELETE OLD BEFORE UPLOAD
+                    // ðŸ”¥ DELETE OLD BEFORE UPLOAD
                     if (existingFiles.audio_before_url) await deleteFileFromStorage(existingFiles.audio_before_url, bucket);
 
                     const cleanAudioName = sanitizeFileName(formData.files.audio.name);
@@ -7273,7 +7294,7 @@
                     const { error: audioError } = await supabaseClient.storage
                         .from('preset-drafts')
                         .upload(audioPath, formData.files.audio, {
-                            upsert: false, // ✅ NO sobrescribir
+                            upsert: false, // âœ… NO sobrescribir
                             contentType: formData.files.audio.type || 'audio/mpeg'
                         });
 
@@ -7282,9 +7303,9 @@
                         filesUploaded.audio = true;
 
                     } else {
-                        console.error('❌ Error subiendo audio:', audioError);
+                        console.error('âŒ Error subiendo audio:', audioError);
 
-                        // 🔥 Si el error es "duplicate", ignorarlo
+                        // ðŸ”¥ Si el error es "duplicate", ignorarlo
                         if (!audioError.message.includes('duplicate') && !audioError.message.includes('already exists')) {
                             showToast('Error subiendo audio: ' + audioError.message, 'error');
                         }
@@ -7292,10 +7313,10 @@
                 }
 
                 // ========================================
-                // 🔥 SUBIR AUDIO AFTER (SI HAY UNO NUEVO)
+                // ðŸ”¥ SUBIR AUDIO AFTER (SI HAY UNO NUEVO)
                 // ========================================
                 if (formData.files.audio_after && !filesUploaded.audio_after) {
-                    // 🔥 DELETE OLD BEFORE UPLOAD
+                    // ðŸ”¥ DELETE OLD BEFORE UPLOAD
                     if (existingFiles.audio_after_url) await deleteFileFromStorage(existingFiles.audio_after_url, bucket);
 
                     const cleanAudioName = sanitizeFileName(formData.files.audio_after.name);
@@ -7312,7 +7333,7 @@
                         draftData.audio_after_url = audioPath;
                         filesUploaded.audio_after = true;
                     } else {
-                        console.error('❌ Error subiendo audio after:', audioError);
+                        console.error('âŒ Error subiendo audio after:', audioError);
                         if (!audioError.message.includes('duplicate') && !audioError.message.includes('already exists')) {
                             showToast('Error subiendo audio after: ' + audioError.message, 'error');
                         }
@@ -7329,10 +7350,10 @@
                         .eq('id', currentDraftId);
 
                     if (updateError) {
-                        console.error('❌ Error actualizando draft:', updateError);
+                        console.error('âŒ Error actualizando draft:', updateError);
                         throw updateError;
                     }
-                    // console.log('✅ Draft actualizado:', currentDraftId); // Silenciado
+                    // console.log('âœ… Draft actualizado:', currentDraftId); // Silenciado
                 } else {
                     const { data, error: insertError } = await supabaseClient
                         .from('preset_drafts')
@@ -7341,7 +7362,7 @@
                         .single();
 
                     if (insertError) {
-                        console.error('❌ Error creando draft:', insertError);
+                        console.error('âŒ Error creando draft:', insertError);
                         throw insertError;
                     }
                     currentDraftId = data.id;
@@ -7349,15 +7370,15 @@
                     currentDraftId = data.id;
                 }
 
-                // 🔥 MARKER: Tenemos un borrador guardado
+                // ðŸ”¥ MARKER: Tenemos un borrador guardado
                 localStorage.setItem('offszn_has_draft', 'true');
 
             } catch (e) {
-                console.error('❌ Error guardando draft:', e);
+                console.error('âŒ Error guardando draft:', e);
 
-                // 🔥 NO mostrar toast si es error de duplicado (muy común en auto-save)
+                // ðŸ”¥ NO mostrar toast si es error de duplicado (muy comÃºn en auto-save)
                 if (!e.message.includes('duplicate') && !e.message.includes('already exists')) {
-                    // showToast('Error al guardar: ' + e.message, 'error'); // Opcional: Silenciar toast de error también si es auto-save
+                    // showToast('Error al guardar: ' + e.message, 'error'); // Opcional: Silenciar toast de error tambiÃ©n si es auto-save
                 }
             } finally {
                 isSaving = false;
@@ -7369,7 +7390,7 @@
         function sanitizeFileName(fileName) {
             const lastDotIndex = fileName.lastIndexOf('.');
 
-            // 🔥 Permitir archivos sin extensión
+            // ðŸ”¥ Permitir archivos sin extensiÃ³n
             const name = lastDotIndex !== -1 && lastDotIndex !== 0
                 ? fileName.substring(0, lastDotIndex)
                 : fileName;
@@ -7381,13 +7402,13 @@
             const cleanName = name
                 .normalize('NFD')
                 .replace(/[\u0300-\u036f]/g, '') // Remover acentos
-                .replace(/[^\w\s-]/g, '') // Solo letras, números, espacios, guiones
-                .replace(/\s+/g, '_') // Espacios → underscores
-                .replace(/-+/g, '-') // Múltiples guiones → uno solo
-                .replace(/_+/g, '_') // Múltiples underscores → uno solo
-                .substring(0, 100); // Máximo 100 caracteres
+                .replace(/[^\w\s-]/g, '') // Solo letras, nÃºmeros, espacios, guiones
+                .replace(/\s+/g, '_') // Espacios â†’ underscores
+                .replace(/-+/g, '-') // MÃºltiples guiones â†’ uno solo
+                .replace(/_+/g, '_') // MÃºltiples underscores â†’ uno solo
+                .substring(0, 100); // MÃ¡ximo 100 caracteres
 
-            // Si después de limpiar queda vacío, usar timestamp
+            // Si despuÃ©s de limpiar queda vacÃ­o, usar timestamp
             if (!cleanName || cleanName.length === 0) {
                 return `file_${Date.now()}${ext}`;
             }
@@ -7395,12 +7416,12 @@
             return cleanName + ext;
         }
         async function handlePublish() {
-            // 🔥 NO COOLDOWN - User requested removal
+            // ðŸ”¥ NO COOLDOWN - User requested removal
             // Prevent double submission with isPublishing flag
             if (window.isPublishing) return;
             window.isPublishing = true;
 
-            // 🔥 Force current date on publish
+            // ðŸ”¥ Force current date on publish
             const today = new Date();
             const year = today.getFullYear();
             const month = String(today.getMonth() + 1).padStart(2, '0');
@@ -7414,47 +7435,47 @@
                 return;
             }
 
-            // VALIDAR PRECIO MÍNIMO
+            // VALIDAR PRECIO MÃNIMO
             const isFree = document.getElementById('freeToggle').checked;
             const price = parseFloat(document.getElementById('priceInput').value) || 0;
 
             if (!isFree && price < 1) {
-                showToast('El precio mínimo es $1', 'error');
+                showToast('El precio mÃ­nimo es $1', 'error');
                 currentStep = 2;
                 updateStepUI();
                 window.isPublishing = false; // Reset flag
                 return;
             }
 
-            // 🔥 VALIDACIÓN DE ARCHIVOS YA CUBIERTA POR validateStep(1)
-            // No bloqueamos si no se han subido al draft, porque handlePublish los subirá ahora.
+            // ðŸ”¥ VALIDACIÃ“N DE ARCHIVOS YA CUBIERTA POR validateStep(1)
+            // No bloqueamos si no se han subido al draft, porque handlePublish los subirÃ¡ ahora.
 
             const btn = document.getElementById('publishNow');
             btn.disabled = true;
             btn.innerHTML = 'Publicando...';
 
-            // 🔥 SHOW OVERLAY
+            // ðŸ”¥ SHOW OVERLAY
             const overlay = document.getElementById('publishOverlay');
             if (overlay) overlay.style.display = 'flex';
             let shouldHideOverlay = true; // Default to hiding unless success redirect
 
             try {
-                // 🔧 FUNCIÓN PARA SANITIZAR NOMBRES DE ARCHIVOS
+                // ðŸ”§ FUNCIÃ“N PARA SANITIZAR NOMBRES DE ARCHIVOS
                 function sanitizeFileName(fileName) {
-                    // Obtener extensión
+                    // Obtener extensiÃ³n
                     const lastDotIndex = fileName.lastIndexOf('.');
                     const name = lastDotIndex !== -1 ? fileName.substring(0, lastDotIndex) : fileName;
                     const ext = lastDotIndex !== -1 ? fileName.substring(lastDotIndex) : '';
 
-                    // Limpiar nombre: solo letras, números, guiones y guiones bajos
+                    // Limpiar nombre: solo letras, nÃºmeros, guiones y guiones bajos
                     const cleanName = name
                         .normalize('NFD') // Normalizar caracteres especiales
                         .replace(/[\u0300-\u036f]/g, '') // Remover acentos
                         .replace(/[^\w\s-]/g, '') // Remover caracteres especiales
-                        .replace(/\s+/g, '_') // Espacios → guiones bajos
-                        .replace(/-+/g, '-') // Múltiples guiones → uno solo
-                        .replace(/_+/g, '_') // Múltiples underscores → uno solo
-                        .substring(0, 100); // Máximo 100 caracteres
+                        .replace(/\s+/g, '_') // Espacios â†’ guiones bajos
+                        .replace(/-+/g, '-') // MÃºltiples guiones â†’ uno solo
+                        .replace(/_+/g, '_') // MÃºltiples underscores â†’ uno solo
+                        .substring(0, 100); // MÃ¡ximo 100 caracteres
 
                     return cleanName + ext;
                 }
@@ -7480,15 +7501,15 @@
                     const cleanKitName = sanitizeFileName(formData.files.kit.name);
                     const kitPath = `${userId}/kits/${Date.now()}_${cleanKitName}`;
 
-                    console.log(`🚀 [UPLOAD] Subiendo archivo SECURE a 'secure-products':`, kitPath);
-                    // 🔥 SECURE UPLOAD
+                    console.log(`ðŸš€ [UPLOAD] Subiendo archivo SECURE a 'secure-products':`, kitPath);
+                    // ðŸ”¥ SECURE UPLOAD
                     const { data, error } = await supabaseClient.storage
                         .from('secure-products')
                         .upload(kitPath, formData.files.kit);
 
                     if (error) throw new Error(`Error subiendo kit: ${error.message}`);
 
-                    // 🔥 STORE PATH (Private)
+                    // ðŸ”¥ STORE PATH (Private)
                     kit_url = data.path;
                 }
 
@@ -7497,7 +7518,7 @@
                 if (formData.files.audio) {
                     const cleanAudioName = sanitizeFileName(formData.files.audio.name);
                     const audioPath = `${userId}/audio/${Date.now()}_${cleanAudioName}`;
-                    console.log(`🎵 [UPLOAD] Subiendo audio a 'products':`, audioPath);
+                    console.log(`ðŸŽµ [UPLOAD] Subiendo audio a 'products':`, audioPath);
                     const { data, error } = await supabaseClient.storage
                         .from('products')
                         .upload(audioPath, formData.files.audio);
@@ -7529,14 +7550,14 @@
                     finalPrice = 0;
                 }
 
-                // 🔥 PREPARAR COLABORADORES CON STATUS PENDING
+                // ðŸ”¥ PREPARAR COLABORADORES CON STATUS PENDING
                 const pendingCollaborators = collaborators.map(c => ({
                     ...c,
                     status: 'pending'
                 }));
 
                 // 5. Insertar en tabla products
-                console.log('💾 [DB] Insertando nuevo producto en la base de datos...');
+                console.log('ðŸ’¾ [DB] Insertando nuevo producto en la base de datos...');
                 const { data: product, error: insertError } = await supabaseClient
                     .from('products')
                     .insert({
@@ -7555,7 +7576,7 @@
                         image_url,
                         kit_url, // URL final en products (usamos kit_url para compatibilidad)
                         audio_url,
-                        audio_after_url, // 🔥 NUEVO: Soporte para track comparativo en products
+                        audio_after_url, // ðŸ”¥ NUEVO: Soporte para track comparativo en products
                         product_type: 'preset',
                         category: selectedCategory,
                         status: 'approved',
@@ -7567,9 +7588,9 @@
 
                 if (insertError) throw new Error(`Error guardando producto: ${insertError.message}`);
 
-                // 🔥 INVITACIONES Y NOTIFICACIONES SILENCIOSAS A COLABORADORES
-                // 🔥 INVITACIONES Y NOTIFICACIONES SILENCIOSAS A COLABORADORES
-                // 🔥 INICIO DE LÓGICA DE COLABORACIONES (CONDICIONAL)
+                // ðŸ”¥ INVITACIONES Y NOTIFICACIONES SILENCIOSAS A COLABORADORES
+                // ðŸ”¥ INVITACIONES Y NOTIFICACIONES SILENCIOSAS A COLABORADORES
+                // ðŸ”¥ INICIO DE LÃ“GICA DE COLABORACIONES (CONDICIONAL)
                 const currentVisibility = document.getElementById('visibilityInput').value;
                 const isVisible = currentVisibility === 'public' || currentVisibility === 'unlisted';
                 const wasVisible = originalVisibility === 'public' || originalVisibility === 'unlisted';
@@ -7577,7 +7598,7 @@
 
                 if (collaborators.length > 0) {
                     try {
-                        console.log('👥 Procesando colaboraciones...');
+                        console.log('ðŸ‘¥ Procesando colaboraciones...');
 
                         const invitations = collaborators.map(c => ({
                             product_id: product.id,
@@ -7592,16 +7613,16 @@
                             .from('collab_invitations')
                             .upsert(invitations, { onConflict: 'product_id, collaborator_id' });
 
-                        if (invError) console.warn('⚠️ Error creando invitaciones:', invError);
-                        else console.log('✅ Invitaciones sincronizadas');
+                        if (invError) console.warn('âš ï¸ Error creando invitaciones:', invError);
+                        else console.log('âœ… Invitaciones sincronizadas');
 
                         // 2. Notificaciones (SOLO SI HAY CAMBIO DE VISIBILIDAD)
                         if (shouldNotify) {
-                            console.log('🔔 Enviando notificaciones (Nuevo Public/Unlisted)...');
+                            console.log('ðŸ”” Enviando notificaciones (Nuevo Public/Unlisted)...');
                             const notifications = collaborators.map(c => ({
                                 user_id: c.id,
                                 type: 'collab_invitation',
-                                title: '¡Nueva Invitación de Colaboración!',
+                                title: 'Â¡Nueva InvitaciÃ³n de ColaboraciÃ³n!',
                                 message: `Has sido invitado como colaborador en "${document.getElementById('titleInput').value}".`,
                                 data: {
                                     product_id: product.id,
@@ -7614,14 +7635,14 @@
                                 .from('notifications')
                                 .insert(notifications);
 
-                            if (notifError) console.warn('⚠️ Error enviando notificaciones:', notifError);
-                            else console.log('🔔 Notificaciones enviadas correctamente');
+                            if (notifError) console.warn('âš ï¸ Error enviando notificaciones:', notifError);
+                            else console.log('ðŸ”” Notificaciones enviadas correctamente');
                         } else {
-                            console.log('🔕 Notificaciones omitidas (Ya era público o sigue privado)');
+                            console.log('ðŸ”• Notificaciones omitidas (Ya era pÃºblico o sigue privado)');
                         }
 
                     } catch (collabError) {
-                        console.warn('⚠️ Error en flujo de colaboración:', collabError);
+                        console.warn('âš ï¸ Error en flujo de colaboraciÃ³n:', collabError);
                     }
                 }
 
@@ -7660,10 +7681,10 @@
                         .eq('id', product.id);
                 }
 
-                // 🔥 CLEANUP: Borrar draft y archivos temporales
+                // ðŸ”¥ CLEANUP: Borrar draft y archivos temporales
                 if (currentDraftId || window.currentDraftId) {
                     const idToDelete = currentDraftId || window.currentDraftId;
-                    console.log(`🧹 [CLEANUP] Eliminando borrador ${idToDelete} y sus archivos...`);
+                    console.log(`ðŸ§¹ [CLEANUP] Eliminando borrador ${idToDelete} y sus archivos...`);
                     await cleanupDraftFiles(idToDelete);
                     await supabaseClient.from('preset_drafts').delete().eq('id', idToDelete);
                     currentDraftId = null;
@@ -7672,12 +7693,12 @@
                 }
 
 
-                // 🔥 NO SAVING TIMESTAMP FOR COOLDOWN (REMOVED)
+                // ðŸ”¥ NO SAVING TIMESTAMP FOR COOLDOWN (REMOVED)
 
-                // 🔥 CLEANUP HAS DRAFT MARKER
+                // ðŸ”¥ CLEANUP HAS DRAFT MARKER
                 localStorage.removeItem('offszn_has_draft');
 
-                // 🔥 LIMPIAR TODO EL ESTADO LOCAL
+                // ðŸ”¥ LIMPIAR TODO EL ESTADO LOCAL
 
                 currentDraftId = null;
                 formData.files = { kit: null, audio: null, audio_after: null };
@@ -7687,7 +7708,7 @@
                 collaborators = [];
                 isDirty = false;
 
-                // 🔥 LIMPIAR TODOS LOS INPUTS Y ESTADO
+                // ðŸ”¥ LIMPIAR TODOS LOS INPUTS Y ESTADO
                 document.getElementById('titleInput').value = '';
                 document.getElementById('descInput').value = '';
                 document.getElementById('dateInput').value = '';
@@ -7707,25 +7728,25 @@
                 renderTags();
 
                 // Show success modal with unique link
-                // 🔥 REDIRECT TO MIS KITS INSTEAD OF MODAL
-                // 🔥 REDIRECT TO MIS KITS INSTEAD OF MODAL
+                // ðŸ”¥ REDIRECT TO MIS KITS INSTEAD OF MODAL
+                // ðŸ”¥ REDIRECT TO MIS KITS INSTEAD OF MODAL
                 window.location.href = '/cuenta/mis-kits.html';
                 btn.disabled = false;
                 btn.innerHTML = 'Publicar Ahora';
 
-                // 🔥 SUCCESS: Keep overlay visible until redirect
+                // ðŸ”¥ SUCCESS: Keep overlay visible until redirect
                 shouldHideOverlay = false;
 
             } catch (error) {
-                console.error('❌ Error al publicar:', error);
+                console.error('âŒ Error al publicar:', error);
                 showToast(error.message || 'Error al publicar', 'error');
                 btn.disabled = false;
                 btn.innerHTML = 'Publicar Ahora';
             } finally {
-                // 🔥 RESET PUBLISHING FLAG
+                // ðŸ”¥ RESET PUBLISHING FLAG
                 window.isPublishing = false;
 
-                // 🔥 HIDE OVERLAY ONLY IF NOT REDIRECTING
+                // ðŸ”¥ HIDE OVERLAY ONLY IF NOT REDIRECTING
                 if (shouldHideOverlay) {
                     const overlay = document.getElementById('publishOverlay');
                     if (overlay) overlay.style.display = 'none';
@@ -7736,8 +7757,8 @@
         // COMPLETION PROGRESS TRACKER (ELIMINADO)
         // ========================================
         function updateCompletionProgress() {
-            // Esta función ya no hace nada - el badge fue removido
-            console.log('📊 Progress tracker deshabilitado');
+            // Esta funciÃ³n ya no hace nada - el badge fue removido
+            console.log('ðŸ“Š Progress tracker deshabilitado');
         }
         // ========================================
         // QUICK ACTIONS FUNCTIONS
@@ -7749,7 +7770,7 @@
             showToast('Borrador guardado', 'success');
             if (btn) setTimeout(() => btn.style.transform = '', 200);
 
-            // 🔥 REDIRECCIÓN A MIS-KITS (Solicitud del usuario)
+            // ðŸ”¥ REDIRECCIÃ“N A MIS-KITS (Solicitud del usuario)
             setTimeout(() => {
                 window.location.href = '/cuenta/mis-kits.html';
             }, 1000);
@@ -7765,11 +7786,11 @@
         let lastAnalyzedTitle = '';
 
         async function autoFillTags() {
-            // Esta función ahora solo es llamada manualmente por el botón
+            // Esta funciÃ³n ahora solo es llamada manualmente por el botÃ³n
             const title = document.getElementById('titleInput').value.toLowerCase().trim();
             const description = document.getElementById('descInput').value.toLowerCase().trim();
             const container = document.getElementById('tagsSuggestions');
-            const btn = document.querySelector('.quick-btn[title="Tags IA"]'); // Botón de sugerir (SELECTOR POR ATRIBUTO)
+            const btn = document.querySelector('.quick-btn[title="Tags IA"]'); // BotÃ³n de sugerir (SELECTOR POR ATRIBUTO)
 
             if (!title || title.length < 3) {
 
@@ -7778,26 +7799,26 @@
 
             if (!container) return;
 
-            // 🔥 INVALIDAR CACHÉ SI CAMBIA EL TÍTULO
+            // ðŸ”¥ INVALIDAR CACHÃ‰ SI CAMBIA EL TÃTULO
             if (title !== lastAnalyzedTitle) {
                 cachedSuggestions = [];
                 currentSuggestionIndex = 0;
                 lastAnalyzedTitle = title;
             }
 
-            // Animación de carga en el botón (mantener ícono, solo deshabilitar)
+            // AnimaciÃ³n de carga en el botÃ³n (mantener Ã­cono, solo deshabilitar)
             if (btn) {
                 btn.style.opacity = '0.6';
                 btn.disabled = true;
             }
 
             try {
-                // 🔥 RETRASO ARTIFICIAL PARA FEEDBACK VISUAL (500ms)
+                // ðŸ”¥ RETRASO ARTIFICIAL PARA FEEDBACK VISUAL (500ms)
                 await new Promise(resolve => setTimeout(resolve, 500));
 
                 // 1. Generar sugerencias SI no tenemos cacheadas
                 if (cachedSuggestions.length === 0) {
-                    // 🎵 ANALIZAR AUDIO SI EXISTE
+                    // ðŸŽµ ANALIZAR AUDIO SI EXISTE
                     let audioAnalysis = { duration: 0, bpm: 0, energy: 0, mood: 'unknown' };
                     if (formData.files.audio) {
                         try {
@@ -7807,28 +7828,28 @@
                     cachedSuggestions = await generateTagsSmart(title, description, audioAnalysis);
                 }
 
-                // 2. Filtrar las que ya están puestas
+                // 2. Filtrar las que ya estÃ¡n puestas
                 const availableSuggestions = cachedSuggestions.filter(tag => !tags.includes(tag));
 
                 if (availableSuggestions.length === 0) {
-                    showToast('No hay más sugerencias disponibles', 'info');
+                    showToast('No hay mÃ¡s sugerencias disponibles', 'info');
                     container.style.display = 'none';
                 } else {
                     container.style.display = 'flex';
-                    // 🔥 EFECTO DE FADE PARA NOTAR EL CAMBIO
+                    // ðŸ”¥ EFECTO DE FADE PARA NOTAR EL CAMBIO
                     container.style.opacity = '0';
                     container.style.transition = 'opacity 0.2s';
 
                     setTimeout(() => {
                         container.innerHTML = '';
 
-                        // Mostrar título pequeño
+                        // Mostrar tÃ­tulo pequeÃ±o
                         const label = document.createElement('div');
                         label.style.cssText = 'font-size: 11px; color: #666; width: 100%; margin-bottom: 4px;';
                         label.textContent = 'Sugerencias (Click para agregar):';
                         container.appendChild(label);
 
-                        // 3. Tomar las siguientes 3 de forma cíclica
+                        // 3. Tomar las siguientes 3 de forma cÃ­clica
                         const batch = [];
                         for (let i = 0; i < 3; i++) {
                             if (availableSuggestions.length > 0) {
@@ -7837,13 +7858,13 @@
                             }
                         }
 
-                        // Avanzar índice para el próximo click
+                        // Avanzar Ã­ndice para el prÃ³ximo click
                         currentSuggestionIndex = (currentSuggestionIndex + 3) % availableSuggestions.length;
 
-                        // 🔥 SI DIMOS LA VUELTA COMPLETA: LIMPIAR CACHÉ
-                        // Esto fuerza a que el próximo click genere 60 tags NUEVOS desde el master pool
+                        // ðŸ”¥ SI DIMOS LA VUELTA COMPLETA: LIMPIAR CACHÃ‰
+                        // Esto fuerza a que el prÃ³ximo click genere 60 tags NUEVOS desde el master pool
                         if (currentSuggestionIndex < 3) {
-                            console.log('🔄 Ciclo completado. Limpiando caché para traer tags frescos.');
+                            console.log('ðŸ”„ Ciclo completado. Limpiando cachÃ© para traer tags frescos.');
                             cachedSuggestions = [];
                             currentSuggestionIndex = 0;
                         }
@@ -7862,7 +7883,7 @@
                                         container.style.display = 'none';
                                     }
                                 } else {
-                                    showToast('Límite de 3 tags alcanzado', 'info');
+                                    showToast('LÃ­mite de 3 tags alcanzado', 'info');
                                 }
                             };
                             container.appendChild(chip);
@@ -7874,7 +7895,7 @@
                 }
 
             } catch (error) {
-                console.warn('⚠️ Error sugerencias:', error);
+                console.warn('âš ï¸ Error sugerencias:', error);
                 showToast('Error generando sugerencias', 'error');
             } finally {
                 if (btn) {
@@ -7893,10 +7914,10 @@
                 // Esperar un momento a que la UI se actualice
                 await new Promise(resolve => setTimeout(resolve, 300));
             }
-            // Wrapper para el botón que llama a la lógica principal
+            // Wrapper para el botÃ³n que llama a la lÃ³gica principal
             autoFillTags();
         }
-        // 🔥 NUEVA FUNCIÓN: Reemplazar tags con confirmación
+        // ðŸ”¥ NUEVA FUNCIÃ“N: Reemplazar tags con confirmaciÃ³n
         window.replaceTagsWithAI = function () {
             const modal = document.querySelector('.modal-overlay');
             const suggestions = document.querySelectorAll('.tag-suggestion');
@@ -7923,7 +7944,7 @@
 
         function toggleLoop() {
             isLooping = !isLooping;
-            // La lógica del loop está ahora en los listeners 'finish' de wavesurferBefore/After
+            // La lÃ³gica del loop estÃ¡ ahora en los listeners 'finish' de wavesurferBefore/After
 
             const btn = document.getElementById('loopBtn');
             if (btn) {
@@ -7965,13 +7986,13 @@
                 audio.src = URL.createObjectURL(file);
 
                 audio.addEventListener('loadedmetadata', () => {
-                    // Estimación simple de calidad basada en tamaño y duración
+                    // EstimaciÃ³n simple de calidad basada en tamaÃ±o y duraciÃ³n
                     const bitrate = (file.size * 8) / audio.duration / 1000; // kbps
 
                     let quality = 'low';
                     let licensesState = {};
 
-                    // 🔥 STATE FOR VISIBILITY TRACKING
+                    // ðŸ”¥ STATE FOR VISIBILITY TRACKING
                     // originalVisibility removed (now global)
 
 
@@ -7983,7 +8004,7 @@
                         message = 'Calidad media (192 kbps)';
                     } else {
                         quality = 'low';
-                        message = '⚠ Baja calidad (< 192 kbps)';
+                        message = 'âš  Baja calidad (< 192 kbps)';
                     }
 
                     resolve({ quality, bitrate: Math.round(bitrate), message });
@@ -8111,9 +8132,9 @@
             collabSpinnerTimeout = null;
             collabSpinnerInterval = null;
         }
-        // 🔥 CAMBIO 3: Función para cargar un producto existente y editarlo
+        // ðŸ”¥ CAMBIO 3: FunciÃ³n para cargar un producto existente y editarlo
         async function loadProductForEdit(productId) {
-            // 🔥 MOSTRAR OVERLAY (Glass) INMEDIATAMENTE
+            // ðŸ”¥ MOSTRAR OVERLAY (Glass) INMEDIATAMENTE
             showLoading();
 
             try {
@@ -8128,11 +8149,11 @@
                     .from('products')
                     .select('*')
                     .eq('id', productId)
-                    .eq('producer_id', userId) // 🔥 SECURITY: Prevent accessing other users' products
+                    .eq('producer_id', userId) // ðŸ”¥ SECURITY: Prevent accessing other users' products
                     .single();
 
-                console.log('📦 PRODUCT DATA LOADED:', product); // 🔥 DEBUG: Check columns
-                window.originalProductData = product; // 🔥 SAVE ORIGINAL DATA FOR CLEANUP
+                console.log('ðŸ“¦ PRODUCT DATA LOADED:', product); // ðŸ”¥ DEBUG: Check columns
+                window.originalProductData = product; // ðŸ”¥ SAVE ORIGINAL DATA FOR CLEANUP
 
                 if (error) throw new Error(error.message);
                 if (!product) {
@@ -8141,12 +8162,12 @@
                     return; // Stop execution
                 }
 
-                // 🔥 GLOBAL EDIT SETTINGS
+                // ðŸ”¥ GLOBAL EDIT SETTINGS
                 window.currentEditId = product.id; // Store ID for update
                 selectedCategory = product.category || 'Preset_de_voces'; // Store Category
 
                 // 2. Crear un draft temporal basado en el producto
-                // 🔥 DISABLE DRAFT CREATION FOR EDIT MODE - Keep in memory only
+                // ðŸ”¥ DISABLE DRAFT CREATION FOR EDIT MODE - Keep in memory only
                 /*
                 const draftData = {
                     ...
@@ -8175,7 +8196,7 @@
 
                 if (product.visibility) {
                     document.getElementById('visibilityInput').value = product.visibility;
-                    originalVisibility = product.visibility; // 🔥 Capture original state
+                    originalVisibility = product.visibility; // ðŸ”¥ Capture original state
                 }
 
                 // 5. Cargar archivos (cover, kit, audio)
@@ -8191,7 +8212,7 @@
                         document.getElementById('coverDropZone').classList.add('has-image');
                         filesUploaded.cover = true;
                     } catch (e) {
-                        console.warn('⚠️ Error cargando cover:', e);
+                        console.warn('âš ï¸ Error cargando cover:', e);
                     }
                 }
 
@@ -8208,7 +8229,7 @@
                     const dropZone = document.getElementById('fileDropZone');
 
                     if (container && dropZone) {
-                        // dropZone.classList.add('uploading'); // 🔥 REMOVED: Caused infinite spinner
+                        // dropZone.classList.add('uploading'); // ðŸ”¥ REMOVED: Caused infinite spinner
                         dropZone.classList.remove('error');
 
                         container.innerHTML = `
@@ -8217,7 +8238,7 @@
                                     <div class="file-name">${fileName}</div>
                                     <div class="file-size">ZIP/RAR</div>
                                 </div>
-                                <button type="button" class="remove-file" onclick="removeFile('kit')" title="Eliminar archivo">✕</button>
+                                <button type="button" class="remove-file" onclick="removeFile('kit')" title="Eliminar archivo">âœ•</button>
                             </div>
                         `;
                     }
@@ -8242,12 +8263,12 @@
                                     <div class="file-name">${fileName}</div>
                                     <div class="file-size">Audio</div>
                                 </div>
-                                <button type="button" class="remove-file" onclick="removeFile('audio')" title="Eliminar archivo">✕</button>
+                                <button type="button" class="remove-file" onclick="removeFile('audio')" title="Eliminar archivo">âœ•</button>
                             </div>
                         `;
                     }
 
-                    // 🔥 LOAD WAVEFORM WITH ROBUST VISIBILITY
+                    // ðŸ”¥ LOAD WAVEFORM WITH ROBUST VISIBILITY
                     if (wavesurferBefore) {
                         try {
                             wavesurferBefore.load(audioUrl);
@@ -8289,12 +8310,12 @@
                                     <div class="file-name">${fileName}</div>
                                     <div class="file-size">Audio After</div>
                                 </div>
-                                <button type="button" class="remove-file" onclick="removeFile('audio_after')" title="Eliminar archivo">✕</button>
+                                <button type="button" class="remove-file" onclick="removeFile('audio_after')" title="Eliminar archivo">âœ•</button>
                             </div>
                         `;
                     }
 
-                    // 🔥 LOAD WAVEFORM AFTER
+                    // ðŸ”¥ LOAD WAVEFORM AFTER
                     if (wavesurferAfter) {
                         try {
                             wavesurferAfter.load(audioUrl);
@@ -8322,7 +8343,7 @@
                 const publishBtn = document.getElementById('publishBtn');
                 if (publishBtn) {
                     publishBtn.innerHTML = 'Guardar Cambios';
-                    // 🔥 Override Dropdown: Make it a direct action button
+                    // ðŸ”¥ Override Dropdown: Make it a direct action button
                     publishBtn.classList.remove('dropdown-toggle'); // Just in case
                     // Hide the arrow or dropdown content entirely to prevent confusion
                     const dropdownContent = document.querySelector('#publishDropdown .dropdown-content');
@@ -8363,7 +8384,7 @@
                 currentStep = 1;
                 updateStepUI();
 
-                // 🔥 HABILITAR SELECT DE VISIBILIDAD
+                // ðŸ”¥ HABILITAR SELECT DE VISIBILIDAD
                 const visibilityInput = document.getElementById('visibilityInput');
                 if (visibilityInput) {
                     visibilityInput.disabled = false;
@@ -8373,19 +8394,19 @@
                 // showToast('Producto cargado - Ahora puedes editarlo', 'success');
 
                 // ========================================
-                // ✅ FINALIZAR: OCULTAR LOADING SIEMPRE
+                // âœ… FINALIZAR: OCULTAR LOADING SIEMPRE
                 // ========================================
-                console.log('✅ Draft cargado correctamente');
+                console.log('âœ… Draft cargado correctamente');
 
             } catch (error) {
-                console.error('❌ Error cargando producto:', error);
+                console.error('âŒ Error cargando producto:', error);
 
-                // Si es un error crítico, mostrar toast
+                // Si es un error crÃ­tico, mostrar toast
                 if (error.message && !error.message.includes('JSON')) {
                     showToast('Error al cargar producto: ' + error.message, 'error');
                 }
 
-                // Deshabilitar/habilitar input según cantidad de tags
+                // Deshabilitar/habilitar input segÃºn cantidad de tags
                 if (tags.length >= 3) {
                     const input = document.getElementById('tagInput');
                     const container = document.getElementById('tagsContainer');
@@ -8397,17 +8418,17 @@
                     if (container) container.classList.add('full');
                 }
             } finally {
-                // 🔥 ESTO ASEGURA QUE EL LOADING SE QUITE PASE LO QUE PASE
+                // ðŸ”¥ ESTO ASEGURA QUE EL LOADING SE QUITE PASE LO QUE PASE
                 hideLoading();
             }
         }
 
-        // 🔥 HANDLE UPDATE PRODUCT (EDIT MODE SAVE)
+        // ðŸ”¥ HANDLE UPDATE PRODUCT (EDIT MODE SAVE)
         async function handleUpdateProduct() {
             if (window.isPublishing) return;
             window.isPublishing = true;
 
-            // 🔥 FORCE OVERLAY TEXT UPDATE BEFORE SHOWING
+            // ðŸ”¥ FORCE OVERLAY TEXT UPDATE BEFORE SHOWING
             const overlay = document.getElementById('publishOverlay');
             if (overlay) {
                 const h3 = overlay.querySelector('h3');
@@ -8433,7 +8454,7 @@
                 activeBtn.innerHTML = 'Guardando...';
             }
 
-            // 🔥 Force current date if not set
+            // ðŸ”¥ Force current date if not set
             if (!document.getElementById('dateInput').value) {
                 const today = new Date();
                 document.getElementById('dateInput').value = today.toISOString().split('T')[0];
@@ -8472,10 +8493,10 @@
                     sounds_count: parseInt(document.getElementById('soundsInput').value) || null,
                     tags: tags.length > 0 ? tags : null,
                     category: selectedCategory,
-                    collaborators: collaborators.length > 0 ? collaborators : null // 🔥 FIX: Save Collaborators
+                    collaborators: collaborators.length > 0 ? collaborators : null // ðŸ”¥ FIX: Save Collaborators
                 };
 
-                // 🔥 CATEGORY SAFETY: Nullify 'audio_after' if category doesn't support it
+                // ðŸ”¥ CATEGORY SAFETY: Nullify 'audio_after' if category doesn't support it
                 if (selectedCategory === 'plugin' || selectedCategory === 'instrument') {
                     updates.audio_after_url = null;
                 }
@@ -8487,7 +8508,7 @@
 
                 // 1. Upload NEW Cover if exists
                 if (formData.coverBlob) {
-                    // 🔥 DELETE OLD COVER IF EXISTS
+                    // ðŸ”¥ DELETE OLD COVER IF EXISTS
                     if (window.originalProductData && window.originalProductData.image_url) {
                         try {
                             await deleteFileFromStorage(window.originalProductData.image_url, 'products');
@@ -8506,7 +8527,7 @@
 
                 // 2. Upload NEW Kit if exists
                 if (formData.files.kit) {
-                    // 🔥 DELETE OLD KIT (SECURE BUCKET)
+                    // ðŸ”¥ DELETE OLD KIT (SECURE BUCKET)
                     if (window.originalProductData && (window.originalProductData.kit_url || window.originalProductData.preset_url || window.originalProductData.file_url)) {
                         try {
                             const oldUrl = window.originalProductData.kit_url || window.originalProductData.preset_url || window.originalProductData.file_url;
@@ -8527,7 +8548,7 @@
 
                 // 3. Upload NEW Audio if exists
                 if (formData.files.audio) {
-                    // 🔥 DELETE OLD AUDIO
+                    // ðŸ”¥ DELETE OLD AUDIO
                     if (window.originalProductData && (window.originalProductData.audio_url || window.originalProductData.audio_before_url)) {
                         try {
                             const oldUrl = window.originalProductData.audio_url || window.originalProductData.audio_before_url;
@@ -8567,9 +8588,9 @@
 
                 if (updateError) throw updateError;
 
-                // showToast('✅ Producto actualizado correctamente', 'success'); // 🚫 TOAST REMOVED
+                // showToast('âœ… Producto actualizado correctamente', 'success'); // ðŸš« TOAST REMOVED
 
-                // 🔥 LOGICA COLABORADORES (SYNC: ADD & REMOVE)
+                // ðŸ”¥ LOGICA COLABORADORES (SYNC: ADD & REMOVE)
                 try {
                     const originalCollabs = window.originalProductData?.collaborators || [];
 
@@ -8577,7 +8598,7 @@
                     const potentialNewCollabs = collaborators.filter(c => !originalCollabs.some(oc => oc.id === c.id));
 
                     if (potentialNewCollabs.length > 0) {
-                        console.log('🔎 Verificando duplicados para:', potentialNewCollabs);
+                        console.log('ðŸ”Ž Verificando duplicados para:', potentialNewCollabs);
 
                         const newCollabsToInvite = [];
 
@@ -8596,7 +8617,7 @@
                         }
 
                         if (newCollabsToInvite.length > 0) {
-                            console.log('👥 Invitando REALMENTE a:', newCollabsToInvite);
+                            console.log('ðŸ‘¥ Invitando REALMENTE a:', newCollabsToInvite);
 
                             // Invitations
                             const invitations = newCollabsToInvite.map(c => ({
@@ -8614,7 +8635,7 @@
                             const notifications = newCollabsToInvite.map(c => ({
                                 user_id: c.id,
                                 type: 'collab_invitation',
-                                title: '¡Nueva Invitación de Colaboración!',
+                                title: 'Â¡Nueva InvitaciÃ³n de ColaboraciÃ³n!',
                                 message: `Has sido invitado a colaborar en "${document.getElementById('titleInput').value}".`,
                                 data: { product_id: window.currentEditId, author_id: userId }
                             }));
@@ -8627,7 +8648,7 @@
                     const removedCollabs = originalCollabs.filter(oc => !collaborators.some(c => c.id === oc.id));
                     if (removedCollabs.length > 0) {
                         const removedIds = removedCollabs.map(c => c.id);
-                        console.log('🗑️ Eliminando colaboradores de la BD:', removedIds);
+                        console.log('ðŸ—‘ï¸ Eliminando colaboradores de la BD:', removedIds);
 
                         // Delete invitations (Hard Delete)
                         await supabaseClient
@@ -8639,7 +8660,7 @@
 
                 } catch (e) { console.warn('Error sync colaboradores:', e); }
 
-                // 🔥 CLEANUP: Delete the temporary draft
+                // ðŸ”¥ CLEANUP: Delete the temporary draft
                 if (currentDraftId || window.currentDraftId) {
                     const idToDelete = currentDraftId || window.currentDraftId;
                     await cleanupDraftFiles(idToDelete);
@@ -8649,7 +8670,7 @@
                     localStorage.removeItem('offszn_has_draft');
                 }
 
-                isDirty = false; // 🔥 FIX: Prevent 'Unsaved Changes' alert on redirect
+                isDirty = false; // ðŸ”¥ FIX: Prevent 'Unsaved Changes' alert on redirect
 
                 // Redirect
                 setTimeout(() => {
@@ -8669,10 +8690,10 @@
         }
 
         // ========================================
-        // 🔥 SETUP VALIDATION LISTENERS (CLEAR ON INPUT)
+        // ðŸ”¥ SETUP VALIDATION LISTENERS (CLEAR ON INPUT)
         // ========================================
 
-        // 🔥 INLINE VALIDATION HELPERS (STABLE UI)
+        // ðŸ”¥ INLINE VALIDATION HELPERS (STABLE UI)
         function showInlineError(elementId, message) {
             const element = document.getElementById(elementId);
             if (!element) return;
@@ -8693,7 +8714,7 @@
                 formGroup.appendChild(errorDiv);
             }
 
-            // Usar innerHTML para permitir saltos de línea y formateo
+            // Usar innerHTML para permitir saltos de lÃ­nea y formateo
             errorDiv.innerHTML = message;
             errorDiv.style.display = 'block';
         }
@@ -8725,9 +8746,9 @@
                 }
             });
 
-            // Para archivos es más complejo, lo hacemos en sus respectivas funciones de drop/change
-            // Pero agregamos listener genérico para clicks en dropzones
-            const zones = ['coverDropZone', 'kitDropZone', 'audioDropZone']; // Ajustar IDs según existan
+            // Para archivos es mÃ¡s complejo, lo hacemos en sus respectivas funciones de drop/change
+            // Pero agregamos listener genÃ©rico para clicks en dropzones
+            const zones = ['coverDropZone', 'kitDropZone', 'audioDropZone']; // Ajustar IDs segÃºn existan
             zones.forEach(id => {
                 const el = document.getElementById(id);
                 if (el) {
@@ -8745,14 +8766,14 @@
             setupValidationListeners();
         });
 
-        // Función para detectar si viene un productId en la URL
+        // FunciÃ³n para detectar si viene un productId en la URL
         window.addEventListener('DOMContentLoaded', async () => {
             const urlParams = new URLSearchParams(window.location.search);
             const editId = urlParams.get('edit');
             const draftId = urlParams.get('draft');
 
             if (editId || draftId) {
-                // 🔥 SHOW LOADING OVERLAY IMMEDIATELY
+                // ðŸ”¥ SHOW LOADING OVERLAY IMMEDIATELY
                 const overlay = document.getElementById('publishOverlay');
                 if (overlay) {
                     overlay.querySelector('h3').textContent = 'Cargando producto...';
@@ -8814,12 +8835,12 @@
             }
         };
         // ========================================
-        // 🔥 CERRAR MODALES AL CLICK FUERA
+        // ðŸ”¥ CERRAR MODALES AL CLICK FUERA
         // ========================================
         document.addEventListener('click', (e) => {
             // 1. MODAL OVERLAY (crop, draft saved, first time)
             if (e.target.classList.contains('modal-overlay')) {
-                // 🔥 Evitar cerrar el modal de éxito al hacer clic fuera
+                // ðŸ”¥ Evitar cerrar el modal de Ã©xito al hacer clic fuera
                 if (e.target.id === 'publishSuccessModal') return;
 
                 e.target.classList.remove('active');
@@ -8835,7 +8856,7 @@
                 e.target.classList.remove('active');
             }
         });
-        // 🔥 Abrir modal de ayuda
+        // ðŸ”¥ Abrir modal de ayuda
         window.openHelpModal = function (modalId) {
             const modal = document.getElementById(modalId);
             if (modal) {
@@ -8843,7 +8864,7 @@
             }
         };
 
-        // 🔥 Cerrar modal de ayuda
+        // ðŸ”¥ Cerrar modal de ayuda
         window.closeHelpModal = function (modalId) {
             const modal = document.getElementById(modalId);
             if (modal) {
@@ -8851,7 +8872,7 @@
             }
         };
 
-        // 🔥 Cerrar al hacer click fuera
+        // ðŸ”¥ Cerrar al hacer click fuera
         document.addEventListener('click', (e) => {
             if (e.target.classList.contains('help-modal-overlay')) {
                 e.target.classList.remove('active');
@@ -8861,7 +8882,7 @@
         // CONTROL DE VOLUMEN (CORREGIDO)
         // ========================================
         let isMuted = false;
-        // let globalVolume = 1; // 🔥 REMOVED DUPLICATE
+        // let globalVolume = 1; // ðŸ”¥ REMOVED DUPLICATE
         let previousVolume = 100;
 
         function toggleMute() {
@@ -8869,7 +8890,7 @@
             const volumeIcon = document.getElementById('volumeIcon');
             const volumeSlider = document.getElementById('volumeSlider');
 
-            if (!volumeIcon || !volumeSlider) return; // 🔥 VALIDACIÓN
+            if (!volumeIcon || !volumeSlider) return; // ðŸ”¥ VALIDACIÃ“N
 
             if (isMuted) {
                 if (wavesurferBefore) wavesurferBefore.setVolume(0);
@@ -8891,7 +8912,7 @@
             }
         }
 
-        // 🔥 EVENT LISTENER CON VALIDACIÓN
+        // ðŸ”¥ EVENT LISTENER CON VALIDACIÃ“N
         const volumeSliderEl = document.getElementById('volumeSlider');
         if (volumeSliderEl) {
             volumeSliderEl.addEventListener('input', (e) => {
@@ -8923,7 +8944,7 @@
             });
         }
         // ========================================
-        // CONFIRMACIÓN DE SALIDA
+        // CONFIRMACIÃ“N DE SALIDA
         // ========================================
         window.confirmExit = function () {
             if (isDirty) {
@@ -8994,22 +9015,22 @@
             document.getElementById('exitConfirmModal').classList.remove('active');
         };
 
-        // 🔥 BEFOREUNLOAD REMOVED: Cannot execute async cleanup code
+        // ðŸ”¥ BEFOREUNLOAD REMOVED: Cannot execute async cleanup code
         // Use the custom exitConfirmModal instead via "Volver al Dashboard" button
 
-        // 🔥 FUNCION FALTANTE: showEstimate
+        // ðŸ”¥ FUNCION FALTANTE: showEstimate
         window.showEstimate = function () {
-            // Cálculo simple de ejemplo o modal informativo
+            // CÃ¡lculo simple de ejemplo o modal informativo
             const price = parseFloat(document.getElementById('priceInput').value) || 0;
             const sales = 100; // Ejemplo
             const total = (price * sales * 0.9).toFixed(2); // 10% fee
 
             showToast(`Estimado: 100 ventas = $${total} (neto)`, 'success');
         };
-        // 🔥 TOAST PREMIUM FUNCTION (OVERRIDE - NO DUPLICATES)
-        // 🔥 TOAST PREMIUM FUNCTION OVERRIDE REMOVED TO USE ELITE STYLE ABOVE
+        // ðŸ”¥ TOAST PREMIUM FUNCTION (OVERRIDE - NO DUPLICATES)
+        // ðŸ”¥ TOAST PREMIUM FUNCTION OVERRIDE REMOVED TO USE ELITE STYLE ABOVE
 
-        // 🔥 LOADING FUNCTIONS (FALTANTES)
+        // ðŸ”¥ LOADING FUNCTIONS (FALTANTES)
         window.showLoading = function (title = 'Cargando...', subtitle = 'Por favor espera un momento.') {
             const overlay = document.getElementById('publishOverlay');
             if (overlay) {
@@ -9052,11 +9073,11 @@
         </div>
     </div>
 
-    <!-- Modal Confirmación Salida -->
+    <!-- Modal ConfirmaciÃ³n Salida -->
     <div class="modal-overlay" id="exitConfirmModal">
         <div class="modal" style="max-width: 400px;">
             <div class="modal-header">
-                <h2 class="modal-title">¿Salir sin guardar?</h2>
+                <h2 class="modal-title">Â¿Salir sin guardar?</h2>
                 <button type="button" class="remove-file" onclick="closeExitModal()">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -9066,7 +9087,7 @@
             </div>
             <div class="modal-body" style="text-align: center; padding: 24px;">
                 <p style="color: #bbb; margin-bottom: 24px; font-size: 15px;">
-                    Tienes cambios sin guardar. Si sales ahora, tu progreso se perderá (o quedará en una versión
+                    Tienes cambios sin guardar. Si sales ahora, tu progreso se perderÃ¡ (o quedarÃ¡ en una versiÃ³n
                     anterior).
                 </p>
                 <div style="display: flex; flex-direction: column; gap: 12px;">
@@ -9097,12 +9118,12 @@
             </div>
             <div class="modal-body" style="text-align: center; padding: 32px;">
                 <p style="color: #888; margin-bottom: 24px; line-height: 1.6;">
-                    ¿Primera vez subiendo un drumkit? Te guiaremos en el proceso paso a paso.
+                    Â¿Primera vez subiendo un drumkit? Te guiaremos en el proceso paso a paso.
                 </p>
 
                 <div
                     style="background: rgba(255,255,255,0.03); padding: 24px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.08); margin-bottom: 24px;">
-                    <h3 style="font-size: 16px; margin-bottom: 16px; color: #fff;">Proceso rápido en 4 pasos:</h3>
+                    <h3 style="font-size: 16px; margin-bottom: 16px; color: #fff;">Proceso rÃ¡pido en 4 pasos:</h3>
                     <div style="text-align: left; color: #aaa; font-size: 14px; line-height: 2;">
                         <div><strong>Paso 1:</strong> Sube tus archivos (cover, Preset.zip, audio preview)</div>
                         <div><strong>Paso 2:</strong> Configura precio y tags</div>
@@ -9112,13 +9133,13 @@
                 </div>
 
                 <p style="color: #666; font-size: 13px; margin-bottom: 24px;">
-                    Tip: Usa los íconos <span
+                    Tip: Usa los Ã­conos <span
                         style="display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; border-radius: 50%; background: rgba(255,255,255,0.1); font-size: 11px; margin: 0 4px;">?</span>
                     para obtener ayuda en cada campo
                 </p>
 
                 <div style="display: flex; gap: 12px; justify-content: center;">
-                    <button class="btn btn-primary" onclick="closeFirstTimeModal()">¡Entendido, empecemos!</button>
+                    <button class="btn btn-primary" onclick="closeFirstTimeModal()">Â¡Entendido, empecemos!</button>
                     <button class="btn btn-secondary" onclick="closeFirstTimeModal()">Saltar tutorial</button>
                 </div>
             </div>
@@ -9172,7 +9193,7 @@
         </div>
     </div>
 
-    <!-- Modal de Éxito de Publicación -->
+    <!-- Modal de Ã‰xito de PublicaciÃ³n -->
     <div class="modal-overlay" id="publishSuccessModal">
         <div class="modal" style="max-width: 500px;">
             <div class="modal-header">
@@ -9215,7 +9236,7 @@
     </div>
     <script>
         // ========================================
-        // 🔥 STORAGE CLEANUP HELPER
+        // ðŸ”¥ STORAGE CLEANUP HELPER
         // ========================================
         async function deleteFileFromStorage(pathOrUrl, bucket = 'preset-drafts') {
             if (!pathOrUrl) return;
@@ -9226,10 +9247,10 @@
                     if (parts.length > 1) path = parts[1];
                     else return;
                 }
-                console.log(`🗑️ [CLEANUP] Borrando archivo del bucket '${bucket}':`, path);
+                console.log(`ðŸ—‘ï¸ [CLEANUP] Borrando archivo del bucket '${bucket}':`, path);
                 await supabaseClient.storage.from(bucket).remove([path]);
             } catch (e) {
-                console.warn(`⚠️ Cleanup failed for ${pathOrUrl} in ${bucket}:`, e);
+                console.warn(`âš ï¸ Cleanup failed for ${pathOrUrl} in ${bucket}:`, e);
             }
         }
 
@@ -9250,14 +9271,14 @@
         }
 
         // ========================================
-        // 🔥 FIX: QUICK ACTIONS & PREVIEW TEXT
+        // ðŸ”¥ FIX: QUICK ACTIONS & PREVIEW TEXT
         // ========================================
 
         // 1. Scroll to Tags
         function scrollToTags() {
-            // Cambiar al paso 2 si no estamos ahí
+            // Cambiar al paso 2 si no estamos ahÃ­
             if (currentStep !== 2) {
-                // Navegar al paso 2 (simulando clic en stepper o lógica interna)
+                // Navegar al paso 2 (simulando clic en stepper o lÃ³gica interna)
                 const step2Btn = document.querySelector('.step[data-step="2"]');
                 if (step2Btn) step2Btn.click();
             }
@@ -9277,7 +9298,7 @@
 
         // 2. Attach Listener to TAGS Quick Action
         document.addEventListener('DOMContentLoaded', () => {
-            // Buscar el botón de TAGS (asumiendo que tiene un tooltip o texto "TAGS")
+            // Buscar el botÃ³n de TAGS (asumiendo que tiene un tooltip o texto "TAGS")
             const quickBtns = document.querySelectorAll('.quick-btn');
             quickBtns.forEach(btn => {
                 const tooltip = btn.querySelector('.quick-btn-tooltip');
@@ -9288,7 +9309,7 @@
         });
 
         // 3. Fix Preview Text (Remove "por ")
-        // Observar cambios en el preview para corregir el texto dinámicamente
+        // Observar cambios en el preview para corregir el texto dinÃ¡micamente
         const observer = new MutationObserver((mutations) => {
             const producerEl = document.getElementById('previewCardProducer');
             if (producerEl && producerEl.textContent.includes('por Willie Inspired')) {
@@ -9304,6 +9325,3 @@
 </body>
 
 </html>
-
-
-

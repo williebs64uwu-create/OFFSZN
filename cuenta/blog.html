@@ -1,7 +1,15 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 
 <head>
+    <!-- Supabase Config & Auth Utils -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        window.SUPABASE_URL = "https://qtjpvztpgfymjhhpoouq.supabase.co";
+        window.SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0anB2enRwZ2Z5bWpoaHBvb3VxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3ODA5MTUsImV4cCI6MjA3NjM1NjkxNX0.YsItTFk3hSQaVuy707-z7Z-j34mXa03O0wWGAlAzjrw";
+        window.supabaseClient = null;
+    </script>
+    <script src="/script/auth-utils.js?v=11"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mi Blog - OFFSZN Productor</title>
@@ -409,7 +417,7 @@
             overflow-y: auto;
         }
 
-        /* ===== CSS DE SCROLLBAR AÑADIDO (LA CORRECCIÓN) ===== */
+        /* ===== CSS DE SCROLLBAR AÃ‘ADIDO (LA CORRECCIÃ“N) ===== */
         .sidebar::-webkit-scrollbar {
             width: 5px;
         }
@@ -935,7 +943,7 @@
             line-height: 1.6;
             margin-bottom: 16px;
             white-space: pre-wrap;
-            /* Para respetar saltos de línea */
+            /* Para respetar saltos de lÃ­nea */
         }
 
         .post-attachment {
@@ -1058,7 +1066,7 @@
             border-radius: 50%;
         }
 
-        /* Skeleton Específico para Posts */
+        /* Skeleton EspecÃ­fico para Posts */
         .post-card.skeleton .post-author-avatar {
             border-radius: 50%;
         }
@@ -1096,7 +1104,7 @@
             }
         }
 
-        /* ===== ANIMACIÓN ÉXITO ===== */
+        /* ===== ANIMACIÃ“N Ã‰XITO ===== */
         .success-animation {
             position: fixed;
             top: 100px;
@@ -1241,7 +1249,7 @@
             style="margin-bottom:10px; display:flex; align-items:center; justify-content:center; width:44px; height:44px;"><img
                 src="../images/LOGO-OFFSZN.png" style="width:38px; mix-blend-mode: screen;"></a>
 
-        <!-- 1. GESTIÓN -->
+        <!-- 1. GESTIÃ“N -->
         <div style="width:40px; border-bottom:1px solid #222; margin:5px 0;"></div>
         <a href="/cuenta/dashboard.html" class="sidebar-icon-btn" title="Dashboard"><i class="bi bi-grid-fill"></i></a>
         <a href="/cuenta/mis-kits.html" class="sidebar-icon-btn" title="Mis Beats/Kits"><i
@@ -1261,7 +1269,7 @@
         <!-- 3. ACADEMIA -->
         <div style="width:40px; border-bottom:1px solid #222; margin:5px 0;"></div>
         <a href="/cuenta/cursos.html" class="sidebar-icon-btn" title="Cursos"><i class="bi bi-mortarboard-fill"></i></a>
-        <a href="/cuenta/analiticas.html" class="sidebar-icon-btn" title="Estadísticas"><i
+        <a href="/cuenta/analiticas.html" class="sidebar-icon-btn" title="EstadÃ­sticas"><i
                 class="bi bi-bar-chart-fill"></i></a>
 
         <!-- 4. SOCIAL -->
@@ -1356,11 +1364,11 @@
                     <a href="/mis-compras.html" class="user-dropdown-item"><i class="fas fa-shopping-bag"></i><span>Mis
                             Compras</span></a>
                     <a href="/account-settings.html" class="user-dropdown-item"><i
-                            class="fas fa-cog"></i><span>Configuración</span></a>
+                            class="fas fa-cog"></i><span>ConfiguraciÃ³n</span></a>
                     <a href="help" class="user-dropdown-item"><i
                             class="fas fa-question-circle"></i><span>Ayuda</span></a>
                     <a href="#" id="navbar-logout-btn" class="user-dropdown-item logout"><i
-                            class="fas fa-sign-out-alt"></i><span>Cerrar Sesión</span></a>
+                            class="fas fa-sign-out-alt"></i><span>Cerrar SesiÃ³n</span></a>
                 </div>
             </div>
         </div>
@@ -1379,13 +1387,13 @@
             <div class="page-header">
                 <h1 class="page-title">Mi Blog</h1>
                 <button class="btn-create-post" id="btn-create-post">
-                    <i class="fas fa-plus"></i> Crear una publicación
+                    <i class="fas fa-plus"></i> Crear una publicaciÃ³n
                 </button>
             </div>
 
             <div class="create-post-form" id="create-post-form">
                 <div class="form-left">
-                    <textarea class="post-textarea" id="post-content" placeholder="¿Qué estás pensando?"
+                    <textarea class="post-textarea" id="post-content" placeholder="Â¿QuÃ© estÃ¡s pensando?"
                         maxlength="1000"></textarea>
 
                     <div class="form-actions">
@@ -1418,14 +1426,14 @@
             </div>
 
             <div class="empty-state" id="empty-state">
-                Agrega tu primera publicación para empezar.
+                Agrega tu primera publicaciÃ³n para empezar.
             </div>
         </main>
     </div>
 
     <div class="success-animation" id="success-animation">
         <i class="fas fa-check"></i>
-        <span>Publicado con éxito</span>
+        <span>Publicado con Ã©xito</span>
     </div>
 
     <div id="logout-overlay">
@@ -1436,18 +1444,18 @@
     </div>
 
     <script>
-        // ---------- TOGGLE USER DROPDOWN (Estándar) ----------
+        // ---------- TOGGLE USER DROPDOWN (EstÃ¡ndar) ----------
         function toggleUserDropdown() {
             const dropdown = document.querySelector('.user-dropdown');
             dropdown.classList.toggle('active');
         }
 
-        // ---------- CLOSE DROPDOWNS ON OUTSIDE CLICK (Estándar) ----------
+        // ---------- CLOSE DROPDOWNS ON OUTSIDE CLICK (EstÃ¡ndar) ----------
         document.addEventListener('click', e => {
             const userDropdown = document.querySelector('.user-dropdown');
             // Asegurarse que userDropdown existe antes de llamar a .contains
             if (userDropdown && !userDropdown.contains(e.target)) {
-                // Asegurarse que el botón existe antes de compararlo
+                // Asegurarse que el botÃ³n existe antes de compararlo
                 const userBtn = document.querySelector('.user-dropdown .navbar-icon-button');
                 if (userBtn && e.target !== userBtn && !userBtn.contains(e.target)) {
                     userDropdown.classList.remove('active');
@@ -1457,7 +1465,7 @@
 
         document.addEventListener('DOMContentLoaded', async () => {
 
-            // ---------- ELEMENTOS DEL DOM (Estándar + Blog) ----------
+            // ---------- ELEMENTOS DEL DOM (EstÃ¡ndar + Blog) ----------
             const profileAvatar = document.querySelector('.profile-avatar');
             const profileName = document.querySelector('.profile-name');
             const walletAmount = document.querySelector('.wallet-amount');
@@ -1478,7 +1486,7 @@
             const successEl = document.getElementById('success-animation');
             const charCounterEl = document.getElementById('char-counter'); // CONTADOR
 
-            // ---------- ESTADO Y API (Estándar) ----------
+            // ---------- ESTADO Y API (EstÃ¡ndar) ----------
             const STORAGE_KEY = 'offszn_giftcards_state';
             const CACHE_KEY = 'offszn_user_cache';
             let appState = { totalBalance: 0, giftCards: [] };
@@ -1489,14 +1497,14 @@
                 API_URL = 'https://offszn-academy.onrender.com/api';
             }
 
-            // ---------- VERIFICAR TOKEN (Estándar) ----------
+            // ---------- VERIFICAR TOKEN (EstÃ¡ndar) ----------
             if (!token) {
                 console.error("Blog: No hay token, redirigiendo al login.");
                 window.location.replace('/pages/login.html');
                 return;
             }
 
-            // ---------- FUNCIONES DE UI/DATOS (Estándar) ----------
+            // ---------- FUNCIONES DE UI/DATOS (EstÃ¡ndar) ----------
             function loadCachedUser() {
                 try {
                     const cached = localStorage.getItem(CACHE_KEY);
@@ -1505,14 +1513,14 @@
                         updateUserUI(cachedData, true);
                         return true;
                     }
-                } catch (err) { console.error('Error al cargar caché:', err); }
+                } catch (err) { console.error('Error al cargar cachÃ©:', err); }
                 return false;
             }
 
             function saveUserCache(userData) {
                 try {
                     localStorage.setItem(CACHE_KEY, JSON.stringify(userData));
-                } catch (err) { console.error('Error al guardar caché:', err); }
+                } catch (err) { console.error('Error al guardar cachÃ©:', err); }
             }
 
             function updateUserUI(userData, fromCache = false) {
@@ -1547,7 +1555,7 @@
                 }
             }
 
-            // ---------- CARGA DE DATOS PRINCIPAL (Estándar) ----------
+            // ---------- CARGA DE DATOS PRINCIPAL (EstÃ¡ndar) ----------
             async function loadDashboardData() {
                 try {
                     const userResponse = await fetch(`${API_URL}/me`, {
@@ -1574,7 +1582,7 @@
                 }
             }
 
-            // ---------- LÓGICA DEL BLOG (Refactorizada) ----------
+            // ---------- LÃ“GICA DEL BLOG (Refactorizada) ----------
 
             // 1. Mostrar Skeletons
             function generateSkeletonPost() {
@@ -1683,11 +1691,11 @@
 
                 showError(''); // Limpiar errores
                 if (!content) {
-                    showError('El contenido no puede estar vacío.');
+                    showError('El contenido no puede estar vacÃ­o.');
                     return;
                 }
 
-                // La validación de tipo y tamaño ya se hizo en el 'change' listener
+                // La validaciÃ³n de tipo y tamaÃ±o ya se hizo en el 'change' listener
                 // Pero podemos re-validar por si acaso
                 if (file) {
                     if (!isFileValid(file)) return;
@@ -1722,7 +1730,7 @@
                             // Si falla (porque es HTML/DOCTYPE), mostramos el error que viste
                             const textError = await response.text();
                             if (textError.includes('<!DOCTYPE')) {
-                                throw new Error('Error de conexión con el servidor (Respuesta HTML). Revisa el endpoint de la API.');
+                                throw new Error('Error de conexiÃ³n con el servidor (Respuesta HTML). Revisa el endpoint de la API.');
                             }
                             throw new Error('Error desconocido al publicar.');
                         }
@@ -1743,7 +1751,7 @@
 
             // 5. Eliminar Post (de API)
             window.deletePost = async function (id) {
-                if (!confirm('¿Estás seguro de que quieres eliminar esta publicación?')) {
+                if (!confirm('Â¿EstÃ¡s seguro de que quieres eliminar esta publicaciÃ³n?')) {
                     return;
                 }
                 try {
@@ -1764,7 +1772,7 @@
             window.toggleFavorite = async function (id) {
                 const favButton = document.querySelector(`.post-card[data-id="${id}"] .post-favorite`);
                 const isActivating = !favButton.classList.contains('active');
-                favButton.classList.toggle('active'); // Actualización optimista
+                favButton.classList.toggle('active'); // ActualizaciÃ³n optimista
 
                 try {
                     const response = await fetch(`${API_URL}/blog/${id}/favorite`, {
@@ -1834,33 +1842,33 @@
                 return div.innerHTML;
             }
 
-            // Función de validación de archivo reutilizable
+            // FunciÃ³n de validaciÃ³n de archivo reutilizable
             function isFileValid(file) {
-                if (!file) return true; // No hay archivo, es válido
+                if (!file) return true; // No hay archivo, es vÃ¡lido
 
                 // 1. Validar Tipo
                 const allowedTypes = ['image/', 'video/'];
                 const isTypeAllowed = allowedTypes.some(type => file.type.startsWith(type));
                 if (!isTypeAllowed) {
-                    showError('Tipo de archivo no permitido. Solo se aceptan imágenes y videos.');
+                    showError('Tipo de archivo no permitido. Solo se aceptan imÃ¡genes y videos.');
                     fileInput.value = '';
                     fileNameEl.textContent = '';
                     return false;
                 }
 
-                // 2. Validar Tamaño
+                // 2. Validar TamaÃ±o
                 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
                 if (file.size > MAX_FILE_SIZE) {
-                    showError('El archivo es demasiado grande. Máximo 10 MB.');
+                    showError('El archivo es demasiado grande. MÃ¡ximo 10 MB.');
                     fileInput.value = '';
                     fileNameEl.textContent = '';
                     return false;
                 }
 
-                return true; // Es válido
+                return true; // Es vÃ¡lido
             }
 
-            // ---------- EVENT LISTENERS (Estándar + Blog) ----------
+            // ---------- EVENT LISTENERS (EstÃ¡ndar + Blog) ----------
             btnCreatePost.addEventListener('click', toggleCreateForm);
             btnPublish.addEventListener('click', handlePublishPost);
 
@@ -1871,7 +1879,7 @@
                 charCounterEl.classList.toggle('limit-reached', count >= 1000);
             });
 
-            // Listener de validación de archivo (MEJORADO)
+            // Listener de validaciÃ³n de archivo (MEJORADO)
             fileInput.addEventListener('change', (e) => {
                 const file = e.target.files[0];
                 fileNameEl.textContent = '';
@@ -1892,7 +1900,7 @@
                 navbarLogoutButton.addEventListener('click', handleLogout);
             }
 
-            // ---------- LOGOUT HANDLER (Estándar) ----------
+            // ---------- LOGOUT HANDLER (EstÃ¡ndar) ----------
             function handleLogout(e) {
                 e.preventDefault();
                 const overlay = document.getElementById('logout-overlay');
@@ -1903,7 +1911,7 @@
                 setTimeout(() => {
                     localStorage.removeItem('authToken');
                     localStorage.removeItem(CACHE_KEY);
-                    overlay.querySelector('h2').textContent = "¡Cerraste sesión!";
+                    overlay.querySelector('h2').textContent = "Â¡Cerraste sesiÃ³n!";
                     overlay.querySelector('i').className = 'fas fa-check-circle';
                 }, 1500);
 
@@ -1916,7 +1924,7 @@
                 }, 3500);
             }
 
-            // ---------- INICIALIZACIÓN (Estándar) ----------
+            // ---------- INICIALIZACIÃ“N (EstÃ¡ndar) ----------
             loadCachedUser();
             loadDashboardData(); // Inicia la carga principal de datos
 
@@ -1925,3 +1933,4 @@
 </body>
 
 </html>
+

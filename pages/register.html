@@ -1,15 +1,23 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 
 <head>
+  <!-- Supabase Config & Auth Utils -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    window.SUPABASE_URL = "https://qtjpvztpgfymjhhpoouq.supabase.co";
+    window.SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0anB2enRwZ2Z5bWpoaHBvb3VxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3ODA5MTUsImV4cCI6MjA3NjM1NjkxNX0.YsItTFk3hSQaVuy707-z7Z-j34mXa03O0wWGAlAzjrw";
+    window.supabaseClient = null;
+  </script>
+  <script src="/script/auth-utils.js?v=11"></script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Crear Cuenta — OFFSZN</title>
+  <title>Crear Cuenta â€” OFFSZN</title>
   <link rel="icon" type="image/webp" href="/images/LOGO OFFSZN.webp">
   <meta name="description"
-    content="Únete a OFFSZN, la comunidad número 1 para productores musicales. Descarga sonidos premium y lleva tus beats al siguiente nivel.">
+    content="Ãšnete a OFFSZN, la comunidad nÃºmero 1 para productores musicales. Descarga sonidos premium y lleva tus beats al siguiente nivel.">
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
   <link
     href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700&display=swap"
     rel="stylesheet">
@@ -67,33 +75,30 @@
 <body class="bg-black min-h-screen flex flex-col">
 
   <script>
-    // 🚀 INSTANT GUARD: Hide page immediately while checking
+    // INSTANT GUARD: Hide page immediately while checking
     document.body.style.opacity = '0';
     document.body.style.pointerEvents = 'none';
 
     (async () => {
-      const token = localStorage.getItem('authToken');
-      if (!token) {
-        // No token - show page
+      // Use global client initialized by auth-utils.js
+      if (!window.supabaseClient) {
+        // Wait briefly if initialization is in progress
+        await new Promise(r => setTimeout(r, 200));
+      }
+
+      const supabaseGuard = window.supabaseClient;
+      if (!supabaseGuard) {
         document.body.style.opacity = '1';
         document.body.style.pointerEvents = 'auto';
         return;
       }
 
-      // Verify with Supabase
-      const { createClient } = supabase;
-      const SUPABASE_URL = "https://qtjpvztpgfymjhhpoouq.supabase.co";
-      const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0anB2enRwZ2Z5bWpoaHBvb3VxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3ODA5MTUsImV4cCI6MjA3NjM1NjkxNX0.YsItTFk3hSQaVuy707-z7Z-j34mXa03O0wWGAlAzjrw";
-      const supabaseGuard = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
       const { data: { session } } = await supabaseGuard.auth.getSession();
 
       if (session) {
-        // Already logged in - instant redirect
         console.log("✅ Ya autenticado, redirigiendo...");
         window.location.replace('/');
       } else {
-        // Not logged in - show page
         document.body.style.opacity = '1';
         document.body.style.pointerEvents = 'auto';
       }
@@ -114,7 +119,7 @@
       <!-- Title -->
       <div class="text-center mb-8">
         <h1 class="text-white text-2xl font-semibold mb-2">Crear una cuenta</h1>
-        <p class="text-zinc-400 text-sm">Empieza tu próxima temporada musical hoy mismo.</p>
+        <p class="text-zinc-400 text-sm">Empieza tu prÃ³xima temporada musical hoy mismo.</p>
       </div>
 
       <!-- Form -->
@@ -122,7 +127,7 @@
 
         <!-- Email -->
         <div>
-          <label for="reg-email" class="block text-zinc-400 text-sm mb-2 font-medium">Correo electrónico</label>
+          <label for="reg-email" class="block text-zinc-400 text-sm mb-2 font-medium">Correo electrÃ³nico</label>
           <input type="email" id="reg-email" name="email" placeholder="tu@email.com"
             class="w-full px-4 py-3 bg-[#0f0f0f] border border-white/10 rounded-xl text-white placeholder-zinc-600 focus:outline-none focus:border-purple-600/50 focus:ring-1 focus:ring-purple-600/50 transition-all"
             required pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$">
@@ -131,9 +136,9 @@
 
         <!-- Password -->
         <div>
-          <label for="reg-password" class="block text-zinc-400 text-sm mb-2 font-medium">Contraseña</label>
+          <label for="reg-password" class="block text-zinc-400 text-sm mb-2 font-medium">ContraseÃ±a</label>
           <div class="relative">
-            <input type="password" id="reg-password" name="password" placeholder="Mínimo 6 caracteres"
+            <input type="password" id="reg-password" name="password" placeholder="MÃ­nimo 6 caracteres"
               class="w-full px-4 py-3 bg-[#0f0f0f] border border-white/10 rounded-xl text-white placeholder-zinc-600 focus:outline-none focus:border-purple-600/50 focus:ring-1 focus:ring-purple-600/50 transition-all pr-12"
               required minlength="6" maxlength="15">
             <button type="button" id="togglePassword"
@@ -201,7 +206,7 @@
               }
               // Check pattern manually to be 100% sure
               else if (!emailPattern.test(emailValue)) {
-                emailError.textContent = 'Ingresa un correo válido (ej: usuario@gmail.com).';
+                emailError.textContent = 'Ingresa un correo vÃ¡lido (ej: usuario@gmail.com).';
                 emailError.classList.remove('hidden');
                 return false;
               } else {
@@ -213,15 +218,15 @@
             const validatePassword = () => {
               const val = passwordInput.value;
               if (!val) {
-                passwordError.textContent = 'La contraseña es obligatoria.';
+                passwordError.textContent = 'La contraseÃ±a es obligatoria.';
                 passwordError.classList.remove('hidden');
                 return false;
               } else if (val.length < 6) {
-                passwordError.textContent = `La contraseña debe tener al menos 6 caracteres (tienes ${val.length}).`;
+                passwordError.textContent = `La contraseÃ±a debe tener al menos 6 caracteres (tienes ${val.length}).`;
                 passwordError.classList.remove('hidden');
                 return false;
               } else if (val.length > 15) {
-                passwordError.textContent = 'La contraseña no puede exceder 15 caracteres.';
+                passwordError.textContent = 'La contraseÃ±a no puede exceder 15 caracteres.';
                 passwordError.classList.remove('hidden');
                 return false;
               } else {
@@ -278,7 +283,7 @@
       <!-- Divider -->
       <div class="flex items-center my-6">
         <div class="flex-1 h-px bg-zinc-800"></div>
-        <span class="px-4 text-zinc-500 text-sm">o continúa con</span>
+        <span class="px-4 text-zinc-500 text-sm">o continÃºa con</span>
         <div class="flex-1 h-px bg-zinc-800"></div>
       </div>
 
@@ -302,8 +307,8 @@
 
       <!-- Login Link -->
       <p class="text-center text-zinc-400 text-sm mt-6">
-        ¿Ya tienes una cuenta?
-        <a href="/pages/login.html" class="text-white hover:underline">Inicia sesión</a>
+        Â¿Ya tienes una cuenta?
+        <a href="/pages/login.html" class="text-white hover:underline">Inicia sesiÃ³n</a>
       </p>
 
     </div>
@@ -311,8 +316,8 @@
 
   <!-- Footer -->
   <footer class="flex items-center justify-center gap-4 py-4 text-zinc-500 text-sm">
-    <a href="/legal/terminos-de-servicio.html" class="hover:text-zinc-300 transition-colors">Términos</a>
-    <a href="/legal/politica-de-privacidad.html" class="hover:text-zinc-300 transition-colors">Política de
+    <a href="/legal/terminos-de-servicio.html" class="hover:text-zinc-300 transition-colors">TÃ©rminos</a>
+    <a href="/legal/politica-de-privacidad.html" class="hover:text-zinc-300 transition-colors">PolÃ­tica de
       Privacidad</a>
   </footer>
 
@@ -323,6 +328,3 @@
 </body>
 
 </html>
-
-
-

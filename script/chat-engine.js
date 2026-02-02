@@ -1,8 +1,11 @@
 // ===== CHAT ENGINE - COMPLETE REWRITE =====
-const SUPABASE_URL = window.SUPABASE_URL || "https://qtjpvztpgfymjhhpoouq.supabase.co";
-const SUPABASE_KEY = window.SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0anB2enRwZ2Z5bWpoaHBvb3VxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3ODA5MTUsImV4cCI6MjA3NjM1NjkxNX0.YsItTFk3hSQaVuy707-z7Z-j34mXa03O0wWGAlAzjrw";
+// Use the global client initialized by auth-utils.js
+const supabase = window.supabaseClient;
 
-const supabase = window.supabaseClient || (window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null);
+// Safety check
+if (!supabase) {
+    console.error("Critical: Global Supabase not found. Ensure auth-utils.js is loaded.");
+}
 
 let currentUser = null;
 let currentConversationId = null;

@@ -1,7 +1,15 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 
 <head>
+    <!-- Supabase Config & Auth Utils -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        window.SUPABASE_URL = "https://qtjpvztpgfymjhhpoouq.supabase.co";
+        window.SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0anB2enRwZ2Z5bWpoaHBvb3VxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3ODA5MTUsImV4cCI6MjA3NjM1NjkxNX0.YsItTFk3hSQaVuy707-z7Z-j34mXa03O0wWGAlAzjrw";
+        window.supabaseClient = null;
+    </script>
+    <script src="/script/auth-utils.js?v=11"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gift Cards - OFFSZN</title>
@@ -1503,7 +1511,7 @@
             style="margin-bottom:10px; display:flex; align-items:center; justify-content:center; width:44px; height:44px;"><img
                 src="../images/LOGO-OFFSZN.png" style="width:38px; mix-blend-mode: screen;"></a>
 
-        <!-- 1. GESTIÓN -->
+        <!-- 1. GESTIÃ“N -->
         <div style="width:40px; border-bottom:1px solid #222; margin:5px 0;"></div>
         <a href="/cuenta/dashboard.html" class="sidebar-icon-btn" title="Dashboard"><i class="bi bi-grid-fill"></i></a>
         <a href="/cuenta/mis-kits.html" class="sidebar-icon-btn" title="Mis Beats/Kits"><i
@@ -1523,7 +1531,7 @@
         <!-- 3. ACADEMIA -->
         <div style="width:40px; border-bottom:1px solid #222; margin:5px 0;"></div>
         <a href="/cuenta/cursos.html" class="sidebar-icon-btn" title="Cursos"><i class="bi bi-mortarboard-fill"></i></a>
-        <a href="/cuenta/analiticas.html" class="sidebar-icon-btn" title="Estadísticas"><i
+        <a href="/cuenta/analiticas.html" class="sidebar-icon-btn" title="EstadÃ­sticas"><i
                 class="bi bi-bar-chart-fill"></i></a>
 
         <!-- 4. SOCIAL -->
@@ -1639,12 +1647,12 @@
                     </a>
                     <a href="#" class="user-dropdown-item disabled">
                         <i class="fas fa-chart-line"></i>
-                        <span>Analíticas</span>
+                        <span>AnalÃ­ticas</span>
                         <span class="soon-badge">Pronto</span>
                     </a>
                     <a href="/account-settings.html" class="user-dropdown-item">
                         <i class="fas fa-cog"></i>
-                        <span>Configuración</span>
+                        <span>ConfiguraciÃ³n</span>
                     </a>
                     <a href="help" class="user-dropdown-item">
                         <i class="fas fa-question-circle"></i>
@@ -1652,7 +1660,7 @@
                     </a>
                     <a href="logout" class="user-dropdown-item logout">
                         <i class="fas fa-sign-out-alt"></i>
-                        <span>Cerrar Sesión</span>
+                        <span>Cerrar SesiÃ³n</span>
                     </a>
                 </div>
             </div>
@@ -1692,7 +1700,7 @@
                     <div class="welcome-gift-icon">
                         <i class="fas fa-gift"></i>
                     </div>
-                    <h2 class="welcome-gift-title">¡Bienvenido a OFFSZN!</h2>
+                    <h2 class="welcome-gift-title">Â¡Bienvenido a OFFSZN!</h2>
                     <div class="welcome-gift-amount" id="welcome-amount">$5.00 USD</div>
                     <p class="welcome-gift-text">
                         Como regalo de bienvenida, te obsequiamos <strong>$5 USD</strong> para que puedas usarlos en
@@ -1711,7 +1719,7 @@
                         <i class="fas fa-trophy"></i>
                         Ruleta Mensual de Premios
                     </h2>
-                    <p class="wheel-subtitle">¡Gira la ruleta una vez al mes y gana increíbles recompensas!</p>
+                    <p class="wheel-subtitle">Â¡Gira la ruleta una vez al mes y gana increÃ­bles recompensas!</p>
                 </div>
 
                 <div class="wheel-container">
@@ -1755,7 +1763,7 @@
                 <div class="gift-cards-grid" id="gift-cards-container">
                     <div class="empty-state">
                         <i class="fas fa-gift"></i>
-                        <h3>No tienes gift cards activas aún</h3>
+                        <h3>No tienes gift cards activas aÃºn</h3>
                         <p>Reclama tu regalo de bienvenida o gira la ruleta mensual para obtener tus primeras
                             recompensas.</p>
                     </div>
@@ -1763,7 +1771,7 @@
             </div>
 
             <div class="how-to-use">
-                <h2 class="how-to-title">¿Cómo usar tus Gift Cards?</h2>
+                <h2 class="how-to-title">Â¿CÃ³mo usar tus Gift Cards?</h2>
 
                 <div class="steps-grid">
                     <div class="step">
@@ -1774,7 +1782,7 @@
 
                     <div class="step">
                         <div class="step-number">2</div>
-                        <h3 class="step-title">Añade</h3>
+                        <h3 class="step-title">AÃ±ade</h3>
                         <p class="step-desc">Agrega los productos a tu carrito de compras.</p>
                     </div>
 
@@ -1786,8 +1794,8 @@
 
                     <div class="step">
                         <div class="step-number">4</div>
-                        <h3 class="step-title">¡Disfruta!</h3>
-                        <p class="step-desc">Descarga tu producto y crea música increíble.</p>
+                        <h3 class="step-title">Â¡Disfruta!</h3>
+                        <p class="step-desc">Descarga tu producto y crea mÃºsica increÃ­ble.</p>
                     </div>
                 </div>
             </div>
@@ -1816,7 +1824,7 @@
                         </div>
                         <div class="rule-content">
                             <div class="rule-title">Gift Cards Acumulativas</div>
-                            <div class="rule-desc">Puedes acumular múltiples gift cards en dólares ($1 + $1 + $5 = $7) y
+                            <div class="rule-desc">Puedes acumular mÃºltiples gift cards en dÃ³lares ($1 + $1 + $5 = $7) y
                                 usarlas juntas.</div>
                         </div>
                     </li>
@@ -1837,7 +1845,7 @@
                             <i class="fas fa-store"></i>
                         </div>
                         <div class="rule-content">
-                            <div class="rule-title">Aceptación del Vendedor</div>
+                            <div class="rule-title">AceptaciÃ³n del Vendedor</div>
                             <div class="rule-desc">El vendedor decide si su producto acepta gift cards. Por defecto,
                                 todos las aceptan.</div>
                         </div>
@@ -1849,7 +1857,7 @@
                         </div>
                         <div class="rule-content">
                             <div class="rule-title">No Reembolsables</div>
-                            <div class="rule-desc">Una vez usada una gift card o descuento, no podrás recuperarlo ni
+                            <div class="rule-desc">Una vez usada una gift card o descuento, no podrÃ¡s recuperarlo ni
                                 reutilizarlo.</div>
                         </div>
                     </li>
@@ -1861,7 +1869,7 @@
                         <div class="rule-content">
                             <div class="rule-title">Ruleta Mensual</div>
                             <div class="rule-desc">Solo puedes girar la ruleta UNA VEZ por mes. El premio se suma
-                                automáticamente a tu cuenta.</div>
+                                automÃ¡ticamente a tu cuenta.</div>
                         </div>
                     </li>
 
@@ -1870,8 +1878,8 @@
                             <i class="fas fa-infinity"></i>
                         </div>
                         <div class="rule-content">
-                            <div class="rule-title">Sin Fecha de Expiración</div>
-                            <div class="rule-desc">Tus gift cards y descuentos nunca expiran. Úsalos cuando quieras.
+                            <div class="rule-title">Sin Fecha de ExpiraciÃ³n</div>
+                            <div class="rule-desc">Tus gift cards y descuentos nunca expiran. Ãšsalos cuando quieras.
                             </div>
                         </div>
                     </li>
@@ -1881,7 +1889,7 @@
             <div class="terms-section">
                 <a href="terms" class="terms-link">
                     <i class="fas fa-file-contract"></i>
-                    Leer Términos y Condiciones Completos
+                    Leer TÃ©rminos y Condiciones Completos
                 </a>
             </div>
         </main>
@@ -1896,11 +1904,11 @@
             <div class="modal-icon success">
                 <i class="fas fa-trophy"></i>
             </div>
-            <h2 class="modal-title">¡Felicidades!</h2>
+            <h2 class="modal-title">Â¡Felicidades!</h2>
             <p class="modal-text">Has ganado:</p>
             <div class="modal-prize" id="prize-text">$1.00 USD</div>
             <p class="modal-text">Tu premio ha sido agregado a tu cuenta.</p>
-            <button class="modal-btn" onclick="closeModal()">¡Genial!</button>
+            <button class="modal-btn" onclick="closeModal()">Â¡Genial!</button>
         </div>
     </div>
 
@@ -1913,7 +1921,7 @@
             <div class="modal-icon gift">
                 <i class="fas fa-gift"></i>
             </div>
-            <h2 class="modal-title">¡Regalo Reclamado!</h2>
+            <h2 class="modal-title">Â¡Regalo Reclamado!</h2>
             <div class="modal-prize" id="welcome-prize">$5.00 USD</div>
             <p class="modal-text">Tu gift card de bienvenida ha sido activada. Ahora puedes usarla en cualquier
                 producto.</p>
@@ -1930,10 +1938,10 @@
             <div class="modal-icon">
                 <i class="fas fa-rocket"></i>
             </div>
-            <h2 class="modal-title">Próximamente</h2>
+            <h2 class="modal-title">PrÃ³ximamente</h2>
             <p class="modal-text">
-                Estamos trabajando en <strong id="featureName">esta función</strong>.<br />
-                Será lanzada pronto.
+                Estamos trabajando en <strong id="featureName">esta funciÃ³n</strong>.<br />
+                SerÃ¡ lanzada pronto.
             </p>
         </div>
     </div>
@@ -1942,3 +1950,4 @@
 </body>
 
 </html>
+

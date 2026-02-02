@@ -1,19 +1,14 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-  const SUPABASE_URL = "https://qtjpvztpgfymjhhpoouq.supabase.co";
-  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0anB2enRwZ2Z5bWpoaHBvb3VxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3ODA5MTUsImV4cCI6MjA3NjM1NjkxNX0.YsItTFk3hSQaVuy707-z7Z-j34mXa03O0wWGAlAzjrw";
+  // Use the global client initialized by auth-utils.js
+  const supabaseClient = window.supabaseClient;
 
-  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-    console.error("Error: Las variables de Supabase no están configuradas...");
-    alert("Error de configuración. Contacta al administrador.");
+  // Safety check
+  if (!supabaseClient) {
+    console.error("Critical: Global Supabase not found. Ensure auth-utils.js is loaded.");
+    // alert("Error de conexión con la base de datos.");
     return;
   }
-
-  const { createClient } = supabase;
-
-  // 🌍 CONSOLIDATE: Re-use existing client if already initialized (e.g. by welcome.html guard)
-  const supabaseClient = window.supabaseClient || createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-  window.supabaseClient = supabaseClient;
 
   // ============================================
   // 🆕 OBTENER PARÁMETRO REDIRECT DE LA URL

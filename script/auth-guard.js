@@ -4,17 +4,14 @@
 
 (function () {
     // 1. Initialize Supabase (Centralized Config)
-    const supabaseUrl = 'https://qtjpvztpgfymjhhpoouq.supabase.co';
-    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0anB2enRwZ2Z5bWpoaHBvb3VxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3ODA5MTUsImV4cCI6MjA3NjM1NjkxNX0.YsItTFk3hSQaVuy707-z7Z-j34mXa03O0wWGAlAzjrw';
+    // Use the global client initialized by auth-utils.js
+    const supabaseClient = window.supabaseClient;
 
-    // Check if Supabase global is available
-    if (typeof supabase === 'undefined') {
-        console.error("Supabase SDK not loaded! Auth Guard cannot function.");
+    // Safety check
+    if (!supabaseClient) {
+        console.error("Critical: Global Supabase not found. Ensure auth-utils.js is loaded.");
         return;
     }
-
-    const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
-    window.supabaseClient = supabaseClient; // Expose globally
     window.currentUser = null;
 
     // 2. Strict Auth Check & Cookie Sync

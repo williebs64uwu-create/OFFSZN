@@ -1,9 +1,12 @@
 // ========================================
 // SUPABASE INITIALIZATION
 // ========================================
-const SUPABASE_URL = 'https://lqwcmqcqxjmfxnpbmjjr.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxxd2NtcWNxeGptZnhucGJtampyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzE2MzI5OTcsImV4cCI6MjA0NzIwODk5N30.Xw_VUJdPDHZfvMDDGjJyBqGOjpPUWkjGhHQvBQRIlrI';
-const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// Use the global client initialized by auth-utils.js
+const supabaseClient = window.supabaseClient;
+
+if (!supabaseClient) {
+    console.error("Critical: Global Supabase not found. Ensure auth-utils.js is loaded.");
+}
 
 // ========================================
 // DOM ELEMENTS

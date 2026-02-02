@@ -1,7 +1,15 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 
 <head>
+    <!-- Supabase Config & Auth Utils -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        window.SUPABASE_URL = "https://qtjpvztpgfymjhhpoouq.supabase.co";
+        window.SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0anB2enRwZ2Z5bWpoaHBvb3VxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3ODA5MTUsImV4cCI6MjA3NjM1NjkxNX0.YsItTFk3hSQaVuy707-z7Z-j34mXa03O0wWGAlAzjrw";
+        window.supabaseClient = null;
+    </script>
+    <script src="/script/auth-utils.js?v=11"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>YouTube Automation Engine - OFFSZN</title>
@@ -58,7 +66,7 @@
                 </svg>
                 YouTube Upload
             </a>
-            <a href="../dashboard.html" class="nav-back">← Dashboard</a>
+            <a href="../dashboard.html" class="nav-back">â† Dashboard</a>
         </div>
     </nav>
 
@@ -67,12 +75,12 @@
         <!-- STEP 1: AUTHENTICATION -->
         <section class="section-card" id="authSection">
             <div class="section-header">
-                <h3>1. Conexión</h3>
+                <h3>1. ConexiÃ³n</h3>
                 <span class="status-badge pending" id="connectionStatus">No conectado</span>
             </div>
 
             <div id="authConnectView">
-                <p class="section-desc">Conecta tu canal de YouTube para permitir la subida automática.</p>
+                <p class="section-desc">Conecta tu canal de YouTube para permitir la subida automÃ¡tica.</p>
                 <button id="btnConnect" class="btn-youtube">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                         <path
@@ -99,7 +107,7 @@
             <div class="section-header">
                 <h3>2. Portada del Video</h3>
             </div>
-            <p class="section-desc">Sube la imagen que se usará como miniatura y fondo del video (1280x720 recomendado).
+            <p class="section-desc">Sube la imagen que se usarÃ¡ como miniatura y fondo del video (1280x720 recomendado).
             </p>
 
             <div class="cover-upload-zone" id="coverUploadZone">
@@ -114,14 +122,14 @@
                     <small>JPG, PNG (Max 5MB)</small>
                 </div>
                 <img id="coverPreview" class="cover-preview hidden">
-                <button id="btnRemoveCover" class="btn-remove-cover hidden">×</button>
+                <button id="btnRemoveCover" class="btn-remove-cover hidden">Ã—</button>
             </div>
         </section>
 
         <!-- STEP 3: BEAT INFO -->
         <section class="section-card">
             <div class="section-header">
-                <h3>3. Información Básica</h3>
+                <h3>3. InformaciÃ³n BÃ¡sica</h3>
             </div>
 
             <div class="grid-2">
@@ -130,7 +138,7 @@
                     <input type="text" id="artistInput" placeholder="Ej: Travis Scott, Drake">
                 </div>
                 <div class="form-field">
-                    <label>Género *</label>
+                    <label>GÃ©nero *</label>
                     <select id="genreInput">
                         <option value="" disabled selected>Seleccionar...</option>
                         <option value="Trap">Trap</option>
@@ -178,21 +186,21 @@
                     Autocompletar
                 </button>
             </div>
-            <p class="section-desc">Escribe la información tal como aparecerá en YouTube. Usa autocompletar como ayuda
+            <p class="section-desc">Escribe la informaciÃ³n tal como aparecerÃ¡ en YouTube. Usa autocompletar como ayuda
                 si lo deseas.</p>
 
             <div class="form-field">
-                <label>Título del Video *</label>
-                <input type="text" id="titleInput" maxlength="100" placeholder="Título exacto del video...">
+                <label>TÃ­tulo del Video *</label>
+                <input type="text" id="titleInput" maxlength="100" placeholder="TÃ­tulo exacto del video...">
                 <div class="field-footer">
                     <span id="titleCount">0/100</span>
                 </div>
             </div>
 
             <div class="form-field">
-                <label>Descripción *</label>
+                <label>DescripciÃ³n *</label>
                 <textarea id="descriptionInput" rows="8" maxlength="5000"
-                    placeholder="Descripción completa del video..."></textarea>
+                    placeholder="DescripciÃ³n completa del video..."></textarea>
                 <div class="field-footer">
                     <span id="descCount">0/5000</span>
                 </div>
@@ -202,7 +210,7 @@
                 <label>Tags (separados por coma)</label>
                 <textarea id="tagsInput" rows="3" placeholder="trap beat, free type beat, ..."></textarea>
                 <div class="field-footer">
-                    <span>Máximo 500 caracteres</span>
+                    <span>MÃ¡ximo 500 caracteres</span>
                 </div>
             </div>
         </section>
@@ -221,3 +229,4 @@
 </body>
 
 </html>
+

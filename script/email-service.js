@@ -1,8 +1,10 @@
-import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
+// Use the global client initialized by auth-utils.js
+const supabase = window.supabaseClient;
 
-const supabaseUrl = "https://qtjpvztpgfymjhhpoouq.supabase.co";
-const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0anB2enRwZ2Z5bWpoaHBvb3VxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3ODA5MTUsImV4cCI6MjA3NjM1NjkxNX0.YsItTFk3hSQaVuy707-z7Z-j34mXa03O0wWGAlAzjrw";
-const supabase = createClient(supabaseUrl, supabaseKey);
+// Safety check
+if (!supabase) {
+  console.error("Critical: Global Supabase not found. Ensure auth-utils.js is loaded.");
+}
 
 // ============================================
 // 📧 EMAILJS CONFIG
@@ -20,7 +22,7 @@ const EMAILJS_CONFIG = {
 function inicializarEmailJS() {
   return new Promise((resolve) => {
     console.log('🔍 Verificando EmailJS...');
-    
+
     if (typeof window.emailjs !== 'undefined') {
       if (!window.emailjsInicializado) {
         try {
@@ -38,10 +40,10 @@ function inicializarEmailJS() {
     console.log('⏳ Esperando a que EmailJS se cargue...');
     let intentos = 0;
     const maxIntentos = 50;
-    
+
     const intervalo = setInterval(() => {
       intentos++;
-      
+
       if (window.emailjs) {
         clearInterval(intervalo);
         try {
@@ -81,7 +83,7 @@ export async function enviarEmailCompra(emailData) {
     // Paso 1: Verificar que EmailJS esté listo
     console.log('🔍 Paso 1: Verificando EmailJS...');
     const emailJSReady = await inicializarEmailJS();
-    
+
     if (!emailJSReady) {
       throw new Error('EmailJS no está disponible');
     }
@@ -95,7 +97,7 @@ export async function enviarEmailCompra(emailData) {
       to_name: emailData.buyerName,
       order_id: emailData.orderId,
       total: emailData.total.toFixed(2),
-      products_list: emailData.products.map(p => 
+      products_list: emailData.products.map(p =>
         `${p.name} - ${p.license} ($${p.price})`
       ).join('\n')
     };
@@ -130,14 +132,14 @@ export async function enviarEmailCompra(emailData) {
     console.error('🔻 Tipo de error:', error.name);
     console.error('🔻 Mensaje:', error.message);
     console.error('🔻 Stack:', error.stack);
-    
+
     if (error.text) {
       console.error('🔻 Texto del error:', error.text);
     }
-    
+
     console.log('╚═══════════════════════════════════════╝');
     console.log('');
-    
+
     return { success: false, error: error.message || error };
   }
 }
@@ -148,7 +150,7 @@ export async function enviarEmailCompra(emailData) {
 export async function enviarEmailDescargaGratis(emailData) {
   try {
     console.log('📧 Enviando email de descarga gratis...');
-    
+
     const emailJSReady = await inicializarEmailJS();
     if (!emailJSReady) {
       throw new Error('EmailJS no está disponible');

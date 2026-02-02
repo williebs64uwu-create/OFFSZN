@@ -1,10 +1,18 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 
 <head>
+  <!-- Supabase Config & Auth Utils -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    window.SUPABASE_URL = "https://qtjpvztpgfymjhhpoouq.supabase.co";
+    window.SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0anB2enRwZ2Z5bWpoaHBvb3VxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3ODA5MTUsImV4cCI6MjA3NjM1NjkxNX0.YsItTFk3hSQaVuy707-z7Z-j34mXa03O0wWGAlAzjrw";
+    window.supabaseClient = null;
+  </script>
+  <script src="/script/auth-utils.js?v=11"></script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>¡Compra Exitosa! - OFFSZN</title>
+  <title>Â¡Compra Exitosa! - OFFSZN</title>
   <link
     href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Montserrat:wght@700;800;900&display=swap"
     rel="stylesheet">
@@ -181,7 +189,7 @@
       animation: slideUp 0.5s 0.1s ease-out backwards;
     }
 
-    /* 📧 ALERTA DE EMAIL */
+    /* ðŸ“§ ALERTA DE EMAIL */
     .email-alert {
       background: linear-gradient(135deg, rgba(114, 9, 183, 0.15), rgba(86, 11, 173, 0.15));
       border: 2px solid rgba(114, 9, 183, 0.4);
@@ -475,6 +483,14 @@
 
   <!-- ==================== NAVBAR ==================== -->
   <header class="navbar">
+    <!-- Supabase Config & Auth Utils -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+      window.SUPABASE_URL = "https://qtjpvztpgfymjhhpoouq.supabase.co";
+      window.SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0anB2enRwZ2Z5bWpoaHBvb3VxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3ODA5MTUsImV4cCI6MjA3NjM1NjkxNX0.YsItTFk3hSQaVuy707-z7Z-j34mXa03O0wWGAlAzjrw";
+      window.supabaseClient = null;
+    </script>
+    <script src="/script/auth-utils.js?v=11"></script>
     <div class="navbar-container">
       <div class="logo">
         <a href="/index.html">OFFSZN</a>
@@ -503,19 +519,19 @@
       <i class="bi bi-check-lg"></i>
     </div>
 
-    <h1>¡Compra Exitosa!</h1>
+    <h1>Â¡Compra Exitosa!</h1>
     <p class="success-message">
-      Tu pago se ha procesado correctamente. Los archivos están listos para descargar.
+      Tu pago se ha procesado correctamente. Los archivos estÃ¡n listos para descargar.
     </p>
 
-    <!-- 📧 ALERTA DE EMAIL -->
+    <!-- ðŸ“§ ALERTA DE EMAIL -->
     <div class="email-alert">
       <div class="email-alert-icon">
         <i class="bi bi-envelope-check"></i>
       </div>
       <div class="email-alert-content">
         <div class="email-alert-title">
-          <span>Revisa tu correo electrónico</span>
+          <span>Revisa tu correo electrÃ³nico</span>
           <span class="email-badge">
             <i class="bi bi-check-circle-fill"></i>
             Enviado
@@ -530,7 +546,7 @@
 
     <div class="order-info" id="orderInfo">
       <div class="info-row">
-        <span class="info-label">Número de orden</span>
+        <span class="info-label">NÃºmero de orden</span>
         <span class="info-value" id="orderId">Cargando...</span>
       </div>
       <div class="info-row">
@@ -544,7 +560,7 @@
     </div>
 
     <div class="purchases-list" id="purchasesList">
-      <h3>📦 Productos comprados</h3>
+      <h3>ðŸ“¦ Productos comprados</h3>
       <div id="purchasesContent">
         <p style="color: #999; text-align: center; padding: 1rem;">Cargando productos...</p>
       </div>
@@ -562,14 +578,15 @@
     </div>
   </div>
 
-  <!-- ==================== SCRIPTS ORIGINALES ==================== -->
   <script type="module">
-    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
     import { generarLicencia } from '../script/generate-license.js';
 
-    const supabaseUrl = "https://qtjpvztpgfymjhhpoouq.supabase.co";
-    const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0anB2enRwZ2Z5bWpoaHBvb3VxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3ODA5MTUsImV4cCI6MjA3NjM1NjkxNX0.YsItTFk3hSQaVuy707-z7Z-j34mXa03O0wWGAlAzjrw";
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    // Use the global client initialized by auth-utils.js
+    const supabase = window.supabaseClient;
+
+    if (!supabase) {
+      console.error("Critical: Global Supabase not found. Ensure auth-utils.js is loaded.");
+    }
 
     async function cargarDetallesCompra() {
       const params = new URLSearchParams(window.location.search);
@@ -598,15 +615,15 @@
         const { data: purchases, error } = await supabase
           .from('purchases')
           .select(`
-            *,
-            products (
-              name,
-              image_url,
-              download_url_mp3,
-              download_url_wav,
-              download_url_stems
-            )
-          `)
+      *,
+      products (
+      name,
+      image_url,
+      download_url_mp3,
+      download_url_wav,
+      download_url_stems
+      )
+      `)
           .eq('paypal_transaction_id', orderId)
           .eq('user_id', user.id);
 
@@ -623,41 +640,37 @@
               user.email.split('@')[0];
 
             return `
-              <div class="purchase-item">
-                <div class="purchase-icon">
-                  <i class="bi bi-music-note-beamed"></i>
-                </div>
-                <div class="purchase-info">
-                  <div class="purchase-name">${p.products.name}</div>
-                  <div class="purchase-license">${getLicenseName(p.license_type)}</div>
-                </div>
-                <div class="purchase-actions">
-                  <a href="${downloadUrl}" 
-                     download 
-                     target="_blank" 
-                     class="btn-download-beat"
-                     ${!downloadUrl || downloadUrl === '#' ? 'style="opacity:0.5;pointer-events:none;"' : ''}>
-                    <i class="bi bi-music-note-beamed"></i>
-                    Descargar Beat
-                  </a>
-                  <button class="btn-download-license" 
-                          onclick='descargarLicencia(${JSON.stringify({
-              id: p.id,
-              productName: p.products.name,
-              producerName: "Willie Inspired",
-              licenseType: p.license_type,
-              amount: p.amount,
-              buyerName: buyerName,
-              buyerEmail: user.email,
-              purchaseDate: p.created_at,
-              orderId: p.paypal_transaction_id
-            }).replace(/"/g, "&quot;")})'>
-                    <i class="bi bi-file-earmark-text"></i>
-                    Descargar Licencia
-                  </button>
-                </div>
-              </div>
-            `;
+      <div class="purchase-item">
+        <div class="purchase-icon">
+          <i class="bi bi-music-note-beamed"></i>
+        </div>
+        <div class="purchase-info">
+          <div class="purchase-name">${p.products.name}</div>
+          <div class="purchase-license">${getLicenseName(p.license_type)}</div>
+        </div>
+        <div class="purchase-actions">
+          <a href="${downloadUrl}" download target="_blank" class="btn-download-beat" ${!downloadUrl ||
+                downloadUrl === '#' ? 'style="opacity:0.5;pointer-events:none;"' : ''}>
+            <i class="bi bi-music-note-beamed"></i>
+            Descargar Beat
+          </a>
+          <button class="btn-download-license" onclick='descargarLicencia(${JSON.stringify({
+                  id: p.id,
+                  productName: p.products.name,
+                  producerName: "Willie Inspired",
+                  licenseType: p.license_type,
+                  amount: p.amount,
+                  buyerName: buyerName,
+                  buyerEmail: user.email,
+                  purchaseDate: p.created_at,
+                  orderId: p.paypal_transaction_id
+                }).replace(/"/g, "&quot;")})'>
+            <i class="bi bi-file-earmark-text"></i>
+            Descargar Licencia
+          </button>
+        </div>
+      </div>
+      `;
           }).join('');
 
           document.getElementById('purchasesContent').innerHTML = purchasesHTML;
@@ -679,7 +692,7 @@
 
     function getLicenseName(licenseId) {
       const licenses = {
-        'basic': 'Licencia Básica',
+        'basic': 'Licencia BÃ¡sica',
         'premium': 'Licencia Premium',
         'stems': 'Stems Trackout',
         'exclusive': 'Licencia Exclusiva'
@@ -695,10 +708,10 @@
 
       try {
         await generarLicencia(purchaseData);
-        alert('✅ ¡Licencia descargada!\n\nRevisa tu carpeta de Descargas.');
+        alert('âœ… Â¡Licencia descargada!\n\nRevisa tu carpeta de Descargas.');
       } catch (error) {
         console.error('Error:', error);
-        alert('❌ Error al generar la licencia.');
+        alert('âŒ Error al generar la licencia.');
       } finally {
         button.innerHTML = originalHTML;
         button.disabled = false;
