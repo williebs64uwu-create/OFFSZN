@@ -718,8 +718,7 @@ async function updateAuthUI(session) {
             dropdownHeader.onclick = () => window.location.href = `/${displayName}`;
         }
 
-        // --- NEW: Check Payment Setup ---
-        checkPaymentSetup(session.user.id);
+
 
     } else {
         if (authSection) authSection.style.display = 'none';
@@ -773,61 +772,7 @@ function updateUserVisuals(displayName, displayLetter, avatarUrl) {
     if (userNameDisplayEl) userNameDisplayEl.innerText = displayName;
 }
 
-async function checkPaymentSetup(userId) {
-    if (typeof window.supabaseClient === 'undefined') return;
 
-    try {
-        const { data: profile } = await window.supabaseClient
-            .from('users') // Standardized to users table
-            .select('payment_methods')
-            .eq('id', userId)
-            .single();
-
-        const paypal = profile?.payment_methods?.paypal;
-
-        if (!paypal || !paypal.includes('@')) {
-            showPaymentWarningBanner();
-        } else {
-            // REMOVE banner if it exists and setup is now correct
-            const existingBanner = document.getElementById('payment-setup-warning');
-            if (existingBanner) existingBanner.remove();
-        }
-    } catch (err) {
-        console.warn("Navbar: Could not check payment setup", err);
-    }
-}
-
-function showPaymentWarningBanner() {
-    // Avoid double banners
-    if (document.getElementById('payment-setup-warning')) return;
-
-    const banner = document.createElement('div');
-    banner.id = 'payment-setup-warning';
-    banner.style.cssText = `
-        background: #facc15;
-        color: #000;
-        text-align: center;
-        padding: 10px;
-        font-size: 0.85rem;
-        font-weight: 700;
-        position: relative;
-        top: 0;
-        z-index: 10001;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 12px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-    `;
-
-    banner.innerHTML = `
-        <span>⚠️ No has activado tus métodos de pago. Actívalo para poder recibir ventas.</span>
-        <a href="/transacciones.html" style="background: #000; color: #fff; padding: 4px 12px; border-radius: 6px; text-decoration: none; font-size: 0.75rem;">Configurar PayPal</a>
-        <button onclick="this.parentElement.remove()" style="background:none; border:none; cursor:pointer; font-size: 1.2rem; line-height: 1;">&times;</button>
-    `;
-
-    document.body.prepend(banner);
-}
 
 window.handleLogout = async function (e) {
     if (e) e.preventDefault();
