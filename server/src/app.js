@@ -14,7 +14,7 @@ import cartRoutes from './infrastructure/http/routes/cart.routes.js';
 import orderRoutes from './infrastructure/http/routes/order.routes.js';
 import userRoutes from './infrastructure/http/routes/user.routes.js';
 import adminRoutes from './infrastructure/http/routes/admin.routes.js';
-import chatbotRouter from './routes/chatbot.js';
+// import chatbotRouter from './routes/chatbot.js';
 import profileRoutes from './infrastructure/http/routes/profile.routes.js';
 import reelsRoutes from './infrastructure/http/routes/reels.routes.js';
 import { handleMercadoPagoWebhook } from './infrastructure/http/controllers/OrderController.js';
@@ -28,6 +28,7 @@ const rootPath = path.join(__dirname, '../../'); // Project Root
 
 // --- 1. CONFIGURACIÓN CORS ROBUSTA ---
 const allowedOrigins = [
+    'https://offszn-oc7c.onrender.com',  // Nuevo Deploy en Producción
     'https://offszn.onrender.com',       // Tu Frontend Producción
     'https://offszn1.onrender.com',
     'https://offszn-academy.onrender.com', // Tu Backend
@@ -118,7 +119,7 @@ app.use('/api', cartRoutes);
 app.use('/api', orderRoutes);
 app.use('/api', userRoutes);
 app.use('/api/admin', adminRoutes);
-app.use('/api', chatbotRouter);
+// app.use('/api', chatbotRouter);
 app.use('/api', profileRoutes);
 app.use('/api', chatRoutes);
 app.use('/api', chatRoutes);
