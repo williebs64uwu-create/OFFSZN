@@ -564,6 +564,11 @@ function renderTags() {
 // ==================== AUTH & CURRENCY ==================== //
 
 async function initAuth() {
+    // Safeguard: Ensure AuthUtils is loaded
+    if (!window.AuthUtils) {
+        console.error("❌ CRITICAL: AuthUtils not loaded. Authentication headers missing.");
+        return;
+    }
     if (typeof supabaseClient === 'undefined') return;
 
     const { data } = await supabaseClient.auth.getSession();
