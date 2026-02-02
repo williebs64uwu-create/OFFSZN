@@ -65,7 +65,10 @@ document.addEventListener('DOMContentLoaded', () => {
       try {
         const { data, error } = await supabaseClient.auth.signUp({
           email: email,
-          password: password
+          password: password,
+          options: {
+            emailRedirectTo: `${baseURL}/pages/welcome.html`
+          }
         });
 
         if (error) {
