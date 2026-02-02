@@ -480,13 +480,15 @@ document.addEventListener('DOMContentLoaded', () => {
       isValid = nick.length >= 3 && validNickFormat && firstName.length > 0 && lastName.length > 0 && role !== '' && nicknameAvailable;
     } else if (currentStep === 2) {
       // Paso 2: Avatar (Opcional)
+    } else if (currentStep === 2) {
+      // Paso 2: Avatar (Opcional)
       isValid = true;
     } else if (currentStep === 3) {
-      // Paso 3: Esenciales (Géneros y DAW)
-      isValid = userData.genres.length > 0 && userData.daws.length > 0;
+      // Paso 3: Esenciales (Opcional)
+      isValid = true;
     } else if (currentStep === 4) {
-      // Paso 4: Detalles (Experiencia)
-      isValid = userData.experience.length > 0;
+      // Paso 4: Detalles (Opcional)
+      isValid = true;
     } else if (currentStep === 5) {
       // Paso 5: Redes (Opcional)
       isValid = true;
@@ -553,25 +555,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       }
 
-    } else if (currentStep === 2) {
-      // Paso 2: Avatar
+    } else if (currentStep >= 2) {
+      // Pasos 2-5 son opcionales
       return true;
-    } else if (currentStep === 3) {
-      // Paso 3: Esenciales
-      if (userData.genres.length === 0) {
-        showStepError('genresError', 'Selecciona al menos un género');
-        return false;
-      }
-      if (userData.daws.length === 0) {
-        showStepError('dawsError', 'Selecciona tu DAW');
-        return false;
-      }
-    } else if (currentStep === 4) {
-      // Paso 4: Detalles
-      if (userData.experience.length === 0) {
-        showStepError('expError', 'Selecciona tu nivel de experiencia');
-        return false;
-      }
     }
     return true;
   }
