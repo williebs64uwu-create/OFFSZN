@@ -111,15 +111,19 @@
                 // Update Badge
                 window.NotificationsManager.updateBadge(countRes.count || 0);
 
-                // 2. Fetch Recent Notifications (Limit 10)
-                const { data, error } = await window.supabaseClient
+                // 2. Fetch Recent Notifications (Limit 50)
+                const { data: notifs, error } = await window.supabaseClient
                     .from('notifications')
                     .select('*')
                     .eq('user_id', currentUserId)
                     .order('created_at', { ascending: false })
                     .limit(50);
 
-                const notifications = notifs || [];
+                if (error) throw error;
+
+                const invites = []; // Placeholder if not fetched in this simplified version
+                const acceptedInvites = []; // Placeholder
+
                 const pendingList = invites || [];
                 const acceptedList = acceptedInvites || [];
 
