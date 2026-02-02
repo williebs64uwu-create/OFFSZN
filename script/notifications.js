@@ -80,6 +80,17 @@
             }
         },
 
+        updateBadge: function (count) {
+            const badge = document.getElementById('notification-badge');
+            if (badge) {
+                badge.innerText = count;
+                badge.style.display = count > 0 ? 'flex' : 'none';
+            }
+            try {
+                localStorage.setItem('notificationCount', count);
+            } catch (e) { /* ignore */ }
+        },
+
         fetch: async function () {
             if (!currentUserId) return;
 
@@ -276,11 +287,7 @@
 
             if (notifications) {
                 const unreadCount = notifications.filter(n => !n.read).length;
-                localStorage.setItem('notificationCount', unreadCount);
-                if (badge) {
-                    badge.innerText = unreadCount;
-                    badge.style.display = unreadCount > 0 ? 'flex' : 'none';
-                }
+                this.updateBadge(unreadCount);
             }
 
             // Exit only if NEITHER list exists
