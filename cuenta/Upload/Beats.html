@@ -3296,7 +3296,7 @@
                                         d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                 </svg>
                                 <div class="upload-subtext">Formato:1080x1080px</div>
-                                <div class="upload-subtext" style="margin-top: 4px; opacity: 0.7;">(MÃ¡x. 10MB)</div>
+                                <div class="upload-subtext" style="margin-top: 4px; opacity: 0.7;">(Máx. 10MB)</div>
                             </div>
                         </div>
                     </div>
@@ -3359,7 +3359,7 @@
                                         </svg>
                                         <button type="button" class="remove-btn-mini"
                                             onclick="event.stopPropagation(); removeFile('mp3_tagged');"
-                                            title="Eliminar">âœ•</button>
+                                            title="Eliminar">✖</button>
                                     </div>
                                     <input type="file" id="mp3TaggedInput" accept=".mp3" hidden>
                                 </div>
@@ -3484,7 +3484,7 @@
 
                         <div class="form-group">
                             <div class="label">
-                                TÃ­tulo <span class="required">*</span>
+                                Título <span class="required">*</span>
                                 <span class="char-count"><span id="titleCount">0</span>/60</span>
                             </div>
                             <input type="text" class="input-field" id="titleInput" maxlength="60"
@@ -3503,8 +3503,8 @@
                                 <div class="label">Visibilidad <span class="required">*</span></div>
                                 <div class="select-wrapper">
                                     <select class="input-field skeleton" id="visibilityInput" disabled>
-                                        <option value="private">Privado (Solo tÃº)</option>
-                                        <option value="public">PÃºblico (Todos)</option>
+                                        <option value="private">Privado (Solo tú)</option>
+                                        <option value="public">Público (Todos)</option>
                                         <option value="unlisted">No listado (Link)</option>
                                     </select>
 
@@ -3514,7 +3514,7 @@
 
                         <div class="form-group">
                             <div class="label">
-                                DescripciÃ³n
+                                Descripción
                                 <span class="char-count"><span id="descCount">0</span>/500</span>
                             </div>
                             <textarea class="input-field" id="descInput" maxlength="500"
@@ -3667,7 +3667,7 @@
                             <img id="mainUserAvatar"
                                 src="https://ui-avatars.com/api/?name=User&background=333&color=fff" class="user-avatar"
                                 style="object-fit: cover;" onerror="this.src='/default-avatar.png'">
-                            <span style="font-weight: 600;">TÃº (Propietario)</span>
+                            <span style="font-weight: 600;">Tú (Propietario)</span>
                         </div>
                         <div>Rol Principal</div>
                         <div style="display: flex; align-items: center; gap: 4px;">
@@ -3687,7 +3687,7 @@
                 <h3 class="section-title">Vista Previa del Beat</h3>
                 <div class="preview-layout">
                     <div class="marketplace-card-preview">
-                        <h4 style="margin-bottom: 16px; font-size: 14px; color: #888;">CÃ³mo se verÃ¡ en el
+                        <h4 style="margin-bottom: 16px; font-size: 14px; color: #888;">Cómo se verá en el
                             marketplace
                         </h4>
                         <div class="drumkit-card">
@@ -3695,7 +3695,7 @@
                                 <span style="color: #666;">Sin portada</span>
                             </div>
                             <div class="card-content">
-                                <h3 id="previewCardTitle">Sin tÃ­tulo</h3>
+                                <h3 id="previewCardTitle">Sin título</h3>
                                 <div class="card-tags" id="previewCardTags"></div>
                                 <div class="card-producer" style="font-size: 13px; color: #888; margin-bottom: 8px;">
                                     <span id="previewCardProducer">Productor</span>
@@ -3706,7 +3706,7 @@
                     </div>
 
                     <div class="verification-panel">
-                        <h4 style="margin-bottom: 20px; font-size: 18px; font-weight: 700;">Verificar InformaciÃ³n
+                        <h4 style="margin-bottom: 20px; font-size: 18px; font-weight: 700;">Verificar Información
                         </h4>
                         <div class="verification-section">
                             <div class="verification-label">Archivos</div>
@@ -3809,7 +3809,7 @@
                 </div>
 
                 <div id="waveform" style="display: none;"></div>
-                <div id="playerPlaceholder">AquÃ­ se mostrarÃ¡ tu preview</div>
+                <div id="playerPlaceholder">Aquí se mostrará tu preview</div>
 
                 <!-- REEMPLAZA TODO EL .volume-control -->
                 <div class="volume-control">
@@ -3847,14 +3847,14 @@
     </footer>
     <script>
         // ========================================
-        // CONFIGURACIÃ“N INICIAL
+        // CONFIGURACIÓN INICIAL
         // ========================================
         // Use the global client initialized by auth-utils.js
         const supabaseClient = window.supabaseClient;
 
         if (!supabaseClient) {
             console.error("Critical: Global Supabase not found. Ensure auth-utils.js is loaded.");
-            return;
+            throw new Error("Critical: Global Supabase not found. Ensure auth-utils.js is loaded.");
         }
 
 
@@ -3862,7 +3862,7 @@
 
         // ðŸŽ¯ SISTEMA DE TAGS INTELIGENTE (sin IA externa)
         // Tag system initialized
-        // ðŸŽµ ANALIZAR AUDIO (BPM, duraciÃ³n, energÃ­a)
+        // 🎵 ANALIZAR AUDIO (BPM, duración, energía)
         async function analyzeAudio(audioFile) {
             return new Promise((resolve) => {
                 const audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -3872,10 +3872,10 @@
                     try {
                         const audioBuffer = await audioContext.decodeAudioData(e.target.result);
 
-                        // DuraciÃ³n
+                        // Duración
                         const duration = Math.floor(audioBuffer.duration);
 
-                        // Calcular energÃ­a promedio (volumen)
+                        // Calcular energía promedio (volumen)
                         const channelData = audioBuffer.getChannelData(0);
                         let sum = 0;
                         for (let i = 0; i < channelData.length; i++) {
@@ -3887,7 +3887,7 @@
                         const peaks = detectPeaks(channelData, audioBuffer.sampleRate);
                         const bpm = Math.round((peaks.length / duration) * 60);
 
-                        // Clasificar mood por energÃ­a
+                        // Clasificar mood por energía
                         let mood = 'chill';
                         if (avgEnergy > 0.15) mood = 'hard';
                         else if (avgEnergy > 0.08) mood = 'melodic';
@@ -3913,7 +3913,7 @@
         function detectPeaks(data, sampleRate) {
             const peaks = [];
             const threshold = 0.15;
-            const minDistance = Math.floor(sampleRate * 0.3); // MÃ­nimo 300ms entre picos
+            const minDistance = Math.floor(sampleRate * 0.3); // Mínimo 300ms entre picos
 
             for (let i = minDistance; i < data.length - minDistance; i++) {
                 if (Math.abs(data[i]) > threshold) {
@@ -3949,7 +3949,7 @@
                 if (audioParams.mood) candidates.add(audioParams.mood);
             }
 
-            // 2. Estrategia por Palabras Clave del TÃ­tulo
+            // 2. Estrategia por Palabras Clave del Título
             const words = (title + ' ' + description).toLowerCase()
                 .replace(/[^\w\s]/g, '')
                 .split(/\s+/)
@@ -3977,7 +3977,7 @@
                 'FL Studio', 'Ableton Live', 'Logic Pro', 'Pro Tools', 'Studio One', 'Cubase', 'Reason', 'Bitwig', 'Reaper'
             ];
 
-            // Normalizar a minÃºsculas para evitar duplicados visuales
+            // Normalizar a minúsculas para evitar duplicados visuales
             const normalizedPool = megaTagPool.map(t => t.toLowerCase());
 
             // Mezclar pool aleatoriamente
@@ -4029,11 +4029,11 @@
             toast.className = `elite-toast ${type}`;
 
             const shortMap = {
-                'Ya tienes el mÃ¡ximo de 3 tags. Elimina uno para usar Auto Tag.': 'MÃ¡ximo 3 tags alcanzado',
+                'Ya tienes el máximo de 3 tags. Elimina uno para usar Auto Tag.': 'Máximo 3 tags alcanzado',
                 'Debes subir el MP3 Tagged (Preview)': 'Falta MP3 Tagged',
                 'Debes subir una portada (1080x1080px)': 'Falta Portada',
                 'La fecha de lanzamiento es obligatoria': 'Falta Fecha',
-                'No hay mÃ¡s sugerencias disponibles': 'Sin mÃ¡s sugerencias'
+                'No hay más sugerencias disponibles': 'Sin más sugerencias'
             };
 
             const finalMsg = shortMap[message] || message;
@@ -4078,7 +4078,7 @@
         let fileHandlersInitialized = false;
 
         // ========================================
-        // INICIALIZACIÃ“N
+        // INICIALIZACIÓN
         // ========================================
         document.addEventListener('DOMContentLoaded', async () => {
             // ðŸ”¥ MARKER: Inline script handled loading visibility
@@ -4105,8 +4105,8 @@
                 }
             }
             await checkAuth();
-            await loadUserProfile(); // ðŸ‘ˆ AquÃ­ se descargan tus precios de $1000
-            initLicenses();         // ðŸ‘ˆ AquÃ­ se establecen los valores iniciales (Perfil > Defaults)
+            await loadUserProfile(); // 👆 Aquí se descargan tus precios de $1000
+            initLicenses();         // 👆 Aquí se establecen los valores iniciales (Perfil > Defaults)
             initDateTime();
             initWaveSurfer();
             initFileHandlers();
@@ -4212,13 +4212,12 @@
             initCustomKeySelect();
 
             try {
-                // ðŸ”¥ LOAD DRAFT HANDLES LOADING UI INTERNALLY
-                await loadDraft();      // ðŸ‘ˆ AquÃ­ se cargan archivos del borrador actual (podrÃ­a sobrescribir licencias si ya existÃ­an)
+                // 🔥 LOAD DRAFT HANDLES LOADING UI INTERNALLY
+                await loadDraft();      // 👆 Aquí se cargan archivos del borrador actual (podría sobrescribir licencias si ya existían)
             } catch (err) {
                 console.error("Error loading draft:", err);
                 hideLoading();
             }
-            // ðŸ”¥ REMOVED global finally { hideLoading() } logic implicit here since we handle it in loadDraft or catch above
 
             // Event listeners bÃ¡sicos
             document.getElementById('titleInput').addEventListener('input', e => {

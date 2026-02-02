@@ -95,6 +95,12 @@
             .eq('id', user.id)
             .single();
 
+          if (profileError && profileError.code !== 'PGRST116') { // PGRST116 is "No rows found" which is fine (new user)
+            console.error('❌ Error verificando perfil:', profileError);
+            alert('Error verificando tu cuenta. Por favor contacta soporte.');
+            return;
+          }
+
           const hasCompletedOnboarding = profile && profile.nickname;
           console.log('📂 Perfil completado:', hasCompletedOnboarding);
 
