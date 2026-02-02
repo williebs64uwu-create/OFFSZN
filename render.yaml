@@ -1,8 +1,20 @@
 services:
   - type: web
     name: offszn
-    staticPublishPath: . 
+    env: node
+    plan: free
+    rootDir: server
+    buildCommand: npm install
+    startCommand: npm start
     
+    envVars:
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_KEY
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+
     rewrites:
       # SECURITY: Block access to sensitive folders and files
       - source: "/server/*"
@@ -13,12 +25,12 @@ services:
         destination: "/404.html"
 
       # Regla 1: Si la URL empieza con /@ (ej: /@willieinspired)
-      - source: "/@:nickname"
+      - source: "/@:username"
         destination: "/usuarios.html"
         
       # Regla 2 (para el Owner): Si la URL es /producto/nombre-del-beat
       - source: "/producto/:slug"
-        destination: "/pages/articulo.html" # (Lo haremos después)
+        destination: "/pages/articulo.html"
         
       # Regla 3 (Fallback): Si nada coincide, sirve el index.
       - source: "/*"
