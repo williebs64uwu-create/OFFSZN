@@ -5,6 +5,21 @@
 
 window.AuthUtils = {
     /**
+     * Initialize Supabase Client globally if credentials exist.
+     * Use this ensuring window.SUPABASE_URL is defined before loading this script.
+     */
+    initSupabase: function () {
+        if (window.supabaseClient) return; // Already initialized
+
+        if (typeof window.supabase !== 'undefined' && window.supabase.createClient && window.SUPABASE_URL && window.SUPABASE_ANON_KEY) {
+            window.supabaseClient = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
+            console.log("✅ Supabase Client Initialized via AuthUtils");
+        } else {
+            console.warn("⚠️ AuthUtils: Cannot init Supabase (Missing credentials or Lib)");
+        }
+    },
+
+    /**
      * Retrieves the Supabase Access Token from Cookie (primary) or LocalStorage (fallback).
      * @returns {string|null} The access token or null if not found.
      */
@@ -56,10 +71,20 @@ window.AuthUtils = {
      */
     getAuthHeaderObj: function () {
         const token = this.getAccessToken();
-        return token ? { 'Authorization': `Bearer ${token}` } : {};
+        if (token) {
+            console.log("🛡️ AuthUtils: Generating header with token:", token.substring(0, 15) + "...");
+            return { 'Authorization': `Bearer ${token}` };
+        } else {
+            console.warn("🛡️ AuthUtils: No token found when requesting headers.");
+            return {};
+        }
     }
 };
 
 // Backwards compatibility / Direct global access shortcuts
 window.getAccessToken = window.AuthUtils.getAccessToken.bind(window.AuthUtils);
+
+// Attempt Init immediately
+window.AuthUtils.initSupabase();
+
 console.log("🛡️ AuthUtils Loaded. Token present:", !!window.getAccessToken());

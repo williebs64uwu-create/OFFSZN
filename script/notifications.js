@@ -98,7 +98,7 @@
                 if (countRes.error) throw countRes.error;
 
                 // Update Badge
-                this.updateBadge(countRes.count || 0);
+                window.NotificationsManager.updateBadge(countRes.count || 0);
 
                 // 2. Fetch Recent Notifications (Limit 10)
                 const { data, error } = await window.supabaseClient
