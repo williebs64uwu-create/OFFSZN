@@ -13,297 +13,302 @@
     <link rel="stylesheet" href="/css/navbar.css">
     <link rel="stylesheet" href="/css/sticky-player.css">
     <link rel="stylesheet" href="/css/hover-card.css">
-    <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Plus+Jakarta+Sans:wght@400;500;700;800&display=swap"
-        rel="stylesheet">
 
-    <style>
-        body {
-            background-color: #000;
-            color: #fff;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .main-container {
-            max-width: 800px;
-            margin: 40px auto;
-            padding: 0 20px;
-            width: 100%;
-            flex: 1;
-        }
-
-        .page-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 24px;
-        }
-
-        .page-title {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            font-size: 1.5rem;
-            font-weight: 700;
-            margin: 0;
-        }
-
-        .mark-read-btn {
-            background: none;
-            border: none;
-            color: #3b82f6;
-            font-size: 0.9rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: color 0.2s;
-        }
-
-        .mark-read-btn:hover {
-            color: #60a5fa;
-            text-decoration: underline;
-        }
-
-        .notifications-list {
-            display: flex;
-            flex-direction: column;
-            gap: 1px;
-            /* Divider effect if we used borders, but we prefer clean bg */
-        }
-
-        .notif-item {
-            display: flex;
-            align-items: flex-start;
-            gap: 16px;
-            padding: 16px;
-            border-radius: 12px;
-            background: transparent;
-            transition: background 0.2s;
-            position: relative;
-        }
-
-        .notif-item:hover {
-            background: #111;
-        }
-
-        /* .notif-item.unread { } */
-
-        .notif-avatar {
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
-            overflow: hidden;
-            flex-shrink: 0;
-            background: #222;
-        }
-
-        .notif-avatar img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .notif-content {
-            flex: 1;
-            padding-right: 40px;
-            /* Space for menu */
-        }
-
-        .notif-text {
-            font-size: 0.95rem;
-            line-height: 1.4;
-            color: #eee;
-            margin-bottom: 4px;
-        }
-
-        .notif-text strong {
-            font-weight: 600;
-            color: #fff;
-        }
-
-        .notif-time {
-            font-size: 0.8rem;
-            color: #888;
-        }
-
-        .unread-dot {
-            width: 8px;
-            height: 8px;
-            background-color: #3b82f6;
-            /* Blue dot */
-            border-radius: 50%;
-            margin-top: 8px;
-            flex-shrink: 0;
-        }
-
-        /* MENU STYLES */
-        .notif-action-btn {
-            position: absolute;
-            top: 16px;
-            right: 16px;
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            background: transparent;
-            border: none;
-            color: #666;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s;
-        }
-
-        .notif-action-btn:hover {
-            background: #222;
-            color: #fff;
-        }
-
-        .menu-dropdown {
-            position: absolute;
-            top: 0;
-            /* Align with top of button */
-            left: 40px;
-            /* Move to the RIGHT of button (32px width + 8px gap) */
-            right: auto;
-            /* Unset right alignment */
-            background: #18181b;
-            border: 1px solid #27272a;
-            border-radius: 12px;
-            padding: 6px;
-            display: none;
-            z-index: 50;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-            min-width: 120px;
-        }
-
-        .menu-dropdown.active {
-            display: block;
-            animation: fadeIn 0.1s ease;
-        }
-
-        .menu-item {
-            width: 100%;
-            text-align: left;
-            background: none;
-            border: none;
-            padding: 8px 12px;
-            color: #ef4444;
-            /* Red for delete */
-            font-size: 0.85rem;
-            border-radius: 6px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .menu-item:hover {
-            background: #27272a;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(-4px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 60px 0;
-            color: #555;
-        }
-    </style>
-    <style>
-        /* SKELETON LOADING STYLES */
-        .skeleton-item {
-            display: flex;
-            align-items: flex-start;
-            gap: 16px;
-            padding: 16px;
-            border-radius: 12px;
-            background: transparent;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .skeleton-avatar {
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
-            background: #27272a;
-            flex-shrink: 0;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .skeleton-content {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            justify-content: center;
-            padding-top: 4px;
-        }
-
-        .skeleton-line {
-            height: 14px;
-            background: #27272a;
-            border-radius: 4px;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .skeleton-line.short {
-            width: 30%;
-            height: 12px;
-        }
-
-        .skeleton-line.long {
-            width: 90%;
-        }
-
-        /* SHIMMER ANIMATION */
-        .skeleton-avatar::after,
-        .skeleton-line::after {
-            content: "";
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg,
-                    rgba(255, 255, 255, 0) 0%,
-                    rgba(255, 255, 255, 0.05) 50%,
-                    rgba(255, 255, 255, 0) 100%);
-            transform: translateX(-100%);
-            animation: shimmer 1.5s infinite;
-        }
-
-        @keyframes shimmer {
-            100% {
-                transform: translateX(100%);
-            }
-        }
-    </style>
-
-    <!-- 1. Cargar Supabase -->
+    <!-- 1. Cargar Supabase (Head Inject) -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
         window.SUPABASE_URL = "https://qtjpvztpgfymjhhpoouq.supabase.co";
         window.SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0anB2enRwZ2Z5bWpoaHBvb3VxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3ODA5MTUsImV4cCI6MjA3NjM1NjkxNX0.YsItTFk3hSQaVuy707-z7Z-j34mXa03O0wWGAlAzjrw";
-
-        // AuthUtils handles initialization
-        // window.AuthUtils.initSupabase() is called in script/auth-utils.js
+        window.supabaseClient = null;
     </script>
+    <script src="/script/auth-utils.js?v=11"></script>
+    <script src="/script/notifications.js?v=11"></script>
+</head>
+
+<style>
+    body {
+        background-color: #000;
+        color: #fff;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .main-container {
+        max-width: 800px;
+        margin: 40px auto;
+        padding: 0 20px;
+        width: 100%;
+        flex: 1;
+    }
+
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+    }
+
+    .page-title {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin: 0;
+    }
+
+    .mark-read-btn {
+        background: none;
+        border: none;
+        color: #3b82f6;
+        font-size: 0.9rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: color 0.2s;
+    }
+
+    .mark-read-btn:hover {
+        color: #60a5fa;
+        text-decoration: underline;
+    }
+
+    .notifications-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1px;
+        /* Divider effect if we used borders, but we prefer clean bg */
+    }
+
+    .notif-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 16px;
+        padding: 16px;
+        border-radius: 12px;
+        background: transparent;
+        transition: background 0.2s;
+        position: relative;
+    }
+
+    .notif-item:hover {
+        background: #111;
+    }
+
+    /* .notif-item.unread { } */
+
+    .notif-avatar {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        overflow: hidden;
+        flex-shrink: 0;
+        background: #222;
+    }
+
+    .notif-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .notif-content {
+        flex: 1;
+        padding-right: 40px;
+        /* Space for menu */
+    }
+
+    .notif-text {
+        font-size: 0.95rem;
+        line-height: 1.4;
+        color: #eee;
+        margin-bottom: 4px;
+    }
+
+    .notif-text strong {
+        font-weight: 600;
+        color: #fff;
+    }
+
+    .notif-time {
+        font-size: 0.8rem;
+        color: #888;
+    }
+
+    .unread-dot {
+        width: 8px;
+        height: 8px;
+        background-color: #3b82f6;
+        /* Blue dot */
+        border-radius: 50%;
+        margin-top: 8px;
+        flex-shrink: 0;
+    }
+
+    /* MENU STYLES */
+    .notif-action-btn {
+        position: absolute;
+        top: 16px;
+        right: 16px;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: transparent;
+        border: none;
+        color: #666;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s;
+    }
+
+    .notif-action-btn:hover {
+        background: #222;
+        color: #fff;
+    }
+
+    .menu-dropdown {
+        position: absolute;
+        top: 0;
+        /* Align with top of button */
+        left: 40px;
+        /* Move to the RIGHT of button (32px width + 8px gap) */
+        right: auto;
+        /* Unset right alignment */
+        background: #18181b;
+        border: 1px solid #27272a;
+        border-radius: 12px;
+        padding: 6px;
+        display: none;
+        z-index: 50;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+        min-width: 120px;
+    }
+
+    .menu-dropdown.active {
+        display: block;
+        animation: fadeIn 0.1s ease;
+    }
+
+    .menu-item {
+        width: 100%;
+        text-align: left;
+        background: none;
+        border: none;
+        padding: 8px 12px;
+        color: #ef4444;
+        /* Red for delete */
+        font-size: 0.85rem;
+        border-radius: 6px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .menu-item:hover {
+        background: #27272a;
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(-4px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 60px 0;
+        color: #555;
+    }
+</style>
+<style>
+    /* SKELETON LOADING STYLES */
+    .skeleton-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 16px;
+        padding: 16px;
+        border-radius: 12px;
+        background: transparent;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .skeleton-avatar {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        background: #27272a;
+        flex-shrink: 0;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .skeleton-content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        justify-content: center;
+        padding-top: 4px;
+    }
+
+    .skeleton-line {
+        height: 14px;
+        background: #27272a;
+        border-radius: 4px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .skeleton-line.short {
+        width: 30%;
+        height: 12px;
+    }
+
+    .skeleton-line.long {
+        width: 90%;
+    }
+
+    /* SHIMMER ANIMATION */
+    .skeleton-avatar::after,
+    .skeleton-line::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg,
+                rgba(255, 255, 255, 0) 0%,
+                rgba(255, 255, 255, 0.05) 50%,
+                rgba(255, 255, 255, 0) 100%);
+        transform: translateX(-100%);
+        animation: shimmer 1.5s infinite;
+    }
+
+    @keyframes shimmer {
+        100% {
+            transform: translateX(100%);
+        }
+    }
+</style>
+
+<!-- 1. Cargar Supabase -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+    window.SUPABASE_URL = "https://qtjpvztpgfymjhhpoouq.supabase.co";
+    window.SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0anB2enRwZ2Z5bWpoaHBvb3VxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3ODA5MTUsImV4cCI6MjA3NjM1NjkxNX0.YsItTFk3hSQaVuy707-z7Z-j34mXa03O0wWGAlAzjrw";
+
+    // AuthUtils handles initialization
+    // window.AuthUtils.initSupabase() is called in script/auth-utils.js
+</script>
 </head>
 
 <body>
