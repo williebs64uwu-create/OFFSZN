@@ -261,9 +261,9 @@ function renderProductPage(product) {
             <div class="product-sidebar">
                 <!-- Cover Art -->
                 <div class="product-cover-art" style="position:relative;">
-                    <img src="${product.image_url || '/images/PORTADA-DEFAULT.png'}" 
+                    <img src="${product.image_url || '/images/portada-default.png'}" 
                          alt="${product.name}"
-                         onerror="this.src='/images/PORTADA-DEFAULT.png'">
+                         onerror="this.src='/images/portada-default.png'">
                      <!-- Player Target -->
                      <div id="sidebar-player-target" style="position:absolute; bottom:15px; left:15px; right:15px;"></div>
                 </div>
@@ -2022,9 +2022,9 @@ function renderRelatedGrid(products, container) {
         // Use EXACTLY the same structure as Profile Trending Cards (Trending / Packs)
         card.innerHTML = `
             <div class="t-card-cover">
-                <img src="${p.image_url || '/images/PORTADA-DEFAULT.png'}" 
+                <img src="${p.image_url || '/images/portada-default.png'}" 
                      alt="${p.name}"
-                     onerror="this.src='/images/PORTADA-DEFAULT.png'"
+                     onerror="this.src='/images/portada-default.png'"
                      onclick="window.location.href='${seoLink}'">
                 
                 <button class="t-play-btn" id="t-play-${p.id}" title="Reproducir">

@@ -1,526 +1,521 @@
 ﻿<!DOCTYPE html>
 <html lang="es">
 
-<head>
-    <!-- Supabase Config & Auth Utils -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script>
-        window.SUPABASE_URL = "https://qtjpvztpgfymjhhpoouq.supabase.co";
-        window.SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0anB2enRwZ2Z5bWpoaHBvb3VxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3ODA5MTUsImV4cCI6MjA3NjM1NjkxNX0.YsItTFk3hSQaVuy707-z7Z-j34mXa03O0wWGAlAzjrw";
-        window.supabaseClient = null;
-    </script>
-    <script src="/script/auth-utils.js?v=11"></script>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Planes y Precios | OFFSZN</title>
-    <!-- Fonts -->
-    <link
-        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap"
-        rel="stylesheet">
-    <!-- Bootstrap Icons -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <!-- PayPal SDK (Placeholder Client ID - Update with LIVE ID) -->
-    <script src="https://www.paypal.com/sdk/js?client-id=sb&currency=USD"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Planes y Precios | OFFSZN</title>
+<!-- Supabase Config & Auth Utils -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Planes y Precios | OFFSZN</title>
+<!-- Fonts -->
+<link
+    href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap"
+    rel="stylesheet">
+<!-- Bootstrap Icons -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+<!-- PayPal SDK (Placeholder Client ID - Update with LIVE ID) -->
+<script src="https://www.paypal.com/sdk/js?client-id=sb&currency=USD"></script>
 
-    <script>
-        // ... (Existing Currency Logic) ...
+<script>
+    // ... (Existing Currency Logic) ...
 
 
-    </script>
+</script>
 
-    <style>
-        :root {
-            --bg-dark: #000000;
-            --accent-purple: #8B5CF6;
-            --accent-glow: rgba(139, 92, 246, 0.4);
-            --text-main: #ffffff;
-            --text-secondary: #888888;
-            --card-bg: #0F0F0F;
-            --border-color: #1A1A1A;
-            --success: #10B981;
-        }
+<style>
+    :root {
+        --bg-dark: #000000;
+        --accent-purple: #8B5CF6;
+        --accent-glow: rgba(139, 92, 246, 0.4);
+        --text-main: #ffffff;
+        --text-secondary: #888888;
+        --card-bg: #0F0F0F;
+        --border-color: #1A1A1A;
+        --success: #10B981;
+    }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Inter', sans-serif;
-        }
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: 'Inter', sans-serif;
+    }
 
-        body {
-            background-color: #000;
-            color: var(--text-main);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            overflow-x: hidden;
-        }
+    body {
+        background-color: #000;
+        color: var(--text-main);
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        overflow-x: hidden;
+    }
 
-        /* Nav Stub */
-        .nav-stub {
-            width: 100%;
-            padding: 20px 40px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            max-width: 1200px;
-            z-index: 10;
-        }
+    /* Nav Stub */
+    .nav-stub {
+        width: 100%;
+        padding: 20px 40px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        max-width: 1200px;
+        z-index: 10;
+    }
 
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            text-decoration: none;
-            color: #fff;
-            font-weight: 700;
-            font-size: 20px;
-            font-family: 'Plus Jakarta Sans', sans-serif;
-        }
+    .logo {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        text-decoration: none;
+        color: #fff;
+        font-weight: 700;
+        font-size: 20px;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+    }
 
-        .btn-close {
-            background: rgba(255, 255, 255, 0.1);
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #fff;
-            text-decoration: none;
-            transition: 0.2s;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-        }
+    .btn-close {
+        background: rgba(255, 255, 255, 0.1);
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        text-decoration: none;
+        transition: 0.2s;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+    }
 
-        .btn-close:hover {
-            background: rgba(255, 255, 255, 0.2);
-        }
+    .btn-close:hover {
+        background: rgba(255, 255, 255, 0.2);
+    }
 
-        /* Radial Glow - Disabled */
-        .radial-glow {
-            display: none;
-        }
+    /* Radial Glow - Disabled */
+    .radial-glow {
+        display: none;
+    }
 
-        /* --- ENTRY ANIMATION --- */
-        .entry-anim {
+    /* --- ENTRY ANIMATION --- */
+    .entry-anim {
+        opacity: 0;
+        animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    @keyframes fadeInUp {
+        from {
             opacity: 0;
-            animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            transform: translateY(30px);
         }
 
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
 
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+
+
+    /* Header */
+    .header {
+        text-align: center;
+        margin-top: 40px;
+        margin-bottom: 40px;
+        padding: 0 20px;
+    }
+
+    .header h1 {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: 48px;
+        font-weight: 800;
+        margin-bottom: 16px;
+        background: linear-gradient(135deg, #fff 0%, #aaa 100%);
+        background-clip: text;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .header p {
+        color: var(--text-secondary);
+        font-size: 18px;
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    /* Currency Toggle */
+    .currency-toggle-wrapper {
+        margin-bottom: 40px;
+        background: #111;
+        border: 1px solid #222;
+        padding: 4px;
+        border-radius: 100px;
+        display: inline-flex;
+        position: relative;
+    }
+
+    .currency-option {
+        padding: 8px 24px;
+        border-radius: 100px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 600;
+        color: #666;
+        transition: 0.2s;
+        z-index: 2;
+        position: relative;
+    }
+
+    .currency-option.active {
+        color: #000;
+    }
+
+    .toggle-bg {
+        position: absolute;
+        top: 4px;
+        left: 4px;
+        width: calc(50% - 4px);
+        height: calc(100% - 8px);
+        background: #FFD700;
+        border-radius: 100px;
+        transition: none;
+        /* Instant toggle, no animation */
+        z-index: 1;
+    }
+
+    /* Prevent flicker on load */
+    .no-transition .toggle-bg {
+        transition: none !important;
+    }
+
+    /* Pricing Grid */
+    .pricing-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 32px;
+        max-width: 900px;
+        width: 100%;
+        padding: 0 20px 80px 20px;
+    }
+
+    /* Card Styles */
+    .pricing-card {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 24px;
+        padding: 40px;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        transition: 0.2s;
+        overflow: hidden;
+    }
+
+    /* Reduced Hover as requested */
+    .pricing-card:hover {
+        border-color: #333;
+    }
+
+    .pricing-card.pro {
+        border-color: var(--accent-purple);
+        background: linear-gradient(180deg, rgba(139, 92, 246, 0.05) 0%, rgba(15, 15, 15, 1) 100%);
+        box-shadow: 0 20px 40px -10px rgba(139, 92, 246, 0.15);
+    }
+
+    .card-header {
+        margin-bottom: 32px;
+    }
+
+    .plan-name {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: 24px;
+        font-weight: 700;
+        margin-bottom: 8px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .plan-price {
+        font-size: 42px;
+        font-weight: 800;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        color: #fff;
+    }
+
+    .plan-price span {
+        font-size: 16px;
+        color: var(--text-secondary);
+        font-weight: 500;
+    }
+
+    .features-list {
+        list-style: none;
+        margin-bottom: 40px;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .features-list li {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        color: #ccc;
+        font-size: 15px;
+    }
+
+    .features-list li i {
+        color: var(--success);
+        font-size: 18px;
+    }
+
+    .pricing-card.pro .features-list li i {
+        color: var(--accent-purple);
+    }
+
+    .pricing-card.pro .features-list li i.bi-star-fill {
+        color: #FFD700;
+    }
+
+    .btn-plan {
+        width: 100%;
+        padding: 16px;
+        border-radius: 12px;
+        font-weight: 700;
+        font-size: 16px;
+        cursor: pointer;
+        transition: 0.2s;
+        border: none;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        text-align: center;
+        text-decoration: none;
+    }
+
+    .btn-basic {
+        background: transparent;
+        border: 1px solid #333;
+        color: #fff;
+    }
+
+    /* .btn-basic:hover { background: rgba(255, 255, 255, 0.05); } */
+
+    .btn-pro {
+        background: #FFD700;
+        color: #000;
+        box-shadow: 0 4px 15px rgba(255, 215, 0, 0.2);
+    }
+
+    .btn-pro:hover {
+        background: #e6c200;
+    }
+
+    .badge-recommended {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        background: rgba(139, 92, 246, 0.2);
+        color: #A78BFA;
+        font-size: 12px;
+        font-weight: 700;
+        padding: 6px 12px;
+        border-radius: 50px;
+        border: 1px solid rgba(139, 92, 246, 0.3);
+    }
+
+    /* PAYMENT MODAL */
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.85);
+        backdrop-filter: blur(8px);
+        z-index: 1000;
+        display: none;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .modal-overlay.active {
+        display: flex;
+        animation: fadeIn 0.2s ease-out;
+    }
+
+    .payment-modal {
+        background: #0F0F0F;
+        border: 1px solid #333;
+        border-radius: 20px;
+        width: 90%;
+        max-width: 600px;
+        padding: 0;
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        max-height: 90vh;
+    }
+
+    .payment-header {
+        padding: 24px;
+        border-bottom: 1px solid #222;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: #111;
+    }
+
+    .payment-body {
+        padding: 32px;
+        display: flex;
+        flex-direction: column;
+        gap: 25px;
+        overflow-y: auto;
+    }
+
+    .payment-method-btn {
+        background: #161616;
+        border: 1px solid #333;
+        padding: 16px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        cursor: pointer;
+        transition: 0.2s;
+        color: #fff;
+        text-align: left;
+    }
+
+    .payment-method-btn:hover {
+        border-color: #666;
+        background: #222;
+    }
+
+    .payment-method-btn.active {
+        border-color: var(--accent-purple);
+        background: rgba(139, 92, 246, 0.1);
+    }
+
+    .method-icon {
+        font-size: 24px;
+        margin-right: 16px;
+        width: 32px;
+        text-align: center;
+    }
+
+    .method-details {
+        display: none;
+        background: #000;
+        border: 1px solid #222;
+        padding: 24px;
+        border-radius: 12px;
+        margin-top: 12px;
+        margin-bottom: 12px;
+        position: relative;
+        z-index: 10;
+    }
+
+    .method-details.show {
+        display: block;
+        animation: slideDown 0.3s ease-out;
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
         }
 
+        to {
+            opacity: 1;
+        }
+    }
 
-
-        /* Header */
-        .header {
-            text-align: center;
-            margin-top: 40px;
-            margin-bottom: 40px;
-            padding: 0 20px;
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
         }
 
-        .header h1 {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            font-size: 48px;
-            font-weight: 800;
-            margin-bottom: 16px;
-            background: linear-gradient(135deg, #fff 0%, #aaa 100%);
-            background-clip: text;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Glow Animation for Hook (Subtle) */
+    @keyframes textGlow {
+        0% {
+            text-shadow: 0 0 2px rgba(255, 215, 0, 0.2);
         }
 
-        .header p {
-            color: var(--text-secondary);
-            font-size: 18px;
-            max-width: 600px;
-            margin: 0 auto;
+        50% {
+            text-shadow: 0 0 8px rgba(255, 215, 0, 0.4);
         }
 
-        /* Currency Toggle */
-        .currency-toggle-wrapper {
-            margin-bottom: 40px;
-            background: #111;
-            border: 1px solid #222;
-            padding: 4px;
-            border-radius: 100px;
-            display: inline-flex;
-            position: relative;
+        100% {
+            text-shadow: 0 0 2px rgba(255, 215, 0, 0.2);
         }
+    }
 
-        .currency-option {
-            padding: 8px 24px;
-            border-radius: 100px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 600;
-            color: #666;
-            transition: 0.2s;
-            z-index: 2;
-            position: relative;
-        }
+    .hook-glow {
+        color: #FFD700;
+        font-weight: 800;
+        animation: textGlow 3s infinite ease-in-out;
+    }
 
-        .currency-option.active {
-            color: #000;
-        }
+    /* WhatsApp Button */
+    .btn-whatsapp {
+        background: #25D366;
+        color: #fff;
+        border: none;
+        width: 100%;
+        padding: 12px;
+        border-radius: 8px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        text-decoration: none;
+        margin-top: 15px;
+        font-size: 14px;
+        transition: 0.2s;
+    }
 
-        .toggle-bg {
-            position: absolute;
-            top: 4px;
-            left: 4px;
-            width: calc(50% - 4px);
-            height: calc(100% - 8px);
-            background: #FFD700;
-            border-radius: 100px;
-            transition: none;
-            /* Instant toggle, no animation */
-            z-index: 1;
-        }
+    .btn-whatsapp:hover {
+        background: #128C7E;
+    }
 
-        /* Prevent flicker on load */
-        .no-transition .toggle-bg {
-            transition: none !important;
-        }
-
-        /* Pricing Grid */
+    @media (max-width: 768px) {
         .pricing-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 32px;
-            max-width: 900px;
-            width: 100%;
-            padding: 0 20px 80px 20px;
+            grid-template-columns: 1fr;
         }
 
-        /* Card Styles */
-        .pricing-card {
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 24px;
-            padding: 40px;
-            display: flex;
-            flex-direction: column;
-            position: relative;
-            transition: 0.2s;
-            overflow: hidden;
-        }
-
-        /* Reduced Hover as requested */
-        .pricing-card:hover {
-            border-color: #333;
-        }
-
-        .pricing-card.pro {
-            border-color: var(--accent-purple);
-            background: linear-gradient(180deg, rgba(139, 92, 246, 0.05) 0%, rgba(15, 15, 15, 1) 100%);
-            box-shadow: 0 20px 40px -10px rgba(139, 92, 246, 0.15);
-        }
-
-        .card-header {
-            margin-bottom: 32px;
-        }
-
-        .plan-name {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            font-size: 24px;
-            font-weight: 700;
-            margin-bottom: 8px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .plan-price {
-            font-size: 42px;
-            font-weight: 800;
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            color: #fff;
-        }
-
-        .plan-price span {
-            font-size: 16px;
-            color: var(--text-secondary);
-            font-weight: 500;
-        }
-
-        .features-list {
-            list-style: none;
-            margin-bottom: 40px;
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-        }
-
-        .features-list li {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            color: #ccc;
-            font-size: 15px;
-        }
-
-        .features-list li i {
-            color: var(--success);
-            font-size: 18px;
-        }
-
-        .pricing-card.pro .features-list li i {
-            color: var(--accent-purple);
-        }
-
-        .pricing-card.pro .features-list li i.bi-star-fill {
-            color: #FFD700;
-        }
-
-        .btn-plan {
-            width: 100%;
-            padding: 16px;
-            border-radius: 12px;
-            font-weight: 700;
-            font-size: 16px;
-            cursor: pointer;
-            transition: 0.2s;
-            border: none;
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            text-align: center;
-            text-decoration: none;
-        }
-
-        .btn-basic {
-            background: transparent;
-            border: 1px solid #333;
-            color: #fff;
-        }
-
-        /* .btn-basic:hover { background: rgba(255, 255, 255, 0.05); } */
-
-        .btn-pro {
-            background: #FFD700;
-            color: #000;
-            box-shadow: 0 4px 15px rgba(255, 215, 0, 0.2);
-        }
-
-        .btn-pro:hover {
-            background: #e6c200;
-        }
-
-        .badge-recommended {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background: rgba(139, 92, 246, 0.2);
-            color: #A78BFA;
-            font-size: 12px;
-            font-weight: 700;
-            padding: 6px 12px;
-            border-radius: 50px;
-            border: 1px solid rgba(139, 92, 246, 0.3);
-        }
-
-        /* PAYMENT MODAL */
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.85);
-            backdrop-filter: blur(8px);
-            z-index: 1000;
-            display: none;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .modal-overlay.active {
-            display: flex;
-            animation: fadeIn 0.2s ease-out;
-        }
-
-        .payment-modal {
-            background: #0F0F0F;
-            border: 1px solid #333;
-            border-radius: 20px;
-            width: 90%;
-            max-width: 600px;
-            padding: 0;
-            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            max-height: 90vh;
-        }
-
-        .payment-header {
-            padding: 24px;
-            border-bottom: 1px solid #222;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: #111;
-        }
-
-        .payment-body {
-            padding: 32px;
-            display: flex;
-            flex-direction: column;
-            gap: 25px;
-            overflow-y: auto;
-        }
-
-        .payment-method-btn {
-            background: #161616;
-            border: 1px solid #333;
-            padding: 16px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            cursor: pointer;
-            transition: 0.2s;
-            color: #fff;
-            text-align: left;
-        }
-
-        .payment-method-btn:hover {
-            border-color: #666;
-            background: #222;
-        }
-
-        .payment-method-btn.active {
-            border-color: var(--accent-purple);
-            background: rgba(139, 92, 246, 0.1);
-        }
-
-        .method-icon {
-            font-size: 24px;
-            margin-right: 16px;
-            width: 32px;
-            text-align: center;
-        }
-
-        .method-details {
-            display: none;
-            background: #000;
-            border: 1px solid #222;
-            padding: 24px;
-            border-radius: 12px;
-            margin-top: 12px;
-            margin-bottom: 12px;
-            position: relative;
-            z-index: 10;
-        }
-
-        .method-details.show {
-            display: block;
-            animation: slideDown 0.3s ease-out;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-            }
-
-            to {
-                opacity: 1;
-            }
-        }
-
-        @keyframes slideDown {
-            from {
-                opacity: 0;
-                transform: translateY(-10px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        /* Glow Animation for Hook (Subtle) */
-        @keyframes textGlow {
-            0% {
-                text-shadow: 0 0 2px rgba(255, 215, 0, 0.2);
-            }
-
-            50% {
-                text-shadow: 0 0 8px rgba(255, 215, 0, 0.4);
-            }
-
-            100% {
-                text-shadow: 0 0 2px rgba(255, 215, 0, 0.2);
-            }
-        }
-
-        .hook-glow {
-            color: #FFD700;
-            font-weight: 800;
-            animation: textGlow 3s infinite ease-in-out;
-        }
-
-        /* WhatsApp Button */
-        .btn-whatsapp {
-            background: #25D366;
-            color: #fff;
-            border: none;
-            width: 100%;
-            padding: 12px;
-            border-radius: 8px;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            text-decoration: none;
-            margin-top: 15px;
-            font-size: 14px;
-            transition: 0.2s;
-        }
-
-        .btn-whatsapp:hover {
-            background: #128C7E;
-        }
-
-        @media (max-width: 768px) {
-            .pricing-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .yape-layout {
-                flex-direction: column;
-                text-align: center !important;
-            }
-
-            .yape-right {
-                text-align: center !important;
-            }
-        }
-
-        /* Yape Layout */
         .yape-layout {
-            display: flex;
-            align-items: center;
-            gap: 20px;
+            flex-direction: column;
+            text-align: center !important;
         }
 
         .yape-right {
-            flex: 1;
-            text-align: left;
+            text-align: center !important;
         }
-    </style>
+    }
+
+    /* Yape Layout */
+    .yape-layout {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+    }
+
+    .yape-right {
+        flex: 1;
+        text-align: left;
+    }
+</style>
 </head>
 
 <body>
