@@ -26,8 +26,28 @@ window.AuthUtils = {
     getAccessToken: function () {
         const ANON_KEY = window.SUPABASE_ANON_KEY || "";
 
-        // Helper to validate token is NOT the anon key
-        const isValid = (t) => t && t !== 'undefined' && t !== 'null' && t !== ANON_KEY;
+        // Helper to validate token is NOT the anon key AND has a valid role
+        const isValid = (t) => {
+            if (!t || t === 'undefined' || t === 'null' || t === ANON_KEY) return false;
+
+            // Robust Check: Is it an 'anon' role JWT?
+            try {
+                // Decode payload (middle part of JWT)
+                const payloadStr = t.split('.')[1];
+                if (!payloadStr) return true; // Not a JWT? Let it through for standard validation
+
+                const payload = JSON.parse(atob(payloadStr));
+                if (payload && payload.role === 'anon') {
+                    console.warn("🛡️ AuthUtils: Blocking 'anon' role token from Authorization header.");
+                    return false;
+                }
+            } catch (e) {
+                // If decoding fails, it might not be a JWT or is mangled.
+                // We let it pass to the server to decide, unless it's the known ANON_KEY.
+            }
+
+            return true;
+        };
 
         // 1. Try Cookie
         const match = document.cookie.match(/(^| )sb-access-token=([^;]+)/);
