@@ -411,32 +411,47 @@
 
             <script>
                 // 🚀 STABILITY FIX: Rely on global session event
-                document.addEventListener('DOMContentLoaded', () => {
+                // 🚀 STABILITY FIX: Run immediately for SPA compatibility
+                (async function initFavoritesPage() {
                     // 1. Initial Player Init
                     if (window.StickyPlayer) window.StickyPlayer.init();
 
-                    // 2. Render when session is confirmed
-                    let isApplying = false;
+                    const containerId = 'favorites-grid';
+                    const container = document.getElementById(containerId);
+
+                    // 2. Render when session is confirmed (Listener)
+                    // We keep this purely for auth-lag or re-login scenarios
                     window.addEventListener('offszn-session-ready', async (e) => {
                         if (e.detail.session && window.FavoritesManager) {
-                            if (isApplying) return;
-                            const container = document.getElementById('favorites-grid');
-                            // 🛑 PREVENT RE-RENDER ON ALT-TAB (Token Refresh)
-                            // If we already have items and they are NOT skeletons, ignore this event.
                             if (container && container.children.length > 0 && !container.querySelector('.skeleton-fav-row')) {
                                 return;
                             }
-                            isApplying = true;
-                            await window.FavoritesManager.renderFavorites('favorites-grid');
-                            isApplying = false;
+                            await window.FavoritesManager.renderFavorites(containerId);
                         }
                     });
 
-                    // 3. Fallback (if already loaded)
+                    // 3. Immediate Render (The primary trigger for SPA)
                     if (window.FavoritesManager) {
-                        window.FavoritesManager.renderFavorites('favorites-grid');
+                        // Check if we already have a list rendered to avoid flickering
+                        if (container && container.children.length > 0 && !container.querySelector('.skeleton-fav-row')) {
+                            // Already content? maybe verify it's not stale? 
+                            // For now, trust it.
+                        } else {
+                            await window.FavoritesManager.renderFavorites(containerId);
+                        }
+                    } else {
+                        // Fallback in case script loads late (unlikely given position)
+                        console.warn("FavoritesManager not ready logic, waiting...");
+                        const checkInterval = setInterval(() => {
+                            if (window.FavoritesManager) {
+                                clearInterval(checkInterval);
+                                window.FavoritesManager.renderFavorites(containerId);
+                            }
+                        }, 100);
+                        // Safety clear
+                        setTimeout(() => clearInterval(checkInterval), 5000);
                     }
-                });
+                })();
 
                 function activateFavFilter(btn, type) {
                     // Update UI
@@ -634,5 +649,3 @@
 </body>
 
 </html>
-
-
