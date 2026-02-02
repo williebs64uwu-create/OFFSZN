@@ -81,31 +81,31 @@
         },
 
         fetch: async function () {
-            if (!currentUserId || !sbClient) return;
+            if (!currentUserId) return;
+
+            // Use GLOBAL AuthUtils
+            const headers = window.AuthUtils.getAuthHeaderObj();
+            if (!headers.Authorization) return; // No token, no fetch
 
             try {
-                // 1. Standard Notifications
-                const { data: notifs, error: notifError } = await sbClient
+                // 1. Get Unread Count
+                const countRes = await window.supabaseClient
+                    .from('notifications')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('user_id', currentUserId)
+                    .eq('read', false); // Only count unread
+
+                if (countRes.error) throw countRes.error;
+
+                // Update Badge
+                this.updateBadge(countRes.count || 0);
+
+                // 2. Fetch Recent Notifications (Limit 10)
+                const { data, error } = await window.supabaseClient
                     .from('notifications')
                     .select('*')
                     .eq('user_id', currentUserId)
                     .order('created_at', { ascending: false })
-                    .limit(50);
-
-                // 2. Pending Invitations (Recibidas)
-                const { data: invites } = await sbClient
-                    .from('collab_invitations')
-                    .select('*, inviter:inviter_id(nickname, first_name, last_name, avatar_url), product:product_id(name, product_type)')
-                    .eq('collaborator_id', currentUserId)
-                    .eq('status', 'pending');
-
-                // 2.5 Accepted Invitations (Enviadas & Aceptadas) 
-                const { data: acceptedInvites } = await sbClient
-                    .from('collab_invitations')
-                    .select('*, collaborator:collaborator_id(nickname, first_name, last_name, avatar_url)')
-                    .eq('inviter_id', currentUserId)
-                    .eq('status', 'accepted')
-                    .order('updated_at', { ascending: false })
                     .limit(50);
 
                 const notifications = notifs || [];

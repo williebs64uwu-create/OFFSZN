@@ -60,19 +60,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     // const username = match[1]; // REMOVED
     console.log("Loading profile for:", username);
 
-    // 2. Setup Following Data & Helper
+    // 3. Setup Following Data & Helper
     window.currentUserFollowing = new Set();
     window.currentUserId = null;
     window.profileInitPromise = Promise.resolve();
 
-    const token = getAccessToken();
+    const token = window.getAccessToken(); // Use GLOBAL
     if (token) {
-        // Fetch both following list and current user identity in parallel to avoid race conditions
+        // Fetch both following list and current user identity in parallel
         window.profileInitPromise = Promise.all([
-            fetch('/api/me/following', { headers: { 'Authorization': `Bearer ${token}` } })
+            fetch('/api/me/following', { headers: window.AuthUtils.getAuthHeaderObj() })
                 .then(r => r.json())
                 .catch(err => { console.warn("Failed to fetch following", err); return []; }),
-            fetch('/api/me', { headers: { 'Authorization': `Bearer ${token}` } })
+            fetch('/api/me', { headers: window.AuthUtils.getAuthHeaderObj() })
                 .then(r => r.json())
                 .catch(err => { console.warn("Failed to fetch me", err); return null; })
         ]).then(([ids, me]) => {

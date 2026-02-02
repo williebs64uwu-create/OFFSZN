@@ -3,25 +3,8 @@
 // Used in: profile-public.js, notificaciones.html, etc.
 // ============================================
 
-// Helper: Get Access Token
-function getAccessToken() {
-    // Check for cookie first
-    const match = document.cookie.match(/(^| )sb-access-token=([^;]+)/);
-    if (match && match[2] && match[2] !== 'undefined' && match[2] !== 'null') {
-        return match[2];
-    }
-    // Check LocalStorage as fallback (Supabase standard key pattern)
-    for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key.startsWith('sb-') && key.endsWith('-auth-token')) {
-            try {
-                const session = JSON.parse(localStorage.getItem(key));
-                if (session && session.access_token) return session.access_token;
-            } catch (e) { }
-        }
-    }
-    return null;
-}
+// Helper: Get Access Token - REMOVED (Now using global AuthUtils)
+// function getAccessToken() { ... }
 
 // Helper: Show Toast
 function showHC_Toast(message) {
@@ -236,7 +219,7 @@ window.showArtistCard = async function (event, element) {
     // Hide if own profile (Robust check)
     let cUserId = window.currentUserId;
     if (!cUserId) {
-        const t = getAccessToken();
+        const t = window.getAccessToken(); // GLOBAL
         if (t) {
             try {
                 const p = JSON.parse(atob(t.split('.')[1]));
@@ -322,7 +305,7 @@ window.showArtistCard = async function (event, element) {
         // Follow Action
         btn.onclick = async (e) => {
             e.stopPropagation();
-            const token = getAccessToken();
+            const token = window.getAccessToken(); // GLOBAL
             if (!token) { window.location.href = '/pages/login.html'; return; } // Fixed path
 
             // Toggle state

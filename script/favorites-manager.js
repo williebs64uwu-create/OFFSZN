@@ -64,7 +64,7 @@ window.FavoritesManager = (function () {
                 subscribe(handleRealtimeUpdates);
             }
 
-            let token = getAccessToken();
+            let token = window.getAccessToken();
             if (!token) {
                 console.log("FavoritesManager: No session found, waiting...");
                 return;
@@ -73,10 +73,10 @@ window.FavoritesManager = (function () {
             try {
                 // New API endpoint
                 const res = await fetch('/api/me/favorites', {
-                    headers: { 'Authorization': `Bearer ${token}` }
+                    headers: window.AuthUtils.getAuthHeaderObj()
                 });
 
-                if (res.status === 401) {
+                if (res.status === 401 || res.status === 403) {
                     console.warn("FavoritesManager: Session invalid or expired. Continuing as guest.");
                     return;
                 }
@@ -170,23 +170,8 @@ window.FavoritesManager = (function () {
         }
     }
 
-    // Helper: Get Access Token (Internal)
-    function getAccessToken() {
-        const match = document.cookie.match(/(^| )sb-access-token=([^;]+)/);
-        if (match && match[2] && match[2] !== 'undefined' && match[2] !== 'null') {
-            return match[2];
-        }
-        for (let i = 0; i < localStorage.length; i++) {
-            const key = localStorage.key(i);
-            if (key.startsWith('sb-') && key.endsWith('-auth-token')) {
-                try {
-                    const session = JSON.parse(localStorage.getItem(key));
-                    if (session && session.access_token) return session.access_token;
-                } catch (e) { }
-            }
-        }
-        return null;
-    }
+    // Helper: Get Access Token (Internal) - REMOVED (Now using global AuthUtils)
+    // function getAccessToken() { ... }
 
     // --- FILTERING STATE ---
     let cachedFavorites = [];
