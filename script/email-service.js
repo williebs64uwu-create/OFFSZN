@@ -3,7 +3,7 @@ const supabase = window.supabaseClient;
 
 // Safety check
 if (!supabase) {
-  console.error("Critical: Global Supabase not found. Ensure auth-utils.js is loaded.");
+  console.warn("Email Service: Global Supabase client not found (might be guest mode or auth-utils pending).");
 }
 
 // ============================================

@@ -22,7 +22,9 @@ const CartManager = {
         };
 
         // Auth Listener
-        if (typeof supabaseClient !== 'undefined') {
+        const supabaseClient = window.supabaseClient; // Use global
+
+        if (supabaseClient) {
             const { data } = await supabaseClient.auth.getSession();
             this.state.user = data.session?.user || null;
 

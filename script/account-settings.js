@@ -5,6 +5,12 @@ let cropper = null; // Store cropper instance
 
 document.addEventListener("DOMContentLoaded", async () => {
     // 1. Initial State Check
+    // Use the global client initialized by auth-utils.js
+    if (!window.supabaseClient) {
+        console.error("Critical: Global Supabase not found in account-settings.js. Ensure auth-utils.js is loaded.");
+        return;
+    }
+
     const { data: { session } } = await window.supabaseClient.auth.getSession();
 
     if (!session) {

@@ -18,9 +18,9 @@ window.HistoryManager = (function () {
         console.log("📜 HistoryManager: Initializing...");
 
         // Wait for Supabase
+        // Use global client
         if (!window.supabaseClient) {
-            console.log("⏳ Waiting for Supabase...");
-            setTimeout(init, 500);
+            console.warn("HistoryManager: Global Supabase client not found (guest or loading).");
             return;
         }
 

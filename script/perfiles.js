@@ -9,7 +9,7 @@ let API_URL = '';
 if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
   API_URL = 'http://localhost:3000/api';
 } else {
-  API_URL = 'https://offszn-academy.onrender.com/api'; // (Tu URL de Render)
+  API_URL = 'https://offszn-oc7c.onrender.com/api'; // (Tu URL de Render)
 }
 
 // ============================================

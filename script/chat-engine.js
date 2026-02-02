@@ -2,9 +2,9 @@
 // Use the global client initialized by auth-utils.js
 const supabase = window.supabaseClient;
 
-// Safety check
-if (!supabase) {
-    console.error("Critical: Global Supabase not found. Ensure auth-utils.js is loaded.");
+// Safety check (Non-blocking log, verified in init)
+if (!supabase && window.location.pathname.includes('chat')) {
+    console.warn("Chat Engine: Global Supabase not found yet. It should be initialized by auth-utils.js.");
 }
 
 let currentUser = null;
@@ -102,7 +102,7 @@ async function initChat() {
         if (item) item.click();
     }
     */
-});
+}
 
 // ===== EVENT LISTENERS =====
 function setupEventListeners() {

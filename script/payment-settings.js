@@ -3,6 +3,13 @@ const PaymentSettings = {
 
     init: async function () {
         console.log("Payment Settings Initialized");
+
+        // Safety Check
+        if (!window.supabaseClient) {
+            console.warn("PaymentSettings: Supabase client not found.");
+            return;
+        }
+
         const session = await this.getSession();
         if (!session) {
             window.location.href = '/pages/login.html';
@@ -22,13 +29,13 @@ const PaymentSettings = {
     },
 
     getSession: async function () {
-        const { data: { session } } = await supabaseClient.auth.getSession();
+        const { data: { session } } = await window.supabaseClient.auth.getSession();
         return session;
     },
 
     loadSidebarData: async function () {
         try {
-            const { data, error } = await supabaseClient
+            const { data, error } = await window.supabaseClient
                 .from('users')
                 .select('nickname, avatar_url, role, first_name, last_name, email')
                 .eq('id', this.userId)
@@ -59,7 +66,7 @@ const PaymentSettings = {
 
     loadStatus: async function () {
         try {
-            const { data: user, error } = await supabaseClient
+            const { data: user, error } = await window.supabaseClient
                 .from('users')
                 .select('payment_methods')
                 .eq('id', this.userId)
@@ -81,7 +88,7 @@ const PaymentSettings = {
         try {
             // Fetch order items for products owned by this producer
             // We join with products to filter by producer_id, and orders to get the status and customer ID
-            const { data, error } = await supabaseClient
+            const { data, error } = await window.supabaseClient
                 .from('order_items')
                 .select(`
                     id,

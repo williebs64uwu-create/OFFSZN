@@ -4,7 +4,7 @@ const supabase = window.supabaseClient;
 
 // Safety check
 if (!supabase) {
-  console.error("Critical: Global Supabase not found. Ensure auth-utils.js is loaded.");
+  console.warn("Generate License: Global Supabase not found (okay if running as standalone utility).");
 }
 
 export async function generarLicencia(purchaseData) {

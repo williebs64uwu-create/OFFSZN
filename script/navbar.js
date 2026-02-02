@@ -259,10 +259,10 @@ async function performSearch(query, category) {
 
         let realResults = [];
         // Supabase Search Logic
-        if (typeof supabaseClient !== 'undefined') {
+        if (typeof window.supabaseClient !== 'undefined') {
             // PRO SEARCH: Search in Name OR Description
             // Note: .or() requires the column filters to be inside parentheses
-            let productsQuery = supabaseClient
+            let productsQuery = window.supabaseClient
                 .from('products')
                 .select('id, name, price_basic, image_url, product_type, producer_id, description')
                 .or(`name.ilike.%${query}%,description.ilike.%${query}%`)
@@ -300,7 +300,7 @@ async function performSearch(query, category) {
             // USERS SEARCH: Run if 'Todo' OR explicitly 'Productores'
             let usersQuery = null;
             if (category === 'Todo' || category === 'Productores') {
-                usersQuery = supabaseClient
+                usersQuery = window.supabaseClient
                     .from('users')
                     .select('nickname, avatar_url')
                     .ilike('nickname', `%${query}%`)
@@ -325,7 +325,7 @@ async function performSearch(query, category) {
 
             // --- FALLBACK: IF NO RESULTS MATCH, FETCH TOP 3 ---
             if ((!pRes.data || pRes.data.length === 0) && (!uRes.data || uRes.data.length === 0)) {
-                const { data: popular } = await supabaseClient
+                const { data: popular } = await window.supabaseClient
                     .from('products')
                     .select('id, name, price_basic, image_url, product_type, producer_id')
                     .eq('visibility', 'public')
@@ -345,7 +345,7 @@ async function performSearch(query, category) {
 
                 if (producerIds.length > 0) {
                     // Fetch specifically from 'users' table for 'nickname'
-                    const { data: users } = await supabaseClient
+                    const { data: users } = await window.supabaseClient
                         .from('users')
                         .select('id, nickname')
                         .in('id', producerIds);
@@ -501,10 +501,10 @@ window.deleteHistoryItem = async function (term, e) {
     getEl('navbarSearchInput')?.focus();
 
     // 🔥 SYNC REMOVAL TO DB (If Logged In)
-    if (typeof supabaseClient !== 'undefined') {
-        const { data: sessionData } = await supabaseClient.auth.getSession();
+    if (typeof window.supabaseClient !== 'undefined') {
+        const { data: sessionData } = await window.supabaseClient.auth.getSession();
         if (sessionData?.session?.user) {
-            await supabaseClient
+            await window.supabaseClient
                 .from('profiles')
                 .update({ search_history: NavbarState.search.history })
                 .eq('id', sessionData.session.user.id);
@@ -522,10 +522,10 @@ async function saveToHistory(term) {
     localStorage.setItem('offszn_search_history', JSON.stringify(NavbarState.search.history));
 
     // 🔥 SYNC ADDITION TO DB (If Logged In)
-    if (typeof supabaseClient !== 'undefined') {
-        const { data: sessionData } = await supabaseClient.auth.getSession();
+    if (typeof window.supabaseClient !== 'undefined') {
+        const { data: sessionData } = await window.supabaseClient.auth.getSession();
         if (sessionData?.session?.user) {
-            await supabaseClient
+            await window.supabaseClient
                 .from('profiles')
                 .update({ search_history: NavbarState.search.history })
                 .eq('id', sessionData.session.user.id);
@@ -569,15 +569,15 @@ async function initAuth() {
         console.error("❌ CRITICAL: AuthUtils not loaded. Authentication headers missing.");
         return;
     }
-    if (typeof supabaseClient === 'undefined') return;
+    if (typeof window.supabaseClient === 'undefined') return;
 
-    const { data } = await supabaseClient.auth.getSession();
+    const { data } = await window.supabaseClient.auth.getSession();
 
     // 🔒 ONBOARDING GUARD: Check if user has a nickname (profile complete)
     if (data.session && data.session.user) {
         // Skip if we are already on welcome page
         if (!window.location.pathname.includes('/pages/welcome.html')) {
-            const { data: profile } = await supabaseClient
+            const { data: profile } = await window.supabaseClient
                 .from('users')
                 .select('nickname')
                 .eq('id', data.session.user.id)
@@ -609,7 +609,7 @@ async function initAuth() {
         detail: { session: data.session, user: data.session?.user }
     }));
 
-    supabaseClient.auth.onAuthStateChange((event, session) => {
+    window.supabaseClient.auth.onAuthStateChange((event, session) => {
         if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
             if (session?.user) {
                 syncSearchHistory(session.user);
@@ -677,9 +677,9 @@ async function updateAuthUI(session) {
         updateUserVisuals(displayName, displayLetter, avatarUrl);
 
         // 2. FETCH FRESH DATA (Background)
-        if (typeof supabaseClient !== 'undefined') {
+        if (typeof window.supabaseClient !== 'undefined') {
             try {
-                const { data: profile } = await supabaseClient
+                const { data: profile } = await window.supabaseClient
                     .from('users')
                     .select('nickname, avatar_url')
                     .eq('id', session.user.id)
@@ -774,10 +774,10 @@ function updateUserVisuals(displayName, displayLetter, avatarUrl) {
 }
 
 async function checkPaymentSetup(userId) {
-    if (typeof supabaseClient === 'undefined') return;
+    if (typeof window.supabaseClient === 'undefined') return;
 
     try {
-        const { data: profile } = await supabaseClient
+        const { data: profile } = await window.supabaseClient
             .from('users') // Standardized to users table
             .select('payment_methods')
             .eq('id', userId)
