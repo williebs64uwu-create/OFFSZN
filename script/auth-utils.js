@@ -24,26 +24,30 @@ window.AuthUtils = {
      * @returns {string|null} The access token or null if not found.
      */
     getAccessToken: function () {
-        // 1. Try Cookie (Most secure/persistent for our setup)
+        const ANON_KEY = window.SUPABASE_ANON_KEY || "";
+
+        // Helper to validate token is NOT the anon key
+        const isValid = (t) => t && t !== 'undefined' && t !== 'null' && t !== ANON_KEY;
+
+        // 1. Try Cookie
         const match = document.cookie.match(/(^| )sb-access-token=([^;]+)/);
-        if (match && match[2] && match[2] !== 'undefined' && match[2] !== 'null') {
+        if (match && isValid(match[2])) {
             return match[2];
         }
 
         // 2. Try LocalStorage (Custom 'authToken')
         const lsToken = localStorage.getItem('authToken');
-        if (lsToken && lsToken !== 'undefined' && lsToken !== 'null') {
+        if (isValid(lsToken)) {
             return lsToken;
         }
 
-        // 3. Try Supabase LocalStorage (Internal Supabase key structure)
-        // Usually keys are like: sb-<supabaseUrl>-auth-token
+        // 3. Try Supabase LocalStorage
         for (let i = 0; i < localStorage.length; i++) {
             const key = localStorage.key(i);
             if (key.startsWith('sb-') && key.endsWith('-auth-token')) {
                 try {
                     const session = JSON.parse(localStorage.getItem(key));
-                    if (session && session.access_token) return session.access_token;
+                    if (session && isValid(session.access_token)) return session.access_token;
                 } catch (e) {
                     console.warn("AuthUtils: Failed to parse Supabase LS session", e);
                 }
