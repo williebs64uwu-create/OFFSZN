@@ -62,12 +62,17 @@ function getProductUrl(product) {
 
 window.getProductUrl = getProductUrl;
 
-document.addEventListener('DOMContentLoaded', async () => {
+async function initExplore() {
     console.log("🚀 Explore V3 Initializing...");
     initGlobalListeners();
     await initUserSocialState();
     await fetchData();
     renderExploreFeed();
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    if (!isExplorePage()) return; // 🛑 STOP EXECUTION ON OTHER PAGES
+    initExplore();
 });
 
 function initGlobalListeners() {
