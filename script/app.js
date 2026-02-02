@@ -6,7 +6,11 @@ let cursos = [];
 let presets = [];
 
 // Fetch al backend
-fetch("https://willie.lovestoblog.com/api/getProductos.php")
+const API_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+  ? 'http://localhost:3000/api'
+  : 'https://offszn-oc7c.onrender.com/api';
+
+fetch(`${API_URL}/products`)
   .then(res => {
     if (!res.ok) throw new Error("Error HTTP " + res.status);
     return res.json();

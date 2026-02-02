@@ -12,6 +12,11 @@ const EXPLORE_CONFIG = {
     HERO_ROTATE_MS: 8000
 };
 
+// API Configuration
+const API_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+    ? 'http://localhost:3000/api'
+    : 'https://offszn-oc7c.onrender.com/api';
+
 // State
 let allProducts = [];
 let allProducers = [];
@@ -107,8 +112,8 @@ async function initUserSocialState() {
 async function fetchData() {
     try {
         const [productsRes, producersRes] = await Promise.all([
-            fetch('/api/products'),
-            fetch('/api/producers')
+            fetch(`${API_URL}/products`),
+            fetch(`${API_URL}/producers`)
         ]);
         if (productsRes.ok) allProducts = await productsRes.json();
         if (producersRes.ok) allProducers = await producersRes.json();

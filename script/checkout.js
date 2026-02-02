@@ -9,6 +9,11 @@ const CheckoutManager = {
   currency: 'USD',
 
   init: async function () {
+    // Define API_URL based on environment
+    this.API_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+      ? 'http://localhost:3000/api'
+      : 'https://offszn-oc7c.onrender.com/api';
+
     console.log("Checkout Manager Initialized");
 
     // Wait for CartManager to be ready (it loads async)
@@ -153,8 +158,8 @@ const CheckoutManager = {
           body.cartItems = CartManager.state.items;
         }
 
-        return supabaseClient.auth.getSession().then(({ data: { session } }) => {
-          return fetch('/api/orders/paypal/create', {
+        return window.supabaseClient.auth.getSession().then(({ data: { session } }) => {
+          return fetch(`${self.API_URL}/orders/paypal/create`, {
             method: 'post',
             headers: {
               'Content-Type': 'application/json',
@@ -181,8 +186,8 @@ const CheckoutManager = {
           body.cartItems = CartManager.state.items;
         }
 
-        return supabaseClient.auth.getSession().then(({ data: { session } }) => {
-          return fetch('/api/orders/paypal/capture', {
+        return window.supabaseClient.auth.getSession().then(({ data: { session } }) => {
+          return fetch(`${self.API_URL}/orders/paypal/capture`, {
             method: 'post',
             headers: {
               'Content-Type': 'application/json',
