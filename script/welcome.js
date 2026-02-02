@@ -478,19 +478,8 @@ document.addEventListener('DOMContentLoaded', () => {
       // Validamos formato básico para habilitar el botón
       const validNickFormat = /^[a-z0-9._-]+$/.test(nick);
       isValid = nick.length >= 3 && validNickFormat && firstName.length > 0 && lastName.length > 0 && role !== '' && nicknameAvailable;
-    } else if (currentStep === 2) {
-      // Paso 2: Avatar (Opcional)
-    } else if (currentStep === 2) {
-      // Paso 2: Avatar (Opcional)
-      isValid = true;
-    } else if (currentStep === 3) {
-      // Paso 3: Esenciales (Opcional)
-      isValid = true;
-    } else if (currentStep === 4) {
-      // Paso 4: Detalles (Opcional)
-      isValid = true;
-    } else if (currentStep === 5) {
-      // Paso 5: Redes (Opcional)
+    } else {
+      // Pasos 2-5 son opcionales, siempre válido
       isValid = true;
     }
 
@@ -965,22 +954,40 @@ document.addEventListener('DOMContentLoaded', () => {
 
     confirmBtn.onclick = () => {
       if (!cropper) return;
-      cropper.getCroppedCanvas({
-        width: 500, height: 500, // Reasonable avatar size
-        fillColor: '#000000'
-      }).toBlob((blob) => {
-        avatarFile = blob; // Save for later upload
 
-        // Update Preview
-        const url = URL.createObjectURL(blob);
-        preview.src = url;
-        dropZone.classList.add('has-image');
+      try {
+        const canvas = cropper.getCroppedCanvas({
+          width: 500, height: 500, // Reasonable avatar size
+          fillColor: '#000000'
+        });
 
-        closeModal(); // But keep the blob!
-        // Don't clear input.value if we want to allow re-selection? 
-        // Actually setupAvatarUpload closes modal and clears input. 
-        // But we saved avatarFile.
-      }, 'image/jpeg', 0.9);
+        if (!canvas) {
+          throw new Error("No se pudo recortar la imagen");
+        }
+
+        canvas.toBlob((blob) => {
+          if (!blob) {
+            console.error("Canvas to Blob failed");
+            return;
+          }
+          avatarFile = blob; // Save for later upload
+
+          // Update Preview
+          const url = URL.createObjectURL(blob);
+          preview.src = url;
+          dropZone.classList.add('has-image');
+
+          closeModal(); // But keep the blob!
+
+          // FORCE UPDATE BUTTON STATE
+          validateCurrentStep();
+
+        }, 'image/jpeg', 0.9);
+      } catch (err) {
+        console.error("Cropper error:", err);
+        alert("Error al recortar la imagen. Intenta con otra.");
+        closeModal();
+      }
     };
   }
 });
