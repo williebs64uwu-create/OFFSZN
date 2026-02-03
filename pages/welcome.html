@@ -877,44 +877,38 @@
       }
 
       // Check Profile (only nickname for speed)
-      const { data: profile } = await supabaseGuard
       if (session) {
-        // 🛡️ SMART GUARD: Only redirect if profile is ALREADY completed (has nickname)
-        // This prevents the loop: Welcome -> Home -> Welcome -> Home
-        const { data: profile } = await supabaseGuard
-          .from('users')
-          .select('nickname')
-          .eq('id', session.user.id)
-          .single();
+        try {
+          // 🛡️ SMART GUARD: Only redirect if profile is ALREADY completed (has nickname)
+          const { data: profile, error: profileError } = await supabaseGuard
+            .from('users')
+            .select('nickname')
+            .eq('id', session.user.id)
+            .single();
 
-        if (profile && profile.nickname) {
-          console.log("✅ Usuario ya completó el onboarding, redirigiendo a perfil...");
-          window.location.replace('/' + profile.nickname);
-        } else {
-          // Stay here to finish onboarding
-          console.log("🚀 Usuario nuevo detectado, permitiendo onboarding...");
+          if (profile && profile.nickname) {
+            console.log("✅ Usuario verificado detectado. Redirigiendo a tu perfil...");
+            window.location.replace('/' + profile.nickname);
+          } else {
+            // Stay here to finish onboarding
+            console.log("🚀 Usuario nuevo o incompleto detectado. Iniciando onboarding...");
+            document.body.style.opacity = '1';
+            document.body.style.pointerEvents = 'auto';
+          }
+        } catch (err) {
+          console.error("❌ Error en guard de welcome:", err);
+          // On error, let them see the page so they aren't stuck on a black screen
           document.body.style.opacity = '1';
           document.body.style.pointerEvents = 'auto';
         }
       } else {
-        // If coming from email confirmation link, the session might be established via URL fragment
-        // Supabase client handles this automatically, but we might need to wait/reload or just show the page.
-        // For now, allow access so usage isn't blocked. The form submission will fail if no session (handled there).
-        // Or better: Redirect to login if absolutely no session?
-        // Let's check hash just in case.
+        // No session - try to wait for hash or redirect
         if (window.location.hash && window.location.hash.includes('access_token')) {
-          console.log("🔄 Detectado token en URL, esperando AuthStateChange...");
-          // Let the Supabase client process the hash
+          console.log("🔄 Autenticando vía URL hash...");
           return;
         }
-
-        // No session, no token -> Login
-        // window.location.replace('/pages/login.html');
-        // Actually, let's show the page but maybe with a 'Sign In' prompt if needed?
-        // For security, redirecting to login is safer if this page requires auth.
-        // But let's stick to the user's current flow.
-        document.body.style.opacity = '1';
-        document.body.style.pointerEvents = 'auto';
+        console.log("⚠️ Sin sesión activa. Redirigiendo al login...");
+        window.location.replace('/pages/login.html');
       }
     })();
   </script>

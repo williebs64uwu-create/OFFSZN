@@ -207,21 +207,36 @@ document.addEventListener('DOMContentLoaded', () => {
           window.location.href = '/admin-frontend/admin_dashboard.html';
         } else {
           // ✅ PRIORIDAD 3: Inteligente (Welcome vs Home)
-          const { data: profileCheck } = await supabaseClient
-            .from('users')
-            .select('nickname')
-            .eq('id', loginData.user.id)
-            .single();
+          try {
+            const { data: profileCheck, error: checkError } = await supabaseClient
+              .from('users')
+              .select('nickname')
+              .eq('id', loginData.user.id)
+              .single();
 
-          if (profileCheck && profileCheck.nickname) {
-            // Usuario Veterano -> Perfil Público (Directo)
-            const profilePath = `/${profileCheck.nickname}`;
-            console.log(`Usuario completo. Redirigiendo a ${profilePath}`);
-            window.location.href = profilePath;
-          } else {
-            // Usuario Nuevo -> Welcome
-            console.log("Usuario incompleto. Redirigiendo a /pages/welcome.html");
-            window.location.href = '/pages/welcome.html';
+            if (checkError) {
+              if (checkError.code === 'PGRST116') {
+                // New user - No row
+                console.log("Usuario nuevo detectado. Redirigiendo a /pages/welcome.html");
+                window.location.href = '/pages/welcome.html';
+              } else {
+                console.error("Error verificando perfil en login:", checkError.message);
+                // Fallback to profile (safest)
+                window.location.href = '/perfil-publico.html';
+              }
+            } else if (profileCheck && profileCheck.nickname) {
+              // Usuario Veterano -> Perfil Público (Directo)
+              const profilePath = `/${profileCheck.nickname}`;
+              console.log(`Usuario completo. Redirigiendo a ${profilePath}`);
+              window.location.href = profilePath;
+            } else {
+              // Row exists but no nickname
+              console.log("Usuario incompleto. Redirigiendo a /pages/welcome.html");
+              window.location.href = '/pages/welcome.html';
+            }
+          } catch (err) {
+            console.error("Fallo inesperado en redirección post-login:", err);
+            window.location.href = '/perfil-publico.html';
           }
         }
 

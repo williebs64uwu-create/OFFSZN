@@ -577,16 +577,31 @@ async function initAuth() {
     if (data.session && data.session.user) {
         // Skip if we are already on welcome page
         if (!window.location.pathname.includes('/pages/welcome.html')) {
-            const { data: profile } = await window.supabaseClient
-                .from('users')
-                .select('nickname')
-                .eq('id', data.session.user.id)
-                .single();
+            try {
+                const { data: profile, error: profileError } = await window.supabaseClient
+                    .from('users')
+                    .select('nickname')
+                    .eq('id', data.session.user.id)
+                    .single();
 
-            if (!profile || !profile.nickname) {
-                console.log("🚦 Usuario incompleto detectado. Redirigiendo a Onboarding...");
-                window.location.replace('/pages/welcome.html');
-                return; // Stop execution
+                // 🛡️ ROBUST CHECK: Only redirect if we are SURE nickname is missing
+                // profileError.code 'PGRST116' means no rows found (new user)
+                if (profileError) {
+                    if (profileError.code === 'PGRST116') {
+                        console.log("🚦 Usuario nuevo detectado (sin perfil). Redirigiendo a Onboarding...");
+                        window.location.replace('/pages/welcome.html');
+                        return;
+                    } else {
+                        console.warn("⚠️ Error consultando perfil en Navbar:", profileError.message);
+                        // Transient error - don't redirect verified users to onboarding by mistake
+                    }
+                } else if (!profile || !profile.nickname) {
+                    console.log("🚦 Usuario incompleto detectado. Redirigiendo a Onboarding...");
+                    window.location.replace('/pages/welcome.html');
+                    return;
+                }
+            } catch (err) {
+                console.error("❌ Fallo crítico en Onboarding Guard:", err);
             }
         }
     }
