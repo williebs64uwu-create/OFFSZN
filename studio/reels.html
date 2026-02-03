@@ -713,6 +713,58 @@
             pointer-events: auto;
         }
 
+        /* Desktop Layout Refinement */
+        @media (min-width: 769px) {
+            .reel-item.comments-active .reels-column {
+                transform: translateX(-150px);
+                transition: transform 0.33s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+
+            .reel-item.comments-active .comments-panel {
+                transform: translateX(100%);
+                /* Start off-screen right */
+                right: -300px;
+                left: auto;
+                width: 350px;
+                height: 100%;
+                border-radius: 0;
+                border-left: 1px solid #222;
+            }
+
+            .reel-item.comments-active .comments-panel.active {
+                transform: translateX(0);
+                right: calc(50% - 225px - 350px);
+                /* Position it to the right of the centered column */
+            }
+
+            /* Better positioning for side-by-side */
+            .reel-item.comments-active {
+                justify-content: center;
+            }
+
+            .reel-item.comments-active .reels-column {
+                margin-right: 350px;
+                /* Offset to make room for comments */
+            }
+
+            .reel-item.comments-active .comments-panel {
+                position: fixed;
+                top: 80px;
+                /* Below navbar */
+                bottom: 0;
+                height: calc(100vh - 80px);
+                right: 0;
+                left: auto;
+                width: 400px;
+                transform: translateX(100%);
+                z-index: 100;
+            }
+
+            .reel-item.comments-active .comments-panel.active {
+                transform: translateX(0);
+            }
+        }
+
         .comments-panel.active {
             transform: translateY(0);
         }
@@ -834,6 +886,41 @@
             100% {
                 left: 100%;
             }
+        }
+
+        /* --- REEL FOLLOW BUTTON STYLES --- */
+        .reel-follow-btn {
+            background: transparent;
+            border: 1.5px solid #fff;
+            color: #fff;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+            pointer-events: auto;
+        }
+
+        .reel-follow-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .reel-follow-btn.following {
+            background: #fff;
+            color: #000;
+            border-color: #fff;
+        }
+
+        .reel-follow-btn.following:hover {
+            background: #ef4444;
+            color: #fff;
+            border-color: #ef4444;
+        }
+
+        .reel-follow-btn.following:hover::after {
+            /* Optional: visual feedback for unfollow */
         }
 
         @media (max-width: 768px) {
@@ -1245,7 +1332,7 @@
                                 <div style="text-align:center; padding:40px; color:#666;"><i class="bi bi-arrow-repeat spin"></i></div>
                             </div>
                             <div class="comment-input-area">
-                                <input type="text" class="comment-input" placeholder="Añadir comentario..." onkeydown="if(event.key==='Enter') submitComment('${reel.id}', this)">
+                                <input type="text" class="comment-input" maxlength="300" placeholder="Añadir comentario..." onkeydown="if(event.key==='Enter') submitComment('${reel.id}', this)">
                                 <i class="bi bi-send-fill" style="color:#8b5cf6; cursor:pointer;" onclick="submitComment('${reel.id}', this.previousElementSibling)"></i>
                             </div>
                         </div>
@@ -1315,6 +1402,9 @@
             };
 
             window.handleVideoClick = function (el) {
+                // Prevent toggle if clicking inside a focused input (like comments)
+                if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA') return;
+
                 const column = el.closest('.reels-column');
                 const video = column.querySelector('video');
 
@@ -1326,6 +1416,31 @@
                     column.classList.add('paused');
                 }
             };
+
+            // GLOBAL KEYBOARD LISTENER: Fix space bar
+            window.addEventListener('keydown', (e) => {
+                if (e.code === 'Space') {
+                    // If focusing an input or textarea, let it be
+                    if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA') return;
+
+                    e.preventDefault(); // Prevent page jump
+
+                    // Find the current active reel (intersecting one)
+                    const activeReel = document.querySelector('.reel-item video:not([paused])') ||
+                        document.querySelector('.reel-item video'); // Fallback
+
+                    if (activeReel) {
+                        const column = activeReel.closest('.reels-column');
+                        if (activeReel.paused) {
+                            activeReel.play();
+                            column.classList.remove('paused');
+                        } else {
+                            activeReel.pause();
+                            column.classList.add('paused');
+                        }
+                    }
+                }
+            });
 
             window.handleSeek = function (e, container) {
                 const rect = container.getBoundingClientRect();
@@ -1406,11 +1521,31 @@
 
             // --- NEW SOCIAL LOGIC ---
             window.toggleComments = function (id) {
+                const item = document.getElementById(`reel-${id}`);
                 const panel = document.getElementById(`comments-${id}`);
                 if (!panel) return;
-                panel.classList.toggle('active');
-                if (panel.classList.contains('active')) {
+
+                const isActive = !panel.classList.contains('active');
+                panel.classList.toggle('active', isActive);
+
+                // Add class to parent to trigger desktop side-by-side
+                if (window.innerWidth > 768) {
+                    item.classList.toggle('comments-active', isActive);
+                }
+
+                if (isActive) {
                     loadReelComments(id, panel.querySelector('.comments-list'));
+                }
+            };
+
+            window.replyComment = function (commentId) {
+                // For now, just set the input focus and maybe add a mention
+                console.log("Replying to comment:", commentId);
+                const input = document.querySelector(`.reel-item.comments-active .comment-input`) ||
+                    document.querySelector(`.comments-panel.active .comment-input`);
+                if (input) {
+                    input.focus();
+                    // We could fetch the user nickname here if needed
                 }
             };
 
@@ -1449,6 +1584,11 @@
             window.submitComment = async function (reelId, input) {
                 const text = input.value.trim();
                 if (!text || !currentUser) return;
+
+                if (text.length > 300) {
+                    showToast("El comentario no puede exceder los 300 caracteres.", true);
+                    return;
+                }
 
                 input.disabled = true;
                 try {
