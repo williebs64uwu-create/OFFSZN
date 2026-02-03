@@ -728,6 +728,23 @@
             display: flex;
             gap: 12px;
             align-items: center;
+            position: sticky;
+            bottom: 0;
+        }
+
+        @keyframes spin {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .spin {
+            display: inline-block;
+            animation: spin 1s linear infinite;
         }
 
         .comment-input {
@@ -1761,8 +1778,8 @@
                                 </div>
                             </div>
                             <div class="comment-input-area">
-                                <input type="text" class="comment-input" placeholder="Añadir comentario...">
-                                <i class="bi bi-send-fill" style="color:var(--accent-purple); cursor:pointer;"></i>
+                                <input type="text" class="comment-input" placeholder="Añadir comentario..." onkeydown="if(event.key==='Enter') submitComment('${reel.id}', this)">
+                                <i class="bi bi-send-fill" style="color:var(--accent-purple); cursor:pointer;" onclick="submitComment('${reel.id}', this.previousElementSibling)"></i>
                             </div>
                         </div>
                     </div>
@@ -1880,32 +1897,119 @@
         };
 
         // --- NEW SOCIAL LOGIC ---
-        function toggleComments(id) {
+        async function toggleComments(id) {
             const panel = document.getElementById(`comments-${id}`);
-            if (panel) {
-                panel.classList.toggle('active');
+            if (!panel) return;
+
+            panel.classList.toggle('active');
+
+            if (panel.classList.contains('active')) {
+                loadReelComments(id, panel.querySelector('.comments-list'));
+            }
+        }
+
+        async function loadReelComments(reelId, container) {
+            container.innerHTML = '<div style="text-align:center; padding:20px;"><i class="bi bi-arrow-repeat spin"></i></div>';
+
+            const { data: comments, error } = await window.supabaseClient
+                .from('reel_comments')
+                .select('*, users(nickname, avatar_url)')
+                .eq('reel_id', reelId)
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                container.innerHTML = '<div style="color:#666; text-align:center; padding:20px;">Error al cargar comentarios</div>';
+                return;
+            }
+
+            if (!comments || comments.length === 0) {
+                container.innerHTML = '<div style="color:#666; text-align:center; padding:40px;">No hay comentarios todavía</div>';
+                return;
+            }
+
+            container.innerHTML = comments.map(c => `
+                <div class="comment-item">
+                    <img src="${c.users?.avatar_url || 'https://ui-avatars.com/api/?name=' + c.users?.nickname}" class="comment-avatar">
+                    <div class="comment-content">
+                        <div class="comment-user">@${c.users?.nickname}</div>
+                        <div class="comment-text">${c.content}</div>
+                        <div class="comment-actions">
+                            <span class="comment-action-btn" onclick="replyComment('${c.id}')">Responder</span>
+                            <span class="comment-action-btn"><i class="bi bi-heart"></i> ${c.likes_count || 0}</span>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function submitComment(reelId, input) {
+            const text = input.value.trim();
+            if (!text || !window.currentUser) return;
+
+            input.disabled = true;
+            try {
+                const { error } = await window.supabaseClient.from('reel_comments').insert({
+                    reel_id: reelId,
+                    user_id: window.currentUser.id,
+                    content: text
+                });
+
+                if (error) throw error;
+                input.value = '';
+                loadReelComments(reelId, input.closest('.comments-panel').querySelector('.comments-list'));
+
+                // Update local count
+                const countEl = document.querySelector(`#reel-${reelId} .social-action-btn:nth-child(3) .social-action-count`);
+                if (countEl) countEl.textContent = (parseInt(countEl.textContent) || 0) + 1;
+
+            } catch (e) {
+                showToast("Error al comentar", "error");
+            } finally {
+                input.disabled = false;
             }
         }
 
         async function toggleReelLike(id, btn) {
-            // For now, simple UI flip. Backend logic would need 'reel_likes' table.
-            const icon = btn.querySelector('.social-action-icon');
+            if (!window.currentUser) {
+                showToast("Inicia sesión para dar like", "info");
+                return;
+            }
+
+            const icon = btn.querySelector('.social-action-icon i');
             const countSpan = btn.querySelector('.social-action-count');
             let count = parseInt(countSpan.textContent) || 0;
+            const isLiking = !icon.classList.contains('liked');
 
-            if (icon.classList.contains('liked')) {
-                icon.classList.remove('liked', 'bi-heart-fill');
-                icon.classList.add('bi-heart');
-                count--;
-            } else {
-                icon.classList.add('liked', 'bi-heart-fill');
-                icon.classList.remove('bi-heart');
+            // Optimistic UI
+            if (isLiking) {
+                icon.classList.add('liked');
                 count++;
+            } else {
+                icon.classList.remove('liked');
+                count--;
             }
             countSpan.textContent = count;
 
-            // Background sync (Mocked for now)
-            console.log("Syncing like for reel:", id);
+            try {
+                if (isLiking) {
+                    await window.supabaseClient.from('reel_likes').insert({
+                        user_id: window.currentUser.id,
+                        reel_id: id
+                    });
+                } else {
+                    await window.supabaseClient.from('reel_likes').delete().match({
+                        user_id: window.currentUser.id,
+                        reel_id: id
+                    });
+                }
+                // Note: The total likes_count in the 'reels' table would ideally be updated by a DB Trigger
+                // If no trigger exists, we would need an RPC here.
+            } catch (e) {
+                console.error("Like error:", e);
+                // Rollback if failed
+                countSpan.textContent = isLiking ? count - 1 : count + 1;
+                icon.classList.toggle('liked');
+            }
         }
 
         function shareReel(url) {
