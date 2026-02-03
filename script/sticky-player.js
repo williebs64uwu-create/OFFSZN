@@ -292,8 +292,17 @@ window.StickyPlayer = (function () {
 
         // Update Price Label (BeatStars Style)
         if (els.priceLabel) {
-            const isFree = trackData.is_free === true || trackData.is_free === 'true';
-            els.priceLabel.innerText = isFree ? 'FREE' : `$${trackData.price_basic || '—'}`;
+            const productType = (trackData.product_type || '').toLowerCase();
+            const price = parseFloat(trackData.price_basic) || 0;
+
+            // BEATS: Always show price if > 0. FREE only if explicitly free.
+            if (productType === 'beat') {
+                els.priceLabel.innerText = price > 0 ? `$${price.toFixed(2)}` : 'FREE';
+            } else {
+                // KITS/PRESETS: Show FREE if is_free is true or price is 0
+                const isFree = trackData.is_free === true || String(trackData.is_free) === 'true' || price === 0;
+                els.priceLabel.innerText = isFree ? 'FREE' : `$${price.toFixed(2)}`;
+            }
         }
 
         if (!audioUrl) return;
@@ -774,7 +783,9 @@ window.StickyPlayer = (function () {
     async function handleBuyClick() {
         if (!currentTrack) return;
 
-        const isFree = currentTrack.is_free === true || String(currentTrack.is_free) === 'true';
+        const price = parseFloat(currentTrack.price_basic) || 0;
+        const isFree = (currentTrack.is_free === true || String(currentTrack.is_free) === 'true' || price === 0) && currentTrack.product_type !== 'beat';
+
         if (isFree) {
             // Free product: just open download gate
             handleDownloadClick();
@@ -782,42 +793,44 @@ window.StickyPlayer = (function () {
         }
 
         // --- PAID PRODUCT LOGIC ---
-        // 1. BEATS: Show license comparison modal
-        if (currentTrack.product_type === 'beat') {
-            if (window.openLicenseComparisonModal) {
-                // If we don't have available_licenses, we need to fetch/construct them
-                if (!currentTrack.available_licenses) {
-                    const lics = await fetchTrackLicenses(currentTrack);
-                    currentTrack.available_licenses = lics;
-                }
-                window.openLicenseComparisonModal(currentTrack.available_licenses);
-            } else {
-                // Fallback to product page if modal not available
-                window.location.href = `/producto.html?id=${currentTrack.id}`;
+        // 1. Ensure modal is available
+        if (window.openLicenseComparisonModal) {
+            // 2. Fetch/Construct Licenses
+            if (!currentTrack.available_licenses) {
+                const lics = await fetchProductLicenses(currentTrack);
+                currentTrack.available_licenses = lics;
             }
-        }
-        // 2. KITS / PRESETS: Add directly to cart and open panel
-        else {
-            if (window.CartManager) {
-                const cartItem = {
-                    id: currentTrack.id,
-                    name: currentTrack.name,
-                    price_basic: parseFloat(currentTrack.price_basic) || 0,
-                    image_url: currentTrack.image_url,
-                    product_type: currentTrack.product_type,
-                    license: { id: 'basic', name: 'Basic License' }
-                };
-                window.CartManager.addToCart(cartItem);
-                window.CartManager.openCart(); // Ensure sidebar opens
-            } else {
-                window.location.href = `/producto.html?id=${currentTrack.id}`;
-            }
+
+            // 3. Open Modal
+            window.openLicenseComparisonModal(currentTrack.available_licenses);
+        } else {
+            // Fallback to product page if modal not available
+            window.location.href = `/producto.html?id=${currentTrack.id}`;
         }
     }
 
-    async function fetchTrackLicenses(track) {
+    /**
+     * UNIFIED LICENSE FETCH (Supports Beats, Kits, Presets)
+     */
+    async function fetchProductLicenses(track) {
         try {
-            // Fetch producer settings to construct licenses (Matching logic from product-core.js)
+            const productType = (track.product_type || '').toLowerCase();
+
+            // KITS / PRESETS: Construct a single "Standard" license
+            if (productType !== 'beat') {
+                return [{
+                    id: 'basic',
+                    name: productType === 'preset' ? 'Preset License' : (productType === 'loopkit' ? 'Loop Kit License' : 'Standard License'),
+                    price: parseFloat(track.price_basic) || 0,
+                    enabled: true,
+                    streams: 'N/A',
+                    sales: 'ILIMITADO',
+                    radio: 'N/A',
+                    files: { mp3: true, wav: true, stems: true }
+                }];
+            }
+
+            // BEATS: Fetch producer settings
             const { data: producer } = await window.supabaseClient
                 .from('users')
                 .select('license_settings')

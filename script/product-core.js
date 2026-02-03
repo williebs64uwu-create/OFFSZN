@@ -1262,7 +1262,9 @@ window.closeLicenseModal = function () {
 }
 
 window.selectLicenseAndClose = function (id) {
-    selectLicense(id);
+    if (window.currentProductData) {
+        window.addToCart(window.currentProductData.id, id);
+    }
     window.closeLicenseModal();
     window.closeLicenseComparisonModal(); // Also close comparison if open
 }
@@ -1841,70 +1843,9 @@ function initABPlayerInContainer(beforeUrl, afterUrl, container, productId) {
 }
 
 /**
- * Placeholder for global cart integration
+ * Placeholder for global cart integration - MOVED TO BOTTOM (Unified Override)
  */
-window.addToCart = (id, license) => {
-    // 1. Get Product Data from global scope (set in init)
-    const product = window.currentProductData;
-    if (!product) {
-        console.error("No product data found for cart add");
-        return;
-    }
-
-    // 2. Determine Price & License Name & Details
-    let finalPrice = parseFloat(product.price_basic) || 0;
-    let licenseName = 'Basic License'; // Default
-    let licenseId = license || 'basic';
-    let licenseDetails = {};
-
-    // Get available licenses dict if present
-    const availLicenses = product.available_licenses || [];
-    let selectedLicObj = null;
-
-    // If it's a beat/license selection
-    const selectedCard = document.querySelector('.license-card-v2.selected');
-    if (selectedCard) {
-        licenseId = selectedCard.id.replace('lic-card-', '');
-        selectedLicObj = availLicenses.find(l => l.id === licenseId);
-    } else if (license) {
-        // Direct pass (fallback)
-        selectedLicObj = availLicenses.find(l => l.id === licenseId);
-    }
-
-    if (selectedLicObj) {
-        finalPrice = parseFloat(selectedLicObj.price) || 0;
-        licenseName = selectedLicObj.name;
-        // Enrich details for accordion
-        licenseDetails = {
-            files_preview: getFilesPreview(selectedLicObj.files, selectedLicObj.name),
-            streams: selectedLicObj.streams,
-            sales: selectedLicObj.sales,
-            radio: selectedLicObj.radio
-        };
-    }
-
-    // 3. Construct Cart Item Object
-    const cartItem = {
-        id: product.id,
-        name: product.name,
-        price_basic: finalPrice, // Use the license price
-        image_url: product.image_url,
-        product_type: product.product_type,
-        license: {
-            id: licenseId,
-            name: licenseName,
-            details: licenseDetails // Pass details to cart
-        }
-    };
-
-    // 4. Call Manager
-    if (window.CartManager) {
-        window.CartManager.addToCart(cartItem);
-    } else {
-        console.error("CartManager not initialized");
-        alert("Error: Carrito no disponible");
-    }
-};
+// window.addToCart = (id, license) => { ... }
 
 /**
  * RELATED PRODUCTS LOGIC
@@ -2151,7 +2092,7 @@ window.addToCart = (id, license) => {
     // 1. Get Product Data from global scope (set in init or passed)
     let product = window.currentProductData;
 
-    // Fallback: Try to find in window.allProducts if defined (Context: Exploring/Marketplace)
+    // Fallback: Try to find in window.allProducts if defined (Marketplace)
     if (!product && window.allProducts) {
         product = window.allProducts.find(p => p.id == id);
     }
@@ -2162,57 +2103,53 @@ window.addToCart = (id, license) => {
         return;
     }
 
-    // 2. Determine Price & License Name
-    // DEFAULT from product
+    // 2. Determine Price, License Name, and Details
     let finalPrice = parseFloat(product.price_basic) || 0;
     let licenseName = product.product_type === 'beat' ? 'Basic Lease' : 'Standard License';
-    let licenseId = license || 'basic'; // ID passed or default
+    let licenseId = license || 'basic';
+    let licenseDetails = {};
 
-    // CHECK FOR SELECTED LICENSE CARD (Detailed View)
-    // The UI uses .license-card-v2.selected to indicate choice
+    const availLicenses = product.available_licenses || [];
+
+    // Check for selected card in UI
     const selectedCard = document.querySelector('.license-card-v2.selected');
-
     if (selectedCard) {
-        // We are in Detailed View and user selected a license
-        // FIX: The class is .lic-price-v2 (found in renderBeatSpecifics)
+        licenseId = selectedCard.id.replace('lic-card-', '');
+    }
+
+    // Find the license object to get details
+    const selectedLicObj = availLicenses.find(l => l.id === licenseId);
+
+    if (selectedLicObj) {
+        finalPrice = parseFloat(selectedLicObj.price) || 0;
+        licenseName = selectedLicObj.name;
+        licenseDetails = {
+            files_preview: (window.getFilesPreview) ? window.getFilesPreview(selectedLicObj.files, selectedLicObj.name) : '',
+            streams: selectedLicObj.streams,
+            sales: selectedLicObj.sales,
+            radio: selectedLicObj.radio
+        };
+    } else if (selectedCard) {
+        // Fallback UI parsing if not in metadata
         const cardPriceEl = selectedCard.querySelector('.lic-price-v2') || selectedCard.querySelector('.lic-price');
         const cardNameEl = selectedCard.querySelector('.lic-name');
 
         if (cardPriceEl) {
-            // ROBUST PARSING: Extract digits and dot only.
-            const rawPrice = cardPriceEl.innerText.trim();
-            const match = rawPrice.match(/[0-9.]+/);
-            if (match) {
-                finalPrice = parseFloat(match[0]);
-            } else if (rawPrice.toLowerCase().includes('gratis')) {
-                finalPrice = 0;
-            }
+            const match = cardPriceEl.innerText.trim().match(/[0-9.]+/);
+            if (match) finalPrice = parseFloat(match[0]);
+            else if (cardPriceEl.innerText.toLowerCase().includes('gratis')) finalPrice = 0;
         }
-
-        if (cardNameEl) {
-            licenseName = cardNameEl.innerText.trim();
-        }
-
-        licenseId = selectedCard.id.replace('lic-card-', ''); // Ensure ID
-
-    } else if (license && product.available_licenses) {
-        // Passed explicit license ID (e.g. from specific button)
-        // Try to find in product.available_licenses metadata if it exists
-        const licObj = product.available_licenses.find(l => l.id === license);
-        if (licObj) {
-            finalPrice = parseFloat(licObj.price);
-            licenseName = licObj.name;
-        }
+        if (cardNameEl) licenseName = cardNameEl.innerText.trim();
     }
 
     // 3. Construct Cart Item
-    // IMPORTANT: WE PASS finalPrice AS 'price_basic' SO CART MANAGER SEES IT AS VARIANT PRICE
     const checkProduct = {
         ...product,
-        price_basic: finalPrice, // OVERRIDE PRICE for Cart Item
+        price_basic: finalPrice,
         license: {
             name: licenseName,
-            id: licenseId
+            id: licenseId,
+            details: licenseDetails
         }
     };
 
@@ -2221,6 +2158,7 @@ window.addToCart = (id, license) => {
     // 4. Call Manager
     if (window.CartManager) {
         window.CartManager.addToCart(checkProduct);
+        window.CartManager.openCart(); // Auto-open sidebar
     } else {
         console.error("CartManager not initialized");
         alert("Error: Carrito no disponible. Recarga la página.");
