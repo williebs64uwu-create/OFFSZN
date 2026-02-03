@@ -368,14 +368,18 @@
         }
 
         #reels-feed-container {
-            height: calc(100vh - var(--nav-height));
+            height: 100vh;
+            /* Changed from calc(100vh - var(--nav-height)) */
+            padding-top: var(--nav-height);
+            /* Push content down instead of reducing height */
             overflow-y: scroll;
             scroll-snap-type: y mandatory;
             scrollbar-width: none;
             /* Firefox */
             -ms-overflow-style: none;
             /* IE/Edge */
-            background: #050505;
+            background: #000;
+            /* Changed from #050505 to match body */
             /* Dark grey backdrop for desktop */
         }
 
@@ -386,7 +390,8 @@
 
         .reel-item {
             width: 100%;
-            height: calc(100vh - var(--nav-height));
+            height: 100vh;
+            /* Changed from calc(100vh - var(--nav-height)) */
             scroll-snap-align: start;
             scroll-snap-stop: always;
             position: relative;
@@ -770,6 +775,69 @@
                 border: none;
             }
         }
+
+
+        /* TOAST NOTIFICATIONS */
+        .toast-container {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            left: auto;
+            transform: none;
+            z-index: 3000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            align-items: flex-end;
+        }
+
+        .elite-toast {
+            background: #0F0F0F;
+            border: 1px solid #333;
+            color: #fff;
+            padding: 12px 20px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+            font-weight: 500;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            min-width: 300px;
+            justify-content: center;
+            opacity: 0;
+            animation: toastSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        .elite-toast.success {
+            border-color: rgba(16, 185, 129, 0.2);
+        }
+
+        .elite-toast.success i {
+            color: #10B981;
+            font-size: 16px;
+        }
+
+        .elite-toast.error {
+            border-color: rgba(239, 68, 68, 0.2);
+        }
+
+        .elite-toast.error i {
+            color: #EF4444;
+            font-size: 16px;
+        }
+
+        @keyframes toastSlideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
     </style>
     <!-- ==================== SIDE PANELS (INJECTED MANUALLY FOR ANALYSIS) ==================== -->
 
@@ -948,6 +1016,20 @@
                         const reelElement = createReelElement(reel);
                         container.appendChild(reelElement);
                     });
+
+                    // --- DEEP LINKING ---
+                    const hash = window.location.hash;
+                    if (hash && hash.startsWith('#reel-')) {
+                        setTimeout(() => {
+                            const target = document.querySelector(hash);
+                            if (target) {
+                                target.scrollIntoView({ behavior: 'smooth' });
+                                // Optional: Auto-play deeply linked reel?
+                                // Let's respect the IntersectionObserver instead, but scrolling it into view 
+                                // should trigger the Observer anyway.
+                            }
+                        }, 500);
+                    }
 
                     setupObserver();
                     setupGlobalListeners();
@@ -1295,8 +1377,30 @@
             window.copyReelLink = function (reelId) {
                 const shareUrl = `${window.location.origin}/studio/reels.html#reel-${reelId}`;
                 navigator.clipboard.writeText(shareUrl).then(() => {
-                    alert('¡Enlace del Reel copiado al portapapeles!');
+                    showToast('¡Enlace del Reel copiado al portapapeles!');
                 });
+            };
+
+            // Custom Toast Notification (Standardized)
+            window.showToast = function (message, isError = false) {
+                let container = document.getElementById('toastContainer');
+                if (!container) {
+                    container = document.createElement('div');
+                    container.id = 'toastContainer';
+                    container.className = 'toast-container';
+                    document.body.appendChild(container);
+                }
+                const toast = document.createElement('div');
+                toast.className = `elite-toast ${isError ? 'error' : 'success'}`;
+                const icon = isError ? 'bi-exclamation-triangle-fill' : 'bi-check-circle-fill';
+                toast.innerHTML = `<i class="bi ${icon}"></i> <span>${message}</span>`;
+
+                container.appendChild(toast);
+
+                setTimeout(() => {
+                    toast.style.animation = 'toastSlideUp 0.3s reverse forwards';
+                    setTimeout(() => toast.remove(), 300);
+                }, 3000);
             };
 
             function setupObserver() {
