@@ -1,5 +1,6 @@
 ﻿<!DOCTYPE html>
 <html lang="es">
+
 <head>
     <!-- Supabase Config & Auth Utils -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -330,10 +331,13 @@
         }
 
         @keyframes spin {
-            to { transform: rotate(360deg); }
+            to {
+                transform: rotate(360deg);
+            }
         }
     </style>
 </head>
+
 <body>
     <!-- Avatar Display -->
     <div class="avatar-container">
@@ -351,7 +355,7 @@
             <!-- Header -->
             <div class="modal-header">
                 <h2 class="modal-title">Subir Imagen</h2>
-                <button class="modal-close" id="closeModal">âœ•</button>
+                <button class="modal-close" id="closeModal">❌</button>
             </div>
 
             <!-- Body -->
@@ -361,14 +365,15 @@
                 <!-- Upload Area -->
                 <div class="upload-area" id="uploadArea">
                     <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                        <polyline points="17 8 12 3 7 8"/>
-                        <line x1="12" y1="3" x2="12" y2="15"/>
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                        <polyline points="17 8 12 3 7 8" />
+                        <line x1="12" y1="3" x2="12" y2="15" />
                     </svg>
                     <p class="upload-text">Haz clic para subir o arrastra y suelta</p>
                     <p class="upload-hint-text">JPG, PNG o WEBP (MÃ¡x. 5MB)</p>
                     <p class="upload-hint-text" style="margin-top: 8px; color: #666;">Recomendado: 400x400px o mayor</p>
-                    <input type="file" id="fileInput" class="file-input" accept="image/jpeg,image/jpg,image/png,image/webp">
+                    <input type="file" id="fileInput" class="file-input"
+                        accept="image/jpeg,image/jpg,image/png,image/webp">
                 </div>
 
                 <!-- Crop Area -->
@@ -588,12 +593,12 @@
             // Zoom con rueda del mouse
             cropArea.addEventListener('wheel', (e) => {
                 e.preventDefault();
-                
+
                 const delta = e.deltaY > 0 ? -0.1 : 0.1;
                 currentZoom = Math.max(1, Math.min(3, currentZoom + delta));
-                
+
                 imageScale = baseScale * currentZoom;
-                
+
                 // SIEMPRE recentrar imagen al hacer zoom
                 const containerWidth = cropArea.offsetWidth;
                 const containerHeight = cropArea.offsetHeight;
@@ -601,20 +606,20 @@
                 const imgHeight = cropImage.naturalHeight;
                 const scaledWidth = imgWidth * imageScale;
                 const scaledHeight = imgHeight * imageScale;
-                
+
                 imageX = (containerWidth - scaledWidth) / 2;
                 imageY = (containerHeight - scaledHeight) / 2;
-                
+
                 // Recentrar cÃ­rculo tambiÃ©n
                 circleX = (containerWidth - CROP_SIZE) / 2;
                 circleY = (containerHeight - CROP_SIZE) / 2;
-                
+
                 // Verificar que el cÃ­rculo no se salga de la imagen
                 const minX = imageX;
                 const maxX = imageX + scaledWidth - CROP_SIZE;
                 const minY = imageY;
                 const maxY = imageY + scaledHeight - CROP_SIZE;
-                
+
                 // Si la imagen es mÃ¡s pequeÃ±a que el cÃ­rculo, ajustar
                 if (maxX < minX || maxY < minY) {
                     circleX = minX;
@@ -623,7 +628,7 @@
                     circleX = Math.max(minX, Math.min(maxX, circleX));
                     circleY = Math.max(minY, Math.min(maxY, circleY));
                 }
-                
+
                 updateImageTransform();
                 updateCropCircle();
             }, { passive: false });
@@ -793,5 +798,5 @@
         });
     </script>
 </body>
-</html>
 
+</html>
