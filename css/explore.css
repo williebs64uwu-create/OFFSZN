@@ -527,7 +527,7 @@
 /* Two Column List Section (Trending / Fresh) */
 .explore-list-grid {
     display: grid;
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr 1fr;
     gap: 40px;
     margin: 40px auto 80px auto;
     max-width: 1300px;
@@ -536,7 +536,7 @@
 
 @media (max-width: 1100px) {
     .explore-list-grid {
-        grid-template-columns: 1fr 1fr;
+        gap: 20px;
     }
 }
 
@@ -719,81 +719,60 @@
     border-radius: 6px;
 }
 
-/* Override the previous skeleton attempts */
-.skeleton-waveform,
-.skeleton-hero,
-.skeleton-card,
-.skeleton-title {
+/* ==========================================================
+   PREMIUM SKELETON LOADERS (Sync with real components)
+   ========================================================== */
+
+/* Hero Skeleton */
+.skeleton-hero {
+    width: 100%;
+    height: 380px;
+    border-radius: 20px;
+    margin-bottom: 40px;
     background: #111;
-    animation: none;
-    /* We use the global .skeleton class or the new specific ones */
 }
 
-/* Let's define the specific structure for the List Item Skeleton more precisely */
-.skeleton-list-item-smart {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    padding: 10px;
+/* Skeleton Container Fixes */
+.skeleton-item {
+    pointer-events: none !important;
+    user-select: none !important;
 }
 
-.skeleton-list-item-smart::before {
-    content: "";
-    width: 25px;
-    height: 14px;
-    background: #111;
+.skeleton-item:hover {
+    background: transparent !important;
+    transform: none !important;
+}
+
+.skeleton-item .skeleton {
+    background-color: #1a1a1a;
+}
+
+/* Specific alignments for list skeletons to match real rows */
+.list-item-smart.skeleton-item .list-item-index {
+    background: #1a1a1a;
     border-radius: 2px;
 }
 
-/* Correcting the list item skeleton structure */
-.skeleton-list-item-smart {
-    display: grid;
-    grid-template-columns: 25px 48px 1fr 120px 48px;
-    align-items: center;
-    gap: 15px;
-    padding: 10px;
-}
-
-.skeleton-list-item-smart div,
-.skeleton-list-item-smart::before,
-.skeleton-list-item-smart::after {
-    background: #111;
-    border-radius: 4px;
-}
-
-/* SHELF CARD SKELETON */
-.skeleton-card-smart {
-    flex: 0 0 200px;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-.skeleton-card-smart::before {
-    content: "";
-    width: 200px;
-    height: 200px;
-    background: #111;
-    border-radius: 12px;
-}
-
-.skeleton-card-smart::after {
-    content: "";
-    width: 70%;
-    height: 14px;
+.list-item-smart.skeleton-item .list-item-img {
     background: #1a1a1a;
-    border-radius: 4px;
 }
 
-/* Add shimmer to all */
-.skeleton-hero,
-.skeleton-title-left,
-.skeleton-list-item-smart::before,
-.skeleton-card-smart::before,
-.skeleton-card-smart::after,
-.skeleton-title {
-    position: relative;
-    overflow: hidden;
+.list-item-smart.skeleton-item .list-play-btn.skeleton {
+    background: #1a1a1a;
+    box-shadow: none;
+}
+
+/* Card Skeleton specific overrides */
+.product-card-smart.skeleton-item {
+    cursor: default;
+}
+
+.product-card-smart.skeleton-item .card-cover-wrapper {
+    background: #1a1a1a;
+}
+
+.product-card-smart.skeleton-item:hover {
+    transform: none;
 }
 
 .list-item-index {

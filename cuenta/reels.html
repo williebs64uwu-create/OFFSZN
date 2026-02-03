@@ -128,11 +128,16 @@
         .main-content-elite {
             margin-left: 80px;
             flex: 1;
-            padding: 40px;
+            padding: 0;
+            /* 🔥 Remove padding for full-screen look */
             width: calc(100% - 80px);
             display: flex;
             flex-direction: column;
             align-items: center;
+            overflow-y: scroll;
+            height: 100vh;
+            scroll-snap-type: y mandatory;
+            /* TikTok-style snapping */
         }
 
         .elite-header {
@@ -141,7 +146,12 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 40px;
+            padding: 20px 40px;
+            /* Adjust padding to be inside */
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: linear-gradient(to bottom, rgba(0, 0, 0, 0.8), transparent);
         }
 
         .elite-header h1 {
@@ -252,31 +262,27 @@
             max-width: 1400px;
         }
 
-        /* --- GRID --- */
+        /* --- GRID/FEED --- */
         .reels-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0;
+            /* No gap for seamless scrolling */
             width: 100%;
-            max-width: 1400px;
+            max-width: 500px;
+            /* Standard Reel width */
         }
 
         .reel-card {
-            background: #111;
-            border-radius: 20px;
+            background: #000;
+            width: 100%;
+            height: 100vh;
+            /* Full screen card */
             overflow: hidden;
             position: relative;
-            aspect-ratio: 9/16;
-            border: 1px solid #222;
-            transition: 0.2s ease-out;
-            /* Removed excessive glow/shadow per request */
-        }
-
-        .reel-card:hover {
-            border-color: #333;
-            /* Subtle border */
-            transform: translateY(-2px);
-            z-index: 10;
+            scroll-snap-align: start;
+            border-bottom: 1px solid #111;
         }
 
         /* Video Container */
@@ -291,8 +297,8 @@
         .reel-video {
             width: 100%;
             height: 100%;
-            object-fit: contain;
-            /* Changed to contain for 16:9 support with black bars */
+            object-fit: cover;
+            /* 🔥 FULL SCREEN COVER */
             background: #000;
             display: block;
         }
@@ -536,47 +542,42 @@
         /* 3. TikTok-Style Social Actions (Right Side) - Compact Size */
         .social-actions {
             position: absolute;
-            right: 10px;
-            bottom: 80px;
+            right: 15px;
+            bottom: 120px;
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 20px;
             z-index: 20;
-            opacity: 0;
-            transition: opacity 0.2s;
-        }
-
-        .reel-card:hover .social-actions {
             opacity: 1;
+            /* Always visible like TikTok/Reels */
         }
 
         .social-action-btn {
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 3px;
+            gap: 5px;
             cursor: pointer;
         }
 
         .social-action-icon {
-            width: 36px;
-            height: 36px;
+            width: 48px;
+            height: 48px;
             border-radius: 50%;
-            background: rgba(0, 0, 0, 0.6);
+            background: rgba(45, 45, 45, 0.4);
             backdrop-filter: blur(8px);
-            border: 1.5px solid rgba(255, 255, 255, 0.2);
+            border: none;
             display: flex;
             align-items: center;
             justify-content: center;
             color: #fff;
-            font-size: 16px;
-            transition: all 0.2s;
+            font-size: 22px;
+            transition: all 0.2s cubic-bezier(0.18, 0.89, 0.32, 1.28);
         }
 
         .social-action-icon:hover {
-            background: rgba(255, 255, 255, 0.9);
-            color: #000;
-            transform: scale(1.08);
+            transform: scale(1.1);
+            background: rgba(255, 255, 255, 0.2);
         }
 
         .social-action-icon.liked {
@@ -592,15 +593,17 @@
         }
 
         .profile-action {
-            width: 36px;
-            height: 36px;
+            width: 50px;
+            height: 50px;
             border-radius: 50%;
-            border: 1.5px solid #fff;
+            border: 2px solid #fff;
             overflow: hidden;
             background: #333;
             display: flex;
             align-items: center;
             justify-content: center;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
         }
 
         .profile-action img {
@@ -633,43 +636,108 @@
         }
 
 
-        .action-btns {
+        /* --- COMMENTS PANEL (YouTube Shorts style) --- */
+        .comments-panel {
             position: absolute;
-            top: 15px;
-            right: 15px;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 65%;
+            background: #0F0F0F;
+            border-radius: 20px 20px 0 0;
+            z-index: 100;
+            transform: translateY(100%);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             display: flex;
-            gap: 8px;
-            opacity: 0;
-            transition: 0.2s;
-            z-index: 10;
+            flex-direction: column;
+            box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.8);
         }
 
-        .reel-card:hover .action-btns {
-            opacity: 1;
+        .comments-panel.active {
+            transform: translateY(0);
         }
 
-        .mini-btn {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            background: rgba(0, 0, 0, 0.5);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            color: #fff;
+        .comments-header {
+            padding: 15px 20px;
+            border-bottom: 1px solid #222;
             display: flex;
+            justify-content: space-between;
             align-items: center;
-            justify-content: center;
-            cursor: pointer;
         }
 
-        .mini-btn:hover {
-            background: #fff;
-            color: #000;
+        .comments-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
         }
 
-        .mini-btn.del:hover {
-            background: #ef4444;
+        .comment-item {
+            display: flex;
+            gap: 12px;
+        }
+
+        .comment-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: #333;
+            flex-shrink: 0;
+        }
+
+        .comment-content {
+            flex: 1;
+        }
+
+        .comment-user {
+            font-size: 13px;
+            font-weight: 600;
             color: #fff;
-            border-color: #ef4444;
+            margin-bottom: 4px;
+        }
+
+        .comment-text {
+            font-size: 13px;
+            color: #ccc;
+            line-height: 1.5;
+        }
+
+        .comment-actions {
+            margin-top: 8px;
+            display: flex;
+            gap: 15px;
+            font-size: 12px;
+            color: #888;
+        }
+
+        .comment-action-btn {
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .comment-action-btn:hover {
+            color: #fff;
+        }
+
+        .comment-input-area {
+            padding: 15px 20px;
+            border-top: 1px solid #222;
+            background: #0F0F0F;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .comment-input {
+            flex: 1;
+            background: #1A1A1A;
+            border: none;
+            border-radius: 20px;
+            padding: 10px 15px;
+            color: #fff;
+            font-size: 13px;
         }
 
 
@@ -1622,22 +1690,44 @@
                 let isVideo = reel.url.includes('cloudinary') || reel.url.match(/\.(mp4|mov|webm)$/i);
                 if (!isVideo) return '';
 
+                // Construct Producer Meta (using existing logic for avatars)
+                const avatar = "../images/LOGO-OFFSZN.png"; // Placeholder or real avatar
+
                 return `
-                    <div class="reel-card">
-                        <div class="reel-video-container" onclick="togglePlay(this)">
-                            
+                    <div class="reel-card" id="reel-${reel.id}">
+                        <div class="reel-video-container" onclick="handleVideoClick(this)">
                             <video class="reel-video" loop muted playsinline preload="metadata">
                                 <source src="${reel.url}" type="video/mp4">
                             </video>
                             
-                            <!-- PLAY OVERLAY -->
-                            <div class="play-overlay"><i class="bi bi-play-fill" style="color:#fff; font-size:32px;"></i></div>
+                            <!-- SOCIAL ACTIONS (TikTok Style) -->
+                            <div class="social-actions" onclick="event.stopPropagation()">
+                                <div class="social-action-btn">
+                                    <div class="profile-action" onclick="window.location.href='/perfil.html?id=${reel.user_id}'">
+                                        <img src="${avatar}" alt="Avatar">
+                                    </div>
+                                </div>
+                                <div class="social-action-btn" onclick="toggleReelLike('${reel.id}', this)">
+                                    <div class="social-action-icon"><i class="bi bi-heart-fill"></i></div>
+                                    <span class="social-action-count">${reel.likes_count || 0}</span>
+                                </div>
+                                <div class="social-action-btn" onclick="toggleComments('${reel.id}')">
+                                    <div class="social-action-icon"><i class="bi bi-chat-dots-fill"></i></div>
+                                    <span class="social-action-count">${reel.comments_count || 0}</span>
+                                </div>
+                                <div class="social-action-btn" onclick="shareReel('${reel.url}')">
+                                    <div class="social-action-icon"><i class="bi bi-share-fill"></i></div>
+                                    <span class="social-action-count">Compartir</span>
+                                </div>
+                            </div>
 
+                            <!-- INFO OVERLAY -->
                             <div class="info-overlay">
+                                <div style="font-weight: 700; font-size: 15px; margin-bottom: 8px;">@user</div>
                                 <div class="reel-title">${reel.title || ''}</div>
                             </div>
 
-                            <!-- VOLUME CONTROL -->
+                            <!-- VOLUME & SEEK (Overlay) -->
                             <div class="volume-control-container" onclick="event.stopPropagation()">
                                 <div class="volume-slider-wrapper">
                                     <input type="range" class="volume-slider" min="0" max="1" step="0.1" value="0" oninput="setGridVolume(this, event)">
@@ -1646,14 +1736,33 @@
                                     <i class="bi bi-volume-mute-fill"></i>
                                 </div>
                             </div>
-                            
-                            <div class="action-btns">
-                                <div class="mini-btn" onclick="openEditModal('${reel.id}'); event.stopPropagation()"><i class="bi bi-pencil-fill"></i></div>
-                                <div class="mini-btn del" onclick="openDeleteModal('${reel.id}'); event.stopPropagation()"><i class="bi bi-trash3-fill"></i></div>
-                            </div>
 
                             <div class="seek-container" onclick="event.stopPropagation()">
                                 <input type="range" class="seek-slider" min="0" max="100" value="0" oninput="seekGrid(this, event)">
+                            </div>
+
+                            <!-- ACTION BTNS (Edit/Del) - Top Right -->
+                            <div class="action-btns" style="position:absolute; top:80px; right:15px; display:flex; gap:10px; opacity:0.6;">
+                                <div class="mini-btn" onclick="openEditModal('${reel.id}'); event.stopPropagation()"><i class="bi bi-pencil-fill"></i></div>
+                                <div class="mini-btn del" onclick="openDeleteModal('${reel.id}'); event.stopPropagation()"><i class="bi bi-trash3-fill"></i></div>
+                            </div>
+                        </div>
+
+                        <!-- COMMENTS PANEL (Drawer) -->
+                        <div class="comments-panel" id="comments-${reel.id}" onclick="event.stopPropagation()">
+                            <div class="comments-header">
+                                <span style="font-weight:700;">Comentarios</span>
+                                <i class="bi bi-x-lg" style="cursor:pointer;" onclick="toggleComments('${reel.id}')"></i>
+                            </div>
+                            <div class="comments-list">
+                                <div style="text-align:center; padding:40px; color:#666;">
+                                    <i class="bi bi-chat-quote" style="font-size:30px; display:block; margin-bottom:10px;"></i>
+                                    Próximamente: Comentarios reales
+                                </div>
+                            </div>
+                            <div class="comment-input-area">
+                                <input type="text" class="comment-input" placeholder="Añadir comentario...">
+                                <i class="bi bi-send-fill" style="color:var(--accent-purple); cursor:pointer;"></i>
                             </div>
                         </div>
                     </div>
@@ -1689,19 +1798,25 @@
             });
         }
 
+        function handleVideoClick(container) {
+            // If comments panel is open, close it instead of toggling play
+            const panel = container.closest('.reel-card').querySelector('.comments-panel');
+            if (panel.classList.contains('active')) {
+                panel.classList.remove('active');
+                return;
+            }
+            togglePlay(container);
+        }
+
         function togglePlay(container) {
             const video = container.querySelector('video');
-            const overlay = container.querySelector('.play-overlay');
-
             if (video.paused) {
                 stopAllGridVideos();
                 video.play().catch(e => console.log("Play error", e));
                 container.classList.add('playing');
-                overlay.style.opacity = '0';
             } else {
                 video.pause();
                 container.classList.remove('playing');
-                overlay.style.opacity = '1';
             }
         }
 
@@ -1763,6 +1878,44 @@
                 else icon.className = 'bi bi-volume-up-fill';
             }
         };
+
+        // --- NEW SOCIAL LOGIC ---
+        function toggleComments(id) {
+            const panel = document.getElementById(`comments-${id}`);
+            if (panel) {
+                panel.classList.toggle('active');
+            }
+        }
+
+        async function toggleReelLike(id, btn) {
+            // For now, simple UI flip. Backend logic would need 'reel_likes' table.
+            const icon = btn.querySelector('.social-action-icon');
+            const countSpan = btn.querySelector('.social-action-count');
+            let count = parseInt(countSpan.textContent) || 0;
+
+            if (icon.classList.contains('liked')) {
+                icon.classList.remove('liked', 'bi-heart-fill');
+                icon.classList.add('bi-heart');
+                count--;
+            } else {
+                icon.classList.add('liked', 'bi-heart-fill');
+                icon.classList.remove('bi-heart');
+                count++;
+            }
+            countSpan.textContent = count;
+
+            // Background sync (Mocked for now)
+            console.log("Syncing like for reel:", id);
+        }
+
+        function shareReel(url) {
+            if (navigator.share) {
+                navigator.share({ title: 'Mira este Reel en OFFSZN', url: url });
+            } else {
+                navigator.clipboard.writeText(url);
+                showToast("Enlace copiado al portapapeles", "info");
+            }
+        }
 
         // --- PREVIEW LOGIC ---
         function setVolume(val) {

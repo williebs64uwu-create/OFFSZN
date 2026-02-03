@@ -136,6 +136,11 @@ async function fetchData() {
 function renderExploreFeed() {
     const container = document.getElementById('explore-rows-container');
     if (!container) return;
+
+    // 🔥 Remove static list skeletons
+    const staticListSkeleton = document.getElementById('explore-list-skeleton');
+    if (staticListSkeleton) staticListSkeleton.style.display = 'none';
+
     container.innerHTML = '';
     usedProductIds.clear();
 
