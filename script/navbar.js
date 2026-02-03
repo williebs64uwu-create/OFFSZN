@@ -494,31 +494,17 @@ window.setSearch = function (text) {
 }
 
 window.deleteHistoryItem = async function (term, e) {
-    e.stopPropagation();
+    if (e) e.stopPropagation();
     const fullHistory = JSON.parse(localStorage.getItem('offszn_search_history')) || [];
     const updatedFullHistory = fullHistory.filter(t => t !== term);
-    localStorage.setItem('offszn_search_history', JSON.stringify(updatedFullHistory));
 
-    NavbarState.search.history = updatedFullHistory.slice(0, 5);
-    renderHistoryAndTrends();
-    getEl('navbarSearchInput')?.focus();
-
-    // 🔥 SYNC REMOVAL TO DB (If Logged In)
-    if (typeof window.supabaseClient !== 'undefined') {
-        const { data: sessionData } = await window.supabaseClient.auth.getSession();
-        if (sessionData?.session?.user) {
-            await window.supabaseClient
-                .from('profiles')
-                .update({ search_history: updatedFullHistory })
-                .eq('id', sessionData.session.user.id);
-        }
-    }
+    // Use Universal Sync
+    await window.updateUniversalSearchHistory(updatedFullHistory);
 }
 
 async function saveToHistory(term) {
-    // 1. Manage Local History (Keep 50 for full view, 5 for dropdown)
-    let fullHistory = JSON.parse(localStorage.getItem('offszn_search_history')) || [];
     const lowerTerm = term.toLowerCase().trim();
+    let fullHistory = JSON.parse(localStorage.getItem('offszn_search_history')) || [];
 
     // Remove if exists
     fullHistory = fullHistory.filter(t => t.toLowerCase().trim() !== lowerTerm);
@@ -529,20 +515,41 @@ async function saveToHistory(term) {
     // Limit storage to 50
     if (fullHistory.length > 50) fullHistory.pop();
 
-    // Update Local Storage
-    localStorage.setItem('offszn_search_history', JSON.stringify(fullHistory));
+    // Use Universal Sync
+    await window.updateUniversalSearchHistory(fullHistory);
+}
 
-    // Update UI State (Only 5)
-    NavbarState.search.history = fullHistory.slice(0, 5);
+// 🌐 UNIVERSAL SYNC FUNCTION
+window.updateUniversalSearchHistory = async function (newFullHistory) {
+    // 1. Update Local Storage
+    localStorage.setItem('offszn_search_history', JSON.stringify(newFullHistory));
 
-    // 2. 🔥 SYNC TO DB (If Logged In)
+    // 2. Update Navbar Internal State
+    if (window.NavbarState) {
+        window.NavbarState.search.history = newFullHistory.slice(0, 5);
+        // Refresh UI if Trending Panel is visible
+        if (document.getElementById('search-trending-panel')?.style.display === 'block') {
+            renderHistoryAndTrends();
+        }
+    }
+
+    // 3. Dispatch Event for other pages (like history.html)
+    window.dispatchEvent(new CustomEvent('offszn-history-changed', {
+        detail: { history: newFullHistory }
+    }));
+
+    // 4. 🔥 Sync to Supabase if Logged In
     if (typeof window.supabaseClient !== 'undefined') {
-        const { data: sessionData } = await window.supabaseClient.auth.getSession();
-        if (sessionData?.session?.user) {
-            await window.supabaseClient
-                .from('profiles')
-                .update({ search_history: fullHistory })
-                .eq('id', sessionData.session.user.id);
+        try {
+            const { data: { session } } = await window.supabaseClient.auth.getSession();
+            if (session?.user) {
+                await window.supabaseClient
+                    .from('profiles')
+                    .update({ search_history: newFullHistory })
+                    .eq('id', session.user.id);
+            }
+        } catch (err) {
+            console.warn("History Sync Failed:", err);
         }
     }
 }

@@ -287,10 +287,8 @@
         render: function (notifications) {
             if (notifications) this.renderedIds = notifications.map(n => n.id);
 
-            // 🛡️ TARGETS: Check for both Global Dropdown AND Main Page List
+            // 🛡️ TARGETS: Check only for Global Dropdown
             const dropdownList = document.getElementById('notification-list');
-            const mainList = document.getElementById('full-notification-list'); // Main Page ID
-
             const badge = document.getElementById('notification-badge');
 
             if (notifications) {
@@ -298,8 +296,8 @@
                 this.updateBadge(unreadCount);
             }
 
-            // Exit only if NEITHER list exists
-            if (!dropdownList && !mainList) return;
+            // Exit only if no dropdown exists
+            if (!dropdownList) return;
 
             const html = (!notifications || notifications.length === 0)
                 ? `
@@ -331,7 +329,6 @@
 
             // ✅ Populates BOTH lists if they exist
             if (dropdownList) dropdownList.innerHTML = html;
-            if (mainList) mainList.innerHTML = html;
 
             // --- Re-Init Hover Cards ---
             if (window.HoverCardManager) {

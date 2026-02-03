@@ -23,7 +23,7 @@
     </script>
     <script src="/script/auth-utils.js?v=11"></script>
 
-    <script src="/script/notifications.js?v=11"></script>
+    <script src="/script/notifications.js?v=20"></script>
 </head>
 
 <style>
@@ -85,8 +85,10 @@
         gap: 16px;
         padding: 16px;
         border-radius: 12px;
-        background: transparent;
-        transition: background 0.2s;
+        background: #0c0c0c;
+        /* Distinct background */
+        border: 1px solid rgba(255, 255, 255, 0.03);
+        transition: all 0.2s;
         position: relative;
     }
 
@@ -94,7 +96,10 @@
         background: #111;
     }
 
-    /* .notif-item.unread { } */
+    .notif-item.unread {
+        background: rgba(59, 130, 246, 0.03);
+        border-color: rgba(59, 130, 246, 0.1);
+    }
 
     .notif-avatar {
         width: 48px;
@@ -812,7 +817,7 @@
     <!-- SCRIPTS -->
     <script src="/script/navbar.js?v=7" type="module"></script>
 
-    <script src="/script/notifications.js?v=8"></script>
+    <!-- notifications.js already loaded in head -->
     <script src="/script/hover-card.js"></script>
     <script src="/script/sticky-player.js"></script>
     <script>
@@ -1332,12 +1337,11 @@
                 }
             }
 
-            // 3. Refresh UI
+            // 3. Refresh UI (Silent)
             if (window.NotificationsManager) window.NotificationsManager.fetch();
 
-            // Local Page Refresh
-            renderSkeletons(); // Show Skeletons immediately
-            const { session } = await window.supabaseClient.auth.getSession();
+            // Local Page Update (Refresh data in background without showing skeletons)
+            const { data: { session } } = await window.supabaseClient.auth.getSession();
             if (session) fetchAndRender(session.user.id);
         };
 
