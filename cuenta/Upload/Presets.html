@@ -3787,10 +3787,14 @@
         // Use the global client initialized by auth-utils.js
         const supabaseClient = window.supabaseClient;
 
-        if (!supabaseClient) {
-            console.error("Critical: Global Supabase not found. Ensure auth-utils.js is loaded.");
-            return;
-        }
+        (function () {
+            if (!supabaseClient) {
+                console.error("Critical: Global Supabase not found. Ensure auth-utils.js is loaded.");
+                // Retain return to exit this IIFE, preventing further execution if logic was sequential, 
+                // though in this file structure, subsequent code is mostly declarations or event listeners.
+                return;
+            }
+        })();
 
 
 
