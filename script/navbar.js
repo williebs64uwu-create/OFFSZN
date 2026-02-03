@@ -71,7 +71,40 @@ function closeAllUI(exceptSearch = false) {
     // Search Overlay
     const sOverlay = getEl('search-overlay');
     if (sOverlay && !exceptSearch) sOverlay.classList.remove('active');
+
+    // Global Guest Modal
+    closeGuestModal();
 }
+
+/**
+ * GLOBAL GUEST AUTH MODAL
+ */
+window.showGuestModal = function (title = "Inicia Sesión", text = "Para realizar esta acción, necesitas una cuenta en OFFSZN.") {
+    const modal = getEl('globalGuestModal');
+    const titleEl = getEl('guestModalTitle');
+    const textEl = getEl('guestModalText');
+
+    if (modal) {
+        if (titleEl) titleEl.innerText = title;
+        if (textEl) textEl.innerText = text;
+
+        modal.classList.add('active');
+        modal.style.display = 'flex';
+        // Force reflow for opacity transition if needed
+        setTimeout(() => modal.style.opacity = '1', 10);
+    }
+};
+
+window.closeGuestModal = function () {
+    const modal = getEl('globalGuestModal');
+    if (modal) {
+        modal.style.opacity = '0';
+        setTimeout(() => {
+            modal.classList.remove('active');
+            modal.style.display = 'none';
+        }, 300);
+    }
+};
 
 function handleSmartToggle(targetType, targetElement) {
     const ANY_OPEN = isAnyUIOpen();

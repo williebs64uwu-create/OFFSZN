@@ -311,6 +311,7 @@
                     let extraId = '';
                     if (n.type === 'product_like') extraId = n.data?.product_id || '';
                     else if (n.type === 'new_follower') extraId = n.data?.follower_id || '';
+                    else if (n.type === 'new_message') extraId = n.data?.conversation_id || '';
 
                     return `
                         <div class="notification-item ${n.read ? '' : 'unread'}" onclick="handleNotificationClick('${n.id}', '${n.type}', '${extraId}')">
@@ -390,6 +391,7 @@
                 case 'new_follower': return 'fa-user-plus';
                 case 'product_like': return 'fa-heart text-danger';
                 case 'product_published': return 'fa-rocket';
+                case 'new_message': return 'fa-comment-dots';
                 default: return 'fa-bell';
             }
         },
@@ -532,6 +534,12 @@
                 window.location.href = `/producto.html?id=${extraId}`;
             } else {
                 window.location.href = '/cuenta/subir-kit.html';
+            }
+        } else if (type === 'new_message') {
+            if (extraId) {
+                window.location.href = `/mensajes.html?convId=${extraId}`;
+            } else {
+                window.location.href = '/mensajes.html';
             }
         }
 

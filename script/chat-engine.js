@@ -64,6 +64,7 @@ async function initChat() {
     const urlParams = new URLSearchParams(window.location.search);
     const targetNickname = urlParams.get('user');
     const initialMsg = urlParams.get('msg');
+    const directConvId = urlParams.get('convId');
 
     if (targetNickname) {
         // Find target user but don't AWAIT yet for the UI reveal
@@ -83,6 +84,31 @@ async function initChat() {
                         adjustInputHeight(input);
                         input.focus();
                     }
+                }
+            }
+        });
+    }
+
+    if (directConvId) {
+        // Handle direct conversation link ASAP
+        const directPromise = supabase
+            .from('conversation_participants')
+            .select('conversation_id, user_id')
+            .eq('conversation_id', directConvId)
+            .neq('user_id', currentUser.id)
+            .limit(1)
+            .maybeSingle();
+
+        directPromise.then(async ({ data: participation, error }) => {
+            if (participation && !error) {
+                const { data: targetUser } = await supabase
+                    .from('users')
+                    .select('id, nickname, avatar_url')
+                    .eq('id', participation.user_id)
+                    .single();
+
+                if (targetUser) {
+                    openChat(directConvId, targetUser.nickname, targetUser.avatar_url, targetUser.id);
                 }
             }
         });

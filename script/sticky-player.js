@@ -99,6 +99,15 @@ window.StickyPlayer = (function () {
         setupVolumeDrag();
         updateVolumeUI(volume);
 
+        // Navigation Click Logic
+        const navigateToProduct = () => {
+            if (currentTrack && currentTrack.id) {
+                window.location.href = `/producto.html?id=${currentTrack.id}`;
+            }
+        };
+        els.title.onclick = navigateToProduct;
+        els.cover.onclick = navigateToProduct;
+
         // -- BUY/DOWNLOAD BUTTONS --
         if (els.buyBtn) {
             els.buyBtn.onclick = (e) => {
@@ -121,6 +130,19 @@ window.StickyPlayer = (function () {
             likeBtn.onclick = (e) => {
                 e.stopPropagation();
                 if (window.FavoritesManager && currentTrack) {
+                    // --- GUEST GUARD ---
+                    if (!window.currentUserId) {
+                        if (window.showGuestModal) {
+                            window.showGuestModal(
+                                "¡Te gusta este beat!",
+                                "Inicia sesión para guardar tus favoritos en tu perfil y descargarlos más tarde."
+                            );
+                        } else {
+                            window.location.href = '/pages/login.html';
+                        }
+                        return;
+                    }
+
                     const ownerId = currentTrack.user_id || (currentTrack.artist_users ? currentTrack.artist_users.id : null);
                     window.FavoritesManager.toggleLike(currentTrack.id, likeBtn, ownerId);
                 } else {
