@@ -1506,7 +1506,7 @@
             // Update Count
             const countLabel = document.getElementById('filterCount');
             if (countLabel) {
-                countLabel.innerText = filtered.length === 1 ? '1 cupÃ³n' : `${filtered.length} cupones`;
+                countLabel.innerText = filtered.length === 1 ? '1 cupón' : `${filtered.length} cupones`;
             }
         }
 
@@ -1540,7 +1540,7 @@
 
                 const typeIcon = c.discount_percent ? '%' : '$';
                 const val = c.discount_percent || c.discount_amount;
-                const minPurchase = c.min_purchase_amount > 0 ? `$${c.min_purchase_amount}` : 'Sin mÃ­n.';
+                const minPurchase = c.min_purchase_amount > 0 ? `$${c.min_purchase_amount}` : 'Sin mín.';
 
                 // Date Formatting
                 const formatDate = (d) => {
@@ -1562,7 +1562,7 @@
                                 <i class="bi bi-calendar-event"></i> ${dateRange}
                             </div>
                             <div class="c-meta">
-                                <span><i class="bi bi-cart"></i> MÃ­n: ${minPurchase}</span>
+                                <span><i class="bi bi-cart"></i> Mín: ${minPurchase}</span>
                                 <span><i class="bi bi-arrow-repeat"></i> ${c.is_single_use ? '1/cliente' : 'Multiuso'}</span>
                             </div>
                         </div>
@@ -1632,7 +1632,7 @@
 
             if (type === 'percent' && amount > 100) {
                 document.getElementById('cAmount').value = 100;
-                preview.innerText = "MÃ¡ximo 100%";
+                preview.innerText = "Máximo 100%";
                 return;
             }
 
@@ -1643,9 +1643,9 @@
 
             if (type === 'percent') {
                 const saving = (100 * (amount / 100)).toFixed(2);
-                preview.innerText = `Este cupÃ³n descontarÃ¡ $${saving} de una venta de $100.00`;
+                preview.innerText = `Este cupón descontará $${saving} de una venta de $100.00`;
             } else {
-                preview.innerText = `Este cupÃ³n descontarÃ¡ $${amount.toFixed(2)} del total de la venta (El total nunca serÃ¡ menor a $0.00)`;
+                preview.innerText = `Este cupón descontará $${amount.toFixed(2)} del total de la venta (El total nunca será menor a $0.00)`;
             }
         }
 
@@ -1944,11 +1944,11 @@
             const appliesTo = document.getElementById('cAppliesTo').value;
 
             if (!code) {
-                showError('cCode', "Por favor genera o escribe un cÃ³digo.");
+                showError('cCode', "Por favor genera o escribe un código.");
                 return;
             }
             if (!amount || amount <= 0) {
-                showError('cAmount', "Por favor ingresa un valor vÃ¡lido para el descuento.");
+                showError('cAmount', "Por favor ingresa un valor válido para el descuento.");
                 return;
             }
             if (type === 'percent' && amount > 100) {
@@ -1974,21 +1974,21 @@
             // Validations
             if (useMinPurchase) {
                 if (min_purchase_amount < 1 || min_purchase_amount > 1000) {
-                    showError('cMinPurchase', "El monto mÃ­nimo debe ser entre $1 y $1000 USD.");
+                    showError('cMinPurchase', "El monto mínimo debe ser entre $1 y $1000 USD.");
                     return;
                 }
             }
 
             if (useGlobalLimit) {
                 if (uses_limit < 1 || uses_limit > 1000) {
-                    showError('cLimit', "El lÃ­mite de usos debe ser entre 1 y 1000.");
+                    showError('cLimit', "El límite de usos debe ser entre 1 y 1000.");
                     return;
                 }
             }
 
             if (useStartDate && useEndDate && validFromInput && validToInput) {
                 if (new Date(valid_to) <= new Date(valid_from)) {
-                    showError('cValidTo', "La fecha de expiraciÃ³n debe ser posterior a la fecha de inicio.");
+                    showError('cValidTo', "La fecha de expiración debe ser posterior a la fecha de inicio.");
                     return;
                 }
             }
@@ -2031,7 +2031,7 @@
                 );
 
                 if (validSelectedProducts.length === 0) {
-                    showError('cProductSearch', "El producto seleccionado no es vÃ¡lido (Debe estar Aprobado y ser PÃºblico/No Listado).");
+                    showError('cProductSearch', "El producto seleccionado no es válido (Debe estar Aprobado y ser Público/No Listado).");
                     return;
                 }
                 appliesToId = validSelectedProducts.map(p => p.id).join(',');
@@ -2069,11 +2069,11 @@
 
             if (error) {
                 console.error(error);
-                showToast("Error al " + (editingCouponId ? "actualizar" : "crear") + " el cupÃ³n: " + error.message, true);
+                showToast("Error al " + (editingCouponId ? "actualizar" : "crear") + " el cupón: " + error.message, true);
             } else {
                 closeModal();
                 loadCoupons();
-                showToast(editingCouponId ? "Â¡CupÃ³n actualizado!" : "Â¡CupÃ³n creado exitosamente!");
+                showToast(editingCouponId ? "¡Cupón actualizado!" : "¡Cupón creado exitosamente!");
             }
         }
 
@@ -2104,7 +2104,7 @@
             if (!c) return;
 
             editingCouponId = id;
-            document.querySelector('#modalCoupon h3').innerText = "Editar CupÃ³n";
+            document.querySelector('#modalCoupon h3').innerText = "Editar Cupón";
             document.querySelector('#modalCoupon button[onclick="saveCoupon()"]').innerText = "Guardar Cambios";
 
             // Prefill Inputs
@@ -2191,7 +2191,7 @@
         }
 
         async function deleteCoupon(id) {
-            if (!confirm("Â¿Eliminar este cupÃ³n?")) return;
+            if (!confirm("¿Eliminar este cupón?")) return;
 
             const { error } = await supabaseClient.from('coupons').delete().eq('id', id);
             if (error) alert("Error deleting");

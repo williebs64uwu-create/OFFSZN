@@ -938,7 +938,7 @@
             <img src="../images/LOGO-OFFSZN.png" style="width:38px; mix-blend-mode: screen;">
         </a>
 
-        <!-- 1. GESTIÃ“N -->
+        <!-- 1. GESTIÓN -->
         <div style="width:40px; border-bottom:1px solid #222; margin:5px 0;"></div>
         <a href="/cuenta/dashboard.html" class="sidebar-icon-btn" data-title="Dashboard"><i
                 class="bi bi-grid-fill"></i></a>
@@ -960,7 +960,7 @@
         <div style="width:40px; border-bottom:1px solid #222; margin:5px 0;"></div>
         <a href="/cuenta/cursos.html" class="sidebar-icon-btn" data-title="Cursos"><i
                 class="bi bi-mortarboard-fill"></i></a>
-        <a href="/cuenta/analiticas.html" class="sidebar-icon-btn" data-title="EstadÃ­sticas"><i
+        <a href="/cuenta/analiticas.html" class="sidebar-icon-btn" data-title="Estadísticas"><i
                 class="bi bi-bar-chart-fill"></i></a>
 
         <!-- 4. SOCIAL -->
@@ -990,7 +990,7 @@
                     <p>Gestiona tus invitaciones y proyectos compartidos</p>
                 </div>
                 <!-- <button class="btn-new-collab" onclick="openInviteModal()">
-                    <i class="bi bi-plus-lg"></i> Nueva InvitaciÃ³n
+                    <i class="bi bi-plus-lg"></i> Nueva Invitación
                 </button> -->
             </div>
 
@@ -1102,7 +1102,7 @@
         </div>
     </div>
 
-    <!-- MODAL: Nueva InvitaciÃ³n -->
+    <!-- MODAL: Nueva Invitación -->
     <div class="modal-overlay" id="inviteModal">
         <div class="modal-content" style="max-width: 600px;">
             <div class="modal-header">
@@ -1361,7 +1361,7 @@
             ownerRow.innerHTML = `
                 <div style="display:flex; align-items:center; gap:10px;">
                     <i class="bi bi-person-circle" style="color:#8B5CF6; font-size:20px;"></i>
-                    <span style="color:#fff; font-weight:500;">TÃº (Propietario)</span>
+                    <span style="color:#fff; font-weight:500;">Tú (Propietario)</span>
                 </div>
                 <div class="split-percent-wrapper">
                     <input type="number" class="split-input" value="100" min="0" max="100" 
@@ -1731,7 +1731,7 @@
             if (error) {
                 showToast("Error al actualizar: " + error.message, "error");
             } else {
-                showToast(status === 'accepted' ? "Â¡ColaboraciÃ³n aceptada!" : "ColaboraciÃ³n rechazada");
+                showToast(status === 'accepted' ? "¡Colaboración aceptada!" : "Colaboración rechazada");
                 loadCollaborations(); // Refresh
             }
         }
@@ -1757,8 +1757,8 @@
 
         function cancelCollab(id) {
             openConfirmModal(
-                "Cancelar InvitaciÃ³n",
-                "Â¿Seguro que quieres cancelar esta invitaciÃ³n? El usuario ya no podrÃ¡ aceptarla.",
+                "Cancelar Invitación",
+                "¿Seguro que quieres cancelar esta invitación? El usuario ya no podrá aceptarla.",
                 async () => {
                     // 1. Try Hard Delete
                     const resDelete = await supabaseClient
@@ -1767,7 +1767,7 @@
                         .eq('id', id);
 
                     if (!resDelete.error && resDelete.count > 0) {
-                        showToast("InvitaciÃ³n eliminada");
+                        showToast("Invitación eliminada");
                         loadCollaborations();
                         return;
                     }
@@ -1784,7 +1784,7 @@
                     if (resUpdate.error) {
                         showToast("Error: " + resUpdate.error.message, "error");
                     } else {
-                        showToast("InvitaciÃ³n cancelada (Soft delete)");
+                        showToast("Invitación cancelada (Soft delete)");
                         loadCollaborations();
                     }
                 }
@@ -1841,7 +1841,7 @@
             if (error) {
                 showToast("Error al editar: " + error.message, "error");
             } else {
-                showToast("InvitaciÃ³n actualizada");
+                showToast("Invitación actualizada");
                 closeEditModal();
                 loadCollaborations();
             }
@@ -2014,7 +2014,7 @@
                     } else {
                         // Active
                         const isOwner = item.inviter_id === window.currentUser.id;
-                        const roleLabel = isOwner ? 'DueÃ±o (TÃº)' : 'Colaborador (TÃº)';
+                        const roleLabel = isOwner ? 'Dueño (Tú)' : 'Colaborador (Tú)';
 
                         actionsHTML = `
                             <div class="card-actions">
@@ -2122,7 +2122,7 @@
     <div class="modal-overlay" id="editModal">
         <div class="elite-modal">
             <div class="modal-header" style="display:flex; justify-content:space-between; align-items:center;">
-                <h2>Editar ColaboraciÃ³n</h2>
+                <h2>Editar Colaboración</h2>
                 <button class="btn-close-modal" onclick="closeEditModal()"><i class="bi bi-x"></i></button>
             </div>
             <div class="modal-body">
@@ -2132,7 +2132,7 @@
                         style="opacity:0.6; cursor:not-allowed;">
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Porcentaje de RegalÃ­as</label>
+                    <label class="form-label">Porcentaje de Regalías</label>
                     <div class="slider-container">
                         <div class="slider-val">
                             <span>Royalties</span>
@@ -2154,10 +2154,10 @@
     <div class="modal-overlay" id="confirmModal">
         <div class="elite-modal" style="max-width: 400px;">
             <div class="modal-header">
-                <h2 id="confirmTitle" style="font-size:18px;">Confirmar AcciÃ³n</h2>
+                <h2 id="confirmTitle" style="font-size:18px;">Confirmar Acción</h2>
             </div>
             <div class="modal-body">
-                <p id="confirmMessage" style="color:#ccc; font-size:14px; line-height:1.5;">Â¿EstÃ¡s seguro?</p>
+                <p id="confirmMessage" style="color:#ccc; font-size:14px; line-height:1.5;">¿Estás seguro?</p>
             </div>
             <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:10px;">
                 <button class="btn-modal-cancel" onclick="closeConfirmModal()">Cancelar</button>
@@ -2189,7 +2189,7 @@
                 </div>
                 <div class="plan-features">
                     <div class="feature-item"><i class="bi bi-check-circle-fill"></i> 5 Subidas Mensuales</div>
-                    <div class="feature-item"><i class="bi bi-check-circle-fill"></i> Analytics BÃ¡sicas</div>
+                    <div class="feature-item"><i class="bi bi-check-circle-fill"></i> Analytics Básicas</div>
                     <div class="feature-item"><i class="bi bi-check-circle-fill"></i> Soporte 24/7</div>
                 </div>
             </div>
@@ -2203,7 +2203,7 @@
                 <div class="plan-features">
                     <div class="feature-item"><i class="bi bi-check-circle-fill"></i> Subidas Ilimitadas</div>
                     <div class="feature-item"><i class="bi bi-check-circle-fill"></i> Analytics Avanzadas</div>
-                    <div class="feature-item"><i class="bi bi-check-circle-fill"></i> 0% ComisiÃ³n</div>
+                    <div class="feature-item"><i class="bi bi-check-circle-fill"></i> 0% Comisión</div>
                 </div>
             </div>
         </div>
