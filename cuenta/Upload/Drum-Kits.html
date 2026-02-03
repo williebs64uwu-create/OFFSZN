@@ -7912,11 +7912,11 @@
         </div>
     </div>
 
-    <!-- Modal ConfirmaciÃ³n Salida -->
+    <!-- Modal Confirmación Salida -->
     <div class="modal-overlay" id="exitConfirmModal">
         <div class="modal" style="max-width: 400px;">
             <div class="modal-header">
-                <h2 class="modal-title">Â¿Salir sin guardar?</h2>
+                <h2 class="modal-title">¿Salir sin guardar?</h2>
                 <button type="button" class="remove-file" onclick="closeExitModal()">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -7926,7 +7926,7 @@
             </div>
             <div class="modal-body" style="text-align: center; padding: 24px;">
                 <p style="color: #bbb; margin-bottom: 24px; font-size: 15px;">
-                    Tienes cambios sin guardar. Si sales ahora, tu progreso se perderÃ¡ (o quedarÃ¡ en una versiÃ³n
+                    Tienes cambios sin guardar. Si sales ahora, tu progreso se perderá (o quedará en una versión
                     anterior).
                 </p>
                 <div style="display: flex; flex-direction: column; gap: 12px;">
@@ -7957,12 +7957,12 @@
             </div>
             <div class="modal-body" style="text-align: center; padding: 32px;">
                 <p style="color: #888; margin-bottom: 24px; line-height: 1.6;">
-                    Â¿Primera vez subiendo un drumkit? Te guiaremos en el proceso paso a paso.
+                    ¿Primera vez subiendo un drumkit? Te guiaremos en el proceso paso a paso.
                 </p>
 
                 <div
                     style="background: rgba(255,255,255,0.03); padding: 24px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.08); margin-bottom: 24px;">
-                    <h3 style="font-size: 16px; margin-bottom: 16px; color: #fff;">Proceso rÃ¡pido en 4 pasos:</h3>
+                    <h3 style="font-size: 16px; margin-bottom: 16px; color: #fff;">Proceso rápido en 4 pasos:</h3>
                     <div style="text-align: left; color: #aaa; font-size: 14px; line-height: 2;">
                         <div><strong>Paso 1:</strong> Sube tus archivos (cover, drumkit .zip, audio preview)</div>
                         <div><strong>Paso 2:</strong> Configura precio y tags</div>
@@ -7972,13 +7972,13 @@
                 </div>
 
                 <p style="color: #666; font-size: 13px; margin-bottom: 24px;">
-                    Tip: Usa los Ã­conos <span
+                    Tip: Usa los íconos <span
                         style="display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; border-radius: 50%; background: rgba(255,255,255,0.1); font-size: 11px; margin: 0 4px;">?</span>
                     para obtener ayuda en cada campo
                 </p>
 
                 <div style="display: flex; gap: 12px; justify-content: center;">
-                    <button class="btn btn-primary" onclick="closeFirstTimeModal()">Â¡Entendido, empecemos!</button>
+                    <button class="btn btn-primary" onclick="closeFirstTimeModal()">¡Entendido, empecemos!</button>
                     <button class="btn btn-secondary" onclick="closeFirstTimeModal()">Saltar tutorial</button>
                 </div>
             </div>
@@ -8085,8 +8085,7 @@
     </div>
 
     <script>
-        // ========================================
-        // ðŸ”¥ STORAGE CLEANUP HELPER
+        // 🔥 STORAGE CLEANUP HELPER
         // ========================================
         async function deleteFileFromStorage(pathOrUrl, bucket = 'drumkit-drafts') {
             if (!pathOrUrl) return;
@@ -8097,10 +8096,10 @@
                     if (parts.length > 1) path = parts[1];
                     else return;
                 }
-                console.log(`ðŸ—‘ï¸ [CLEANUP] Borrando archivo del bucket '${bucket}':`, path);
+                console.log(`🗑️ [CLEANUP] Borrando archivo del bucket '${bucket}':`, path);
                 await supabaseClient.storage.from(bucket).remove([path]);
             } catch (e) {
-                console.warn(`âš ï¸ Cleanup failed for ${pathOrUrl} in ${bucket}:`, e);
+                console.warn(`⚠️ Cleanup failed for ${pathOrUrl} in ${bucket}:`, e);
             }
         }
 
@@ -8115,15 +8114,14 @@
             } catch (e) { console.warn('Cleanup draft files failed', e); }
         }
 
-        // ========================================
-        // ðŸ”¥ FIX: QUICK ACTIONS & PREVIEW TEXT
+        // 🔥 FIX: QUICK ACTIONS & PREVIEW TEXT
         // ========================================
 
         // 1. Scroll to Tags
         function scrollToTags() {
-            // Cambiar al paso 2 si no estamos ahÃ­
+            // Cambiar al paso 2 si no estamos ahí
             if (currentStep !== 2) {
-                // Navegar al paso 2 (simulando clic en stepper o lÃ³gica interna)
+                // Navegar al paso 2 (simulando clic en stepper o lógica interna)
                 const step2Btn = document.querySelector('.step[data-step="2"]');
                 if (step2Btn) step2Btn.click();
             }
@@ -8143,7 +8141,7 @@
 
         // 2. Attach Listener to TAGS Quick Action
         document.addEventListener('DOMContentLoaded', () => {
-            // Buscar el botÃ³n de TAGS (asumiendo que tiene un tooltip o texto "TAGS")
+            // Buscar el botón de TAGS (asumiendo que tiene un tooltip o texto "TAGS")
             const quickBtns = document.querySelectorAll('.quick-btn');
             quickBtns.forEach(btn => {
                 const tooltip = btn.querySelector('.quick-btn-tooltip');
@@ -8154,7 +8152,7 @@
         });
 
         // 3. Fix Preview Text (Remove "por ")
-        // Observar cambios en el preview para corregir el texto dinÃ¡micamente
+        // Observar cambios en el preview para corregir el texto dinámicamente
         const observer = new MutationObserver((mutations) => {
             const producerEl = document.getElementById('previewCardProducer');
             if (producerEl && producerEl.textContent.includes('por Willie Inspired')) {
@@ -8167,7 +8165,7 @@
             observer.observe(previewCard, { childList: true, subtree: true, characterData: true });
         }
 
-        // ðŸ”¥ HANDLE UPDATE PRODUCT (EDIT MODE SAVE)
+        // 🔥 HANDLE UPDATE PRODUCT (EDIT MODE SAVE)
         async function handleUpdateProduct() {
             if (window.isPublishing) return;
             window.isPublishing = true;
@@ -8177,10 +8175,10 @@
             btn.disabled = true;
             btn.innerHTML = 'Guardando...';
 
-            // ðŸ”¥ SHOW OVERLAY CONSISTENTLY via showLoading helper
+            // 🔥 SHOW OVERLAY CONSISTENTLY via showLoading helper
             showLoading('PUBLICANDO TU ARCHIVO...', 'Por favor, no cierres esta página.');
 
-            // ðŸ”¥ Force current date if not set
+            // 🔥 Force current date if not set
             if (!document.getElementById('dateInput').value) {
                 const today = new Date();
                 const year = today.getFullYear();
@@ -8197,7 +8195,7 @@
                     window.isPublishing = false;
                     btn.disabled = false;
                     btn.innerHTML = originalText;
-                    hideLoading(); // ðŸ”¥ FIX: Hide if validation fails
+                    hideLoading(); // 🔥 FIX: Hide if validation fails
                     return;
                 }
             }
@@ -8227,7 +8225,7 @@
 
                 // Recalculate is_free
                 updates.is_free = document.getElementById('freeToggle').checked;
-                // if (updates.is_free) updates.price_basic = 0; // ðŸ”¥ REMOVED to keep original price
+                // if (updates.is_free) updates.price_basic = 0; // 🔥 REMOVED to keep original price
 
                 // Helper for sanitizing
                 const sanitize = (name) => {
@@ -8236,7 +8234,7 @@
 
                 // 1. Upload NEW Cover if exists
                 if (formData.coverBlob) {
-                    // ðŸ”¥ CLEANUP OLD COVER
+                    // 🔥 CLEANUP OLD COVER
                     if (window.originalProductData && window.originalProductData.image_url) {
                         try {
                             const urlParts = window.originalProductData.image_url.split('/products/');
@@ -8257,7 +8255,7 @@
 
                 // Kit File (Secure)
                 if (formData.files.kit) {
-                    // ðŸ”¥ CLEANUP OLD KIT
+                    // 🔥 CLEANUP OLD KIT
                     if (window.originalProductData && window.originalProductData.kit_url) {
                         try {
                             const oldUrl = window.originalProductData.kit_url;
@@ -8282,7 +8280,7 @@
 
                 // Audio Preview
                 if (formData.files.audio) {
-                    // ðŸ”¥ CLEANUP OLD AUDIO
+                    // 🔥 CLEANUP OLD AUDIO
                     if (window.originalProductData && window.originalProductData.audio_url) {
                         try {
                             const urlParts = window.originalProductData.audio_url.split('/products/');
@@ -8308,7 +8306,7 @@
 
                 if (updateError) throw updateError;
 
-                // ðŸ”¥ LOGICA COLABORADORES (SYNC: ADD & REMOVE)
+                // 🔥 LOGICA COLABORADORES (SYNC: ADD & REMOVE)
                 try {
                     const originalCollabs = window.originalProductData?.collaborators || [];
 
@@ -8316,7 +8314,7 @@
                     const potentialNewCollabs = collaborators.filter(c => !originalCollabs.some(oc => oc.id === c.id));
 
                     if (potentialNewCollabs.length > 0) {
-                        console.log('ðŸ”Ž Verificando duplicados para:', potentialNewCollabs);
+                        console.log('🔎 Verificando duplicados para:', potentialNewCollabs);
 
                         const newCollabsToInvite = [];
 
@@ -8335,7 +8333,7 @@
                         }
 
                         if (newCollabsToInvite.length > 0) {
-                            console.log('ðŸ‘¥ Invitando REALMENTE a:', newCollabsToInvite);
+                            console.log('👥 Invitando REALMENTE a:', newCollabsToInvite);
 
                             // Invitations
                             const invitations = newCollabsToInvite.map(c => ({
@@ -8353,7 +8351,7 @@
                             const notifications = newCollabsToInvite.map(c => ({
                                 user_id: c.id,
                                 type: 'collab_invitation',
-                                title: 'Â¡Nueva InvitaciÃ³n de ColaboraciÃ³n!',
+                                title: '¡Nueva Invitación de Colaboración!',
                                 message: `Has sido invitado a colaborar en "${document.getElementById('titleInput').value}".`,
                                 data: { product_id: window.currentEditId, author_id: userId }
                             }));
@@ -8366,7 +8364,7 @@
                     const removedCollabs = originalCollabs.filter(oc => !collaborators.some(c => c.id === oc.id));
                     if (removedCollabs.length > 0) {
                         const removedIds = removedCollabs.map(c => c.id);
-                        console.log('ðŸ—‘ï¸ Eliminando colaboradores de la BD:', removedIds);
+                        console.log('🗑️ Eliminando colaboradores de la BD:', removedIds);
 
                         // Delete invitations (Hard Delete)
                         await supabaseClient
