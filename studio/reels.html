@@ -368,33 +368,30 @@
         }
 
         #reels-feed-container {
-            height: 100vh;
+            height: calc(100vh - 80px);
+            /* Adjust for navbar height */
             overflow-y: scroll;
             scroll-snap-type: y mandatory;
             scrollbar-width: none;
-            /* Firefox */
             -ms-overflow-style: none;
-            /* IE/Edge */
             background: #000;
-            /* Changed from #050505 to match body */
-            /* Dark grey backdrop for desktop */
         }
 
         #reels-feed-container::-webkit-scrollbar {
             display: none;
-            /* Chrome/Safari */
         }
 
         .reel-item {
             width: 100%;
-            height: 100vh;
-            /* Changed from calc(100vh - var(--nav-height)) */
+            height: calc(100vh - 80px);
+            /* Perfect fit */
             scroll-snap-align: start;
             scroll-snap-stop: always;
             position: relative;
             display: flex;
             align-items: center;
             justify-content: center;
+            border-bottom: 1px solid #111;
         }
 
         /* The Centered Column */
@@ -434,7 +431,8 @@
 
         .reel-content {
             position: absolute;
-            bottom: 30px;
+            bottom: 60px;
+            /* Elevated to avoid cutoff */
             left: 20px;
             right: 80px;
             color: #fff;
@@ -508,29 +506,30 @@
         /* Action Layer - Snapped to right of column */
         .reel-actions {
             position: absolute;
-            bottom: 40px;
-            right: 12px;
+            bottom: 100px;
+            /* 🔥 Subido para evitar recorte */
+            right: 15px;
             display: flex;
             flex-direction: column;
-            gap: 18px;
+            gap: 22px;
             align-items: center;
             z-index: 11;
         }
 
         .action-btn {
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(45, 45, 45, 0.4);
             backdrop-filter: blur(10px);
             border: none;
-            width: 44px;
-            height: 44px;
+            width: 50px;
+            height: 50px;
             border-radius: 50%;
             color: #fff;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.2rem;
+            font-size: 1.4rem;
             cursor: pointer;
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.2s cubic-bezier(0.18, 0.89, 0.32, 1.28);
         }
 
         .action-btn:hover {
@@ -696,33 +695,109 @@
             opacity: 0.9;
         }
 
-        .reel-follow-btn {
-            background: rgba(255, 255, 255, 0.12);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            color: #fff;
-            padding: 4px 14px;
-            border-radius: 6px;
-            font-size: 0.75rem;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            backdrop-filter: blur(4px);
-            text-transform: none;
-            height: 28px;
+        /* --- COMMENTS PANEL --- */
+        .comments-panel {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 65%;
+            background: #0F0F0F;
+            border-radius: 20px 20px 0 0;
+            z-index: 100;
+            transform: translateY(100%);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             display: flex;
+            flex-direction: column;
+            box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.8);
+            pointer-events: auto;
+        }
+
+        .comments-panel.active {
+            transform: translateY(0);
+        }
+
+        .comments-header {
+            padding: 15px 20px;
+            border-bottom: 1px solid #222;
+            display: flex;
+            justify-content: space-between;
             align-items: center;
-            justify-content: center;
         }
 
-        .reel-follow-btn:hover {
-            background: rgba(255, 255, 255, 0.25);
-            transform: scale(1.05);
+        .comments-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
         }
 
-        .reel-follow-btn.following {
-            background: transparent;
-            border-color: rgba(255, 255, 255, 0.4);
-            color: rgba(255, 255, 255, 0.6);
+        .comment-item {
+            display: flex;
+            gap: 12px;
+        }
+
+        .comment-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: #333;
+            flex-shrink: 0;
+        }
+
+        .comment-content {
+            flex: 1;
+        }
+
+        .comment-user {
+            font-size: 13px;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 4px;
+        }
+
+        .comment-text {
+            font-size: 13px;
+            color: #ccc;
+            line-height: 1.5;
+        }
+
+        .comment-input-area {
+            padding: 15px 20px;
+            border-top: 1px solid #222;
+            background: #0F0F0F;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            position: sticky;
+            bottom: 0;
+        }
+
+        .comment-input {
+            flex: 1;
+            background: #1A1A1A;
+            border: none;
+            border-radius: 20px;
+            padding: 10px 15px;
+            color: #fff;
+            font-size: 13px;
+        }
+
+        @keyframes spin {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .spin {
+            display: inline-block;
+            animation: spin 1s linear infinite;
         }
 
         /* --- SKELETON LOADER --- */
@@ -1144,6 +1219,12 @@
                             </button>
                             <span class="likes-count">${reel.likes_count || 0}</span>
 
+                            <!-- NEW: Comments Icon -->
+                            <button class="action-btn comment-btn" onclick="toggleComments('${reel.id}')" title="Comentarios">
+                                <i class="bi bi-chat-dots-fill"></i>
+                            </button>
+                            <span class="comments-count" style="font-size: 0.85rem; font-weight: 600; margin-bottom: 20px;">${reel.comments_count || 0}</span>
+
                             <button class="action-btn share-btn" onclick="copyReelLink('${reel.id}')" title="Compartir">
                                 <i class="bi bi-share-fill"></i>
                             </button>
@@ -1152,10 +1233,21 @@
                                 <i class="bi bi-eye-fill"></i>
                                 <span class="views-count">${reel.views_count || 0}</span>
                             </div>
-                            
-                            <button class="action-btn mute-toggle" onclick="toggleMuteAll(null, event)" title="Silencio">
-                                <i class="bi bi-volume-up-fill"></i>
-                            </button>
+                        </div>
+
+                        <!-- NEW: Comments Panel -->
+                        <div class="comments-panel" id="comments-${reel.id}" onclick="event.stopPropagation()">
+                            <div class="comments-header">
+                                <span style="font-weight:700;">Comentarios</span>
+                                <i class="bi bi-x-lg" style="cursor:pointer;" onclick="toggleComments('${reel.id}')"></i>
+                            </div>
+                            <div class="comments-list">
+                                <div style="text-align:center; padding:40px; color:#666;"><i class="bi bi-arrow-repeat spin"></i></div>
+                            </div>
+                            <div class="comment-input-area">
+                                <input type="text" class="comment-input" placeholder="Añadir comentario..." onkeydown="if(event.key==='Enter') submitComment('${reel.id}', this)">
+                                <i class="bi bi-send-fill" style="color:#8b5cf6; cursor:pointer;" onclick="submitComment('${reel.id}', this.previousElementSibling)"></i>
+                            </div>
                         </div>
 
                         <!-- Progress Bar -->
@@ -1262,17 +1354,16 @@
 
             window.toggleLike = async function (reelId, btn) {
                 if (!currentUser) {
-                    alert('Debes iniciar sesión para dar like.');
+                    showToast('Debes iniciar sesión para dar like.');
                     return;
                 }
 
-                // Debounce/Lock to prevent rapid spam clicks
                 if (likeLocks.has(reelId)) return;
                 likeLocks.add(reelId);
 
+                const icon = btn.querySelector('i');
                 const isLiking = !btn.classList.contains('liked');
 
-                // Find all instances of this reel in the feed for total sync
                 const allReelInstances = document.querySelectorAll(`.reel-item[data-id="${reelId}"]`);
                 const allBtns = Array.from(allReelInstances).map(el => el.querySelector('.like-btn'));
                 const allCounts = Array.from(allReelInstances).map(el => el.querySelector('.likes-count'));
@@ -1285,7 +1376,6 @@
                 const currentCount = parseInt(allCounts[0]?.innerText || "0");
                 const nextCount = isLiking ? currentCount + 1 : Math.max(0, currentCount - 1);
 
-                // OPTIMISTIC UPDATE (All instances)
                 updateUI(isLiking, nextCount);
 
                 try {
@@ -1295,9 +1385,8 @@
                             reel_id: reelId
                         });
                         if (error && error.code === '23505') {
-                            console.warn("User already liked this reel, syncing UI...");
+                            console.warn("User already liked this reel");
                         } else if (error) throw error;
-
                         userLikes.add(reelId);
                     } else {
                         const { error } = await window.supabaseClient.from('reel_likes').delete().match({
@@ -1309,11 +1398,79 @@
                     }
                 } catch (err) {
                     console.error('Like error:', err);
-                    // Rollback all instances
                     updateUI(!isLiking, currentCount);
                 } finally {
-                    // Extended lock to allow DB triggers to finish before accepting Realtime updates
                     setTimeout(() => likeLocks.delete(reelId), 2000);
+                }
+            };
+
+            // --- NEW SOCIAL LOGIC ---
+            window.toggleComments = function (id) {
+                const panel = document.getElementById(`comments-${id}`);
+                if (!panel) return;
+                panel.classList.toggle('active');
+                if (panel.classList.contains('active')) {
+                    loadReelComments(id, panel.querySelector('.comments-list'));
+                }
+            };
+
+            async function loadReelComments(reelId, container) {
+                const { data: comments, error } = await window.supabaseClient
+                    .from('reel_comments')
+                    .select('*, users(nickname, avatar_url)')
+                    .eq('reel_id', reelId)
+                    .order('created_at', { ascending: false });
+
+                if (error) {
+                    container.innerHTML = '<div style="color:#666; text-align:center; padding:20px;">Error al cargar comentarios</div>';
+                    return;
+                }
+
+                if (!comments || comments.length === 0) {
+                    container.innerHTML = '<div style="color:#666; text-align:center; padding:40px;">No hay comentarios todavía</div>';
+                    return;
+                }
+
+                container.innerHTML = comments.map(c => `
+                    <div class="comment-item">
+                        <img src="${c.users?.avatar_url || 'https://ui-avatars.com/api/?name=' + c.users?.nickname}" class="comment-avatar">
+                        <div class="comment-content">
+                            <div class="comment-user">@${c.users?.nickname}</div>
+                            <div class="comment-text">${c.content}</div>
+                            <div class="comment-actions">
+                                <span class="comment-action-btn" onclick="replyComment('${c.id}')">Responder</span>
+                                <span class="comment-action-btn"><i class="bi bi-heart"></i> ${c.likes_count || 0}</span>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            window.submitComment = async function (reelId, input) {
+                const text = input.value.trim();
+                if (!text || !currentUser) return;
+
+                input.disabled = true;
+                try {
+                    const { error } = await window.supabaseClient.from('reel_comments').insert({
+                        reel_id: reelId,
+                        user_id: currentUser.id,
+                        content: text
+                    });
+
+                    if (error) throw error;
+                    input.value = '';
+                    loadReelComments(reelId, input.closest('.comments-panel').querySelector('.comments-list'));
+
+                    // Update count
+                    const reelItem = document.querySelector(`.reel-item[data-id="${reelId}"]`);
+                    const countEl = reelItem.querySelector('.comments-count');
+                    if (countEl) countEl.innerText = (parseInt(countEl.innerText) || 0) + 1;
+
+                } catch (e) {
+                    console.error("Comment error", e);
+                } finally {
+                    input.disabled = false;
                 }
             };
 
