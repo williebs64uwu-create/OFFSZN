@@ -103,7 +103,7 @@ window.StickyPlayer = (function () {
         if (els.buyBtn) {
             els.buyBtn.onclick = (e) => {
                 e.stopPropagation();
-                if (currentTrack) window.location.href = `/producto.html?id=${currentTrack.id}`;
+                handleBuyClick();
             };
         }
 
@@ -243,11 +243,8 @@ window.StickyPlayer = (function () {
             });
         }
 
-        // COUNT PLAY (Debounced 5s)
+        // COUNT PLAY (Debounced 5s - MOVED to ws.on('play'))
         if (playTimeout) clearTimeout(playTimeout);
-        if (autoPlay) {
-            playTimeout = setTimeout(() => trackPlay(trackData.id), 5000);
-        }
 
         // Update Internal State
         currentTrack = trackData;
@@ -356,18 +353,32 @@ window.StickyPlayer = (function () {
             isPlaying = true;
             updatePlayBtn();
             updateListButton(currentTrack, true);
+
+            // ACCURATE PLAY STATS: Start 5s timer ONLY when audio actually starts
+            if (currentTrack && !currentTrack.hasBeenCounted) {
+                if (playTimeout) clearTimeout(playTimeout);
+                playTimeout = setTimeout(() => {
+                    if (isPlaying && currentTrack) {
+                        trackPlay(currentTrack.id);
+                        currentTrack.hasBeenCounted = true;
+                        console.log(`[StickyPlayer] Play counted for ${currentTrack.name}`);
+                    }
+                }, 5000); // 5 seconds of active playback
+            }
         });
 
         ws.on('pause', () => {
             isPlaying = false;
             updatePlayBtn();
             updateListButton(currentTrack, false);
+            if (playTimeout) clearTimeout(playTimeout); // Stop counting if paused
         });
 
         ws.on('finish', () => {
             isPlaying = false;
             updatePlayBtn();
             updateListButton(currentTrack, false);
+            if (playTimeout) clearTimeout(playTimeout);
             playNext();
         });
 
@@ -375,6 +386,7 @@ window.StickyPlayer = (function () {
             console.warn("StickyPlayer: Playback failed (MediaError)", e);
             isPlaying = false;
             updatePlayBtn();
+            if (playTimeout) clearTimeout(playTimeout);
             // Show toast if window.toast exists
             if (window.toast) window.toast("Error: No se pudo reproducir este archivo.", "error");
         });
@@ -754,32 +766,93 @@ window.StickyPlayer = (function () {
                 }
             }
         } else {
-            // PAID: Add to Cart
+            // PAID: Redirect to product page (Requested: Like "View Product")
+            window.location.href = `/producto.html?id=${currentTrack.id}`;
+        }
+    }
+
+    async function handleBuyClick() {
+        if (!currentTrack) return;
+
+        const isFree = currentTrack.is_free === true || String(currentTrack.is_free) === 'true';
+        if (isFree) {
+            // Free product: just open download gate
+            handleDownloadClick();
+            return;
+        }
+
+        // --- PAID PRODUCT LOGIC ---
+        // 1. BEATS: Show license comparison modal
+        if (currentTrack.product_type === 'beat') {
+            if (window.openLicenseComparisonModal) {
+                // If we don't have available_licenses, we need to fetch/construct them
+                if (!currentTrack.available_licenses) {
+                    const lics = await fetchTrackLicenses(currentTrack);
+                    currentTrack.available_licenses = lics;
+                }
+                window.openLicenseComparisonModal(currentTrack.available_licenses);
+            } else {
+                // Fallback to product page if modal not available
+                window.location.href = `/producto.html?id=${currentTrack.id}`;
+            }
+        }
+        // 2. KITS / PRESETS: Add directly to cart and open panel
+        else {
             if (window.CartManager) {
-                // Construct a cart-compatible object
                 const cartItem = {
                     id: currentTrack.id,
                     name: currentTrack.name,
                     price_basic: parseFloat(currentTrack.price_basic) || 0,
                     image_url: currentTrack.image_url,
                     product_type: currentTrack.product_type,
-                    license: {
-                        id: 'basic',
-                        name: 'Basic License'
-                    }
+                    license: { id: 'basic', name: 'Basic License' }
                 };
-                if (window.CartManager) {
-                    window.CartManager.addToCart(cartItem);
-                } else {
-                    // Fallback for independent usage: Still show toast
-                    if (window.toast) {
-                        window.toast.show(`"${cartItem.name}" agregado a tu carrito`, 'success', 4000, cartItem.id);
-                    }
-                }
+                window.CartManager.addToCart(cartItem);
+                window.CartManager.openCart(); // Ensure sidebar opens
             } else {
-                console.error("CartManager not found");
-                alert("Carrito no disponible");
+                window.location.href = `/producto.html?id=${currentTrack.id}`;
             }
+        }
+    }
+
+    async function fetchTrackLicenses(track) {
+        try {
+            // Fetch producer settings to construct licenses (Matching logic from product-core.js)
+            const { data: producer } = await window.supabaseClient
+                .from('users')
+                .select('license_settings')
+                .eq('id', track.producer_id || track.user_id)
+                .single();
+
+            const producerSettings = producer?.license_settings || {};
+            const productLicenses = track.licenses || {};
+
+            const FACTORY_DEFAULTS = {
+                'basic': { name: 'Basic Lease', price: 20, streams: '5,000', sales: '500', radio: 'No Permitido', files: { mp3: true, wav: false, stems: false }, enabled: true },
+                'premium': { name: 'Premium Lease', price: 40, streams: '50,000', sales: '2,000', radio: '2 Estaciones', files: { mp3: true, wav: true, stems: false }, enabled: true },
+                'trackout': { name: 'Trackout Lease', price: 60, streams: '500,000', sales: '10,000', radio: 'ILIMITADO', files: { mp3: true, wav: true, stems: true }, enabled: true },
+                'unlimited': { name: 'Unlimited License', price: 80, streams: 'UNLIMITED', sales: 'UNLIMITED', radio: 'ILIMITADO', files: { mp3: true, wav: true, stems: true }, enabled: true }
+            };
+
+            return ['basic', 'premium', 'trackout', 'unlimited'].map(key => {
+                const prodLic = productLicenses[key] || {};
+                const userLic = producerSettings[key] || {};
+                const factLic = FACTORY_DEFAULTS[key];
+
+                return {
+                    id: key,
+                    name: prodLic.name || userLic.name || factLic.name,
+                    price: (prodLic.price !== undefined) ? prodLic.price : (userLic.price !== undefined) ? userLic.price : factLic.price,
+                    enabled: (prodLic.enabled !== undefined) ? prodLic.enabled : (userLic.enabled !== undefined) ? userLic.enabled : factLic.enabled,
+                    streams: userLic.streams || factLic.streams,
+                    sales: userLic.sales || factLic.sales,
+                    radio: userLic.radio || factLic.radio,
+                    files: userLic.files || factLic.files
+                };
+            });
+        } catch (e) {
+            console.error("[StickyPlayer] Error fetching licenses:", e);
+            return [];
         }
     }
 

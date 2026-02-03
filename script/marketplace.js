@@ -276,6 +276,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // 3. Centralized Cart Addition
             if (window.CartManager) {
                 window.CartManager.addToCart(productToAdd);
+                window.CartManager.openCart(); // 🔥 Ensure cart opens on marketplace add
 
                 // UI Feedback (Specific to marketplace buttons)
                 if (button) {

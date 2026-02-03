@@ -1173,7 +1173,7 @@ function selectLicense(id) {
 /**
  * LICENSE MODAL LOGIC
  */
-function openLicenseModal(lic, product) {
+window.openLicenseModal = function (lic, product) {
     let backdrop = document.getElementById('lic-details-backdrop');
     if (!backdrop) {
         backdrop = document.createElement('div');
@@ -1253,7 +1253,7 @@ function openLicenseModal(lic, product) {
     setTimeout(() => backdrop.classList.add('active'), 10);
 }
 
-function closeLicenseModal() {
+window.closeLicenseModal = function () {
     const backdrop = document.getElementById('lic-details-backdrop');
     if (backdrop) {
         backdrop.classList.remove('active');
@@ -1261,13 +1261,13 @@ function closeLicenseModal() {
     }
 }
 
-function selectLicenseAndClose(id) {
+window.selectLicenseAndClose = function (id) {
     selectLicense(id);
-    closeLicenseModal();
-    closeLicenseComparisonModal(); // Also close comparison if open
+    window.closeLicenseModal();
+    window.closeLicenseComparisonModal(); // Also close comparison if open
 }
 
-function openLicenseComparisonModal(licenses) {
+window.openLicenseComparisonModal = function (licenses) {
     let backdrop = document.getElementById('lic-compare-backdrop');
     if (!backdrop) {
         backdrop = document.createElement('div');
@@ -1364,7 +1364,7 @@ function openLicenseComparisonModal(licenses) {
     setTimeout(() => backdrop.classList.add('active'), 10);
 }
 
-function closeLicenseComparisonModal() {
+window.closeLicenseComparisonModal = function () {
     const backdrop = document.getElementById('lic-compare-backdrop');
     if (backdrop) {
         backdrop.classList.remove('active');
