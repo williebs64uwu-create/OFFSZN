@@ -9,7 +9,7 @@ const NavbarState = {
     search: {
         debounceTimer: null,
         currentCategory: 'Todo',
-        history: JSON.parse(localStorage.getItem('offszn_search_history')) || ['Dark Piano', 'Tainy Drums'],
+        history: (JSON.parse(localStorage.getItem('offszn_search_history')) || ['Dark Piano', 'Tainy Drums']).slice(0, 5),
         selectedIndex: -1,
         activeTags: [],
         isHovering: false,
@@ -467,7 +467,7 @@ function renderHistoryAndTrends() {
         <div style="margin-bottom: 20px;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px;">
                 <span style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 0.7rem; color: #555; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase;">Búsquedas Recientes</span>
-                <span style="font-size: 0.75rem; color: #8b5cf6; cursor: pointer; font-weight: 500;" onclick="window.location.href='/history'">Ver todo</span>
+                <span style="font-size: 0.75rem; color: #8b5cf6; cursor: pointer; font-weight: 500;" onclick="window.location.href='/history.html'">Ver todo</span>
             </div>
             <div style="display: flex; flex-direction: column; gap: 4px;">${historyHtml}</div>
         </div>` : '';
@@ -495,8 +495,11 @@ window.setSearch = function (text) {
 
 window.deleteHistoryItem = async function (term, e) {
     e.stopPropagation();
-    NavbarState.search.history = NavbarState.search.history.filter(t => t !== term);
-    localStorage.setItem('offszn_search_history', JSON.stringify(NavbarState.search.history));
+    const fullHistory = JSON.parse(localStorage.getItem('offszn_search_history')) || [];
+    const updatedFullHistory = fullHistory.filter(t => t !== term);
+    localStorage.setItem('offszn_search_history', JSON.stringify(updatedFullHistory));
+
+    NavbarState.search.history = updatedFullHistory.slice(0, 5);
     renderHistoryAndTrends();
     getEl('navbarSearchInput')?.focus();
 
@@ -506,28 +509,39 @@ window.deleteHistoryItem = async function (term, e) {
         if (sessionData?.session?.user) {
             await window.supabaseClient
                 .from('profiles')
-                .update({ search_history: NavbarState.search.history })
+                .update({ search_history: updatedFullHistory })
                 .eq('id', sessionData.session.user.id);
         }
     }
 }
 
 async function saveToHistory(term) {
-    // Case-insensitive deduplication
+    // 1. Manage Local History (Keep 50 for full view, 5 for dropdown)
+    let fullHistory = JSON.parse(localStorage.getItem('offszn_search_history')) || [];
     const lowerTerm = term.toLowerCase().trim();
-    NavbarState.search.history = NavbarState.search.history.filter(t => t.toLowerCase().trim() !== lowerTerm);
 
-    NavbarState.search.history.unshift(term);
-    if (NavbarState.search.history.length > 8) NavbarState.search.history.pop();
-    localStorage.setItem('offszn_search_history', JSON.stringify(NavbarState.search.history));
+    // Remove if exists
+    fullHistory = fullHistory.filter(t => t.toLowerCase().trim() !== lowerTerm);
 
-    // 🔥 SYNC ADDITION TO DB (If Logged In)
+    // Add to front
+    fullHistory.unshift(term);
+
+    // Limit storage to 50
+    if (fullHistory.length > 50) fullHistory.pop();
+
+    // Update Local Storage
+    localStorage.setItem('offszn_search_history', JSON.stringify(fullHistory));
+
+    // Update UI State (Only 5)
+    NavbarState.search.history = fullHistory.slice(0, 5);
+
+    // 2. 🔥 SYNC TO DB (If Logged In)
     if (typeof window.supabaseClient !== 'undefined') {
         const { data: sessionData } = await window.supabaseClient.auth.getSession();
         if (sessionData?.session?.user) {
             await window.supabaseClient
                 .from('profiles')
-                .update({ search_history: NavbarState.search.history })
+                .update({ search_history: fullHistory })
                 .eq('id', sessionData.session.user.id);
         }
     }
@@ -924,7 +938,7 @@ async function syncSearchHistory(user) {
         // C. Merge: Local (Guest) + Remote -> Unique Set
         // We prioritize Local (most recent) + Remote
         const mergedSet = new Set([...localHistory, ...remoteHistory]);
-        const mergedArray = Array.from(mergedSet).slice(0, 8); // Limit to 8 to match saveToHistory
+        const mergedArray = Array.from(mergedSet).slice(0, 50); // Limit to 50 for full history
 
         // D. Save Back to Profile
         const { error: updateError } = await supabaseClient
@@ -935,7 +949,7 @@ async function syncSearchHistory(user) {
         if (!updateError) {
             // E. Clear Guest LocalStorage (optional, but good cleanup) or keep it synced?
             // "seguira sus 3 busquedas recientes" -> Update local state to match merged
-            NavbarState.search.history = mergedArray;
+            NavbarState.search.history = mergedArray.slice(0, 5); // UI only shows 5
             localStorage.setItem('offszn_search_history', JSON.stringify(mergedArray)); // Keep local synced for performance
         }
 
