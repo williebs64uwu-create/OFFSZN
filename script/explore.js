@@ -33,7 +33,7 @@ function isExplorePage() {
 // ------------------- INITIALIZATION -------------------
 
 document.addEventListener('DOMContentLoaded', () => {
-    if (!isExplorePage()) return; // 🛑 STOP EXECUTION ON OTHER PAGES
+    if (!isExplorePage()) return;
     initExplore();
 });
 
@@ -70,15 +70,11 @@ window.getProductUrl = getProductUrl;
 async function initExplore() {
     console.log("🚀 Explore V3 Initializing...");
     initGlobalListeners();
-    await initUserSocialState();
+
+    // 🔥 OPTIMIZATION: Fire all data fetches in parallel
     await fetchData();
     renderExploreFeed();
 }
-
-document.addEventListener('DOMContentLoaded', () => {
-    if (!isExplorePage()) return; // 🛑 STOP EXECUTION ON OTHER PAGES
-    initExplore();
-});
 
 function initGlobalListeners() {
     if (window.FavoritesManager) {
@@ -95,28 +91,32 @@ function initGlobalListeners() {
     }
 }
 
-async function initUserSocialState() {
-    const token = localStorage.getItem('sb-access-token') || getCookie('sb-access-token');
-    if (!token) return;
-    try {
-        const res = await fetch('/api/me/following', {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (res.ok) {
-            const ids = await res.json();
-            currentUserFollowing = new Set(ids);
-        }
-    } catch (err) { console.warn("Social state error", err); }
-}
-
 async function fetchData() {
+    const token = localStorage.getItem('sb-access-token') || getCookie('sb-access-token');
+
     try {
-        const [productsRes, producersRes] = await Promise.all([
+        const promises = [
             fetch(`${API_URL}/products`),
             fetch(`${API_URL}/producers`)
-        ]);
-        if (productsRes.ok) allProducts = await productsRes.json();
-        if (producersRes.ok) allProducers = await producersRes.json();
+        ];
+
+        // Only fetch following if logged in
+        if (token) {
+            promises.push(fetch('/api/me/following', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            }));
+        }
+
+        const results = await Promise.all(promises);
+
+        // Process results
+        if (results[0].ok) allProducts = await results[0].json();
+        if (results[1].ok) allProducers = await results[1].json();
+
+        if (token && results[2]?.ok) {
+            const ids = await results[2].json();
+            currentUserFollowing = new Set(ids);
+        }
 
         if (allProducts.length > 0) {
             // Select Hero products (top activity)
