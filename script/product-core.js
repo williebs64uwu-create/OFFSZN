@@ -309,14 +309,8 @@ function renderProductPage(product) {
                 
                 <!-- HEADER: Title & Producer -->
                 <div>
-                    <h1 style="font-size:3rem; font-weight:800; line-height:1.1; margin-bottom:10px;">
-                        ${(() => {
-            const name = product.name || 'Sin título';
-            if (name.length > 60) {
-                return name.substring(0, 57) + '...';
-            }
-            return name;
-        })()}
+                    <h1 style="font-size:3rem; font-weight:800; line-height:1.1; margin-bottom:10px; word-break: break-word; overflow-wrap: break-word; hyphens: auto;">
+                        ${product.name || 'Sin título'}
                     </h1>
                     ${producerHTML}
                 </div>
