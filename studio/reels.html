@@ -1671,12 +1671,13 @@
                 // For threaded comments, we'll fetch all and arrange them locally.
                 const { data: comments, error } = await window.supabaseClient
                     .from('reel_comments')
-                    .select('*, users(nickname, avatar_url), reel_comment_likes(user_id)')
+                    .select('*, users!user_id(nickname, avatar_url), reel_comment_likes(user_id)') // Explicit join
                     .eq('reel_id', reelId)
-                    .order('created_at', { ascending: true }); // Ascending for threaded logic
+                    .order('created_at', { ascending: true });
 
                 if (error) {
-                    container.innerHTML = '<div style="color:#666; text-align:center; padding:20px;">Error al cargar comentarios</div>';
+                    console.error("DEBUG: reel_comments error details:", error);
+                    container.innerHTML = `<div style="color:#666; text-align:center; padding:20px;">Error al cargar comentarios (${error.message})</div>`;
                     return;
                 }
 

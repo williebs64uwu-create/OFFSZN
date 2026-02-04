@@ -4220,6 +4220,50 @@
                 hideLoading();
             }
 
+            // ========================================
+            // ðŸ”¥ YOUTUBE IMPORT HANDLING
+            // ========================================
+            const urlParamsYT = new URLSearchParams(window.location.search);
+            if (urlParamsYT.get('from') === 'youtube') {
+                const title = urlParamsYT.get('title');
+                const desc = urlParamsYT.get('desc');
+                const tagsParam = urlParamsYT.get('tags');
+                const bpm = urlParamsYT.get('bpm');
+                const key = urlParamsYT.get('key');
+
+                if (title) {
+                    const titleIn = document.getElementById('titleInput');
+                    titleIn.value = title;
+                    document.getElementById('titleCount').innerText = title.length;
+                    titleIn.classList.add('filled'); // Visual helper
+                }
+                if (desc) {
+                    const descIn = document.getElementById('descInput');
+                    descIn.value = desc;
+                    document.getElementById('descCount').innerText = desc.length;
+                }
+                if (bpm && document.getElementById('bpmInput')) {
+                    document.getElementById('bpmInput').value = bpm;
+                }
+                if (key && typeof window.selectCustomKey === 'function') {
+                    window.selectCustomKey(key);
+                }
+
+                if (tagsParam) {
+                    // Navigate to tags step to ensure UI exists if needed (usually tags container is always there)
+                    const tagsList = tagsParam.split(',').filter(t => t.trim());
+                    // Wait a bit to ensure addTag is ready
+                    setTimeout(() => {
+                        tagsList.forEach(tag => {
+                            if (typeof window.addTag === 'function') window.addTag(tag.trim());
+                            else if (typeof addTag === 'function') addTag(tag.trim());
+                        });
+                    }, 500);
+                }
+                isDirty = true;
+                window.history.replaceState({}, document.title, window.location.pathname); // Clean URL
+            }
+
             // Event listeners bÃ¡sicos
             document.getElementById('titleInput').addEventListener('input', e => {
                 document.getElementById('titleCount').textContent = e.target.value.length;
@@ -5114,7 +5158,61 @@
 
                 closeCropModal();
 
-                // saveDraftAuto(); // 🔥 DISABLED AUTO-SAVE
+                // initAutosaveInterval(); // ðŸ”¥ DISABLED AUTO-SAVE
+                await loadDraft();
+
+                // ========================================
+                // ðŸ”¥ YOUTUBE IMPORT HANDLING
+                // ========================================
+                const urlParamsYT = new URLSearchParams(window.location.search);
+                if (urlParamsYT.get('from') === 'youtube') {
+                    const title = urlParamsYT.get('title');
+                    const desc = urlParamsYT.get('desc');
+                    const tagsParam = urlParamsYT.get('tags');
+                    const bpm = urlParamsYT.get('bpm');
+                    const key = urlParamsYT.get('key'); // or 'note'
+
+                    if (title) {
+                        const titleIn = document.getElementById('titleInput');
+                        if (titleIn) {
+                            titleIn.value = title;
+                            const counter = document.getElementById('titleCount');
+                            if (counter) counter.innerText = title.length;
+                            titleIn.classList.add('filled');
+                        }
+                    }
+                    if (desc) {
+                        const descIn = document.getElementById('descInput');
+                        if (descIn) {
+                            descIn.value = desc;
+                            const counter = document.getElementById('descCount');
+                            if (counter) counter.innerText = desc.length;
+                        }
+                    }
+                    if (bpm) {
+                        const bpmIn = document.getElementById('bpmInput'); // Ensure ID exists or match input[name]
+                        if (bpmIn) bpmIn.value = bpm;
+                    }
+                    if (key) {
+                        // Beats usually have a Key selector or text input.
+                        // Assuming standard input for now, adjust if it's a select.
+                        const keyIn = document.getElementById('keyInput');
+                        if (keyIn) keyIn.value = key;
+                    }
+
+                    if (tagsParam) {
+                        const tagsList = tagsParam.split(',').filter(t => t.trim());
+                        setTimeout(() => {
+                            tagsList.forEach(tag => {
+                                if (typeof window.addTag === 'function') window.addTag(tag.trim());
+                                else if (typeof addTag === 'function') addTag(tag.trim());
+                            });
+                        }, 500);
+                    }
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                }
+
+                // Event listeners
             } catch (e) {
                 showToast('Error: ' + e.message, 'error');
             } finally {

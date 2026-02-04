@@ -28,6 +28,7 @@
     <!-- Supabase -->
 
     <script src="../script/auth-guard.js"></script>
+    <script src="/script/id-obfuscator.js"></script>
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
@@ -2766,22 +2767,38 @@
 
         function copyLink(id, type, e) {
             e.stopPropagation();
-            // Construct public link. Assuming standard structure: /track/ID or /kit/ID
-            // Or simpler generic: url/product.html?id=...
-            // Let's use a cleaner generic structure for now
+
+            // Find product object
+            let product = null;
+            if (currentItems) {
+                // Use loose equality for safety (string vs number)
+                product = currentItems.find(p => p.id == id);
+            }
+
+            // Fallback object if not found (shouldn't happen)
+            if (!product) {
+                product = { id: id, product_type: type.replace('s', '') }; // "beats" -> "beat"
+            }
+
+            // Use the centralized SEO Link generator
+            let relativePath = '#';
+            if (window.createSeoLink) {
+                relativePath = window.createSeoLink(product);
+            } else {
+                // Formatting fallback if script fails to load
+                relativePath = '/product.html?id=' + id;
+            }
+
             const baseUrl = window.location.origin;
-            let path = '/product.html?id=' + id; // Default fallback
+            const fullUrl = `${baseUrl}${relativePath}`;
 
-            // Adjust path based on your real public routing if known.
-            // Assuming generic product page for now as user hasn't specified public storefront structure.
-
-            const fullUrl = `${baseUrl}${path}`;
             navigator.clipboard.writeText(fullUrl).then(() => {
                 showToast("Link copiado al portapapeles", "success");
             }).catch(err => {
                 console.error(err);
                 showToast("Error al copiar link", "error");
             });
+
             // Close menu
             document.querySelectorAll('.ctx-menu-dropdown').forEach(el => el.classList.remove('active'));
         }
