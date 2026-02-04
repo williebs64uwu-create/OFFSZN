@@ -170,13 +170,9 @@ function renderProductPage(product) {
     let displayCategory = product.category;
     const pType = (product.product_type || '').toLowerCase();
 
-    // 1. If it's a Beat and no category is explicitly set, infer from tags (Genre)
-    if (!displayCategory && pType === 'beat') {
-        if (product.tags && product.tags.length > 0) {
-            displayCategory = product.tags[0]; // Use first tag as Genre/Category (e.g. "Trap")
-        } else {
-            displayCategory = 'Beat';
-        }
+    // 1. Force 'Beat' for beats (User Request: SI O SI "Beat")
+    if (pType === 'beat') {
+        displayCategory = 'Beat';
     }
 
     // 2. Map technical keys to friendly labels
@@ -187,15 +183,17 @@ function renderProductPage(product) {
         'loopkit': 'Loop Kit',
         'instrumento': 'Instrumento',
         'plugin': 'Plugin',
-        'beat': 'Beat', // Default fallback
+        'beat': 'Beat',
         'trap': 'Trap',
         'reggaeton': 'Reggaetón'
     };
 
     // 3. Resolve final display string
-    // If we have a category/inferred value, check map, otherwise fallback to product_type if map exists, else N/A
     let valToDisplay = displayCategory || pType;
     valToDisplay = categoryMap[valToDisplay.toLowerCase()] || valToDisplay || 'N/A';
+
+    // Capitalize if it's the simple word "Beat"
+    if (valToDisplay.toLowerCase() === 'beat') valToDisplay = 'Beat';
 
     metaRows += `<div class="info-row"><span class="info-label">Categoría</span> <span class="info-val" style="text-transform: capitalize;">${valToDisplay}</span></div>`;
 

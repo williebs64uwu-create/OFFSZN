@@ -772,7 +772,11 @@ async function openChat(convId, name, avatar, userId) {
 
     const { data: messages } = await supabase
         .from('messages')
-        .select('*, message_reactions(user_id, emoji)')
+        .select(`
+            *, 
+            message_reactions(user_id, emoji),
+            parent:messages!reply_to_id(content, sender_id, attachment_type)
+        `)
         .eq('conversation_id', convId)
         .order('created_at', { ascending: true });
 
@@ -882,10 +886,27 @@ function renderMessage(msg) {
 
     // 2. REPLY PREVIEW
     let replyHtml = '';
-    if (msg.reply_to_id) {
-        replyHtml = `<div class="message-reply-preview" onclick="scrollToMessage('${msg.reply_to_id}')">
-            Respuesta a mensaje anterior
+    if (msg.parent) {
+        // Fix: Use the parent message content
+        const pContent = msg.parent.content || (msg.parent.attachment_type === 'image' ? '📷 Foto' : 'Mensaje no disponible');
+        const shortReply = pContent.length > 50 ? pContent.substring(0, 47) + '...' : pContent;
+        const pIsMe = msg.parent.sender_id === currentUser.id;
+        // If DM, we know the other user. 
+        // We can get the name from the "startChat" variable or sidebar. 
+        // For now, simple logic:
+        const replyUser = pIsMe ? 'Ti mismo' : 'Usuario';
+
+        replyHtml = `
+        <div class="reply-quote-container" onclick="scrollToMessage('${msg.reply_to_id}')">
+            <div class="reply-quote-bar"></div>
+            <div class="reply-quote-content">
+                <div class="reply-quote-user">Respondiste a ${replyUser}</div>
+                <div class="reply-quote-text">${shortReply.replace(/</g, "&lt;")}</div>
+            </div>
         </div>`;
+    } else if (msg.reply_to_id) {
+        // Fallback if joined data is missing but ID exists (shouldn't happen with correct query)
+        replyHtml = `<div class="message-reply-preview" onclick="scrollToMessage('${msg.reply_to_id}')">Respuesta a mensaje anterior</div>`;
     }
 
     const actionsHtml = `
@@ -919,9 +940,11 @@ function renderMessage(msg) {
     if (reactions.length > 0) {
         // Find my reaction or just the first one
         const myReaction = reactions.find(r => r.user_id === currentUser.id);
-        const displayReaction = myReaction ? myReaction.reaction : reactions[reactions.length - 1].reaction;
+        const displayEmoji = myReaction ? myReaction.emoji : reactions[reactions.length - 1].emoji;
 
-        reactionHtml = `<div class="message-reaction-bubble">${displayReaction}</div>`;
+        if (displayEmoji) {
+            reactionHtml = `<div class="message-reaction-bubble" onclick="submitReaction('${msg.id}', '${displayEmoji}', event)">${displayEmoji}</div>`;
+        }
     }
 
     // 4. CONTENT
@@ -968,9 +991,12 @@ function onReplyClick(id, author, text) {
     const textEl = document.getElementById('replyPreviewText');
     if (container) {
         userEl.textContent = `Respondiendo a ${author}`;
-        textEl.textContent = text;
+        // Truncate for input preview
+        const short = text.length > 80 ? text.substring(0, 77) + '...' : text;
+        textEl.textContent = short;
         container.style.display = 'flex';
-        document.getElementById('messageInput').focus();
+        const input = document.getElementById('messageInput');
+        if (input) input.focus();
     }
 }
 
@@ -1097,8 +1123,16 @@ function setupRealtime() {
         }, payload => {
             if (payload.new.conversation_id === currentConversationId) {
                 if (payload.new.sender_id !== currentUser.id) {
-                    renderMessage(payload.new);
-                    scrollToBottom();
+                    // Refresh entire conversation to get joins correctly? 
+                    // Or blindly render? The optimized way is to render. 
+                    // BUT Realtime payload DOES NOT include Joined tables (parent).
+                    // We must fetch the single message with join to show the reply correctly.
+                    fetchSingleMessage(payload.new.id).then(fullMsg => {
+                        if (fullMsg) {
+                            renderMessage(fullMsg);
+                            scrollToBottom();
+                        }
+                    });
 
                     const item = document.querySelector(`.chat-item[data-id="${currentConversationId}"]`);
                     if (item) {
@@ -1321,5 +1355,18 @@ window.startChatFromModal = async function () {
 function adjustInputHeight(el) {
     el.style.height = 'auto';
     el.style.height = el.scrollHeight + 'px';
+}
+
+async function fetchSingleMessage(id) {
+    const { data } = await supabase
+        .from('messages')
+        .select(`
+            *, 
+            message_reactions(user_id, emoji),
+            parent:messages!reply_to_id(content, sender_id, attachment_type)
+        `)
+        .eq('id', id)
+        .single();
+    return data;
 }
 
