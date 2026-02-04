@@ -775,7 +775,12 @@ async function openChat(convId, name, avatar, userId) {
         .select(`
             *, 
             message_reactions(user_id, emoji),
-            parent:messages!reply_to_id(content, sender_id, attachment_type)
+            parent:messages!reply_to_id(
+                content, 
+                sender_id, 
+                attachment_type,
+                sender:users!sender_id(nickname)
+            )
         `)
         .eq('conversation_id', convId)
         .order('created_at', { ascending: true });
@@ -886,27 +891,35 @@ function renderMessage(msg) {
 
     // 2. REPLY PREVIEW
     let replyHtml = '';
-    if (msg.parent) {
-        // Fix: Use the parent message content
-        const pContent = msg.parent.content || (msg.parent.attachment_type === 'image' ? '📷 Foto' : 'Mensaje no disponible');
-        const shortReply = pContent.length > 50 ? pContent.substring(0, 47) + '...' : pContent;
-        const pIsMe = msg.parent.sender_id === currentUser.id;
-        // If DM, we know the other user. 
-        // We can get the name from the "startChat" variable or sidebar. 
-        // For now, simple logic:
-        const replyUser = pIsMe ? 'Ti mismo' : 'Usuario';
+    // Handle array or object return from Supabase
+    const parentMsg = Array.isArray(msg.parent) ? msg.parent[0] : msg.parent;
 
-        replyHtml = `
-        <div class="reply-quote-container" onclick="scrollToMessage('${msg.reply_to_id}')">
-            <div class="reply-quote-bar"></div>
-            <div class="reply-quote-content">
-                <div class="reply-quote-user">Respondiste a ${replyUser}</div>
+    if (parentMsg) {
+        const pContent = parentMsg.content || (parentMsg.attachment_type === 'image' ? '📷 Foto' : '');
+
+        // Only show if there is actually content (hide "Mensaje no disponible" spam)
+        if (pContent) {
+            const shortReply = pContent.length > 50 ? pContent.substring(0, 47) + '...' : pContent;
+            const pIsMe = parentMsg.sender_id === currentUser.id;
+
+            // Get nickname from nested sender data
+            let replyUserNick = 'Usuario';
+            if (pIsMe) {
+                replyUserNick = 'Ti mismo';
+            } else if (parentMsg.sender) {
+                // Handle both object and array formats
+                const senderData = Array.isArray(parentMsg.sender) ? parentMsg.sender[0] : parentMsg.sender;
+                if (senderData?.nickname) {
+                    replyUserNick = senderData.nickname;
+                }
+            }
+
+            replyHtml = `
+            <div class="reply-quote-container" onclick="scrollToMessage('${msg.reply_to_id}')">
+                <div class="reply-quote-user">Respondiste a ${replyUserNick}</div>
                 <div class="reply-quote-text">${shortReply.replace(/</g, "&lt;")}</div>
-            </div>
-        </div>`;
-    } else if (msg.reply_to_id) {
-        // Fallback if joined data is missing but ID exists (shouldn't happen with correct query)
-        replyHtml = `<div class="message-reply-preview" onclick="scrollToMessage('${msg.reply_to_id}')">Respuesta a mensaje anterior</div>`;
+            </div>`;
+        }
     }
 
     const actionsHtml = `
@@ -957,9 +970,9 @@ function renderMessage(msg) {
     }
 
     msgDiv.innerHTML = `
-        ${replyHtml}
         <div class="message-container">
             <div class="message-bubble">
+                ${replyHtml}
                 ${contentHtml}
                 ${reactionHtml}
             </div>
@@ -1363,7 +1376,12 @@ async function fetchSingleMessage(id) {
         .select(`
             *, 
             message_reactions(user_id, emoji),
-            parent:messages!reply_to_id(content, sender_id, attachment_type)
+            parent:messages!reply_to_id(
+                content, 
+                sender_id, 
+                attachment_type,
+                sender:users!sender_id(nickname)
+            )
         `)
         .eq('id', id)
         .single();
