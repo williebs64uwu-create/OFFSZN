@@ -641,9 +641,19 @@ window.contactProducerForExclusivity = function () {
     }
 
     const message = `Vi tu ${productCategory} ("${product.name}") ${productLink} estoy interesado en tener una versión exclusiva para negociarlo.`;
+    const targetUrl = `/mensajes.html?user=${producerNickname}&msg=${encodeURIComponent(message)}`;
+
+    // --- CHECK AUTH ---
+    const token = window.getAccessToken ? window.getAccessToken() : null;
+    if (!token) {
+        // Redirect to login with return parameter
+        console.log("[Exclusivity] Guest detected. Redirecting to login w/ return...");
+        window.location.href = `/pages/login.html?redirect=${encodeURIComponent(targetUrl)}`;
+        return;
+    }
 
     // Redirect to chat with pre-filled message (Corrected path to mensajes.html)
-    window.location.href = `/mensajes.html?user=${producerNickname}&msg=${encodeURIComponent(message)}`;
+    window.location.href = targetUrl;
 }
 
 window.closeShareModal = function () {

@@ -1150,6 +1150,21 @@ document.addEventListener('DOMContentLoaded', () => {
             const btn = e.target.closest('.btn-list-icon');
             if (btn && btn.title === 'Like') {
                 e.stopPropagation();
+
+                // --- GUEST GUARD (Explicit Check) ---
+                const token = window.getAccessToken ? window.getAccessToken() : null;
+                if (!token) {
+                    if (window.showGuestModal) {
+                        window.showGuestModal(
+                            "¡Guarda tus favoritos!",
+                            "Inicia sesión para guardar estos sonidos en tu colección personal."
+                        );
+                    } else {
+                        window.location.href = '/pages/login.html';
+                    }
+                    return;
+                }
+
                 const row = btn.closest('.list-row');
                 if (row && window.FavoritesManager) {
                     const prodId = row.dataset.id;

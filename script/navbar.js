@@ -72,8 +72,8 @@ function closeAllUI(exceptSearch = false) {
     const sOverlay = getEl('search-overlay');
     if (sOverlay && !exceptSearch) sOverlay.classList.remove('active');
 
-    // Global Guest Modal
-    closeGuestModal();
+    // Global Guest Modal - REMOVED AUTO-CLOSE
+    // closeGuestModal();
 }
 
 /**

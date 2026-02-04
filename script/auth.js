@@ -202,10 +202,15 @@ document.addEventListener('DOMContentLoaded', () => {
         document.cookie = `sb-access-token=${token}; path=/; max-age=${maxAge}; SameSite=Strict; Secure`;
 
 
-        // ✅ PRIORIDAD 1: Redirect al carrito si viene de ahí
-        if (redirectParam === 'carrito') {
-          console.log('Redirigiendo al carrito...');
-          window.location.href = '/carrito.html';
+        // ✅ PRIORIDAD 1: Redirect Inteligente (Carrito o URL específica)
+        if (redirectParam) {
+          if (redirectParam === 'carrito') {
+            console.log('Redirigiendo al carrito...');
+            window.location.href = '/carrito.html';
+          } else {
+            console.log('Redirigiendo post-login a:', redirectParam);
+            window.location.href = decodeURIComponent(redirectParam);
+          }
           return;
         }
 

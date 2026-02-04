@@ -208,6 +208,8 @@ function setupEventListeners() {
     // Global helpers for HTML onclicks
     window.onReplyClick = onReplyClick;
     window.cancelReply = cancelReply;
+    window.onReactClick = onReactClick;
+    window.submitReaction = submitReaction;
 }
 
 let isEditMode = false;
@@ -677,6 +679,7 @@ async function openChat(convId, name, avatar, userId) {
     localStorage.setItem('OFFSZN_LAST_CONV_ID', convId);
 
     // 4. Update Header
+    cancelReply(); // FIX: Clear any lingering reply preview
     const placeholder = document.getElementById('chatPlaceholder');
     const activeCont = document.getElementById('activeChatContainer');
 
@@ -769,7 +772,7 @@ async function openChat(convId, name, avatar, userId) {
 
     const { data: messages } = await supabase
         .from('messages')
-        .select('*')
+        .select('*, message_reactions(user_id, reaction)')
         .eq('conversation_id', convId)
         .order('created_at', { ascending: true });
 
@@ -885,17 +888,41 @@ function renderMessage(msg) {
         </div>`;
     }
 
-    // 3. ACTIONS
     const actionsHtml = `
         <div class="message-actions">
             <button class="msg-action-btn" onclick="onReplyClick('${msg.id}', '${isMe ? 'Tú' : 'Usuario'}', '${msg.content?.replace(/'/g, "\\'").replace(/"/g, '&quot;')}')">
                 <i class="bi bi-reply-fill"></i>
             </button>
-            <button class="msg-action-btn" onclick="onReactClick('${msg.id}')">
+            <button class="msg-action-btn" onclick="onReactClick('${msg.id}', event)">
                 <i class="bi bi-emoji-smile"></i>
             </button>
         </div>
     `;
+
+    // 4. REACTIONS RENDER
+    let reactionHtml = '';
+    const reactions = msg.message_reactions || [];
+    // Just show the last one or accumulate? 
+    // User wants "like image 3". Image 3 shows one small bubble on the message.
+    // Usually we show the reaction made by ME or just a summary. 
+    // "replace the one that was already there" implies 1 reaction per user.
+    // We can show all unique reactions or just mine? 
+    // Let's look for MY reaction or ANY reaction. 
+    // For simplicity and typical UI, we show the reaction bubble if there is one. 
+    // If there are multiple users, we might show multiple icons? 
+    // The requirement says "replace", implying a singular state per user.
+    // Let's show the reaction made by ANYONE. If multiple people react, show the last one? 
+    // Or stack them?
+    // "Image 3" shows one heart. 
+    // I will render the reaction from the user relevant (or just the last one added if multiple).
+
+    if (reactions.length > 0) {
+        // Find my reaction or just the first one
+        const myReaction = reactions.find(r => r.user_id === currentUser.id);
+        const displayReaction = myReaction ? myReaction.reaction : reactions[reactions.length - 1].reaction;
+
+        reactionHtml = `<div class="message-reaction-bubble">${displayReaction}</div>`;
+    }
 
     // 4. CONTENT
     let contentHtml = '';
@@ -909,7 +936,10 @@ function renderMessage(msg) {
     msgDiv.innerHTML = `
         ${replyHtml}
         <div class="message-container">
-            <div class="message-bubble">${contentHtml}</div>
+            <div class="message-bubble">
+                ${contentHtml}
+                ${reactionHtml}
+            </div>
             ${actionsHtml}
         </div>
         ${isMe && msg.is_read ? '<div class="seen-status">Visto</div>' : ''}
@@ -950,9 +980,76 @@ function cancelReply() {
     if (container) container.style.display = 'none';
 }
 
-function onReactClick(id) {
-    // Basic interaction for now, could be expanded to a picker
-    alert('Reacciones próximamente (requiere tabla message_reactions)');
+function onReactClick(msgId, event) {
+    if (event) event.stopPropagation();
+
+    // Close existing
+    const existing = document.querySelector('.reaction-popover');
+    if (existing) existing.remove();
+
+    // Create Picker
+    const popover = document.createElement('div');
+    popover.className = 'reaction-popover';
+    popover.innerHTML = `
+        <span class="reaction-option" onclick="submitReaction('${msgId}', '👍', event)">👍</span>
+        <span class="reaction-option" onclick="submitReaction('${msgId}', '👎', event)">👎</span>
+        <span class="reaction-option" onclick="submitReaction('${msgId}', '🔥', event)">🔥</span>
+        <span class="reaction-option" onclick="submitReaction('${msgId}', '✅', event)">✅</span>
+    `;
+
+    // Attach to button
+    const btn = event.currentTarget;
+    // Ensure relative positioning context if needed, but absolute positioning in CSS handles it relative to parent or button?
+    // Since .msg-action-btn is inside .message-actions (flex), position absolute might be relative to body if parents usually are static.
+    // But .message-actions is static. .message is relative!
+    // Let's append to button and rely on button position.
+    btn.style.position = 'relative';
+    btn.appendChild(popover);
+
+    // Close handler
+    const closeHandler = (e) => {
+        if (!popover.contains(e.target) && e.target !== btn) {
+            popover.remove();
+            document.removeEventListener('click', closeHandler);
+            btn.style.position = ''; // Reset
+        }
+    };
+    setTimeout(() => document.addEventListener('click', closeHandler), 0);
+}
+
+async function submitReaction(msgId, emoji, event) {
+    if (event) event.stopPropagation();
+
+    // Close picker
+    const existing = document.querySelector('.reaction-popover');
+    if (existing) existing.remove();
+
+    // 1. OPTIMISTIC UI UPDATE
+    const msgDiv = document.getElementById(`msg-${msgId}`);
+    if (msgDiv) {
+        const bubble = msgDiv.querySelector('.message-bubble');
+        let reactionEl = bubble.querySelector('.message-reaction-bubble');
+        if (!reactionEl) {
+            reactionEl = document.createElement('div');
+            reactionEl.className = 'message-reaction-bubble';
+            bubble.appendChild(reactionEl);
+        }
+        reactionEl.textContent = emoji;
+    }
+
+    // 2. DB UPDATE
+    const { error } = await supabase
+        .from('message_reactions')
+        .upsert({
+            message_id: msgId,
+            user_id: currentUser.id,
+            reaction: emoji
+        }, { onConflict: 'message_id, user_id' });
+
+    if (error) {
+        console.error('Error adding reaction:', error);
+        // Revert UI?
+    }
 }
 
 // ===== HELPERS =====
@@ -1033,6 +1130,47 @@ function setupRealtime() {
                     } else {
                         loadConversations();
                     }
+                }
+            }
+        })
+        .subscribe();
+
+    // LISTEN FOR REACTIONS TOO
+    supabase.channel('public:reactions')
+        .on('postgres_changes', {
+            event: '*', // INSERT, UPDATE, DELETE
+            schema: 'public',
+            table: 'message_reactions'
+        }, payload => {
+            if (!currentConversationId) return;
+
+            // Ideally we check if the message belongs to current convo. 
+            // But payload doesn't have conversation_id, only message_id.
+            // We can check if the message ID corresponds to a message currently in DOM.
+            const msgId = payload.new ? payload.new.message_id : payload.old.message_id;
+            const msgDiv = document.getElementById(`msg-${msgId}`);
+
+            if (msgDiv) {
+                // Determine what to show.
+                // Since this is realtime from ANOTHER user, we really should fetch the latest state
+                // or trust the payload. 
+                // Creating a simplified update logic:
+                const bubble = msgDiv.querySelector('.message-bubble');
+                let reactionEl = bubble.querySelector('.message-reaction-bubble');
+
+                if (payload.eventType === 'DELETE') {
+                    // Check if there are other reactions? 
+                    // To do this strictly correctly, we need the count or list.
+                    // For now, if we receive a DELETE, we might just hide it.
+                    if (reactionEl) reactionEl.remove();
+                } else {
+                    // INSERT or UPDATE
+                    if (!reactionEl) {
+                        reactionEl = document.createElement('div');
+                        reactionEl.className = 'message-reaction-bubble';
+                        bubble.appendChild(reactionEl);
+                    }
+                    reactionEl.textContent = payload.new.reaction;
                 }
             }
         })

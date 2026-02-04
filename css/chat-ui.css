@@ -733,3 +733,66 @@
 .message:hover .message-actions {
     opacity: 1;
 }
+
+/* === NEW REACTION PICKER === */
+.reaction-popover {
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%) translateY(-8px);
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 100px;
+    padding: 6px 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+    z-index: 100;
+    animation: popIn 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes popIn {
+    from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(0) scale(0.8);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(-8px) scale(1);
+    }
+}
+
+.reaction-option {
+    font-size: 1.4rem;
+    cursor: pointer;
+    transition: transform 0.2s;
+    line-height: 1;
+}
+
+.reaction-option:hover {
+    transform: scale(1.2);
+}
+
+/* REACTION BUBBLE ON MESSAGE */
+.message-reaction-bubble {
+    position: absolute;
+    bottom: -10px;
+    right: 0;
+    /* Default for received */
+    background: #262626;
+    border: 2px solid #000;
+    /* Border matches bg to look like cutout */
+    border-radius: 12px;
+    padding: 2px 6px;
+    font-size: 0.85rem;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    z-index: 2;
+    cursor: pointer;
+}
+
+.message.sent .message-reaction-bubble {
+    right: auto;
+    left: 0;
+}
