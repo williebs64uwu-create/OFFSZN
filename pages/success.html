@@ -401,7 +401,7 @@
                         </p>
                         <div class="input-group">
                             <label>Correo de Compra</label>
-                            <input type="email" id="portal-email" placeholder="ejemplo@correo.com" value="${guestEmail}">
+                            <input type="email" id="portal-email" placeholder="ejemplo@correo.com" value="${guestEmail || new URLSearchParams(window.location.search).get('email') || ''}">
                         </div>
                         <button class="btn-primary" onclick="redirectToRegister()">Activar Cuenta y Guardar Pedido</button>
                     </div>
@@ -773,6 +773,11 @@
                 alert("Hemos enviado un enlace de acceso a tu correo. Revisa tu bandeja de entrada.");
             }
         }
+
+        // --- INITIALIZATION ---
+        document.addEventListener('DOMContentLoaded', () => {
+            initSuccessPage();
+        });
     </script>
 </body>
 

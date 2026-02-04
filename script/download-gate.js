@@ -24,12 +24,44 @@ window.openDownloadGateModal = function (url, producerName, productId) {
 
     // --- GUEST HANDLING ---
     if (!currentUserId) {
+        const isFree = product?.is_free || false;
         let backdrop = document.getElementById('gate-modal-backdrop');
+
         if (!backdrop) {
             backdrop = document.createElement('div');
             backdrop.id = 'gate-modal-backdrop';
             backdrop.className = 'share-modal-backdrop';
             backdrop.onclick = (e) => { if (e.target === backdrop) window.closeDownloadGateModal(); };
+            document.body.appendChild(backdrop);
+        }
+
+        if (isFree) {
+            // Guest is allowed to download free items!
+            backdrop.innerHTML = `
+                <div class="share-modal-content">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                         <h3 style="color:#fff; margin:0;">Descarga Gratuita</h3>
+                         <button onclick="closeDownloadGateModal()" style="background:none; border:none; color:#666; font-size:1.5rem; cursor:pointer;"><i class="bi bi-x"></i></button>
+                    </div>
+                    <p style="color:#ccc; font-size:1rem; margin-bottom:20px; line-height:1.5;">
+                        Puedes descargar este kit ahora mismo como invitado. <br>
+                        <span style="font-size:0.85rem; color:#888;">(Crea una cuenta luego para guardarlo siempre en tu librería personal).</span>
+                    </p>
+                    <button id="btn-gate-action" class="btn-glass-primary" style="width:100%; border-radius:30px; padding:12px; margin-top:10px;">
+                        <i class="bi bi-download"></i> DESCARGAR AHORA
+                    </button>
+                    <button id="btn-gate-login" class="btn-minimal-link" style="width:100%; justify-content:center; margin-top:15px; color:#8b5cf6;">
+                        <i class="bi bi-person-plus"></i> Crear cuenta y guardar
+                    </button>
+                </div>
+            `;
+
+            const actionBtn = document.getElementById('btn-gate-action');
+            if (actionBtn) {
+                actionBtn.onclick = () => completeGate(url, productId);
+            }
+        } else {
+            // Paid item or restricted (shouldn't really hit here if it's a "download gate" for free items)
             backdrop.innerHTML = `
                 <div class="share-modal-content">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
@@ -37,7 +69,7 @@ window.openDownloadGateModal = function (url, producerName, productId) {
                          <button onclick="closeDownloadGateModal()" style="background:none; border:none; color:#666; font-size:1.5rem; cursor:pointer;"><i class="bi bi-x"></i></button>
                     </div>
                     <p style="color:#ccc; font-size:1rem; margin-bottom:20px; line-height:1.5;">
-                        Para descargar este kit gratis y guardarlo en tu librería, necesitas una cuenta en OFFSZN.
+                        Para acceder a este contenido y guardarlo en tu librería, necesitas una cuenta en OFFSZN.
                     </p>
                     <button id="btn-gate-login" class="btn-glass-primary" style="width:100%; border-radius:30px; padding:12px; margin-top:10px;">
                         <i class="bi bi-person-plus-fill"></i> INICIAR SESIÓN / REGISTRARSE
@@ -46,24 +78,6 @@ window.openDownloadGateModal = function (url, producerName, productId) {
                         Quizás luego
                     </button>
                 </div>
-            `;
-            document.body.appendChild(backdrop);
-        } else {
-            // Re-render guest specialized content
-            backdrop.querySelector('.share-modal-content').innerHTML = `
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                        <h3 style="color:#fff; margin:0;">Inicia Sesión</h3>
-                        <button onclick="closeDownloadGateModal()" style="background:none; border:none; color:#666; font-size:1.5rem; cursor:pointer;"><i class="bi bi-x"></i></button>
-                </div>
-                <p style="color:#ccc; font-size:1rem; margin-bottom:20px; line-height:1.5;">
-                    Para descargar este kit gratis y guardarlo en tu librería, necesitas una cuenta en OFFSZN.
-                </p>
-                <button id="btn-gate-login" class="btn-glass-primary" style="width:100%; border-radius:30px; padding:12px; margin-top:10px;">
-                    <i class="bi bi-person-plus-fill"></i> INICIAR SESIÓN / REGISTRARSE
-                </button>
-                <button onclick="closeDownloadGateModal()" class="btn-minimal-link" style="width:100%; justify-content:center; margin-top:15px;">
-                    Quizás luego
-                </button>
             `;
         }
 
@@ -164,7 +178,7 @@ window.completeGate = async function (url, productId) {
         const producerEmail = producerObj?.email;
         const currentUserId = window.currentUserId;
 
-        // 1. Follow Logic (Only if not owner and not already following)
+        // 1. Follow Logic (Only if logged in and not owner and not already following)
         if (currentUserId && producerId && currentUserId !== producerId) {
             // Check if already following via window.currentUserFollowing set (if available)
             const isFollowing = window.currentUserFollowing && window.currentUserFollowing.has(producerId);
@@ -187,10 +201,10 @@ window.completeGate = async function (url, productId) {
                 }
             }
         } else {
-            console.log("[Gate] Owner or local check passed, skipping follow.");
+            console.log("[Gate] Guest, Owner or local check passed, skipping follow.");
         }
 
-        // 2. Dashboard Persistence ($0 Order)
+        // 2. Dashboard Persistence ($0 Order) - Only if logged in
         if (currentUserId && productId && productId !== 'undefined') {
             console.log("[Gate] Recording free download in dashboard...");
             fetch('/api/orders/free', {
@@ -204,15 +218,15 @@ window.completeGate = async function (url, productId) {
                 .catch(err => console.error("[Gate] Dashboard sync error:", err));
         }
 
-        // 3. EmailJS Notification (Consolidated/Hybrid)
-        if (typeof emailjs !== 'undefined' && producerId && currentUserId !== producerId) {
+        // 3. EmailJS Notification (Consolidated/Hybrid) - Only if logged in or we have info
+        if (typeof emailjs !== 'undefined' && producerId && currentUserId && currentUserId !== producerId) {
             // A. Notify Producer (Template Producer)
             const producerParams = {
                 activity_type: 'Descarga Gratuita',
                 to_name: producerObj?.nickname || 'Productor',
                 to_email: producerEmail || '',
                 product_name: product?.name || 'Sonido',
-                downloader_name: window.currentUserNickname || window.currentUserData?.nickname || 'Un usuario',
+                downloader_name: window.currentUserNickname || window.currentUserData?.nickname || 'Un invitado',
                 amount: 'Gratis'
             };
 
@@ -230,7 +244,7 @@ window.completeGate = async function (url, productId) {
                     activity_type: 'descarga gratuita',
                     download_url: url
                 };
-                // Assuming template_client_receipt exists as per plan
+                // Assuming template_client_receipt exists
                 emailjs.send('service_w50l62y', 'template_client_receipt', clientParams, 'If_WAVcuXiGSPp2SB')
                     .then(() => console.log("[Gate] Client confirmation sent."))
                     .catch(err => console.warn("[Gate] Client Email skipped/failed (Template might not exist yet)."));
