@@ -551,8 +551,13 @@ window.setSearch = function (text) {
 
 window.deleteHistoryItem = async function (term, e) {
     if (e) e.stopPropagation();
+    console.log("🗑️ Deleting history item:", term);
+
+    const lowerTerm = term.toLowerCase().trim();
     const fullHistory = JSON.parse(localStorage.getItem('offszn_search_history')) || [];
-    const updatedFullHistory = fullHistory.filter(t => t !== term);
+
+    // Case-insensitive filtering
+    const updatedFullHistory = fullHistory.filter(t => t.toLowerCase().trim() !== lowerTerm);
 
     // Use Universal Sync
     await window.updateUniversalSearchHistory(updatedFullHistory);
@@ -599,6 +604,7 @@ window.updateUniversalSearchHistory = async function (newFullHistory) {
         try {
             const { data: { session } } = await window.supabaseClient.auth.getSession();
             if (session?.user) {
+                // Confirming table name is 'profiles' as per user screenshot
                 await window.supabaseClient
                     .from('profiles')
                     .update({ search_history: newFullHistory })
