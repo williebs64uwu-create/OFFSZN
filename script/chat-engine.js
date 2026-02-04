@@ -772,7 +772,7 @@ async function openChat(convId, name, avatar, userId) {
 
     const { data: messages } = await supabase
         .from('messages')
-        .select('*, message_reactions(user_id, reaction)')
+        .select('*, message_reactions(user_id, emoji)')
         .eq('conversation_id', convId)
         .order('created_at', { ascending: true });
 
@@ -1170,7 +1170,7 @@ function setupRealtime() {
                         reactionEl.className = 'message-reaction-bubble';
                         bubble.appendChild(reactionEl);
                     }
-                    reactionEl.textContent = payload.new.reaction;
+                    reactionEl.textContent = payload.new.emoji;
                 }
             }
         })
