@@ -166,7 +166,20 @@ function renderProductPage(product) {
     const dateStr = dateObj.toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' });
     metaRows += `<div class="info-row"><span class="info-label">Publicado</span> <span class="info-val">${dateStr}</span></div>`;
 
-    // Category (Added per request)
+    // Category (Smart Logic)
+    let displayCategory = product.category;
+    const pType = (product.product_type || '').toLowerCase();
+
+    // 1. If it's a Beat and no category is explicitly set, infer from tags (Genre)
+    if (!displayCategory && pType === 'beat') {
+        if (product.tags && product.tags.length > 0) {
+            displayCategory = product.tags[0]; // Use first tag as Genre/Category (e.g. "Trap")
+        } else {
+            displayCategory = 'Beat';
+        }
+    }
+
+    // 2. Map technical keys to friendly labels
     const categoryMap = {
         'voces': 'Preset de Voces',
         'plantilla': 'Plantilla',
@@ -174,12 +187,17 @@ function renderProductPage(product) {
         'loopkit': 'Loop Kit',
         'instrumento': 'Instrumento',
         'plugin': 'Plugin',
+        'beat': 'Beat', // Default fallback
         'trap': 'Trap',
         'reggaeton': 'Reggaetón'
     };
-    const catId = (product.category || product.product_type || '').toLowerCase();
-    const displayCategory = categoryMap[catId] || product.category || 'N/A';
-    metaRows += `<div class="info-row"><span class="info-label">Categoría</span> <span class="info-val" style="text-transform: capitalize;">${displayCategory}</span></div>`;
+
+    // 3. Resolve final display string
+    // If we have a category/inferred value, check map, otherwise fallback to product_type if map exists, else N/A
+    let valToDisplay = displayCategory || pType;
+    valToDisplay = categoryMap[valToDisplay.toLowerCase()] || valToDisplay || 'N/A';
+
+    metaRows += `<div class="info-row"><span class="info-label">Categoría</span> <span class="info-val" style="text-transform: capitalize;">${valToDisplay}</span></div>`;
 
     if (product.product_type === 'drumkit' || product.product_type === 'loopkit' || product.product_type === 'preset') {
         metaRows += `<div class="info-row"><span class="info-label">Archivos</span> <span class="info-val">${product.sounds_count || '1'}</span></div>`;
