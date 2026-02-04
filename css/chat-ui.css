@@ -7,9 +7,9 @@
     --chat-accent: #7c3aed;
     --chat-text: #ffffff;
     --chat-subtext: #8e8e8e;
-    --chat-bubble-sent: #373737;
-    /* Instagram sent bubble is dark grey on black */
-    --chat-bubble-received: #262626;
+    --chat-bubble-sent: #262626;
+    /* Instagram-like dark grey */
+    --chat-bubble-received: #1a1a1a;
     --chat-bubble-sent-text: #ffffff;
 }
 
@@ -422,11 +422,10 @@
 
 /* Corrección para la burbuja y el texto largo */
 .message-bubble {
-    padding: 10px 16px;
-    /* Clean Instagram balance */
-    border-radius: 20px;
-    /* Smoother radius */
-    font-size: 0.95rem;
+    padding: 7px 12px;
+    /* More compact Instagram style */
+    border-radius: 18px;
+    font-size: 0.9rem;
     line-height: 1.4;
     position: relative;
     width: fit-content;
@@ -435,7 +434,6 @@
     word-wrap: break-word;
     overflow-wrap: break-word;
     word-break: break-word;
-    word-break: break-all;
     white-space: pre-wrap;
     max-width: 100%;
 }
@@ -443,13 +441,15 @@
 .message.sent .message-bubble {
     background: var(--chat-bubble-sent);
     color: var(--chat-bubble-sent-text);
-    border-radius: 18px;
+    border-bottom-right-radius: 4px;
+    /* Instagram tail effect */
 }
 
 .message.received .message-bubble {
     background: var(--chat-bubble-received);
     color: #fff;
-    border-radius: 18px;
+    border-bottom-left-radius: 4px;
+    /* Instagram tail effect */
 }
 
 .message-time {
@@ -651,14 +651,41 @@
     gap: 2px;
 }
 
+/* NEW REACTION BUBBLE (INSTAGRAM STYLE) */
+.message-reaction-bubble {
+    position: absolute;
+    bottom: -10px;
+    right: 12px;
+    background: #262626;
+    border: 2px solid #000;
+    border-radius: 20px;
+    padding: 2px 6px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    z-index: 5;
+    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.message.received .message-reaction-bubble {
+    right: auto;
+    left: 12px;
+}
+
+.message-reaction-bubble:hover {
+    transform: scale(1.2);
+}
+
 /* REPLY QUOTE IN MESSAGE */
 .reply-quote-container {
-    background: rgba(255, 255, 255, 0.05);
-    /* Subtle overlay */
+    background: rgba(255, 255, 255, 0.1);
+    border-left: 2px solid var(--chat-accent);
+    /* Small indicator */
     border-radius: 8px;
-    padding: 6px 10px;
+    padding: 6px 12px;
     margin-bottom: 8px;
-    /* Space before actual message content */
     cursor: pointer;
     display: flex;
     flex-direction: column;

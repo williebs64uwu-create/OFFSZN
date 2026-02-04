@@ -13,6 +13,16 @@ let emojiPicker = null;
 let isInitialized = false;
 let replyToId = null; // State for current reply
 
+// ===== GLOBAL EXPORTS (For HTML onclicks) =====
+window.onReplyClick = onReplyClick;
+window.cancelReply = cancelReply;
+window.onReactClick = onReactClick;
+window.submitReaction = submitReaction;
+window.scrollToMessage = scrollToMessage;
+window.openNewMessageModal = openNewMessageModal;
+window.closeNewMessageModal = closeNewMessageModal;
+window.startChatFromModal = startChatFromModal;
+
 // ===== INITIALIZATION =====
 // 🛡️ SPA SAFEGUARD
 function isChatPage() {
@@ -205,11 +215,7 @@ function setupEventListeners() {
     // Emoji picker
     setupEmojiPicker();
 
-    // Global helpers for HTML onclicks
-    window.onReplyClick = onReplyClick;
-    window.cancelReply = cancelReply;
-    window.onReactClick = onReactClick;
-    window.submitReaction = submitReaction;
+    // Event Listeners setup
 }
 
 let isEditMode = false;
@@ -913,9 +919,10 @@ function renderMessage(msg) {
                 }
             }
 
+            const replyActionText = isMe ? 'Respondiste' : 'Respondió';
             replyHtml = `
             <div class="reply-quote-container" onclick="scrollToMessage('${msg.reply_to_id}')">
-                <div class="reply-quote-user">Respondiste a ${replyUserNick}</div>
+                <div class="reply-quote-user">${replyActionText} a ${replyUserNick}</div>
                 <div class="reply-quote-text">${shortReply.replace(/</g, "&lt;")}</div>
             </div>`;
         }
@@ -1081,8 +1088,8 @@ async function submitReaction(msgId, emoji, event) {
         .upsert({
             message_id: msgId,
             user_id: currentUser.id,
-            reaction: emoji
-        }, { onConflict: 'message_id, user_id' });
+            emoji: emoji // Fixed column name from 'reaction' to 'emoji'
+        }, { onConflict: 'message_id, user_id, emoji' }); // Matching user PK constraint
 
     if (error) {
         console.error('Error adding reaction:', error);
