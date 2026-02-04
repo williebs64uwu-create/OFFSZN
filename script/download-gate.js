@@ -40,12 +40,11 @@ window.openDownloadGateModal = function (url, producerName, productId) {
             backdrop.innerHTML = `
                 <div class="share-modal-content">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                         <h3 style="color:#fff; margin:0;">Descarga Gratuita</h3>
+                         <h3 style="color:#fff; margin:0;">Descarga Gratuita como invitado</h3>
                          <button onclick="closeDownloadGateModal()" style="background:none; border:none; color:#666; font-size:1.5rem; cursor:pointer;"><i class="bi bi-x"></i></button>
                     </div>
-                    <p style="color:#ccc; font-size:1rem; margin-bottom:20px; line-height:1.5;">
-                        Puedes descargar este kit ahora mismo como invitado. <br>
-                        <span style="font-size:0.85rem; color:#888;">(Crea una cuenta luego para guardarlo siempre en tu librería personal).</span>
+                    <p style="color:#888; font-size:0.85rem; margin-bottom:20px; line-height:1.5;">
+                        (Crea una cuenta luego para guardarlo siempre en tu librería personal).
                     </p>
                     <button id="btn-gate-action" class="btn-glass-primary" style="width:100%; border-radius:30px; padding:12px; margin-top:10px;">
                         <i class="bi bi-download"></i> DESCARGAR AHORA

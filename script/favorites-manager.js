@@ -77,11 +77,16 @@ window.FavoritesManager = (function () {
                 });
 
                 if (res.status === 401 || res.status === 403) {
-                    console.warn("FavoritesManager: Session invalid or expired. Continuing as guest.");
+                    console.log("FavoritesManager: No active session (Guest mode)");
+                    isInitialized = true; // Mark as initialized so it stops trying
                     return;
                 }
 
-                if (!res.ok) throw new Error('Failed to fetch favorites');
+                if (!res.ok) {
+                    console.warn("FavoritesManager: API error, skipping load.");
+                    isInitialized = true;
+                    return;
+                }
 
                 const products = await res.json();
                 likedItemIds = new Set(products.map(p => String(p.id)));

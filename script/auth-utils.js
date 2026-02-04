@@ -1,7 +1,7 @@
-    /**
- * OFFSZN Auth Utilities
- * Centralized token management to prevent 403 errors and duplication.
- */
+/**
+* OFFSZN Auth Utilities
+* Centralized token management to prevent 403 errors and duplication.
+*/
 
 window.AuthUtils = {
     /**
@@ -39,6 +39,11 @@ window.AuthUtils = {
                 const payload = JSON.parse(atob(payloadStr));
                 if (payload && payload.role === 'anon') {
                     console.warn("🛡️ AuthUtils: Blocking 'anon' role token from Authorization header.");
+                    return false;
+                }
+                // --- EXPIRY CHECK ---
+                if (payload && payload.exp && payload.exp < Date.now() / 1000) {
+                    console.warn("🛡️ AuthUtils: Token expired. Clearing local state.");
                     return false;
                 }
             } catch (e) {

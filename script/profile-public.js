@@ -68,11 +68,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Fetch both following list and current user identity in parallel
         window.profileInitPromise = Promise.all([
             fetch('/api/me/following', { headers: window.AuthUtils.getAuthHeaderObj() })
-                .then(r => r.json())
-                .catch(err => { console.warn("Failed to fetch following", err); return []; }),
+                .then(r => r.ok ? r.json() : [])
+                .catch(err => []),
             fetch('/api/me', { headers: window.AuthUtils.getAuthHeaderObj() })
-                .then(r => r.json())
-                .catch(err => { console.warn("Failed to fetch me", err); return null; })
+                .then(r => r.ok ? r.json() : null)
+                .catch(err => null)
         ]).then(([ids, me]) => {
             if (Array.isArray(ids)) window.currentUserFollowing = new Set(ids);
             if (me && me.id) window.currentUserId = me.id;

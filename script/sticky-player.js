@@ -131,7 +131,8 @@ window.StickyPlayer = (function () {
                 e.stopPropagation();
                 if (window.FavoritesManager && currentTrack) {
                     // --- GUEST GUARD ---
-                    if (!window.currentUserId) {
+                    const token = window.getAccessToken ? window.getAccessToken() : null;
+                    if (!token || !window.currentUserId) {
                         if (window.showGuestModal) {
                             window.showGuestModal(
                                 "¡Te gusta este beat!",
@@ -779,10 +780,17 @@ window.StickyPlayer = (function () {
         if (!currentTrack) return;
 
         const isFree = currentTrack.is_free === true || String(currentTrack.is_free) === 'true';
+        const productType = (currentTrack.product_type || '').toLowerCase();
 
-        // Prioritize "Main Assets" (ZIP/WAV/Stems) for Kits/Presets/Beats if downloading
-        const mainAssetUrl = currentTrack.download_url_wav || currentTrack.download_url_stems || currentTrack.wav_url || currentTrack.stems_url;
-        const audioUrl = mainAssetUrl || currentTrack.download_url_mp3 || currentTrack.mp3_url || currentTrack.audio_url || currentTrack.demo_file || '';
+        // GUEST/FREE: If it's a beat, prioritize MP3 (democratization/security)
+        // KITS: Use ZIP/WAV.
+        let audioUrl = '';
+        if (productType === 'beat') {
+            audioUrl = currentTrack.download_url_mp3 || currentTrack.mp3_url || currentTrack.audio_url || currentTrack.demo_file || '';
+        } else {
+            const mainAssetUrl = currentTrack.download_url_wav || currentTrack.download_url_stems || currentTrack.wav_url || currentTrack.stems_url;
+            audioUrl = mainAssetUrl || currentTrack.download_url_mp3 || currentTrack.mp3_url || currentTrack.audio_url || currentTrack.demo_file || '';
+        }
 
         if (isFree) {
             if (window.openDownloadGateModal) {
