@@ -845,7 +845,7 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
       // Default: Redirect to Public Profile
       const nick = userData.nickname || 'user';
-      window.location.href = '/' + nick;
+      window.location.href = '/@' + nick;
     }
   });
 

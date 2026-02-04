@@ -239,7 +239,7 @@ document.addEventListener('DOMContentLoaded', () => {
               }
             } else if (profileCheck && profileCheck.nickname) {
               // Usuario Veterano -> Perfil Público (Directo)
-              const profilePath = `/${profileCheck.nickname}`;
+              const profilePath = `/@${profileCheck.nickname}`;
               console.log(`Usuario completo. Redirigiendo a ${profilePath}`);
               window.location.href = profilePath;
             } else {

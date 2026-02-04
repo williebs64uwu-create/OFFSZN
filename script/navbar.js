@@ -491,7 +491,7 @@ function renderActualResults(results) {
 
         // CLICK ACTION
         let targetUrl = item.type === 'user' ?
-            `/${encodeURIComponent(item.title)}` :
+            `/@${encodeURIComponent(item.title)}` :
             (window.createSeoLink ? window.createSeoLink(item) : `/producto.html?id=${item.id}`);
 
         html += `
@@ -807,7 +807,7 @@ async function updateAuthUI(session) {
         // Dynamic Profile Link
         const dropdownHeader = document.querySelector('.user-dropdown-header');
         if (dropdownHeader) {
-            dropdownHeader.onclick = () => window.location.href = `/${displayName}`;
+            dropdownHeader.onclick = () => window.location.href = `/@${displayName}`;
         }
 
 
