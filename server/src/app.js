@@ -136,23 +136,38 @@ app.use((req, res, next) => {
     next();
 });
 
-// B. Clean URLs (Strip .html)
+// B. Clean URLs (Force Redirects & Internal Rewrites)
 app.use((req, res, next) => {
     // Skip API routes
     if (req.path.startsWith('/api')) return next();
 
-    // Si la request termina en / (root), deja que express.static sirva index.html
-    if (req.path.endsWith('/')) return next();
+    // 1. Force Redirect: Remove .html from browser address bar
+    if (req.path.endsWith('.html')) {
+        const cleanPath = req.path.replace(/\.html$/, '');
 
-    // Si tiene extensión, servir normal
-    if (path.extname(req.path)) return next();
-
-    // Intenta encontrar el archivo .html
-    const possibleHtml = path.join(rootPath, req.path + '.html');
-
-    if (fs.existsSync(possibleHtml)) {
-        req.url += '.html'; // Reescribe la URL internamente
+        // Special case: /index or /folder/index -> / or /folder
+        if (cleanPath.endsWith('/index')) {
+            const rootPathRedirect = cleanPath.slice(0, -6) || '/';
+            return res.redirect(301, rootPathRedirect);
+        }
+        return res.redirect(301, cleanPath);
     }
+
+    // 2. Extra cleaning: if user typed /something/ (trailing slash), remove it unless it's the root
+    if (req.path.length > 1 && req.path.endsWith('/')) {
+        return res.redirect(301, req.path.slice(0, -1));
+    }
+
+    // 3. Internal Rewriting: If no extension, try to serve the .html file
+    if (!path.extname(req.path)) {
+        const possibleHtml = path.join(rootPath, req.path + '.html');
+        if (fs.existsSync(possibleHtml)) {
+            // Check if it's the index.html specifically being called by '/'
+            // Express handles '/' with express.static usually, but we want to be explicit
+            return res.sendFile(possibleHtml);
+        }
+    }
+
     next();
 });
 

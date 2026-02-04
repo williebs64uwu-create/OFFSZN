@@ -409,6 +409,8 @@
             box-shadow: 0 0 50px rgba(0, 0, 0, 1);
             border-left: 1px solid rgba(255, 255, 255, 0.05);
             border-right: 1px solid rgba(255, 255, 255, 0.05);
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            /* Smooth shift */
         }
 
         .reel-video {
@@ -720,20 +722,18 @@
                 transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             }
 
-            /* Move video to the left when comments are active */
+            /* Video shifts after a small delay */
             .reel-item.comments-active .reels-column {
                 transform: translateX(-220px);
+                transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1) 0.1s;
             }
 
             .comments-panel {
                 position: absolute;
                 top: 0;
                 left: 50%;
-                /* Center start */
-                /* Positioned to the right of the shifted video */
-                /* Half width of reel (225px) + 20px gap */
-                transform: translateX(calc(225px + 20px + 300px));
-                /* Start further right */
+                /* Start off screen */
+                transform: translateX(100vw);
                 width: 400px;
                 height: 100%;
                 background: #0F0F0F;
@@ -744,16 +744,12 @@
                 flex-direction: column;
                 opacity: 0;
                 pointer-events: none;
-                transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+                transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
             }
 
             .reel-item.comments-active .comments-panel {
                 opacity: 1;
                 pointer-events: auto;
-                /* Final position: Right side of shifted video */
-                /* Video center is now 50% - 220px. 
-                   Right edge of video is (50% - 220px) + 225px = 50% + 5px.
-                   Panel gap should be 20px, so panel starts at 50% + 25px. */
                 transform: translateX(25px);
             }
         }
@@ -830,6 +826,57 @@
             font-size: 13px;
             color: #ccc;
             line-height: 1.5;
+            margin-bottom: 6px;
+        }
+
+        .comment-actions {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 11px;
+            color: #666;
+            font-weight: 600;
+        }
+
+        .comment-action-btn {
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .comment-action-btn:hover {
+            color: #fff;
+        }
+
+        .comment-action-btn.liked {
+            color: #ef4444;
+        }
+
+        .comment-action-btn.liked i::before {
+            content: "\F415";
+            /* bi-heart-fill */
+        }
+
+        /* --- REPLIES --- */
+        .replies-container {
+            margin-left: 48px;
+            margin-top: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            border-left: 1px solid #222;
+            padding-left: 12px;
+        }
+
+        .reply-item {
+            display: flex;
+            gap: 10px;
+        }
+
+        .reply-avatar {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #333;
         }
 
         .comment-input-area {
@@ -1549,6 +1596,17 @@
 
                 const isActive = !panel.classList.contains('active');
 
+                // Toggle "comments-active" on reel-item (triggers staggered CSS)
+                item.classList.toggle('comments-active', isActive);
+
+                // Toggle "active" on panel with a tiny delay if opening to ensure CSS transition is smooth
+                if (isActive) {
+                    setTimeout(() => panel.classList.add('active'), 10);
+                    loadReelComments(id, panel.querySelector('.comments-list'));
+                } else {
+                    panel.classList.remove('active');
+                }
+
                 // Close any other open comments first (YouTube style)
                 document.querySelectorAll('.comments-panel.active').forEach(p => {
                     if (p.id !== `comments-${id}`) {
@@ -1556,32 +1614,66 @@
                         p.closest('.reel-item').classList.remove('comments-active');
                     }
                 });
+            };
 
-                panel.classList.toggle('active', isActive);
-                item.classList.toggle('comments-active', isActive);
+            window.replyComment = function (commentId, userNickname) {
+                console.log("Replying to comment:", commentId);
+                const panel = document.querySelector(`.reel-item.comments-active .comments-panel`) ||
+                    document.querySelector(`.comments-panel.active`);
+                if (!panel) return;
 
-                if (isActive) {
-                    loadReelComments(id, panel.querySelector('.comments-list'));
+                const input = panel.querySelector('.comment-input');
+                if (input) {
+                    input.dataset.parentId = commentId;
+                    input.value = `@${userNickname} `;
+                    input.focus();
                 }
             };
 
-            window.replyComment = function (commentId) {
-                // For now, just set the input focus and maybe add a mention
-                console.log("Replying to comment:", commentId);
-                const input = document.querySelector(`.reel-item.comments-active .comment-input`) ||
-                    document.querySelector(`.comments-panel.active .comment-input`);
-                if (input) {
-                    input.focus();
-                    // We could fetch the user nickname here if needed
+            window.toggleCommentLike = async function (commentId, btn) {
+                if (!window.currentUser) {
+                    showGuestModal();
+                    return;
+                }
+
+                const isLiked = btn.classList.contains('liked');
+                const newState = !isLiked;
+                const countEl = btn.querySelector('.comment-like-count');
+                let count = parseInt(countEl.innerText) || 0;
+
+                // Optimistic UI
+                btn.classList.toggle('liked', newState);
+                countEl.innerText = newState ? count + 1 : Math.max(0, count - 1);
+
+                try {
+                    if (newState) {
+                        await window.supabaseClient.from('reel_comment_likes').insert({
+                            comment_id: commentId,
+                            user_id: currentUser.id
+                        });
+                    } else {
+                        await window.supabaseClient.from('reel_comment_likes').delete().match({
+                            comment_id: commentId,
+                            user_id: currentUser.id
+                        });
+                    }
+                } catch (e) {
+                    console.error("Comment like error", e);
+                    // Rollback
+                    btn.classList.toggle('liked', isLiked);
+                    countEl.innerText = count;
                 }
             };
 
             async function loadReelComments(reelId, container) {
+                // Fetch comments AND check if current user liked them
+                // Note: We use a simplified fetch here. 
+                // For threaded comments, we'll fetch all and arrange them locally.
                 const { data: comments, error } = await window.supabaseClient
                     .from('reel_comments')
-                    .select('*, users(nickname, avatar_url)')
+                    .select('*, users(nickname, avatar_url), reel_comment_likes(user_id)')
                     .eq('reel_id', reelId)
-                    .order('created_at', { ascending: false });
+                    .order('created_at', { ascending: true }); // Ascending for threaded logic
 
                 if (error) {
                     container.innerHTML = '<div style="color:#666; text-align:center; padding:20px;">Error al cargar comentarios</div>';
@@ -1593,31 +1685,63 @@
                     return;
                 }
 
-                container.innerHTML = comments.map(c => `
-                    <div class="comment-item">
-                        <img src="${c.users?.avatar_url || 'https://ui-avatars.com/api/?name=' + c.users?.nickname}" class="comment-avatar">
-                        <div class="comment-content">
-                            <div class="comment-user">@${c.users?.nickname}</div>
-                            <div class="comment-text">${c.content}</div>
-                            <div class="comment-actions">
-                                <span class="comment-action-btn" onclick="replyComment('${c.id}')">Responder</span>
-                                <span class="comment-action-btn"><i class="bi bi-heart"></i> ${c.likes_count || 0}</span>
+                // Internal Threading Logic
+                const parents = comments.filter(c => !c.parent_id);
+                const replies = comments.filter(c => c.parent_id);
+
+                container.innerHTML = parents.map(c => {
+                    const isLiked = currentUser && c.reel_comment_likes?.some(l => l.user_id === currentUser.id);
+                    const commentReplies = replies.filter(r => r.parent_id === c.id);
+
+                    return `
+                    <div class="comment-group" id="comment-group-${c.id}">
+                        <div class="comment-item">
+                            <img src="${c.users?.avatar_url || 'https://ui-avatars.com/api/?name=' + (c.users?.nickname || 'U')}" class="comment-avatar">
+                            <div class="comment-content">
+                                <div class="comment-user">@${c.users?.nickname || 'usuario'}</div>
+                                <div class="comment-text">${c.content}</div>
+                                <div class="comment-actions">
+                                    <span class="comment-action-btn" onclick="replyComment('${c.id}', '${c.users?.nickname}')">Responder</span>
+                                    <span class="comment-action-btn ${isLiked ? 'liked' : ''}" onclick="toggleCommentLike('${c.id}', this)">
+                                        <i class="bi bi-heart"></i> <span class="comment-like-count">${c.likes_count || 0}</span>
+                                    </span>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                `).join('');
+                        ${commentReplies.length > 0 ? `
+                        <div class="replies-container">
+                            ${commentReplies.map(r => {
+                        const isReplyLiked = currentUser && r.reel_comment_likes?.some(l => l.user_id === currentUser.id);
+                        return `
+                                <div class="reply-item">
+                                    <img src="${r.users?.avatar_url || 'https://ui-avatars.com/api/?name=' + (r.users?.nickname || 'U')}" class="reply-avatar">
+                                    <div class="comment-content">
+                                        <div class="comment-user">@${r.users?.nickname || 'usuario'}</div>
+                                        <div class="comment-text">${r.content}</div>
+                                        <div class="comment-actions">
+                                            <span class="comment-action-btn ${isReplyLiked ? 'liked' : ''}" onclick="toggleCommentLike('${r.id}', this)">
+                                                <i class="bi bi-heart"></i> <span class="comment-like-count">${r.likes_count || 0}</span>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>`;
+                    }).join('')}
+                        </div>` : ''}
+                    </div>`;
+                }).join('');
+
+                // Scroll to bottom after load if needed
+                container.scrollTop = container.scrollHeight;
             }
 
             window.submitComment = async function (reelId, input) {
                 if (!window.currentUser) {
-                    if (window.showGuestModal) {
-                        window.showGuestModal("Únete a la conversación", "Inicia sesión para comentar y conectar con otros productores. 💬");
-                    } else {
-                        showToast('Debes iniciar sesiÃ³n para comentar.');
-                    }
+                    showGuestModal("Únete a la conversación", "Inicia sesión para comentar y conectar con otros productores. 💬");
                     return;
                 }
                 const text = input.value.trim();
+                const parentId = input.dataset.parentId || null;
+
                 if (!text || !window.currentUser) return;
 
                 if (text.length > 300) {
@@ -1630,11 +1754,17 @@
                     const { error } = await window.supabaseClient.from('reel_comments').insert({
                         reel_id: reelId,
                         user_id: currentUser.id,
-                        content: text
+                        content: text,
+                        parent_id: parentId
                     });
 
                     if (error) throw error;
+
+                    // Clear state
                     input.value = '';
+                    delete input.dataset.parentId;
+
+                    // Reload
                     loadReelComments(reelId, input.closest('.comments-panel').querySelector('.comments-list'));
 
                     // Update count

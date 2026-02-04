@@ -5,7 +5,7 @@
  */
 
 // ==================== STATE MANAGEMENT ==================== //
-const NavbarState = {
+window.NavbarState = {
     search: {
         debounceTimer: null,
         currentCategory: 'Todo',
@@ -16,6 +16,8 @@ const NavbarState = {
         lastResults: [] // Cache for instant currency toggle
     }
 };
+
+const NavbarState = window.NavbarState;
 
 // ==================== DOM ELEMENTS (Lazy Load) ==================== //
 // We use getters or lookups inside functions to safely handle pages where elements might be missing
@@ -588,10 +590,8 @@ window.updateUniversalSearchHistory = async function (newFullHistory) {
     // 2. Update Navbar Internal State
     if (window.NavbarState) {
         window.NavbarState.search.history = newFullHistory.slice(0, 5);
-        // Refresh UI if Trending Panel is visible
-        if (document.getElementById('search-trending-panel')?.style.display === 'block') {
-            renderHistoryAndTrends();
-        }
+        // Refresh UI instantly
+        renderHistoryAndTrends();
     }
 
     // 3. Dispatch Event for other pages (like history.html)
@@ -614,7 +614,25 @@ window.updateUniversalSearchHistory = async function (newFullHistory) {
             console.warn("History Sync Failed:", err);
         }
     }
-}
+};
+
+// 🔄 CROSS-TAB SYNC: Listen for storage changes from other tabs
+window.addEventListener('storage', (e) => {
+    if (e.key === 'offszn_search_history' && e.newValue) {
+        const newHistory = JSON.parse(e.newValue);
+        // Update local state and UI silently
+        if (window.NavbarState) {
+            window.NavbarState.search.history = newHistory.slice(0, 5);
+            if (typeof renderHistoryAndTrends === 'function') {
+                renderHistoryAndTrends();
+            }
+        }
+        // Notify local history page if present
+        window.dispatchEvent(new CustomEvent('offszn-history-changed', {
+            detail: { history: newHistory }
+        }));
+    }
+});
 
 function addTag(term) {
     if (!NavbarState.search.activeTags.includes(term)) {
