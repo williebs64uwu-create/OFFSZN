@@ -156,6 +156,10 @@ app.use((req, res, next) => {
     next();
 });
 
+// C1. Serve Static Files from Server Public (Prioritize this for moved assets)
+const publicPath = path.join(__dirname, '../public');
+app.use(express.static(publicPath));
+
 // C. Serve Static Files from Root
 app.use(express.static(rootPath));
 

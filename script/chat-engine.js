@@ -779,7 +779,7 @@ async function openChat(convId, name, avatar, userId) {
                 content, 
                 sender_id, 
                 attachment_type,
-                sender:users!sender_id(nickname)
+                sender:users(nickname)
             )
         `)
         .eq('conversation_id', convId)
@@ -1380,7 +1380,7 @@ async function fetchSingleMessage(id) {
                 content, 
                 sender_id, 
                 attachment_type,
-                sender:users!sender_id(nickname)
+                sender:users(nickname)
             )
         `)
         .eq('id', id)
