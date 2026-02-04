@@ -10,7 +10,8 @@ if (!supabase && window.location.pathname.includes('chat')) {
 let currentUser = null;
 let currentConversationId = null;
 let emojiPicker = null;
-let isInitialized = false; // Flag to prevent re-initialization
+let isInitialized = false;
+let replyToId = null; // State for current reply
 
 // ===== INITIALIZATION =====
 // 🛡️ SPA SAFEGUARD
@@ -167,38 +168,32 @@ function setupEventListeners() {
     // Tab buttons
     const tabPrincipal = document.getElementById('tabPrincipal');
     const tabSolicitudes = document.getElementById('tabSolicitudes');
-    const searchInputEl = document.querySelector('.search-input-wrapper input'); // Grab input ref
+    const searchInputEl = document.querySelector('.search-input-wrapper input');
 
     if (tabPrincipal && tabSolicitudes) {
-        tabPrincipal.addEventListener('click', () => {
-            if (tabPrincipal.classList.contains('active')) return; // ignore if already active
+        tabPrincipal.onclick = () => {
+            if (tabPrincipal.classList.contains('active')) return;
             tabPrincipal.classList.add('active');
             tabSolicitudes.classList.remove('active');
-
-            // Enable search
             if (searchInputEl) {
                 searchInputEl.disabled = false;
-                searchInputEl.style.opacity = '1';
+                searchInputEl.parentElement.style.opacity = '1';
                 searchInputEl.placeholder = 'Buscar';
             }
-
             loadConversations();
-        });
-        tabSolicitudes.addEventListener('click', () => {
+        };
+        tabSolicitudes.onclick = () => {
             if (tabSolicitudes.classList.contains('active')) return;
             tabSolicitudes.classList.add('active');
             tabPrincipal.classList.remove('active');
-
-            // Disable search
             if (searchInputEl) {
                 searchInputEl.disabled = true;
-                searchInputEl.style.opacity = '0.5';
-                searchInputEl.placeholder = 'No disponible';
-                searchInputEl.value = ''; // Clear search
+                searchInputEl.parentElement.style.opacity = '0.5';
+                searchInputEl.placeholder = 'Solo Principal';
+                searchInputEl.value = '';
             }
-
             showSolicitudes();
-        });
+        };
     }
 
     // Edit button (Pencil)
@@ -209,6 +204,10 @@ function setupEventListeners() {
 
     // Emoji picker
     setupEmojiPicker();
+
+    // Global helpers for HTML onclicks
+    window.onReplyClick = onReplyClick;
+    window.cancelReply = cancelReply;
 }
 
 let isEditMode = false;
@@ -813,8 +812,11 @@ async function sendMessage() {
     const { data: msgData, error } = await supabase.from('messages').insert({
         conversation_id: currentConversationId,
         sender_id: currentUser.id,
-        content: text
+        content: text,
+        reply_to_id: replyToId // Include reply if exists
     }).select().single();
+
+    if (replyToId) cancelReply(); // Clear reply after sending
 
     if (error) {
         console.error('Error sending message:', error);
@@ -855,50 +857,102 @@ async function sendMessage() {
 // ===== RENDER MESSAGE =====
 function renderMessage(msg) {
     const feedInner = document.getElementById('messagesFeedInner');
+    if (!feedInner) return;
+
     const isMe = msg.sender_id === currentUser.id;
+    const msgDiv = document.createElement('div');
+    msgDiv.className = `message ${isMe ? 'sent' : 'received'}`;
+    msgDiv.id = `msg-${msg.id || Date.now()}`;
+    msgDiv.setAttribute('data-time', msg.created_at);
 
-    const messageDiv = document.createElement('div');
-    messageDiv.className = `message ${isMe ? 'sent' : 'received'}`;
+    // 1. DATE HEADER
+    const lastMsgNode = feedInner.lastElementChild;
+    const lastTime = lastMsgNode ? new Date(lastMsgNode.getAttribute('data-time')) : null;
+    const currTime = new Date(msg.created_at);
 
-    if (msg.content) {
-        const bubbleDiv = document.createElement('div');
-        bubbleDiv.className = 'message-bubble';
-
-        // Linkify URLs
-        const urlRegex = /(https?:\/\/[^\s]+)/g;
-        const htmlContent = msg.content.replace(urlRegex, (url) => {
-            return `<a href="${url}" target="_blank" style="color: inherit; text-decoration: underline;">${url}</a>`;
-        });
-
-        bubbleDiv.innerHTML = htmlContent;
-        messageDiv.appendChild(bubbleDiv);
+    if (!lastTime || (currTime - lastTime > 3600000)) { // 1 hour gap
+        const header = document.createElement('div');
+        header.className = 'date-header';
+        header.textContent = formatMessageDate(msg.created_at);
+        feedInner.appendChild(header);
     }
 
+    // 2. REPLY PREVIEW
+    let replyHtml = '';
+    if (msg.reply_to_id) {
+        replyHtml = `<div class="message-reply-preview" onclick="scrollToMessage('${msg.reply_to_id}')">
+            Respuesta a mensaje anterior
+        </div>`;
+    }
+
+    // 3. ACTIONS
+    const actionsHtml = `
+        <div class="message-actions">
+            <button class="msg-action-btn" onclick="onReplyClick('${msg.id}', '${isMe ? 'Tú' : 'Usuario'}', '${msg.content?.replace(/'/g, "\\'").replace(/"/g, '&quot;')}')">
+                <i class="bi bi-reply-fill"></i>
+            </button>
+            <button class="msg-action-btn" onclick="onReactClick('${msg.id}')">
+                <i class="bi bi-emoji-smile"></i>
+            </button>
+        </div>
+    `;
+
+    // 4. CONTENT
+    let contentHtml = '';
     if (msg.attachment_url && msg.attachment_type === 'image') {
-        const bubbleDiv = document.createElement('div');
-        bubbleDiv.className = 'message-bubble';
-        bubbleDiv.style.padding = '4px';
-        bubbleDiv.style.background = 'transparent';
-
-        const img = document.createElement('img');
-        img.src = msg.attachment_url;
-        img.style.maxHeight = '250px';
-        img.style.maxWidth = '100%';
-        img.style.borderRadius = '12px';
-        img.style.cursor = 'pointer';
-        img.style.display = 'block';
-        img.onclick = () => window.open(msg.attachment_url, '_blank');
-
-        bubbleDiv.appendChild(img);
-        messageDiv.appendChild(bubbleDiv);
+        contentHtml = `<img src="${msg.attachment_url}" style="max-height: 250px; border-radius: 12px; cursor: pointer;" onclick="window.open('${msg.attachment_url}', '_blank')">`;
+    } else {
+        const urlRegex = /(https?:\/\/[^\s]+)/g;
+        contentHtml = (msg.content || '').replace(urlRegex, (url) => `<a href="${url}" target="_blank" style="color: inherit; text-decoration: underline;">${url}</a>`);
     }
 
-    const timeDiv = document.createElement('div');
-    timeDiv.className = 'message-time';
-    timeDiv.textContent = formatTime(msg.created_at);
-    messageDiv.appendChild(timeDiv);
+    msgDiv.innerHTML = `
+        ${replyHtml}
+        <div class="message-container">
+            <div class="message-bubble">${contentHtml}</div>
+            ${actionsHtml}
+        </div>
+        ${isMe && msg.is_read ? '<div class="seen-status">Visto</div>' : ''}
+    `;
 
-    feedInner.appendChild(messageDiv);
+    feedInner.appendChild(msgDiv);
+}
+
+function formatMessageDate(iso) {
+    const d = new Date(iso);
+    const now = new Date();
+    const isToday = d.toDateString() === now.toDateString();
+    if (isToday) return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    return d.toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+}
+
+function scrollToMessage(id) {
+    const el = document.getElementById(`msg-${id}`);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function onReplyClick(id, author, text) {
+    replyToId = id;
+    const container = document.getElementById('replyPreviewContainer');
+    const userEl = document.getElementById('replyPreviewUser');
+    const textEl = document.getElementById('replyPreviewText');
+    if (container) {
+        userEl.textContent = `Respondiendo a ${author}`;
+        textEl.textContent = text;
+        container.style.display = 'flex';
+        document.getElementById('messageInput').focus();
+    }
+}
+
+function cancelReply() {
+    replyToId = null;
+    const container = document.getElementById('replyPreviewContainer');
+    if (container) container.style.display = 'none';
+}
+
+function onReactClick(id) {
+    // Basic interaction for now, could be expanded to a picker
+    alert('Reacciones próximamente (requiere tabla message_reactions)');
 }
 
 // ===== HELPERS =====

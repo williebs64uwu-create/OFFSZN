@@ -104,9 +104,16 @@ window.FavoritesManager = (function () {
 
     // 2. Toggle Like (Throttled)
     async function toggleLike(targetId, buttonElement = null, targetOwnerId = null) {
-        const token = getAccessToken();
+        const token = window.getAccessToken ? window.getAccessToken() : null;
         if (!token) {
-            window.location.href = '/pages/login.html';
+            if (window.showGuestModal) {
+                window.showGuestModal(
+                    "¡Guarda tus favoritos!",
+                    "Crea una cuenta para guardar este beat en tu colección y acceder a él desde cualquier dispositivo."
+                );
+            } else {
+                window.location.href = '/pages/login.html';
+            }
             return;
         }
 

@@ -250,6 +250,8 @@ export const capturePayPalOrder = async (req, res) => {
                 return acc + (capture ? parseFloat(capture.amount.value) : 0);
             }, 0);
 
+            const payerEmail = response.result.payer?.email_address;
+
             const { data: order, error: orderError } = await supabase
                 .from('orders')
                 .insert({
@@ -257,7 +259,8 @@ export const capturePayPalOrder = async (req, res) => {
                     transaction_id: orderID,
                     status: 'completed',
                     total_price: totalPaid,
-                    amount: totalPaid
+                    amount: totalPaid,
+                    payer_email: payerEmail // Save this for guest flow linking
                 })
                 .select()
                 .single();
@@ -557,6 +560,61 @@ export const getSecureDownloadUrl = async (req, res) => {
     } catch (err) {
         console.error('[SecureDownload] Internal Error:', err);
         res.status(500).json({ error: 'Error interno al procesar la descarga' });
+    }
+};
+
+/**
+ * Permite vincular una orden de invitado a un usuario recién registrado.
+ * Solo funciona si la orden no tiene user_id y el email coincide.
+ */
+export const linkGuestOrder = async (req, res) => {
+    try {
+        const { orderId } = req.body;
+        const userId = req.user.userId;
+        const userEmail = req.user.email;
+
+        console.log(`[LinkOrder] Request: order=${orderId}, user=${userId}, email=${userEmail}`);
+
+        if (!orderId) {
+            return res.status(400).json({ error: 'Falta orderId' });
+        }
+
+        // 1. Buscar la orden
+        const { data: order, error: fetchError } = await supabase
+            .from('orders')
+            .select('*')
+            .eq('id', orderId)
+            .single();
+
+        if (fetchError || !order) {
+            return res.status(404).json({ error: 'Orden no encontrada' });
+        }
+
+        // 2. Validaciones de seguridad
+        if (order.user_id) {
+            return res.status(400).json({ error: 'Esta orden ya está vinculada a un usuario' });
+        }
+
+        // 3. Vincular
+        const { error: updateError } = await supabase
+            .from('orders')
+            .update({ user_id: userId })
+            .eq('id', orderId);
+
+        if (updateError) throw updateError;
+
+        // 4. Vincular Transacciones también
+        await supabase
+            .from('transactions')
+            .update({ user_id: userId })
+            .eq('related_order', orderId);
+
+        console.log(`[LinkOrder] SUCCESS: Order ${orderId} linked to ${userId}`);
+        res.status(200).json({ message: 'Orden vinculada correctamente' });
+
+    } catch (err) {
+        console.error('[LinkOrder] Error:', err);
+        res.status(500).json({ error: 'Error interno al vincular la orden' });
     }
 };
 

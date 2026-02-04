@@ -93,6 +93,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
           console.log("Registro exitoso, sesión iniciada.");
 
+          // --- GUEST ORDER LINKING ---
+          const pendingOrderId = sessionStorage.getItem('pending_order_link');
+          if (pendingOrderId && data.session.access_token) {
+            console.log("Linking pending guest order:", pendingOrderId);
+            await linkPendingOrder(pendingOrderId, data.session.access_token);
+            sessionStorage.removeItem('pending_order_link');
+          }
+
           if (redirectParam === 'carrito') {
             window.location.href = '/carrito.html';
           } else {
@@ -466,6 +474,31 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
   };
+
+  // ============================================
+  // 🆕 LINK PENDING GUEST ORDER
+  // ============================================
+  async function linkPendingOrder(orderId, token) {
+    try {
+      const response = await fetch(`${baseURL}/api/orders/paypal/link`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ orderId })
+      });
+
+      const result = await response.json();
+      if (!response.ok) {
+        console.error("Error linking order:", result.error);
+      } else {
+        console.log("Order linked successfully:", result.message);
+      }
+    } catch (err) {
+      console.error("Network error linking order:", err);
+    }
+  }
 
   // ============================================
   // HELPER: Mostrar mensajes

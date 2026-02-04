@@ -179,7 +179,7 @@ function renderHeader(user) {
             msgBtn.style.display = 'inline-block'; // Reveal
             msgBtn.innerHTML = '<i class="bi bi-chat-dots-fill" style="margin-right:6px;"></i> Mensaje';
             msgBtn.onclick = () => {
-                window.location.href = '/mensajes';
+                window.location.href = `/mensajes.html?user=${user.nickname}`;
             };
         }
     }
@@ -260,8 +260,18 @@ function renderHeader(user) {
         }
 
         followBtn.onclick = async () => {
-            const token = getAccessToken();
-            if (!token) { window.location.href = '/login.html'; return; }
+            const token = window.getAccessToken ? window.getAccessToken() : null;
+            if (!token) {
+                if (window.showGuestModal) {
+                    window.showGuestModal(
+                        "¡Sigue a este productor!",
+                        "Crea una cuenta para seguir a tus artistas favoritos, recibir notificaciones de nuevos lanzamientos y más."
+                    );
+                } else {
+                    window.location.href = '/pages/login.html';
+                }
+                return;
+            }
 
             const isFollowing = followBtn.classList.contains('following-state');
             const method = isFollowing ? 'DELETE' : 'POST';

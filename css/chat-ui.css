@@ -1,14 +1,16 @@
 /* Chat System Styles for OFFSZN */
 :root {
     --chat-bg: #000000;
-    --chat-sidebar-bg: #0a0a0a;
-    --chat-border: #1f1f1f;
-    --chat-hover: #141414;
-    --chat-accent: #8b5cf6;
-    --chat-text: #ececec;
-    --chat-subtext: #888888;
-    --chat-bubble-sent: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%);
-    --chat-bubble-received: #1e1e1e;
+    --chat-sidebar-bg: #000000;
+    --chat-border: #262626;
+    --chat-hover: #121212;
+    --chat-accent: #7c3aed;
+    --chat-text: #ffffff;
+    --chat-subtext: #8e8e8e;
+    --chat-bubble-sent: #373737;
+    /* Instagram sent bubble is dark grey on black */
+    --chat-bubble-received: #262626;
+    --chat-bubble-sent-text: #ffffff;
 }
 
 .chat-wrapper {
@@ -92,22 +94,25 @@
 
 .search-input-wrapper {
     position: relative;
-    background: #1a1a1a;
-    border-radius: 8px;
-    padding: 8px 12px;
+    background: #262626;
+    border-radius: 10px;
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
 }
 
 .search-input-wrapper i {
-    color: #666;
-    margin-right: 8px;
+    color: #8e8e8e;
+    margin-right: 10px;
+    font-size: 0.9rem;
 }
 
 .search-input-wrapper input {
     background: transparent;
     border: none;
     color: #fff;
-    font-size: 0.9rem;
-    width: 85%;
+    font-size: 0.95rem;
+    width: 100%;
     outline: none;
 }
 
@@ -439,14 +444,14 @@
 
 .message.sent .message-bubble {
     background: var(--chat-bubble-sent);
-    color: #fff;
-    border-bottom-right-radius: 4px;
+    color: var(--chat-bubble-sent-text);
+    border-radius: 18px;
 }
 
 .message.received .message-bubble {
     background: var(--chat-bubble-received);
     color: #fff;
-    border-bottom-left-radius: 4px;
+    border-radius: 18px;
 }
 
 .message-time {
@@ -603,4 +608,128 @@
 .delete-chat-btn:hover {
     background: #ef4444;
     color: #fff;
+}
+
+/* MESSAGE ACTIONS & REACTIONS */
+.msg-action-btn {
+    background: none;
+    border: none;
+    color: #8e8e8e;
+    font-size: .9rem;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background .2s, color .2s;
+}
+
+.msg-action-btn:hover {
+    background: #262626;
+    color: #fff;
+}
+
+.message-reactions {
+    display: flex;
+    gap: 4px;
+    margin-top: -8px;
+    padding: 0 4px;
+    z-index: 2;
+}
+
+.reaction-badge {
+    background: #262626;
+    border: 1px solid #333;
+    border-radius: 12px;
+    padding: 2px 6px;
+    font-size: .75rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+}
+
+/* REPLY SYSTEM */
+.reply-preview-container {
+    background: #121212;
+    border-top: 1px solid var(--chat-border);
+    padding: 10px 20px;
+    display: none;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.reply-preview-content {
+    border-left: 2px solid var(--chat-accent);
+    padding-left: 12px;
+    overflow: hidden;
+}
+
+.reply-preview-user {
+    font-size: .75rem;
+    font-weight: 600;
+    color: var(--chat-accent);
+    margin-bottom: 2px;
+}
+
+.reply-preview-text {
+    font-size: .8rem;
+    color: #8e8e8e;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.message-reply-preview {
+    font-size: .8rem;
+    color: #8e8e8e;
+    padding: 6px 12px;
+    background: rgba(255, 255, 255, .05);
+    border-radius: 12px;
+    margin-bottom: 4px;
+    border-left: 2px solid var(--chat-accent);
+    cursor: pointer;
+    max-width: 100%;
+}
+
+/* DATE & STATUS */
+.date-header {
+    text-align: center;
+    margin: 20px 0;
+    font-size: .75rem;
+    color: #8e8e8e;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+}
+
+.seen-status {
+    font-size: .7rem;
+    color: #8e8e8e;
+    margin-top: 4px;
+    align-self: flex-end;
+}
+
+/* MESSAGE LAYOUT */
+.message-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+}
+
+.message.sent .message-container {
+    flex-direction: row-reverse;
+}
+
+.message-actions {
+    display: flex;
+    gap: 4px;
+    opacity: 0;
+    transition: opacity .2s;
+}
+
+.message:hover .message-actions {
+    opacity: 1;
 }

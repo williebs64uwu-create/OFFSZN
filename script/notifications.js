@@ -463,7 +463,7 @@
         if (type === 'new_follower') {
             // "comenzó a seguirte" => Perfil
             if (extraId && extraId !== 'undefined') {
-                window.location.href = `/usuarios.html?id=${extraId}`;
+                window.location.href = `/perfil-publico.html?id=${extraId}`;
             } else {
                 console.warn("No follower ID found");
             }
@@ -524,7 +524,7 @@
             window.location.href = '/cuenta/colaboraciones.html?tab=mis-invitaciones';
         } else if (type === 'new_follower') {
             if (extraId) {
-                window.location.href = `/usuarios.html?id=${extraId}`;
+                window.location.href = `/perfil-publico.html?id=${extraId}`;
             } else {
                 window.location.reload();
             }
@@ -556,7 +556,7 @@
             event.stopPropagation(); // Stop bubbling to parent notification-item
         }
         if (id && id !== 'undefined' && id !== 'null') {
-            window.location.href = `/usuarios.html?id=${id}`;
+            window.location.href = `/perfil-publico.html?id=${id}`;
         } else {
             console.warn('Cannot open profile: Invalid ID', id);
         }

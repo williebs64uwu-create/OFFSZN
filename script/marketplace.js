@@ -230,12 +230,8 @@ document.addEventListener('DOMContentLoaded', () => {
     async function addToCart(productId, button) {
         const token = localStorage.getItem('authToken');
 
-        // --- AUTH WALL ---
-        if (!token) {
-            alert('Debes crear una cuenta para comprar o añadir al carrito.');
-            window.location.href = '/pages/register.html';
-            return;
-        }
+        // --- AUTH WALL REMOVED ---
+        // Guests can now add items to cart. CartManager handles guest state.
 
         // Evitar duplicados
         if (cart.find(item => item.id === productId)) {
@@ -371,12 +367,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const token = localStorage.getItem('authToken');
         const checkoutButton = document.getElementById('btn-checkout');
 
-        if (!token) {
-            if (window.toast) window.toast.error('Debes iniciar sesión.');
-            else alert('Debes iniciar sesión.');
-            window.location.href = '/pages/login';
-            return;
-        }
+        // --- AUTH WALL REMOVED ---
+        // CheckoutManager handles guest sessions by passing cartItems to backend.
 
         if (cart.length === 0) return;
 

@@ -359,23 +359,27 @@
     </div>
 
     <script>
+        window.currentOrderData = null; // Global storage
+
         async function initSuccessPage() {
             const params = new URLSearchParams(window.location.search);
             const orderId = params.get('order_id');
 
             // 1. Check Auth Status
             const { data: { session } } = await supabaseClient.auth.getSession();
-            renderPortal(session);
 
             if (orderId) {
-                fetchOrderDetails(orderId);
+                await fetchOrderDetails(orderId);
             } else {
                 renderDefaultOrderState();
             }
+
+            renderPortal(session);
         }
 
         function renderPortal(session) {
             const container = document.getElementById('portal-content');
+            const guestEmail = window.currentOrderData?.payer_email || '';
 
             if (session) {
                 // LOGGED IN
@@ -393,16 +397,28 @@
                 container.innerHTML = `
                     <div class="sign-in-box">
                         <p style="font-size: 0.85rem; color: #bbb; margin-bottom: 20px;">
-                            Ingresa tu correo abajo para activar tu cuenta y acceder a tus descargas permanentes. Te enviaremos un enlace de acceso seguro.
+                            ¡Compra completada como invitado! Activa tu cuenta ahora para guardar este pedido en tu librería permanentemente.
                         </p>
                         <div class="input-group">
-                            <label>Tu Correo Electrónico</label>
-                            <input type="email" id="portal-email" placeholder="ejemplo@correo.com">
+                            <label>Correo de Compra</label>
+                            <input type="email" id="portal-email" placeholder="ejemplo@correo.com" value="${guestEmail}">
                         </div>
-                        <button class="btn-primary" onclick="requestAccess()">Activar Cuenta</button>
+                        <button class="btn-primary" onclick="redirectToRegister()">Activar Cuenta y Guardar Pedido</button>
                     </div>
                 `;
             }
+        }
+
+        function redirectToRegister() {
+            const email = document.getElementById('portal-email').value;
+            const orderId = new URLSearchParams(window.location.search).get('order_id');
+
+            if (!email) {
+                alert("Por favor ingresa el correo que usaste para la compra.");
+                return;
+            }
+
+            window.location.href = `/pages/register.html?email=${encodeURIComponent(email)}&order_id=${orderId}`;
         }
 
         async function fetchOrderDetails(id) {
@@ -418,6 +434,7 @@
                     .single();
 
                 if (orderErr) throw orderErr;
+                window.currentOrderData = order;
 
                 // --- SECURITY CHECK ---
                 // If order belongs to a user, verify it matches current session
