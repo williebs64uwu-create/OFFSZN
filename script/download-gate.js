@@ -38,20 +38,28 @@ window.openDownloadGateModal = function (url, producerName, productId) {
         if (isFree) {
             // Guest is allowed to download free items!
             backdrop.innerHTML = `
-                <div class="share-modal-content">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                         <h3 style="color:#fff; margin:0;">Descarga Gratuita como invitado</h3>
-                         <button onclick="closeDownloadGateModal()" style="background:none; border:none; color:#666; font-size:1.5rem; cursor:pointer;"><i class="bi bi-x"></i></button>
+                <div class="share-modal-content" style="background: rgba(10, 10, 10, 0.8) !important; backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 28px; padding: 35px; width: 380px;">
+                    <button onclick="closeDownloadGateModal()" style="position: absolute; top: 15px; right: 15px; background: rgba(255,255,255,0.05); border: none; color: #fff; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s;"><i class="bi bi-x" style="font-size: 1.4rem;"></i></button>
+                    
+                    <div style="text-align: center; margin-bottom: 25px;">
+                        <div style="width: 60px; height: 60px; background: rgba(139, 92, 246, 0.1); color: #8b5cf6; border-radius: 18px; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px; font-size: 1.8rem;">
+                            <i class="bi bi-cloud-download"></i>
+                        </div>
+                        <h3 style="color:#fff; margin:0 0 8px; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.4rem; font-weight: 700; letter-spacing: -0.5px;">Descarga para invitados</h3>
+                        <p style="color:#888; font-size:0.9rem; line-height:1.5; margin: 0; font-weight: 400;">
+                            Crea una cuenta luego para guardar este item permanentemente en tu librería.
+                        </p>
                     </div>
-                    <p style="color:#888; font-size:0.85rem; margin-bottom:20px; line-height:1.5;">
-                        (Crea una cuenta luego para guardarlo siempre en tu librería personal).
-                    </p>
-                    <button id="btn-gate-action" class="btn-glass-primary" style="width:100%; border-radius:30px; padding:12px; margin-top:10px;">
-                        <i class="bi bi-download"></i> DESCARGAR AHORA
-                    </button>
-                    <button id="btn-gate-login" class="btn-minimal-link" style="width:100%; justify-content:center; margin-top:15px; color:#8b5cf6;">
-                        <i class="bi bi-person-plus"></i> Crear cuenta y guardar
-                    </button>
+
+                    <div style="display: flex; flex-direction: column; gap: 12px;">
+                        <button id="btn-gate-action" class="btn-glass-primary" style="width:100% !important; border-radius:14px; padding:16px; font-weight: 700; font-size: 0.95rem; background: #fff !important; color: #000 !important; border: none !important; display: flex; align-items: center; justify-content: center; gap: 10px; transition: all 0.2s;">
+                            <i class="bi bi-download" style="font-size: 1.1rem;"></i> DESCARGAR AHORA
+                        </button>
+                        
+                        <button id="btn-gate-login" style="width:100%; height: 50px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; color: #aaa; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.06)'; this.style.color='#fff';" onmouseout="this.style.background='rgba(255,255,255,0.03)'; this.style.color='#aaa';">
+                            <i class="bi bi-person-plus-fill" style="margin-right: 6px; color: #8b5cf6;"></i> Registrarse y guardar
+                        </button>
+                    </div>
                 </div>
             `;
 

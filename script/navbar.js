@@ -80,7 +80,30 @@ function closeAllUI(exceptSearch = false) {
  * GLOBAL GUEST AUTH MODAL
  */
 window.showGuestModal = function (title = "Inicia Sesión", text = "Para realizar esta acción, necesitas una cuenta en OFFSZN.") {
-    const modal = getEl('globalGuestModal');
+    let modal = getEl('globalGuestModal');
+
+    // --- SELF-HEALING: Inject Modal if missing ---
+    if (!modal) {
+        console.warn("Navbar: globalGuestModal missing, injecting...");
+        const modalHtml = `
+            <div class="guest-auth-modal" id="globalGuestModal" onclick="if(event.target === this) closeGuestModal()">
+                <div class="guest-auth-card">
+                    <span class="guest-modal-close" onclick="closeGuestModal()"><i class="bi bi-x"></i></span>
+                    <div class="guest-auth-title" id="guestModalTitle"></div>
+                    <div class="guest-auth-text" id="guestModalText"></div>
+                    <div class="guest-auth-btns">
+                        <a href="/pages/login.html" class="guest-btn-primary">
+                            <i class="bi bi-person-plus-fill"></i> INICIAR SESIÓN / REGISTRARSE
+                        </a>
+                        <button class="guest-btn-secondary" onclick="closeGuestModal()">Quizás luego</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        modal = getEl('globalGuestModal');
+    }
+
     const titleEl = getEl('guestModalTitle');
     const textEl = getEl('guestModalText');
 
@@ -798,6 +821,8 @@ async function updateAuthUI(session) {
         if (promoBanner) promoBanner.style.display = 'flex';
 
         // Clear cache on logout/no-session
+        window.currentUserId = null;
+        window.currentUserData = null;
         localStorage.removeItem('offszn_cached_nickname');
         localStorage.removeItem('offszn_cached_avatar');
     }

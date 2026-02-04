@@ -506,25 +506,17 @@ window.toggleLikeGlobal = function (btn, productId, producerId) {
 }
 
 // Global functions for interactions (attached to window for onclick access)
+// Global functions for interactions (attached to window for onclick access)
 window.toggleLike = function (btn, productId) {
-    const icon = btn.querySelector('i');
-    const valSpan = btn.querySelector('.stat-value');
-    let val = parseInt(valSpan.innerText);
-
-    // Animation Effect
-    icon.classList.add('anim-bounce');
-    setTimeout(() => icon.classList.remove('anim-bounce'), 450);
-
-    if (btn.classList.contains('liked')) {
-        btn.classList.remove('liked');
-        icon.classList.remove('bi-heart-fill');
-        icon.classList.add('bi-heart');
-        valSpan.innerText = val - 1;
+    if (window.toggleLikeGlobal) {
+        const prodId = productId || (window.currentProductData ? window.currentProductData.id : null);
+        const ownerId = window.currentProductData ? window.currentProductData.producer_id : null;
+        window.toggleLikeGlobal(btn, prodId, ownerId);
     } else {
-        btn.classList.add('liked');
-        icon.classList.remove('bi-heart');
-        icon.classList.add('bi-heart-fill'); // Filled heart
-        valSpan.innerText = val + 1;
+        // Fallback for safety (though toggleLikeGlobal should exist)
+        if (window.FavoritesManager) {
+            window.FavoritesManager.toggleLike(productId, btn);
+        }
     }
 }
 

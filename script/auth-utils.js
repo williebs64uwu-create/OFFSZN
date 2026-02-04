@@ -37,13 +37,15 @@ window.AuthUtils = {
                 if (!payloadStr) return true; // Not a JWT? Let it through for standard validation
 
                 const payload = JSON.parse(atob(payloadStr));
-                if (payload && payload.role === 'anon') {
-                    console.warn("🛡️ AuthUtils: Blocking 'anon' role token from Authorization header.");
-                    return false;
-                }
+                if (payload && payload.role === 'anon') return false;
+
                 // --- EXPIRY CHECK ---
-                if (payload && payload.exp && payload.exp < Date.now() / 1000) {
-                    console.warn("🛡️ AuthUtils: Token expired. Clearing local state.");
+                if (payload && payload.exp && payload.exp < (Date.now() / 1000)) {
+                    // Silent invalidation - don't spam console
+                    if (localStorage.getItem('authToken') === t) {
+                        localStorage.removeItem('authToken');
+                        console.log("🛡️ AuthUtils: Expired token cleared from LocalStorage.");
+                    }
                     return false;
                 }
             } catch (e) {
