@@ -416,33 +416,9 @@ window.AvatarManager = {
 
             if (updateError) throw updateError;
 
-            // 4. SUCCESS
-            // Update local state immediately
-            currentProfileData.avatar_url = publicUrl;
-
-            // Visual Update
-            const formAvatar = document.getElementById('formAvatar');
-            const sidebarAvatar = document.getElementById('sidebarAvatar');
-            const navAvatar = document.getElementById('user-avatar-display');
-
-            const imgTag = `<img src="${publicUrl}" alt="Avatar">`;
-            formAvatar.innerHTML = imgTag;
-            sidebarAvatar.innerHTML = imgTag;
-            sidebarAvatar.classList.add('has-image');
-
-            // Should also update Navbar avatar if possible (DIRECT DOM UPDATE)
-            if (navAvatar) {
-                navAvatar.innerHTML = imgTag;
-                navAvatar.classList.remove('user-avatar-placeholder');
-            }
-
-            // Navbar dropdown large avatar
-            const navDropAvatar = document.querySelector('.user-dropdown-avatar-lg');
-            if (navDropAvatar) {
-                navDropAvatar.innerHTML = imgTag;
-            }
-
-            alert("Imagen de perfil actualizada.");
+            // 4. SUCCESS - RELOAD TO FIX GLITCHES & CACHE
+            alert("Imagen de perfil actualizada. Recargando...");
+            window.location.reload();
 
         } catch (err) {
             console.error(err);

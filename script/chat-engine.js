@@ -778,8 +778,7 @@ async function openChat(convId, name, avatar, userId) {
             parent:messages!reply_to_id(
                 content, 
                 sender_id, 
-                attachment_type,
-                sender:users(nickname)
+                attachment_type
             )
         `)
         .eq('conversation_id', convId)
@@ -1379,8 +1378,7 @@ async function fetchSingleMessage(id) {
             parent:messages!reply_to_id(
                 content, 
                 sender_id, 
-                attachment_type,
-                sender:users(nickname)
+                attachment_type
             )
         `)
         .eq('id', id)
