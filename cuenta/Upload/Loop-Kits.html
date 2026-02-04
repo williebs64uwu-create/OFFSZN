@@ -3891,6 +3891,7 @@
                     .single();
 
                 if (!error && data) {
+                    if (data.nickname) window.currentUserNickname = data.nickname;
                     const avatar = document.getElementById('mainUserAvatar');
                     if (avatar) {
                         avatar.src = data.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(data.nickname || 'User')}&background=333&color=fff`;
@@ -5376,19 +5377,24 @@
             }
 
             document.getElementById('previewCardTitle').innerText = document.getElementById('titleInput').value || 'Sin tÃ­tulo';
-            // ðŸ”¥ NUEVO: Mostrar nombre del productor
+            // 🔥 FIXED: Use global variable or fetch if missing
             const producerNameEl = document.getElementById('previewCardProducer');
             if (producerNameEl) {
-                supabaseClient
-                    .from('users')
-                    .select('nickname')
-                    .eq('id', userId)
-                    .single()
-                    .then(({ data }) => {
-                        if (data && data.nickname) {
-                            producerNameEl.innerText = `por ${data.nickname}`;
-                        }
-                    });
+                if (window.currentUserNickname) {
+                    producerNameEl.innerText = `por ${window.currentUserNickname}`;
+                } else {
+                    supabaseClient
+                        .from('users')
+                        .select('nickname')
+                        .eq('id', userId)
+                        .single()
+                        .then(({ data }) => {
+                            if (data && data.nickname) {
+                                window.currentUserNickname = data.nickname;
+                                producerNameEl.innerText = `por ${data.nickname}`;
+                            }
+                        });
+                }
             }
             document.getElementById('previewCardTags').innerHTML = tags.map(tag => `<div class="card-tag">#${tag}</div>`).join('');
 
@@ -5549,8 +5555,9 @@
         <div class="verification-item-value" style="color: #ddd;">${visibilityLabel}</div>
     </div>
 `;
-            // ðŸ”¥ COLABORADORES: Siempre mostrar propietario
+            // 🔥 COLABORADORES: Siempre mostrar propietario
             const main = 100 - collaborators.reduce((sum, c) => sum + c.percent, 0);
+            const producerName = window.currentUserNickname || 'Cargando...';
             let collabHTML = `
         <div class="verification-item">
             <div class="verification-item-icon">
@@ -5559,7 +5566,7 @@
                     <circle cx="12" cy="7" r="4"></circle>
                 </svg>
             </div>
-            <div class="verification-item-text"><strong>TÃº (Propietario)</strong></div>
+            <div class="verification-item-text"><strong>${producerName}</strong></div>
             <div class="verification-item-value" style="color: #00ff88;">${main}%</div>
         </div>
     `;

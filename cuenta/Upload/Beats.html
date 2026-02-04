@@ -6049,16 +6049,23 @@
             // ðŸ”¥ NUEVO: Mostrar nombre del productor
             const producerNameEl = document.getElementById('previewCardProducer');
             if (producerNameEl) {
-                supabaseClient
-                    .from('users')
-                    .select('nickname')
-                    .eq('id', userId)
-                    .single()
-                    .then(({ data }) => {
-                        if (data && data.nickname) {
-                            producerNameEl.innerText = `por ${data.nickname}`;
-                        }
-                    });
+                // 🔥 FIX: Use the variable already loaded in loadUserProfile()
+                if (window.currentUserNickname) {
+                    producerNameEl.innerText = `por ${window.currentUserNickname}`;
+                } else {
+                    // Fallback to fetch if not loaded yet (safety)
+                    supabaseClient
+                        .from('users')
+                        .select('nickname')
+                        .eq('id', userId)
+                        .single()
+                        .then(({ data }) => {
+                            if (data && data.nickname) {
+                                window.currentUserNickname = data.nickname;
+                                producerNameEl.innerText = `por ${data.nickname}`;
+                            }
+                        });
+                }
             }
             document.getElementById('previewCardTags').innerHTML = tags.map(tag => `<div class="card-tag">#${tag}</div>`).join('');
 
@@ -6253,7 +6260,7 @@
 `;
             // ðŸ”¥ COLABORADORES: Siempre mostrar propietario
             const main = 100 - collaborators.reduce((sum, c) => sum + c.percent, 0);
-            const producerName = window.userNickname || 'Willie Inspired';
+            const producerName = window.currentUserNickname || 'Cargando...';
             let collabHTML = `
         <div class="verification-item">
             <div class="verification-item-icon">
