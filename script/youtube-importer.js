@@ -93,8 +93,18 @@ async function listUserVideos(pageToken = '') {
     showImporterModal();
     const listContainer = document.getElementById('yt-video-list');
 
+    // Remove "Load More" button if it exists to re-add it at the end
+    const oldLoadMore = document.getElementById('yt-load-more');
+    if (oldLoadMore) oldLoadMore.remove();
+
     if (!pageToken) {
-        listContainer.innerHTML = '<div class="yt-loading">Cargando tus videos...</div>';
+        // Initial Load: Show Skeletons
+        listContainer.innerHTML = '';
+        renderSkeleton(listContainer, 8); // Show 8 skeletons
+    } else {
+        // Appending: Show Skeletons at the end? Or just loading spinner?
+        // Let's render skeletons at the end
+        renderSkeleton(listContainer, 4);
     }
 
     try {
@@ -106,14 +116,12 @@ async function listUserVideos(pageToken = '') {
             "pageToken": pageToken
         });
 
+        // Clear skeletons (identified by class)
+        const skeletons = listContainer.querySelectorAll('.skeleton-card');
+        skeletons.forEach(s => s.remove());
+
         const videos = response.result.items;
         nextPageToken = response.result.nextPageToken || '';
-
-        if (!pageToken) listContainer.innerHTML = '';
-
-        // Remove "Load More" button if it exists to re-add it at the end
-        const oldLoadMore = document.getElementById('yt-load-more');
-        if (oldLoadMore) oldLoadMore.remove();
 
         if (videos && videos.length > 0) {
             videos.forEach(video => {
@@ -128,13 +136,28 @@ async function listUserVideos(pageToken = '') {
                 loadMoreBtn.textContent = 'Cargar más';
                 loadMoreBtn.onclick = () => listUserVideos(nextPageToken);
                 listContainer.appendChild(loadMoreBtn);
+
+                // Optional: Auto-scroll to show new items if appended? 
+                // User said "activates scroll down", implying the list gets longer.
             }
         } else {
-            listContainer.innerHTML = '<div class="yt-empty">No se encontraron videos en tu canal.</div>';
+            if (!pageToken) listContainer.innerHTML = '<div class="yt-empty">No se encontraron videos en tu canal.</div>';
         }
     } catch (err) {
         console.error("YouTube API Error:", err);
         listContainer.innerHTML = '<div class="yt-error">Error al conectar con YouTube. Verifica los permisos.</div>';
+    }
+}
+
+function renderSkeleton(container, count) {
+    for (let i = 0; i < count; i++) {
+        const div = document.createElement('div');
+        div.className = 'skeleton-card';
+        div.innerHTML = `
+            <div class="skeleton-img"></div>
+            <div class="skeleton-text"></div>
+        `;
+        container.appendChild(div);
     }
 }
 
@@ -383,9 +406,12 @@ function redirectToUpload() {
 let cropImage, cropBox, cropContainer;
 let imageScale = 1, imageX = 0, imageY = 0;
 let isDragging = false, dragStartX = 0, dragStartY = 0;
-let CROP_SIZE = 300;
 let baseScale = 1;
 let currentCropBlob = null; // Stores the final cropped image
+let activeCropMode = 'square'; // 'square' (Thumbnail) or 'wide' (Video BG)
+
+let selectedAudioFile = null;
+let selectedImageFile = null;
 
 document.addEventListener('DOMContentLoaded', () => {
     cropImage = document.getElementById('cropImage');
@@ -403,6 +429,54 @@ document.addEventListener('DOMContentLoaded', () => {
     if (saveBtn) saveBtn.onclick = saveCrop;
 });
 
+// --- NEW UPLOAD FLOW FUNCTIONS ---
+
+function showUploadForm() {
+    document.getElementById('yt-hub-selection').style.display = 'none';
+    document.getElementById('yt-upload-form').style.display = 'block';
+}
+
+function handleAudioSelect(input) {
+    if (input.files && input.files[0]) {
+        selectedAudioFile = input.files[0];
+        const zone = document.getElementById('audio-dropzone');
+        const filename = document.getElementById('audio-filename');
+
+        zone.classList.add('has-file');
+        filename.innerText = selectedAudioFile.name;
+
+        // Auto-fill title if empty
+        const titleInput = document.getElementById('upload-title');
+        if (titleInput && !titleInput.value) {
+            titleInput.value = selectedAudioFile.name.replace(/\.[^/.]+$/, ""); // Remove extension
+        }
+    }
+}
+
+function handleImageSelect(input) {
+    if (input.files && input.files[0]) {
+        selectedImageFile = input.files[0];
+        // Open Crop Modal in WIDE mode
+        openCropModalForUpload(selectedImageFile);
+    }
+}
+
+function openCropModalForUpload(file) {
+    const modal = document.getElementById('cropModal');
+    modal.classList.add('active');
+    activeCropMode = 'square'; // Force Square for Beats (Standard)
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        cropImage.src = e.target.result;
+        imageScale = 1; imageX = 0; imageY = 0;
+        cropImage.onload = () => initializeCrop();
+    };
+    reader.readAsDataURL(file);
+}
+
+// ---------------------------------
+
 function openCropModalForThumb() {
     const rawThumb = document.getElementById('yt-imported-thumb');
     if (!rawThumb || !rawThumb.src) {
@@ -412,9 +486,13 @@ function openCropModalForThumb() {
 
     const modal = document.getElementById('cropModal');
     modal.classList.add('active');
+    activeCropMode = 'square'; // Force 1:1
 
     // Load image into cropper
-    cropImage.src = rawThumb.src;
+    // FIX CORS: Set attribute and append timestamp to avoid cached non-CORS response
+    cropImage.crossOrigin = 'Anonymous';
+    cropImage.src = rawThumb.src + (rawThumb.src.includes('?') ? '&' : '?') + 't=' + new Date().getTime();
+
     // Important: Reset state
     imageScale = 1; imageX = 0; imageY = 0;
 
@@ -433,18 +511,22 @@ function initializeCrop() {
     const imgW = cropImage.naturalWidth;
     const imgH = cropImage.naturalHeight;
 
-    // Calculate crop box size (ensure it fits)
-    CROP_SIZE = Math.min(containerW, containerH) * 0.8;
-    const boxX = (containerW - CROP_SIZE) / 2;
-    const boxY = (containerH - CROP_SIZE) / 2;
+    // ALways Square Crop (1:1) for Beat Covers
+    const size = Math.min(containerW, containerH) * 0.8;
+    const boxW = size;
+    const boxH = size;
 
-    cropBox.style.width = CROP_SIZE + 'px';
-    cropBox.style.height = CROP_SIZE + 'px';
+    const boxX = (containerW - boxW) / 2;
+    const boxY = (containerH - boxH) / 2;
+
+    cropBox.style.width = boxW + 'px';
+    cropBox.style.height = boxH + 'px';
     cropBox.style.left = boxX + 'px';
     cropBox.style.top = boxY + 'px';
+    cropBox.style.borderRadius = '0';
 
     // Calculate initial scale to cover the box
-    baseScale = Math.max(CROP_SIZE / imgW, CROP_SIZE / imgH);
+    baseScale = Math.max(boxW / imgW, boxH / imgH);
     imageScale = baseScale;
 
     // Center image
@@ -507,56 +589,119 @@ window.zoomCrop = function (delta) {
 };
 
 async function saveCrop() {
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    canvas.width = 1080;
-    canvas.height = 1080;
+    // 1. GENERATE SQUARE CROP (For Use as Cover Art)
+    const squareCanvas = document.createElement('canvas');
+    const squareCtx = squareCanvas.getContext('2d');
+    squareCanvas.width = 1080;
+    squareCanvas.height = 1080;
 
-    // Calculate source rectangle
-    // We need to map the crop box (relative to container) to the image (relative to image origin)
-    // 1. Box position relative to image
+    // Get Image Data for Crop
     const boxRect = cropBox.getBoundingClientRect();
     const containerRect = cropContainer.getBoundingClientRect();
-
-    // This is tricky without strict constraints, let's try a simpler approach typical for these croppers:
-    // We draw the relevant part of the image into the canvas.
-
-    // Let's rely on the visual correlation:
-    // cropBox top-left relative to container: cropBox.offsetLeft, cropBox.offsetTop
-    // image top-left relative to container: imageX, imageY
-
     const cropLeft = cropBox.offsetLeft;
     const cropTop = cropBox.offsetTop;
-
     const relX = cropLeft - imageX;
     const relY = cropTop - imageY;
-
+    const boxW = parseFloat(cropBox.style.width);
+    const boxH = parseFloat(cropBox.style.height);
     const sourceX = relX / imageScale;
     const sourceY = relY / imageScale;
-    const sourceSize = CROP_SIZE / imageScale;
+    const sourceW = boxW / imageScale;
+    const sourceH = boxH / imageScale;
 
-    // Draw
-    ctx.drawImage(cropImage, sourceX, sourceY, sourceSize, sourceSize, 0, 0, 1080, 1080);
+    // Draw Final Square
+    squareCtx.drawImage(cropImage, sourceX, sourceY, sourceW, sourceH, 0, 0, 1080, 1080);
 
-    // Export Blob
-    currentCropBlob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.9));
+    // Save Square Blob
+    currentCropBlob = await new Promise(resolve => squareCanvas.toBlob(resolve, 'image/jpeg', 0.95));
 
-    // Update Preview
-    const preview = document.getElementById('yt-imported-thumb');
-    preview.src = URL.createObjectURL(currentCropBlob);
+    // Handle UI Updates based on where we came from
+
+    // CASE A: UPLOAD FLOW (Generate TunesToTube Style Video Frame)
+    if (document.getElementById('yt-upload-form').style.display === 'block') {
+        // Update Video Preview Background logic
+
+        // 2. GENERATE 16:9 VIDEO FRAME
+        const videoCanvas = document.createElement('canvas');
+        const vCtx = videoCanvas.getContext('2d');
+        videoCanvas.width = 1920;
+        videoCanvas.height = 1080;
+
+        // A. Draw Blurred Background
+        // We stretch the square image to cover 16:9 and blur it
+        vCtx.filter = 'blur(40px) brightness(40%)';
+        // We draw the square canvas into the video canvas, scaled to cover.
+        // To cover 1920x1080 with 1080x1080 source, we scale width by 1920/1080 = 1.77
+        // Or just stretch it. For abstract background, stretching is fine/common.
+        vCtx.drawImage(squareCanvas, 0, 0, 1920, 1080);
+        vCtx.filter = 'none'; // Reset filter
+
+        // B. Draw Sharp Centered Art
+        // Target size: Let's say 850x850 pixels in the center (approx 80% height)
+        const artSize = 850;
+        const artX = (1920 - artSize) / 2;
+        const artY = (1080 - artSize) / 2;
+
+        // Shadow for depth
+        vCtx.shadowColor = "rgba(0, 0, 0, 0.5)";
+        vCtx.shadowBlur = 50;
+        vCtx.shadowOffsetX = 0;
+        vCtx.shadowOffsetY = 20;
+
+        vCtx.drawImage(squareCanvas, artX, artY, artSize, artSize);
+
+        // Export Video Frame Blob
+        const videoFrameBlob = await new Promise(resolve => videoCanvas.toBlob(resolve, 'image/jpeg', 0.9));
+
+        // Update Preview Image
+        const prevBg = document.getElementById('yt-preview-bg');
+        if (prevBg) {
+            prevBg.src = URL.createObjectURL(videoFrameBlob);
+            prevBg.style.opacity = '1'; // Remove opacity to show full image
+        }
+
+        // Update Dropzone State
+        const zone = document.getElementById('image-dropzone');
+        if (zone) {
+            zone.classList.add('has-file');
+            zone.querySelector('h3').innerText = "Portada Recortada";
+            zone.querySelector('p').innerText = "Listo para generación de video";
+        }
+
+    }
+    // CASE B: IMPORT FLOW (Just Square Thumb)
+    else {
+        const preview = document.getElementById('yt-imported-thumb');
+        if (preview) {
+            preview.src = URL.createObjectURL(currentCropBlob);
+            preview.style.display = 'block';
+        }
+        if (window.showToast) window.showToast('Portada recortada guardada', 'success');
+    }
 
     // Close
     closeCropModal();
-    if (window.showToast) window.showToast('Portada recortada guardada', 'success');
 }
 
+async function processAndUpload() {
+    const title = document.getElementById('upload-title').value;
+    if (!selectedAudioFile || !currentCropBlob) {
+        if (window.showToast) window.showToast('Falta audio o imagen', 'error');
+        return;
+    }
 
+    if (window.showToast) window.showToast('⏳ Generando video (Simulado)...', 'info');
+
+    // SIMULATION
+    setTimeout(() => {
+        if (window.showToast) window.showToast('✅ Video listo para YouTube!', 'success');
+        // Here we would call the YouTube Upload API with the video blob
+    }, 2000);
+}
 
 // ========================================
 // 6. GLOBAL EXPOSURE
 // ========================================
-window.handleImportClick = handleImportClick;
-window.closeImporterModal = closeImporterModal;
 window.handleImportClick = handleImportClick;
 window.closeImporterModal = closeImporterModal;
 window.redirectToUpload = redirectToUpload;
@@ -564,7 +709,11 @@ window.selectVideo = selectVideo;
 window.resetToHub = resetToHub;
 window.openCropModalForThumb = openCropModalForThumb;
 window.closeCropModal = closeCropModal;
-window.zoomCrop = window.zoomCrop; // Expose zoom helper
+window.zoomCrop = window.zoomCrop;
+window.showUploadForm = showUploadForm;
+window.handleAudioSelect = handleAudioSelect;
+window.handleImageSelect = handleImageSelect;
+window.processAndUpload = processAndUpload;
 
 // Auto-load GSI and GAPI
 const gapiScript = document.createElement('script');

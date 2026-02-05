@@ -231,7 +231,7 @@ function renderProductPage(product) {
     let producerHTML = `
         <span class="artist-hover-trigger producer-link-thin" 
               data-artist="${producerDataJSON}"
-              onclick="window.location.href='/perfil-publico.html?id=${product.producer_id}'"
+              onclick="window.location.href='/@' + encodeURIComponent('${producerName}')"
               onmouseenter="window.showArtistCard(event, this)" 
               onmouseleave="window.hideArtistCard(event, this)"
               style="color:#aaa; font-size:1rem; margin-bottom: 20px; display:inline-flex; align-items:center; cursor:pointer;">
@@ -258,7 +258,7 @@ function renderProductPage(product) {
                 return `
                     <span class="artist-hover-trigger collaborator-link-thin" 
                           data-artist="${cDataJSON}"
-                          onclick="window.location.href='/perfil-publico.html?id=${c.user_id}'"
+                          onclick="window.location.href='/@' + encodeURIComponent('${cUser.nickname || 'Unknown'}')"
                           onmouseenter="window.showArtistCard(event, this)" 
                           onmouseleave="window.hideArtistCard(event, this)"
                           style="color:#fff; cursor:pointer;">

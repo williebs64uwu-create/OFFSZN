@@ -144,13 +144,15 @@ app.use((req, res, next) => {
     // 1. Force Redirect: Remove .html from browser address bar
     if (req.path.endsWith('.html')) {
         const cleanPath = req.path.replace(/\.html$/, '');
+        const search = req.originalUrl.split('?')[1];
+        const queryString = search ? '?' + search : '';
 
         // Special case: /index or /folder/index -> / or /folder
         if (cleanPath.endsWith('/index')) {
             const rootPathRedirect = cleanPath.slice(0, -6) || '/';
-            return res.redirect(301, rootPathRedirect);
+            return res.redirect(301, rootPathRedirect + queryString);
         }
-        return res.redirect(301, cleanPath);
+        return res.redirect(301, cleanPath + queryString);
     }
 
     // 2. Extra cleaning: if user typed /something/ (trailing slash), remove it unless it's the root
