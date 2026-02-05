@@ -14,16 +14,42 @@ window.AuthUtils = {
         if (typeof window.supabase !== 'undefined' && window.supabase.createClient && window.SUPABASE_URL && window.SUPABASE_ANON_KEY) {
             window.supabaseClient = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
             console.log("✅ Supabase Client Initialized via AuthUtils");
+
+            // 🔄 SYNC: Listen for Auto-Refresh Events to keep token fresh
+            window.supabaseClient.auth.onAuthStateChange((event, session) => {
+                if (session && session.access_token) {
+                    window.AuthUtils._cachedToken = session.access_token;
+                    // Optional: Update manual storage if used
+                    if (localStorage.getItem('authToken')) {
+                        localStorage.setItem('authToken', session.access_token);
+                    }
+                } else if (event === 'SIGNED_OUT') {
+                    window.AuthUtils._cachedToken = null;
+                }
+            });
+
+            // Try to set initial cache
+            window.supabaseClient.auth.getSession().then(({ data }) => {
+                if (data?.session?.access_token) {
+                    window.AuthUtils._cachedToken = data.session.access_token;
+                }
+            });
+
         } else {
             console.warn("⚠️ AuthUtils: Cannot init Supabase (Missing credentials or Lib)");
         }
     },
 
+    _cachedToken: null,
+
     /**
-     * Retrieves the Supabase Access Token from Cookie (primary) or LocalStorage (fallback).
+     * Retrieves the Supabase Access Token from Memory (fastest), Cookie (primary) or LocalStorage (fallback).
      * @returns {string|null} The access token or null if not found.
      */
     getAccessToken: function () {
+        // 0. Try Memory Cache (Synced with Auto-Refresh)
+        if (this._cachedToken) return this._cachedToken;
+
         const ANON_KEY = window.SUPABASE_ANON_KEY || "";
 
         // Helper to validate token is NOT the anon key AND has a valid role
@@ -40,12 +66,10 @@ window.AuthUtils = {
                 if (payload && payload.role === 'anon') return false;
 
                 // --- EXPIRY CHECK ---
+                // If strictly expired, we prefer NOT to return it to avoid 401s.
+                // However, we don't delete it immediately to allow refresh logic to run.
                 if (payload && payload.exp && payload.exp < (Date.now() / 1000)) {
-                    // Silent invalidation - don't spam console
-                    if (localStorage.getItem('authToken') === t) {
-                        localStorage.removeItem('authToken');
-                        console.log("🛡️ AuthUtils: Expired token cleared from LocalStorage.");
-                    }
+                    console.warn("⚠️ AuthUtils: Token found but expired. Waiting for refresh...");
                     return false;
                 }
             } catch (e) {
@@ -59,12 +83,14 @@ window.AuthUtils = {
         // 1. Try Cookie
         const match = document.cookie.match(/(^| )sb-access-token=([^;]+)/);
         if (match && isValid(match[2])) {
+            this._cachedToken = match[2];
             return match[2];
         }
 
         // 2. Try LocalStorage (Custom 'authToken')
         const lsToken = localStorage.getItem('authToken');
         if (isValid(lsToken)) {
+            this._cachedToken = lsToken;
             return lsToken;
         }
 
@@ -74,7 +100,10 @@ window.AuthUtils = {
             if (key.startsWith('sb-') && key.endsWith('-auth-token')) {
                 try {
                     const session = JSON.parse(localStorage.getItem(key));
-                    if (session && isValid(session.access_token)) return session.access_token;
+                    if (session && isValid(session.access_token)) {
+                        this._cachedToken = session.access_token;
+                        return session.access_token;
+                    }
                 } catch (e) {
                     console.warn("AuthUtils: Failed to parse Supabase LS session", e);
                 }
@@ -103,7 +132,7 @@ window.AuthUtils = {
     getAuthHeaderObj: function () {
         const token = this.getAccessToken();
         if (token) {
-            console.log("🛡️ AuthUtils: Generating header with token:", token.substring(0, 15) + "...");
+            // console.log("🛡️ AuthUtils: Generating header with token:", token.substring(0, 15) + "...");
             return { 'Authorization': `Bearer ${token}` };
         } else {
             console.warn("🛡️ AuthUtils: No token found when requesting headers.");
@@ -118,4 +147,4 @@ window.getAccessToken = window.AuthUtils.getAccessToken.bind(window.AuthUtils);
 // Attempt Init immediately
 window.AuthUtils.initSupabase();
 
-console.log("🛡️ AuthUtils Loaded. Token present:", !!window.getAccessToken());
+console.log("🛡️ AuthUtils Loaded.");
