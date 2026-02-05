@@ -89,21 +89,41 @@ function showForm() {
     document.getElementById('yt-main-form').style.display = 'block';
 }
 
+let isFetching = false; // Global flag to prevent race conditions
+
 async function listUserVideos(pageToken = '') {
+    if (isFetching) return; // Prevent duplicate calls
+    isFetching = true;
+
     showImporterModal();
     const listContainer = document.getElementById('yt-video-list');
 
-    // Remove "Load More" button if it exists to re-add it at the end
-    const oldLoadMore = document.getElementById('yt-load-more');
-    if (oldLoadMore) oldLoadMore.remove();
+    // Infinite Scroll Setup (Singleton)
+    if (!listContainer.hasAttribute('data-scroll-init')) {
+        listContainer.setAttribute('data-scroll-init', 'true');
+        listContainer.addEventListener('scroll', () => {
+            const { scrollTop, scrollHeight, clientHeight } = listContainer;
+            // Load more when user is 100px from bottom and has next token
+            if (scrollTop + clientHeight >= scrollHeight - 100) {
+                if (nextPageToken && !isFetching) {
+                    listUserVideos(nextPageToken);
+                }
+            }
+        });
+    }
 
     if (!pageToken) {
         // Initial Load: Show Skeletons
         listContainer.innerHTML = '';
-        renderSkeleton(listContainer, 8); // Show 8 skeletons
+        renderSkeleton(listContainer, 8);
     } else {
-        // Appending: Show Skeletons at the end? Or just loading spinner?
-        // Let's render skeletons at the end
+        // Appending: Render skeletons at the end
+        // But since we append real cards later, we can just append skeletons now
+        // Give them an ID to remove them easily specific to this batch?
+        // Actually, just append, and when we get results, we remove ALL skeletons.
+        // But if we have mixed content, we only want to remove the new skeletons.
+        // Simplification: Append a specific skeleton container? 
+        // For now, let's just append skeletons.
         renderSkeleton(listContainer, 4);
     }
 
@@ -111,12 +131,12 @@ async function listUserVideos(pageToken = '') {
         const response = await gapi.client.youtube.search.list({
             "part": ["snippet"],
             "forMine": true,
-            "maxResults": 12,
+            "maxResults": 50,
             "type": ["video"],
             "pageToken": pageToken
         });
 
-        // Clear skeletons (identified by class)
+        // Clear skeletons
         const skeletons = listContainer.querySelectorAll('.skeleton-card');
         skeletons.forEach(s => s.remove());
 
@@ -125,37 +145,36 @@ async function listUserVideos(pageToken = '') {
 
         if (videos && videos.length > 0) {
             videos.forEach(video => {
-                const card = createVideoCard(video);
-                listContainer.appendChild(card);
+                if (video && video.snippet) { // Safety Check
+                    const card = createVideoCard(video);
+                    listContainer.appendChild(card);
+                }
             });
-
-            if (nextPageToken) {
-                const loadMoreBtn = document.createElement('button');
-                loadMoreBtn.id = 'yt-load-more';
-                loadMoreBtn.className = 'yt-btn-secondary';
-                loadMoreBtn.textContent = 'Cargar más';
-                loadMoreBtn.onclick = () => listUserVideos(nextPageToken);
-                listContainer.appendChild(loadMoreBtn);
-
-                // Optional: Auto-scroll to show new items if appended? 
-                // User said "activates scroll down", implying the list gets longer.
-            }
+            // No Button - Scroll handles it
         } else {
             if (!pageToken) listContainer.innerHTML = '<div class="yt-empty">No se encontraron videos en tu canal.</div>';
         }
     } catch (err) {
         console.error("YouTube API Error:", err);
-        listContainer.innerHTML = '<div class="yt-error">Error al conectar con YouTube. Verifica los permisos.</div>';
+        // Only show error if list is empty
+        if (listContainer.children.length === 0)
+            listContainer.innerHTML = '<div class="yt-error">Error al conectar con YouTube. Verifica los permisos.</div>';
+    } finally {
+        isFetching = false; // Reset flag properly
     }
 }
 
 function renderSkeleton(container, count) {
     for (let i = 0; i < count; i++) {
         const div = document.createElement('div');
-        div.className = 'skeleton-card';
+        div.className = 'yt-video-card skeleton-card'; // Reuse yt-video-card class for layout
+        div.style.pointerEvents = 'none';
         div.innerHTML = `
-            <div class="skeleton-img"></div>
-            <div class="skeleton-text"></div>
+            <div class="skeleton-img" style="width: 100%; aspect-ratio: 16/9;"></div>
+            <div class="yt-video-info">
+                <div class="skeleton-text" style="width: 80%; height: 14px; margin-bottom: 8px;"></div>
+                <div class="skeleton-text" style="width: 50%; height: 12px;"></div>
+            </div>
         `;
         container.appendChild(div);
     }
@@ -166,10 +185,14 @@ function renderSkeleton(container, count) {
 // ========================================
 
 function createVideoCard(video) {
+    if (!video || !video.snippet) return document.createElement('div'); // Safety fallback
+
     const snippet = video.snippet;
-    const videoId = video.id.videoId;
-    const title = snippet.title;
-    const thumb = snippet.thumbnails.medium.url;
+    const videoId = video.id ? video.id.videoId : '';
+    const title = snippet.title || 'Sin Título';
+    const thumb = snippet.thumbnails?.medium?.url || '';
+    // Format date: "15 oct 2023"
+    const date = new Date(snippet.publishedAt).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' });
 
     const div = document.createElement('div');
     div.className = 'yt-video-card';
@@ -177,6 +200,7 @@ function createVideoCard(video) {
         <img src="${thumb}" alt="${title}">
         <div class="yt-video-info">
             <h4 title="${title}">${title}</h4>
+            <div style="font-size: 0.75rem; color: #888; margin-top: auto;">${date}</div>
         </div>
     `;
     div.onclick = () => selectVideo(videoId, title, snippet.description, snippet.thumbnails);
@@ -185,7 +209,12 @@ function createVideoCard(video) {
 
 function showImporterModal() {
     const modal = document.getElementById('yt-importer-modal');
-    if (modal) modal.style.display = 'flex';
+    if (modal) {
+        modal.style.display = 'flex';
+        // Reset scroll position
+        const list = document.getElementById('yt-video-list');
+        if (list) list.scrollTop = 0;
+    }
 }
 
 function closeImporterModal() {
@@ -209,6 +238,9 @@ async function selectVideo(videoId, title, description, thumbnails) {
     if (thumbnails.maxres) thumbUrl = thumbnails.maxres.url;
     else if (thumbnails.high) thumbUrl = thumbnails.high.url;
     else if (thumbnails.medium) thumbUrl = thumbnails.medium.url;
+
+    // ... rest of selectVideo
+
 
     const thumbImg = document.getElementById('yt-imported-thumb');
     if (thumbImg) {
@@ -351,7 +383,7 @@ function updateDescCount(textarea) {
     const len = textarea.value.length;
     const counter = document.getElementById('desc-count');
     const warning = document.getElementById('desc-warning');
-    const max = 800;
+    const max = 3000;
 
     if (counter) {
         counter.textContent = `${len}/${max}`;
@@ -421,7 +453,18 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initialize cropper events if elements exist
     if (cropContainer) {
         cropContainer.addEventListener('mousedown', startDrag);
+        // Map wheel to zoom safely
         cropContainer.addEventListener('wheel', handleZoom, { passive: false });
+    }
+
+    // Zoom Slider
+    const zoomRange = document.getElementById('zoomRange');
+    if (zoomRange) {
+        zoomRange.addEventListener('input', (e) => {
+            const zoomValue = parseFloat(e.target.value); // 1 to 3
+            // Convert slider 1..3 to actual scale
+            setZoom(zoomValue * baseScale);
+        });
     }
 
     // Save button
@@ -469,7 +512,7 @@ function openCropModalForUpload(file) {
     const reader = new FileReader();
     reader.onload = (e) => {
         cropImage.src = e.target.result;
-        imageScale = 1; imageX = 0; imageY = 0;
+        // Wait for image to load naturally
         cropImage.onload = () => initializeCrop();
     };
     reader.readAsDataURL(file);
@@ -493,9 +536,6 @@ function openCropModalForThumb() {
     cropImage.crossOrigin = 'Anonymous';
     cropImage.src = rawThumb.src + (rawThumb.src.includes('?') ? '&' : '?') + 't=' + new Date().getTime();
 
-    // Important: Reset state
-    imageScale = 1; imageX = 0; imageY = 0;
-
     cropImage.onload = () => {
         initializeCrop();
     };
@@ -505,39 +545,109 @@ function closeCropModal() {
     document.getElementById('cropModal').classList.remove('active');
 }
 
+// CROPPER LOGIC (Improved)
+
+let minScale = 1;
+let maxScale = 3;
+
 function initializeCrop() {
-    const containerW = cropContainer.offsetWidth;
-    const containerH = cropContainer.offsetHeight;
+    cropImage.style.transform = 'none'; // Reset to read natural dims
+
+    const containerW = cropContainer.offsetWidth; // 600
+    const containerH = cropContainer.offsetHeight; // 400
     const imgW = cropImage.naturalWidth;
     const imgH = cropImage.naturalHeight;
 
-    // ALways Square Crop (1:1) for Beat Covers
-    const size = Math.min(containerW, containerH) * 0.8;
-    const boxW = size;
-    const boxH = size;
+    // Fixed Crop Box (Square 300x300 for example, or based on height)
+    // Use 320x320 centered
+    const boxSize = 320;
 
-    const boxX = (containerW - boxW) / 2;
-    const boxY = (containerH - boxH) / 2;
+    // Center Crop Box
+    const boxX = (containerW - boxSize) / 2;
+    const boxY = (containerH - boxSize) / 2;
 
-    cropBox.style.width = boxW + 'px';
-    cropBox.style.height = boxH + 'px';
+    cropBox.style.width = boxSize + 'px';
+    cropBox.style.height = boxSize + 'px';
     cropBox.style.left = boxX + 'px';
     cropBox.style.top = boxY + 'px';
     cropBox.style.borderRadius = '0';
 
-    // Calculate initial scale to cover the box
-    baseScale = Math.max(boxW / imgW, boxH / imgH);
-    imageScale = baseScale;
+    // Min Scale: Image must cover the box area
+    // Scale = BoxDim / ImageDim
+    // We need max of (BoxW/ImgW, BoxH/ImgH) to ensure coverage
+    baseScale = Math.max(boxSize / imgW, boxSize / imgH);
 
-    // Center image
-    imageX = (containerW / 2) - (imgW * imageScale) / 2;
-    imageY = (containerH / 2) - (imgH * imageScale) / 2;
+    // Set Limits
+    minScale = baseScale;
+    maxScale = baseScale * 4; // allow 4x zoom
+
+    // Initial State: Centered at Min Scale
+    imageScale = minScale;
+
+    // imageX so image center aligns with box center
+    // Image Center = (imgW * scale) / 2
+    // Box Center = boxX + boxSize/2 (relative to container)
+    // We want image left edge (imageX) such that center aligns
+
+    // Easier: Center image in CropBox
+    // CropBox Center X = boxX + boxSize/2
+    // Image Center X = imageX + (imgW*scale)/2
+    // eqn: boxX + boxSize/2 = imageX + (imgW*scale)/2
+    // imageX = boxX + boxSize/2 - (imgW*scale)/2
+
+    imageX = (boxX + boxSize / 2) - (imgW * imageScale) / 2;
+    imageY = (boxY + boxSize / 2) - (imgH * imageScale) / 2;
+
+    // Reset Slider
+    const zoomRange = document.getElementById('zoomRange');
+    if (zoomRange) {
+        zoomRange.min = 1;
+        zoomRange.max = 4; // 1x to 4x relative to base
+        zoomRange.step = 0.1;
+        zoomRange.value = 1;
+    }
 
     updateImageTransform();
 }
 
 function updateImageTransform() {
     cropImage.style.transform = `translate(${imageX}px, ${imageY}px) scale(${imageScale})`;
+}
+
+// Set Zoom with Constraints
+function setZoom(newScale) {
+    // 1. Clamp Scale
+    if (newScale < minScale) newScale = minScale;
+    if (newScale > maxScale) newScale = maxScale;
+
+    // 2. Adjust Position to Keep Centered (Zoom towards center of crop box)
+    // Simple approach: When zooming, we keep the center point of the current view fixed? 
+    // Or just re-constrain.
+
+    const oldScale = imageScale;
+    imageScale = newScale;
+
+    // Re-Constrain Position (Keep image covering crop box)
+    constrainImagePosition();
+    updateImageTransform();
+}
+
+function handleZoom(e) {
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? -0.1 : 0.1;
+
+    // Calculate new relative zoom factor for slider
+    // Current Factor = imageScale / baseScale
+    let currentFactor = imageScale / baseScale;
+    let newFactor = currentFactor + delta;
+
+    // Update Slider
+    const zoomRange = document.getElementById('zoomRange');
+    if (zoomRange) {
+        zoomRange.value = newFactor;
+        // Trigger input event to update everything
+        zoomRange.dispatchEvent(new Event('input'));
+    }
 }
 
 function startDrag(e) {
@@ -553,8 +663,33 @@ function onDrag(e) {
     e.preventDefault();
     imageX = e.clientX - dragStartX;
     imageY = e.clientY - dragStartY;
-    // Optional: Add constrain logic here
+
+    constrainImagePosition();
     updateImageTransform();
+}
+
+function constrainImagePosition() {
+    const boxRect = cropBox.getBoundingClientRect();
+    const containerRect = cropContainer.getBoundingClientRect(); // 0,0 relative to itself
+
+    // Crop Box Position relative to container
+    const boxL = parseFloat(cropBox.style.left);
+    const boxT = parseFloat(cropBox.style.top);
+    const boxR = boxL + parseFloat(cropBox.style.width);
+    const boxB = boxT + parseFloat(cropBox.style.height);
+
+    const imgW = cropImage.naturalWidth * imageScale;
+    const imgH = cropImage.naturalHeight * imageScale;
+
+    // Constraints:
+    // Image Left (imageX) must be <= Box Left (boxL) -> otherwise gap on left
+    // Image Right (imageX + imgW) must be >= Box Right (boxR) -> otherwise gap on right
+
+    if (imageX > boxL) imageX = boxL;
+    if (imageX + imgW < boxR) imageX = boxR - imgW;
+
+    if (imageY > boxT) imageY = boxT;
+    if (imageY + imgH < boxB) imageY = boxB - imgH;
 }
 
 function stopDrag() {
@@ -563,30 +698,12 @@ function stopDrag() {
     document.removeEventListener('mouseup', stopDrag);
 }
 
-function handleZoom(e) {
-    e.preventDefault();
-    zoomCrop(e.deltaY > 0 ? -0.1 : 0.1);
-}
-
+// Legacy zoom support (optional, can be removed if specific handlers work)
 window.zoomCrop = function (delta) {
-    if (delta === 0) {
-        // From slider
-        const slider = document.getElementById('zoomRange');
-        if (slider) imageScale = baseScale * parseFloat(slider.value);
-    } else {
-        imageScale += (baseScale * delta);
-    }
-
-    // Min/Max limits
-    if (imageScale < baseScale) imageScale = baseScale;
-    if (imageScale > baseScale * 4) imageScale = baseScale * 4;
-
-    // Sync slider if exists
-    const slider = document.getElementById('zoomRange');
-    if (slider) slider.value = imageScale / baseScale;
-
-    updateImageTransform();
+    // No-op or map to new logic if needed
 };
+
+
 
 async function saveCrop() {
     // 1. GENERATE SQUARE CROP (For Use as Cover Art)

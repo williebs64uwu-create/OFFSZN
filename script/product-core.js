@@ -320,17 +320,30 @@ function renderProductPage(product) {
                 <div id="buying-modules"></div>
 
                 <!-- Description (Accordion) -->
-                <div class="section-headline" onclick="toggleAccordion('desc')" style="cursor:pointer; margin-top:25px;">
+                <div class="section-headline" onclick="toggleAccordion('desc')" style="cursor:pointer; margin-top:15px;">
                     <span>Descripción</span>
                     <i class="bi bi-chevron-down chevron-icon" id="chevron-desc" style="color:#666;"></i>
                 </div>
-                <div id="content-desc" class="terms-accordion-content open" style="color:#888; font-size:1rem; line-height:1.6; white-space: pre-line;">${(() => {
+                <div id="content-desc" class="terms-accordion-content open" style="color:#888; font-size:1rem; line-height:1.6; white-space: pre-line; margin-top: 15px;">${(() => {
             if (!product.description) return 'Sin descripción.';
-            // Preserve single and double line breaks, but limit more than 2 to just 2
-            return product.description
-                .replace(/\r\n/g, '\n')     // Standardize
-                .replace(/\n{3,}/g, '\n\n') // Limit triple+ to double
+
+            const fullDesc = product.description
+                .replace(/\r\n/g, '\n')
+                .replace(/\n{3,}/g, '\n\n')
                 .trim();
+
+            const limit = 800; // Truncate at 800 chars
+
+            if (fullDesc.length <= limit) {
+                return fullDesc;
+            } else {
+                const shortDesc = fullDesc.substring(0, limit);
+                // YouTube Style: "...más" (bold). "Mostrar menos" (bold)
+                return `
+<span id="desc-short">${shortDesc}...<span onclick="window.toggleDesc(event)" style="font-weight:700; cursor:pointer; color:#fff;">más</span></span>
+<span id="desc-full" style="display:none;">${fullDesc}<br><br><span onclick="window.toggleDesc(event)" style="font-weight:700; cursor:pointer; color:#fff;">Mostrar menos</span></span>
+`;
+            }
         })()}
                 </div>
 
@@ -1884,6 +1897,8 @@ window.addToCart = (id, license) => {
             id: licenseId,
             details: licenseDetails
         }
+
+
     };
 
     console.log(`[Cart] Adding ${product.name} - License: ${licenseName} ($${finalPrice})`);
@@ -1897,3 +1912,22 @@ window.addToCart = (id, license) => {
         alert("Error: Carrito no disponible. Recarga la página.");
     }
 };
+
+// GLOBAL: Description Toggle Function
+window.toggleDesc = function (e) {
+    if (e) e.stopPropagation(); // prevent accordion toggle
+    const short = document.getElementById('desc-short');
+    const full = document.getElementById('desc-full');
+
+    if (short && full) {
+        if (short.style.display !== 'none') {
+            // Expand
+            short.style.display = 'none';
+            full.style.display = 'inline';
+        } else {
+            // Collapse
+            short.style.display = 'inline';
+            full.style.display = 'none';
+        }
+    }
+}

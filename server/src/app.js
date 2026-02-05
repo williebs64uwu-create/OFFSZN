@@ -212,12 +212,19 @@ app.get(['/@:username', '/:username'], (req, res, next) => {
     // 1. Reserved Words / Known Routes Exclusion
     const reserved = [
         'api', 'auth', 'dashboard', 'login', 'register', 'admin',
-        'css', 'script', 'images', 'favicon.ico', '404', 'robots.txt'
+        'css', 'script', 'images', 'favicon.ico', '404', 'robots.txt',
+        'pages', 'welcome', 'home', 'index'
     ];
     if (reserved.includes(username)) return next();
 
     // 2. Ignore file extensions (e.g. style.css)
-    if (username.includes('.')) return next();
+    // FIX: Allow dots if it's an explicit profile route (/@...)
+    const isExplicitProfile = req.path.startsWith('/@');
+
+    // Only skip if dot exists AND it's NOT an explicit /@ route
+    if (username.includes('.') && !isExplicitProfile) {
+        return next();
+    }
 
     // 3. Ignore if mapped to a real folder/file that static middleware missed
     const localPath = path.join(rootPath, username);
