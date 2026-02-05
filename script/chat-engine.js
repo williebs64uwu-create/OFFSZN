@@ -1235,7 +1235,7 @@ function setupRealtime() {
 
 let selectedUserForChat = null;
 
-window.openNewMessageModal = function () {
+function openNewMessageModal() {
     const overlay = document.getElementById('newMessageModalOverlay');
     const input = document.getElementById('modalSearchInput');
 
@@ -1253,7 +1253,7 @@ window.openNewMessageModal = function () {
     }
 }
 
-window.closeNewMessageModal = function (e) {
+function closeNewMessageModal(e) {
     if (e && e.target !== e.currentTarget) return; // Only if clicked on overlay or close button
 
     const overlay = document.getElementById('newMessageModalOverlay');
@@ -1359,7 +1359,7 @@ function updateModalChatButton() {
     }
 }
 
-window.startChatFromModal = async function () {
+async function startChatFromModal() {
     if (!selectedUserForChat) return;
 
     const userToChat = selectedUserForChat;
