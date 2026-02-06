@@ -19,6 +19,13 @@ let gisInited = false;
 let nextPageToken = '';
 
 // ========================================
+// GLOBAL CONFIG
+// ========================================
+const targetUrl = '/cuenta/Upload/Beats.html'; // Or 'beats.html' depending on structure, usually relative is safer if in same dir, but here we are in /script/ so absolute path from root is better. 
+// Assuming beats.html is at /cuenta/Upload/Beats.html based on typical structure.
+// Wait, listing showed `cuenta/Upload/Beats.html`. So `/cuenta/Upload/Beats.html` is correct.
+
+// ========================================
 // 1. INITIALIZATION
 // ========================================
 
@@ -103,8 +110,8 @@ async function listUserVideos(pageToken = '') {
         listContainer.setAttribute('data-scroll-init', 'true');
         listContainer.addEventListener('scroll', () => {
             const { scrollTop, scrollHeight, clientHeight } = listContainer;
-            // Load more when user is 100px from bottom and has next token
-            if (scrollTop + clientHeight >= scrollHeight - 100) {
+            // Load more when user is 600px from bottom (Intelligent Pre-loading)
+            if (scrollTop + clientHeight >= scrollHeight - 600) {
                 if (nextPageToken && !isFetching) {
                     listUserVideos(nextPageToken);
                 }
@@ -117,13 +124,7 @@ async function listUserVideos(pageToken = '') {
         listContainer.innerHTML = '';
         renderSkeleton(listContainer, 8);
     } else {
-        // Appending: Render skeletons at the end
-        // But since we append real cards later, we can just append skeletons now
-        // Give them an ID to remove them easily specific to this batch?
-        // Actually, just append, and when we get results, we remove ALL skeletons.
-        // But if we have mixed content, we only want to remove the new skeletons.
-        // Simplification: Append a specific skeleton container? 
-        // For now, let's just append skeletons.
+        // Appending: Render skeletons to indicate loading
         renderSkeleton(listContainer, 4);
     }
 
@@ -136,31 +137,41 @@ async function listUserVideos(pageToken = '') {
             "pageToken": pageToken
         });
 
-        // Clear skeletons
-        const skeletons = listContainer.querySelectorAll('.skeleton-card');
-        skeletons.forEach(s => s.remove());
-
         const videos = response.result.items;
         nextPageToken = response.result.nextPageToken || '';
 
+        // Atomic DOM Update to prevent Scroll Jumps
+        const skeletons = listContainer.querySelectorAll('.skeleton-card');
+
         if (videos && videos.length > 0) {
+            const fragment = document.createDocumentFragment();
             videos.forEach(video => {
-                if (video && video.snippet) { // Safety Check
+                if (video && video.snippet) {
                     const card = createVideoCard(video);
-                    listContainer.appendChild(card);
+                    fragment.appendChild(card);
                 }
             });
-            // No Button - Scroll handles it
+
+            // Remove skeletons AND Append new items in same cycle
+            skeletons.forEach(s => s.remove());
+            listContainer.appendChild(fragment);
+
         } else {
+            // No videos found in this batch
+            skeletons.forEach(s => s.remove());
             if (!pageToken) listContainer.innerHTML = '<div class="yt-empty">No se encontraron videos en tu canal.</div>';
         }
     } catch (err) {
         console.error("YouTube API Error:", err);
+        // Remove Skeletons on error
+        const skeletons = listContainer.querySelectorAll('.skeleton-card');
+        skeletons.forEach(s => s.remove());
+
         // Only show error if list is empty
         if (listContainer.children.length === 0)
             listContainer.innerHTML = '<div class="yt-error">Error al conectar con YouTube. Verifica los permisos.</div>';
     } finally {
-        isFetching = false; // Reset flag properly
+        isFetching = false;
     }
 }
 
@@ -249,9 +260,24 @@ async function selectVideo(videoId, title, description, thumbnails) {
         // ENABLE CORS FOR CANVAS
         thumbImg.crossOrigin = "Anonymous";
 
-        // Hide placeholder elements
-        document.querySelector('.yt-thumb-placeholder').style.display = 'none';
-        document.querySelector('.yt-thumb-overlay').style.display = 'flex'; // Enable overlay
+        // Hide placeholder elements safely
+        const container = document.getElementById('yt-thumb-preview-container');
+        if (container) {
+            const placeholder = container.querySelector('.yt-thumb-placeholder');
+            const overlay = document.querySelector('.yt-edit-thumb-btn')?.parentElement; // The overlay is the parent of the button
+
+            if (placeholder) placeholder.style.display = 'none';
+            // In the new layout, the button is absolute positioned, so we just ensure it's visible if needed, 
+            // but the container having 'has-file' class might be enough or we show the button directly.
+            // The HTML structure shows the button is always there but maybe hidden?
+            // Actually, in the new HTML:
+            // <div class="yt-thumb-placeholder" style="display:none;">...</div>
+            // <button ... class="yt-edit-thumb-btn"> ... </button>
+            // The button is effectively the overlay action.
+
+            // Let's just ensure the button is visible or the container state is correct.
+            container.classList.add('has-file');
+        }
     }
 
     // 1. Extract Tags (Requires another API call for keywords)
@@ -269,87 +295,76 @@ async function selectVideo(videoId, title, description, thumbnails) {
         console.warn("Could not fetch tags:", e);
     }
 
-    // 2. Clean Title & Extract BPM/Key (Search in Title AND Description)
+    // 2. INTELLIGENT METADATA DETECTION
+    const detection = detectMetadata(title, description);
     const cleanTitle = title.replace(/\[.*?\]/g, '').replace(/\(.*?\)/g, '').trim();
-    const searchText = `${title} ${description}`; // Combine for broader search
 
-    // Regex for BPM: strict integer, look for '140bpm', '140 bpm', or '[140]'
-    // Avoid decimals or fancy formats. Only integers.
-    // Matches: 140bpm, 140 BPM, [140]
-    const bpmMatch = searchText.match(/\b(\d{2,3})\s*(?:BPM|bpm)\b/) || searchText.match(/\[(\d{2,3})\]/);
-    let bpm = '';
-    if (bpmMatch) {
-        bpm = parseInt(bpmMatch[1], 10); // Ensure integer
-        if (isNaN(bpm)) bpm = '';
+    // Handle Tags (Cloud UI) - these elements are needed for populateForm
+    const tagCloud = document.getElementById('yt-tags-cloud');
+    const hiddenTagsInput = document.getElementById('final-tags-input');
+
+    // Conflict Resolution: Check if we have multiple valid unique candidates
+    if (detection.uniqueBpms.length > 1 || detection.uniqueKeys.length > 1) {
+        showConflictModal(detection.uniqueBpms, detection.uniqueKeys, (selectedBpm, selectedKey) => {
+            // Continue with detected conflict resolution
+            populateForm(cleanTitle, description, selectedBpm, selectedKey, tags, hiddenTagsInput, tagCloud);
+        });
+        // We stop here, populateForm calls the rest (Modal handles selection)
+    } else {
+        // Auto-select best candidates
+        const bestBpm = detection.uniqueBpms.length > 0 ? detection.uniqueBpms[0] : '';
+        const bestKey = detection.uniqueKeys.length > 0 ? detection.uniqueKeys[0] : '';
+        populateForm(cleanTitle, description, bestBpm, bestKey, tags, hiddenTagsInput, tagCloud);
     }
 
-    // Regex for Key: [Cm], [Eb Major], [Am], or 'Key: Cm' in desc
-    // Common keys: C, D, E, F, G, A, B with # or b, and min/maj/m/major/minor
-    const keyRegex = /(?:Key:|Tone:|Nota:)?\s*\[?([A-G][#b]?\s*(?:maj|major|min|minor|m)?)\]?/i;
-    // We try to match explicit keys first to avoid random letters
-    const keyMatch = searchText.match(keyRegex);
-
-    // Validate if it looks like a key (e.g. length < 10)
-    let key = '';
-    if (keyMatch) {
-        const potentialKey = keyMatch[1].trim();
-        // Simple validation: strictly limited length and chars
-        if (potentialKey.length < 10) {
-            key = potentialKey;
-        }
+    // UPDATE "WATCH ON YOUTUBE" LINK
+    const watchBtn = document.getElementById('yt-watch-link');
+    if (watchBtn) {
+        watchBtn.href = `https://www.youtube.com/watch?v=${videoId}`;
+        watchBtn.style.display = 'inline-flex';
     }
+}
 
-    // 3. Populate Form (Title, BPM, Key)
+function populateForm(cleanTitle, description, bpm, key, tags, hiddenTagsInput, tagCloud) {
     const titleInput = document.querySelector('input[name="title"]');
     const descInput = document.querySelector('textarea[name="description"]');
     const bpmInput = document.querySelector('input[name="bpm"]');
     const keyInput = document.querySelector('input[name="key"]');
 
-    if (titleInput) titleInput.value = cleanTitle;
+    if (titleInput) {
+        titleInput.value = cleanTitle;
+        updateTitleCount(titleInput);
+    }
     if (descInput) {
         descInput.value = description;
-        updateDescCount(descInput); // Update counter
+        updateDescCount(descInput);
     }
     if (bpmInput) bpmInput.value = bpm;
     if (keyInput) keyInput.value = key;
 
-    // 4. Handle Tags (Cloud UI)
-    const tagCloud = document.getElementById('yt-tags-cloud');
-    const hiddenTagsInput = document.getElementById('final-tags-input');
-
+    // Handle Tags (Same as before)
     if (tagCloud && hiddenTagsInput) {
-        tagCloud.innerHTML = ''; // Clear prev
+        tagCloud.innerHTML = '';
         let allTags = tags.split(', ').filter(t => t.trim());
         let selectedTags = [];
 
         if (allTags.length > 0 && allTags[0] !== '') {
-            // Pre-select up to 3
             selectedTags = allTags.slice(0, 3);
-
             allTags.forEach(tag => {
                 const chip = document.createElement('div');
                 chip.className = 'yt-tag-chip';
                 chip.textContent = tag;
-
-                // Check if pre-selected
-                if (selectedTags.includes(tag)) {
-                    chip.classList.add('selected');
-                }
-
-                // Toggle logic
+                if (selectedTags.includes(tag)) chip.classList.add('selected');
                 chip.onclick = () => {
                     if (selectedTags.includes(tag)) {
-                        // Deselect
                         selectedTags = selectedTags.filter(t => t !== tag);
                         chip.classList.remove('selected');
                     } else {
-                        // Select
                         selectedTags.push(tag);
                         chip.classList.add('selected');
                     }
                     updateHiddenTags(selectedTags, hiddenTagsInput);
                 };
-
                 tagCloud.appendChild(chip);
             });
             updateHiddenTags(selectedTags, hiddenTagsInput);
@@ -358,19 +373,149 @@ async function selectVideo(videoId, title, description, thumbnails) {
             hiddenTagsInput.value = '';
         }
     } else {
-        // Fallback for old input if UI not updated
         const oldInput = document.querySelector('input[name="tags"]');
         if (oldInput) oldInput.value = tags;
     }
 
-    // Toast/Feedback
-    if (window.showToast) {
-        window.showToast('¡Datos importados con éxito!', 'success');
-    } else {
-        alert('Datos importados: ' + cleanTitle);
+    if (window.showToast) window.showToast('¡Datos importados con éxito!', 'success');
+    closeImporterModal();
+}
+
+function detectMetadata(title, description) {
+    // 1. Clean Title
+    const cleanTitle = title.replace(/\[.*?\]/g, '').replace(/\(.*?\)/g, '').trim();
+    const searchText = `${title} ${description}`;
+
+    let foundBpms = [];
+    let foundKeys = [];
+
+    // HELPER: Add unique valid BPM
+    const addBpm = (val) => {
+        if (val >= 50 && val <= 250) foundBpms.push(val);
+    };
+
+    // STRATEGY 1: Contextual Search (Key - BPM or BPM - Key)
+    // Looking for patterns like "F# minor - 120" or "120 - F# minor"
+    // Separators: " - ", " ", "/", "|"
+    const notePart = "(?:[A-G][#b]?\\s*(?:maj|major|min|minor|m))";
+    const bpmPart = "(\\d{2,3})";
+
+    // Regex 1: "Key - 120"
+    const keyThenBpm = new RegExp(`${notePart}[\\s\\-\\u2013\\u2014|/]+${bpmPart}(?!\\d)`, 'gi');
+    let match;
+    while ((match = keyThenBpm.exec(searchText)) !== null) {
+        addBpm(parseInt(match[1], 10));
     }
 
-    closeImporterModal();
+    // Regex 2: "120 - Key"
+    const bpmThenKey = new RegExp(`(?:^|\\s)${bpmPart}[\\s\\-\\u2013\\u2014|/]+${notePart}`, 'gi');
+    while ((match = bpmThenKey.exec(searchText)) !== null) {
+        addBpm(parseInt(match[1], 10));
+    }
+
+    // STRATEGY 2: Explicit Label "120 BPM"
+    const labeledBpmRegex = /(\d{2,3})\s*BPM/gi;
+    while ((match = labeledBpmRegex.exec(searchText)) !== null) {
+        addBpm(parseInt(match[1], 10));
+    }
+
+    // STRATEGY 3: Naked Numbers (Fallback)
+    // If we haven't found any high-confidence BPMs yet, OR if the user wants us to be permissive:
+    // User request: "si ya falla todas... solo buscar numeros"
+    if (foundBpms.length === 0) {
+        // Find all standalone 2-3 digit numbers
+        const nakedRegex = /\b(\d{2,3})\b/g;
+        while ((match = nakedRegex.exec(searchText)) !== null) {
+            addBpm(parseInt(match[1], 10));
+        }
+    }
+
+    // Process Keys (Same strict logic)
+    const noteFragment = "([A-G])(#|b)?";
+    const scaleFragment = "\\s*(maj|major|min|minor|m)";
+    const keyRegex = new RegExp(`\\b${noteFragment}${scaleFragment}\\b`, 'gi');
+
+    while ((match = keyRegex.exec(searchText)) !== null) {
+        let note = match[1].toUpperCase();
+        let acc = match[2] || '';
+        let type = match[3].toLowerCase();
+
+        if (type === 'm' || type === 'min') type = 'minor';
+        if (type === 'maj') type = 'major';
+
+        foundKeys.push(`${note}${acc} ${type}`);
+    }
+
+    // Deduplicate
+    const uniqueBpms = [...new Set(foundBpms)];
+    const uniqueKeys = [...new Set(foundKeys)];
+
+    return { uniqueBpms, uniqueKeys };
+}
+
+function showConflictModal(bpms, keys, onConfirm) {
+    // Determine what we need to ask
+    let bpmHtml = '';
+    if (bpms.length > 1) {
+        bpmHtml = `<div style="margin-bottom:16px;">
+            <label style="display:block; color:#ccc; margin-bottom:8px;">Selecciona BPM Correcto:</label>
+            <div style="display:flex; gap:8px;">
+                ${bpms.map((b, i) => `<button class="conflict-btn ${i === 0 ? 'selected' : ''}" onclick="selectConflict(this, 'bpm', '${b}')">${b}</button>`).join('')}
+            </div>
+            <input type="hidden" id="conflict-bpm-val" value="${bpms[0]}">
+        </div>`;
+    } else {
+        bpmHtml = `<input type="hidden" id="conflict-bpm-val" value="${bpms[0] || ''}">`;
+    }
+
+    let keyHtml = '';
+    if (keys.length > 1) {
+        keyHtml = `<div style="margin-bottom:16px;">
+            <label style="display:block; color:#ccc; margin-bottom:8px;">Selecciona Key Correcta:</label>
+            <div style="display:flex; gap:8px;">
+                ${keys.map((k, i) => `<button class="conflict-btn ${i === 0 ? 'selected' : ''}" onclick="selectConflict(this, 'key', '${k}')">${k}</button>`).join('')}
+            </div>
+            <input type="hidden" id="conflict-key-val" value="${keys[0]}">
+        </div>`;
+    } else {
+        keyHtml = `<input type="hidden" id="conflict-key-val" value="${keys[0] || ''}">`;
+    }
+
+    const modal = document.createElement('div');
+    modal.id = 'conflict-modal';
+    modal.style.cssText = `position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); backdrop-filter:blur(5px); z-index:9999; display:flex; justify-content:center; align-items:center;`;
+    modal.innerHTML = `
+        <div style="background:#1a1a1a; padding:24px; border-radius:12px; border:1px solid #333; width:300px; box-shadow:0 10px 40px rgba(0,0,0,0.5);">
+            <h3 style="margin:0 0 16px 0; font-size:1.1rem; color:#fff;">⚠️ Confirmar Datos</h3>
+            <p style="color:#888; font-size:0.9rem; margin-bottom:20px;">Hemos detectado múltiples opciones. Por favor confirma:</p>
+            ${bpmHtml}
+            ${keyHtml}
+            <div style="text-align:right; margin-top:20px;">
+                <button id="btn-conflict-confirm" style="background:#8b5cf6; color:white; border:none; padding:8px 16px; border-radius:6px; cursor:pointer;">Confirmar</button>
+            </div>
+        </div>
+        <style>
+            .conflict-btn { background:#333; color:#fff; border:1px solid #444; padding:6px 12px; border-radius:4px; cursor:pointer; }
+            .conflict-btn.selected { background:#8b5cf6; border-color:#8b5cf6; }
+        </style>
+    `;
+
+    document.body.appendChild(modal);
+
+    // selection logic
+    window.selectConflict = (btn, type, val) => {
+        // remove selected from siblings
+        btn.parentNode.querySelectorAll('.conflict-btn').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        document.getElementById(`conflict-${type}-val`).value = val;
+    };
+
+    document.getElementById('btn-conflict-confirm').onclick = () => {
+        const b = document.getElementById('conflict-bpm-val').value;
+        const k = document.getElementById('conflict-key-val').value;
+        modal.remove();
+        onConfirm(b, k);
+    };
 }
 
 // Helper to update hidden input
@@ -396,7 +541,25 @@ function updateDescCount(textarea) {
         }
     }
 }
+
+// Helper for title count
+function updateTitleCount(input) {
+    const len = input.value.length;
+    const counter = document.getElementById('title-count');
+    const max = 60;
+
+    if (counter) {
+        counter.textContent = `${len}/${max}`;
+        if (len > max) {
+            counter.classList.add('limit-exceeded');
+        } else {
+            counter.classList.remove('limit-exceeded');
+        }
+    }
+}
+
 window.updateDescCount = updateDescCount;
+window.updateTitleCount = updateTitleCount;
 
 // ========================================
 // 5. REDIRECTION TO UPLOAD
@@ -534,7 +697,11 @@ function openCropModalForThumb() {
     // Load image into cropper
     // FIX CORS: Set attribute and append timestamp to avoid cached non-CORS response
     cropImage.crossOrigin = 'Anonymous';
-    cropImage.src = rawThumb.src + (rawThumb.src.includes('?') ? '&' : '?') + 't=' + new Date().getTime();
+    if (rawThumb.src.startsWith('blob:')) {
+        cropImage.src = rawThumb.src;
+    } else {
+        cropImage.src = rawThumb.src + (rawThumb.src.includes('?') ? '&' : '?') + 't=' + new Date().getTime();
+    }
 
     cropImage.onload = () => {
         initializeCrop();
@@ -736,8 +903,6 @@ async function saveCrop() {
 
     // CASE A: UPLOAD FLOW (Generate TunesToTube Style Video Frame)
     if (document.getElementById('yt-upload-form').style.display === 'block') {
-        // Update Video Preview Background logic
-
         // 2. GENERATE 16:9 VIDEO FRAME
         const videoCanvas = document.createElement('canvas');
         const vCtx = videoCanvas.getContext('2d');
@@ -777,12 +942,21 @@ async function saveCrop() {
             prevBg.style.opacity = '1'; // Remove opacity to show full image
         }
 
-        // Update Dropzone State
-        const zone = document.getElementById('image-dropzone');
-        if (zone) {
-            zone.classList.add('has-file');
-            zone.querySelector('h3').innerText = "Portada Recortada";
-            zone.querySelector('p').innerText = "Listo para generación de video";
+        // Update Dropzone State (New Rules)
+        const coverZone = document.getElementById('coverDropZone');
+        const coverPreview = document.getElementById('cropImagePreview');
+
+        if (coverZone && coverPreview) {
+            coverPreview.src = URL.createObjectURL(currentCropBlob);
+            coverZone.classList.add('has-file');
+        } else {
+            // Fallback for safety
+            const zone = document.getElementById('image-dropzone');
+            if (zone) {
+                zone.classList.add('has-file');
+                zone.querySelector('h3').innerText = "Portada Recortada";
+                zone.querySelector('p').innerText = "Listo para generación de video";
+            }
         }
 
     }
@@ -796,25 +970,395 @@ async function saveCrop() {
         if (window.showToast) window.showToast('Portada recortada guardada', 'success');
     }
 
+    // Upload to Drafts (Background)
+    uploadFileToDrafts(currentCropBlob, 'cover');
+
     // Close
     closeCropModal();
 }
 
-async function processAndUpload() {
-    const title = document.getElementById('upload-title').value;
-    if (!selectedAudioFile || !currentCropBlob) {
-        if (window.showToast) window.showToast('Falta audio o imagen', 'error');
+// PSYCHOLOGICAL PROGRESS BAR LOGIC
+let progressInterval;
+
+// ========================================
+// 8. IMPORT FLOW FILE HANDLING (New)
+// ========================================
+let importFiles = { mp3: null, wav: null, stems: null };
+
+function handleImportFileSelect(input, type) {
+    if (input.files && input.files[0]) {
+        const file = input.files[0];
+        importFiles[type] = file;
+
+        // UI Update
+        const slot = document.getElementById(`import-slot-${type}`);
+        if (slot) {
+            slot.classList.add('has-file');
+
+            // Update Icon
+            const iconDiv = slot.querySelector('.slot-icon');
+            if (iconDiv) iconDiv.innerHTML = '<i class="bi bi-check-lg"></i>';
+
+            // Update Text
+            const h4 = slot.querySelector('.slot-info h4');
+            if (h4) h4.innerText = file.name;
+
+            const p = slot.querySelector('.slot-info p');
+            if (p) p.innerText = (file.size / (1024 * 1024)).toFixed(1) + ' MB';
+
+            // Update Badge
+            const badge = slot.querySelector('.status-badge');
+            if (badge) {
+                badge.className = 'status-badge success';
+                badge.innerText = 'Listo';
+            }
+
+            // Update Button
+            const btn = slot.querySelector('.btn-mini-upload');
+            if (btn) {
+                btn.innerHTML = 'Cambiar <i class="bi bi-arrow-repeat"></i>';
+            }
+        }
+    }
+}
+
+// Ensure global access
+window.handleImportFileSelect = handleImportFileSelect;
+
+// UPDATE processAndUpload GUEST LOGIC for IMPORTER
+// ... inside processAndUpload() ...
+// We need to verify if we are in Importer Mode and capture these flags.
+
+// (The full processAndUpload replacement is needed to integrate this cleanly)
+// Re-inserting the previous processAndUpload logic but with the new import checks added.
+
+// ========================================
+// 9. VIDEO PREVIEW SIMULATION (Audio + Visual)
+// ========================================
+let audioPreview = new Audio();
+let isPreviewPlaying = false;
+
+// Global handler for Audio Selection (Manual)
+window.handleAudioSelect = function (input) {
+    if (input.files && input.files[0]) {
+        const file = input.files[0];
+        window.selectedAudioFile = file; // Persist for upload
+
+        // Update UI
+        const zone = document.getElementById('audio-dropzone');
+        const nameDisplay = document.getElementById('audio-filename');
+        if (zone) zone.classList.add('has-file');
+        if (nameDisplay) nameDisplay.innerText = file.name;
+
+        // Set Preview Source
+        const objectUrl = URL.createObjectURL(file);
+        audioPreview.src = objectUrl;
+
+        // Reset Play State
+        audioPreview.pause();
+        isPreviewPlaying = false;
+        updatePreviewIcon(false);
+
+        if (window.showToast) window.showToast('Audio cargado para previsualización', 'success');
+
+        // Upload to Drafts
+        uploadFileToDrafts(file, 'mp3');
+    }
+}
+
+// Handler for Play Button
+window.togglePreviewPlay = function () {
+    if (!audioPreview.src || audioPreview.src === '') {
+        if (window.showToast) window.showToast('Sube un audio primero para escuchar la previa', 'error');
         return;
     }
 
-    if (window.showToast) window.showToast('⏳ Generando video (Simulado)...', 'info');
-
-    // SIMULATION
-    setTimeout(() => {
-        if (window.showToast) window.showToast('✅ Video listo para YouTube!', 'success');
-        // Here we would call the YouTube Upload API with the video blob
-    }, 2000);
+    if (isPreviewPlaying) {
+        audioPreview.pause();
+        isPreviewPlaying = false;
+        updatePreviewIcon(false);
+    } else {
+        audioPreview.play().then(() => {
+            isPreviewPlaying = true;
+            updatePreviewIcon(true);
+        }).catch(err => {
+            console.error("Play error:", err);
+        });
+    }
 }
+
+function updatePreviewIcon(isPlaying) {
+    const icon = document.querySelector('.yt-play-overlay i');
+    if (icon) {
+        icon.className = isPlaying ? 'bi bi-pause-fill' : 'bi bi-play-fill';
+    }
+}
+
+// Auto-reset on end
+audioPreview.addEventListener('ended', () => {
+    isPreviewPlaying = false;
+    updatePreviewIcon(false);
+});
+
+// ========================================
+// 10. DRAFT UPLOAD LOGIC
+// ========================================
+let uploadedDraftPaths = {
+    cover: null,
+    mp3_tagged: null,
+    wav_untagged: null,
+    stems: null
+};
+
+async function uploadFileToDrafts(file, type) {
+    const user = window.AuthUtils ? window.AuthUtils.getCurrentUser() : null;
+    if (!user) return null; // Guest: Local only
+
+    // Verify Size
+    const mb = 1024 * 1024;
+    let max = 50 * mb; // Default MP3/WAV/STEMS (Unified to 50 as per request)
+    if (type === 'cover') max = 10 * mb;
+
+    if (file.size > max) {
+        if (window.showToast) window.showToast(`El archivo excede el límite de ${(max / mb).toFixed(0)}MB`, 'error');
+        if (type !== 'cover') updateSlotStatus(type, 'error');
+        return null;
+    }
+
+    let folder = '';
+    if (type === 'mp3') folder = 'mp3_tagged';
+    else if (type === 'wav') folder = 'wav_untagged';
+    else if (type === 'stems') folder = 'stems';
+    else if (type === 'cover') folder = 'covers';
+    else return null;
+
+    // Sanitize
+    const cleanName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+    const path = `${user.id}/${folder}/${Date.now()}_${cleanName}`;
+
+    // UI Update (Slots)
+    if (type !== 'cover') updateSlotStatus(type, 'uploading');
+
+    try {
+        const { data, error } = await window.supabaseClient.storage
+            .from('beat-drafts')
+            .upload(path, file, { cacheControl: '3600', upsert: false });
+
+        if (error) throw error;
+
+        // Store Path
+        if (type === 'mp3') uploadedDraftPaths.mp3_tagged = data.path;
+        else if (type === 'wav') uploadedDraftPaths.wav_untagged = data.path;
+        else if (type === 'stems') uploadedDraftPaths.stems = data.path;
+        else if (type === 'cover') uploadedDraftPaths.cover = data.path;
+
+        if (type !== 'cover') updateSlotStatus(type, 'success');
+        if (window.showToast) window.showToast(`${type.toUpperCase()} guardado en borrador`, 'success');
+        return data.path;
+
+    } catch (err) {
+        console.error('Upload Error:', err);
+        if (type !== 'cover') updateSlotStatus(type, 'error');
+        if (window.showToast) window.showToast('Error al subir archivo', 'error');
+        return null;
+    }
+}
+
+function updateSlotStatus(type, status) {
+    const slot = document.getElementById(`import-slot-${type}`);
+    if (!slot) return;
+    const badge = slot.querySelector('.status-badge');
+    if (!badge) return;
+
+    if (status === 'uploading') {
+        badge.className = 'status-badge warning';
+        badge.innerText = 'Subiendo...';
+    } else if (status === 'success') {
+        badge.className = 'status-badge success';
+        badge.innerText = 'Listo';
+    } else if (status === 'error') {
+        badge.className = 'status-badge error';
+        badge.innerText = 'Error';
+    }
+}
+
+// Hook into Importer MP3 Select too
+// (Redefine to include upload)
+const originalImportHandler = window.handleImportFileSelect; // Keep original reference
+window.handleImportFileSelect = function (input, type) {
+    // 1. Original Logic (UI Updates)
+    if (originalImportHandler) originalImportHandler(input, type);
+
+    if (input.files && input.files[0]) {
+        const file = input.files[0];
+
+        // 2. Preview Logic
+        if (type === 'mp3') {
+            const objectUrl = URL.createObjectURL(file);
+            audioPreview.src = objectUrl;
+            audioPreview.pause();
+            isPreviewPlaying = false;
+            updatePreviewIcon(false);
+        }
+
+        // 3. Upload Logic
+        uploadFileToDrafts(file, type);
+    }
+}
+
+/* ========================================
+   11. PROCESS & UPLOAD (FINAL STEP)
+   ======================================== */
+async function processAndUpload() {
+    // Determine Mode
+    const isManual = document.getElementById('yt-upload-form').style.display === 'block';
+
+    // Gather Data
+    const title = isManual ? document.getElementById('upload-title').value : document.getElementById('import-title').value;
+    const description = isManual ? document.getElementById('upload-desc').value : document.getElementById('import-desc').value;
+    const bpm = isManual ? document.querySelector('input[name="bpm"]')?.value : document.getElementById('import-bpm').value;
+    const key = isManual ? document.querySelector('input[name="key"]')?.value : document.getElementById('import-key').value;
+    const tags = document.getElementById('final-tags-input')?.value || '';
+
+    // Validation
+    if (!title) {
+        if (window.showToast) window.showToast('Falta el título', 'error');
+        return;
+    }
+
+    // Auth Check
+    const token = window.AuthUtils ? window.AuthUtils.getAccessToken() : null;
+    const user = window.AuthUtils ? window.AuthUtils.getCurrentUser() : null;
+
+    // GUEST LOGIC (Preserved)
+    if (!token || !user) {
+        const pendingData = {
+            mode: isManual ? 'manual' : 'importer',
+            title: title,
+            description: description,
+            bpm: bpm,
+            key: key,
+            tags: tags,
+            timestamp: Date.now()
+        };
+        localStorage.setItem('pendingUpload', JSON.stringify(pendingData));
+
+        // SHOW GLOBAL MODAL
+        if (window.showGuestModal) {
+            window.showGuestModal(
+                "Guarda tu Progreso",
+                "Para continuar y vincular este contenido a tu perfil, necesitas iniciar sesión o registrarte."
+            );
+        } else {
+            // Fallback
+            if (confirm("🚀 ¡Estás a un paso!\n\nPara vincular este contenido a tu perfil, necesitas una cuenta gratis.\n\nTe llevaremos a Registro.")) {
+                window.location.href = '/pages/register.html';
+            }
+        }
+        return;
+    }
+
+    // LOGGED IN LOGIC: Create Draft & Redirect
+    try {
+        // Show Overlay
+        const overlay = document.getElementById('publishOverlay');
+        if (overlay) overlay.style.display = 'flex';
+
+        // Prepare File Data for DB
+        // We use 'uploadedDraftPaths' which has keys: cover, mp3_tagged, etc.
+        // If Manual, we might assume uploadedDraftPaths was populated by handleAudioSelect
+        // But what if user selected file BEFORE login? (Not possible as we check auth in uploadFileToDrafts)
+        // If logged in, files should show "Subido" (Success)
+
+        // Wait, manual audio input triggers 'mp3' upload?
+        // Yes, I verified handleAudioSelect calls uploadFileToDrafts(..., 'mp3')
+
+        const draftData = {
+            user_id: user.id,
+            title: title,
+            description: description,
+            bpm: bpm || null,
+            key: key || null,
+            tags: tags ? tags.split(',').map(t => t.trim()) : [],
+            files_data: uploadedDraftPaths, // The JSON object with paths
+            // Legacy columns (optional but good for compatibility)
+            cover_url: uploadedDraftPaths.cover,
+            mp3_url: uploadedDraftPaths.mp3_tagged,
+            wav_url: uploadedDraftPaths.wav_untagged,
+            stems_url: uploadedDraftPaths.stems,
+            source: 'youtube_importer',
+            created_at: new Date().toISOString()
+        };
+
+        const { data, error } = await window.supabaseClient
+            .from('beat_drafts')
+            .insert(draftData)
+            .select('id')
+            .single();
+
+        if (error) throw error;
+
+        // Success: Wait briefly then redirect to My Kits
+        setTimeout(() => {
+            window.location.href = '/cuenta/mis-kits.html';
+        }, 1500);
+
+    } catch (err) {
+        console.error('Draft Creation Error:', err);
+        const overlay = document.getElementById('publishOverlay');
+        if (overlay) overlay.style.display = 'none'; // Hide on error
+        if (window.showToast) window.showToast('Error al crear borrador: ' + err.message, 'error');
+    }
+}
+
+
+// 7. GUEST RESTORE LOGIC
+window.addEventListener('load', () => {
+    // Check for pending upload data
+    const pendingJson = localStorage.getItem('pendingUpload');
+    if (pendingJson) {
+        // Check if user is now logged in
+        // A slight delay to ensure AuthUtils has init (it runs immediately but async check might take a tick)
+        setTimeout(() => {
+            const token = window.AuthUtils ? window.AuthUtils.getAccessToken() : null;
+            if (token) {
+                try {
+                    const data = JSON.parse(pendingJson);
+
+                    // Restore Fields
+                    if (document.getElementById('upload-title')) document.getElementById('upload-title').value = data.title || '';
+                    if (document.getElementById('upload-desc')) document.getElementById('upload-desc').value = data.description || '';
+                    if (document.getElementById('upload-schedule-time')) document.getElementById('upload-schedule-time').value = data.scheduleTime || '';
+
+                    // Restore Import Fields if they exist
+                    if (document.getElementById('import-bpm')) document.getElementById('import-bpm').value = data.bpm || '';
+                    if (document.getElementById('import-key')) document.getElementById('import-key').value = data.key || '';
+                    if (document.getElementById('final-tags-input')) document.getElementById('final-tags-input').value = data.tags || '';
+
+                    // Notify
+                    if (window.showToast) window.showToast('✅ Datos de subida restaurados. Por favor, selecciona tus archivos nuevamente.', 'success'); // Files cant be restored
+
+                    // Clear storage so it doesn't persist forever
+                    localStorage.removeItem('pendingUpload');
+
+                    // If we are in the main view, maybe we should switch to upload form automatically?
+                    // But usually user land here. If they land on 'youtube.html' directly, we are good.
+                    // If they land on dashboard, they need to navigate here. 
+                    // Ideally, we redirect them HERE after login if this flag exists, but that's complex logic outside this file.
+                    // For now, if they are ON this page, it restores.
+
+                    // Auto-show upload form if data existed (assuming manual upload was the context)
+                    if (data.title && showUploadForm) {
+                        showUploadForm();
+                    }
+
+                } catch (e) {
+                    console.error("Error restoring pending upload", e);
+                }
+            }
+        }, 1000); // Wait 1s for Auth init
+    }
+});
 
 // ========================================
 // 6. GLOBAL EXPOSURE

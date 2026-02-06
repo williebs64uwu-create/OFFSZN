@@ -313,8 +313,15 @@
                     else if (n.type === 'new_follower') extraId = n.data?.follower_id || '';
                     else if (n.type === 'new_message') extraId = n.data?.conversation_id || '';
 
+                    // Ensure extraId is safe
+                    extraId = extraId ? extraId.toString().replace(/"/g, '&quot;') : '';
+
                     return `
-                        <div class="notification-item ${n.read ? '' : 'unread'}" onclick="handleNotificationClick('${n.id}', '${n.type}', '${extraId}')">
+                        <div class="notification-item ${n.read ? '' : 'unread'}" 
+                             data-id="${n.id}" 
+                             data-type="${n.type}" 
+                             data-extra-id="${extraId}"
+                             onclick="handleNotificationItemClick(this)">
                             <div class="notif-icon ${n.type}">
                                 <i class="fas ${this.getIcon(n.type)}"></i>
                             </div>
@@ -447,6 +454,14 @@
 
     // --- Global Helpers for Onclick ---
 
+    // New safe handler
+    window.handleNotificationItemClick = function (el) {
+        const id = el.getAttribute('data-id');
+        const type = el.getAttribute('data-type');
+        const extraId = el.getAttribute('data-extra-id');
+        handleNotificationClick(id, type, extraId);
+    };
+
 
 
     window.triggerDeleteNotif = function (id, type, event) {
@@ -516,6 +531,8 @@
         else if (sbClient) {
             await sbClient.from('notifications').update({ read: true }).eq('id', id);
         }
+
+        console.log(`Processing click: Type=${type}, ExtraID='${extraId}'`);
 
         // Redirect Logic
         if (type === 'collab_invitation') {

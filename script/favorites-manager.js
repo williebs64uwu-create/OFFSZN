@@ -258,9 +258,7 @@ window.FavoritesManager = (function () {
         const container = document.getElementById(containerId);
         if (!container) return;
 
-        // RACE CONDITION HANDLING:
-        // Use an ID to track the latest request. If a new request comes in, 
-        // older running renders will detect the ID mismatch and stop.
+        // RACE CONDITION HANDLING
         const thisRenderId = Date.now();
         lastRenderId = thisRenderId;
 
@@ -271,29 +269,21 @@ window.FavoritesManager = (function () {
 
         try {
             // 1. Filter Logic (Instant)
-            // SANITIZATION: Escape special regex chars to prevent errors
             const safeSearch = currentSearch.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
             const filtered = cachedFavorites.filter(p => {
                 const term = safeSearch.toLowerCase();
                 const matchesSearch = p.name.toLowerCase().includes(term);
-
-                // TYPE FILTER
                 let matchesType = true;
                 if (globalFilterType !== 'all') {
-                    // Concatenate type and category for broad matching
                     const typeBlob = ((p.product_type || '') + ' ' + (p.category || '')).toLowerCase();
                     matchesType = typeBlob.includes(globalFilterType);
                 }
-
                 return matchesSearch && matchesType;
             });
 
-            // Check cancellation
             if (lastRenderId !== thisRenderId) return;
 
-            // 2. Render Strategy:
-            // If we have data, render immediately. No artificial delays.
-
+            // 2. Clear & Empty State
             if (filtered.length === 0) {
                 if (cachedFavorites.length > 0) {
                     container.innerHTML = '<div style="text-align:center; padding:4rem; color:#666;">No se encontraron resultados para tu búsqueda.</div>';
@@ -303,41 +293,52 @@ window.FavoritesManager = (function () {
                 return;
             }
 
-            // Cleanup old wavesurfers efficiently
+            // Cleanup old wavesurfers
             activeWavesurfers.forEach(ws => { try { ws.destroy(); } catch (e) { } });
             activeWavesurfers = [];
             window.activeWavesurfers = activeWavesurfers;
+            window.currentlyPlaying = null; // Reset current playing
 
-            container.innerHTML = ''; // Clear previous instantly
+            container.innerHTML = '';
 
-            // 3. Batched DOM Insertion (Performance)
-            const fragment = document.createDocumentFragment();
-            const rowsToInit = [];
+            // 3. Batched Rendering (Optimization)
+            const BATCH_SIZE = 20;
 
-            filtered.forEach((prod, index) => {
-                const row = createListRow(prod, index, collabStats);
-                fragment.appendChild(row);
-                rowsToInit.push(row);
-            });
+            // Render first batch immediately
+            const firstBatch = filtered.slice(0, BATCH_SIZE);
+            renderBatch(firstBatch, container, collabStats);
 
-            container.appendChild(fragment);
+            // Render remaining in background
+            if (filtered.length > BATCH_SIZE) {
+                let currentOffset = BATCH_SIZE;
 
-            // Check cancellation after DOM update
-            if (lastRenderId !== thisRenderId) return;
+                const renderNextBatch = () => {
+                    if (lastRenderId !== thisRenderId) return; // Stop if invalidated
 
-            // 4. Initialize WaveSurfers in background (don't block UI)
-            // We use a small timeout to let the browser paint the rows first
-            setTimeout(() => {
-                if (lastRenderId !== thisRenderId) return;
+                    const nextBatch = filtered.slice(currentOffset, currentOffset + BATCH_SIZE);
+                    if (nextBatch.length > 0) {
+                        renderBatch(nextBatch, container, collabStats);
+                        currentOffset += BATCH_SIZE;
+                        requestAnimationFrame(renderNextBatch);
+                    }
+                };
 
-                initWaveSurfers((ws) => {
-                    // Optional: Do something when each WS is ready
-                }, rowsToInit);
-            }, 10);
+                // Allow UI to breathe before starting next batches
+                setTimeout(() => requestAnimationFrame(renderNextBatch), 50);
+            }
 
         } catch (err) {
             console.error("Error applying filters:", err);
         }
+    }
+
+    function renderBatch(items, container, collabStats) {
+        const fragment = document.createDocumentFragment();
+        items.forEach((prod, index) => {
+            const row = createListRow(prod, index, collabStats);
+            fragment.appendChild(row);
+        });
+        container.appendChild(fragment);
     }
 
     function createListRow(prod, index, collabStats = {}) {
@@ -440,7 +441,9 @@ window.FavoritesManager = (function () {
                  <button id="btn-play-${waveformId}" style="width:36px; height:36px; border-radius:50%; background:#222; border:none; color:#fff; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background 0.2s; flex-shrink:0;">
                     <i class="bi bi-play-fill" style="font-size:1.2rem; margin-left:2px;"></i>
                 </button>
-                <div class="list-waveform-container" id="${waveformId}" style="height:32px; width:100%; position:relative; flex:1;"></div>
+                <div class="list-waveform-container waveform-static-fallback" id="${waveformId}" style="height:32px; width:100%; position:relative; flex:1; opacity:0.8;">
+                    <!-- Static Line (CSS) -->
+                </div>
                 <div style="font-size:0.8rem; color:#666; font-family:monospace; min-width:40px; text-align:right;">
                     <span id="fav-duration-${waveformId}">--:--</span>
                 </div>
@@ -470,106 +473,145 @@ window.FavoritesManager = (function () {
         row.dataset.waveformId = waveformId;
         row.dataset.productId = prod.id;
         row.dataset.trackData = JSON.stringify(prod);
+
+        // Attach Onclick to BUTTON only (Efficient)
+        const playBtn = row.querySelector(`#btn-play-${waveformId}`);
+        if (playBtn) {
+            playBtn.onclick = (e) => {
+                e.stopPropagation();
+                handlePlayClick(row, prod);
+            };
+        }
+
         return row;
     }
 
-    function initWaveSurfers(onCreated = null, manualRows = null) {
-        if (!window.WaveSurfer) return;
+    // --- LAZY WAVESURFER LOGIC ---
 
-        const targetRows = manualRows || document.querySelectorAll('.list-row');
+    async function handlePlayClick(row, prod) {
+        const waveformId = row.dataset.waveformId;
+        const btn = document.getElementById(`btn-play-${waveformId}`);
+        const audioUrl = row.dataset.audioUrl;
 
-        targetRows.forEach(row => {
-            const url = row.dataset.audioUrl;
-            const id = row.dataset.waveformId;
-            if (url && id) {
-                // Double check element existence (handled by querySelectorAll but redundant for manualRows if valid)
-                const containerEl = document.getElementById(id);
-                if (!containerEl) return;
+        // 1. GLOBAL PLAYER SYNC (Sticky Player)
+        if (window.StickyPlayer && window.StickyPlayer.play) {
+            // Use StickyPlayer as primary engine if available
+            // This avoids creating local WaveSurfer instances entirely if we want centralized playback
+            const currentId = window.StickyPlayer.getCurrentTrackId();
 
-                const ws = WaveSurfer.create({
-                    container: containerEl,
-                    waveColor: '#666',
-                    progressColor: '#8b5cf6',
-                    barWidth: 2,
-                    barGap: 2,
-                    barRadius: 2,
-                    height: 28,
-                    url: url,
-                    normalize: true,
-                    interact: true
-                });
-
-                // TIMEOUT FALLBACK
-                setTimeout(() => {
-                    const el = document.getElementById(id);
-                    if (el && el.classList.contains('skeleton-waveform')) {
-                        el.classList.remove('skeleton-waveform');
-                        el.classList.add('waveform-static-fallback');
-                    }
-                }, 4000);
-
-                // ERROR FALLBACK
-                ws.on('error', (err) => {
-                    // SILENCE ABORT ERRORS (Happens on rapid tab switching)
-                    if (err.name === 'AbortError' || (err.message && err.message.includes('aborted'))) return;
-
-                    console.warn(`Favorites WaveSurfer error for ${id}:`, err);
-                    const el = document.getElementById(id);
-                    if (el) {
-                        el.classList.remove('skeleton-waveform');
-                        el.classList.add('waveform-static-fallback');
-                    }
-                });
-                const prodId = row.dataset.productId;
-                ws.customId = id; // id is the container ID (waveformId)
-
-                if (onCreated) onCreated(ws);
-
-                ws.on('ready', () => {
-                    const dur = ws.getDuration();
-                    const mins = Math.floor(dur / 60);
-                    const secs = Math.floor(dur % 60);
-                    const el = document.getElementById(`fav-duration-${id}`);
-                    if (el) el.innerText = `${mins}:${secs < 10 ? '0' : ''}${secs}`;
-                });
-                ws.on('finish', () => {
-                    const btn = document.getElementById(`btn-play-${id}`);
-                    if (btn) btn.innerHTML = '<i class="bi bi-play-fill"></i>';
-                });
-
-                // Bidirectional Sync: Seek Global Player when clicking list waveform
-                ws.on('interaction', () => {
-                    const prodId = row.dataset.productId;
-                    if (window.StickyPlayer && window.StickyPlayer.getCurrentTrackId() == prodId) {
-                        window.StickyPlayer.togglePlay();
-                        window.StickyPlayer.seekTo(ws.getCurrentTime());
-                    } else if (window.StickyPlayer) {
-                        const product = cachedFavorites.find(p => String(p.id) === String(prodId));
-                        window.StickyPlayer.play(product);
-                        setTimeout(() => window.StickyPlayer.seekTo(ws.getCurrentTime()), 100);
-                    }
-                });
-                const btn = document.getElementById(`btn-play-${id}`);
-                if (btn) {
-                    btn.onclick = (e) => {
-                        e.stopPropagation();
-                        const prodId = row.dataset.productId;
-                        const product = cachedFavorites.find(p => String(p.id) === String(prodId));
-                        if (window.StickyPlayer) {
-                            const currentId = window.StickyPlayer.getCurrentTrackId();
-                            if (currentId == prodId) {
-                                window.StickyPlayer.togglePlay();
-                            } else {
-                                window.StickyPlayer.updatePlaylist(cachedFavorites, 'favorites');
-                                window.StickyPlayer.play(product);
-                            }
-                        } else ws.playPause();
-                    };
-                }
-                activeWavesurfers.push(ws);
+            // If clicking same track, toggle
+            if (currentId == prod.id) {
+                window.StickyPlayer.togglePlay();
+                return;
             }
+
+            // Update Playlist & Play
+            // We only pass the current search results as context if possible, otherwise just this track
+            // Ideally we pass context: window.trendingProducts || cachedFavorites
+            // Filtered list is hard to access here without passing it down. 
+            // Minimal: Pass cachedFavorites
+            window.StickyPlayer.updatePlaylist(cachedFavorites, 'favorites');
+            window.StickyPlayer.play(prod);
+            return;
+        }
+
+        // 2. LOCAL FALLBACK (Only if StickyPlayer Missing)
+        // Check if WS exists for this row
+        let ws = window.activeWavesurfers.find(w => w.customId === waveformId);
+
+        if (!ws) {
+            // INIT ON DEMAND
+            if (btn) btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>';
+
+            try {
+                ws = await lazyLoadWaveSurfer(waveformId, audioUrl, row);
+                // Auto play once ready
+                ws.play();
+                if (btn) btn.innerHTML = '<i class="bi bi-pause-fill"></i>';
+                window.currentlyPlaying = ws;
+            } catch (e) {
+                console.error("Error lazy loading WS:", e);
+                if (btn) btn.innerHTML = '<i class="bi bi-exclamation-circle"></i>';
+            }
+        } else {
+            // Already initialized, just toggle
+            ws.playPause();
+            // Icon update handled by events
+        }
+    }
+
+    function lazyLoadWaveSurfer(containerId, url, row) {
+        return new Promise((resolve, reject) => {
+            if (!window.WaveSurfer) return reject("WaveSurfer lib not found");
+
+            const containerEl = document.getElementById(containerId);
+            if (!containerEl) return reject("Container not found");
+
+            // Pause others
+            if (window.activeWavesurfers) {
+                window.activeWavesurfers.forEach(w => w.pause());
+            }
+
+            const ws = WaveSurfer.create({
+                container: containerEl,
+                waveColor: '#666',
+                progressColor: '#8b5cf6',
+                barWidth: 2,
+                barGap: 2,
+                barRadius: 2,
+                height: 28,
+                url: url,
+                normalize: true,
+                interact: true,
+                cursorWidth: 0
+            });
+
+            ws.customId = containerId;
+
+            // REMOVE STATIC PLACEHOLDER
+            containerEl.classList.remove('waveform-static-fallback');
+            containerEl.innerHTML = ''; // Clear image/css placeholder if any
+
+            ws.on('ready', () => {
+                const dur = ws.getDuration();
+                const mins = Math.floor(dur / 60);
+                const secs = Math.floor(dur % 60);
+                const el = document.getElementById(`fav-duration-${containerId}`);
+                if (el) el.innerText = `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+                resolve(ws);
+            });
+
+            ws.on('play', () => {
+                const btn = document.getElementById(`btn-play-${containerId}`);
+                if (btn) btn.innerHTML = '<i class="bi bi-pause-fill"></i>';
+
+                // Pause other local instances
+                window.activeWavesurfers.forEach(w => {
+                    if (w !== ws) w.pause();
+                });
+            });
+
+            ws.on('pause', () => {
+                const btn = document.getElementById(`btn-play-${containerId}`);
+                if (btn) btn.innerHTML = '<i class="bi bi-play-fill"></i>';
+            });
+
+            ws.on('finish', () => {
+                const btn = document.getElementById(`btn-play-${containerId}`);
+                if (btn) btn.innerHTML = '<i class="bi bi-play-fill"></i>';
+            });
+
+            ws.on('error', (err) => {
+                if (err.name === 'AbortError') return;
+                console.warn("WS Error", err);
+                reject(err);
+            });
+
+            window.activeWavesurfers.push(ws);
         });
     }
+
+
 
     function setSearch(query) {
         currentSearch = query;

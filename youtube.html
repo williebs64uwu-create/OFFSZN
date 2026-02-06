@@ -164,8 +164,171 @@
 
         .input-group input:focus,
         .input-group textarea:focus {
-            border-color: #ef4444;
+            border-color: #8b5cf6;
+            /* PURPLE FOCUS */
+            box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2);
         }
+
+        .input-group textarea {
+            height: 180px;
+            /* FIXED HEIGHT */
+            resize: none;
+            /* NO RESIZE */
+        }
+
+        /* CUSTOM SCROLLBAR FOR TEXTAREA */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #444;
+            border-radius: 4px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #666;
+        }
+
+        .watch-yt-btn:hover {
+            background: rgba(255, 255, 255, 0.1) !important;
+            transform: translateY(-2px);
+        }
+
+        /* --- UPLOAD UI STYLES (From Beats.html) --- */
+        .grid-1-2 {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 32px;
+        }
+
+        @media (max-width: 768px) {
+            .grid-1-2 {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Cover Upload (Left) */
+        .cover-upload {
+            background: #111;
+            aspect-ratio: 1/1;
+            border-radius: 12px;
+            border: 2px dashed #333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            cursor: pointer;
+            overflow: hidden;
+            position: relative;
+            transition: all 0.2s;
+        }
+
+        .cover-upload:hover {
+            border-color: #666;
+            background: #161616;
+        }
+
+        .cover-preview {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: none;
+        }
+
+        .cover-upload.has-file .cover-preview {
+            display: block;
+        }
+
+        .cover-upload.has-file .cover-placeholder {
+            display: none;
+        }
+
+        .cover-upload.has-file {
+            border-style: solid;
+            border-color: transparent;
+        }
+
+        .cover-placeholder {
+            text-align: center;
+            color: #666;
+        }
+
+        /* Horizontal Upload Slots (Right) */
+        .upload-zone.horizontal-upload {
+            background: rgba(10, 10, 10, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 0 20px;
+            min-height: 72px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: border-color 0.2s ease, background 0.2s ease;
+            cursor: pointer;
+        }
+
+        .upload-zone.horizontal-upload:hover {
+            border-color: rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .upload-zone.horizontal-upload.has-file {
+            border-color: rgba(16, 185, 129, 0.5) !important;
+            background: transparent !important;
+        }
+
+        .slot-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 14px;
+        }
+
+        .upload-cta-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.06);
+            padding: 8px 16px;
+            border-radius: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.2s ease;
+        }
+
+        .upload-cta-btn span {
+            font-size: 12px;
+            color: #fff;
+            font-weight: 600;
+        }
+
+        .upload-cta-btn .icon-box {
+            width: 24px;
+            height: 24px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .remove-btn-mini {
+            background: none;
+            border: none;
+            color: #ef4444;
+            cursor: pointer;
+            font-size: 16px;
+            padding: 4px;
+        }
+
 
         .input-row {
             display: grid;
@@ -1006,69 +1169,185 @@
             <!-- HEADER BOX -->
             <div class="yt-header-box">
                 <div class="yt-header-info">
-                    <h1>YouTube Master Importer</h1>
+                    <h1>DE YOUTUBE A OFFSZN</h1>
                     <p>Importa tus beats directamente desde tu canal de YouTube.</p>
                 </div><button class="yt-btn-secondary" onclick="resetToHub()" style="font-size:0.9rem;"><i
                         class="bi bi-arrow-left"></i>Volver </button>
             </div>
-            <!-- PRODUCT FORM -->
+            <!--🔥 REFACTORED IMPORTER FORM (Grid Layout) -->
             <div class="yt-product-form">
-                <div class="form-section">
-                    <!-- THUMBNAIL PREVIEW & CROP TRIGGER -->
-                    <div style="margin-bottom:24px; text-align:center;">
-                        <div id="yt-thumb-preview-container" class="yt-thumb-container"><img id="yt-imported-thumb"
-                                src="" alt="Thumbnail" style="display:none;">
-                            <div class="yt-thumb-placeholder"><i class="bi bi-image"></i><span>Miniatura del
-                                    Video</span>
+                <!-- TOP: VISUALS (Cover + Files) -->
+                <div class="grid-1-2" style="margin-bottom:30px;">
+                    <!-- LEFT: THUMBNAIL -->
+                    <div>
+                        <div class="label" style="margin-bottom:8px; color:#aaa; font-size:0.9rem;">Portada del Video
+                        </div>
+                        <div id="yt-thumb-preview-container" class="cover-upload has-file" style="cursor: default;">
+                            <img id="yt-imported-thumb" src="" alt="Thumbnail" class="cover-preview"
+                                style="display:block;">
+                            <div class="yt-thumb-placeholder" style="display:none;">
+                                <i class="bi bi-image"></i><span>Miniatura</span>
                             </div>
-                            <div class="yt-thumb-overlay"><button onclick="openCropModalForThumb()"
-                                    class="yt-edit-thumb-btn"><i class="bi bi-crop"></i>Recortar
-                                    / Editar </button></div>
+                            <!-- Overlay actions for cropping -->
+                            <div
+                                style="position:absolute; bottom:10px; left:0; right:0; display:flex; justify-content:center; gap:8px;">
+                                <button onclick="openCropModalForThumb()" class="yt-edit-thumb-btn"
+                                    style="background:rgba(0,0,0,0.7); border:1px solid rgba(255,255,255,0.2); backdrop-filter:blur(4px); padding:6px 12px; border-radius:20px; color:#fff; font-size:0.8rem; cursor:pointer; transition:all 0.2s;">
+                                    <i class="bi bi-crop" style="margin-right:4px;"></i> Ajustar
+                                </button>
+                            </div>
                         </div>
                     </div>
-                    <h3>Informaci&oacute;n del Producto</h3>
-                    <div class="input-group"><label>Tipo de Producto</label>
-                        <!-- 🔥 LOCKED TO BEAT AS REQUESTED --><select id="yt-product-type" disabled
-                            style="background:#1a1a1a; color:#888; cursor:not-allowed;">
-                            <option value="beat" selected>Beat</option>
-                        </select>
-                        <div style="font-size:0.75rem; color:#666; margin-top:4px;"><i class="bi bi-lock-fill"></i>Solo
-                            disponible para Beats por
-                            el momento. </div>
-                    </div>
-                    <div class="input-group"><label>T�tulo</label><input type="text" name="title"
-                            placeholder="Ej: Dark Piano Type Beat"></div>
-                    <div class="input-group"><label style="display:flex; justify-content:space-between;">Descripci�n
-                            <span id="desc-count" style="font-size:0.8rem; color:#888;">0/800</span></label><textarea
-                            name="description" rows="6" placeholder="Cu�ntanos m�s sobre este beat..."
-                            oninput="updateDescCount(this)"></textarea>
-                        <div id="desc-warning" style="display:none; color:#ef4444; font-size:0.8rem; margin-top:4px;">
-                            ?? La descripci�n excede el l�mite recomendado para el Marketplace
-                            (800 caracteres). Se mostrar� truncada en algunas vistas. </div>
-                    </div>
-                    <div class="input-group"><label>Etiquetas de YouTube</label>
-                        <div style="margin-bottom:8px; font-size:0.85rem; color:#aaa;">
-                            Selecciona las 3 etiquetas principales para OFFSZN: </div>
-                        <!-- Hidden input to store comma-separated tags for upload --><input type="hidden" name="tags"
-                            id="final-tags-input">
-                        <!-- Interactive Cloud -->
-                        <div id="yt-tags-cloud"
-                            style="display:flex; flex-wrap:wrap; gap:8px; min-height:40px; padding:10px; background:rgba(255,255,255,0.03); border-radius:8px; border:1px solid rgba(255,255,255,0.1);">
-                            <span style="color:#666; font-size:0.9rem;">Las etiquetas
-                                del video aparecer�n aqu�...</span>
+
+                    <!-- RIGHT: FILE UPLOAD STACK -->
+                    <div>
+                        <div class="label" style="margin-bottom:8px; color:#aaa; font-size:0.9rem;">Archivos del
+                            Producto</div>
+                        <div class="file-stack" style="display: flex; flex-direction: column; gap: 12px;">
+
+                            <!-- 1. MP3 (Purple) -->
+                            <div class="upload-zone horizontal-upload" id="import-slot-mp3"
+                                onclick="document.getElementById('import-file-mp3').click()" style="cursor: pointer;">
+                                <div style="display:flex; align-items:center;">
+                                    <div class="slot-icon" style="color: #8b5cf6; background: rgba(139, 92, 246, 0.1);">
+                                        <i class="bi bi-music-note-beamed"></i>
+                                    </div>
+                                    <div class="slot-info">
+                                        <div style="font-weight: 700; color: #fff;">BEAT MP3</div>
+                                        <div style="font-size: 12px; color: #aaa;">(Con Tag)</div>
+                                    </div>
+                                </div>
+                                <div class="slot-status" style="display:flex; align-items:center; gap:16px;">
+                                    <span class="status-badge pending" style="font-size: 11px; color: #555;">Vax
+                                        10MB</span>
+                                    <div class="upload-cta-btn">
+                                        <span>Subir Archivo</span>
+                                        <div class="icon-box"><i class="bi bi-upload"
+                                                style="font-size: 12px; color:#fff;"></i></div>
+                                    </div>
+                                </div>
+                                <input type="file" id="import-file-mp3" accept=".mp3" hidden
+                                    onchange="handleImportFileSelect(this, 'mp3')">
+                            </div>
+
+                            <!-- 2. WAV (Cyan) -->
+                            <div class="upload-zone horizontal-upload" id="import-slot-wav"
+                                onclick="document.getElementById('import-file-wav').click()" style="cursor: pointer;">
+                                <div style="display:flex; align-items:center;">
+                                    <div class="slot-icon" style="color: #06b6d4; background: rgba(6, 182, 212, 0.1);">
+                                        <i class="bi bi-soundwave"></i>
+                                    </div>
+                                    <div class="slot-info">
+                                        <div style="font-weight: 700; color: #fff;">BEAT WAV</div>
+                                        <div style="font-size: 12px; color: #aaa;">(Sin Tag)</div>
+                                    </div>
+                                </div>
+                                <div class="slot-status" style="display:flex; align-items:center; gap:16px;">
+                                    <span class="status-badge pending" style="font-size: 11px; color: #555;">Vax
+                                        50MB</span>
+                                    <div class="upload-cta-btn">
+                                        <span>Subir Archivo</span>
+                                        <div class="icon-box"><i class="bi bi-upload"
+                                                style="font-size: 12px; color:#fff;"></i></div>
+                                    </div>
+                                </div>
+                                <input type="file" id="import-file-wav" accept=".wav" hidden
+                                    onchange="handleImportFileSelect(this, 'wav')">
+                            </div>
+
+                            <!-- 3. STEMS (Orange) -->
+                            <div class="upload-zone horizontal-upload" id="import-slot-stems"
+                                onclick="document.getElementById('import-file-stems').click()" style="cursor: pointer;">
+                                <div style="display:flex; align-items:center;">
+                                    <div class="slot-icon" style="color: #f59e0b; background: rgba(245, 158, 11, 0.1);">
+                                        <i class="bi bi-layers"></i>
+                                    </div>
+                                    <div class="slot-info">
+                                        <div style="font-weight: 700; color: #fff;">STEMS</div>
+                                        <div style="font-size: 12px; color: #aaa;">(Opcional)</div>
+                                    </div>
+                                </div>
+                                <div class="slot-status" style="display:flex; align-items:center; gap:16px;">
+                                    <span class="status-badge pending" style="font-size: 11px; color: #555;">Vax
+                                        200MB</span>
+                                    <div class="upload-cta-btn">
+                                        <span>Subir Archivo</span>
+                                        <div class="icon-box"><i class="bi bi-upload"
+                                                style="font-size: 12px; color:#fff;"></i></div>
+                                    </div>
+                                </div>
+                                <input type="file" id="import-file-stems" accept=".zip,.rar" hidden
+                                    onchange="handleImportFileSelect(this, 'stems')">
+                            </div>
+
                         </div>
-                    </div>
-                    <div class="input-row">
-                        <div class="input-group"><label>BPM</label><input type="text" name="bpm" placeholder="Ej: 140">
-                        </div>
-                        <div class="input-group"><label>Nota / Key</label><input type="text" name="key"
-                                placeholder="Ej: Cm"></div>
                     </div>
                 </div>
-                <div style="text-align: right;"><button class="yt-btn-secondary" onclick="redirectToUpload()"
-                        style="background: #fff; color: #000; font-weight: 700; border: none; padding: 14px 40px; border-radius: 12px; cursor: pointer;">Subir
-                        a OFFSZN </button></div>
+
+                <!-- BOTTOM: METADATA -->
+                <div class="importer-metadata">
+                    <h3
+                        style="margin:0 0 20px 0; color:#fff; font-size:1.1rem; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:12px;">
+                        Datos del Producto</h3>
+
+                    <div class="input-group">
+                        <label>Tipo de Producto</label>
+                        <select id="yt-product-type" disabled
+                            style="width:100%; padding:12px; background:#1a1a1a; border:1px solid rgba(255,255,255,0.1); border-radius:8px; color:#888; cursor:not-allowed;">
+                            <option value="beat" selected>Beat</option>
+                        </select>
+                    </div>
+
+                    <div class="input-group">
+                        <label style="display:flex; justify-content:space-between;">Título <span id="title-count"
+                                style="font-size:0.8rem; color:#888;">0/60</span></label>
+                        <input type="text" name="title" id="import-title" placeholder="Ej: Dark Piano Type Beat"
+                            maxlength="60" oninput="updateTitleCount(this)">
+                    </div>
+
+                    <div class="input-group">
+                        <label style="display:flex; justify-content:space-between;">Descripción <span id="desc-count"
+                                style="font-size:0.8rem; color:#888;">0/3000</span></label>
+                        <textarea name="description" id="import-desc" placeholder="Cuéntanos más sobre este beat..."
+                            oninput="updateDescCount(this)" class="custom-scrollbar" rows="6"></textarea>
+                        <div style="display:flex; justify-content:flex-end; margin-top:8px;">
+                            <a id="yt-watch-link" href="#" target="_blank" class="watch-yt-btn"
+                                style="display:none; align-items:center; background:rgba(255,255,255,0.05); color:#ccc; font-size:0.8rem; padding:6px 12px; border-radius:6px; text-decoration:none; border:1px solid rgba(255,255,255,0.1); transition:all 0.2s;">
+                                <i class="bi bi-youtube" style="color:#ef4444; margin-right:6px;"></i> Ver en YouTube
+                            </a>
+                        </div>
+                        <div id="desc-warning" style="display:none; color:#ef4444; font-size:0.8rem; margin-top:4px;">
+                            ⚠ La descripción excede el límite (3000 chars).
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label>Etiquetas (Selecciona 3)</label>
+                        <input type="hidden" name="tags" id="final-tags-input">
+                        <div id="yt-tags-cloud"
+                            style="display:flex; flex-wrap:wrap; gap:8px; min-height:40px; padding:10px; background:rgba(255,255,255,0.03); border-radius:8px; border:1px solid rgba(255,255,255,0.1);">
+                            <span style="color:#666; font-size:0.9rem;">Las etiquetas aparecerán aquí...</span>
+                        </div>
+                    </div>
+
+                    <div class="input-row" style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+                        <div class="input-group">
+                            <label>BPM</label>
+                            <input type="text" name="bpm" id="import-bpm" placeholder="Ej: 140">
+                        </div>
+                        <div class="input-group">
+                            <label>Key</label>
+                            <input type="text" name="key" id="import-key" placeholder="Ej: Cm">
+                        </div>
+                    </div>
+
+                    <button class="yt-btn-secondary" onclick="redirectToUpload()"
+                        style="width: 100%; background: #fff; color: #000; font-weight: 700; border: none; padding: 14px; border-radius: 12px; cursor: pointer; margin-top:16px;">
+                        <i class="bi bi-arrow-right-circle-fill" style="margin-right:8px;"></i> Continuar a OFFSZN
+                    </button>
+                </div>
             </div>
+        </div>
         </div>
 
         <!-- 🔥 UPLOAD FORM (TunesToTube Style) -->
@@ -1081,56 +1360,149 @@
                         class="bi bi-arrow-left"></i>Volver </button>
             </div>
 
-            <div class="yt-upload-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
-                <!-- LEFT: FILES & CONFIG -->
-                <div class="yt-upload-left">
-                    <!-- 1. AUDIO -->
-                    <div class="upload-dropzone" id="audio-dropzone"
-                        onclick="document.getElementById('audio-input').click()">
-                        <input type="file" id="audio-input" accept="audio/*" style="display:none;"
-                            onchange="handleAudioSelect(this)">
-                        <div class="drop-icon"><i class="bi bi-music-note-beamed"></i></div>
-                        <h3>1. Sube tu Audio</h3>
-                        <p id="audio-filename">Arrastra tu MP3 o WAV aquí</p>
-                    </div>
-
-                    <!-- 2. IMAGE -->
-                    <div class="upload-dropzone" id="image-dropzone"
-                        onclick="document.getElementById('image-input').click()" style="margin-top: 20px;">
-                        <input type="file" id="image-input" accept="image/*" style="display:none;"
+            <!-- NEW LAYOUT: Cover Left, Files Right (Beats Style) -->
+            <div class="grid-1-2" style="margin-bottom: 40px;">
+                <!-- LEFT: COVER (Square) -->
+                <div>
+                    <div class="label" style="margin-bottom:8px; color:#aaa; font-size:0.9rem;">1. Portada <span
+                            style="color:#ef4444">*</span></div>
+                    <div class="cover-upload" id="coverDropZone"
+                        onclick="document.getElementById('image-input').click()">
+                        <input type="file" id="image-input" accept="image/png, image/jpeg, image/jpg" hidden
                             onchange="handleImageSelect(this)">
-                        <div class="drop-icon"><i class="bi bi-image"></i></div>
-                        <h3>2. Sube tu Portada</h3>
-                        <p id="image-filename">JPG o PNG (Se recortará a 16:9)</p>
+
+                        <!-- Preview Image (Uses logic from crop) -->
+                        <img id="cropImagePreview" class="cover-preview"
+                            style="display:none; width:100%; height:100%; object-fit:cover; border-radius:10px;">
+
+                        <div class="cover-placeholder" id="coverPlaceholder">
+                            <i class="bi bi-image" style="font-size: 2rem; color: #666; margin-bottom: 8px;"></i>
+                            <div style="font-size: 0.9rem; color:#fff; font-weight:600;">Subir Portada</div>
+                            <div style="font-size: 0.8rem; opacity: 0.7;">1080x1080px (JPG/PNG)</div>
+                        </div>
                     </div>
                 </div>
 
-                <!-- RIGHT: PREVIEW & METADATA -->
-                <div class="yt-upload-right">
+                <!-- RIGHT: FILE STACK -->
+                <div>
+                    <div class="label" style="margin-bottom:8px; color:#aaa; font-size:0.9rem;">2. Archivos de Audio
+                        <span style="color:#ef4444">*</span>
+                    </div>
+                    <div class="file-stack" style="display: flex; flex-direction: column; gap: 12px;">
+                        <!-- MP3 SLOT (Active) -->
+                        <div class="upload-zone horizontal-upload" id="audio-dropzone"
+                            onclick="document.getElementById('audio-input').click()">
+                            <div style="display:flex; align-items:center;">
+                                <div class="slot-icon" style="color: #8b5cf6; background: rgba(139, 92, 246, 0.1);">
+                                    <i class="bi bi-music-note-beamed"></i>
+                                </div>
+                                <div>
+                                    <div style="font-weight: 700; color: #fff;">BEAT MP3</div>
+                                    <div style="font-size: 12px; color: #aaa;">(Para el Video)</div>
+                                    <div id="audio-filename" style="font-size: 11px; color: #8b5cf6; margin-top:2px;">
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="display:flex; align-items:center; gap:16px;">
+                                <span style="font-size: 11px; color: #555;">Max 50MB</span>
+                                <div class="upload-cta-btn">
+                                    <span>Subir Archivo</span>
+                                    <div class="icon-box"><i class="bi bi-upload"
+                                            style="font-size: 12px; color:#fff;"></i></div>
+                                </div>
+                            </div>
+                            <input type="file" id="audio-input" accept="audio/*" hidden
+                                onchange="handleAudioSelect(this)">
+                        </div>
+
+                        <!-- WAV SLOT (Visual Only for now, maps to same input if clicked?) -->
+                        <div class="upload-zone horizontal-upload"
+                            onclick="document.getElementById('audio-input').click()" style="opacity: 0.8;">
+                            <div style="display:flex; align-items:center;">
+                                <div class="slot-icon" style="color: #06b6d4; background: rgba(6, 182, 212, 0.1);">
+                                    <i class="bi bi-soundwave"></i>
+                                </div>
+                                <div>
+                                    <div style="font-weight: 700; color: #fff;">BEAT WAV</div>
+                                    <div style="font-size: 12px; color: #aaa;">(Recomendado)</div>
+                                </div>
+                            </div>
+                            <div class="upload-cta-btn" style="opacity:0.6;"><span>Cambiar Archivo</span></div>
+                        </div>
+
+                        <!-- STEMS SLOT (Disabled/Visual) -->
+                        <div class="upload-zone horizontal-upload" style="opacity: 0.4; cursor: not-allowed;">
+                            <div style="display:flex; align-items:center;">
+                                <div class="slot-icon" style="color: #f59e0b; background: rgba(245, 158, 11, 0.1);">
+                                    <i class="bi bi-layers"></i>
+                                </div>
+                                <div>
+                                    <div style="font-weight: 700; color: #fff;">STEMS</div>
+                                    <div style="font-size: 12px; color: #aaa;">(No disponible para Video)</div>
+                                </div>
+                            </div>
+                            <div class="upload-cta-btn" style="border:none;"><i class="bi bi-lock"></i></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- METADATA & PREVIEW ROW -->
+            <div style="display: grid; grid-template-columns: 1fr 340px; gap: 40px; align-items:start;">
+                <!-- LEFT: DATA -->
+                <div>
+                    <h3 style="margin-bottom:20px; color:#fff; font-size:1.1rem;">Información del Video</h3>
+                    <div class="input-group">
+                        <label>Título del Video</label>
+                        <input type="text" id="upload-title" placeholder="Ej: Travis Scott Type Beat - 'NIGHT'">
+                    </div>
+                    <div class="input-group">
+                        <label>Descripción</label>
+                        <textarea id="upload-desc" rows="5"
+                            placeholder="Enlace de compra, redes sociales..."></textarea>
+                    </div>
+
+                    <!-- SCHEDULING FIELD (New) -->
+                    <div class="input-group">
+                        <label style="display: flex; justify-content: space-between; align-items: center;">
+                            Programar Publicación <span
+                                style="font-size: 0.75rem; color: #888; font-weight: 400;">(Opcional)</span>
+                        </label>
+                        <input type="datetime-local" id="upload-schedule-time" style="color-scheme: dark;">
+                        <div style="font-size: 0.75rem; color: #666; margin-top: 6px;">
+                            <i class="bi bi-calendar-event"></i> Si se deja vacío, se publicará inmediatamente.
+                        </div>
+                    </div>
+
+                    <button class="yt-btn-secondary" onclick="processAndUpload()"
+                        style="width: 100%; background: #ef4444; color: #fff; margin-top: 20px; border:none; padding:16px; font-size:1rem; border-radius:12px; font-weight:700;">
+                        <i class="bi bi-cloud-upload" style="margin-right: 8px;"></i> Procesar y Subir a YouTube
+                    </button>
+                    <!-- Status message container -->
+                    <div id="upload-status" style="margin-top:16px; text-align:center; color:#ccc; font-size:0.9rem;">
+                    </div>
+                </div>
+
+                <!-- RIGHT: PREVIEW -->
+                <div>
+                    <div class="label" style="margin-bottom:12px; color:#aaa;">Vista Previa (16:9)</div>
                     <!-- PREVIEW BOX (16:9) -->
                     <div class="yt-video-preview"
-                        style="aspect-ratio: 16/9; background: #000; border-radius: 12px; position: relative; overflow: hidden; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.1);">
+                        style="aspect-ratio: 16/9; background: #000; border-radius: 12px; position: relative; overflow: hidden; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
                         <img id="yt-preview-bg" src=""
                             style="width: 100%; height: 100%; object-fit: cover; opacity: 0.5;">
-                        <div class="yt-play-overlay"
-                            style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 60px; height: 60px; background: rgba(255,0,0,0.9); border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+                        <div class="yt-play-overlay" onclick="togglePreviewPlay()"
+                            style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 60px; height: 60px; background: rgba(239, 68, 68, 0.9); border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); cursor: pointer; transition: transform 0.2s;">
                             <i class="bi bi-play-fill" style="font-size: 2rem; color: #fff; padding-left: 4px;"></i>
                         </div>
                         <div
-                            style="position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.8); padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 700;">
+                            style="position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.8); padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 700; color:#fff;">
                             OFFSZN PLAYER</div>
                     </div>
-
-                    <!-- METADATA -->
-                    <div class="input-group"><label>Título del Video</label><input type="text" id="upload-title"
-                            placeholder="Ej: Travis Scott Type Beat - 'NIGHT'"></div>
-                    <div class="input-group"><label>Descripción</label><textarea id="upload-desc" rows="4"
-                            placeholder="Enlace de compra, redes sociales..."></textarea></div>
-
-                    <button class="yt-btn-secondary" onclick="processAndUpload()"
-                        style="width: 100%; background: #ef4444; color: #fff; margin-top: 10px;">
-                        <i class="bi bi-cloud-upload" style="margin-right: 8px;"></i> Procesar y Subir a YouTube
-                    </button>
+                    <div style="font-size:0.8rem; color:#666; line-height:1.4;">
+                        <i class="bi bi-info-circle" style="margin-right:6px;"></i>
+                        Tu video se generará automáticamente combinando el audio y la imagen.
+                    </div>
                 </div>
             </div>
         </div>
@@ -1181,10 +1553,87 @@
             </button>
         </div>
     </div>
+    <!-- ==================== UPLOAD PROGRESS OVERLAY (Psychological) ==================== -->
+    <div id="upload-overlay"
+        style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:9999; align-items:center; justify-content:center; flex-direction:column; backdrop-filter:blur(10px);">
+
+        <div class="progress-modal" style="width:90%; max-width:500px; text-align:center;">
+            <!-- Animation Container -->
+            <div style="margin-bottom:30px; position:relative; width:80px; height:80px; margin:0 auto 20px;">
+                <div style="position:absolute; inset:0; border:4px solid rgba(239, 68, 68, 0.2); border-radius:50%;">
+                </div>
+                <div
+                    style="position:absolute; inset:0; border:4px solid #ef4444; border-radius:50%; border-top-color:transparent; animation:spin 1s linear infinite;">
+                </div>
+                <i class="bi bi-cloud-arrow-up-fill"
+                    style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); font-size:2rem; color:#fff;"></i>
+            </div>
+
+            <h3 id="progress-title" style="color:#fff; font-size:1.5rem; margin-bottom:10px; font-weight:700;">Subiendo
+                Contenido...</h3>
+            <p id="progress-desc" style="color:#aaa; font-size:0.95rem; margin-bottom:30px;">Estamos procesando tu video
+                y subiendo los archivos a OFFSZN.</p>
+
+            <!-- Progress Bar -->
+            <div class="progress-container"
+                style="background:rgba(255,255,255,0.1); border-radius:10px; height:12px; width:100%; overflow:hidden; position:relative; margin-bottom:16px;">
+                <div id="upload-progress-bar"
+                    style="background: linear-gradient(90deg, #ef4444, #f87171); width:0%; height:100%; border-radius:10px; transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 0 15px rgba(239, 68, 68, 0.5);">
+                </div>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; color:#fff; font-size:0.9rem; font-weight:600;">
+                <span id="progress-status-text">Iniciando...</span>
+                <span id="progress-percent">0%</span>
+            </div>
+
+            <div
+                style="margin-top:40px; padding:16px; background:rgba(239, 68, 68, 0.1); border:1px solid rgba(239, 68, 68, 0.2); border-radius:8px; color:#ffcccc; font-size:0.85rem; display:flex; align-items:center; gap:12px; text-align:left;">
+                <i class="bi bi-exclamation-triangle-fill" style="font-size:1.2rem;"></i>
+                <div>
+                    <strong>IMPORTANTE:</strong><br>
+                    No cierres ni recargues esta ventana hasta que el proceso termine por completo.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        @keyframes spin {
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+
     <script src="/script/cart.js"></script>
     <script src="/script/notifications.js"></script>
     <script src="/script/navbar.js?v=7" type="module"></script>
     <script src="/script/youtube-importer.js"></script>
+    <!-- PUBLISH OVERLAY -->
+    <div id="publishOverlay"
+        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 9999; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(10px);">
+        <div class="spinner"
+            style="width: 50px; height: 50px; border: 4px solid rgba(255,255,255,0.1); border-left-color: #8b5cf6; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 24px;">
+        </div>
+        <h3 id="publishOverlayTitle"
+            style="font-size: 24px; font-weight: 700; margin-bottom: 8px; color: #fff; letter-spacing: -0.5px; font-family: 'Plus Jakarta Sans', sans-serif;">
+            SUBIENDO BEAT...</h3>
+        <p id="publishOverlayText"
+            style="color: #888; font-size: 15px; font-weight: 500; font-family: 'Inter', sans-serif;">Por favor, no
+            cierres esta página.</p>
+    </div>
+    <style>
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
 </body>
 
 </html>
