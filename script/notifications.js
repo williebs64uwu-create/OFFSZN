@@ -160,7 +160,7 @@
                 if (productIds.size > 0) {
                     const { data: products } = await sbClient
                         .from('products')
-                        .select('id, name, product_type')
+                        .select('id, name, product_type, public_slug')
                         .in('id', Array.from(productIds));
                     if (products) products.forEach(p => productsMap[p.id] = p);
                 }
@@ -197,16 +197,17 @@
                         const actor = actorsMap[n.data.follower_id];
                         if (actor) {
                             const name = actor.nickname || actor.first_name || 'Alguien';
-                            // FIX: User request - Underline, Link to Profile, NO HOVER CARD
+                            // Fix: User request - Underline, Link to Profile, NO HOVER CARD
                             // Fix: Add data-artist for hover-card.js compatibility
                             const artistData = JSON.stringify({ nickname: name }).replace(/'/g, "&apos;").replace(/"/g, "&quot;");
+                            const profileUrl = window.createProfileLink(actor); // Generate SEO link
 
                             const nameHtml = `<strong class="artist-hover-trigger" 
                                                       data-artist='${artistData}'
                                                       data-id="${n.data.follower_id}" 
                                                       onmouseenter="window.showArtistCard(event, this)" 
                                                       onmouseleave="window.hideArtistCard(event, this)"
-                                                      onclick="window.openProfile('${n.data.follower_id}', event)" 
+                                                      onclick="event.stopPropagation(); window.location.href='${profileUrl}'" 
                                                       style="cursor:pointer;">${name}</strong>`;
                             finalMessage = `${nameHtml} comenzó a seguirte.`;
                         }
@@ -215,7 +216,12 @@
                     return {
                         ...n,
                         message: finalMessage,
-                        title: finalTitle
+                        title: finalTitle,
+                        targetUrl: (n.type === 'product_like' && n.data?.product_id && productsMap[n.data.product_id])
+                            ? window.createSeoLink(productsMap[n.data.product_id])
+                            : (n.type === 'new_follower' && n.data?.follower_id && actorsMap[n.data.follower_id])
+                                ? window.createProfileLink(actorsMap[n.data.follower_id])
+                                : null
                     };
                 });
 
@@ -316,11 +322,15 @@
                     // Ensure extraId is safe
                     extraId = extraId ? extraId.toString().replace(/"/g, '&quot;') : '';
 
+                    if (n.type === 'new_follower') console.log('👤 Follower Notif Render:', { id: n.id, extraId, targetUrl: n.targetUrl }); // DEBUG
+
                     return `
+
                         <div class="notification-item ${n.read ? '' : 'unread'}" 
                              data-id="${n.id}" 
                              data-type="${n.type}" 
                              data-extra-id="${extraId}"
+                             data-url="${n.targetUrl || ''}"
                              onclick="handleNotificationItemClick(this)">
                             <div class="notif-icon ${n.type}">
                                 <i class="fas ${this.getIcon(n.type)}"></i>
@@ -459,7 +469,9 @@
         const id = el.getAttribute('data-id');
         const type = el.getAttribute('data-type');
         const extraId = el.getAttribute('data-extra-id');
-        handleNotificationClick(id, type, extraId);
+        const url = el.getAttribute('data-url'); // NEW
+        console.log('🔔 Notification Clicked:', { id, type, extraId, url }); // DEBUG
+        handleNotificationClick(id, type, extraId, url);
     };
 
 
@@ -506,7 +518,7 @@
         }
     };
 
-    window.handleNotificationClick = async function (id, type, extraId) {
+    window.handleNotificationClick = async function (id, type, extraId, targetUrl) {
         // Optimistic UI Update
         const badge = document.getElementById('notification-badge');
         const count = parseInt(localStorage.getItem('notificationCount') || '0');
@@ -535,19 +547,26 @@
         console.log(`Processing click: Type=${type}, ExtraID='${extraId}'`);
 
         // Redirect Logic
+        // Redirect Logic (Prioritize calculated SEO URL)
+        if (targetUrl && targetUrl !== 'null' && targetUrl !== 'undefined') {
+            window.location.href = targetUrl;
+            return;
+        }
+
         if (type === 'collab_invitation') {
             window.location.href = '/cuenta/colaboraciones.html?tab=recibidas';
         } else if (type === 'collab_accepted') {
             window.location.href = '/cuenta/colaboraciones.html?tab=mis-invitaciones';
         } else if (type === 'new_follower') {
             if (extraId) {
+                // Fallback
                 window.location.href = `/perfil-publico.html?id=${extraId}`;
             } else {
                 window.location.reload();
             }
         } else if (type === 'product_like') {
             if (extraId && extraId !== 'undefined') {
-                // Redirect to PUBLIC product page
+                // Fallback
                 window.location.href = `/producto.html?id=${extraId}`;
             } else {
                 window.location.href = '/cuenta/subir-kit.html';

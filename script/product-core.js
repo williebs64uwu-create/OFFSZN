@@ -20,22 +20,36 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         // 2. Fetch Data from Supabase (Dual Lookup: ID or Slug)
-        let query = window.supabaseClient
-            .from('products')
-            .select(`
-                *,
-                producer:producer_id (*)
-            `);
+        // 2. Fetch Data from Supabase (Robust Dual Lookup)
+        let product = null;
+        let error = null;
 
+        // Attempt 1: ID Lookup (Fastest)
         if (urlData.id) {
-            // Priority 1: ID lookup (if we have a valid code)
-            query = query.eq('id', urlData.id);
-        } else {
-            // Priority 2: Slug lookup
-            query = query.eq('public_slug', urlData.slug);
+            const { data, error: err } = await window.supabaseClient
+                .from('products')
+                .select(`*, producer:producer_id (*)`)
+                .eq('id', urlData.id)
+                .maybeSingle();
+
+            product = data;
+            error = err;
         }
 
-        const { data: product, error } = await query.maybeSingle();
+        // Attempt 2: Slug Lookup (Fallback if ID failed or was invalid/collision)
+        // This fixes cases where the URL parser mistakenly decodes part of the name (e.g. "bpm") as an ID.
+        if (!product && urlData.slug) {
+            if (urlData.id) console.warn("⚠️ ID lookup failed/empty. Falling back to public_slug:", urlData.slug);
+
+            const { data, error: err } = await window.supabaseClient
+                .from('products')
+                .select(`*, producer:producer_id (*)`)
+                .eq('public_slug', urlData.slug)
+                .maybeSingle();
+
+            product = data;
+            if (err) error = err; // Update error only if this attempt also fails
+        }
 
         if (error) {
             console.error("Supabase Error Full:", error);
