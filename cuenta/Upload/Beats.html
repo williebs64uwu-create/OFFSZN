@@ -3497,11 +3497,11 @@
                     <div class="yt-hub-btn secondary">Comenzar</div>
                 </div>
                 <!-- OPTION 2: YOUTUBE + OFFZSN -->
-                <div class="yt-hub-card secondary" onclick="enableYouTubeUploadMode()">
+                <div class="yt-hub-card secondary" style="opacity: 0.6; cursor: not-allowed;">
                     <div class="yt-hub-icon" style="color:#ef4444;"><i class="bi bi-youtube"></i></div>
                     <h2>Subir a YOUTUBE <br>y OFFSZN</h2>
                     <p>Genera video automático y publica en ambas plataformas.</p>
-                    <div class="yt-hub-btn">Comenzar</div>
+                    <div class="yt-hub-btn" style="background: #333; color: #888;">Próximamente</div>
                 </div>
             </div>
         </div>
@@ -7961,6 +7961,16 @@
             return cleanName + ext;
         }
         async function handlePublish() {
+            // 🔥 GUARD: Prevent Publish if No User ID (Fixes producer_id: null bug)
+            if (!userId) {
+                console.error('❌ Blocked Publish: userId is null. Attempting re-fetch...');
+                await checkAuth(); // Try to recover
+                if (!userId) {
+                    showToast('Error Crítico: No se detectó la sesión de usuario. Por favor recarga la página.', 'error');
+                    return;
+                }
+            }
+
             // 🔥 PREVENIR DOBLE SUBMISSION
             if (window.isPublishing) return;
             window.isPublishing = true;
@@ -10395,6 +10405,13 @@
         function enableYouTubeUploadMode() {
             window.isYouTubeUpload = true;
             console.log('📺 YouTube Upload Mode ENABLED');
+
+            // 🔥 GUARD: Prevent starting if no user
+            if (!userId) {
+                showToast('Error: No se ha detectado el usuario. Recarga la página.', 'error');
+                console.error('❌ Blocked YouTube Upload: userId is null');
+                return;
+            }
 
             // Show toast
             showToast('Modo YouTube Activado', 'info');
