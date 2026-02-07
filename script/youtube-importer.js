@@ -232,7 +232,7 @@ function createVideoCard(video) {
             <div style="font-size: 0.75rem; color: #888; margin-top: auto;">${date}</div>
         </div>
     `;
-    div.onclick = () => selectVideo(videoId, title, snippet.description, snippet.thumbnails);
+    div.onclick = () => selectVideo(videoId, title, snippet.description || '', snippet.thumbnails);
     return div;
 }
 
@@ -1338,7 +1338,10 @@ let uploadedDraftPaths = {
 };
 
 async function uploadFileToDrafts(file, type) {
-    const user = window.AuthUtils ? window.AuthUtils.getCurrentUser() : null;
+    // 🔥 FIX: Direct Supabase check instead of AuthUtils which might not be init
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    const user = session?.user;
+
     if (!user) return null; // Guest: Local only
 
     // Verify Size
@@ -1360,7 +1363,8 @@ async function uploadFileToDrafts(file, type) {
     else return null;
 
     // Sanitize
-    const cleanName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+    const fileName = file.name || `file_${Date.now()}`;
+    const cleanName = fileName.replace(/[^a-zA-Z0-9.-]/g, '_');
     const path = `${user.id}/${folder}/${Date.now()}_${cleanName}`;
 
     // UI Update (Slots)

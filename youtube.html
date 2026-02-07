@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Youtube - OFFSZN</title>
+    <title>Checkout - OFFSZN</title>
     <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -30,1028 +30,212 @@
     </script>
     <script src="/script/auth-utils.js?v=11"></script>
     <script src="/script/notifications.js"></script>
-    <style>
-        .yt-tag-chip {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 6px 14px;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            cursor: pointer;
-            transition: all 0.2s;
-            border: 1px solid transparent;
-            user-select: none;
-        }
-
-        .yt-tag-chip:hover {
-            background: rgba(255, 255, 255, 0.2);
-        }
-
-        .yt-tag-chip.selected {
-            background: #8b5cf6;
-            color: #fff;
-            border-color: #a78bfa;
-            box-shadow: 0 0 10px rgba(139, 92, 246, 0.4);
-        }
-
-        /* Limit text styles */
-        .limit-exceeded {
-            color: #ef4444 !important;
-            font-weight: bold;
-        }
-
-        .yt-importer-container {
-            max-width: 900px;
-            margin: 100px auto 40px;
-            padding: 0 20px;
-        }
-
-        .yt-header-box {
-            background: rgba(20, 20, 20, 0.6);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            border-radius: 20px;
-            padding: 32px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 24px;
-        }
-
-        .yt-header-info h1 {
-            font-size: 1.5rem;
-            font-weight: 700;
-            margin: 0 0 8px 0;
-            color: #fff;
-        }
-
-        .yt-header-info p {
-            color: #888;
-            font-size: 0.9rem;
-            margin: 0;
-        }
-
-        #btn-import-yt {
-            background: #ef4444;
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 12px;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            cursor: pointer;
-            transition: all 0.2s;
-            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.2);
-        }
-
-        #btn-import-yt:hover {
-            background: #dc2626;
-            transform: translateY(-2px);
-        }
-
-        #btn-import-yt:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        /* Form styling */
-        .yt-product-form {
-            display: grid;
-            gap: 24px;
-            margin-bottom: 60px;
-        }
-
-        .form-section {
-            background: rgba(20, 20, 20, 0.4);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            border-radius: 16px;
-            padding: 24px;
-        }
-
-        .yt-product-form h3 {
-            font-size: 1rem;
-            margin: 0 0 20px 0;
-            color: #ccc;
-            font-weight: 600;
-        }
-
-        .input-group {
-            margin-bottom: 16px;
-        }
-
-        .input-group label {
-            display: block;
-            font-size: 0.8rem;
-            color: #666;
-            margin-bottom: 8px;
-            font-weight: 500;
-        }
-
-        .input-group input,
-        .input-group textarea {
-            width: 100%;
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 8px;
-            padding: 12px 16px;
-            color: #fff;
-            font-size: 0.9rem;
-            outline: none;
-            transition: border-color 0.2s;
-        }
-
-        .input-group input:focus,
-        .input-group textarea:focus {
-            border-color: #8b5cf6;
-            /* PURPLE FOCUS */
-            box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2);
-        }
-
-        .input-group textarea {
-            height: 180px;
-            /* FIXED HEIGHT */
-            resize: none;
-            /* NO RESIZE */
-        }
-
-        /* CUSTOM SCROLLBAR FOR TEXTAREA */
-        .custom-scrollbar::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        .custom-scrollbar::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 4px;
-        }
-
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: #444;
-            border-radius: 4px;
-        }
-
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-            background: #666;
-        }
-
-        .watch-yt-btn:hover {
-            background: rgba(255, 255, 255, 0.1) !important;
-            transform: translateY(-2px);
-        }
-
-        /* --- UPLOAD UI STYLES (From Beats.html) --- */
-        .grid-1-2 {
-            display: grid;
-            grid-template-columns: 300px 1fr;
-            gap: 32px;
-        }
-
-        @media (max-width: 768px) {
-            .grid-1-2 {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        /* Cover Upload (Left) */
-        .cover-upload {
-            background: #111;
-            aspect-ratio: 1/1;
-            border-radius: 12px;
-            border: 2px dashed #333;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-            cursor: pointer;
-            overflow: hidden;
-            position: relative;
-            transition: all 0.2s;
-        }
-
-        .cover-upload:hover {
-            border-color: #666;
-            background: #161616;
-        }
-
-        .cover-preview {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            display: none;
-        }
-
-        .cover-upload.has-file .cover-preview {
-            display: block;
-        }
-
-        .cover-upload.has-file .cover-placeholder {
-            display: none;
-        }
-
-        .cover-upload.has-file {
-            border-style: solid;
-            border-color: transparent;
-        }
-
-        .cover-placeholder {
-            text-align: center;
-            color: #666;
-        }
-
-        /* Horizontal Upload Slots (Right) */
-        .upload-zone.horizontal-upload {
-            background: rgba(10, 10, 10, 0.6);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 12px;
-            padding: 0 20px;
-            min-height: 72px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            transition: border-color 0.2s ease, background 0.2s ease;
-            cursor: pointer;
-        }
-
-        .upload-zone.horizontal-upload:hover {
-            border-color: rgba(255, 255, 255, 0.2);
-            background: rgba(255, 255, 255, 0.02);
-        }
-
-        .upload-zone.horizontal-upload.has-file {
-            border-color: rgba(16, 185, 129, 0.5) !important;
-            background: transparent !important;
-        }
-
-        .slot-icon {
-            width: 36px;
-            height: 36px;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-right: 14px;
-        }
-
-        .upload-cta-btn {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            background: rgba(255, 255, 255, 0.06);
-            padding: 8px 16px;
-            border-radius: 30px;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            transition: all 0.2s ease;
-        }
-
-        .upload-cta-btn span {
-            font-size: 12px;
-            color: #fff;
-            font-weight: 600;
-        }
-
-        .upload-cta-btn .icon-box {
-            width: 24px;
-            height: 24px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .remove-btn-mini {
-            background: none;
-            border: none;
-            color: #ef4444;
-            cursor: pointer;
-            font-size: 16px;
-            padding: 4px;
-        }
-
-
-        .input-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 16px;
-        }
-
-        /* Modal styling */
-        .yt-modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.9);
-            backdrop-filter: blur(10px);
-            z-index: 2000;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .yt-modal-content {
-            background: #111;
-            width: 90%;
-            max-width: 800px;
-            max-height: 80vh;
-            border-radius: 24px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            position: relative;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-        }
-
-        .yt-modal-header {
-            padding: 24px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .yt-modal-header h2 {
-            margin: 0;
-            font-size: 1.2rem;
-            color: #fff;
-        }
-
-        .yt-close {
-            background: none;
-            border: none;
-            color: #888;
-            font-size: 1.5rem;
-            cursor: pointer;
-        }
-
-        #yt-video-list {
-            flex: 1;
-            overflow-y: auto;
-            padding: 24px;
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-            /* Restoring Grid */
-            gap: 20px;
-            align-content: flex-start;
-            /* Prevent vertical stretching gaps */
-
-            /* Custom Scrollbar - Dark Theme */
-            scrollbar-width: thin;
-            scrollbar-color: #333 transparent;
-        }
-
-        #yt-video-list::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        #yt-video-list::-webkit-scrollbar-track {
-            background: transparent;
-        }
-
-        #yt-video-list::-webkit-scrollbar-thumb {
-            background-color: #333;
-            border-radius: 20px;
-            border: 2px solid transparent;
-            /* Padding effect */
-            background-clip: content-box;
-        }
-
-        #yt-video-list::-webkit-scrollbar-thumb:hover {
-            background-color: #555;
-        }
-
-        .yt-video-card {
-            background: #1a1a1a;
-            border-radius: 12px;
-            overflow: hidden;
-            cursor: pointer;
-            transition: all 0.2s;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            display: flex;
-            flex-direction: column;
-            /* Top-Bottom Layout */
-            height: 100%;
-            min-height: 220px;
-            /* Force visual height */
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-        }
-
-        .yt-video-card:hover {
-            background: #252525;
-            border-color: #ef4444;
-            transform: translateY(-4px);
-        }
-
-        .yt-video-card img {
-            width: 100%;
-            aspect-ratio: 16/9;
-            object-fit: cover;
-            flex-shrink: 0;
-            border-right: none;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            background: #000;
-            /* Fallback */
-        }
-
-        .yt-video-info {
-            padding: 16px;
-            background: #1a1a1a;
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-start;
-            align-items: flex-start;
-            border-top: none;
-            min-width: 0;
-        }
-
-        .yt-video-info h4 {
-            margin: 0 0 6px 0;
-            font-size: 0.9rem;
-            color: #fff;
-            font-weight: 600;
-
-            /* Multi-line Truncation */
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            line-clamp: 2;
-            -webkit-box-orient: vertical;
-            white-space: normal;
-            overflow: hidden;
-            text-overflow: ellipsis;
-
-            line-height: 1.4;
-            text-align: left;
-            width: 100%;
-        }
-
-        /* SKELETON STYLES */
-        .skeleton-card {
-            background: #1a1a1a;
-            border-radius: 12px;
-            overflow: hidden;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            display: flex;
-            flex-direction: column;
-        }
-
-        .skeleton-img {
-            width: 100%;
-            aspect-ratio: 16/9;
-            background: linear-gradient(90deg, #222 25%, #2a2a2a 50%, #222 75%);
-            background-size: 200% 100%;
-            animation: skeleton-loading 1.5s infinite;
-        }
-
-        .skeleton-text {
-            height: 14px;
-            margin: 12px;
-            width: 70%;
-            border-radius: 4px;
-            background: linear-gradient(90deg, #222 25%, #2a2a2a 50%, #222 75%);
-            background-size: 200% 100%;
-            animation: skeleton-loading 1.5s infinite;
-        }
-
-        @keyframes skeleton-loading {
-            0% {
-                background-position: 200% 0;
-            }
-
-            100% {
-                background-position: -200% 0;
-            }
-        }
-
-        .yt-btn-secondary {
-            background: transparent;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            color: #fff;
-            padding: 10px 20px;
-            border-radius: 10px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .yt-btn-secondary:hover {
-            background: rgba(255, 255, 255, 0.05);
-        }
-
-        .yt-loading,
-        .yt-empty,
-        .yt-error {
-            grid-column: 1 / -1;
-            text-align: center;
-            padding: 40px;
-            color: #666;
-        }
-
-        #yt-load-more {
-            grid-column: 1 / -1;
-            margin: 20px auto;
-            max-width: 200px;
-        }
-
-        /* HUB STYLES */
-        .yt-hub-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 24px;
-            max-width: 800px;
-            margin: 40px auto;
-        }
-
-        .yt-hub-card {
-            background: rgba(20, 20, 20, 0.6);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 20px;
-            padding: 40px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 16px;
-        }
-
-        .yt-hub-card:hover {
-            background: rgba(30, 30, 30, 0.8);
-            border-color: rgba(255, 255, 255, 0.2);
-            transform: translateY(-5px);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-        }
-
-        .yt-hub-icon {
-            font-size: 3rem;
-            margin-bottom: 8px;
-        }
-
-        .yt-hub-card h2 {
-            font-size: 1.4rem;
-            margin: 0;
-            color: #fff;
-            line-height: 1.3;
-        }
-
-        .yt-hub-card p {
-            font-size: 0.9rem;
-            color: #888;
-            margin: 0;
-        }
-
-        .yt-hub-btn {
-            margin-top: 16px;
-            padding: 10px 24px;
-            background: #ef4444;
-            color: #fff;
-            border-radius: 50px;
-            font-weight: 600;
-            font-size: 0.9rem;
-            transition: all 0.2s;
-        }
-
-        .yt-hub-btn.secondary {
-            background: rgba(255, 255, 255, 0.1);
-        }
-
-        .yt-hub-card:hover .yt-hub-btn {
-            transform: scale(1.05);
-            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
-        }
-
-        .yt-hub-card.secondary:hover .yt-hub-btn.secondary {
-            background: #fff;
-            color: #000;
-            box-shadow: 0 4px 15px rgba(255, 255, 255, 0.2);
-        }
-
-        .fade-in {
-            animation: fadeIn 0.4s ease forwards;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        /* THUMBNAIL STYLES */
-        .yt-thumb-container {
-            width: 200px;
-            height: 200px;
-            margin: 0 auto;
-            border-radius: 12px;
-            overflow: hidden;
-            position: relative;
-            background: #111;
-            border: 1px dashed rgba(255, 255, 255, 0.2);
-        }
-
-        /* NEW UPLOAD DROPZONES */
-        .upload-dropzone {
-            background: rgba(255, 255, 255, 0.03);
-            border: 2px dashed rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
-            padding: 30px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 160px;
-        }
-
-        .upload-dropzone:hover {
-            background: rgba(255, 255, 255, 0.06);
-            border-color: #ef4444;
-        }
-
-        .upload-dropzone.has-file {
-            border-style: solid;
-            border-color: #22c55e;
-            background: rgba(34, 197, 94, 0.1);
-        }
-
-        .drop-icon {
-            font-size: 2.5rem;
-            color: #666;
-            margin-bottom: 12px;
-            transition: color 0.2s;
-        }
-
-        .upload-dropzone:hover .drop-icon {
-            color: #ef4444;
-        }
-
-        .upload-dropzone.has-file .drop-icon {
-            color: #22c55e;
-        }
-
-        .upload-dropzone h3 {
-            font-size: 1rem;
-            color: #fff;
-            margin: 0 0 4px 0;
-            font-weight: 600;
-        }
-
-        .upload-dropzone p {
-            font-size: 0.8rem;
-            color: #888;
-            margin: 0;
-        }
-
-        .yt-thumb-container img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .yt-thumb-placeholder {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            color: #666;
-            gap: 8px;
-        }
-
-        .yt-thumb-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.6);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            opacity: 0;
-            transition: opacity 0.2s;
-        }
-
-        .yt-thumb-container:hover .yt-thumb-overlay {
-            opacity: 1;
-        }
-
-        .yt-edit-thumb-btn {
-            background: #fff;
-            color: #000;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-weight: 600;
-            cursor: pointer;
-            font-size: 0.85rem;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        /* CROP MODAL STYLES (Refined) */
-        .image-crop-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.9);
-            z-index: 4000;
-            display: none;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-        }
-
-        .image-crop-modal.active {
-            display: flex;
-        }
-
-        .crop-header {
-            width: 100%;
-            max-width: 600px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 20px;
-            color: #fff;
-            position: relative;
-            z-index: 20;
-        }
-
-        .crop-header h3 {
-            margin: 0;
-            font-size: 1.2rem;
-            font-weight: 700;
-        }
-
-        .crop-close {
-            background: none;
-            border: none;
-            color: #fff;
-            font-size: 1.5rem;
-            cursor: pointer;
-        }
-
-        #cropContainer {
-            width: 600px;
-            height: 400px;
-            position: relative;
-            overflow: hidden;
-            background: #111;
-            /* Lighter background than pure black */
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
-            border-radius: 12px;
-            /* Rounded corners */
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        #cropImage {
-            position: absolute;
-            left: 0;
-            top: 0;
-            max-width: none;
-            display: block;
-            pointer-events: none;
-            /* Let container handle events */
-            transform-origin: 0 0;
-            user-select: none;
-        }
-
-        #cropBox {
-            position: absolute;
-            border: 2px solid #fff;
-            box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.75);
-            /* Dark overlay */
-            pointer-events: none;
-            z-index: 10;
-        }
-
-        /* CONTROLS */
-        .crop-controls {
-            width: 600px;
-            padding: 15px 0;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 16px;
-        }
-
-        .zoom-slider-container {
-            flex: 1;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            color: #ccc;
-        }
-
-        .zoom-slider {
-            flex: 1;
-            -webkit-appearance: none;
-            appearance: none;
-            height: 4px;
-            background: #444;
-            border-radius: 2px;
-            outline: none;
-        }
-
-        .zoom-slider::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            width: 16px;
-            height: 16px;
-            border-radius: 50%;
-            background: #3b82f6;
-            cursor: pointer;
-            border: 2px solid #1a1a1a;
-        }
-
-        .btn-save-crop {
-            background: #8b5cf6;
-            color: white;
-            border: none;
-            padding: 10px 24px;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-
-        .btn-save-crop:hover {
-            background: #7c3aed;
-        }
-    </style>
 </head>
 
 <body>
-    <!--====================EXTRACTED NAVBAR====================-->
+
+
+
+    <!-- ==================== EXTRACTED NAVBAR ==================== -->
     <header class="navbar">
         <div class="navbar-container">
-            <div class="logo"><a href="/index.html"><img src="/images/LOGO OFFSZN.webp" alt="OFFSZN"
-                        style="height: 80px; width: auto; display: block; transform: scale(1.5); transform-origin: left center;"></a>
+            <div class="logo">
+                <a href="/index.html">
+                    <img src="/images/LOGO OFFSZN.webp" alt="OFFSZN"
+                        style="height: 80px; width: auto; display: block; transform: scale(1.5); transform-origin: left center;">
+                </a>
             </div>
             <div class="navbar-center">
                 <ul class="navbar-links">
                     <li><a href="/explorar.html">Explorar</a></li>
-                    <li class="dropdown-parent"><a onclick="toggleDropdown(this)" class="nav-toggle-link noselect"
+                    <li class="dropdown-parent">
+                        <a onclick="toggleDropdown(this)" class="nav-toggle-link noselect"
                             style="user-select: none; -webkit-user-select: none; cursor: pointer;"
-                            onselectstart="return false;">Recursos <i class="bi bi-chevron-down"></i></a>
+                            onselectstart="return false;">
+                            Recursos <i class="bi bi-chevron-down"></i>
+                        </a>
                         <div class="dropdown-menu mega-columns">
                             <!-- BOX 1: SONIDOS (Tools) -->
-                            <div class="mega-column-box"><span class="dropdown-section-title"
-                                    style="font-size: 0.7rem; letter-spacing: 1.5px; color:#555; margin-bottom: 12px; display:block; font-weight:800; padding-left: 6px;">SONIDOS
+                            <div class="mega-column-box">
+                                <span class="dropdown-section-title"
+                                    style="font-size: 0.7rem; letter-spacing: 1.5px; color:#555; margin-bottom: 12px; display:block; font-weight:800; padding-left: 6px;">
+                                    SONIDOS
                                 </span>
-                                <div class="dropdown-section"><a href="/recursos/drum-kits" class="mega-nav-link"><i
-                                            class="bi bi-disc"></i>Drum Kits</a><a href="/recursos/presets"
-                                        class="mega-nav-link"><i class="bi bi-sliders"></i>Presets</a><a
-                                        href="/recursos/samples-loops" class="mega-nav-link"><i
-                                            class="bi bi-soundwave"></i>Loops</a><a href="/recursos/one-shots"
-                                        class="mega-nav-link"><i class="bi bi-bullseye"></i>One-Shots</a><a
-                                        href="/recursos/recursos-gratis" class="mega-nav-link"><i
-                                            class="bi bi-check-circle"></i>Gratis</a></div>
-                            </div>
-                            <!-- BOX 2: COMUNIDAD (Swapped to Middle) -->
-                            <div class="mega-column-box"><span class="dropdown-section-title"
-                                    style="font-size: 0.7rem; letter-spacing: 1.5px; color:#555; margin-bottom: 12px; display:block; font-weight:800; padding-left: 6px;">COMUNIDAD
-                                </span>
-                                <div class="dropdown-section"><a href="/comunidad/productores" class="mega-nav-link"><i
-                                            class="bi bi-people"></i>Productores</a><a href="/comunidad/colaboraciones"
-                                        class="mega-nav-link"><i class="bi bi-person-plus"></i>Collabs</a><a
-                                        href="/comunidad/eventos" class="mega-nav-link"><i
-                                            class="bi bi-calendar-event"></i>Eventos</a><a href="/comunidad/feed"
-                                        class="mega-nav-link"><i class="bi bi-collection-play"></i>Feed</a><a
-                                        href="/cursos/inicio" class="mega-nav-link"><i
-                                            class="bi bi-mortarboard"></i>Cursos <span
-                                            style="background: rgba(139, 92, 246, 0.1); color: #a78bfa; font-size: 0.6rem; padding: 1px 4px; border-radius: 4px; margin-left: 6px; border: 1px solid rgba(139, 92, 246, 0.2);">SOON</span></a>
+                                <div class="dropdown-section">
+                                    <a href="/recursos/drum-kits" class="mega-nav-link"><i class="bi bi-disc"></i> Drum
+                                        Kits</a>
+                                    <a href="/recursos/presets" class="mega-nav-link"><i class="bi bi-sliders"></i>
+                                        Presets</a>
+                                    <a href="/recursos/samples-loops" class="mega-nav-link"><i
+                                            class="bi bi-soundwave"></i> Loops</a>
+                                    <a href="/recursos/one-shots" class="mega-nav-link"><i class="bi bi-bullseye"></i>
+                                        One-Shots</a>
+                                    <a href="/recursos/recursos-gratis" class="mega-nav-link"><i
+                                            class="bi bi-check-circle"></i>
+                                        Gratis</a>
                                 </div>
                             </div>
-                            <!-- BOX 3: GNEROS (Swapped to End) -->
-                            <div class="mega-column-box"><span class="dropdown-section-title"
-                                    style="font-size: 0.7rem; letter-spacing: 1.5px; color:#555; margin-bottom: 12px; display:block; font-weight:800; padding-left: 6px;">G&Eacute;NEROS
+
+                            <!-- BOX 2: COMUNIDAD (Swapped to Middle) -->
+                            <div class="mega-column-box">
+                                <span class="dropdown-section-title"
+                                    style="font-size: 0.7rem; letter-spacing: 1.5px; color:#555; margin-bottom: 12px; display:block; font-weight:800; padding-left: 6px;">
+                                    COMUNIDAD
                                 </span>
-                                <div class="dropdown-section"><a href="/recursos/beats"
-                                        class="mega-nav-link">Hip-Hop</a><a href="/recursos/beats"
-                                        class="mega-nav-link">Trap</a><a href="/recursos/beats"
-                                        class="mega-nav-link">R&B</a><a href="/recursos/beats"
-                                        class="mega-nav-link">Reggaet&oacute;n</a><a href="/recursos/beats"
-                                        class="mega-nav-link">Drill</a><a href="/recursos/beats" class="mega-nav-link"
+                                <div class="dropdown-section">
+                                    <a href="/comunidad/productores" class="mega-nav-link"><i class="bi bi-people"></i>
+                                        Productores</a>
+                                    <a href="/comunidad/colaboraciones" class="mega-nav-link"><i
+                                            class="bi bi-person-plus"></i>
+                                        Collabs</a>
+                                    <a href="/comunidad/eventos" class="mega-nav-link"><i
+                                            class="bi bi-calendar-event"></i> Eventos</a>
+                                    <a href="/comunidad/feed" class="mega-nav-link"><i
+                                            class="bi bi-collection-play"></i> Feed</a>
+                                    <a href="/cursos/inicio" class="mega-nav-link">
+                                        <i class="bi bi-mortarboard"></i> Cursos <span
+                                            style="background: rgba(139, 92, 246, 0.1); color: #a78bfa; font-size: 0.6rem; padding: 1px 4px; border-radius: 4px; margin-left: 6px; border: 1px solid rgba(139, 92, 246, 0.2);">SOON</span>
+                                    </a>
+                                </div>
+                            </div>
+
+                            <!-- BOX 3: GÉNEROS (Swapped to End) -->
+                            <div class="mega-column-box">
+                                <span class="dropdown-section-title"
+                                    style="font-size: 0.7rem; letter-spacing: 1.5px; color:#555; margin-bottom: 12px; display:block; font-weight:800; padding-left: 6px;">
+                                    GÉNEROS
+                                </span>
+                                <div class="dropdown-section">
+                                    <a href="/recursos/beats" class="mega-nav-link">Hip-Hop</a>
+                                    <a href="/recursos/beats" class="mega-nav-link">Trap</a>
+                                    <a href="/recursos/beats" class="mega-nav-link">R&B</a>
+                                    <a href="/recursos/beats" class="mega-nav-link">Reggaetón</a>
+                                    <a href="/recursos/beats" class="mega-nav-link">Drill</a>
+                                    <a href="/recursos/beats" class="mega-nav-link"
                                         style="color: rgba(255,255,255,0.6); font-size: 0.8rem; margin-top: 4px; transition: color 0.2s;">Ver
-                                        todos &rarr;
-                                    </a></div>
+                                        todos &rarr;</a>
+                                </div>
                             </div>
                         </div>
                     </li>
+
                     <!-- STUDIO / LAB (New Identity Feature) -->
-                    <li class="dropdown-parent"><a onclick="toggleDropdown(this)" class="nav-toggle-link noselect"
+                    <li class="dropdown-parent">
+                        <a onclick="toggleDropdown(this)" class="nav-toggle-link noselect"
                             style="user-select: none; -webkit-user-select: none; cursor: pointer;"
-                            onselectstart="return false;">Studio <span
-                                style="background: rgba(139, 92, 246, 0.1); color: #a78bfa; font-size: 0.6rem; padding: 1px 4px; border-radius: 4px; margin-left: 4px; border: 1px solid rgba(139, 92, 246, 0.2);">BETA</span><i
-                                class="bi bi-chevron-down"></i></a>
+                            onselectstart="return false;">
+                            Studio <span
+                                style="background: rgba(139, 92, 246, 0.1); color: #a78bfa; font-size: 0.6rem; padding: 1px 4px; border-radius: 4px; margin-left: 4px; border: 1px solid rgba(139, 92, 246, 0.2);">BETA</span>
+                            <i class="bi bi-chevron-down"></i>
+                        </a>
                         <div class="dropdown-menu" style="min-width: 250px; padding: 8px;">
-                            <div class="dropdown-section"><span class="dropdown-section-title"
-                                    style="font-size: 0.7rem; letter-spacing: 1.5px; color:#555; margin-bottom: 8px; display:block; font-weight:800; padding: 0 8px;">EXCLUSIVE
-                                    TOOLS </span><a href="/youtube.html" class="dropdown-item"
-                                    style="border-radius: 8px;"><i class="bi bi-youtube" style="color: #ef4444;"></i>
+                            <div class="dropdown-section">
+                                <span class="dropdown-section-title"
+                                    style="font-size: 0.7rem; letter-spacing: 1.5px; color:#555; margin-bottom: 8px; display:block; font-weight:800; padding: 0 8px;">
+                                    EXCLUSIVE TOOLS
+                                </span>
+                                <a href="/youtube.html" class="dropdown-item" style="border-radius: 8px;">
+                                    <i class="bi bi-youtube" style="color: #ef4444;"></i>
                                     <div class="dropdown-item-content">
                                         <div class="dropdown-item-title">YouTube Upload</div>
                                         <div class="dropdown-item-desc" style="font-size: 0.7rem; color: #888;">
-                                            Sube tu producto al marketplace y se publica autom&aacute;tico en YouTube
-                                            con tu miniatura. </div>
+                                            Sube tu producto al marketplace y se publica automático en YouTube con tu
+                                            miniatura.
+                                        </div>
                                     </div>
-                                </a><a href="/studio/reels" class="dropdown-item" style="border-radius: 8px;"><i
-                                        class="bi bi-collection-play"></i>
+                                </a>
+                                <a href="/studio/reels" class="dropdown-item" style="border-radius: 8px;">
+                                    <i class="bi bi-collection-play"></i>
                                     <div class="dropdown-item-content">
                                         <div class="dropdown-item-title">Reels</div>
-                                        <div class="dropdown-item-desc" style="font-size: 0.7rem; color: #888;">
-                                            Descubre tendencias visuales</div>
+                                        <div class="dropdown-item-desc" style="font-size: 0.7rem; color: #888;">Descubre
+                                            tendencias visuales</div>
                                     </div>
-                                </a></div>
+                                </a>
+                            </div>
                         </div>
                         <!-- Cursos moved to Dropdown -->
+
                 </ul>
+
                 <!-- NEW: NAVBAR SEARCH (Wavs Style) -->
                 <!-- NEW: NAVBAR SEARCH (Wavs Style) with Internal Filter & Trending Panel -->
-                <div class="navbar-search" style="margin-left: 24px; flex: 1; max-width: 440px; position: relative;"><i
-                        class="bi bi-search"
-                        style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: #666; font-size: 0.85rem; z-index: 10;"></i><input
-                        type="text" id="navbarSearchInput" placeholder="Buscar 'trap' o 'drill'..."
+                <div class="navbar-search" style="margin-left: 24px; flex: 1; max-width: 440px; position: relative;">
+                    <i class="bi bi-search"
+                        style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: #666; font-size: 0.85rem; z-index: 10;"></i>
+                    <input type="text" id="navbarSearchInput" placeholder="Buscar 'trap' o 'drill'..."
                         style="width: 100%; background: #0f0f0f; border: 1px solid rgba(255,255,255,0.08); padding: 11px 110px 11px 42px; border-radius: 12px; color: #fff; font-size: 0.9rem; outline: none; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);">
+
                     <!-- Internal Filter Trigger - Seamless Integration -->
                     <div class="search-filter-trigger" onclick="toggleSearchFilter(event)"
                         style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); display: flex; align-items: center; gap: 6px; cursor: pointer; padding: 4px 10px; background: rgba(255,255,255,0.05); border-radius: 8px; height: 28px; transition: background 0.2s;">
                         <span id="search-filter-label"
-                            style="font-size: 0.75rem; color: #ccc; font-weight: 600; letter-spacing: 0.3px;">Todo</span><i
-                            class="bi bi-chevron-down" style="font-size: 0.65rem; color: #888;"></i>
+                            style="font-size: 0.75rem; color: #ccc; font-weight: 600; letter-spacing: 0.3px;">Todo</span>
+                        <i class="bi bi-chevron-down" style="font-size: 0.65rem; color: #888;"></i>
                     </div>
+
                     <!-- Filter Dropdown (Glassmorphism) -->
                     <div id="search-filter-dropdown"
                         style="position: absolute; top: calc(100% + 8px); right: 0; background: rgba(15, 15, 15, 0.95); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 6px; width: 140px; display: none; flex-direction: column; box-shadow: 0 10px 40px rgba(0,0,0,0.5); z-index: 1002; transform-origin: top right; animation: scaleIn 0.2s ease;">
                         <div onclick="selectSearchFilter('Todo')" class="search-filter-item selected">Todo</div>
-                        <div onclick="selectSearchFilter('Beats')" class="search-filter-item">Beats
-                        </div>
-                        <div onclick="selectSearchFilter('Drum Kits')" class="search-filter-item">
-                            Drum Kits</div>
-                        <div onclick="selectSearchFilter('Samples')" class="search-filter-item">
-                            Samples</div>
-                        <div onclick="selectSearchFilter('Presets')" class="search-filter-item">
-                            Presets</div>
-                        <div onclick="selectSearchFilter('Plantillas')" class="search-filter-item">
-                            Plantillas</div>
-                        <div onclick="selectSearchFilter('Productores')" class="search-filter-item">
-                            Productores</div>
+                        <div onclick="selectSearchFilter('Beats')" class="search-filter-item">Beats</div>
+                        <div onclick="selectSearchFilter('Drum Kits')" class="search-filter-item">Drum Kits</div>
+                        <div onclick="selectSearchFilter('Samples')" class="search-filter-item">Samples</div>
+                        <div onclick="selectSearchFilter('Presets')" class="search-filter-item">Presets</div>
+                        <div onclick="selectSearchFilter('Plantillas')" class="search-filter-item">Plantillas</div>
+                        <div onclick="selectSearchFilter('Productores')" class="search-filter-item">Productores</div>
                     </div>
+
                     <!-- Trending / Intelligent Panel (Appears on Focus) -->
                     <!-- Trending / Intelligent Panel -->
                     <div id="search-trending-panel"
                         style="position: absolute; top: calc(100% + 4px); left: 0; width: 100%; background: #0a0a0a; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 12px; display: none; box-shadow: 0 20px 50px rgba(0,0,0,0.8); z-index: 1001;">
+
                         <!-- Recent Searches (New) -->
-                        <div style="margin-bottom: 20px;"><span
-                                style="display: block; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 0.7rem; color: #555; font-weight: 700; letter-spacing: 0.5px; margin-bottom: 8px; text-transform: uppercase;">B&uacute;squedas
+                        <div style="margin-bottom: 20px;">
+                            <span
+                                style="display: block; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 0.7rem; color: #555; font-weight: 700; letter-spacing: 0.5px; margin-bottom: 8px; text-transform: uppercase;">Búsquedas
                                 Recientes</span>
                             <div style="display: flex; flex-direction: column; gap: 4px;">
                                 <div class="recent-item" onclick="setSearch('Dark Piano')"><i
-                                        class="bi bi-clock-history"></i>Dark Piano</div>
+                                        class="bi bi-clock-history"></i>
+                                    Dark
+                                    Piano</div>
                                 <div class="recent-item" onclick="setSearch('Tainy Drums')"><i
-                                        class="bi bi-clock-history"></i>Tainy Drums
-                                </div>
+                                        class="bi bi-clock-history"></i>
+                                    Tainy
+                                    Drums</div>
                             </div>
-                        </div><span
+                        </div>
+
+                        <span
                             style="display: block; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 0.7rem; color: #555; font-weight: 700; letter-spacing: 0.5px; margin-bottom: 12px; text-transform: uppercase;">Tendencias
                             Ahora</span>
-                        <div style="display: flex; flex-wrap: wrap; gap: 8px;"><span class="trend-tag"><i
-                                    class="bi bi-graph-up-arrow"></i>Dark
-                                Trap</span><span class="trend-tag"><i class="bi bi-fire"></i>Reggaeton 2025</span><span
-                                class="trend-tag">Drill UK</span></div>
+                        <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                            <span class="trend-tag"><i class="bi bi-graph-up-arrow"></i> Dark Trap</span>
+                            <span class="trend-tag"><i class="bi bi-fire"></i> Reggaeton 2025</span>
+                            <span class="trend-tag">Drill UK</span>
+                        </div>
                     </div>
                 </div>
                 <!-- Search Overlay Backdrop -->
                 <div id="search-overlay"></div>
+
                 <!-- Active Tags Container (New) -->
                 <div id="active-search-tags"></div>
                 <!-- Logic moved to script/navbar.js -->
-            </div><button class="menu-toggle" id="menuToggle"></button>
+            </div>
+            <button class="menu-toggle" id="menuToggle">
+            </button>
             <div class="navbar-right">
+
                 <!-- 1. CURRENCY (Always Visible) -->
-                <div class="currency-dropdown" style="position: relative;"><button id="currency-toggle-btn"
-                        onclick="toggleCurrency(event)" class="nav-text-btn"
-                        style="background:none; border:none; color:#bbb; font-size:0.8rem; font-weight:600; cursor:pointer; padding:6px 8px; display:flex; align-items:center; gap:4px; outline:none; transition: all 0.2s;"><span
-                            id="current-currency">PEN</span><i class="bi bi-caret-down-fill"
-                            style="font-size:0.6rem;"></i></button>
+                <div class="currency-dropdown" style="position: relative;">
+                    <button id="currency-toggle-btn" onclick="toggleCurrency(event)" class="nav-text-btn"
+                        style="background:none; border:none; color:#bbb; font-size:0.8rem; font-weight:600; cursor:pointer; padding:6px 8px; display:flex; align-items:center; gap:4px; outline:none; transition: all 0.2s;">
+                        <span id="current-currency">PEN</span> <i class="bi bi-caret-down-fill"
+                            style="font-size:0.6rem;"></i>
+                    </button>
                     <div id="currency-menu"
                         style="position: absolute; top: 100%; left: 0; background: #141414; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 4px; display: none; flex-direction: column; min-width: 80px; box-shadow: 0 4px 12px rgba(0,0,0,0.5); z-index: 1005;">
                         <div onclick="setCurrency('PEN')" class="currency-item"
@@ -1062,40 +246,45 @@
                             USD</div>
                     </div>
                 </div>
-                <!-- 2. CART (Always Visible) --><a href="#" class="nav-icon-btn" title="Carrito" data-label="Carrito"
-                    onclick="toggleCartPanel(event)"><i class="bi bi-cart3"></i><span id="cart-count-badge"
-                        class="cart-label-count" style="display:none;">0</span></a>
+
+                <!-- 2. CART (Always Visible) -->
+                <a href="#" class="nav-icon-btn" title="Carrito" data-label="Carrito" onclick="toggleCartPanel(event)">
+                    <i class="bi bi-cart3"></i>
+                    <span id="cart-count-badge" class="cart-label-count" style="display:none;">0</span>
+                </a>
+
                 <!-- 3. LOGGED IN ACTIONS (Hidden by default) -->
                 <div id="nav-auth-section" style="display: flex; align-items: center; gap: 0.5rem;">
+
                     <!-- NOTIFICACIONES -->
-                    <div class="notification-dropdown"><button class="nav-icon-btn"
-                            onclick="toggleNotificationDropdown(event)" data-label="Notificaciones"
-                            style="user-select: none;" onselectstart="return false;"><i class="bi bi-bell"></i><span
-                                class="notification-badge" id="notification-badge"
-                                style="display:none;">0</span></button>
+                    <div class="notification-dropdown">
+                        <button class="nav-icon-btn" onclick="toggleNotificationDropdown(event)"
+                            data-label="Notificaciones" style="user-select: none;" onselectstart="return false;">
+                            <i class="bi bi-bell"></i>
+                            <span class="notification-badge" id="notification-badge" style="display:none;">0</span>
+                        </button>
                         <div class="notification-menu" id="notification-menu">
                             <div class="notification-header"
                                 style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-bottom: 1px solid #222;">
-                                <h4 style="margin: 0; font-size: 0.95rem; font-weight: 600; color: #fff;">
-                                    Notificaciones </h4><a href="/notificaciones.html" class="notif-view-all">Ver
-                                    todos</a>
+                                <h4 style="margin: 0; font-size: 0.95rem; font-weight: 600; color: #fff;">Notificaciones
+                                </h4>
+                                <a href="/notificaciones.html" class="notif-view-all">Ver todos</a>
                             </div>
                             <div id="notification-list" style="max-height: 400px; overflow-y: auto;">
                                 <div class="notif-empty" style="text-align: center; color: #fff; padding: 40px 20px;">
-                                    <div style="font-size: 2rem; margin-bottom: 16px; color: #666;">
-                                        <i class="bi bi-bell"></i>
-                                    </div>
-                                    <h4 style="margin-bottom: 8px; font-size: 0.9rem; font-weight: 500;">
-                                        Cargando... </h4>
+                                    <div style="font-size: 2rem; margin-bottom: 16px; color: #666;"><i
+                                            class="bi bi-bell"></i></div>
+                                    <h4 style="margin-bottom: 8px; font-size: 0.9rem; font-weight: 500;">Cargando...
+                                    </h4>
                                 </div>
                             </div>
                         </div>
                     </div>
+
                     <!-- USER PROFILE -->
                     <div class="user-dropdown">
                         <div class="user-trigger" onclick="toggleUserDropdown(event)" style="cursor: pointer;">
-                            <div id="user-avatar-display" class="user-avatar-placeholder">W
-                            </div>
+                            <div id="user-avatar-display" class="user-avatar-placeholder">W</div>
                         </div>
                         <div class="user-dropdown-menu" style="width: 380px;">
                             <div class="user-dropdown-header" onclick="window.location.href='perfil-publico.html'"
@@ -1104,538 +293,130 @@
                                 onmouseout="this.style.backgroundColor='#232323'">
                                 <div style="display: flex; align-items: center; gap: 12px;">
                                     <div class="user-dropdown-avatar-lg"
-                                        style="width: 48px; height: 48px; font-size: 1.2rem; border-radius: 50%;">
-                                        W </div>
+                                        style="width: 48px; height: 48px; font-size: 1.2rem; border-radius: 50%;">W
+                                    </div>
                                     <div style="display: flex; flex-direction: column;">
                                         <h4 id="dropdown-username"
-                                            style="margin: 0; font-size: 1rem; color: #fff; font-weight: 600;">
-                                            Willie Inspired</h4><span style="color: #999; font-size: 0.85rem;">0
-                                            Cr&eacute;ditos</span>
+                                            style="margin: 0; font-size: 1rem; color: #fff; font-weight: 600;">Willie
+                                            Inspired</h4>
+                                        <span style="color: #999; font-size: 0.85rem;">0 Créditos</span>
                                     </div>
-                                </div><a href="/cuenta/planes.html" class="btn-subscribe-sm"
-                                    onclick="event.stopPropagation();" style="padding: 6px 12px; font-size: 0.8rem;"><i
-                                        class="bi bi-plus-circle-fill"></i>Suscribirse </a>
+                                </div>
+                                <a href="/cuenta/planes.html" class="btn-subscribe-sm"
+                                    onclick="event.stopPropagation();" style="padding: 6px 12px; font-size: 0.8rem;">
+                                    <i class="bi bi-plus-circle-fill"></i> Suscribirse
+                                </a>
                             </div>
-                            <div class="w-grid"><a href="/cuenta/dashboard.html" class="w-grid-item"><i
-                                        class="fas fa-columns"
-                                        style="transform: rotate(90deg);"></i><span>Dashboard</span></a><a
-                                    href="mis-compras.html" class="w-grid-item"><i
-                                        class="fas fa-layer-group"></i><span>Compras</span></a><a href="/mensajes.html"
-                                    class="w-grid-item"><i class="fas fa-envelope"></i><span>Mensajes</span></a>
+
+                            <div class="w-grid">
+                                <a href="/cuenta/dashboard.html" class="w-grid-item"><i class="fas fa-columns"
+                                        style="transform: rotate(90deg);"></i><span>Dashboard</span></a>
+                                <a href="mis-compras.html" class="w-grid-item"><i
+                                        class="fas fa-layer-group"></i><span>Compras</span></a>
+                                <a href="/mensajes.html" class="w-grid-item"><i
+                                        class="fas fa-envelope"></i><span>Mensajes</span></a>
                             </div>
-                            <!-- LIST --><a href="/favoritos.html" class="w-list-item"><i class="fas fa-heart"></i>Mis
-                                Favoritos</a><a href="gift-cards" class="w-list-item"><i class="fas fa-gift"></i>Gift
-                                Cards</a><a href="historial" class="w-list-item"><i
-                                    class="fas fa-history"></i>Historial</a>
-                            <div style="height: 1px; background: rgba(255,255,255,0.1); margin: 8px 0;">
-                            </div><a href="/account-settings.html" class="w-list-item"><i
-                                    class="fas fa-sliders-h"></i>Configuraci&oacute;n</a><a href="ayuda.html"
-                                class="w-list-item"><i class="fas fa-question-circle"></i>Centro de Ayuda</a><a href="#"
-                                id="navbar-logout-btn" class="w-list-item" style="color: #ef4444; margin-top: 8px;"><i
-                                    class="fas fa-sign-out-alt" style="color: #ef4444;"></i>Cerrar Sesi&oacute;n </a>
+
+                            <!-- LIST -->
+                            <a href="/favoritos.html" class="w-list-item"><i class="fas fa-heart"></i> Mis Favoritos</a>
+                            <a href="gift-cards" class="w-list-item"><i class="fas fa-gift"></i> Gift Cards</a>
+                            <a href="historial" class="w-list-item"><i class="fas fa-history"></i> Historial</a>
+                            <div style="height: 1px; background: rgba(255,255,255,0.1); margin: 8px 0;"></div>
+                            <a href="/account-settings.html" class="w-list-item"><i class="fas fa-sliders-h"></i>
+                                Configuración</a>
+                            <a href="ayuda.html" class="w-list-item"><i class="fas fa-question-circle"></i> Centro de
+                                Ayuda</a>
+                            <a href="#" id="navbar-logout-btn" class="w-list-item"
+                                style="color: #ef4444; margin-top: 8px;">
+                                <i class="fas fa-sign-out-alt" style="color: #ef4444;"></i> Cerrar Sesión
+                            </a>
                         </div>
                     </div>
-                    <!-- UPLOAD BUTTON --><a href="/cuenta/subir-kit.html" target=_blank class="btn-upload"><i
-                            class="fas fa-cloud-upload-alt"></i>Subir</a>
+
+                    <!-- UPLOAD BUTTON -->
+                    <a href="/cuenta/subir-kit.html" target=_blank class="btn-upload"><i
+                            class="fas fa-cloud-upload-alt"></i>
+                        Subir</a>
                 </div>
+
                 <!-- 4. GUEST ACTIONS (Shown when Logged Out) -->
                 <div id="nav-guest-section" style="display: none; align-items: center; gap: 0.5rem;">
                     <!-- Separtor -->
-                    <div style="width:1px; height:24px; background:rgba(255,255,255,0.1); margin:0 4px;">
-                    </div><a href="/pages/login.html" class="navbar-login-link">Iniciar
-                        Sesi&oacute;n</a><a href="/pages/register.html" class="btn-join">Únete <i
-                            class="bi bi-rocket-takeoff"></i></a>
+                    <div style="width:1px; height:24px; background:rgba(255,255,255,0.1); margin:0 4px;"></div>
+                    <a href="/pages/login.html" class="navbar-login-link">Iniciar Sesión</a>
+                    <a href="/pages/register.html" class="btn-join">Únete <i class="bi bi-rocket-takeoff"></i></a>
                 </div>
+
             </div>
         </div>
     </header>
-    <main class="yt-importer-container">
-        <!-- 🔥 STEP 1: HUB SELECTION (New Entry Point) -->
-        <div id="yt-hub-selection" class="yt-hub-grid">
-            <!-- OPTION 1: IMPORT FROM YOUTUBE -->
-            <div class="yt-hub-card" onclick="handleImportClick()">
-                <div class="yt-hub-icon" style="color:#ef4444;"><i class="bi bi-youtube"></i></div>
-                <h2>Importar de Youtube <br>para OFFSZN</h2>
-                <p>Importa metadatos y miniatura autom&aacute;ticamente.</p>
-                <div class="yt-hub-btn">Comenzar</div>
-            </div>
-            <!-- OPTION 2: MANUAL UPLOAD (TunesToTube Style) -->
-            <div class="yt-hub-card secondary" onclick="showUploadForm()">
-                <div class="yt-hub-icon" style="color:#fff;"><i class="bi bi-cloud-arrow-up-fill"></i>
+    <!-- ==================== SIDE PANELS (INJECTED MANUALLY FOR ANALYSIS) ==================== -->
+
+    <!-- BACKDROP -->
+    <div class="overlay-backdrop" id="globalBackdrop" onclick="closeAllOverlays()"></div>
+
+    <!-- CART SIDE PANEL -->
+    <div class="side-panel" id="globalCartPanel">
+        <div class="panel-header">
+            <div class="panel-title" style="display: flex; align-items: center; gap: 8px;">
+                <div style="position: relative; display: flex;">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span id="cart-panel-count" class="notification-badge"
+                        style="position: absolute; top: -6px; right: -6px; display: flex;">1</span>
                 </div>
-                <h2>Subir a OFFSZN <br>+ YouTube</h2>
-                <p>Sube tu MP3 y Portada. Nosotros generamos el video.</p>
-                <div class="yt-hub-btn secondary">Crear Video & Subir</div>
+                Tu Carrito
+            </div>
+            <button class="panel-close" onclick="closeAllOverlays()">&times;</button>
+        </div>
+        <!-- ID CHANGED: globalCartItems -> cart-items-container to match script/cart.js -->
+        <div class="panel-content" id="cart-items-container">
+            <div style="text-align:center; padding: 40px 0; color: #666;">
+                <i class="fas fa-shopping-basket" style="font-size: 3rem; margin-bottom: 10px;"></i>
+                <p>Tu carrito está vacío</p>
             </div>
         </div>
-        <!-- 🔥 FORM (Hidden by default, shown after selection) -->
-        <div id="yt-main-form" style="display:none;" class="fade-in">
-            <!-- HEADER BOX -->
-            <div class="yt-header-box">
-                <div class="yt-header-info">
-                    <h1>DE YOUTUBE A OFFSZN</h1>
-                    <p>Importa tus beats directamente desde tu canal de YouTube.</p>
-                </div><button class="yt-btn-secondary" onclick="resetToHub()" style="font-size:0.9rem;"><i
-                        class="bi bi-arrow-left"></i>Volver </button>
+        <!-- ID ADDED: cart-summary (needed by script) -->
+        <div class="cart-total-section" id="cart-summary">
+            <div style="display:flex; justify-content:space-between; margin-bottom:1rem; color:#fff; font-weight:700;">
+                <span>Total:</span>
+                <!-- ID CHANGED for JS compatibility -->
+                <span id="cart-total-price">$0.00</span>
             </div>
-            <!--🔥 REFACTORED IMPORTER FORM (Grid Layout) -->
-            <div class="yt-product-form">
-                <!-- TOP: VISUALS (Cover + Files) -->
-                <div class="grid-1-2" style="margin-bottom:30px;">
-                    <!-- LEFT: THUMBNAIL -->
-                    <div>
-                        <div class="label" style="margin-bottom:8px; color:#aaa; font-size:0.9rem;">Portada del Video
-                        </div>
-                        <div id="yt-thumb-preview-container" class="cover-upload has-file" style="cursor: default;">
-                            <img id="yt-imported-thumb" src="" alt="Thumbnail" class="cover-preview"
-                                style="display:block;">
-                            <div class="yt-thumb-placeholder" style="display:none;">
-                                <i class="bi bi-image"></i><span>Miniatura</span>
-                            </div>
-                            <!-- Overlay actions for cropping -->
-                            <div
-                                style="position:absolute; bottom:10px; left:0; right:0; display:flex; justify-content:center; gap:8px;">
-                                <button onclick="openCropModalForThumb()" class="yt-edit-thumb-btn"
-                                    style="background:rgba(0,0,0,0.7); border:1px solid rgba(255,255,255,0.2); backdrop-filter:blur(4px); padding:6px 12px; border-radius:20px; color:#fff; font-size:0.8rem; cursor:pointer; transition:all 0.2s;">
-                                    <i class="bi bi-crop" style="margin-right:4px;"></i> Ajustar
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- RIGHT: FILE UPLOAD STACK -->
-                    <div>
-                        <div class="label" style="margin-bottom:8px; color:#aaa; font-size:0.9rem;">Archivos del
-                            Producto</div>
-                        <div class="file-stack" style="display: flex; flex-direction: column; gap: 12px;">
-
-                            <!-- 1. MP3 (Purple) -->
-                            <div class="upload-zone horizontal-upload" id="import-slot-mp3"
-                                onclick="document.getElementById('import-file-mp3').click()" style="cursor: pointer;">
-                                <div style="display:flex; align-items:center;">
-                                    <div class="slot-icon" style="color: #8b5cf6; background: rgba(139, 92, 246, 0.1);">
-                                        <i class="bi bi-music-note-beamed"></i>
-                                    </div>
-                                    <div class="slot-info">
-                                        <div style="font-weight: 700; color: #fff;">BEAT MP3</div>
-                                        <div style="font-size: 12px; color: #aaa;">(Con Tag)</div>
-                                    </div>
-                                </div>
-                                <div class="slot-status" style="display:flex; align-items:center; gap:16px;">
-                                    <span class="status-badge pending" style="font-size: 11px; color: #555;">max
-                                        50MB</span>
-                                    <div class="upload-cta-btn">
-                                        <span>Subir Archivo</span>
-                                        <div class="icon-box"><i class="bi bi-upload"
-                                                style="font-size: 12px; color:#fff;"></i></div>
-                                    </div>
-                                </div>
-                                <input type="file" id="import-file-mp3" accept=".mp3" hidden
-                                    onchange="handleImportFileSelect(this, 'mp3')">
-                            </div>
-
-                            <!-- 2. WAV (Cyan) -->
-                            <div class="upload-zone horizontal-upload" id="import-slot-wav"
-                                onclick="document.getElementById('import-file-wav').click()" style="cursor: pointer;">
-                                <div style="display:flex; align-items:center;">
-                                    <div class="slot-icon" style="color: #06b6d4; background: rgba(6, 182, 212, 0.1);">
-                                        <i class="bi bi-soundwave"></i>
-                                    </div>
-                                    <div class="slot-info">
-                                        <div style="font-weight: 700; color: #fff;">BEAT WAV</div>
-                                        <div style="font-size: 12px; color: #aaa;">(Sin Tag)</div>
-                                    </div>
-                                </div>
-                                <div class="slot-status" style="display:flex; align-items:center; gap:16px;">
-                                    <span class="status-badge pending" style="font-size: 11px; color: #555;">max
-                                        50MB</span>
-                                    <div class="upload-cta-btn">
-                                        <span>Subir Archivo</span>
-                                        <div class="icon-box"><i class="bi bi-upload"
-                                                style="font-size: 12px; color:#fff;"></i></div>
-                                    </div>
-                                </div>
-                                <input type="file" id="import-file-wav" accept=".wav" hidden
-                                    onchange="handleImportFileSelect(this, 'wav')">
-                            </div>
-
-                            <!-- 3. STEMS (Orange) -->
-                            <div class="upload-zone horizontal-upload" id="import-slot-stems"
-                                onclick="document.getElementById('import-file-stems').click()" style="cursor: pointer;">
-                                <div style="display:flex; align-items:center;">
-                                    <div class="slot-icon" style="color: #f59e0b; background: rgba(245, 158, 11, 0.1);">
-                                        <i class="bi bi-layers"></i>
-                                    </div>
-                                    <div class="slot-info">
-                                        <div style="font-weight: 700; color: #fff;">STEMS</div>
-                                        <div style="font-size: 12px; color: #aaa;">(Opcional)</div>
-                                    </div>
-                                </div>
-                                <div class="slot-status" style="display:flex; align-items:center; gap:16px;">
-                                    <span class="status-badge pending" style="font-size: 11px; color: #555;">max
-                                        50MB</span>
-                                    <div class="upload-cta-btn">
-                                        <span>Subir Archivo</span>
-                                        <div class="icon-box"><i class="bi bi-upload"
-                                                style="font-size: 12px; color:#fff;"></i></div>
-                                    </div>
-                                </div>
-                                <input type="file" id="import-file-stems" accept=".zip,.rar" hidden
-                                    onchange="handleImportFileSelect(this, 'stems')">
-                            </div>
-
-                        </div>
-                    </div>
-                </div>
-
-                <!-- BOTTOM: METADATA -->
-                <div class="importer-metadata">
-                    <h3
-                        style="margin:0 0 20px 0; color:#fff; font-size:1.1rem; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:12px;">
-                        Datos del Beat</h3>
-
-
-
-                    <div class="input-group">
-                        <label style="display:flex; justify-content:space-between;">Título <span id="title-count"
-                                style="font-size:0.8rem; color:#888;">0/60</span></label>
-                        <input type="text" name="title" id="import-title" placeholder="Ej: Dark Piano Type Beat"
-                            maxlength="60" oninput="updateTitleCount(this)">
-                    </div>
-
-                    <div class="input-group">
-                        <label style="display:flex; justify-content:space-between;">Descripción <span id="desc-count"
-                                style="font-size:0.8rem; color:#888;">0/3000</span></label>
-                        <textarea name="description" id="import-desc" placeholder="Cuéntanos más sobre este beat..."
-                            oninput="updateDescCount(this)" class="custom-scrollbar" rows="6"></textarea>
-                        <div style="display:flex; justify-content:flex-end; margin-top:8px;">
-                            <a id="yt-watch-link" href="#" target="_blank" class="watch-yt-btn"
-                                style="display:none; align-items:center; background:rgba(255,255,255,0.05); color:#ccc; font-size:0.8rem; padding:6px 12px; border-radius:6px; text-decoration:none; border:1px solid rgba(255,255,255,0.1); transition:all 0.2s;">
-                                <i class="bi bi-youtube" style="color:#ef4444; margin-right:6px;"></i> Ver en YouTube
-                            </a>
-                        </div>
-                        <div id="desc-warning" style="display:none; color:#ef4444; font-size:0.8rem; margin-top:4px;">
-                            ⚠ La descripción excede el límite (3000 chars).
-                        </div>
-                    </div>
-
-                    <div class="input-group">
-                        <label>Etiquetas (Selecciona 3)</label>
-                        <input type="hidden" name="tags" id="final-tags-input">
-                        <div id="yt-tags-cloud"
-                            style="display:flex; flex-wrap:wrap; gap:8px; min-height:40px; padding:10px; background:rgba(255,255,255,0.03); border-radius:8px; border:1px solid rgba(255,255,255,0.1);">
-                            <span style="color:#666; font-size:0.9rem;">Las etiquetas aparecerán aquí...</span>
-                        </div>
-                        <div id="tag-limit-warning"
-                            style="display:none; color:#ef4444; font-size:0.8rem; margin-top:6px; font-weight:600;">
-                            <i class="bi bi-exclamation-circle"></i> Solo puedes seleccionar hasta 3 etiquetas.
-                        </div>
-                    </div>
-
-                    <div class="input-row" style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
-                        <div class="input-group">
-                            <label>BPM</label>
-                            <input type="text" name="bpm" id="import-bpm" placeholder="Ej: 140">
-                        </div>
-                        <div class="input-group">
-                            <label>Key</label>
-                            <input type="text" name="key" id="import-key" placeholder="Ej: Cm">
-                        </div>
-                    </div>
-
-                    <button class="yt-btn-secondary" onclick="redirectToUpload()"
-                        style="width: 100%; background: #fff; color: #000; font-weight: 700; border: none; padding: 14px; border-radius: 12px; cursor: pointer; margin-top:16px;">
-                        <i class="bi bi-arrow-right-circle-fill" style="margin-right:8px;"></i> Continuar a OFFSZN
-                    </button>
-                </div>
-            </div>
-        </div>
-        </div>
-
-        <!-- 🔥 UPLOAD FORM (TunesToTube Style) -->
-        <div id="yt-upload-form" style="display:none;" class="fade-in">
-            <div class="yt-header-box">
-                <div class="yt-header-info">
-                    <h1>Creador de Video & Upload</h1>
-                    <p>Combina tu audio e imagen para publicar en YouTube y OFFSZN simultáneamente.</p>
-                </div><button class="yt-btn-secondary" onclick="resetToHub()" style="font-size:0.9rem;"><i
-                        class="bi bi-arrow-left"></i>Volver </button>
-            </div>
-
-            <!-- NEW LAYOUT: Cover Left, Files Right (Beats Style) -->
-            <div class="grid-1-2" style="margin-bottom: 40px;">
-                <!-- LEFT: COVER (Square) -->
-                <div>
-                    <div class="label" style="margin-bottom:8px; color:#aaa; font-size:0.9rem;">1. Portada <span
-                            style="color:#ef4444">*</span></div>
-                    <div class="cover-upload" id="coverDropZone"
-                        onclick="document.getElementById('image-input').click()">
-                        <input type="file" id="image-input" accept="image/png, image/jpeg, image/jpg" hidden
-                            onchange="handleImageSelect(this)">
-
-                        <!-- Preview Image (Uses logic from crop) -->
-                        <img id="cropImagePreview" class="cover-preview"
-                            style="display:none; width:100%; height:100%; object-fit:cover; border-radius:10px;">
-
-                        <div class="cover-placeholder" id="coverPlaceholder">
-                            <i class="bi bi-image" style="font-size: 2rem; color: #666; margin-bottom: 8px;"></i>
-                            <div style="font-size: 0.9rem; color:#fff; font-weight:600;">Subir Portada</div>
-                            <div style="font-size: 0.8rem; opacity: 0.7;">1080x1080px (JPG/PNG)</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- RIGHT: FILE STACK -->
-                <div>
-                    <div class="label" style="margin-bottom:8px; color:#aaa; font-size:0.9rem;">2. Archivos de Audio
-                        <span style="color:#ef4444">*</span>
-                    </div>
-                    <div class="file-stack" style="display: flex; flex-direction: column; gap: 12px;">
-                        <!-- MP3 SLOT (Active) -->
-                        <div class="upload-zone horizontal-upload" id="audio-dropzone"
-                            onclick="document.getElementById('audio-input').click()">
-                            <div style="display:flex; align-items:center;">
-                                <div class="slot-icon" style="color: #8b5cf6; background: rgba(139, 92, 246, 0.1);">
-                                    <i class="bi bi-music-note-beamed"></i>
-                                </div>
-                                <div>
-                                    <div style="font-weight: 700; color: #fff;">BEAT MP3</div>
-                                    <div style="font-size: 12px; color: #aaa;">(Para el Video)</div>
-                                    <div id="audio-filename" style="font-size: 11px; color: #8b5cf6; margin-top:2px;">
-                                    </div>
-                                </div>
-                            </div>
-                            <div style="display:flex; align-items:center; gap:16px;">
-                                <span style="font-size: 11px; color: #555;">Max 50MB</span>
-                                <div class="upload-cta-btn">
-                                    <span>Subir Archivo</span>
-                                    <div class="icon-box"><i class="bi bi-upload"
-                                            style="font-size: 12px; color:#fff;"></i></div>
-                                </div>
-                            </div>
-                            <input type="file" id="audio-input" accept="audio/*" hidden
-                                onchange="handleAudioSelect(this)">
-                        </div>
-
-                        <!-- WAV SLOT (Visual Only for now, maps to same input if clicked?) -->
-                        <div class="upload-zone horizontal-upload"
-                            onclick="document.getElementById('audio-input').click()" style="opacity: 0.8;">
-                            <div style="display:flex; align-items:center;">
-                                <div class="slot-icon" style="color: #06b6d4; background: rgba(6, 182, 212, 0.1);">
-                                    <i class="bi bi-soundwave"></i>
-                                </div>
-                                <div>
-                                    <div style="font-weight: 700; color: #fff;">BEAT WAV</div>
-                                    <div style="font-size: 12px; color: #aaa;">(Recomendado)</div>
-                                </div>
-                            </div>
-                            <div class="upload-cta-btn" style="opacity:0.6;"><span>Cambiar Archivo</span></div>
-                        </div>
-
-                        <!-- STEMS SLOT (Disabled/Visual) -->
-                        <div class="upload-zone horizontal-upload" style="opacity: 0.4; cursor: not-allowed;">
-                            <div style="display:flex; align-items:center;">
-                                <div class="slot-icon" style="color: #f59e0b; background: rgba(245, 158, 11, 0.1);">
-                                    <i class="bi bi-layers"></i>
-                                </div>
-                                <div>
-                                    <div style="font-weight: 700; color: #fff;">STEMS</div>
-                                    <div style="font-size: 12px; color: #aaa;">(No disponible para Video)</div>
-                                </div>
-                            </div>
-                            <div class="upload-cta-btn" style="border:none;"><i class="bi bi-lock"></i></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- METADATA & PREVIEW ROW -->
-            <div style="display: grid; grid-template-columns: 1fr 340px; gap: 40px; align-items:start;">
-                <!-- LEFT: DATA -->
-                <div>
-                    <h3 style="margin-bottom:20px; color:#fff; font-size:1.1rem;">Información del Video</h3>
-                    <div class="input-group">
-                        <label>Título del Video</label>
-                        <input type="text" id="upload-title" placeholder="Ej: Travis Scott Type Beat - 'NIGHT'">
-                    </div>
-                    <div class="input-group">
-                        <label>Descripción</label>
-                        <textarea id="upload-desc" rows="5"
-                            placeholder="Enlace de compra, redes sociales..."></textarea>
-                    </div>
-
-                    <!-- SCHEDULING FIELD (New) -->
-                    <div class="input-group">
-                        <label style="display: flex; justify-content: space-between; align-items: center;">
-                            Programar Publicación <span
-                                style="font-size: 0.75rem; color: #888; font-weight: 400;">(Opcional)</span>
-                        </label>
-                        <input type="datetime-local" id="upload-schedule-time" style="color-scheme: dark;">
-                        <div style="font-size: 0.75rem; color: #666; margin-top: 6px;">
-                            <i class="bi bi-calendar-event"></i> Si se deja vacío, se publicará inmediatamente.
-                        </div>
-                    </div>
-
-                    <button class="yt-btn-secondary" onclick="processAndUpload()"
-                        style="width: 100%; background: #ef4444; color: #fff; margin-top: 20px; border:none; padding:16px; font-size:1rem; border-radius:12px; font-weight:700;">
-                        <i class="bi bi-cloud-upload" style="margin-right: 8px;"></i> Procesar y Subir a YouTube
-                    </button>
-                    <!-- Status message container -->
-                    <div id="upload-status" style="margin-top:16px; text-align:center; color:#ccc; font-size:0.9rem;">
-                    </div>
-                </div>
-
-                <!-- RIGHT: PREVIEW -->
-                <div>
-                    <div class="label" style="margin-bottom:12px; color:#aaa;">Vista Previa (16:9)</div>
-                    <!-- PREVIEW BOX (16:9) -->
-                    <div class="yt-video-preview"
-                        style="aspect-ratio: 16/9; background: #000; border-radius: 12px; position: relative; overflow: hidden; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
-                        <img id="yt-preview-bg" src=""
-                            style="width: 100%; height: 100%; object-fit: cover; opacity: 0.5;">
-                        <div class="yt-play-overlay" onclick="togglePreviewPlay()"
-                            style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 60px; height: 60px; background: rgba(239, 68, 68, 0.9); border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); cursor: pointer; transition: transform 0.2s;">
-                            <i class="bi bi-play-fill" style="font-size: 2rem; color: #fff; padding-left: 4px;"></i>
-                        </div>
-                        <div
-                            style="position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.8); padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 700; color:#fff;">
-                            OFFSZN PLAYER</div>
-                    </div>
-                    <div style="font-size:0.8rem; color:#666; line-height:1.4;">
-                        <i class="bi bi-info-circle" style="margin-right:6px;"></i>
-                        Tu video se generará automáticamente combinando el audio y la imagen.
-                    </div>
-                </div>
-            </div>
-        </div>
-
-    </main>
-    <!-- YOUTUBE SELECTION MODAL -->
-    <div id="yt-importer-modal" class="yt-modal">
-        <div class="yt-modal-content">
-            <div class="yt-modal-header">
-                <h2>Selecciona un Video</h2><button class="yt-close" onclick="closeImporterModal()">&times;
-                </button>
-            </div>
-            <div id="yt-video-list">
-                <!-- Videos injected here -->
-            </div>
-        </div>
-    </div>
-    <!-- CROP MODAL (Adapted from Beats.html) -->
-    <!-- ==================== CROP MODAL (REFINED) ==================== -->
-    <div id="cropModal" class="image-crop-modal">
-        <div class="crop-header">
-            <h3>Ajustar Portada</h3>
-            <button class="crop-close" onclick="closeCropModal()">&times;</button>
-        </div>
-
-        <div id="cropContainer">
-            <img id="cropImage" src="" alt="Crop Preview">
-            <div id="cropBox"></div>
-        </div>
-
-        <div class="crop-controls">
-            <div style="color: #fff; font-size: 1.2rem; cursor: pointer;"
-                onclick="document.getElementById('zoomRange').stepDown()">
-                <i class="bi bi-dash"></i>
-            </div>
-
-            <div class="zoom-slider-container">
-                <input type="range" id="zoomRange" class="zoom-slider" min="1" max="4" step="0.1" value="1">
-            </div>
-
-            <div style="color: #fff; font-size: 1.2rem; cursor: pointer;"
-                onclick="document.getElementById('zoomRange').stepUp()">
-                <i class="bi bi-plus"></i>
-            </div>
-
-            <button id="saveCropBtn" class="btn-save-crop">
-                Guardar Portada
+            <!-- ID CHANGED for JS compatibility -->
+            <button class="btn-checkout-global" id="cart-checkout-btn"
+                onclick="window.location.href='/pages/checkout.html'">
+                <i class="bi bi-lock-fill" style="margin-right:6px;"></i> Ir a Pagar Seguro
             </button>
-        </div>
-    </div>
-    <!-- ==================== UPLOAD PROGRESS OVERLAY (Psychological) ==================== -->
-    <div id="upload-overlay"
-        style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:9999; align-items:center; justify-content:center; flex-direction:column; backdrop-filter:blur(10px);">
 
-        <div class="progress-modal" style="width:90%; max-width:500px; text-align:center;">
-            <!-- Animation Container -->
-            <div style="margin-bottom:30px; position:relative; width:80px; height:80px; margin:0 auto 20px;">
-                <div style="position:absolute; inset:0; border:4px solid rgba(239, 68, 68, 0.2); border-radius:50%;">
-                </div>
-                <div
-                    style="position:absolute; inset:0; border:4px solid #ef4444; border-radius:50%; border-top-color:transparent; animation:spin 1s linear infinite;">
-                </div>
-                <i class="bi bi-cloud-arrow-up-fill"
-                    style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); font-size:2rem; color:#fff;"></i>
-            </div>
-
-            <h3 id="progress-title" style="color:#fff; font-size:1.5rem; margin-bottom:10px; font-weight:700;">Subiendo
-                Contenido...</h3>
-            <p id="progress-desc" style="color:#aaa; font-size:0.95rem; margin-bottom:30px;">Estamos procesando tu video
-                y subiendo los archivos a OFFSZN.</p>
-
-            <!-- Progress Bar -->
-            <div class="progress-container"
-                style="background:rgba(255,255,255,0.1); border-radius:10px; height:12px; width:100%; overflow:hidden; position:relative; margin-bottom:16px;">
-                <div id="upload-progress-bar"
-                    style="background: linear-gradient(90deg, #ef4444, #f87171); width:0%; height:100%; border-radius:10px; transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 0 15px rgba(239, 68, 68, 0.5);">
-                </div>
-            </div>
-
-            <div style="display:flex; justify-content:space-between; color:#fff; font-size:0.9rem; font-weight:600;">
-                <span id="progress-status-text">Iniciando...</span>
-                <span id="progress-percent">0%</span>
-            </div>
-
+            <!-- TRUST BADGES -->
             <div
-                style="margin-top:40px; padding:16px; background:rgba(239, 68, 68, 0.1); border:1px solid rgba(239, 68, 68, 0.2); border-radius:8px; color:#ffcccc; font-size:0.85rem; display:flex; align-items:center; gap:12px; text-align:left;">
-                <i class="bi bi-exclamation-triangle-fill" style="font-size:1.2rem;"></i>
-                <div>
-                    <strong>IMPORTANTE:</strong><br>
-                    No cierres ni recargues esta ventana hasta que el proceso termine por completo.
+                style="margin-top: 20px; text-align: center; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 15px;">
+                <p style="font-size: 0.65rem; color: #666; margin-bottom: 10px; letter-spacing: 1px; font-weight: 700;">
+                    METODOS DE PAGO SEGUROS</p>
+
+                <div style="display: flex; gap: 12px; justify-content: center; align-items: center; opacity: 0.8; filter: grayscale(100%); transition: filter 0.3s;"
+                    onmouseover="this.style.filter='grayscale(0%)'" onmouseout="this.style.filter='grayscale(100%)'">
+                    <!-- Global -->
+                    <i class="fab fa-cc-paypal" style="font-size: 26px; color: #fff;"></i>
+                    <i class="fab fa-cc-visa" style="font-size: 26px; color: #fff;"></i>
+                    <i class="fab fa-cc-mastercard" style="font-size: 26px; color: #fff;"></i>
+
+                    <!-- Local (Custom Badges) -->
+                    <div
+                        style="background: #742284; color: white; font-size: 0.7rem; font-weight: 800; padding: 2px 6px; border-radius: 4px; display: flex; align-items: center;">
+                        YAPE</div>
+                    <div
+                        style="background: #00d3de; color: white; font-size: 0.7rem; font-weight: 800; padding: 2px 6px; border-radius: 4px; display: flex; align-items: center;">
+                        PLIN</div>
                 </div>
             </div>
         </div>
     </div>
-
-    <style>
-        @keyframes spin {
-            100% {
-                transform: rotate(360deg);
-            }
-        }
-    </style>
 
     <script src="/script/cart.js"></script>
     <script src="/script/notifications.js"></script>
     <script src="/script/navbar.js?v=7" type="module"></script>
-    <script src="/script/youtube-importer.js"></script>
-    <!-- PUBLISH OVERLAY -->
-    <div id="publishOverlay"
-        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 9999; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(10px);">
-        <div class="spinner"
-            style="width: 50px; height: 50px; border: 4px solid rgba(255,255,255,0.1); border-left-color: #8b5cf6; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 24px;">
-        </div>
-        <h3 id="publishOverlayTitle"
-            style="font-size: 24px; font-weight: 700; margin-bottom: 8px; color: #fff; letter-spacing: -0.5px; font-family: 'Plus Jakarta Sans', sans-serif;">
-            SUBIENDO BEAT...</h3>
-        <p id="publishOverlayText"
-            style="color: #888; font-size: 15px; font-weight: 500; font-family: 'Inter', sans-serif;">Por favor, no
-            cierres esta página.</p>
-    </div>
-    <style>
-        @keyframes spin {
-            0% {
-                transform: rotate(0deg);
-            }
-
-            100% {
-                transform: rotate(360deg);
-            }
-        }
-    </style>
+    <!-- Removed redundant inline script -->
 </body>
 
 </html>

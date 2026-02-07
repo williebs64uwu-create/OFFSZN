@@ -59,6 +59,23 @@ const corsOptions = {
     optionsSuccessStatus: 200
 };
 
+// --- 1.1 SECURITY HEADERS (COOP/COEP) ---
+// Critical for FFmpeg WASM (SharedArrayBuffer) AND Google OAuth (Popups)
+app.use((req, res, next) => {
+    // 1. Allow Popups to communicate (Google Auth)
+    res.setHeader("Cross-Origin-Opener-Policy", "same-origin-allow-popups");
+
+    // 2. Embedder Policy (Optional for v0.11 but good for v0.12)
+    // If we use require-corp, we might need to serve assets with correct headers too.
+    // For now, let's start with just COOP to fix Auth.
+    // res.setHeader("Cross-Origin-Embedder-Policy", "require-corp"); 
+
+    next();
+});
+
+// --- 2. MIDDLEWARES GLOBALES ---
+// A. Security Check firstodo
+
 // Aplicar CORS a todo
 app.use(cors(corsOptions));
 
@@ -174,7 +191,7 @@ app.use((req, res, next) => {
 });
 
 // C1. Serve Static Files from Server Public (Prioritize this for moved assets)
-const publicPath = path.join(__dirname, '../public');
+const publicPath = path.join(__dirname, '../../public');
 app.use(express.static(publicPath));
 
 // C. Serve Static Files from Root

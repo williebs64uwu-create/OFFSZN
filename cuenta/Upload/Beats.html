@@ -3481,8 +3481,11 @@
         <!-- 🔥 STRATEGY SELECTION MODAL (Initial View) -->
         <div id="upload-strategy-hub" style="display:block;">
             <div style="text-align:center; margin-bottom:40px;">
-                <h1 style="font-size:2.5rem; font-weight:800; margin-bottom:10px;">¿Cómo quieres subir tu música?</h1>
-                <p style="color:#888;">Elige la mejor opción para tu flujo de trabajo.</p>
+                <h1 style="font-size:2.5rem; font-weight:800; margin-bottom:10px;">Nuevas herramientas disponibles</h1>
+                <p style="color:#888;">
+                    - Detector de BPM y KEY automatico <br>
+                    - Importar desde YOUTUBE
+                </p>
             </div>
 
             <div class="yt-hub-grid">
@@ -3493,12 +3496,14 @@
                     <p>Sube tu producto directamente a la tienda.</p>
                     <div class="yt-hub-btn secondary">Comenzar</div>
                 </div>
-                <!-- OPTION 2: YOUTUBE + OFFZSN -->
-                <div class="yt-hub-card secondary" onclick="alert('Funcionalidad Próximamente.')">
+                <!-- OPTION 2: YOUTUBE + OFFZSN (DISABLED PROXIMAMENTE) -->
+                <div class="yt-hub-card secondary" style="opacity: 0.6; cursor: not-allowed;" onclick="">
                     <div class="yt-hub-icon" style="color:#ef4444;"><i class="bi bi-youtube"></i></div>
                     <h2>Subir a YOUTUBE <br>y OFFSZN</h2>
                     <p>Genera video automático y publica en ambas plataformas.</p>
-                    <div class="yt-hub-btn">Comenzar</div>
+                    <div class="yt-hub-btn"
+                        style="background: linear-gradient(135deg, #ef4444, #b91c1c) !important; cursor: not-allowed;">
+                        PRÓXIMAMENTE</div>
                 </div>
             </div>
         </div>
@@ -4169,15 +4174,20 @@
                         // 1. Essentia Analysis (Key & BPM)
                         if (window.Essentia && window.EssentiaWASM) {
                             try {
+                                // 🔥 YIELD TO UI (Prevent freezing)
+                                await new Promise(r => setTimeout(r, 50));
+
                                 // Load WASM (It's a global factory function)
                                 const wasmModule = await window.EssentiaWASM();
                                 const essentia = new window.Essentia(wasmModule);
 
                                 // Convert to Vector (Use optimized slice if song is huge? KeyExtractor needs ~60s+)
-                                // For safety, let's use the first 2 minutes max to save memory on huge files
-                                // 44100 * 120 = 5,292,000 samples
-                                const maxSamples = 44100 * 120; // 2 minutes
+                                // 🔥 OPTIMIZE: Use first 60 seconds (sufficient for Key/BPM)
+                                const maxSamples = 44100 * 60; // 60 seconds
                                 const processingData = channelData.length > maxSamples ? channelData.slice(0, maxSamples) : channelData;
+
+                                // 🔥 YIELD AGAIN
+                                await new Promise(r => setTimeout(r, 10));
                                 const vector = essentia.arrayToVector(processingData);
 
                                 // A. KEY DETECTION
@@ -4668,10 +4678,52 @@
                         currentStep = targetStep;
                         updateStepUI();
                         if (currentStep === 4) {
-                            setTimeout(() => {
-                                renderPreview();
-                                updateCompletionProgress();
-                            }, 100);
+                            // 4. Render Preview (YouTube Mode)
+                            if (window.renderPreviewUI) {
+                                window.renderPreviewUI('youtube-preview-container', {
+                                    title: title,
+                                    desc: desc,
+                                    tags: tags,
+                                    coverUrl: coverUrl,
+                                    coverBlob: files.cover, // We need the blob for rendering
+                                    audioBlob: files.mp3_tagged || files.wav_untagged, // Prefer MP3 for speed?
+
+                                    // 🔥 CALLBACK: When YouTube Upload is Success
+                                    onSuccess: async (youtubeId) => {
+                                        console.log('🎉 YouTube Success! ID:', youtubeId);
+
+                                        // 1. Set YouTube URL in FormData/State
+                                        const youtubeUrl = `https://youtu.be/${youtubeId}`;
+                                        document.getElementById('youtubeUrlInput').value = youtubeUrl;
+
+                                        // 2. Trigger OFFSZN Save (Reuse existing logic)
+                                        // We force "isYouTubeUpload" to false temporarily if needed, 
+                                        // or we just call the update function directly.
+
+                                        // But handleUpdateProduct expects an event usually, let's mock it or adapt it.
+                                        // Better: Update the internal state and call handleUpdateProduct
+
+                                        // We need to ensure we don't loop. 
+                                        // If we are here, we are in "YouTube Mode".
+                                        // We want to save the product with the new YouTube URL.
+
+                                        // Let's manually trigger the update logic
+                                        try {
+                                            showLoading('GUARDANDO EN OFFSZN...');
+                                            await handleUpdateProduct(null, {
+                                                forceYouTubeUrl: youtubeUrl,
+                                                skipYouTubeCheck: true
+                                            });
+                                            // handleUpdateProduct handles the redirect and success message
+                                        } catch (e) {
+                                            console.error('Error saving to OFFSZN after YouTube:', e);
+                                            alert('Video subido a YouTube, pero error guardando en OFFSZN: ' + e.message);
+                                            hideLoading();
+                                        }
+                                    }
+                                });
+                            }
+                            updateCompletionProgress();
                         }
                         return;
                     }
@@ -6499,7 +6551,43 @@
         // VISTA PREVIA (STEP 4)
         // ========================================
         function renderPreview() {
-            const filesItems = []; // âœ… Declarar al inicio
+            // 🔥 YOUTUBE INTEGRATION LOGIC
+            if (window.isYouTubeUpload && window.YouTubeUploader) {
+                const stdLayout = document.querySelector('#step4 .preview-layout');
+                if (stdLayout) stdLayout.style.display = 'none';
+
+                let ytContainer = document.getElementById('step4-yt-container');
+                if (!ytContainer) {
+                    ytContainer = document.createElement('div');
+                    ytContainer.id = 'step4-yt-container';
+                    const step4 = document.getElementById('step4');
+                    // Insert before the closing form tag or inside step4
+                    // step4 contains h3 and prevent-layout. Append to step4 is fine.
+                    step4.appendChild(ytContainer);
+                }
+                ytContainer.style.display = 'block';
+
+                // Prepare Data for YouTube Renderer
+                const data = {
+                    title: document.getElementById('titleInput').value || 'Sin Título',
+                    desc: document.getElementById('descInput').value || '',
+                    coverBlob: formData.coverBlob, // The actual blob for processing
+                    coverUrl: document.getElementById('coverPreview')?.src, // For display
+                    audioBlob: formData.files.mp3_tagged || formData.files.wav_untagged,
+                    tags: tags // Global tags array
+                };
+
+                window.YouTubeUploader.renderPreviewUI(ytContainer.id, data);
+                return; // ⛔ STOP executing standard preview logic
+            } else {
+                // Restore standard layout
+                const stdLayout = document.querySelector('#step4 .preview-layout');
+                if (stdLayout) stdLayout.style.display = ''; // Revert to CSS default (flex/block)
+                const ytContainer = document.getElementById('step4-yt-container');
+                if (ytContainer) ytContainer.style.display = 'none';
+            }
+
+            const filesItems = []; // ✅ Declarar al inicio
 
             // Cover y tÃ­tulo
             // Cover y tÃ­tulo
@@ -6969,6 +7057,7 @@
         }
 
         // ðŸ”´ FUNCIÃ“N MEJORADA: validateStep con Inline Validation
+        // ðŸ´ FUNCIÃ“N MEJORADA: validateStep con Inline Validation
         function validateStep(step) {
             clearInlineErrors(); // Limpiar errores previos
             let isValid = true;
@@ -6976,25 +7065,32 @@
 
             if (step === 1) {
                 // 1. MP3 Tagged (Required for Preview)
-                // 1. MP3 Tagged (Required for Preview)
                 if (!formData.files.mp3_tagged && !filesUploaded.mp3_tagged) {
-                    showInlineError('mp3TaggedPreviewContainer', 'Debes subir el MP3 Tagged (Preview)');
-                    errors.push('Falta el MP3 Tagged');
+                    showInlineError('mp3TaggedDropZone', 'Debes subir el MP3 Tagged (Preview)');
+                    errors.push('Falta MP3 Tagged');
                     isValid = false;
                 }
 
-                // 3. Cover Image
+                // 2. Cover (Required)
                 if (!formData.coverBlob && !filesUploaded.cover) {
                     showInlineError('coverDropZone', 'Debes subir una portada (1080x1080px)');
-                    errors.push('Falta la imagen de portada');
+                    errors.push('Falta Portada');
                     isValid = false;
                 }
 
-                // 4. Title
+                // 3. Title (Required)
                 const titleInput = document.getElementById('titleInput');
                 if (!titleInput.value.trim()) {
                     showInlineError('titleInput', 'El tÃ­tulo es obligatorio');
-                    errors.push('Falta el tÃ­tulo del producto');
+                    errors.push('Falta TÃ­tulo');
+                    isValid = false;
+                }
+
+                // 4. Visibility (Required)
+                const visInput = document.getElementById('visibilityInput');
+                if (!visInput.value) {
+                    showInlineError('visibilityInput', 'Selecciona la visibilidad');
+                    errors.push('Falta Visibilidad');
                     isValid = false;
                 }
 
@@ -7867,9 +7963,47 @@
             return cleanName + ext;
         }
         async function handlePublish() {
-            // ðŸ”¥ PREVENIR DOBLE SUBMISSION
+            // 🔥 PREVENIR DOBLE SUBMISSION
             if (window.isPublishing) return;
             window.isPublishing = true;
+
+            // 🔥 YOUTUBE UPLOAD INTERCEPTION
+            if (window.isYouTubeUpload && window.YouTubeUploader) {
+                const btn = document.getElementById('publishNow');
+                const originalText = btn ? btn.innerHTML : 'Publicar Ahora';
+                try {
+                    if (btn) {
+                        btn.disabled = true;
+                        btn.innerHTML = 'Subiendo a YouTube...';
+                    }
+
+                    // 1. Upload to YouTube
+                    // Prepare minimal metadata for YouTube (Full metadata is in local vars)
+                    const ytMetadata = {
+                        title: document.getElementById('titleInput').value || 'Sin Título',
+                        description: document.getElementById('descInput').value || '',
+                        tags: tags // Global tags
+                    };
+
+                    // This throws if video is not generated yet
+                    await window.YouTubeUploader.handleUpload(ytMetadata);
+
+                    showToast('Video subido a YouTube correctamente ✅', 'success');
+
+                    // 2. Continue to normal OFFSZN upload
+                    if (btn) btn.innerHTML = 'Subiendo a OFFSZN...';
+
+                } catch (error) {
+                    console.error('YouTube Upload Error:', error);
+                    showToast(error.message || 'Error al subir a YouTube', 'error');
+                    window.isPublishing = false;
+                    if (btn) {
+                        btn.disabled = false;
+                        btn.innerHTML = originalText;
+                    }
+                    return; // Stop execution
+                }
+            }
 
             const btn = document.getElementById('publishNow');
             const originalBtnText = btn ? btn.innerHTML : 'Publicar Ahora';
@@ -9849,6 +9983,7 @@
                     // Beat Specific
                     bpm: parseInt(document.getElementById('bpmInput')?.value) || null,
                     key_scale: document.getElementById('keyInput')?.value || null,
+                    youtube_url: document.getElementById('youtubeUrlInput')?.value || null, // 🔥 SAVE YOUTUBE URL
 
                     // Pricing
                     discount_amount: parseInt(document.getElementById('offerInput')?.value) || null,
@@ -10252,6 +10387,31 @@
     <script src="https://accounts.google.com/gsi/client" onload="gisLoaded()" async defer></script>
     <script src="https://apis.google.com/js/api.js" onload="gapiLoaded()" async defer></script>
     <script src="../../script/youtube-importer.js"></script>
+    <script src="../../script/youtube-uploader.js"></script> <!-- 🔥 MODULAR YOUTUBE UPLOADER -->
+    <script>
+        // ========================================
+        // 🔥 YOUTUBE UPLOAD MODE LOGIC
+        // ========================================
+        window.isYouTubeUpload = false;
+
+        function enableYouTubeUploadMode() {
+            window.isYouTubeUpload = true;
+            console.log('📺 YouTube Upload Mode ENABLED');
+
+            // Show toast
+            showToast('Modo YouTube Activado', 'info');
+
+            // Initialize Uploader (Loads GAPI if needed)
+            if (window.YouTubeUploader) {
+                window.YouTubeUploader.init({
+                    // Config passed from auth-utils if needed, or hardcoded for now
+                });
+            }
+
+            // Show Form
+            showMainUploadForm();
+        }
+    </script>
 </body>
 
 </html>
