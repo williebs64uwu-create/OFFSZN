@@ -431,9 +431,12 @@ document.addEventListener('DOMContentLoaded', () => {
   // ============================================
   window.signUpWithGoogle = async function () {
     try {
+      // FIX: Localhost whitelist typically only includes root. Production uses specific callback page.
+      const callbackPath = isLocal ? '/' : '/pages/auth-callback.html';
+
       const callbackURL = redirectParam === 'carrito'
-        ? `${baseURL}/pages/auth-callback.html?redirect=carrito`
-        : `${baseURL}/pages/auth-callback.html`;
+        ? `${baseURL}${callbackPath}?redirect=carrito`
+        : `${baseURL}${callbackPath}`;
 
       console.log('🔍 OAuth Google - Callback URL:', callbackURL);
 
@@ -458,9 +461,12 @@ document.addEventListener('DOMContentLoaded', () => {
   // ============================================
   window.signUpWithApple = async function () {
     try {
+      // FIX: Localhost whitelist typically only includes root. Production uses specific callback page.
+      const callbackPath = isLocal ? '/' : '/pages/auth-callback.html';
+
       const callbackURL = redirectParam === 'carrito'
-        ? `${baseURL}/pages/auth-callback.html?redirect=carrito`
-        : `${baseURL}/pages/auth-callback.html`;
+        ? `${baseURL}${callbackPath}?redirect=carrito`
+        : `${baseURL}${callbackPath}`;
 
       console.log('🔍 OAuth Apple - Callback URL:', callbackURL);
 

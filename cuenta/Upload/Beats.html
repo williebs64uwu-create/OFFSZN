@@ -18,9 +18,230 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/essentia.js@0.1.3/dist/essentia-wasm.web.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/essentia.js@0.1.3/dist/essentia.js-core.js"></script>
     <script src="https://unpkg.com/wavesurfer.js@7"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
+        /* ========================================
+           STRATEGY HUB STYLES (New)
+           ======================================== */
+        .yt-hub-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
+            max-width: 800px;
+            margin: 0 auto;
+            animation: fadeIn 0.4s ease forwards;
+        }
+
+        .yt-hub-card {
+            background: rgba(20, 20, 20, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .yt-hub-card:hover {
+            background: rgba(30, 30, 30, 0.8);
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .yt-hub-icon {
+            font-size: 3rem;
+            margin-bottom: 8px;
+        }
+
+        .yt-hub-card h2 {
+            font-size: 1.4rem;
+            margin: 0;
+            color: #fff;
+            line-height: 1.3;
+        }
+
+        .yt-hub-card p {
+            font-size: 0.9rem;
+            color: #888;
+            margin: 0;
+        }
+
+        .yt-hub-btn {
+            margin-top: 16px;
+            padding: 10px 24px;
+            background: #ef4444;
+            color: #fff;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+
+        .yt-hub-btn.secondary {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .yt-hub-card:hover .yt-hub-btn {
+            transform: scale(1.05);
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+        }
+
+        .yt-hub-card.secondary:hover .yt-hub-btn.secondary {
+            background: #fff;
+            color: #000;
+            box-shadow: 0 4px 15px rgba(255, 255, 255, 0.2);
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ========================================
+     YOUTUBE IMPORT MODAL FIXES (MATCHING YOUTUBE.HTML)
+     ======================================== */
+        #yt-video-list {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px !important;
+            padding: 20px;
+            overflow-y: auto;
+            max-height: 60vh;
+            /* Custom Scrollbar - Dark Theme matches youtube.html */
+            scrollbar-width: thin;
+            scrollbar-color: #333 transparent;
+        }
+
+        #yt-video-list::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        #yt-video-list::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        #yt-video-list::-webkit-scrollbar-thumb {
+            background-color: #333;
+            border-radius: 20px;
+            border: 2px solid transparent;
+            background-clip: content-box;
+        }
+
+        #yt-video-list::-webkit-scrollbar-thumb:hover {
+            background-color: #555;
+        }
+
+        .yt-video-card {
+            background: #1a1a1a;
+            border-radius: 12px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            flex-direction: column;
+            /* Top-Bottom Layout */
+            height: 100%;
+            min-height: 220px;
+            /* Force visual height */
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .yt-video-card:hover {
+            transform: translateY(-4px);
+            background: #252525;
+            border-color: #ef4444;
+        }
+
+        .yt-video-card img {
+            width: 100%;
+            aspect-ratio: 16/9;
+            object-fit: cover;
+            flex-shrink: 0;
+            border-right: none;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            background: #000;
+        }
+
+        .yt-video-info {
+            padding: 16px;
+            background: #1a1a1a;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: flex-start;
+            border-top: none;
+            min-width: 0;
+        }
+
+        .yt-video-info h4 {
+            margin: 0 0 6px 0;
+            font-size: 0.9rem;
+            color: #fff;
+            font-weight: 600;
+            /* Multi-line Truncation */
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            line-clamp: 2;
+            -webkit-box-orient: vertical;
+            white-space: normal;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1.4;
+            text-align: left;
+            width: 100%;
+        }
+
+        /* SKELETON STYLES (MATCHING) */
+        .skeleton-card {
+            pointer-events: none;
+        }
+
+        .skeleton-img {
+            width: 100%;
+            aspect-ratio: 16/9;
+            background: linear-gradient(90deg, #222 25%, #2a2a2a 50%, #222 75%);
+            background-size: 200% 100%;
+            animation: skeleton-loading 1.5s infinite;
+        }
+
+        .skeleton-text {
+            height: 14px;
+            margin: 12px;
+            width: 70%;
+            border-radius: 4px;
+            background: linear-gradient(90deg, #222 25%, #2a2a2a 50%, #222 75%);
+            background-size: 200% 100%;
+            animation: skeleton-loading 1.5s infinite;
+        }
+
+        @keyframes skeleton-loading {
+            0% {
+                background-position: 200% 0;
+            }
+
+            100% {
+                background-position: -200% 0;
+            }
+        }
+
+
         /* ========================================
     BOTÃ“N DE DESCARGA EN PREVIEW CARD
     ======================================== */
@@ -3257,475 +3478,542 @@
     </header>
 
     <main>
-        <div class="steps-container">
-            <div class="steps-line"></div>
-            <div class="steps-progress" id="stepsProgress"></div>
+        <!-- 🔥 STRATEGY SELECTION MODAL (Initial View) -->
+        <div id="upload-strategy-hub" style="display:block;">
+            <div style="text-align:center; margin-bottom:40px;">
+                <h1 style="font-size:2.5rem; font-weight:800; margin-bottom:10px;">¿Cómo quieres subir tu música?</h1>
+                <p style="color:#888;">Elige la mejor opción para tu flujo de trabajo.</p>
+            </div>
 
-            <div class="step active" data-step="1">
-                1
-                <div class="step-label">Archivos e Info</div>
-            </div>
-            <div class="step" data-step="2">
-                2
-                <div class="step-label">Detalles y Precio</div>
-            </div>
-            <div class="step" data-step="3">
-                3
-                <div class="step-label">Colaboradores</div>
-            </div>
-            <div class="step" data-step="4">
-                4
-                <div class="step-label">Vista Previa</div>
+            <div class="yt-hub-grid">
+                <!-- OPTION 1: STANDARD UPLOAD -->
+                <div class="yt-hub-card" onclick="showMainUploadForm()">
+                    <div class="yt-hub-icon" style="color:#fff;"><i class="bi bi-cloud-arrow-up-fill"></i></div>
+                    <h2>Subir a OFFSZN</h2>
+                    <p>Sube tu producto directamente a la tienda.</p>
+                    <div class="yt-hub-btn secondary">Comenzar</div>
+                </div>
+                <!-- OPTION 2: YOUTUBE + OFFZSN -->
+                <div class="yt-hub-card secondary" onclick="alert('Funcionalidad Próximamente.')">
+                    <div class="yt-hub-icon" style="color:#ef4444;"><i class="bi bi-youtube"></i></div>
+                    <h2>Subir a YOUTUBE <br>y OFFSZN</h2>
+                    <p>Genera video automático y publica en ambas plataformas.</p>
+                    <div class="yt-hub-btn">Comenzar</div>
+                </div>
             </div>
         </div>
 
+        <!-- 🔥 MAIN UPLOAD FORM (Hidden initially) -->
+        <div id="main-upload-container" style="display:none;" class="fade-in">
+            <div class="steps-container">
+                <div class="steps-line"></div>
+                <div class="steps-progress" id="stepsProgress"></div>
+
+                <div class="step active" data-step="1">
+                    1
+                    <div class="step-label">Archivos e Info</div>
+                </div>
+                <div class="step" data-step="2">
+                    2
+                    <div class="step-label">Detalles y Precio</div>
+                </div>
+                <div class="step" data-step="3">
+                    3
+                    <div class="step-label">Colaboradores</div>
+                </div>
+                <div class="step" data-step="4">
+                    4
+                    <div class="step-label">Vista Previa</div>
+                </div>
+            </div>
 
 
-        <form id="uploadForm">
-            <!-- STEP 1 -->
-            <div class="form-step active" id="step1">
-                <div class="grid-1-2">
-                    <div>
-                        <div class="label">Portada <span class="required">*</span></div>
-                        <div class="cover-upload" id="coverDropZone">
-                            <input type="file" id="coverInput" accept="image/png, image/jpeg, image/jpg" hidden>
-                            <img id="coverPreview" class="cover-preview">
-                            <div class="cover-placeholder" id="coverPlaceholder">
-                                <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2">
-                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                </svg>
-                                <div class="upload-subtext">Formato:1080x1080px</div>
-                                <div class="upload-subtext" style="margin-top: 4px; opacity: 0.7;">(Máx. 10MB)</div>
+
+            <form id="uploadForm">
+                <!-- STEP 1 -->
+                <div class="form-step active" id="step1">
+                    <div class="grid-1-2">
+                        <div>
+                            <div class="label">Portada <span class="required">*</span></div>
+                            <div class="cover-upload" id="coverDropZone">
+                                <input type="file" id="coverInput" accept="image/png, image/jpeg, image/jpg" hidden>
+                                <img id="coverPreview" class="cover-preview">
+                                <div class="cover-placeholder" id="coverPlaceholder">
+                                    <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                    </svg>
+                                    <div class="upload-subtext">Formato:1080x1080px</div>
+                                    <div class="upload-subtext" style="margin-top: 4px; opacity: 0.7;">(Máx. 10MB)</div>
+                                </div>
+                            </div>
+                            <!-- YOUTUBE IMPORT BUTTON -->
+                            <div onclick="document.getElementById('yt-importer-modal').style.display='flex'; handleImportClick();"
+                                style="margin-top: 12px; background: rgba(255,0,0,0.1); border: 1px solid rgba(255,0,0,0.3); color: #ff9999; padding: 10px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s;"
+                                onmouseover="this.style.background='rgba(255,0,0,0.2)'; this.style.color='#fff'"
+                                onmouseout="this.style.background='rgba(255,0,0,0.1)'; this.style.color='#ff9999'">
+                                <i class="bi bi-youtube" style="font-size: 16px;"></i>
+                                Importar de YouTube
+                            </div>
+                        </div>
+                        <div>
+                            <!-- NEW LAYOUT: Stacked File Inputs -->
+                            <!-- NEW LAYOUT: Grid File Inputs -->
+                            <!-- NEW LAYOUT: Vertical Stack (Full Width) -->
+                            <!-- NEW LAYOUT: Vertical Stack (Full Width) -->
+                            <div class="file-stack"
+                                style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; margin-top: 29px;">
+
+                                <!-- 1. BEAT MP3 (TAGGED) -->
+                                <div class="form-group" style="margin-bottom: 0;">
+                                    <div class="upload-zone horizontal-upload" id="mp3TaggedDropZone"
+                                        style="display: flex; align-items: center; padding: 12px 20px; min-height: 72px;">
+
+                                        <!-- Icon -->
+                                        <div class="slot-icon"
+                                            style="color: #8b5cf6; background: rgba(139, 92, 246, 0.1); margin-right: 16px;">
+                                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                                stroke="currentColor" stroke-width="2">
+                                                <path d="M9 18V5l12-2v13"></path>
+                                                <circle cx="6" cy="18" r="3"></circle>
+                                                <circle cx="18" cy="16" r="3"></circle>
+                                            </svg>
+                                        </div>
+
+                                        <!-- Text Info -->
+                                        <div style="flex: 1; text-align: left;">
+                                            <div
+                                                style="font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 4px;">
+                                                BEAT MP3</div>
+                                            <div style="font-size: 12px; color: #aaa;">(Con Tag)
+                                            </div>
+                                        </div>
+
+                                        <!-- Right Side: Limit + Upload CTA -->
+                                        <div style="display: flex; align-items: center; gap: 24px;">
+                                            <span style="font-size: 11px; color: #555;">Max 50MB</span>
+
+                                            <div class="upload-cta-btn">
+                                                <span>Subir Archivo</span>
+                                                <div class="icon-box">
+                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                                        stroke="#fff" stroke-width="2">
+                                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                                        <polyline points="17 8 12 3 7 8"></polyline>
+                                                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                                                    </svg>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- SUCCESS STATE -->
+                                        <div class="success-state"
+                                            style="display: none; align-items: center; gap: 8px; margin-left: 20px;">
+                                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#22c55e"
+                                                stroke-width="2">
+                                                <polyline points="20 6 9 17 4 12"></polyline>
+                                            </svg>
+                                            <button type="button" class="remove-btn-mini"
+                                                onclick="event.stopPropagation(); removeFile('mp3_tagged');"
+                                                title="Eliminar">✖</button>
+                                        </div>
+                                        <input type="file" id="mp3TaggedInput" accept=".mp3" hidden>
+                                    </div>
+                                    <div id="mp3TaggedPreviewContainer"></div>
+                                </div>
+
+                                <!-- 2. BEAT WAV (UNTAGGED) -->
+                                <div class="form-group" style="margin-bottom: 0;">
+                                    <div class="upload-zone horizontal-upload" id="wavUntaggedDropZone"
+                                        style="display: flex; align-items: center; padding: 12px 20px; min-height: 72px;">
+
+                                        <!-- Icon -->
+                                        <div class="slot-icon"
+                                            style="color: #06b6d4; background: rgba(6, 182, 212, 0.1); margin-right: 16px;">
+                                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                                stroke="currentColor" stroke-width="2">
+                                                <path d="M2 12h20M7 6v12M12 3v18M17 6v12"></path>
+                                            </svg>
+                                        </div>
+
+                                        <!-- Text Info -->
+                                        <div style="flex: 1; text-align: left;">
+                                            <div
+                                                style="font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 4px;">
+                                                BEAT WAV</div>
+                                            <div style="font-size: 12px; color: #aaa;">(Sin Tag)
+                                            </div>
+                                        </div>
+
+                                        <!-- Right Side: Limit + Upload CTA -->
+                                        <div style="display: flex; align-items: center; gap: 24px;">
+                                            <span style="font-size: 11px; color: #555;">Max 50MB</span>
+
+                                            <div class="upload-cta-btn">
+                                                <span>Subir Archivo</span>
+                                                <div class="icon-box">
+                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                                        stroke="#fff" stroke-width="2">
+                                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                                        <polyline points="17 8 12 3 7 8"></polyline>
+                                                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                                                    </svg>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- SUCCESS STATE -->
+                                        <div class="success-state"
+                                            style="display: none; align-items: center; gap: 8px; margin-left: 20px;">
+                                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#22c55e"
+                                                stroke-width="2">
+                                                <polyline points="20 6 9 17 4 12"></polyline>
+                                            </svg>
+                                            <button type="button" class="remove-btn-mini"
+                                                onclick="event.stopPropagation(); removeFile('wav_untagged');"
+                                                title="Eliminar">❌</button>
+                                        </div>
+                                        <input type="file" id="wavUntaggedInput" accept=".wav" hidden>
+                                    </div>
+                                    <div id="wavUntaggedPreviewContainer"></div>
+                                </div>
+
+                                <!-- 3. STEMS -->
+                                <div class="form-group" style="margin-bottom: 0;">
+                                    <div class="upload-zone horizontal-upload" id="stemsDropZone"
+                                        style="display: flex; align-items: center; padding: 12px 20px; min-height: 72px;">
+
+                                        <!-- Icon -->
+                                        <div class="slot-icon"
+                                            style="color: #f59e0b; background: rgba(245, 158, 11, 0.1); margin-right: 16px;">
+                                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                                stroke="currentColor" stroke-width="2">
+                                                <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+                                                <polyline points="2 17 12 22 22 17"></polyline>
+                                                <polyline points="2 12 12 17 22 12"></polyline>
+                                            </svg>
+                                        </div>
+
+                                        <!-- Text Info -->
+                                        <div style="flex: 1; text-align: left;">
+                                            <div
+                                                style="font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 4px;">
+                                                STEMS</div>
+                                            <div style="font-size: 12px; color: #aaa;">(Opcional)
+                                            </div>
+                                        </div>
+
+                                        <!-- Right Side: Limit + Upload CTA -->
+                                        <div style="display: flex; align-items: center; gap: 24px;">
+                                            <span style="font-size: 11px; color: #555;">Max 50MB</span>
+
+                                            <div class="upload-cta-btn">
+                                                <span>Subir Archivo</span>
+                                                <div class="icon-box">
+                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                                        stroke="#fff" stroke-width="2">
+                                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                                        <polyline points="17 8 12 3 7 8"></polyline>
+                                                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                                                    </svg>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- SUCCESS STATE -->
+                                        <div class="success-state"
+                                            style="display: none; align-items: center; gap: 8px; margin-left: 20px;">
+                                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#22c55e"
+                                                stroke-width="2">
+                                                <polyline points="20 6 9 17 4 12"></polyline>
+                                            </svg>
+                                            <button type="button" class="remove-btn-mini"
+                                                onclick="event.stopPropagation(); removeFile('stems');"
+                                                title="Eliminar">❌</button>
+                                        </div>
+                                        <input type="file" id="stemsInput" accept=".zip,.rar" hidden>
+                                    </div>
+                                    <div id="stemsPreviewContainer"></div>
+                                </div>
+
+                            </div>
+
+                            <div class="form-group">
+                                <div class="label">
+                                    Título <span class="required">*</span>
+                                    <span class="char-count"><span id="titleCount">0</span>/60</span>
+                                </div>
+                                <input type="text" class="input-field" id="titleInput" maxlength="60"
+                                    placeholder="(Ej: offszn 140bpm Cm)">
+                            </div>
+
+                            <div class="grid-2">
+                                <div class="form-group">
+                                    <div class="label">Fecha de Lanzamiento <span class="required">*</span></div>
+                                    <input type="date" class="input-field" id="dateInput" readonly
+                                        style="opacity: 0.7; cursor: not-allowed;">
+                                    <div id="dateError" class="alert alert-error"
+                                        style="margin-top: 4px; font-size: 12px; display: none;"></div>
+                                </div>
+                                <div class="form-group">
+                                    <div class="label">Visibilidad <span class="required">*</span></div>
+                                    <div class="select-wrapper">
+                                        <select class="input-field skeleton" id="visibilityInput" disabled>
+                                            <option value="private">Privado (Solo tú)</option>
+                                            <option value="public">Público (Todos)</option>
+                                            <option value="unlisted">No listado (Link)</option>
+                                        </select>
+
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <div class="label">
+                                    Descripción
+                                    <span class="char-count"><span id="descCount">0</span>/3000</span>
+                                </div>
+                                <textarea class="input-field" id="descInput" maxlength="3000"
+                                    placeholder="Describe tu beat..."></textarea>
                             </div>
                         </div>
                     </div>
-                    <div>
-                        <!-- NEW LAYOUT: Stacked File Inputs -->
-                        <!-- NEW LAYOUT: Grid File Inputs -->
-                        <!-- NEW LAYOUT: Vertical Stack (Full Width) -->
-                        <!-- NEW LAYOUT: Vertical Stack (Full Width) -->
-                        <div class="file-stack"
-                            style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; margin-top: 29px;">
+                </div>
 
-                            <!-- 1. BEAT MP3 (TAGGED) -->
-                            <div class="form-group" style="margin-bottom: 0;">
-                                <div class="upload-zone horizontal-upload" id="mp3TaggedDropZone"
-                                    style="display: flex; align-items: center; padding: 12px 20px; min-height: 72px;">
+                <!-- STEP 2 -->
+                <div class="form-step" id="step2">
+                    <div class="grid-2">
+                        <!-- ðŸ”¥ COLUMNA IZQUIERDA: Metadatos -->
+                        <div>
+                            <h3 class="section-title">Metadatos</h3>
 
-                                    <!-- Icon -->
-                                    <div class="slot-icon"
-                                        style="color: #8b5cf6; background: rgba(139, 92, 246, 0.1); margin-right: 16px;">
-                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+                            <!-- Tags -->
+                            <div class="form-group">
+                                <div class="label">
+                                    Tags (Max 3)
+                                    <button type="button" class="quick-tag-btn" onclick="window.quickAutoFillTags()"
+                                        title="Generar Tags con IA">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
                                             stroke="currentColor" stroke-width="2">
+                                            <path
+                                                d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z">
+                                            </path>
+                                        </svg>
+                                        Auto Tag
+                                    </button>
+                                </div>
+
+                                <div class="tags-container" id="tagsContainer">
+                                    <input type="text" class="tags-input" id="tagInput" placeholder="Escribe un tag...">
+                                </div>
+                                <!-- Sugerencias de tags -->
+                                <div class="tags-suggestions" id="tagsSuggestions" style="display: none;">
+                                    <small style="color: #666; width: 100%; margin-bottom: 4px;">Sugerencias:</small>
+                                </div>
+                            </div>
+
+                            <!-- BPM & Key -->
+                            <div class="grid-2">
+                                <div class="form-group">
+                                    <div class="label">BPM <span class="required">*</span></div>
+                                    <div class="number-control input-with-icon">
+                                        <input type="number" class="input-field" id="bpmInput" placeholder="Ej: 140"
+                                            style="padding-left: 42px;" min="60" max="250"
+                                            oninput="if(this.value > 250) this.value = 250;">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                            stroke-linejoin="round">
+                                            <circle cx="12" cy="12" r="10"></circle>
+                                            <polyline points="12 6 12 12 16 14"></polyline>
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <div class="label">Key (Nota) <span class="required">*</span></div>
+                                    <div class="select-wrapper input-with-icon" style="position: relative;">
+                                        <!-- Icono Musical -->
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); pointer-events: none; color: #666; z-index: 10;">
                                             <path d="M9 18V5l12-2v13"></path>
                                             <circle cx="6" cy="18" r="3"></circle>
                                             <circle cx="18" cy="16" r="3"></circle>
                                         </svg>
-                                    </div>
 
-                                    <!-- Text Info -->
-                                    <div style="flex: 1; text-align: left;">
-                                        <div
-                                            style="font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 4px;">
-                                            BEAT MP3</div>
-                                        <div style="font-size: 12px; color: #aaa;">(Con Tag)
+                                        <!-- SELECT NATIVO OCULTO (Para mantener lÃ³gica de guardado) -->
+                                        <select id="keyInput" style="display: none;">
+                                            <option value="">Sin tonalidad</option>
+                                            <option value="C Major">C Major</option>
+                                            <option value="C Minor">C Minor</option>
+                                            <option value="C# Major">C# Major</option>
+                                            <option value="C# Minor">C# Minor</option>
+                                            <option value="D Major">D Major</option>
+                                            <option value="D Minor">D Minor</option>
+                                            <option value="D# Major">D# Major</option>
+                                            <option value="D# Minor">D# Minor</option>
+                                            <option value="E Major">E Major</option>
+                                            <option value="E Minor">E Minor</option>
+                                            <option value="F Major">F Major</option>
+                                            <option value="F Minor">F Minor</option>
+                                            <option value="F# Major">F# Major</option>
+                                            <option value="F# Minor">F# Minor</option>
+                                            <option value="G Major">G Major</option>
+                                            <option value="G Minor">G Minor</option>
+                                            <option value="G# Major">G# Major</option>
+                                            <option value="G# Minor">G# Minor</option>
+                                            <option value="A Major">A Major</option>
+                                            <option value="A Minor">A Minor</option>
+                                            <option value="A# Major">A# Major</option>
+                                            <option value="A# Minor">A# Minor</option>
+                                            <option value="B Major">B Major</option>
+                                            <option value="B Minor">B Minor</option>
+                                        </select>
+
+                                        <!-- TRIGGER DEL DROPDOWN CUSTOM -->
+                                        <div class="input-field" id="keyCustomTrigger"
+                                            onclick="toggleKeyDropdown(event)"
+                                            style="padding-left: 42px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; height: 45px; user-select: none;">
+                                            <span id="keyDisplay">Sin tonalidad</span>
+                                            <i class="bi bi-chevron-down"
+                                                style="color: #666; transition: transform 0.3s;" id="keyChevron"></i>
+                                        </div>
+
+                                        <!-- DROPDOWN LIST CUSTOM -->
+                                        <div id="keyOptionsList" class="custom-scrollbar"
+                                            style="display: none; position: absolute; top: calc(100% + 4px); left: 0; width: 100%; max-height: 200px; overflow-y: auto; background: #1a1a1a; border: 1px solid #333; border-radius: 8px; z-index: 9999; box-shadow: 0 4px 20px rgba(0,0,0,0.8);">
+                                            <!-- Se llenarÃ¡ con JS -->
                                         </div>
                                     </div>
-
-                                    <!-- Right Side: Limit + Upload CTA -->
-                                    <div style="display: flex; align-items: center; gap: 24px;">
-                                        <span style="font-size: 11px; color: #555;">Max 50MB</span>
-
-                                        <div class="upload-cta-btn">
-                                            <span>Subir Archivo</span>
-                                            <div class="icon-box">
-                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-                                                    stroke="#fff" stroke-width="2">
-                                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                                                    <polyline points="17 8 12 3 7 8"></polyline>
-                                                    <line x1="12" y1="3" x2="12" y2="15"></line>
-                                                </svg>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- SUCCESS STATE -->
-                                    <div class="success-state"
-                                        style="display: none; align-items: center; gap: 8px; margin-left: 20px;">
-                                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#22c55e"
-                                            stroke-width="2">
-                                            <polyline points="20 6 9 17 4 12"></polyline>
-                                        </svg>
-                                        <button type="button" class="remove-btn-mini"
-                                            onclick="event.stopPropagation(); removeFile('mp3_tagged');"
-                                            title="Eliminar">✖</button>
-                                    </div>
-                                    <input type="file" id="mp3TaggedInput" accept=".mp3" hidden>
-                                </div>
-                                <div id="mp3TaggedPreviewContainer"></div>
-                            </div>
-
-                            <!-- 2. BEAT WAV (UNTAGGED) -->
-                            <div class="form-group" style="margin-bottom: 0;">
-                                <div class="upload-zone horizontal-upload" id="wavUntaggedDropZone"
-                                    style="display: flex; align-items: center; padding: 12px 20px; min-height: 72px;">
-
-                                    <!-- Icon -->
-                                    <div class="slot-icon"
-                                        style="color: #06b6d4; background: rgba(6, 182, 212, 0.1); margin-right: 16px;">
-                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
-                                            stroke="currentColor" stroke-width="2">
-                                            <path d="M2 12h20M7 6v12M12 3v18M17 6v12"></path>
-                                        </svg>
-                                    </div>
-
-                                    <!-- Text Info -->
-                                    <div style="flex: 1; text-align: left;">
-                                        <div
-                                            style="font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 4px;">
-                                            BEAT WAV</div>
-                                        <div style="font-size: 12px; color: #aaa;">(Sin Tag)
-                                        </div>
-                                    </div>
-
-                                    <!-- Right Side: Limit + Upload CTA -->
-                                    <div style="display: flex; align-items: center; gap: 24px;">
-                                        <span style="font-size: 11px; color: #555;">Max 50MB</span>
-
-                                        <div class="upload-cta-btn">
-                                            <span>Subir Archivo</span>
-                                            <div class="icon-box">
-                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-                                                    stroke="#fff" stroke-width="2">
-                                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                                                    <polyline points="17 8 12 3 7 8"></polyline>
-                                                    <line x1="12" y1="3" x2="12" y2="15"></line>
-                                                </svg>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- SUCCESS STATE -->
-                                    <div class="success-state"
-                                        style="display: none; align-items: center; gap: 8px; margin-left: 20px;">
-                                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#22c55e"
-                                            stroke-width="2">
-                                            <polyline points="20 6 9 17 4 12"></polyline>
-                                        </svg>
-                                        <button type="button" class="remove-btn-mini"
-                                            onclick="event.stopPropagation(); removeFile('wav_untagged');"
-                                            title="Eliminar">❌</button>
-                                    </div>
-                                    <input type="file" id="wavUntaggedInput" accept=".wav" hidden>
-                                </div>
-                                <div id="wavUntaggedPreviewContainer"></div>
-                            </div>
-
-                            <!-- 3. STEMS -->
-                            <div class="form-group" style="margin-bottom: 0;">
-                                <div class="upload-zone horizontal-upload" id="stemsDropZone"
-                                    style="display: flex; align-items: center; padding: 12px 20px; min-height: 72px;">
-
-                                    <!-- Icon -->
-                                    <div class="slot-icon"
-                                        style="color: #f59e0b; background: rgba(245, 158, 11, 0.1); margin-right: 16px;">
-                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
-                                            stroke="currentColor" stroke-width="2">
-                                            <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
-                                            <polyline points="2 17 12 22 22 17"></polyline>
-                                            <polyline points="2 12 12 17 22 12"></polyline>
-                                        </svg>
-                                    </div>
-
-                                    <!-- Text Info -->
-                                    <div style="flex: 1; text-align: left;">
-                                        <div
-                                            style="font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 4px;">
-                                            STEMS</div>
-                                        <div style="font-size: 12px; color: #aaa;">(Opcional)
-                                        </div>
-                                    </div>
-
-                                    <!-- Right Side: Limit + Upload CTA -->
-                                    <div style="display: flex; align-items: center; gap: 24px;">
-                                        <span style="font-size: 11px; color: #555;">Max 50MB</span>
-
-                                        <div class="upload-cta-btn">
-                                            <span>Subir Archivo</span>
-                                            <div class="icon-box">
-                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-                                                    stroke="#fff" stroke-width="2">
-                                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                                                    <polyline points="17 8 12 3 7 8"></polyline>
-                                                    <line x1="12" y1="3" x2="12" y2="15"></line>
-                                                </svg>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- SUCCESS STATE -->
-                                    <div class="success-state"
-                                        style="display: none; align-items: center; gap: 8px; margin-left: 20px;">
-                                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#22c55e"
-                                            stroke-width="2">
-                                            <polyline points="20 6 9 17 4 12"></polyline>
-                                        </svg>
-                                        <button type="button" class="remove-btn-mini"
-                                            onclick="event.stopPropagation(); removeFile('stems');"
-                                            title="Eliminar">❌</button>
-                                    </div>
-                                    <input type="file" id="stemsInput" accept=".zip,.rar" hidden>
-                                </div>
-                                <div id="stemsPreviewContainer"></div>
-                            </div>
-
-                        </div>
-
-                        <div class="form-group">
-                            <div class="label">
-                                Título <span class="required">*</span>
-                                <span class="char-count"><span id="titleCount">0</span>/60</span>
-                            </div>
-                            <input type="text" class="input-field" id="titleInput" maxlength="60"
-                                placeholder="(Ej: offszn 140bpm Cm)">
-                        </div>
-
-                        <div class="grid-2">
-                            <div class="form-group">
-                                <div class="label">Fecha de Lanzamiento <span class="required">*</span></div>
-                                <input type="date" class="input-field" id="dateInput" readonly
-                                    style="opacity: 0.7; cursor: not-allowed;">
-                                <div id="dateError" class="alert alert-error"
-                                    style="margin-top: 4px; font-size: 12px; display: none;"></div>
-                            </div>
-                            <div class="form-group">
-                                <div class="label">Visibilidad <span class="required">*</span></div>
-                                <div class="select-wrapper">
-                                    <select class="input-field skeleton" id="visibilityInput" disabled>
-                                        <option value="private">Privado (Solo tú)</option>
-                                        <option value="public">Público (Todos)</option>
-                                        <option value="unlisted">No listado (Link)</option>
-                                    </select>
-
                                 </div>
                             </div>
                         </div>
 
-                        <div class="form-group">
-                            <div class="label">
-                                Descripción
-                                <span class="char-count"><span id="descCount">0</span>/3000</span>
+                        <!-- ðŸ”¥ COLUMNA DERECHA: Precios -->
+                        <!-- ðŸ”¥ COLUMNA DERECHA: Licencias -->
+                        <div style="position: sticky; top: 20px;">
+                            <div
+                                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+                                <h3 class="section-title" style="margin-bottom: 0;">Licencias & Precios</h3>
+                                <a href="admin-licencias.html"
+                                    style="color: #666; font-size: 12px; text-decoration: none; border-bottom: 1px dotted rgba(255,255,255,0.2); transition: all 0.2s;"
+                                    onmouseover="this.style.color='#ccc'; this.style.borderColor='#ccc'"
+                                    onmouseout="this.style.color='#666'; this.style.borderColor='rgba(255,255,255,0.2)'">
+                                    Administrar
+                                </a>
                             </div>
-                            <textarea class="input-field" id="descInput" maxlength="3000"
-                                placeholder="Describe tu beat..."></textarea>
+                            <div id="licensesContainer" style="display: flex; flex-direction: column; gap: 15px;">
+                                <!-- populated by JS -->
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- STEP 2 -->
-            <div class="form-step" id="step2">
-                <div class="grid-2">
-                    <!-- ðŸ”¥ COLUMNA IZQUIERDA: Metadatos -->
-                    <div>
-                        <h3 class="section-title">Metadatos</h3>
-
-                        <!-- Tags -->
-                        <div class="form-group">
-                            <div class="label">
-                                Tags (Max 3)
-                                <button type="button" class="quick-tag-btn" onclick="window.quickAutoFillTags()"
-                                    title="Generar Tags con IA">
-                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                        stroke-width="2">
-                                        <path
-                                            d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z">
-                                        </path>
-                                    </svg>
-                                    Auto Tag
-                                </button>
-                            </div>
-
-                            <div class="tags-container" id="tagsContainer">
-                                <input type="text" class="tags-input" id="tagInput" placeholder="Escribe un tag...">
-                            </div>
-                            <!-- Sugerencias de tags -->
-                            <div class="tags-suggestions" id="tagsSuggestions" style="display: none;">
-                                <small style="color: #666; width: 100%; margin-bottom: 4px;">Sugerencias:</small>
-                            </div>
+                <!-- STEP 3 -->
+                <div class="form-step" id="step3">
+                    <h3 class="section-title">Colaboradores (Max 5)</h3>
+                    <div class="form-group">
+                        <div style="position: relative; margin-bottom: 20px;">
+                            <input type="text" class="input-field" id="collabSearch" placeholder="Buscar usuario..."
+                                maxlength="20" autocomplete="off" style="max-width: 400px;">
+                            <div id="collabDropdown" class="collab-dropdown" style="display: none;"></div>
                         </div>
+                    </div>
 
-                        <!-- BPM & Key -->
-                        <div class="grid-2">
-                            <div class="form-group">
-                                <div class="label">BPM <span class="required">*</span></div>
-                                <div class="number-control input-with-icon">
-                                    <input type="number" class="input-field" id="bpmInput" placeholder="Ej: 140"
-                                        style="padding-left: 42px;" min="60" max="250"
-                                        oninput="if(this.value > 250) this.value = 250;">
-                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <circle cx="12" cy="12" r="10"></circle>
-                                        <polyline points="12 6 12 12 16 14"></polyline>
-                                    </svg>
-                                </div>
+                    <div class="collab-list" id="collabList">
+                        <div class="collab-row" id="mainUserRow">
+                            <div class="user-info">
+                                <img id="mainUserAvatar"
+                                    src="https://ui-avatars.com/api/?name=User&background=333&color=fff"
+                                    class="user-avatar" style="object-fit: cover;"
+                                    onerror="this.src='/default-avatar.png'">
+                                <span style="font-weight: 600;">Tú (Propietario)</span>
                             </div>
-                            <div class="form-group">
-                                <div class="label">Key (Nota) <span class="required">*</span></div>
-                                <div class="select-wrapper input-with-icon" style="position: relative;">
-                                    <!-- Icono Musical -->
-                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                                        style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); pointer-events: none; color: #666; z-index: 10;">
-                                        <path d="M9 18V5l12-2v13"></path>
-                                        <circle cx="6" cy="18" r="3"></circle>
-                                        <circle cx="18" cy="16" r="3"></circle>
-                                    </svg>
+                            <div>Rol Principal</div>
+                            <div style="display: flex; align-items: center; gap: 4px;">
+                                <input type="number" class="input-field" id="mainUserPercent" value="100" readonly
+                                    style="text-align: right;">
+                                <span>%</span>
+                            </div>
+                            <div></div>
+                        </div>
+                    </div>
+                    <div id="collabError" class="alert alert-error" style="margin-top: 12px;"></div>
 
-                                    <!-- SELECT NATIVO OCULTO (Para mantener lÃ³gica de guardado) -->
-                                    <select id="keyInput" style="display: none;">
-                                        <option value="">Sin tonalidad</option>
-                                        <option value="C Major">C Major</option>
-                                        <option value="C Minor">C Minor</option>
-                                        <option value="C# Major">C# Major</option>
-                                        <option value="C# Minor">C# Minor</option>
-                                        <option value="D Major">D Major</option>
-                                        <option value="D Minor">D Minor</option>
-                                        <option value="D# Major">D# Major</option>
-                                        <option value="D# Minor">D# Minor</option>
-                                        <option value="E Major">E Major</option>
-                                        <option value="E Minor">E Minor</option>
-                                        <option value="F Major">F Major</option>
-                                        <option value="F Minor">F Minor</option>
-                                        <option value="F# Major">F# Major</option>
-                                        <option value="F# Minor">F# Minor</option>
-                                        <option value="G Major">G Major</option>
-                                        <option value="G Minor">G Minor</option>
-                                        <option value="G# Major">G# Major</option>
-                                        <option value="G# Minor">G# Minor</option>
-                                        <option value="A Major">A Major</option>
-                                        <option value="A Minor">A Minor</option>
-                                        <option value="A# Major">A# Major</option>
-                                        <option value="A# Minor">A# Minor</option>
-                                        <option value="B Major">B Major</option>
-                                        <option value="B Minor">B Minor</option>
-                                    </select>
+                </div>
 
-                                    <!-- TRIGGER DEL DROPDOWN CUSTOM -->
-                                    <div class="input-field" id="keyCustomTrigger" onclick="toggleKeyDropdown(event)"
-                                        style="padding-left: 42px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; height: 45px; user-select: none;">
-                                        <span id="keyDisplay">Sin tonalidad</span>
-                                        <i class="bi bi-chevron-down" style="color: #666; transition: transform 0.3s;"
-                                            id="keyChevron"></i>
+                <!-- STEP 4 -->
+                <div class="form-step" id="step4">
+                    <h3 class="section-title">Vista Previa del Beat</h3>
+                    <div class="preview-layout">
+                        <div class="marketplace-card-preview">
+                            <h4 style="margin-bottom: 16px; font-size: 14px; color: #888;">Cómo se verá en el
+                                marketplace
+                            </h4>
+                            <div class="drumkit-card">
+                                <div class="card-cover" id="previewCardCover">
+                                    <span style="color: #666;">Sin portada</span>
+                                </div>
+                                <div class="card-content">
+                                    <h3 id="previewCardTitle">Sin título</h3>
+                                    <div class="card-tags" id="previewCardTags"></div>
+                                    <div class="card-producer"
+                                        style="font-size: 13px; color: #888; margin-bottom: 8px;">
+                                        <span id="previewCardProducer">Productor</span>
                                     </div>
-
-                                    <!-- DROPDOWN LIST CUSTOM -->
-                                    <div id="keyOptionsList" class="custom-scrollbar"
-                                        style="display: none; position: absolute; top: calc(100% + 4px); left: 0; width: 100%; max-height: 200px; overflow-y: auto; background: #1a1a1a; border: 1px solid #333; border-radius: 8px; z-index: 9999; box-shadow: 0 4px 20px rgba(0,0,0,0.8);">
-                                        <!-- Se llenarÃ¡ con JS -->
-                                    </div>
+                                    <!-- El precio se genera dinÃ¡micamente en renderPreview() -->
                                 </div>
                             </div>
                         </div>
-                    </div>
 
-                    <!-- ðŸ”¥ COLUMNA DERECHA: Precios -->
-                    <!-- ðŸ”¥ COLUMNA DERECHA: Licencias -->
-                    <div style="position: sticky; top: 20px;">
-                        <div
-                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
-                            <h3 class="section-title" style="margin-bottom: 0;">Licencias & Precios</h3>
-                            <a href="admin-licencias.html"
-                                style="color: #666; font-size: 12px; text-decoration: none; border-bottom: 1px dotted rgba(255,255,255,0.2); transition: all 0.2s;"
-                                onmouseover="this.style.color='#ccc'; this.style.borderColor='#ccc'"
-                                onmouseout="this.style.color='#666'; this.style.borderColor='rgba(255,255,255,0.2)'">
-                                Administrar
-                            </a>
-                        </div>
-                        <div id="licensesContainer" style="display: flex; flex-direction: column; gap: 15px;">
-                            <!-- populated by JS -->
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- STEP 3 -->
-            <div class="form-step" id="step3">
-                <h3 class="section-title">Colaboradores (Max 5)</h3>
-                <div class="form-group">
-                    <div style="position: relative; margin-bottom: 20px;">
-                        <input type="text" class="input-field" id="collabSearch" placeholder="Buscar usuario..."
-                            maxlength="20" autocomplete="off" style="max-width: 400px;">
-                        <div id="collabDropdown" class="collab-dropdown" style="display: none;"></div>
-                    </div>
-                </div>
-
-                <div class="collab-list" id="collabList">
-                    <div class="collab-row" id="mainUserRow">
-                        <div class="user-info">
-                            <img id="mainUserAvatar"
-                                src="https://ui-avatars.com/api/?name=User&background=333&color=fff" class="user-avatar"
-                                style="object-fit: cover;" onerror="this.src='/default-avatar.png'">
-                            <span style="font-weight: 600;">Tú (Propietario)</span>
-                        </div>
-                        <div>Rol Principal</div>
-                        <div style="display: flex; align-items: center; gap: 4px;">
-                            <input type="number" class="input-field" id="mainUserPercent" value="100" readonly
-                                style="text-align: right;">
-                            <span>%</span>
-                        </div>
-                        <div></div>
-                    </div>
-                </div>
-                <div id="collabError" class="alert alert-error" style="margin-top: 12px;"></div>
-
-            </div>
-
-            <!-- STEP 4 -->
-            <div class="form-step" id="step4">
-                <h3 class="section-title">Vista Previa del Beat</h3>
-                <div class="preview-layout">
-                    <div class="marketplace-card-preview">
-                        <h4 style="margin-bottom: 16px; font-size: 14px; color: #888;">Cómo se verá en el
-                            marketplace
-                        </h4>
-                        <div class="drumkit-card">
-                            <div class="card-cover" id="previewCardCover">
-                                <span style="color: #666;">Sin portada</span>
+                        <div class="verification-panel">
+                            <h4 style="margin-bottom: 20px; font-size: 18px; font-weight: 700;">Verificar Información
+                            </h4>
+                            <div class="verification-section">
+                                <div class="verification-label">Archivos</div>
+                                <div class="verification-items" id="verifyFiles"></div>
                             </div>
-                            <div class="card-content">
-                                <h3 id="previewCardTitle">Sin título</h3>
-                                <div class="card-tags" id="previewCardTags"></div>
-                                <div class="card-producer" style="font-size: 13px; color: #888; margin-bottom: 8px;">
-                                    <span id="previewCardProducer">Productor</span>
-                                </div>
-                                <!-- El precio se genera dinÃ¡micamente en renderPreview() -->
+                            <div class="verification-section">
+                                <div class="verification-label">Detalles</div>
+                                <div class="verification-items" id="verifyDetails"></div>
+                            </div>
+                            <div class="verification-section" id="verifyCollabSection" style="display: none;">
+                                <div class="verification-label">Colaboradores</div>
+                                <div class="verification-items" id="verifyCollabs"></div>
                             </div>
                         </div>
                     </div>
-
-                    <div class="verification-panel">
-                        <h4 style="margin-bottom: 20px; font-size: 18px; font-weight: 700;">Verificar Información
-                        </h4>
-                        <div class="verification-section">
-                            <div class="verification-label">Archivos</div>
-                            <div class="verification-items" id="verifyFiles"></div>
-                        </div>
-                        <div class="verification-section">
-                            <div class="verification-label">Detalles</div>
-                            <div class="verification-items" id="verifyDetails"></div>
-                        </div>
-                        <div class="verification-section" id="verifyCollabSection" style="display: none;">
-                            <div class="verification-label">Colaboradores</div>
-                            <div class="verification-items" id="verifyCollabs"></div>
-                        </div>
-                    </div>
                 </div>
-            </div>
-        </form>
+            </form>
+            <!-- Cierre del main-upload-container -->
+        </div>
     </main>
+
+    <script>
+        function showMainUploadForm() {
+            document.getElementById('upload-strategy-hub').style.display = 'none';
+            document.getElementById('main-upload-container').style.display = 'block';
+        }
+    </script>
+
+    <!-- YOUTUBE SELECTION MODAL -->
+    <div id="yt-importer-modal" class="yt-modal"
+        style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:9999; align-items:center; justify-content:center; backdrop-filter:blur(5px);">
+        <div class="yt-modal-content"
+            style="background:#111; width:90%; max-width:800px; height:80vh; border-radius:16px; border:1px solid #333; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 20px 50px rgba(0,0,0,0.5);">
+            <div class="yt-modal-header"
+                style="padding:20px; border-bottom:1px solid #222; display:flex; justify-content:space-between; align-items:center;">
+                <h2 style="margin:0; font-size:1.2rem; font-weight:700;">Selecciona un Video</h2>
+                <button class="yt-close" onclick="document.getElementById('yt-importer-modal').style.display='none'"
+                    style="background:none; border:none; color:#fff; font-size:1.5rem; cursor:pointer;">&times;</button>
+            </div>
+            <div id="yt-video-list"
+                style="flex:1; overflow-y:auto; padding:20px; display:grid; grid-template-columns:repeat(auto-fill, minmax(200px, 1fr)); gap:16px;">
+                <!-- Videos injected here -->
+            </div>
+        </div>
+    </div>
 
     <div class="modal-overlay" id="cropModal">
         <div class="modal">
@@ -3872,23 +4160,67 @@
                 reader.onload = async (e) => {
                     try {
                         const audioBuffer = await audioContext.decodeAudioData(e.target.result);
-
-                        // Duración
+                        const channelData = audioBuffer.getChannelData(0);
                         const duration = Math.floor(audioBuffer.duration);
 
-                        // Calcular energía promedio (volumen)
-                        const channelData = audioBuffer.getChannelData(0);
-                        let sum = 0;
-                        for (let i = 0; i < channelData.length; i++) {
-                            sum += Math.abs(channelData[i]);
+                        let bpm = 0;
+                        let key = null;
+
+                        // 1. Essentia Analysis (Key & BPM)
+                        if (window.Essentia && window.EssentiaWASM) {
+                            try {
+                                // Load WASM (It's a global factory function)
+                                const wasmModule = await window.EssentiaWASM();
+                                const essentia = new window.Essentia(wasmModule);
+
+                                // Convert to Vector (Use optimized slice if song is huge? KeyExtractor needs ~60s+)
+                                // For safety, let's use the first 2 minutes max to save memory on huge files
+                                // 44100 * 120 = 5,292,000 samples
+                                const maxSamples = 44100 * 120; // 2 minutes
+                                const processingData = channelData.length > maxSamples ? channelData.slice(0, maxSamples) : channelData;
+                                const vector = essentia.arrayToVector(processingData);
+
+                                // A. KEY DETECTION
+                                // KeyExtractor(audioVector, profileType='bgate', polyphony=true) - using defaults
+                                const keyData = essentia.KeyExtractor(vector);
+                                if (keyData && keyData.key && keyData.scale) {
+                                    // Normalize: "C" + "major" -> "C Major"
+                                    const scaleMap = { 'major': 'Major', 'minor': 'Minor' };
+                                    key = `${keyData.key} ${scaleMap[keyData.scale] || keyData.scale}`;
+                                }
+
+                                // B. BPM DETECTION
+                                // RhythmExtractor2013 is robust
+                                const rhythm = essentia.RhythmExtractor2013(vector);
+                                if (rhythm && rhythm.bpm > 0) {
+                                    bpm = Math.round(rhythm.bpm);
+                                }
+
+                                // Cleanup to free WASM memory? 
+                                // Essentia.js usage guides suggest explicit deletion if creating many vectors
+                                // vector.delete(); // Check API if necessary. usually vector is C++ object.
+                                // But JS wrapper 'arrayToVector' might handle lifecycle? 
+                                // Safety: Let GC handle it or Essentia helper.
+                                if (essentia.delete) essentia.delete(vector); // Hypothetical
+
+                            } catch (err) {
+                                console.warn("Essentia analysis error:", err);
+                            }
                         }
-                        const avgEnergy = sum / channelData.length;
 
-                        // Estimar BPM (simplificado)
-                        const peaks = detectPeaks(channelData, audioBuffer.sampleRate);
-                        const bpm = Math.round((peaks.length / duration) * 60);
+                        // 2. Fallback BPM (if Essentia missing/failed)
+                        if (!bpm) {
+                            const peaks = detectPeaks(channelData, audioBuffer.sampleRate);
+                            bpm = Math.round((peaks.length / duration) * 60);
+                        }
 
-                        // Clasificar mood por energía
+                        // 3. Energy / Mood
+                        let sum = 0;
+                        // Use first 30s for energy to be fast
+                        const energySlice = channelData.slice(0, 44100 * 30);
+                        for (let i = 0; i < energySlice.length; i++) sum += Math.abs(energySlice[i]);
+                        const avgEnergy = sum / energySlice.length;
+
                         let mood = 'chill';
                         if (avgEnergy > 0.15) mood = 'hard';
                         else if (avgEnergy > 0.08) mood = 'melodic';
@@ -3896,13 +4228,14 @@
 
                         resolve({
                             duration,
-                            bpm: Math.max(60, Math.min(180, bpm)), // Limitar a rango realista
+                            bpm: Math.max(60, Math.min(250, bpm)), // Limit 250
+                            key: key, // Can be null
                             energy: avgEnergy,
                             mood
                         });
                     } catch (error) {
-                        // Silent error handling
-                        resolve({ duration: 0, bpm: 0, energy: 0, mood: 'unknown' });
+                        console.error('Audio analysis failed:', error);
+                        resolve({ duration: 0, bpm: 0, key: null, energy: 0, mood: 'unknown' });
                     }
                 };
 
@@ -4847,6 +5180,36 @@
                         document.getElementById('waveform').style.display = 'block';
                         document.getElementById('playerPlaceholder').style.display = 'none';
                     }
+
+                    // 🔥 Fallback: Si no hay BPM o Key (falló detección de texto), analizar audio
+                    const bpmIn = document.getElementById('bpmInput');
+                    const keyIn = document.getElementById('keyInput');
+
+                    if ((bpmIn && !bpmIn.value) || (keyIn && !keyIn.value)) {
+                        analyzeAudio(file).then(data => {
+                            // BPM Fallback
+                            if (bpmIn && !bpmIn.value && data.bpm) {
+                                bpmIn.value = data.bpm;
+                                bpmIn.style.borderColor = '#00ff88';
+                                setTimeout(() => bpmIn.style.borderColor = '', 1000);
+                            }
+
+                            // Key Fallback (Essentia)
+                            if (keyIn && !keyIn.value && data.key) {
+                                // Ensure standard format via existing helper if needed, 
+                                // but Essentia output is normalized in analyzeAudio now ("C Major")
+                                if (typeof window.selectCustomKey === 'function') {
+                                    window.selectCustomKey(data.key);
+                                    // Visual Feedback
+                                    const trigger = document.getElementById('keyCustomTrigger');
+                                    if (trigger) {
+                                        trigger.style.borderColor = '#00ff88';
+                                        setTimeout(() => trigger.style.borderColor = '', 1000);
+                                    }
+                                }
+                            }
+                        });
+                    }
                 }
 
                 if (type === 'wav_untagged') {
@@ -5397,6 +5760,14 @@
                 }
             });
         }
+        window.addTag = addTag;
+
+        window.clearTags = function () {
+            tags = [];
+            isDirty = true;
+            renderTags();
+        };
+
         function addTag(tag) {
             if (!tag) return;
 
@@ -5674,7 +6045,7 @@
                  ${isFreeEnabled ? `
                  <div style="border-top: 1px solid rgba(255,255,255,0.05); padding-top: 10px; margin-top: 5px;">
                     <p style="font-size: 12px; color: #888; margin: 0 0 5px 0;">
-                        Los usuarios podrÃ¡n descargar el archivo <strong>MP3 con Tag</strong> gratuitamente a cambio de seguirte o dejar su email (uso promocional).
+                        Los usuariosPodrán descargar el archivo <strong>MP3 con Tag</strong> gratuitamente a cambio de seguirte o dejar su email (uso promocional).
                     </p>
                     <div style="font-size: 11px; color: #888; display: flex; align-items: center; gap: 6px;">
                         Estado del archivo: 
@@ -6592,25 +6963,8 @@
             const input = document.getElementById('dateInput');
             if (!input || !input.value) return false;
 
-            // PARSING MANUAL PARA EVITAR UTC:
-            // "2026-01-02" -> [2026, 01, 02]
-            const parts = input.value.split('-');
-            const year = parseInt(parts[0], 10);
-            const month = parseInt(parts[1], 10) - 1; // Meses en JS son 0-11
-            const day = parseInt(parts[2], 10);
-
-            // Crear fecha LOCAL (00:00:00)
-            const selectedDate = new Date(year, month, day);
-            const now = new Date();
-
-            // Resetear "ahora" a medianoche local
-            now.setHours(0, 0, 0, 0);
-
-            // Comparar
-            if (selectedDate < now) {
-                showInlineError('dateInput', 'La fecha de lanzamiento no puede ser en el pasado');
-                return false;
-            }
+            // ðŸ”¥ BYPASS: El usuario solicitÃ³ quitar la validaciÃ³n de fecha pasada.
+            // "en bypass siempre nos va a dejar pasar, sea pasado o no"
             return true;
         }
 
@@ -8263,6 +8617,7 @@
                 }
 
                 // âœ… DRAFT FOUND
+                showMainUploadForm(); // ðŸ”¥ Hide Strategy Hub when resuming draft
                 // showLoading(); // Manual control
                 /* const overlay = document.getElementById('publishOverlay');
                 if (overlay) {
@@ -8498,6 +8853,7 @@
         // ðŸ”¥ CAMBIO 3: FunciÃ³n para cargar un producto existente y editarlo
         async function loadProductForEdit(productId) {
             try {
+                showMainUploadForm(); // ðŸ”¥ Hide Strategy Hub immediately
                 showLoading(); // ðŸ”¥ Ensure loading overlay is shown
 
 
@@ -9892,6 +10248,10 @@
             }
         }
     </style>
+    <!-- Google Identity Services -->
+    <script src="https://accounts.google.com/gsi/client" onload="gisLoaded()" async defer></script>
+    <script src="https://apis.google.com/js/api.js" onload="gapiLoaded()" async defer></script>
+    <script src="../../script/youtube-importer.js"></script>
 </body>
 
 </html>

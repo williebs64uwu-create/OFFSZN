@@ -79,21 +79,39 @@ async function handleImportClick() {
     }
 }
 
+// ðŸ”¥ WINDOW EXPORTS FOR EXTERNAL CALLS
+window.handleImportClick = handleImportClick;
+window.listUserVideos = listUserVideos;
+
 // ðŸ”¥ HUB NAVIGATION HELPERS
 function resetToHub() {
-    document.getElementById('yt-hub-selection').style.display = 'grid';
-    document.getElementById('yt-main-form').style.display = 'none';
+    const hub = document.getElementById('yt-hub-selection');
+    const main = document.getElementById('yt-main-form');
+
+    if (hub) hub.style.display = 'grid';
+    if (main) main.style.display = 'none';
 
     // Clear form
-    document.getElementById('yt-product-type').value = 'beat';
-    document.querySelector('input[name="title"]').value = '';
-    document.querySelector('textarea[name="description"]').value = '';
+    const title = document.querySelector('input[name="title"]');
+    const desc = document.querySelector('textarea[name="description"]');
+
+    if (title) title.value = '';
+    if (desc) desc.value = '';
 }
 
 // SHOW FORM AFTER SELECTION
 function showForm() {
-    document.getElementById('yt-hub-selection').style.display = 'none';
-    document.getElementById('yt-main-form').style.display = 'block';
+    const hub = document.getElementById('yt-hub-selection');
+    const main = document.getElementById('yt-main-form');
+
+    if (hub) hub.style.display = 'none';
+    if (main) main.style.display = 'block';
+
+    // ðŸ”¥ Beats.html Specific: Close the modal after selection because we populate the main form directly
+    // If we are in Beats.html (no yt-main-form), we likely want to close `yt-importer-modal`
+    if (!main) {
+        document.getElementById('yt-importer-modal').style.display = 'none';
+    }
 }
 
 let isFetching = false; // Global flag to prevent race conditions
@@ -102,7 +120,7 @@ async function listUserVideos(pageToken = '') {
     if (isFetching) return; // Prevent duplicate calls
     isFetching = true;
 
-    showImporterModal();
+    showImporterModal(); // Only show modal when we are DEFINITELY listing videos
     const listContainer = document.getElementById('yt-video-list');
 
     // Infinite Scroll Setup (Singleton)
@@ -254,29 +272,51 @@ async function selectVideo(videoId, title, description, thumbnails) {
 
 
     const thumbImg = document.getElementById('yt-imported-thumb');
+    const beatCoverPreview = document.getElementById('coverPreview');
+
     if (thumbImg) {
         thumbImg.style.display = 'block';
         thumbImg.src = thumbUrl;
-        // ENABLE CORS FOR CANVAS
         thumbImg.crossOrigin = "Anonymous";
 
-        // Hide placeholder elements safely
+        // Logic for youtube.html (old)
         const container = document.getElementById('yt-thumb-preview-container');
         if (container) {
-            const placeholder = container.querySelector('.yt-thumb-placeholder');
-            const overlay = document.querySelector('.yt-edit-thumb-btn')?.parentElement; // The overlay is the parent of the button
-
-            if (placeholder) placeholder.style.display = 'none';
-            // In the new layout, the button is absolute positioned, so we just ensure it's visible if needed, 
-            // but the container having 'has-file' class might be enough or we show the button directly.
-            // The HTML structure shows the button is always there but maybe hidden?
-            // Actually, in the new HTML:
-            // <div class="yt-thumb-placeholder" style="display:none;">...</div>
-            // <button ... class="yt-edit-thumb-btn"> ... </button>
-            // The button is effectively the overlay action.
-
-            // Let's just ensure the button is visible or the container state is correct.
             container.classList.add('has-file');
+            const placeholder = container.querySelector('.yt-thumb-placeholder');
+            if (placeholder) placeholder.style.display = 'none';
+        }
+    }
+
+    // ðŸ”¥ Logic for Beats.html (Unified)
+    if (beatCoverPreview) {
+        beatCoverPreview.src = thumbUrl;
+        beatCoverPreview.style.display = 'block';
+
+        const dropZone = document.getElementById('coverDropZone');
+        if (dropZone) dropZone.classList.add('has-image');
+
+        // ðŸ”¥ FETCH BLOB FOR BEATS.HTML FORM DATA
+        if (typeof formData !== 'undefined') {
+            try {
+                // Use a proxy or fetch with CORS anonymous
+                // YouTube images usually allow CORS if crossOrigin is set on Img, but for fetch() we need correct headers.
+                // Assuming standard fetch works for googleusercontent
+                const response = await fetch(thumbUrl, { mode: 'cors' });
+                const blob = await response.blob();
+                formData.coverBlob = blob;
+                if (typeof filesUploaded !== 'undefined') filesUploaded.cover = true;
+
+                // Show Remove Button
+                const removeBtn = document.getElementById('removeCoverBtn');
+                if (removeBtn) removeBtn.style.display = 'block';
+
+            } catch (e) {
+                console.warn("Could not fetch cover blob:", e);
+                // If fetch fails, we might rely on the URL being passed to backend? 
+                // For now, Beats.html logic relies on blob for new uploads. 
+                // We might need to flag that it's a URL upload if blob fails.
+            }
         }
     }
 
@@ -326,18 +366,21 @@ async function selectVideo(videoId, title, description, thumbnails) {
 }
 
 function populateForm(cleanTitle, description, bpm, key, tags, hiddenTagsInput, tagCloud) {
-    const titleInput = document.querySelector('input[name="title"]');
-    const descInput = document.querySelector('textarea[name="description"]');
-    const bpmInput = document.querySelector('input[name="bpm"]');
-    const keyInput = document.querySelector('input[name="key"]');
+    const titleInput = document.querySelector('input[name="title"]') || document.getElementById('titleInput');
+    const descInput = document.querySelector('textarea[name="description"]') || document.getElementById('descInput');
+    const bpmInput = document.querySelector('input[name="bpm"]') || document.getElementById('bpmInput');
+    // For Key, Beats.html uses a hidden select #keyInput or the custom dropdown logic
+    const keyInput = document.querySelector('input[name="key"]') || document.getElementById('keyInput');
 
     if (titleInput) {
         titleInput.value = cleanTitle;
-        updateTitleCount(titleInput);
+        // updateTitleCount might not be defined or scoped correctly.
+        // Best practice: Dispatch 'input' event to trigger Beats.html's own listeners.
+        titleInput.dispatchEvent(new Event('input', { bubbles: true }));
     }
     if (descInput) {
         descInput.value = description;
-        updateDescCount(descInput);
+        descInput.dispatchEvent(new Event('input', { bubbles: true }));
     }
     if (bpmInput) bpmInput.value = bpm;
     if (keyInput) keyInput.value = key;
@@ -356,12 +399,26 @@ function populateForm(cleanTitle, description, bpm, key, tags, hiddenTagsInput, 
                 chip.textContent = tag;
                 if (selectedTags.includes(tag)) chip.classList.add('selected');
                 chip.onclick = () => {
+                    const warning = document.getElementById('tag-limit-warning');
+
                     if (selectedTags.includes(tag)) {
+                        // Deselecting
                         selectedTags = selectedTags.filter(t => t !== tag);
                         chip.classList.remove('selected');
+                        if (warning) warning.style.display = 'none';
                     } else {
+                        // Selecting
+                        if (selectedTags.length >= 3) {
+                            if (warning) {
+                                warning.style.display = 'block';
+                                warning.classList.add('fade-in'); // Reuse fade-in animation
+                            }
+                            return; // Stop selection
+                        }
+
                         selectedTags.push(tag);
                         chip.classList.add('selected');
+                        if (warning) warning.style.display = 'none';
                     }
                     updateHiddenTags(selectedTags, hiddenTagsInput);
                 };
@@ -375,82 +432,202 @@ function populateForm(cleanTitle, description, bpm, key, tags, hiddenTagsInput, 
     } else {
         const oldInput = document.querySelector('input[name="tags"]');
         if (oldInput) oldInput.value = tags;
-    }
 
-    if (window.showToast) window.showToast('¡Datos importados con éxito!', 'success');
-    closeImporterModal();
-}
-
-function detectMetadata(title, description) {
-    // 1. Clean Title
-    const cleanTitle = title.replace(/\[.*?\]/g, '').replace(/\(.*?\)/g, '').trim();
-    const searchText = `${title} ${description}`;
-
-    let foundBpms = [];
-    let foundKeys = [];
-
-    // HELPER: Add unique valid BPM
-    const addBpm = (val) => {
-        if (val >= 50 && val <= 250) foundBpms.push(val);
-    };
-
-    // STRATEGY 1: Contextual Search (Key - BPM or BPM - Key)
-    // Looking for patterns like "F# minor - 120" or "120 - F# minor"
-    // Separators: " - ", " ", "/", "|"
-    const notePart = "(?:[A-G][#b]?\\s*(?:maj|major|min|minor|m))";
-    const bpmPart = "(\\d{2,3})";
-
-    // Regex 1: "Key - 120"
-    const keyThenBpm = new RegExp(`${notePart}[\\s\\-\\u2013\\u2014|/]+${bpmPart}(?!\\d)`, 'gi');
-    let match;
-    while ((match = keyThenBpm.exec(searchText)) !== null) {
-        addBpm(parseInt(match[1], 10));
-    }
-
-    // Regex 2: "120 - Key"
-    const bpmThenKey = new RegExp(`(?:^|\\s)${bpmPart}[\\s\\-\\u2013\\u2014|/]+${notePart}`, 'gi');
-    while ((match = bpmThenKey.exec(searchText)) !== null) {
-        addBpm(parseInt(match[1], 10));
-    }
-
-    // STRATEGY 2: Explicit Label "120 BPM"
-    const labeledBpmRegex = /(\d{2,3})\s*BPM/gi;
-    while ((match = labeledBpmRegex.exec(searchText)) !== null) {
-        addBpm(parseInt(match[1], 10));
-    }
-
-    // STRATEGY 3: Naked Numbers (Fallback)
-    // If we haven't found any high-confidence BPMs yet, OR if the user wants us to be permissive:
-    // User request: "si ya falla todas... solo buscar numeros"
-    if (foundBpms.length === 0) {
-        // Find all standalone 2-3 digit numbers
-        const nakedRegex = /\b(\d{2,3})\b/g;
-        while ((match = nakedRegex.exec(searchText)) !== null) {
-            addBpm(parseInt(match[1], 10));
+        // ðŸ”¥ Beats.html Tag System Support
+        if (typeof window.clearTags === 'function' && typeof window.addTag === 'function') {
+            window.clearTags();
+            const tagList = tags.split(',').map(t => t.trim()).filter(t => t);
+            // Select up to 3 tags
+            tagList.slice(0, 3).forEach(tag => window.addTag(tag));
         }
     }
 
-    // Process Keys (Same strict logic)
-    const noteFragment = "([A-G])(#|b)?";
-    const scaleFragment = "\\s*(maj|major|min|minor|m)";
-    const keyRegex = new RegExp(`\\b${noteFragment}${scaleFragment}\\b`, 'gi');
+}
 
-    while ((match = keyRegex.exec(searchText)) !== null) {
-        let note = match[1].toUpperCase();
-        let acc = match[2] || '';
-        let type = match[3].toLowerCase();
+// ========================================
+// 4. METADATA DETECTION (ENHANCED)
+// ========================================
 
-        if (type === 'm' || type === 'min') type = 'minor';
-        if (type === 'maj') type = 'major';
+/**
+ * Ensures all standard Musical Keys (Sharps & Flats) exist in the selection dropdown.
+ * If not, it injects them properly so the user can select them.
+ */
+function ensureAllKeys() {
+    const hiddenSelect = document.getElementById('keyInput');
+    const customList = document.getElementById('keyOptionsList');
+    if (!hiddenSelect) return;
 
-        foundKeys.push(`${note}${acc} ${type}`);
+    // Standard Chromatic Keys (Major & Minor) - 12x2 = 24 base + enharmonics
+    const allKeys = [
+        // Major
+        'C Major', 'C# Major', 'Db Major', 'D Major', 'D# Major', 'Eb Major', 'E Major', 'F Major', 'F# Major', 'Gb Major', 'G Major', 'G# Major', 'Ab Major', 'A Major', 'A# Major', 'Bb Major', 'B Major',
+        // Minor
+        'C Minor', 'C# Minor', 'Db Minor', 'D Minor', 'D# Minor', 'Eb Minor', 'E Minor', 'F Minor', 'F# Minor', 'Gb Minor', 'G Minor', 'G# Minor', 'Ab Minor', 'A Minor', 'A# Minor', 'Bb Minor', 'B Minor'
+    ];
+
+    const currentOptions = Array.from(hiddenSelect.options).map(o => o.value);
+    let addedCount = 0;
+
+    allKeys.forEach(key => {
+        if (!currentOptions.includes(key)) {
+            // 1. Add to hidden select
+            const opt = document.createElement('option');
+            opt.value = key;
+            opt.text = key;
+            hiddenSelect.appendChild(opt);
+
+            // 2. Add to Custom UI List (if exists)
+            if (customList) {
+                const div = document.createElement('div');
+                div.className = 'custom-option';
+                div.textContent = key;
+                div.style.cssText = 'padding: 10px 14px; cursor: pointer; color: #ccc; border-bottom: 1px solid rgba(255,255,255,0.05); transition: background 0.2s; font-size: 14px;';
+                div.onclick = () => {
+                    if (window.selectCustomKey) window.selectCustomKey(key);
+                };
+                // Hover effect logic is tricky to inline, but CSS might handle it or we leave plain. 
+                // Matches style from Beats.html initCustomKeySelect
+                div.onmouseenter = () => { div.style.background = 'rgba(255,255,255,0.05)'; div.style.color = '#fff'; };
+                div.onmouseleave = () => { div.style.background = 'transparent'; div.style.color = '#ccc'; };
+
+                customList.appendChild(div);
+            }
+            addedCount++;
+        }
+    });
+
+    if (addedCount > 0) {
+        console.log(`✅ Added ${addedCount} missing keys (Flats/Sharps) to dropdown.`);
+    }
+}
+
+function detectBPM(text) {
+    const numericBPM = [];
+
+    // 1. "120 BPM" or "120bpm"
+    const explicitRegex = /\b(\d{2,3})\s?BPM\b/gi;
+    let match;
+    while ((match = explicitRegex.exec(text)) !== null) {
+        const val = parseInt(match[1]);
+        if (val >= 60 && val <= 250) numericBPM.push(val);
     }
 
-    // Deduplicate
-    const uniqueBpms = [...new Set(foundBpms)];
-    const uniqueKeys = [...new Set(foundKeys)];
+    // 2. "120" if context is suspicious (e.g. at end of title?) - skipped for safety to avoid false positives
+    // But user asked for it if fails: "solo buscar numeros"
 
-    return { uniqueBpms, uniqueKeys };
+    // Return first robust match
+    if (numericBPM.length > 0) return numericBPM[0];
+
+    // Fallback: Look for lone numbers 70-180
+    const fallbackRegex = /\b(7[0-9]|8[0-9]|9[0-9]|1[0-7][0-9])\b/g;
+    while ((match = fallbackRegex.exec(text)) !== null) {
+        // Only if not part of a date like 2024 (handled by \b & range)
+        return parseInt(match[1]);
+    }
+    return null;
+}
+
+function detectKey(text) {
+    // Regex for:
+    // Root: A-G
+    // Accidental: #, b, sharp, flat (optional)
+    // Scale: maj, min, m, M, major, minor, mayor, menor
+    // Spacing: optional
+
+    // Note: We need to handle "Abminor" (no space)
+
+    const root = "[A-G]";
+    const acc = "(?:#|b|flat|sharp)?";
+    const scale = "(?:maj|major|mayor|M|min|minor|menor|m)";
+
+    // We strictly look for Root+Acc+Scale to avoid "A" (word) matches.
+    // Example: "A# Minor", "Abminor", "C major"
+    const regex = new RegExp(`\\b(${root})(${acc})\\s?(${scale})\\b`, 'gi');
+
+    const match = regex.exec(text);
+    if (!match) return null;
+
+    let [full, r, a, s] = match;
+
+    // Normalize Root
+    r = r.toUpperCase();
+
+    // Normalize Accidental
+    a = a ? a.toLowerCase() : '';
+    if (a === 'flat') a = 'b';
+    if (a === 'sharp') a = '#';
+
+    // Normalize Scale
+    s = s.toLowerCase();
+    let type = 'Major'; // Default
+    if (['min', 'minor', 'menor', 'm'].includes(s)) {
+        type = 'Minor';
+    }
+
+    // Construct final key string matching Dropdown format (e.g. "C# Major")
+    // Note: We preserve 'b' (Flat) to satisfy user preference for flats.
+    // EnsureAllKeys() will make sure "Ab Minor" exists.
+
+    return `${r}${a} ${type}`;
+}
+
+function detectMetadata(title, description) {
+    try {
+        console.log('🔍 Detecting Metadata for:', title);
+
+        // 1. Ensure Keys Exist
+        ensureAllKeys();
+
+        const searchText = `${title} ${description}`;
+
+        // 2. Detect BPM
+        const detectedBPM = detectBPM(searchText);
+        if (detectedBPM) {
+            console.log('🎯 Detected BPM:', detectedBPM);
+            const bpmInput = document.getElementById('bpmInput'); // Beats.html ID
+            if (bpmInput) {
+                bpmInput.value = detectedBPM;
+                bpmInput.classList.add('filled');
+            }
+            // Also Support legacy ID or other inputs if needed
+            const legacyBpm = document.getElementById('import-bpm');
+            if (legacyBpm) legacyBpm.value = detectedBPM;
+        }
+
+        // 3. Detect Key
+        const detectedKey = detectKey(searchText);
+        if (detectedKey) {
+            console.log('🎯 Detected Key:', detectedKey);
+
+            // Use the global helper from Beats.html if available
+            if (typeof window.selectCustomKey === 'function') {
+                window.selectCustomKey(detectedKey);
+            } else {
+                // Fallback direct set
+                const keyInput = document.getElementById('keyInput');
+                if (keyInput) keyInput.value = detectedKey;
+
+                const keyDisplay = document.getElementById('keyDisplay');
+                if (keyDisplay) {
+                    keyDisplay.textContent = detectedKey;
+                    keyDisplay.style.color = '#fff';
+                }
+            }
+        }
+
+        // 4. Auto-Tagging (Matches Task Plan)
+        // If we have tags in title/description that aren't YouTube tags? 
+        // Logic handled in handleImportClick -> addTag
+
+        return {
+            uniqueBpms: detectedBPM ? [detectedBPM] : [],
+            uniqueKeys: detectedKey ? [detectedKey] : []
+        };
+
+    } catch (e) {
+        console.error('⚠️ Metadata detection logic error:', e);
+        return { uniqueBpms: [], uniqueKeys: [] };
+    }
 }
 
 function showConflictModal(bpms, keys, onConfirm) {
@@ -598,10 +775,11 @@ function redirectToUpload() {
 // ========================================
 // 7. CROPPER LOGIC (Simplified from Beats.html)
 // ========================================
-let cropImage, cropBox, cropContainer;
-let imageScale = 1, imageX = 0, imageY = 0;
-let isDragging = false, dragStartX = 0, dragStartY = 0;
-let baseScale = 1;
+// ðŸ”¥ Namespaced variables to prevent collision with Beats.html globals
+let ytCropImage, ytCropBox, ytCropContainer;
+let ytImageScale = 1, ytImageX = 0, ytImageY = 0;
+let ytIsDragging = false, ytDragStartX = 0, ytDragStartY = 0;
+let ytBaseScale = 1;
 let currentCropBlob = null; // Stores the final cropped image
 let activeCropMode = 'square'; // 'square' (Thumbnail) or 'wide' (Video BG)
 
@@ -609,15 +787,18 @@ let selectedAudioFile = null;
 let selectedImageFile = null;
 
 document.addEventListener('DOMContentLoaded', () => {
-    cropImage = document.getElementById('cropImage');
-    cropBox = document.getElementById('cropBox');
-    cropContainer = document.getElementById('cropContainer');
+    // Attempt to find elements - checking both IDs to be safe or reusing specific YT IDs if we changed them
+    // But since Beats.html uses id="cropImage", we select that.
+    // The conflict was in the *variable name* in global scope, not the DOM ID.
+    ytCropImage = document.getElementById('cropImage');
+    ytCropBox = document.getElementById('cropBox');
+    ytCropContainer = document.getElementById('cropContainer');
 
     // Initialize cropper events if elements exist
-    if (cropContainer) {
-        cropContainer.addEventListener('mousedown', startDrag);
+    if (ytCropContainer) {
+        ytCropContainer.addEventListener('mousedown', startDrag);
         // Map wheel to zoom safely
-        cropContainer.addEventListener('wheel', handleZoom, { passive: false });
+        ytCropContainer.addEventListener('wheel', handleZoom, { passive: false });
     }
 
     // Zoom Slider
@@ -626,7 +807,7 @@ document.addEventListener('DOMContentLoaded', () => {
         zoomRange.addEventListener('input', (e) => {
             const zoomValue = parseFloat(e.target.value); // 1 to 3
             // Convert slider 1..3 to actual scale
-            setZoom(zoomValue * baseScale);
+            setZoom(zoomValue * ytBaseScale);
         });
     }
 
@@ -655,7 +836,9 @@ function handleAudioSelect(input) {
         const titleInput = document.getElementById('upload-title');
         if (titleInput && !titleInput.value) {
             titleInput.value = selectedAudioFile.name.replace(/\.[^/.]+$/, ""); // Remove extension
+            titleInput.dispatchEvent(new Event('input', { bubbles: true })); // ðŸ”¥ TRIGGER COUNTER UPDATE
         }
+        // No descInput in original context, so no dispatch for it here.
     }
 }
 
@@ -674,9 +857,9 @@ function openCropModalForUpload(file) {
 
     const reader = new FileReader();
     reader.onload = (e) => {
-        cropImage.src = e.target.result;
+        ytCropImage.src = e.target.result;
         // Wait for image to load naturally
-        cropImage.onload = () => initializeCrop();
+        ytCropImage.onload = () => initializeCrop();
     };
     reader.readAsDataURL(file);
 }
@@ -696,14 +879,14 @@ function openCropModalForThumb() {
 
     // Load image into cropper
     // FIX CORS: Set attribute and append timestamp to avoid cached non-CORS response
-    cropImage.crossOrigin = 'Anonymous';
+    ytCropImage.crossOrigin = 'Anonymous';
     if (rawThumb.src.startsWith('blob:')) {
-        cropImage.src = rawThumb.src;
+        ytCropImage.src = rawThumb.src;
     } else {
-        cropImage.src = rawThumb.src + (rawThumb.src.includes('?') ? '&' : '?') + 't=' + new Date().getTime();
+        ytCropImage.src = rawThumb.src + (rawThumb.src.includes('?') ? '&' : '?') + 't=' + new Date().getTime();
     }
 
-    cropImage.onload = () => {
+    ytCropImage.onload = () => {
         initializeCrop();
     };
 }
@@ -714,16 +897,16 @@ function closeCropModal() {
 
 // CROPPER LOGIC (Improved)
 
-let minScale = 1;
-let maxScale = 3;
+let ytMinScale = 1;
+let ytMaxScale = 3;
 
 function initializeCrop() {
-    cropImage.style.transform = 'none'; // Reset to read natural dims
+    ytCropImage.style.transform = 'none'; // Reset to read natural dims
 
-    const containerW = cropContainer.offsetWidth; // 600
-    const containerH = cropContainer.offsetHeight; // 400
-    const imgW = cropImage.naturalWidth;
-    const imgH = cropImage.naturalHeight;
+    const containerW = ytCropContainer.offsetWidth; // 600
+    const containerH = ytCropContainer.offsetHeight; // 400
+    const imgW = ytCropImage.naturalWidth;
+    const imgH = ytCropImage.naturalHeight;
 
     // Fixed Crop Box (Square 300x300 for example, or based on height)
     // Use 320x320 centered
@@ -733,23 +916,23 @@ function initializeCrop() {
     const boxX = (containerW - boxSize) / 2;
     const boxY = (containerH - boxSize) / 2;
 
-    cropBox.style.width = boxSize + 'px';
-    cropBox.style.height = boxSize + 'px';
-    cropBox.style.left = boxX + 'px';
-    cropBox.style.top = boxY + 'px';
-    cropBox.style.borderRadius = '0';
+    ytCropBox.style.width = boxSize + 'px';
+    ytCropBox.style.height = boxSize + 'px';
+    ytCropBox.style.left = boxX + 'px';
+    ytCropBox.style.top = boxY + 'px';
+    ytCropBox.style.borderRadius = '0';
 
     // Min Scale: Image must cover the box area
     // Scale = BoxDim / ImageDim
     // We need max of (BoxW/ImgW, BoxH/ImgH) to ensure coverage
-    baseScale = Math.max(boxSize / imgW, boxSize / imgH);
+    ytBaseScale = Math.max(boxSize / imgW, boxSize / imgH);
 
     // Set Limits
-    minScale = baseScale;
-    maxScale = baseScale * 4; // allow 4x zoom
+    ytMinScale = ytBaseScale;
+    ytMaxScale = ytBaseScale * 4; // allow 4x zoom
 
     // Initial State: Centered at Min Scale
-    imageScale = minScale;
+    ytImageScale = ytMinScale;
 
     // imageX so image center aligns with box center
     // Image Center = (imgW * scale) / 2
@@ -762,8 +945,8 @@ function initializeCrop() {
     // eqn: boxX + boxSize/2 = imageX + (imgW*scale)/2
     // imageX = boxX + boxSize/2 - (imgW*scale)/2
 
-    imageX = (boxX + boxSize / 2) - (imgW * imageScale) / 2;
-    imageY = (boxY + boxSize / 2) - (imgH * imageScale) / 2;
+    ytImageX = (boxX + boxSize / 2) - (imgW * ytImageScale) / 2;
+    ytImageY = (boxY + boxSize / 2) - (imgH * ytImageScale) / 2;
 
     // Reset Slider
     const zoomRange = document.getElementById('zoomRange');
@@ -778,203 +961,247 @@ function initializeCrop() {
 }
 
 function updateImageTransform() {
-    cropImage.style.transform = `translate(${imageX}px, ${imageY}px) scale(${imageScale})`;
+    ytCropImage.style.transform = `translate(${ytImageX}px, ${ytImageY}px) scale(${ytImageScale})`;
 }
 
 // Set Zoom with Constraints
 function setZoom(newScale) {
     // 1. Clamp Scale
-    if (newScale < minScale) newScale = minScale;
-    if (newScale > maxScale) newScale = maxScale;
+    let clamped = Math.max(ytMinScale, Math.min(newScale, ytMaxScale));
 
-    // 2. Adjust Position to Keep Centered (Zoom towards center of crop box)
-    // Simple approach: When zooming, we keep the center point of the current view fixed? 
-    // Or just re-constrain.
+    // 2. Adjust X/Y to Zoom towards Center (optional but better)
+    // Simple approach: just scale, but keep center relative to viewport?
+    // Let's just update scale for now, and re-clamp position if needed.
+    // Ideally zoom into center of CropBox.
 
-    const oldScale = imageScale;
-    imageScale = newScale;
+    // Center of CropBox relative to Image TopLeft (current)
+    // cx = (boxCenter - imageX) / oldScale
+    // newImageX = boxCenter - cx * newScale
 
-    // Re-Constrain Position (Keep image covering crop box)
-    constrainImagePosition();
+    // Let's use simpler logic: maintain center point
+    const containerW = ytCropContainer.offsetWidth; // 600
+    const containerH = ytCropContainer.offsetHeight; // 400
+    const boxSize = 320;
+    const boxX = (containerW - boxSize) / 2;
+    const boxY = (containerH - boxSize) / 2;
+    const centerX = boxX + boxSize / 2;
+    const centerY = boxY + boxSize / 2;
+
+    const oldScale = ytImageScale;
+    const newS = clamped;
+
+    const dx = (centerX - ytImageX) / oldScale;
+    const dy = (centerY - ytImageY) / oldScale;
+
+    ytImageX = centerX - dx * newS;
+    ytImageY = centerY - dy * newS;
+    ytImageScale = newS;
+
+    checkBounds();
     updateImageTransform();
 }
 
-function handleZoom(e) {
-    e.preventDefault();
-    const delta = e.deltaY > 0 ? -0.1 : 0.1;
+function checkBounds() {
+    const containerW = ytCropContainer.offsetWidth;
+    const containerH = ytCropContainer.offsetHeight;
+    const boxSize = 320;
+    const boxX = (containerW - boxSize) / 2;
+    const boxY = (containerH - boxSize) / 2;
 
-    // Calculate new relative zoom factor for slider
-    // Current Factor = imageScale / baseScale
-    let currentFactor = imageScale / baseScale;
-    let newFactor = currentFactor + delta;
+    const imgW = ytCropImage.naturalWidth * ytImageScale;
+    const imgH = ytCropImage.naturalHeight * ytImageScale;
 
-    // Update Slider
-    const zoomRange = document.getElementById('zoomRange');
-    if (zoomRange) {
-        zoomRange.value = newFactor;
-        // Trigger input event to update everything
-        zoomRange.dispatchEvent(new Event('input'));
-    }
+    // Boundary Validation
+    // The image must cover the box area fully.
+    // So imageLeft <= boxLeft AND imageRight >= boxRight
+    // ytImageX <= boxX
+    // ytImageX + imgW >= boxX + boxSize
+
+    if (ytImageX > boxX) ytImageX = boxX;
+    if (ytImageX + imgW < boxX + boxSize) ytImageX = (boxX + boxSize) - imgW;
+
+    if (ytImageY > boxY) ytImageY = boxY;
+    if (ytImageY + imgH < boxY + boxSize) ytImageY = (boxY + boxSize) - imgH;
 }
 
+// DRAG EVENTS
 function startDrag(e) {
-    isDragging = true;
-    dragStartX = e.clientX - imageX;
-    dragStartY = e.clientY - imageY;
+    e.preventDefault();
+    ytIsDragging = true;
+    ytDragStartX = e.clientX - ytImageX;
+    ytDragStartY = e.clientY - ytImageY;
+
     document.addEventListener('mousemove', onDrag);
     document.addEventListener('mouseup', stopDrag);
 }
 
 function onDrag(e) {
-    if (!isDragging) return;
+    if (!ytIsDragging) return;
     e.preventDefault();
-    imageX = e.clientX - dragStartX;
-    imageY = e.clientY - dragStartY;
+    ytImageX = e.clientX - ytDragStartX;
+    ytImageY = e.clientY - ytDragStartY;
 
-    constrainImagePosition();
+    checkBounds();
     updateImageTransform();
 }
 
-function constrainImagePosition() {
-    const boxRect = cropBox.getBoundingClientRect();
-    const containerRect = cropContainer.getBoundingClientRect(); // 0,0 relative to itself
-
-    // Crop Box Position relative to container
-    const boxL = parseFloat(cropBox.style.left);
-    const boxT = parseFloat(cropBox.style.top);
-    const boxR = boxL + parseFloat(cropBox.style.width);
-    const boxB = boxT + parseFloat(cropBox.style.height);
-
-    const imgW = cropImage.naturalWidth * imageScale;
-    const imgH = cropImage.naturalHeight * imageScale;
-
-    // Constraints:
-    // Image Left (imageX) must be <= Box Left (boxL) -> otherwise gap on left
-    // Image Right (imageX + imgW) must be >= Box Right (boxR) -> otherwise gap on right
-
-    if (imageX > boxL) imageX = boxL;
-    if (imageX + imgW < boxR) imageX = boxR - imgW;
-
-    if (imageY > boxT) imageY = boxT;
-    if (imageY + imgH < boxB) imageY = boxB - imgH;
-}
-
 function stopDrag() {
-    isDragging = false;
+    ytIsDragging = false;
     document.removeEventListener('mousemove', onDrag);
     document.removeEventListener('mouseup', stopDrag);
 }
 
-// Legacy zoom support (optional, can be removed if specific handlers work)
-window.zoomCrop = function (delta) {
-    // No-op or map to new logic if needed
-};
+function handleZoom(e) {
+    e.preventDefault();
+    const delta = Math.sign(e.deltaY) * -0.2; // Speed
+    const newScale = ytImageScale + delta;
+    setZoom(newScale);
 
+    // Update slider
+    const zoomRange = document.getElementById('zoomRange');
+    if (zoomRange) {
+        zoomRange.value = newScale / ytBaseScale;
+    }
+}
 
+function saveCrop() {
+    // 1. Create Canvas
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
 
-async function saveCrop() {
-    // 1. GENERATE SQUARE CROP (For Use as Cover Art)
-    const squareCanvas = document.createElement('canvas');
-    const squareCtx = squareCanvas.getContext('2d');
-    squareCanvas.width = 1080;
-    squareCanvas.height = 1080;
+    const outputSize = 1080;
+    canvas.width = outputSize;
+    canvas.height = outputSize;
 
-    // Get Image Data for Crop
-    const boxRect = cropBox.getBoundingClientRect();
-    const containerRect = cropContainer.getBoundingClientRect();
-    const cropLeft = cropBox.offsetLeft;
-    const cropTop = cropBox.offsetTop;
-    const relX = cropLeft - imageX;
-    const relY = cropTop - imageY;
-    const boxW = parseFloat(cropBox.style.width);
-    const boxH = parseFloat(cropBox.style.height);
-    const sourceX = relX / imageScale;
-    const sourceY = relY / imageScale;
-    const sourceW = boxW / imageScale;
-    const sourceH = boxH / imageScale;
+    // 2. Draw Image portion
+    // We need source coordinates.
+    // cropBox relative to Image TopLeft = (Box - Image) / scale
 
-    // Draw Final Square
-    squareCtx.drawImage(cropImage, sourceX, sourceY, sourceW, sourceH, 0, 0, 1080, 1080);
+    const containerW = ytCropContainer.offsetWidth; // 600
+    const containerH = ytCropContainer.offsetHeight; // 400
+    const boxSize = 320;
+    const boxX = (containerW - boxSize) / 2;
+    const boxY = (containerH - boxSize) / 2;
 
-    // Save Square Blob
-    currentCropBlob = await new Promise(resolve => squareCanvas.toBlob(resolve, 'image/jpeg', 0.95));
+    const sourceX = (boxX - ytImageX) / ytImageScale;
+    const sourceY = (boxY - ytImageY) / ytImageScale;
+    const sourceSize = boxSize / ytImageScale;
 
-    // Handle UI Updates based on where we came from
+    ctx.drawImage(ytCropImage, sourceX, sourceY, sourceSize, sourceSize, 0, 0, outputSize, outputSize);
 
-    // CASE A: UPLOAD FLOW (Generate TunesToTube Style Video Frame)
-    if (document.getElementById('yt-upload-form').style.display === 'block') {
-        // 2. GENERATE 16:9 VIDEO FRAME
-        const videoCanvas = document.createElement('canvas');
-        const vCtx = videoCanvas.getContext('2d');
-        videoCanvas.width = 1920;
-        videoCanvas.height = 1080;
+    // 3. Export
+    canvas.toBlob(async (blob) => {
+        currentCropBlob = blob;
 
-        // A. Draw Blurred Background
-        // We stretch the square image to cover 16:9 and blur it
-        vCtx.filter = 'blur(40px) brightness(40%)';
-        // We draw the square canvas into the video canvas, scaled to cover.
-        // To cover 1920x1080 with 1080x1080 source, we scale width by 1920/1080 = 1.77
-        // Or just stretch it. For abstract background, stretching is fine/common.
-        vCtx.drawImage(squareCanvas, 0, 0, 1920, 1080);
-        vCtx.filter = 'none'; // Reset filter
+        // Update Preview
+        const previewUrl = URL.createObjectURL(blob);
 
-        // B. Draw Sharp Centered Art
-        // Target size: Let's say 850x850 pixels in the center (approx 80% height)
-        const artSize = 850;
-        const artX = (1920 - artSize) / 2;
-        const artY = (1080 - artSize) / 2;
+        // Determine Target
+        if (activeCropMode === 'square') {
+            // New Upload logic or legacy logic?
+            // "New Upload" logic in this file?
+            const preview = document.getElementById('cover-preview-img');
+            const placeholder = document.getElementById('cover-placeholder');
+            const dropzone = document.getElementById('cover-dropzone');
 
-        // Shadow for depth
-        vCtx.shadowColor = "rgba(0, 0, 0, 0.5)";
-        vCtx.shadowBlur = 50;
-        vCtx.shadowOffsetX = 0;
-        vCtx.shadowOffsetY = 20;
+            if (preview && placeholder && dropzone) {
+                preview.src = previewUrl;
+                preview.style.display = 'block';
+                placeholder.style.display = 'none';
+                dropzone.classList.add('has-file');
+            }
 
-        vCtx.drawImage(squareCanvas, artX, artY, artSize, artSize);
-
-        // Export Video Frame Blob
-        const videoFrameBlob = await new Promise(resolve => videoCanvas.toBlob(resolve, 'image/jpeg', 0.9));
-
-        // Update Preview Image
-        const prevBg = document.getElementById('yt-preview-bg');
-        if (prevBg) {
-            prevBg.src = URL.createObjectURL(videoFrameBlob);
-            prevBg.style.opacity = '1'; // Remove opacity to show full image
-        }
-
-        // Update Dropzone State (New Rules)
-        const coverZone = document.getElementById('coverDropZone');
-        const coverPreview = document.getElementById('cropImagePreview');
-
-        if (coverZone && coverPreview) {
-            coverPreview.src = URL.createObjectURL(currentCropBlob);
-            coverZone.classList.add('has-file');
-        } else {
-            // Fallback for safety
-            const zone = document.getElementById('image-dropzone');
-            if (zone) {
-                zone.classList.add('has-file');
-                zone.querySelector('h3').innerText = "Portada Recortada";
-                zone.querySelector('p').innerText = "Listo para generación de video";
+            // Also update legacy/Beats.html if present
+            const beatCover = document.getElementById('coverPreview');
+            const beatDrop = document.getElementById('coverDropZone');
+            if (beatCover) {
+                beatCover.src = previewUrl;
+                beatCover.style.display = 'block';
+                // Hide placeholder inside Beats.html
+                const beatPlaceholder = document.getElementById('coverPlaceholder');
+                if (beatPlaceholder) beatPlaceholder.style.display = 'none';
+            }
+            // Set global file blobs if we represent form data here?
+            // In Beats.html we rely on global `formData`
+            if (typeof formData !== 'undefined') {
+                formData.coverBlob = blob;
             }
         }
 
-    }
-    // CASE B: IMPORT FLOW (Just Square Thumb)
-    else {
-        const preview = document.getElementById('yt-imported-thumb');
-        if (preview) {
-            preview.src = URL.createObjectURL(currentCropBlob);
-            preview.style.display = 'block';
+        // Handle UI Updates based on where we came from
+        const ytUploadForm = document.getElementById('yt-upload-form');
+
+        // CASE A: UPLOAD FLOW (Generate TunesToTube Style Video Frame for YouTube.html)
+        if (ytUploadForm && ytUploadForm.style.display === 'block') {
+            // 2. GENERATE 16:9 VIDEO FRAME
+            const videoCanvas = document.createElement('canvas');
+            const vCtx = videoCanvas.getContext('2d');
+            videoCanvas.width = 1920;
+            videoCanvas.height = 1080;
+
+            // A. Draw Blurred Background
+            vCtx.filter = 'blur(40px) brightness(40%)';
+            vCtx.drawImage(canvas, 0, 0, 1920, 1080); // Use 'canvas' here
+            vCtx.filter = 'none'; // Reset filter
+
+            // B. Draw Sharp Centered Art
+            const artSize = 850;
+            const artX = (1920 - artSize) / 2;
+            const artY = (1080 - artSize) / 2;
+
+            // Shadow for depth
+            vCtx.shadowColor = "rgba(0, 0, 0, 0.5)";
+            vCtx.shadowBlur = 50;
+            vCtx.shadowOffsetX = 0;
+            vCtx.shadowOffsetY = 20;
+
+            vCtx.drawImage(canvas, artX, artY, artSize, artSize); // Use 'canvas' here
+
+            // Export Video Frame Blob
+            const videoFrameBlob = await new Promise(resolve => videoCanvas.toBlob(resolve, 'image/jpeg', 0.9));
+
+            // Update Preview Image
+            const prevBg = document.getElementById('yt-preview-bg');
+            if (prevBg) {
+                prevBg.src = URL.createObjectURL(videoFrameBlob);
+                prevBg.style.opacity = '1';
+            }
+
+            // Update Dropzone State
+            const coverZone = document.getElementById('coverDropZone');
+            const coverPreview = document.getElementById('cropImagePreview');
+
+            if (coverZone && coverPreview) {
+                coverPreview.src = URL.createObjectURL(currentCropBlob);
+                coverZone.classList.add('has-file');
+            } else {
+                const zone = document.getElementById('image-dropzone');
+                if (zone) {
+                    zone.classList.add('has-file');
+                    zone.querySelector('h3').innerText = "Portada Recortada";
+                    zone.querySelector('p').innerText = "Listo para generación de video";
+                }
+            }
+
         }
-        if (window.showToast) window.showToast('Portada recortada guardada', 'success');
-    }
+        // CASE B: IMPORT FLOW (Just Square Thumb)
+        else {
+            const preview = document.getElementById('yt-imported-thumb');
+            if (preview) {
+                preview.src = URL.createObjectURL(currentCropBlob);
+                preview.style.display = 'block';
+            }
+            if (window.showToast) window.showToast('Portada recortada guardada', 'success');
+        }
 
-    // Upload to Drafts (Background)
-    uploadFileToDrafts(currentCropBlob, 'cover');
+        // Upload to Drafts (Background)
+        if (typeof uploadFileToDrafts === 'function') {
+            uploadFileToDrafts(currentCropBlob, 'cover');
+        }
 
-    // Close
-    closeCropModal();
+        closeCropModal();
+
+    }, 'image/jpeg', 0.95);
 }
 
 // PSYCHOLOGICAL PROGRESS BAR LOGIC
