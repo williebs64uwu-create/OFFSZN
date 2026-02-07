@@ -138,6 +138,8 @@ function setSelectValue(id, value) {
 }
 
 function setupFormListeners() {
+    let timeout = null; // Fix: Declare timeout variable for debounce
+
     // 1. Account Form
     const accountForm = document.getElementById('accountForm');
     const firstNameInput = document.getElementById('firstName');
@@ -526,7 +528,7 @@ async function saveProfileChanges(e, type) {
         currentProfileData = { ...currentProfileData, ...updates };
 
         // Inline Success logic can be added here
-        alert("Cambios guardados correctamente.");
+        // alert("Cambios guardados correctamente."); // REMOVED
 
         // Refresh specific UI parts if needed
         if (updates.first_name || updates.nickname) {
@@ -536,8 +538,14 @@ async function saveProfileChanges(e, type) {
             document.getElementById('sidebarRole').textContent = updates.role;
         }
 
+        // RELOAD PAGE TO REFLECT CHANGES INSTANTLY
+        showToast("Cambios guardados. Recargando...", 'success');
+        setTimeout(() => {
+            window.location.reload();
+        }, 1500);
+
     } catch (err) {
-        alert(err.message || "Error al guardar cambios.");
+        showToast(err.message || "Error al guardar cambios.", 'error');
         console.error(err);
     } finally {
         btn.disabled = false;
@@ -799,4 +807,58 @@ function setupPasswordToggles() {
             }
         });
     });
+}
+
+// TOAST SYSTEM
+function showToast(message, type = 'success') {
+    const existing = document.querySelector('.custom-toast');
+    if (existing) existing.remove();
+
+    const toast = document.createElement('div');
+    toast.className = 'custom-toast';
+    toast.style.cssText = `
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background: ${type === 'error' ? '#ef4444' : '#22c55e'};
+        color: white;
+        padding: 12px 24px;
+        border-radius: 8px;
+        font-family: 'Inter', sans-serif;
+        font-weight: 500;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        z-index: 10000;
+        animation: slideIn 0.3s ease-out;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    `;
+
+    // Add icon based on type
+    const icon = type === 'error' ? '<i class="bi bi-exclamation-circle-fill"></i>' : '<i class="bi bi-check-circle-fill"></i>';
+    toast.innerHTML = `${icon} <span>${message}</span>`;
+
+    // Add animation styles if not present
+    if (!document.getElementById('toast-style')) {
+        const style = document.createElement('style');
+        style.id = 'toast-style';
+        style.textContent = `
+            @keyframes slideIn {
+                from { transform: translateY(100%); opacity: 0; }
+                to { transform: translateY(0); opacity: 1; }
+            }
+            @keyframes fadeOut {
+                from { opacity: 1; }
+                to { opacity: 0; }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+
+    document.body.appendChild(toast);
+
+    setTimeout(() => {
+        toast.style.animation = 'fadeOut 0.3s forwards';
+        setTimeout(() => toast.remove(), 300);
+    }, 4000);
 }
