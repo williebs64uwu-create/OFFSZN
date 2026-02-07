@@ -4,9 +4,9 @@
  */
 
 document.addEventListener('DOMContentLoaded', async () => {
-    // 1. Get Product ID from Clean URL or Params
-    const productId = getProductIdFromUrl();
-    if (!productId) {
+    // 1. Get Product Data from Clean URL or Params
+    const urlData = getProductIdFromUrl();
+    if (!urlData.id && !urlData.slug) {
         window.location.href = 'explorar.html';
         return;
     }
@@ -19,19 +19,32 @@ document.addEventListener('DOMContentLoaded', async () => {
             currentUser = sessionRes.data.session.user;
         }
 
-        // 2. Fetch Data from Supabase
-        const { data: product, error } = await window.supabaseClient
+        // 2. Fetch Data from Supabase (Dual Lookup: ID or Slug)
+        let query = window.supabaseClient
             .from('products')
             .select(`
                 *,
                 producer:producer_id (*)
-            `)
-            .eq('id', productId)
-            .single();
+            `);
+
+        if (urlData.id) {
+            // Priority 1: ID lookup (if we have a valid code)
+            query = query.eq('id', urlData.id);
+        } else {
+            // Priority 2: Slug lookup
+            query = query.eq('public_slug', urlData.slug);
+        }
+
+        const { data: product, error } = await query.maybeSingle();
 
         if (error) {
             console.error("Supabase Error Full:", error);
             throw error;
+        }
+
+        if (!product) {
+            console.warn("Product not found for:", urlData);
+            throw new Error("Producto no encontrado.");
         }
 
         // --- PARALLEL DATA FETCHING (Likes & Followers) ---
@@ -41,7 +54,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const likesCountPromise = window.supabaseClient
             .from('likes')
             .select('*', { count: 'exact', head: true })
-            .eq('target_id', productId) // UUID should be a string here
+            .eq('target_id', product.id)
             .eq('target_type', 'product');
 
         // B. Did I Like?
@@ -50,7 +63,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             userLikePromise = window.supabaseClient
                 .from('likes')
                 .select('*', { count: 'exact', head: true })
-                .eq('target_id', productId)
+                .eq('target_id', product.id)
                 .eq('target_type', 'product')
                 .eq('user_id', currentUser.id);
         }
@@ -101,7 +114,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         window.supabaseClient
             .from('products')
             .update({ views_count: (product.views_count || 0) + 1 })
-            .eq('id', productId)
+            .eq('id', product.id)
             .then(({ error }) => {
                 if (error) console.warn("Error incrementing views:", error);
             });
@@ -122,31 +135,56 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 /**
- * Parses URL to find the numeric ID.
- * Supports /beat/slug-NAME-CODE and ?p=CODE
+ * Parses URL to find the numeric ID or Public Slug.
+ * Supports:
+ * - /beat/slug-NAME-CODE (Auto-gen)
+ * - /beat/custom-slug (Manual)
+ * - ?p=CODE
+ * - ?id=UUID
  */
 function getProductIdFromUrl() {
     const params = new URLSearchParams(window.location.search);
     const pCode = params.get('p');
+    const legacyId = params.get('id');
 
-    if (pCode && window.IdObfuscator) {
-        return window.IdObfuscator.decodeId(pCode);
-    }
-
-    // Clean URL check: /beat/some-slug-CODE
+    // 1. URL Path check: /beat/some-slug-CODE or /beat/some-custom-slug
     const pathParts = window.location.pathname.split('/').filter(p => p);
     if (pathParts.length >= 2) {
         const lastPart = pathParts[pathParts.length - 1];
-        const code = lastPart.split('-').pop(); // Get last segment after '-'
-        console.log("Debug: Extracted code from URL:", code); // DEBUG
+        const segments = lastPart.split('-');
+        const code = segments.pop(); // Try to extract last part as code
+
+        console.log("Debug: Extracted segment from URL path:", lastPart);
+
+        // Check if last segment is a valid ID code
         if (code && window.IdObfuscator) {
-            const decoded = window.IdObfuscator.decodeId(code);
-            console.log("Debug: Decoded ID:", decoded); // DEBUG
-            return decoded;
+            const decodedId = window.IdObfuscator.decodeId(code);
+            if (decodedId && !isNaN(decodedId)) {
+                console.log("Debug: Decoded ID from segment:", decodedId);
+                return { id: decodedId, slug: lastPart };
+            }
         }
+
+        // If no code or invalid code, treat the whole part as a manual slug
+        return { id: null, slug: lastPart };
     }
 
-    return params.get('id'); // Fallback to legacy ?id=X
+    // 2. URL Param check: ?p=CODE
+    if (pCode && window.IdObfuscator) {
+        const decodedId = window.IdObfuscator.decodeId(pCode);
+        return { id: decodedId, slug: null };
+    }
+
+    // 3. Legacy ID check: ?id=UUID
+    if (legacyId) {
+        // Simple check if it's a number (obfuscated code) vs UUID
+        if (!isNaN(legacyId) && window.IdObfuscator) {
+            return { id: window.IdObfuscator.decodeId(legacyId), slug: null };
+        }
+        return { id: legacyId, slug: null };
+    }
+
+    return { id: null, slug: null };
 }
 
 /**

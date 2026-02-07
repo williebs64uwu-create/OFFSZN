@@ -1085,4 +1085,60 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Logout Button Listener
     const logoutBtn = getEl('navbar-logout-btn');
     if (logoutBtn) logoutBtn.addEventListener('click', window.handleLogout);
+
+    // Initialize Mobile Menu
+    setupMobileMenu();
 });
+
+/* ==================== MOBILE MENU LOGIC (NEW) ==================== */
+function setupMobileMenu() {
+    const hamburgerBtn = document.getElementById('hamburger-btn');
+    const navContainer = document.getElementById('nav-container');
+
+    if (hamburgerBtn && navContainer) {
+        // Create Backdrop if not exists
+        let backdrop = document.querySelector('.mobile-menu-backdrop');
+        if (!backdrop) {
+            backdrop = document.createElement('div');
+            backdrop.className = 'mobile-menu-backdrop';
+            document.body.appendChild(backdrop);
+        }
+
+        const toggleMenu = (e) => {
+            if (e) e.stopPropagation();
+            navContainer.classList.toggle('active');
+            backdrop.classList.toggle('active');
+            hamburgerBtn.innerHTML = navContainer.classList.contains('active') ? '✕' : '☰';
+
+            if (navContainer.classList.contains('active')) {
+                document.body.style.overflow = 'hidden'; // Prevent background scrolling
+            } else {
+                document.body.style.overflow = '';
+            }
+        };
+
+        const closeMenu = () => {
+            navContainer.classList.remove('active');
+            backdrop.classList.remove('active');
+            hamburgerBtn.innerHTML = '☰';
+            document.body.style.overflow = '';
+        };
+
+        // Toggle
+        hamburgerBtn.addEventListener('click', toggleMenu);
+
+        // Close on Backdrop
+        backdrop.addEventListener('click', closeMenu);
+
+        // Close on Link Click (except toggles)
+        navContainer.querySelectorAll('a').forEach(link => {
+            // If it's a toggle link (like 'Recursos'), let it toggle the submenu
+            if (!link.classList.contains('nav-toggle-link') && !link.classList.contains('search-filter-trigger')) {
+                link.addEventListener('click', closeMenu);
+            }
+        });
+
+        // Connect to Global UI Close
+        // (Optional: if you want closeAllUI to also close this menu, you can add state check there)
+    }
+}

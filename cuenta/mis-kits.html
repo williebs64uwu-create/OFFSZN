@@ -2273,11 +2273,30 @@
                         }
                     } catch (err) { console.warn(`Storage cleanup failed for item ${id}:`, err); }
 
-                    // --- DB DELETE ---
-                    await supabaseClient.from(table).delete().eq('id', id);
+                    // --- DB DELETE / SOFT DELETE ---
+                    if (item.isDraft) {
+                        // Drafts are hard-deleted (no historical stats)
+                        await supabaseClient.from(table).delete().eq('id', id);
+                    } else {
+                        // Published products are SOFT-DELETED (Hybrid)
+                        // This keeps metadata for Analytics while clearing file links
+                        await supabaseClient.from('products').update({
+                            status: 'deleted',
+                            visibility: 'deleted',
+                            // Clear file links to free up storage space (files were deleted above)
+                            audio_url: null,
+                            mp3_url: null,
+                            wav_url: null,
+                            stems_url: null,
+                            kit_url: null,
+                            preset_url: null,
+                            loop_url: null,
+                            file_url: null
+                        }).eq('id', id);
+                    }
                 }
 
-                showToast("Productos eliminados correctamente", "success");
+                showToast("Productos eliminados (archivos borrados, datos preservados)", "success");
                 closeDeleteModal();
                 deselectAll();
                 loadProducts(currentTab, currentStatus);
@@ -2395,7 +2414,119 @@
         window.bulkAction = bulkAction;
         window.bulkDelete = bulkDelete;
         window.toggleVisibilityMenu = toggleVisibilityMenu;
+        window.toggleVisibilityMenu = toggleVisibilityMenu;
         window.updateBulkVisibility = updateBulkVisibility;
+
+        /* ===== UPLOAD LIMIT LOGIC ===== */
+        async function initUploadLimit() {
+            const userId = localStorage.getItem('userId');
+            if (!userId) return;
+
+            try {
+                // 1. Get Plan
+                const { data: profile } = await supabaseClient
+                    .from('profiles')
+                    .select('plan')
+                    .eq('id', userId)
+                    .single();
+
+                const userPlan = profile?.plan || 'free';
+
+                // If PRO, no limit
+                if (userPlan === 'pro') {
+                    // Optional: Show "Ilimitado" or just hide counter
+                    return;
+                }
+
+                // 2. Count ALL Products (Active + Drafts)
+                const tables = [
+                    { name: 'products', col: 'producer_id' },
+                    { name: 'beat_drafts', col: 'user_id' },
+                    { name: 'drumkit_drafts', col: 'user_id' },
+                    { name: 'loopkit_drafts', col: 'user_id' },
+                    { name: 'preset_drafts', col: 'user_id' }
+                ];
+
+                const promises = tables.map(t =>
+                    supabaseClient
+                        .from(t.name)
+                        .select('*', { count: 'exact', head: true })
+                        .eq(t.col, userId)
+                );
+
+                const results = await Promise.all(promises);
+                let totalCount = 0;
+                results.forEach(r => {
+                    if (r.count) totalCount += r.count;
+                });
+
+                // 3. Update UI (Inject Counter)
+                updateLimitUI(totalCount, 100);
+
+                // 4. Intercept Button
+                setupLimitInterceptor(totalCount, 100);
+
+            } catch (err) {
+                console.warn("Error checking upload limit:", err);
+            }
+        }
+
+        function updateLimitUI(current, max) {
+            const btn = document.getElementById('btnCreateNew');
+            if (!btn) return;
+
+            // Create Badge
+            const badge = document.createElement('div');
+            badge.className = 'limit-badge';
+            badge.innerHTML = `<i class="bi bi-cloud-upload"></i> ${current}/${max}`;
+            badge.style.cssText = `
+                position: absolute;
+                bottom: -24px;
+                right: 0;
+                color: #666;
+                font-size: 11px;
+                font-weight: 500;
+                white-space: nowrap;
+            `;
+
+            // Adjust Button Container position to allow absolute positioning of badge
+            btn.parentElement.style.position = 'relative';
+            btn.parentElement.appendChild(badge);
+
+            // Color warning if close to limit
+            if (current >= max) {
+                badge.style.color = '#ef4444';
+            } else if (current >= max * 0.8) {
+                badge.style.color = '#F59E0B';
+            }
+        }
+
+        function setupLimitInterceptor(current, max) {
+            const btn = document.getElementById('btnCreateNew');
+            if (!btn) return;
+
+            if (current >= max) {
+                // Remove href and add click listener
+                btn.removeAttribute('href');
+                btn.style.opacity = '0.7';
+                btn.style.cursor = 'not-allowed'; // Visual feedback
+
+                // Clone to remove old listeners if any, then add new one
+                const newBtn = btn.cloneNode(true);
+                btn.parentNode.replaceChild(newBtn, btn);
+
+                newBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    document.getElementById('modalLimitReached').classList.add('active');
+                });
+            }
+        }
+
+        // Run on Load
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(initUploadLimit, 1000); // Delay slightly to let auth settle
+        });
 
         /* ===== PRODUCT LOGIC ===== */
 
@@ -3104,6 +3235,30 @@
 
 
 
+
+    <!-- Limit Reached Modal -->
+    <div id="modalLimitReached" class="modal-overlay">
+        <div class="elite-modal" style="max-width:400px; text-align:center;">
+            <div
+                style="width:60px; height:60px; background:rgba(255, 215, 0, 0.1); border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 20px auto; border:1px solid rgba(255, 215, 0, 0.2);">
+                <i class="bi bi-rocket-takeoff-fill" style="font-size:24px; color:#FFD700;"></i>
+            </div>
+            <h3 style="color:#fff; margin-bottom:12px;">¡Límite Alcanzado!</h3>
+            <p style="color:#aaa; font-size:14px; line-height:1.5; margin-bottom:24px;">
+                Tu plan <strong>Básico</strong> permite hasta <strong>100 productos</strong> (incluyendo borradores).
+                <br><br>
+                Actualiza a <strong>PRO</strong> para subir contenido ilimitado y desbloquear 0% de comisión.
+            </p>
+            <a href="/cuenta/planes.html" class="elite-btn"
+                style="text-decoration:none; display:block; margin-bottom:12px; background:#FFD700; color:#000;">
+                <i class="bi bi-lightning-charge-fill"></i> Actualizar a PRO
+            </a>
+            <button onclick="document.getElementById('modalLimitReached').classList.remove('active')" class="elite-btn"
+                style="background:transparent; border:1px solid #333; color:#aaa;">
+                Administrar mis productos
+            </button>
+        </div>
+    </div>
 </body>
 
 </html>

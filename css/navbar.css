@@ -1827,3 +1827,158 @@
      font-size: 0.9rem;
      opacity: 0.6;
  }
+
+ /* ==================== MOBILE RESPONSIVE (NEW) ==================== */
+ .hamburger-btn {
+     display: none;
+ }
+
+ .nav-container {
+     display: flex;
+     justify-content: space-between;
+     align-items: center;
+     width: 100%;
+ }
+
+ @media (max-width: 900px) {
+     .navbar-container {
+         justify-content: space-between;
+         position: relative;
+         /* Ensure context */
+     }
+
+     .hamburger-btn {
+         display: block;
+         font-size: 28px;
+         background: none;
+         border: none;
+         color: white;
+         cursor: pointer;
+         z-index: 1002;
+         /* Above menu */
+         position: relative;
+     }
+
+     /* OFF-CANVAS MENU */
+     .nav-container {
+         position: fixed;
+         top: 0;
+         right: -100%;
+         width: 80%;
+         max-width: 360px;
+         /* Optional cap */
+         height: 100vh;
+         background: #0a0a0a;
+         flex-direction: column;
+         padding: 80px 20px 40px;
+         transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+         z-index: 1001;
+         /* Above backdrop */
+         box-shadow: -5px 0 25px rgba(0, 0, 0, 0.7);
+         overflow-y: auto;
+         justify-content: flex-start;
+         align-items: stretch;
+     }
+
+     .nav-container.active {
+         right: 0;
+     }
+
+     /* INTERNAL ELEMENTS ADJUSTMENTS */
+     .navbar-center {
+         flex-direction: column;
+         width: 100%;
+         gap: 20px;
+         margin-bottom: 20px;
+     }
+
+     .navbar-links {
+         display: flex !important;
+         /* Override previous hide */
+         flex-direction: column;
+         width: 100%;
+         gap: 15px;
+         align-items: center;
+     }
+
+     .navbar-links>li {
+         width: 100%;
+         text-align: center;
+     }
+
+     .navbar-links>li>a {
+         justify-content: center;
+         width: 100%;
+         font-size: 1.1rem;
+         /* Bigger for touch */
+         padding: 12px;
+     }
+
+     /* MEGA MENU MOBILE TWEAKS */
+     .dropdown-menu.mega-columns {
+         position: static;
+         width: 100%;
+         min-width: auto;
+         opacity: 1;
+         visibility: visible;
+         display: none;
+         /* Hidden by default, toggled via JS if needed or just show all? */
+         /* For simple MVP, let's allow toggle or just show. 
+           But usually mobile menus show submenus on click. 
+           Existing JS toggleDropdown might work if we adjust CSS.
+           For now, let's letting existing JS handle 'dropdown-active'
+        */
+         box-shadow: none;
+         border: none;
+         background: transparent !important;
+         grid-template-columns: 1fr;
+         /* Single column */
+         padding: 0;
+     }
+
+     .dropdown-active .dropdown-menu {
+         display: grid;
+         /* Show when active */
+     }
+
+     /* SEARCH BAR */
+     .navbar-search {
+         margin-left: 0 !important;
+         width: 100% !important;
+         max-width: none !important;
+         margin-bottom: 20px;
+     }
+
+     /* RIGHT SIDE BUTTONS */
+     .navbar-right {
+         flex-direction: column;
+         gap: 15px;
+         width: 100%;
+         justify-content: center;
+     }
+
+     /* HIDE OLD TOGGLE IF PRESENT */
+     .menu-toggle {
+         display: none !important;
+     }
+
+     /* BACKDROP FOR MOBILE MENU */
+     .mobile-menu-backdrop {
+         position: fixed;
+         top: 0;
+         left: 0;
+         width: 100%;
+         height: 100%;
+         background: rgba(0, 0, 0, 0.5);
+         backdrop-filter: blur(4px);
+         z-index: 1000;
+         opacity: 0;
+         visibility: hidden;
+         transition: 0.3s;
+     }
+
+     .mobile-menu-backdrop.active {
+         opacity: 1;
+         visibility: visible;
+     }
+ }

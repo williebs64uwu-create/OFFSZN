@@ -3,6 +3,7 @@ import { Router } from 'express';
 // Importamos los controladores
 import { getUserByNickname, getProductsByNickname, getAllProducers } from '../controllers/UserController.js';
 import { getAllProducts } from '../controllers/ProductController.js';
+import { getLeaderboard } from '../controllers/LeaderboardController.js';
 
 const router = Router();
 
@@ -18,6 +19,9 @@ router.get('/users/:nickname/products', getProductsByNickname);
 router.get('/products', getAllProducts);
 
 // 4. Obtener lista de PRODUCTORES (Esta es la que te fallaba)
-router.get('/producers', getAllProducers); 
+router.get('/producers', getAllProducers);
+
+// 5. Leaderboard (Top Productores)
+router.get('/leaderboard', getLeaderboard);
 
 export default router;

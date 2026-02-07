@@ -64,8 +64,15 @@ window.IdObfuscator = {
 };
 
 // SHUFFLED ALPHABET (Randomized for "hashing" effect)
-const CHARS = 'qL8zF1Gk7XwNjR4yvB5tM6dncb9sPp2hQr3JmKW0ZTDVBgHflSx_'; // URL-safe chars
+const CHARS = 'qL8zF1Gk7XwNjR4yvB5tM6dncb9sPp2hQr3JmKW0ZTDVagHflSx_'; // URL-safe chars (Fixed duplicate B at index 42)
 const BASE = CHARS.length;
+
+// 🔥 LEGACY / BROKEN CODES EXCEPTION LIST
+// Maps specific broken codes (generated with old buggy alphabet) to their CORRECT intended ID.
+// This fixes existing links that users might have shared.
+const LEGACY_MAPPINGS = {
+    '4LB': 118, // The famous "Narcos" beat collision
+};
 
 function toShuffledBase(num) {
     let n = Number(num);
@@ -84,6 +91,13 @@ function toShuffledBase(num) {
 
 function fromShuffledBase(str) {
     if (!str) return null;
+
+    // 0. Check Legacy Mappings first
+    if (LEGACY_MAPPINGS.hasOwnProperty(str)) {
+        console.log(`🔧 [IdObfuscator] Legacy code detected: ${str} -> ${LEGACY_MAPPINGS[str]}`);
+        return LEGACY_MAPPINGS[str];
+    }
+
     let n = 0;
     for (let i = 0; i < str.length; i++) {
         const char = str[i];
@@ -116,10 +130,23 @@ window.createSeoLink = (product) => {
     const name = product.name || 'product';
     const type = (product.product_type || 'beat').toLowerCase(); // beat, kit, loopkit...
 
-    // Choose param name based on type for semantics
-    // beat -> ?beat=...
-    // kit -> ?kit=...
-    // preset -> ?preset=...
+    // 1. If product has a custom public_slug (manually set in DB), use it directly!
+    if (product.public_slug) {
+        let prefix = 'beat';
+        const lType = type.toLowerCase();
+        if (lType.includes('drumkit')) prefix = 'drumkit';
+        else if (lType.includes('loopkit')) prefix = 'loopkit';
+        else if (lType.includes('kit')) prefix = 'kit';
+        else if (lType.includes('preset') || lType.includes('voces')) prefix = 'preset';
+        else if (lType.includes('sample')) prefix = 'sample';
+        else if (lType.includes('instrumento')) prefix = 'instrumento';
+        else if (lType.includes('plugin')) prefix = 'plugin';
+        else if (lType.includes('plantilla')) prefix = 'plantilla';
+
+        return `/${prefix}/${product.public_slug}`;
+    }
+
+    // 2. Fallback to auto-generated slug with obfuscated ID
     let param = 'beat';
     const lType = type.toLowerCase();
     if (lType.includes('drumkit')) param = 'drumkit';

@@ -9,7 +9,7 @@ const EXPLORE_CONFIG = {
     PRODUCERS_LIMIT: 5, // For the list
     CAROUSEL_LIMIT: 12,
     CURATED_TYPES: ['drumkit', 'loopkit', 'preset'],
-    HERO_ROTATE_MS: 8000
+    HERO_ROTATE_MS: 10000
 };
 
 // API Configuration
@@ -20,7 +20,7 @@ const API_URL = (window.location.hostname === 'localhost' || window.location.hos
 // State
 let allProducts = [];
 let allProducers = [];
-let currentUserFollowing = new Set();
+window.currentUserFollowing = window.currentUserFollowing || new Set();
 let heroProducts = [];
 let currentHeroIndex = 0;
 let heroTimer = null;
@@ -92,30 +92,55 @@ function initGlobalListeners() {
 }
 
 async function fetchData() {
-    const token = localStorage.getItem('sb-access-token') || getCookie('sb-access-token');
+    // 🛡️ SMART AUTH WAIT: Polling for token if session hint exists
+    let token = window.AuthUtils ? window.AuthUtils.getAccessToken() : null;
+    let attempts = 0;
+    const hasSessionHint = document.cookie.includes('sb-access-token') || localStorage.getItem('authToken');
+
+    if (!token && hasSessionHint) {
+        console.log("⏳ Explore: Session hint found, waiting for token refresh...");
+        while (!token && attempts < 20) { // Max 2 seconds
+            await new Promise(r => setTimeout(r, 100));
+            token = window.AuthUtils.getAccessToken();
+            attempts++;
+            if (token) break;
+        }
+        if (token) console.log(`✅ Explore: Token secured after ${attempts * 100}ms`);
+        else console.warn("⚠️ Explore: Token wait timed out. Proceeding as guest.");
+    }
+
+    // Initialize user state promises
+    let userPromises = [];
+    if (token) {
+        userPromises = [
+            fetch('/api/me/following', { headers: { 'Authorization': `Bearer ${token}` } })
+                .then(r => r.ok ? r.json() : [])
+                .catch(() => []),
+            // We can also fetch /api/me if needed, but following is priority for this view
+        ];
+    }
 
     try {
-        const promises = [
+        // Fetch Content + User Data in Parallel
+        const [productsRes, producersRes, leaderboardRes, followingData] = await Promise.all([
             fetch(`${API_URL}/products`),
-            fetch(`${API_URL}/producers`)
-        ];
+            fetch(`${API_URL}/producers`),
+            fetch(`${API_URL}/leaderboard`),
+            // If logged in, this resolves to the list. If not, it resolves to an empty array immediately
+            token ? userPromises[0] : Promise.resolve([])
+        ]);
 
-        // Only fetch following if logged in
-        if (token) {
-            promises.push(fetch('/api/me/following', {
-                headers: { 'Authorization': `Bearer ${token}` }
-            }));
-        }
+        // Process Content
+        if (productsRes.ok) allProducts = await productsRes.json();
+        if (producersRes.ok) allProducers = await producersRes.json();
+        if (leaderboardRes.ok) window.topProducers = await leaderboardRes.json();
 
-        const results = await Promise.all(promises);
-
-        // Process results
-        if (results[0].ok) allProducts = await results[0].json();
-        if (results[1].ok) allProducers = await results[1].json();
-
-        if (token && results[2]?.ok) {
-            const ids = await results[2].json();
-            currentUserFollowing = new Set(ids);
+        // Process User State (Reliable)
+        if (followingData && Array.isArray(followingData)) {
+            window.currentUserFollowing = new Set(followingData);
+            console.log("✅ User Following Loaded:", window.currentUserFollowing.size);
+        } else {
+            window.currentUserFollowing = window.currentUserFollowing || new Set();
         }
 
         if (allProducts.length > 0) {
@@ -150,14 +175,18 @@ function renderExploreFeed() {
         heroProducts.forEach(p => usedProductIds.add(p.id));
     }
 
-    // 2. FILTERS (UX Accessory) - Removed as per request
-    // renderCategoryFilters(container);
-
     // 3. THE LIST GRID (Section 2: Trending / Fresh) - 2 Columns
     const listGridContainer = document.createElement('div');
     listGridContainer.id = 'explore-list-grid-wrapper';
     listGridContainer.appendChild(renderTwoColLists());
     container.appendChild(listGridContainer);
+
+    // 2. LEADERBOARD (Top Producers) - MOVED BELOW as per user request
+    if (window.topProducers && window.topProducers.length > 0) {
+        const leaderboardContainer = document.createElement('div');
+        leaderboardContainer.innerHTML = renderLeaderboard(window.topProducers);
+        container.appendChild(leaderboardContainer);
+    }
 
     // 4. SHELF: RECOMENDADOS (Section 3: For you / General)
     const recommended = allProducts
@@ -346,51 +375,177 @@ function createListItemHtml(item, index, type) {
 }
 
 /**
- * Hero Slider
+ * Hero Slider & GSAP Animations
  */
+let heroParticles = null;
+
 function startHeroSlider() {
+    if (!heroProducts || heroProducts.length === 0) return;
+
     renderHeroSlide(heroProducts[currentHeroIndex]);
+    initHeroParticles();
+
     if (heroTimer) clearInterval(heroTimer);
-    heroTimer = setInterval(() => {
-        currentHeroIndex = (currentHeroIndex + 1) % heroProducts.length;
-        const heroEl = document.querySelector('.explore-hero');
-        if (heroEl) {
-            heroEl.style.opacity = '0';
-            setTimeout(() => {
-                renderHeroSlide(heroProducts[currentHeroIndex]);
-                if (heroEl) heroEl.style.opacity = '1';
-            }, 500);
+    heroTimer = setInterval(() => moveToNextHero(), EXPLORE_CONFIG.HERO_ROTATE_MS);
+}
+
+function moveToNextHero() {
+    currentHeroIndex = (currentHeroIndex + 1) % heroProducts.length;
+    performHeroTransition(currentHeroIndex);
+}
+
+function performHeroTransition(index) {
+    const heroEl = document.querySelector('.explore-hero');
+    if (!heroEl) return;
+
+    const content = heroEl.querySelector('.hero-content');
+    const image = heroEl.querySelector('.hero-image-container');
+
+    // Premium GSAP Exit
+    const tl = gsap.timeline({
+        onComplete: () => {
+            renderHeroSlide(heroProducts[index]);
+            // Entrance handled in renderHeroSlide
         }
-    }, EXPLORE_CONFIG.HERO_ROTATE_MS);
+    });
+
+    tl.to([content, image], {
+        opacity: 0,
+        y: -20,
+        duration: 0.3,
+        ease: "power2.in"
+    });
 }
 
 function renderHeroSlide(product) {
     const heroSection = document.getElementById('explore-hero-container');
     if (!heroSection) return;
 
+    const imgUrl = product.image_url || 'https://via.placeholder.com/400';
+    const producer = product.producer_nickname || 'Artista';
+    const type = (product.product_type || 'Beat').toUpperCase();
+
+    const dotsHtml = heroProducts.map((_, i) =>
+        `<div class="hero-dot ${i === currentHeroIndex ? 'active' : ''}" onclick="window.navToHero(${i})"></div>`
+    ).join('');
+
     heroSection.innerHTML = `
-        <div class="explore-hero">
-            <div class="hero-bg-accent"></div>
-            <div class="hero-content">
+        <div class="explore-hero active">
+            <canvas class="hero-particles-canvas"></canvas>
+            
+            <div class="hero-content" style="opacity: 0; transform: translateY(15px);">
                 <span class="hero-tag">Destacado</span>
                 <h1 class="hero-title">${product.name}</h1>
-                <p class="hero-subtitle">Producido por ${product.producer_nickname || 'Artista'} • ${product.product_type || 'Beat'}</p>
+                <p class="hero-subtitle">Una creación de <strong>${producer}</strong> • ${type}</p>
                 <div class="hero-actions">
-                    <button class="btn-hero-play" id="hero-play-btn"><i class="bi bi-play-fill"></i> Escuchar Ahora</button>
-                    <button class="btn-hero-outline" id="hero-details-btn">Detalles</button>
+                    <button class="btn-hero-play" id="hero-play-btn">
+                        <i class="bi bi-play-fill"></i> Escuchar Ahora
+                    </button>
+                    <button class="btn-hero-outline" id="hero-details-btn">Ver Detalles</button>
                 </div>
             </div>
-            <img src="${product.image_url || 'https://via.placeholder.com/400'}" alt="cover" class="hero-image">
+
+            <div class="hero-image-container" style="opacity: 0; transform: translateX(20px) translateY(-50%);">
+                <img src="${imgUrl}" alt="cover" class="hero-image">
+            </div>
+
+            <div class="hero-indicators">
+                ${dotsHtml}
+            </div>
         </div>
     `;
 
-    // Event Listeners (Safer than inline JSON)
+    // Premium GSAP Entrance - Synchronized and Fast
+    const heroEl = heroSection.querySelector('.explore-hero');
+    const content = heroEl.querySelector('.hero-content');
+    const image = heroEl.querySelector('.hero-image-container');
+
+    gsap.to([content, image], {
+        opacity: 1,
+        y: 0,
+        x: 0,
+        duration: 0.6,
+        ease: "power2.out"
+    });
+
+    // Restart Particles for the new canvas
+    initHeroParticles();
+
+    // Event Listeners (Restored)
     const playBtn = heroSection.querySelector('#hero-play-btn');
     const detailsBtn = heroSection.querySelector('#hero-details-btn');
 
-    if (playBtn) playBtn.onclick = () => window.playTrack(product);
-    if (detailsBtn) detailsBtn.onclick = () => window.location.href = getProductUrl(product);
+    if (playBtn) playBtn.onclick = () => window.playTrack ? window.playTrack(product) : console.log("Play:", product);
+    if (detailsBtn) detailsBtn.onclick = () => window.location.href = getProductUrl ? getProductUrl(product) : '#';
 }
+
+function initHeroParticles() {
+    const canvas = document.querySelector('.hero-particles-canvas');
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    let particles = [];
+    let width, height;
+
+    const resize = () => {
+        width = canvas.width = canvas.parentElement.offsetWidth;
+        height = canvas.height = canvas.parentElement.offsetHeight;
+    };
+    resize();
+
+    class Particle {
+        constructor() {
+            this.x = Math.random() * width;
+            this.y = Math.random() * height;
+            this.size = Math.random() * 0.8 + 0.2; // Tiny dots
+            this.speedX = (Math.random() * 0.15 - 0.075);
+            this.speedY = (Math.random() * 0.15 - 0.075);
+            this.opacity = Math.random() * 0.4 + 0.2;
+        }
+        update() {
+            this.x += this.speedX;
+            this.y += this.speedY;
+            if (this.x > width) this.x = 0;
+            if (this.x < 0) this.x = width;
+            if (this.y > height) this.y = 0;
+            if (this.y < 0) this.y = height;
+        }
+        draw() {
+            ctx.fillStyle = `rgba(255, 255, 255, ${this.opacity})`; // White dots
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+            ctx.fill();
+        }
+    }
+
+    const init = () => {
+        particles = [];
+        for (let i = 0; i < 50; i++) {
+            particles.push(new Particle());
+        }
+    };
+    init();
+
+    const animate = () => {
+        if (!document.contains(canvas)) return; // Stop if removed
+        ctx.clearRect(0, 0, width, height);
+        particles.forEach(p => {
+            p.update();
+            p.draw();
+        });
+        requestAnimationFrame(animate);
+    };
+    animate();
+}
+
+// Global nav helper
+window.navToHero = (index) => {
+    if (index === currentHeroIndex) return;
+    currentHeroIndex = index;
+    if (heroTimer) clearInterval(heroTimer);
+    performHeroTransition(index);
+    heroTimer = setInterval(() => moveToNextHero(), EXPLORE_CONFIG.HERO_ROTATE_MS);
+};
 
 /**
  * Shelf Components
@@ -519,4 +674,122 @@ function showErrorState() {
     const container = document.getElementById('explore-rows-container');
     if (container) container.innerHTML = '<div style="padding: 100px 5%; color: #666; text-align: center;">Error al cargar el feed.</div>';
 }
+
+
+/**
+ * Leaderboard Renderer
+ */
+function renderLeaderboard(producers) {
+    // Determine Top 10 (or less)
+    const top10 = producers.slice(0, 10);
+    const midPoint = Math.ceil(top10.length / 2);
+
+    // Split for 2 columns
+    const leftCol = top10.slice(0, midPoint);
+    const rightCol = top10.slice(midPoint);
+
+    const createRow = (p, i) => {
+        const isFollowing = window.currentUserFollowing && window.currentUserFollowing.has(p.id);
+        const btnClass = isFollowing ? 'lb-follow-btn following' : 'lb-follow-btn';
+        const btnText = isFollowing ? 'Siguiendo' : '<i class="bi bi-plus"></i> Seguir';
+
+        return `
+        <div class="leaderboard-item" onclick="window.location.href='/@${p.nickname}'">
+            <div class="lb-rank ${p.rank <= 3 ? 'top-rank' : ''}">#${p.rank}</div>
+            <img src="${p.avatar_url || 'https://via.placeholder.com/60'}" class="lb-avatar" alt="${p.nickname}">
+            <div class="lb-info">
+                <div class="lb-name">
+                    ${p.nickname} 
+                    ${p.is_verified ? '<i class="bi bi-patch-check-fill lb-verified"></i>' : ''}
+                </div>
+                <div class="lb-score">${p.score.toLocaleString()} pts</div>
+            </div>
+             <button class="${btnClass}" onclick="event.stopPropagation(); toggleFollow('${p.id}', this)">
+                ${btnText}
+            </button>
+        </div>
+    `};
+
+    return `
+        <div class="explore-row leaderboard-section" style="margin-top: 40px; margin-bottom: 60px;">
+            <div class="row-header" style="justify-content: flex-start; margin-bottom: 30px;">
+                <h2 class="row-title">Top Productores del Mes</h2>
+            </div>
+            <div class="leaderboard-grid">
+                <div class="lb-col">
+                    ${leftCol.map(p => createRow(p, p.rank)).join('')}
+                </div>
+                <div class="lb-col">
+                    ${rightCol.map(p => createRow(p, p.rank)).join('')}
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+/**
+ * Handle Follow Action
+ */
+async function toggleFollow(producerId, btn) {
+    const token = window.AuthUtils ? window.AuthUtils.getAccessToken() : null;
+    // ... rest of function
+
+
+    if (!token) {
+        // Redirect to login or show modal
+        window.location.href = '/pages/login.html';
+        return;
+    }
+
+    const isFollowing = btn.classList.contains('following');
+    const method = isFollowing ? 'DELETE' : 'POST';
+
+    // Optimistic UI Update
+    btn.disabled = true;
+    if (isFollowing) {
+        btn.classList.remove('following');
+        btn.innerHTML = '<i class="bi bi-plus"></i> Seguir';
+    } else {
+        btn.classList.add('following');
+        btn.innerText = 'Siguiendo';
+    }
+
+    try {
+        const res = await fetch(`/api/users/${producerId}/follow`, {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if (!res.ok) {
+            throw new Error('Action failed');
+        }
+
+        // Update Global State
+        if (isFollowing) {
+            window.currentUserFollowing.delete(producerId);
+        } else {
+            window.currentUserFollowing.add(producerId);
+        }
+
+    } catch (err) {
+        console.error("Follow error:", err);
+        // Revert UI on error
+        if (isFollowing) {
+            btn.classList.add('following');
+            btn.innerText = 'Siguiendo';
+        } else {
+            btn.classList.remove('following');
+            btn.innerHTML = '<i class="bi bi-plus"></i> Seguir';
+        }
+        alert("Error al seguir usuario via API."); // Simple feedback
+    } finally {
+        btn.disabled = false;
+    }
+}
+
+// Make globally available for onclick handlers
+window.toggleFollow = toggleFollow;
 

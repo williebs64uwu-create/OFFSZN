@@ -438,8 +438,8 @@
                     style="position: absolute; left: 20px; top: 0; bottom: 0; width: 2px; background: linear-gradient(to bottom, #f59e0b, #8b5cf6, #3b82f6, rgba(255,255,255,0.1)); border-radius: 2px;">
                 </div>
 
-                <!-- ITEM 0: PERSONALIZACIONES (FEB 6 - 4PM) -->
-                <div class="timeline-item"
+                <!-- ITEM 0: PERSONALIZACIONES (FEB 7 - 3PM) -->
+                <div class="timeline-item" data-release-date="2026-02-07T15:00:00"
                     style="position: relative; margin-bottom: 50px; padding-left: 60px; animation: slideInRight 0.6s ease backwards;">
                     <!-- Dot -->
                     <div class="timeline-dot"
@@ -447,9 +447,9 @@
                     </div>
 
                     <!-- Date Badge -->
-                    <div
+                    <div class="item-status-badge"
                         style="display: inline-block; background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.3); color: #fbbf24; padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 700; margin-bottom: 12px;">
-                        Mañana, 6 de Feb • 4:00 PM
+                        7 de Feb • 3:00 PM
                     </div>
 
                     <!-- Card with Electric Border Effect -->
@@ -496,8 +496,8 @@
                     </div>
                 </div>
 
-                <!-- ITEM 1: YOUTUBE (TOMORROW) -->
-                <div class="timeline-item"
+                <!-- ITEM 1: YOUTUBE (DONE) -->
+                <div class="timeline-item" data-release-date="2026-02-06T23:00:00"
                     style="position: relative; margin-bottom: 50px; padding-left: 60px; animation: slideInRight 0.6s ease 0.2s backwards;">
                     <!-- Dot -->
                     <div class="timeline-dot"
@@ -505,9 +505,9 @@
                     </div>
 
                     <!-- Date Badge -->
-                    <div
+                    <div class="item-status-badge"
                         style="display: inline-block; background: rgba(139, 92, 246, 0.15); border: 1px solid rgba(139, 92, 246, 0.3); color: #a78bfa; padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 700; margin-bottom: 12px;">
-                        Mañana, 6 de Feb • 8:00 PM
+                        Subido 6 de Feb • 11:00 PM
                     </div>
 
                     <!-- Card -->
@@ -535,7 +535,7 @@
                 </div>
 
                 <!-- ITEM 2: CATALOGO (FEB 7) -->
-                <div class="timeline-item"
+                <div class="timeline-item" data-release-date="2026-02-07T18:00:00"
                     style="position: relative; margin-bottom: 50px; padding-left: 60px; animation: slideInRight 0.6s ease 0.4s backwards;">
                     <!-- Dot -->
                     <div class="timeline-dot"
@@ -543,7 +543,7 @@
                     </div>
 
                     <!-- Date Badge -->
-                    <div
+                    <div class="item-status-badge"
                         style="display: inline-block; background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.3); color: #60a5fa; padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 700; margin-bottom: 12px;">
                         7 de Febrero • 6:00 PM
                     </div>
@@ -673,6 +673,44 @@
 
     <script src="/script/notifications.js"></script>
     <script src="/script/navbar.js?v=7" type="module"></script>
+
+    <!-- AUTOMATIC STATUS SCRIPT -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const now = new Date();
+            const items = document.querySelectorAll('.timeline-item[data-release-date]');
+
+            items.forEach(item => {
+                const releaseDateStr = item.getAttribute('data-release-date');
+                const releaseDate = new Date(releaseDateStr);
+                const statusBadge = item.querySelector('.item-status-badge');
+                const dot = item.querySelector('.timeline-dot');
+
+                if (now >= releaseDate) {
+                    // Item is Available (Done)
+                    if (statusBadge) {
+                        const currentText = statusBadge.innerText;
+                        // Use check icon for DISPONIBLE
+                        statusBadge.innerHTML = `<i class="bi bi-check-circle-fill"></i> DISPONIBLE — ${currentText}`;
+                        statusBadge.style.background = 'rgba(16, 185, 129, 0.15)';
+                        statusBadge.style.border = '1px solid rgba(16, 185, 129, 0.3)';
+                        statusBadge.style.color = '#10b981';
+                    }
+                    if (dot) {
+                        dot.style.borderColor = '#10b981';
+                        dot.style.boxShadow = '0 0 15px rgba(16, 185, 129, 0.5)';
+                    }
+                } else {
+                    // Item is Coming Soon (Upcoming)
+                    if (statusBadge) {
+                        const currentText = statusBadge.innerText;
+                        statusBadge.innerHTML = `<i class="bi bi-clock-fill"></i> PRÓXIMAMENTE — ${currentText}`;
+                    }
+                }
+            });
+        });
+    </script>
+
     <!-- Removed redundant inline script -->
 </body>
 
