@@ -8,11 +8,11 @@ export const getLeaderboard = async (req, res) => {
         console.log("Fetching producers with avatars...");
         const { data: producers, error: userError } = await supabase
             .from('users')
-            .select('id, nickname, avatar_url, banner_url, bio, is_verified') // Added banner/bio for completion bonus
+            .select('id, nickname, avatar_url, banner_url, bio, is_verified')
             .eq('is_producer', true)
             .not('avatar_url', 'is', null) // Must have avatar
             .neq('avatar_url', '')       // Must not be empty string
-            .neq('nickname', 'willieinspired'); // Exclude Admin/Test Account as requested
+            .not('id', 'in', '("38c4925a-5a0b-4905-a1a3-8f7ecc939394","0382a813-85c7-46c3-8d2c-61a5692adffd")'); // Exclude Testeo2 and WillieInspired (Admin) by ID as requested
 
         if (userError) {
             console.error("User Fetch Error:", userError);
@@ -53,7 +53,7 @@ export const getLeaderboard = async (req, res) => {
         // 4. Calculate Scores (Aggregating Stats)
         // Formula aligned with Trending:
         // Views: 1 | Plays: 2 | Downloads: 20 | Sales: 50 | Follower: 10
-        // NEW: Upload: 10 | Verified: 100 | Profile Complete (Banner+Bio): 50
+        // NEW: Upload: 10 | Verified: 100 | Bio (Profile Complete): 50
         const scores = {};
 
         // Initialize Scores with State-Based Points
@@ -67,8 +67,8 @@ export const getLeaderboard = async (req, res) => {
             // Verified Status (100 pts)
             if (p.is_verified) baseScore += 100;
 
-            // Profile Completion (50 pts) - Encourages pro look
-            if (p.banner_url && p.bio) baseScore += 50;
+            // Profile Completion (50 pts) - Bonus for Banner or Bio
+            if (p.banner_url || (p.bio && p.bio.length > 5)) baseScore += 50;
 
             scores[p.id] = baseScore;
         });
