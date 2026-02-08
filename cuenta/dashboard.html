@@ -1694,7 +1694,8 @@
                 const { data: products, error: prodErr } = await supabaseClient
                     .from('products')
                     .select('views')
-                    .eq('producer_id', userId);
+                    .eq('producer_id', userId)
+                    .eq('status', 'approved'); // Only active products count for stats
 
                 if (!prodErr && products) {
                     products.forEach(p => totalPlays += (p.views || 0));
@@ -1940,7 +1941,7 @@
             try {
                 // Fetch All Data needed
                 const [resProducts, resOrders, resReceived, resAccepted] = await Promise.all([
-                    supabaseClient.from('products').select('*').eq('producer_id', userId).order('created_at', { ascending: false }).limit(4),
+                    supabaseClient.from('products').select('*').eq('producer_id', userId).eq('status', 'approved').order('created_at', { ascending: false }).limit(4),
                     supabaseClient.from('orders').select('*').eq('producer_id', userId).order('created_at', { ascending: false }).limit(4),
                     // Received Invites (I am collaborator)
                     supabaseClient.from('collab_invitations').select('*').eq('collaborator_id', userId).eq('status', 'pending').order('created_at', { ascending: false }).limit(4),

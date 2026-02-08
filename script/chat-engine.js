@@ -784,7 +784,8 @@ async function openChat(convId, name, avatar, userId) {
             parent:messages!reply_to_id(
                 content, 
                 sender_id, 
-                attachment_type
+                attachment_type,
+                sender:users!sender_id(nickname)
             )
         `)
         .eq('conversation_id', convId)
@@ -807,10 +808,30 @@ async function sendMessage() {
     input.value = '';
 
     // Optimistic UI for chat bubble
+    const renderTime = Date.now();
+
+    // Find parent message info if this is a reply
+    let parentData = null;
+    if (replyToId) {
+        const parentEl = document.getElementById(`msg-${replyToId}`);
+        if (parentEl) {
+            const content = parentEl.querySelector('.oz-bubble').textContent.trim();
+            const chatName = document.getElementById('currentChatName').textContent;
+            const isParentMe = parentEl.classList.contains('sent');
+            parentData = {
+                content: content,
+                sender_id: isParentMe ? currentUser.id : 'other',
+                sender: { nickname: isParentMe ? 'ti mismo' : chatName }
+            };
+        }
+    }
+
     renderMessage({
+        id: renderTime, // Temporary ID for mapping
         sender_id: currentUser.id,
         content: text,
-        created_at: new Date().toISOString()
+        created_at: new Date().toISOString(),
+        parent: parentData // Include for optimistic quote
     });
     scrollToBottom();
 
@@ -838,6 +859,25 @@ async function sendMessage() {
     if (error) {
         console.error('Error sending message:', error);
         return;
+    }
+
+    // UPDATE DOM WITH REAL ID
+    const tempId = `msg-${renderTime}`;
+    const msgDiv = document.getElementById(tempId);
+    if (msgDiv && msgData) {
+        msgDiv.id = `msg-${msgData.id}`;
+        // Update action buttons with real ID
+        const replyBtn = msgDiv.querySelector('.msg-action-btn i.bi-reply-fill')?.parentElement;
+        const reactBtn = msgDiv.querySelector('.msg-action-btn i.bi-emoji-smile')?.parentElement;
+
+        if (replyBtn) {
+            replyBtn.setAttribute('onclick', `onReplyClick('${msgData.id}', 'Tú', '${text.replace(/'/g, "\\'").replace(/"/g, '&quot;')}')`);
+        }
+        if (reactBtn) {
+            reactBtn.setAttribute('onclick', `onReactClick('${msgData.id}', event)`);
+            reactBtn.style.opacity = '1';
+            reactBtn.style.pointerEvents = 'auto';
+        }
     }
 
     await supabase.from('conversations')
@@ -903,27 +943,36 @@ function renderMessage(msg) {
     if (parentMsg) {
         const pContent = parentMsg.content || (parentMsg.attachment_type === 'image' ? '📷 Foto' : '');
 
-        // Only show if there is actually content (hide "Mensaje no disponible" spam)
         if (pContent) {
             const shortReply = pContent.length > 50 ? pContent.substring(0, 47) + '...' : pContent;
             const pIsMe = parentMsg.sender_id === currentUser.id;
 
-            // Get nickname from nested sender data
-            let replyUserNick = 'Usuario';
-            if (pIsMe) {
-                replyUserNick = 'Ti mismo';
-            } else if (parentMsg.sender) {
-                // Handle both object and array formats
-                const senderData = Array.isArray(parentMsg.sender) ? parentMsg.sender[0] : parentMsg.sender;
-                if (senderData?.nickname) {
-                    replyUserNick = senderData.nickname;
+            // Current sender name (for received headers)
+            const senderData = Array.isArray(msg.sender) ? msg.sender[0] : msg.sender;
+            const senderNick = senderData?.nickname || 'Usuario';
+
+            // Parent sender name
+            const parentSenderData = Array.isArray(parentMsg.sender) ? parentMsg.sender[0] : parentMsg.sender;
+            const parentNick = parentSenderData?.nickname || 'Usuario';
+
+            const pIsSender = parentMsg.sender_id === msg.sender_id;
+
+            let headerText = '';
+            if (isMe) {
+                headerText = pIsMe ? 'Te respondiste a ti mismo' : `Respondiste a ${parentNick}`;
+            } else {
+                if (pIsMe) {
+                    headerText = `${senderNick} te ha respondido`;
+                } else if (pIsSender) {
+                    headerText = `${senderNick} se respondió a sí mismo`;
+                } else {
+                    headerText = `${senderNick} respondió a ${parentNick}`;
                 }
             }
 
-            const replyActionText = isMe ? 'Respondiste' : 'Respondió';
             replyHtml = `
+            <div class="oz-reply-header">${headerText}</div>
             <div class="reply-quote-container" onclick="scrollToMessage('${msg.reply_to_id}')">
-                <div class="reply-quote-user">${replyActionText} a ${replyUserNick}</div>
                 <div class="reply-quote-text">${shortReply.replace(/</g, "&lt;")}</div>
             </div>`;
         }
@@ -931,11 +980,14 @@ function renderMessage(msg) {
 
     const actionsHtml = `
         <div class="oz-message-actions"> <!-- Updated class -->
-            <button class="msg-action-btn" onclick="onReplyClick('${msg.id}', '${isMe ? 'Tú' : 'Usuario'}', '${msg.content?.replace(/'/g, "\\'").replace(/"/g, '&quot;')}')">
+            <button class="msg-action-btn" onclick="onReactClick('${msg.id}', event)" ${!msg.id ? 'style="opacity:0.5; pointer-events:none;"' : ''}>
+                <i class="bi bi-emoji-smile"></i>
+            </button>
+            <button class="msg-action-btn" onclick="onReplyClick('${msg.id}', '${isMe ? 'Tú' : 'Usuario'}', '${msg.content?.replace(/'/g, "\\'").replace(/"/g, '&quot;')}')" ${!msg.id ? 'style="opacity:0.5; pointer-events:none;"' : ''}>
                 <i class="bi bi-reply-fill"></i>
             </button>
-            <button class="msg-action-btn" onclick="onReactClick('${msg.id}', event)">
-                <i class="bi bi-emoji-smile"></i>
+            <button class="msg-action-btn" ${!msg.id ? 'style="opacity:0.5; pointer-events:none;"' : ''}>
+                <i class="bi bi-three-dots-vertical"></i>
             </button>
         </div>
     `;
@@ -975,22 +1027,27 @@ function renderMessage(msg) {
         contentHtml = rawContent.replace(urlRegex, (url) => `<a href="${url}" target="_blank" style="color: inherit; text-decoration: underline;">${url}</a>`);
     }
 
-    // Structure:
-    // .oz-message-row
-    //    .oz-reply-container (Optional, External)
-    //    .oz-msg-container (Bubble + Actions)
-
-    // Move reply OUTSIDE the bubble for stacked look
-    msgDiv.innerHTML = `
-        ${replyHtml ? `<div class="oz-reply-external">${replyHtml}</div>` : ''}
-        <div class="oz-msg-container">
-            <div class="oz-bubble">
-                ${contentHtml}
-                ${reactionHtml}
-            </div>
-            ${actionsHtml}
+    // Structure matches Image 2 and modern chat apps
+    const senderData = Array.isArray(msg.sender) ? msg.sender[0] : msg.sender;
+    const avatarHtml = !isMe ? `
+        <div class="oz-msg-avatar">
+            ${renderAvatar(senderData?.avatar_url, senderData?.nickname)}
         </div>
-        ${isMe ? `<div class="oz-time">${formatMessageDate(msg.created_at).split(' ')[0]}</div>` : ''} 
+    ` : '';
+
+    msgDiv.innerHTML = `
+        ${avatarHtml}
+        <div class="oz-msg-body">
+            ${replyHtml}
+            <div class="oz-msg-container">
+                <div class="oz-bubble">
+                    ${contentHtml}
+                    ${reactionHtml}
+                </div>
+                ${actionsHtml}
+            </div>
+            ${isMe ? `<div class="oz-time">${formatMessageDate(msg.created_at).split(' ')[0]}</div>` : ''} 
+        </div>
     `;
 
     feedInner.appendChild(msgDiv);
@@ -1006,7 +1063,12 @@ function formatMessageDate(iso) {
 
 function scrollToMessage(id) {
     const el = document.getElementById(`msg-${id}`);
-    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        // Flash animation Instagram-style
+        el.classList.add('oz-highlight');
+        setTimeout(() => el.classList.remove('oz-highlight'), 1500);
+    }
 }
 
 function onReplyClick(id, author, text) {
@@ -1015,9 +1077,11 @@ function onReplyClick(id, author, text) {
     const userEl = document.getElementById('replyPreviewUser');
     const textEl = document.getElementById('replyPreviewText');
     if (container) {
-        userEl.textContent = `Respondiendo a ${author}`;
+        userEl.textContent = author === 'Tú' ? 'Respondiendo a ti mismo' : `Respondiendo a ${author}`;
+        // Unescape &quot; for display
+        const decodedText = text.replace(/&quot;/g, '"').replace(/\\'/g, "'");
         // Truncate for input preview
-        const short = text.length > 80 ? text.substring(0, 77) + '...' : text;
+        const short = decodedText.length > 80 ? decodedText.substring(0, 77) + '...' : decodedText;
         textEl.textContent = short;
         container.style.display = 'flex';
         const input = document.getElementById('messageInput');
@@ -1078,7 +1142,7 @@ async function submitReaction(msgId, emoji, event) {
     // 1. OPTIMISTIC UI UPDATE
     const msgDiv = document.getElementById(`msg-${msgId}`);
     if (msgDiv) {
-        const bubble = msgDiv.querySelector('.message-bubble');
+        const bubble = msgDiv.querySelector('.oz-bubble'); // CORRECTED SELECTOR
         let reactionEl = bubble.querySelector('.message-reaction-bubble');
         if (!reactionEl) {
             reactionEl = document.createElement('div');
@@ -1214,7 +1278,7 @@ function setupRealtime() {
                 // Since this is realtime from ANOTHER user, we really should fetch the latest state
                 // or trust the payload. 
                 // Creating a simplified update logic:
-                const bubble = msgDiv.querySelector('.message-bubble');
+                const bubble = msgDiv.querySelector('.oz-bubble'); // CORRECTED SELECTOR
                 let reactionEl = bubble.querySelector('.message-reaction-bubble');
 
                 if (payload.eventType === 'DELETE') {
@@ -1391,7 +1455,8 @@ async function fetchSingleMessage(id) {
             parent:messages!reply_to_id(
                 content, 
                 sender_id, 
-                attachment_type
+                attachment_type,
+                sender:users!sender_id(nickname)
             )
         `)
         .eq('id', id)

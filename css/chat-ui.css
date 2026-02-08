@@ -444,23 +444,51 @@
 
 .oz-message-row {
     display: flex;
-    flex-direction: column;
+    /* direction handled by received/sent */
     max-width: 75%;
     width: fit-content !important;
-    /* Force compact width */
     position: relative;
     margin-bottom: 4px;
     padding: 0 16px;
+    gap: 8px;
+    /* Gap between avatar and bubble */
 }
 
 /* Alignments */
 .oz-message-row.sent {
     align-self: flex-end;
     align-items: flex-end;
+    flex-direction: row-reverse;
+    /* No avatar usually, but for consistency if added */
 }
 
 .oz-message-row.received {
     align-self: flex-start;
+    align-items: flex-end;
+    /* Avatar at bottom */
+    flex-direction: row;
+}
+
+.oz-msg-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    overflow: hidden;
+    flex-shrink: 0;
+    margin-bottom: 2px;
+}
+
+.oz-msg-body {
+    display: flex;
+    flex-direction: column;
+    /* max-width removed to let oz-bubble handle it */
+}
+
+.oz-message-row.sent .oz-msg-body {
+    align-items: flex-end;
+}
+
+.oz-message-row.received .oz-msg-body {
     align-items: flex-start;
 }
 
@@ -691,6 +719,14 @@
     color: #666;
 }
 
+/* REPLY HEADER Styles */
+.oz-reply-header {
+    font-size: 0.75rem;
+    color: #8e8e8e;
+    margin-bottom: 4px;
+    font-weight: 500;
+}
+
 /* REPLY QUOTE - EXTERNAL STACKED STYLE */
 .oz-reply-external {
     margin-bottom: -10px;
@@ -716,23 +752,41 @@
 }
 
 .reply-quote-container {
-    background: #333;
-    /* Dark pill */
+    background: rgba(59, 130, 246, 0.15);
+    /* More blue-ish per Image 1 */
     border-radius: 18px;
-    padding: 10px 16px;
-    padding-bottom: 16px;
-    /* Extra padding for overlap */
+    /* More pill-shaped */
+    padding: 8px 16px;
+    padding-bottom: 12px;
+    margin-bottom: -8px;
     cursor: pointer;
     display: flex;
     flex-direction: column;
     gap: 2px;
     position: relative;
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(59, 130, 246, 0.3);
     transition: background 0.2s;
+    z-index: 1;
+    max-width: fit-content;
 }
 
 .reply-quote-container:hover {
-    background: #444;
+    background: rgba(59, 130, 246, 0.25);
+}
+
+/* Highlight animation Instagram-style */
+@keyframes oz-flash {
+    0% {
+        filter: brightness(1.8);
+    }
+
+    100% {
+        filter: brightness(1);
+    }
+}
+
+.oz-highlight .oz-bubble {
+    animation: oz-flash 1.5s ease-out !important;
 }
 
 /* User name in quote */
@@ -763,21 +817,26 @@
 /* Reactions */
 .message-reaction-bubble {
     position: absolute;
-    bottom: -10px;
-    right: 0px;
-    background: #262626;
-    border: 2px solid #000;
-    border-radius: 12px;
-    padding: 2px 6px;
-    font-size: 0.85rem;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-    z-index: 2;
+    bottom: -15px;
+    /* Lower per image 1 */
+    right: 12px;
+    background: #1a1a1a;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    /* Pill shape */
+    padding: 2px 8px;
+    font-size: 0.9rem;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    z-index: 5;
     cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
 }
 
 .oz-message-row.sent .message-reaction-bubble {
     right: auto;
-    left: 0px;
+    left: 12px;
 }
 
 .reaction-popover {
