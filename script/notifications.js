@@ -5,6 +5,23 @@
     let sbClient = null;
     let currentUserId = null;
 
+    // --- DEFENSIVE SAFEGUARDS: Polyfill Link Generators if id-obfuscator.js is missing ---
+    if (typeof window.createProfileLink !== 'function') {
+        window.createProfileLink = function (user) {
+            if (!user) return '#';
+            if (user.nickname) return `/@${user.nickname}`;
+            if (user.id) return `/perfil-publico.html?id=${user.id}`;
+            return '#';
+        };
+    }
+    if (typeof window.createSeoLink !== 'function') {
+        window.createSeoLink = function (product) {
+            if (!product) return '#';
+            if (product.public_slug) return `/beat/${product.public_slug}`;
+            return `/producto.html?id=${product.id}`;
+        };
+    }
+
     window.NotificationsManager = {
         renderedIds: [],
         _lastMarkRead: 0, // Cooldown tracker
@@ -142,17 +159,57 @@
                 (notifs || []).forEach(n => {
                     if (n.type === 'product_like' && n.data?.liker_id) actorIds.add(n.data.liker_id);
                     if (n.type === 'product_like' && n.data?.product_id) productIds.add(n.data.product_id);
-                    if (n.type === 'new_follower' && n.data?.follower_id) actorIds.add(n.data.follower_id);
+                    if (n.type === 'new_follower') {
+                        // ROBUST: Check for follower_id OR data.id if data is the follower record
+                        const fid = n.data?.follower_id || n.data?.id || (n.data?.user_id !== currentUserId ? n.data?.user_id : null);
+                        if (fid) {
+                            actorIds.add(fid);
+                        } else {
+                            // FALLBACK: Extract username from message if data is null (Legacy/Broken notifications)
+                            // Message format: "<strong>username</strong> te empezó a seguir."
+                            const match = n.message && n.message.match(/<strong[^>]*>(.*?)<\/strong>/);
+                            if (match && match[1]) {
+                                n._extractedUsername = match[1]; // Store for later
+                            }
+                        }
+                    }
                 });
 
-                // Fetch Actors
+                // Fetch Actors (By ID and Username)
                 let actorsMap = {};
+                let actorsByNameMap = {}; // New map for username lookup
+
+                // 1. Fetch by ID
                 if (actorIds.size > 0) {
                     const { data: actors } = await sbClient
                         .from('users')
                         .select('id, nickname, first_name, last_name, avatar_url')
                         .in('id', Array.from(actorIds));
-                    if (actors) actors.forEach(u => actorsMap[u.id] = u);
+                    if (actors) actors.forEach(u => {
+                        actorsMap[u.id] = u;
+                        if (u.nickname) actorsByNameMap[u.nickname] = u;
+                    });
+                }
+
+                // 2. Fetch by Username (Rescue)
+                const usernamesToFetch = new Set();
+                (notifs || []).forEach(n => {
+                    if (n._extractedUsername && !Object.values(actorsMap).some(u => u.nickname === n._extractedUsername)) {
+                        usernamesToFetch.add(n._extractedUsername);
+                    }
+                });
+
+                if (usernamesToFetch.size > 0) {
+                    console.log(`[Notifications] Rescuing ${usernamesToFetch.size} users by nickname...`);
+                    const { data: rescued } = await sbClient
+                        .from('users')
+                        .select('id, nickname, first_name, last_name, avatar_url')
+                        .in('nickname', Array.from(usernamesToFetch));
+
+                    if (rescued) rescued.forEach(u => {
+                        actorsMap[u.id] = u; // Add to main map too
+                        if (u.nickname) actorsByNameMap[u.nickname] = u;
+                    });
                 }
 
                 // Fetch Products (New)
@@ -167,6 +224,9 @@
 
                 // Process Standard Notifications with Rich HTML
                 const processedNotifs = (notifs || []).map(n => {
+                    // DEBUG: Check data structure
+                    if (n.type === 'new_follower') console.log('Raw Follower Notif:', n);
+
                     let finalMessage = n.message;
                     let finalTitle = n.title;
 
@@ -193,8 +253,15 @@
                             // Reconstruct message: "A [Name] le gustó tu [Category] "[Prod]""
                             finalMessage = `A ${nameHtml} le gustó tu ${categoryLabel} <strong>"${prodName}"</strong>.`;
                         }
-                    } else if (n.type === 'new_follower' && n.data?.follower_id) {
-                        const actor = actorsMap[n.data.follower_id];
+                    } else if (n.type === 'new_follower') {
+                        const fid = n.data?.follower_id || n.data?.id || (n.data?.user_id !== currentUserId ? n.data?.user_id : null);
+
+                        // Try by ID first, then by extracted username
+                        let actor = fid ? actorsMap[fid] : null;
+                        if (!actor && n._extractedUsername) {
+                            actor = actorsByNameMap[n._extractedUsername];
+                        }
+
                         if (actor) {
                             const name = actor.nickname || actor.first_name || 'Alguien';
                             // Fix: User request - Underline, Link to Profile, NO HOVER CARD
@@ -204,14 +271,24 @@
 
                             const nameHtml = `<strong class="artist-hover-trigger" 
                                                       data-artist='${artistData}'
-                                                      data-id="${n.data.follower_id}" 
+                                                      data-id="${actor.id}" 
                                                       onmouseenter="window.showArtistCard(event, this)" 
                                                       onmouseleave="window.hideArtistCard(event, this)"
                                                       onclick="event.stopPropagation(); window.location.href='${profileUrl}'" 
                                                       style="cursor:pointer;">${name}</strong>`;
                             finalMessage = `${nameHtml} comenzó a seguirte.`;
+                        } else {
+                            // If actor NOT found (Deleted user or Name changed + Legacy Notif), strip interactive elements to avoid 404s
+                            finalMessage = finalMessage.replace(/class="[^"]*artist-hover-trigger[^"]*"/g, '')
+                                .replace(/data-username="[^"]*"/g, '')
+                                .replace(/data-artist='[^']*'/g, '')
+                                .replace(/onclick="[^"]*"/g, '')
+                                .replace(/style="cursor:pointer;"/g, '');
                         }
+
+
                     }
+
 
                     return {
                         ...n,
@@ -219,8 +296,18 @@
                         title: finalTitle,
                         targetUrl: (n.type === 'product_like' && n.data?.product_id && productsMap[n.data.product_id])
                             ? window.createSeoLink(productsMap[n.data.product_id])
-                            : (n.type === 'new_follower' && n.data?.follower_id && actorsMap[n.data.follower_id])
-                                ? window.createProfileLink(actorsMap[n.data.follower_id])
+                            : (n.type === 'new_follower')
+                                ? (function () {
+                                    const fid = n.data?.follower_id || n.data?.id || (n.data?.user_id !== currentUserId ? n.data?.user_id : null);
+                                    let actor = (fid && actorsMap[fid]) ? actorsMap[fid] : null;
+
+                                    // Rescue logic for URL generation too
+                                    if (!actor && n._extractedUsername) {
+                                        actor = actorsByNameMap[n._extractedUsername];
+                                    }
+
+                                    return actor ? window.createProfileLink(actor) : null;
+                                })()
                                 : null
                     };
                 });

@@ -1,5 +1,15 @@
 /* Chat System Styles for OFFSZN */
 :root {
+    box-sizing: border-box;
+}
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+:root {
     --chat-bg: #000000;
     --chat-sidebar-bg: #000000;
     --chat-border: #262626;
@@ -7,9 +17,12 @@
     --chat-accent: #7c3aed;
     --chat-text: #ffffff;
     --chat-subtext: #8e8e8e;
-    --chat-bubble-sent: #262626;
-    /* Instagram-like dark grey */
-    --chat-bubble-received: #1a1a1a;
+
+    /* Updated Colors for Instagram-like feel */
+    --chat-bubble-sent: #7209b7;
+    /* OFFSZN Purple */
+    --chat-bubble-received: #262626;
+    /* Dark Grey */
     --chat-bubble-sent-text: #ffffff;
 }
 
@@ -19,7 +32,6 @@
     /* Subtract Navbar height */
     background: var(--chat-bg);
     margin: 0;
-    /* Full width layout */
     max-width: none;
     width: 100%;
     font-family: 'Inter', sans-serif;
@@ -28,10 +40,11 @@
     border-right: 1px solid var(--chat-border);
 }
 
-/* SIDEBAR */
+/* =========================================
+   SIDEBAR STYLES (Restored)
+   ========================================= */
 .chat-sidebar {
     width: 350px;
-    /* Expandido hasta la línea verde */
     min-width: 350px;
     background: var(--chat-sidebar-bg);
     border-right: 1px solid var(--chat-border);
@@ -123,7 +136,6 @@
     padding: 10px 20px 20px;
     overflow-x: auto;
     scrollbar-width: none;
-    /* Hide scrollbar */
 }
 
 .stories-row::-webkit-scrollbar {
@@ -145,7 +157,6 @@
     border-radius: 50%;
     padding: 2px;
     background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
-    /* Instagram style ring placeholder */
     display: flex;
     align-items: center;
     justify-content: center;
@@ -182,12 +193,31 @@
     overflow-y: auto;
 }
 
+.chat-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.chat-list::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.chat-list::-webkit-scrollbar-thumb {
+    background: #333;
+    border-radius: 10px;
+}
+
+.chat-list::-webkit-scrollbar-thumb:hover {
+    background: #444;
+}
+
 .chat-item {
     display: flex;
     padding: 12px 20px;
     gap: 12px;
     cursor: pointer;
     transition: background 0.2s;
+    position: relative;
+    overflow: hidden;
 }
 
 .chat-item:hover,
@@ -245,7 +275,33 @@
     margin-left: auto;
 }
 
-/* MAIN CHAT AREA */
+.delete-chat-btn {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    z-index: 5;
+}
+
+.delete-chat-btn:hover {
+    background: #ef4444;
+    color: #fff;
+}
+
+/* =========================================
+   MAIN CHAT AREA (Restored & Updated)
+   ========================================= */
 .chat-main {
     flex: 1;
     display: flex;
@@ -254,10 +310,8 @@
     position: relative;
 }
 
-/* Constrain Width Wrapper for Content */
 .chat-content-constrained {
     width: 100%;
-    /* max-width removed to allow chat to expand and stay close to sidebar */
     margin: 0;
     display: flex;
     flex-direction: column;
@@ -270,13 +324,10 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    /* Center content wrapper */
     padding: 0;
-    /* Remove padding to let wrapper handle it */
     width: 100%;
 }
 
-/* Padding para el Header */
 .chat-header-inner {
     width: 100%;
     max-width: 100%;
@@ -284,7 +335,6 @@
     align-items: center;
     justify-content: space-between;
     padding: 0 40px;
-    /* Reducido para juntarlo más */
     margin: 0;
 }
 
@@ -308,7 +358,6 @@
     object-fit: cover;
 }
 
-/* SOCIAL LINKS IN HEADER */
 .header-socials {
     display: flex;
     gap: 12px;
@@ -353,9 +402,15 @@
     cursor: pointer;
 }
 
-/* Custom Scrollbar for Messages Feed */
+/* MESSAGES FEED */
+.messages-feed {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
 
-/* Scrollbar Limpio */
 .messages-feed::-webkit-scrollbar {
     width: 6px;
 }
@@ -373,110 +428,146 @@
     background: #444;
 }
 
-/* MESSAGES FEED */
-.messages-feed {
-    flex: 1;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    /* Center children (messages) conceptually */
-}
-
-
-/* Padding para los Mensajes */
 .messages-feed-inner {
     width: 100%;
     max-width: 100%;
     display: flex;
     flex-direction: column;
-    gap: 12px;
-    /* User set gap */
-    padding: 24px 40px;
-    /* User set padding */
+    gap: 2px;
+    padding: 20px 0;
     margin: 0;
 }
 
-.message {
+/* =========================================
+   NAMESPACED MESSAGE STYLES (oz-*)
+   ========================================= */
+
+.oz-message-row {
     display: flex;
     flex-direction: column;
-    max-width: 70%;
-    /* User set max-width */
-    width: fit-content;
-    /* Critical shrink fix */
+    max-width: 75%;
+    width: fit-content !important;
+    /* Force compact width */
     position: relative;
-    margin-bottom: 0;
+    margin-bottom: 4px;
+    padding: 0 16px;
 }
 
-.message.sent {
+/* Alignments */
+.oz-message-row.sent {
     align-self: flex-end;
     align-items: flex-end;
-    /* Force children to shrink to right */
 }
 
-.message.received {
+.oz-message-row.received {
     align-self: flex-start;
     align-items: flex-start;
-    /* Force children to shrink to left */
 }
 
-/* Corrección para la burbuja y el texto largo */
-.message-bubble {
-    padding: 7px 12px;
-    /* More compact Instagram style */
-    border-radius: 18px;
-    font-size: 0.9rem;
-    line-height: 1.4;
+.oz-bubble {
+    padding: 10px 16px;
+    border-radius: 22px;
+    font-size: 0.95rem;
+    line-height: 1.5;
     position: relative;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
     width: fit-content;
 
-    /* Text wrapping enhancements */
+    /* Text wrapping */
     word-wrap: break-word;
-    overflow-wrap: break-word;
     word-break: break-word;
-    white-space: pre-wrap;
     max-width: 100%;
 }
 
-.message.sent .message-bubble {
-    background: var(--chat-bubble-sent);
-    color: var(--chat-bubble-sent-text);
+/* SENT BUBBLE - Purple Gradient */
+.oz-message-row.sent .oz-bubble {
+    background: linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%);
+    color: #fff;
     border-bottom-right-radius: 4px;
-    /* Instagram tail effect */
 }
 
-.message.received .message-bubble {
-    background: var(--chat-bubble-received);
+/* RECEIVED BUBBLE - Dark Grey */
+.oz-message-row.received .oz-bubble {
+    background: #262626;
     color: #fff;
     border-bottom-left-radius: 4px;
-    /* Instagram tail effect */
 }
 
-.message-time {
+/* Container inside row (for Actions + Bubble) */
+.oz-msg-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: fit-content;
+}
+
+.oz-message-row.sent .oz-msg-container {
+    flex-direction: row-reverse;
+}
+
+/* Time/Date */
+.oz-date-header {
+    align-self: center;
+    font-size: 0.75rem;
+    color: #555;
+    margin: 20px 0 10px 0;
+    font-weight: 500;
+}
+
+.oz-time {
     font-size: 0.65rem;
     color: #555;
     margin-top: 2px;
     margin-right: 4px;
 }
 
-/* INPUT AREA */
+.oz-message-actions {
+    display: flex;
+    gap: 4px;
+    opacity: 0;
+    transition: opacity .2s;
+}
+
+.oz-message-row:hover .oz-message-actions {
+    opacity: 1;
+}
+
+/* Helper Elements */
+.msg-action-btn {
+    background: none;
+    border: none;
+    color: #8e8e8e;
+    font-size: .9rem;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background .2s, color .2s;
+}
+
+.msg-action-btn:hover {
+    background: #262626;
+    color: #fff;
+}
+
+/* =========================================
+   INPUT AREA
+   ========================================= */
 .chat-input-area {
     display: flex;
     flex-direction: column;
-    /* Stack reply preview and input */
     width: 100%;
     position: relative;
     background: #000;
-    /* Ensure bg covers feed if it overlaps */
 }
 
 .input-container-wrapper {
     width: 100%;
     max-width: 100%;
     padding: 16px 40px;
-    /* Reduced from 20px */
 }
-
 
 .input-container {
     background: #1a1a1a;
@@ -509,9 +600,7 @@
     font-size: 0.95rem;
     outline: none;
     resize: none;
-    /* No manual resize */
     max-height: 150px;
-    /* Approx 7 lines */
     overflow-y: auto;
     padding: 2px 0;
     line-height: 1.4;
@@ -537,7 +626,7 @@
     color: #333;
 }
 
-/* CUSTOM EMOJI PICKER */
+/* Emoji Picker & Helpers */
 .custom-emoji-picker {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
@@ -561,16 +650,12 @@
     padding: 5px;
     border-radius: 8px;
     transition: background 0.2s;
-    user-select: none;
-    outline: none;
-    -webkit-tap-highlight-color: transparent;
 }
 
 .custom-emoji-picker span:hover {
     background: #333;
 }
 
-/* Scrollbar for picker */
 .custom-emoji-picker::-webkit-scrollbar {
     width: 6px;
 }
@@ -580,158 +665,18 @@
     border-radius: 10px;
 }
 
-/* DELETE BUTTON IN CHAT LIST */
-.chat-item {
-    position: relative;
-    overflow: hidden;
-}
-
-.delete-chat-btn {
-    position: absolute;
-    right: 15px;
-    top: 50%;
-    transform: translateY(-50%);
-    background: rgba(239, 68, 68, 0.1);
-    color: #ef4444;
-    border: 1px solid rgba(239, 68, 68, 0.2);
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    display: none;
-    /* Shown via JS in edit mode */
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.2s;
-    z-index: 5;
-}
-
-.delete-chat-btn:hover {
-    background: #ef4444;
-    color: #fff;
-}
-
-/* MESSAGE ACTIONS & REACTIONS */
-.msg-action-btn {
-    background: none;
-    border: none;
-    color: #8e8e8e;
-    font-size: .9rem;
-    cursor: pointer;
-    padding: 4px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background .2s, color .2s;
-}
-
-.msg-action-btn:hover {
-    background: #262626;
-    color: #fff;
-}
-
-.message-reactions {
-    display: flex;
-    gap: 4px;
-    margin-top: -8px;
-    padding: 0 4px;
-    z-index: 2;
-}
-
-.reaction-badge {
-    background: #262626;
-    border: 1px solid #333;
-    border-radius: 12px;
-    padding: 2px 6px;
-    font-size: .75rem;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 2px;
-}
-
-/* NEW REACTION BUBBLE (INSTAGRAM STYLE) */
-.message-reaction-bubble {
-    position: absolute;
-    bottom: -10px;
-    right: 12px;
-    background: #262626;
-    border: 2px solid #000;
-    border-radius: 20px;
-    padding: 2px 6px;
-    font-size: 0.8rem;
-    cursor: pointer;
-    z-index: 5;
-    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.message.received .message-reaction-bubble {
-    right: auto;
-    left: 12px;
-}
-
-.message-reaction-bubble:hover {
-    transform: scale(1.2);
-}
-
-/* REPLY QUOTE IN MESSAGE */
-.reply-quote-container {
-    background: rgba(255, 255, 255, 0.1);
-    border-left: 2px solid var(--chat-accent);
-    /* Small indicator */
-    border-radius: 8px;
-    padding: 6px 12px;
-    margin-bottom: 8px;
-    cursor: pointer;
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    opacity: 0.9;
-    transition: opacity 0.2s;
-    max-width: 100%;
-}
-
-.reply-quote-container:hover {
-    opacity: 1;
-}
-
-.reply-quote-user {
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: var(--chat-subtext);
-}
-
-.reply-quote-text {
-    font-size: 0.85rem;
-    color: #ccc;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-/* INPUT REPLY PREVIEW OVERRIDE */
-/* INPUT REPLY PREVIEW OVERRIDE */
+/* Reply Preview */
 .reply-preview-container {
     background: #000;
     border-top: 1px solid var(--chat-border);
     padding: 12px 40px;
-    /* Align with input */
     display: none;
     align-items: center;
     justify-content: space-between;
     width: 100%;
-    box-sizing: border-box;
-    /* Ensure padding doesn't add to width */
 }
 
 .reply-preview-content {
-    border-left: none;
-    /* Removed vertical bar */
-    padding-left: 0;
     display: flex;
     flex-direction: column;
     gap: 2px;
@@ -739,7 +684,6 @@
 
 .reply-preview-user {
     font-size: 0.8rem;
-    /* A bit larger */
     color: #fff;
 }
 
@@ -747,48 +691,95 @@
     color: #666;
 }
 
-.date-header {
-    text-align: center;
-    margin: 20px 0;
-    font-size: .75rem;
-    color: #8e8e8e;
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: .5px;
+/* REPLY QUOTE - EXTERNAL STACKED STYLE */
+.oz-reply-external {
+    margin-bottom: -10px;
+    /* Overlap with bubble */
+    z-index: 0;
+    max-width: 100%;
+    transform: scale(0.95);
+    /* Slightly smaller */
+    transform-origin: inherit;
+    /* Scale from left/right depending on flex alignment */
 }
 
-.seen-status {
-    font-size: .7rem;
-    color: #8e8e8e;
-    margin-top: 4px;
-    align-self: flex-end;
+/* Ensure scale origin aligns with the side */
+.oz-message-row.sent .oz-reply-external {
+    transform-origin: bottom right;
+    margin-right: 12px;
+    /* Align visually with bubble curvature */
 }
 
-/* MESSAGE LAYOUT */
-.message-container {
+.oz-message-row.received .oz-reply-external {
+    transform-origin: bottom left;
+    margin-left: 12px;
+}
+
+.reply-quote-container {
+    background: #333;
+    /* Dark pill */
+    border-radius: 18px;
+    padding: 10px 16px;
+    padding-bottom: 16px;
+    /* Extra padding for overlap */
+    cursor: pointer;
     display: flex;
-    align-items: center;
-    gap: 8px;
-    width: fit-content;
-    /* Shrink to content */
+    flex-direction: column;
+    gap: 2px;
+    position: relative;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    transition: background 0.2s;
 }
 
-.message.sent .message-container {
-    flex-direction: row-reverse;
+.reply-quote-container:hover {
+    background: #444;
 }
 
-.message-actions {
-    display: flex;
-    gap: 4px;
-    opacity: 0;
-    transition: opacity .2s;
+/* User name in quote */
+.reply-quote-user {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 2px;
 }
 
-.message:hover .message-actions {
-    opacity: 1;
+/* Text in quote */
+.reply-quote-text {
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.7);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-/* === NEW REACTION PICKER === */
+/* Tweaks to main bubble */
+.oz-bubble {
+    z-index: 2;
+    /* Sit on top of reply */
+    position: relative;
+}
+
+
+/* Reactions */
+.message-reaction-bubble {
+    position: absolute;
+    bottom: -10px;
+    right: 0px;
+    background: #262626;
+    border: 2px solid #000;
+    border-radius: 12px;
+    padding: 2px 6px;
+    font-size: 0.85rem;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    z-index: 2;
+    cursor: pointer;
+}
+
+.oz-message-row.sent .message-reaction-bubble {
+    right: auto;
+    left: 0px;
+}
+
 .reaction-popover {
     position: absolute;
     bottom: 100%;
@@ -827,26 +818,4 @@
 
 .reaction-option:hover {
     transform: scale(1.2);
-}
-
-/* REACTION BUBBLE ON MESSAGE */
-.message-reaction-bubble {
-    position: absolute;
-    bottom: -10px;
-    right: 0;
-    /* Default for received */
-    background: #262626;
-    border: 2px solid #000;
-    /* Border matches bg to look like cutout */
-    border-radius: 12px;
-    padding: 2px 6px;
-    font-size: 0.85rem;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-    z-index: 2;
-    cursor: pointer;
-}
-
-.message.sent .message-reaction-bubble {
-    right: auto;
-    left: 0;
 }

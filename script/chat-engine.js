@@ -878,7 +878,8 @@ function renderMessage(msg) {
 
     const isMe = msg.sender_id === currentUser.id;
     const msgDiv = document.createElement('div');
-    msgDiv.className = `message ${isMe ? 'sent' : 'received'}`;
+    // Namespace update: .message -> .oz-message-row
+    msgDiv.className = `oz-message-row ${isMe ? 'sent' : 'received'}`;
     msgDiv.id = `msg-${msg.id || Date.now()}`;
     msgDiv.setAttribute('data-time', msg.created_at);
 
@@ -889,7 +890,7 @@ function renderMessage(msg) {
 
     if (!lastTime || (currTime - lastTime > 3600000)) { // 1 hour gap
         const header = document.createElement('div');
-        header.className = 'date-header';
+        header.className = 'oz-date-header'; // Updated class
         header.textContent = formatMessageDate(msg.created_at);
         feedInner.appendChild(header);
     }
@@ -929,7 +930,7 @@ function renderMessage(msg) {
     }
 
     const actionsHtml = `
-        <div class="message-actions">
+        <div class="oz-message-actions"> <!-- Updated class -->
             <button class="msg-action-btn" onclick="onReplyClick('${msg.id}', '${isMe ? 'Tú' : 'Usuario'}', '${msg.content?.replace(/'/g, "\\'").replace(/"/g, '&quot;')}')">
                 <i class="bi bi-reply-fill"></i>
             </button>
@@ -947,8 +948,6 @@ function renderMessage(msg) {
     // Usually we show the reaction made by ME or just a summary. 
     // "replace the one that was already there" implies 1 reaction per user.
     // We can show all unique reactions or just mine? 
-    // Let's look for MY reaction or ANY reaction. 
-    // For simplicity and typical UI, we show the reaction bubble if there is one. 
     // If there are multiple users, we might show multiple icons? 
     // The requirement says "replace", implying a singular state per user.
     // Let's show the reaction made by ANYONE. If multiple people react, show the last one? 
@@ -966,25 +965,32 @@ function renderMessage(msg) {
         }
     }
 
-    // 4. CONTENT
+    // 4. CONTENT - CONTENT
     let contentHtml = '';
     if (msg.attachment_url && msg.attachment_type === 'image') {
-        contentHtml = `<img src="${msg.attachment_url}" style="max-height: 250px; border-radius: 12px; cursor: pointer;" onclick="window.open('${msg.attachment_url}', '_blank')">`;
+        contentHtml = `<img src="${msg.attachment_url}" style="max-height: 250px; border-radius: 12px; cursor: pointer; display: block;" onclick="window.open('${msg.attachment_url}', '_blank')">`;
     } else {
         const urlRegex = /(https?:\/\/[^\s]+)/g;
-        contentHtml = (msg.content || '').replace(urlRegex, (url) => `<a href="${url}" target="_blank" style="color: inherit; text-decoration: underline;">${url}</a>`);
+        const rawContent = msg.content || '';
+        contentHtml = rawContent.replace(urlRegex, (url) => `<a href="${url}" target="_blank" style="color: inherit; text-decoration: underline;">${url}</a>`);
     }
 
+    // Structure:
+    // .oz-message-row
+    //    .oz-reply-container (Optional, External)
+    //    .oz-msg-container (Bubble + Actions)
+
+    // Move reply OUTSIDE the bubble for stacked look
     msgDiv.innerHTML = `
-        <div class="message-container">
-            <div class="message-bubble">
-                ${replyHtml}
+        ${replyHtml ? `<div class="oz-reply-external">${replyHtml}</div>` : ''}
+        <div class="oz-msg-container">
+            <div class="oz-bubble">
                 ${contentHtml}
                 ${reactionHtml}
             </div>
             ${actionsHtml}
         </div>
-        ${isMe && msg.is_read ? '<div class="seen-status">Visto</div>' : ''}
+        ${isMe ? `<div class="oz-time">${formatMessageDate(msg.created_at).split(' ')[0]}</div>` : ''} 
     `;
 
     feedInner.appendChild(msgDiv);

@@ -2280,30 +2280,42 @@
                     } else {
                         // Published products are SOFT-DELETED (Hybrid)
                         // This keeps metadata for Analytics while clearing file links
-                        await supabaseClient.from('products').update({
-                            status: 'deleted',
-                            visibility: 'deleted',
+
+                        // Add __DELETED__ tag to filter out later
+                        let currentTags = Array.isArray(item.tags) ? [...item.tags] : [];
+                        if (!currentTags.includes('__DELETED__')) currentTags.push('__DELETED__');
+
+                        // Try setting status to 'deleted' to satisfy constraints (e.g. non-null URLs for published items)
+                        const { error } = await supabaseClient.from('products').update({
+                            status: 'deleted',     // Explicitly mark as deleted
+                            visibility: 'private', // Hide from public
+                            tags: currentTags,     // Tag for extra safety
                             // Clear file links to free up storage space (files were deleted above)
                             audio_url: null,
                             mp3_url: null,
                             wav_url: null,
                             stems_url: null,
                             kit_url: null,
-                            preset_url: null,
-                            loop_url: null,
-                            file_url: null
+                            download_url_mp3: null,
+                            download_url_wav: null,
+                            download_url_stems: null,
+                            image_url: null,       // Clear cover image
+                            public_slug: `deleted_${Date.now()}_${id}` // Obfuscate slug to prevent access but keep unique constraint if any
                         }).eq('id', id);
+
+                        if (error) throw error;
                     }
                 }
 
-                showToast("Productos eliminados (archivos borrados, datos preservados)", "success");
+                showToast("Producto eliminado", "success");
                 closeDeleteModal();
                 deselectAll();
-                loadProducts(currentTab, currentStatus);
+                setTimeout(() => loadProducts(currentTab, currentStatus), 500);
 
             } catch (e) {
-                console.error(e);
-                showToast("Error eliminando productos", "error");
+                console.error("Delete Error:", e);
+                // Show detailed error message to user/dev
+                showToast("Error: " + (e.message || e.details || "Falló la eliminación"), "error");
             } finally {
                 if (btn) {
                     btn.innerHTML = 'Eliminar Definitivamente';
@@ -2703,7 +2715,17 @@
                 }
 
                 // Combine
-                const allItems = [...drafts, ...products];
+                let allItems = [...drafts, ...products];
+
+                // FILTER SOFT-DELETED ITEMS
+                allItems = allItems.filter(item => {
+                    const tags = item.tags || [];
+                    // Check tag OR status
+                    if (item.status === 'deleted') return false;
+                    if (tags.includes('__DELETED__')) return false;
+                    return true;
+                });
+
                 currentItems = allItems; // Store for bulk actions
 
                 // PRELOAD IMAGES
