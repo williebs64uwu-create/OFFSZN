@@ -8,7 +8,7 @@ export const getLeaderboard = async (req, res) => {
         console.log("Fetching producers with avatars...");
         const { data: producers, error: userError } = await supabase
             .from('users')
-            .select('id, nickname, avatar_url, is_verified') // Removed non-existent followers_count
+            .select('id, nickname, avatar_url, banner_url, bio, is_verified') // Added banner/bio for completion bonus
             .eq('is_producer', true)
             .not('avatar_url', 'is', null) // Must have avatar
             .neq('avatar_url', '')       // Must not be empty string
@@ -53,22 +53,35 @@ export const getLeaderboard = async (req, res) => {
         // 4. Calculate Scores (Aggregating Stats)
         // Formula aligned with Trending:
         // Views: 1 | Plays: 2 | Downloads: 20 | Sales: 50 | Follower: 10
+        // NEW: Upload: 10 | Verified: 100 | Profile Complete (Banner+Bio): 50
         const scores = {};
 
-        // Initialize Scores with Follower Points (10 pts per follower)
+        // Initialize Scores with State-Based Points
         producers.forEach(p => {
+            let baseScore = 0;
+
+            // Followers (10 pts)
             const fCount = followerCounts[p.id] || 0;
-            scores[p.id] = fCount * 10;
+            baseScore += fCount * 10;
+
+            // Verified Status (100 pts)
+            if (p.is_verified) baseScore += 100;
+
+            // Profile Completion (50 pts) - Encourages pro look
+            if (p.banner_url && p.bio) baseScore += 50;
+
+            scores[p.id] = baseScore;
         });
 
-        // Add Product Stats
+        // Add Product Stats & Upload Counts
         products?.forEach(prod => {
             if (scores[prod.producer_id] !== undefined) {
                 const pScore =
                     (prod.views_count || 0) * 1 +
                     (prod.plays_count || 0) * 2 +
                     (prod.downloads_count || 0) * 20 +
-                    (prod.sales_count || 0) * 50;
+                    (prod.sales_count || 0) * 50 +
+                    10; // +10 points just for existing (Upload Reward)
 
                 scores[prod.producer_id] += pScore;
             }

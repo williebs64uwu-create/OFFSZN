@@ -58,7 +58,7 @@ const CartManager = {
                 // AUTH: Load from DB
                 const { data, error } = await supabaseClient
                     .from('cart_items')
-                    .select('quantity, license_name, variant_price, product:products(id, name, price_basic, image_url, product_type, producer_id)')
+                    .select('quantity, license_name, variant_price, product:products(id, name, price_basic, image_url, product_type, producer_id, status)')
                     .eq('user_id', this.state.user.id);
 
                 if (error) {
@@ -71,7 +71,7 @@ const CartManager = {
                         quantity: row.quantity,
                         license_name: row.license_name,
                         variant_price: row.variant_price
-                    })).filter(i => i.product); // Safety check
+                    })).filter(i => i.product && i.product.status !== 'deleted'); // Filter out deleted
                 }
 
             } else {

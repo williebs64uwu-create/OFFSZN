@@ -30,6 +30,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 .from('products')
                 .select(`*, producer:producer_id (*)`)
                 .eq('id', urlData.id)
+                .neq('status', 'deleted') // Soft Delete Check
                 .maybeSingle();
 
             product = data;
@@ -45,6 +46,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 .from('products')
                 .select(`*, producer:producer_id (*)`)
                 .eq('public_slug', urlData.slug)
+                .neq('status', 'deleted') // Soft Delete Check
                 .maybeSingle();
 
             product = data;
@@ -1665,6 +1667,7 @@ async function fetchRelatedProducts(currentProduct) {
             .eq('category', currentProduct.category)
             .eq('product_type', currentProduct.product_type)
             .neq('id', currentProduct.id)
+            .neq('status', 'deleted')
             .limit(10);
 
         if (stage1 && stage1.length > 0) {
@@ -1681,6 +1684,7 @@ async function fetchRelatedProducts(currentProduct) {
                 .eq('category', currentProduct.category)
                 .eq('product_type', currentProduct.product_type)
                 .neq('id', currentProduct.id)
+                .neq('status', 'deleted')
                 .limit(10 - allRelated.length);
 
             if (stage2 && stage2.length > 0) {
@@ -1699,6 +1703,7 @@ async function fetchRelatedProducts(currentProduct) {
                 .select('*, producer:producer_id (nickname, avatar_url, is_verified)')
                 .eq('product_type', currentProduct.product_type)
                 .not('id', 'in', `(${excludeIds.join(',')})`)
+                .neq('status', 'deleted')
                 .limit(10 - allRelated.length);
 
             if (stage3 && stage3.length > 0) {
@@ -1716,6 +1721,7 @@ async function fetchRelatedProducts(currentProduct) {
                 .from('products')
                 .select('*, producer:producer_id (nickname, avatar_url, is_verified)')
                 .not('id', 'in', `(${excludeIds.join(',')})`)
+                .neq('status', 'deleted')
                 .limit(10 - allRelated.length);
 
             if (stage4 && stage4.length > 0) {

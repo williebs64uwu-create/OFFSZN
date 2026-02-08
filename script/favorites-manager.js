@@ -358,6 +358,43 @@ window.FavoritesManager = (function () {
         row.onmouseover = () => row.style.background = 'rgba(255,255,255,0.02)';
         row.onmouseout = () => row.style.background = 'transparent';
 
+        // --- SOFT DELETE CHECK ---
+        const isSoftDeleted = (prod.public_slug && prod.public_slug.startsWith('deleted_')) || prod.status === 'deleted';
+
+        if (isSoftDeleted) {
+            row.innerHTML = `
+                <div class="list-cover" style="opacity:0.5; filter:grayscale(100%);">
+                    <div style="width:56px; height:56px; border-radius:8px; background:#222; display:flex; align-items:center; justify-content:center; color:#555;">
+                        <i class="bi bi-eye-slash-fill" style="font-size:1.2rem;"></i>
+                    </div>
+                </div>
+                <div class="list-col-info" style="opacity:0.6;">
+                    <span style="color:#aaa; font-size:0.95rem; font-weight:600; text-decoration:line-through;">${prod.name}</span>
+                    <span style="color:#666; font-size:0.75rem; margin-top:2px;">Producto no disponible</span>
+                </div>
+                <!-- Empty Player Area -->
+                <div style="flex:1;"></div> 
+                
+                <!-- Badge Placeholder -->
+                <div style="text-align:center;">
+                    <span style="background:rgba(255,255,255,0.05); color:#666; font-size:0.65rem; padding:2px 8px; border-radius:4px;">REMOVED</span>
+                </div>
+
+                <!-- No Price -->
+                <div></div>
+
+                <!-- Actions: Contact Only -->
+                <div style="display:flex; justify-content:center;">
+                    <a href="/contacto.html?subject=Producto%20Eliminado%20${prod.id}" class="fav-action-btn" title="Contactar Soporte / Productor" style="width:auto; padding:0 12px; border-radius:100px; gap:6px; font-size:0.8rem; border:1px solid #333; text-decoration:none;">
+                        <i class="bi bi-envelope"></i> <span style="font-size:0.75rem;">Info</span>
+                    </a>
+                </div>
+            `;
+            // We don't attach audio data or play click handlers for deleted items
+            return row;
+        }
+
+        // --- STANDARD RENDER ---
         const waveformId = `fav-waveform-track-${prod.id}-${index}`;
         const user = prod.artist_users || { nickname: 'Unknown' };
 

@@ -102,18 +102,46 @@ window.HistoryManager = (function () {
 
         filtered.forEach(item => {
             const row = document.createElement('div');
-            row.className = 'list-row fade-out-up'; // reuse existing or simple class
-            row.style.animation = 'none'; // reset
-            row.innerHTML = `
-                <div class="list-cover">
-                    <img src="${item.image}" alt="${item.title}" onerror="this.src='/images/disk.png'">
-                </div>
-                <div class="list-col-info">
-                    <div class="list-track-title">${item.title}</div>
-                    <div class="list-author-sub">${item.producer}</div>
-                </div>
-                <!-- Add more cols as needed -->
-            `;
+            row.className = 'list-row fade-out-up';
+            row.style.animation = 'none';
+
+            // Check for soft delete
+            const isSoftDeleted = (item.public_slug && item.public_slug.startsWith('deleted_')) || item.status === 'deleted';
+
+            if (isSoftDeleted) {
+                row.innerHTML = `
+                    <div class="list-cover" style="opacity:0.5; filter:grayscale(100%);">
+                        <div style="width:56px; height:56px; border-radius:8px; background:#222; display:flex; align-items:center; justify-content:center; color:#555;">
+                            <i class="bi bi-eye-slash-fill"></i>
+                        </div>
+                    </div>
+                    <div class="list-col-info" style="opacity:0.6;">
+                        <div class="list-track-title" style="text-decoration:line-through; color:#aaa;">${item.title}</div>
+                        <div class="list-author-sub" style="color:#666;">No disponible</div>
+                    </div>
+                    <div></div>
+                    <div style="text-align:center;">
+                        <span style="font-size:0.7rem; color:#666; border:1px solid #333; padding:2px 8px; border-radius:4px;">ELIMINADO</span>
+                    </div>
+                    <div></div>
+                    <div style="display:flex; justify-content:center;">
+                        <a href="/contacto.html" class="fav-action-btn" title="Contactar Soporte" style="color:#888;">
+                            <i class="bi bi-envelope"></i>
+                        </a>
+                    </div>
+                `;
+            } else {
+                row.innerHTML = `
+                    <div class="list-cover">
+                        <img src="${item.image}" alt="${item.title}" onerror="this.src='/images/disk.png'">
+                    </div>
+                    <div class="list-col-info">
+                        <div class="list-track-title">${item.title}</div>
+                        <div class="list-author-sub">${item.producer}</div>
+                    </div>
+                    <!-- Add more cols as needed -->
+                `;
+            }
             container.appendChild(row);
         });
     }

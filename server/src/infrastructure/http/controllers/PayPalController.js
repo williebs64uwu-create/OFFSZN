@@ -99,7 +99,8 @@ export const createPayPalOrder = async (req, res) => {
         const { data: dbProducts, error: dbError } = await supabase
             .from('products')
             .select('id, name, price_basic, price_premium, price_stems, price_exclusive, product_type, licenses, producer_id')
-            .in('id', productIds);
+            .in('id', productIds)
+            .eq('status', 'approved');
 
         if (dbError) throw dbError;
 
@@ -284,7 +285,8 @@ export const capturePayPalOrder = async (req, res) => {
             const { data: dbProducts } = await supabase
                 .from('products')
                 .select('id, price_basic, price_premium, price_stems, price_exclusive, product_type, licenses, producer_id')
-                .in('id', productIds);
+                .in('id', productIds)
+                .eq('status', 'approved');
 
             const producerIds = [...new Set(dbProducts.map(p => p.producer_id))];
             const { data: producerSettings } = await supabase

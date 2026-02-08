@@ -21,7 +21,8 @@ export const createMercadoPagoPreference = async (req, res) => {
         const { data: dbProducts, error } = await supabase
             .from('products')
             .select('id, name, price_basic, image_url, currency')
-            .in('id', productIds);
+            .in('id', productIds)
+            .eq('status', 'approved');
 
         if (error) throw error;
 
