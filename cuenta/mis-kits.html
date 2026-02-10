@@ -2295,37 +2295,54 @@
                         else if (currentTab === 'presets') { table = 'preset_drafts'; draftBucket = 'preset-drafts'; }
                     }
 
-                    // --- STORAGE CLEANUP (ROBUST) ---
+                    // --- HYBRID STORAGE CLEANUP ---
                     try {
+                        const filesToProcess = [];
+
                         if (item.isDraft) {
-                            // 1. BEATS DRAFTS (files_data JSON)
                             if (item.files_data) {
-                                const files = Object.values(item.files_data).filter(v => v && typeof v === 'string');
-                                for (const path of files) await deleteFileFromStorage(path, draftBucket);
+                                Object.values(item.files_data).forEach(v => { if (v && typeof v === 'string') filesToProcess.push({ url: v, bucket: draftBucket }); });
                             }
-
-                            // 2. STANDARD DRAFTS (Columns)
-                            await deleteFileFromStorage(item.cover_url, draftBucket);
-                            await deleteFileFromStorage(item.beat_url || item.kit_url || item.preset_url || item.loop_url, draftBucket);
-                            await deleteFileFromStorage(item.audio_url || item.audio_before_url, draftBucket);
-                            await deleteFileFromStorage(item.audio_after_url, draftBucket);
-
+                            filesToProcess.push({ url: item.cover_url, bucket: draftBucket });
+                            filesToProcess.push({ url: item.beat_url || item.kit_url || item.preset_url || item.loop_url, bucket: draftBucket });
+                            filesToProcess.push({ url: item.audio_url || item.audio_before_url, bucket: draftBucket });
+                            filesToProcess.push({ url: item.audio_after_url, bucket: draftBucket });
                         } else {
-                            // PRODUCT CLEANUP
-
                             // Public Bucket
-                            await deleteFileFromStorage(item.image_url, 'products');
-                            await deleteFileFromStorage(item.audio_url, 'products');     // Drumkits
-                            await deleteFileFromStorage(item.mp3_url, 'products');       // Beats
-                            await deleteFileFromStorage(item.audio_after_url, 'products'); // Presets
+                            filesToProcess.push({ url: item.image_url, bucket: 'products' });
+                            filesToProcess.push({ url: item.audio_url, bucket: 'products' });
+                            filesToProcess.push({ url: item.mp3_url, bucket: 'products' });
+                            filesToProcess.push({ url: item.audio_after_url, bucket: 'products' });
 
                             // Secure Bucket
-                            await deleteFileFromStorage(item.kit_url, 'secure-products');     // Drumkits / Loopkits
-                            await deleteFileFromStorage(item.wav_url, 'secure-products');     // Beats
-                            await deleteFileFromStorage(item.stems_url, 'secure-products');   // Beats
-                            await deleteFileFromStorage(item.preset_url, 'secure-products');  // Presets
-                            await deleteFileFromStorage(item.file_url, 'secure-products');    // Generic
+                            filesToProcess.push({ url: item.kit_url, bucket: 'secure-products' });
+                            filesToProcess.push({ url: item.wav_url, bucket: 'secure-products' });
+                            filesToProcess.push({ url: item.stems_url, bucket: 'secure-products' });
+                            filesToProcess.push({ url: item.preset_url, bucket: 'secure-products' });
+                            filesToProcess.push({ url: item.file_url, bucket: 'secure-products' });
                         }
+
+                        // Separate R2 keys from Supabase paths
+                        const r2Keys = [];
+                        const supabaseTasks = [];
+
+                        for (const f of filesToProcess) {
+                            if (!f.url) continue;
+
+                            const isR2 = f.url.includes('r2.cloudflarestorage.com') || f.url.includes('pub-') ||
+                                (!f.url.startsWith('http') && f.url.includes('/'));
+
+                            if (isR2) {
+                                r2Keys.push(f.url);
+                            } else if (f.url.includes('supabase.co')) {
+                                supabaseTasks.push(deleteFileFromStorage(f.url, f.bucket));
+                            }
+                        }
+
+                        // Execute Deletions
+                        if (r2Keys.length > 0) await AuthUtils.deleteFromR2(r2Keys);
+                        if (supabaseTasks.length > 0) await Promise.all(supabaseTasks);
+
                     } catch (err) { console.warn(`Storage cleanup failed for item ${id}:`, err); }
 
                     // --- DB DELETE / SOFT DELETE ---
@@ -3238,10 +3255,13 @@
                 setTimeout(() => toast.remove(), 300);
             }, 3000);
         }
-        // HELPER: Delete file with URL handling
+        // HELPER: Delete file from SUPABASE Storage
         async function deleteFileFromStorage(pathOrUrl, bucket) {
             if (!pathOrUrl) return;
             try {
+                // Ignore R2 URLs here, they are handled separately in confirmBulkDelete
+                if (pathOrUrl.includes('r2.cloudflarestorage.com') || pathOrUrl.includes('pub-')) return;
+
                 let path = pathOrUrl;
                 if (pathOrUrl.startsWith('http')) {
                     // Try to extract path from URL
@@ -3260,7 +3280,7 @@
                 path = decodeURIComponent(path);
 
                 await supabaseClient.storage.from(bucket).remove([path]);
-            } catch (e) { console.warn('Delete failed for ' + pathOrUrl, e); }
+            } catch (e) { console.warn('Supabase delete failed for ' + pathOrUrl, e); }
         }
     </script>
 

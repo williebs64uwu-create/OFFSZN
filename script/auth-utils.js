@@ -221,12 +221,68 @@ window.AuthUtils = {
             console.error('AuthUtils: Error getting authorized URL:', error);
             return pathOrUrl; // Fallback to original
         }
+    },
+
+    /**
+     * Deletes one or more files from Cloudflare R2 via API.
+     * @param {string|string[]} keys Single key or array of keys to delete.
+     * @returns {Promise<boolean>} True if operation completed.
+     */
+    deleteFromR2: async function (keys) {
+        if (!keys) return true;
+        const keysArray = Array.isArray(keys) ? keys : [keys];
+        if (keysArray.length === 0) return true;
+
+        // Clean keys: Ensure only the path part is sent (no query params, no base URL)
+        const cleanKeys = keysArray.map(k => {
+            if (!k) return null;
+            let key = k;
+            if (k.startsWith('http')) {
+                const r2Base = '.r2.cloudflarestorage.com/';
+                if (k.includes(r2Base)) {
+                    key = k.split(r2Base)[1].split('?')[0];
+                } else {
+                    try {
+                        const urlObj = new URL(k);
+                        key = urlObj.pathname.substring(1);
+                    } catch (e) { }
+                }
+            }
+            return key;
+        }).filter(k => k);
+
+        if (cleanKeys.length === 0) return true;
+
+        try {
+            const token = this.getAccessToken();
+            const response = await fetch('/api/r2/delete-files', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': token ? `Bearer ${token}` : undefined
+                },
+                body: JSON.stringify({ keys: cleanKeys })
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                console.warn("AuthUtils: Failed to delete from R2:", error);
+                return false;
+            }
+
+            console.log(`🛡️ AuthUtils: Deleted ${cleanKeys.length} items from R2`);
+            return true;
+        } catch (error) {
+            console.error('AuthUtils: Error deleting from R2:', error);
+            return false;
+        }
     }
 };
 
 // Backwards compatibility / Direct global access shortcuts
 window.getAccessToken = window.AuthUtils.getAccessToken.bind(window.AuthUtils);
 window.getAuthorizedUrl = window.AuthUtils.getAuthorizedUrl.bind(window.AuthUtils);
+window.deleteFromR2 = window.AuthUtils.deleteFromR2.bind(window.AuthUtils);
 
 // Attempt Init immediately
 window.AuthUtils.initSupabase();
