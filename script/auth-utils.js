@@ -159,13 +159,27 @@ window.AuthUtils = {
 
         // --- HYBRID LOGIC ---
         // If it's a full URL and NOT R2, it's already public (Supabase)
-        const isR2Url = pathOrUrl.includes('r2.cloudflarestorage.com') ||
+        // 🔥 FIX: Ignore data: URIs, local images (/images, /assets, /icon) and empty strings
+        const isR2Url = (
+            pathOrUrl.includes('r2.cloudflarestorage.com') ||
             pathOrUrl.includes('pub-') ||
-            (!pathOrUrl.startsWith('http') && pathOrUrl.includes('/')); // Likely a path like 'beats/123/abc.mp3'
+            // Relative path check: Must NOT start with http, NOT be data:, NOT be local static asset folders
+            (!pathOrUrl.startsWith('http') &&
+                !pathOrUrl.startsWith('data:') &&
+                !pathOrUrl.startsWith('/images') &&
+                !pathOrUrl.startsWith('/assets') &&
+                !pathOrUrl.startsWith('/icon') &&
+                pathOrUrl.includes('/') // Must have some folder structure
+            )
+        );
 
         if (!isR2Url && pathOrUrl.startsWith('http')) {
             return pathOrUrl; // Supabase public URL
         }
+
+        // --- SECOND LAYER DEFENSE ---
+        // If it's not R2 and doesn't look like an R2 key (relative path), return original
+        if (!isR2Url) return pathOrUrl;
 
         // --- R2 LOGIC ---
         let key = pathOrUrl;

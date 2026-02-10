@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { authenticateTokenMiddleware } from '../../middlewares/authenticateTokenMiddleware.js';
-import { getPresignedUploadUrl, getPresignedDownloadUrl, deleteFromR2 } from '../../services/r2-storage.service.js';
+import { getPresignedUploadUrl, getPresignedDownloadUrl, deleteFromR2, getPublicUrl } from '../../services/r2-storage.service.js';
+import { R2_BUCKET_NAME } from '../../../shared/config/config.js';
 
 const router = Router();
 
@@ -29,7 +30,7 @@ router.post('/r2/upload-url', authenticateTokenMiddleware, async (req, res) => {
         res.json({
             uploadUrl,
             key,
-            publicUrl: `https://${process.env.R2_BUCKET_NAME}.41d0f49121d02c88f71fdb4da54a791d.r2.cloudflarestorage.com/${key}`
+            publicUrl: getPublicUrl(key)
         });
     } catch (error) {
         console.error('Error al generar R2 upload URL:', error);

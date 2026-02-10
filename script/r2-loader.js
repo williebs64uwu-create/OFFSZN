@@ -13,9 +13,19 @@
             if (!src) return;
 
             // Detect R2 paths (Full URLs or relative keys)
-            const isR2 = src.includes('r2.cloudflarestorage.com') ||
+            // 🔥 FIX: Ignore data: URIs, local images (/images, /assets), and non-string src
+            const isR2 = (
+                src.includes('r2.cloudflarestorage.com') ||
                 src.includes('pub-') ||
-                (!src.startsWith('http') && src.includes('/'));
+                // Relative path check: Must NOT start with http, NOT be data:, NOT be local static asset folders
+                (!src.startsWith('http') &&
+                    !src.startsWith('data:') &&
+                    !src.startsWith('/images') &&
+                    !src.startsWith('/assets') &&
+                    !src.startsWith('/icon') &&
+                    src.includes('/') // Must have some folder structure
+                )
+            );
 
             // Sign only if it's R2 and NOT already signed (contains AWS signature params)
             if (isR2 && !src.includes('X-Amz-Signature')) {
