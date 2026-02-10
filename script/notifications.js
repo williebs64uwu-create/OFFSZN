@@ -22,6 +22,17 @@
         };
     }
 
+    console.log("[Notifications] System v26 - Loaded");
+    // --- IMMEDIATE ACTION: Kill any phantom placeholders (like "4") as soon as script loads ---
+    (function () {
+        const badge = document.getElementById('notification-badge');
+        if (badge) {
+            badge.innerText = '0';
+            badge.style.display = 'none';
+        }
+        localStorage.removeItem('notificationCount');
+    })();
+
     window.NotificationsManager = {
         renderedIds: [],
         _lastMarkRead: 0, // Cooldown tracker
@@ -36,16 +47,6 @@
                     dropdown.classList.remove('active');
                 }
             });
-
-            // INSTANT LOAD: Check LocalStorage
-            const cachedCount = localStorage.getItem('notificationCount');
-            if (cachedCount && cachedCount !== '0') {
-                const badge = document.getElementById('notification-badge');
-                if (badge) {
-                    badge.innerText = cachedCount;
-                    badge.style.display = 'flex';
-                }
-            }
 
             // Subscribe if user already exists
             if (currentUserId) this.subscribe();
@@ -84,7 +85,6 @@
                                     const ids = await res.json();
                                     if (Array.isArray(ids)) {
                                         window.currentUserFollowing = new Set(ids);
-                                        console.log(`[Notifications] Loaded ${ids.length} following IDs (via API).`);
                                     }
                                 }
                             } catch (err) {
@@ -104,12 +104,11 @@
         updateBadge: function (count) {
             const badge = document.getElementById('notification-badge');
             if (badge) {
-                badge.innerText = count;
+                // IMPLEMENTED: Cap display at +9 for counts > 9 as requested.
+                badge.innerText = count > 9 ? '+9' : count;
                 badge.style.display = count > 0 ? 'flex' : 'none';
             }
-            try {
-                localStorage.setItem('notificationCount', count);
-            } catch (e) { /* ignore */ }
+            // Removed localStorage caching completely to prevent stale data flickers.
         },
 
         fetch: async function () {
@@ -120,23 +119,30 @@
             if (!headers.Authorization) return; // No token, no fetch
 
             try {
-                // 1. Get Unread Count
+                // UNREAD FILTER: Only count notifications from the last 10 days
+                const tenDaysAgo = new Date();
+                tenDaysAgo.setDate(tenDaysAgo.getDate() - 10);
+                const dateIso = tenDaysAgo.toISOString();
+
+                // 1. Get Unread Count (Filtered by date)
                 const countRes = await window.supabaseClient
                     .from('notifications')
                     .select('*', { count: 'exact', head: true })
                     .eq('user_id', currentUserId)
-                    .eq('read', false); // Only count unread
+                    .eq('read', false)
+                    .gt('created_at', dateIso); // Ignore old "buggy" notifications
 
                 if (countRes.error) throw countRes.error;
 
                 // Update Badge
-                window.NotificationsManager.updateBadge(countRes.count || 0);
+                // Deleted premature updateBadge to prevent "4" flicker.
 
-                // 2. Fetch Recent Notifications (Limit 50)
+                // 2. Fetch Recent Notifications (Limit 50, strictly > 10 days)
                 const { data: notifs, error } = await window.supabaseClient
                     .from('notifications')
                     .select('*')
                     .eq('user_id', currentUserId)
+                    .gt('created_at', dateIso)
                     .order('created_at', { ascending: false })
                     .limit(50);
 
@@ -200,7 +206,6 @@
                 });
 
                 if (usernamesToFetch.size > 0) {
-                    console.log(`[Notifications] Rescuing ${usernamesToFetch.size} users by nickname...`);
                     const { data: rescued } = await sbClient
                         .from('users')
                         .select('id, nickname, first_name, last_name, avatar_url')
@@ -224,9 +229,6 @@
 
                 // Process Standard Notifications with Rich HTML
                 const processedNotifs = (notifs || []).map(n => {
-                    // DEBUG: Check data structure
-                    if (n.type === 'new_follower') console.log('Raw Follower Notif:', n);
-
                     let finalMessage = n.message;
                     let finalTitle = n.title;
 
@@ -406,10 +408,7 @@
                     else if (n.type === 'new_follower') extraId = n.data?.follower_id || '';
                     else if (n.type === 'new_message') extraId = n.data?.conversation_id || '';
 
-                    // Ensure extraId is safe
                     extraId = extraId ? extraId.toString().replace(/"/g, '&quot;') : '';
-
-                    if (n.type === 'new_follower') console.log('👤 Follower Notif Render:', { id: n.id, extraId, targetUrl: n.targetUrl }); // DEBUG
 
                     return `
 
@@ -503,13 +502,8 @@
         markAllAsRead: async function () {
             // Cooldown: Prevent double-clicks or spam (5 seconds)
             const now = Date.now();
-            if (this._lastMarkRead && (now - this._lastMarkRead < 5000)) {
-                console.log("Cooldown active for markAllAsRead");
-                return;
-            }
             this._lastMarkRead = now;
 
-            console.log("Marking all as read...");
             if (!currentUserId || !sbClient) return;
 
             // 1. Mark virtuals as read in localStorage
@@ -538,7 +532,6 @@
 
         // --- Visual Delete Functionality ---
         deleteNotification: async function (id, type) {
-            console.log(`[Dropdown] Visual delete for: ${id}`);
             const deleted = JSON.parse(localStorage.getItem('deletedNotifs') || '[]');
             if (!deleted.includes(id)) {
                 deleted.push(id);
@@ -556,8 +549,7 @@
         const id = el.getAttribute('data-id');
         const type = el.getAttribute('data-type');
         const extraId = el.getAttribute('data-extra-id');
-        const url = el.getAttribute('data-url'); // NEW
-        console.log('🔔 Notification Clicked:', { id, type, extraId, url }); // DEBUG
+        const url = el.getAttribute('data-url');
         handleNotificationClick(id, type, extraId, url);
     };
 
@@ -571,15 +563,11 @@
     window.triggerViewDetails = function (id, type, extraId, event) {
         if (event) event.stopPropagation();
 
-        console.log("View Details Triggered:", type, extraId);
-
         // Logic based on type
         if (type === 'new_follower') {
             // "comenzó a seguirte" => Perfil
             if (extraId && extraId !== 'undefined') {
                 window.location.href = `/perfil-publico.html?id=${extraId}`;
-            } else {
-                console.warn("No follower ID found");
             }
         }
         else if (type === 'collab_invitation') {
@@ -601,22 +589,14 @@
         }
         else {
             // Default fallback for others
-            console.log("Unknown type for view details:", type);
         }
     };
 
     window.handleNotificationClick = async function (id, type, extraId, targetUrl) {
-        // Optimistic UI Update
+        // Optimistic UI Update - REMOVED: Stale localStorage usage. 
+        // We now rely on the reload/fetch to update the badge accurately.
         const badge = document.getElementById('notification-badge');
-        const count = parseInt(localStorage.getItem('notificationCount') || '0');
-        if (count > 0) {
-            const newCount = count - 1;
-            localStorage.setItem('notificationCount', newCount);
-            if (badge) {
-                badge.innerText = newCount;
-                if (newCount === 0) badge.style.display = 'none';
-            }
-        }
+        // (Deleted optimistic -1 logic that used stale localStorage)
 
         // 1. Handle Virtual (Local Storage)
         if (id.startsWith('invite-') || id.startsWith('accepted-')) {
@@ -630,8 +610,6 @@
         else if (sbClient) {
             await sbClient.from('notifications').update({ read: true }).eq('id', id);
         }
-
-        console.log(`Processing click: Type=${type}, ExtraID='${extraId}'`);
 
         // Redirect Logic
         // Redirect Logic (Prioritize calculated SEO URL)
@@ -680,8 +658,6 @@
         }
         if (id && id !== 'undefined' && id !== 'null') {
             window.location.href = `/perfil-publico.html?id=${id}`;
-        } else {
-            console.warn('Cannot open profile: Invalid ID', id);
         }
     };
 

@@ -101,8 +101,9 @@ window.StickyPlayer = (function () {
 
         // Navigation Click Logic
         const navigateToProduct = () => {
-            if (currentTrack && currentTrack.id) {
-                window.location.href = `/producto.html?id=${currentTrack.id}`;
+            if (currentTrack) {
+                const seoLink = window.createSeoLink ? window.createSeoLink(currentTrack) : `/producto.html?id=${currentTrack.id}`;
+                window.location.href = seoLink;
             }
         };
         els.title.onclick = navigateToProduct;
@@ -921,7 +922,8 @@ window.StickyPlayer = (function () {
             }
         } else {
             // PAID: Redirect to product page (Requested: Like "View Product")
-            window.location.href = `/producto.html?id=${currentTrack.id}`;
+            const seoLink = window.createSeoLink ? window.createSeoLink(currentTrack) : `/producto.html?id=${currentTrack.id}`;
+            window.location.href = seoLink;
         }
     }
 
@@ -950,7 +952,8 @@ window.StickyPlayer = (function () {
             window.openLicenseComparisonModal(currentTrack.available_licenses);
         } else {
             // Fallback to product page if modal not available
-            window.location.href = `/producto.html?id=${currentTrack.id}`;
+            const seoLink = window.createSeoLink ? window.createSeoLink(currentTrack) : `/producto.html?id=${currentTrack.id}`;
+            window.location.href = seoLink;
         }
     }
 

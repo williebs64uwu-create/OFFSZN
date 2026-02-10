@@ -1,4 +1,4 @@
-ï»¿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 
 <head>
@@ -14,7 +14,7 @@
   <script src="/script/auth-utils.js?v=11"></script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Autenticando... â€” OFFSZN</title>
+  <title>Autenticando... — OFFSZN</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
@@ -38,8 +38,8 @@
 
   <div class="text-center">
     <div class="inline-block spinner rounded-full h-12 w-12 border-4 border-zinc-700 border-t-white mb-4"></div>
-    <p class="text-white text-lg font-medium">Completando autenticaciÃ³n...</p>
-    <p class="text-zinc-500 text-sm mt-2">SerÃ¡s redirigido en un momento</p>
+    <p class="text-white text-lg font-medium">Completando autenticación...</p>
+    <p class="text-zinc-500 text-sm mt-2">Serás redirigido en un momento</p>
   </div>
 
   <script>
@@ -52,20 +52,20 @@
         return;
       }
 
-      // Obtener el parÃ¡metro de redirect de la URL
+      // Obtener el parámetro de redirect de la URL
       const urlParams = new URLSearchParams(window.location.search);
       const redirectParam = urlParams.get('redirect');
 
-      console.log('ðŸ” Auth Callback - ParÃ¡metro redirect:', redirectParam);
+      console.log('?? Auth Callback - Parámetro redirect:', redirectParam);
 
       try {
-        // Obtener la sesiÃ³n actual de Supabase desde el hash de la URL
+        // Obtener la sesión actual de Supabase desde el hash de la URL
         const { data: { session }, error } = await supabaseClient.auth.getSession();
 
-        console.log('ðŸ“¦ SesiÃ³n recibida:', session ? 'SÃ­' : 'No');
+        console.log('?? Sesión recibida:', session ? 'Sí' : 'No');
 
         if (error) {
-          console.error('âŒ Error obteniendo sesiÃ³n:', error);
+          console.error('? Error obteniendo sesión:', error);
           throw error;
         }
 
@@ -78,17 +78,17 @@
           const maxAge = 60 * 60 * 24 * 7;
           document.cookie = `sb-access-token=${token}; path=/; max-age=${maxAge}; SameSite=Strict; Secure`;
 
-          console.log('âœ… OAuth exitoso, token guardado en localStorage y cookie');
+          console.log('? OAuth exitoso, token guardado en localStorage y cookie');
 
-          // PequeÃ±o delay
+          // Pequeño delay
           await new Promise(resolve => setTimeout(resolve, 500));
 
-          // ðŸ§  LÃ³gica Inteligente de RedirecciÃ³n (V3)
+          // ?? Lógica Inteligente de Redirección (V3)
           // Verificar si el usuario ya tiene un perfil COMPLETO en la tabla 'users'
           const user = session.user;
-          console.log('ðŸ‘¤ Usuario:', user.email);
+          console.log('?? Usuario:', user.email);
 
-          // Consultar perfil para ver si ya completÃ³ el onboarding (tiene nickname)
+          // Consultar perfil para ver si ya completó el onboarding (tiene nickname)
           const { data: profile, error: profileError } = await supabaseClient
             .from('users')
             .select('nickname')
@@ -96,34 +96,34 @@
             .single();
 
           if (profileError && profileError.code !== 'PGRST116') { // PGRST116 is "No rows found" which is fine (new user)
-            console.error('âŒ Error verificando perfil:', profileError);
+            console.error('? Error verificando perfil:', profileError);
             alert('Error verificando tu cuenta. Por favor contacta soporte.');
             return;
           }
 
           const hasCompletedOnboarding = profile && profile.nickname;
-          console.log('ðŸ“‚ Perfil completado:', hasCompletedOnboarding);
+          console.log('?? Perfil completado:', hasCompletedOnboarding);
 
           if (redirectParam === 'carrito') {
-            console.log('ðŸ›’ Redirigiendo al carrito...');
+            console.log('?? Redirigiendo al carrito...');
             window.location.replace('/carrito.html');
           } else if (!hasCompletedOnboarding) {
             // No tiene nickname -> Es Nuevo o Incompleto -> Welcome (Onboarding)
-            console.log('âœ¨ Sin onboarding completo -> Welcome');
+            console.log('? Sin onboarding completo -> Welcome');
             window.location.replace('/pages/welcome.html');
           } else {
-            // Ya tiene nickname -> Es Recurrente -> Perfil PÃºblico (Directo)
+            // Ya tiene nickname -> Es Recurrente -> Perfil Público (Directo)
             const profilePath = `/@${profile.nickname}`;
-            console.log(`ðŸ  Con onboarding completo -> Redirigiendo a ${profilePath}`);
+            console.log(`?? Con onboarding completo -> Redirigiendo a ${profilePath}`);
             window.location.replace(profilePath);
           }
         } else {
-          throw new Error('No se recibiÃ³ sesiÃ³n de OAuth');
+          throw new Error('No se recibió sesión de OAuth');
         }
 
       } catch (error) {
-        console.error('âŒ Error en callback de OAuth:', error);
-        alert('Error al completar autenticaciÃ³n. Redirigiendo al registro...');
+        console.error('? Error en callback de OAuth:', error);
+        alert('Error al completar autenticación. Redirigiendo al registro...');
         setTimeout(() => {
           window.location.replace('/pages/register.html');
         }, 1000);

@@ -6,7 +6,15 @@ window.activeWavesurfers = window.activeWavesurfers || [];
 window.currentlyPlaying = window.currentlyPlaying || null;
 
 document.addEventListener('DOMContentLoaded', async () => {
-    // 0. SAFETY CHECK: Only run if on Profile Page
+    // 0. INITIALIZE REVEAL PROMISES (Master Coordination)
+    window.profileTimerPromise = new Promise(res => setTimeout(res, 2300));
+
+    // Signals to reveal the content (Fired after preparation + timer)
+    let triggerReveal;
+    window.profileRevealSignal = new Promise(res => { triggerReveal = res; });
+    window.triggerProfileReveal = triggerReveal;
+
+    // 1. SAFETY CHECK: Only run if on Profile Page
     if (!document.getElementById('profile-root')) return;
 
     // 1. Get Username from URL
@@ -116,7 +124,10 @@ async function loadUserProfile(username) {
 }
 
 async function renderHeader(user) {
-    // 1. Avatar Setup (Optimistic Render)
+    // 0. Hold reveal until signal
+    if (window.profileRevealSignal) await window.profileRevealSignal;
+
+    // 1. Avatar Setup
     // We render the container immediately with either the public URL (Supabase) or a transparent placeholder (R2).
     // R2 Authorization happens in the background.
 
@@ -147,10 +158,7 @@ async function renderHeader(user) {
     }
 
     // Text Info
-    // Text Info
     // User requested to use Nickname specifically.
-    // NOTE: The innerText is overwritten by the renderHeader function below for the centered layout.
-    // This block is legacy but kept for safety. 
     document.getElementById('profileName').innerText = user.nickname || "User";
 
     // Role / Verified
@@ -883,18 +891,39 @@ async function loadUserProducts(user) {
         // User wants "Trending" to be real. Let's create a sorted version for Trending.
         window.trendingProducts = [...productsCache].sort((a, b) => getScore(b) - getScore(a));
 
-        if (document.getElementById('profileProductsCount')) {
-            // 🔥 CRITICAL FIX: Use innerHTML to keep the 'Productos' label visible
-            document.getElementById('profileProductsCount').innerHTML = `${productsCache.length} <span style="font-weight:400;">Productos</span>`;
+        // Update counts in user object just in case
+        user.products_count = productsCache.length;
+
+        // --- PRE-WARM IMAGE CACHE (For Synchronized Reveal) ---
+        const urlsToWarm = [];
+        if (user.avatar_url) urlsToWarm.push(user.avatar_url);
+
+        // Trending
+        if (window.trendingProducts) {
+            window.trendingProducts.slice(0, 5).forEach(p => { if (p.image_url) urlsToWarm.push(p.image_url); });
         }
 
-        // 1. Trending Carousel Init
-        trendingPage = 0;
-        await updateTrendingView(user, collabStats); // This calls renderTrending (async)
-        setupTrendingControls(user, collabStats);
+        // Main List (First 15 for instant reveal)
+        productsCache.slice(0, 15).forEach(p => { if (p.image_url) urlsToWarm.push(p.image_url); });
 
-        // 2. Render Main List (All initially)
-        await renderProductList(productsCache, user, collabStats);
+        if (urlsToWarm.length > 0 && window.getAuthorizedUrl) {
+            await Promise.all(urlsToWarm.map(url => window.getAuthorizedUrl(url).catch(() => null)));
+        }
+
+        // 1. Start all preparation in parallel
+        const headerPromise = renderHeader(user);
+        const trendPromise = updateTrendingView(user, collabStats);
+        const listPromise = renderProductList(productsCache, user, collabStats);
+
+        // 2. Wait for TIMER (The 2.3s minimum)
+        await window.profileTimerPromise;
+
+        // 3. MASTER TRIGGER: Reveal everything!
+        if (window.triggerProfileReveal) window.triggerProfileReveal();
+
+        // 4. Final Setup (Post-Reveal logic)
+        await Promise.all([headerPromise, trendPromise, listPromise]);
+        setupTrendingControls(user, collabStats);
 
         // 3. Setup Filter Logic
         setupProfileControls();
@@ -1016,19 +1045,13 @@ async function renderTrending(items, user, collabStats = {}) {
     });
     const authorizedUrls = await Promise.all(authPromises);
 
-    container.innerHTML = '';
-    container.classList.add('fade-in');
+    // 2. Prepare all cards in memory
+    const fragment = document.createDocumentFragment();
 
-    if (items.length === 0) {
-        container.style.display = 'none'; // Hide if no items
-        return;
-    }
-
-    items.forEach(prod => {
+    items.forEach((prod, idx) => {
         const div = document.createElement('div');
         div.className = 'trending-card';
         const plays = prod.plays_count || 0;
-
         const seoLink = window.createSeoLink ? window.createSeoLink(prod) : '/producto.html?id=' + prod.id;
 
         // Initial image check (avoid broken icon)
@@ -1062,11 +1085,7 @@ async function renderTrending(items, user, collabStats = {}) {
                     nickname: user.nickname,
                     avatar_url: user.avatar_url,
                     is_verified: user.is_verified || user.is_producer,
-                    stats: {
-                        followers: user.followers_count || 0
-                        // products omitted to ensure hover-card.js can refetch if needed, 
-                        // though on profile-public it should be accurate.
-                    }
+                    stats: { followers: user.followers_count || 0 }
                 }, 'producer-link-thin');
 
                 const collabs = (prod.collaborators || [])
@@ -1086,9 +1105,7 @@ async function renderTrending(items, user, collabStats = {}) {
                             nickname: cName,
                             avatar_url: pre.avatar_url || c.avatar_url,
                             is_verified: (pre.is_verified !== undefined) ? pre.is_verified : (c.is_verified || false),
-                            stats: {
-                                followers: pre.followers !== undefined ? pre.followers : 0
-                            }
+                            stats: { followers: pre.followers !== undefined ? pre.followers : 0 }
                         }, 'collaborator-link-thin');
                     }).join('<span style="color:#666; margin-right:2px;">, </span>');
 
@@ -1097,35 +1114,28 @@ async function renderTrending(items, user, collabStats = {}) {
                 return html;
             })()}
                 </div>
-            </div>
-            <div class="t-meta-row">
-                <span>${prod.product_type || 'Beat'}</span>
-                <span style="font-size:0.4rem;">●</span>
-                <span>${prod.bpm ? prod.bpm + ' BPM' : 'New'}</span>
+                <div class="t-meta-row">
+                    <span>${prod.product_type || 'Beat'}</span>
+                    <span style="font-size:0.4rem;">●</span>
+                    <span>${prod.bpm ? prod.bpm + ' BPM' : 'New'}</span>
+                </div>
             </div>
         `;
+
         // Direct event listener for the play button to prevent navigation
         const playBtn = div.querySelector('.t-play-btn');
         if (playBtn) {
             playBtn.onclick = (e) => {
-                e.preventDefault();
-                e.stopPropagation();
+                e.preventDefault(); e.stopPropagation();
                 if (window.StickyPlayer) {
-                    // Update playlist data for sticky player
-                    const trackData = {
-                        ...prod,
-                        artist_users: user
-                    };
+                    const trackData = { ...prod, artist_users: user };
                     window.StickyPlayer.play(trackData);
                 }
             };
         }
 
-        // Removed global div.onclick to avoid conflicts with play button
-        // div.onclick = () => window.location.href = seoLink;
-
-        // 🔥 FIX: Authorize trending image
-        const authUrl = authorizedUrls[items.indexOf(prod)];
+        // Authorize trending image if authUrl exists
+        const authUrl = authorizedUrls[idx];
         if (prod.image_url) {
             const img = div.querySelector('img');
             if (img) {
@@ -1134,14 +1144,22 @@ async function renderTrending(items, user, collabStats = {}) {
                     img.src = authUrl;
                     if (img.complete) img.onload();
                 } else {
-                    // Fallback if not R2 or sign failed
                     img.style.opacity = 1;
                 }
             }
         }
 
-        container.appendChild(div);
+        fragment.appendChild(div);
     });
+
+    // 3. Swap content
+    if (window.profileRevealSignal) await window.profileRevealSignal;
+
+    container.innerHTML = '';
+    container.appendChild(fragment);
+    container.classList.remove('fade-in');
+    void container.offsetWidth; // Trigger reflow
+    container.classList.add('fade-in');
 }
 
 async function renderProductList(items, user, collabStats = {}) {
@@ -1156,88 +1174,48 @@ async function renderProductList(items, user, collabStats = {}) {
     const authorizedUrls = await Promise.all(authPromises);
 
     // Cleanup old wavesurfers
-    window.activeWavesurfers.forEach(ws => {
-        try { ws.destroy(); } catch (e) { }
-    });
+    window.activeWavesurfers.forEach(ws => { try { ws.destroy(); } catch (e) { } });
     window.activeWavesurfers = [];
     window.currentlyPlaying = null;
 
-    list.innerHTML = '';
-    list.classList.add('fade-in');
-
     if (items.length === 0) {
-        // Empty State Logic
+        list.innerHTML = '';
+        list.classList.add('fade-in');
         const isOwner = window.currentUserId && (user.id === window.currentUserId);
-
         if (isOwner) {
             list.innerHTML = `
                 <div class="empty-state-cta">
-                    <div class="empty-icon">
-                        <i class="bi bi-cloud-arrow-up-fill"></i>
-                    </div>
+                    <div class="empty-icon"><i class="bi bi-cloud-arrow-up-fill"></i></div>
                     <h3>Sube tu primer producto</h3>
                     <p>Comparte tus beats, kits o sonidos con el mundo. Solo tú puedes ver esto.</p>
-                    <button class="btn-upload-first" onclick="window.location.href='/cuenta/subir-kit.html'">
-                        Subir ahora
-                    </button>
-                </div>
-            `;
+                    <button class="btn-upload-first" onclick="window.location.href='/cuenta/subir-kit.html'">Subir ahora</button>
+                </div>`;
         } else {
             list.innerHTML = '<div class="empty-state">No se encontraron productos con estos filtros.</div>';
         }
-
-        // Clear playlist if no items
-        if (window.StickyPlayer && window.StickyPlayer.updatePlaylist) {
-            window.StickyPlayer.updatePlaylist([], user.nickname || 'Unknown');
-        }
+        if (window.StickyPlayer?.updatePlaylist) window.StickyPlayer.updatePlaylist([], user.nickname || 'Unknown');
         return;
     }
 
-    // 🔥 Use forEach for parallel processing (independent async starts)
-    items.forEach(async (prod, index) => {
+    const fragment = document.createDocumentFragment();
+    const rowsMetadata = [];
+
+    items.forEach((prod, index) => {
         const row = document.createElement('div');
         row.className = 'list-row';
         row.dataset.id = prod.id;
         const seoLink = window.createSeoLink ? window.createSeoLink(prod) : `/producto.html?id=${prod.id}`;
 
-        const price = prod.price_basic ? '$' + prod.price_basic : (prod.is_free ? 'FREE' : '—');
-        const bpm = prod.bpm ? `${prod.bpm}` : '—';
-        const key = prod.key_scale || '—';
-        const duration = "—:—"; // Placeholder if no duration data
-
-        // Unique ID for waveform container
         const waveformId = `waveform-track-${prod.id}-${index}`;
+        const audioUrl = prod.mp3_url || prod.audio_url || prod.download_url_mp3 || prod.demo_file || prod.tagged_file || prod.preview_url || prod.cloud_url || (prod.track_data ? prod.track_data.audio_url : '') || '';
 
-        // Debugging: Log product to see available fields
-        console.log(`Product [${prod.name}]:`, prod);
-
-        // Comprehensive Audio Source Check
-        // Checks standard fields and fallbacks
-        const audioUrl = prod.mp3_url ||
-            prod.audio_url ||
-            prod.download_url_mp3 ||
-            prod.demo_file ||
-            prod.tagged_file ||
-            prod.preview_url ||
-            prod.cloud_url ||
-            (prod.track_data ? prod.track_data.audio_url : '') ||
-            '';
-
-        if (!audioUrl) {
-            console.warn(`No audio URL found for ${prod.name}`);
-        }
-
-        // Initial image check (avoid broken icon)
         const isR2List = prod.image_url && (prod.image_url.includes('r2.cloudflarestorage.com') || prod.image_url.includes('pub-') || (!prod.image_url.startsWith('http') && prod.image_url.includes('/')));
         const initialImgList = isR2List ? 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=' : (prod.image_url || 'https://via.placeholder.com/100');
 
         row.innerHTML = `
-            <!-- 1. Cover -->
             <div class="list-cover" style="cursor: pointer;" onclick="window.location.href = '${seoLink}'">
                 <img src="${initialImgList}" id="list-img-${prod.id}" alt="cover" class="skeleton-img-transition">
             </div>
-
-            <!-- 2. Info (Title + Author) -->
             <div class="list-col-info" style="cursor: pointer;" onclick="event.stopPropagation(); window.location.href = '${seoLink}'">
                 <span class="list-track-title">${prod.name}</span>
                 <span class="list-author-sub">
@@ -1246,280 +1224,62 @@ async function renderProductList(items, user, collabStats = {}) {
                     const safeData = JSON.stringify(data).replace(/'/g, "&apos;").replace(/"/g, "&quot;");
                     return `<span class="artist-hover-trigger ${extraClass}" data-artist="${safeData}" onmouseenter="window.showArtistCard(event, this)" onmouseleave="window.hideArtistCard(event, this)">${name}</span>`;
                 };
-
-                // 1. Producer
-                const producerData = {
-                    id: user.id,
-                    nickname: user.nickname,
-                    avatar_url: user.avatar_url,
-                    is_verified: user.is_verified || user.is_producer,
-                    stats: {
-                        products: user.products_count || 0,
-                        followers: user.followers_count || 0
-                    }
-                };
-                let html = createArtistSpan(user.nickname, producerData, 'producer-link-thin');
-
-                // 2. Collaborators
-                const collabs = (prod.collaborators || [])
-                    .filter(c => {
-                        const hasName = (c.nickname || c.name) && (c.nickname || c.name).trim().length > 0;
-                        // Only show if accepted (or if status is undefined, assume legacy/accepted)
-                        const isAccepted = c.status === 'accepted';
-                        return hasName && isAccepted;
-                    });
-
+                let html = createArtistSpan(user.nickname, { id: user.id, nickname: user.nickname, avatar_url: user.avatar_url, is_verified: user.is_verified || user.is_producer, stats: { products: user.products_count || 0, followers: user.followers_count || 0 } }, 'producer-link-thin');
+                const collabs = (prod.collaborators || []).filter(c => (c.nickname || c.name) && c.status === 'accepted');
                 if (collabs.length > 0) {
                     html += `<span style="color:#666; margin-right:2px;">, </span>`;
-
-                    const visible = collabs.slice(0, 2);
-                    html += visible.map(c => {
+                    html += collabs.slice(0, 2).map(c => {
                         const cName = c.nickname || c.name;
                         const pre = collabStats[cName] || {};
-
-                        const cData = {
-                            id: pre.id || '', // Need ID for follow
-                            nickname: cName,
-                            avatar_url: pre.avatar_url || c.avatar_url,
-                            is_verified: (pre.is_verified !== undefined) ? pre.is_verified : (c.is_verified || false),
-                            stats: {
-                                products: pre.products !== undefined ? pre.products : 0,
-                                followers: pre.followers !== undefined ? pre.followers : 0
-                            }
-                        };
-                        return createArtistSpan(cName, cData, 'collaborator-link-thin');
+                        return createArtistSpan(cName, { id: pre.id || '', nickname: cName, avatar_url: pre.avatar_url || c.avatar_url, is_verified: (pre.is_verified !== undefined) ? pre.is_verified : (c.is_verified || false), stats: { products: pre.products !== undefined ? pre.products : 0, followers: pre.followers !== undefined ? pre.followers : 0 } }, 'collaborator-link-thin');
                     }).join(`<span style="color:#666; margin-right:2px;">, </span>`);
-
-                    if (collabs.length > 2) {
-                        html += `<span title="More..." style="cursor:help; color:#666;">, ...</span>`;
-                    }
+                    if (collabs.length > 2) html += `, ...`;
                 }
                 return html;
             })()}
                 </span>
             </div>
-
-            <!-- 3. Player (Play + Wave) -->
             <div class="list-col-player">
-                <button class="btn-list-play" id="btn-play-${waveformId}">
-                    <i class="bi bi-play-fill"></i>
-                </button>
-                
+                <button class="btn-list-play" id="btn-play-${waveformId}"><i class="bi bi-play-fill"></i></button>
                 <div class="list-waveform-container list-waveform skeleton-waveform" id="${waveformId}" style="height:28px; flex:1; position:relative;"></div>
             </div>
-
-            <!-- 4. Tags (Duration + Badges) -->
             <div class="list-col-tags">
                 <span id="duration-${waveformId}" style="font-size:0.75rem; color:#666; font-weight:700; margin-right:8px; min-width:30px;">--:--</span>
-                
                 <span class="badge-outline badge-type">${prod.product_type || 'BEAT'}</span>
-                ${(() => {
-                const pType = (prod.product_type || 'beat').toLowerCase();
-                // No green color for tags per user request
-                const style = 'border-color:#333; color:#aaa;';
-
-                let content = '';
-
-                if (pType.includes('beat')) {
-                    // Beats: Show License Count
-                    let licenseCount = 0;
-
-                    // 1. Try checking the 'licenses' JSON object (New Structure)
-                    const l = prod.licenses || {};
-                    // User JSON example keys: basic, premium, trackout, unlimited
-                    if (l.basic?.enabled) licenseCount++;
-                    if (l.premium?.enabled) licenseCount++;
-                    if (l.trackout?.enabled || l.stems?.enabled) licenseCount++;
-                    if (l.unlimited?.enabled || l.exclusive?.enabled) licenseCount++;
-
-                    // 2. Fallback: Check flat price columns (Old Structure) if count is still 0
-                    if (licenseCount === 0) {
-                        if (prod.price_basic && Number(prod.price_basic) > 0) licenseCount++;
-                        if (prod.price_premium && Number(prod.price_premium) > 0) licenseCount++;
-                        if (prod.price_stems && Number(prod.price_stems) > 0) licenseCount++;
-                        if (prod.price_exclusive && Number(prod.price_exclusive) > 0) licenseCount++;
-                    }
-
-                    const label = licenseCount === 1 ? 'Licencia' : 'Licencias';
-                    content = `${licenseCount} ${label}`;
-                } else if (pType.includes('drum') || pType.includes('sound')) {
-                    // Drumkits
-                    const c = prod.sounds_count || 0;
-                    content = `${c} Sonidos`;
-                } else if (pType.includes('loop')) {
-                    // Loopkits
-                    const c = prod.sounds_count || 0;
-                    content = `${c} Loops`;
-                } else if (pType.includes('preset')) {
-                    // Presets
-                    const c = prod.sounds_count || 0;
-                    content = `${c} Presets`;
-                } else {
-                    // Fallback
-                    content = '';
-                }
-
-                if (content) {
-                    return `<span class="badge-outline badge-meta" style="${style}">${content}</span>`;
-                }
-
-                return '';
-            })()}
             </div>
-
-            <!-- 6. Price -->
             <div class="list-col-price">
-                 <button class="btn-list-price" 
-                    onclick="event.stopPropagation(); window.location.href = '${seoLink}'">
+                 <button class="btn-list-price" onclick="event.stopPropagation(); window.location.href = '${seoLink}'">
                     ${prod.is_free ? 'FREE' : '$' + (prod.price_basic || '—')}
                  </button>
             </div>
-
-            <!-- 7. Actions -->
             <div class="list-col-actions" style="width:100%; justify-content:flex-end;">
                 ${(() => {
                 const isLiked = window.FavoritesManager ? window.FavoritesManager.isLiked(prod.id) : false;
-                return `<button class="btn-list-icon" title="Like" style="${isLiked ? 'color:#ef4444;' : ''}">
-                        <i class="bi ${isLiked ? 'bi-heart-fill' : 'bi-heart'}"></i>
-                    </button>`;
+                return `<button class="btn-list-icon" title="Like" style="${isLiked ? 'color:#ef4444;' : ''}"><i class="bi ${isLiked ? 'bi-heart-fill' : 'bi-heart'}"></i></button>`;
             })()}
                 <button class="btn-list-icon" title="Download"><i class="bi bi-download"></i></button>
                 <button class="btn-list-icon" title="Más"><i class="bi bi-three-dots"></i></button>
             </div>
         `;
 
-        list.appendChild(row);
+        rowsMetadata.push({ row, prod, waveformId, audioUrl, authUrl: authorizedUrls[index] });
+        fragment.appendChild(row);
+    });
 
-        // Initialize WaveSurfer if audioUrl exists
-        if (audioUrl && window.WaveSurfer) {
-            // 🔥 FIX: AUTHORIZE R2 URL
-            const finalAudioUrl = await window.getAuthorizedUrl(audioUrl);
+    // 3. Swap
+    if (window.profileRevealSignal) await window.profileRevealSignal;
 
-            const ws = WaveSurfer.create({
-                container: document.getElementById(waveformId), // Pass element directly
-                waveColor: '#666', // Brighter for dark theme
-                progressColor: '#8b5cf6',
-                cursorColor: 'transparent',
-                barWidth: 2,
-                barGap: 2, // Slightly more spaces
-                barRadius: 2,
-                height: 28,
-                normalize: true,
-                interact: true,
-                url: finalAudioUrl,
-                autoCenter: false,    // No moving
-                minPxPerSec: 0,       // Static
-                partialRender: true,
-                hideScrollbar: true
-            });
+    list.innerHTML = '';
+    list.appendChild(fragment);
+    list.classList.remove('fade-in');
+    void list.offsetWidth;
+    list.classList.add('fade-in');
 
-            // TIMEOUT FALLBACK: If WS takes too long, show static fallback
-            setTimeout(() => {
-                const el = document.getElementById(waveformId);
-                if (el && el.classList.contains('skeleton-waveform')) {
-                    el.classList.remove('skeleton-waveform');
-                    el.classList.add('waveform-static-fallback');
-                }
-            }, 4000);
+    // 4. Post-Append Initialization
+    rowsMetadata.forEach(async (meta) => {
+        const { row, prod, waveformId, audioUrl, authUrl } = meta;
 
-            // ERROR FALLBACK
-            ws.on('error', (err) => {
-                console.warn(`WaveSurfer error for ${prod.name}:`, err);
-                const el = document.getElementById(waveformId);
-                if (el) {
-                    el.classList.remove('skeleton-waveform');
-                    el.classList.add('waveform-static-fallback');
-                }
-            });
-
-            // Handle Review/Ready
-            ws.on('ready', () => {
-                const waveformEl = document.getElementById(waveformId);
-                if (waveformEl) {
-                    waveformEl.classList.remove('skeleton-waveform');
-                    waveformEl.classList.remove('waveform-static-fallback');
-                    waveformEl.style.background = 'transparent';
-                }
-                const dur = ws.getDuration();
-                const mins = Math.floor(dur / 60);
-                const secs = Math.floor(dur % 60);
-                const durStr = `${mins}:${secs < 10 ? '0' : ''}${secs}`;
-
-                const durEl = document.getElementById(`duration-${waveformId}`);
-                if (durEl) durEl.innerText = durStr;
-            });
-
-            ws.on('finish', () => {
-                const btn = document.getElementById(`btn-play-${waveformId}`);
-                if (btn) btn.innerHTML = '<i class="bi bi-play-fill"></i>';
-                window.currentlyPlaying = null;
-            });
-
-            ws.on('play', () => {
-                const btn = document.getElementById(`btn-play-${waveformId}`);
-                if (btn) btn.innerHTML = '<i class="bi bi-pause-fill"></i>';
-            });
-
-            ws.on('pause', () => {
-                const btn = document.getElementById(`btn-play-${waveformId}`);
-                if (btn) btn.innerHTML = '<i class="bi bi-play-fill"></i>';
-            });
-
-            // SYNC BACK TO STICKY PLAYER ON INTERACTION
-            ws.on('interaction', () => {
-                if (window.StickyPlayer && window.StickyPlayer.getCurrentTrackId() === prod.id) {
-                    window.StickyPlayer.togglePlay();
-                    window.StickyPlayer.seekTo(ws.getCurrentTime());
-                } else if (window.StickyPlayer) {
-                    // If not active, clicking row plays it
-                    window.StickyPlayer.play(prod);
-                    setTimeout(() => window.StickyPlayer.seekTo(ws.getCurrentTime()), 100);
-                }
-            });
-
-            // Store ref with ID to find it later
-            ws.customId = waveformId;
-            window.activeWavesurfers.push(ws);
-
-            // Play Button Logic (Use Sticky Player)
-            const playBtn = document.getElementById(`btn-play-${waveformId}`);
-            playBtn.onclick = (e) => {
-                e.stopPropagation();
-
-                // Construct Track Data for Sticky Player
-                const trackData = {
-                    ...prod,
-                    artist_users: user // Pass producer object for hover access
-                };
-
-                if (window.StickyPlayer) {
-                    // Check if this track is currently active
-                    const currentId = window.StickyPlayer.getCurrentTrackId();
-
-                    // If it's the SAME track, just Toggle it
-                    if (currentId === prod.id) {
-                        window.StickyPlayer.togglePlay();
-                    } else {
-                        // If it's a NEW track, load and play
-                        window.StickyPlayer.play(trackData);
-                    }
-                } else {
-                    console.error("StickyPlayer not found");
-                }
-            };
-
-            /* LEGACY WAVESURFER EVENT LOGIC REMOVED FOR CENTRALIZED PLAYER
-             * If we want visuals, we can keep WS just for rendering the waveform, 
-             * but disable its own audio playback or sync it.
-             * For now, the user requested the Sticky Player take over.
-             */
-        } else {
-            // Fallback for no audio or no library
-            document.getElementById(waveformId).innerHTML = '<div style="height:100%; border-bottom:1px solid #333; opacity:0.3;">NO AUDIO</div>';
-        }
-
-        // 🔥 FIX: Authorize list image with skeleton
-        const authUrl = authorizedUrls[items.indexOf(prod)];
+        // Authorize Image
         if (prod.image_url) {
             const img = row.querySelector('img');
             if (img) {
@@ -1532,7 +1292,58 @@ async function renderProductList(items, user, collabStats = {}) {
                 }
             }
         }
-    }); // Changed from }
+
+        // Initialize WaveSurfer
+        if (audioUrl && window.WaveSurfer) {
+            try {
+                const finalAudioUrl = await window.getAuthorizedUrl(audioUrl);
+                const ws = WaveSurfer.create({
+                    container: document.getElementById(waveformId),
+                    waveColor: '#666',
+                    progressColor: '#8b5cf6',
+                    cursorColor: 'transparent',
+                    barWidth: 2,
+                    barRadius: 2,
+                    barGap: 3,
+                    height: 24,
+                    url: finalAudioUrl,
+                    normalize: true,
+                    backend: 'WebAudio'
+                });
+
+                ws.on('ready', () => {
+                    const container = document.getElementById(waveformId);
+                    if (container) container.classList.remove('skeleton-waveform');
+                    const durationEl = document.getElementById(`duration-${waveformId}`);
+                    if (durationEl) {
+                        const d = ws.getDuration();
+                        const mins = Math.floor(d / 60);
+                        const secs = Math.floor(d % 60).toString().padStart(2, '0');
+                        durationEl.innerText = `${mins}:${secs}`;
+                    }
+                    window.activeWavesurfers.push(ws);
+                });
+
+                const playBtn = document.getElementById(`btn-play-${waveformId}`);
+                if (playBtn) {
+                    playBtn.onclick = (e) => {
+                        e.stopPropagation();
+                        if (window.StickyPlayer) {
+                            const trackData = { ...prod, artist_users: user };
+                            if (window.StickyPlayer.getCurrentTrackId() === prod.id) {
+                                window.StickyPlayer.togglePlay();
+                            } else {
+                                window.StickyPlayer.play(trackData);
+                            }
+                        }
+                    };
+                }
+            } catch (err) {
+                const el = document.getElementById(waveformId);
+                if (el) { el.classList.remove('skeleton-waveform'); el.classList.add('waveform-static-fallback'); }
+            }
+        }
+    });
 
     // UPDATE STICKY PLAYER PLAYLIST
     // Pass all tracks with artist_users data for proper navigation

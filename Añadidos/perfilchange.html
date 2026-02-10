@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 
 <head>
@@ -355,7 +355,7 @@
             <!-- Header -->
             <div class="modal-header">
                 <h2 class="modal-title">Subir Imagen</h2>
-                <button class="modal-close" id="closeModal">❌</button>
+                <button class="modal-close" id="closeModal">?</button>
             </div>
 
             <!-- Body -->
@@ -370,7 +370,7 @@
                         <line x1="12" y1="3" x2="12" y2="15" />
                     </svg>
                     <p class="upload-text">Haz clic para subir o arrastra y suelta</p>
-                    <p class="upload-hint-text">JPG, PNG o WEBP (MÃ¡x. 5MB)</p>
+                    <p class="upload-hint-text">JPG, PNG o WEBP (Máx. 5MB)</p>
                     <p class="upload-hint-text" style="margin-top: 8px; color: #666;">Recomendado: 400x400px o mayor</p>
                     <input type="file" id="fileInput" class="file-input"
                         accept="image/jpeg,image/jpg,image/png,image/webp">
@@ -379,7 +379,7 @@
                 <!-- Crop Area -->
                 <div class="crop-container" id="cropContainer">
                     <p class="upload-hint-text" style="margin-bottom: 12px; text-align: center; color: #999;">
-                        Arrastra el cÃ­rculo para ajustar - Usa la rueda del mouse para hacer zoom
+                        Arrastra el círculo para ajustar - Usa la rueda del mouse para hacer zoom
                     </p>
                     <div class="crop-area" id="cropArea">
                         <img id="cropImage" class="crop-image">
@@ -403,12 +403,12 @@
 
     <script>
         // ============================================
-        // CONFIGURACIÃ“N
+        // CONFIGURACIÓN
         // ============================================
         const MAX_SIZE_MB = 5;
         const ACCEPTED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
-        const OUTPUT_SIZE = 400; // TamaÃ±o final de salida en pÃ­xeles
-        let CROP_SIZE = 300; // TamaÃ±o visual del cÃ­rculo (se ajustarÃ¡ dinÃ¡micamente)
+        const OUTPUT_SIZE = 400; // Tamaño final de salida en píxeles
+        let CROP_SIZE = 300; // Tamaño visual del círculo (se ajustará dinámicamente)
 
         // ============================================
         // ELEMENTOS DEL DOM
@@ -504,14 +504,14 @@
         function handleFile(file) {
             // Validar tipo
             if (!ACCEPTED_TYPES.includes(file.type)) {
-                showError('Formato no Válido. Solo JPG, PNG o WEBP');
+                showError('Formato no V�lido. Solo JPG, PNG o WEBP');
                 return;
             }
 
-            // Validar tamaÃ±o
+            // Validar tamaño
             const sizeMB = file.size / (1024 * 1024);
             if (sizeMB > MAX_SIZE_MB) {
-                showError(`La imagen es muy grande. MÃ¡ximo ${MAX_SIZE_MB}MB`);
+                showError(`La imagen es muy grande. Máximo ${MAX_SIZE_MB}MB`);
                 return;
             }
 
@@ -552,10 +552,10 @@
             const imgWidth = cropImage.naturalWidth;
             const imgHeight = cropImage.naturalHeight;
 
-            // El cÃ­rculo ocupa el 70% del contenedor (mÃ¡s grande visualmente)
+            // El círculo ocupa el 70% del contenedor (más grande visualmente)
             CROP_SIZE = Math.min(containerWidth, containerHeight) * 0.7;
 
-            // Calcular escala base para que la imagen llene el cÃ­rculo de crop
+            // Calcular escala base para que la imagen llene el círculo de crop
             const minDimension = Math.min(imgWidth, imgHeight);
             baseScale = CROP_SIZE / minDimension;
             imageScale = baseScale;
@@ -566,7 +566,7 @@
             imageX = (containerWidth - scaledWidth) / 2;
             imageY = (containerHeight - scaledHeight) / 2;
 
-            // Posicionar cÃ­rculo de crop en el centro
+            // Posicionar círculo de crop en el centro
             circleX = (containerWidth - CROP_SIZE) / 2;
             circleY = (containerHeight - CROP_SIZE) / 2;
 
@@ -610,17 +610,17 @@
                 imageX = (containerWidth - scaledWidth) / 2;
                 imageY = (containerHeight - scaledHeight) / 2;
 
-                // Recentrar cÃ­rculo tambiÃ©n
+                // Recentrar círculo también
                 circleX = (containerWidth - CROP_SIZE) / 2;
                 circleY = (containerHeight - CROP_SIZE) / 2;
 
-                // Verificar que el cÃ­rculo no se salga de la imagen
+                // Verificar que el círculo no se salga de la imagen
                 const minX = imageX;
                 const maxX = imageX + scaledWidth - CROP_SIZE;
                 const minY = imageY;
                 const maxY = imageY + scaledHeight - CROP_SIZE;
 
-                // Si la imagen es mÃ¡s pequeÃ±a que el cÃ­rculo, ajustar
+                // Si la imagen es más pequeña que el círculo, ajustar
                 if (maxX < minX || maxY < minY) {
                     circleX = minX;
                     circleY = minY;
@@ -661,23 +661,23 @@
             const containerWidth = cropArea.offsetWidth;
             const containerHeight = cropArea.offsetHeight;
 
-            // Calcular nueva posiciÃ³n del cÃ­rculo
+            // Calcular nueva posición del círculo
             let newCircleX = clientX - dragStartX;
             let newCircleY = clientY - dragStartY;
 
-            // Calcular lÃ­mites de la imagen escalada
+            // Calcular límites de la imagen escalada
             const imgWidth = cropImage.naturalWidth;
             const imgHeight = cropImage.naturalHeight;
             const scaledWidth = imgWidth * imageScale;
             const scaledHeight = imgHeight * imageScale;
 
-            // LÃ­mites: el cÃ­rculo no puede salirse de donde estÃ¡ la imagen
+            // Límites: el círculo no puede salirse de donde está la imagen
             const minX = imageX;
             const maxX = imageX + scaledWidth - CROP_SIZE;
             const minY = imageY;
             const maxY = imageY + scaledHeight - CROP_SIZE;
 
-            // Aplicar lÃ­mites
+            // Aplicar límites
             circleX = Math.max(minX, Math.min(maxX, newCircleX));
             circleY = Math.max(minY, Math.min(maxY, newCircleY));
 
@@ -703,20 +703,20 @@
             updateBtn.disabled = true;
 
             try {
-                // Crear canvas para crop (tamaÃ±o de SALIDA final)
+                // Crear canvas para crop (tamaño de SALIDA final)
                 const canvas = document.createElement('canvas');
                 const ctx = canvas.getContext('2d');
                 canvas.width = OUTPUT_SIZE;
                 canvas.height = OUTPUT_SIZE;
 
-                // Calcular posiciÃ³n de recorte
+                // Calcular posición de recorte
                 const scaleRatio = cropImage.naturalWidth / (cropImage.width * imageScale);
 
                 const sourceX = (circleX - imageX) * scaleRatio;
                 const sourceY = (circleY - imageY) * scaleRatio;
                 const sourceSize = CROP_SIZE * scaleRatio;
 
-                // Dibujar imagen recortada (escalar al tamaÃ±o de salida)
+                // Dibujar imagen recortada (escalar al tamaño de salida)
                 ctx.drawImage(
                     cropImage,
                     sourceX,
@@ -735,10 +735,10 @@
                         type: currentImage.type
                     });
 
-                    // â­ AQUÃ VA TU LÃ“GICA DE SUBIDA - Descomenta y modifica:
+                    // ⭐ AQUÍ VA TU LÓGICA DE SUBIDA - Descomenta y modifica:
                     // await uploadToSupabase(croppedFile);
 
-                    console.log('TamaÃ±o final:', OUTPUT_SIZE + 'x' + OUTPUT_SIZE + 'px');
+                    console.log('Tamaño final:', OUTPUT_SIZE + 'x' + OUTPUT_SIZE + 'px');
 
                     // Actualizar preview inmediatamente
                     const url = canvas.toDataURL();
@@ -762,7 +762,7 @@
         }
 
         // ============================================
-        // FUNCIÃ“N PARA SUPABASE (EJEMPLO)
+        // FUNCIÓN PARA SUPABASE (EJEMPLO)
         // ============================================
         /*
         async function uploadToSupabase(file) {
@@ -775,7 +775,7 @@
 
             if (error) throw error;
 
-            // Obtener URL pÃºblica
+            // Obtener URL pública
             const { data: urlData } = supabase.storage
                 .from('avatars')
                 .getPublicUrl(data.path);

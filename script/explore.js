@@ -202,7 +202,15 @@ function renderExploreFeed() {
         .filter(p => !usedProductIds.has(p.id) && EXPLORE_CONFIG.CURATED_TYPES.includes(p.product_type?.toLowerCase()))
         .slice(0, EXPLORE_CONFIG.CAROUSEL_LIMIT);
     if (kits.length > 0) {
-        container.appendChild(createShelfRow('Librerías y Kits de Sonido', kits));
+        container.appendChild(createShelfRow('Librerías y Kits de Sonido', kits, 'standard'));
+    }
+
+    // 6. SHELF: PRESETS (Section 5: New format)
+    const presets = allProducts
+        .filter(p => p.product_type?.toLowerCase().includes('preset') || p.product_type?.toLowerCase().includes('voces'))
+        .slice(0, EXPLORE_CONFIG.CAROUSEL_LIMIT);
+    if (presets.length > 0) {
+        container.appendChild(createShelfRow('Presets de voces', presets, 'premium-preset'));
     }
 }
 
@@ -553,7 +561,7 @@ window.navToHero = (index) => {
 /**
  * Shelf Components
  */
-function createShelfRow(title, items) {
+function createShelfRow(title, items, format = 'standard') {
     const row = document.createElement('div');
     row.className = 'explore-row';
     const rowId = `row-${Math.random().toString(36).substr(2, 9)}`;
@@ -561,17 +569,27 @@ function createShelfRow(title, items) {
         <div class="row-header"><h2 class="row-title">${title}</h2></div>
         <div class="shelf-wrapper">
             <button class="btn-nav prev"><i class="bi bi-chevron-left"></i></button>
-            <div class="shelf-container" id="${rowId}">${items.map(item => createProductCardHtml(item)).join('')}</div>
+            <div class="shelf-container" id="${rowId}">${items.map(item => createProductCardHtml(item, format)).join('')}</div>
             <button class="btn-nav next"><i class="bi bi-chevron-right"></i></button>
         </div>
     `;
-    initShelfNavigation(row, rowId, 220);
+    // Different step scroll based on format
+    const stepSize = format === 'premium-preset' ? 340 : 220;
+    initShelfNavigation(row, rowId, stepSize);
     setTimeout(() => {
-        row.querySelectorAll('.product-card-smart').forEach(card => {
+        // Support both standard and premium formats
+        const cards = row.querySelectorAll('.product-card-smart, .preset-card-premium');
+        cards.forEach(card => {
             const id = card.dataset.productId;
             const item = items.find(i => i.id == id);
-            card.querySelector('.quick-play-btn').addEventListener('click', (e) => { e.stopPropagation(); playTrack(item); });
-            card.querySelector('.card-like-btn').addEventListener('click', (e) => { e.stopPropagation(); toggleLike(id, e.currentTarget, item.producer_id); });
+
+            // Standard Card Actions
+            const playBtn = card.querySelector('.quick-play-btn');
+            const likeBtn = card.querySelector('.card-like-btn');
+
+            if (playBtn) playBtn.addEventListener('click', (e) => { e.stopPropagation(); playTrack(item); });
+            if (likeBtn) likeBtn.addEventListener('click', (e) => { e.stopPropagation(); toggleLike(id, e.currentTarget, item.producer_id); });
+
             card.addEventListener('click', () => window.location.href = getProductUrl(item));
         });
     }, 0);
@@ -587,18 +605,38 @@ function initShelfNavigation(row, containerId, cardStep) {
     btnNext.addEventListener('click', () => { container.scrollBy({ left: scrollAmount, behavior: 'smooth' }); });
 }
 
-function createProductCardHtml(product) {
+function createProductCardHtml(product, format = 'standard') {
     const isLiked = window.FavoritesManager ? window.FavoritesManager.isLiked(product.id) : false;
+    const img = product.image_url || 'https://via.placeholder.com/400';
+    const artist = product.producer_nickname || 'OFFSZN Artist';
+
+    if (format === 'premium-preset') {
+        const price = product.is_free ? 'FREE' : `$${product.price_basic || '20'}`;
+        return `
+            <div class="preset-card-premium" data-product-id="${product.id}">
+                <img src="${img}" alt="${product.name}">
+                <div class="preset-overlay">
+                    <span class="preset-tag">PRESET</span>
+                    <h3 class="preset-title">${product.name}</h3>
+                    <div class="preset-info">
+                        <span class="preset-sub">${artist}</span>
+                        <span class="preset-price">${price}</span>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
     return `
         <div class="product-card-smart" data-product-id="${product.id}">
             <div class="card-cover-wrapper">
-                <img src="${product.image_url || 'https://via.placeholder.com/300'}" alt="${product.name}">
+                <img src="${img}" alt="${product.name}">
                 <button class="quick-play-btn"><i class="bi bi-play-fill"></i></button>
                 <button class="card-like-btn ${isLiked ? 'liked' : ''}"><i class="bi ${isLiked ? 'bi-heart-fill' : 'bi-heart'}"></i></button>
             </div>
             <div class="card-info">
                 <div class="card-title">${product.name}</div>
-                <div class="card-producer">${product.producer_nickname || 'Artista'}</div>
+                <div class="card-producer">${artist}</div>
             </div>
         </div>
     `;
