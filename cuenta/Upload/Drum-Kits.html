@@ -6068,12 +6068,9 @@
                 // ========================================
                 if (data.cover_url) {
                     try {
-                        const { data: signedUrlData } = await supabaseClient.storage
-                            .from('drumkit-drafts')
-                            .createSignedUrl(data.cover_url, 3600);
-
-                        if (signedUrlData?.signedUrl) {
-                            const response = await fetch(signedUrlData.signedUrl);
+                        const finalUrl = await getAuthorizedUrl(data.cover_url);
+                        if (finalUrl) {
+                            const response = await fetch(finalUrl);
                             if (response.ok) {
                                 const blob = await response.blob();
                                 formData.coverBlob = blob;
@@ -6086,16 +6083,11 @@
                                     preview.style.display = 'block';
                                     dropZone.classList.add('has-image');
                                     filesUploaded.cover = true;
-
                                 }
                             }
                         }
                     } catch (e) {
-                        console.warn('âš ï¸ Error con cover:', e.message);
-                        await supabaseClient
-                            .from('drumkit_drafts')
-                            .update({ cover_url: null })
-                            .eq('id', currentDraftId);
+                        console.warn('⚠️ Error con cover:', e.message);
                     }
                 }
 
@@ -6104,16 +6096,13 @@
                 // ========================================
                 if (data.kit_url) {
                     try {
-                        const { data: signedUrlData } = await supabaseClient.storage
-                            .from('drumkit-drafts')
-                            .createSignedUrl(data.kit_url, 3600);
-
-                        if (signedUrlData?.signedUrl) {
-                            const response = await fetch(signedUrlData.signedUrl);
+                        const finalUrl = await getAuthorizedUrl(data.kit_url);
+                        if (finalUrl) {
+                            const response = await fetch(finalUrl);
                             if (response.ok) {
                                 const blob = await response.blob();
 
-                                // ðŸ”¥ EXTRAER NOMBRE LIMPIO (sin timestamp ni UUID)
+                                // 🔥 EXTRAER NOMBRE LIMPIO (sin timestamp ni UUID)
                                 let displayName = data.kit_url.split('/').pop();
                                 displayName = displayName.replace(/^\d+_[a-f0-9-]+_/, ''); // Remover timestamp_uuid_
 
@@ -6131,16 +6120,12 @@
                     </div>
                 `;
                                     filesUploaded.kit = true;
-                                    console.log('âœ… Kit restaurado');
+                                    console.log('✅ Kit restaurado');
                                 }
                             }
                         }
                     } catch (e) {
-                        console.warn('âš ï¸ Error con kit:', e.message);
-                        await supabaseClient
-                            .from('drumkit_drafts')
-                            .update({ kit_url: null })
-                            .eq('id', currentDraftId);
+                        console.warn('⚠️ Error con kit:', e.message);
                     }
                 }
 
@@ -6149,16 +6134,13 @@
                 // ========================================
                 if (data.audio_url) {
                     try {
-                        const { data: signedUrlData } = await supabaseClient.storage
-                            .from('drumkit-drafts')
-                            .createSignedUrl(data.audio_url, 3600);
-
-                        if (signedUrlData?.signedUrl) {
-                            const response = await fetch(signedUrlData.signedUrl);
+                        const finalUrl = await getAuthorizedUrl(data.audio_url);
+                        if (finalUrl) {
+                            const response = await fetch(finalUrl);
                             if (response.ok) {
                                 const blob = await response.blob();
 
-                                // ðŸ”¥ EXTRAER NOMBRE LIMPIO (sin timestamp ni UUID)
+                                // 🔥 EXTRAER NOMBRE LIMPIO (sin timestamp ni UUID)
                                 let displayName = data.audio_url.split('/').pop();
                                 displayName = displayName.replace(/^\d+_[a-f0-9-]+_/, ''); // Remover timestamp_uuid_
 
@@ -6184,16 +6166,11 @@
                     </div>
                 `;
                                     filesUploaded.audio = true;
-
                                 }
                             }
                         }
                     } catch (e) {
-                        console.warn('âš ï¸ Error con audio:', e.message);
-                        await supabaseClient
-                            .from('drumkit_drafts')
-                            .update({ audio_url: null })
-                            .eq('id', currentDraftId);
+                        console.warn('⚠️ Error con audio:', e.message);
                     }
                 }
                 // ðŸ”¥ ESPERAR A QUE EL DOM ESTÃ‰ LISTO
@@ -6383,105 +6360,26 @@
                 // ========================================
                 // ðŸ”¥ SUBIR COVER (SI HAY UNO NUEVO)
                 // ========================================
+                // 1. Cover
                 if (formData.coverBlob && !filesUploaded.cover) {
-                    // ðŸ”¥ CLEANUP OLD COVER FROM DRAFT
-                    if (currentDraftId) {
-                        const { data: currentDraft } = await supabaseClient.from('drumkit_drafts').select('cover_url').eq('id', currentDraftId).single();
-                        if (currentDraft?.cover_url) await deleteFileFromStorage(currentDraft.cover_url, 'drumkit-drafts');
-                    }
-
-                    const coverPath = `${userId}/covers/${Date.now()}_${crypto.randomUUID()}.jpg`;
-
-
-                    const { error: coverError } = await supabaseClient.storage
-                        .from('drumkit-drafts')
-                        .upload(coverPath, formData.coverBlob, {
-                            upsert: false, // âœ… NO sobrescribir
-                            contentType: 'image/jpeg'
-                        });
-
-                    if (!coverError) {
-                        draftData.cover_url = coverPath;
-                        filesUploaded.cover = true;
-
-                    } else {
-                        console.error('âŒ Error subiendo cover:', coverError);
-
-                        // ðŸ”¥ Si el error es "duplicate", ignorarlo
-                        if (!coverError.message.includes('duplicate') && !coverError.message.includes('already exists')) {
-                            showToast('Error subiendo cover: ' + coverError.message, 'error');
-                        }
-                    }
+                    const coverFile = new File([formData.coverBlob], 'cover.jpg', { type: 'image/jpeg' });
+                    const key = await uploadToR2(coverFile, 'drafts/covers');
+                    draftData.cover_url = `https://offszn-storage.41d0f49121d02c88f71fdb4da54a791d.r2.cloudflarestorage.com/${key}`;
+                    filesUploaded.cover = true;
                 }
 
-                // ========================================
-                // ðŸ”¥ SUBIR KIT (SI HAY UNO NUEVO)
-                // ========================================
+                // 2. Kit
                 if (formData.files.kit && !filesUploaded.kit) {
-                    // ðŸ”¥ CLEANUP OLD KIT FROM DRAFT
-                    if (currentDraftId) {
-                        const { data: currentDraft } = await supabaseClient.from('drumkit_drafts').select('kit_url').eq('id', currentDraftId).single();
-                        if (currentDraft?.kit_url) await deleteFileFromStorage(currentDraft.kit_url, 'drumkit-drafts');
-                    }
-
-                    const cleanKitName = sanitizeFileName(formData.files.kit.name);
-
-                    const kitPath = `${userId}/kits/${Date.now()}_${crypto.randomUUID()}_${cleanKitName}`;
-
-                    const { error: kitError } = await supabaseClient.storage
-                        .from('drumkit-drafts')
-                        .upload(kitPath, formData.files.kit, {
-                            upsert: false, // âœ… NO sobrescribir
-                            contentType: formData.files.kit.type || 'application/zip'
-                        });
-
-                    if (!kitError) {
-                        draftData.kit_url = kitPath;
-                        filesUploaded.kit = true;
-
-                    } else {
-                        console.error('âŒ Error subiendo kit:', kitError);
-
-                        // ðŸ”¥ Si el error es "duplicate", ignorarlo
-                        if (!kitError.message.includes('duplicate') && !kitError.message.includes('already exists')) {
-                            showToast('Error subiendo kit: ' + kitError.message, 'error');
-                        }
-                    }
+                    const key = await uploadToR2(formData.files.kit, 'drafts/kits');
+                    draftData.kit_url = key; // Private key
+                    filesUploaded.kit = true;
                 }
 
-                // ========================================
-                // ðŸ”¥ SUBIR AUDIO (SI HAY UNO NUEVO)
-                // ========================================
+                // 3. Audio
                 if (formData.files.audio && !filesUploaded.audio) {
-                    // ðŸ”¥ CLEANUP OLD AUDIO FROM DRAFT
-                    if (currentDraftId) {
-                        const { data: currentDraft } = await supabaseClient.from('drumkit_drafts').select('audio_url').eq('id', currentDraftId).single();
-                        if (currentDraft?.audio_url) await deleteFileFromStorage(currentDraft.audio_url, 'drumkit-drafts');
-                    }
-
-                    const cleanAudioName = sanitizeFileName(formData.files.audio.name);
-
-                    const audioPath = `${userId}/audio/${Date.now()}_${crypto.randomUUID()}_${cleanAudioName}`;
-
-                    const { error: audioError } = await supabaseClient.storage
-                        .from('drumkit-drafts')
-                        .upload(audioPath, formData.files.audio, {
-                            upsert: false, // âœ… NO sobrescribir
-                            contentType: formData.files.audio.type || 'audio/mpeg'
-                        });
-
-                    if (!audioError) {
-                        draftData.audio_url = audioPath;
-                        filesUploaded.audio = true;
-
-                    } else {
-                        console.error('âŒ Error subiendo audio:', audioError);
-
-                        // ðŸ”¥ Si el error es "duplicate", ignorarlo
-                        if (!audioError.message.includes('duplicate') && !audioError.message.includes('already exists')) {
-                            showToast('Error subiendo audio: ' + audioError.message, 'error');
-                        }
-                    }
+                    const key = await uploadToR2(formData.files.audio, 'drafts/audio');
+                    draftData.audio_url = `https://offszn-storage.41d0f49121d02c88f71fdb4da54a791d.r2.cloudflarestorage.com/${key}`;
+                    filesUploaded.audio = true;
                 }
 
                 // ========================================
@@ -6559,7 +6457,91 @@
 
             return cleanName + ext;
         }
+        // ========================================
+        // 🚀 CLOUDFLARE R2 UPLOAD HELPER
+        // ========================================
+        async function uploadToR2(file, folder = 'uploads') {
+            try {
+                const session = await supabaseClient.auth.getSession();
+                const token = session.data.session?.access_token;
+                if (!token) throw new Error('No hay sesión activa para subir a R2');
+
+                const response = await fetch('/api/r2/upload-url', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({
+                        fileName: file.name,
+                        fileType: file.type || 'application/octet-stream',
+                        folder: folder
+                    })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Error al obtener URL de R2');
+                }
+
+                const { uploadUrl, key } = await response.json();
+
+                const uploadRes = await fetch(uploadUrl, {
+                    method: 'PUT',
+                    body: file,
+                    headers: { 'Content-Type': file.type }
+                });
+
+                if (!uploadRes.ok) throw new Error('La subida directa a R2 falló');
+                return key;
+            } catch (error) {
+                console.error('Error en uploadToR2:', error);
+                throw error;
+            }
+        }
+
+        async function getAuthorizedUrl(pathOrUrl) {
+            if (!pathOrUrl) return null;
+
+            // ðŸ”¥ FIX: Si es una URL de R2 (cloudflarestorage), necesitamos firmarla sÃ­ o sÃ­.
+            // Si es Supabase (http...) y pÃºblico, lo dejamos pasar.
+            // Si es un KEY (no http), lo firmamos.
+            const isR2Url = pathOrUrl.includes('r2.cloudflarestorage.com') ||
+                pathOrUrl.includes('pub-') ||
+                (pathOrUrl.startsWith('http') === false); // Es un Key
+
+            if (!isR2Url && pathOrUrl.startsWith('http')) return pathOrUrl;
+
+            // Si es R2 URL completa, extraemos el KEY
+            let key = pathOrUrl;
+            if (pathOrUrl.startsWith('http')) {
+                // 🔥 FIX: No usar new URL().pathname porque corta en '#' o '?'
+                const r2Base = '.r2.cloudflarestorage.com/';
+                if (pathOrUrl.includes(r2Base)) {
+                    key = pathOrUrl.split(r2Base)[1];
+                } else {
+                    try {
+                        const urlObj = new URL(pathOrUrl);
+                        key = urlObj.pathname.substring(1);
+                    } catch (e) { }
+                }
+            }
+            try {
+                const session = await supabaseClient.auth.getSession();
+                const token = session.data.session?.access_token;
+                const response = await fetch('/api/r2/download-url', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ key })
+                });
+                if (!response.ok) return null;
+                const { downloadUrl } = await response.json();
+                return downloadUrl;
+            } catch (error) {
+                console.error('Error getting authorized URL:', error);
+                return null;
+            }
+        }
+
         async function handlePublish() {
+
             // ðŸ”¥ COOLDOWN: Prevenir spam (5 minutos)
             // ðŸ”¥ NO COOLDOWN - User requested removal
             // Prevent double submission with isPublishing flag
@@ -6626,51 +6608,29 @@
                     return cleanName + ext;
                 }
 
-                // 1. Subir cover a bucket 'products'
+                // 1. Subir cover a R2
                 let image_url = null;
                 if (formData.coverBlob) {
-                    const coverPath = `${userId}/covers/${Date.now()}_cover.jpg`;
-                    const { data, error } = await supabaseClient.storage
-                        .from('products')
-                        .upload(coverPath, formData.coverBlob, {
-                            cacheControl: '3600',
-                            upsert: false
-                        });
-
-                    if (error) throw new Error(`Error subiendo cover: ${error.message}`);
-                    image_url = supabaseClient.storage.from('products').getPublicUrl(data.path).data.publicUrl;
+                    console.log('🖼️ Subiendo Portada a R2...');
+                    const coverFile = new File([formData.coverBlob], 'cover.jpg', { type: 'image/jpeg' });
+                    const key = await uploadToR2(coverFile, 'products/covers');
+                    image_url = `https://offszn-storage.41d0f49121d02c88f71fdb4da54a791d.r2.cloudflarestorage.com/${key}`;
                 }
 
-                // 2. Subir kit (.rar/.zip) a bucket 'products'
+                // 2. Subir kit (.rar/.zip) a R2 (SECURE)
                 let kit_url = null;
                 if (formData.files.kit) {
-                    const cleanKitName = sanitizeFileName(formData.files.kit.name);
-                    const kitPath = `${userId}/kits/${Date.now()}_${cleanKitName}`;
-
-                    console.log(`ðŸš€ [UPLOAD] Subiendo archivo SECURE a 'secure-products':`, kitPath);
-                    // ðŸ”¥ SECURE UPLOAD: Use private bucket
-                    const { data, error } = await supabaseClient.storage
-                        .from('secure-products')
-                        .upload(kitPath, formData.files.kit);
-
-                    if (error) throw new Error(`Error subiendo kit: ${error.message}`);
-
-                    // ðŸ”¥ STORE PATH, NOT PUBLIC URL (Privacy)
-                    kit_url = data.path;
+                    console.log('🚀 Subiendo Kit a R2 (Secure)...');
+                    const key = await uploadToR2(formData.files.kit, 'secure-products/kits');
+                    kit_url = key;
                 }
 
-                // 3. Subir audio preview a bucket 'products'
+                // 3. Subir audio preview a R2
                 let audio_url = null;
                 if (formData.files.audio) {
-                    const cleanAudioName = sanitizeFileName(formData.files.audio.name);
-                    const audioPath = `${userId}/audio/${Date.now()}_${cleanAudioName}`;
-                    console.log(`ðŸŽµ [UPLOAD] Subiendo audio a 'products':`, audioPath);
-                    const { data, error } = await supabaseClient.storage
-                        .from('products')
-                        .upload(audioPath, formData.files.audio);
-
-                    if (error) throw new Error(`Error subiendo audio: ${error.message}`);
-                    audio_url = supabaseClient.storage.from('products').getPublicUrl(data.path).data.publicUrl;
+                    console.log('🎵 Subiendo Audio Preview a R2...');
+                    const key = await uploadToR2(formData.files.audio, 'products/audio');
+                    audio_url = `https://offszn-storage.41d0f49121d02c88f71fdb4da54a791d.r2.cloudflarestorage.com/${key}`;
                 }
 
                 // 4. Calcular precio final
@@ -7344,17 +7304,20 @@
                 // 5.1 Cover
                 if (product.image_url) {
                     try {
-                        const response = await fetch(product.image_url);
-                        const blob = await response.blob();
-                        formData.coverBlob = blob;
+                        const signedUrl = await getAuthorizedUrl(product.image_url); // ðŸ”¥ FIX: Sign first
+                        if (signedUrl) {
+                            const response = await fetch(signedUrl);
+                            const blob = await response.blob();
+                            formData.coverBlob = blob;
 
-                        const preview = document.getElementById('coverPreview');
-                        preview.src = URL.createObjectURL(blob);
-                        preview.style.display = 'block';
-                        document.getElementById('coverDropZone').classList.add('has-image');
-                        filesUploaded.cover = true;
+                            const preview = document.getElementById('coverPreview');
+                            preview.src = URL.createObjectURL(blob);
+                            preview.style.display = 'block';
+                            document.getElementById('coverDropZone').classList.add('has-image');
+                            filesUploaded.cover = true;
+                        }
                     } catch (e) {
-                        console.warn('âš ï¸ Error cargando cover:', e);
+                        console.warn('âš ï¸  Error cargando cover:', e);
                     }
                 }
 
@@ -7403,7 +7366,16 @@
 
                 // 5.2 Kit File
                 if (product.kit_url) {
-                    // ðŸ”¥ FIX: Correct DropZone ID (fileDropZone NOT kitDropZone)
+                    // 🔥 FIX: Sign kit URL mainly for fetching if needed, but for renderFilePreview we use raw name
+                    // But if we want to repopulate formData (which loop above for cover does), we should fetch it.
+                    // The existing code didn't fetch kit/audio blobs? 
+                    // Wait, the original code for kit only did renderFilePreview.
+                    // Ah, lines 6097 in loadDraft DOES fetch them. 
+                    // But loadProductForEdit below only calls renderFilePreview for kit/audio.
+                    // This means if user saves without changing kit, formData.files.kit is null!
+                    // But handleUpdateProduct checks: if (formData.files.kit) upload... else keep existing.
+                    // So we DON'T need to fetch kit/audio blobs effectively, just visual preview.
+
                     renderFilePreview('kit', product.kit_url, 'filePreviewContainer', 'fileDropZone');
                     // Specific UI toggle for Kit
                     document.getElementById('fileInput').style.display = 'none';
@@ -7416,7 +7388,10 @@
                     // Init Waveform
                     if (wavesurfer && product.audio_url) {
                         try {
-                            wavesurfer.load(product.audio_url);
+                            (async () => {
+                                const finalUrl = await getAuthorizedUrl(product.audio_url);
+                                if (finalUrl) wavesurfer.load(finalUrl);
+                            })();
                             document.getElementById('playPauseBtn').disabled = false;
                             document.getElementById('waveform').style.display = 'block';
                             document.getElementById('playerPlaceholder').style.display = 'none';
@@ -8098,16 +8073,58 @@
         async function deleteFileFromStorage(pathOrUrl, bucket = 'drumkit-drafts') {
             if (!pathOrUrl) return;
             try {
+                // Determine if it's R2 or Supabase
+                const isR2 = pathOrUrl.includes('r2.cloudflarestorage.com') ||
+                    pathOrUrl.includes('pub-') ||
+                    (pathOrUrl.startsWith('http') === false);
+
+                if (isR2) {
+                    let key = pathOrUrl;
+                    if (pathOrUrl.startsWith('http')) {
+                        try {
+                            const urlObj = new URL(pathOrUrl);
+                            key = urlObj.pathname.substring(1);
+                        } catch (e) {
+                            console.warn("Could not parse R2 URL for deletion:", pathOrUrl);
+                        }
+                    }
+                    console.log(`🗑️ [CLEANUP] Eliminando de R2 vía Backend: ${key}`);
+
+                    const session = await supabaseClient.auth.getSession();
+                    const token = session.data.session?.access_token;
+
+                    await fetch('/api/r2/delete-files', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify({ keys: [key] })
+                    });
+                    return;
+                }
+
+                // Standard Supabase Deletion
                 let path = pathOrUrl;
                 if (pathOrUrl.startsWith('http')) {
                     const parts = pathOrUrl.split(`/${bucket}/`);
-                    if (parts.length > 1) path = parts[1];
-                    else return;
+                    if (parts.length > 1) {
+                        path = parts[1];
+                    } else {
+                        const urlObj = new URL(pathOrUrl);
+                        const pathParts = urlObj.pathname.split(`/storage/v1/object/public/${bucket}/`);
+                        if (pathParts.length > 1) path = pathParts[1];
+                        else {
+                            console.warn('⚠️ Could not extract path from URL:', pathOrUrl);
+                            return;
+                        }
+                    }
                 }
-                console.log(`🗑️ [CLEANUP] Borrando archivo del bucket '${bucket}':`, path);
+
+                console.log(`🗑️ [CLEANUP] Borrando de Supabase bucket '${bucket}':`, path);
                 await supabaseClient.storage.from(bucket).remove([path]);
-            } catch (e) {
-                console.warn(`⚠️ Cleanup failed for ${pathOrUrl} in ${bucket}:`, e);
+            } catch (error) {
+                console.warn(`⚠️ Cleanup failed for ${pathOrUrl} in ${bucket}:`, error);
             }
         }
 
@@ -8230,68 +8247,47 @@
 
                 // 1. Upload NEW Cover if exists
                 if (formData.coverBlob) {
+                    console.log('🖼️ Subiendo Portada Editada a R2...');
+
                     // 🔥 CLEANUP OLD COVER
                     if (window.originalProductData && window.originalProductData.image_url) {
-                        try {
-                            const urlParts = window.originalProductData.image_url.split('/products/');
-                            if (urlParts.length > 1) await supabaseClient.storage.from('products').remove([urlParts[1]]);
-                        } catch (e) { console.warn('Old cover cleanup failed', e); }
+                        console.log('♻️ [CLEANUP] Eliminando portada anterior...');
+                        await deleteFileFromStorage(window.originalProductData.image_url, 'drumkit-covers');
                     }
 
-                    const coverPath = `${userId}/covers/${Date.now()}_cover_edit.jpg`;
-                    const { data, error } = await supabaseClient.storage
-                        .from('products')
-                        .upload(coverPath, formData.coverBlob, { upsert: false });
-
-                    if (error) throw error;
-                    updates.image_url = supabaseClient.storage.from('products').getPublicUrl(data.path).data.publicUrl;
+                    const coverFile = new File([formData.coverBlob], 'cover_edit.jpg', { type: 'image/jpeg' });
+                    const key = await uploadToR2(coverFile, 'products/covers');
+                    updates.image_url = `https://offszn-storage.41d0f49121d02c88f71fdb4da54a791d.r2.cloudflarestorage.com/${key}`;
                 }
 
                 // 2. Upload NEW Files if exist
 
                 // Kit File (Secure)
                 if (formData.files.kit) {
+                    console.log('🚀 Subiendo Kit Editado a R2 (Secure)...');
+
                     // 🔥 CLEANUP OLD KIT
                     if (window.originalProductData && window.originalProductData.kit_url) {
-                        try {
-                            const oldUrl = window.originalProductData.kit_url;
-                            const isUrl = oldUrl.startsWith('http');
-                            const oldPath = isUrl ? oldUrl.split('/secure-products/')[1] : oldUrl;
-                            if (oldPath) await supabaseClient.storage.from('secure-products').remove([oldPath]);
-                        } catch (e) { console.warn('Old kit cleanup failed', e); }
+                        console.log('♻️ [CLEANUP] Eliminando kit anterior...');
+                        await deleteFileFromStorage(window.originalProductData.kit_url, 'drumkits');
                     }
 
-                    const cleanName = sanitize(formData.files.kit.name);
-                    const path = `${userId}/kits/${Date.now()}_edit_${cleanName}`;
-                    const { data, error } = await supabaseClient.storage
-                        .from('secure-products') // Assuming secure bucket
-                        .upload(path, formData.files.kit);
-
-                    if (error) {
-                        // Fallback to normal if secure fails? No, critical.
-                        throw error;
-                    }
-                    updates.kit_url = data.path; // Store Path in DB
+                    const key = await uploadToR2(formData.files.kit, 'secure-products/kits');
+                    updates.kit_url = key;
                 }
 
                 // Audio Preview
                 if (formData.files.audio) {
+                    console.log('🎵 Subiendo Audio Editado a R2...');
+
                     // 🔥 CLEANUP OLD AUDIO
                     if (window.originalProductData && window.originalProductData.audio_url) {
-                        try {
-                            const urlParts = window.originalProductData.audio_url.split('/products/');
-                            if (urlParts.length > 1) await supabaseClient.storage.from('products').remove([urlParts[1]]);
-                        } catch (e) { console.warn('Old audio cleanup failed', e); }
+                        console.log('♻️ [CLEANUP] Eliminando audio anterior...');
+                        await deleteFileFromStorage(window.originalProductData.audio_url, 'drumkits');
                     }
 
-                    const cleanName = sanitize(formData.files.audio.name);
-                    const path = `${userId}/audio/${Date.now()}_edit_${cleanName}`;
-                    const { data, error } = await supabaseClient.storage
-                        .from('products')
-                        .upload(path, formData.files.audio);
-
-                    if (error) throw error;
-                    updates.audio_url = supabaseClient.storage.from('products').getPublicUrl(data.path).data.publicUrl;
+                    const key = await uploadToR2(formData.files.audio, 'products/audio');
+                    updates.audio_url = `https://offszn-storage.41d0f49121d02c88f71fdb4da54a791d.r2.cloudflarestorage.com/${key}`;
                 }
 
                 // 4. Update Database

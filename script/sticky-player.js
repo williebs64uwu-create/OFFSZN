@@ -247,10 +247,18 @@ window.StickyPlayer = (function () {
     }
 
     // Unified Load Logic
-    function loadTrack(trackData, autoPlay = true, startTime = 0) {
+    async function loadTrack(trackData, autoPlay = true, startTime = 0) {
         if (!container) init();
         container.classList.add('visible');
 
+        // Add skeletons to UI
+        if (els.cover) els.cover.parentElement.classList.add('skeleton');
+        if (els.title) els.title.classList.add('skeleton-text');
+        if (els.artist) els.artist.classList.add('skeleton-text');
+        const wfContainer = document.getElementById('sp-waveform');
+        if (wfContainer) wfContainer.classList.add('skeleton-waveform');
+
+        currentTrack = trackData;
         // History Logic: Push CURRENT track to history before switching
         if (!isNavigatingHistory && currentTrack && currentTrack.id !== trackData.id) {
             navigationHistory.push(currentTrack);
@@ -283,15 +291,17 @@ window.StickyPlayer = (function () {
 
         els.title.innerText = trackData.name || 'Untitled';
         els.artist.innerHTML = '';
-        if (trackData.artist_users || trackData.producer) {
-            // Handle both structure types (array or object)
-            let pData = trackData.artist_users || trackData.producer;
-            if (Array.isArray(pData)) pData = pData[0];
 
+        // Resolve Producer/Artist Data (Standardizing between Explore/Profile structures)
+        let pData = trackData.artist_users || trackData.producer || trackData.producer_data;
+        if (Array.isArray(pData)) pData = pData[0];
+
+        if (pData && (pData.nickname || pData.name)) {
             els.artist.appendChild(createHoverSpan(pData));
         } else {
-            // Fallback
-            els.artist.innerText = trackData.producer_name || 'Unknown';
+            // High-level fallback from product object itself
+            const fallbackName = trackData.producer_nickname || trackData.producer_name || trackData.artist_name || 'OFFSZN Artist';
+            els.artist.innerText = fallbackName;
         }
 
         // Badges Logic - Cleared per user request
@@ -300,8 +310,45 @@ window.StickyPlayer = (function () {
             badgesContainer.innerHTML = '';
         }
 
-        // Cover
-        els.cover.src = trackData.image_url ? trackData.image_url : 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=';
+        // Cover - 🔥 FIX: Smart R2 Loading
+        // 1. Determine if it's potentially an R2/Private URL
+        const rawImg = trackData.image_url || '';
+        const isR2 = rawImg.includes('r2.cloudflarestorage.com') || rawImg.includes('pub-') || (!rawImg.startsWith('http') && rawImg.includes('/'));
+
+        // 2. Set Initial State
+        if (isR2) {
+            // Use transparent pixel to avoid "broken icon" while authorizing
+            els.cover.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=';
+        } else {
+            els.cover.src = rawImg || 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=';
+        }
+
+        // 3. Authorize & Load
+        if (rawImg) {
+            window.getAuthorizedUrl(rawImg).then(url => {
+                if (url) {
+                    els.cover.onload = () => {
+                        if (els.cover.parentElement) els.cover.parentElement.classList.remove('skeleton');
+                        if (els.title) els.title.classList.remove('skeleton-text');
+                        if (els.artist) els.artist.classList.remove('skeleton-text');
+                        els.cover.style.opacity = '1';
+                    };
+                    // Reset opacity for fade-in effect if needed
+                    els.cover.style.opacity = '0';
+                    els.cover.style.transition = 'opacity 0.3s ease';
+
+                    els.cover.src = url;
+
+                    // Handle cached case
+                    if (els.cover.complete && els.cover.naturalWidth > 0) els.cover.onload();
+                }
+            });
+        } else {
+            // No image case, remove skeletons immediately
+            if (els.cover.parentElement) els.cover.parentElement.classList.remove('skeleton');
+            if (els.title) els.title.classList.remove('skeleton-text');
+            if (els.artist) els.artist.classList.remove('skeleton-text');
+        }
 
         // Like Status Sync
         if (window.FavoritesManager) {
@@ -330,40 +377,106 @@ window.StickyPlayer = (function () {
 
         if (!audioUrl) return;
 
-        // Waveform Init
-        if (!ws && window.WaveSurfer) {
-            initWaveSurfer(audioUrl, autoPlay, startTime);
-        } else if (ws) {
-            loadWaveSurferAudio(audioUrl, autoPlay, startTime);
+        // 🔥 FIX: AUTHORIZE R2 URL (Start promise but don't blocking if image logic can handle UI)
+        const finalAudioUrl = await window.getAuthorizedUrl(audioUrl);
+
+        // 🔥 FIX: ALWAYS DESTROY OLD INSTANCE (Clean Slate)
+        // This force-recreates the WaveSurfer instance every time a track loads,
+        // preventing state corruption and ensuring fresh rendering (matching Profile Page behavior).
+        if (ws) {
+            try {
+                ws.destroy();
+                ws = null;
+            } catch (e) { console.warn("WS Destroy Error", e); }
         }
-    }
 
-    function initWaveSurfer(audioUrl, autoPlay, startTime) {
-        // Ensure container is empty and ready
-        const wfContainer = document.getElementById('sp-waveform');
-        if (wfContainer) wfContainer.innerHTML = '';
+        // Ensure container is clean
+        if (wfContainer) {
+            wfContainer.innerHTML = '';
+            // Add skeleton back while loading
+            wfContainer.classList.add('skeleton-waveform');
+        }
 
+        // Create FRESH instance
         ws = WaveSurfer.create({
             container: '#sp-waveform',
-            waveColor: '#444',
+            waveColor: '#555',
             progressColor: '#8b5cf6',
             cursorColor: '#fff',
             cursorWidth: 2,
             barWidth: 2,
-            barGap: 1,
+            barGap: 2,
             barRadius: 2,
             height: 40,
             normalize: true,
             interact: true,
             fillParent: true,
-            autoCenter: false,    // Stay static
-            minPxPerSec: 0,       // Fit container
+            autoCenter: false,
+            minPxPerSec: 0,
             hideScrollbar: true,
-            backend: 'MediaElement' // Robust to demuxer errors
+            partialRender: true,
+            url: finalAudioUrl // Load URL directly in config like Profile
         });
 
-        // Use the handler we defined previously
-        loadWaveSurferAudio(audioUrl, autoPlay, startTime);
+        // Event Handlers for FRESH instance
+        ws.on('ready', () => {
+            if (wfContainer) wfContainer.classList.remove('skeleton-waveform');
+            if (els.totalTime) els.totalTime.innerText = formatTime(ws.getDuration());
+
+            // Simple render check after a moment (no brute force loop)
+            setTimeout(() => {
+                if (ws && ws.renderer) {
+                    try { ws.renderer.reRender(); } catch (e) { }
+                }
+            }, 100);
+
+            if (autoPlay) {
+                ws.play();
+                isPlaying = true;
+                updatePlayBtn();
+            } else if (startTime > 0) {
+                const duration = ws.getDuration();
+                if (duration > 0) ws.seekTo(startTime / duration);
+            }
+        });
+
+        // 🔥 FIX: WAVEFORM DISAPPEARANCE BUG (Force Redraw Loop)
+        // V7 canvas sometimes clears itself or fails to scale if container is flex-resized.
+        // We use a brute-force approach to ensure it stays visible.
+        ws.on('ready', () => {
+            // Basic state
+            if (wfContainer) wfContainer.classList.remove('skeleton-waveform');
+            if (els.totalTime) els.totalTime.innerText = formatTime(ws.getDuration());
+
+            // Force redraw loop (0ms, 100ms, 300ms, 500ms, 1s)
+            // This ensures that if the container transitions from height 0 or display:none, 
+            // the canvas will eventually render correctly.
+            const forceRender = () => {
+                if (ws && ws.renderer) {
+                    try {
+                        // Trigger internal re-render or window resize event
+                        window.dispatchEvent(new Event('resize'));
+                    } catch (e) { }
+                }
+            };
+
+            [50, 150, 300, 500, 1000].forEach(ms => setTimeout(forceRender, ms));
+        });
+
+        // Robust Resize Observer
+        // This handles cases where the browser window doesn't change, but the layout does (e.g. keyboard open, bottom sheet)
+        if (window.ResizeObserver && wfContainer) {
+            const resizeObserver = new ResizeObserver(() => {
+                if (ws) {
+                    // Debounce resize trigger
+                    if (window._wsResizeTimer) clearTimeout(window._wsResizeTimer);
+                    window._wsResizeTimer = setTimeout(() => {
+                        try { window.dispatchEvent(new Event('resize')); } catch (e) { }
+                    }, 50);
+                }
+            });
+            resizeObserver.observe(wfContainer);
+        }
 
         // High frequency sync logic (from old play)
         ws.on('timeupdate', () => {
@@ -415,6 +528,8 @@ window.StickyPlayer = (function () {
         });
 
         ws.on('error', (e) => {
+            console.error('[StickyPlayer] WaveSurfer error:', e);
+            if (wfContainer) wfContainer.classList.remove('skeleton-waveform');
             console.warn("StickyPlayer: Playback failed (MediaError)", e);
             isPlaying = false;
             updatePlayBtn();

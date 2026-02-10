@@ -1,0 +1,78 @@
+/**
+ * R2 Auto-Loader - Premium Authorization Hook
+ * Automatically signs R2 resources found in the DOM.
+ * This works globally without having to refactor existing render logic.
+ */
+(function () {
+    /**
+     * Resolves an image element's R2 source.
+     */
+    async function resolveElement(el) {
+        if (el.tagName === 'IMG') {
+            const src = el.getAttribute('src');
+            if (!src) return;
+
+            // Detect R2 paths (Full URLs or relative keys)
+            const isR2 = src.includes('r2.cloudflarestorage.com') ||
+                src.includes('pub-') ||
+                (!src.startsWith('http') && src.includes('/'));
+
+            // Sign only if it's R2 and NOT already signed (contains AWS signature params)
+            if (isR2 && !src.includes('X-Amz-Signature')) {
+                const originalSrc = src;
+
+                // 🧪 UX Enhancement: Set to empty state to avoid "broken icon" during signing
+                // Only if the current src is the raw R2 key/url
+                el.style.opacity = el.style.opacity || '0';
+                el.style.transition = 'opacity 0.4s ease';
+
+                try {
+                    const authorizedUrl = await window.getAuthorizedUrl(originalSrc);
+                    if (authorizedUrl && authorizedUrl !== originalSrc) {
+                        el.onload = () => { el.style.opacity = '1'; };
+                        el.src = authorizedUrl;
+                        if (el.complete) el.onload();
+                    } else {
+                        // Fallback: If signing fails, show original (might be public)
+                        el.style.opacity = '1';
+                    }
+                } catch (e) {
+                    el.style.opacity = '1';
+                }
+            }
+        }
+    }
+
+    // --- MUTATION OBSERVER ---
+    // Watches for new images added via JS (Template Literals, innerHTML, etc.)
+    const observer = new MutationObserver((mutations) => {
+        mutations.forEach(mutation => {
+            mutation.addedNodes.forEach(node => {
+                if (node.nodeType === 1) { // ELEMENT_NODE
+                    if (node.tagName === 'IMG') {
+                        resolveElement(node);
+                    } else {
+                        node.querySelectorAll('img').forEach(resolveElement);
+                    }
+                }
+            });
+        });
+    });
+
+    // --- INITIALIZATION ---
+    function init() {
+        // 1. Process existing images
+        document.querySelectorAll('img').forEach(resolveElement);
+
+        // 2. Start observing DOM for new images
+        observer.observe(document.body, { childList: true, subtree: true });
+
+        console.log("🛡️ R2-Loader: Initialized and watching for resources.");
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
+})();

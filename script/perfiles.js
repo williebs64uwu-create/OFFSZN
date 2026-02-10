@@ -95,7 +95,10 @@ function actualizarHeaderPerfil(user) {
     if (user.avatar_url) {
       // (Aquí irá la optimización de imagen, por ahora usamos la URL directa)
       avatarImg.src = user.avatar_url;
-      avatarImg.onerror = () => { avatarImg.src = placeholderUrl; }; // Fallback
+      avatarImg.onerror = () => {
+        if (window.AvatarManager) window.AvatarManager.handleError(avatarImg, user.nickname);
+        else avatarImg.src = placeholderUrl;
+      };
     } else {
       avatarImg.src = placeholderUrl;
     }

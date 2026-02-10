@@ -485,7 +485,7 @@ function renderActualResults(results) {
         // IMAGE LOGIC: Prefer image_url, fallback to icon
         let imgHtml = '';
         if (item.img) {
-            imgHtml = `<img src="${item.img}" style="width:36px; height:36px; border-radius:6px; object-fit:cover;" alt="${item.title}">`;
+            imgHtml = `<img src="${item.img}" style="width:36px; height:36px; border-radius:6px; object-fit:cover;" alt="${item.title}" onerror="if(window.AvatarManager) window.AvatarManager.handleError(this, '${item.title.replace(/'/g, "\\'")}')">`;
         } else {
             let icon = item.type === 'user' ? 'person-circle' : (item.type === 'kit' ? 'box-seam' : 'music-note-beamed');
             imgHtml = `<div class="result-img" style="display:flex;align-items:center;justify-content:center;color:#666; background:rgba(255,255,255,0.05); border-radius:50%; width:36px; height:36px;"><i class="bi bi-${icon}"></i></div>`;
@@ -792,6 +792,11 @@ async function updateAuthUI(session) {
         window.currentUserNickname = displayName;
         updateUserVisuals(displayName, displayLetter, avatarUrl);
 
+        // 🚀 NEW: Check for external avatars and internalize them
+        if (window.AvatarManager && window.AvatarManager.maybeInternalize) {
+            window.AvatarManager.maybeInternalize(session);
+        }
+
         // 2. FETCH FRESH DATA (Background)
         if (typeof window.supabaseClient !== 'undefined') {
             try {
@@ -865,7 +870,7 @@ function updateUserVisuals(displayName, displayLetter, avatarUrl) {
             // Prevent flickering by checking if src is already correct
             const currentImg = avatarEl.querySelector('img');
             if (!currentImg || currentImg.src !== avatarUrl) {
-                avatarEl.innerHTML = `<img src="${avatarUrl}" alt="${displayName}">`;
+                avatarEl.innerHTML = `<img src="${avatarUrl}" alt="${displayName}" onerror="if(window.AvatarManager) window.AvatarManager.handleError(this, '${displayName.replace(/'/g, "\\'")}')">`;
                 avatarEl.classList.add('user-avatar-placeholder');
             }
         } else {
@@ -879,7 +884,7 @@ function updateUserVisuals(displayName, displayLetter, avatarUrl) {
         if (avatarUrl) {
             const currentImg = dropdownAvatarEl.querySelector('img');
             if (!currentImg || currentImg.src !== avatarUrl) {
-                dropdownAvatarEl.innerHTML = `<img src="${avatarUrl}" alt="${displayName}">`;
+                dropdownAvatarEl.innerHTML = `<img src="${avatarUrl}" alt="${displayName}" onerror="if(window.AvatarManager) window.AvatarManager.handleError(this, '${displayName.replace(/'/g, "\\'")}')">`;
             }
         } else {
             dropdownAvatarEl.innerText = displayLetter;

@@ -7792,72 +7792,34 @@
 
                 // 1. Cover
                 if (formData.coverBlob && !filesUploaded.cover) {
-                    // ðŸ”¥ CLEANUP OLD COVER FROM DRAFT
-                    if (existingFilesData.cover) await deleteFileFromStorage(existingFilesData.cover, 'beat-drafts');
-
-                    const coverPath = `${userId}/covers/${Date.now()}_${crypto.randomUUID()}.jpg`;
-                    const { error } = await supabaseClient.storage
-                        .from(bucket)
-                        .upload(coverPath, formData.coverBlob, { contentType: 'image/jpeg' });
-
-                    if (!error) {
-                        draftData.files_data.cover = coverPath;
-                        filesUploaded.cover = true;
-                    }
+                    const coverFile = new File([formData.coverBlob], 'cover.jpg', { type: 'image/jpeg' });
+                    const key = await uploadToR2(coverFile, 'drafts/covers');
+                    draftData.files_data.cover = `https://offszn-storage.41d0f49121d02c88f71fdb4da54a791d.r2.cloudflarestorage.com/${key}`;
+                    filesUploaded.cover = true;
                 }
-
 
                 // 2. MP3 Tagged
                 if (formData.files.mp3_tagged && !filesUploaded.mp3_tagged) {
-                    // ðŸ”¥ CLEANUP OLD MP3 FROM DRAFT
-                    if (existingFilesData.mp3_tagged) await deleteFileFromStorage(existingFilesData.mp3_tagged, 'beat-drafts');
-
-                    const cleanName = sanitizeFileName(formData.files.mp3_tagged.name);
-                    const path = `${userId}/mp3_tagged/${Date.now()}_${crypto.randomUUID()}_${cleanName}`;
-                    const { error } = await supabaseClient.storage
-                        .from(bucket)
-                        .upload(path, formData.files.mp3_tagged, { contentType: 'audio/mpeg' });
-
-                    if (!error) {
-                        draftData.files_data.mp3_tagged = path;
-                        filesUploaded.mp3_tagged = true;
-                    }
+                    console.log('🎵 Subiendo MP3 de borrador a R2...');
+                    const key = await uploadToR2(formData.files.mp3_tagged, 'drafts/mp3');
+                    draftData.files_data.mp3_tagged = `https://offszn-storage.41d0f49121d02c88f71fdb4da54a791d.r2.cloudflarestorage.com/${key}`;
+                    filesUploaded.mp3_tagged = true;
                 }
-
 
                 // 3. WAV Untagged
                 if (formData.files.wav_untagged && !filesUploaded.wav_untagged) {
-                    // ðŸ”¥ CLEANUP OLD WAV FROM DRAFT
-                    if (existingFilesData.wav_untagged) await deleteFileFromStorage(existingFilesData.wav_untagged, 'beat-drafts');
-
-                    const cleanName = sanitizeFileName(formData.files.wav_untagged.name);
-                    const path = `${userId}/wav_untagged/${Date.now()}_${crypto.randomUUID()}_${cleanName}`;
-                    const { error } = await supabaseClient.storage
-                        .from(bucket)
-                        .upload(path, formData.files.wav_untagged, { contentType: 'audio/wav' });
-
-                    if (!error) {
-                        draftData.files_data.wav_untagged = path;
-                        filesUploaded.wav_untagged = true;
-                    }
+                    console.log('🚀 Subiendo WAV de borrador a R2...');
+                    const key = await uploadToR2(formData.files.wav_untagged, 'drafts/wav');
+                    draftData.files_data.wav_untagged = key; // Preserve key for private files
+                    filesUploaded.wav_untagged = true;
                 }
-
 
                 // 4. Stems
                 if (formData.files.stems && !filesUploaded.stems) {
-                    // ðŸ”¥ CLEANUP OLD STEMS FROM DRAFT
-                    if (existingFilesData.stems) await deleteFileFromStorage(existingFilesData.stems, 'beat-drafts');
-
-                    const cleanName = sanitizeFileName(formData.files.stems.name);
-                    const path = `${userId}/stems/${Date.now()}_${crypto.randomUUID()}_${cleanName}`;
-                    const { error } = await supabaseClient.storage
-                        .from(bucket)
-                        .upload(path, formData.files.stems, { contentType: 'application/zip' }); // Or detect type
-
-                    if (!error) {
-                        draftData.files_data.stems = path;
-                        filesUploaded.stems = true;
-                    }
+                    console.log('🚀 Subiendo Stems de borrador a R2...');
+                    const key = await uploadToR2(formData.files.stems, 'drafts/stems');
+                    draftData.files_data.stems = key; // Preserve key
+                    filesUploaded.stems = true;
                 }
 
                 // ========================================
@@ -7960,7 +7922,115 @@
 
             return cleanName + ext;
         }
+        // ========================================
+        // 🚀 CLOUDFLARE R2 UPLOAD HELPER
+        // ========================================
+        async function uploadToR2(file, folder = 'uploads') {
+            try {
+                // 1. Obtener URL firmada del backend
+                const session = await supabaseClient.auth.getSession();
+                const token = session.data.session?.access_token;
+
+                if (!token) throw new Error('No hay sesión activa para subir a R2');
+
+                console.log('ðŸš€ [Client] Subiendo a R2. Token presente:', !!token, 'Token length:', token ? token.length : 0);
+
+                const response = await fetch('/api/r2/upload-url', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        fileName: file.name,
+                        fileType: file.type || 'application/octet-stream', // 🔥 Fallback for unknown types (e.g. .zip on Windows)
+                        folder: folder
+                    })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Error al obtener URL de R2');
+                }
+
+                const { uploadUrl, key } = await response.json();
+
+                // 2. Subir directamente a R2
+                const uploadRes = await fetch(uploadUrl, {
+                    method: 'PUT',
+                    body: file,
+                    headers: {
+                        'Content-Type': file.type
+                    }
+                });
+
+                if (!uploadRes.ok) throw new Error('La subida directa a R2 falló');
+
+                console.log(`✅ [R2] Archivo subido con éxito: ${key}`);
+                return key; // Retornamos el Key para guardarlo en la DB
+            } catch (error) {
+                console.error('Error en uploadToR2:', error);
+                throw error;
+            }
+        }
+
+        /**
+         * 🚀 Obtiene una URL autorizada (Firmada) si es un Key de R2, 
+         * o devuelve la URL tal cual si ya es un Link de Supabase.
+         */
+        async function getAuthorizedUrl(pathOrUrl) {
+            if (!pathOrUrl) return null;
+
+            // ðŸ”¥ FIX: Si es una URL de R2 (cloudflarestorage), necesitamos firmarla sÃ­ o sÃ­.
+            // Si es Supabase (http...) y pÃºblico, lo dejamos pasar.
+            // Si es un KEY (no http), lo firmamos.
+            const isR2Url = pathOrUrl.includes('r2.cloudflarestorage.com') ||
+                pathOrUrl.includes('pub-') ||
+                (pathOrUrl.startsWith('http') === false); // Es un Key
+
+            if (!isR2Url && pathOrUrl.startsWith('http')) return pathOrUrl; // Es Supabase o externo pÃºblico
+
+            // Si es R2 URL completa, extraemos el KEY
+            let key = pathOrUrl;
+            if (pathOrUrl.startsWith('http')) {
+                // 🔥 FIX: No usar new URL().pathname porque corta en '#' o '?'
+                // Buscamos la base del bucket de R2
+                const r2Base = '.r2.cloudflarestorage.com/';
+                if (pathOrUrl.includes(r2Base)) {
+                    key = pathOrUrl.split(r2Base)[1];
+                } else {
+                    // Fallback para otros dominios (ej. pub-...)
+                    try {
+                        const urlObj = new URL(pathOrUrl);
+                        key = urlObj.pathname.substring(1);
+                    } catch (e) { }
+                }
+            }
+
+            try {
+                const session = await supabaseClient.auth.getSession();
+                const token = session.data.session?.access_token;
+
+                const response = await fetch('/api/r2/download-url', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ key })
+                });
+
+                if (!response.ok) return null;
+                const { downloadUrl } = await response.json();
+                return downloadUrl;
+            } catch (error) {
+                console.error('Error getting authorized URL:', error);
+                return null;
+            }
+        }
+
         async function handlePublish() {
+
             // 🔥 GUARD: Prevent Publish if No User ID (Fixes producer_id: null bug)
             if (!userId) {
                 console.error('❌ Blocked Publish: userId is null. Attempting re-fetch...');
@@ -8132,62 +8202,35 @@
 
                 let image_url = null;
                 if (formData.coverBlob) {
-                    const coverPath = `${userId}/covers/${Date.now()}_cover.jpg`;
-                    const { data, error } = await supabaseClient.storage
-                        .from('products')
-                        .upload(coverPath, formData.coverBlob, { cacheControl: '3600', upsert: true });
-                    if (error) throw new Error(`Error subiendo cover: ${error.message}`);
-                    image_url = supabaseClient.storage.from('products').getPublicUrl(data.path).data.publicUrl;
+                    console.log('🖼️ [UPLOAD] Subiendo Cover a R2...');
+                    const coverFile = new File([formData.coverBlob], 'cover.jpg', { type: 'image/jpeg' });
+                    const key = await uploadToR2(coverFile, 'products/covers');
+                    // Construir URL pública (Asumiendo que el bucket tiene acceso público configurado o usamos el helper)
+                    image_url = `https://offszn-storage.41d0f49121d02c88f71fdb4da54a791d.r2.cloudflarestorage.com/${key}`;
                 }
 
-                // 2. Subir Archivos de Audio (MP3 Tagg, WAV, Stems)
+                // 2. Subir Archivos de Audio a R2
                 let filesData = {};
-                let audio_url = null;
 
                 // 2.1 MP3 Tagged (Preview & Basic)
                 if (formData.files.mp3_tagged) {
-                    const cleanName = sanitizeFileName(formData.files.mp3_tagged.name);
-                    const path = `${userId}/mp3_tagged/${Date.now()}_${cleanName}`;
-                    console.log(`ðŸŽµ [UPLOAD] Subiendo MP3 Tagged a 'products':`, path);
-                    const { data, error } = await supabaseClient.storage
-                        .from('products')
-                        .upload(path, formData.files.mp3_tagged, { cacheControl: '3600', upsert: true });
-                    if (error) throw new Error(`Error subiendo MP3 Tagged: ${error.message}`);
-
-                    const url = supabaseClient.storage.from('products').getPublicUrl(data.path).data.publicUrl;
-                    filesData.mp3_tagged = url; // Set as main audio preview
+                    console.log(`🎵 [UPLOAD] Subiendo MP3 Tagged a R2...`);
+                    const key = await uploadToR2(formData.files.mp3_tagged, 'beats/mp3');
+                    filesData.mp3_tagged = `https://offszn-storage.41d0f49121d02c88f71fdb4da54a791d.r2.cloudflarestorage.com/${key}`;
                 }
 
-                // 2.2 WAV Untagged
                 // 2.2 WAV Untagged
                 if (formData.files.wav_untagged) {
-                    const cleanName = sanitizeFileName(formData.files.wav_untagged.name);
-                    const path = `${userId}/wav_untagged/${Date.now()}_${cleanName}`;
-
-                    console.log(`ðŸš€ [UPLOAD] Subiendo WAV Secure a 'secure-products':`, path);
-                    // ðŸ”¥ SECURE UPLOAD
-                    const { data, error } = await supabaseClient.storage
-                        .from('secure-products')
-                        .upload(path, formData.files.wav_untagged, { cacheControl: '3600', upsert: true });
-                    if (error) throw new Error(`Error subiendo WAV: ${error.message}`);
-
-                    filesData.wav_untagged = data.path; // Store Path
+                    console.log(`🚀 [UPLOAD] Subiendo WAV Untagged a R2 (Secure)...`);
+                    const key = await uploadToR2(formData.files.wav_untagged, 'secure-products/beats/wav');
+                    filesData.wav_untagged = key; // Guardamos el KEY para archivos privados
                 }
 
                 // 2.3 Stems
-                // 2.3 Stems
                 if (formData.files.stems) {
-                    const cleanName = sanitizeFileName(formData.files.stems.name);
-                    const path = `${userId}/stems/${Date.now()}_${cleanName}`;
-
-                    console.log(`ðŸš€ [UPLOAD] Subiendo Stems Secure a 'secure-products':`, path);
-                    // ðŸ”¥ SECURE UPLOAD
-                    const { data, error } = await supabaseClient.storage
-                        .from('secure-products')
-                        .upload(path, formData.files.stems, { cacheControl: '3600', upsert: true });
-                    if (error) throw new Error(`Error subiendo Stems: ${error.message}`);
-
-                    filesData.stems = data.path; // Store Path
+                    console.log(`🚀 [UPLOAD] Subiendo Stems a R2 (Secure)...`);
+                    const key = await uploadToR2(formData.files.stems, 'secure-products/beats/stems');
+                    filesData.stems = key; // Guardamos el KEY para archivos privados
                 }
 
                 // 4. Calcular precio para display (el menor de las activas)
@@ -8860,13 +8903,12 @@
                 const loadDraftFile = async (path, type) => {
                     try {
                         if (!path) return;
-                        const { data: signedData, error } = await supabaseClient.storage
-                            .from('beat-drafts') // ðŸ”¥ Asegurar bucket correcto
-                            .createSignedUrl(path, 3600);
 
-                        if (error || !signedData?.signedUrl) return;
+                        // 🚀 Usar helper para obtener URL autorizada (R2 o Supabase)
+                        const finalUrl = await getAuthorizedUrl(path);
+                        if (!finalUrl) return;
 
-                        const response = await fetch(signedData.signedUrl);
+                        const response = await fetch(finalUrl);
                         if (!response.ok) return;
                         const blob = await response.blob();
 
@@ -9064,9 +9106,14 @@
                 if (product.image_url) {
                     try {
                         const preview = document.getElementById('coverPreview');
-                        preview.src = product.image_url; // Directly use URL
-                        preview.style.display = 'block';
-                        document.getElementById('coverDropZone').classList.add('has-image');
+                        // ðŸ”¥ FIX: Resolve R2 URL for Cover
+                        getAuthorizedUrl(product.image_url).then(url => {
+                            if (url) {
+                                preview.src = url;
+                                preview.style.display = 'block';
+                                document.getElementById('coverDropZone').classList.add('has-image');
+                            }
+                        });
                         filesUploaded.cover = true; // Mark as visually present
 
                         // ðŸ”¥ DO NOT set formData.coverBlob here. 
@@ -9116,10 +9163,11 @@
                     // Init Waveform
                     if (wavesurfer && url) {
                         try {
-                            console.log('ðŸŽµ Loading Audio for Edit:', url); // DEBUG
-                            // Ensure URL is clean (handle spaces if legacy data didn't encode)
-                            const cleanUrl = encodeURI(decodeURI(url));
-                            wavesurfer.load(cleanUrl);
+                            console.log('🎵 Loading Audio for Edit:', url);
+                            // 🚀 Obtener URL firmada si es necesario
+                            getAuthorizedUrl(url).then(authorizedUrl => {
+                                if (authorizedUrl) wavesurfer.load(authorizedUrl);
+                            });
 
                             document.getElementById('playPauseBtn').disabled = false;
                             document.getElementById('waveform').style.display = 'block';
@@ -10014,84 +10062,63 @@
 
                 // 1. Upload NEW Cover if exists
                 if (formData.coverBlob) {
+                    console.log('🖼️ [EDIT] Subiendo nueva portada a R2...');
+
                     // 🔥 CLEANUP OLD COVER
                     if (window.originalProductData && window.originalProductData.image_url) {
-                        try {
-                            await deleteFileFromStorage(window.originalProductData.image_url, 'products');
-                        } catch (e) { console.warn('Old cover cleanup failed', e); }
+                        console.log('♻️ [CLEANUP] Eliminando portada anterior...');
+                        await deleteFileFromStorage(window.originalProductData.image_url, 'beat-covers');
                     }
 
-                    const coverPath = `${userId}/covers/${Date.now()}_cover_edit.jpg`;
-
-                    const { data, error } = await supabaseClient.storage
-                        .from('products')
-                        .upload(coverPath, formData.coverBlob, { upsert: false });
-
-                    if (error) throw error;
-                    updates.image_url = supabaseClient.storage.from('products').getPublicUrl(data.path).data.publicUrl;
+                    const coverFile = new File([formData.coverBlob], 'cover_edit.jpg', { type: 'image/jpeg' });
+                    const key = await uploadToR2(coverFile, 'products/covers');
+                    updates.image_url = `https://offszn-storage.41d0f49121d02c88f71fdb4da54a791d.r2.cloudflarestorage.com/${key}`;
                 }
 
-                // 2. Upload NEW Files if exist
+                // 2. Upload NEW Files to R2 if exist
 
                 // MP3 Tagged
                 if (formData.files.mp3_tagged) {
+                    console.log(`🎵 [EDIT] Subiendo nuevo MP3 Tagged a R2...`);
+
                     // 🔥 CLEANUP OLD MP3
-                    if (window.originalProductData && window.originalProductData.mp3_url) {
-                        try {
-                            await deleteFileFromStorage(window.originalProductData.mp3_url, 'products');
-                        } catch (e) { console.warn('Old mp3 cleanup failed', e); }
+                    if (window.originalProductData && (window.originalProductData.mp3_url || window.originalProductData.audio_url)) {
+                        console.log('♻️ [CLEANUP] Eliminando MP3 anterior...');
+                        const oldUrl = window.originalProductData.mp3_url || window.originalProductData.audio_url;
+                        await deleteFileFromStorage(oldUrl, 'beats');
                     }
 
-                    const cleanName = sanitize(formData.files.mp3_tagged.name);
-
-                    const path = `${userId}/mp3_tagged/${Date.now()}_edit_${cleanName}`;
-                    const { data, error } = await supabaseClient.storage
-                        .from('products')
-                        .upload(path, formData.files.mp3_tagged);
-
-                    if (error) throw error;
-                    updates.mp3_url = supabaseClient.storage.from('products').getPublicUrl(data.path).data.publicUrl;
-                    updates.audio_url = updates.mp3_url; // Legacy support
+                    const key = await uploadToR2(formData.files.mp3_tagged, 'beats/mp3');
+                    updates.mp3_url = `https://offszn-storage.41d0f49121d02c88f71fdb4da54a791d.r2.cloudflarestorage.com/${key}`;
+                    updates.audio_url = updates.mp3_url;
                 }
 
-                // WAV Untagged (Secure)
+                // WAV Untagged
                 if (formData.files.wav_untagged) {
+                    console.log(`🚀 [EDIT] Subiendo nuevo WAV a R2 (Secure)...`);
+
                     // 🔥 CLEANUP OLD WAV
                     if (window.originalProductData && window.originalProductData.wav_url) {
-                        try {
-                            await deleteFileFromStorage(window.originalProductData.wav_url, 'secure-products');
-                        } catch (e) { console.warn('Old wav cleanup failed', e); }
+                        console.log('♻️ [CLEANUP] Eliminando WAV anterior...');
+                        await deleteFileFromStorage(window.originalProductData.wav_url, 'secure-beats');
                     }
 
-                    const cleanName = sanitize(formData.files.wav_untagged.name);
-
-                    const path = `${userId}/wav_untagged/${Date.now()}_edit_${cleanName}`;
-                    const { data, error } = await supabaseClient.storage
-                        .from('secure-products')
-                        .upload(path, formData.files.wav_untagged);
-
-                    if (error) throw error;
-                    updates.wav_url = data.path; // Store Path
+                    const key = await uploadToR2(formData.files.wav_untagged, 'secure-products/beats/wav');
+                    updates.wav_url = key; // Store Key
                 }
 
-                // Stems (Secure)
+                // Stems
                 if (formData.files.stems) {
+                    console.log(`🚀 [EDIT] Subiendo nuevos Stems a R2 (Secure)...`);
+
                     // 🔥 CLEANUP OLD STEMS
                     if (window.originalProductData && window.originalProductData.stems_url) {
-                        try {
-                            await deleteFileFromStorage(window.originalProductData.stems_url, 'secure-products');
-                        } catch (e) { console.warn('Old stems cleanup failed', e); }
+                        console.log('♻️ [CLEANUP] Eliminando Stems anteriores...');
+                        await deleteFileFromStorage(window.originalProductData.stems_url, 'secure-beats');
                     }
 
-                    const cleanName = sanitize(formData.files.stems.name);
-
-                    const path = `${userId}/stems/${Date.now()}_edit_${cleanName}`;
-                    const { data, error } = await supabaseClient.storage
-                        .from('secure-products')
-                        .upload(path, formData.files.stems);
-
-                    if (error) throw error;
-                    updates.stems_url = data.path; // Store Path
+                    const key = await uploadToR2(formData.files.stems, 'secure-products/beats/stems');
+                    updates.stems_url = key; // Store Key
                 }
 
                 // 4. Update Database
@@ -10201,26 +10228,55 @@
             }
         }
         // ========================================
-        // HELPER: DELETE FILE FROM STORAGE
+        // 🔥 HELPER: DELETE FILE FROM STORAGE (SUPABASE & R2)
         // ========================================
         async function deleteFileFromStorage(pathOrUrl, bucketName = 'beat-drafts') {
             if (!pathOrUrl) return;
             try {
+                // Determine if it's R2 or Supabase
+                const isR2 = pathOrUrl.includes('r2.cloudflarestorage.com') ||
+                    pathOrUrl.includes('pub-') ||
+                    (pathOrUrl.startsWith('http') === false);
+
+                if (isR2) {
+                    let key = pathOrUrl;
+                    if (pathOrUrl.startsWith('http')) {
+                        try {
+                            const urlObj = new URL(pathOrUrl);
+                            key = urlObj.pathname.substring(1);
+                        } catch (e) {
+                            console.warn("Could not parse R2 URL for deletion:", pathOrUrl);
+                        }
+                    }
+                    console.log(`🗑️ [CLEANUP] Eliminando de R2 vía Backend: ${key}`);
+
+                    const session = await supabaseClient.auth.getSession();
+                    const token = session.data.session?.access_token;
+
+                    await fetch('/api/r2/delete-files', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify({ keys: [key] })
+                    });
+                    return;
+                }
+
+                // Standard Supabase Deletion
                 let path = pathOrUrl;
-                // 🔥 Handle Full URLs
                 if (pathOrUrl.startsWith('http')) {
-                    // Try to split by bucket name
                     const parts = pathOrUrl.split(`/${bucketName}/`);
                     if (parts.length > 1) {
                         path = parts[1];
                     } else {
-                        // Fallback: Try project URL structure
                         const urlObj = new URL(pathOrUrl);
                         const pathParts = urlObj.pathname.split(`/storage/v1/object/public/${bucketName}/`);
                         if (pathParts.length > 1) path = pathParts[1];
                         else {
                             console.warn('⚠️ Could not extract path from URL:', pathOrUrl);
-                            return; // Don't try to delete invalid paths
+                            return;
                         }
                     }
                 }
@@ -10229,8 +10285,8 @@
                     .from(bucketName)
                     .remove([path]);
 
-                if (error) console.warn('⚠️ Error removing file:', path, error);
-                else console.log(`🗑️ [CLEANUP] Archivo eliminado de '${bucketName}':`, path);
+                if (error) console.warn(`⚠️ Error removing file from ${bucketName}:`, path, error);
+                else console.log(`🗑️ [CLEANUP] Archivo eliminado de Supabase (${bucketName}):`, path);
             } catch (e) {
                 console.warn('⚠️ Exception removing file:', e);
             }

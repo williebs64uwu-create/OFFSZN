@@ -324,16 +324,24 @@ function renderProductPage(product) {
         }
     }
 
+    // --- 🧪 OPTIMIZATION: Check if it's R2 to avoid skeleton flash ---
+    const isR2Main = product.image_url && (product.image_url.includes('r2.cloudflarestorage.com') || product.image_url.includes('pub-') || (!product.image_url.startsWith('http') && product.image_url.includes('/')));
+    const initialImgMain = isR2Main ? 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=' : (product.image_url || '/images/portada-default.png');
+    // Pre-apply skeleton class if R2
+    const mainSkeletonClass = isR2Main ? ' skeleton' : '';
+
 
     container.innerHTML = `
         <div class="product-split-layout">
             <!-- LEFT: SIDEBAR (Art, Player, Meta) -->
             <div class="product-sidebar">
                 <!-- Cover Art -->
-                <div class="product-cover-art" style="position:relative;">
-                    <img src="${product.image_url || '/images/portada-default.png'}" 
+                <div class="product-cover-art${mainSkeletonClass}" style="position:relative;">
+                    <img src="${initialImgMain}" 
+                         id="product-main-art"
                          alt="${product.name}"
-                         onerror="this.src='/images/portada-default.png'">
+                         class="${isR2Main ? 'skeleton-img-transition' : ''}"
+                         error="this.style.display='none'">
                      <!-- Player Target -->
                      <div id="sidebar-player-target" style="position:absolute; bottom:15px; left:15px; right:15px;"></div>
                 </div>
@@ -475,6 +483,20 @@ function renderProductPage(product) {
         renderPresetSpecifics(product);
     } else {
         renderGenericSpecifics(product);
+    }
+
+    // 🔥 FIX: Authorize main image
+    if (product.image_url) {
+        const img = document.getElementById('product-main-art');
+        if (img) {
+            window.getAuthorizedUrl(product.image_url).then(url => {
+                if (url) {
+                    img.onload = () => { img.style.opacity = 1; };
+                    img.src = url;
+                    if (img.complete) img.onload();
+                }
+            });
+        }
     }
 
     // 4. Free Download (Removed Sidebar Button per request)
@@ -1199,7 +1221,7 @@ function renderPresetSpecifics(product) {
     if (product.is_free) {
         buyBtn.innerHTML = 'DESCARGA GRATIS';
         buyBtn.onclick = () => {
-            const downloadUrl = product.download_url_wav || product.download_url_stems || product.wav_url || product.stems_url || product.audio_url;
+            const downloadUrl = product.kit_url || product.download_url_wav || product.download_url_stems || product.wav_url || product.stems_url || product.audio_url;
             if (window.openDownloadGateModal) {
                 window.openDownloadGateModal(downloadUrl, product.producer?.nickname, product.id);
             } else {
@@ -1304,7 +1326,7 @@ function renderKitSpecifics(product) {
         // Free Product: Show "DESCARGA GRATIS" ONLY (Clean)
         buyBtn.innerHTML = `DESCARGA GRATIS`;
         buyBtn.onclick = () => {
-            const downloadUrl = product.download_url_wav || product.download_url_stems || product.wav_url || product.stems_url || product.audio_url;
+            const downloadUrl = product.kit_url || product.download_url_wav || product.download_url_stems || product.wav_url || product.stems_url || product.audio_url;
             if (window.openDownloadGateModal) {
                 window.openDownloadGateModal(downloadUrl, product.producer?.nickname, product.id);
             } else {
@@ -1406,11 +1428,18 @@ function initStandardPlayer(product) {
 /**
  * AUDIO LOGIC: A/B Modal (Fullscreen Comparison)
  */
-window.openABModal = function (beforeUrl, afterUrl, product) {
+window.openABModal = async function (beforeUrl, afterUrl, product) {
     if (!beforeUrl || beforeUrl === 'null' || !afterUrl || afterUrl === 'null') {
         console.warn("A/B files not available for this product");
         return;
     }
+
+    // 🔥 FIX: Authorize both R2 URLs in parallel
+    const [signedBefore, signedAfter] = await Promise.all([
+        window.getAuthorizedUrl(beforeUrl),
+        window.getAuthorizedUrl(afterUrl)
+    ]);
+
     const productName = product.name;
     let backdrop = document.getElementById('ab-modal-backdrop');
     if (!backdrop) {
@@ -1448,7 +1477,7 @@ window.openABModal = function (beforeUrl, afterUrl, product) {
     }
 
     const playerContainer = document.getElementById('ab-modal-player-container');
-    initABPlayerInContainer(beforeUrl, afterUrl, playerContainer, product.id);
+    initABPlayerInContainer(signedBefore, signedAfter, playerContainer, product.id);
 
     backdrop.style.display = 'flex';
     setTimeout(() => backdrop.classList.add('active'), 10);
@@ -1768,6 +1797,7 @@ function renderRelatedGrid(products, container) {
         card.innerHTML = `
             <div class="t-card-cover">
                 <img src="${p.image_url || '/images/portada-default.png'}" 
+                     id="related-img-${p.id}"
                      alt="${p.name}"
                      onerror="this.src='/images/portada-default.png'"
                      onclick="window.location.href='${seoLink}'">
@@ -1809,6 +1839,23 @@ function renderRelatedGrid(products, container) {
                 }
             };
         }
+        // 🔥 FIX: Authorize related image with skeleton
+        if (p.image_url) {
+            const imgId = `related-img-${p.id}`;
+            const img = document.getElementById(imgId);
+            if (img) {
+                const parent = img.parentElement;
+                if (parent) parent.classList.add('skeleton');
+
+                window.getAuthorizedUrl(p.image_url).then(url => {
+                    if (url) {
+                        img.onload = () => { if (parent) parent.classList.remove('skeleton'); };
+                        img.src = url;
+                    }
+                });
+            }
+        }
+
         container.appendChild(card);
     });
 }

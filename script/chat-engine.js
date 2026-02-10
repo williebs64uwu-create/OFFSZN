@@ -22,6 +22,8 @@ window.scrollToMessage = scrollToMessage;
 window.openNewMessageModal = openNewMessageModal;
 window.closeNewMessageModal = closeNewMessageModal;
 window.startChatFromModal = startChatFromModal;
+window.toggleMessageMenu = toggleMessageMenu;
+window.copyMessageText = copyMessageText;
 
 // ===== INITIALIZATION =====
 // 🛡️ SPA SAFEGUARD
@@ -986,9 +988,16 @@ function renderMessage(msg) {
             <button class="msg-action-btn" onclick="onReplyClick('${msg.id}', '${isMe ? 'Tú' : 'Usuario'}', '${msg.content?.replace(/'/g, "\\'").replace(/"/g, '&quot;')}')" ${!msg.id ? 'style="opacity:0.5; pointer-events:none;"' : ''}>
                 <i class="bi bi-reply-fill"></i>
             </button>
-            <button class="msg-action-btn" ${!msg.id ? 'style="opacity:0.5; pointer-events:none;"' : ''}>
-                <i class="bi bi-three-dots-vertical"></i>
-            </button>
+            <div class="oz-menu-container">
+                <button class="msg-action-btn" onclick="toggleMessageMenu('${msg.id}', event)" ${!msg.id ? 'style="opacity:0.5; pointer-events:none;"' : ''}>
+                    <i class="bi bi-three-dots-vertical"></i>
+                </button>
+                <div id="menu-${msg.id}" class="oz-msg-menu">
+                    <div class="oz-menu-item" onclick="copyMessageText('${msg.id}', event)">
+                        <i class="bi bi-clipboard"></i> Copiar
+                    </div>
+                </div>
+            </div>
         </div>
     `;
 
@@ -1444,6 +1453,66 @@ async function startChatFromModal() {
 function adjustInputHeight(el) {
     el.style.height = 'auto';
     el.style.height = el.scrollHeight + 'px';
+}
+
+// ===== MESSAGE ACTIONS MENU =====
+
+function toggleMessageMenu(msgId, event) {
+    event.stopPropagation();
+    // Close any other open menus first
+    document.querySelectorAll('.oz-msg-menu.active').forEach(m => {
+        if (m.id !== `menu-${msgId}`) m.classList.remove('active');
+    });
+
+    const menu = document.getElementById(`menu-${msgId}`);
+    if (menu) {
+        menu.classList.toggle('active');
+    }
+}
+
+// Close menus on outside click
+document.addEventListener('click', () => {
+    document.querySelectorAll('.oz-msg-menu.active').forEach(m => m.classList.remove('active'));
+});
+
+async function copyMessageText(msgId, event) {
+    if (event) event.stopPropagation();
+    const msgDiv = document.getElementById(`msg-${msgId}`);
+    if (!msgDiv) return;
+
+    // Get text from bubble (excluding reaction pill)
+    const bubble = msgDiv.querySelector('.oz-bubble');
+    if (!bubble) return;
+
+    // Clone to remove the reaction bubble if present before getting text
+    const tempBubble = bubble.cloneNode(true);
+    const reaction = tempBubble.querySelector('.message-reaction-bubble');
+    if (reaction) reaction.remove();
+
+    const text = tempBubble.innerText.trim();
+
+    try {
+        await navigator.clipboard.writeText(text);
+        showCopyFeedback(msgId);
+    } catch (err) {
+        console.error('Failed to copy text: ', err);
+    }
+}
+
+function showCopyFeedback(msgId) {
+    const menuEl = document.querySelector(`#menu-${msgId} .oz-menu-item`);
+    if (menuEl) {
+        const originalHtml = menuEl.innerHTML;
+        menuEl.innerHTML = '<i class="bi bi-check2"></i> ¡Copiado!';
+        menuEl.style.color = '#34d399'; // Positive green
+
+        setTimeout(() => {
+            menuEl.innerHTML = originalHtml;
+            menuEl.style.color = '';
+            // Close menu after feedback
+            document.getElementById(`menu-${msgId}`).classList.remove('active');
+        }, 1200);
+    }
 }
 
 async function fetchSingleMessage(id) {

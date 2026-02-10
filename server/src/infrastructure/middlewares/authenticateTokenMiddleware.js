@@ -2,6 +2,8 @@ import { supabase } from '../database/connection.js';
 
 export const authenticateTokenMiddleware = async (req, res, next) => {
     const authHeader = req.headers['authorization'];
+    console.log('[AuthMiddleware] Headers:', JSON.stringify(req.headers));
+    console.log('[AuthMiddleware] Auth Header:', authHeader);
     const token = authHeader && authHeader.split(' ')[1];
 
     if (token == null) {

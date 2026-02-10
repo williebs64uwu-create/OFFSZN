@@ -261,8 +261,38 @@ window.completeGate = async function (url, productId) {
         // 4. Download Trigger (Direct)
         setTimeout(async () => {
             try {
+
+                // R2 Key Resolution (If url doesn't start with http/blob)
+                let finalUrl = url;
+                if (url && !url.startsWith('http') && !url.startsWith('blob:') && !url.startsWith('data:')) {
+                    console.log("[Gate] Detected R2/Storage Key. Resolving...", url);
+                    try {
+                        const token = localStorage.getItem('authToken'); // Need auth for R2 signing
+                        const headers = { 'Content-Type': 'application/json' };
+                        if (token) headers['Authorization'] = `Bearer ${token}`;
+
+                        const res = await fetch('/api/r2/download-url', {
+                            method: 'POST',
+                            headers: headers,
+                            body: JSON.stringify({ key: url })
+                        });
+
+                        if (res.ok) {
+                            const data = await res.json();
+                            if (data.downloadUrl) {
+                                finalUrl = data.downloadUrl;
+                                console.log("[Gate] Resolved URL:", finalUrl);
+                            }
+                        } else {
+                            console.warn("[Gate] Failed to resolve R2 key. Status:", res.status);
+                        }
+                    } catch (r2Err) {
+                        console.error("[Gate] R2 Resolution Error:", r2Err);
+                    }
+                }
+
                 console.log("[Gate] Starting forced direct download via Fetch/Blob...");
-                const response = await fetch(url);
+                const response = await fetch(finalUrl);
                 const blob = await response.blob();
                 const blobUrl = window.URL.createObjectURL(blob);
 

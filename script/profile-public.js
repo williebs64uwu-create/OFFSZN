@@ -94,18 +94,20 @@ async function loadUserProfile(username) {
         }
 
         const user = await response.json();
+        window.currentUserProfile = user; // Store for tab rendering
 
         // Wait for auth/following data to be ready before rendering header
         if (window.profileInitPromise) {
             await window.profileInitPromise;
         }
 
+        // 3. Render Header Data (IMMEDIATE)
+        // We render this ASAP so the user sees the profile info while products load.
+        renderHeader(user);
+
         // 4. Fetch User Products (via API) - SYNC WAIT
         // We wait for the products fetch to complete so we can remove ALL skeletons together.
         await loadUserProducts(user);
-
-        // 3. Render Header Data (Now happens AFTER waiting for products)
-        renderHeader(user);
     } catch (e) {
         console.error("Error loading profile:", e);
         document.getElementById('profileName').innerText = "Usuario no encontrado";
@@ -113,11 +115,32 @@ async function loadUserProfile(username) {
     }
 }
 
-function renderHeader(user) {
-    // Avatar
+async function renderHeader(user) {
+    // 1. Avatar Setup (Optimistic Render)
+    // We render the container immediately with either the public URL (Supabase) or a transparent placeholder (R2).
+    // R2 Authorization happens in the background.
+
+    const isR2 = user.avatar_url && (user.avatar_url.includes('r2.cloudflarestorage.com') || user.avatar_url.includes('pub-'));
     const avatarContainer = document.getElementById('profileAvatar');
+
     if (user.avatar_url) {
-        avatarContainer.innerHTML = `<img src="${user.avatar_url}" alt="${user.nickname}">`;
+        // Default to public URL or Placeholder
+        let currentSrc = isR2 ? 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=' : user.avatar_url;
+        let diffOpacity = isR2 ? 0 : 1;
+
+        avatarContainer.innerHTML = `<img src="${currentSrc}" id="profileAvatarImg" alt="${user.nickname}" class="skeleton-img-transition" style="opacity: ${diffOpacity}" onerror="if(window.AvatarManager) window.AvatarManager.handleError(this, '${user.nickname.replace(/'/g, "\\'")}')">`;
+
+        // Background Auth for R2
+        if (isR2) {
+            window.getAuthorizedUrl(user.avatar_url).then(url => {
+                const img = document.getElementById('profileAvatarImg');
+                if (img) {
+                    img.onload = () => { img.style.opacity = 1; };
+                    img.src = url;
+                }
+            }).catch(e => console.warn("Avatar Auth Failed", e));
+        }
+
     } else {
         const initial = (user.nickname || "U").charAt(0).toUpperCase();
         avatarContainer.innerHTML = `<span>${initial}</span>`;
@@ -156,10 +179,56 @@ function renderHeader(user) {
     document.getElementById('profileRole').innerText = user.role || '';
     document.getElementById('profileBio').innerText = user.bio || '';
 
+    // Apply Banner Style (Aligned to Schema: using banner_url for style string)
+    if (user.banner_url) {
+        const header = document.querySelector('.profile-header');
+        if (header) {
+            const val = user.banner_url;
+            if (val.includes(':')) {
+                const [type, color] = val.split(':');
+                header.style.background = color;
+            } else if (val.startsWith('http')) {
+                header.style.backgroundImage = `url(${val})`;
+                header.style.backgroundSize = 'cover';
+                header.style.backgroundPosition = 'center';
+            }
+        }
+    }
+
+    // --- DYNAMIC THEME ---
+    let socials = {};
+    try {
+        socials = typeof user.socials === 'string' ? JSON.parse(user.socials) : (user.socials || {});
+    } catch (e) {
+        console.error("Error parsing socials for dynamic theme:", e);
+    }
+    const isThemeActive = socials.dynamic_theme === true || socials.dynamic_theme === "true";
+    console.log("Dynamic Theme Status on Load:", isThemeActive, socials);
+    applyDynamicThemeEffects(user.banner_url, isThemeActive);
+
+    // Update Modal Toggle State (if me)
+    const toggle = document.getElementById('dynamicThemeToggle');
+    if (toggle) toggle.checked = isThemeActive;
+
     // Clear Location Skeleton (Fix stuck skeleton)
     const locEl = document.getElementById('profileLocation');
     if (locEl) {
         locEl.innerHTML = user.location || ''; // If no location, clear it.
+    }
+
+    // --- OWNER CONTROLS DETECTION ---
+    const isMe = window.currentUserId && (user.id === window.currentUserId);
+
+    if (isMe) {
+        // Show owner buttons
+        const personalizeBtn = document.getElementById('btnPersonalize');
+        if (personalizeBtn) personalizeBtn.style.display = 'inline-block';
+
+        const accBtn = document.getElementById('btnAccountSettings');
+        if (accBtn) accBtn.style.display = 'inline-block';
+
+        const changeAvatarBtn = document.getElementById('ownerChangeAvatar');
+        if (changeAvatarBtn) changeAvatarBtn.style.display = 'flex';
     }
 
     // ACTIONS: Reveal Real Buttons, Remove Skeletons
@@ -173,7 +242,7 @@ function renderHeader(user) {
     const msgBtn = document.getElementById('btnMessage');
     if (msgBtn) {
         // Hide if viewing own profile
-        if (window.currentUserId && (user.id === window.currentUserId)) {
+        if (isMe) {
             msgBtn.style.display = 'none';
         } else {
             msgBtn.style.display = 'inline-block'; // Reveal
@@ -230,26 +299,44 @@ function renderHeader(user) {
     const followBtn = document.getElementById('btnFollow');
     if (followBtn) followBtn.setAttribute('data-target-id', user.id); // Tag for global sync
 
+    // Joined Date Formatting (Removed from header as per user request)
+    /*
+    if (user.created_at) {
+        const joinedDate = new Date(user.created_at);
+        const day = joinedDate.getDate();
+        const month = joinedDate.toLocaleDateString('es-ES', { month: 'long' });
+        const year = joinedDate.getFullYear();
+        const formattedDate = `${day} de ${month} de ${year}`;
+
+        const joinedEl = document.getElementById('profileJoined');
+        if (joinedEl) joinedEl.innerText = `Miembro desde ${formattedDate}`;
+    }
+    */
+
     // Ensure accurate counts are displayed if elements exist
     const pCountEl = document.getElementById('profileProductsCount');
-    if (pCountEl) pCountEl.innerText = `${user.products_count || 0} Productos`;
+    if (pCountEl) {
+        // 🔥 FIX: Ensure structure is preserved and text is visible
+        const count = user.products_count !== undefined ? user.products_count : 0;
+        pCountEl.innerHTML = `${count} <span style="font-weight:400;">Productos</span>`;
+    }
 
     const fCountEl = document.getElementById('profileFollowersCount');
     if (fCountEl) {
         const count = user.followers_count || 0;
         const label = count === 1 ? 'Seguidor' : 'Seguidores';
-        fCountEl.innerText = `${count} ${label}`;
+        fCountEl.innerHTML = `${count} <span style="font-weight:400;">${label}</span>`;
     }
 
     const followingCountEl = document.getElementById('profileFollowingCount');
     if (followingCountEl) {
-        const count = user.following_count || 0;
-        followingCountEl.innerText = `${count} Siguiendo`;
+        // Removed as per request: "quitemos lo de x siguiendo"
+        followingCountEl.parentNode.style.display = 'none';
     }
 
     if (followBtn) {
         // Hide if viewing own profile
-        if (window.currentUserId && (user.id === window.currentUserId)) {
+        if (isMe) {
             followBtn.style.display = 'none';
         } else {
             followBtn.style.display = 'inline-block';
@@ -279,7 +366,7 @@ function renderHeader(user) {
             followBtn.disabled = true;
             try {
                 const res = await fetch(`/api/users/${user.id}/follow`, {
-                    method,
+                    method: method,
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
 
@@ -311,6 +398,340 @@ function renderHeader(user) {
         };
     }
 }
+
+// --- TAB SYSTEM ---
+window.setActiveTab = function (tabName) {
+    console.log("Switching to tab:", tabName);
+
+    // Update Tab Buttons UI
+    document.querySelectorAll('.profile-tab-btn').forEach(btn => {
+        // Find the button that matches the tabName
+        const isThisTab = btn.getAttribute('onclick').includes(`'${tabName}'`);
+        btn.classList.toggle('active', isThisTab);
+    });
+
+    // Toggle Content Sections
+    const trendingArea = document.querySelector('.section-header'); // Trending title
+    const trendingGrid = document.getElementById('trendingGrid');
+    const toolbar = document.querySelector('.pro-toolbar-container');
+    const productsList = document.getElementById('profileProductsList');
+
+    // Services & About placeholders
+    let servicesSection = document.getElementById('services-section');
+    let aboutSection = document.getElementById('about-section');
+
+    // Create if not exist
+    if (!servicesSection) {
+        servicesSection = document.createElement('div');
+        servicesSection.id = 'services-section';
+        servicesSection.className = 'about-section-container'; // Use about container style
+        document.querySelector('.profile-body').appendChild(servicesSection);
+    }
+
+    if (!aboutSection) {
+        aboutSection = document.createElement('div');
+        aboutSection.id = 'about-section';
+        aboutSection.className = 'about-section-container';
+        document.querySelector('.profile-body').appendChild(aboutSection);
+    }
+
+    // Logic
+    if (tabName === 'products') {
+        if (trendingArea) trendingArea.style.display = 'flex';
+        if (trendingGrid) trendingGrid.style.display = 'grid';
+        if (toolbar) toolbar.style.display = 'flex';
+        if (productsList) productsList.style.display = 'flex';
+        servicesSection.style.display = 'none';
+        aboutSection.style.display = 'none';
+    } else if (tabName === 'services') {
+        if (trendingArea) trendingArea.style.display = 'none';
+        if (trendingGrid) trendingGrid.style.display = 'none';
+        if (toolbar) toolbar.style.display = 'none';
+        if (productsList) productsList.style.display = 'none';
+        servicesSection.style.display = 'block';
+        aboutSection.style.display = 'none';
+
+        // Render Services Content
+        renderServicesTab(servicesSection);
+    } else if (tabName === 'about') {
+        if (trendingArea) trendingArea.style.display = 'none';
+        if (trendingGrid) trendingGrid.style.display = 'none';
+        if (toolbar) toolbar.style.display = 'none';
+        if (productsList) productsList.style.display = 'none';
+        servicesSection.style.display = 'none';
+        aboutSection.style.display = 'block';
+
+        // Populate Bio & Info
+        renderAboutTab(aboutSection);
+    }
+}
+
+function renderAboutTab(container) {
+    const user = window.currentUserProfile; // Assuming it's stored globally
+    if (!user) return;
+
+    container.innerHTML = `
+        <div class="about-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; margin-top: 20px;">
+            <div class="about-card" style="background: #111; padding: 24px; border-radius: 12px; border: 1px solid #222;">
+                <h4 style="color: #8b5cf6; margin-bottom: 12px; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px;">Biografía</h4>
+                <p style="color: #ccc; line-height: 1.6; font-size: 0.95rem; white-space: pre-wrap;">${user.bio || "Sin biografía disponible."}</p>
+            </div>
+            <div class="about-card" style="background: #111; padding: 24px; border-radius: 12px; border: 1px solid #222;">
+                <h4 style="color: #8b5cf6; margin-bottom: 20px; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px;">Detalles</h4>
+                <div style="display: flex; flex-direction: column; gap: 16px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 12px; border-bottom: 1px solid #222;">
+                        <span style="color: #666; font-size: 0.85rem;">Experiencia</span>
+                        <span style="color: #fff; font-weight: 600; font-size: 0.9rem;">${user.experience ? user.experience[0] : 'No especificada'}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 12px; border-bottom: 1px solid #222;">
+                        <span style="color: #666; font-size: 0.85rem;">DAW Principal</span>
+                        <span style="color: #fff; font-weight: 600; font-size: 0.9rem;">${(user.daws && user.daws.length > 0) ? user.daws[0] : 'No especificado'}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="color: #666; font-size: 0.85rem;">Miembro desde</span>
+                        <span style="color: #fff; font-weight: 600; font-size: 0.9rem;">
+                            ${(() => {
+            const d = new Date(user.created_at);
+            return `${d.getDate()} de ${d.toLocaleDateString('es-ES', { month: 'long' })} de ${d.getFullYear()}`;
+        })()}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function renderServicesTab(container) {
+    const user = window.currentUserProfile;
+    if (!user) return;
+
+    const socials = user.socials || {};
+    const services = socials.offered_services || {};
+    const hasServices = services.mixing || services.mastering;
+
+    let servicesHtml = '';
+    if (hasServices) {
+        servicesHtml = `
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 32px;">
+                ${services.mixing ? `
+                    <div style="background: #111; border: 1px solid #222; padding: 24px; border-radius: 12px; text-align: center;">
+                        <i class="bi bi-mic-fill" style="font-size: 2rem; color: #8b5cf6; display: block; margin-bottom: 12px;"></i>
+                        <h4 style="color: #fff; margin-bottom: 4px;">Servicio de Mezcla</h4>
+                        <p style="color: #666; font-size: 0.8rem;">Mezcla profesional para tus tracks.</p>
+                    </div>` : ''}
+                ${services.mastering ? `
+                    <div style="background: #111; border: 1px solid #222; padding: 24px; border-radius: 12px; text-align: center;">
+                        <i class="bi bi-waveform" style="font-size: 2rem; color: #10b981; display: block; margin-bottom: 12px;"></i>
+                        <h4 style="color: #fff; margin-bottom: 4px;">Servicio de Mastering</h4>
+                        <p style="color: #666; font-size: 0.8rem;">El toque final para un sonido comercial.</p>
+                    </div>` : ''}
+                <div style="background: #181818; border: 1px dashed #333; padding: 24px; border-radius: 12px; text-align: center; display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: pointer;" onclick="document.getElementById('btnMessage')?.click()">
+                    <i class="bi bi-chat-left-text" style="font-size: 1.5rem; color: #555; margin-bottom: 8px;"></i>
+                    <span style="color: #888; font-size: 0.85rem; font-weight: 600;">Contactar ahora</span>
+                </div>
+            </div>
+        `;
+    } else {
+        servicesHtml = `
+            <div class="empty-state" style="padding: 40px 20px; text-align: center; background: #111; border-radius: 12px; border: 1px solid #222; margin-bottom: 32px;">
+                <p style="color: #666; margin: 0;">Este usuario no ofrece servicios listados actualmente.</p>
+            </div>
+        `;
+    }
+
+    let spotifyHtml = '';
+    if (socials.spotify_content) {
+        // Extract ID or URL
+        const spotifyUrl = socials.spotify_content;
+        let embedUrl = '';
+        if (spotifyUrl.includes('playlist/')) {
+            const id = spotifyUrl.split('playlist/')[1].split('?')[0];
+            embedUrl = `https://open.spotify.com/embed/playlist/${id}`;
+        } else if (spotifyUrl.includes('track/')) {
+            const id = spotifyUrl.split('track/')[1].split('?')[0];
+            embedUrl = `https://open.spotify.com/embed/track/${id}`;
+        }
+
+        if (embedUrl) {
+            spotifyHtml = `
+                <div style="margin-top: 32px;">
+                    <h4 style="color: #fff; margin-bottom: 16px; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center; gap: 8px;">
+                        <i class="bi bi-spotify" style="color: #1DB954;"></i> Mi Portfolio / Playlist
+                    </h4>
+                    <iframe style="border-radius:12px" src="${embedUrl}?utm_source=generator&theme=0" width="100%" height="380" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+                </div>
+            `;
+        }
+    }
+
+    container.innerHTML = `
+        <div class="services-container" style="margin-top: 20px;">
+            ${servicesHtml}
+            ${spotifyHtml}
+        </div>
+    `;
+}
+
+// --- PERSONALIZATION PORTAL ---
+window.ProfilePersonalizer = {
+    selectedBanner: null,
+
+    open: function () {
+        const modal = document.getElementById('personalizeModal');
+        if (modal) modal.style.display = 'block';
+        // Reset view
+        document.getElementById('bannerPicker').style.display = 'none';
+        const mainView = document.querySelector('.p-modal-main-view');
+        if (mainView) mainView.style.display = 'flex';
+    },
+
+    close: function () {
+        const modal = document.getElementById('personalizeModal');
+        if (modal) modal.style.display = 'none';
+    },
+
+    select: function (option) {
+        if (option === 'avatar') {
+            this.close();
+            const currentImg = document.querySelector('#profileAvatar img')?.src;
+            window.AvatarManager.open(currentImg);
+        } else if (option === 'banner') {
+            const mainView = document.querySelector('.p-modal-main-view');
+            if (mainView) mainView.style.display = 'none';
+            document.getElementById('bannerPicker').style.display = 'block';
+
+            // AUTO-HIGHLIGHT: Mark the current banner as selected
+            const currentBanner = window.currentUserProfile?.banner_url;
+            if (currentBanner) {
+                document.querySelectorAll('#bannerPicker [onclick^="ProfilePersonalizer.applyBanner"]').forEach(el => {
+                    const onclickAttr = el.getAttribute('onclick');
+                    if (onclickAttr && onclickAttr.includes(currentBanner)) {
+                        el.style.borderColor = '#fff';
+                    } else {
+                        el.style.borderColor = 'transparent';
+                    }
+                });
+            }
+        }
+    },
+
+    applyBanner: function (style) {
+        this.selectedBanner = style;
+        const [type, value] = style.split(':');
+        const header = document.querySelector('.profile-header');
+        if (header) {
+            header.style.background = value;
+        }
+
+        // Highlight selected in real-time
+        document.querySelectorAll('#bannerPicker [onclick^="ProfilePersonalizer.applyBanner"]').forEach(el => {
+            const onclickAttr = el.getAttribute('onclick');
+            if (onclickAttr && onclickAttr.includes(style)) {
+                el.style.borderColor = '#fff';
+            } else {
+                el.style.borderColor = 'transparent';
+            }
+        });
+
+        // REAL-TIME DYNAMIC THEME: Update body bath immediately if active
+        const isDynamicActive = document.getElementById('dynamicThemeToggle')?.checked || false;
+        if (isDynamicActive && typeof applyDynamicThemeEffects === 'function') {
+            applyDynamicThemeEffects(style, true);
+        }
+    },
+
+    saveBanner: async function () {
+        // We use selectedBanner if changed, otherwise stick with existing
+        const bannerToSave = this.selectedBanner || window.currentUserProfile?.banner_url;
+        const isDynamicActive = document.getElementById('dynamicThemeToggle')?.checked || false;
+
+        try {
+            // Get Current Socials to avoid wiping them
+            const { data: uData } = await window.supabaseClient
+                .from('users')
+                .select('socials')
+                .eq('id', window.currentUserId)
+                .single();
+
+            const socials = typeof uData.socials === 'string' ? JSON.parse(uData.socials) : (uData.socials || {});
+            socials.dynamic_theme = isDynamicActive;
+
+            const { error } = await window.supabaseClient
+                .from('users')
+                .update({
+                    banner_url: bannerToSave,
+                    socials: socials
+                })
+                .eq('id', window.currentUserId);
+
+            if (error) throw error;
+
+            if (window.showToast) window.showToast("Personalización guardada.", "success");
+            this.close();
+        } catch (err) {
+            console.error("Error saving personalization:", err);
+            if (window.showToast) window.showToast("Error al guardar.", "error");
+        }
+    },
+
+    toggleDynamicTheme: async function (isActive) {
+        console.log("Toggle Dynamic Theme:", isActive);
+        const banner = this.selectedBanner || window.currentUserProfile?.banner_url;
+        applyDynamicThemeEffects(banner, isActive);
+
+        // AUTO-SAVE: Immediately persist the toggle state
+        try {
+            const { data: uData } = await window.supabaseClient
+                .from('users')
+                .select('socials')
+                .eq('id', window.currentUserId)
+                .single();
+
+            const socials = typeof uData.socials === 'string' ? JSON.parse(uData.socials) : (uData.socials || {});
+            socials.dynamic_theme = isActive;
+
+            const { error } = await window.supabaseClient
+                .from('users')
+                .update({ socials: socials })
+                .eq('id', window.currentUserId);
+
+            if (error) throw error;
+            console.log("Dynamic theme preference saved:", isActive);
+        } catch (err) {
+            console.error("Error auto-saving dynamic theme:", err);
+            // Revert visual state on error? optional.
+        }
+    }
+};
+
+/**
+ * Applies or removes the subtle background "bath" effect
+ */
+function applyDynamicThemeEffects(bannerVal, isActive) {
+    const body = document.body;
+    if (!isActive || !bannerVal) {
+        body.classList.remove('dynamic-theme-active');
+        body.style.setProperty('--dynamic-theme-color', 'transparent');
+        return;
+    }
+
+    let color = '#000'; // Default
+    if (bannerVal.includes(':')) {
+        const [type, val] = bannerVal.split(':');
+        if (type === 'solid') {
+            color = val;
+        } else if (type === 'gradient') {
+            // Extract first color of gradient
+            const match = val.match(/#[0-9a-fA-F]{3,6}|rgba?\([^)]+\)/);
+            if (match) color = match[0];
+        }
+    }
+
+    body.style.setProperty('--dynamic-theme-color', color);
+    body.classList.add('dynamic-theme-active');
+}
+
 
 // Helper for Visuals (Shared)
 // Helper for Visuals (Shared)
@@ -463,16 +884,17 @@ async function loadUserProducts(user) {
         window.trendingProducts = [...productsCache].sort((a, b) => getScore(b) - getScore(a));
 
         if (document.getElementById('profileProductsCount')) {
-            document.getElementById('profileProductsCount').innerText = productsCache.length;
+            // 🔥 CRITICAL FIX: Use innerHTML to keep the 'Productos' label visible
+            document.getElementById('profileProductsCount').innerHTML = `${productsCache.length} <span style="font-weight:400;">Productos</span>`;
         }
 
         // 1. Trending Carousel Init
         trendingPage = 0;
-        updateTrendingView(user, collabStats);
+        await updateTrendingView(user, collabStats); // This calls renderTrending (async)
         setupTrendingControls(user, collabStats);
 
         // 2. Render Main List (All initially)
-        renderProductList(productsCache, user, collabStats);
+        await renderProductList(productsCache, user, collabStats);
 
         // 3. Setup Filter Logic
         setupProfileControls();
@@ -583,9 +1005,17 @@ function updateTrendingView(user, collabStats) {
     renderTrending(sliced, user, collabStats);
 }
 
-function renderTrending(items, user, collabStats = {}) {
+async function renderTrending(items, user, collabStats = {}) {
     const container = document.getElementById('trendingGrid');
     if (!container) return;
+
+    // 1. Pre-authorize ALL images in parallel while skeletons stay visible
+    const authPromises = items.map(prod => {
+        if (!prod.image_url) return Promise.resolve(null);
+        return window.getAuthorizedUrl(prod.image_url);
+    });
+    const authorizedUrls = await Promise.all(authPromises);
+
     container.innerHTML = '';
     container.classList.add('fade-in');
 
@@ -601,9 +1031,13 @@ function renderTrending(items, user, collabStats = {}) {
 
         const seoLink = window.createSeoLink ? window.createSeoLink(prod) : '/producto.html?id=' + prod.id;
 
+        // Initial image check (avoid broken icon)
+        const isR2Trending = prod.image_url && (prod.image_url.includes('r2.cloudflarestorage.com') || prod.image_url.includes('pub-') || (!prod.image_url.startsWith('http') && prod.image_url.includes('/')));
+        const initialImgTrending = isR2Trending ? 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=' : (prod.image_url || 'https://via.placeholder.com/300');
+
         div.innerHTML = `
             <div class="t-card-cover">
-                <img src="${prod.image_url || 'https://via.placeholder.com/300'}" alt="${prod.name}" onclick="window.location.href='${seoLink}'">
+                <img src="${initialImgTrending}" id="trending-img-${prod.id}" alt="${prod.name}" onclick="window.location.href='${seoLink}'" class="skeleton-img-transition">
                 
                 <button class="t-play-btn" title="Reproducir">
                     <i class="bi bi-play-fill"></i>
@@ -690,13 +1124,36 @@ function renderTrending(items, user, collabStats = {}) {
         // Removed global div.onclick to avoid conflicts with play button
         // div.onclick = () => window.location.href = seoLink;
 
+        // 🔥 FIX: Authorize trending image
+        const authUrl = authorizedUrls[items.indexOf(prod)];
+        if (prod.image_url) {
+            const img = div.querySelector('img');
+            if (img) {
+                if (authUrl) {
+                    img.onload = () => { img.style.opacity = 1; };
+                    img.src = authUrl;
+                    if (img.complete) img.onload();
+                } else {
+                    // Fallback if not R2 or sign failed
+                    img.style.opacity = 1;
+                }
+            }
+        }
+
         container.appendChild(div);
     });
 }
 
-function renderProductList(items, user, collabStats = {}) {
+async function renderProductList(items, user, collabStats = {}) {
     const list = document.getElementById('profileProductsList');
     if (!list) return;
+
+    // 1. Pre-authorize ALL images in parallel
+    const authPromises = items.map(prod => {
+        if (!prod.image_url) return Promise.resolve(null);
+        return window.getAuthorizedUrl(prod.image_url);
+    });
+    const authorizedUrls = await Promise.all(authPromises);
 
     // Cleanup old wavesurfers
     window.activeWavesurfers.forEach(ws => {
@@ -736,7 +1193,8 @@ function renderProductList(items, user, collabStats = {}) {
         return;
     }
 
-    items.forEach((prod, index) => {
+    // 🔥 Use forEach for parallel processing (independent async starts)
+    items.forEach(async (prod, index) => {
         const row = document.createElement('div');
         row.className = 'list-row';
         row.dataset.id = prod.id;
@@ -769,10 +1227,14 @@ function renderProductList(items, user, collabStats = {}) {
             console.warn(`No audio URL found for ${prod.name}`);
         }
 
+        // Initial image check (avoid broken icon)
+        const isR2List = prod.image_url && (prod.image_url.includes('r2.cloudflarestorage.com') || prod.image_url.includes('pub-') || (!prod.image_url.startsWith('http') && prod.image_url.includes('/')));
+        const initialImgList = isR2List ? 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=' : (prod.image_url || 'https://via.placeholder.com/100');
+
         row.innerHTML = `
             <!-- 1. Cover -->
             <div class="list-cover" style="cursor: pointer;" onclick="window.location.href = '${seoLink}'">
-                <img src="${prod.image_url || 'https://via.placeholder.com/100'}" alt="cover">
+                <img src="${initialImgList}" id="list-img-${prod.id}" alt="cover" class="skeleton-img-transition">
             </div>
 
             <!-- 2. Info (Title + Author) -->
@@ -930,6 +1392,9 @@ function renderProductList(items, user, collabStats = {}) {
 
         // Initialize WaveSurfer if audioUrl exists
         if (audioUrl && window.WaveSurfer) {
+            // 🔥 FIX: AUTHORIZE R2 URL
+            const finalAudioUrl = await window.getAuthorizedUrl(audioUrl);
+
             const ws = WaveSurfer.create({
                 container: document.getElementById(waveformId), // Pass element directly
                 waveColor: '#666', // Brighter for dark theme
@@ -941,7 +1406,7 @@ function renderProductList(items, user, collabStats = {}) {
                 height: 28,
                 normalize: true,
                 interact: true,
-                url: audioUrl,
+                url: finalAudioUrl,
                 autoCenter: false,    // No moving
                 minPxPerSec: 0,       // Static
                 partialRender: true,
@@ -1052,7 +1517,22 @@ function renderProductList(items, user, collabStats = {}) {
             // Fallback for no audio or no library
             document.getElementById(waveformId).innerHTML = '<div style="height:100%; border-bottom:1px solid #333; opacity:0.3;">NO AUDIO</div>';
         }
-    });
+
+        // 🔥 FIX: Authorize list image with skeleton
+        const authUrl = authorizedUrls[items.indexOf(prod)];
+        if (prod.image_url) {
+            const img = row.querySelector('img');
+            if (img) {
+                if (authUrl) {
+                    img.onload = () => { img.style.opacity = 1; };
+                    img.src = authUrl;
+                    if (img.complete) img.onload();
+                } else {
+                    img.style.opacity = 1;
+                }
+            }
+        }
+    }); // Changed from }
 
     // UPDATE STICKY PLAYER PLAYLIST
     // Pass all tracks with artist_users data for proper navigation

@@ -138,11 +138,81 @@ window.AuthUtils = {
             console.warn("🛡️ AuthUtils: No token found when requesting headers.");
             return {};
         }
+    },
+
+    _urlCache: {}, // In-memory cache for signed URLs to speed up repeat loads
+
+    /**
+     * Resolves a path or URL to an authorized/signed URL if it's an R2 resource.
+     * Supports Hybrid (Supabase/R2) logic.
+     * @param {string} pathOrUrl The path or URL to resolve
+     * @returns {Promise<string|null>} The authorized URL
+     */
+    getAuthorizedUrl: async function (pathOrUrl) {
+        if (!pathOrUrl) return null;
+
+        // --- CACHE CHECK ---
+        if (this._urlCache[pathOrUrl]) {
+            return this._urlCache[pathOrUrl];
+        }
+
+
+        // --- HYBRID LOGIC ---
+        // If it's a full URL and NOT R2, it's already public (Supabase)
+        const isR2Url = pathOrUrl.includes('r2.cloudflarestorage.com') ||
+            pathOrUrl.includes('pub-') ||
+            (!pathOrUrl.startsWith('http') && pathOrUrl.includes('/')); // Likely a path like 'beats/123/abc.mp3'
+
+        if (!isR2Url && pathOrUrl.startsWith('http')) {
+            return pathOrUrl; // Supabase public URL
+        }
+
+        // --- R2 LOGIC ---
+        let key = pathOrUrl;
+        if (pathOrUrl.startsWith('http')) {
+            // Extract key from full R2 URL
+            const r2Base = '.r2.cloudflarestorage.com/';
+            if (pathOrUrl.includes(r2Base)) {
+                key = pathOrUrl.split(r2Base)[1];
+            } else {
+                try {
+                    const urlObj = new URL(pathOrUrl);
+                    key = urlObj.pathname.substring(1);
+                } catch (e) { }
+            }
+        }
+
+        // --- SIGNING VIA API ---
+        try {
+            const token = this.getAccessToken(); // Use self
+            const response = await fetch('/api/r2/download-url', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': token ? `Bearer ${token}` : undefined
+                },
+                body: JSON.stringify({ key })
+            });
+
+            if (!response.ok) {
+                console.warn(`AuthUtils: Failed to sign R2 key: ${key}`, response.status);
+                // Return original if signing fails as fallback (might be public)
+                return pathOrUrl;
+            }
+
+            const { downloadUrl } = await response.json();
+            this._urlCache[pathOrUrl] = downloadUrl; // Cache result
+            return downloadUrl;
+        } catch (error) {
+            console.error('AuthUtils: Error getting authorized URL:', error);
+            return pathOrUrl; // Fallback to original
+        }
     }
 };
 
 // Backwards compatibility / Direct global access shortcuts
 window.getAccessToken = window.AuthUtils.getAccessToken.bind(window.AuthUtils);
+window.getAuthorizedUrl = window.AuthUtils.getAuthorizedUrl.bind(window.AuthUtils);
 
 // Attempt Init immediately
 window.AuthUtils.initSupabase();

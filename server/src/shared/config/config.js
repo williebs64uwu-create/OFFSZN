@@ -22,3 +22,10 @@ export const EMAILJS_PUBLIC_KEY = process.env.EMAILJS_PUBLIC_KEY;
 export const EMAILJS_PRIVATE_KEY = process.env.EMAILJS_PRIVATE_KEY;
 
 export const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
+
+// CLOUDFLARE R2
+export const R2_ENDPOINT = process.env.R2_ENDPOINT;
+export const R2_ACCESS_KEY_ID = process.env.R2_ACCESS_KEY_ID;
+export const R2_SECRET_ACCESS_KEY = process.env.R2_SECRET_ACCESS_KEY;
+export const R2_BUCKET_NAME = process.env.R2_BUCKET_NAME || 'offszn-storage';
+export const R2_TOKEN = process.env.R2_TOKEN;

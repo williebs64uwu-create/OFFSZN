@@ -161,7 +161,7 @@ function createProducerCard(user) {
 
     const initial = (user.nickname || user.first_name || 'U').charAt(0).toUpperCase();
     const avatarContent = user.avatar_url
-        ? `<img src="${user.avatar_url}" alt="${user.nickname}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`
+        ? `<img src="${user.avatar_url}" alt="${user.nickname}" onerror="if(window.AvatarManager) window.AvatarManager.handleError(this, '${user.nickname.replace(/'/g, "\\'")}')" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`
         : `<div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; background: #222; border: 1px solid #333; border-radius:50%; font-size:2.5rem; font-weight:700; color:#fff;">${initial}</div>`;
 
     // Get follower count (will be 0 for now, we'll add the real count later)

@@ -270,17 +270,20 @@ function renderTwoColLists(category = 'Todo') {
 
     // Initialize WaveSurfers after adding to DOM
     setTimeout(() => {
-        grid.querySelectorAll('.list-item-smart[data-type="product"]').forEach(item => {
+        grid.querySelectorAll('.list-item-smart[data-type="product"]').forEach(async item => {
             const id = item.dataset.id;
             const product = allProducts.find(p => p.id == id);
             const container = item.querySelector('.list-item-waveform');
 
             // Comprehensive Audio URL Fallback
-            const audioUrl = product.mp3_url || product.download_url_mp3 || product.preview_url ||
+            const rawAudioUrl = product.mp3_url || product.download_url_mp3 || product.preview_url ||
                 product.audio_url || product.tagged_file || product.demo_file ||
                 product.file_url || product.url_file;
 
-            if (container && audioUrl && window.WaveSurfer) {
+            if (container && rawAudioUrl && window.WaveSurfer) {
+                // 🔥 AUTHORIZE R2 AUDIO
+                const audioUrl = await window.getAuthorizedUrl(rawAudioUrl);
+
                 const ws = WaveSurfer.create({
                     container: container,
                     waveColor: '#444',
@@ -633,19 +636,30 @@ function renderCategoryFilters(parent) {
 function playTrack(product) {
     if (!product) return;
     if (window.StickyPlayer) {
-        // Robust URL for sticky player too
+        // 1. Toggle Logic: If same track, toggle instead of reloading
+        if (window.StickyPlayer.getCurrentTrackId() == product.id) {
+            window.StickyPlayer.togglePlay();
+            return;
+        }
+
+        // 2. Standardize Audio URL
         const audioUrl = product.mp3_url || product.download_url_mp3 || product.preview_url ||
             product.audio_url || product.tagged_file || product.demo_file ||
             product.file_url || product.url_file;
 
-        window.StickyPlayer.play({
+        // 3. Construct Standardized Data (Matching profile-public.js pattern)
+        const trackData = {
             ...product,
             audio_url: audioUrl,
-            producer: product.producer || {
-                nickname: product.producer_nickname,
-                id: product.producer_id
+            artist_users: {
+                nickname: product.producer_nickname || 'OFFSZN Artist',
+                id: product.producer_id,
+                avatar_url: product.producer_avatar || null,
+                is_verified: product.producer_is_verified || false
             }
-        });
+        };
+
+        window.StickyPlayer.play(trackData);
     } else {
         console.warn("StickyPlayer not found");
     }

@@ -227,7 +227,7 @@ export const getUserByNickname = async (req, res) => {
 
         const { data: user, error } = await supabase
             .from('users')
-            .select('id, nickname, first_name, last_name, avatar_url, bio, role, socials, is_verified, is_producer, created_at')
+            .select('id, nickname, first_name, last_name, avatar_url, bio, role, socials, is_verified, is_producer, created_at, experience, daws, banner_url')
             .ilike('nickname', nickname)
             .maybeSingle();
 

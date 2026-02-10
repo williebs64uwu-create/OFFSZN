@@ -441,6 +441,20 @@
                                 <option value="Avanzado (3+ años)">Avanzado (3+ años)</option>
                             </select>
                         </div>
+                        <div class="form-group">
+                            <label for="mostUsedDaw">DAW más usado</label>
+                            <select id="mostUsedDaw" class="form-select">
+                                <option value="" disabled selected hidden>Selecciona tu DAW</option>
+                                <option value="FL Studio">FL Studio</option>
+                                <option value="Ableton Live">Ableton Live</option>
+                                <option value="Logic Pro">Logic Pro</option>
+                                <option value="Pro Tools">Pro Tools</option>
+                                <option value="Cubase">Cubase</option>
+                                <option value="Studio One">Studio One</option>
+                                <option value="Reaper">Reaper</option>
+                                <option value="Otro">Otro / Varios</option>
+                            </select>
+                        </div>
                         <div class="form-group full-width">
                             <label for="bio">Bio</label>
                             <textarea id="bio" class="form-input" placeholder="Cuéntanos un poco sobre ti..."
@@ -448,6 +462,39 @@
                             <span id="bioCounter"
                                 style="color: #a1a1aa; font-size: 0.75rem; display: block; margin-top: 4px; text-align: right;">0/500</span>
                         </div>
+
+                        <!-- NEW SECTION: SERVICIOS -->
+                        <div class="form-group full-width"
+                            style="margin-top: 10px; padding: 20px; background: rgba(255,255,255,0.03); border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
+                            <h3
+                                style="font-size: 0.9rem; margin-bottom: 15px; color: #8b5cf6; text-transform: uppercase; letter-spacing: 1px;">
+                                Servicios y Portfolio</h3>
+                            <div
+                                style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+                                <div style="display: flex; flex-direction: column; gap: 8px;">
+                                    <label style="font-size: 0.8rem; color: #999;">Servicios Ofrecidos</label>
+                                    <div style="display: flex; gap: 15px;">
+                                        <label
+                                            style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.85rem; color: #ccc;">
+                                            <input type="checkbox" id="serviceMixing" style="accent-color: #8b5cf6;">
+                                            Mezcla
+                                        </label>
+                                        <label
+                                            style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.85rem; color: #ccc;">
+                                            <input type="checkbox" id="serviceMastering" style="accent-color: #8b5cf6;">
+                                            Mastering
+                                        </label>
+                                    </div>
+                                </div>
+                                <div style="display: flex; flex-direction: column; gap: 8px;">
+                                    <label for="spotifyWork" style="font-size: 0.8rem; color: #999;">Spotify Playlist /
+                                        Track URL</label>
+                                    <input type="url" id="spotifyWork" class="form-input"
+                                        placeholder="https://open.spotify.com/playlist/..." style="font-size: 0.8rem;">
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="form-actions">
                             <button type="submit" class="btn-primary-sm">Actualizar perfil</button>
                         </div>
@@ -562,67 +609,10 @@
         </div>
     </footer>
 
-    <!-- Avatar Crop Modal -->
-    <div id="cropModal" class="modal-overlay" style="display: none;">
-        <div class="crop-modal-content">
-            <div class="crop-header">
-                <h3>Editar Avatar</h3>
-                <button class="close-modal" onclick="AvatarManager.closeCropModal()">&times;</button>
-            </div>
-            <div class="crop-body">
-                <div class="img-container">
-                    <img id="cropImage" src="" alt="Imagen para recortar">
-                </div>
-            </div>
-            <div class="crop-controls">
-                <button onclick="AvatarManager.rotate(-90)" class="btn-icon" title="Rotar Izquierda"><i
-                        class="bi bi-arrow-counterclockwise"></i></button>
-                <button onclick="AvatarManager.rotate(90)" class="btn-icon" title="Rotar Derecha"><i
-                        class="bi bi-arrow-clockwise"></i></button>
-                <button onclick="AvatarManager.zoom(0.1)" class="btn-icon" title="Acercar"><i
-                        class="bi bi-zoom-in"></i></button>
-                <button onclick="AvatarManager.zoom(-0.1)" class="btn-icon" title="Alejar"><i
-                        class="bi bi-zoom-out"></i></button>
-            </div>
+    <!-- Shared Modals handled by AvatarManager -->
 
-            <!-- PRO Upsell Banner -->
-            <div class="pro-upsell-banner">
-                <div class="pro-text">
-                    <span>Personaliza mucho más con <strong>PRO</strong> <i class="bi bi-stars"
-                            style="color:#fdc62e;"></i></span>
-                </div>
-                <button class="btn-get-pro" onclick="window.location.href='/cuenta/planes.html'">Obtener PRO</button>
-            </div>
-
-            <div class="crop-footer">
-                <button class="btn-secondary" onclick="AvatarManager.closeCropModal()">Cancelar</button>
-                <button class="btn-primary" onclick="AvatarManager.saveCrop()">Guardar Avatar</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Premium "Nitro" Modal -->
-    <div id="premiumModal" class="modal-overlay" style="display: none;">
-        <div class="premium-modal-content">
-            <div class="premium-glow"></div>
-            <button class="close-modal-abs"
-                onclick="document.getElementById('premiumModal').style.display='none'">&times;</button>
-            <div class="premium-icon">
-                <i class="bi bi-stars"></i>
-            </div>
-            <h2>Desbloquea Avatares Animados</h2>
-            <p>Personaliza tu perfil con avatares GIF y marcos exclusivos con <strong>OFFSZN PRO</strong>.</p>
-            <div class="premium-actions">
-                <button class="btn-nitro" onclick="window.location.href='/cuenta/planes.html'">Obtener PRO</button>
-                <button class="btn-link" onclick="document.getElementById('premiumModal').style.display='none'">Quizás
-                    luego</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Cropper.js -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
+    <script src="/script/avatar-manager.js"></script>
 
     <!-- Global Scripts -->
     <script src="/script/cart.js"></script>

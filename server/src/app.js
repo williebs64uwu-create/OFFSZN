@@ -20,6 +20,8 @@ import reelsRoutes from './infrastructure/http/routes/reels.routes.js';
 import { handleMercadoPagoWebhook } from './infrastructure/http/controllers/OrderController.js';
 import chatRoutes from './infrastructure/http/routes/chat.routes.js';
 import paypalRoutes from './infrastructure/http/routes/paypal.routes.js';
+import r2Routes from './infrastructure/http/routes/r2.routes.js';
+
 
 const app = express()
 const __filename = fileURLToPath(import.meta.url);
@@ -139,8 +141,9 @@ app.use('/api/admin', adminRoutes);
 // app.use('/api', chatbotRouter);
 app.use('/api', profileRoutes);
 app.use('/api', chatRoutes);
-app.use('/api', chatRoutes);
 app.use('/api', paypalRoutes);
+app.use('/api', r2Routes);
+
 
 // --- 3. CLEAN URLS & STATIC FILES (MIDDLEWARE) ---
 

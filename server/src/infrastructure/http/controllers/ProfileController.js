@@ -21,6 +21,7 @@ export const getUserProfile = async (req, res) => {
                 is_producer, 
                 created_at,
                 followers:followers!followers_user_id_fkey(count),
+                following:followers!followers_follower_id_fkey(count),
                 products:products!products_producer_id_fkey(count)
             `)
             .ilike('nickname', nickname)
@@ -54,10 +55,12 @@ export const getUserProfile = async (req, res) => {
         const user = {
             ...userData,
             followers_count: userData.followers?.[0]?.count || 0,
+            following_count: userData.following?.[0]?.count || 0,
             products_count: userData.products?.[0]?.count || 0
         };
         // Remove raw arrays 
         delete user.followers;
+        delete user.following;
         delete user.products;
 
         res.status(200).json(user);

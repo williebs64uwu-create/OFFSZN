@@ -24,6 +24,8 @@
   <link rel="stylesheet" href="/css/hover-card.css">
   <link rel="stylesheet" href="/css/download-gate.css">
   <link rel="stylesheet" href="/css/sticky-player.css">
+  <link rel="stylesheet" href="/css/avatar-manager.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -356,6 +358,10 @@
           <div id="profileAvatar" class="profile-avatar-img">
             <div class="skeleton skeleton-profile-avatar"></div>
           </div>
+          <button id="ownerChangeAvatar" class="owner-avatar-btn" style="display: none;"
+            onclick="AvatarManager.open(document.querySelector('#profileAvatar img')?.src)">
+            <i class="bi bi-plus-lg"></i>
+          </button>
         </div>
 
         <div class="profile-details">
@@ -376,28 +382,45 @@
             <div id="profileLocation">
               <div class="skeleton skeleton-profile-meta" style="width:80px; display:inline-block;"></div>
             </div>
+            <!-- Removed Joined Date as per request -->
           </div>
 
           <div id="profileBio" class="profile-bio">
             <div class="skeleton skeleton-profile-bio"></div>
           </div>
 
-          <div class="profile-stats">
-            <div class="stat">
-              <b id="profileProductsCount">
-                <div class="skeleton skeleton-profile-stats" style="width:80px;"></div>
-              </b>
+          <div class="profile-middle-row">
+            <div class="profile-stats">
+              <div class="stat">
+                <b id="profileProductsCount">
+                  <div class="skeleton skeleton-profile-stats" style="width:80px;"></div>
+                </b>
+              </div>
+              <div class="stat">
+                <b id="profileFollowersCount">
+                  <div class="skeleton skeleton-profile-stats" style="width:100px;"></div>
+                </b>
+              </div>
+              <div class="stat">
+                <b id="profileFollowingCount">
+                  <div class="skeleton skeleton-profile-stats" style="width:90px;"></div>
+                </b>
+              </div>
             </div>
-            <div class="stat">
-              <b id="profileFollowersCount">
-                <div class="skeleton skeleton-profile-stats" style="width:100px;"></div>
-              </b>
+
+            <div id="socialLinks" class="social-links">
+              <div class="skeleton skeleton-profile-social" style="width:24px; height:24px;"></div>
+              <div class="skeleton skeleton-profile-social" style="width:24px; height:24px;"></div>
+              <div class="skeleton skeleton-profile-social" style="width:24px; height:24px;"></div>
+              <div class="skeleton skeleton-profile-social" style="width:24px; height:24px;"></div>
             </div>
-            <div class="stat">
-              <b id="profileFollowingCount">
-                <div class="skeleton skeleton-profile-stats" style="width:90px;"></div>
-              </b>
-            </div>
+          </div>
+
+          <!-- NEW: HORIZONTAL TABS -->
+          <div id="profileTabs" class="profile-tabs-nav">
+            <button class="profile-tab-btn active" onclick="setActiveTab('products')">PRODUCTOS</button>
+            <button class="profile-tab-btn" onclick="setActiveTab('services')">SERVICIOS</button>
+            <button class="profile-tab-btn" onclick="setActiveTab('about')">ACERCA DE MÍ</button>
           </div>
 
           <div class="profile-actions">
@@ -410,13 +433,14 @@
             <!-- REAL BUTTONS (Hidden Initially) -->
             <button class="btn-primary" id="btnFollow" style="display:none;">Seguir</button>
             <button class="btn-secondary" id="btnMessage" style="display:none;">Mensaje</button>
-
-            <div id="socialLinks" class="social-links" style="display: flex; gap: 8px; margin-top: 12px;">
-              <div class="skeleton skeleton-profile-social" style="width:28px; height:28px;"></div>
-              <div class="skeleton skeleton-profile-social" style="width:28px; height:28px;"></div>
-              <div class="skeleton skeleton-profile-social" style="width:28px; height:28px;"></div>
-              <div class="skeleton skeleton-profile-social" style="width:28px; height:28px;"></div>
-            </div>
+            <button class="btn-personalize-compact" id="btnPersonalize" style="display:none;"
+              onclick="ProfilePersonalizer.open()">
+              <i class="bi bi-palette-fill" style="margin-right:6px;"></i> Personalizar perfil
+            </button>
+            <button class="btn-secondary-compact" id="btnAccountSettings" style="display:none;"
+              onclick="window.location.href='/account-settings.html'">
+              <i class="bi bi-gear-fill" style="margin-right:6px;"></i> Ajustes de cuentas
+            </button>
           </div>
         </div>
       </div>
@@ -737,8 +761,139 @@
 <script src="/script/id-obfuscator.js?v=11"></script>
 <script src="/script/profile-public.js?v=11" type="module"></script>
 <script src="/script/hover-card.js?v=11"></script>
-<script src="/script/download-gate.js"></script>
+<!-- Shared Modals handled by AvatarManager -->
+
+<!-- NEW: Profile Personalization Portal -->
+<div id="personalizeModal" class="p-modal"
+  style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 9999; backdrop-filter: blur(10px); color: #fff; font-family: 'Plus Jakarta Sans', sans-serif;">
+  <div class="p-modal-content"
+    style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 440px; background: #0c0c0c; border: 1px solid #1a1a1a; border-radius: 24px; overflow: hidden; box-shadow: 0 40px 100px rgba(0,0,0,0.9);">
+    <div class="p-modal-header"
+      style="padding: 24px 32px; border-bottom: 1px solid #1a1a1a; display: flex; justify-content: space-between; align-items: center;">
+      <h3 style="margin: 0; font-size: 1.25rem; font-weight: 800; letter-spacing: -0.5px;">Personalizar Perfil</h3>
+      <button onclick="ProfilePersonalizer.close()"
+        style="background: #1a1a1a; border: none; color: #fff; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; font-size: 1.2rem;"
+        onmouseover="this.style.background='#333'" onmouseout="this.style.background='#1a1a1a'">&times;</button>
+    </div>
+    <div class="p-modal-main-view" style="padding: 32px; display: flex; flex-direction: column; gap: 16px;">
+      <!-- Option: Avatar -->
+      <div onclick="ProfilePersonalizer.select('avatar')"
+        style="padding: 24px; background: #141414; border: 1px solid #1a1a1a; border-radius: 16px; cursor: pointer; display: flex; align-items: center; gap: 20px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative; overflow: hidden;"
+        onmouseover="this.style.borderColor='#8b5cf6'; this.style.transform='translateY(-2px)'; this.style.background='#181818'"
+        onmouseout="this.style.borderColor='#1a1a1a'; this.style.transform='translateY(0)'; this.style.background='#141414'">
+        <div
+          style="width: 52px; height: 52px; background: linear-gradient(135deg, rgba(139, 92, 246, 0.2) 0%, rgba(139, 92, 246, 0.05) 100%); color: #8b5cf6; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; border: 1px solid rgba(139, 92, 246, 0.2);">
+          <i class="bi bi-person-circle"></i>
+        </div>
+        <div style="flex: 1;">
+          <div style="font-weight: 800; font-size: 1.05rem; margin-bottom: 4px; color: #fff;">Foto de Perfil</div>
+          <div style="font-size: 0.8rem; color: #888; font-weight: 500;">Actualiza tu imagen de marca</div>
+        </div>
+        <i class="bi bi-chevron-right" style="color: #444; font-size: 1.1rem;"></i>
+      </div>
+      <!-- Option: Banner -->
+      <div onclick="ProfilePersonalizer.select('banner')"
+        style="padding: 24px; background: #141414; border: 1px solid #1a1a1a; border-radius: 16px; cursor: pointer; display: flex; align-items: center; gap: 20px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);"
+        onmouseover="this.style.borderColor='#10b981'; this.style.transform='translateY(-2px)'; this.style.background='#181818'"
+        onmouseout="this.style.borderColor='#1a1a1a'; this.style.transform='translateY(0)'; this.style.background='#141414'">
+        <div
+          style="width: 52px; height: 52px; background: linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(16, 185, 129, 0.05) 100%); color: #10b981; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; border: 1px solid rgba(16, 185, 129, 0.2);">
+          <i class="bi bi-layout-header"></i>
+        </div>
+        <div style="flex: 1;">
+          <div style="font-weight: 800; font-size: 1.05rem; margin-bottom: 4px; color: #fff;">Personaliza tu Banner
+          </div>
+          <div style="font-size: 0.8rem; color: #888; font-weight: 500;">Elige un color o gradiente de fondo</div>
+        </div>
+        <i class="bi bi-chevron-right" style="color: #444; font-size: 1.1rem;"></i>
+      </div>
+
+      <!-- Option: Dynamic Theme Toggle -->
+      <div
+        style="padding: 24px; background: #141414; border: 1px solid #1a1a1a; border-radius: 16px; display: flex; align-items: center; gap: 20px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);">
+        <div
+          style="width: 52px; height: 52px; background: linear-gradient(135deg, rgba(139, 92, 246, 0.2) 0%, rgba(139, 92, 246, 0.05) 100%); color: #8b5cf6; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; border: 1px solid rgba(139, 92, 246, 0.2);">
+          <i class="bi bi-palette2"></i>
+        </div>
+        <div style="flex: 1;">
+          <div style="font-weight: 800; font-size: 1.05rem; margin-bottom: 4px; color: #fff;">Tema Dinámico</div>
+          <div style="font-size: 0.8rem; color: #888; font-weight: 500;">Baña el resto de tu perfil con los colores de
+            tu banner (muy sutil)</div>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="dynamicThemeToggle"
+            onchange="ProfilePersonalizer.toggleDynamicTheme(this.checked)">
+          <span class="slider round"></span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Banner Color Picker Sub-View (Hidden by default) -->
+    <div id="bannerPicker" style="display: none; padding: 32px; background: #080808; border-top: 1px solid #1a1a1a;">
+      <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 24px;">
+        <button onclick="ProfilePersonalizer.open()"
+          style="background: #1a1a1a; border: none; color: #fff; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s;">
+          <i class="bi bi-arrow-left"></i>
+        </button>
+        <div
+          style="font-size: 0.75rem; color: #888; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px;">
+          Estilos Disponibles</div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 32px;">
+        <!-- Vibrant Solids -->
+        <div onclick="ProfilePersonalizer.applyBanner('solid:#8b5cf6')"
+          style="aspect-ratio: 1; background: #8b5cf6; border-radius: 12px; cursor: pointer; border: 2px solid transparent; transition: transform 0.2s;"
+          class="banner-option" title="Electric Purple"></div>
+        <div onclick="ProfilePersonalizer.applyBanner('solid:#10b981')"
+          style="aspect-ratio: 1; background: #10b981; border-radius: 12px; cursor: pointer; border: 2px solid transparent; transition: transform 0.2s;"
+          class="banner-option" title="Neon Green"></div>
+        <div onclick="ProfilePersonalizer.applyBanner('solid:#06b6d4')"
+          style="aspect-ratio: 1; background: #06b6d4; border-radius: 12px; cursor: pointer; border: 2px solid transparent; transition: transform 0.2s;"
+          class="banner-option" title="Ocean Cyan"></div>
+        <div onclick="ProfilePersonalizer.applyBanner('solid:#f43f5e')"
+          style="aspect-ratio: 1; background: #f43f5e; border-radius: 12px; cursor: pointer; border: 2px solid transparent; transition: transform 0.2s;"
+          class="banner-option" title="Rose Fire"></div>
+
+        <!-- Vibrant Gradients -->
+        <div onclick="ProfilePersonalizer.applyBanner('gradient:linear-gradient(135deg, #8b5cf6 0%, #d946ef 100%)')"
+          style="aspect-ratio: 1; background: linear-gradient(135deg, #8b5cf6 0%, #d946ef 100%); border-radius: 12px; cursor: pointer; border: 2px solid transparent; transition: transform 0.2s;"
+          class="banner-option" title="Cosmic"></div>
+        <div onclick="ProfilePersonalizer.applyBanner('gradient:linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)')"
+          style="aspect-ratio: 1; background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%); border-radius: 12px; cursor: pointer; border: 2px solid transparent; transition: transform 0.2s;"
+          class="banner-option" title="Sunset"></div>
+        <div onclick="ProfilePersonalizer.applyBanner('gradient:linear-gradient(135deg, #10b981 0%, #3b82f6 100%)')"
+          style="aspect-ratio: 1; background: linear-gradient(135deg, #10b981 0%, #3b82f6 100%); border-radius: 12px; cursor: pointer; border: 2px solid transparent; transition: transform 0.2s;"
+          class="banner-option" title="Aurora"></div>
+        <div onclick="ProfilePersonalizer.applyBanner('gradient:linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)')"
+          style="aspect-ratio: 1; background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%); border-radius: 12px; cursor: pointer; border: 2px solid transparent; transition: transform 0.2s;"
+          class="banner-option" title="Indigo Night"></div>
+
+        <!-- High Contrast / Dark -->
+        <div onclick="ProfilePersonalizer.applyBanner('solid:#111')"
+          style="aspect-ratio: 1; background: #111; border-radius: 12px; cursor: pointer; border: 2px solid #333; transition: transform 0.2s;"
+          class="banner-option" title="Pure Black"></div>
+        <div onclick="ProfilePersonalizer.applyBanner('gradient:linear-gradient(135deg, #111 0%, #444 100%)')"
+          style="aspect-ratio: 1; background: linear-gradient(135deg, #111 0%, #444 100%); border-radius: 12px; cursor: pointer; border: 2px solid transparent; transition: transform 0.2s;"
+          class="banner-option" title="Steel"></div>
+        <div onclick="ProfilePersonalizer.applyBanner('gradient:linear-gradient(135deg, #db2777 0%, #111 100%)')"
+          style="aspect-ratio: 1; background: linear-gradient(135deg, #db2777 0%, #111 100%); border-radius: 12px; cursor: pointer; border: 2px solid transparent; transition: transform 0.2s;"
+          class="banner-option" title="Midnight Pink"></div>
+        <div onclick="ProfilePersonalizer.applyBanner('gradient:linear-gradient(135deg, #059669 0%, #111 100%)')"
+          style="aspect-ratio: 1; background: linear-gradient(135deg, #059669 0%, #111 100%); border-radius: 12px; cursor: pointer; border: 2px solid transparent; transition: transform 0.2s;"
+          class="banner-option" title="Forest Night"></div>
+      </div>
+      <button onclick="ProfilePersonalizer.saveBanner()" class="btn-primary"
+        style="width: 100%; height: 52px; border-radius: 14px; font-weight: 800; font-size: 1rem;">Guardar
+        Cambios</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
+<script src="/script/avatar-manager.js"></script>
 <script src="/script/sticky-player.js?v=11"></script>
+
 <script>
   document.addEventListener('DOMContentLoaded', () => {
     if (window.StickyPlayer) window.StickyPlayer.init();

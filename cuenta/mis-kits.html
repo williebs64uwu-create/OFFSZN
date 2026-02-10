@@ -1897,6 +1897,61 @@
         // ========================================
         async function deleteFileFromStorage(pathOrUrl, bucket) {
             if (!pathOrUrl) return;
+
+            // 1. CHEQUEO R2 (Si es URL completa de R2 o tiene estructura de key de R2)
+            // Nuestros keys de R2 suelen empezar con "uploads/" o "products/" y no son URLs de Supabase
+            // O si es una URL completa de Cloudflare R2
+            const isR2Url = pathOrUrl.includes('r2.cloudflarestorage.com') ||
+                pathOrUrl.includes('pub-') || // Dominios custom R2
+                (pathOrUrl.startsWith('uploads/') && !pathOrUrl.includes('supabase'));
+
+            if (isR2Url) {
+                try {
+                    // Extraer key si es URL completa
+                    let key = pathOrUrl;
+                    if (pathOrUrl.startsWith('http')) {
+                        // Intentar extraer la parte después del dominio si es una URL pública
+                        // Esto depende de cómo estructures tus URLs públicas.
+                        // Si guardaste el KEY en la BD (lo ideal), úsalo directo.
+                        // Si guardaste la URL pública, necesitamos parsearla.
+                        // Asumiremos que si empieza con http, intentamos sacar el pathname sin la primera barra
+                        try {
+                            const urlObj = new URL(pathOrUrl);
+                            key = urlObj.pathname.substring(1); // Quitar '/' inicial
+                        } catch (e) {
+                            console.warn("No se pudo parsear URL R2, usando string original:", pathOrUrl);
+                        }
+                    }
+
+                    console.log(`[R2] Solicitando eliminación de: ${key}`);
+
+                    const session = await supabaseClient.auth.getSession();
+                    const token = session.data.session?.access_token;
+
+                    if (!token) throw new Error("No hay sesión para eliminar en R2");
+
+                    const response = await fetch('/api/r2/delete-files', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify({ keys: [key] })
+                    });
+
+                    if (!response.ok) {
+                        const errData = await response.json();
+                        throw new Error(errData.error || 'Error en endpoint delete R2');
+                    }
+                    console.log(`[R2] Eliminado correctamente: ${key}`);
+
+                } catch (e) {
+                    console.warn(`?? Cleanup failed for R2 file ${pathOrUrl}:`, e);
+                }
+                return; // Terminar aquí si era R2
+            }
+
+            // 2. LOGICA LEGACY (SUPABASE STORAGE)
             try {
                 let path = pathOrUrl;
                 if (pathOrUrl.startsWith('http')) {
@@ -1904,7 +1959,7 @@
                     if (parts.length > 1) path = parts[1];
                     else return;
                 }
-                console.log(`??? Deleting from ${bucket}:`, path);
+                console.log(`?? Deleting from Supabase ${bucket}:`, path);
                 await supabaseClient.storage.from(bucket).remove([path]);
             } catch (e) { console.warn(`?? Cleanup failed for ${pathOrUrl} in ${bucket}:`, e); }
         }
@@ -2459,12 +2514,19 @@
                     { name: 'preset_drafts', col: 'user_id' }
                 ];
 
-                const promises = tables.map(t =>
-                    supabaseClient
+                const promises = tables.map(t => {
+                    let q = supabaseClient
                         .from(t.name)
                         .select('*', { count: 'exact', head: true })
-                        .eq(t.col, userId)
-                );
+                        .eq(t.col, userId);
+
+                    // 🔥 EXCLUDE DELETED PRODUCTS FROM LIMIT 
+                    if (t.name === 'products') {
+                        q = q.neq('status', 'deleted');
+                    }
+
+                    return q;
+                });
 
                 const results = await Promise.all(promises);
                 let totalCount = 0;
@@ -2585,6 +2647,49 @@
 
 
 
+        async function getAuthorizedUrl(pathOrUrl) {
+            if (!pathOrUrl || pathOrUrl === '/images/portada-default.png') return pathOrUrl;
+
+            // Si es una URL de R2 (cloudflarestorage), necesitamos firmarla.
+            const isR2Url = pathOrUrl.includes('r2.cloudflarestorage.com') ||
+                pathOrUrl.includes('pub-') ||
+                (pathOrUrl.startsWith('http') === false);
+
+            if (!isR2Url && pathOrUrl.startsWith('http')) return pathOrUrl;
+
+            let key = pathOrUrl;
+            if (pathOrUrl.startsWith('http')) {
+                try {
+                    const urlObj = new URL(pathOrUrl);
+                    key = urlObj.pathname.substring(1);
+                } catch (e) {
+                    console.warn("Error parsing URL in getAuthorizedUrl:", pathOrUrl);
+                }
+            }
+
+            try {
+                const session = await supabaseClient.auth.getSession();
+                const token = session.data.session?.access_token;
+                if (!token) return pathOrUrl;
+
+                const response = await fetch('/api/r2/download-url', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ key })
+                });
+
+                if (!response.ok) return pathOrUrl;
+                const { downloadUrl } = await response.json();
+                return downloadUrl;
+            } catch (error) {
+                console.error('Error getting authorized URL:', error);
+                return pathOrUrl;
+            }
+        }
+
         async function loadProducts(type, status = 'all') {
             const container = document.getElementById('productsContainer');
 
@@ -2694,28 +2799,40 @@
                 const products = productsRes.data || [];
                 const drafts = draftsRes.data || [];
 
-                // Mark drafts
-                // ?? SIGN DRAFTS URLs & MARK STATUS
-                if (drafts.length > 0) {
-                    let bucket = 'beat-drafts';
-                    if (type === 'drumkits') bucket = 'drumkit-drafts';
-                    if (type === 'presets') bucket = 'preset-drafts';
-                    if (type === 'loopkits') bucket = 'loopkit-drafts';
+                // 3. PROCESS ALL ITEMS FOR COVERS (Sign URLs if needed)
+                await Promise.all([...drafts, ...products].map(async item => {
+                    const coverPath = item.image_url || item.cover_url;
+                    if (!coverPath) return;
 
-                    await Promise.all(drafts.map(async d => {
-                        d.isDraft = true;
-                        d.status = 'draft';
-
-                        // Sign Cover URL if it's a relative path (private bucket)
-                        if (d.cover_url && !d.cover_url.startsWith('http')) {
-                            const { data } = await supabaseClient.storage.from(bucket).createSignedUrl(d.cover_url, 3600);
-                            if (data?.signedUrl) d.signed_cover_url = data.signedUrl;
+                    if (item.id && !item.user_id) { // Published item
+                        // Published items might be R2 or Supabase
+                        if (coverPath.startsWith('http')) {
+                            item.signed_cover_url = await getAuthorizedUrl(coverPath);
+                        } else {
+                            // Legacy Supabase Private support
+                            const bucket = dbType === 'beat' ? 'beat-covers' : `${dbType}-covers`;
+                            const { data } = await supabaseClient.storage.from(bucket).createSignedUrl(coverPath, 3600);
+                            if (data?.signedUrl) item.signed_cover_url = data.signedUrl;
                         }
-                    }));
-                }
+                    } else { // Draft
+                        item.isDraft = true;
+                        item.status = 'draft';
+                        let bucket = 'beat-drafts';
+                        if (type === 'drumkits') bucket = 'drumkit-drafts';
+                        if (type === 'presets') bucket = 'preset-drafts';
+                        if (type === 'loopkits') bucket = 'loopkit-drafts';
+
+                        if (!coverPath.startsWith('http')) {
+                            const { data } = await supabaseClient.storage.from(bucket).createSignedUrl(coverPath, 3600);
+                            if (data?.signedUrl) item.signed_cover_url = data.signedUrl;
+                        } else {
+                            item.signed_cover_url = await getAuthorizedUrl(coverPath);
+                        }
+                    }
+                }));
 
                 // Combine
-                let allItems = [...drafts, ...products];
+                let allItems = [...drafts.map(d => ({ ...d, isDraft: true, status: 'draft' })), ...products];
 
                 // FILTER SOFT-DELETED ITEMS
                 allItems = allItems.filter(item => {

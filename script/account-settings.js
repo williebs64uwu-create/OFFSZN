@@ -26,11 +26,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     // 3. Setup Listeners
     setupFormListeners();
 
-    // 4. Setup Avatar Listeners (New Manager)
-    const avatarInput = document.getElementById('avatarInput');
-    if (avatarInput) {
-        avatarInput.addEventListener('change', AvatarManager.handleFileSelect);
-    }
+    // 4. Shared AvatarManager is initialized globally
 });
 
 async function loadUserData() {
@@ -108,6 +104,22 @@ async function loadUserData() {
             if (yt) yt.value = data.socials.youtube || '';
             const sp = document.getElementById('spotify');
             if (sp) sp.value = data.socials.spotify || '';
+        }
+
+        // POPULATE DAW & SERVICES (ALIGNED TO SCHEMA)
+        if (data.daws && data.daws.length > 0) {
+            setSelectValue('mostUsedDaw', data.daws[0]);
+        }
+
+        if (data.socials) {
+            const socials = data.socials;
+            const mixEl = document.getElementById('serviceMixing');
+            if (mixEl) mixEl.checked = !!socials.offered_services?.mixing;
+            const mastEl = document.getElementById('serviceMastering');
+            if (mastEl) mastEl.checked = !!socials.offered_services?.mastering;
+
+            const spWork = document.getElementById('spotifyWork');
+            if (spWork) spWork.value = socials.spotify_content || '';
         }
 
     } catch (err) {
@@ -193,32 +205,39 @@ function setupFormListeners() {
 
     function syncCounters() {
         // First Name Counter
-        const fnVal = firstNameInput.value;
-        const fnCounter = document.getElementById('firstNameCounter');
-        if (fnCounter) {
-            fnCounter.textContent = `${fnVal.length}/25`;
-            fnCounter.style.color = fnVal.length === 25 ? '#ef4444' : '#a1a1aa';
+        if (firstNameInput) {
+            const fnVal = firstNameInput.value;
+            const fnCounter = document.getElementById('firstNameCounter');
+            if (fnCounter) {
+                fnCounter.textContent = `${fnVal.length}/25`;
+                fnCounter.style.color = fnVal.length === 25 ? '#ef4444' : '#a1a1aa';
+            }
         }
 
         // Last Name Counter
-        const lnVal = lastNameInput.value;
-        const lnCounter = document.getElementById('lastNameCounter');
-        if (lnCounter) {
-            lnCounter.textContent = `${lnVal.length}/25`;
-            lnCounter.style.color = lnVal.length === 25 ? '#ef4444' : '#a1a1aa';
+        if (lastNameInput) {
+            const lnVal = lastNameInput.value;
+            const lnCounter = document.getElementById('lastNameCounter');
+            if (lnCounter) {
+                lnCounter.textContent = `${lnVal.length}/25`;
+                lnCounter.style.color = lnVal.length === 25 ? '#ef4444' : '#a1a1aa';
+            }
         }
 
         // Nickname Counter
-        const nickVal = nickInput.value;
-        const nickCounter = document.getElementById('nicknameCounter');
-        if (nickCounter) {
-            nickCounter.textContent = `${nickVal.length}/30`;
-            nickCounter.style.color = nickVal.length === 30 ? '#ef4444' : '#a1a1aa';
+        if (nickInput) {
+            const nickVal = nickInput.value;
+            const nickCounter = document.getElementById('nicknameCounter');
+            if (nickCounter) {
+                nickCounter.textContent = `${nickVal.length}/30`;
+                nickCounter.style.color = nickVal.length === 30 ? '#ef4444' : '#a1a1aa';
+            }
         }
     }
 
     // SANITIZATION: Strict Nickname Logic
     function sanitizeNickname() {
+        if (!nickInput) return;
         let val = nickInput.value;
         const sanitized = val.toLowerCase().replace(/[^a-z0-9._-]/g, '');
         if (sanitized !== val) {
@@ -282,153 +301,6 @@ function setupFormListeners() {
     }
 }
 
-/* ==================== AVATAR MANAGER (Crop & Upload) ==================== */
-window.AvatarManager = {
-    fileToUpload: null,
-
-    handleFileSelect: (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-
-        // Validate Type
-        const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
-        if (!validTypes.includes(file.type)) {
-            alert("Solo se permiten imágenes (JPG, PNG, WEBP, GIF).");
-            return;
-        }
-
-        // Show Premium Modal for GIFs (Upsell)
-        if (file.type === 'image/gif') {
-            // Rudimentary check for 'is_premium' could be added here
-            // document.getElementById('premiumModal').style.display = 'flex';
-        }
-
-        // Prepare Cropper
-        const reader = new FileReader();
-        reader.onload = (event) => {
-            const image = document.getElementById('cropImage');
-            image.src = event.target.result;
-
-            // Show Modal
-            document.getElementById('cropModal').style.display = 'flex';
-
-            // Init Cropper (Destroy old if exists)
-            if (cropper) {
-                cropper.destroy();
-            }
-
-            cropper = new Cropper(image, {
-                aspectRatio: 1, // Square/Circle
-                viewMode: 1,
-                dragMode: 'move',
-                autoCropArea: 1,
-                restore: false,
-                guides: false,
-                center: false,
-                highlight: false,
-                cropBoxMovable: false,
-                cropBoxResizable: false,
-                toggleDragModeOnDblclick: false,
-                background: false, // Dark theme
-            });
-        };
-        reader.readAsDataURL(file);
-    },
-
-    rotate: (degree) => {
-        if (cropper) cropper.rotate(degree);
-    },
-
-    zoom: (ratio) => {
-        if (cropper) cropper.zoom(ratio);
-    },
-
-    closeCropModal: () => {
-        document.getElementById('cropModal').style.display = 'none';
-        if (cropper) {
-            cropper.destroy();
-            cropper = null;
-        }
-        document.getElementById('avatarInput').value = ''; // Reset input
-    },
-
-    saveCrop: async () => {
-        if (!cropper) return;
-
-        // Get canvas
-        const canvas = cropper.getCroppedCanvas({
-            width: 400, // Optimized size
-            height: 400,
-            imageSmoothingQuality: 'high',
-        });
-
-        // Convert to Blob
-        canvas.toBlob(async (blob) => {
-            if (!blob) {
-                alert("Error al recortar la imagen.");
-                return;
-            }
-
-            // Close Modal & Start Upload
-            AvatarManager.closeCropModal();
-            await AvatarManager.uploadToSupabase(blob);
-        }, 'image/jpeg', 0.9);
-    },
-
-    uploadToSupabase: async (fileBlob) => {
-        // Show Loading State
-
-        try {
-            // 1. DELETE OLD AVATAR IF EXISTS
-            if (currentProfileData.avatar_url && currentProfileData.avatar_url.includes('/avatars/')) {
-                const segments = currentProfileData.avatar_url.split('/avatars/');
-                if (segments.length > 1) {
-                    const oldFileName = segments[1].split('?')[0]; // Remove query params
-                    // console.log("Deleting old avatar:", oldFileName);
-                    await window.supabaseClient.storage.from('avatars').remove([oldFileName]);
-                }
-            }
-
-            // 2. UPLOAD NEW
-            const fileName = `${currentUser.id}_${Date.now()}.jpg`; // Force JPG from crop
-            const { error: uploadError } = await window.supabaseClient.storage
-                .from('avatars')
-                .upload(fileName, fileBlob, {
-                    contentType: 'image/jpeg',
-                    upsert: true
-                });
-
-            if (uploadError) {
-                // RLS Error Handling
-                if (uploadError.statusCode === "403" || uploadError.message.includes("row-level security")) {
-                    alert("Error de permisos: No puedes subir archivos. Contacta soporte.");
-                    console.error("RLS Error:", uploadError);
-                    return;
-                }
-                throw uploadError;
-            }
-
-            const { data: { publicUrl } } = window.supabaseClient.storage.from('avatars').getPublicUrl(fileName);
-
-            // 3. UPDATE DB
-            const { error: updateError } = await window.supabaseClient
-                .from('users')
-                .update({ avatar_url: publicUrl })
-                .eq('id', currentUser.id);
-
-            if (updateError) throw updateError;
-
-            // 4. SUCCESS - RELOAD TO FIX GLITCHES & CACHE
-            alert("Imagen de perfil actualizada. Recargando...");
-            window.location.reload();
-
-        } catch (err) {
-            console.error(err);
-            alert("Ocurrió un error al subir la imagen.");
-        }
-    }
-};
-
 /* ==================== FORM SUBMISSION LOGIC ==================== */
 
 async function saveProfileChanges(e, type) {
@@ -490,14 +362,26 @@ async function saveProfileChanges(e, type) {
             const role = document.getElementById('role').value;
             const expEl = document.getElementById('experience');
             const experience = expEl ? expEl.value : null;
+            const daw = document.getElementById('mostUsedDaw') ? document.getElementById('mostUsedDaw').value : null;
 
             if (!role) throw new Error("Selecciona tu rol principal.");
 
-            // Save experience as ARRAY (Postgres text[])
+            // Merge new settings into existing socials
+            const mergedSocials = { ...currentProfileData.socials };
+            mergedSocials.offered_services = {
+                mixing: document.getElementById('serviceMixing')?.checked || false,
+                mastering: document.getElementById('serviceMastering')?.checked || false
+            };
+            mergedSocials.spotify_content = document.getElementById('spotifyWork')?.value.trim() || null;
+
+            // Aligned to Schema: daws (text[]), experience (text[]), socials (jsonb)
             updates = {
                 role,
-                bio: document.getElementById('bio') ? document.getElementById('bio').value.trim() : currentProfileData.bio
+                bio: document.getElementById('bio') ? document.getElementById('bio').value.trim() : currentProfileData.bio,
+                daws: daw ? [daw] : [],
+                socials: mergedSocials
             };
+
             if (experience) {
                 updates.experience = [experience];
             }
@@ -505,14 +389,13 @@ async function saveProfileChanges(e, type) {
 
         // === 3. SOCIALS FORM ===
         if (type === 'socials') {
-            const socials = {
-                instagram: document.getElementById('instagram').value.trim(),
-                tiktok: document.getElementById('tiktok').value.trim(),
-                youtube: document.getElementById('youtube').value.trim(),
-                spotify: document.getElementById('spotify').value.trim(),
-                // Website field removed
-            };
-            updates = { socials };
+            const mergedSocials = { ...currentProfileData.socials };
+            mergedSocials.instagram = document.getElementById('instagram').value.trim();
+            mergedSocials.tiktok = document.getElementById('tiktok').value.trim();
+            mergedSocials.youtube = document.getElementById('youtube').value.trim();
+            mergedSocials.spotify = document.getElementById('spotify').value.trim();
+
+            updates = { socials: mergedSocials };
         }
 
         // EXECUTE UPDATE
@@ -538,11 +421,19 @@ async function saveProfileChanges(e, type) {
             document.getElementById('sidebarRole').textContent = updates.role;
         }
 
-        // RELOAD PAGE TO REFLECT CHANGES INSTANTLY
-        showToast("Cambios guardados. Recargando...", 'success');
-        setTimeout(() => {
-            window.location.reload();
-        }, 1500);
+        // REDIRECT OR RELOAD
+        const nickname = currentProfileData.nickname || currentUser.user_metadata?.nickname;
+        if (type === 'profile' && nickname) {
+            showToast("Perfil actualizado. Redirigiendo...", 'success');
+            setTimeout(() => {
+                window.location.href = `/@${nickname}`;
+            }, 1500);
+        } else {
+            showToast("Cambios guardados. Recargando...", 'success');
+            setTimeout(() => {
+                window.location.reload();
+            }, 1500);
+        }
 
     } catch (err) {
         showToast(err.message || "Error al guardar cambios.", 'error');
@@ -730,10 +621,12 @@ function setupSocialListeners() {
             const errorEl = document.getElementById('error-youtube');
 
             if (val && !val.startsWith('http')) {
-                errorEl.textContent = "Por favor ingresa una URL válida (https://...)";
-                errorEl.classList.add('active');
-                errorEl.style.color = '#ef4444';
-            } else {
+                if (errorEl) {
+                    errorEl.textContent = "Por favor ingresa una URL válida (https://...)";
+                    errorEl.classList.add('active');
+                    errorEl.style.color = '#ef4444';
+                }
+            } else if (errorEl) {
                 errorEl.textContent = "";
                 errorEl.classList.remove('active');
             }
@@ -746,10 +639,12 @@ function setupSocialListeners() {
             const errorEl = document.getElementById('error-spotify');
 
             if (val && !val.startsWith('http')) {
-                errorEl.textContent = "Por favor ingresa una URL válida (https://...)";
-                errorEl.classList.add('active');
-                errorEl.style.color = '#ef4444';
-            } else {
+                if (errorEl) {
+                    errorEl.textContent = "Por favor ingresa una URL válida (https://...)";
+                    errorEl.classList.add('active');
+                    errorEl.style.color = '#ef4444';
+                }
+            } else if (errorEl) {
                 errorEl.textContent = "";
                 errorEl.classList.remove('active');
             }
@@ -764,6 +659,7 @@ function setupPasswordListeners() {
     const errorMatch = document.getElementById('error-password-match');
 
     function checkMatch() {
+        if (!newPassInput || !confirmPassInput || !errorMatch) return;
         const p1 = newPassInput.value;
         const p2 = confirmPassInput.value;
 

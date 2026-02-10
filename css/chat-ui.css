@@ -552,12 +552,85 @@
 .oz-message-actions {
     display: flex;
     gap: 4px;
+    align-items: center;
     opacity: 0;
-    transition: opacity .2s;
+    transition: opacity 0.2s;
 }
 
 .oz-message-row:hover .oz-message-actions {
     opacity: 1;
+}
+
+/* MENU CONTAINER & DROPDOWN */
+.oz-menu-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.oz-msg-menu {
+    position: absolute;
+    bottom: 125%;
+    /* Show above actions for better visibility */
+    right: 0;
+    background: rgba(26, 26, 26, 0.98);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 30px;
+    /* Pill shape menu */
+    padding: 2px 4px;
+    min-width: unset;
+    width: max-content;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+    z-index: 100;
+    display: none;
+    flex-direction: row;
+    /* Horizontal layout */
+}
+
+/* For received messages, move menu to the left of the button if preferred */
+.oz-message-row.received .oz-msg-menu {
+    right: auto;
+    left: 0;
+}
+
+.oz-msg-menu.active {
+    display: flex;
+    animation: oz-menu-pop 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes oz-menu-pop {
+    from {
+        opacity: 0;
+        transform: scale(0.8);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.oz-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.9);
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+
+.oz-menu-item:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+}
+
+.oz-menu-item i {
+    font-size: 1rem;
 }
 
 /* Helper Elements */
