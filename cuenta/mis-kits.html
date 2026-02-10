@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ï»¿<!DOCTYPE html>
 <html lang="es">
 
 <head>
@@ -1040,7 +1040,7 @@
             style="margin-bottom:10px; display:flex; align-items:center; justify-content:center; width:44px; height:44px;">
             <img src="../images/LOGO-OFFSZN.png" style="width:38px; mix-blend-mode: screen;"></a>
 
-        <!-- 1. GESTIÓN -->
+        <!-- 1. GESTIï¿½N -->
         <div style="width:40px; border-bottom:1px solid #222; margin:5px 0;"></div>
         <a href="/cuenta/dashboard.html" class="sidebar-icon-btn" title="Dashboard"><i class="bi bi-grid-fill"></i></a>
         <a href="/cuenta/mis-kits.html" class="sidebar-icon-btn active" title="Mis Beats/Kits"><i
@@ -1063,7 +1063,7 @@
         <div style="width:40px; border-bottom:1px solid #222; margin:5px 0;"></div>
         <a href="/cuenta/cursos.html" class="sidebar-icon-btn" data-title="Cursos"><i
                 class="bi bi-mortarboard-fill"></i></a>
-        <a href="/cuenta/analiticas.html" class="sidebar-icon-btn" data-title="Estadísticas"><i
+        <a href="/cuenta/analiticas.html" class="sidebar-icon-btn" data-title="EstadÃ­sticas"><i
                 class="bi bi-bar-chart-fill"></i></a>
 
         <!-- 4. SOCIAL -->
@@ -1447,7 +1447,7 @@
                         </div>
                         <ul class="plan-features">
                             <li><i class="bi bi-check-circle-fill"></i> 5 Subidas Mensuales</li>
-                            <li><i class="bi bi-check-circle-fill"></i> Analytics Básicas</li>
+                            <li><i class="bi bi-check-circle-fill"></i> Analytics BÃ¡sicas</li>
                             <li><i class="bi bi-check-circle-fill"></i> Soporte 24/7</li>
                         </ul>
                     </div>
@@ -1466,7 +1466,7 @@
                         <ul class="plan-features">
                             <li><i class="bi bi-check-circle-fill"></i> Subidas Ilimitadas</li>
                             <li><i class="bi bi-check-circle-fill"></i> Analytics Avanzadas</li>
-                            <li><i class="bi bi-check-circle-fill"></i> 0% Comisión</li>
+                            <li><i class="bi bi-check-circle-fill"></i> 0% ComisiÃ³n</li>
                         </ul>
                     </div>
                 </div>
@@ -1910,10 +1910,10 @@
                     // Extraer key si es URL completa
                     let key = pathOrUrl;
                     if (pathOrUrl.startsWith('http')) {
-                        // Intentar extraer la parte después del dominio si es una URL pública
-                        // Esto depende de cómo estructures tus URLs públicas.
-                        // Si guardaste el KEY en la BD (lo ideal), úsalo directo.
-                        // Si guardaste la URL pública, necesitamos parsearla.
+                        // Intentar extraer la parte despuï¿½s del dominio si es una URL pï¿½blica
+                        // Esto depende de cï¿½mo estructures tus URLs pï¿½blicas.
+                        // Si guardaste el KEY en la BD (lo ideal),     ï¿½salo directo.
+                        // Si guardaste la URL pï¿½blica, necesitamos parsearla.
                         // Asumiremos que si empieza con http, intentamos sacar el pathname sin la primera barra
                         try {
                             const urlObj = new URL(pathOrUrl);
@@ -1923,12 +1923,12 @@
                         }
                     }
 
-                    console.log(`[R2] Solicitando eliminación de: ${key}`);
+                    console.log(`[R2] Solicitando eliminaciÃ³n de: ${key}`);
 
                     const session = await supabaseClient.auth.getSession();
                     const token = session.data.session?.access_token;
 
-                    if (!token) throw new Error("No hay sesión para eliminar en R2");
+                    if (!token) throw new Error("No hay sesiÃ³n para eliminar en R2");
 
                     const response = await fetch('/api/r2/delete-files', {
                         method: 'POST',
@@ -1948,7 +1948,7 @@
                 } catch (e) {
                     console.warn(`?? Cleanup failed for R2 file ${pathOrUrl}:`, e);
                 }
-                return; // Terminar aquí si era R2
+                return; // Terminar aquï¿½ si era R2
             }
 
             // 2. LOGICA LEGACY (SUPABASE STORAGE)
@@ -2137,7 +2137,7 @@
                     <label style="color:#ccc; font-size:12px; font-weight:600;">Nueva Visibilidad</label>
                     <select id="bulkInputVisibility" class="elite-input" style="cursor:pointer;">
                         <option value="public">Publicado (Visible)</option>
-                        <option value="private">Privado (Solo tú)</option>
+                        <option value="private">Privado (Solo tÃº)</option>
                         <option value="unlisted">No Listado (Solo enlace)</option>
                     </select>
                 `;
@@ -2146,7 +2146,7 @@
                 content.innerHTML = `
                     <label style="color:#ccc; font-size:12px; font-weight:600;">Escribe las nuevas etiquetas separadas por coma</label>
                     <input type="text" id="bulkInputTags" class="elite-input" placeholder="Trap, Dark, Hard...">
-                    <div style="margin-top:8px; font-size:11px; color:#666;">Nota: Reemplazará las etiquetas existentes.</div>
+                    <div style="margin-top:8px; font-size:11px; color:#666;">Nota: ReemplazaÃ© las etiquetas existentes.</div>
                 `;
             } else if (action === 'artwork') {
                 title.textContent = 'Cambiar Portada';
@@ -2199,13 +2199,13 @@
                         updateData = { tags: tagsRaw.split(',').map(t => t.trim()).filter(t => t.length > 0) };
                     } else if (currentBulkAction === 'artwork') {
                         const url = document.getElementById('bulkInputArtwork').value;
-                        if (url.length < 5) throw new Error("URL inválida");
+                        if (url.length < 5) throw new Error("URL invÃ¡lida");
                         updateData = { image_url: url };
                     }
                 }
 
                 if (itemsToUpdate.length === 0 && skippedDrafts > 0) {
-                    showToast(`No se pueden cambiar borradores a "${updateData.visibility}". Publícalos primero.`, "warning");
+                    showToast(`No se pueden cambiar borradores a "${updateData.visibility}". Publicalos primero.`, "warning");
                     closeBulkModal();
                     return;
                 }
@@ -2370,7 +2370,7 @@
             } catch (e) {
                 console.error("Delete Error:", e);
                 // Show detailed error message to user/dev
-                showToast("Error: " + (e.message || e.details || "Falló la eliminación"), "error");
+                showToast("Error: " + (e.message || e.details || "FallÃ³ la eliminaciÃ³n"), "error");
             } finally {
                 if (btn) {
                     btn.innerHTML = 'Eliminar Definitivamente';
@@ -2407,7 +2407,7 @@
                 });
 
                 if (itemsToUpdate.length === 0 && skippedDrafts > 0) {
-                    showToast(`No se pueden cambiar borradores. Publícalos primero.`, "warning");
+                    showToast(`No se pueden cambiar borradores. Publicalos primero.`, "warning");
                     return;
                 }
 
@@ -2449,7 +2449,7 @@
                         const notifications = item.collaborators.map(c => ({
                             user_id: c.id,
                             type: 'collab_invitation',
-                            title: '¡Nueva Invitación de Colaboración!',
+                            title: 'Nueva InvitaciÃ³n de ColaboraciÃ³n!',
                             message: `Has sido invitado como colaborador en "${item.name}".`,
                             data: {
                                 product_id: item.id,
@@ -2936,9 +2936,9 @@
                 let name = p.name || p.title;
                 if (!name || name.trim() === '') {
                     if (isDraft) {
-                        name = `Sin Título ${draftCounter++}`;
+                        name = `Sin TÃ­tulo ${draftCounter++}`;
                     } else {
-                        name = 'Sin Título';
+                        name = 'Sin TÃ­tulo';
                     }
                 }
 
@@ -3146,7 +3146,7 @@
                     showToast("Error: " + error.message, "error");
                 }
             } else {
-                showToast("Correo inválido", "error");
+                showToast("Correo invÃ¡lido", "error");
             }
         }
 
@@ -3178,7 +3178,7 @@
 
                 if (error) throw error;
 
-                showToast("Cupón creado exitosamente", "success");
+                showToast("CupÃ³n creado exitosamente", "success");
                 closeModals();
                 document.getElementById('couponCode').value = '';
                 document.getElementById('couponAmount').value = '';
@@ -3276,7 +3276,7 @@
             <div class="modal-body">
                 <p style="color:#aaa; font-size:14px; margin-bottom:15px;">Ingresa tu correo de PayPal para
                     recibir los
-                    pagos de tus ventas automáticamente.</p>
+                    pagos de tus ventas automÃ¡ticamente.</p>
                 <input type="email" id="inputPaypalEmail" placeholder="ejemplo@correo.com">
             </div>
             <div class="modal-footer">
@@ -3291,11 +3291,11 @@
         <div class="elite-modal">
             <div class="modal-header">
                 <h3><i class="bi bi-ticket-perforated" style="color:var(--accent-purple); margin-right:8px;"></i> Crear
-                    Cupón</h3>
+                    CupÃ³n</h3>
                 <button class="btn-close-modal" onclick="closeModals()"><i class="bi bi-x-lg"></i></button>
             </div>
             <div class="modal-body">
-                <input type="text" id="couponCode" placeholder="Código (ej. VERANO2025)"
+                <input type="text" id="couponCode" placeholder="CÃ³digo (ej. VERANO2025)"
                     style="text-transform:uppercase;">
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
                     <input type="number" id="couponAmount" placeholder="Monto (ej. 20)">
@@ -3304,13 +3304,13 @@
                         <option value="fixed">$ Fijo</option>
                     </select>
                 </div>
-                <p style="color:#666; font-size:12px; margin-top:10px;">* Los cupones se aplicarán
-                    automáticamente en el
+                <p style="color:#666; font-size:12px; margin-top:10px;">* Los cupones se aplicarÃ¡n
+                    automÃ¡ticamente en el
                     checkout.</p>
             </div>
             <div class="modal-footer">
                 <button class="btn-modal-cancel" onclick="closeModals()">Cancelar</button>
-                <button class="btn-modal-save" onclick="saveCoupon()">Crear Cupón</button>
+                <button class="btn-modal-save" onclick="saveCoupon()">Crear CupÃ³n</button>
             </div>
         </div>
     </div>
@@ -3319,7 +3319,7 @@
     <div id="bulkEditModal" class="modal-overlay">
         <div class="elite-modal">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-                <h3 id="bulkModalTitle" style="color:#fff; margin:0; font-size:18px;">Editar Selección</h3>
+                <h3 id="bulkModalTitle" style="color:#fff; margin:0; font-size:18px;">Editar SelecciÃ³n</h3>
                 <button onclick="closeBulkModal()"
                     style="background:none; border:none; color:#666; font-size:20px; cursor:pointer;"><i
                         class="bi bi-x-lg"></i></button>
@@ -3345,16 +3345,16 @@
                 <i class="bi bi-trash3-fill" style="font-size:28px; color:#ef4444;"></i>
             </div>
 
-            <h3 style="color:#fff; margin:0 0 10px 0; font-size:20px; font-weight:700;">¿Eliminar Productos?</h3>
+            <h3 style="color:#fff; margin:0 0 10px 0; font-size:20px; font-weight:700;">Eliminar Productos?</h3>
 
             <p style="color:#aaa; font-size:14px; line-height:1.5; margin-bottom:16px;">
-                Estás a punto de eliminar <span id="deleteCount" style="color:#fff; font-weight:700;">0</span>
+                EstÃ¡s a punto de eliminar <span id="deleteCount" style="color:#fff; font-weight:700;">0</span>
                 productos.
             </p>
 
             <!-- Warning (Clean Text) -->
             <p style="color:#ef4444; font-size:13px; margin-bottom:28px; font-weight:500;">
-                <i class="bi bi-exclamation-triangle-fill" style="margin-right:4px;"></i> Esta acción no se puede
+                <i class="bi bi-exclamation-triangle-fill" style="margin-right:4px;"></i> Esta acciÃ³n no se puede
                 deshacer
             </p>
 
@@ -3382,11 +3382,11 @@
                 style="width:60px; height:60px; background:rgba(255, 215, 0, 0.1); border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 20px auto; border:1px solid rgba(255, 215, 0, 0.2);">
                 <i class="bi bi-rocket-takeoff-fill" style="font-size:24px; color:#FFD700;"></i>
             </div>
-            <h3 style="color:#fff; margin-bottom:12px;">¡Límite Alcanzado!</h3>
+            <h3 style="color:#fff; margin-bottom:12px;">LÃ­mite Alcanzado!</h3>
             <p style="color:#aaa; font-size:14px; line-height:1.5; margin-bottom:24px;">
-                Tu plan <strong>Básico</strong> permite hasta <strong>100 productos</strong> (incluyendo borradores).
+                Tu plan <strong>BÃ¡sico</strong> permite hasta <strong>100 productos</strong> (incluyendo borradores).
                 <br><br>
-                Actualiza a <strong>PRO</strong> para subir contenido ilimitado y desbloquear 0% de comisión.
+                Actualiza a <strong>PRO</strong> para subir contenido ilimitado y desbloquear 0% de comisiÃ³n.
             </p>
             <a href="/cuenta/planes.html" class="elite-btn"
                 style="text-decoration:none; display:block; margin-bottom:12px; background:#FFD700; color:#000;">
