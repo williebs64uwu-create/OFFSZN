@@ -1,21 +1,49 @@
 /**
  * AvatarManager - Shared component for OFFSZN
- * Handles avatar cropping, previewing, and uploading to Supabase.
+ * Handles avatar cropping, previewing, and uploading to Cloudinary.
+ * Pro users can upload GIF avatars (up to 20MB).
  */
 
 window.AvatarManager = {
     cropper: null,
     currentBlob: null,
+    originalFile: null,     // Stores the original file (used for GIF upload path)
+    isCurrentFileGif: false, // Tracks if current file in cropper is a GIF
     onSuccess: null,
+    isProUser: false,
 
     /**
      * Initialize the manager and inject necessary HTML/CSS if not present
      */
-    init: function () {
-        if (document.getElementById('cropModal')) return;
+    init: async function () {
+        // Check Pro plan status
+        try {
+            if (window.supabaseClient) {
+                const { data: { session } } = await window.supabaseClient.auth.getSession();
+                if (session) {
+                    const { data: profile } = await window.supabaseClient
+                        .from('profiles')
+                        .select('plan')
+                        .eq('id', session.user.id)
+                        .maybeSingle();
+                    this.isProUser = profile?.plan === 'pro';
+                }
+            }
+        } catch (e) {
+            console.warn('AvatarManager: Could not check plan status');
+        }
+
+        if (document.getElementById('offsznAvatarModal')) {
+            // Update GIF section visibility
+            const gifSection = document.getElementById('avatarGifSection');
+            if (gifSection && this.isProUser) {
+                gifSection.style.display = 'block';
+            }
+            return;
+        }
 
         const modalHtml = `
-            <div id="cropModal" class="avatar-modal-overlay" style="display: none;">
+            <div id="offsznAvatarModal" class="avatar-modal-overlay" style="display: none;">
                 <div class="avatar-modal-content">
                     <div class="avatar-modal-header">
                         <h3>Editar Avatar</h3>
@@ -28,120 +56,179 @@ window.AvatarManager = {
                         </div>
                     </div>
 
-                    <div class="avatar-modal-controls">
-                        <div class="control-group">
-                            <button onclick="AvatarManager.rotate(-90)" class="ctrl-btn" title="Rotar Izquierda">
-                                <i class="bi bi-arrow-counterclockwise"></i>
-                            </button>
-                            <button onclick="AvatarManager.rotate(90)" class="ctrl-btn" title="Rotar Derecha">
-                                <i class="bi bi-arrow-clockwise"></i>
-                            </button>
+                    <div class="avatar-modal-controls" style="display: flex; flex-direction: column; gap: 16px; align-items: center; padding: 20px 24px;">
+                        <!-- Edit Controls (Hidden until upload, appears ABOVE) -->
+                        <div id="avatarEditControls" style="display: none; gap: 12px; align-items: center; justify-content: center; width: 100%; padding-bottom: 8px; border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
+                            <div class="control-group">
+                                <button onclick="AvatarManager.rotate(-90)" class="ctrl-btn" title="Rotar Izquierda">
+                                    <i class="bi bi-arrow-counterclockwise"></i>
+                                </button>
+                                <button onclick="AvatarManager.rotate(90)" class="ctrl-btn" title="Rotar Derecha">
+                                    <i class="bi bi-arrow-clockwise"></i>
+                                </button>
+                            </div>
+                            <div class="control-group">
+                                <button onclick="AvatarManager.zoom(0.1)" class="ctrl-btn" title="Acercar">
+                                    <i class="bi bi-zoom-in"></i>
+                                </button>
+                                <button onclick="AvatarManager.zoom(-0.1)" class="ctrl-btn" title="Alejar">
+                                    <i class="bi bi-zoom-out"></i>
+                                </button>
+                            </div>
                         </div>
-                        <div class="control-group">
-                            <button onclick="AvatarManager.zoom(0.1)" class="ctrl-btn" title="Acercar">
-                                <i class="bi bi-zoom-in"></i>
-                            </button>
-                            <button onclick="AvatarManager.zoom(-0.1)" class="ctrl-btn" title="Alejar">
-                                <i class="bi bi-zoom-out"></i>
-                            </button>
-                        </div>
-                        <button class="ctrl-btn btn-change-source" onclick="AvatarManager.triggerFileInput()" title="Cambiar Imagen">
-                            <i class="bi bi-image"></i> Elegir Archivo
-                        </button>
-                    </div>
 
-                    <div class="pro-upsell-lite">
-                        <i class="bi bi-info-circle"></i>
-                        <span>Solo se permiten formatos <b>PNG y JPG</b></span>
+                        <!-- Initial Selection Buttons (STAYS IN POSITION) -->
+                        <div id="avatarUploadButtons" style="display: flex; gap: 12px; width: 100%; justify-content: center; flex-wrap: nowrap;">
+                            <button class="ctrl-btn btn-change-source" onclick="AvatarManager.triggerFileInput()" style="flex: 1; min-width: 140px; height: 44px; border-radius: 10px; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1);">
+                                <i class="bi bi-image"></i> Subir Imagen
+                            </button>
+                            
+                            <div class="avatar-gif-section" id="avatarGifSection" style="display:none; flex: 1; min-width: 140px;">
+                                <button class="ctrl-btn btn-gif-upload" onclick="AvatarManager.triggerGifInput()" style="background:#7c3aed11; border:1px solid #7c3aed44; color:#a78bfa; width:100%; height:44px; padding:0 10px; border-radius:10px; font-size:13px; cursor:pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                                    <i class="bi bi-filetype-gif"></i> Subir GIF <span style="background:#7c3aed;color:#fff;padding:2px 6px;border-radius:4px;font-size:10px;">PRO</span>
+                                </button>
+                                <input type="file" id="avatarGifInput" style="display:none;" accept=".gif" onchange="AvatarManager.handleGifSelect(event)">
+                            </div>
+                        </div>
                     </div>
 
                     <div class="avatar-modal-footer">
                         <button class="avatar-btn-cancel" onclick="AvatarManager.close()">Cancelar</button>
-                        <button class="avatar-btn-save" onclick="AvatarManager.save()">Guardar Avatar</button>
+                        <button id="avatarSaveBtn" class="avatar-btn-save" onclick="AvatarManager.save()" style="display: none;">Guardar Avatar</button>
                     </div>
                 </div>
-                <!-- Hidden input for file selection -->
-                <input type="file" id="avatarHiddenInput" style="display: none;" accept="image/png, image/jpeg" onchange="AvatarManager.handleFileSelect(event)">
+                <!-- Hidden input for file selection (Strict: JPG, PNG, JFIF) -->
+                <input type="file" id="avatarHiddenInput" style="display: none;" accept=".jpg, .jpeg, .png, .jfif" onchange="AvatarManager.handleFileSelect(event)">
             </div>
         `;
         document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+        // Show GIF section for Pro users
+        if (this.isProUser) {
+            const gifSection = document.getElementById('avatarGifSection');
+            if (gifSection) gifSection.style.display = 'block';
+        }
     },
 
     /**
      * Open the modal with a specific image URL (current or local)
      */
-    open: function (imageUrl, callback) {
-        this.init();
+    open: async function (imageUrl, callback) {
+        await this.init();
         this.onSuccess = callback;
 
-        const modal = document.getElementById('cropModal');
+        const modal = document.getElementById('offsznAvatarModal');
         const img = document.getElementById('avatarCropImg');
 
-        modal.style.display = 'flex';
-        // Subtler transition: Hide until cropper is ready
-        img.style.opacity = '0';
-        img.src = imageUrl || '';
+        if (!modal) {
+            console.error("AvatarManager: Modal not found. Initializing again...");
+            await this.init();
+        }
+
+        const activeModal = document.getElementById('offsznAvatarModal');
+        if (activeModal) activeModal.style.display = 'flex';
+
+        // Visibility Reset
+        const uploadButtons = document.getElementById('avatarUploadButtons');
+        const editControls = document.getElementById('avatarEditControls');
+        const saveBtn = document.getElementById('avatarSaveBtn');
+
+        if (uploadButtons) uploadButtons.style.display = 'flex';
+        if (editControls) editControls.style.display = 'none';
+        if (saveBtn) saveBtn.style.display = 'none';
+
+        // 🔥 UPLOAD ONLY MODE
+        // Mostramos el modal listo para recibir un archivo nuevo.
+        img.style.display = imageUrl ? 'block' : 'none';
+        img.style.opacity = '1'; // Removed opacity for clear view
+        img.src = imageUrl || ''; // Mostramos la actual pero "bloqueada"
+        img.style.width = 'auto'; // Reset dims
+        img.style.height = 'auto';
+        this.originalFile = null;
 
         if (this.cropper) {
             this.cropper.destroy();
+            this.cropper = null;
         }
 
-        // Initialize Cropper logic
-        img.onload = () => {
-            if (!img.src || img.src.includes('undefined')) return;
-
-            // If already exists, just show it (or it might have been replaced)
-            if (this.cropper) {
-                img.style.opacity = '1';
-                return;
-            }
-
-            this.cropper = new Cropper(img, {
-                aspectRatio: 1,
-                viewMode: 1,
-                dragMode: 'move',
-                autoCropArea: 0.8,
-                restore: false,
-                guides: false,
-                center: true,
-                highlight: false,
-                cropBoxMovable: true,
-                cropBoxResizable: true,
-                toggleDragModeOnDblclick: false,
-                background: false,
-                ready: () => {
-                    img.style.opacity = '1'; // Show when ready
-                }
-            });
-        };
+        // El cropper SOLO se iniciará cuando el usuario elija un archivo nuevo
+        // en 'handleFileSelect' o 'handleGifSelect'.
     },
 
     handleFileSelect: function (e) {
         const file = e.target.files[0];
         if (!file) return;
 
-        const validTypes = ['image/png', 'image/jpeg', 'image/jpg'];
-        if (!validTypes.includes(file.type)) {
-            const msg = "Formato no soportado. Por favor sube solo PNG o JPG.";
-            this.showToast(msg, true);
-            e.target.value = ""; // Clear input
+        const isGif = file.type === 'image/gif' || file.name.toLowerCase().endsWith('.gif');
+        const validTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/jfif'];
+
+        // GIF check: This button is ONLY for regular images
+        if (isGif) {
+            this.showToast('Usa el botón GIF para subir animaciones.', true);
+            e.target.value = '';
             return;
         }
 
+        const isJfif = file.name.toLowerCase().endsWith('.jfif');
+        if (!validTypes.includes(file.type) && !isJfif) {
+            this.showToast('Solo se aceptan JPG, PNG o JFIF.', true);
+            e.target.value = '';
+            return;
+        }
+
+        // Size check (30MB)
+        if (file.size > 30 * 1024 * 1024) {
+            this.showToast(`El archivo pesa ${(file.size / 1024 / 1024).toFixed(1)}MB (máx. 30MB)`, true);
+            e.target.value = '';
+            return;
+        }
+
+        // Store original file + type
+        this.originalFile = file;
+        this.isCurrentFileGif = isGif;
+
+        // Load into cropper
         const reader = new FileReader();
         reader.onload = (event) => {
             const img = document.getElementById('avatarCropImg');
+            img.style.opacity = '1';
+            img.style.display = 'block';
 
             if (this.cropper) {
-                // IMPORTANT: replace() already handles updating the underlying img src
-                // and refreshing the UI. We avoid setting img.src directly to prevent 
-                // re-triggering the img.onload behavior.
                 this.cropper.replace(event.target.result);
             } else {
                 img.src = event.target.result;
+                this.cropper = new Cropper(img, {
+                    aspectRatio: 1,
+                    initialAspectRatio: 1,
+                    viewMode: 1,
+                    dragMode: 'move',
+                    autoCropArea: 0.8,
+                    restore: false,
+                    guides: false,
+                    center: true,
+                    highlight: false,
+                    cropBoxMovable: true,
+                    cropBoxResizable: true,
+                    toggleDragModeOnDblclick: false,
+                    background: false,
+                    checkOrientation: true,
+                    ready: () => {
+                        img.style.opacity = '1';
+                    }
+                });
             }
-            // Reset input so choosing the SAME file again triggers onchange
-            e.target.value = "";
+
+            // Switch to Edit Mode
+            const uploadButtons = document.getElementById('avatarUploadButtons');
+            const editControls = document.getElementById('avatarEditControls');
+            const saveBtn = document.getElementById('avatarSaveBtn');
+
+            if (uploadButtons) uploadButtons.style.display = 'flex';
+            if (editControls) editControls.style.display = 'flex';
+            if (saveBtn) saveBtn.style.display = 'block';
+
+            e.target.value = '';
         };
         reader.readAsDataURL(file);
     },
@@ -154,6 +241,80 @@ window.AvatarManager = {
         }
     },
 
+    // 🔥 GIF AVATAR (Pro Only)
+    triggerGifInput: function () {
+        const input = document.getElementById('avatarGifInput');
+        if (input) {
+            input.value = '';
+            input.click();
+        }
+    },
+
+    handleGifSelect: async function (e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        if (file.type !== 'image/gif' && !file.name.toLowerCase().endsWith('.gif')) {
+            this.showToast('Solo se permiten archivos GIF en este botón.', true);
+            e.target.value = '';
+            return;
+        }
+
+        if (file.size > 30 * 1024 * 1024) {
+            const fileMB = (file.size / (1024 * 1024)).toFixed(1);
+            this.showToast(`El GIF pesa ${fileMB}MB (máx. 30MB)`, true);
+            return;
+        }
+
+        // 🔥 Load GIF into cropper (same as regular images)
+        this.originalFile = file;
+        this.isCurrentFileGif = true;
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            const img = document.getElementById('avatarCropImg');
+            img.style.opacity = '1';
+            img.style.display = 'block';
+
+            if (this.cropper) {
+                this.cropper.replace(event.target.result);
+            } else {
+                img.src = event.target.result;
+                this.cropper = new Cropper(img, {
+                    aspectRatio: 1,
+                    initialAspectRatio: 1,
+                    viewMode: 1,
+                    dragMode: 'move',
+                    autoCropArea: 0.8,
+                    restore: false,
+                    guides: false,
+                    center: true,
+                    highlight: false,
+                    cropBoxMovable: true,
+                    cropBoxResizable: true,
+                    toggleDragModeOnDblclick: false,
+                    background: false,
+                    checkOrientation: true,
+                    ready: () => {
+                        img.style.opacity = '1';
+                    }
+                });
+            }
+
+            // Switch to Edit Mode
+            const uploadButtons = document.getElementById('avatarUploadButtons');
+            const editControls = document.getElementById('avatarEditControls');
+            const saveBtn = document.getElementById('avatarSaveBtn');
+
+            if (uploadButtons) uploadButtons.style.display = 'flex';
+            if (editControls) editControls.style.display = 'flex';
+            if (saveBtn) saveBtn.style.display = 'block';
+
+            e.target.value = '';
+        };
+        reader.readAsDataURL(file);
+    },
+
     rotate: function (deg) {
         if (this.cropper) this.cropper.rotate(deg);
     },
@@ -163,115 +324,106 @@ window.AvatarManager = {
     },
 
     close: function () {
-        const modal = document.getElementById('cropModal');
+        const modal = document.getElementById('offsznAvatarModal');
         if (modal) modal.style.display = 'none';
         if (this.cropper) {
             this.cropper.destroy();
             this.cropper = null;
         }
+        this.originalFile = null;
+        this.isCurrentFileGif = false;
     },
 
     save: async function () {
-        if (!this.cropper) return;
-
-        const canvas = this.cropper.getCroppedCanvas({
-            width: 400,
-            height: 400,
-            imageSmoothingQuality: 'high'
-        });
-
-        if (!canvas) {
-            console.error("AvatarManager: Failed to get cropped canvas.");
-            this.showToast("Error al procesar imagen", true);
+        // 🔥 VALIDACIÓN ESTRICTA: Siempre debe haber un archivo nuevo
+        if (!this.originalFile) {
+            this.showToast('Por favor, selecciona una imagen nueva para subir.', true);
             return;
         }
 
-        canvas.toBlob(async (blob) => {
-            if (!blob) {
-                console.error("AvatarManager: Canvas toBlob failed.");
-                this.showToast("Error al procesar imagen", true);
-                return;
-            }
-            this.close();
+        if (!this.cropper) return;
 
+        // Grab state BEFORE close() clears it
+        const file = this.originalFile;
+        const isGif = this.isCurrentFileGif;
+        const cropData = this.cropper.getData(true); // rounded pixel values
+
+        // 🔥 PIXEL-PERFECT PATH: Round everything to integers
+        const crop = {
+            x: Math.round(Math.max(0, cropData.x)),
+            y: Math.round(Math.max(0, cropData.y)),
+            width: Math.round(cropData.width),
+            height: Math.round(cropData.height)
+        };
+
+        console.log('📦 Pixel-Perfect Crop Data:', crop, 'isGif:', isGif);
+
+        this.close();
+        const reader = new FileReader();
+        reader.onload = async (event) => {
             if (this.onSuccess) {
+                const resp = await fetch(event.target.result);
+                const blob = await resp.blob();
                 this.onSuccess(blob);
             } else {
-                // Default upload logic if no callback provided
-                await this.uploadDefault(blob);
+                await this.uploadToCloudinary(event.target.result, isGif, file.size, crop);
             }
-        }, 'image/jpeg', 0.9);
+        };
+        reader.readAsDataURL(file);
     },
 
-    uploadDefault: async function (blob) {
+    // Core Cloudinary upload method
+    uploadToCloudinary: async function (base64Image, isGif = false, fileSize = 0, crop = null) {
         if (!window.supabaseClient) {
-            alert("Error: Supabase no inicializado.");
+            this.showToast('Error: Supabase no inicializado.', true);
             return;
         }
 
         const { data: { session } } = await window.supabaseClient.auth.getSession();
-        if (!session) return;
+        if (!session) {
+            this.showToast('Sesión expirada. Recarga la página.', true);
+            return;
+        }
 
         try {
-            const userId = session.user.id;
+            this.showToast(base64Image ? 'Subiendo avatar...' : 'Actualizando recorte...');
 
-            // 1. Fetch current profile to find old avatar for cleanup
-            const { data: profile } = await window.supabaseClient
-                .from('users')
-                .select('avatar_url')
-                .eq('id', userId)
-                .single();
+            const body = {
+                image: base64Image, // May be null for re-crop
+                isGif: isGif,
+                fileSize: fileSize,
+                crop: crop
+            };
 
-            const oldUrl = profile?.avatar_url;
-            const fileName = `${userId}_${Date.now()}.jpg`;
+            const response = await fetch('/api/cloudinary/avatar', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${session.access_token}`
+                },
+                body: JSON.stringify(body)
+            });
 
-            // 2. Upload to storage
-            const { error: uploadError } = await window.supabaseClient.storage
-                .from('avatars')
-                .upload(fileName, blob, { contentType: 'image/jpeg', upsert: true });
+            const data = await response.json();
 
-            if (uploadError) throw uploadError;
-
-            // 3. Get public URL
-            const { data: { publicUrl } } = window.supabaseClient.storage.from('avatars').getPublicUrl(fileName);
-
-            // 4. Update user profile
-            const { error: updateError } = await window.supabaseClient
-                .from('users')
-                .update({ avatar_url: publicUrl })
-                .eq('id', userId);
-
-            if (updateError) throw updateError;
-
-            // 5. STORAGE CLEANUP: Delete old avatar from bucket
-            if (oldUrl) {
-                const bucketUrl = window.supabaseClient.storage.from('avatars').getPublicUrl('').data.publicUrl;
-                if (oldUrl.includes(bucketUrl)) {
-                    const oldFileName = oldUrl.split('/').pop();
-                    if (oldFileName && oldFileName !== fileName) {
-                        try {
-                            console.log("🗑️ AvatarManager: Silently cleaning up old avatar:", oldFileName);
-                            const { error: delErr } = await window.supabaseClient.storage.from('avatars').remove([oldFileName]);
-                            if (delErr) throw delErr;
-                            console.log("✅ AvatarManager: Old avatar deleted.");
-                        } catch (cleanErr) {
-                            console.warn("AvatarManager: Cleanup error (non-fatal):", cleanErr);
-                        }
-                    }
+            if (!response.ok) {
+                if (data.upgrade) {
+                    this.showToast('Los avatars GIF son exclusivos del Plan Pro', true);
+                    return;
                 }
+                throw new Error(data.error || 'Error al subir avatar');
             }
 
-            if (publicUrl) {
-                // INSTANT FEEDBACK: Set flag and reload immediately
+            if (data.success && data.url) {
                 localStorage.setItem('avatar_update_success', 'true');
                 window.location.reload();
             } else {
-                this.showToast("Error al subir el avatar.", true);
+                this.showToast('Error al subir el avatar.', true);
             }
 
         } catch (err) {
-            console.error("Upload error:", err);
-            this.showToast("Error al subir el avatar.", true);
+            console.error('Upload error:', err);
+            this.showToast(err.message || 'Error al subir el avatar.', true);
         }
     },
 
@@ -363,7 +515,7 @@ window.AvatarManager = {
     },
 
     /**
-     * If the avatar is external (e.g. Google), download and re-upload to our own bucket
+     * If the avatar is external (e.g. Google), download and re-upload to Cloudinary.
      * This ensures the avatar is preserved permanently.
      */
     maybeInternalize: async function (session) {
@@ -379,37 +531,43 @@ window.AvatarManager = {
             if (!profile || !profile.avatar_url) return;
 
             const url = profile.avatar_url;
-            const bucketUrl = window.supabaseClient.storage.from('avatars').getPublicUrl('').data.publicUrl;
 
-            // Check if URL is NOT already in our bucket
-            if (!url.includes(bucketUrl) && (url.startsWith('http') || url.startsWith('https'))) {
-                console.log("🛠️ AvatarManager: Internalizing external avatar...", url);
+            // Already on our storage (Supabase bucket OR Cloudinary) — skip
+            if (url.includes('supabase.co') || url.includes('cloudinary.com')) return;
+
+            // External URL (e.g. Google) — internalize to Cloudinary
+            if (url.startsWith('http') || url.startsWith('https')) {
+                console.log("🛠️ AvatarManager: Internalizing external avatar to Cloudinary...", url);
 
                 const response = await fetch(url);
                 const blob = await response.blob();
 
                 if (blob) {
-                    const userId = session.user.id;
-                    const fileName = `${userId}_migrated_${Date.now()}.jpg`;
+                    // Convert to base64 and upload via Cloudinary API
+                    const base64 = await new Promise((resolve) => {
+                        const reader = new FileReader();
+                        reader.onload = (e) => resolve(e.target.result);
+                        reader.readAsDataURL(blob);
+                    });
 
-                    const { error: uploadError } = await window.supabaseClient.storage
-                        .from('avatars')
-                        .upload(fileName, blob, { contentType: 'image/jpeg', upsert: true });
+                    const avatarRes = await fetch('/api/cloudinary/avatar', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${session.access_token}`
+                        },
+                        body: JSON.stringify({
+                            image: base64,
+                            isGif: false,
+                            fileSize: blob.size
+                        })
+                    });
 
-                    if (uploadError) throw uploadError;
-
-                    const { data: { publicUrl } } = window.supabaseClient.storage.from('avatars').getPublicUrl(fileName);
-
-                    const { error: updateError } = await window.supabaseClient
-                        .from('users')
-                        .update({ avatar_url: publicUrl })
-                        .eq('id', userId);
-
-                    if (updateError) throw updateError;
-
-                    console.log("✅ AvatarManager: Avatar internalized successfully.");
-                    // Update cache to prevent flickering
-                    localStorage.setItem('offszn_cached_avatar', publicUrl);
+                    const data = await avatarRes.json();
+                    if (avatarRes.ok && data.success) {
+                        console.log("✅ AvatarManager: Avatar internalized to Cloudinary successfully.");
+                        localStorage.setItem('offszn_cached_avatar', data.url);
+                    }
                 }
             }
         } catch (err) {

@@ -22,6 +22,11 @@ import chatRoutes from './infrastructure/http/routes/chat.routes.js';
 import paypalRoutes from './infrastructure/http/routes/paypal.routes.js';
 import r2Routes from './infrastructure/http/routes/r2.routes.js';
 
+import cloudinaryRoutes from './infrastructure/http/routes/cloudinary.routes.js';
+
+
+
+
 
 const app = express()
 const __filename = fileURLToPath(import.meta.url);
@@ -93,6 +98,9 @@ import jwt from 'jsonwebtoken'
 import { JWT_SECRET } from '../src/shared/config/config.js'
 
 // ... imports ...
+
+// --- 2.0 CLOUDINARY ROUTES (before global JSON parser — needs 30MB limit) ---
+app.use('/api/cloudinary', express.json({ limit: '30mb' }), cloudinaryRoutes);
 
 // --- 2. PARSEO DE JSON & COOKIES ---
 app.use(express.json())
@@ -277,4 +285,6 @@ checkConnection()
 app.listen(PORT, () => {
     console.log(`🚀 Servidor corriendo en el puerto ${PORT}`)
     console.log(`🌐 Accede a tu web en: http://localhost:${PORT}`)
+    console.log(`TIME: ${new Date().toISOString()}`)
+    // Touching again
 })

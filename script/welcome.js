@@ -702,20 +702,41 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     try {
-      // UPLOAD AVATAR (If selected)
+      // UPLOAD AVATAR (If selected) — via Cloudinary
       let avatarUrl = null;
       if (avatarFile) {
-        const fileExt = 'jpg';
-        const fileName = `${user.id}_${Date.now()}.${fileExt}`;
-        const { error: uploadError } = await supabaseClient.storage
-          .from('avatars')
-          .upload(fileName, avatarFile, { contentType: 'image/jpeg', upsert: true });
+        try {
+          // Convert blob to base64
+          const base64 = await new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onload = (e) => resolve(e.target.result);
+            reader.readAsDataURL(avatarFile);
+          });
 
-        if (uploadError) {
-          console.warn("Avatar upload warning:", uploadError);
-        } else {
-          const { data: { publicUrl } } = supabaseClient.storage.from('avatars').getPublicUrl(fileName);
-          avatarUrl = publicUrl;
+          const { data: { session } } = await supabaseClient.auth.getSession();
+          if (session) {
+            const avatarRes = await fetch('/api/cloudinary/avatar', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${session.access_token}`
+              },
+              body: JSON.stringify({
+                image: base64,
+                isGif: false,
+                fileSize: avatarFile.size
+              })
+            });
+
+            const avatarData = await avatarRes.json();
+            if (avatarRes.ok && avatarData.success) {
+              avatarUrl = avatarData.url;
+            } else {
+              console.warn("Avatar upload warning:", avatarData.error);
+            }
+          }
+        } catch (avatarErr) {
+          console.warn("Avatar upload warning:", avatarErr);
         }
       }
 
@@ -911,10 +932,11 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     function handleFile(file) {
-      if (!file.type.startsWith('image/')) {
-        showStepError('step1Error', 'Solo archivos de imagen'); // Reusing existing error handling?
-        // Or better:
-        alert("Por favor sube una imagen válida.");
+      const validTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/jfif'];
+      const isJfif = file.name.toLowerCase().endsWith('.jfif');
+
+      if (!validTypes.includes(file.type) && !isJfif) {
+        alert("Solo se aceptan JPG, PNG o JFIF.");
         return;
       }
 
