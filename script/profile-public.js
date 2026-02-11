@@ -951,24 +951,36 @@ function setupBioCollapse() {
     const bioText = document.getElementById('profileBio');
     if (!bioText) return;
 
-    // Check if bio is long
-    const fullText = bioText.innerText;
-    if (fullText.length > 150) {
-        const charLimit = 150;
-        const shortText = fullText.substring(0, charLimit) + "...";
+    // Clean text: max 1 space, max 1 newline as requested
+    let rawText = bioText.innerText || "";
+    let cleanText = rawText
+        .replace(/[ ]+/g, ' ')           // Max 1 space
+        .replace(/\n\s*\n/g, '\n')       // Max 1 newline (no empty lines)
+        .trim();
 
-        bioText.setAttribute('data-full', fullText);
+    if (!cleanText) return;
+
+    // Update bio with cleaned text immediately
+    bioText.innerText = cleanText;
+
+    if (cleanText.length > 150) {
+        const charLimit = 150;
+        const shortText = cleanText.substring(0, charLimit) + "...";
+
+        bioText.setAttribute('data-full', cleanText);
         bioText.setAttribute('data-short', shortText);
-        bioText.innerHTML = `${shortText} <span id="bioToggle" style="color:var(--p-accent); cursor:pointer; font-weight:600; margin-left:4px;">Ver más</span>`;
+
+        // Add toggle with a small break for aesthetics
+        bioText.innerHTML = `${shortText} <br> <span id="bioToggle" style="color:var(--p-accent); cursor:pointer; font-weight:600; margin-top:4px; display:inline-block;">Ver más</span>`;
 
         bioText.onclick = (e) => {
             if (e.target.id === 'bioToggle') {
                 const isExpanded = bioText.classList.contains('expanded');
                 if (isExpanded) {
-                    bioText.innerHTML = `${shortText} <span id="bioToggle" style="color:var(--p-accent); cursor:pointer; font-weight:600; margin-left:4px;">Ver más</span>`;
+                    bioText.innerHTML = `${shortText} <br> <span id="bioToggle" style="color:var(--p-accent); cursor:pointer; font-weight:600; margin-top:4px; display:inline-block;">Ver más</span>`;
                     bioText.classList.remove('expanded');
                 } else {
-                    bioText.innerHTML = `${fullText} <span id="bioToggle" style="color:var(--p-accent); cursor:pointer; font-weight:600; margin-left:4px;">Ver menos</span>`;
+                    bioText.innerHTML = `${cleanText} <br> <span id="bioToggle" style="color:var(--p-accent); cursor:pointer; font-weight:600; margin-top:4px; display:inline-block;">Ver menos</span>`;
                     bioText.classList.add('expanded');
                 }
             }
