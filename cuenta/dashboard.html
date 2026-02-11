@@ -2039,7 +2039,7 @@
         }
 
         // RENDER FUNCTION (Using <a> tags for native click behavior)
-        function renderActivities(list) {
+        async function renderActivities(list) {
             const container = document.getElementById('activityContainer');
             if (!container) return;
             container.classList.add('fade-in');
@@ -2053,7 +2053,8 @@
                 return;
             }
 
-            container.innerHTML = list.map(item => {
+            // 1. Prepare HTML and collect images for authorization
+            const rows = await Promise.all(list.map(async item => {
                 let thumb = '';
                 let typeBadge = '';
                 let priceDisplay = item.price ? `$${parseFloat(item.price).toFixed(2)}` : '';
@@ -2062,7 +2063,9 @@
 
                 if (item.type === 'product') {
                     const typeLabel = typeMap[item.category] || 'Producto';
-                    thumb = `<img src="${item.img || 'https://via.placeholder.com/80'}" class="activity-thumb" alt="" style="width:48px; height:48px; border-radius:6px; object-fit:cover;">`;
+                    // 🔥 AUTHORIZE R2 IMAGE
+                    const authorizedImg = item.img ? await AuthUtils.getAuthorizedUrl(item.img) : 'https://via.placeholder.com/80';
+                    thumb = `<img src="${authorizedImg}" class="activity-thumb" alt="" style="width:48px; height:48px; border-radius:6px; object-fit:cover;">`;
                     typeBadge = `<span class="activity-type-badge" style="font-size:10px; padding:2px 6px; border-radius:4px; background:#222; color:#aaa; margin-left:auto;">${typeLabel}</span>`;
                 } else if (item.type === 'sale') {
                     thumb = `<div style="width:48px; height:48px; border-radius:6px; display:flex; align-items:center; justify-content:center; background:rgba(16, 185, 129, 0.2); color:#10B981;"><i class="bi bi-currency-dollar"></i></div>`;
@@ -2088,7 +2091,9 @@
                         ${typeBadge}
                     </a>
                 `;
-            }).join('');
+            }));
+
+            container.innerHTML = rows.join('');
         }
 
         // FILTER LOGIC
