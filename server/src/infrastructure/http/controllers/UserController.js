@@ -244,7 +244,7 @@ export const getUserByNickname = async (req, res) => {
         // Fetch counts manually to ensure accuracy
         const [followersRes, productsRes] = await Promise.all([
             supabase.from('followers').select('*', { count: 'exact', head: true }).eq('user_id', user.id),
-            supabase.from('products').select('*', { count: 'exact', head: true }).eq('producer_id', user.id).eq('status', 'approved')
+            supabase.from('products').select('*', { count: 'exact', head: true }).eq('producer_id', user.id).eq('status', 'approved').eq('visibility', 'public')
         ]);
 
         user.followers_count = followersRes.count || 0;
@@ -284,6 +284,7 @@ export const getProductsByNickname = async (req, res) => {
             `)
             .eq('producer_id', user.id)
             .eq('status', 'approved')
+            .eq('visibility', 'public') // Only show public products on profile
             .order('created_at', { ascending: false });
 
         if (productsError) {
