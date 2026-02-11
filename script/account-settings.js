@@ -758,3 +758,160 @@ function showToast(message, type = 'success') {
         setTimeout(() => toast.remove(), 300);
     }, 4000);
 }
+
+/* ==================== MENTIONS MANAGER ==================== */
+class MentionsManager {
+    constructor(textareaId, dropdownId) {
+        this.textarea = document.getElementById(textareaId);
+        this.dropdown = document.getElementById(dropdownId);
+        if (!this.textarea || !this.dropdown) return;
+
+        this.isActive = false;
+        this.query = "";
+        this.selectedIndex = -1;
+        this.filteredUsers = [];
+        this.debounceTimer = null;
+
+        this.init();
+    }
+
+    init() {
+        this.textarea.addEventListener('input', () => this.handleInput());
+        this.textarea.addEventListener('keydown', (e) => this.handleKeyDown(e));
+
+        // Close on click outside
+        document.addEventListener('click', (e) => {
+            if (e.target !== this.textarea && !this.dropdown.contains(e.target)) {
+                this.close();
+            }
+        });
+    }
+
+    handleInput() {
+        const text = this.textarea.value;
+        const cursorPos = this.textarea.selectionStart;
+        const textBeforeCaret = text.substring(0, cursorPos);
+
+        // Match @username (only at the end of textBeforeCaret)
+        const mentionMatch = textBeforeCaret.match(/@([a-z0-9._-]*)$/i);
+
+        if (mentionMatch) {
+            this.isActive = true;
+            this.query = mentionMatch[1];
+            this.showDropdown();
+
+            clearTimeout(this.debounceTimer);
+            this.debounceTimer = setTimeout(() => this.searchUsers(this.query), 300);
+        } else {
+            this.close();
+        }
+    }
+
+    async searchUsers(query) {
+        if (!this.isActive) return;
+
+        try {
+            // Use the same search logic as Navbar but specifically for users
+            const { data, error } = await window.supabaseClient
+                .from('users')
+                .select('nickname, avatar_url')
+                .ilike('nickname', `%${query}%`)
+                .limit(5);
+
+            if (error) throw error;
+
+            this.filteredUsers = data || [];
+            this.renderResults();
+        } catch (err) {
+            console.error("Mentions Search Error:", err);
+            this.renderResults([]);
+        }
+    }
+
+    showDropdown() {
+        this.dropdown.style.display = 'flex';
+        // Basic positioning: below the textarea or follow caret (advanced)
+        // For now, let's keep it anchored below the textarea for stability
+        this.dropdown.style.top = (this.textarea.offsetTop + this.textarea.offsetHeight + 5) + 'px';
+        this.dropdown.style.left = this.textarea.offsetLeft + 'px';
+    }
+
+    renderResults() {
+        if (!this.isActive) return;
+
+        if (this.filteredUsers.length === 0) {
+            this.dropdown.innerHTML = '<div class="mention-empty">No se encontraron usuarios</div>';
+            return;
+        }
+
+        this.dropdown.innerHTML = this.filteredUsers.map((user, index) => `
+            <div class="mention-item ${index === this.selectedIndex ? 'selected' : ''}" data-index="${index}">
+                <img src="${user.avatar_url || 'https://raw.githubusercontent.com/williebs64uwu/OFFSZN-Assets/main/default-avatar.png'}" class="mention-avatar" onerror="this.src='https://raw.githubusercontent.com/williebs64uwu/OFFSZN-Assets/main/default-avatar.png'">
+                <span class="mention-nickname">@${user.nickname}</span>
+            </div>
+        `).join('');
+
+        // Add click listeners
+        this.dropdown.querySelectorAll('.mention-item').forEach(item => {
+            item.onclick = () => {
+                this.selectUser(this.filteredUsers[item.dataset.index]);
+            };
+        });
+    }
+
+    selectUser(user) {
+        const text = this.textarea.value;
+        const cursorPos = this.textarea.selectionStart;
+        const textBeforeCaret = text.substring(0, cursorPos);
+        const textAfterCaret = text.substring(cursorPos);
+
+        const mentionMatch = textBeforeCaret.match(/@([a-z0-9._-]*)$/i);
+        if (mentionMatch) {
+            const startPos = mentionMatch.index;
+            const newTextBefore = textBeforeCaret.substring(0, startPos) + "@" + user.nickname + " ";
+            this.textarea.value = newTextBefore + textAfterCaret;
+
+            // Set caret position after the inserted name
+            const newPos = newTextBefore.length;
+            this.textarea.setSelectionRange(newPos, newPos);
+            this.textarea.focus();
+
+            // Trigger input event to update counters
+            this.textarea.dispatchEvent(new Event('input'));
+        }
+
+        this.close();
+    }
+
+    handleKeyDown(e) {
+        if (!this.isActive) return;
+
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            this.selectedIndex = (this.selectedIndex + 1) % (this.filteredUsers.length || 1);
+            this.renderResults();
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            this.selectedIndex = (this.selectedIndex - 1 + (this.filteredUsers.length || 1)) % (this.filteredUsers.length || 1);
+            this.renderResults();
+        } else if (e.key === 'Enter') {
+            if (this.selectedIndex >= 0 && this.filteredUsers[this.selectedIndex]) {
+                e.preventDefault();
+                this.selectUser(this.filteredUsers[this.selectedIndex]);
+            }
+        } else if (e.key === 'Escape') {
+            this.close();
+        }
+    }
+
+    close() {
+        this.isActive = false;
+        this.dropdown.style.display = 'none';
+        this.selectedIndex = -1;
+    }
+}
+
+// Initialize Mentions
+if (document.getElementById('bio')) {
+    new MentionsManager('bio', 'mentionsDropdown');
+}

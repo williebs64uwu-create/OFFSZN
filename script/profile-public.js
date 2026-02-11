@@ -960,31 +960,42 @@ function setupBioCollapse() {
 
     if (!cleanText) return;
 
-    // Update bio with cleaned text immediately
-    bioText.innerText = cleanText;
+    // --- MENTIONS CONVERSION ---
+    // Detect @username and wrap in <a> tag
+    const formatMentions = (text) => {
+        return text.replace(/@([a-z0-9._-]+)/gi, (match, username) => {
+            return `<a href="/@${username}" class="bio-mention">@${username}</a>`;
+        });
+    };
 
     if (cleanText.length > 150) {
         const charLimit = 150;
         const shortText = cleanText.substring(0, charLimit) + "...";
 
-        bioText.setAttribute('data-full', cleanText);
-        bioText.setAttribute('data-short', shortText);
+        const fullHtml = formatMentions(cleanText);
+        const shortHtml = formatMentions(shortText);
 
-        // Add toggle with a small break for aesthetics
-        bioText.innerHTML = `${shortText} <br> <span id="bioToggle" style="color:var(--p-accent); cursor:pointer; font-weight:600; margin-top:4px; display:inline-block;">Ver más</span>`;
+        bioText.setAttribute('data-full', fullHtml);
+        bioText.setAttribute('data-short', shortHtml);
+
+        // Initial render (short)
+        bioText.innerHTML = `${shortHtml} <br> <span id="bioToggle" style="color:var(--p-accent); cursor:pointer; font-weight:600; margin-top:4px; display:inline-block;">Ver más</span>`;
 
         bioText.onclick = (e) => {
             if (e.target.id === 'bioToggle') {
                 const isExpanded = bioText.classList.contains('expanded');
                 if (isExpanded) {
-                    bioText.innerHTML = `${shortText} <br> <span id="bioToggle" style="color:var(--p-accent); cursor:pointer; font-weight:600; margin-top:4px; display:inline-block;">Ver más</span>`;
+                    bioText.innerHTML = `${shortHtml} <br> <span id="bioToggle" style="color:var(--p-accent); cursor:pointer; font-weight:600; margin-top:4px; display:inline-block;">Ver más</span>`;
                     bioText.classList.remove('expanded');
                 } else {
-                    bioText.innerHTML = `${cleanText} <br> <span id="bioToggle" style="color:var(--p-accent); cursor:pointer; font-weight:600; margin-top:4px; display:inline-block;">Ver menos</span>`;
+                    bioText.innerHTML = `${fullHtml} <br> <span id="bioToggle" style="color:var(--p-accent); cursor:pointer; font-weight:600; margin-top:4px; display:inline-block;">Ver menos</span>`;
                     bioText.classList.add('expanded');
                 }
             }
         };
+    } else {
+        // No truncation needed, just format mentions
+        bioText.innerHTML = formatMentions(cleanText);
     }
 }
 

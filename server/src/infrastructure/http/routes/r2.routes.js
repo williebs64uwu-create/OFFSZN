@@ -5,14 +5,31 @@ import { R2_BUCKET_NAME } from '../../../shared/config/config.js';
 
 const router = Router();
 
+// 🔥 FILE SIZE LIMITS (server-side enforcement)
+const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB general
+const MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10MB for images
+
 // Endpoint para obtener una URL de subida firmada
 router.post('/r2/upload-url', authenticateTokenMiddleware, async (req, res) => {
     try {
-        const { fileName, fileType, folder } = req.body;
+        const { fileName, fileType, folder, fileSize } = req.body;
         const userId = req.user.userId;
 
         if (!fileName || !fileType) {
             return res.status(400).json({ error: 'Faltan fileName o fileType' });
+        }
+
+        // 🔥 Server-side file size validation
+        if (fileSize) {
+            const isImage = fileType.startsWith('image/');
+            const maxAllowed = isImage ? MAX_IMAGE_SIZE : MAX_FILE_SIZE;
+            const maxMB = Math.round(maxAllowed / (1024 * 1024));
+
+            if (fileSize > maxAllowed) {
+                return res.status(413).json({
+                    error: `El archivo excede el límite de ${maxMB}MB`
+                });
+            }
         }
 
         // Estructura de carpetas sugerida: folder/userId/timestamp_fileName

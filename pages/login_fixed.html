@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 
 <head>
@@ -14,10 +14,10 @@
   <script src="/script/auth-utils.js?v=11"></script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Crear Cuenta — OFFSZN</title>
+  <title>Iniciar Sesión — OFFSZN</title>
   <link rel="icon" type="image/webp" href="/images/LOGO OFFSZN.webp">
   <meta name="description"
-    content="Únete a OFFSZN, la comunidad número 1 para productores musicales. Descarga sonidos premium y lleva tus beats al siguiente nivel.">
+    content="Inicia sesión en OFFSZN para acceder a tus kits, beats y herramientas de producción musical.">
   <script src="https://cdn.tailwindcss.com"></script>
 
   <link
@@ -60,14 +60,12 @@
 
     .form-message.error {
       color: #ef4444;
-      /* red-500 */
       background: rgba(239, 68, 68, 0.1);
       border: 1px solid rgba(239, 68, 68, 0.2);
     }
 
     .form-message.success {
       color: #22c55e;
-      /* green-500 */
       background: rgba(34, 197, 94, 0.1);
       border: 1px solid rgba(34, 197, 94, 0.2);
     }
@@ -120,36 +118,37 @@
 
       <!-- Title -->
       <div class="text-center mb-8">
-        <h1 class="text-white text-2xl font-semibold mb-2">Crear una cuenta</h1>
-        <p class="text-zinc-400 text-sm">Empieza tu próxima temporada musical hoy mismo.</p>
+        <h1 class="text-white text-2xl font-semibold mb-2">Iniciar Sesión</h1>
+        <p class="text-zinc-400 text-sm">Bienvenido de nuevo.</p>
       </div>
 
       <!-- Form -->
-      <form id="register-form" class="space-y-4" novalidate>
+      <form id="login-form" class="space-y-4" novalidate>
 
         <!-- Email -->
         <div>
-          <label for="reg-email" class="block text-zinc-400 text-sm mb-2 font-medium">Correo electrónico</label>
-          <input type="email" id="reg-email" name="email" placeholder="tu@email.com"
+          <label for="log-email" class="block text-zinc-400 text-sm mb-2 font-medium">Correo electrónico</label>
+          <input type="email" id="log-email" name="email" placeholder="tu@email.com"
             class="w-full px-4 py-3 bg-[#0f0f0f] border border-white/10 rounded-xl text-white placeholder-zinc-600 focus:outline-none focus:border-purple-600/50 focus:ring-1 focus:ring-purple-600/50 transition-all"
-            required pattern="[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,}$">
+            required>
+          <!-- Validation error container (if we want to use specific field errors) -->
           <span id="email-error" class="text-red-500 text-xs mt-2 block hidden font-medium"></span>
         </div>
 
         <!-- Password -->
         <div>
-          <label for="reg-password" class="block text-zinc-400 text-sm mb-2 font-medium">Contraseña</label>
+          <div class="flex items-center justify-between mb-2">
+            <label for="log-password" class="text-zinc-400 text-sm font-medium">Contraseña</label>
+            <a href="/pages/forgot-password.html"
+              class="text-xs text-violet-400 hover:text-violet-300 transition-colors">¿Olvidaste tu contraseña?</a>
+          </div>
+
           <div class="relative">
-            <input type="password" id="reg-password" name="password" placeholder="Mínimo 6 caracteres"
+            <input type="password" id="log-password" name="password" placeholder="Tu contraseña"
               class="w-full px-4 py-3 bg-[#0f0f0f] border border-white/10 rounded-xl text-white placeholder-zinc-600 focus:outline-none focus:border-purple-600/50 focus:ring-1 focus:ring-purple-600/50 transition-all pr-12"
-              required minlength="6" maxlength="15">
+              required>
             <button type="button" id="togglePassword"
               class="absolute inset-y-0 right-0 px-4 flex items-center text-zinc-500 hover:text-white transition-colors cursor-pointer focus:outline-none">
-
-              <!-- Icon Logic Swapped per User Request: 
-                   Default (Hidden/Dots) -> Shows Slashed Eye ("It is hidden")
-                   Active (Visible/Text) -> Shows Open Eye ("It is visible") 
-              -->
 
               <!-- Eye Slash (Hidden state - DEFAULT visible icon) -->
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor"
@@ -163,7 +162,7 @@
               <!-- Eye Open (Visible state - DEFAULT hidden icon) -->
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-eye-fill"
                 viewBox="0 0 16 16" id="eyeIcon" style="display: none;">
-                <path d="M10.5 8a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0" />
+                <path d="M10.5 8a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0 2.5 2.5 0 0 1 5 0" />
                 <path d="M0 8s3-5.5 8-5.5S16 8 16 8s-3 5.5-8 5.5S0 8 0 8m8 3.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7" />
               </svg>
             </button>
@@ -173,7 +172,7 @@
           <script>
             // --- UI LOGIC ---
             const togglePassword = document.querySelector('#togglePassword');
-            const passwordInput = document.querySelector('#reg-password');
+            const passwordInput = document.querySelector('#log-password');
             const eyeIcon = document.querySelector('#eyeIcon');
             const eyeSlashIcon = document.querySelector('#eyeSlashIcon');
 
@@ -190,101 +189,9 @@
               }
             });
 
-            // --- CUSTOM VALIDATION LOGIC ---
-            const emailInput = document.getElementById('reg-email');
-            const emailError = document.getElementById('email-error');
-            const passwordError = document.getElementById('password-error');
-            const form = document.getElementById('register-form');
-
-            const validateEmail = () => {
-              const emailValue = emailInput.value;
-              // Strict Regex: anything@anything.2+chars
-              const emailPattern = /^[^@\s]+@[^@\s]+\.[a-zA-Z]{2,}$/;
-
-              if (!emailValue) {
-                emailError.textContent = 'El correo es obligatorio.';
-                emailError.classList.remove('hidden');
-                return false;
-              }
-              // Check pattern manually to be 100% sure
-              else if (!emailPattern.test(emailValue)) {
-                emailError.textContent = 'Ingresa un correo válido (ej: usuario@gmail.com).';
-                emailError.classList.remove('hidden');
-                return false;
-              } else {
-                emailError.classList.add('hidden');
-                return true;
-              }
-            };
-
-            const validatePassword = () => {
-              const val = passwordInput.value;
-              if (!val) {
-                passwordError.textContent = 'La contraseña es obligatoria.';
-                passwordError.classList.remove('hidden');
-                return false;
-              } else if (val.length < 6) {
-                passwordError.textContent = `La contraseña debe tener al menos 6 caracteres (tienes ${val.length}).`;
-                passwordError.classList.remove('hidden');
-                return false;
-              } else if (val.length > 15) {
-                passwordError.textContent = 'La contraseña no puede exceder 15 caracteres.';
-                passwordError.classList.remove('hidden');
-                return false;
-              } else {
-                passwordError.classList.add('hidden');
-                return true;
-              }
-            };
-
-            // Real-time validation
-            emailInput.addEventListener('input', validateEmail);
-            passwordInput.addEventListener('input', validatePassword);
-
-            // Create global validation handler for form submission in auth.js to call
-            window.validateRegisterForm = () => {
-              const isEmailValid = validateEmail();
-              const isPasswordValid = validatePassword();
-              return isEmailValid && isPasswordValid;
-            }
-
-            // Global helper to show backend errors inline
-            window.showRegisterError = (field, message) => {
-              if (field === 'email') {
-                emailError.textContent = message;
-                emailError.classList.remove('hidden');
-                emailInput.classList.add('border-red-500', 'focus:border-red-500', 'focus:ring-red-500/50');
-                // Remove error style on next input
-                emailInput.addEventListener('input', () => {
-                  emailInput.classList.remove('border-red-500', 'focus:border-red-500', 'focus:ring-red-500/50');
-                }, { once: true });
-              } else if (field === 'password') {
-                passwordError.textContent = message;
-                passwordError.classList.remove('hidden');
-                passwordInput.classList.add('border-red-500', 'focus:border-red-500', 'focus:ring-red-500/50');
-                // Remove error style on next input
-                passwordInput.addEventListener('input', () => {
-                  passwordInput.classList.remove('border-red-500', 'focus:border-red-500', 'focus:ring-red-500/50');
-                }, { once: true });
-              }
-            }
-            // --- GUEST FLOW: PRE-FILL EMAIL & ORDER_ID ---
-            document.addEventListener('DOMContentLoaded', () => {
-              const urlParams = new URLSearchParams(window.location.search);
-              const emailParam = urlParams.get('email');
-              const orderIdParam = urlParams.get('order_id');
-
-              if (emailParam) {
-                emailInput.value = emailParam;
-                // Trigger validation
-                validateEmail();
-              }
-
-              if (orderIdParam) {
-                console.log("Registered for Guest Order Linking:", orderIdParam);
-                sessionStorage.setItem('pending_order_link', orderIdParam);
-              }
-            });
+            // --- SIMPLE VALIDATION LOGIC FOR LOGIN ---
+            // We kept the strict regex in Register, but Login is best kept simple to avoid blocking legacy users
+            // However, we can use the "Show Error" helper if backend returns errors.
           </script>
         </div>
 
@@ -294,7 +201,7 @@
         <!-- Submit Button -->
         <button type="submit"
           class="btn-primary w-full py-3.5 bg-violet-600 hover:bg-violet-700 text-white font-bold rounded-xl transition-colors shadow-[0_4px_20px_rgba(124,58,237,0.3)]">
-          Crear cuenta
+          Iniciar sesión
         </button>
 
       </form>
@@ -324,10 +231,10 @@
         </button>
       </div>
 
-      <!-- Login Link -->
+      <!-- Register Link -->
       <p class="text-center text-zinc-400 text-sm mt-6">
-        ¿Ya tienes una cuenta?
-        <a href="/pages/login.html" class="text-white hover:underline">Inicia sesión</a>
+        ¿No tienes una cuenta?
+        <a href="/pages/register.html" class="text-white hover:underline">Regístrate</a>
       </p>
 
     </div>
