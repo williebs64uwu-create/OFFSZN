@@ -1684,7 +1684,7 @@ async function fetchRelatedProducts(currentProduct) {
     if (!container) return;
 
     try {
-        console.log("[Related] Fetching for:", currentProduct.id, currentProduct.product_type, currentProduct.category);
+        // console.log("[Related] Fetching for:", currentProduct.id, currentProduct.product_type, currentProduct.category);
 
         let allRelated = [];
 
@@ -1701,7 +1701,7 @@ async function fetchRelatedProducts(currentProduct) {
 
         if (stage1 && stage1.length > 0) {
             allRelated = [...stage1];
-            console.log("[Related] Stage 1 found:", stage1.length);
+            // console.log("[Related] Stage 1 found:", stage1.length);
         }
 
         // STAGE 2: Same Category (Other Producers) if needed
@@ -1718,7 +1718,7 @@ async function fetchRelatedProducts(currentProduct) {
 
             if (stage2 && stage2.length > 0) {
                 allRelated = [...allRelated, ...stage2];
-                console.log("[Related] Stage 2 found:", stage2.length);
+                // console.log("[Related] Stage 2 found:", stage2.length);
             }
         }
 
@@ -1737,7 +1737,7 @@ async function fetchRelatedProducts(currentProduct) {
 
             if (stage3 && stage3.length > 0) {
                 allRelated = [...allRelated, ...stage3];
-                console.log("[Related] Stage 3 found:", stage3.length);
+                // console.log("[Related] Stage 3 found:", stage3.length);
             }
         }
 
@@ -1755,7 +1755,7 @@ async function fetchRelatedProducts(currentProduct) {
 
             if (stage4 && stage4.length > 0) {
                 allRelated = [...allRelated, ...stage4];
-                console.log("[Related] Stage 4 found:", stage4.length);
+                // console.log("[Related] Stage 4 found:", stage4.length);
             }
         }
 

@@ -230,7 +230,7 @@ function renderTwoColLists(category = 'Todo') {
         'Plantillas': 'plantilla' // Check if this matches DB, usually 'template' or 'preset' with category
     };
 
-    let filtered = [...allProducts];
+    let filtered = allProducts.filter(p => p.visibility === 'public');
     if (category !== 'Todo') {
         const typeMatch = filterMap[category];
         filtered = filtered.filter(p => p.product_type?.toLowerCase() === typeMatch?.toLowerCase());

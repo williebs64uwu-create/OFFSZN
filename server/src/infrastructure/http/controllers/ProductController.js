@@ -13,7 +13,8 @@ export const getAllProducts = async (req, res) => {
                 *, 
                 users!products_producer_id_fkey ( nickname ) 
             `)
-            .eq('status', 'approved');
+            .eq('status', 'approved')
+            .eq('visibility', 'public');
 
         if (error) {
             // Si esto vuelve a fallar, el error saldrá aquí
