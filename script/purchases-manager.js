@@ -36,6 +36,9 @@ window.PurchasesManager = (function () {
     }
 
     async function startManager() {
+        // Initialize Sidebar Skeletons IMMEDIATELY (Before session check)
+        injectSidebarSkeletons();
+
         // First check if user is logged in
         const { data: { session }, error: sessionError } = await window.supabaseClient.auth.getSession();
 
@@ -51,11 +54,12 @@ window.PurchasesManager = (function () {
         const userId = session.user.id;
 
         try {
+            // Add artificial delay for smoother visual transition (unify with other settings)
+            await new Promise(resolve => setTimeout(resolve, 1200));
             await fetchPurchases(userId);
             isInitialized = true;
-        } catch (err) {
-            console.error("PurchasesManager Start Error:", err);
-            renderErrorState(document.getElementById('purchases-list'));
+        } finally {
+            removeSidebarSkeletons();
         }
     }
 
@@ -357,6 +361,30 @@ window.PurchasesManager = (function () {
                 }, 4000); // 4 Seconds cooldown
             }
         }
+    }
+
+    function renderSidebarInfo(userId) {
+        // We'll fetch it separately if needed, but usually it's handled by other scripts.
+        // However, for consistency we'll implement it here if needed.
+        // For now, let's just implement the UI removal.
+    }
+
+    function injectSidebarSkeletons() {
+        const name = document.getElementById('sidebarName');
+        const role = document.getElementById('sidebarRole');
+        const avatar = document.getElementById('sidebarAvatar');
+        if (name) name.classList.add('skeleton-base', 'skeleton-name');
+        if (role) role.classList.add('skeleton-base', 'skeleton-role');
+        if (avatar) avatar.classList.add('skeleton-base', 'skeleton-avatar');
+    }
+
+    function removeSidebarSkeletons() {
+        const name = document.getElementById('sidebarName');
+        const role = document.getElementById('sidebarRole');
+        const avatar = document.getElementById('sidebarAvatar');
+        if (name) name.classList.remove('skeleton-base', 'skeleton-name');
+        if (role) role.classList.remove('skeleton-base', 'skeleton-role');
+        if (avatar) avatar.classList.remove('skeleton-base', 'skeleton-avatar');
     }
 
     return { init, downloadFile, generatePDF };

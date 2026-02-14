@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Slug Generation Test</title>
+</head>
+
+<body>
+    <h1>Slug Generation Test</h1>
+    <div id="results"></div>
+
+    <script>
+        function generatePublicSlug(title) {
+            // Generate clean URL-safe slug from title
+            // PROPOSED NEW LOGIC:
+            return title
+                .toLowerCase()
+                .trim()
+                .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // Remove accents
+                .replace(/\+/g, '-') // Replace + with -
+                .replace(/_/g, '-') // Replace _ with -
+                .replace(/[^\w\s-]/g, '') // Remove special characters
+                .replace(/\s+/g, '-') // Spaces to hyphens
+                .replace(/-+/g, '-') // Multiple hyphens to single
+                .replace(/^-+|-+$/g, '') // Trim hyphens from ends
+                .substring(0, 60); // Max 60 characters
+        }
+
+        const testCases = [
+            "Hola+Type",
+            "Hola_Type",
+            "hola type",
+            "Café con Leche",
+            "This+is_a-Mixing---Test",
+            " Special ! Characters @ Test # ",
+            "---Start-End---"
+        ];
+
+        const resultsDiv = document.getElementById('results');
+
+        testCases.forEach(input => {
+            const slug = generatePublicSlug(input);
+            const p = document.createElement('p');
+            p.textContent = `Input: "${input}" => Slug: "${slug}"`;
+            resultsDiv.appendChild(p);
+            console.log(`Input: "${input}" => Slug: "${slug}"`);
+        });
+    </script>
+</body>
+
+</html>

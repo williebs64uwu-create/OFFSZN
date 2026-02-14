@@ -192,13 +192,33 @@ async function renderHeader(user) {
         const header = document.querySelector('.profile-header');
         if (header) {
             const val = user.banner_url;
-            if (val.includes(':')) {
+
+            // 🔥 Enhanced Banner Parsing: Support url:, gif:, solid:, gradient:
+            if (val.startsWith('url:') || val.startsWith('gif:')) {
+                // Extract URL (everything after the first colon)
+                const url = val.substring(val.indexOf(':') + 1);
+                header.style.background = `url("${url}") center/cover no-repeat`;
+            } else if (val.includes(':')) {
+                // Solid or Gradient
                 const [type, color] = val.split(':');
-                header.style.background = color;
+                if (type === 'solid') {
+                    header.style.background = color;
+                } else if (type === 'gradient') {
+                    // For gradients, the value might contain commas, so we take everything after 'gradient:'
+                    // But simpler: just assume 'color' is the rest if split limit logic applied, 
+                    // but split(':') splits ALL colons. 
+                    // Let's use substring for robustness.
+                    const gradientVal = val.substring(val.indexOf(':') + 1);
+                    header.style.background = gradientVal;
+                } else {
+                    // Fallback for simple hex or other? 
+                    // If it was just 'color', handled above? No, split logic is naive.
+                    // If unknown type, try using as color?
+                    header.style.background = color;
+                }
             } else if (val.startsWith('http')) {
-                header.style.backgroundImage = `url(${val})`;
-                header.style.backgroundSize = 'cover';
-                header.style.backgroundPosition = 'center';
+                // Legacy URL
+                header.style.background = `url("${val}") center/cover no-repeat`;
             }
         }
     }
@@ -583,20 +603,124 @@ function renderServicesTab(container) {
 
 // --- PERSONALIZATION PORTAL ---
 window.ProfilePersonalizer = {
-    selectedBanner: null,
+    isPro: false, // Will be fetched on open
+    isUploadingGif: false, // Track if current flow is for static or animated
 
     open: function () {
         const modal = document.getElementById('personalizeModal');
-        if (modal) modal.style.display = 'block';
+        if (modal) {
+            modal.style.display = 'block';
+            const content = modal.querySelector('.p-modal-content');
+            if (content) content.style.width = '440px';
+        }
         // Reset view
-        document.getElementById('bannerPicker').style.display = 'none';
+        document.getElementById('sideBySideContainer').style.display = 'none';
         const mainView = document.querySelector('.p-modal-main-view');
         if (mainView) mainView.style.display = 'flex';
+
+        // Fetch Plan Status
+        this.checkPlan();
+
+        // 🔥 Sync Mockup Data
+        if (window.currentUserProfile) {
+            this.syncMockupData(window.currentUserProfile);
+        }
+    },
+
+    syncMockupData: function (user) {
+        // 1. Text Info
+        const nameEl = document.getElementById('previewName');
+        const roleEl = document.getElementById('previewRole');
+        const verifiedEl = document.getElementById('previewVerified');
+
+        if (nameEl) nameEl.innerText = user.nickname || "User";
+        if (roleEl) roleEl.innerText = user.role || "Productor • Artista";
+        if (verifiedEl) verifiedEl.style.display = (user.is_verified || user.is_producer) ? 'inline-block' : 'none';
+
+        // 2. Stats
+        const prodCount = document.getElementById('previewProductsCount');
+        const followCount = document.getElementById('previewFollowersCount');
+        if (prodCount) prodCount.innerText = user.products_count || '0';
+        if (followCount) followCount.innerText = user.followers_count || '0';
+
+        // 3. Avatar
+        const previewAvatarImg = document.getElementById('previewAvatarImg');
+        const previewAvatarInitial = document.getElementById('previewAvatarInitial');
+
+        if (user.avatar_url) {
+            if (previewAvatarImg) {
+                previewAvatarImg.src = user.avatar_url;
+                previewAvatarImg.style.display = 'block';
+            }
+            if (previewAvatarInitial) previewAvatarInitial.style.display = 'none';
+        } else {
+            if (previewAvatarImg) previewAvatarImg.style.display = 'none';
+            if (previewAvatarInitial) {
+                previewAvatarInitial.style.display = 'flex';
+                previewAvatarInitial.innerText = (user.nickname || "U").charAt(0).toUpperCase();
+            }
+        }
+
+        // 4. Socials
+        const socials = typeof user.socials === 'string' ? JSON.parse(user.socials) : (user.socials || {});
+        const previewSocials = document.getElementById('previewSocials');
+        if (previewSocials) {
+            const icons = previewSocials.querySelectorAll('i');
+            icons.forEach(icon => {
+                const type = icon.classList.toString().split('bi-')[1]; // tiktok, spotify, youtube, instagram
+                if (socials && socials[type]) {
+                    icon.style.display = 'inline-block';
+                } else {
+                    icon.style.display = 'none';
+                }
+            });
+        }
+
+        // 5. Initial Header Background (Sync with actual page)
+        const actualHeader = document.querySelector('.profile-header');
+        const mockupHeader = document.getElementById('previewHeaderMockup');
+        if (actualHeader && mockupHeader) {
+            mockupHeader.style.background = actualHeader.style.background;
+            mockupHeader.style.backgroundImage = actualHeader.style.backgroundImage;
+            mockupHeader.style.backgroundSize = 'cover';
+            mockupHeader.style.backgroundPosition = 'center';
+        }
     },
 
     close: function () {
         const modal = document.getElementById('personalizeModal');
         if (modal) modal.style.display = 'none';
+    },
+
+    backToMain: function () {
+        const modal = document.getElementById('personalizeModal');
+        if (modal) {
+            const content = modal.querySelector('.p-modal-content');
+            if (content) {
+                content.style.width = '440px';
+                // Reset to default on back
+            }
+        }
+        document.getElementById('sideBySideContainer').style.display = 'none';
+
+        // Reset Banner Picker View state
+        const controls = document.getElementById('bannerPickerControls');
+        const cropView = document.getElementById('bannerCropView');
+        const picker = document.getElementById('bannerPicker');
+        if (controls) controls.style.display = 'flex';
+        if (cropView) cropView.style.display = 'none';
+        if (picker) picker.style.flex = '0 0 400px';
+
+        if (this.cropper) {
+            this.cropper.destroy();
+            this.cropper = null;
+        }
+
+        const sideContainer = document.getElementById('sideBySideContainer');
+        if (sideContainer) sideContainer.style.height = '600px';
+
+        const mainView = document.querySelector('.p-modal-main-view');
+        if (mainView) mainView.style.display = 'flex';
     },
 
     select: function (option) {
@@ -605,56 +729,360 @@ window.ProfilePersonalizer = {
             const currentImg = document.querySelector('#profileAvatar img')?.src;
             window.AvatarManager.open(currentImg);
         } else if (option === 'banner') {
+            // Check Plan (Parallel with open)
+            this.checkPlan();
+
+            const modal = document.getElementById('personalizeModal');
+            if (modal) {
+                const content = modal.querySelector('.p-modal-content');
+                if (content) {
+                    content.style.width = '1000px'; // Wide for panoramic
+                    content.style.transition = 'width 0.4s cubic-bezier(0.4, 0, 0.2, 1)';
+                    // 🔥 Trigger layout recalculation
+                    setTimeout(() => window.dispatchEvent(new Event('resize')), 100);
+                }
+            }
+
             const mainView = document.querySelector('.p-modal-main-view');
             if (mainView) mainView.style.display = 'none';
-            document.getElementById('bannerPicker').style.display = 'block';
+            document.getElementById('sideBySideContainer').style.display = 'flex';
 
-            // AUTO-HIGHLIGHT: Mark the current banner as selected
-            const currentBanner = window.currentUserProfile?.banner_url;
-            if (currentBanner) {
-                document.querySelectorAll('#bannerPicker [onclick^="ProfilePersonalizer.applyBanner"]').forEach(el => {
-                    const onclickAttr = el.getAttribute('onclick');
-                    if (onclickAttr && onclickAttr.includes(currentBanner)) {
-                        el.style.borderColor = '#fff';
-                    } else {
-                        el.style.borderColor = 'transparent';
-                    }
-                });
+            // 🔥 Unified Preview Sync
+            if (window.currentUserProfile) {
+                this.syncMockupData(window.currentUserProfile);
             }
+        }
+
+        // AUTO-HIGHLIGHT: Mark the current banner as selected
+        const currentBanner = window.currentUserProfile?.banner_url;
+        if (currentBanner) {
+            document.querySelectorAll('.banner-option').forEach(el => {
+                const onclickAttr = el.getAttribute('onclick');
+                if (onclickAttr && onclickAttr.includes(currentBanner)) {
+                    el.classList.add('active');
+                    el.style.borderColor = '#fff';
+                } else {
+                    el.classList.remove('active');
+                    el.style.borderColor = 'transparent';
+                }
+            });
         }
     },
 
     applyBanner: function (style) {
+        if (style.startsWith('gif:') && !this.isPro) {
+            window.location.href = '/cuenta/planes.html';
+            return;
+        }
         this.selectedBanner = style;
         const [type, value] = style.split(':');
-        const header = document.querySelector('.profile-header');
-        if (header) {
-            header.style.background = value;
-        }
 
-        // Highlight selected in real-time
-        document.querySelectorAll('#bannerPicker [onclick^="ProfilePersonalizer.applyBanner"]').forEach(el => {
+        const header = document.querySelector('.profile-header');
+        if (header) header.style.background = value;
+
+        const previewHeader = document.getElementById('previewHeaderMockup');
+        if (previewHeader) previewHeader.style.background = value;
+
+        document.querySelectorAll('.banner-option').forEach(el => {
             const onclickAttr = el.getAttribute('onclick');
             if (onclickAttr && onclickAttr.includes(style)) {
+                el.classList.add('active');
                 el.style.borderColor = '#fff';
             } else {
+                el.classList.remove('active');
                 el.style.borderColor = 'transparent';
             }
         });
 
-        // REAL-TIME DYNAMIC THEME: Update body bath immediately if active
         const isDynamicActive = document.getElementById('dynamicThemeToggle')?.checked || false;
         if (isDynamicActive && typeof applyDynamicThemeEffects === 'function') {
             applyDynamicThemeEffects(style, true);
         }
+
+        if (!style.startsWith('gif:')) {
+            this.saveBanner();
+        }
+    },
+
+    triggerCustomBanner: function (isGif) {
+        if (isGif && !this.isPro) {
+            window.location.href = '/cuenta/planes.html';
+            return;
+        }
+        this.isUploadingGif = !!isGif;
+        document.getElementById('bannerCustomInput')?.click();
+    },
+
+    resetCrop: function () {
+        if (this.cropper) {
+            this.cropper.reset();
+            // Optional: ensuring it fills the width perfectly
+            this.cropper.setCropBoxData({
+                left: 0,
+                width: this.cropper.getContainerData().width
+            });
+        }
+    },
+
+    handleCustomBanner: function (e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        if (file.size > 30 * 1024 * 1024) {
+            if (window.showToast) window.showToast("El archivo es muy pesado (máx 30MB).", "error");
+            return;
+        }
+
+        const validExtensions = ['jpg', 'jpeg', 'png', 'jfif'];
+        const fileExt = file.name.split('.').pop().toLowerCase();
+
+        if (this.isUploadingGif) {
+            if (fileExt !== 'gif' && file.type !== 'image/gif') {
+                if (window.showToast) window.showToast("Solo se aceptan archivos GIF para banners animados.", "error");
+                e.target.value = '';
+                return;
+            }
+        } else {
+            if (!validExtensions.includes(fileExt)) {
+                if (window.showToast) window.showToast("Solo se aceptan formatos JPG, PNG y JFIF.", "error");
+                e.target.value = ''; // Reset input
+                return;
+            }
+        }
+
+        this.customFile = file;
+
+        const controls = document.getElementById('bannerPickerControls');
+        const cropView = document.getElementById('bannerCropView');
+        const picker = document.getElementById('bannerPicker');
+        const preview = document.getElementById('panoramicPreview');
+        const modalContainer = document.querySelector('#personalizeModal .p-modal-content');
+
+        if (controls) controls.style.display = 'none';
+        if (cropView) cropView.style.display = 'flex';
+
+        if (picker) picker.style.flex = '1';
+        if (preview) preview.style.display = 'none';
+
+        if (modalContainer) {
+            modalContainer.style.width = '1000px'; // Standardized wide width
+            modalContainer.style.transition = 'width 0.4s cubic-bezier(0.4, 0, 0.2, 1)';
+            // 🔥 Force recalculation to avoid clipping reported by user
+            setTimeout(() => window.dispatchEvent(new Event('resize')), 100);
+        }
+
+        const sideContainer = document.getElementById('sideBySideContainer');
+        if (sideContainer) {
+            // 🔥 LOCK HEIGHT: Use a fixed height during crop to prevent "jumping"
+            sideContainer.style.height = '600px';
+            sideContainer.style.overflow = 'hidden';
+        }
+
+        if (picker) {
+            picker.style.padding = '32px';
+        }
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            const img = document.getElementById('bannerCropImg');
+            img.src = event.target.result;
+
+            if (this.cropper) {
+                this.cropper.destroy();
+            }
+
+            this.cropper = new Cropper(img, {
+                aspectRatio: 1500 / 380,
+                viewMode: 3, // 3 = Canvas should always fill the container. Best for banners.
+                dragMode: 'move', // Allow moving image instead of box
+                autoCropArea: 1, // Start with maximum area
+                responsive: true,
+                restore: false,
+                guides: true,
+                center: true,
+                highlight: false,
+                cropBoxMovable: false, // Lock box since image covers everything
+                cropBoxResizable: false, // Lock box for consistency
+                toggleDragModeOnDblclick: false,
+                background: false,
+                checkOrientation: true,
+                zoomOnWheel: true,
+                ready: function () {
+                    // 🔥 FORCE RECTANGULAR CROP
+                    const viewBox = document.querySelector('#bannerCropView .cropper-view-box');
+                    const face = document.querySelector('#bannerCropView .cropper-face');
+                    if (viewBox) viewBox.style.borderRadius = '0';
+                    if (face) face.style.borderRadius = '0';
+                }
+            });
+        };
+        reader.readAsDataURL(file);
+    },
+
+    confirmCrop: async function () {
+        if (!this.cropper) return;
+
+        const confirmBtn = document.getElementById('bannerConfirmBtn');
+        const cancelBtn = document.getElementById('bannerCancelBtn');
+        const closeBtn = document.getElementById('p-modal-close-btn');
+
+        if (confirmBtn) {
+            confirmBtn.disabled = true;
+            confirmBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="width: 1em; height: 1em; border-width: 2px; margin-right: 8px; display: inline-block; vertical-align: middle; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: spinner-border .75s linear infinite;"></span> Guardando...';
+
+            if (!document.getElementById('spinner-style-inline')) {
+                const style = document.createElement('style');
+                style.id = 'spinner-style-inline';
+                style.textContent = `@keyframes spinner-border {to{transform:rotate(360deg)}}`;
+                document.head.appendChild(style);
+            }
+        }
+
+        // 🔥 LOCK UI: Disable cancel and close buttons
+        if (cancelBtn) cancelBtn.disabled = true;
+        if (closeBtn) closeBtn.style.visibility = 'hidden';
+
+        // 🔥 LOCK CROPPER: Disable interaction while uploading
+        if (this.cropper) {
+            this.cropper.disable();
+        }
+
+        try {
+            // Auto-Save upon confirmation
+            // saveBanner handles the reload on success.
+            await this.saveBanner();
+
+            // If success, saveBanner triggers reload. We stay blocked.
+
+        } catch (e) {
+            console.error(e);
+            // 🔥 UNLOCK UI: If error, allow user to try again or cancel
+            if (confirmBtn) {
+                confirmBtn.disabled = false;
+                confirmBtn.innerHTML = 'Confirmar';
+            }
+            if (cancelBtn) cancelBtn.disabled = false;
+            if (closeBtn) closeBtn.style.visibility = 'visible';
+
+            // 🔥 RE-ENABLE CROPPER
+            if (this.cropper) {
+                this.cropper.enable();
+            }
+
+            if (window.showToast) window.showToast("Error al guardar.", "error");
+        }
+    },
+
+    cancelCrop: function () {
+        if (this.cropper) {
+            this.cropper.destroy();
+            this.cropper = null;
+        }
+        this.customFile = null;
+        document.getElementById('bannerCropView').style.display = 'none';
+        document.getElementById('bannerPickerControls').style.display = 'flex';
+        document.getElementById('bannerCustomInput').value = '';
+
+        // 🔥 Restore Modal UI
+        const picker = document.getElementById('bannerPicker');
+        const preview = document.getElementById('panoramicPreview');
+        const sideContainer = document.getElementById('sideBySideContainer');
+        const modalContent = document.querySelector('#personalizeModal .p-modal-content');
+
+        if (picker) {
+            picker.style.flex = '0 0 400px';
+            picker.style.padding = '32px'; // Restore original padding
+        }
+        if (preview) preview.style.display = 'flex';
+        if (sideContainer) sideContainer.style.height = '600px'; // Restore original height
+
+        if (modalContent) {
+            modalContent.style.width = '1000px'; // Side-by-side wide
+            setTimeout(() => window.dispatchEvent(new Event('resize')), 100);
+        }
+    },
+
+    checkPlan: async function () {
+        try {
+            const { data: profile } = await window.supabaseClient
+                .from('profiles')
+                .select('plan')
+                .eq('id', window.currentUserId)
+                .maybeSingle();
+            this.isPro = profile?.plan === 'pro';
+        } catch (e) {
+            this.isPro = false;
+        }
     },
 
     saveBanner: async function () {
-        // We use selectedBanner if changed, otherwise stick with existing
-        const bannerToSave = this.selectedBanner || window.currentUserProfile?.banner_url;
+        const bannerVal = this.selectedBanner || window.currentUserProfile?.banner_url;
+        const isCustom = !!this.customFile;
+        const isCustomGif = this.customFile?.type === 'image/gif';
+        const isPresetGif = bannerVal?.startsWith('gif:');
+
+        // 🔥 Gating: Only GIFs are Pro. Static images/colors/gradients are Free.
+        if ((isCustomGif || isPresetGif) && !this.isPro) {
+            if (window.showToast) window.showToast("Esta función es exclusiva para usuarios PRO.", "info");
+            setTimeout(() => window.location.href = '/cuenta/planes.html', 1500);
+            return;
+        }
+
         const isDynamicActive = document.getElementById('dynamicThemeToggle')?.checked || false;
 
         try {
+            if (window.showToast) window.showToast("Guardando cambios...", "info");
+
+            let finalBannerUrl = bannerVal;
+
+            // 🔥 Handle Custom Upload via Cloudinary (Optimized: Send Cropped Base64)
+            if (this.customFile) {
+                let uploadPayload = null;
+                let isGif = this.customFile.type === 'image/gif';
+
+                // 🔥 UPLOAD VIA FORMDATA (MULTIPART)
+                // This is much more stable than Base64/JSON for large images.
+                const formData = new FormData();
+
+                if (isGif) {
+                    formData.append('imageFile', this.customFile);
+                } else if (this.cropper) {
+                    const blob = await new Promise(resolve => {
+                        this.cropper.getCroppedCanvas({
+                            width: 1500, // Real 1:1 width
+                            height: 380, // Real 1:1 height
+                            imageSmoothingEnabled: true,
+                            imageSmoothingQuality: 'high'
+                        }).toBlob(resolve, 'image/jpeg', 0.85); // High quality blob
+                    });
+                    formData.append('imageFile', blob, 'banner.jpg');
+                }
+
+                if (isGif === undefined) isGif = false;
+
+                formData.append('isGif', isGif);
+                formData.append('fileSize', this.customFile.size);
+
+                const { data: { session }, error: sessionError } = await window.supabaseClient.auth.getSession();
+
+                if (sessionError || !session) {
+                    throw new Error("Tu sesión ha expirado. Por favor recarga la página.");
+                }
+
+                const res = await fetch('/api/cloudinary/banner', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${session.access_token}`
+                        // Browser automatically sets multi-part header with boundary
+                    },
+                    body: formData
+                });
+
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || "Error al subir banner");
+                finalBannerUrl = `url:${data.url}`;
+            }
+
             // Get Current Socials to avoid wiping them
             const { data: uData } = await window.supabaseClient
                 .from('users')
@@ -668,7 +1096,7 @@ window.ProfilePersonalizer = {
             const { error } = await window.supabaseClient
                 .from('users')
                 .update({
-                    banner_url: bannerToSave,
+                    banner_url: finalBannerUrl,
                     socials: socials
                 })
                 .eq('id', window.currentUserId);
@@ -676,10 +1104,32 @@ window.ProfilePersonalizer = {
             if (error) throw error;
 
             if (window.showToast) window.showToast("Personalización guardada.", "success");
-            this.close();
+
+            // 🔥 OPTIMISTIC UI UPDATE: Update the actual profile banner immediately so it feels instant
+            const header = document.querySelector('.profile-header');
+            if (header && finalBannerUrl) {
+                if (finalBannerUrl.startsWith('url:')) {
+                    const cleanUrl = finalBannerUrl.replace('url:', '');
+                    header.style.background = `url('${cleanUrl}') center/cover no-repeat`;
+                } else if (finalBannerUrl.startsWith('solid:')) {
+                    header.style.background = finalBannerUrl.replace('solid:', '');
+                } else if (finalBannerUrl.startsWith('gradient:')) {
+                    header.style.background = finalBannerUrl.replace('gradient:', '');
+                } else if (finalBannerUrl.startsWith('gif:')) {
+                    const cleanGif = finalBannerUrl.replace('gif:', '');
+                    header.style.background = `url('${cleanGif}') center/cover no-repeat`;
+                }
+            }
+
+            // Update local state and UI
+            if (window.currentUserProfile) window.currentUserProfile.banner_url = finalBannerUrl;
+
+            // Reload page faster (300ms is enough to see the change and toast)
+            setTimeout(() => window.location.reload(), 300);
+
         } catch (err) {
             console.error("Error saving personalization:", err);
-            if (window.showToast) window.showToast("Error al guardar.", "error");
+            throw err;
         }
     },
 

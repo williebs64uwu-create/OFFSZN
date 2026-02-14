@@ -1091,6 +1091,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     const logoutBtn = getEl('navbar-logout-btn');
     if (logoutBtn) logoutBtn.addEventListener('click', window.handleLogout);
 
+    // Global Avatar Tooltip (Ensure all user-triggers have the "Perfil" label)
+    document.querySelectorAll('.user-trigger').forEach(el => {
+        if (!el.hasAttribute('data-label')) {
+            el.setAttribute('data-label', 'Perfil');
+        }
+    });
+
     // Initialize Mobile Menu
     setupMobileMenu();
 });

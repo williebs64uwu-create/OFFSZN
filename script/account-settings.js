@@ -4,7 +4,9 @@ let currentProfileData = null;
 let cropper = null; // Store cropper instance
 
 document.addEventListener("DOMContentLoaded", async () => {
-    // 1. Initial State Check
+    // 1. Inject Skeletons IMMEDIATELY
+    injectSkeletons();
+
     // Use the global client initialized by auth-utils.js
     if (!window.supabaseClient) {
         console.error("Critical: Global Supabase not found in account-settings.js. Ensure auth-utils.js is loaded.");
@@ -20,13 +22,25 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     currentUser = session.user;
 
-    // 2. Load User Data
-    await loadUserData();
+    // 2. Start Minimum Wait Timer (2s)
+    const timerPromise = new Promise(resolve => setTimeout(resolve, 2000));
 
-    // 3. Setup Listeners
-    setupFormListeners();
+    // 3. Start Data Fetching
+    const fetchPromise = loadUserData();
 
-    // 4. Shared AvatarManager is initialized globally
+    // 4. Wait for BOTH (Timer + Data) to finish
+    try {
+        await Promise.all([timerPromise, fetchPromise]);
+    } catch (err) {
+        console.error("Error during parallel load:", err);
+    } finally {
+        // 5. Render and Reveal Everything Simultaneously
+        renderUserData();
+        removeSkeletons();
+
+        // 6. Setup Listeners
+        setupFormListeners();
+    }
 });
 
 async function loadUserData() {
@@ -39,13 +53,24 @@ async function loadUserData() {
 
         if (error) throw error;
         currentProfileData = data;
+    } catch (err) {
+        console.error("Error loading profile:", err);
+    }
+}
 
-        // POPULATE SIDEBAR
-        document.getElementById('sidebarName').textContent = data.nickname || (data.first_name ? `${data.first_name} ${data.last_name || ''}` : 'Usuario');
-        document.getElementById('sidebarRole').textContent = data.role || 'Sin rol';
+function renderUserData() {
+    if (!currentProfileData) return;
+    const data = currentProfileData;
 
-        // Handle Sidebar Avatar
-        const sidebarAvatar = document.getElementById('sidebarAvatar');
+    // POPULATE SIDEBAR
+    const sidebarName = document.getElementById('sidebarName');
+    const sidebarRole = document.getElementById('sidebarRole');
+    const sidebarAvatar = document.getElementById('sidebarAvatar');
+
+    if (sidebarName) sidebarName.textContent = data.nickname || (data.first_name ? `${data.first_name} ${data.last_name || ''}` : 'Usuario');
+    if (sidebarRole) sidebarRole.textContent = data.role || 'Sin rol';
+
+    if (sidebarAvatar) {
         if (data.avatar_url) {
             sidebarAvatar.innerHTML = `<img src="${data.avatar_url}" alt="Avatar">`;
             sidebarAvatar.classList.add('has-image');
@@ -53,78 +78,111 @@ async function loadUserData() {
             sidebarAvatar.innerHTML = (data.nickname || data.email || 'U').charAt(0).toUpperCase();
             sidebarAvatar.classList.remove('has-image');
         }
-
-        const fName = document.getElementById('firstName');
-        if (fName) fName.value = data.first_name || '';
-
-        const lName = document.getElementById('lastName');
-        if (lName) lName.value = data.last_name || '';
-
-        const nick = document.getElementById('nickname');
-        if (nick) nick.value = data.nickname || '';
-
-        const mail = document.getElementById('email');
-        if (mail) mail.value = data.email || ''; // Readonly
-
-        // POPULATE BIO
-        const bioEl = document.getElementById('bio');
-        if (bioEl) {
-            bioEl.value = data.bio || '';
-            const bioCounter = document.getElementById('bioCounter');
-            if (bioCounter) bioCounter.textContent = `${(data.bio || '').length}/500`;
-        }
-
-        // Handle Form Avatar
-        const formAvatar = document.getElementById('formAvatar');
-        if (formAvatar) {
-            if (data.avatar_url) {
-                formAvatar.innerHTML = `<img src="${data.avatar_url}" alt="Avatar">`;
-            } else {
-                formAvatar.innerHTML = (data.nickname || data.email || 'U').charAt(0).toUpperCase();
-            }
-        }
-
-        // POPULATE DROPDOWNS (Role & Experience)
-        if (data.role) {
-            setSelectValue('role', data.role);
-        }
-        if (data.experience && data.experience.length > 0) {
-            // Setup robust matching for array or string
-            const expVal = Array.isArray(data.experience) ? data.experience[0] : (data.experience || '');
-            setSelectValue('experience', expVal);
-        }
-
-        // POPULATE SOCIALS (Removed Website)
-        if (data.socials) {
-            const ig = document.getElementById('instagram');
-            if (ig) ig.value = data.socials.instagram || '';
-            const tk = document.getElementById('tiktok');
-            if (tk) tk.value = data.socials.tiktok || '';
-            const yt = document.getElementById('youtube');
-            if (yt) yt.value = data.socials.youtube || '';
-            const sp = document.getElementById('spotify');
-            if (sp) sp.value = data.socials.spotify || '';
-        }
-
-        // POPULATE DAW & SERVICES (ALIGNED TO SCHEMA)
-        if (data.daws && data.daws.length > 0) {
-            setSelectValue('mostUsedDaw', data.daws[0]);
-        }
-
-        if (data.socials) {
-            const socials = data.socials;
-            const mixEl = document.getElementById('serviceMixing');
-            if (mixEl) mixEl.checked = !!socials.offered_services?.mixing;
-            const mastEl = document.getElementById('serviceMastering');
-            if (mastEl) mastEl.checked = !!socials.offered_services?.mastering;
-
-            const spWork = document.getElementById('spotifyWork');
-            if (spWork) spWork.value = socials.spotify_content || '';
-        }
-
-    } catch (err) {
-        console.error("Error loading profile:", err);
     }
+
+    // POPULATE FORMS
+    const fName = document.getElementById('firstName');
+    if (fName) fName.value = data.first_name || '';
+
+    const lName = document.getElementById('lastName');
+    if (lName) lName.value = data.last_name || '';
+
+    const nick = document.getElementById('nickname');
+    if (nick) nick.value = data.nickname || '';
+
+    const mail = document.getElementById('email');
+    if (mail) mail.value = data.email || '';
+
+    const bioEl = document.getElementById('bio');
+    if (bioEl) {
+        bioEl.value = data.bio || '';
+        const bioCounter = document.getElementById('bioCounter');
+        if (bioCounter) bioCounter.textContent = `${(data.bio || '').length}/500`;
+    }
+
+    const formAvatar = document.getElementById('formAvatar');
+    if (formAvatar) {
+        if (data.avatar_url) {
+            formAvatar.innerHTML = `<img src="${data.avatar_url}" alt="Avatar">`;
+        } else {
+            formAvatar.innerHTML = (data.nickname || data.email || 'U').charAt(0).toUpperCase();
+        }
+    }
+
+    if (data.role) setSelectValue('role', data.role);
+    if (data.experience && data.experience.length > 0) {
+        const expVal = Array.isArray(data.experience) ? data.experience[0] : (data.experience || '');
+        setSelectValue('experience', expVal);
+    }
+
+    if (data.socials) {
+        const socials = data.socials;
+        const ig = document.getElementById('instagram');
+        if (ig) ig.value = socials.instagram || '';
+        const tk = document.getElementById('tiktok');
+        if (tk) tk.value = socials.tiktok || '';
+        const yt = document.getElementById('youtube');
+        if (yt) yt.value = socials.youtube || '';
+        const sp = document.getElementById('spotify');
+        if (sp) sp.value = socials.spotify || '';
+    }
+
+    const offered_services = data.socials?.offered_services || {};
+    const mixing = document.getElementById('serviceMixing');
+    if (mixing) mixing.checked = offered_services.mixing || false;
+    const mastering = document.getElementById('serviceMastering');
+    if (mastering) mastering.checked = offered_services.mastering || false;
+
+    const spotifyWork = document.getElementById('spotifyWork');
+    if (spotifyWork) spotifyWork.value = data.socials?.spotify_content || '';
+
+    if (data.daws && data.daws.length > 0) {
+        setSelectValue('mostUsedDaw', data.daws[0]);
+    }
+}
+
+function injectSkeletons() {
+    // Sidebar
+    const name = document.getElementById('sidebarName');
+    const role = document.getElementById('sidebarRole');
+    const avatar = document.getElementById('sidebarAvatar');
+    if (name) name.classList.add('skeleton-base', 'skeleton-name');
+    if (role) role.classList.add('skeleton-base', 'skeleton-role');
+    if (avatar) avatar.classList.add('skeleton-base', 'skeleton-avatar');
+
+    // Form Fields (Inputs & Selects)
+    document.querySelectorAll('.form-input, .form-select').forEach(el => {
+        el.classList.add('skeleton-base');
+    });
+
+    // Buttons
+    document.querySelectorAll('.btn-primary-sm, .btn-change-avatar').forEach(btn => {
+        btn.classList.add('btn-loading-skeleton');
+    });
+
+    // Form Avatar
+    const formAvatar = document.getElementById('formAvatar');
+    if (formAvatar) formAvatar.classList.add('skeleton-base', 'skeleton-avatar');
+}
+
+function removeSkeletons() {
+    const name = document.getElementById('sidebarName');
+    const role = document.getElementById('sidebarRole');
+    const avatar = document.getElementById('sidebarAvatar');
+    const formAvatar = document.getElementById('formAvatar');
+
+    if (name) name.classList.remove('skeleton-base', 'skeleton-name');
+    if (role) role.classList.remove('skeleton-base', 'skeleton-role');
+    if (avatar) avatar.classList.remove('skeleton-base', 'skeleton-avatar');
+    if (formAvatar) formAvatar.classList.remove('skeleton-base', 'skeleton-avatar');
+
+    document.querySelectorAll('.form-input, .form-select').forEach(el => {
+        el.classList.remove('skeleton-base');
+    });
+
+    document.querySelectorAll('.btn-primary-sm, .btn-change-avatar').forEach(btn => {
+        btn.classList.remove('btn-loading-skeleton');
+    });
 }
 
 // Helper: match select option robustly

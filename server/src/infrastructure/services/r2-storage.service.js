@@ -62,11 +62,12 @@ export const getPresignedDownloadUrl = async (key, expiresIn = 3600) => {
  * Nota: R2 puede requerir un dominio personalizado o configuración específica para accesos públicos directos.
  */
 export const getPublicUrl = (key) => {
-    // Si usas el endpoint de R2 directamente, suele ser https://<bucket>.<account-id>.r2.cloudflarestorage.com/<key>
-    // Pero es mejor usar un subdominio si está configurado.
-    // Como el usuario pidió "Default", construiremos la URL basada en el endpoint.
+    // 🔥 KEY SANITIZATION: Remove leading slashes
+    let cleanKey = key;
+    while (cleanKey.startsWith('/')) cleanKey = cleanKey.substring(1);
+
     const baseUrl = R2_ENDPOINT.replace('https://', `https://${R2_BUCKET_NAME}.`);
-    return `${baseUrl}/${key}`;
+    return `${baseUrl}/${cleanKey}`;
 };
 
 /**

@@ -33,8 +33,15 @@ document.addEventListener('DOMContentLoaded', async () => {
                 .neq('status', 'deleted') // Soft Delete Check
                 .maybeSingle();
 
-            product = data;
-            error = err;
+            // 🔥 COLLISION FIX: If we decoded the ID from a slug, verify it's the RIGHT product!
+            // If the product slug doesn't match the requested slug, it's a collision (e.g. "advantage" -> ID 158)
+            if (data && urlData.slug && data.public_slug && data.public_slug !== urlData.slug) {
+                console.warn(`🚨 [Collision] ID ${urlData.id} found, but slug '${data.public_slug}' mismatch with URL '${urlData.slug}'. Falling back to slug lookup.`);
+                product = null;
+            } else {
+                product = data;
+                error = err;
+            }
         }
 
         // Attempt 2: Slug Lookup (Fallback if ID failed or was invalid/collision)

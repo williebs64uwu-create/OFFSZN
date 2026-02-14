@@ -69,24 +69,24 @@
             animation: skeleton-wave 1.5s infinite;
         }
 
-        @keyframes skeleton-wave {
-            0% {
-                left: -100%;
+
+
+        @media (max-width: 768px) {
+
+            .tx-grid,
+            .skeleton-row {
+                grid-template-columns: 1fr 1fr;
+                gap: 10px;
             }
 
-            100% {
-                left: 200%;
+            .transaction-item {
+                gap: 10px;
+                /* Backup */
             }
-        }
 
-        .mini-skeleton::before {
-            content: "";
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.05);
-            margin-bottom: 8px;
-            flex-shrink: 0;
+            .tr-date {
+                display: none;
+            }
         }
 
         .mini-skeleton-text {
@@ -209,16 +209,22 @@
             margin-top: 20px;
         }
 
-        .transaction-item {
+        /* Shared Grid Layout for Items and Skeletons */
+        .tx-grid {
             display: grid;
             grid-template-columns: 2fr 1fr 1fr 1fr;
             align-items: center;
+            gap: 20px;
+        }
+
+        .transaction-item {
             padding: 16px 20px;
             background: rgba(255, 255, 255, 0.02);
             border: 1px solid rgba(255, 255, 255, 0.05);
             border-radius: 12px;
             transition: all 0.2s ease;
         }
+
 
         .transaction-item:hover {
             background: rgba(255, 255, 255, 0.04);
@@ -511,7 +517,7 @@
                                 <div class="notif-empty" style="text-align: center; color: #fff; padding: 40px 20px;">
                                     <div style="font-size: 2rem; margin-bottom: 16px; color: #666;"><i
                                             class="bi bi-bell"></i></div>
-                                    <h4 style="margin-bottom: 8px; font-size: 0.9rem; font-weight: 500;">Cargando...
+                                    <h4 style="margin-bottom: 8px; font-size: 0.9rem; font-weight: 500;">&nbsp;</h4>
                                     </h4>
                                 </div>
                             </div>
@@ -519,7 +525,8 @@
                     </div>
 
                     <div class="user-dropdown">
-                        <div class="user-trigger" onclick="toggleUserDropdown(event)" style="cursor: pointer;">
+                        <div class="user-trigger" data-label="Perfil" onclick="toggleUserDropdown(event)"
+                            style="cursor: pointer;">
                             <div id="user-avatar-display" class="user-avatar-placeholder">W</div>
                         </div>
                         <div class="user-dropdown-menu" style="width: 380px;">
@@ -635,9 +642,9 @@
         <!-- Sidebar Navigation -->
         <aside class="settings-sidebar">
             <div class="profile-card">
-                <div class="profile-card-avatar" id="sidebarAvatar">W</div>
-                <div class="profile-card-name" id="sidebarName">Cargando...</div>
-                <div class="profile-card-role" id="sidebarRole">Productor</div>
+                <div class="profile-card-avatar" id="sidebarAvatar"></div>
+                <div class="profile-card-name" id="sidebarName"></div>
+                <div class="profile-card-role" id="sidebarRole"></div>
             </div>
 
             <nav class="settings-nav">
@@ -684,7 +691,10 @@
                                         <div id="paypal-status-dot" class="status-dot offline"
                                             style="width: 8px; height: 8px; border-radius: 50%;"></div>
                                         <span id="paypal-status-label"
-                                            style="font-size: 0.85rem; font-weight: 600;">Cargando...</span>
+                                            style="font-size: 0.85rem; font-weight: 600; width: 100px;">
+                                            <div class="skeleton-base skeleton-text" style="height: 12px; margin: 0;">
+                                            </div>
+                                        </span>
                                     </div>
                                 </div>
                             </div>
@@ -693,7 +703,10 @@
                                 <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 4px;">Correo
                                     Vinculado:</div>
                                 <div id="paypal-display-email"
-                                    style="font-size: 0.95rem; font-weight: 600; color: #fff;">---</div>
+                                    style="font-size: 0.95rem; font-weight: 600; color: #fff;">
+                                    <div class="skeleton-base skeleton-text medium"
+                                        style="height: 14px; margin-top: 4px;"></div>
+                                </div>
                             </div>
 
                             <button id="btn-connect-paypal" class="btn-primary-sm" style="min-width: 180px;">
@@ -719,7 +732,7 @@
                         <div style="text-align: center; padding: 40px; color: var(--text-secondary);">
                             <i class="bi bi-clipboard-data"
                                 style="font-size: 3rem; opacity: 0.2; display: block; margin-bottom: 16px;"></i>
-                            <p>Cargando historial de ventas...</p>
+                            <p>&nbsp;</p>
                         </div>
                     </div>
                 </div>

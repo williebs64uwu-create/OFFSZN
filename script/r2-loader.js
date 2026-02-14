@@ -23,6 +23,8 @@
                     !src.startsWith('/images') &&
                     !src.startsWith('/assets') &&
                     !src.startsWith('/icon') &&
+                    !src.startsWith('/banners') &&
+                    !src.startsWith('/fonts') &&
                     src.includes('/') // Must have some folder structure
                 )
             );

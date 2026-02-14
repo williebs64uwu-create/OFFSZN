@@ -727,11 +727,11 @@
 <div id="personalizeModal" class="p-modal"
   style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 9999; backdrop-filter: blur(10px); color: #fff; font-family: 'Plus Jakarta Sans', sans-serif;">
   <div class="p-modal-content"
-    style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 440px; background: #0c0c0c; border: 1px solid #1a1a1a; border-radius: 24px; overflow: hidden; box-shadow: 0 40px 100px rgba(0,0,0,0.9);">
+    style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 440px; background: #0c0c0c; border: 1px solid #1a1a1a; border-radius: 24px; overflow: hidden; box-shadow: 0 40px 100px rgba(0,0,0,0.9); transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);">
     <div class="p-modal-header"
       style="padding: 24px 32px; border-bottom: 1px solid #1a1a1a; display: flex; justify-content: space-between; align-items: center;">
       <h3 style="margin: 0; font-size: 1.25rem; font-weight: 800; letter-spacing: -0.5px;">Personalizar Perfil</h3>
-      <button onclick="ProfilePersonalizer.close()"
+      <button id="p-modal-close-btn" onclick="ProfilePersonalizer.close()"
         style="background: #1a1a1a; border: none; color: #fff; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; font-size: 1.2rem;"
         onmouseover="this.style.background='#333'" onmouseout="this.style.background='#1a1a1a'">&times;</button>
     </div>
@@ -768,6 +768,9 @@
         <i class="bi bi-chevron-right" style="color: #444; font-size: 1.1rem;"></i>
       </div>
 
+      <input type="file" id="bannerCustomInput" style="display: none;" accept=".jpg,.jpeg,.png,.jfif"
+        onchange="ProfilePersonalizer.handleCustomBanner(event)">
+
       <!-- Option: Dynamic Theme Toggle -->
       <div
         style="padding: 24px; background: #141414; border: 1px solid #1a1a1a; border-radius: 16px; display: flex; align-items: center; gap: 20px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);">
@@ -788,66 +791,496 @@
       </div>
     </div>
 
-    <!-- Banner Color Picker Sub-View (Hidden by default) -->
-    <div id="bannerPicker" style="display: none; padding: 32px; background: #080808; border-top: 1px solid #1a1a1a;">
-      <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 24px;">
-        <button onclick="ProfilePersonalizer.open()"
-          style="background: #1a1a1a; border: none; color: #fff; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s;">
-          <i class="bi bi-arrow-left"></i>
-        </button>
+    <!-- Container for Side-by-Side View -->
+    <div id="sideBySideContainer" style="display: none; flex-direction: row; height: 600px;">
+      <!-- LEFT: Color Selection (Controls) -->
+      <div id="bannerPicker"
+        style="flex: 0 0 400px; padding: 32px; background: #080808; border-right: 1px solid #1a1a1a; display: flex; flex-direction: column; transition: padding 0.3s cubic-bezier(0.4, 0, 0.2, 1);">
+
+        <!-- View: Banner Cropping (PRO) - Replaces bannerPicker during crop -->
+        <div id="bannerCropView" style="display: none; flex-direction: column; gap: 24px;">
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <h3 style="margin: 0; font-size: 1.2rem; font-weight: 800; color: #fff;">Recortar Banner</h3>
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <button onclick="ProfilePersonalizer.resetCrop()"
+                style="background: transparent; border: 1px solid #333; color: #888; font-size: 0.7rem; font-weight: 700; padding: 4px 10px; border-radius: 6px; cursor: pointer; transition: all 0.2s;"
+                onmouseover="this.style.borderColor='#a855f7'; this.style.color='#a855f7'"
+                onmouseout="this.style.borderColor='#333'; this.style.color='#888'">
+                Reiniciar
+              </button>
+              <span
+                style="background: #a855f7; color: #fff; font-size: 0.7rem; font-weight: 700; padding: 4px 10px; border-radius: 6px;">1500x380</span>
+            </div>
+          </div>
+
+          <div id="bannerCropContainer"
+            style="position: relative; width: 100%; height: 400px; background: #000; border-radius: 12px; overflow: hidden; border: 1px solid #333; display: flex; align-items: center; justify-content: center;">
+            <img id="bannerCropImg" src="" style="max-width: 100%; max-height: 100%; display: block;">
+          </div>
+
+          <div style="display: flex; gap: 16px; margin-top: 32px; padding-bottom: 32px;">
+            <button id="bannerCancelBtn" onclick="ProfilePersonalizer.cancelCrop()"
+              onmouseover="this.style.background='rgba(255,255,255,0.1)'; this.style.color='#fff'; this.style.borderColor='rgba(255,255,255,0.2)'"
+              onmouseout="this.style.background='rgba(255,255,255,0.05)'; this.style.color='#888'; this.style.borderColor='rgba(255,255,255,0.1)'"
+              style="flex: 1; padding: 14px; background: rgba(255,255,255,0.05); color: #888; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s;">
+              Cancelar
+            </button>
+            <button id="bannerConfirmBtn" onclick="ProfilePersonalizer.confirmCrop()"
+              onmouseover="this.style.background='#f0f0f0'; this.style.transform='translateY(-1px)'"
+              onmouseout="this.style.background='#fff'; this.style.transform='translateY(0)'"
+              style="flex: 1; padding: 14px; background: #fff; color: #000 !important; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; font-size: 0.9rem;">
+              Confirmar
+            </button>
+          </div>
+        </div>
+
+        <div id="bannerPickerControls" style="display: flex; flex-direction: column; flex: 1; overflow-y: auto;">
+          <style>
+            .custom-scrollbar::-webkit-scrollbar {
+              width: 4px;
+            }
+
+            .custom-scrollbar::-webkit-scrollbar-track {
+              background: transparent;
+            }
+
+            .custom-scrollbar::-webkit-scrollbar-thumb {
+              background: #333;
+              border-radius: 10px;
+            }
+
+            .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+              background: #444;
+            }
+
+            .banner-option {
+              position: relative;
+              aspect-ratio: 1;
+              border-radius: 10px;
+              cursor: pointer;
+              border: 2px solid transparent;
+              transition: transform 0.2s;
+            }
+
+            .banner-option:hover {
+              transform: scale(1.1) !important;
+              filter: brightness(1.1);
+              z-index: 2;
+            }
+
+            .banner-option.active::after {
+              content: '\F26E';
+              font-family: 'bootstrap-icons';
+              position: absolute;
+              top: 50%;
+              left: 50%;
+              transform: translate(-50%, -50%);
+              background: rgba(16, 185, 129, 0.9);
+              color: white;
+              width: 24px;
+              height: 24px;
+              border-radius: 50%;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              font-size: 0.8rem;
+              box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+            }
+
+            .color-section-title {
+              font-size: 0.65rem;
+              color: #555;
+              font-weight: 800;
+              text-transform: uppercase;
+              letter-spacing: 1px;
+              margin-bottom: 12px;
+              display: flex;
+              align-items: center;
+              gap: 8px;
+            }
+
+            .color-section-line {
+              flex: 1;
+              height: 1px;
+              background: #1a1a1a;
+            }
+
+            .color-grid {
+              display: grid;
+              grid-template-columns: repeat(4, 1fr);
+              gap: 10px;
+              margin-bottom: 24px;
+            }
+          </style>
+
+          <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 24px;">
+            <button onclick="ProfilePersonalizer.backToMain()"
+              style="background: #1a1a1a; border: none; color: #fff; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s;">
+              <i class="bi bi-arrow-left"></i>
+            </button>
+            <div
+              style="font-size: 0.75rem; color: #888; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px;">
+              Estilos Disponibles</div>
+          </div>
+
+          <!-- NEW: Unified Custom Upload Section -->
+          <div style="display: flex; gap: 12px; margin-bottom: 32px;">
+            <button onclick="ProfilePersonalizer.triggerCustomBanner(false)"
+              style="flex: 1; padding: 14px; background: #141414; border: 1px solid #1a1a1a; border-radius: 12px; color: #fff; font-weight: 700; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s;"
+              onmouseover="this.style.background='#1a1a1a'; this.style.borderColor='#333'"
+              onmouseout="this.style.background='#141414'; this.style.borderColor='#1a1a1a'">
+              <i class="bi bi-image" style="color: #3b82f6;"></i> Subir Foto
+            </button>
+            <button onclick="ProfilePersonalizer.triggerCustomBanner(true)"
+              style="flex: 1; padding: 14px; background: #141414; border: 1px solid #1a1a1a; border-radius: 12px; color: #fff; font-weight: 700; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s; border-left: 3px solid #3b82f6;"
+              onmouseover="this.style.background='#1a1a1a'; this.style.borderColor='#333'"
+              onmouseout="this.style.background='#141414'; this.style.borderColor='#1a1a1a'">
+              <i class="bi bi-filetype-gif" style="color: #3b82f6;"></i> Subir GIF <span
+                style="font-size: 0.6rem; background: #3b82f6; padding: 1px 4px; border-radius: 3px;">PRO</span>
+            </button>
+          </div>
+
+          <div style="flex: 1; overflow-y: auto; padding-right: 8px;" class="custom-scrollbar"
+            id="colorScrollContainer">
+            <!-- CATEGORY: OFFSZN PURPLES -->
+            <div class="color-section-title"><span>Púrpura & Violeta</span>
+              <div class="color-section-line"></div>
+            </div>
+            <div class="color-grid">
+              <div onclick="ProfilePersonalizer.applyBanner('solid:#8b5cf6')" style="background: #8b5cf6;"
+                class="banner-option" title="Electric Purple"></div>
+              <div onclick="ProfilePersonalizer.applyBanner('solid:#7c3aed')" style="background: #7c3aed;"
+                class="banner-option" title="Violet High"></div>
+              <div onclick="ProfilePersonalizer.applyBanner('solid:#6d28d9')" style="background: #6d28d9;"
+                class="banner-option" title="Royal Purple"></div>
+              <div onclick="ProfilePersonalizer.applyBanner('solid:#5b21b6')" style="background: #5b21b6;"
+                class="banner-option" title="Deep Violet"></div>
+              <div onclick="ProfilePersonalizer.applyBanner('solid:#a855f7')" style="background: #a855f7;"
+                class="banner-option" title="Orchid neón"></div>
+              <div onclick="ProfilePersonalizer.applyBanner('solid:#c084fc')" style="background: #c084fc;"
+                class="banner-option" title="Light Purple"></div>
+              <div onclick="ProfilePersonalizer.applyBanner('solid:#4c1d95')" style="background: #4c1d95;"
+                class="banner-option" title="Midnight Purple"></div>
+              <div onclick="ProfilePersonalizer.applyBanner('solid:#2e1065')" style="background: #2e1065;"
+                class="banner-option" title="Abyss Purple"></div>
+              <div onclick="ProfilePersonalizer.applyBanner('solid:#818cf8')" style="background: #818cf8;"
+                class="banner-option" title="Soft Violet"></div>
+              <div onclick="ProfilePersonalizer.applyBanner('solid:#6366f1')" style="background: #6366f1;"
+                class="banner-option" title="Indigo Pop"></div>
+              <div onclick="ProfilePersonalizer.applyBanner('solid:#4338ca')" style="background: #4338ca;"
+                class="banner-option" title="Classic Indigo"></div>
+              <div onclick="ProfilePersonalizer.applyBanner('solid:#3730a3')" style="background: #3730a3;"
+                class="banner-option" title="Deep Indigo"></div>
+            </div>
+
+            <!-- CATEGORY: MIDNIGHT & MINIMAL -->
+            <div class="color-section-title"><span>Oscuros & Minimalistas</span>
+              <div class="color-section-line"></div>
+            </div>
+            <div class="color-grid">
+              <div onclick="ProfilePersonalizer.applyBanner('solid:#000000')"
+                style="background: #000000; border: 1px solid #222;" class="banner-option" title="Pure Black"></div>
+              <div onclick="ProfilePersonalizer.applyBanner('solid:#0a0a0a')"
+                style="background: #0a0a0a; border: 1px solid #222;" class="banner-option" title="Off Black"></div>
+              <div onclick="ProfilePersonalizer.applyBanner('solid:#111111')"
+                style="background: #111111; border: 1px solid #222;" class="banner-option" title="Deep Grey"></div>
+              <div onclick="ProfilePersonalizer.applyBanner('solid:#171717')" style="background: #171717;"
+                class="banner-option" title="Neutral Dark"></div>
+              <div onclick="ProfilePersonalizer.applyBanner('solid:#1c1c1e')" style="background: #1c1c1e;"
+                class="banner-option" title="Space Grey"></div>
+              <div onclick="ProfilePersonalizer.applyBanner('solid:#262626')" style="background: #262626;"
+                class="banner-option" title="Carbon"></div>
+              <div onclick="ProfilePersonalizer.applyBanner('solid:#1e293b')" style="background: #1e293b;"
+                class="banner-option" title="Navy Dark"></div>
+              <div onclick="ProfilePersonalizer.applyBanner('solid:#064e3b')" style="background: #064e3b;"
+                class="banner-option" title="Emerald Dark"></div>
+            </div>
+
+            <!-- CATEGORY: PREMIUM GRADIENTS -->
+            <div class="color-section-title"><span>Gradientes Premium</span>
+              <div class="color-section-line"></div>
+            </div>
+            <div class="color-grid">
+              <div
+                onclick="ProfilePersonalizer.applyBanner('gradient:linear-gradient(135deg, #8b5cf6 0%, #d946ef 100%)')"
+                style="background: linear-gradient(135deg, #8b5cf6 0%, #d946ef 100%);" class="banner-option"
+                title="Cosmic"></div>
+              <div
+                onclick="ProfilePersonalizer.applyBanner('gradient:linear-gradient(135deg, #00d3de 0%, #8b5cf6 100%)')"
+                style="background: linear-gradient(135deg, #00d3de 0%, #8b5cf6 100%);" class="banner-option"
+                title="Aqua Violet"></div>
+              <div
+                onclick="ProfilePersonalizer.applyBanner('gradient:linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)')"
+                style="background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);" class="banner-option"
+                title="Sunset"></div>
+              <div
+                onclick="ProfilePersonalizer.applyBanner('gradient:linear-gradient(135deg, #10b981 0%, #3b82f6 100%)')"
+                style="background: linear-gradient(135deg, #10b981 0%, #3b82f6 100%);" class="banner-option"
+                title="Aurora"></div>
+              <div
+                onclick="ProfilePersonalizer.applyBanner('gradient:linear-gradient(45deg, #ff00cc 0%, #3333ff 100%)')"
+                style="background: linear-gradient(45deg, #ff00cc 0%, #3333ff 100%);" class="banner-option"
+                title="Hyper Drive"></div>
+              <div
+                onclick="ProfilePersonalizer.applyBanner('gradient:linear-gradient(to right, #6a11cb 0%, #2575fc 100%)')"
+                style="background: linear-gradient(to right, #6a11cb 0%, #2575fc 100%);" class="banner-option"
+                title="Blue Ocean"></div>
+              <div
+                onclick="ProfilePersonalizer.applyBanner('gradient:linear-gradient(135deg, #ee0979 0%, #ff6a00 100%)')"
+                style="background: linear-gradient(135deg, #ee0979 0%, #ff6a00 100%);" class="banner-option"
+                title="Fire">
+              </div>
+              <div onclick="ProfilePersonalizer.applyBanner('gradient:linear-gradient(135deg, #111 0%, #444 100%)')"
+                style="background: linear-gradient(135deg, #111 0%, #444 100%);" class="banner-option"
+                title="Steel Flow">
+              </div>
+            </div>
+
+            <!-- CATEGORY: VIBRANT COLORS -->
+            <div class="color-section-title"><span>Vibrantes & Neón</span>
+              <div class="color-section-line"></div>
+            </div>
+            <div class="color-grid">
+              <div onclick="ProfilePersonalizer.applyBanner('solid:#6366f1')" style="background: #6366f1;"
+                class="banner-option" title="Indigo"></div>
+              <div onclick="ProfilePersonalizer.applyBanner('solid:#3b82f6')" style="background: #3b82f6;"
+                class="banner-option" title="Blue Ray"></div>
+              <div onclick="ProfilePersonalizer.applyBanner('solid:#0ea5e9')" style="background: #0ea5e9;"
+                class="banner-option" title="Sky Blue"></div>
+              <div onclick="ProfilePersonalizer.applyBanner('solid:#10b981')" style="background: #10b981;"
+                class="banner-option" title="Neon Green"></div>
+              <div onclick="ProfilePersonalizer.applyBanner('solid:#f59e0b')" style="background: #f59e0b;"
+                class="banner-option" title="Amber"></div>
+              <div onclick="ProfilePersonalizer.applyBanner('solid:#f97316')" style="background: #f97316;"
+                class="banner-option" title="Orange"></div>
+              <div onclick="ProfilePersonalizer.applyBanner('solid:#ef4444')" style="background: #ef4444;"
+                class="banner-option" title="Pure Red"></div>
+              <div onclick="ProfilePersonalizer.applyBanner('solid:#ec4899')" style="background: #ec4899;"
+                class="banner-option" title="Pink Pop"></div>
+              <div onclick="ProfilePersonalizer.applyBanner('solid:#06b6d4')" style="background: #06b6d4;"
+                class="banner-option" title="Cyan Neon"></div>
+              <div onclick="ProfilePersonalizer.applyBanner('solid:#84cc16')" style="background: #84cc16;"
+                class="banner-option" title="Lime"></div>
+              <div onclick="ProfilePersonalizer.applyBanner('solid:#facc15')" style="background: #facc15;"
+                class="banner-option" title="Yellow"></div>
+              <div onclick="ProfilePersonalizer.applyBanner('solid:#fb923c')" style="background: #fb923c;"
+                class="banner-option" title="Peach"></div>
+            </div>
+
+            <!-- CATEGORY: PASTELS & SOFT -->
+            <div class="color-section-title"><span>Soft & Pasteles</span>
+              <div class="color-section-line"></div>
+            </div>
+            <div class="color-grid">
+              <div onclick="ProfilePersonalizer.applyBanner('solid:#ddd6fe')" style="background: #ddd6fe;"
+                class="banner-option" title="Soft Lavender"></div>
+              <div onclick="ProfilePersonalizer.applyBanner('solid:#bae6fd')" style="background: #bae6fd;"
+                class="banner-option" title="Soft Blue"></div>
+              <div onclick="ProfilePersonalizer.applyBanner('solid:#bbf7d0')" style="background: #bbf7d0;"
+                class="banner-option" title="Soft Green"></div>
+              <div onclick="ProfilePersonalizer.applyBanner('solid:#fef08a')" style="background: #fef08a;"
+                class="banner-option" title="Soft Yellow"></div>
+              <div onclick="ProfilePersonalizer.applyBanner('solid:#fbcfe8')" style="background: #fbcfe8;"
+                class="banner-option" title="Soft Pink"></div>
+              <div onclick="ProfilePersonalizer.applyBanner('solid:#ffedd5')" style="background: #ffedd5;"
+                class="banner-option" title="Soft Orange"></div>
+              <div onclick="ProfilePersonalizer.applyBanner('solid:#fecaca')" style="background: #fecaca;"
+                class="banner-option" title="Soft Red"></div>
+              <div onclick="ProfilePersonalizer.applyBanner('solid:#f3f4f6')" style="background: #f3f4f6;"
+                class="banner-option" title="Soft Grey"></div>
+            </div>
+
+            <!-- CATEGORY: ANIMATED GIF BANNERS (PRO) -->
+            <div class="color-section-title"><span>Banners Animados (PRO)</span>
+              <div class="color-section-line"></div>
+            </div>
+            <div class="color-grid">
+              <!-- Retro Cyber Loop -->
+              <div
+                onclick="ProfilePersonalizer.applyBanner('gif:https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExNHJmZzRyeGZzN2p4ZzRyeGZzN2p4ZzRyeGZzN2p4ZzRyeWZ6JmVwPXYxX2ludGVybmFsX2dpZl9ieV9pZCZjdD1n/3o7TKMGpxx5G7XfS6k/giphy.gif')"
+                style="background: url('https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExNHJmZzRyeGZzN2p4ZzRyeGZzN2p4ZzRyeGZzN2p4ZzRyeWZ6JmVwPXYxX2ludGVybmFsX2dpZl9ieV9pZCZjdD1n/3o7TKMGpxx5G7XfS6k/giphy.gif') center/cover; position: relative;"
+                class="banner-option" title="Retro Cyber Loop">
+                <span
+                  style="position: absolute; bottom: 4px; right: 4px; background: #3b82f6; color: #fff; font-size: 0.5rem; padding: 1px 4px; border-radius: 2px;">GIF</span>
+              </div>
+              <!-- Purple Nebula -->
+              <div
+                onclick="ProfilePersonalizer.applyBanner('gif:https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExNHJmZzRyeGZzN2p4ZzRyeGZzN2p4ZzRyeGZzN2p4ZzRyeWZ6JmVwPXYxX2ludGVybmFsX2dpZl9ieV9pZCZjdD1n/l41lTfuxs6i8b12yM/giphy.gif')"
+                style="background: url('https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExNHJmZzRyeGZzN2p4ZzRyeGZzN2p4ZzRyeGZzN2p4ZzRyeWZ6JmVwPXYxX2ludGVybmFsX2dpZl9ieV9pZCZjdD1n/l41lTfuxs6i8b12yM/giphy.gif') center/cover; position: relative;"
+                class="banner-option" title="Purple Nebula">
+                <span
+                  style="position: absolute; bottom: 4px; right: 4px; background: #3b82f6; color: #fff; font-size: 0.5rem; padding: 1px 4px; border-radius: 2px;">GIF</span>
+              </div>
+              <!-- Glitch Flow -->
+              <div
+                onclick="ProfilePersonalizer.applyBanner('gif:https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExNHJmZzRyeGZzN2p4ZzRyeGZzN2p4ZzRyeGZzN2p4ZzRyeWZ6JmVwPXYxX2ludGVybmFsX2dpZl9ieV9pZCZjdD1n/3o7TKVUn7iM8FMEU24/giphy.gif')"
+                style="background: url('https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExNHJmZzRyeGZzN2p4ZzRyeGZzN2p4ZzRyeGZzN2p4ZzRyeWZ6JmVwPXYxX2ludGVybmFsX2dpZl9ieV9pZCZjdD1n/3o7TKVUn7iM8FMEU24/giphy.gif') center/cover; position: relative;"
+                class="banner-option" title="Glitch Flow">
+                <span
+                  style="position: absolute; bottom: 4px; right: 4px; background: #3b82f6; color: #fff; font-size: 0.5rem; padding: 1px 4px; border-radius: 2px;">GIF</span>
+              </div>
+              <!-- Night Forest -->
+              <div
+                onclick="ProfilePersonalizer.applyBanner('gif:https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExNHJmZzRyeGZzN2p4ZzRyeGZzN2p4ZzRyeGZzN2p4ZzRyeWZ6JmVwPXYxX2ludGVybmFsX2dpZl9ieV9pZCZjdD1n/3o7TKMGpxx5G7XfS6k/giphy.gif')"
+                style="background: url('https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExNHJmZzRyeGZzN2p4ZzRyeGZzN2p4ZzRyeGZzN2p4ZzRyeWZ6JmVwPXYxX2ludGVybmFsX2dpZl9ieV9pZCZjdD1n/3o7TKMGpxx5G7XfS6k/giphy.gif') center/cover; position: relative;"
+                class="banner-option" title="Night Forest">
+                <span
+                  style="position: absolute; bottom: 4px; right: 4px; background: #3b82f6; color: #fff; font-size: 0.5rem; padding: 1px 4px; border-radius: 2px;">GIF</span>
+              </div>
+            </div>
+
+            <!-- CATEGORY: ADDITIONAL DARK TINTS -->
+            <div class="color-section-title"><span>Tintes Oscuros</span>
+              <div class="color-section-line"></div>
+            </div>
+            <div class="color-grid">
+              <div onclick="ProfilePersonalizer.applyBanner('solid:#1e1b4b')" style="background: #1e1b4b;"
+                class="banner-option" title="Deep Indigo"></div>
+              <div onclick="ProfilePersonalizer.applyBanner('solid:#1e293b')" style="background: #1e293b;"
+                class="banner-option" title="Slate Dark"></div>
+              <div onclick="ProfilePersonalizer.applyBanner('solid:#134e4a')" style="background: #134e4a;"
+                class="banner-option" title="Teal Dark"></div>
+              <div onclick="ProfilePersonalizer.applyBanner('solid:#422006')" style="background: #422006;"
+                class="banner-option" title="Coffee"></div>
+              <div onclick="ProfilePersonalizer.applyBanner('solid:#450a0a')" style="background: #450a0a;"
+                class="banner-option" title="Maroon Dark"></div>
+              <div onclick="ProfilePersonalizer.applyBanner('solid:#2d333b')" style="background: #2d333b;"
+                class="banner-option" title="GitHub Dark"></div>
+              <div onclick="ProfilePersonalizer.applyBanner('solid:#1a1a2e')" style="background: #1a1a2e;"
+                class="banner-option" title="Cosmos Dark"></div>
+              <div onclick="ProfilePersonalizer.applyBanner('solid:#0f172a')" style="background: #0f172a;"
+                class="banner-option" title="Cyan Deep"></div>
+            </div>
+
+            <!-- CATEGORY: GLASSY GRADIENTS -->
+            <div class="color-section-title"><span>Glassy & Muted</span>
+              <div class="color-section-line"></div>
+            </div>
+            <div class="color-grid">
+              <div
+                onclick="ProfilePersonalizer.applyBanner('gradient:linear-gradient(135deg, #121212 0%, #2a2a2a 100%)')"
+                style="background: linear-gradient(135deg, #121212 0%, #2a2a2a 100%);" class="banner-option"
+                title="Frosted Grey"></div>
+              <div
+                onclick="ProfilePersonalizer.applyBanner('gradient:linear-gradient(135deg, #0f172a 0%, #1e293b 100%)')"
+                style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);" class="banner-option"
+                title="Midnight Mist"></div>
+              <div
+                onclick="ProfilePersonalizer.applyBanner('gradient:linear-gradient(135deg, #2d1b4b 0%, #1e1b4b 100%)')"
+                style="background: linear-gradient(135deg, #2d1b4b 0%, #1e1b4b 100%);" class="banner-option"
+                title="Deep Violet Mist"></div>
+              <div
+                onclick="ProfilePersonalizer.applyBanner('gradient:linear-gradient(135deg, #022c22 0%, #064e3b 100%)')"
+                style="background: linear-gradient(135deg, #022c22 0%, #064e3b 100%);" class="banner-option"
+                title="Deep Forest Mist"></div>
+              <div
+                onclick="ProfilePersonalizer.applyBanner('gradient:linear-gradient(135deg, #4c0519 0%, #881337 100%)')"
+                style="background: linear-gradient(135deg, #4c0519 0%, #881337 100%);" class="banner-option"
+                title="Deep Berry Mist"></div>
+              <div
+                onclick="ProfilePersonalizer.applyBanner('gradient:linear-gradient(135deg, #422006 0%, #713f12 100%)')"
+                style="background: linear-gradient(135deg, #422006 0%, #713f12 100%);" class="banner-option"
+                title="Deep Amber Mist"></div>
+              <div
+                onclick="ProfilePersonalizer.applyBanner('gradient:linear-gradient(135deg, #06202c 0%, #083344 100%)')"
+                style="background: linear-gradient(135deg, #06202c 0%, #083344 100%);" class="banner-option"
+                title="Deep Ocean Mist"></div>
+              <div
+                onclick="ProfilePersonalizer.applyBanner('gradient:linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)')"
+                style="background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);" class="banner-option"
+                title="Night Sky"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: Panoramic Live Preview -->
+      <div id="panoramicPreview"
+        style="flex: 1; position: relative; background: #111; display: flex; align-items: center; justify-content: center; overflow: hidden;">
         <div
-          style="font-size: 0.75rem; color: #888; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px;">
-          Estilos Disponibles</div>
+          style="position: absolute; top: 12px; left: 12px; font-size: 0.6rem; font-weight: 800; color: rgba(255,255,255,0.2); text-transform: uppercase;">
+          Preview en tiempo real</div>
+
+        <!-- The Actual Mockup Header (Visual Clone of .profile-header) -->
+        <div id="previewHeaderMockup"
+          style="width: 100%; height: 100%; display: flex; align-items: center; padding: 48px 40px; transition: background 0.4s ease; position: relative; overflow: hidden;">
+
+          <!-- Overlay 1: Glassy Veil (Sync with .profile-header::before) -->
+          <div
+            style="position: absolute; inset: 0; background: rgba(0,0,0,0.45); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); z-index: 1;">
+          </div>
+
+          <!-- Overlay 2: Bottom Fade (Sync with .profile-header::after) -->
+          <div
+            style="position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.9) 20%, rgba(0,0,0,0.6) 40%, rgba(0,0,0,0.2) 60%, transparent 100%); z-index: 2; pointer-events: none;">
+          </div>
+
+          <!-- Content (Sync with .profile-header-content) -->
+          <div
+            style="position: relative; z-index: 10; display: flex; align-items: center; gap: 40px; width: 100%; text-align: left;">
+            <!-- Avatar (Scaled) -->
+            <div id="previewAvatarOuter"
+              style="width: 130px; height: 130px; border-radius: 50%; border: 4px solid #1a1a1a; background: #1a1a1a; overflow: hidden; box-shadow: 0 12px 40px rgba(0,0,0,0.6); flex-shrink: 0;">
+              <img id="previewAvatarImg" src="" style="width:100%; height:100%; object-fit:cover; display: none;">
+              <div id="previewAvatarInitial"
+                style="width:100%; height:100%; display: flex; align-items: center; justify-content: center; font-size: 2.8rem; font-weight: 800; color: #444;">
+                U</div>
+            </div>
+
+            <!-- Details -->
+            <div style="flex: 1; display: flex; flex-direction: column; gap: 12px;">
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <h1 id="previewName"
+                  style="font-size: 2.5rem; font-weight: 900; color: #fff; margin:0; line-height: 1; letter-spacing: -1.5px;">
+                  Username</h1>
+                <div id="previewVerified" style="color: #3b82f6; font-size: 1.5rem; display: none;"><i
+                    class="bi bi-patch-check-fill"></i></div>
+              </div>
+
+              <div id="previewRole" style="color: #b3b3b3; font-size: 0.9rem; font-weight: 500; letter-spacing: 0.2px;">
+                Productor • Artista</div>
+
+              <!-- STATS & SOCIALS ROW -->
+              <div style="display: flex; align-items: center; gap: 32px; margin-top: 4px;">
+                <div style="display: flex; gap: 24px;">
+                  <div style="display: flex; flex-direction: column;">
+                    <span id="previewProductsCount" style="color: #fff; font-size: 1.1rem; font-weight: 800;">0</span>
+                    <span
+                      style="color: rgba(255,255,255,0.4); font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Productos</span>
+                  </div>
+                  <div style="display: flex; flex-direction: column;">
+                    <span id="previewFollowersCount" style="color: #fff; font-size: 1.1rem; font-weight: 800;">0</span>
+                    <span
+                      style="color: rgba(255,255,255,0.4); font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Seguidores</span>
+                  </div>
+                </div>
+
+                <!-- Mockup Socials -->
+                <div id="previewSocials"
+                  style="display: flex; gap: 12px; color: rgba(255,255,255,0.6); font-size: 1.1rem;">
+                  <i class="bi bi-tiktok"></i>
+                  <i class="bi bi-spotify"></i>
+                  <i class="bi bi-youtube"></i>
+                  <i class="bi bi-instagram"></i>
+                </div>
+              </div>
+
+              <!-- ACTION BUTTONS MOCKUP -->
+              <div style="display: flex; gap: 10px; margin-top: 8px;">
+                <div
+                  style="padding: 10px 24px; background: #fff; color: #000; border-radius: 10px; font-size: 0.8rem; font-weight: 800;">
+                  Seguir</div>
+                <div
+                  style="padding: 10px 24px; background: rgba(255,255,255,0.1); color: #fff; border-radius: 10px; font-size: 0.8rem; font-weight: 800; border: 1px solid rgba(255,255,255,0.1);">
+                  Mensaje</div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
-
-      <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 32px;">
-        <!-- Vibrant Solids -->
-        <div onclick="ProfilePersonalizer.applyBanner('solid:#8b5cf6')"
-          style="aspect-ratio: 1; background: #8b5cf6; border-radius: 12px; cursor: pointer; border: 2px solid transparent; transition: transform 0.2s;"
-          class="banner-option" title="Electric Purple"></div>
-        <div onclick="ProfilePersonalizer.applyBanner('solid:#10b981')"
-          style="aspect-ratio: 1; background: #10b981; border-radius: 12px; cursor: pointer; border: 2px solid transparent; transition: transform 0.2s;"
-          class="banner-option" title="Neon Green"></div>
-        <div onclick="ProfilePersonalizer.applyBanner('solid:#06b6d4')"
-          style="aspect-ratio: 1; background: #06b6d4; border-radius: 12px; cursor: pointer; border: 2px solid transparent; transition: transform 0.2s;"
-          class="banner-option" title="Ocean Cyan"></div>
-        <div onclick="ProfilePersonalizer.applyBanner('solid:#f43f5e')"
-          style="aspect-ratio: 1; background: #f43f5e; border-radius: 12px; cursor: pointer; border: 2px solid transparent; transition: transform 0.2s;"
-          class="banner-option" title="Rose Fire"></div>
-
-        <!-- Vibrant Gradients -->
-        <div onclick="ProfilePersonalizer.applyBanner('gradient:linear-gradient(135deg, #8b5cf6 0%, #d946ef 100%)')"
-          style="aspect-ratio: 1; background: linear-gradient(135deg, #8b5cf6 0%, #d946ef 100%); border-radius: 12px; cursor: pointer; border: 2px solid transparent; transition: transform 0.2s;"
-          class="banner-option" title="Cosmic"></div>
-        <div onclick="ProfilePersonalizer.applyBanner('gradient:linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)')"
-          style="aspect-ratio: 1; background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%); border-radius: 12px; cursor: pointer; border: 2px solid transparent; transition: transform 0.2s;"
-          class="banner-option" title="Sunset"></div>
-        <div onclick="ProfilePersonalizer.applyBanner('gradient:linear-gradient(135deg, #10b981 0%, #3b82f6 100%)')"
-          style="aspect-ratio: 1; background: linear-gradient(135deg, #10b981 0%, #3b82f6 100%); border-radius: 12px; cursor: pointer; border: 2px solid transparent; transition: transform 0.2s;"
-          class="banner-option" title="Aurora"></div>
-        <div onclick="ProfilePersonalizer.applyBanner('gradient:linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)')"
-          style="aspect-ratio: 1; background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%); border-radius: 12px; cursor: pointer; border: 2px solid transparent; transition: transform 0.2s;"
-          class="banner-option" title="Indigo Night"></div>
-
-        <!-- High Contrast / Dark -->
-        <div onclick="ProfilePersonalizer.applyBanner('solid:#111')"
-          style="aspect-ratio: 1; background: #111; border-radius: 12px; cursor: pointer; border: 2px solid #333; transition: transform 0.2s;"
-          class="banner-option" title="Pure Black"></div>
-        <div onclick="ProfilePersonalizer.applyBanner('gradient:linear-gradient(135deg, #111 0%, #444 100%)')"
-          style="aspect-ratio: 1; background: linear-gradient(135deg, #111 0%, #444 100%); border-radius: 12px; cursor: pointer; border: 2px solid transparent; transition: transform 0.2s;"
-          class="banner-option" title="Steel"></div>
-        <div onclick="ProfilePersonalizer.applyBanner('gradient:linear-gradient(135deg, #db2777 0%, #111 100%)')"
-          style="aspect-ratio: 1; background: linear-gradient(135deg, #db2777 0%, #111 100%); border-radius: 12px; cursor: pointer; border: 2px solid transparent; transition: transform 0.2s;"
-          class="banner-option" title="Midnight Pink"></div>
-        <div onclick="ProfilePersonalizer.applyBanner('gradient:linear-gradient(135deg, #059669 0%, #111 100%)')"
-          style="aspect-ratio: 1; background: linear-gradient(135deg, #059669 0%, #111 100%); border-radius: 12px; cursor: pointer; border: 2px solid transparent; transition: transform 0.2s;"
-          class="banner-option" title="Forest Night"></div>
-      </div>
-      <button onclick="ProfilePersonalizer.saveBanner()" class="btn-primary"
-        style="width: 100%; height: 52px; border-radius: 14px; font-weight: 800; font-size: 1rem;">Guardar
-        Cambios</button>
     </div>
   </div>
+</div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>

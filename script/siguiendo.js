@@ -1,7 +1,14 @@
 // script/siguiendo.js
 
+let followingData = {
+    sidebar: null,
+    list: []
+};
 
 document.addEventListener('DOMContentLoaded', async () => {
+    // 1. Inject Skeletons IMMEDIATELY
+    injectSkeletons();
+
     const { data: { session } } = await supabaseClient.auth.getSession();
 
     if (!session) {
@@ -11,14 +18,28 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const userId = session.user.id;
 
-    // Initialize Sidebar User Info
-    await loadSidebarInfo(userId);
+    // 2. Start Minimum Wait Timer (2s)
+    const timerPromise = new Promise(resolve => setTimeout(resolve, 2000));
 
-    // Load Following List
-    await loadFollowingList(userId);
+    // 3. Start Data Fetching
+    const fetchPromise = Promise.all([
+        loadSidebarData(userId),
+        fetchFollowingList(userId)
+    ]);
+
+    // 4. Wait for BOTH (Timer + Data) to finish
+    try {
+        await Promise.all([timerPromise, fetchPromise]);
+    } catch (err) {
+        console.error("Error during parallel load:", err);
+    } finally {
+        // 5. Render and Reveal Everything Simultaneously
+        renderEverything();
+        removeSkeletons();
+    }
 });
 
-async function loadSidebarInfo(userId) {
+async function loadSidebarData(userId) {
     try {
         const { data: user, error } = await supabaseClient
             .from('users')
@@ -27,7 +48,67 @@ async function loadSidebarInfo(userId) {
             .single();
 
         if (error) throw error;
+        followingData.sidebar = user;
+    } catch (err) {
+        console.error("Error loading sidebar info:", err);
+    }
+}
 
+async function fetchFollowingList(userId) {
+    try {
+        // 1. Get IDs of users I follow
+        const response = await fetch('/api/me/following', {
+            headers: {
+                'Authorization': `Bearer ${(await supabaseClient.auth.getSession()).data.session.access_token}`
+            }
+        });
+
+        if (!response.ok) throw new Error('Error fetching following list');
+        const followingIds = await response.json();
+
+        if (!followingIds || followingIds.length === 0) {
+            followingData.list = [];
+            return;
+        }
+
+        // 2. Fetch profile details for these users
+        const { data: profiles, error: profileError } = await supabaseClient
+            .from('users')
+            .select('id, nickname, first_name, last_name, avatar_url, role, is_verified, bio')
+            .in('id', followingIds);
+
+        if (profileError) throw profileError;
+
+        // 3. Get follower counts for each user in parallel
+        const countPromises = profiles.map(profile =>
+            supabaseClient
+                .from('followers')
+                .select('*', { count: 'exact', head: true })
+                .eq('user_id', profile.id)
+                .then(({ count, error }) => ({ id: profile.id, count: error ? 0 : count }))
+        );
+
+        const results = await Promise.all(countPromises);
+        const followerCounts = {};
+        results.forEach(res => {
+            followerCounts[res.id] = res.count || 0;
+        });
+
+        profiles.forEach(profile => {
+            profile.follower_count = followerCounts[profile.id] || 0;
+        });
+
+        followingData.list = profiles;
+    } catch (err) {
+        console.error("Error loading following list:", err);
+        followingData.list = null; // Error state
+    }
+}
+
+function renderEverything() {
+    // Sidebar
+    if (followingData.sidebar) {
+        const user = followingData.sidebar;
         const sidebarAvatar = document.getElementById('sidebarAvatar');
         const sidebarName = document.getElementById('sidebarName');
         const sidebarRole = document.getElementById('sidebarRole');
@@ -42,80 +123,63 @@ async function loadSidebarInfo(userId) {
                 sidebarAvatar.textContent = (user.nickname || 'U').charAt(0).toUpperCase();
             }
         }
-    } catch (err) {
-        console.error("Error loading sidebar info:", err);
     }
+
+    // Main Grid
+    const container = document.getElementById('followingList');
+    if (!container) return;
+
+    if (followingData.list === null) {
+        container.innerHTML = `<p style="color:red; grid-column:1/-1;">Error al cargar la lista.</p>`;
+        return;
+    }
+
+    if (followingData.list.length === 0) {
+        container.innerHTML = `
+            <div style="grid-column: 1/-1; text-align: center; padding: 40px; color: #666;">
+                <i class="bi bi-people" style="font-size: 3rem; display: block; margin-bottom: 10px;"></i>
+                <p>Aún no sigues a nadie.</p>
+            </div>
+        `;
+        return;
+    }
+
+    container.innerHTML = '';
+    followingData.list.forEach(profile => {
+        const card = createProducerCard(profile);
+        container.appendChild(card);
+    });
 }
 
-async function loadFollowingList(userId) {
-    const container = document.getElementById('followingList');
+function injectSkeletons() {
+    // Sidebar
+    const name = document.getElementById('sidebarName');
+    const role = document.getElementById('sidebarRole');
+    const avatar = document.getElementById('sidebarAvatar');
+    if (name) name.classList.add('skeleton-base', 'skeleton-name');
+    if (role) role.classList.add('skeleton-base', 'skeleton-role');
+    if (avatar) avatar.classList.add('skeleton-base', 'skeleton-avatar');
+
+    // Main Grid
     const skeleton = document.getElementById('followingSkeleton');
-    try {
-        // 1. Get IDs of users I follow
-        const response = await fetch('/api/me/following', {
-            headers: {
-                'Authorization': `Bearer ${(await supabaseClient.auth.getSession()).data.session.access_token}`
-            }
-        });
+    const list = document.getElementById('followingList');
+    if (skeleton) skeleton.style.display = 'grid';
+    if (list) list.style.display = 'none';
+}
 
-        if (!response.ok) throw new Error('Error fetching following list');
-        const followingIds = await response.json();
+function removeSkeletons() {
+    const name = document.getElementById('sidebarName');
+    const role = document.getElementById('sidebarRole');
+    const avatar = document.getElementById('sidebarAvatar');
 
-        if (!followingIds || followingIds.length === 0) {
-            container.innerHTML = `
-                <div style="grid-column: 1/-1; text-align: center; padding: 40px; color: #666;">
-                    <i class="bi bi-people" style="font-size: 3rem; display: block; margin-bottom: 10px;"></i>
-                    <p>Aún no sigues a nadie.</p>
-                </div>
-            `;
-            return;
-        }
+    if (name) name.classList.remove('skeleton-base', 'skeleton-name');
+    if (role) role.classList.remove('skeleton-base', 'skeleton-role');
+    if (avatar) avatar.classList.remove('skeleton-base', 'skeleton-avatar');
 
-        // 2. Fetch profile details for these users
-        const { data: profiles, error: profileError } = await supabaseClient
-            .from('users')
-            .select('id, nickname, first_name, last_name, avatar_url, role, is_verified, bio')
-            .in('id', followingIds);
-
-        if (profileError) throw profileError;
-
-        // 3. Get follower counts for each user
-        const followerCounts = {};
-        for (const profile of profiles) {
-            const { count, error: countError } = await supabaseClient
-                .from('followers')
-                .select('*', { count: 'exact', head: true })
-                .eq('user_id', profile.id);
-
-            if (!countError) {
-                followerCounts[profile.id] = count || 0;
-            }
-        }
-
-        // Add follower counts to profiles
-        profiles.forEach(profile => {
-            profile.follower_count = followerCounts[profile.id] || 0;
-        });
-
-        // 4. Render cards
-        container.innerHTML = '';
-        profiles.forEach(profile => {
-            const card = createProducerCard(profile);
-            container.appendChild(card);
-        });
-
-        // Toggle visibility
-        if (skeleton) skeleton.style.display = 'none';
-        if (container) container.style.display = 'grid';
-
-    } catch (err) {
-        console.error("Error loading following list:", err);
-        if (skeleton) skeleton.style.display = 'none';
-        if (container) {
-            container.style.display = 'grid';
-            container.innerHTML = `<p style="color:red; grid-column:1/-1;">Error al cargar la lista.</p>`;
-        }
-    }
+    const skeleton = document.getElementById('followingSkeleton');
+    const list = document.getElementById('followingList');
+    if (skeleton) skeleton.style.display = 'none';
+    if (list) list.style.display = 'grid';
 }
 
 function createProducerCard(user) {
@@ -164,7 +228,7 @@ function createProducerCard(user) {
         ? `<img src="${user.avatar_url}" alt="${user.nickname}" onerror="if(window.AvatarManager) window.AvatarManager.handleError(this, '${user.nickname.replace(/'/g, "\\'")}')" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`
         : `<div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; background: #222; border: 1px solid #333; border-radius:50%; font-size:2.5rem; font-weight:700; color:#fff;">${initial}</div>`;
 
-    // Get follower count (will be 0 for now, we'll add the real count later)
+    // Get follower count
     const followerCount = user.follower_count || 0;
 
     card.innerHTML = `
@@ -224,4 +288,3 @@ function createProducerCard(user) {
 
     return card;
 }
-

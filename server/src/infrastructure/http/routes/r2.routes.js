@@ -43,7 +43,8 @@ router.post('/r2/upload-url', authenticateTokenMiddleware, async (req, res) => {
             .replace(/[^\w\.-]/g, '_') // Todo lo que no sea seguro -> _
             .replace(/_+/g, '_'); // Evitar múltiples underscores
 
-        const key = `${folder || 'uploads'}/${userId}/${timestamp}_${cleanFileName}`;
+        const keyWithPotentialDoubles = `${folder || 'uploads'}/${userId}/${timestamp}_${cleanFileName}`;
+        const key = keyWithPotentialDoubles.replace(/_+/g, '_');
 
         const uploadUrl = await getPresignedUploadUrl(key, fileType);
 
@@ -62,14 +63,18 @@ router.post('/r2/upload-url', authenticateTokenMiddleware, async (req, res) => {
 // MODIFICADO: Ahora permite acceso público a ciertas rutas (covers, previews) sin token.
 router.post('/r2/download-url', async (req, res) => {
     try {
-        const { key, expiresIn } = req.body;
+        let { key, expiresIn } = req.body;
 
         if (!key) {
             return res.status(400).json({ error: 'Falta el key del archivo' });
         }
 
+        // 🔥 KEY SANITIZATION: Ensure key doesn't start with / and doesn't have query params
+        if (key.includes('?')) key = key.split('?')[0];
+        while (key.startsWith('/')) key = key.substring(1);
+
         // Definir prefijos públicos
-        const publicPrefixes = ['products/covers/', 'beats/mp3/', 'avatars/', 'public/'];
+        const publicPrefixes = ['products/covers/', 'beats/mp3/', 'avatars/', 'public/', 'banners/'];
         const isPublic = publicPrefixes.some(prefix => key.startsWith(prefix));
 
         // Si NO es público, requerir autenticación

@@ -6,7 +6,7 @@
 window.AuthUtils = {
     /**
      * Initialize Supabase Client globally if credentials exist.
-     * Use this ensuring window.SUPABASE_URL is defined before loading this script.
+     * Use this ensuring window.SUPABASE_URL is defined before loading this s   cript.
      */
     initSupabase: function () {
         if (window.supabaseClient) return; // Already initialized
@@ -156,6 +156,10 @@ window.AuthUtils = {
             return this._urlCache[pathOrUrl];
         }
 
+        // 🔥 PREVENT DOUBLE SIGNING: If already contains signature params, return as is
+        if (typeof pathOrUrl === 'string' && pathOrUrl.includes('X-Amz-Signature')) {
+            return pathOrUrl;
+        }
 
         // --- HYBRID LOGIC ---
         // If it's a full URL and NOT R2, it's already public (Supabase)
@@ -191,10 +195,16 @@ window.AuthUtils = {
             } else {
                 try {
                     const urlObj = new URL(pathOrUrl);
-                    key = urlObj.pathname.substring(1);
+                    key = urlObj.pathname; // Note: pathname starts with / usually
                 } catch (e) { }
             }
         }
+
+        // 🔥 KEY CLEANUP: R2 keys must NOT start with / and must NOT have query params
+        if (key.includes('?')) key = key.split('?')[0];
+        while (key.startsWith('/')) key = key.substring(1);
+
+        if (!key) return pathOrUrl;
 
         // --- SIGNING VIA API ---
         try {

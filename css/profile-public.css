@@ -45,8 +45,8 @@ body::before {
 }
 
 body.dynamic-theme-active::before {
-    opacity: 0.12;
-    /* Refined for ultra-subtle "premium" look */
+    opacity: 0.14;
+    /* Refined for seamless wash transition */
 }
 
 /* === SWITCH TOGGLE === */
@@ -113,7 +113,10 @@ input:checked+.slider:before {
 .profile-header {
     background: linear-gradient(180deg, #111 0%, #000 100%);
     /* Fallback darker background */
-    padding: 64px 40px 48px;
+    padding: 100px 40px 64px;
+    /* Restored to 3:1 Panoramic look */
+    min-height: 380px;
+    /* Ensure enough height for banner visibility */
     border: none;
     margin-bottom: 0;
     position: relative;
@@ -125,11 +128,8 @@ input:checked+.slider:before {
     content: '';
     position: absolute;
     inset: 0;
-    background: rgba(0, 0, 0, 0.45);
-    /* Protective dark veil for white text */
-    backdrop-filter: blur(24px);
-    /* Vibrant Glass Effect */
-    -webkit-backdrop-filter: blur(24px);
+    background: rgba(0, 0, 0, 0.2);
+    /* Lighter veil, no blur (Crisp Image) */
     z-index: 1;
 }
 
@@ -138,13 +138,12 @@ input:checked+.slider:before {
     position: absolute;
     inset: 0;
     /* Ultra-smooth multi-stop gradient to eliminate visual division */
-    /* Fades from solid black at bottom to transparent at ~50% height */
+    /* Fades from solid black at bottom (0%) to transparent quickly */
     background: linear-gradient(to top,
             rgba(0, 0, 0, 1) 0%,
-            rgba(0, 0, 0, 0.9) 20%,
-            rgba(0, 0, 0, 0.6) 40%,
-            rgba(0, 0, 0, 0.2) 60%,
-            transparent 100%);
+            rgba(0, 0, 0, 0.7) 15%,
+            rgba(0, 0, 0, 0.3) 30%,
+            transparent 50%);
     pointer-events: none;
     z-index: 2;
 }
@@ -585,7 +584,8 @@ input:checked+.slider:before {
 .profile-tab-btn {
     background: none;
     border: none;
-    color: #666;
+    color: #ccc;
+    /* Lighter default */
     font-size: 0.8rem;
     font-weight: 700;
     padding: 12px 4px;
@@ -593,6 +593,8 @@ input:checked+.slider:before {
     letter-spacing: 1px;
     position: relative;
     transition: all 0.2s;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
+    /* Strong shadow for readability */
 }
 
 .profile-tab-btn:hover {
@@ -610,8 +612,12 @@ input:checked+.slider:before {
     /* Adjusted to sit at the bottom of the padding */
     left: 0;
     width: 100%;
-    height: 2px;
+    height: 3px;
+    /* Slightly thicker */
     background: #fff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    /* Shadow for the line */
+    border-radius: 2px;
 }
 
 .profile-actions {
@@ -624,13 +630,16 @@ input:checked+.slider:before {
     gap: 12px;
 }
 
+/* === TRANSPARENT OUTLINE BUTTONS (Header) === */
 .btn-personalize-compact,
-.btn-secondary-compact {
-    background: rgba(0, 0, 0, 0.4);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: #fff;
+.btn-secondary-compact,
+.profile-actions .btn-primary,
+.profile-actions .btn-secondary {
+    background: transparent !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border: 1px solid rgba(255, 255, 255, 0.4) !important;
+    color: #fff !important;
     padding: 8px 18px;
     border-radius: 20px;
     font-size: 0.75rem;
@@ -640,15 +649,17 @@ input:checked+.slider:before {
     align-items: center;
     gap: 8px;
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    box-shadow: none !important;
 }
 
 .btn-personalize-compact:hover,
-.btn-secondary-compact:hover {
-    background: rgba(255, 255, 255, 0.1);
-    border-color: rgba(255, 255, 255, 0.4);
+.btn-secondary-compact:hover,
+.profile-actions .btn-primary:hover,
+.profile-actions .btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.1) !important;
+    border-color: rgba(255, 255, 255, 0.8) !important;
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
 }
 
 .btn-personalize-compact i,

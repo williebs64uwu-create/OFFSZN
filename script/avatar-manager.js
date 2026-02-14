@@ -34,9 +34,9 @@ window.AvatarManager = {
         }
 
         if (document.getElementById('offsznAvatarModal')) {
-            // Update GIF section visibility
+            // Update GIF section visibility (Always show now, gating is inside the trigger)
             const gifSection = document.getElementById('avatarGifSection');
-            if (gifSection && this.isProUser) {
+            if (gifSection) {
                 gifSection.style.display = 'block';
             }
             return;
@@ -103,11 +103,9 @@ window.AvatarManager = {
         `;
         document.body.insertAdjacentHTML('beforeend', modalHtml);
 
-        // Show GIF section for Pro users
-        if (this.isProUser) {
-            const gifSection = document.getElementById('avatarGifSection');
-            if (gifSection) gifSection.style.display = 'block';
-        }
+        // Show GIF section for everyone
+        const gifSection = document.getElementById('avatarGifSection');
+        if (gifSection) gifSection.style.display = 'block';
     },
 
     /**
@@ -201,15 +199,15 @@ window.AvatarManager = {
                 this.cropper = new Cropper(img, {
                     aspectRatio: 1,
                     initialAspectRatio: 1,
-                    viewMode: 1,
+                    viewMode: 3,
                     dragMode: 'move',
-                    autoCropArea: 0.8,
+                    autoCropArea: 1, // Ensure full initial coverage
                     restore: false,
                     guides: false,
                     center: true,
                     highlight: false,
-                    cropBoxMovable: true,
-                    cropBoxResizable: true,
+                    cropBoxMovable: false, // Prevent moving the crop box itself, move image instead
+                    cropBoxResizable: false, // Fixed size crop box
                     toggleDragModeOnDblclick: false,
                     background: false,
                     checkOrientation: true,
@@ -241,8 +239,16 @@ window.AvatarManager = {
         }
     },
 
-    // 🔥 GIF AVATAR (Pro Only)
+    // 🔥 GIF AVATAR (Gated Redirect)
     triggerGifInput: function () {
+        if (!this.isProUser) {
+            this.showToast('Los avatars GIF son exclusivos del Plan Pro. Redirigiendo...', true);
+            setTimeout(() => {
+                window.location.href = '/cuenta/planes.html';
+            }, 1500);
+            return;
+        }
+
         const input = document.getElementById('avatarGifInput');
         if (input) {
             input.value = '';
@@ -283,15 +289,15 @@ window.AvatarManager = {
                 this.cropper = new Cropper(img, {
                     aspectRatio: 1,
                     initialAspectRatio: 1,
-                    viewMode: 1,
+                    viewMode: 3,
                     dragMode: 'move',
-                    autoCropArea: 0.8,
+                    autoCropArea: 1, // Ensure full initial coverage
                     restore: false,
                     guides: false,
                     center: true,
                     highlight: false,
-                    cropBoxMovable: true,
-                    cropBoxResizable: true,
+                    cropBoxMovable: false, // Prevent moving the crop box itself, move image instead
+                    cropBoxResizable: false, // Fixed size crop box
                     toggleDragModeOnDblclick: false,
                     background: false,
                     checkOrientation: true,

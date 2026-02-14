@@ -1,10 +1,23 @@
 const PaymentSettings = {
     userId: null,
 
+    // Store fetched data
+    data: {
+        sidebar: null,
+        status: null,
+        sales: []
+    },
+
     init: async function () {
+        // 1. Inject Skeletons IMMEDIATELY
+        this.injectSidebarSkeletons();
+        this.injectSalesSkeletons();
+        this.injectButtonSkeleton();
+        this.injectEmailSkeleton();
+        this.injectPayPalStatusSkeleton();
+
         console.log("Payment Settings Initialized");
 
-        // Safety Check
         if (!window.supabaseClient) {
             console.warn("PaymentSettings: Supabase client not found.");
             return;
@@ -18,12 +31,24 @@ const PaymentSettings = {
 
         this.userId = session.user.id;
 
-        // Load All Data
-        await Promise.all([
-            this.loadSidebarData(),
-            this.loadStatus(),
-            this.loadSalesHistory()
+        // 2. Start Minimum Wait Timer (1.5s)
+        const timerPromise = new Promise(resolve => setTimeout(resolve, 1500));
+
+        // 3. Start Data Fetching
+        const uniqueFetchPromise = Promise.all([
+            this.fetchSidebarData(),
+            this.fetchStatus(),
+            this.fetchSalesHistory()
         ]);
+
+        // 4. Wait for BOTH (Timer + Data)
+        await Promise.all([timerPromise, uniqueFetchPromise]);
+
+        // 5. Render Everything Simultaneously
+        this.removeSidebarSkeletons();
+        this.renderSidebar();
+        this.renderStatus();
+        this.renderSalesHistory();
 
         this.setupListeners();
     },
@@ -33,61 +58,38 @@ const PaymentSettings = {
         return session;
     },
 
-    loadSidebarData: async function () {
+    // --- FETCHING ACTIONS ---
+
+    fetchSidebarData: async function () {
         try {
             const { data, error } = await window.supabaseClient
                 .from('users')
                 .select('nickname, avatar_url, role, first_name, last_name, email')
                 .eq('id', this.userId)
                 .single();
-
             if (error) throw error;
-
-            // Populate Sidebar
-            const nameEl = document.getElementById('sidebarName');
-            const roleEl = document.getElementById('sidebarRole');
-            const avatarEl = document.getElementById('sidebarAvatar');
-
-            if (nameEl) nameEl.textContent = data.nickname || (data.first_name ? `${data.first_name} ${data.last_name || ''}` : 'Usuario');
-            if (roleEl) roleEl.textContent = data.role || 'Productor';
-
-            if (avatarEl) {
-                if (data.avatar_url) {
-                    avatarEl.innerHTML = `<img src="${data.avatar_url}" alt="Avatar" style="width:100%; height:100%; border-radius:inherit; object-fit:cover;">`;
-                    avatarEl.style.background = "transparent";
-                } else {
-                    avatarEl.textContent = (data.nickname || data.email || 'U').charAt(0).toUpperCase();
-                }
-            }
+            this.data.sidebar = data;
         } catch (err) {
-            console.error("Error loading sidebar data:", err);
+            console.error("Error fetching sidebar data:", err);
         }
     },
 
-    loadStatus: async function () {
+    fetchStatus: async function () {
         try {
             const { data: user, error } = await window.supabaseClient
                 .from('users')
                 .select('payment_methods')
                 .eq('id', this.userId)
                 .single();
-
             if (error) throw error;
-
-            const paypal = user?.payment_methods?.paypal;
-            this.updateUI(paypal);
+            this.data.status = user?.payment_methods?.paypal;
         } catch (err) {
-            console.error("Error loading payment status:", err);
+            console.error("Error fetching payment status:", err);
         }
     },
 
-    loadSalesHistory: async function () {
-        const container = document.getElementById('sales-history-container');
-        if (!container) return;
-
+    fetchSalesHistory: async function () {
         try {
-            // Fetch order items for products owned by this producer
-            // We join with products to filter by producer_id, and orders to get the status and customer ID
             const { data, error } = await window.supabaseClient
                 .from('order_items')
                 .select(`
@@ -102,52 +104,159 @@ const PaymentSettings = {
 
             if (error) throw error;
 
-            // Filter out null products (though shouldn't happen with inner joins if we had them)
-            // Supabase JS doesn't do true inner join filtering easily without RPC or standard JS filtering
-            const mySales = data.filter(item => item.product && item.product.producer_id === this.userId);
-
-            if (!mySales || mySales.length === 0) {
-                container.innerHTML = `
-                    <div style="text-align: center; padding: 40px; color: var(--text-secondary);">
-                        <i class="bi bi-clipboard-data" style="font-size: 3rem; opacity: 0.2; display: block; margin-bottom: 16px;"></i>
-                        <p>No tienes ventas registradas aún.</p>
-                        <a href="/cuenta/subir-kit.html" style="color: var(--accent); font-weight: 600; text-decoration: none;">¡Sube tu primer producto!</a>
-                    </div>
-                `;
-                return;
-            }
-
-            container.innerHTML = mySales.map(sale => {
-                const date = new Date(sale.created_at).toLocaleDateString('es-ES', {
-                    day: '2-digit',
-                    month: 'short',
-                    year: 'numeric'
-                });
-                const customerName = sale.order?.buyer?.nickname || "Usuario Anónimo";
-                const customerEmail = sale.order?.buyer?.email || "N/A";
-                const status = sale.order?.status || 'completed';
-                const amount = parseFloat(sale.price_at_purchase).toFixed(2);
-
-                return `
-                    <div class="transaction-item">
-                        <div class="tr-customer">
-                            <i class="bi bi-person-circle" style="font-size: 1.5rem; color: #444;"></i>
-                            <div class="tr-customer-info">
-                                <h4>${customerName}</h4>
-                                <p>${customerEmail}</p>
-                            </div>
-                        </div>
-                        <div class="tr-date">${date}</div>
-                        <div><span class="tr-status ${status}">${status}</span></div>
-                        <div class="tr-amount">$${amount}</div>
-                    </div>
-                `;
-            }).join('');
-
+            // Filter
+            this.data.sales = data.filter(item => item.product && item.product.producer_id === this.userId);
         } catch (err) {
-            console.error("Error loading sales history:", err);
-            container.innerHTML = `<p style="color:#ef4444; text-align:center;">Error al cargar el historial.</p>`;
+            console.error("Error fetching sales history:", err);
+            this.data.sales = null; // Mark as error
         }
+    },
+
+    // --- SKELETON ACTIONS ---
+
+    injectSidebarSkeletons: function () {
+        const name = document.getElementById('sidebarName');
+        const role = document.getElementById('sidebarRole');
+        const avatar = document.getElementById('sidebarAvatar');
+        if (name) name.classList.add('skeleton-base', 'skeleton-name');
+        if (role) role.classList.add('skeleton-base', 'skeleton-role');
+        if (avatar) avatar.classList.add('skeleton-base', 'skeleton-avatar');
+    },
+
+    removeSidebarSkeletons: function () {
+        const name = document.getElementById('sidebarName');
+        const role = document.getElementById('sidebarRole');
+        const avatar = document.getElementById('sidebarAvatar');
+        if (name) name.classList.remove('skeleton-base', 'skeleton-name');
+        if (role) role.classList.remove('skeleton-base', 'skeleton-role');
+        if (avatar) avatar.classList.remove('skeleton-base', 'skeleton-avatar');
+    },
+
+    // --- RENDERING ACTIONS ---
+
+    injectSalesSkeletons: function () {
+        const container = document.getElementById('sales-history-container');
+        if (!container) return;
+
+        // Matches .transaction-item .tx-grid structure exactly
+        container.innerHTML = Array(5).fill(0).map(() => `
+            <div class="skeleton-row">
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <div class="skeleton-base skeleton-circle" style="width:40px; height:40px;"></div>
+                    <div style="flex:1;">
+                        <div class="skeleton-base skeleton-text" style="width:120px; margin-bottom:6px;"></div>
+                        <div class="skeleton-base skeleton-text" style="width:160px; margin-bottom:0;"></div>
+                    </div>
+                </div>
+                <div class="skeleton-base skeleton-text" style="width:80px; margin-bottom:0;"></div>
+                <div><div class="skeleton-base skeleton-status"></div></div>
+                <div class="skeleton-base skeleton-amount"></div>
+            </div>
+        `).join('');
+    },
+
+    injectButtonSkeleton: function () {
+        const btn = document.getElementById('btn-connect-paypal');
+        if (btn) {
+            console.log("Applying skeleton to PayPal button");
+            btn.classList.add('btn-loading-skeleton');
+        }
+    },
+
+    injectEmailSkeleton: function () {
+        const emailEl = document.getElementById('paypal-display-email');
+        if (emailEl) {
+            emailEl.innerHTML = `<div class="skeleton-base" style="width: 160px; height: 16px; border-radius: 4px; display: inline-block; vertical-align: middle;"></div>`;
+        }
+    },
+
+    injectPayPalStatusSkeleton: function () {
+        const label = document.getElementById('paypal-status-label');
+        const dot = document.getElementById('paypal-status-dot');
+        if (label) {
+            label.innerHTML = `<div class="skeleton-base" style="width: 70px; height: 14px; border-radius: 4px; display: inline-block;"></div>`;
+        }
+        if (dot) {
+            dot.style.backgroundColor = "rgba(255,255,255,0.05)";
+        }
+    },
+
+    renderSidebar: function () {
+        if (!this.data.sidebar) return; // Or handle error state
+
+        const data = this.data.sidebar;
+        const nameEl = document.getElementById('sidebarName');
+        const roleEl = document.getElementById('sidebarRole');
+        const avatarEl = document.getElementById('sidebarAvatar');
+
+        if (nameEl) nameEl.textContent = data.nickname || (data.first_name ? `${data.first_name} ${data.last_name || ''}` : 'Usuario');
+        if (roleEl) roleEl.textContent = data.role || 'Productor';
+
+        if (avatarEl) {
+            if (data.avatar_url) {
+                avatarEl.innerHTML = `<img src="${data.avatar_url}" alt="Avatar" style="width:100%; height:100%; border-radius:inherit; object-fit:cover;">`;
+                avatarEl.style.background = "transparent";
+            } else {
+                avatarEl.textContent = (data.nickname || data.email || 'U').charAt(0).toUpperCase();
+            }
+        }
+    },
+
+    renderStatus: function () {
+        // data.status is the paypal email or undefined
+        const paypalEmail = this.data.status;
+        this.updateUI(paypalEmail);
+    },
+
+    renderSalesHistory: function () {
+        const container = document.getElementById('sales-history-container');
+        if (!container) return;
+
+        const mySales = this.data.sales;
+
+        if (mySales === null) {
+            container.innerHTML = `<p style="color:#ef4444; text-align:center;">Error al cargar el historial.</p>`;
+            return;
+        }
+
+        if (mySales.length === 0) {
+            container.innerHTML = `
+                <div style="text-align: center; padding: 40px; color: var(--text-secondary);">
+                    <i class="bi bi-clipboard-data" style="font-size: 3rem; opacity: 0.2; display: block; margin-bottom: 16px;"></i>
+                    <p>No tienes ventas registradas aún.</p>
+                    <a href="/cuenta/subir-kit.html" style="color: var(--accent); font-weight: 600; text-decoration: none;">¡Sube tu primer producto!</a>
+                </div>
+            `;
+            return;
+        }
+
+        // Use .tx-grid + .transaction-item
+        container.innerHTML = mySales.map(sale => {
+            const date = new Date(sale.created_at).toLocaleDateString('es-ES', {
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric'
+            });
+            const customerName = sale.order?.buyer?.nickname || "Usuario Anónimo";
+            const customerEmail = sale.order?.buyer?.email || "N/A";
+            const status = sale.order?.status || 'completed';
+            const amount = parseFloat(sale.price_at_purchase).toFixed(2);
+
+            return `
+                <div class="transaction-item tx-grid">
+                    <div class="tr-customer">
+                        <i class="bi bi-person-circle" style="font-size: 1.5rem; color: #444;"></i>
+                        <div class="tr-customer-info">
+                            <h4>${customerName}</h4>
+                            <p>${customerEmail}</p>
+                        </div>
+                    </div>
+                    <div class="tr-date">${date}</div>
+                    <div><span class="tr-status ${status}">${status}</span></div>
+                    <div class="tr-amount">$${amount}</div>
+                </div>
+            `;
+        }).join('');
     },
 
     updateUI: function (paypalEmail) {
@@ -157,6 +266,10 @@ const PaymentSettings = {
         const btn = document.getElementById('btn-connect-paypal');
 
         if (!label || !dot) return;
+
+        // Remove Skeleton States
+        if (btn) btn.classList.remove('btn-loading-skeleton');
+        if (dot) dot.style.backgroundColor = "";
 
         if (paypalEmail && this.isValidEmail(paypalEmail)) {
             label.textContent = "Conectado";
@@ -179,15 +292,17 @@ const PaymentSettings = {
     },
 
     setupListeners: function () {
-        // Robust listener registration
         const btn = document.getElementById('btn-connect-paypal');
         if (btn) {
-            btn.addEventListener('click', () => this.openModal());
+            // Remove old listeners? No easy way, but this element persists. 
+            // Better to clone or check if listener added. 
+            // For now, assuming simple page load.
+            btn.onclick = () => this.openModal();
         }
 
         const saveBtn = document.getElementById('btn-save-paypal');
         if (saveBtn) {
-            saveBtn.addEventListener('click', () => this.save());
+            saveBtn.onclick = () => this.save();
         }
     },
 
@@ -207,7 +322,6 @@ const PaymentSettings = {
         const input = document.getElementById('inputPaypalEmail');
         let email = input.value.trim().toLowerCase();
 
-        // Basic sanitization: strip any non-email characters if accidentally pasted
         email = email.match(/[a-zA-Z0-9._%+-]+@?[a-zA-Z0-9.-]+\.?[a-zA-Z]{0,}/)?.[0] || email;
 
         if (!this.isValidEmail(email)) {
@@ -217,8 +331,7 @@ const PaymentSettings = {
         }
 
         try {
-            // Get current methods first to avoid overwriting other potential methods
-            const { data: user } = await supabaseClient
+            const { data: user } = await window.supabaseClient
                 .from('users')
                 .select('payment_methods')
                 .eq('id', this.userId)
@@ -227,7 +340,7 @@ const PaymentSettings = {
             const currentMethods = user?.payment_methods || {};
             currentMethods.paypal = email;
 
-            const { error } = await supabaseClient
+            const { error } = await window.supabaseClient
                 .from('users')
                 .update({ payment_methods: currentMethods })
                 .eq('id', this.userId);
@@ -238,9 +351,11 @@ const PaymentSettings = {
             else alert("PayPal configurado correctamente.");
 
             this.closeModal();
-            await this.loadStatus();
 
-            // Re-run navbar check if available
+            // Reload just status and render it
+            await this.fetchStatus();
+            this.renderStatus();
+
             if (window.checkPaymentSetup) window.checkPaymentSetup(this.userId);
 
         } catch (err) {

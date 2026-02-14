@@ -868,3 +868,206 @@ textarea.form-input::-webkit-scrollbar-thumb:hover {
     color: var(--text-secondary);
     font-size: 0.85rem;
 }
+
+/* ==================== SKELETON LOADERS ==================== */
+@keyframes skeleton-shimmer {
+    0% {
+        background-position: 200% 0;
+    }
+
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+/* Base Skeleton for any element */
+.skeleton-base {
+    position: relative !important;
+    overflow: hidden !important;
+    background-color: #242426 !important;
+    /* Lighter for better contrast on dark cards */
+    background-image: linear-gradient(90deg,
+            rgba(255, 255, 255, 0) 0,
+            rgba(255, 255, 255, 0.08) 50%,
+            rgba(255, 255, 255, 0) 100%) !important;
+    background-size: 200% 100% !important;
+    animation: skeleton-shimmer 1.5s infinite !important;
+    border-radius: 8px !important;
+    border: none !important;
+    box-shadow: none !important;
+    color: transparent !important;
+    pointer-events: none;
+    -webkit-text-fill-color: transparent !important;
+}
+
+/* Ensure no images or text peek through during skeleton phase */
+.skeleton-base img,
+.skeleton-base * {
+    opacity: 0 !important;
+    visibility: hidden !important;
+}
+
+/* Specific component overrides to maintain layout */
+.skeleton-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50% !important;
+    flex-shrink: 0;
+}
+
+/* Hide content inside skeletons */
+.skeleton-base::placeholder {
+    color: transparent !important;
+}
+
+/* Skeleton Text Variants */
+.skeleton-text {
+    height: 12px;
+    margin-bottom: 8px;
+    display: block;
+}
+
+.skeleton-text.short {
+    width: 30%;
+}
+
+.skeleton-text.medium {
+    width: 60%;
+}
+
+.skeleton-text.long {
+    width: 90%;
+}
+
+.skeleton-circle {
+    border-radius: 50% !important;
+    flex-shrink: 0;
+}
+
+/* Specific Component Skeletons */
+.skeleton-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50% !important;
+    flex-shrink: 0;
+}
+
+.skeleton-name {
+    height: 22px;
+    width: 140px;
+    border-radius: 4px;
+}
+
+.skeleton-role {
+    height: 26px;
+    width: 100px;
+    border-radius: 100px !important;
+}
+
+/* High Fidelity Sidebar Centering & Sizing */
+#sidebarAvatar.skeleton-base,
+#sidebarName.skeleton-base,
+#sidebarRole.skeleton-base {
+    margin-left: auto !important;
+    margin-right: auto !important;
+    display: block !important;
+}
+
+#sidebarAvatar.skeleton-base {
+    width: 82px !important;
+    height: 82px !important;
+    border-radius: 50% !important;
+    margin-bottom: 20px !important;
+}
+
+#sidebarName.skeleton-base {
+    width: 140px !important;
+    height: 20px !important;
+    border-radius: 100px !important;
+    margin-bottom: 8px !important;
+}
+
+#sidebarRole.skeleton-base {
+    width: 90px !important;
+    height: 22px !important;
+    border-radius: 100px !important;
+    margin-top: 4px !important;
+    background: #323235 !important;
+    /* Slightly different for role badge look */
+}
+
+/* Button Skeleton State */
+.btn-loading-skeleton {
+    color: transparent !important;
+    background-color: #1a1a1a !important;
+    background-image: linear-gradient(90deg,
+            rgba(255, 255, 255, 0) 0,
+            rgba(255, 255, 255, 0.05) 50%,
+            rgba(255, 255, 255, 0) 100%) !important;
+    background-size: 200% 100% !important;
+    animation: skeleton-shimmer 1.5s infinite !important;
+    border: none !important;
+    pointer-events: none;
+    position: relative !important;
+    overflow: hidden !important;
+    box-shadow: none !important;
+    border-radius: 100px !important;
+}
+
+/* Producer Card Skeletons (High Fidelity) */
+.skeleton-producer-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 24px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    aspect-ratio: 1 / 1.15;
+    width: 100%;
+}
+
+.skeleton-avatar-lg {
+    width: 80px;
+    height: 80px;
+    border-radius: 50% !important;
+    margin-bottom: 8px;
+}
+
+.skeleton-text-center {
+    height: 14px;
+    border-radius: 100px !important;
+    margin: 0 auto;
+}
+
+.skeleton-btn-sm {
+    width: 100%;
+    height: 32px;
+    border-radius: 6px !important;
+    margin-top: auto;
+}
+
+/* Transaction Item Skeletons (Compatibility) */
+.skeleton-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr;
+    align-items: center;
+    gap: 20px;
+    padding: 16px 20px;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 12px;
+    border: none !important;
+}
+
+.skeleton-status {
+    height: 26px;
+    width: 85px;
+    border-radius: 20px;
+}
+
+.skeleton-amount {
+    height: 20px;
+    width: 50px;
+    margin-left: auto;
+}

@@ -28,65 +28,14 @@
     <link rel="stylesheet" href="/css/hover-card.css">
     <link rel="stylesheet" href="/css/footer.css">
     <link rel="stylesheet" href="/css/account-settings.css">
+
+
     <style>
         .producers-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
             gap: 20px;
             width: 100%;
-        }
-
-        .mini-skeleton {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 12px;
-            padding: 16px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 12px;
-            aspect-ratio: 1 / 1.15;
-            position: relative;
-            overflow: hidden;
-            width: 100%;
-        }
-
-        .mini-skeleton::after {
-            content: "";
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 50%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.03), transparent);
-            animation: skeleton-wave 1.5s infinite;
-        }
-
-        @keyframes skeleton-wave {
-            0% {
-                left: -100%;
-            }
-
-            100% {
-                left: 200%;
-            }
-        }
-
-        .mini-skeleton::before {
-            content: "";
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.05);
-            margin-bottom: 8px;
-            flex-shrink: 0;
-        }
-
-        .mini-skeleton-text {
-            height: 12px;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 4px;
-            width: 70%;
         }
     </style>
 
@@ -328,7 +277,7 @@
                                 <div class="notif-empty" style="text-align: center; color: #fff; padding: 40px 20px;">
                                     <div style="font-size: 2rem; margin-bottom: 16px; color: #666;"><i
                                             class="bi bi-bell"></i></div>
-                                    <h4 style="margin-bottom: 8px; font-size: 0.9rem; font-weight: 500;">Cargando...
+                                    <h4 style="margin-bottom: 8px; font-size: 0.9rem; font-weight: 500;">&nbsp;</h4>
                                     </h4>
                                 </div>
                             </div>
@@ -336,7 +285,8 @@
                     </div>
 
                     <div class="user-dropdown">
-                        <div class="user-trigger" onclick="toggleUserDropdown(event)" style="cursor: pointer;">
+                        <div class="user-trigger" data-label="Perfil" onclick="toggleUserDropdown(event)"
+                            style="cursor: pointer;">
                             <div id="user-avatar-display" class="user-avatar-placeholder">W</div>
                         </div>
                         <div class="user-dropdown-menu" style="width: 380px;">
@@ -452,9 +402,9 @@
         <!-- Sidebar Navigation -->
         <aside class="settings-sidebar">
             <div class="profile-card">
-                <div class="profile-card-avatar" id="sidebarAvatar">W</div>
-                <div class="profile-card-name" id="sidebarName">Cargando...</div>
-                <div class="profile-card-role" id="sidebarRole">Productor</div>
+                <div class="profile-card-avatar" id="sidebarAvatar"></div>
+                <div class="profile-card-name" id="sidebarName"></div>
+                <div class="profile-card-role" id="sidebarRole"></div>
             </div>
 
             <nav class="settings-nav">
@@ -479,38 +429,90 @@
                 <h1 class="settings-section-title">Siguiendo</h1>
 
                 <div id="followingSkeleton" class="producers-grid">
-                    <!-- 8 Mini Skeletons -->
-                    <div class="skeleton-card mini-skeleton">
-                        <div class="mini-skeleton-text" style="width: 70%; margin-top: 4px;"></div>
-                        <div class="mini-skeleton-text" style="width: 40%; margin-top: 4px;"></div>
+                    <!-- 12 High-Fidelity Skeletons -->
+                    <div class="skeleton-producer-card">
+                        <div class="skeleton-base skeleton-avatar-lg"></div>
+                        <div class="skeleton-base skeleton-text-center" style="width: 70%; height: 18px;"></div>
+                        <div class="skeleton-base skeleton-text-center" style="width: 45%; height: 14px;"></div>
+                        <div class="skeleton-base skeleton-text-center" style="width: 50%; height: 12px;"></div>
+                        <div class="skeleton-base skeleton-btn-sm"></div>
                     </div>
-                    <div class="skeleton-card mini-skeleton">
-                        <div class="mini-skeleton-text" style="width: 60%; margin-top: 4px;"></div>
-                        <div class="mini-skeleton-text" style="width: 35%; margin-top: 4px;"></div>
+                    <div class="skeleton-producer-card">
+                        <div class="skeleton-base skeleton-avatar-lg"></div>
+                        <div class="skeleton-base skeleton-text-center" style="width: 65%; height: 18px;"></div>
+                        <div class="skeleton-base skeleton-text-center" style="width: 50%; height: 14px;"></div>
+                        <div class="skeleton-base skeleton-text-center" style="width: 40%; height: 12px;"></div>
+                        <div class="skeleton-base skeleton-btn-sm"></div>
                     </div>
-                    <div class="skeleton-card mini-skeleton">
-                        <div class="mini-skeleton-text" style="width: 75%; margin-top: 4px;"></div>
-                        <div class="mini-skeleton-text" style="width: 45%; margin-top: 4px;"></div>
+                    <div class="skeleton-producer-card">
+                        <div class="skeleton-base skeleton-avatar-lg"></div>
+                        <div class="skeleton-base skeleton-text-center" style="width: 75%; height: 18px;"></div>
+                        <div class="skeleton-base skeleton-text-center" style="width: 40%; height: 14px;"></div>
+                        <div class="skeleton-base skeleton-text-center" style="width: 55%; height: 12px;"></div>
+                        <div class="skeleton-base skeleton-btn-sm"></div>
                     </div>
-                    <div class="skeleton-card mini-skeleton">
-                        <div class="mini-skeleton-text" style="width: 50%; margin-top: 4px;"></div>
-                        <div class="mini-skeleton-text" style="width: 30%; margin-top: 4px;"></div>
+                    <div class="skeleton-producer-card">
+                        <div class="skeleton-base skeleton-avatar-lg"></div>
+                        <div class="skeleton-base skeleton-text-center" style="width: 60%; height: 18px;"></div>
+                        <div class="skeleton-base skeleton-text-center" style="width: 55%; height: 14px;"></div>
+                        <div class="skeleton-base skeleton-text-center" style="width: 35%; height: 12px;"></div>
+                        <div class="skeleton-base skeleton-btn-sm"></div>
                     </div>
-                    <div class="skeleton-card mini-skeleton">
-                        <div class="mini-skeleton-text" style="width: 65%; margin-top: 4px;"></div>
-                        <div class="mini-skeleton-text" style="width: 40%; margin-top: 4px;"></div>
+                    <div class="skeleton-producer-card">
+                        <div class="skeleton-base skeleton-avatar-lg"></div>
+                        <div class="skeleton-base skeleton-text-center" style="width: 70%; height: 18px;"></div>
+                        <div class="skeleton-base skeleton-text-center" style="width: 45%; height: 14px;"></div>
+                        <div class="skeleton-base skeleton-text-center" style="width: 50%; height: 12px;"></div>
+                        <div class="skeleton-base skeleton-btn-sm"></div>
                     </div>
-                    <div class="skeleton-card mini-skeleton">
-                        <div class="mini-skeleton-text" style="width: 55%; margin-top: 4px;"></div>
-                        <div class="mini-skeleton-text" style="width: 35%; margin-top: 4px;"></div>
+                    <div class="skeleton-producer-card">
+                        <div class="skeleton-base skeleton-avatar-lg"></div>
+                        <div class="skeleton-base skeleton-text-center" style="width: 65%; height: 18px;"></div>
+                        <div class="skeleton-base skeleton-text-center" style="width: 50%; height: 14px;"></div>
+                        <div class="skeleton-base skeleton-text-center" style="width: 40%; height: 12px;"></div>
+                        <div class="skeleton-base skeleton-btn-sm"></div>
                     </div>
-                    <div class="skeleton-card mini-skeleton">
-                        <div class="mini-skeleton-text" style="width: 70%; margin-top: 4px;"></div>
-                        <div class="mini-skeleton-text" style="width: 45%; margin-top: 4px;"></div>
+                    <div class="skeleton-producer-card">
+                        <div class="skeleton-base skeleton-avatar-lg"></div>
+                        <div class="skeleton-base skeleton-text-center" style="width: 75%; height: 18px;"></div>
+                        <div class="skeleton-base skeleton-text-center" style="width: 40%; height: 14px;"></div>
+                        <div class="skeleton-base skeleton-text-center" style="width: 55%; height: 12px;"></div>
+                        <div class="skeleton-base skeleton-btn-sm"></div>
                     </div>
-                    <div class="skeleton-card mini-skeleton">
-                        <div class="mini-skeleton-text" style="width: 60%; margin-top: 4px;"></div>
-                        <div class="mini-skeleton-text" style="width: 30%; margin-top: 4px;"></div>
+                    <div class="skeleton-producer-card">
+                        <div class="skeleton-base skeleton-avatar-lg"></div>
+                        <div class="skeleton-base skeleton-text-center" style="width: 60%; height: 18px;"></div>
+                        <div class="skeleton-base skeleton-text-center" style="width: 55%; height: 14px;"></div>
+                        <div class="skeleton-base skeleton-text-center" style="width: 35%; height: 12px;"></div>
+                        <div class="skeleton-base skeleton-btn-sm"></div>
+                    </div>
+                    <div class="skeleton-producer-card">
+                        <div class="skeleton-base skeleton-avatar-lg"></div>
+                        <div class="skeleton-base skeleton-text-center" style="width: 70%; height: 18px;"></div>
+                        <div class="skeleton-base skeleton-text-center" style="width: 45%; height: 14px;"></div>
+                        <div class="skeleton-base skeleton-text-center" style="width: 50%; height: 12px;"></div>
+                        <div class="skeleton-base skeleton-btn-sm"></div>
+                    </div>
+                    <div class="skeleton-producer-card">
+                        <div class="skeleton-base skeleton-avatar-lg"></div>
+                        <div class="skeleton-base skeleton-text-center" style="width: 65%; height: 18px;"></div>
+                        <div class="skeleton-base skeleton-text-center" style="width: 50%; height: 14px;"></div>
+                        <div class="skeleton-base skeleton-text-center" style="width: 40%; height: 12px;"></div>
+                        <div class="skeleton-base skeleton-btn-sm"></div>
+                    </div>
+                    <div class="skeleton-producer-card">
+                        <div class="skeleton-base skeleton-avatar-lg"></div>
+                        <div class="skeleton-base skeleton-text-center" style="width: 75%; height: 18px;"></div>
+                        <div class="skeleton-base skeleton-text-center" style="width: 40%; height: 14px;"></div>
+                        <div class="skeleton-base skeleton-text-center" style="width: 55%; height: 12px;"></div>
+                        <div class="skeleton-base skeleton-btn-sm"></div>
+                    </div>
+                    <div class="skeleton-producer-card">
+                        <div class="skeleton-base skeleton-avatar-lg"></div>
+                        <div class="skeleton-base skeleton-text-center" style="width: 60%; height: 18px;"></div>
+                        <div class="skeleton-base skeleton-text-center" style="width: 55%; height: 14px;"></div>
+                        <div class="skeleton-base skeleton-text-center" style="width: 35%; height: 12px;"></div>
+                        <div class="skeleton-base skeleton-btn-sm"></div>
                     </div>
                 </div>
 
