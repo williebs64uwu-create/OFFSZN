@@ -79,35 +79,37 @@ export const getPublicUrl = (key) => {
 export const deleteFromR2 = async (keys) => {
     if (!keys || keys.length === 0) return;
 
+    // 🔥 FIX: Sanitize keys (remove leading slashes)
+    const sanitizedKeys = keys.map(k => k.startsWith('/') ? k.substring(1) : k);
+
     // R2/S3 requiere que el array sea de objetos { Key: 'key' }
-    const objects = keys.map(key => ({ Key: key }));
+    const objects = sanitizedKeys.map(key => ({ Key: key }));
 
-    // 🔥 FIX: Borrar de AMBOS buckets (Público y Seguro)
-    // Esto asegura que se eliminen tanto covers/mp3 (públicos) como wavs/stems/zips (seguros).
-    const buckets = [R2_BUCKET_NAME, R2_SECURE_BUCKET_NAME];
+    console.log(`[R2 Storage] Attempting to delete ${objects.length} objects from ${R2_BUCKET_NAME}`);
+    console.log(`[R2 Storage] Sample Keys:`, JSON.stringify(objects.slice(0, 3))); // Log first 3 keys
 
+    // 🔥 FIX: Single Bucket Architecture
+    // All files are in OFF-SZN STORAGE (even 'secure-products/' folder)
     try {
-        const deletePromises = buckets.map(async (bucketName) => {
-            if (!bucketName) return; // Safety check
-
-            const command = new DeleteObjectsCommand({
-                Bucket: bucketName,
-                Delete: {
-                    Objects: objects,
-                    Quiet: true
-                }
-            });
-
-            const response = await s3Client.send(command);
-            if (response.Errors && response.Errors.length > 0) {
-                console.warn(`[R2] Errores parciales al eliminar del bucket ${bucketName}:`, response.Errors);
-            } else {
-                console.log(`[R2] Eliminación exitosa en bucket: ${bucketName}`);
+        const command = new DeleteObjectsCommand({
+            Bucket: R2_BUCKET_NAME,
+            Delete: {
+                Objects: objects,
+                Quiet: false // ENABLE VERBOSE OUTPUT
             }
         });
 
-        await Promise.all(deletePromises);
-        console.log(`[R2] Proceso de eliminación completado para ${keys.length} archivos.`);
+        const response = await s3Client.send(command);
+
+        if (response.Deleted && response.Deleted.length > 0) {
+            console.log(`✅ [R2 Storage] Successfully deleted ${response.Deleted.length} items from R2.`);
+        } else {
+            console.warn(`⚠️ [R2 Storage] No items were reported as deleted by R2.`);
+        }
+
+        if (response.Errors && response.Errors.length > 0) {
+            console.error(`❌ [R2 Storage] Errors deleting items:`, JSON.stringify(response.Errors));
+        }
 
     } catch (error) {
         console.error("Error al eliminar archivos de R2 (Global):", error);

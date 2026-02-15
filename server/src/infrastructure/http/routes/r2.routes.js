@@ -7,8 +7,9 @@ import { supabase } from '../../database/connection.js';
 const router = Router();
 
 // 🔥 FILE SIZE LIMITS (server-side enforcement)
-const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB general
-const MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10MB for images
+// 🔥 FILE SIZE LIMITS (server-side enforcement)
+const MAX_FILE_SIZE = 1000 * 1024 * 1024; // 1GB (Increased for Stems/WAVs)
+const MAX_IMAGE_SIZE = 20 * 1024 * 1024; // 20MB for images
 
 router.get('/r2/test-hello', (req, res) => res.send('Hello World'));
 
@@ -22,10 +23,19 @@ router.post('/r2/upload-url', authenticateTokenMiddleware, async (req, res) => {
             return res.status(400).json({ error: 'Faltan fileName o fileType' });
         }
 
-        // 🔥 Server-side file size validation
+        // 🔥 Server-side file size validation (Granular)
         if (fileSize) {
-            const isImage = fileType.startsWith('image/');
-            const maxAllowed = isImage ? MAX_IMAGE_SIZE : MAX_FILE_SIZE;
+            let maxAllowed = 50 * 1024 * 1024; // Default 50MB
+
+            if (fileType.startsWith('image/')) {
+                maxAllowed = 20 * 1024 * 1024; // 20MB
+            } else if (fileType === 'audio/wav' || fileName.toLowerCase().endsWith('.wav')) {
+                maxAllowed = 60 * 1024 * 1024; // 60MB for WAV
+            } else if (fileType === 'application/x-rar-compressed' || fileName.toLowerCase().endsWith('.rar')) {
+                maxAllowed = 50 * 1024 * 1024; // 50MB for RAR
+            }
+            // MP3 and others default to 50MB
+
             const maxMB = Math.round(maxAllowed / (1024 * 1024));
 
             if (fileSize > maxAllowed) {
@@ -34,6 +44,11 @@ router.post('/r2/upload-url', authenticateTokenMiddleware, async (req, res) => {
                 });
             }
         }
+
+        // 🔥 FIX: Ensure valid Content-Type for signature
+        // If frontend sends empty string (common for zip/rar), default to octet-stream
+        // matches frontend fallback: file.type || 'application/octet-stream'
+        const finalFileType = fileType || 'application/octet-stream';
 
         // Estructura de carpetas sugerida: folder/userId/timestamp_fileName
         const timestamp = Date.now();
@@ -44,26 +59,31 @@ router.post('/r2/upload-url', authenticateTokenMiddleware, async (req, res) => {
             .replace(/_+/g, '_'); // Evitar múltiples underscores
 
         const keyWithPotentialDoubles = `${folder || 'uploads'}/${userId}/${timestamp}_${cleanFileName}`;
-        const key = keyWithPotentialDoubles.replace(/_+/g, '_');
+        let finalKey = keyWithPotentialDoubles.replace(/_+/g, '_');
 
-        // 🔥 FIX: DETERMINAR BUCKET SEGÚN TIPO DE ARCHIVO
-        // Los Kits y Stems van al bucket PRIVADO (secure-products)
-        let bucket = R2_BUCKET_NAME; // Default: 'offszn-storage'
-        if (folder === 'kits' || folder === 'stems' || folder === 'wav_untagged') {
-            bucket = R2_SECURE_BUCKET_NAME; // 'secure-products'
-            console.log(`[R2 Upload] Routing sensitive file (${folder}) to SECURE bucket: ${bucket}`);
+        // 🔥 FIX: SINGLE BUCKET ARCHITECTURE
+        // Todo va a 'offszn-storage'. Si es sensible, se agrega 'secure-products/' al inicio del key.
+        const isSensitive = folder.includes('kits') || folder.includes('stems') || folder.includes('wav');
+
+        if (isSensitive) {
+            // Evitar duplicar el prefijo se ya viene
+            if (!finalKey.startsWith('secure-products/')) {
+                finalKey = `secure-products/${finalKey}`;
+            }
+            console.log(`[R2 Upload] Routing sensitive file to SECURE FOLDER: ${finalKey}`);
         }
 
-        const uploadUrl = await getPresignedUploadUrl(key, fileType, bucket);
+        // Siempre usar el bucket principal
+        const bucket = R2_BUCKET_NAME;
 
-        // Si es bucket seguro, la Public URL no servirá directamente (requiere firma), 
-        // pero devolvemos key para que el frontend lo guarde.
-        // El frontend usa getAuthorizedUrl para visualizarlos si es necesario.
+        const uploadUrl = await getPresignedUploadUrl(finalKey, finalFileType, bucket);
 
+        // Si es sensible, la Public URL no servirá directamente (requiere firma)
+        // Devolvemos el key final (con el prefijo secure-products si aplica)
         res.json({
             uploadUrl,
-            key,
-            publicUrl: (bucket === R2_SECURE_BUCKET_NAME) ? null : getPublicUrl(key)
+            key: finalKey,
+            publicUrl: isSensitive ? null : getPublicUrl(finalKey)
         });
     } catch (error) {
         console.error('Error al generar R2 upload URL:', error);

@@ -305,7 +305,7 @@ async function selectVideo(videoId, title, description, thumbnails) {
                 const response = await fetch(thumbUrl, { mode: 'cors' });
                 const blob = await response.blob();
                 formData.coverBlob = blob;
-                if (typeof filesUploaded !== 'undefined') filesUploaded.cover = true;
+                if (typeof filesUploaded !== 'undefined') filesUploaded.cover = false; // 🔥 Mark as NOT uploaded so saveDraftManual handles it
 
                 // Show Remove Button
                 const removeBtn = document.getElementById('removeCoverBtn');

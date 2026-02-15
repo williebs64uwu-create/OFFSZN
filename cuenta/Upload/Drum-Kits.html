@@ -6310,8 +6310,8 @@
             }
         }
 
-        // 🔥 AQUI EMEPIEZA LA FUNCION saveDraftAuto
-        async function saveDraftAuto() {
+        // 🔥 RENAMED: Manual Save only
+        async function saveDraftManual() {
             if (isSaving || window.isPublishing) return;
 
             // 🔥 Check for actual content
@@ -6331,6 +6331,9 @@
 
             try {
                 isSaving = true;
+
+                // Show toast to indicate saving
+                showToast('Guardando borrador...', 'info');
 
                 const titleInput = document.getElementById('titleInput');
                 const descInput = document.getElementById('descInput');
@@ -6357,28 +6360,56 @@
                     last_saved: new Date().toISOString()
                 };
 
+                // 🔥 FETCH EXISTING DRAFT FOR CLEANUP (If exists)
+                let existingDraft = null;
+                if (currentDraftId) {
+                    const { data } = await supabaseClient.from('drumkit_drafts').select('*').eq('id', currentDraftId).single();
+                    existingDraft = data;
+                }
+
                 // ========================================
                 // 🔥 SUBIR COVER (SI HAY UNO NUEVO)
                 // ========================================
                 // 1. Cover
                 if (formData.coverBlob && !filesUploaded.cover) {
+                    // Cleanup old cover
+                    if (existingDraft && existingDraft.cover_url) {
+                        console.log('🧹 [DRAFT-CLEANUP] Eliminando cover antiguo...');
+                        await deleteFileFromStorage(existingDraft.cover_url, 'drumkit-drafts');
+                    }
+
                     const coverFile = new File([formData.coverBlob], 'cover.jpg', { type: 'image/jpeg' });
                     const key = await uploadToR2(coverFile, 'drafts/covers');
                     draftData.cover_url = `https://offszn-storage.41d0f49121d02c88f71fdb4da54a791d.r2.cloudflarestorage.com/${key}`;
+                    console.log('✅ Cover uploaded to R2:', draftData.cover_url);
                     filesUploaded.cover = true;
                 }
 
                 // 2. Kit
                 if (formData.files.kit && !filesUploaded.kit) {
+                    // Cleanup old kit
+                    if (existingDraft && existingDraft.kit_url) {
+                        console.log('🧹 [DRAFT-CLEANUP] Eliminando kit antiguo...');
+                        await deleteFileFromStorage(existingDraft.kit_url, 'drumkit-drafts');
+                    }
+
                     const key = await uploadToR2(formData.files.kit, 'drafts/kits');
-                    draftData.kit_url = key; // Private key
+                    draftData.kit_url = key; // Private key (R2 Key)
+                    console.log('✅ Kit uploaded to R2 (Key):', draftData.kit_url);
                     filesUploaded.kit = true;
                 }
 
                 // 3. Audio
                 if (formData.files.audio && !filesUploaded.audio) {
+                    // Cleanup old audio
+                    if (existingDraft && existingDraft.audio_url) {
+                        console.log('🧹 [DRAFT-CLEANUP] Eliminando audio antiguo...');
+                        await deleteFileFromStorage(existingDraft.audio_url, 'drumkit-drafts');
+                    }
+
                     const key = await uploadToR2(formData.files.audio, 'drafts/audio');
                     draftData.audio_url = `https://offszn-storage.41d0f49121d02c88f71fdb4da54a791d.r2.cloudflarestorage.com/${key}`;
+                    console.log('✅ Audio uploaded to R2:', draftData.audio_url);
                     filesUploaded.audio = true;
                 }
 
@@ -6408,19 +6439,19 @@
                         throw insertError;
                     }
                     currentDraftId = data.id;
-
-                    currentDraftId = data.id;
                 }
 
                 // 🔥 MARKER: Tenemos un borrador guardado
                 localStorage.setItem('offszn_has_draft', 'true');
+
+                showToast('Borrador guardado correctamente', 'success');
 
             } catch (e) {
                 console.error('❌ Error guardando draft:', e);
 
                 // 🔥 NO mostrar toast si es error de duplicado (muy común en auto-save)
                 if (!e.message.includes('duplicate') && !e.message.includes('already exists')) {
-                    // showToast('Error al guardar: ' + e.message, 'error'); // Opcional: Silenciar toast de error también si es auto-save
+                    showToast('Error al guardar: ' + e.message, 'error');
                 }
             } finally {
                 isSaving = false;
@@ -6854,7 +6885,7 @@
                     btn.innerText = 'GUARDANDO...';
                 }
 
-                // await saveDraftAuto(); // 🔥 DISABLED AUTO-SAVE
+                await saveDraftManual(); // 🔥 ENABLED MANUAL SAVE
                 showToast('Borrador guardado', 'success');
 
             } catch (e) {
@@ -7033,7 +7064,7 @@
 
             modal.remove();
             showToast('Tags reemplazados', 'success');
-            saveDraftAuto();
+            // saveDraftManual(); // 🔥 DISABLED AUTO-SAVE (Manual only)
         };
         // ========================================
         // ENHANCED AUDIO PLAYER
@@ -7766,7 +7797,7 @@
             btn.innerHTML = 'Guardando...';
             btn.disabled = true;
 
-            // await saveDraftAuto(); // 🔥 DISABLED AUTO-SAVE
+            await saveDraftManual(); // 🔥 ENABLED MANUAL SAVE
 
             btn.innerHTML = 'Guardar y Salir';
             btn.disabled = false;
@@ -8259,6 +8290,7 @@
                     const coverFile = new File([formData.coverBlob], 'cover_edit.jpg', { type: 'image/jpeg' });
                     const key = await uploadToR2(coverFile, 'products/covers');
                     updates.image_url = `https://offszn-storage.41d0f49121d02c88f71fdb4da54a791d.r2.cloudflarestorage.com/${key}`;
+                    console.log('✅ [EDIT] Cover uploaded to R2:', updates.image_url);
                 }
 
                 // 2. Upload NEW Files if exist
@@ -8275,6 +8307,7 @@
 
                     const key = await uploadToR2(formData.files.kit, 'secure-products/kits');
                     updates.kit_url = key;
+                    console.log('✅ [EDIT] Kit uploaded to R2 (Secure):', updates.kit_url);
                 }
 
                 // Audio Preview
@@ -8289,6 +8322,7 @@
 
                     const key = await uploadToR2(formData.files.audio, 'products/audio');
                     updates.audio_url = `https://offszn-storage.41d0f49121d02c88f71fdb4da54a791d.r2.cloudflarestorage.com/${key}`;
+                    console.log('✅ [EDIT] Audio uploaded to R2:', updates.audio_url);
                 }
 
                 // 4. Update Database
