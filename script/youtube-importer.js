@@ -1191,13 +1191,14 @@ function saveCrop() {
                 preview.src = URL.createObjectURL(currentCropBlob);
                 preview.style.display = 'block';
             }
-            if (window.showToast) window.showToast('Portada recortada guardada', 'success');
+            // if (window.showToast) window.showToast('Portada recortada guardada', 'success'); // REMOVED PER USER REQUEST
         }
 
         // Upload to Drafts (Background)
-        if (typeof uploadFileToDrafts === 'function') {
-            uploadFileToDrafts(currentCropBlob, 'cover');
-        }
+        // if (typeof uploadFileToDrafts === 'function') {
+        //     uploadFileToDrafts(currentCropBlob, 'cover');
+        // }
+        // ðŸ”¥ AUTO-UPLOAD DISABLED. Staged in formData above.
 
         closeCropModal();
 
@@ -1237,7 +1238,7 @@ function handleImportFileSelect(input, type) {
             const badge = slot.querySelector('.status-badge');
             if (badge) {
                 badge.className = 'status-badge success';
-                badge.innerText = 'Listo';
+                badge.innerText = 'Listo'; // Staged
             }
 
             // Update Button
@@ -1288,8 +1289,13 @@ window.handleAudioSelect = function (input) {
 
         if (window.showToast) window.showToast('Audio cargado para previsualización', 'success');
 
-        // Upload to Drafts
-        uploadFileToDrafts(file, 'mp3');
+        // ðŸ”¥ STAGE FOR UPLOAD (Beats.html)
+        if (typeof formData !== 'undefined') {
+            formData.files.mp3_tagged = file;
+        }
+
+        // Upload to Drafts - DISABLED
+        // uploadFileToDrafts(file, 'mp3');
     }
 }
 
@@ -1337,62 +1343,11 @@ let uploadedDraftPaths = {
     stems: null
 };
 
+// 🔥 REMOVED AUTO-UPLOAD FUNCTIONALITY PER USER REQUEST
+// Files are now only staged in formData and uploaded on "Save" or "Publish".
 async function uploadFileToDrafts(file, type) {
-    // 🔥 FIX: Direct Supabase check instead of AuthUtils which might not be init
-    const { data: { session } } = await supabaseClient.auth.getSession();
-    const user = session?.user;
-
-    if (!user) return null; // Guest: Local only
-
-    // Verify Size
-    const mb = 1024 * 1024;
-    let max = 50 * mb; // Default MP3/WAV/STEMS (Unified to 50 as per request)
-    if (type === 'cover') max = 10 * mb;
-
-    if (file.size > max) {
-        if (window.showToast) window.showToast(`El archivo excede el límite de ${(max / mb).toFixed(0)}MB`, 'error');
-        if (type !== 'cover') updateSlotStatus(type, 'error');
-        return null;
-    }
-
-    let folder = '';
-    if (type === 'mp3') folder = 'mp3_tagged';
-    else if (type === 'wav') folder = 'wav_untagged';
-    else if (type === 'stems') folder = 'stems';
-    else if (type === 'cover') folder = 'covers';
-    else return null;
-
-    // Sanitize
-    const fileName = file.name || `file_${Date.now()}`;
-    const cleanName = fileName.replace(/[^a-zA-Z0-9.-]/g, '_');
-    const path = `${user.id}/${folder}/${Date.now()}_${cleanName}`;
-
-    // UI Update (Slots)
-    if (type !== 'cover') updateSlotStatus(type, 'uploading');
-
-    try {
-        const { data, error } = await window.supabaseClient.storage
-            .from('beat-drafts')
-            .upload(path, file, { cacheControl: '3600', upsert: false });
-
-        if (error) throw error;
-
-        // Store Path
-        if (type === 'mp3') uploadedDraftPaths.mp3_tagged = data.path;
-        else if (type === 'wav') uploadedDraftPaths.wav_untagged = data.path;
-        else if (type === 'stems') uploadedDraftPaths.stems = data.path;
-        else if (type === 'cover') uploadedDraftPaths.cover = data.path;
-
-        if (type !== 'cover') updateSlotStatus(type, 'success');
-        if (window.showToast) window.showToast(`${type.toUpperCase()} guardado en borrador`, 'success');
-        return data.path;
-
-    } catch (err) {
-        console.error('Upload Error:', err);
-        if (type !== 'cover') updateSlotStatus(type, 'error');
-        if (window.showToast) window.showToast('Error al subir archivo', 'error');
-        return null;
-    }
+    console.log("🔥 Auto-upload disabled. File staged for manual save:", type);
+    return null;
 }
 
 function updateSlotStatus(type, status) {
@@ -1432,8 +1387,14 @@ window.handleImportFileSelect = function (input, type) {
             updatePreviewIcon(false);
         }
 
-        // 3. Upload Logic
-        uploadFileToDrafts(file, type);
+        // 3. Stage for Upload (Sync with Beats.html formData)
+        if (typeof formData !== 'undefined') {
+            if (type === 'mp3') formData.files.mp3_tagged = file;
+            else if (type === 'wav') formData.files.wav_untagged = file;
+            else if (type === 'stems') formData.files.stems = file;
+        }
+
+        // uploadFileToDrafts(file, type); // 🔥 DISABLED
     }
 }
 

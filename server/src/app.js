@@ -220,9 +220,10 @@ app.get([
     '/sample/:slug',
     '/instrumento/:slug',
     '/plugin/:slug',
-    '/voces/:slug'
+    '/voces/:slug',
+    '/p/:code' // 🔥 Short Link Route
 ], (req, res, next) => {
-    const { slug } = req.params;
+    const { slug, code } = req.params;
     // Serve Producto
     const productPage = path.join(rootPath, 'producto.html');
     if (fs.existsSync(productPage)) {

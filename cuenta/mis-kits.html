@@ -2503,6 +2503,10 @@
 
         /* ===== UPLOAD LIMIT LOGIC ===== */
         async function initUploadLimit() {
+            // ðŸ”¥ CONFIG: UPLOAD LIMIT
+            const MAX_UPLOAD_LIMIT = 100; // RELEASE: Change to 50 if needed
+            // const MAX_UPLOAD_LIMIT = 50; 
+
             const userId = localStorage.getItem('userId');
             if (!userId) return;
 
@@ -2552,10 +2556,10 @@
                 });
 
                 // 3. Update UI (Inject Counter)
-                updateLimitUI(totalCount, 100);
+                updateLimitUI(totalCount, MAX_UPLOAD_LIMIT);
 
                 // 4. Intercept Button
-                setupLimitInterceptor(totalCount, 100);
+                setupLimitInterceptor(totalCount, MAX_UPLOAD_LIMIT);
 
             } catch (err) {
                 console.warn("Error checking upload limit:", err);
@@ -2816,40 +2820,46 @@
                 const products = productsRes.data || [];
                 const drafts = draftsRes.data || [];
 
+                // Combine FIRST to ensure we modify the objects that get rendered
+                let allItems = [...drafts.map(d => ({ ...d, isDraft: true, status: 'draft' })), ...products];
+
                 // 3. PROCESS ALL ITEMS FOR COVERS (Sign URLs if needed)
-                await Promise.all([...drafts, ...products].map(async item => {
-                    const coverPath = item.image_url || item.cover_url;
+                await Promise.all(allItems.map(async item => {
+                    // ðŸ”¥ FIX: Check files_data.cover for drafts first
+                    // Ensure files_data is parsed if it's a string (Supabase quirk)
+                    if (item.files_data && typeof item.files_data === 'string') {
+                        try { item.files_data = JSON.parse(item.files_data); } catch (e) { console.warn('Failed to parse files_data', e); }
+                    }
+
+                    let coverPath = item.image_url || item.cover_url;
+                    if (item.files_data && item.files_data.cover) {
+                        coverPath = item.files_data.cover;
+                        // console.log("Found draft cover:", coverPath); 
+                    }
+
                     if (!coverPath) return;
 
-                    if (item.id && !item.user_id) { // Published item
-                        // Published items might be R2 or Supabase
-                        if (coverPath.startsWith('http')) {
+                    // Normalize URL (Sign if R2/Private)
+                    if (coverPath.startsWith('http')) {
+                        if (coverPath.includes('r2.cloudflarestorage.com') || !coverPath.includes('supabase.co')) {
                             item.signed_cover_url = await getAuthorizedUrl(coverPath);
                         } else {
-                            // Legacy Supabase Private support
-                            const bucket = dbType === 'beat' ? 'beat-covers' : `${dbType}-covers`;
-                            const { data } = await supabaseClient.storage.from(bucket).createSignedUrl(coverPath, 3600);
-                            if (data?.signedUrl) item.signed_cover_url = data.signedUrl;
+                            item.signed_cover_url = coverPath; // Public Supabase URL
                         }
-                    } else { // Draft
-                        item.isDraft = true;
-                        item.status = 'draft';
-                        let bucket = 'beat-drafts';
-                        if (type === 'drumkits') bucket = 'drumkit-drafts';
-                        if (type === 'presets') bucket = 'preset-drafts';
-                        if (type === 'loopkits') bucket = 'loopkit-drafts';
+                    } else {
+                        // Legacy Path (Bucket ID)
+                        let bucket = 'beat-covers';
+                        if (item.isDraft) bucket = 'beat-drafts';
 
-                        if (!coverPath.startsWith('http')) {
-                            const { data } = await supabaseClient.storage.from(bucket).createSignedUrl(coverPath, 3600);
-                            if (data?.signedUrl) item.signed_cover_url = data.signedUrl;
-                        } else {
-                            item.signed_cover_url = await getAuthorizedUrl(coverPath);
-                        }
+                        // Type specific buckets
+                        if (dbType === 'drumkit') bucket = item.isDraft ? 'drumkit-drafts' : 'drumkit-covers';
+                        if (dbType === 'loopkit') bucket = item.isDraft ? 'loopkit-drafts' : 'loopkit-covers';
+                        if (dbType === 'preset') bucket = item.isDraft ? 'preset-drafts' : 'preset-covers';
+
+                        const { data } = await supabaseClient.storage.from(bucket).createSignedUrl(coverPath, 3600);
+                        if (data?.signedUrl) item.signed_cover_url = data.signedUrl;
                     }
                 }));
-
-                // Combine
-                let allItems = [...drafts.map(d => ({ ...d, isDraft: true, status: 'draft' })), ...products];
 
                 // FILTER SOFT-DELETED ITEMS
                 allItems = allItems.filter(item => {

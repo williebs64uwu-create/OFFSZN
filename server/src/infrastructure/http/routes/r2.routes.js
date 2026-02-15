@@ -1,7 +1,7 @@
 import { Router } from 'express';
+import { getPresignedUploadUrl, getPresignedDownloadUrl, getPublicUrl, deleteFromR2 } from '../../services/r2-storage.service.js';
 import { authenticateTokenMiddleware } from '../../middlewares/authenticateTokenMiddleware.js';
-import { getPresignedUploadUrl, getPresignedDownloadUrl, deleteFromR2, getPublicUrl } from '../../services/r2-storage.service.js';
-import { R2_BUCKET_NAME } from '../../../shared/config/config.js';
+import { R2_BUCKET_NAME, R2_SECURE_BUCKET_NAME } from '../../../shared/config/config.js';
 import { supabase } from '../../database/connection.js';
 
 const router = Router();
@@ -46,12 +46,24 @@ router.post('/r2/upload-url', authenticateTokenMiddleware, async (req, res) => {
         const keyWithPotentialDoubles = `${folder || 'uploads'}/${userId}/${timestamp}_${cleanFileName}`;
         const key = keyWithPotentialDoubles.replace(/_+/g, '_');
 
-        const uploadUrl = await getPresignedUploadUrl(key, fileType);
+        // 🔥 FIX: DETERMINAR BUCKET SEGÚN TIPO DE ARCHIVO
+        // Los Kits y Stems van al bucket PRIVADO (secure-products)
+        let bucket = R2_BUCKET_NAME; // Default: 'offszn-storage'
+        if (folder === 'kits' || folder === 'stems' || folder === 'wav_untagged') {
+            bucket = R2_SECURE_BUCKET_NAME; // 'secure-products'
+            console.log(`[R2 Upload] Routing sensitive file (${folder}) to SECURE bucket: ${bucket}`);
+        }
+
+        const uploadUrl = await getPresignedUploadUrl(key, fileType, bucket);
+
+        // Si es bucket seguro, la Public URL no servirá directamente (requiere firma), 
+        // pero devolvemos key para que el frontend lo guarde.
+        // El frontend usa getAuthorizedUrl para visualizarlos si es necesario.
 
         res.json({
             uploadUrl,
             key,
-            publicUrl: getPublicUrl(key)
+            publicUrl: (bucket === R2_SECURE_BUCKET_NAME) ? null : getPublicUrl(key)
         });
     } catch (error) {
         console.error('Error al generar R2 upload URL:', error);

@@ -172,6 +172,19 @@ function getProductIdFromUrl() {
 
     // 1. URL Path check: /beat/some-slug-CODE or /beat/some-custom-slug
     const pathParts = window.location.pathname.split('/').filter(p => p);
+
+    // 🔥 NEW: Short Link Check: /p/CODE
+    if (pathParts.length >= 2 && pathParts[pathParts.length - 2] === 'p') {
+        const code = pathParts[pathParts.length - 1];
+        if (code && window.IdObfuscator) {
+            const decodedId = window.IdObfuscator.decodeId(code);
+            console.log(`Debug: Short Link Detected. Code: ${code} -> ID: ${decodedId}`);
+            if (decodedId && !isNaN(decodedId)) {
+                return { id: decodedId, slug: null };
+            }
+        }
+    }
+
     if (pathParts.length >= 2) {
         const lastPart = pathParts[pathParts.length - 1];
         const segments = lastPart.split('-');
@@ -659,37 +672,78 @@ window.openShareModal = function (productId) {
             if (e.target === backdrop) window.closeShareModal();
         };
 
-        backdrop.innerHTML = `
-            <div class="share-modal-content">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                     <h3 style="color:#fff; margin:0;">Compartir Producto</h3>
-                     <button onclick="closeShareModal()" style="background:none; border:none; color:#666; font-size:1.5rem; cursor:pointer;"><i class="bi bi-x"></i></button>
-                </div>
-                <p style="color:#888; font-size:0.9rem; margin-bottom:20px;">Copia el enlace directo para compartir este sonido con otros.</p>
-                
-                <div class="share-link-box" id="share-link-box" style="padding:0; overflow:hidden; display:flex; align-items:center; height:45px;">
-                     <button onclick="copyShareLink()" class="btn-copy-share">
-                        COPIAR
-                     </button>
-                     <input type="text" id="share-url-text" readonly style="flex:1; background:transparent; border:none; color:#ccc; padding:0 10px; outline:none; font-family:monospace; font-size:0.9rem;" value="...">
-                </div>
-                
-                <div id="share-status" style="height:20px; font-size:0.8rem; color:#4bff8f; margin-top:10px;"></div>
-            </div>
-        `;
+        // Initialize with placeholder content - will be updated below
+        backdrop.innerHTML = `<div class="share-modal-content"></div>`;
         document.body.appendChild(backdrop);
     }
 
-    // Logic to set URL
-    let displayUrl = window.location.href;
-    if (window.createSeoLink && window.currentProductData) {
-        displayUrl = window.location.origin + window.createSeoLink(window.currentProductData);
+    // --- 1. GENERATE SHORT LINK ---
+    let shortLink = window.location.href; // Fallback
+    if (window.IdObfuscator && window.currentProductData) {
+        const product = window.currentProductData;
+        const code = window.IdObfuscator.encodeId(product.id);
+        if (code) {
+            shortLink = `${window.location.origin}/p/${code}`;
+        }
     }
-    document.getElementById('share-url-text').value = displayUrl;
+
+    // --- 2. PREPARE SOCIAL LINKS ---
+    const shareText = `Escucha "${window.currentProductData?.name || 'este beat'}" en OFFSZN 🔥`;
+    const encodedLink = encodeURIComponent(shortLink);
+    const encodedText = encodeURIComponent(shareText);
+
+    const socials = [
+        { name: 'WhatsApp', icon: 'bi-whatsapp', color: '#25D366', url: `https://api.whatsapp.com/send?text=${encodedText}%20${encodedLink}` },
+        { name: 'Facebook', icon: 'bi-facebook', color: '#1877F2', url: `https://www.facebook.com/sharer/sharer.php?u=${encodedLink}` },
+        { name: 'Twitter', icon: 'bi-twitter-x', color: '#000000', url: `https://twitter.com/intent/tweet?text=${encodedText}&url=${encodedLink}` },
+        { name: 'Telegram', icon: 'bi-telegram', color: '#0088cc', url: `https://t.me/share/url?url=${encodedLink}&text=${encodedText}` }
+    ];
+
+    // --- 3. RENDER MODAL CONTENT ---
+    const contentBox = backdrop.querySelector('.share-modal-content');
+    if (contentBox) {
+        contentBox.innerHTML = `
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:25px;">
+                 <h3 style="color:#fff; margin:0; font-weight:800;">Compartir</h3>
+                 <button onclick="closeShareModal()" style="background:none; border:none; color:#666; font-size:1.5rem; cursor:pointer;"><i class="bi bi-x"></i></button>
+            </div>
+            
+            <!-- Social Grid -->
+            <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:10px; margin-bottom:24px;">
+                ${socials.map(s => `
+                    <a href="${s.url}" target="_blank" class="social-share-btn" style="display:flex; flex-direction:column; align-items:center; gap:8px; text-decoration:none; color:#ccc;">
+                        <div style="width:48px; height:48px; background:#1a1a1a; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:1.4rem; color:${s.color}; transition:transform 0.2s; border:1px solid #333;"
+                             onmouseover="this.style.background='#222'; this.style.transform='translateY(-2px)'"
+                             onmouseout="this.style.background='#1a1a1a'; this.style.transform='translateY(0)'">
+                            <i class="bi ${s.icon}"></i>
+                        </div>
+                        <span style="font-size:0.7rem; font-weight:600;">${s.name}</span>
+                    </a>
+                `).join('')}
+            </div>
+
+            <div style="height:1px; background:#1a1a1a; width:100%; margin-bottom:24px;"></div>
+
+            <p style="color:#666; font-size:0.8rem; margin-bottom:10px; font-weight:700; text-transform:uppercase;">Enlace Corto</p>
+            <div class="share-link-box" id="share-link-box" style="padding:0; overflow:hidden; display:flex; align-items:center; height:50px; background:#111; border:1px solid #333; border-radius:12px;">
+                 <div style="padding:0 16px; color:#666; font-size:1.1rem;"><i class="bi bi-link-45deg"></i></div>
+                 <input type="text" id="share-url-text" readonly style="flex:1; background:transparent; border:none; color:#fff; padding:0 10px 0 0; outline:none; font-family:'Inter', sans-serif; font-size:0.95rem;" value="${shortLink}">
+                 <button onclick="copyShareLink()" class="btn-copy-share" style="height:100%; padding:0 24px; background:#fff; color:#000; border:none; font-weight:800; cursor:pointer; font-size:0.85rem;">
+                    COPIAR
+                 </button>
+            </div>
+            
+            <div id="share-status" style="height:20px; font-size:0.8rem; color:#4bff8f; margin-top:10px; text-align:center;"></div>
+        `;
+    }
+
+    // Logic to set URL (Legacy fallback for input if needed, but we set it in HTML above)
+    // document.getElementById('share-url-text').value = shortLink;
 
     // Show
     backdrop.style.display = 'flex';
     setTimeout(() => backdrop.classList.add('active'), 10);
+
     // Focus input for quick copying
     setTimeout(() => {
         const input = document.getElementById('share-url-text');

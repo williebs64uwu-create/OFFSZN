@@ -3763,8 +3763,8 @@
                                     <div class="label">Visibilidad <span class="required">*</span></div>
                                     <div class="select-wrapper">
                                         <select class="input-field skeleton" id="visibilityInput" disabled>
-                                            <option value="private">Privado (Solo tú)</option>
                                             <option value="public">Público (Todos)</option>
+                                            <option value="private">Privado (Solo tú)</option>
                                             <option value="unlisted">No listado (Link)</option>
                                         </select>
 
@@ -3997,6 +3997,8 @@
         function showMainUploadForm() {
             document.getElementById('upload-strategy-hub').style.display = 'none';
             document.getElementById('main-upload-container').style.display = 'block';
+            const qa = document.querySelector('.quick-actions');
+            if (qa) qa.style.display = 'block';
         }
     </script>
 
@@ -4059,7 +4061,7 @@
         </button>
     </div>
     <!-- Quick Actions Sidebar -->
-    <div class="quick-actions">
+    <div class="quick-actions" style="display: none;">
         <button class="quick-btn" onclick="quickSave()" title="Guardar">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
@@ -5525,6 +5527,7 @@
                 btn.innerText = 'Procesando...';
                 btn.disabled = true;
 
+                /* ðŸ”¥ REMOVED: Do not delete old cover during local crop. Let Manual Save handle it.
                 if (currentDraftId && filesUploaded.cover) {
                     try {
                         const { data: draft } = await supabaseClient
@@ -5542,7 +5545,8 @@
                     } catch (e) {
                         console.warn('?? Error eliminando cover anterior:', e);
                     }
-                }
+                } 
+                */
 
                 const canvas = document.createElement('canvas');
                 const ctx = canvas.getContext('2d');
@@ -5572,7 +5576,7 @@
                 closeCropModal();
 
                 // initAutosaveInterval(); // ðŸ”¥ DISABLED AUTO-SAVE
-                await loadDraft();
+                // await loadDraft(); // ðŸ”¥ REMOVED: Do not reload draft state, it overwrites local changes!
 
                 // ========================================
                 // ðŸ”¥ YOUTUBE IMPORT HANDLING
@@ -7793,10 +7797,17 @@
                 };
 
                 // Helper for upload
+                // console.log("Manual Save Triggered"); // Debug removed
                 const bucket = 'beat-drafts';
 
                 // 1. Cover
                 if (formData.coverBlob && !filesUploaded.cover) {
+                    // ðŸ”¥ CLEANUP: If replacing an existing file, delete the old one first
+                    if (existingFilesData.cover) {
+                        console.log('ðŸ§¹ [DRAFT-CLEANUP] Reemplazando cover antiguo...');
+                        await deleteFileFromStorage(existingFilesData.cover, bucket);
+                    }
+
                     const coverFile = new File([formData.coverBlob], 'cover.jpg', { type: 'image/jpeg' });
                     const key = await uploadToR2(coverFile, 'drafts/covers');
                     draftData.files_data.cover = `https://offszn-storage.41d0f49121d02c88f71fdb4da54a791d.r2.cloudflarestorage.com/${key}`;
@@ -7805,6 +7816,11 @@
 
                 // 2. MP3 Tagged
                 if (formData.files.mp3_tagged && !filesUploaded.mp3_tagged) {
+                    // ðŸ”¥ CLEANUP
+                    if (existingFilesData.mp3_tagged) {
+                        console.log('ðŸ§¹ [DRAFT-CLEANUP] Reemplazando MP3 antiguo...');
+                        await deleteFileFromStorage(existingFilesData.mp3_tagged, bucket);
+                    }
                     console.log('?? Subiendo MP3 de borrador a R2...');
                     const key = await uploadToR2(formData.files.mp3_tagged, 'drafts/mp3');
                     draftData.files_data.mp3_tagged = `https://offszn-storage.41d0f49121d02c88f71fdb4da54a791d.r2.cloudflarestorage.com/${key}`;
@@ -7813,6 +7829,11 @@
 
                 // 3. WAV Untagged
                 if (formData.files.wav_untagged && !filesUploaded.wav_untagged) {
+                    // ðŸ”¥ CLEANUP
+                    if (existingFilesData.wav_untagged) {
+                        console.log('ðŸ§¹ [DRAFT-CLEANUP] Reemplazando WAV antiguo...');
+                        await deleteFileFromStorage(existingFilesData.wav_untagged, bucket);
+                    }
                     console.log('?? Subiendo WAV de borrador a R2...');
                     const key = await uploadToR2(formData.files.wav_untagged, 'drafts/wav');
                     draftData.files_data.wav_untagged = key; // Preserve key for private files
@@ -7821,6 +7842,11 @@
 
                 // 4. Stems
                 if (formData.files.stems && !filesUploaded.stems) {
+                    // ðŸ”¥ CLEANUP
+                    if (existingFilesData.stems) {
+                        console.log('ðŸ§¹ [DRAFT-CLEANUP] Reemplazando Stems antiguos...');
+                        await deleteFileFromStorage(existingFilesData.stems, bucket);
+                    }
                     console.log('?? Subiendo Stems de borrador a R2...');
                     const key = await uploadToR2(formData.files.stems, 'drafts/stems');
                     draftData.files_data.stems = key; // Preserve key
@@ -7979,6 +8005,7 @@
                 throw error;
             }
         }
+        window.uploadToR2 = uploadToR2; // ðŸ”¥ EXPOSE GLOBALLY
 
         /**
          * ?? Obtiene una URL autorizada (Firmada) si es un Key de R2, 
@@ -9558,18 +9585,47 @@
             } catch (e) { console.warn(`âš ï¸ Cleanup failed for ${pathOrUrl} in ${bucket}:`, e); }
         }
 
-        async function cleanupDraftFiles(draftId) {
+        async function cleanupDraftFiles(draftId, filesToKeep = []) {
             try {
                 const { data: draft } = await supabaseClient.from('beat_drafts')
-                    .select('cover_url, mp3_url, wav_url, stems_url')
+                    .select('files_data, cover_url, mp3_url, wav_url, stems_url')
                     .eq('id', draftId)
                     .single();
 
                 if (draft) {
-                    if (draft.cover_url) await deleteFileFromStorage(draft.cover_url, 'beat-drafts');
-                    if (draft.mp3_url) await deleteFileFromStorage(draft.mp3_url, 'beat-drafts');
-                    if (draft.wav_url) await deleteFileFromStorage(draft.wav_url, 'beat-drafts');
-                    if (draft.stems_url) await deleteFileFromStorage(draft.stems_url, 'beat-drafts');
+                    // Collect all possible file paths to delete
+                    let filesToDelete = [];
+
+                    // Legacy columns
+                    if (draft.cover_url) filesToDelete.push({ path: draft.cover_url, bucket: 'beat-drafts' });
+                    if (draft.mp3_url) filesToDelete.push({ path: draft.mp3_url, bucket: 'beat-drafts' });
+                    if (draft.wav_url) filesToDelete.push({ path: draft.wav_url, bucket: 'beat-drafts' });
+                    if (draft.stems_url) filesToDelete.push({ path: draft.stems_url, bucket: 'beat-drafts' });
+
+                    // JSON files_data
+                    if (draft.files_data) {
+                        if (draft.files_data.cover) filesToDelete.push({ path: draft.files_data.cover, bucket: 'beat-drafts' });
+                        if (draft.files_data.mp3_tagged) filesToDelete.push({ path: draft.files_data.mp3_tagged, bucket: 'beat-drafts' });
+                        if (draft.files_data.wav_untagged) filesToDelete.push({ path: draft.files_data.wav_untagged, bucket: 'beat-drafts' });
+                        if (draft.files_data.stems) filesToDelete.push({ path: draft.files_data.stems, bucket: 'beat-drafts' });
+                    }
+
+                    // Filter out files that should be kept (Public Product)
+                    for (const file of filesToDelete) {
+                        if (!file.path) continue;
+
+                        // Check if exact path or URL is in keep list
+                        const shouldKeep = filesToKeep.some(keepUrl => {
+                            return keepUrl && (keepUrl === file.path || file.path.includes(keepUrl) || keepUrl.includes(file.path));
+                        });
+
+                        if (shouldKeep) {
+                            console.log(`ðŸ›¡ï¸  Skipping cleanup for kept file: ${file.path}`);
+                            continue;
+                        }
+
+                        await deleteFileFromStorage(file.path, file.bucket);
+                    }
                 }
             } catch (e) { console.warn('Cleanup draft files failed', e); }
         }
@@ -9865,15 +9921,47 @@
             } catch (e) { console.warn(`?? Cleanup failed for ${pathOrUrl} in ${bucket}:`, e); }
         }
 
-        async function cleanupDraftFiles(draftId) {
+        async function cleanupDraftFiles(draftId, filesToKeep = []) {
             try {
-                const { data: draft } = await supabaseClient.from('beat_drafts').select('files_data').eq('id', draftId).single();
-                if (draft?.files_data) {
-                    const files = draft.files_data;
-                    if (files.cover) await deleteFileFromStorage(files.cover, 'beat-drafts');
-                    if (files.mp3_tagged) await deleteFileFromStorage(files.mp3_tagged, 'beat-drafts');
-                    if (files.wav_untagged) await deleteFileFromStorage(files.wav_untagged, 'beat-drafts');
-                    if (files.stems) await deleteFileFromStorage(files.stems, 'beat-drafts');
+                const { data: draft } = await supabaseClient.from('beat_drafts')
+                    .select('files_data, cover_url, mp3_url, wav_url, stems_url')
+                    .eq('id', draftId)
+                    .single();
+
+                if (draft) {
+                    // Collect all possible file paths to delete
+                    let filesToDelete = [];
+
+                    // Legacy columns
+                    if (draft.cover_url) filesToDelete.push({ path: draft.cover_url, bucket: 'beat-drafts' });
+                    if (draft.mp3_url) filesToDelete.push({ path: draft.mp3_url, bucket: 'beat-drafts' });
+                    if (draft.wav_url) filesToDelete.push({ path: draft.wav_url, bucket: 'beat-drafts' });
+                    if (draft.stems_url) filesToDelete.push({ path: draft.stems_url, bucket: 'beat-drafts' });
+
+                    // JSON files_data
+                    if (draft.files_data) {
+                        if (draft.files_data.cover) filesToDelete.push({ path: draft.files_data.cover, bucket: 'beat-drafts' });
+                        if (draft.files_data.mp3_tagged) filesToDelete.push({ path: draft.files_data.mp3_tagged, bucket: 'beat-drafts' });
+                        if (draft.files_data.wav_untagged) filesToDelete.push({ path: draft.files_data.wav_untagged, bucket: 'beat-drafts' });
+                        if (draft.files_data.stems) filesToDelete.push({ path: draft.files_data.stems, bucket: 'beat-drafts' });
+                    }
+
+                    // Filter out files that should be kept (Public Product)
+                    for (const file of filesToDelete) {
+                        if (!file.path) continue;
+
+                        // Check if exact path or URL is in keep list
+                        const shouldKeep = filesToKeep.some(keepUrl => {
+                            return keepUrl && (keepUrl === file.path || file.path.includes(keepUrl) || keepUrl.includes(file.path));
+                        });
+
+                        if (shouldKeep) {
+                            console.log(`ðŸ›¡ï¸  Skipping cleanup for kept file: ${file.path}`);
+                            continue;
+                        }
+
+                        await deleteFileFromStorage(file.path, file.bucket);
+                    }
                 }
             } catch (e) { console.warn('Cleanup draft files failed', e); }
         }
