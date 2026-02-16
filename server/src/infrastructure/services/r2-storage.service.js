@@ -1,4 +1,4 @@
-import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectsCommand } from "@aws-sdk/client-s3";
+import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectsCommand, CopyObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 // CORRECCIÓN AQUÍ: Subimos 2 niveles para buscar en src/config/config.js
@@ -115,5 +115,38 @@ export const deleteFromR2 = async (keys) => {
         console.error("Error al eliminar archivos de R2 (Global):", error);
         // No lanzamos error para no romper el flujo del frontend, pero logueamos.
         // throw error; 
+    }
+};
+
+/**
+ * Copia un archivo dentro del mismo bucket (o entre buckets si se configura).
+ * @param {string} sourceKey - Clave de origen.
+ * @param {string} destinationKey - Clave de destino.
+ * @returns {Promise<void>}
+ */
+export const copyFileInR2 = async (sourceKey, destinationKey) => {
+    try {
+        // Sanitize keys
+        const src = sourceKey.startsWith('/') ? sourceKey.substring(1) : sourceKey;
+        const dest = destinationKey.startsWith('/') ? destinationKey.substring(1) : destinationKey;
+
+        // R2 requires CopySource to be 'BucketName/Key' URL encoded
+        // However, AWS SDK usually handles this if we pass Bucket and CopySource
+        // For S3/R2, CopySource = `Bucket/${Key}`
+        const copySource = `${R2_BUCKET_NAME}/${src}`;
+
+        console.log(`[R2 COPY] Copying from ${copySource} to ${dest}`);
+
+        const command = new CopyObjectCommand({
+            Bucket: R2_BUCKET_NAME,
+            CopySource: encodeURI(copySource), // Important for special chars
+            Key: dest
+        });
+
+        await s3Client.send(command);
+        console.log(`✅ [R2 COPY] Success: ${dest}`);
+    } catch (error) {
+        console.error(`❌ [R2 COPY] Failed from ${sourceKey} to ${destinationKey}:`, error);
+        throw error;
     }
 };

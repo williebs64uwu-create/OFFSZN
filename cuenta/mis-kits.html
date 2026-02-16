@@ -2840,7 +2840,14 @@
                     if (!coverPath) return;
 
                     // Normalize URL (Sign if R2/Private)
-                    if (coverPath.startsWith('http')) {
+                    const isR2Key = coverPath.includes('loopkit-drafts/') ||
+                        coverPath.includes('drumkit-drafts/') ||
+                        coverPath.includes('preset-drafts/') ||
+                        (!coverPath.startsWith('http') && coverPath.startsWith('products/'));
+
+                    if (isR2Key) {
+                        item.signed_cover_url = await getAuthorizedUrl(coverPath);
+                    } else if (coverPath.startsWith('http')) {
                         if (coverPath.includes('r2.cloudflarestorage.com') || !coverPath.includes('supabase.co')) {
                             item.signed_cover_url = await getAuthorizedUrl(coverPath);
                         } else {

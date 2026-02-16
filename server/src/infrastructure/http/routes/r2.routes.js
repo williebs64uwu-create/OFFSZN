@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getPresignedUploadUrl, getPresignedDownloadUrl, getPublicUrl, deleteFromR2 } from '../../services/r2-storage.service.js';
+import { getPresignedUploadUrl, getPresignedDownloadUrl, getPublicUrl, deleteFromR2, copyFileInR2 } from '../../services/r2-storage.service.js';
 import { authenticateTokenMiddleware } from '../../middlewares/authenticateTokenMiddleware.js';
 import { R2_BUCKET_NAME, R2_SECURE_BUCKET_NAME } from '../../../shared/config/config.js';
 import { supabase } from '../../database/connection.js';
@@ -155,6 +155,25 @@ router.post('/r2/delete-files', authenticateTokenMiddleware, async (req, res) =>
     } catch (error) {
         console.error('Error en endpoint remove R2:', error);
         res.status(500).json({ error: 'Error al eliminar archivos' });
+    }
+});
+
+router.post('/r2/copy-file', authenticateTokenMiddleware, async (req, res) => {
+    try {
+        const { sourceKey, destinationKey } = req.body;
+
+        if (!sourceKey || !destinationKey) {
+            return res.status(400).json({ error: 'Faltan sourceKey o destinationKey' });
+        }
+
+        console.log(`[R2 Endpoint] Copying file for user ${req.user.userId}`);
+        await copyFileInR2(sourceKey, destinationKey);
+
+        res.json({ message: 'Archivo copiado correctamente' });
+
+    } catch (error) {
+        console.error('Error en endpoint copy R2:', error);
+        res.status(500).json({ error: 'Error al copiar archivo' });
     }
 });
 

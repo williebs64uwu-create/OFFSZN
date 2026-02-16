@@ -4245,7 +4245,11 @@
                 }
 
                 // Guardar draft automáticamente (esto subirá el archivo)
-                // await // saveDraftAuto(); // 🔥 DISABLED AUTO-SAVE // 🔥 AUTOSAVE DISABLED
+                // await saveDraftAuto(); // 🔥 DISABLED AUTO-SAVE PER USER REQUEST
+                // showToast('Archivo subido. No olvides guardar el borrador.', 'success'); // 🔥 TOAST REMOVED PER USER REQUEST
+                const saveBtn = document.getElementById('saveDraftBtn') || document.querySelector('.quick-btn');
+                if (saveBtn) saveBtn.classList.add('pulse'); // Visual cue (optional)
+
 
             } catch (error) {
                 showToast(`Error: ${error.message}`, 'error');
@@ -4347,8 +4351,11 @@
                 filesUploaded.cover = false;
             }
 
-            // // saveDraftAuto(); // 🔥 DISABLED AUTO-SAVE // 🔥 AUTOSAVE DISABLED
+            // await // saveDraftAuto(); // 🔥 DISABLED AUTO-SAVE // 🔥 AUTOSAVE DISABLED
             updateCompletionProgress(); // 🔥 AGREGAR ESTA LÍNEA
+
+            await saveDraftAuto(); // 🔥 AUTO-SAVE ON REMOVE
+
 
         };
         // ========================================
@@ -4398,6 +4405,10 @@
             }
 
             document.getElementById('coverInput').value = '';
+
+            // await saveDraftAuto(); // 🔥 AUTO-SAVE ON REMOVE DISABLED
+            showToast('Portada eliminada. Recuerda guardar.', 'info');
+
             // // saveDraftAuto(); // 🔥 DISABLED AUTO-SAVE // 🔥 AUTOSAVE DISABLED
         };
         // ========================================
@@ -6040,11 +6051,15 @@
                 const data = draftDataResult;
 
 
+
                 if (error) {
                     console.error('Error cargando borrador:', error);
-                    // hideLoading(); // Not needed as we didn't show it
                     return;
                 }
+
+                console.log('📦 DRAFT DATA RAW:', data); // 🔥 DEBUG
+                console.log('🎵 Audio URL form DB:', data?.audio_url); // 🔥 DEBUG
+                console.log('📦 Kit URL form DB:', data?.kit_url); // 🔥 DEBUG
 
                 if (!data) {
                     // No hay borrador -> Clean exit
@@ -6079,6 +6094,9 @@
                 localStorage.setItem('offszn_has_draft', 'true');
 
                 const product = data; // Rename for clarity
+
+                // 🔥 CRITICAL: Set global data for handlePublish (Promote logic)
+                window.originalProductData = data;
 
                 // 2. Preparar datos para UI
                 const draftData = {
@@ -6152,6 +6170,9 @@
                 // ========================================
                 // 🔥 KIT - CORREGIDO
                 // ========================================
+                // ========================================
+                // 🔥 KIT - CORREGIDO
+                // ========================================
                 if (data.kit_url) {
                     try {
                         const finalUrl = await getAuthorizedUrl(data.kit_url);
@@ -6175,7 +6196,7 @@
                             <div class="file-name">${displayName}</div>
                             <div class="file-size">${(blob.size / (1024 * 1024)).toFixed(2)} MB</div>
                         </div>
-                        <button type="button" class="remove-file" onclick="removeFile('kit')">?</button>
+                        <button type="button" class="remove-file" onclick="removeFile('kit')">×</button>
                     </div>
                 `;
                                     filesUploaded.kit = true;
@@ -6185,10 +6206,7 @@
                         }
                     } catch (e) {
                         console.warn('⚠️ Error con kit:', e.message);
-                        await supabaseClient
-                            .from('loopkit_drafts')
-                            .update({ kit_url: null })
-                            .eq('id', currentDraftId);
+                        // No borrar URL para no perder referencia si fue error de red
                     }
                 }
 
@@ -6197,9 +6215,7 @@
                 // ========================================
                 if (data.audio_url) {
                     try {
-                        const { data: signedUrlData } = await supabaseClient.storage
-                            .from('loopkit-drafts')
-                            .createSignedUrl(data.audio_url, 3600);
+                        const finalUrl = await getAuthorizedUrl(data.audio_url); // 🔥 FIX: Use getAuthorizedUrl instead of Supabase Storage
 
                         if (finalUrl) {
                             const response = await fetch(finalUrl);
@@ -6228,7 +6244,7 @@
                             <div class="file-name">${displayName}</div>
                             <div class="file-size">${(blob.size / (1024 * 1024)).toFixed(2)} MB</div>
                         </div>
-                        <button type="button" class="remove-file" onclick="removeFile('audio')">?</button>
+                        <button type="button" class="remove-file" onclick="removeFile('audio')">×</button>
                     </div>
                 `;
                                     filesUploaded.audio = true;
@@ -6238,10 +6254,7 @@
                         }
                     } catch (e) {
                         console.warn('⚠️ Error con audio:', e.message);
-                        await supabaseClient
-                            .from('loopkit_drafts')
-                            .update({ audio_url: null })
-                            .eq('id', currentDraftId);
+                        // No borrar URL para no perder referencia
                     }
                 }
                 // 🔥 RESTORE TEXT DATA IMMEDIATELY
@@ -6447,37 +6460,70 @@
                     last_saved: new Date().toISOString()
                 };
 
+                // 🔥 FETCH OLD DRAFT DATA FOR CLEANUP (Before overwriting)
+                let oldDraft = null;
+                if (currentDraftId) {
+                    const { data } = await supabaseClient
+                        .from('loopkit_drafts')
+                        .select('cover_url, kit_url, audio_url')
+                        .eq('id', currentDraftId)
+                        .maybeSingle();
+                    oldDraft = data;
+                }
+
+                // ========================================
+                // ?? SUBIR COVER (SI HAY UNO NUEVO)
+                // ========================================
+
                 // ========================================
                 // ?? SUBIR COVER (SI HAY UNO NUEVO)
                 // ========================================
                 if (formData.coverBlob && !filesUploaded.cover) {
-                    const key = await uploadToR2(new File([formData.coverBlob], 'cover.jpg', { type: 'image/jpeg' }), 'loopkit-drafts');
+                    const key = await uploadToR2(new File([formData.coverBlob], 'cover.jpg', { type: 'image/jpeg' }), 'loopkit-drafts/covers');
                     if (key) {
                         draftData.cover_url = key;
                         filesUploaded.cover = true;
+
+                        // Cleanup Old
+                        if (oldDraft && oldDraft.cover_url) deleteFileFromStorage(oldDraft.cover_url, 'loopkit-drafts');
                     }
+                } else if (!formData.coverBlob && !filesUploaded.cover) {
+                    // 🔥 EXPLICIT NULL: User removed file
+                    draftData.cover_url = null;
                 }
 
                 // ========================================
                 // ?? SUBIR KIT (SI HAY UNO NUEVO)
                 // ========================================
                 if (formData.files.kit && !filesUploaded.kit) {
-                    const key = await uploadToR2(formData.files.kit, 'loopkit-drafts');
+                    const key = await uploadToR2(formData.files.kit, 'loopkit-drafts/kits');
                     if (key) {
                         draftData.kit_url = key;
                         filesUploaded.kit = true;
+
+                        // Cleanup Old
+                        if (oldDraft && oldDraft.kit_url) deleteFileFromStorage(oldDraft.kit_url, 'loopkit-drafts');
                     }
+                } else if (!formData.files.kit && !filesUploaded.kit) {
+                    // 🔥 EXPLICIT NULL: User removed file
+                    draftData.kit_url = null;
                 }
 
                 // ========================================
                 // ?? SUBIR AUDIO (SI HAY UNO NUEVO)
                 // ========================================
                 if (formData.files.audio && !filesUploaded.audio) {
-                    const key = await uploadToR2(formData.files.audio, 'loopkit-drafts');
+                    const key = await uploadToR2(formData.files.audio, 'loopkit-drafts/audio');
                     if (key) {
                         draftData.audio_url = key;
                         filesUploaded.audio = true;
+
+                        // Cleanup Old
+                        if (oldDraft && oldDraft.audio_url) deleteFileFromStorage(oldDraft.audio_url, 'loopkit-drafts');
                     }
+                } else if (!formData.files.audio && !filesUploaded.audio) {
+                    // 🔥 EXPLICIT NULL: User removed file
+                    draftData.audio_url = null;
                 }
 
                 // ========================================
@@ -6493,7 +6539,7 @@
                         console.error('❌ Error actualizando draft:', updateError);
                         throw updateError;
                     }
-                    // console.log('✅ Draft actualizado:', currentDraftId); // Silenciado
+                    console.log('✅ Draft actualizado (AutoSync)');
                 } else {
                     const { data, error: insertError } = await supabaseClient
                         .from('loopkit_drafts')
@@ -6557,9 +6603,20 @@
         }
         async function uploadToR2(file, folder = 'uploads') {
             try {
+                // 1. Obtener URL firmada del backend
+                const session = await supabaseClient.auth.getSession();
+                const token = session.data.session?.access_token;
+
+                if (!token) throw new Error('No hay sesión activa para subir a R2');
+
+                console.log(`🚀 [Client] Subiendo a R2 (${folder}). Token presente:`, !!token);
+
                 const response = await fetch('/api/r2/upload-url', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
                     body: JSON.stringify({
                         fileName: file.name,
                         fileType: file.type || 'application/octet-stream',
@@ -6568,17 +6625,29 @@
                     })
                 });
 
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Error al obtener URL de R2');
+                }
+
                 const { uploadUrl, key } = await response.json();
 
-                await fetch(uploadUrl, {
+                console.log(`🔍 [R2 REQUEST] Upload URL for "${file.name}" in folder "${folder}"`);
+
+                // 2. Subir directamente a R2
+                const uploadRes = await fetch(uploadUrl, {
                     method: 'PUT',
                     body: file,
-                    headers: { 'Content-Type': file.type }
+                    headers: {
+                        'Content-Type': file.type || 'application/octet-stream'
+                    }
                 });
+
+                if (!uploadRes.ok) throw new Error('La subida directa a R2 falló');
 
                 return key;
             } catch (error) {
-                console.error('Error uploading to R2:', error);
+                console.error('Error en uploadToR2:', error);
                 throw error;
             }
         }
@@ -6630,6 +6699,49 @@
             }
         }
 
+        // 🔥 NUEVA FUNCIÓN: Copiar archivo en R2 (Backend)
+        async function copyFileOnBackend(sourceKey, destinationKey) {
+            try {
+                const session = await supabaseClient.auth.getSession();
+                consttoken = session.data.session?.access_token;
+
+                if (!token) throw new Error('No hay sesión para copiar archivos');
+
+                // Si el sourceKey es una URL completa, extraer el key
+                if (sourceKey.startsWith('http')) {
+                    const r2Base = '.r2.cloudflarestorage.com/';
+                    if (sourceKey.includes(r2Base)) {
+                        sourceKey = sourceKey.split(r2Base)[1];
+                    }
+                }
+
+                console.log(`♻️ [COPY] Solicitando copia: ${sourceKey} -> ${destinationKey}`);
+
+                const response = await fetch('/api/r2/copy-file', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        sourceKey,
+                        destinationKey
+                    })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Error al copiar archivo');
+                }
+
+                console.log('✅ Archivo copiado correctamente en R2');
+                return true;
+            } catch (error) {
+                console.error('❌ Error copiando archivo:', error);
+                throw error; // Re-lanzar para detener el proceso si falla
+            }
+        }
+
         async function handlePublish() {
             // 🔥 COOLDOWN: Prevenir spam (5 minutos)
             // 🔥 NO COOLDOWN - User requested removal
@@ -6672,9 +6784,31 @@
             // 🔥 VALIDACIÓN DE ARCHIVOS YA CUBIERTA POR validateStep(1)
             // No bloqueamos si no se han subido al draft, porque handlePublish los subirá ahora.
 
+            // 🔥 WAIT FOR PENDING AUTO-SAVE
+            if (isSaving) {
+                console.log('⏳ [PUBLISH] Waiting for pending save to complete...');
+                const btn = document.getElementById('publishNow');
+                const originalText = btn.innerHTML;
+                btn.innerHTML = 'Guardando...';
+                await new Promise(resolve => {
+                    const check = setInterval(() => {
+                        if (!isSaving) {
+                            clearInterval(check);
+                            resolve();
+                        }
+                    }, 500);
+                });
+                btn.innerHTML = originalText;
+                console.log('✅ [PUBLISH] Save finished. Proceeding...');
+            }
+
             const btn = document.getElementById('publishNow');
             btn.disabled = true;
             btn.innerHTML = 'Publicando...';
+
+            let image_url = null;
+            let kit_url = null;
+            let audio_url = null;
 
             try {
                 // 🔧 FUNCIÓN PARA SANITIZAR NOMBRES DE ARCHIVOS
@@ -6698,26 +6832,63 @@
                 }
 
                 // 1. Subir cover a R2
-                let image_url = null;
                 if (formData.coverBlob) {
-                    const key = await uploadToR2(new File([formData.coverBlob], 'cover.jpg', { type: 'image/jpeg' }), 'covers');
+                    const key = await uploadToR2(new File([formData.coverBlob], 'cover.jpg', { type: 'image/jpeg' }), 'products/covers');
                     image_url = `https://offszn-storage.41d0f49121d02c88f71fdb4da54a791d.r2.cloudflarestorage.com/${key}`;
+                    console.log(`🔍 [PUBLISH-DEBUG] Cover Key generated: ${key}`);
+                } else if (currentDraftId && window.originalProductData?.cover_url) {
+                    // CASO 3B: Promocionar archivo de Draft a Producción
+                    const oldKey = window.originalProductData.cover_url;
+                    if (oldKey.includes('loopkit-drafts/')) {
+                        console.log(`♻️ [PUBLISH] Promocionar Cover desde Draft: ${oldKey}`);
+
+                        // Generar nuevo key de producción
+                        const timestamp = Date.now();
+                        const newKey = `products/covers/${userId}/${timestamp}_draft_promoted.jpg`;
+
+                        // Copiar en Backend
+                        await copyFileOnBackend(oldKey, newKey);
+
+                        image_url = `https://offszn-storage.41d0f49121d02c88f71fdb4da54a791d.r2.cloudflarestorage.com/${newKey}`;
+                    }
                 }
 
                 // 2. Subir kit (.rar/.zip) a R2
-                let kit_url = null;
                 if (formData.files.kit) {
-                    console.log(`?? [UPLOAD] Subiendo kit a R2 (Secure)`);
-                    const key = await uploadToR2(formData.files.kit, 'kits');
+                    console.log(`🚀 [UPLOAD] Subiendo kit a R2 (Secure)`);
+                    const key = await uploadToR2(formData.files.kit, 'secure-products/kits');
                     kit_url = key; // Solo guardamos el key para archivos seguros
+                } else if (currentDraftId && window.originalProductData?.kit_url) {
+                    // CASO 3B: Promocionar Kit
+                    const oldKey = window.originalProductData.kit_url;
+                    if (oldKey.includes('loopkit-drafts/')) {
+                        console.log(`♻️ [PUBLISH] Promocionar Kit desde Draft: ${oldKey}`);
+                        const timestamp = Date.now();
+                        const ext = oldKey.split('.').pop();
+                        const newKey = `secure-products/kits/${userId}/${timestamp}_draft_promoted.${ext}`;
+
+                        await copyFileOnBackend(oldKey, newKey);
+                        kit_url = newKey;
+                    }
                 }
 
                 // 3. Subir audio preview a R2
-                let audio_url = null;
                 if (formData.files.audio) {
-                    console.log(`?? [UPLOAD] Subiendo audio a R2`);
-                    const key = await uploadToR2(formData.files.audio, 'audio');
+                    console.log(`🚀 [UPLOAD] Subiendo audio a R2`);
+                    const key = await uploadToR2(formData.files.audio, 'products/audio');
                     audio_url = `https://offszn-storage.41d0f49121d02c88f71fdb4da54a791d.r2.cloudflarestorage.com/${key}`;
+                } else if (currentDraftId && window.originalProductData?.audio_url) {
+                    // CASO 3B: Promocionar Audio
+                    const oldKey = window.originalProductData.audio_url;
+                    if (oldKey.includes('loopkit-drafts/')) {
+                        console.log(`♻️ [PUBLISH] Promocionar Audio desde Draft: ${oldKey}`);
+                        const timestamp = Date.now();
+                        const ext = oldKey.split('.').pop();
+                        const newKey = `products/audio/${userId}/${timestamp}_draft_promoted.${ext}`;
+
+                        await copyFileOnBackend(oldKey, newKey);
+                        audio_url = `https://offszn-storage.41d0f49121d02c88f71fdb4da54a791d.r2.cloudflarestorage.com/${newKey}`;
+                    }
                 }
 
                 // 4. Calcular precio final
@@ -6758,6 +6929,7 @@
                 // ?? DELETE DRAFT AFTER SUCCESSFUL PUBLISH
                 if (currentDraftId) {
                     console.log(`?? [CLEANUP] Eliminando borrador ${currentDraftId}...`);
+                    await cleanupDraftFiles(currentDraftId); // 🔥 Clean files first
                     await supabaseClient.from('loopkit_drafts').delete().eq('id', currentDraftId);
                     currentDraftId = null;
                     localStorage.removeItem('offszn_has_draft');
@@ -6904,6 +7076,12 @@
 
             } catch (error) {
                 console.error('❌ Error al publicar:', error);
+
+                // 🔥 ROLLBACK: DELETE UPLOADED FILES
+                if (image_url) await deleteFileFromStorage(image_url, 'products/covers');
+                if (kit_url) await deleteFileFromStorage(kit_url, 'secure-products/kits');
+                if (audio_url) await deleteFileFromStorage(audio_url, 'products/audio');
+
                 showToast(error.message || 'Error al publicar', 'error');
                 btn.disabled = false;
                 btn.innerHTML = 'Publicar Ahora';
@@ -7464,7 +7642,50 @@
                     // Init Waveform
                     if (wavesurfer && product.audio_url) {
                         try {
-                            wavesurfer.load(product.audio_url);
+                            // 🔥 FETCH SIGNED URL FOR AUDIO (IF NEEDED)
+                            // If audio_url is already a full URL, try to use it.
+                            // However, for R2 products/audio, we might need a proxied URL if CORS issues arise.
+                            // Let's rely on valid public URLs first, but if it fails, fallback or ensure it's playable.
+
+                            // For now, let's assume specific routing logic in backend handles public/private.
+                            // But usually, we need to ensure the URL is reachable by valid CORS.
+                            // If product.audio_url comes from DB as 'https://...', it should work if bucket is public.
+                            // If it fails, it might be due to the way Wavesurfer fetches it.
+
+                            // Let's try to fetch a fresh download URL if the stored one seems "old" or if we want to be safe.
+                            // Actually, simpler fix: Just load it. If it fails, we catch it.
+                            // The error 'Failed to fetch' often means CORS.
+
+                            // 🚀 FIX: Fetch a fresh SIGNED URL for the audio to ensure access & CORS headers
+                            console.log('🔄 [EDIT] Fetching fresh audio URL for Wavesurfer...');
+                            const { data: sessionData } = await supabaseClient.auth.getSession();
+                            const token = sessionData.session?.access_token;
+
+                            // Extract key from URL if it's a full URL
+                            let key = product.audio_url;
+                            if (key.startsWith('http')) {
+                                const urlObj = new URL(key);
+                                key = urlObj.pathname.substring(1); // remove leading slash
+                            }
+
+                            const response = await fetch('/api/r2/download-url', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Authorization': `Bearer ${token}`
+                                },
+                                body: JSON.stringify({ key: key })
+                            });
+
+                            if (response.ok) {
+                                const { downloadUrl } = await response.json();
+                                console.log('✅ [EDIT] Audio URL refreshed:', downloadUrl);
+                                wavesurfer.load(downloadUrl);
+                            } else {
+                                console.warn('⚠️ [EDIT] Failed to refresh URL, using original:', product.audio_url);
+                                wavesurfer.load(product.audio_url);
+                            }
+
                             document.getElementById('playPauseBtn').disabled = false;
                             document.getElementById('waveform').style.display = 'block';
                             document.getElementById('playerPlaceholder').style.display = 'none';
@@ -7476,11 +7697,15 @@
                 window.currentEditId = product.id; // Store ID for update
 
                 // Update Button Text
-                const publishBtn = document.getElementById('publishNow');
+                // Update Button Text & Page Title
+                const publishBtn = document.getElementById('publishNow') || document.getElementById('publishBtn');
                 if (publishBtn) {
                     publishBtn.innerHTML = 'Guardar Cambios';
                     publishBtn.onclick = handleUpdateProduct; // Handle logic separately
                 }
+
+                const pageTitle = document.getElementById('pageTitle');
+                if (pageTitle) pageTitle.innerText = 'Editar Loop Kit';
 
                 // 6. Restaurar tags, precios, colaboradores
                 if (product.tags) {
@@ -7521,6 +7746,10 @@
                 // 🔥 HIDE DRAFT BUTTON IN EDIT MODE
                 const saveDraftBtn = document.getElementById('saveDraft');
                 if (saveDraftBtn) saveDraftBtn.style.display = 'none';
+
+                // Also hide the quick save icon in header if it exists
+                const quickSaveBtn = document.getElementById('saveDraftBtn') || document.querySelector('.quick-btn');
+                if (quickSaveBtn) quickSaveBtn.style.display = 'none';
 
                 // showToast('Producto cargado - Ahora puedes editarlo', 'success');
 
@@ -8149,7 +8378,8 @@
                     if (pathOrUrl.startsWith('http')) {
                         try {
                             const urlObj = new URL(pathOrUrl);
-                            key = urlObj.pathname.substring(1);
+                            key = urlObj.pathname;
+                            if (key.startsWith('/')) key = key.substring(1);
                         } catch (e) {
                             console.warn("Could not parse R2 URL for deletion:", pathOrUrl);
                         }
@@ -8196,13 +8426,45 @@
 
         async function cleanupDraftFiles(draftId) {
             try {
-                const { data: draft } = await supabaseClient.from('loopkit_drafts').select('cover_url, kit_url, audio_url').eq('id', draftId).single();
+                const { data: draft } = await supabaseClient.from('loopkit_drafts').select('*').eq('id', draftId).single();
                 if (draft) {
                     await deleteFileFromStorage(draft.cover_url, 'loopkit-drafts');
                     await deleteFileFromStorage(draft.kit_url, 'loopkit-drafts');
                     await deleteFileFromStorage(draft.audio_url, 'loopkit-drafts');
+                    console.log('✅ [CLEANUP-DEBUG] Draft cleanup finished.');
                 }
             } catch (e) { console.warn('Cleanup draft files failed', e); }
+        }
+
+        // ========================================
+        // ?? HELPER: PROMOVER ARCHIVOS (Server-Side Copy)
+        // ========================================
+        async function copyFileOnBackend(sourceKey, destinationKey) {
+            try {
+                const { data: sessionData } = await supabaseClient.auth.getSession();
+                const token = sessionData.session?.access_token;
+
+                if (!token) throw new Error("No session token");
+
+                const response = await fetch('/api/r2/copy-file', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ sourceKey, destinationKey })
+                });
+
+                if (!response.ok) {
+                    const err = await response.json();
+                    throw new Error(err.error || 'Error copying file');
+                }
+                console.log('✅ File copied successfully on backend');
+                return true;
+            } catch (error) {
+                console.error('❌ Error promoting file:', error);
+                throw error; // Bloquear publicación si falla la copia
+            }
         }
 
         // ========================================
@@ -8331,7 +8593,7 @@
                         await deleteFileFromStorage(window.originalProductData.image_url, 'loopkit-covers');
                     }
 
-                    const key = await uploadToR2(new File([formData.coverBlob], 'cover_edit.jpg', { type: 'image/jpeg' }), 'covers');
+                    const key = await uploadToR2(new File([formData.coverBlob], 'cover_edit.jpg', { type: 'image/jpeg' }), 'products/covers');
                     updates.image_url = `https://offszn-storage.41d0f49121d02c88f71fdb4da54a791d.r2.cloudflarestorage.com/${key}`;
                 }
 
@@ -8345,7 +8607,7 @@
                         await deleteFileFromStorage(window.originalProductData.kit_url, 'loopkits');
                     }
 
-                    const key = await uploadToR2(formData.files.kit, 'kits');
+                    const key = await uploadToR2(formData.files.kit, 'secure-products/kits');
                     updates.kit_url = key; // Store Key in DB
                 }
 
@@ -8357,7 +8619,7 @@
                         await deleteFileFromStorage(window.originalProductData.audio_url, 'loopkits');
                     }
 
-                    const key = await uploadToR2(formData.files.audio, 'audio');
+                    const key = await uploadToR2(formData.files.audio, 'products/audio');
                     updates.audio_url = `https://offszn-storage.41d0f49121d02c88f71fdb4da54a791d.r2.cloudflarestorage.com/${key}`;
                 }
 
@@ -8507,6 +8769,33 @@
                 return true;
             }
         }
+
+        // ========================================
+        // 🔥 SESSION CHECK HELPER
+        // ========================================
+        async function checkSession() {
+            // Already initialized via AuthUtils?
+            if (!window.supabaseClient) {
+                console.warn('Supabase not ready, retrying...');
+                // Simple wait
+                await new Promise(r => setTimeout(r, 500));
+                if (!window.supabaseClient && window.AuthUtils) window.AuthUtils.initSupabase();
+            }
+
+            const { data, error } = await supabaseClient.auth.getSession();
+            if (error || !data.session) {
+                console.warn('No active session, redirecting...');
+                window.location.href = '/login.html';
+                return;
+            }
+
+            // Set global user ID
+            userId = data.session.user.id;
+            console.log('✅ Session active for user:', userId);
+        }
+
+        // ========================================
+
     </script>
 </body>
 
