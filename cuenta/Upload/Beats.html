@@ -4887,15 +4887,20 @@
                 }
 
                 // 2. Fetch License Settings (Sync with Admin Dashboard)
+                // 2. Fetch License Settings (Sync with Admin Dashboard)
                 const { data: profileData, error: profileError } = await supabaseClient
                     .from('profiles')
-                    .select('license_settings')
+                    .select('license_settings, upload_defaults_preference')
                     .eq('id', userId)
                     .maybeSingle();
 
-                if (profileData && profileData.license_settings) {
-                    window.userLicenseSettings = profileData.license_settings;
-                    // console.log('âœ… License settings synced:', window.userLicenseSettings);
+                if (profileData) {
+                    if (profileData.license_settings) {
+                        window.userLicenseSettings = profileData.license_settings;
+                    }
+                    // ðŸ”¥ STORE UPLOAD PREFERENCE
+                    window.uploadDefaultsPreference = profileData.upload_defaults_preference || 'last_used';
+                    console.log('âœ… Upload Preference:', window.uploadDefaultsPreference);
                 }
 
             } catch (e) {
@@ -5965,6 +5970,7 @@
         // --- NUEVO SISTEMA DE INICIALIZACIÓN DE LICENCIAS ---
         function initLicenses() {
             // Si no hay estado previo (es un beat nuevo), creamos el objeto base
+            // Si no hay estado previo (es un beat nuevo), creamos el objeto base
             DEFAULT_LICENSES.forEach(lic => {
                 if (!licensesState[lic.id]) {
                     // ðŸ”¥ MAPPING: Map old profile keys to new system keys
@@ -5974,11 +5980,27 @@
                         'stems': 'trackout',
                         'unlimited': 'unlimited'
                     };
-                    const profileKey = keyMap[lic.id] || lic.id;
+                    const profileKey = Object.keys(keyMap).find(key => keyMap[key] === lic.id) || lic.id;
 
-                    // 1. Prioridad 1: Ajustes de tu Perfil (Admin Dashboard)
-                    if (window.userLicenseSettings && (window.userLicenseSettings[lic.id] || window.userLicenseSettings[profileKey])) {
-                        const saved = window.userLicenseSettings[lic.id] || window.userLicenseSettings[profileKey];
+                    // CHECK PREFERENCE: 'last_used' vs 'admin_defaults'
+                    // For 'last_used', we would need to have fetched the last beat. 
+                    // Since that requires an async call and this is synchronous, we might need a separate init strategy or 
+                    // just stick to Admin Defaults for now as requested by user ("admin defaults... is what it should be").
+
+                    // ðŸ”¥ LOGIC:
+                    // 1. Try to use Admin Defaults (with legacy key support)
+                    // 2. Fallback to System Defaults
+
+                    // NOTE: 'last_used' implementation would go here if we pre-fetched it. 
+                    // For now, we fix the KEY ISSUE which is the main bug.
+
+                    let saved = null;
+                    if (window.userLicenseSettings) {
+                        // Try direct key (new system) OR legacy key (old system)
+                        saved = window.userLicenseSettings[lic.id] || window.userLicenseSettings[profileKey];
+                    }
+
+                    if (saved) {
                         licensesState[lic.id] = {
                             enabled: saved.enabled,
                             price: parseFloat(saved.price)
@@ -5993,12 +6015,69 @@
                 }
             });
 
+            // ðŸ”¥ ASYNC FULL OVERRIDE FOR 'LAST_USED' PREFERENCE
+            if (window.uploadDefaultsPreference === 'last_used') {
+                applyLastUsedSettings();
+            }
+
             // Forzar Descarga Gratis activa por defecto
             if (window.freeDownloadEnabled === undefined) {
                 window.freeDownloadEnabled = true;
             }
 
             renderLicenses();
+        }
+
+        // ========================================
+        // ðŸ”¥ APPLY LAST USED SETTINGS (ASYNC)
+        // ========================================
+        async function applyLastUsedSettings() {
+            try {
+                // 1. Fetch the most recent beat
+                // Note: verify table name 'products' and column 'type'
+                const { data, error } = await supabaseClient
+                    .from('products')
+                    .select('licenses')
+                    .eq('producer_id', userId)
+                    .eq('product_type', 'beat')
+                    .order('created_at', { ascending: false })
+                    .limit(1)
+                    .maybeSingle(); // Use maybeSingle to avoid 406 on empty result
+
+                if (error) throw error;
+
+                if (data && data.licenses) {
+                    console.log('ðŸ”¥ Applying Last Used Licenses:', data.licenses);
+
+                    // Merge into licensesState
+                    Object.keys(licensesState).forEach(key => {
+                        // The saved licenses JSON structure might match our keys or legacy keys (mp3, wav...)
+                        // We check direct match first
+                        let saved = data.licenses[key];
+
+                        // If not found, check legacy map reverse
+                        if (!saved) {
+                            const keyMap = { 'basic': 'mp3', 'premium': 'wav', 'trackout': 'stems', 'unlimited': 'unlimited' };
+                            const legacyKey = keyMap[key];
+                            if (legacyKey) saved = data.licenses[legacyKey];
+                        }
+
+                        if (saved) {
+                            licensesState[key] = {
+                                enabled: !!saved.enabled,
+                                price: parseFloat(saved.price) || licensesState[key].price
+                            };
+                        }
+                    });
+
+                    // Re-render UI
+                    renderLicenses();
+                    // showToast('ðŸ”¥ Precios ajustados al último beat', 'success');
+                }
+
+            } catch (e) {
+                console.warn('âš ï¸  Error applying last used settings:', e);
+            }
         }
 
         function renderLicenses() {

@@ -26,274 +26,16 @@
     <link rel="stylesheet" href="/css/hover-card.css">
     <link rel="stylesheet" href="/css/footer.css">
     <link rel="stylesheet" href="/css/account-settings.css">
+    <link rel="stylesheet" href="/css/avatar-manager.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
 
     <!-- Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
         window.SUPABASE_URL = "https://qtjpvztpgfymjhhpoouq.supabase.co";
         window.SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0anB2enRwZ2Z5bWpoaHBvb3VxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3ODA5MTUsImV4cCI6MjA3NjM1NjkxNX0.YsItTFk3hSQaVuy707-z7Z-j34mXa03O0wWGAlAzjrw";
+        // window.supabaseClient handled by auth-utils.js
         window.supabaseClient = null;
-    </script>
-    <script src="/script/auth-utils.js?v=11"></script>
-    <style>
-        .producers-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
-            gap: 20px;
-            width: 100%;
-        }
-
-        .mini-skeleton {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 12px;
-            padding: 16px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 12px;
-            aspect-ratio: 1 / 1.15;
-            position: relative;
-            overflow: hidden;
-            width: 100%;
-        }
-
-        .mini-skeleton::after {
-            content: "";
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 50%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.03), transparent);
-            animation: skeleton-wave 1.5s infinite;
-        }
-
-
-
-        @media (max-width: 768px) {
-
-            .tx-grid,
-            .skeleton-row {
-                grid-template-columns: 1fr 1fr;
-                gap: 10px;
-            }
-
-            .transaction-item {
-                gap: 10px;
-                /* Backup */
-            }
-
-            .tr-date {
-                display: none;
-            }
-        }
-
-        .mini-skeleton-text {
-            height: 12px;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 4px;
-            width: 70%;
-        }
-
-        /* Status Dots */
-        .status-dot {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            display: inline-block;
-        }
-
-        .status-dot.online {
-            background-color: #10b981;
-            box-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
-        }
-
-        .status-dot.offline {
-            background-color: #ef4444;
-            box-shadow: 0 0 8px rgba(239, 68, 68, 0.4);
-        }
-
-        /* PayPal Modal Style Override */
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            backdrop-filter: blur(4px);
-            z-index: 9999;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .modal-overlay.active {
-            display: flex;
-        }
-
-        .elite-modal {
-            background: #121214;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 20px;
-            width: 450px;
-            max-width: 90%;
-            padding: 30px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
-        }
-
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-
-        .modal-header h3 {
-            margin: 0;
-            font-size: 1.25rem;
-            font-weight: 700;
-        }
-
-        .btn-close-modal {
-            background: none;
-            border: none;
-            color: #666;
-            font-size: 1.5rem;
-            cursor: pointer;
-        }
-
-        .modal-body input {
-            width: 100%;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
-            padding: 14px;
-            color: #fff;
-            margin-top: 10px;
-            outline: none;
-        }
-
-        .modal-footer {
-            display: flex;
-            justify-content: flex-end;
-            gap: 12px;
-            margin-top: 30px;
-        }
-
-        .btn-modal-cancel {
-            background: transparent;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            color: #fff;
-            padding: 10px 20px;
-            border-radius: 100px;
-            cursor: pointer;
-        }
-
-        .btn-modal-save {
-            background: #8b5cf6;
-            color: #fff;
-            border: none;
-            padding: 10px 24px;
-            border-radius: 100px;
-            cursor: pointer;
-            font-weight: 600;
-        }
-
-        /* Transactions List Styles */
-        .transaction-list {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            margin-top: 20px;
-        }
-
-        /* Shared Grid Layout for Items and Skeletons */
-        .tx-grid {
-            display: grid;
-            grid-template-columns: 2fr 1fr 1fr 1fr;
-            align-items: center;
-            gap: 20px;
-        }
-
-        .transaction-item {
-            padding: 16px 20px;
-            background: rgba(255, 255, 255, 0.02);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            border-radius: 12px;
-            transition: all 0.2s ease;
-        }
-
-
-        .transaction-item:hover {
-            background: rgba(255, 255, 255, 0.04);
-            border-color: rgba(139, 92, 246, 0.3);
-            transform: translateY(-1px);
-        }
-
-        .tr-customer {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .tr-customer-info h4 {
-            margin: 0;
-            font-size: 0.9rem;
-            color: #eee;
-        }
-
-        .tr-customer-info p {
-            margin: 0;
-            font-size: 0.75rem;
-            color: #666;
-        }
-
-        .tr-status {
-            font-size: 0.8rem;
-            padding: 4px 10px;
-            border-radius: 6px;
-            text-transform: capitalize;
-            width: fit-content;
-        }
-
-        .tr-status.approved,
-        .tr-status.completed {
-            background: rgba(16, 185, 129, 0.1);
-            color: #10b981;
-        }
-
-        .tr-amount {
-            font-weight: 700;
-            color: #fff;
-            text-align: right;
-        }
-
-        .tr-date {
-            font-size: 0.8rem;
-            color: #888;
-        }
-
-        @media (max-width: 768px) {
-            .transaction-item {
-                grid-template-columns: 1fr 1fr;
-                gap: 10px;
-            }
-
-            .tr-date {
-                display: none;
-            }
-        }
-    </style>
-
-    <!-- Supabase -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script>
-        window.SUPABASE_URL = "https://qtjpvztpgfymjhhpoouq.supabase.co";
-        window.SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0anB2enRwZ2Z5bWpoaHBvb3VxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3ODA5MTUsImV4cCI6MjA3NjM1NjkxNX0.YsItTFk3hSQaVuy707-z7Z-j34mXa03O0wWGAlAzjrw";
-        window.supabaseClient = null;
-        // Initialization handled by auth-utils.js
     </script>
     <script src="/script/auth-utils.js?v=11"></script>
 
@@ -517,7 +259,7 @@
                                 <div class="notif-empty" style="text-align: center; color: #fff; padding: 40px 20px;">
                                     <div style="font-size: 2rem; margin-bottom: 16px; color: #666;"><i
                                             class="bi bi-bell"></i></div>
-                                    <h4 style="margin-bottom: 8px; font-size: 0.9rem; font-weight: 500;">&nbsp;</h4>
+                                    <h4 style="margin-bottom: 8px; font-size: 0.9rem; font-weight: 500;">Cargando...
                                     </h4>
                                 </div>
                             </div>
@@ -642,22 +384,22 @@
         <!-- Sidebar Navigation -->
         <aside class="settings-sidebar">
             <div class="profile-card">
-                <div class="profile-card-avatar" id="sidebarAvatar"></div>
-                <div class="profile-card-name" id="sidebarName"></div>
-                <div class="profile-card-role" id="sidebarRole"></div>
+                <div class="profile-card-avatar skeleton-base" id="sidebarAvatar"></div>
+                <div class="profile-card-name skeleton-base" id="sidebarName"></div>
+                <div class="profile-card-role skeleton-base" id="sidebarRole"></div>
             </div>
 
             <nav class="settings-nav">
                 <a href="/account-settings.html" class="settings-nav-item">
                     <i class="bi bi-person-gear"></i> Ajustes de cuenta
                 </a>
-                <a href="/preferencias.html" class="settings-nav-item">
+                <a href="/preferencias.html" class="settings-nav-item active">
                     <i class="bi bi-sliders"></i> Preferencias
                 </a>
                 <a href="/perfilpro.html" class="settings-nav-item">
                     <i class="bi bi-person-badge"></i> Perfil
                 </a>
-                <a href="/transacciones.html" class="settings-nav-item active">
+                <a href="/transacciones.html" class="settings-nav-item">
                     <i class="bi bi-currency-dollar"></i> Transacciones
                 </a>
                 <a href="/siguiendo.html" class="settings-nav-item">
@@ -669,76 +411,59 @@
         <!-- Main Settings Content -->
         <section class="settings-main">
             <div class="settings-section">
-                <h1 class="settings-section-title">Transacciones y Cobros</h1>
+                <h1 class="settings-section-title">Preferencias de Subida</h1>
 
-                <!-- Payment Configuration Section -->
+
                 <div class="settings-group">
-                    <h2 class="settings-group-title"><i class="bi bi-paypal" style="color: #0070BA;"></i> Configuración
-                        de Cobros</h2>
-                    <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 24px;">
-                        Configura tus métodos de pago para recibir el dinero de tus ventas automáticamente en tu cuenta.
-                    </p>
+                    <h2 class="settings-group-title">Valores Predeterminados (Beats)</h2>
 
-                    <div class="payment-setup-card"
-                        style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: 16px; padding: 24px;">
-                        <div
-                            style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 20px;">
-                            <div style="display: flex; align-items: center; gap: 16px;">
-                                <div
-                                    style="width: 48px; height: 48px; background: #003087; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: #fff;">
-                                    <i class="bi bi-paypal"></i>
-                                </div>
-                                <div>
-                                    <h4 style="margin: 0; font-size: 1rem; font-weight: 700;">PayPal</h4>
-                                    <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px;">
-                                        <div id="paypal-status-dot" class="status-dot offline"
-                                            style="width: 8px; height: 8px; border-radius: 50%;"></div>
-                                        <span id="paypal-status-label"
-                                            style="font-size: 0.85rem; font-weight: 600; width: 100px;">
-                                            <div class="skeleton-base skeleton-text" style="height: 12px; margin: 0;">
-                                            </div>
-                                        </span>
-                                    </div>
+                    <div class="preference-options" style="display: flex; flex-direction: column; gap: 16px;">
+                        <!-- OPTION 1: ADMIN DEFAULTS -->
+                        <label class="preference-card"
+                            style="display: flex; align-items: flex-start; gap: 20px; padding: 24px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; cursor: pointer; transition: all 0.2s;">
+                            <div class="radio-wrapper skeleton-base skeleton-circle"
+                                style="width: 24px; height: 24px; flex-shrink: 0; margin-top: 2px;">
+                                <input type="radio" name="uploadDefaults" value="admin_defaults"
+                                    onchange="saveUploadPreference(this.value)"
+                                    style="accent-color: #8b5cf6; transform: scale(1.6); cursor: pointer;">
+                            </div>
+                            <div class="pref-content" style="flex: 1;">
+                                <div class="skeleton-base"
+                                    style="font-weight: 700; color: #fff; margin-bottom: 8px; height: 24px; width: 85%; font-size: 1.05rem;">
+                                    Usar mis Precios Predeterminados (Recomendado)</div>
+                                <div class="skeleton-base"
+                                    style="font-size: 0.9rem; color: #888; line-height: 1.5; height: 18px; width: 95%;">
+                                    Tus beats nuevos siempre iniciarán con los precios que configuraste en tu <a
+                                        href="/cuenta/admin-licencias.html"
+                                        style="color: #8b5cf6; text-decoration: none; font-weight: 600;">Admin de
+                                        Licencias</a>.
                                 </div>
                             </div>
+                        </label>
 
-                            <div style="flex: 1; min-width: 200px;">
-                                <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 4px;">Correo
-                                    Vinculado:</div>
-                                <div id="paypal-display-email"
-                                    style="font-size: 0.95rem; font-weight: 600; color: #fff;">
-                                    <div class="skeleton-base skeleton-text medium"
-                                        style="height: 14px; margin-top: 4px;"></div>
+                        <!-- OPTION 2: LAST USED -->
+                        <label class="preference-card"
+                            style="display: flex; align-items: flex-start; gap: 20px; padding: 24px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; cursor: pointer; transition: all 0.2s;">
+                            <div class="radio-wrapper skeleton-base skeleton-circle"
+                                style="width: 24px; height: 24px; flex-shrink: 0; margin-top: 2px;">
+                                <input type="radio" name="uploadDefaults" value="last_used"
+                                    onchange="saveUploadPreference(this.value)"
+                                    style="accent-color: #8b5cf6; transform: scale(1.6); cursor: pointer;">
+                            </div>
+                            <div class="pref-content" style="flex: 1;">
+                                <div class="skeleton-base"
+                                    style="font-weight: 700; color: #fff; margin-bottom: 8px; height: 24px; width: 80%; font-size: 1.05rem;">
+                                    Usar configuración del último Beat</div>
+                                <div class="skeleton-base"
+                                    style="font-size: 0.9rem; color: #888; line-height: 1.5; height: 18px; width: 90%;">
+                                    Copia automáticamente los precios y licencias activas del último beat que subiste.
                                 </div>
                             </div>
-
-                            <button id="btn-connect-paypal" class="btn-primary-sm" style="min-width: 180px;">
-                                Conectar PayPal
-                            </button>
-                        </div>
-                    </div>
-
-                    <div
-                        style="margin-top: 24px; padding: 16px; background: rgba(139, 92, 246, 0.05); border-radius: 12px; border: 1px solid rgba(139, 92, 246, 0.1);">
-                        <p style="font-size: 0.85rem; color: #a78bfa; margin: 0; line-height: 1.5;">
-                            <i class="bi bi-info-circle-fill"></i>
-                            Asegúrate de que tu correo de PayPal esté verificado para evitar retrasos en tus cobros.
-                        </p>
+                        </label>
                     </div>
                 </div>
 
-                <!-- Transaction History -->
-                <div class="settings-group">
-                    <h2 class="settings-group-title"><i class="bi bi-clock-history"></i> Historial de Ventas</h2>
 
-                    <div id="sales-history-container" class="transaction-list">
-                        <div style="text-align: center; padding: 40px; color: var(--text-secondary);">
-                            <i class="bi bi-clipboard-data"
-                                style="font-size: 3rem; opacity: 0.2; display: block; margin-bottom: 16px;"></i>
-                            <p>&nbsp;</p>
-                        </div>
-                    </div>
-                </div>
             </div>
         </section>
     </main>
@@ -818,34 +543,10 @@
         </div>
     </footer>
 
-    <!-- Avatar Crop Modal -->
-    <div id="cropModal" class="modal-overlay" style="display: none;">
-        <!-- ... (existing crop modal content) ... -->
-    </div>
+    <!-- Shared Modals handled by AvatarManager -->
 
-    <!-- PayPal Modal -->
-    <div class="modal-overlay" id="modalPayPal">
-        <div class="elite-modal">
-            <div class="modal-header">
-                <h3><i class="bi bi-paypal" style="color:#0070BA; margin-right:8px;"></i> Configurar PayPal</h3>
-                <button class="btn-close-modal" onclick="PaymentSettings.closeModal()">&times;</button>
-            </div>
-            <div class="modal-body" style="padding: 0;">
-                <p style="color:#aaa; font-size:14px; margin-bottom:15px;">Ingresa tu correo de PayPal para recibir los
-                    pagos de tus ventas automáticamente.</p>
-                <input type="email" id="inputPaypalEmail" placeholder="ejemplo@correo.com"
-                    style="width: 100%; box-sizing: border-box;">
-            </div>
-            <div class="modal-footer">
-                <button class="btn-modal-cancel" onclick="PaymentSettings.closeModal()">Cancelar</button>
-                <button class="btn-modal-save" id="btn-save-paypal">Guardar Cambios</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Cropper.js -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
+    <script src="/script/avatar-manager.js"></script>
 
     <!-- Global Scripts -->
 
@@ -853,7 +554,9 @@
     <script src="/script/notifications.js?v=26"></script>
     <script src="/script/navbar.js?v=11" type="module"></script>
     <script src="/script/sticky-player.js"></script>
-    <script src="/script/payment-settings.js" type="module"></script>
+    <!-- ðŸ”¥ PREFERENCES SCRIPT -->
+    <script src="/script/preferences.js?v=1"></script>
+    <!-- <script src="/script/account-settings.js?v=11" type="module"></script> -->
 </body>
 
 </html>
