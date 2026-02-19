@@ -18,8 +18,6 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/essentia.js@0.1.3/dist/essentia-wasm.web.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/essentia.js@0.1.3/dist/essentia.js-core.js"></script>
     <script src="https://unpkg.com/wavesurfer.js@7"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
@@ -3761,13 +3759,31 @@
                                 </div>
                                 <div class="form-group">
                                     <div class="label">Visibilidad <span class="required">*</span></div>
-                                    <div class="select-wrapper">
-                                        <select class="input-field skeleton" id="visibilityInput" disabled>
+                                    <div class="select-wrapper" style="position: relative;">
+                                        <!-- SELECT NATIVO OCULTO -->
+                                        <select id="visibilityInput" style="display: none;">
                                             <option value="public">Público (Todos)</option>
                                             <option value="private">Privado (Solo tú)</option>
                                             <option value="unlisted">No listado (Link)</option>
                                         </select>
 
+                                        <!-- TRIGGER DEL DROPDOWN CUSTOM -->
+                                        <div class="input-field" id="visibilityCustomTrigger"
+                                            onclick="window.toggleVisibilityDropdown(event)"
+                                            style="padding: 0 16px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; height: 45px; user-select: none;">
+                                            <span id="visibilityDisplay">Público (Todos)</span>
+                                            <svg style="width: 16px; height: 16px; color: #666; transition: transform 0.3s;"
+                                                id="visibilityChevron" viewBox="0 0 24 24" fill="none"
+                                                stroke="currentColor" stroke-width="2">
+                                                <polyline points="6 9 12 15 18 9"></polyline>
+                                            </svg>
+                                        </div>
+
+                                        <!-- DROPDOWN LIST CUSTOM -->
+                                        <div id="visibilityOptionsList" class="custom-scrollbar"
+                                            style="display: none; position: absolute; top: calc(100% + 4px); left: 0; width: 100%; max-height: 200px; overflow-y: auto; background: #1a1a1a; border: 1px solid #333; border-radius: 8px; z-index: 9999; box-shadow: 0 4px 20px rgba(0,0,0,0.8);">
+                                            <!-- Se llenará con JS -->
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -4062,7 +4078,7 @@
     </div>
     <!-- Quick Actions Sidebar -->
     <div class="quick-actions" style="display: none;">
-        <button class="quick-btn" onclick="quickSave()" title="Guardar">
+        <button class="quick-btn" onclick="quickSave()" id="saveDraftQuick" title="Guardar">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
                 <polyline points="17 21 17 13 7 13 7 21"></polyline>
@@ -4157,125 +4173,76 @@
         // ðŸŽ¯ SISTEMA DE TAGS INTELIGENTE (sin IA externa)
         // Tag system initialized
         // ?? ANALIZAR AUDIO (BPM, duración, energía)
+        let audioAnalysisWorker = null;
+
         async function analyzeAudio(audioFile) {
-            return new Promise((resolve) => {
-                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                const reader = new FileReader();
+            return new Promise(async (resolve) => {
+                try {
+                    // 1. Get Total Duration quickly using a temporary Audio element
+                    const tempAudio = document.createElement('audio');
+                    tempAudio.src = URL.createObjectURL(audioFile);
+                    const totalDuration = await new Promise((res) => {
+                        tempAudio.onloadedmetadata = () => res(Math.floor(tempAudio.duration));
+                        tempAudio.onerror = () => res(0);
+                    });
+                    URL.revokeObjectURL(tempAudio.src);
 
-                reader.onload = async (e) => {
-                    try {
-                        const audioBuffer = await audioContext.decodeAudioData(e.target.result);
-                        const channelData = audioBuffer.getChannelData(0);
-                        const duration = Math.floor(audioBuffer.duration);
+                    // 2. Decode only a 60-second segment (from middle if possible)
+                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
 
-                        let bpm = 0;
-                        let key = null;
+                    // Slice the file to ~2MB (roughly 60s of 256kbps audio)
+                    // We take it from the middle (roughly) to get a representative part
+                    const startByte = audioFile.size > 5000000 ? 2000000 : 0;
+                    const endByte = startByte + 3000000; // ~3MB chunk
+                    const blobSlice = audioFile.slice(startByte, endByte);
+                    const arrayBuffer = await blobSlice.arrayBuffer();
 
-                        // 1. Essentia Analysis (Key & BPM)
-                        if (window.Essentia && window.EssentiaWASM) {
-                            try {
-                                // ?? YIELD TO UI (Prevent freezing)
-                                await new Promise(r => setTimeout(r, 50));
+                    const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+                    const channelData = audioBuffer.getChannelData(0);
 
-                                // Load WASM (It's a global factory function)
-                                const wasmModule = await window.EssentiaWASM();
-                                const essentia = new window.Essentia(wasmModule);
-
-                                // Convert to Vector (Use optimized slice if song is huge? KeyExtractor needs ~60s+)
-                                // ?? OPTIMIZE: Use first 60 seconds (sufficient for Key/BPM)
-                                const maxSamples = 44100 * 60; // 60 seconds
-                                const processingData = channelData.length > maxSamples ? channelData.slice(0, maxSamples) : channelData;
-
-                                // ?? YIELD AGAIN
-                                await new Promise(r => setTimeout(r, 10));
-                                const vector = essentia.arrayToVector(processingData);
-
-                                // A. KEY DETECTION
-                                // KeyExtractor(audioVector, profileType='bgate', polyphony=true) - using defaults
-                                const keyData = essentia.KeyExtractor(vector);
-                                if (keyData && keyData.key && keyData.scale) {
-                                    // Normalize: "C" + "major" -> "C Major"
-                                    const scaleMap = { 'major': 'Major', 'minor': 'Minor' };
-                                    key = `${keyData.key} ${scaleMap[keyData.scale] || keyData.scale}`;
-                                }
-
-                                // B. BPM DETECTION
-                                // RhythmExtractor2013 is robust
-                                const rhythm = essentia.RhythmExtractor2013(vector);
-                                if (rhythm && rhythm.bpm > 0) {
-                                    bpm = Math.round(rhythm.bpm);
-                                }
-
-                                // Cleanup to free WASM memory? 
-                                // Essentia.js usage guides suggest explicit deletion if creating many vectors
-                                // vector.delete(); // Check API if necessary. usually vector is C++ object.
-                                // But JS wrapper 'arrayToVector' might handle lifecycle? 
-                                // Safety: Let GC handle it or Essentia helper.
-                                if (essentia.delete) essentia.delete(vector); // Hypothetical
-
-                            } catch (err) {
-                                console.warn("Essentia analysis error:", err);
-                            }
-                        }
-
-                        // 2. Fallback BPM (if Essentia missing/failed)
-                        if (!bpm) {
-                            const peaks = detectPeaks(channelData, audioBuffer.sampleRate);
-                            bpm = Math.round((peaks.length / duration) * 60);
-                        }
-
-                        // 3. Energy / Mood
-                        let sum = 0;
-                        // Use first 30s for energy to be fast
-                        const energySlice = channelData.slice(0, 44100 * 30);
-                        for (let i = 0; i < energySlice.length; i++) sum += Math.abs(energySlice[i]);
-                        const avgEnergy = sum / energySlice.length;
-
-                        let mood = 'chill';
-                        if (avgEnergy > 0.15) mood = 'hard';
-                        else if (avgEnergy > 0.08) mood = 'melodic';
-                        else if (avgEnergy > 0.04) mood = 'ambient';
-
-                        resolve({
-                            duration,
-                            bpm: Math.max(60, Math.min(250, bpm)), // Limit 250
-                            key: key, // Can be null
-                            energy: avgEnergy,
-                            mood
-                        });
-                    } catch (error) {
-                        console.error('Audio analysis failed:', error);
-                        resolve({ duration: 0, bpm: 0, key: null, energy: 0, mood: 'unknown' });
+                    // 3. OFF-LOAD BPM & KEY DETECTION TO WORKER
+                    if (!audioAnalysisWorker) {
+                        audioAnalysisWorker = new Worker('/script/audio-analysis-worker.js');
                     }
-                };
 
-                reader.readAsArrayBuffer(audioFile);
+                    // Use a one-time listener for this specific call
+                    const results = await new Promise((resWorker) => {
+                        const handler = (e) => {
+                            audioAnalysisWorker.removeEventListener('message', handler);
+                            resWorker(e.data);
+                        };
+                        audioAnalysisWorker.addEventListener('message', handler);
+                        audioAnalysisWorker.postMessage({
+                            channelData: channelData,
+                            sampleRate: audioBuffer.sampleRate
+                        }, [channelData.buffer]); // Transferable for zero-copy
+                    });
+
+                    // 4. Calculate Energy / Mood (Lightweight, can stay here or move to worker)
+                    let sum = 0;
+                    for (let i = 0; i < channelData.length; i++) sum += Math.abs(channelData[i]);
+                    const avgEnergy = sum / channelData.length;
+
+                    let mood = 'chill';
+                    if (avgEnergy > 0.15) mood = 'hard';
+                    else if (avgEnergy > 0.08) mood = 'melodic';
+                    else if (avgEnergy > 0.04) mood = 'ambient';
+
+                    resolve({
+                        duration: totalDuration || Math.floor(audioBuffer.duration),
+                        bpm: results.bpm || 0,
+                        key: results.key || null,
+                        energy: avgEnergy,
+                        mood
+                    });
+
+                } catch (error) {
+                    console.error('?? Audio analysis failed:', error);
+                    resolve({ duration: 0, bpm: 0, key: null, energy: 0, mood: 'unknown' });
+                }
             });
         }
 
-        // Detectar picos de amplitud (para BPM)
-        function detectPeaks(data, sampleRate) {
-            const peaks = [];
-            const threshold = 0.15;
-            const minDistance = Math.floor(sampleRate * 0.3); // Mínimo 300ms entre picos
-
-            for (let i = minDistance; i < data.length - minDistance; i++) {
-                if (Math.abs(data[i]) > threshold) {
-                    let isPeak = true;
-                    for (let j = i - minDistance; j < i + minDistance; j++) {
-                        if (j !== i && Math.abs(data[j]) > Math.abs(data[i])) {
-                            isPeak = false;
-                            break;
-                        }
-                    }
-                    if (isPeak) {
-                        peaks.push(i);
-                        i += minDistance; // Saltar para evitar duplicados
-                    }
-                }
-            }
-            return peaks;
-        }
 
         // ðŸ”„ FALLBACK: Keyword matching inteligente & REPERTORIO MASIVO
         async function generateTagsSmart(title, description, audioParams) {
@@ -4972,45 +4939,9 @@
         }
 
         function initExitModal() {
-            if (!document.getElementById('exitModal')) {
-                const modalHTML = `
-                <div class="exit-modal-overlay" id="exitModal">
-                    <div class="exit-modal" style="text-align: center; border: 1px solid rgba(255,255,255,0.1); background: #0a0a0a;">
-                        <div class="exit-modal-title" style="justify-content: center; color: #fff;">
-                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2">
-                                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
-                                <line x1="12" y1="9" x2="12" y2="13"></line>
-                                <line x1="12" y1="17" x2="12.01" y2="17"></line>
-                            </svg>
-                            Â¿Salir sin guardar?
-                        </div>
-                        <div class="exit-modal-message" style="color: #aaa; margin-bottom: 32px;">
-                            Tienes cambios sin guardar. Si sales ahora, perderás todo tu progreso.
-                        </div>
-                        <div class="exit-modal-actions" style="justify-content: center; gap: 16px;">
-                             <button class="exit-modal-btn cancel" id="exitConfirm" style="color: #ef4444; border: none; font-weight: 500;">Salir sin guardar</button>
-                            <button class="exit-modal-btn confirm" id="exitCancel" style="background: #fff; color: #000; hover: background: #ddd;">Seguir Editando</button>
-                        </div>
-                    </div>
-                </div>
-            `;
-                document.body.insertAdjacentHTML('afterbegin', modalHTML);
-            }
-
-            document.getElementById('uploadForm').addEventListener('change', () => isDirty = true);
-            document.getElementById('uploadForm').addEventListener('input', () => isDirty = true);
-
-            // ðŸ”¥ BEFOREUNLOAD REMOVED: Cannot execute async cleanup code
-            // Use the custom exitConfirmModal instead via "Volver al Dashboard" button
-
-            document.getElementById('exitCancel')?.addEventListener('click', () => {
-                document.getElementById('exitModal').classList.remove('active');
-            });
-
-            document.getElementById('exitConfirm')?.addEventListener('click', () => {
-                isDirty = false;
-                window.location.href = '/';
-            });
+            // Confirmation modal removed as per user request.
+            document.getElementById('uploadForm')?.addEventListener('change', () => isDirty = true);
+            document.getElementById('uploadForm')?.addEventListener('input', () => isDirty = true);
         }
 
         function initAutosaveInterval() {
@@ -8632,11 +8563,14 @@
             try {
                 if (btn) btn.style.transform = 'scale(0.9)';
 
-                await saveDraftManual(); // 🔥 ENABLED MANUAL SAVE
+                // Ensure we use the correct function name (Beats uses saveDraftManual too)
+                if (typeof saveDraftManual === 'function') {
+                    await saveDraftManual();
+                }
 
                 showToast('Borrador guardado', 'success');
 
-                // ðŸ”¥ REDIRECCIÓN A MIS-KITS (Solicitud del usuario)
+                // ðŸ”¥ REDIRECCIN A MIS-KITS (Solicitud del usuario)
                 setTimeout(() => {
                     window.location.href = '/cuenta/mis-kits.html';
                 }, 1000);
@@ -9034,8 +8968,6 @@
                     // Trigger toggle to update UI
                     if (window.toggleFreeDownload) toggleFreeDownload(); // This might toggle it back if logic simply inverts, better to direct set.
                     // Actually toggleFreeDownload usually reads state or toggles it. Let's just set state and re-render.
-                    // But toggleFreeDownload updates the UI visibility of fields.
-                    // Safe way: set variable then call render or toggle if UI doesn't match.
                     // For now, assume renderLicenses handles price inputs based on state.
                 }
 
@@ -9179,10 +9111,20 @@
         }
 
         // ðŸ”¥ CAMBIO 3: Función para cargar un producto existente y editarlo
+        let isProductLoading = false;
         async function loadProductForEdit(productId) {
+            if (isProductLoading) return;
             try {
+                isProductLoading = true;
+                showLoading('CARGANDO PRODUCTO...');
                 showMainUploadForm(); // ðŸ”¥ Hide Strategy Hub immediately
                 showLoading(); // ðŸ”¥ Ensure loading overlay is shown
+
+                // Hide all draft buttons
+                const saveDraftBtn = document.getElementById('saveDraftBtn');
+                if (saveDraftBtn) saveDraftBtn.style.display = 'none';
+                const saveDraftQuickBtn = document.getElementById('saveDraftQuick');
+                if (saveDraftQuickBtn) saveDraftQuickBtn.style.display = 'none';
 
 
                 // 1. Cargar datos del producto desde la tabla 'products'
@@ -9358,10 +9300,10 @@
                     publishWrapper.appendChild(mainBtn);
 
                     // 🔥 HIDE Save Draft Button (Prevent Confusion)
-                    const saveDraftBtn = document.getElementById('saveDraft');
+                    const saveDraftBtn = document.getElementById('saveDraft') || document.getElementById('saveDraftQuick');
                     if (saveDraftBtn) saveDraftBtn.style.display = 'none';
 
-                    const quickSaveBtn = document.getElementById('saveDraftBtn') || document.querySelector('.quick-btn');
+                    const quickSaveBtn = document.getElementById('saveDraftBtn') || document.getElementById('saveDraftQuick');
                     if (quickSaveBtn) quickSaveBtn.style.display = 'none';
                 }
 
@@ -9436,7 +9378,7 @@
                 console.log('âœ… Draft cargado correctamente');
 
             } catch (error) {
-                console.error('âŒ Error cargando producto:', error);
+                console.error('❌ Error cargando producto:', error);
 
                 // Si es un error crítico, mostrar toast
                 if (error.message && !error.message.includes('JSON')) {
@@ -9455,6 +9397,7 @@
                     if (container) container.classList.add('full');
                 }
             } finally {
+                isProductLoading = false;
                 hideLoading();
             }
         }
@@ -9678,12 +9621,8 @@
         // CONFIRMACIÓN DE SALIDA
         // ========================================
         window.confirmExit = function () {
-            // Show modal if there's a draft OR if there are unsaved changes
-            if (currentDraftId || isDirty) {
-                document.getElementById('exitConfirmModal').classList.add('active');
-            } else {
-                window.location.href = '/cuenta/mis-kits.html';
-            }
+            isDirty = false;
+            window.location.href = '/cuenta/mis-kits.html';
         };
 
         // ========================================
@@ -9770,70 +9709,6 @@
             } catch (e) { console.warn('Cleanup draft files failed', e); }
         }
 
-        async function discardDraftAndExit() {
-            if (window.isDiscarding) return;
-            window.isDiscarding = true;
-
-            try {
-                showLoading('ELIMINANDO BORRADOR...', 'Limpiando archivos y base de datos...');
-
-                if (currentDraftId) {
-                    // 1. Clean up files from storage
-                    await cleanupDraftFiles(currentDraftId);
-
-                    // 2. Delete draft from database
-                    await supabaseClient
-                        .from('beat_drafts')
-                        .delete()
-                        .eq('id', currentDraftId);
-                }
-
-                // 3. Clear local markers
-                localStorage.removeItem('offszn_has_draft');
-                isDirty = false;
-
-                // 4. Redirect
-                window.location.href = '/cuenta/mis-kits.html';
-            } catch (error) {
-                console.error('Error in discardDraftAndExit:', error);
-                showToast('Error al descartar: ' + error.message, 'error');
-                window.isDiscarding = false;
-                hideLoading();
-            }
-        }
-
-        window.exitWithoutSaving = function () {
-            if (currentDraftId) {
-                // If it's a draft, use the discard logic
-                discardDraftAndExit();
-            } else {
-                // If it's a product edit (no currentDraftId) or an empty session
-                isDirty = false; // Prevent beforeunload
-                window.location.href = '/cuenta/mis-kits.html';
-            }
-        };
-
-        window.saveAndExit = async function () {
-            const btn = document.getElementById('saveExitBtn');
-            btn.innerHTML = 'Guardando...';
-            btn.disabled = true;
-
-            await saveDraftManual(); // 🔥 ENABLED MANUAL SAVE
-
-            btn.innerHTML = 'Guardar y Salir';
-            btn.disabled = false;
-
-            isDirty = false;
-            window.location.href = '/cuenta/mis-kits.html';
-        };
-
-        window.closeExitModal = function () {
-            document.getElementById('exitConfirmModal').classList.remove('active');
-        };
-
-        // ðŸ”¥ BEFOREUNLOAD REMOVED: Cannot execute async cleanup code
-        // Use the custom exitConfirmModal instead via "Volver al Dashboard" button
-
         // ðŸ”¥ FUNCION FALTANTE: showEstimate
         window.showEstimate = function () {
             // Cálculo simple de ejemplo o modal informativo
@@ -9875,35 +9750,7 @@
     </div>
 
     <!-- Modal Confirmación Salida -->
-    <div class="modal-overlay" id="exitConfirmModal">
-        <div class="modal" style="max-width: 400px;">
-            <div class="modal-header">
-                <h2 class="modal-title">¿Salir sin guardar?</h2>
-                <button type="button" class="remove-file" onclick="closeExitModal()">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <line x1="18" y1="6" x2="6" y2="18"></line>
-                        <line x1="6" y1="6" x2="18" y2="18"></line>
-                    </svg>
-                </button>
-            </div>
-            <div class="modal-body" style="text-align: center; padding: 24px;">
-                <p style="color: #bbb; margin-bottom: 24px; font-size: 15px;">
-                    Tienes cambios sin guardar. Si sales ahora, tu progreso se perderá (o quedará en una versión
-                    anterior).
-                </p>
-                <div style="display: flex; flex-direction: column; gap: 12px;">
-                    <button id="saveExitBtn" class="btn btn-primary" onclick="saveAndExit()"
-                        style="width: 100%; justify-content: center;">
-                        Guardar Borrador y Salir
-                    </button>
-                    <button class="btn btn-secondary" onclick="exitWithoutSaving()"
-                        style="width: 100%; justify-content: center; border-color: #ef4444; color: #ef4444; background: rgba(239, 68, 68, 0.05);">
-                        Salir sin Guardar
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
+    <!-- Modal Exit Confirmado eliminado -->
     <!-- Modal Primera Vez -->
     <div class="modal-overlay" id="firstTimeModal">
         <div class="modal" style="max-width: 700px;">
@@ -10400,7 +10247,85 @@
                 }
             }
         }
+        // 🔥 CUSTOM VISIBILITY SELECT LOGIC
+        function initCustomVisibilitySelect() {
+            const hiddenSelect = document.getElementById('visibilityInput');
+            const customList = document.getElementById('visibilityOptionsList');
+            if (!hiddenSelect || !customList) return;
 
+            customList.innerHTML = Array.from(hiddenSelect.options).map(opt => `
+                <div class="custom-option" 
+                    onclick="window.selectCustomVisibility('${opt.value}')" 
+                    style="padding: 10px 14px; cursor: pointer; color: #ccc; border-bottom: 1px solid rgba(255,255,255,0.05); transition: background 0.2s; font-size: 14px;">
+                    ${opt.text}
+                </div>
+            `).join('');
+
+            // Hover styles
+            customList.querySelectorAll('.custom-option').forEach(el => {
+                el.onmouseenter = () => { el.style.background = 'rgba(255,255,255,0.05)'; el.style.color = '#fff'; };
+                el.onmouseleave = () => { el.style.background = 'transparent'; el.style.color = '#ccc'; };
+            });
+
+            // Set initial state
+            const initialValue = hiddenSelect.value || 'public';
+            window.selectCustomVisibility(initialValue);
+        }
+
+        window.toggleVisibilityDropdown = function (e) {
+            if (e) e.stopPropagation();
+            const list = document.getElementById('visibilityOptionsList');
+            const chevron = document.getElementById('visibilityChevron');
+            if (!list) return;
+
+            const isVisible = list.style.display === 'block';
+            list.style.display = isVisible ? 'none' : 'block';
+            if (chevron) {
+                chevron.style.transform = isVisible ? 'rotate(0deg)' : 'rotate(180deg)';
+                chevron.style.color = isVisible ? '#666' : 'var(--primary-color)';
+            }
+
+            // Close other dropdowns if any
+            const publishDropdown = document.getElementById('publishDropdownContent');
+            if (publishDropdown) publishDropdown.style.display = 'none';
+        };
+
+        window.selectCustomVisibility = function (value) {
+            const hiddenSelect = document.getElementById('visibilityInput');
+            const display = document.getElementById('visibilityDisplay');
+            const list = document.getElementById('visibilityOptionsList');
+            const chevron = document.getElementById('visibilityChevron');
+
+            if (hiddenSelect) {
+                hiddenSelect.value = value;
+                hiddenSelect.dispatchEvent(new Event('change'));
+            }
+
+            if (display) {
+                const option = hiddenSelect.querySelector(`option[value="${value}"]`);
+                display.textContent = option ? option.textContent : value;
+                display.style.color = '#fff';
+            }
+
+            if (list) list.style.display = 'none';
+            if (chevron) {
+                chevron.style.transform = 'rotate(0deg)';
+                chevron.style.color = '#666';
+            }
+        };
+
+        // Close dropdown on click outside
+        document.addEventListener('click', () => {
+            const list = document.getElementById('visibilityOptionsList');
+            const chevron = document.getElementById('visibilityChevron');
+            if (list && list.style.display === 'block') {
+                list.style.display = 'none';
+                if (chevron) {
+                    chevron.style.transform = 'rotate(0deg)';
+                    chevron.style.color = '#666';
+                }
+            }
+        });
 
         // ?? ROBUST DATE VALIDATION
         function validateReleaseDate() {
@@ -10465,7 +10390,6 @@
         // ========================================
         window.quickSave = async function () {
             try {
-                showLoading('GUARDANDO BORRADOR...');
                 if (typeof saveDraftManual === 'function') {
                     await saveDraftManual();
                 } else {
@@ -10489,6 +10413,7 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             initAll();
+            initCustomVisibilitySelect();
         });
     </script>
     <!-- ðŸ”¥ PUBLISH OVERLAY -->

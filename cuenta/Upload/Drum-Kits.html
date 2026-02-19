@@ -2898,6 +2898,39 @@
             box-shadow: 0 0 0 1px rgba(239, 68, 68, 0.2);
             animation: shake 0.3s ease;
         }
+
+        /* 🔥 INPUTS CON ICONOS (VISIBILIDAD) */
+        .input-with-icon {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-with-icon svg {
+            position: absolute;
+            left: 14px;
+            color: #666;
+            pointer-events: none;
+            transition: color 0.3s;
+            z-index: 10;
+        }
+
+        .input-with-icon .input-field {
+            padding-left: 42px !important;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
     </style>
     <style>
         /* 🔥 COLLAB ROW STYLES */
@@ -3080,6 +3113,7 @@
                                 </div>
                                 <div id="audioPreviewContainer"></div>
                             </div>
+
                         </div>
 
                         <div class="form-group">
@@ -3101,13 +3135,31 @@
                             </div>
                             <div class="form-group">
                                 <div class="label">Visibilidad <span class="required">*</span></div>
-                                <div class="select-wrapper">
-                                    <select class="input-field skeleton" id="visibilityInput" disabled>
+                                <div class="select-wrapper" style="position: relative;">
+                                    <!-- SELECT NATIVO OCULTO -->
+                                    <select id="visibilityInput" style="display: none;">
                                         <option value="public">Público (Todos)</option>
                                         <option value="private">Privado (Solo tú)</option>
                                         <option value="unlisted">No listado (Link)</option>
                                     </select>
 
+                                    <!-- TRIGGER DEL DROPDOWN CUSTOM -->
+                                    <div class="input-field" id="visibilityCustomTrigger"
+                                        onclick="window.toggleVisibilityDropdown(event)"
+                                        style="padding: 0 16px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; height: 45px; user-select: none;">
+                                        <span id="visibilityDisplay">Público (Todos)</span>
+                                        <svg style="width: 16px; height: 16px; color: #666; transition: transform 0.3s;"
+                                            id="visibilityChevron" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                            stroke-width="2">
+                                            <polyline points="6 9 12 15 18 9"></polyline>
+                                        </svg>
+                                    </div>
+
+                                    <!-- DROPDOWN LIST CUSTOM -->
+                                    <div id="visibilityOptionsList" class="custom-scrollbar"
+                                        style="display: none; position: absolute; top: calc(100% + 4px); left: 0; width: 100%; max-height: 200px; overflow-y: auto; background: #1a1a1a; border: 1px solid #333; border-radius: 8px; z-index: 9999; box-shadow: 0 4px 20px rgba(0,0,0,0.8);">
+                                        <!-- Se llenará con JS -->
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -3351,7 +3403,7 @@
     </div>
     <!-- Quick Actions Sidebar -->
     <div class="quick-actions">
-        <button class="quick-btn" onclick="quickSave()" title="Guardar">
+        <button class="quick-btn" onclick="saveDraftManual()" id="saveDraftQuick" title="Guardar Borrador">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
                 <polyline points="17 21 17 13 7 13 7 21"></polyline>
@@ -3632,7 +3684,10 @@
         let wavesurfer;
 
         const formData = {
-            files: { kit: null, audio: null },
+            files: {
+                kit: null,
+                audio: null
+            },
             coverBlob: null
         };
 
@@ -3643,7 +3698,7 @@
         };
 
         // 🔥 NUEVO: Prevenir uploads duplicados
-        let uploadsInProgress = {
+        const uploadsInProgress = {
             cover: false,
             kit: false,
             audio: false
@@ -3668,35 +3723,39 @@
             // 🔥 LIMPIAR TODO SI NO VIENE UN ?edit=ID
             const urlParams = new URLSearchParams(window.location.search);
             const editingProductId = urlParams.get('edit');
+            const draftId = urlParams.get('draft');
 
-            if (!editingProductId) {
-                // ✅ Estamos creando un NUEVO drumkit - limpiar todo
-                currentDraftId = null;
-                formData.files = { kit: null, audio: null };
-                formData.coverBlob = null;
-                filesUploaded = { cover: false, kit: false, audio: false };
-                tags = [];
-                collaborators = [];
-                isDirty = false;
+            await checkAuth();
+            await loadUserProfile();
+            initDateTime();
+            initWaveSurfer();
+            initFileHandlers();
+            initTagsInput();
+            initPriceValidation();
+            initExitModal();
+            initCustomVisibilitySelect();
+
+            if (editingProductId) {
+                await loadProductForEdit(editingProductId);
+            } else if (draftId) {
+                await loadDraft(draftId);
+            } else {
+                // NUEVO PRODUCTO o Caso "Last Used"
+                const hasLastUsed = localStorage.getItem('offszn_last_kit_used');
+                if (hasLastUsed) {
+                    console.log('🔄 Applying "Last Used" case...');
+                }
+
+                // 🔥 ASEGURAR QUE EL DISK ICON SE VEA EN NUEVO UPLOAD
+                const saveDraftBtn = document.getElementById('saveDraftQuick');
+                if (saveDraftBtn) saveDraftBtn.style.display = 'flex';
 
                 const visibilityInput = document.getElementById('visibilityInput');
                 if (visibilityInput) {
                     visibilityInput.disabled = false;
                     visibilityInput.classList.remove('skeleton');
                 }
-                const saveDraftBtn = document.getElementById('saveDraft');
-                if (saveDraftBtn) saveDraftBtn.style.display = 'flex'; // Reset visibility
             }
-            await checkAuth();
-            await loadUserProfile();
-            initDateTime();
-            initWaveSurfer();
-            initFileHandlers(); // ✅ SIN setTimeout
-            initTagsInput();
-            initPriceValidation();
-            initExitModal();
-            // initAutosaveInterval(); // 🔥 DISABLED AUTO-SAVE
-            await loadDraft();
 
             // Event listeners básicos
             document.getElementById('titleInput').addEventListener('input', e => {
@@ -3788,9 +3847,9 @@
                 publishNowBtn.onclick = () => {
                     document.querySelector('.dropdown-content').style.display = 'none';
                     if (window.currentEditId) {
-                        handleUpdateProduct();
+                        handleUpdateProduct(); // Editing published product
                     } else {
-                        handlePublish();
+                        handlePublish(); // New product or from draft
                     }
                 };
             }
@@ -3971,45 +4030,10 @@
         }
 
         function initExitModal() {
-            if (!document.getElementById('exitModal')) {
-                const modalHTML = `
-                <div class="exit-modal-overlay" id="exitModal">
-                    <div class="exit-modal" style="text-align: center; border: 1px solid rgba(255,255,255,0.1); background: #0a0a0a;">
-                        <div class="exit-modal-title" style="justify-content: center; color: #fff;">
-                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2">
-                                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
-                                <line x1="12" y1="9" x2="12" y2="13"></line>
-                                <line x1="12" y1="17" x2="12.01" y2="17"></line>
-                            </svg>
-                            ¿Salir sin guardar?
-                        </div>
-                        <div class="exit-modal-message" style="color: #aaa; margin-bottom: 32px;">
-                            Tienes cambios sin guardar. Si sales ahora, perderás todo tu progreso.
-                        </div>
-                        <div class="exit-modal-actions" style="justify-content: center; gap: 16px;">
-                             <button class="exit-modal-btn cancel" id="exitConfirm" style="color: #ef4444; border: none; font-weight: 500;">Salir sin guardar</button>
-                            <button class="exit-modal-btn confirm" id="exitCancel" style="background: #fff; color: #000; hover: background: #ddd;">Seguir Editando</button>
-                        </div>
-                    </div>
-                </div>
-            `;
-                document.body.insertAdjacentHTML('afterbegin', modalHTML);
-            }
-
-            document.getElementById('uploadForm').addEventListener('change', () => isDirty = true);
-            document.getElementById('uploadForm').addEventListener('input', () => isDirty = true);
-
-            // 🔥 BEFOREUNLOAD REMOVED: Cannot execute async cleanup code
-            // Use the custom exitConfirmModal instead via "Volver al Dashboard" button
-
-            document.getElementById('exitCancel')?.addEventListener('click', () => {
-                document.getElementById('exitModal').classList.remove('active');
-            });
-
-            document.getElementById('exitConfirm')?.addEventListener('click', () => {
-                isDirty = false;
-                window.location.href = '/';
-            });
+            // Confirmation modal removed as per user request.
+            // But we still track isDirty if needed for other logic.
+            document.getElementById('uploadForm')?.addEventListener('change', () => isDirty = true);
+            document.getElementById('uploadForm')?.addEventListener('input', () => isDirty = true);
         }
 
         function initAutosaveInterval() {
@@ -4022,31 +4046,6 @@
         }
 
         // ========================================
-        // 🔥 QUICK SAVE (HEADER BUTTON)
-        // ========================================
-        window.quickSave = async function () {
-            try {
-                showLoading('GUARDANDO BORRADOR...');
-                if (typeof saveDraftAuto === 'function') {
-                    await saveDraftAuto(); // 🔥 MANUAL SAVE ENABLED
-                } else {
-                    console.error("saveDraftAuto function missing");
-                    throw new Error("Save function missing");
-                }
-
-                isDirty = false;
-                // showToast('Borrador guardado correctamente', 'success'); // 🔥 REMOVED TOAST PER USER REQUEST
-
-                setTimeout(() => {
-                    window.location.href = '/cuenta/mis-kits.html';
-                }, 1000);
-
-            } catch (error) {
-                console.error('Error saving draft:', error);
-                showToast('Error al guardar borrador', 'error');
-                hideLoading();
-            }
-        };
 
         function initWaveSurfer() {
             wavesurfer = WaveSurfer.create({
@@ -4171,8 +4170,7 @@
                 const MAX_SIZES = {
                     cover: 10 * 1024 * 1024,
                     kit: 50 * 1024 * 1024,
-                    audio: 50 * 1024 * 1024,
-                    audio_after: 50 * 1024 * 1024
+                    audio: 50 * 1024 * 1024
                 };
 
                 if (file.size > MAX_SIZES[type]) {
@@ -4189,29 +4187,8 @@
                     return;
                 }
 
-                // 🔥 CRÍTICO: Borrar archivo anterior SOLO si ya fue subido a Supabase
-                if (currentDraftId && filesUploaded[type]) {
-                    try {
-                        const columnName = type === 'kit' ? 'kit_url' : 'audio_url';
-
-                        const { data: draft } = await supabaseClient
-                            .from('drumkit_drafts')
-                            .select(columnName)
-                            .eq('id', currentDraftId)
-                            .single();
-
-                        const oldUrl = draft?.[columnName];
-
-                        if (oldUrl) {
-                            await supabaseClient.storage
-                                .from('drumkit-drafts')
-                                .remove([oldUrl]);
-                            // File removed
-                        }
-                    } catch (e) {
-                        // Silent error handling
-                    }
-                }
+                // 🔥 NO CLEANUP IN HANDLEFILE: User said nothing uploads until manual save.
+                // It just stays in memory.
 
                 // Guardar archivo en memoria
                 formData.files[type] = file;
@@ -4229,7 +4206,11 @@
                 }
 
                 // Mostrar preview
-                const containerId = type === 'kit' ? 'filePreviewContainer' : 'audioPreviewContainer';
+                let containerId;
+                if (type === 'kit') containerId = 'filePreviewContainer';
+                else if (type === 'audio') containerId = 'audioPreviewContainer';
+                else if (type === 'audio_after') containerId = 'audioAfterPreviewContainer';
+
                 const container = document.getElementById(containerId);
 
                 if (container) {
@@ -4269,10 +4250,8 @@
                         .single();
 
                     if (draft?.kit_url) {
-                        await supabaseClient.storage
-                            .from('drumkit-drafts')
-                            .remove([draft.kit_url]);
-                        console.log('🗑️ Kit anterior eliminado del Storage');
+                        await deleteFileFromStorage(draft.kit_url, 'drumkit-drafts');
+                        console.log('🗑️ Kit anterior eliminado del Storage (R2)');
                     }
                 } catch (e) {
                     console.warn('⚠️ Error eliminando kit:', e);
@@ -4288,15 +4267,14 @@
                         .single();
 
                     if (draft?.audio_url) {
-                        await supabaseClient.storage
-                            .from('drumkit-drafts')
-                            .remove([draft.audio_url]);
-                        console.log('🗑️ Audio anterior eliminado del Storage');
+                        await deleteFileFromStorage(draft.audio_url, 'drumkit-drafts');
+                        console.log('🗑️ Audio anterior eliminado del Storage (R2)');
                     }
                 } catch (e) {
                     console.warn('⚠️ Error eliminando audio:', e);
                 }
             }
+
 
             if (type === 'cover' && filesUploaded.cover && currentDraftId) {
                 try {
@@ -4307,10 +4285,8 @@
                         .single();
 
                     if (draft?.cover_url) {
-                        await supabaseClient.storage
-                            .from('drumkit-drafts')
-                            .remove([draft.cover_url]);
-                        console.log('🗑️ Cover anterior eliminado del Storage');
+                        await deleteFileFromStorage(draft.cover_url, 'drumkit-drafts');
+                        console.log('🗑️ Cover anterior eliminado del Storage (R2)');
                     }
                 } catch (e) {
                     console.warn('⚠️ Error eliminando cover:', e);
@@ -4365,9 +4341,7 @@
                         .single();
 
                     if (draft?.cover_url) {
-                        await supabaseClient.storage
-                            .from('drumkit-drafts')
-                            .remove([draft.cover_url]);
+                        await deleteFileFromStorage(draft.cover_url, 'drumkit-drafts');
                         console.log('🗑️ Cover eliminado del Storage');
                     }
                 } catch (e) {
@@ -4535,10 +4509,8 @@
                             .single();
 
                         if (draft?.cover_url) {
-                            await supabaseClient.storage
-                                .from('drumkit-drafts')
-                                .remove([draft.cover_url]);
-                            console.log('🗑️ Cover anterior eliminado');
+                            await deleteFileFromStorage(draft.cover_url, 'drumkit-drafts');
+                            console.log('🗑️ Cover anterior eliminado (R2)');
                         }
                     } catch (e) {
                         console.warn('⚠️ Error eliminando cover anterior:', e);
@@ -5387,8 +5359,8 @@
                     key: 'audio',
                     label: 'Audio de Vista Previa',
                     icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>',
-                    fileName: formData.files.audio ? formData.files.audio.name : null // 🔥 NUEVO
-                }
+                    fileName: formData.files.audio ? formData.files.audio.name : null
+                },
             ];
 
             fileTypes.forEach(({ key, label, icon }) => {
@@ -5952,6 +5924,62 @@
         // ========================================
         let isRestoringDraft = false; // 🔥 PREVENT DOUBLE CALLS
 
+        // ========================================
+        // R2 STORAGE CLEANUP (Backend Proxy)
+        // ========================================
+        async function deleteFileFromStorage(pathOrUrl, bucket = 'drumkit-drafts') {
+            if (!pathOrUrl) return;
+            try {
+                let key = pathOrUrl;
+                if (pathOrUrl.startsWith('http')) {
+                    try {
+                        const urlObj = new URL(pathOrUrl);
+                        // Extract key: everything after the first slash of the pathname
+                        key = urlObj.pathname.substring(1);
+
+                        // Handle potential Supabase URLs in transition
+                        if (key.includes('/storage/v1/object/public/')) {
+                            key = key.split(`/${bucket}/`)[1] || key.split('/').pop();
+                        }
+                    } catch (e) {
+                        console.warn("Could not parse URL for deletion:", pathOrUrl);
+                    }
+                }
+
+                console.log(`🗑️ [R2-CLEANUP] Eliminando: ${key}`);
+
+                const session = await supabaseClient.auth.getSession();
+                const token = session.data.session?.access_token;
+
+                await fetch('/api/r2/delete-files', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ keys: [key] })
+                });
+            } catch (error) {
+                console.warn('⚠️ Error en deleteFileFromStorage:', error);
+            }
+        }
+
+        // ?? LOADING HELPERS (COPIED FROM BEATS.HTML)
+        function showLoading(msg = 'CARGANDO...') {
+            const overlay = document.getElementById('publishOverlay');
+            if (overlay) {
+                // Ensure specific title element exists or modify text directly
+                const title = overlay.querySelector('h3');
+                if (title) title.innerText = msg;
+                overlay.style.display = 'flex';
+            }
+        }
+
+        function hideLoading() {
+            const overlay = document.getElementById('publishOverlay');
+            if (overlay) overlay.style.display = 'none';
+        }
+
         async function loadDraft(specificId = null) {
             if (isRestoringDraft) return;
             isRestoringDraft = true;
@@ -5964,6 +5992,8 @@
                 console.log('📝 Edit mode detected, skipping draft load.');
                 return;
             }
+
+
 
             // ⛔️ STRICT MODE: If no ID is provided, DO NOT LOAD ANYTHING.
             if (!specificId) {
@@ -6173,6 +6203,7 @@
                         console.warn('?? Error con audio:', e.message);
                     }
                 }
+
                 // 🔥 ESPERAR A QUE EL DOM ESTÉ LISTO
                 // 🔥 WAIT FOR AUDIO WAVEFORM (Ensuring overlay stays until ready)
                 setTimeout(async () => {
@@ -6215,7 +6246,10 @@
                 // Restaurar visibilidad y asegurar que esté habilitado
                 const visibilityInput = document.getElementById('visibilityInput');
                 if (visibilityInput) {
-                    if (data.visibility) visibilityInput.value = data.visibility;
+                    if (data.visibility) {
+                        visibilityInput.value = data.visibility;
+                        window.selectCustomVisibility(data.visibility); // ? UI SYNC
+                    }
                     visibilityInput.disabled = false;
                     visibilityInput.classList.remove('skeleton');
                 }
@@ -6246,6 +6280,10 @@
                 showToast('Error al restaurar', 'error');
             }
         }
+
+        // ========================================
+        // 🔥 CARGAR PRODUCTO PUBLICADO (EDIT MODE)
+        // ========================================
         // ========================================
         // NOTIFICAR COLABORADORES
         // ========================================
@@ -6332,8 +6370,8 @@
             try {
                 isSaving = true;
 
-                // Show toast to indicate saving
-                showToast('Guardando borrador...', 'info');
+                // Show blocking overlay as requested (like Beats)
+                showLoading('GUARDANDO BORRADOR...');
 
                 const titleInput = document.getElementById('titleInput');
                 const descInput = document.getElementById('descInput');
@@ -6444,10 +6482,13 @@
                 // 🔥 MARKER: Tenemos un borrador guardado
                 localStorage.setItem('offszn_has_draft', 'true');
 
+                hideLoading();
                 showToast('Borrador guardado correctamente', 'success');
 
             } catch (e) {
                 console.error('❌ Error guardando draft:', e);
+
+                hideLoading();
 
                 // 🔥 NO mostrar toast si es error de duplicado (muy común en auto-save)
                 if (!e.message.includes('duplicate') && !e.message.includes('already exists')) {
@@ -6573,10 +6614,6 @@
         }
 
         async function handlePublish() {
-
-            // 🔥 COOLDOWN: Prevenir spam (5 minutos)
-            // 🔥 NO COOLDOWN - User requested removal
-            // Prevent double submission with isPublishing flag
             if (window.isPublishing) return;
             window.isPublishing = true;
 
@@ -6642,27 +6679,40 @@
 
                 // 1. Subir cover a R2
                 let image_url = null;
-                if (formData.coverBlob) {
+                if (formData.coverBlob && !filesUploaded.cover) {
                     console.log('??? Subiendo Portada a R2...');
                     const coverFile = new File([formData.coverBlob], 'cover.jpg', { type: 'image/jpeg' });
                     const key = await uploadToR2(coverFile, 'products/covers');
                     image_url = `https://offszn-storage.41d0f49121d02c88f71fdb4da54a791d.r2.cloudflarestorage.com/${key}`;
+                    filesUploaded.cover = true;
+                } else if (filesUploaded.cover && currentDraftId) {
+                    // Si ya se subió al draft, recuperamos la URL del draft
+                    const { data } = await supabaseClient.from('drumkit_drafts').select('cover_url').eq('id', currentDraftId).single();
+                    image_url = data?.cover_url;
                 }
 
                 // 2. Subir kit (.rar/.zip) a R2 (SECURE)
                 let kit_url = null;
-                if (formData.files.kit) {
+                if (formData.files.kit && !filesUploaded.kit) {
                     console.log('?? Subiendo Kit a R2 (Secure)...');
                     const key = await uploadToR2(formData.files.kit, 'secure-products/kits');
                     kit_url = key;
+                    filesUploaded.kit = true;
+                } else if (filesUploaded.kit && currentDraftId) {
+                    const { data } = await supabaseClient.from('drumkit_drafts').select('kit_url').eq('id', currentDraftId).single();
+                    kit_url = data?.kit_url;
                 }
 
                 // 3. Subir audio preview a R2
                 let audio_url = null;
-                if (formData.files.audio) {
+                if (formData.files.audio && !filesUploaded.audio) {
                     console.log('?? Subiendo Audio Preview a R2...');
                     const key = await uploadToR2(formData.files.audio, 'products/audio');
                     audio_url = `https://offszn-storage.41d0f49121d02c88f71fdb4da54a791d.r2.cloudflarestorage.com/${key}`;
+                    filesUploaded.audio = true;
+                } else if (filesUploaded.audio && currentDraftId) {
+                    const { data } = await supabaseClient.from('drumkit_drafts').select('audio_url').eq('id', currentDraftId).single();
+                    audio_url = data?.audio_url;
                 }
 
                 // 4. Calcular precio final
@@ -6697,13 +6747,8 @@
 
                 if (insertError) throw new Error(`Error guardando producto: ${insertError.message}`);
 
-                // 🔥 DELETE DRAFT AFTER SUCCESSFUL PUBLISH
-                if (currentDraftId) {
-                    console.log(`🧹 [CLEANUP] Eliminando borrador ${currentDraftId} y sus archivos...`);
-                    await supabaseClient.from('drumkit_drafts').delete().eq('id', currentDraftId);
-                    currentDraftId = null;
-                    localStorage.removeItem('offszn_has_draft');
-                }
+                // 🔥 DRAFT CLEANUP MOVED TO THE END OF THIS FUNCTION (Lines 6900+)
+                // We keep it at the end to ensure it only happens IF product insertion was successful.
 
                 // 🔥 INICIO DE LÓGICA DE COLABORACIONES (CONDICIONAL)
                 const currentVisibility = document.getElementById('visibilityInput').value;
@@ -6885,8 +6930,12 @@
                     btn.innerText = 'GUARDANDO...';
                 }
 
-                await saveDraftManual(); // 🔥 ENABLED MANUAL SAVE
-                showToast('Borrador guardado', 'success');
+                if (window.currentEditId) {
+                    await handleUpdateProduct();
+                } else {
+                    await saveDraftManual();
+                }
+                showToast('Cambios guardados', 'success');
 
             } catch (e) {
                 console.error('Quick save failed', e);
@@ -7271,8 +7320,12 @@
             collabSpinnerInterval = null;
         }
         // 🔥 CAMBIO 3: Función para cargar un producto existente y editarlo
+        let isProductLoading = false;
         async function loadProductForEdit(productId) {
+            if (isProductLoading) return;
             try {
+                isProductLoading = true;
+                showLoading('Cargando producto...');
 
 
                 // 1. Cargar datos del producto desde la tabla 'products'
@@ -7329,7 +7382,8 @@
 
                 if (product.visibility) {
                     document.getElementById('visibilityInput').value = product.visibility;
-                    originalVisibility = product.visibility; // 🔥 Capture original state
+                    originalVisibility = product.visibility; // ? Capture original state
+                    window.selectCustomVisibility(product.visibility); // ? UI SYNC
                 }
 
                 // 5. Cargar archivos (cover, kit, audio)
@@ -7486,8 +7540,12 @@
                 }
 
                 // 🔥 HIDE DRAFT BUTTON IN EDIT MODE
-                const saveDraftBtn = document.getElementById('saveDraft');
+                const saveDraftBtn = document.getElementById('saveDraftQuick');
                 if (saveDraftBtn) saveDraftBtn.style.display = 'none';
+
+                // 🔥 UPDATE EXIT MODAL TEXT
+                const saveExitBtn = document.getElementById('saveExitBtn');
+                if (saveExitBtn) saveExitBtn.innerText = 'Guardar Cambios y Salir';
 
                 // showToast('Producto cargado - Ahora puedes editarlo', 'success');
 
@@ -7516,6 +7574,7 @@
                     if (container) container.classList.add('full');
                 }
             } finally {
+                isProductLoading = false;
                 // 🔥 ESTO ASEGURA QUE EL LOADING SE QUITE PASE LO QUE PASE
                 hideLoading();
                 const pubOverlay = document.getElementById('publishOverlay');
@@ -7742,11 +7801,8 @@
         // CONFIRMACIÓN DE SALIDA
         // ========================================
         window.confirmExit = function () {
-            if (isDirty) {
-                document.getElementById('exitConfirmModal').classList.add('active');
-            } else {
-                window.location.href = '/cuenta/mis-kits.html';
-            }
+            isDirty = false;
+            window.location.href = '/cuenta/mis-kits.html';
         };
 
         async function discardDraftAndExit() {
@@ -7757,61 +7813,35 @@
                 showLoading('ELIMINANDO BORRADOR...', 'Limpiando archivos y base de datos...');
 
                 if (currentDraftId) {
-                    // 1. Clean up files from storage
                     await cleanupDraftFiles(currentDraftId);
-
-                    // 2. Delete draft from database
-                    await supabaseClient
-                        .from('drumkit_drafts')
-                        .delete()
-                        .eq('id', currentDraftId);
+                    await supabaseClient.from('drumkit_drafts').delete().eq('id', currentDraftId);
                 }
 
-                // 3. Clear local markers
                 localStorage.removeItem('offszn_has_draft');
                 isDirty = false;
-
-                // 4. Redirect
                 window.location.href = '/cuenta/mis-kits.html';
             } catch (error) {
-                console.error('Error in discardDraftAndExit:', error);
+                console.error('Error discarding draft:', error);
                 showToast('Error al descartar: ' + error.message, 'error');
                 window.isDiscarding = false;
                 hideLoading();
             }
         }
 
-        window.exitWithoutSaving = function () {
-            if (currentDraftId) {
-                // If it's a draft, use the discard logic
-                discardDraftAndExit();
-            } else {
-                // If it's a product edit (no currentDraftId) or an empty session
-                isDirty = false; // Prevent beforeunload
-                window.location.href = '/cuenta/mis-kits.html';
-            }
-        };
+        function showPublishSuccess(id, title) {
+            const modal = document.getElementById('publishSuccessModal');
+            const linkInput = document.getElementById('uniqueLinkInput');
+            const viewBtn = document.getElementById('viewProductBtn');
+            const message = document.getElementById('publishMessage');
 
-        window.saveAndExit = async function () {
-            const btn = document.getElementById('saveExitBtn');
-            btn.innerHTML = 'Guardando...';
-            btn.disabled = true;
+            const slug = generatePublicSlug(title);
+            const publicUrl = `${window.location.origin}/drum-kit/${slug}--${id}`;
 
-            await saveDraftManual(); // 🔥 ENABLED MANUAL SAVE
-
-            btn.innerHTML = 'Guardar y Salir';
-            btn.disabled = false;
-
-            isDirty = false;
-            window.location.href = '/cuenta/mis-kits.html';
-        };
-
-        window.closeExitModal = function () {
-            document.getElementById('exitConfirmModal').classList.remove('active');
-        };
-
-        // 🔥 BEFOREUNLOAD REMOVED: Cannot execute async cleanup code
-        // Use the custom exitConfirmModal instead via "Volver al Dashboard" button
+            linkInput.value = publicUrl;
+            viewBtn.onclick = () => window.location.href = publicUrl;
+            message.style.display = 'block';
+            modal.classList.add('active');
+        }
 
         // 🔥 FUNCION FALTANTE: showEstimate
         window.showEstimate = function () {
@@ -7927,36 +7957,7 @@
         </div>
     </div>
 
-    <!-- Modal Confirmación Salida -->
-    <div class="modal-overlay" id="exitConfirmModal">
-        <div class="modal" style="max-width: 400px;">
-            <div class="modal-header">
-                <h2 class="modal-title">Salir sin guardar?</h2>
-                <button type="button" class="remove-file" onclick="closeExitModal()">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <line x1="18" y1="6" x2="6" y2="18"></line>
-                        <line x1="6" y1="6" x2="18" y2="18"></line>
-                    </svg>
-                </button>
-            </div>
-            <div class="modal-body" style="text-align: center; padding: 24px;">
-                <p style="color: #bbb; margin-bottom: 24px; font-size: 15px;">
-                    Tienes cambios sin guardar. Si sales ahora, tu progreso se perderá (o quedará en una versión
-                    anterior).
-                </p>
-                <div style="display: flex; flex-direction: column; gap: 12px;">
-                    <button id="saveExitBtn" class="btn btn-primary" onclick="saveAndExit()"
-                        style="width: 100%; justify-content: center;">
-                        Guardar Borrador y Salir
-                    </button>
-                    <button class="btn btn-secondary" onclick="exitWithoutSaving()"
-                        style="width: 100%; justify-content: center; border-color: #ef4444; color: #ef4444; background: rgba(239, 68, 68, 0.05);">
-                        Salir sin Guardar
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
+    <!-- Modal Exit Confirmado eliminado -->
     <!-- Modal Primera Vez -->
     <div class="modal-overlay" id="firstTimeModal">
         <div class="modal" style="max-width: 700px;">
@@ -8100,65 +8101,7 @@
     </div>
 
     <script>
-        // ?? STORAGE CLEANUP HELPER
-        // ========================================
-        async function deleteFileFromStorage(pathOrUrl, bucket = 'drumkit-drafts') {
-            if (!pathOrUrl) return;
-            try {
-                // Determine if it's R2 or Supabase
-                const isR2 = pathOrUrl.includes('r2.cloudflarestorage.com') ||
-                    pathOrUrl.includes('pub-') ||
-                    (pathOrUrl.startsWith('http') === false);
-
-                if (isR2) {
-                    let key = pathOrUrl;
-                    if (pathOrUrl.startsWith('http')) {
-                        try {
-                            const urlObj = new URL(pathOrUrl);
-                            key = urlObj.pathname.substring(1);
-                        } catch (e) {
-                            console.warn("Could not parse R2 URL for deletion:", pathOrUrl);
-                        }
-                    }
-                    console.log(`??? [CLEANUP] Eliminando de R2 vía Backend: ${key}`);
-
-                    const session = await supabaseClient.auth.getSession();
-                    const token = session.data.session?.access_token;
-
-                    await fetch('/api/r2/delete-files', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${token}`
-                        },
-                        body: JSON.stringify({ keys: [key] })
-                    });
-                    return;
-                }
-
-                // Standard Supabase Deletion
-                let path = pathOrUrl;
-                if (pathOrUrl.startsWith('http')) {
-                    const parts = pathOrUrl.split(`/${bucket}/`);
-                    if (parts.length > 1) {
-                        path = parts[1];
-                    } else {
-                        const urlObj = new URL(pathOrUrl);
-                        const pathParts = urlObj.pathname.split(`/storage/v1/object/public/${bucket}/`);
-                        if (pathParts.length > 1) path = pathParts[1];
-                        else {
-                            console.warn('?? Could not extract path from URL:', pathOrUrl);
-                            return;
-                        }
-                    }
-                }
-
-                console.log(`??? [CLEANUP] Borrando de Supabase bucket '${bucket}':`, path);
-                await supabaseClient.storage.from(bucket).remove([path]);
-            } catch (error) {
-                console.warn(`?? Cleanup failed for ${pathOrUrl} in ${bucket}:`, error);
-            }
-        }
+        // Consolidado en script anterior
 
         async function cleanupDraftFiles(draftId) {
             try {
@@ -8278,7 +8221,7 @@
                 };
 
                 // 1. Upload NEW Cover if exists
-                if (formData.coverBlob) {
+                if (formData.coverBlob && !filesUploaded.cover) {
                     console.log('??? Subiendo Portada Editada a R2...');
 
                     // ?? CLEANUP OLD COVER
@@ -8291,12 +8234,13 @@
                     const key = await uploadToR2(coverFile, 'products/covers');
                     updates.image_url = `https://offszn-storage.41d0f49121d02c88f71fdb4da54a791d.r2.cloudflarestorage.com/${key}`;
                     console.log('✅ [EDIT] Cover uploaded to R2:', updates.image_url);
+                    filesUploaded.cover = true;
                 }
 
                 // 2. Upload NEW Files if exist
 
                 // Kit File (Secure)
-                if (formData.files.kit) {
+                if (formData.files.kit && !filesUploaded.kit) {
                     console.log('?? Subiendo Kit Editado a R2 (Secure)...');
 
                     // ?? CLEANUP OLD KIT
@@ -8308,10 +8252,11 @@
                     const key = await uploadToR2(formData.files.kit, 'secure-products/kits');
                     updates.kit_url = key;
                     console.log('✅ [EDIT] Kit uploaded to R2 (Secure):', updates.kit_url);
+                    filesUploaded.kit = true;
                 }
 
                 // Audio Preview
-                if (formData.files.audio) {
+                if (formData.files.audio && !filesUploaded.audio) {
                     console.log('?? Subiendo Audio Editado a R2...');
 
                     // ?? CLEANUP OLD AUDIO
@@ -8323,7 +8268,9 @@
                     const key = await uploadToR2(formData.files.audio, 'products/audio');
                     updates.audio_url = `https://offszn-storage.41d0f49121d02c88f71fdb4da54a791d.r2.cloudflarestorage.com/${key}`;
                     console.log('✅ [EDIT] Audio uploaded to R2:', updates.audio_url);
+                    filesUploaded.audio = true;
                 }
+
 
                 // 4. Update Database
                 const { error: updateError } = await supabaseClient
@@ -8433,6 +8380,86 @@
                 // hideLoading(); // 🔥 KEPT VISIBLE UNTIL REDIRECT
             }
         }
+
+        // 🔥 CUSTOM VISIBILITY SELECT LOGIC
+        function initCustomVisibilitySelect() {
+            const hiddenSelect = document.getElementById('visibilityInput');
+            const customList = document.getElementById('visibilityOptionsList');
+            if (!hiddenSelect || !customList) return;
+
+            customList.innerHTML = Array.from(hiddenSelect.options).map(opt => `
+                <div class="custom-option" 
+                    onclick="window.selectCustomVisibility('${opt.value}')" 
+                    style="padding: 10px 14px; cursor: pointer; color: #ccc; border-bottom: 1px solid rgba(255,255,255,0.05); transition: background 0.2s; font-size: 14px;">
+                    ${opt.text}
+                </div>
+            `).join('');
+
+            // Hover styles
+            customList.querySelectorAll('.custom-option').forEach(el => {
+                el.onmouseenter = () => { el.style.background = 'rgba(255,255,255,0.05)'; el.style.color = '#fff'; };
+                el.onmouseleave = () => { el.style.background = 'transparent'; el.style.color = '#ccc'; };
+            });
+
+            // Set initial state
+            const initialValue = hiddenSelect.value || 'public';
+            window.selectCustomVisibility(initialValue);
+        }
+
+        window.toggleVisibilityDropdown = function (e) {
+            if (e) e.stopPropagation();
+            const list = document.getElementById('visibilityOptionsList');
+            const chevron = document.getElementById('visibilityChevron');
+            if (!list) return;
+
+            const isVisible = list.style.display === 'block';
+            list.style.display = isVisible ? 'none' : 'block';
+            if (chevron) {
+                chevron.style.transform = isVisible ? 'rotate(0deg)' : 'rotate(180deg)';
+                chevron.style.color = isVisible ? '#666' : 'var(--primary-color)';
+            }
+
+            // Close other dropdowns if any
+            const publishDropdown = document.getElementById('publishDropdownContent');
+            if (publishDropdown) publishDropdown.style.display = 'none';
+        };
+
+        window.selectCustomVisibility = function (value) {
+            const hiddenSelect = document.getElementById('visibilityInput');
+            const display = document.getElementById('visibilityDisplay');
+            const list = document.getElementById('visibilityOptionsList');
+            const chevron = document.getElementById('visibilityChevron');
+
+            if (hiddenSelect) {
+                hiddenSelect.value = value;
+                hiddenSelect.dispatchEvent(new Event('change'));
+            }
+
+            if (display) {
+                const option = hiddenSelect.querySelector(`option[value="${value}"]`);
+                display.textContent = option ? option.textContent : value;
+                display.style.color = '#fff';
+            }
+
+            if (list) list.style.display = 'none';
+            if (chevron) {
+                chevron.style.transform = 'rotate(0deg)';
+                chevron.style.color = '#666';
+            }
+        };
+
+        // Close dropdown on click outside
+        document.addEventListener('click', () => {
+            const list = document.getElementById('visibilityOptionsList');
+            const chevron = document.getElementById('visibilityChevron');
+            if (list && list.style.display === 'block') {
+                list.style.display = 'none';
+                if (chevron) {
+                    chevron.style.transform = 'rotate(0deg)';
+                    chevron.style.color = '#666';
+                }
+            }
+        });
 
         // 🔥 ROBUST DATE VALIDATION
         function validateReleaseDate() {

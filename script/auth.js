@@ -24,8 +24,8 @@ document.addEventListener('DOMContentLoaded', () => {
   // ============================================
   // 🔥 URL BASE DINÁMICA (Local vs Producción)
   // ============================================
+  const baseURL = window.location.origin;
   const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-  const baseURL = isLocal ? window.location.origin : 'https://offszn-oc7c.onrender.com';
 
   console.log(`🌍 Entorno detectado: ${isLocal ? 'LOCAL' : 'PRODUCCIÓN'} -> BaseURL: ${baseURL}`);
 

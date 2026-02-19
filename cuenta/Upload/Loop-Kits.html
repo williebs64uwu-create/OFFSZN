@@ -3101,13 +3101,31 @@
                             </div>
                             <div class="form-group">
                                 <div class="label">Visibilidad <span class="required">*</span></div>
-                                <div class="select-wrapper">
-                                    <select class="input-field skeleton" id="visibilityInput" disabled>
+                                <div class="select-wrapper" style="position: relative;">
+                                    <!-- SELECT NATIVO OCULTO -->
+                                    <select id="visibilityInput" style="display: none;">
                                         <option value="public">Público (Todos)</option>
                                         <option value="private">Privado (Solo tú)</option>
                                         <option value="unlisted">No listado (Link)</option>
                                     </select>
 
+                                    <!-- TRIGGER DEL DROPDOWN CUSTOM -->
+                                    <div class="input-field" id="visibilityCustomTrigger"
+                                        onclick="window.toggleVisibilityDropdown(event)"
+                                        style="padding: 0 16px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; height: 45px; user-select: none;">
+                                        <span id="visibilityDisplay">Público (Todos)</span>
+                                        <svg style="width: 16px; height: 16px; color: #666; transition: transform 0.3s;"
+                                            id="visibilityChevron" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                            stroke-width="2">
+                                            <polyline points="6 9 12 15 18 9"></polyline>
+                                        </svg>
+                                    </div>
+
+                                    <!-- DROPDOWN LIST CUSTOM -->
+                                    <div id="visibilityOptionsList" class="custom-scrollbar"
+                                        style="display: none; position: absolute; top: calc(100% + 4px); left: 0; width: 100%; max-height: 200px; overflow-y: auto; background: #1a1a1a; border: 1px solid #333; border-radius: 8px; z-index: 9999; box-shadow: 0 4px 20px rgba(0,0,0,0.8);">
+                                        <!-- Se llenará con JS -->
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -3351,7 +3369,7 @@
     </div>
     <!-- Quick Actions Sidebar -->
     <div class="quick-actions">
-        <button class="quick-btn" onclick="quickSave()" title="Guardar">
+        <button class="quick-btn" onclick="quickSave()" id="saveDraftQuick" title="Guardar">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
                 <polyline points="17 21 17 13 7 13 7 21"></polyline>
@@ -3514,6 +3532,20 @@
             }
             return peaks;
         }
+
+
+        // Close dropdown on click outside
+        document.addEventListener('click', () => {
+            const list = document.getElementById('visibilityOptionsList');
+            const chevron = document.getElementById('visibilityChevron');
+            if (list && list.style.display === 'block') {
+                list.style.display = 'none';
+                if (chevron) {
+                    chevron.style.transform = 'rotate(0deg)';
+                    chevron.style.color = '#666';
+                }
+            }
+        });
 
         // 🔄 FALLBACK: Keyword matching inteligente & REPERTORIO MASIVO
         async function generateTagsSmart(title, description, audioParams) {
@@ -3696,6 +3728,7 @@
             initPriceValidation();
             initExitModal();
             // initAutosaveInterval(); // 🔥 DISABLED AUTO-SAVE
+            initCustomVisibilitySelect(); // 🔥 RESTORED CALL
             await loadDraft();
 
             // Event listeners básicos
@@ -3799,19 +3832,19 @@
             document.getElementById('saveDraft').addEventListener('click', async function () {
                 const btn = this;
                 const originalText = btn.innerHTML;
-
+ 
                 btn.disabled = true;
                 btn.innerHTML = 'Guardando...';
                 try {
                     await // saveDraftAuto(); // 🔥 DISABLED AUTO-SAVE
                     showToast('Borrador guardado', 'success');
                     isDirty = false;
-
+ 
                     // 🔥 REDIRECCIÓN A MIS-KITS (Solicitud del usuario)
                     setTimeout(() => {
                         window.location.href = '/cuenta/mis-kits.html';
                     }, 1000);
-
+ 
                 } catch (error) {
                     showToast('Error al guardar: ' + error.message, 'error');
                 } finally {
@@ -3829,7 +3862,19 @@
 
             document.addEventListener('click', () => {
                 document.querySelector('.dropdown-content').style.display = 'none';
+
+                // CERRAR DROPDOWN CUSTOM DE VISIBILIDAD
+                const list = document.getElementById('visibilityOptionsList');
+                const chevron = document.getElementById('visibilityChevron');
+                if (list && list.style.display === 'block') {
+                    list.style.display = 'none';
+                    if (chevron) {
+                        chevron.style.transform = 'rotate(0deg)';
+                        chevron.style.color = '#666';
+                    }
+                }
             });
+
 
             // Inicializar spinners
             setTimeout(() => {
@@ -3971,45 +4016,9 @@
         }
 
         function initExitModal() {
-            if (!document.getElementById('exitModal')) {
-                const modalHTML = `
-                <div class="exit-modal-overlay" id="exitModal">
-                    <div class="exit-modal" style="text-align: center; border: 1px solid rgba(255,255,255,0.1); background: #0a0a0a;">
-                        <div class="exit-modal-title" style="justify-content: center; color: #fff;">
-                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2">
-                                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
-                                <line x1="12" y1="9" x2="12" y2="13"></line>
-                                <line x1="12" y1="17" x2="12.01" y2="17"></line>
-                            </svg>
-                            ¿Salir sin guardar?
-                        </div>
-                        <div class="exit-modal-message" style="color: #aaa; margin-bottom: 32px;">
-                            Tienes cambios sin guardar. Si sales ahora, perderás todo tu progreso.
-                        </div>
-                        <div class="exit-modal-actions" style="justify-content: center; gap: 16px;">
-                             <button class="exit-modal-btn cancel" id="exitConfirm" style="color: #ef4444; border: none; font-weight: 500;">Salir sin guardar</button>
-                            <button class="exit-modal-btn confirm" id="exitCancel" style="background: #fff; color: #000; hover: background: #ddd;">Seguir Editando</button>
-                        </div>
-                    </div>
-                </div>
-            `;
-                document.body.insertAdjacentHTML('afterbegin', modalHTML);
-            }
-
-            document.getElementById('uploadForm').addEventListener('change', () => isDirty = true);
-            document.getElementById('uploadForm').addEventListener('input', () => isDirty = true);
-
-            // 🔥 BEFOREUNLOAD REMOVED: Cannot execute async cleanup code
-            // Use the custom exitConfirmModal instead via "Volver al Dashboard" button
-
-            document.getElementById('exitCancel')?.addEventListener('click', () => {
-                document.getElementById('exitModal').classList.remove('active');
-            });
-
-            document.getElementById('exitConfirm')?.addEventListener('click', () => {
-                isDirty = false;
-                window.location.href = '/';
-            });
+            // Confirmation modal removed as per user request.
+            document.getElementById('uploadForm')?.addEventListener('change', () => isDirty = true);
+            document.getElementById('uploadForm')?.addEventListener('input', () => isDirty = true);
         }
 
         function initAutosaveInterval() {
@@ -4022,31 +4031,6 @@
         }
 
         // ========================================
-        // 🔥 QUICK SAVE (HEADER BUTTON)
-        // ========================================
-        window.quickSave = async function () {
-            try {
-                showLoading('GUARDANDO BORRADOR...');
-                if (typeof saveDraftAuto === 'function') {
-                    await saveDraftAuto(); // 🔥 MANUAL SAVE ENABLED
-                } else {
-                    console.error("saveDraftAuto function missing");
-                    throw new Error("Save function missing");
-                }
-
-                isDirty = false;
-                // showToast('Borrador guardado correctamente', 'success'); // 🔥 REMOVED TOAST PER USER REQUEST
-
-                setTimeout(() => {
-                    window.location.href = '/cuenta/mis-kits.html';
-                }, 1000);
-
-            } catch (error) {
-                console.error('Error saving draft:', error);
-                showToast('Error al guardar borrador', 'error');
-                hideLoading();
-            }
-        };
 
         function initWaveSurfer() {
             wavesurfer = WaveSurfer.create({
@@ -4193,15 +4177,15 @@
                 /* if (currentDraftId && filesUploaded[type]) {
                     try {
                         const columnName = type === 'kit' ? 'kit_url' : 'audio_url';
-
+ 
                         const { data: draft } = await supabaseClient
                             .from('loopkit_drafts')
                             .select(columnName)
                             .eq('id', currentDraftId)
                             .single();
-
+ 
                         const oldUrl = draft?.[columnName];
-
+ 
                         if (oldUrl) {
                             await supabaseClient.storage
                                 .from('loopkit-drafts')
@@ -4354,7 +4338,7 @@
             // await // saveDraftAuto(); // 🔥 DISABLED AUTO-SAVE // 🔥 AUTOSAVE DISABLED
             updateCompletionProgress(); // 🔥 AGREGAR ESTA LÍNEA
 
-            await saveDraftAuto(); // 🔥 AUTO-SAVE ON REMOVE
+            // await saveDraftManual(); // 🔥 AUTO-SAVE ON REMOVE DISABLED
 
 
         };
@@ -6413,8 +6397,54 @@
             }
         }
 
+
+        // ========================================
+        // R2 STORAGE CLEANUP (Backend Proxy)
+        // ========================================
+        async function deleteFileFromStorage(pathOrUrl, bucket = 'loop-kit-drafts') {
+            if (!pathOrUrl) return;
+            try {
+                // Determine if it's R2 or Supabase
+                const isR2 = pathOrUrl.includes('r2.cloudflarestorage.com') ||
+                    pathOrUrl.includes('pub-') ||
+                    !pathOrUrl.startsWith('http');
+
+                if (isR2) {
+                    let key = pathOrUrl;
+                    if (pathOrUrl.startsWith('http')) {
+                        try {
+                            const urlObj = new URL(pathOrUrl);
+                            key = urlObj.pathname.substring(1);
+                        } catch (e) {
+                            console.warn("Could not parse R2 URL for deletion:", pathOrUrl);
+                        }
+                    }
+                    console.log(`🗑️ [CLEANUP] Eliminando de R2 vía Backend: ${key}`);
+
+                    const session = await supabaseClient.auth.getSession();
+                    const token = session.data.session?.access_token;
+
+                    await fetch('/api/r2/delete-files', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify({ keys: [key] })
+                    });
+                } else {
+                    // Supabase Storage Fallback (Legacy)
+                    // console.log(`🗑️ [CLEANUP] Eliminando de Supabase: ${pathOrUrl}`);
+                    const { error } = await supabaseClient.storage.from(bucket).remove([pathOrUrl]);
+                    if (error) console.warn('Error eliminando de Supabase:', error);
+                }
+            } catch (error) {
+                console.warn('⚠️ Error en deleteFileFromStorage:', error);
+            }
+        }
+
         // 🔥 AQUI EMEPIEZA LA FUNCION saveDraftAuto
-        async function saveDraftAuto() {
+        async function saveDraftManual() {
             if (isSaving || window.isPublishing) return;
 
             // 🔥 Check for actual content
@@ -7119,7 +7149,7 @@
                     btn.innerText = 'GUARDANDO...';
                 }
 
-                // await saveDraftAuto(); // 🔥 DISABLED AUTO-SAVE
+                await saveDraftManual();
                 showToast('Borrador guardado', 'success');
 
             } catch (e) {
@@ -7298,7 +7328,7 @@
 
             modal.remove();
             showToast('Tags reemplazados', 'success');
-            saveDraftAuto();
+            // saveDraftManual(); // 🔥 DISABLED AUTO-SAVE PER USER REQUEST
         };
         // ========================================
         // ENHANCED AUDIO PLAYER
@@ -7503,9 +7533,12 @@
             collabSpinnerTimeout = null;
             collabSpinnerInterval = null;
         }
-        // 🔥 CAMBIO 3: Función para cargar un producto existente y editarlo
+        let isProductLoading = false;
         async function loadProductForEdit(productId) {
+            if (isProductLoading) return;
             try {
+                isProductLoading = true;
+                showLoading('CARGANDO PRODUCTO...');
 
 
                 // 1. Cargar datos del producto desde la tabla 'products'
@@ -7744,11 +7777,11 @@
                 }
 
                 // 🔥 HIDE DRAFT BUTTON IN EDIT MODE
-                const saveDraftBtn = document.getElementById('saveDraft');
+                // 🔥 HIDE Save Draft Button (Prevent Confusion)
+                const saveDraftBtn = document.getElementById('saveDraft') || document.getElementById('saveDraftQuick');
                 if (saveDraftBtn) saveDraftBtn.style.display = 'none';
 
-                // Also hide the quick save icon in header if it exists
-                const quickSaveBtn = document.getElementById('saveDraftBtn') || document.querySelector('.quick-btn');
+                const quickSaveBtn = document.getElementById('saveDraftBtn') || document.getElementById('saveDraftQuick');
                 if (quickSaveBtn) quickSaveBtn.style.display = 'none';
 
                 // showToast('Producto cargado - Ahora puedes editarlo', 'success');
@@ -7779,9 +7812,8 @@
                 }
             } finally {
                 // 🔥 ESTO ASEGURA QUE EL LOADING SE QUITE PASE LO QUE PASE
+                isProductLoading = false;
                 hideLoading();
-                const pubOverlay = document.getElementById('publishOverlay');
-                if (pubOverlay) pubOverlay.style.display = 'none';
             }
         }
 
@@ -8004,76 +8036,9 @@
         // CONFIRMACIÓN DE SALIDA
         // ========================================
         window.confirmExit = function () {
-            if (isDirty) {
-                document.getElementById('exitConfirmModal').classList.add('active');
-            } else {
-                window.location.href = '/cuenta/mis-kits.html';
-            }
-        };
-
-        async function discardDraftAndExit() {
-            if (window.isDiscarding) return;
-            window.isDiscarding = true;
-
-            try {
-                showLoading('ELIMINANDO BORRADOR...', 'Limpiando archivos y base de datos...');
-
-                if (currentDraftId) {
-                    // 1. Clean up files from storage
-                    await cleanupDraftFiles(currentDraftId);
-
-                    // 2. Delete draft from database
-                    await supabaseClient
-                        .from('loopkit_drafts')
-                        .delete()
-                        .eq('id', currentDraftId);
-                }
-
-                // 3. Clear local markers
-                localStorage.removeItem('offszn_has_draft');
-                isDirty = false;
-
-                // 4. Redirect
-                window.location.href = '/cuenta/mis-kits.html';
-            } catch (error) {
-                console.error('Error in discardDraftAndExit:', error);
-                showToast('Error al descartar: ' + error.message, 'error');
-                window.isDiscarding = false;
-                hideLoading();
-            }
-        }
-
-        window.exitWithoutSaving = function () {
-            if (currentDraftId) {
-                // If it's a draft, use the discard logic
-                discardDraftAndExit();
-            } else {
-                // If it's a product edit (no currentDraftId) or an empty session
-                isDirty = false; // Prevent beforeunload
-                window.location.href = '/cuenta/mis-kits.html';
-            }
-        };
-
-        window.saveAndExit = async function () {
-            const btn = document.getElementById('saveExitBtn');
-            btn.innerHTML = 'Guardando...';
-            btn.disabled = true;
-
-            // await saveDraftAuto(); // 🔥 DISABLED AUTO-SAVE
-
-            btn.innerHTML = 'Guardar y Salir';
-            btn.disabled = false;
-
             isDirty = false;
             window.location.href = '/cuenta/mis-kits.html';
         };
-
-        window.closeExitModal = function () {
-            document.getElementById('exitConfirmModal').classList.remove('active');
-        };
-
-        // 🔥 BEFOREUNLOAD REMOVED: Cannot execute async cleanup code
-        // Use the custom exitConfirmModal instead via "Volver al Dashboard" button
 
         // 🔥 FUNCION FALTANTE: showEstimate
         window.showEstimate = function () {
@@ -8189,36 +8154,8 @@
         </div>
     </div>
 
-    <!-- Modal Confirmaci�n Salida -->
-    <div class="modal-overlay" id="exitConfirmModal">
-        <div class="modal" style="max-width: 400px;">
-            <div class="modal-header">
-                <h2 class="modal-title">�Salir sin guardar?</h2>
-                <button type="button" class="remove-file" onclick="closeExitModal()">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <line x1="18" y1="6" x2="6" y2="18"></line>
-                        <line x1="6" y1="6" x2="18" y2="18"></line>
-                    </svg>
-                </button>
-            </div>
-            <div class="modal-body" style="text-align: center; padding: 24px;">
-                <p style="color: #bbb; margin-bottom: 24px; font-size: 15px;">
-                    Tienes cambios sin guardar. Si sales ahora, tu progreso se perder� (o quedar� en una versi�n
-                    anterior).
-                </p>
-                <div style="display: flex; flex-direction: column; gap: 12px;">
-                    <button id="saveExitBtn" class="btn btn-primary" onclick="saveAndExit()"
-                        style="width: 100%; justify-content: center;">
-                        Guardar Borrador y Salir
-                    </button>
-                    <button class="btn btn-secondary" onclick="exitWithoutSaving()"
-                        style="width: 100%; justify-content: center; border-color: #ef4444; color: #ef4444; background: rgba(239, 68, 68, 0.05);">
-                        Salir sin Guardar
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
+    <!-- Modal Confirmacin Salida -->
+    <!-- Modal Exit Confirmado eliminado -->
     <!-- Modal Primera Vez -->
     <div class="modal-overlay" id="firstTimeModal">
         <div class="modal" style="max-width: 700px;">
@@ -8794,7 +8731,73 @@
             console.log('✅ Session active for user:', userId);
         }
 
-        // ========================================
+
+        // 🔥 CUSTOM VISIBILITY SELECT LOGIC
+        function initCustomVisibilitySelect() {
+            const hiddenSelect = document.getElementById('visibilityInput');
+            const customList = document.getElementById('visibilityOptionsList');
+            if (!hiddenSelect || !customList) return;
+
+            customList.innerHTML = Array.from(hiddenSelect.options).map(opt => `
+                <div class="custom-option" 
+                    onclick="window.selectCustomVisibility('${opt.value}')" 
+                    style="padding: 10px 14px; cursor: pointer; color: #ccc; border-bottom: 1px solid rgba(255,255,255,0.05); transition: background 0.2s; font-size: 14px;">
+                    ${opt.text}
+                </div>
+            `).join('');
+
+            // Hover styles
+            customList.querySelectorAll('.custom-option').forEach(el => {
+                el.onmouseenter = () => { el.style.background = 'rgba(255,255,255,0.05)'; el.style.color = '#fff'; };
+                el.onmouseleave = () => { el.style.background = 'transparent'; el.style.color = '#ccc'; };
+            });
+
+            // Set initial state
+            const initialValue = hiddenSelect.value || 'public';
+            window.selectCustomVisibility(initialValue);
+        }
+
+        window.toggleVisibilityDropdown = function (e) {
+            if (e) e.stopPropagation();
+            const list = document.getElementById('visibilityOptionsList');
+            const chevron = document.getElementById('visibilityChevron');
+            if (!list) return;
+
+            const isVisible = list.style.display === 'block';
+            list.style.display = isVisible ? 'none' : 'block';
+            if (chevron) {
+                chevron.style.transform = isVisible ? 'rotate(0deg)' : 'rotate(180deg)';
+                chevron.style.color = isVisible ? '#666' : 'var(--primary-color)';
+            }
+
+            // Close other dropdowns if any
+            const publishDropdown = document.getElementById('publishDropdownContent');
+            if (publishDropdown) publishDropdown.style.display = 'none';
+        };
+
+        window.selectCustomVisibility = function (value) {
+            const hiddenSelect = document.getElementById('visibilityInput');
+            const display = document.getElementById('visibilityDisplay');
+            const list = document.getElementById('visibilityOptionsList');
+            const chevron = document.getElementById('visibilityChevron');
+
+            if (hiddenSelect) {
+                hiddenSelect.value = value;
+                hiddenSelect.dispatchEvent(new Event('change'));
+            }
+
+            if (display) {
+                const option = hiddenSelect.querySelector(`option[value="${value}"]`);
+                display.textContent = option ? option.textContent : value;
+                display.style.color = '#fff';
+            }
+
+            if (list) list.style.display = 'none';
+            if (chevron) {
+                chevron.style.transform = 'rotate(0deg)';
+                chevron.style.color = '#666';
+            }
+        };
 
     </script>
 </body>
