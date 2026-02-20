@@ -241,19 +241,21 @@ function renderTwoColLists(category = 'Todo') {
         }
     }
 
-    // A. Trending (List of 5)
-    const trends = [...filtered]
+    // A. Trending
+    let limitTrends = 5;
+    const allTrends = [...filtered]
         .sort((a, b) => {
             const score = p => (p.views_count || 0) + (p.plays_count || 0) * 2 + (p.stats_likes || 0) * 5;
             return score(b) - score(a);
-        })
-        .slice(0, 5);
+        });
+    const trends = allTrends.slice(0, limitTrends);
 
-    // B. Super Fresh (List of 5) - Excluding trends
-    const fresh = [...filtered]
+    // B. Super Fresh 
+    let limitFresh = 5;
+    const allFresh = [...filtered]
         .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
-        .filter(p => !trends.find(t => t.id === p.id))
-        .slice(0, 5);
+        .filter(p => !allTrends.slice(0, 15).find(t => t.id === p.id));
+    const fresh = allFresh.slice(0, limitFresh);
 
     grid.innerHTML = `
         <div class="list-col" style="margin-bottom: 60px;">
@@ -261,14 +263,20 @@ function renderTwoColLists(category = 'Todo') {
                 <h3 class="list-col-title">Tendencias</h3>
                 <span class="list-col-subtitle">Lo más escuchado ahora</span>
             </div>
-            ${trends.map((p, i) => createListItemHtml(p, i + 1, 'product')).join('')}
+            <div id="trends-list-container">
+                ${trends.map((p, i) => createListItemHtml(p, i + 1, 'product')).join('')}
+            </div>
+            ${allTrends.length > 5 ? '<button class="btn-ver-mas mobile-only" id="btn-more-trends">Ver más <i class="bi bi-chevron-down"></i></button>' : ''}
         </div>
         <div class="list-col">
             <div class="list-col-header">
                 <h3 class="list-col-title">Super Fresh</h3>
                 <span class="list-col-subtitle">Subidos esta semana</span>
             </div>
-            ${fresh.map((p, i) => createListItemHtml(p, i + 1, 'product')).join('')}
+            <div id="fresh-list-container">
+                ${fresh.map((p, i) => createListItemHtml(p, i + 1, 'product')).join('')}
+            </div>
+            ${allFresh.length > 5 ? '<button class="btn-ver-mas mobile-only" id="btn-more-fresh">Ver más <i class="bi bi-chevron-down"></i></button>' : ''}
         </div>
     `;
 
@@ -276,20 +284,19 @@ function renderTwoColLists(category = 'Todo') {
     gridOuter.className = 'explore-list-outer';
     gridOuter.appendChild(grid);
 
-    // Initialize WaveSurfers after adding to DOM
-    setTimeout(() => {
-        grid.querySelectorAll('.list-item-smart[data-type="product"]').forEach(async item => {
+    // Reusable WaveSurfer initialization for new items
+    const initWS = (containerNode) => {
+        containerNode.querySelectorAll('.list-item-smart[data-type="product"]:not(.ws-initialized)').forEach(async item => {
+            item.classList.add('ws-initialized'); // Mark to avoid duplicate inits
             const id = item.dataset.id;
             const product = allProducts.find(p => p.id == id);
             const container = item.querySelector('.list-item-waveform');
 
-            // Comprehensive Audio URL Fallback
             const rawAudioUrl = product.mp3_url || product.download_url_mp3 || product.preview_url ||
                 product.audio_url || product.tagged_file || product.demo_file ||
                 product.file_url || product.url_file;
 
             if (container && rawAudioUrl && window.WaveSurfer) {
-                // 🔥 AUTHORIZE R2 AUDIO
                 const audioUrl = await window.getAuthorizedUrl(rawAudioUrl);
 
                 const ws = WaveSurfer.create({
@@ -305,7 +312,7 @@ function renderTwoColLists(category = 'Todo') {
                     interact: true,
                     url: audioUrl,
                     hideScrollbar: true,
-                    backend: 'MediaElement' // Better for cloud demuxing
+                    backend: 'MediaElement'
                 });
 
                 ws.on('ready', () => {
@@ -313,7 +320,6 @@ function renderTwoColLists(category = 'Todo') {
                 });
 
                 ws.on('error', (e) => {
-                    // Only log as warn to avoid red console blocks
                     console.warn(`Explore Waveform Error [ID: ${id}]:`, e);
                     container.classList.remove('skeleton-waveform');
                     container.innerHTML = '<div style="font-size: 0.6rem; color: #555; padding-top: 8px; font-weight: 500;">PREVIEW UNAVAILABLE</div>';
@@ -333,19 +339,47 @@ function renderTwoColLists(category = 'Todo') {
                 window.activeWavesurfers.push(ws);
             } else if (container) {
                 container.classList.remove('skeleton-waveform');
-
-                // GENERATE FAKE WAVEFORM (Visual Placeholder)
-                // Creates 30 random bars with low opacity
                 let fakeWaveformHtml = '<div class="fake-waveform">';
                 for (let i = 0; i < 30; i++) {
-                    const height = Math.floor(Math.random() * 16 + 4); // 4px to 20px
+                    const height = Math.floor(Math.random() * 16 + 4);
                     fakeWaveformHtml += `<div class="fake-bar" style="height: ${height}px; opacity: 0.5;"></div>`;
                 }
                 fakeWaveformHtml += '</div>';
-
                 container.innerHTML = fakeWaveformHtml;
             }
         });
+    };
+
+    // Initialize WaveSurfers after adding to DOM
+    setTimeout(() => {
+        initWS(grid);
+
+        // Events for "Ver mas"
+        const btnMoreTrends = grid.querySelector('#btn-more-trends');
+        if (btnMoreTrends) {
+            btnMoreTrends.onclick = () => {
+                const nextGrp = allTrends.slice(limitTrends, limitTrends + 5);
+                const container = grid.querySelector('#trends-list-container');
+                const html = nextGrp.map((p, i) => createListItemHtml(p, limitTrends + i + 1, 'product')).join('');
+                container.insertAdjacentHTML('beforeend', html);
+                limitTrends += 5;
+                initWS(container);
+                if (limitTrends >= Math.min(15, allTrends.length)) btnMoreTrends.style.display = 'none';
+            };
+        }
+
+        const btnMoreFresh = grid.querySelector('#btn-more-fresh');
+        if (btnMoreFresh) {
+            btnMoreFresh.onclick = () => {
+                const nextGrp = allFresh.slice(limitFresh, limitFresh + 5);
+                const container = grid.querySelector('#fresh-list-container');
+                const html = nextGrp.map((p, i) => createListItemHtml(p, limitFresh + i + 1, 'product')).join('');
+                container.insertAdjacentHTML('beforeend', html);
+                limitFresh += 5;
+                initWS(container);
+                if (limitFresh >= Math.min(15, allFresh.length)) btnMoreFresh.style.display = 'none';
+            };
+        }
     }, 150);
 
     return grid;
@@ -383,20 +417,38 @@ function createListItemHtml(item, index, type) {
     return `
         <div class="list-item-smart" data-id="${item.id}" data-type="product">
             <div class="list-item-index">${index}</div>
-            <img src="${img}" class="list-item-img" alt="cover" onclick="window.location.href='${link}'">
-            <div class="list-item-info" onclick="window.location.href='${link}'">
+            <img src="${img}" class="list-item-img" alt="cover" onclick="event.stopPropagation(); window.handleCoverClick(${item.id})">
+            <div class="list-item-info" onclick="event.stopPropagation(); window.handleInfoClick(event, ${item.id}, '${link}')">
                 <div class="list-item-name">${name}</div>
                 <div class="list-item-sub">${sub}</div>
             </div>
-            <div class="list-item-waveform skeleton-waveform"></div>
+            <div class="list-item-waveform skeleton-waveform" onclick="event.stopPropagation(); window.handleInfoClick(event, ${item.id}, '${link}')"></div>
             <div class="list-item-value">
-                <div class="list-play-btn ${hasAudio ? '' : 'disabled'}" onclick="event.stopPropagation(); ${hasAudio ? `window.playTrackById(${item.id})` : ''}">
+                <div class="list-play-btn ${hasAudio ? '' : 'disabled'}" id="btn-play-waveform-${item.id}-${index}" onclick="event.stopPropagation(); ${hasAudio ? `window.playTrackById(${item.id})` : ''}">
                     <i class="bi bi-play-fill"></i>
                 </div>
             </div>
         </div>
     `;
 }
+
+// Global Handlers for List Interactions
+window.handleCoverClick = function (id) {
+    window.playTrackById(id);
+};
+
+window.handleInfoClick = function (event, id, link) {
+    if (window.innerWidth <= 768 && window.ExpandedPlayer) {
+        if (typeof allProducts !== 'undefined') {
+            const product = allProducts.find(p => p.id == id);
+            if (product) {
+                window.ExpandedPlayer.open(product);
+                return;
+            }
+        }
+    }
+    window.location.href = link; // Fallback or desktop behavior
+};
 
 function getProductAudio(product) {
     if (!product) return null;
@@ -418,6 +470,50 @@ function startHeroSlider() {
 
     if (heroTimer) clearInterval(heroTimer);
     heroTimer = setInterval(() => moveToNextHero(), EXPLORE_CONFIG.HERO_ROTATE_MS);
+
+    // Initialise Touch Swipe Logic
+    const heroSection = document.getElementById('explore-hero-container');
+    if (heroSection && !heroSection.dataset.swipeBound) {
+        let touchStartX = 0;
+        let currentX = 0;
+        let isDragging = false;
+
+        heroSection.addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].screenX;
+            isDragging = true;
+            heroSection.style.transition = 'none'; // Disable transition while dragging
+        }, { passive: true });
+
+        heroSection.addEventListener('touchmove', e => {
+            if (!isDragging) return;
+            currentX = e.changedTouches[0].screenX;
+            const diffX = currentX - touchStartX;
+
+            // Only allow horizontal drag, add some resistance
+            if (Math.abs(diffX) > 10) {
+                heroSection.style.transform = `translateX(${diffX * 0.4}px)`;
+            }
+        }, { passive: true });
+
+        heroSection.addEventListener('touchend', e => {
+            isDragging = false;
+            heroSection.style.transition = 'transform 0.3s ease-out'; // Re-enable smooth snap back
+            const touchEndX = e.changedTouches[0].screenX;
+            const diffX = touchEndX - touchStartX;
+
+            if (diffX < -50) {
+                // Swipe Left -> Next
+                window.navToHero((currentHeroIndex + 1) % heroProducts.length);
+            } else if (diffX > 50) {
+                // Swipe Right -> Prev
+                window.navToHero((currentHeroIndex - 1 + heroProducts.length) % heroProducts.length);
+            }
+            // Snap back to center
+            heroSection.style.transform = `translateX(0px)`;
+
+        }, { passive: true });
+        heroSection.dataset.swipeBound = 'true';
+    }
 }
 
 function moveToNextHero() {
@@ -432,19 +528,21 @@ function performHeroTransition(index) {
     const content = heroEl.querySelector('.hero-content');
     const image = heroEl.querySelector('.hero-image-container');
 
-    // Premium GSAP Exit
+    // Smooth Slide out
+    const isNext = (index > currentHeroIndex) || (index === 0 && currentHeroIndex === heroProducts.length - 1);
+    const slideDir = isNext ? -30 : 30;
+
     const tl = gsap.timeline({
         onComplete: () => {
-            renderHeroSlide(heroProducts[index]);
-            // Entrance handled in renderHeroSlide
+            renderHeroSlide(heroProducts[index], isNext);
         }
     });
 
     tl.to([content, image], {
         opacity: 0,
-        y: -20,
-        duration: 0.3,
-        ease: "power2.in"
+        x: slideDir, // Slide slightly left/right on exit
+        duration: 0.25,
+        ease: "power2.inOut"
     });
 }
 
@@ -461,14 +559,26 @@ function renderHeroSlide(product) {
     ).join('');
 
     heroSection.innerHTML = `
-        <div class="explore-hero active">
-            <canvas class="hero-particles-canvas"></canvas>
+        <div class="explore-hero active" id="hero-card-clickable">
+            <!-- Mobile Background Image & Gradient -->
+            <div class="hero-mobile-bg mobile-only" style="background-image: url('${imgUrl}')"></div>
+            <div class="hero-mobile-gradient mobile-only"></div>
+
+            <canvas class="hero-particles-canvas desktop-only"></canvas>
             
             <div class="hero-content" style="opacity: 0; transform: translateY(15px);">
-                <span class="hero-tag">Destacado</span>
+                <span class="hero-tag desktop-only">Destacado</span>
                 <h1 class="hero-title">${product.name}</h1>
-                <p class="hero-subtitle">Una creación de <strong>${producer}</strong> • ${type}</p>
-                <div class="hero-actions">
+                <p class="hero-subtitle desktop-only">Una creación de <strong>${producer}</strong> • ${type}</p>
+                
+                <!-- Mobile info row -->
+                <div class="hero-mobile-info mobile-only">
+                    <span class="hero-mobile-artist">${producer}</span>
+                    <span class="hero-mobile-dot">&bull;</span>
+                    <span class="hero-mobile-type">${type}</span>
+                </div>
+
+                <div class="hero-actions desktop-only">
                     <button class="btn-hero-play" id="hero-play-btn">
                         <i class="bi bi-play-fill"></i> Escuchar Ahora
                     </button>
@@ -476,9 +586,14 @@ function renderHeroSlide(product) {
                 </div>
             </div>
 
-            <div class="hero-image-container" style="opacity: 0; transform: translateX(20px) translateY(-50%);">
+            <div class="hero-image-container desktop-only" style="opacity: 0; transform: translateX(20px) translateY(-50%);">
                 <img src="${imgUrl}" alt="cover" class="hero-image">
             </div>
+
+            <!-- Mobile Purple Play Button -->
+            <button class="hero-mobile-play-btn mobile-only" id="hero-mobile-play">
+                <i class="bi bi-play-fill" style="margin-left: 3px;"></i>
+            </button>
 
             <div class="hero-indicators">
                 ${dotsHtml}
@@ -491,13 +606,18 @@ function renderHeroSlide(product) {
     const content = heroEl.querySelector('.hero-content');
     const image = heroEl.querySelector('.hero-image-container');
 
-    gsap.to([content, image], {
-        opacity: 1,
-        y: 0,
-        x: 0,
-        duration: 0.6,
-        ease: "power2.out"
-    });
+    gsap.fromTo([content, image],
+        {
+            opacity: 0,
+            x: arguments.length > 1 && arguments[1] ? 30 : -30 // Slide from opposite dir
+        },
+        {
+            opacity: 1,
+            x: 0,
+            duration: 0.35,
+            ease: "power2.out"
+        }
+    );
 
     // Restart Particles for the new canvas
     initHeroParticles();
@@ -505,9 +625,23 @@ function renderHeroSlide(product) {
     // Event Listeners (Restored)
     const playBtn = heroSection.querySelector('#hero-play-btn');
     const detailsBtn = heroSection.querySelector('#hero-details-btn');
+    const mobilePlayBtn = heroSection.querySelector('#hero-mobile-play');
+    const heroCard = heroSection.querySelector('#hero-card-clickable');
 
-    if (playBtn) playBtn.onclick = () => window.playTrack ? window.playTrack(product) : console.log("Play:", product);
-    if (detailsBtn) detailsBtn.onclick = () => window.location.href = getProductUrl ? getProductUrl(product) : '#';
+    const doPlay = () => window.playTrack ? window.playTrack(product) : console.log("Play:", product);
+
+    if (playBtn) playBtn.onclick = (e) => { e.stopPropagation(); doPlay(); };
+    if (mobilePlayBtn) mobilePlayBtn.onclick = (e) => { e.stopPropagation(); doPlay(); };
+    if (detailsBtn) detailsBtn.onclick = (e) => { e.stopPropagation(); window.location.href = getProductUrl ? getProductUrl(product) : '#'; };
+
+    // Clicking the mobile card opens details
+    if (heroCard) {
+        heroCard.onclick = () => {
+            if (window.innerWidth <= 768) {
+                window.location.href = getProductUrl ? getProductUrl(product) : '#';
+            }
+        };
+    }
 }
 
 function initHeroParticles() {

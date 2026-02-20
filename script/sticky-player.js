@@ -287,20 +287,23 @@ window.StickyPlayer = (function () {
             if (idx >= 0) currentIndex = idx;
         }
 
-        // UI Updates
-        updateListButton(currentTrack, false); // Initialize as paused (will update if autoPlay triggers)
+        // UI Updates - Run immediately before downloading audio
+        updateListButton(currentTrack, false); // Initialize as paused
+
+        // Remove skeleton classes instantly 
+        if (els.title) els.title.classList.remove('skeleton-text');
+        if (els.artist) els.artist.classList.remove('skeleton-text');
 
         els.title.innerText = trackData.name || 'Untitled';
         els.artist.innerHTML = '';
 
-        // Resolve Producer/Artist Data (Standardizing between Explore/Profile structures)
+        // Resolve Producer/Artist Data
         let pData = trackData.artist_users || trackData.producer || trackData.producer_data;
         if (Array.isArray(pData)) pData = pData[0];
 
         if (pData && (pData.nickname || pData.name)) {
             els.artist.appendChild(createHoverSpan(pData));
         } else {
-            // High-level fallback from product object itself
             const fallbackName = trackData.producer_nickname || trackData.producer_name || trackData.artist_name || 'OFFSZN Artist';
             els.artist.innerText = fallbackName;
         }
@@ -312,70 +315,40 @@ window.StickyPlayer = (function () {
         }
 
         // Cover - 🔥 FIX: Smart R2 Loading
-        // 1. Determine if it's potentially an R2/Private URL
         const rawImg = trackData.image_url || '';
         const isR2 = rawImg.includes('r2.cloudflarestorage.com') || rawImg.includes('pub-') || (!rawImg.startsWith('http') && rawImg.includes('/'));
 
-        // 2. Set Initial State
         if (isR2) {
-            // Use transparent pixel to avoid "broken icon" while authorizing
             els.cover.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=';
         } else {
             els.cover.src = rawImg || 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=';
         }
 
-        // 3. Authorize & Load
         if (rawImg) {
             window.getAuthorizedUrl(rawImg).then(url => {
                 if (url) {
                     els.cover.onload = () => {
                         if (els.cover.parentElement) els.cover.parentElement.classList.remove('skeleton');
-                        if (els.title) els.title.classList.remove('skeleton-text');
-                        if (els.artist) els.artist.classList.remove('skeleton-text');
                         els.cover.style.opacity = '1';
                     };
-                    // Reset opacity for fade-in effect if needed
                     els.cover.style.opacity = '0';
                     els.cover.style.transition = 'opacity 0.3s ease';
-
                     els.cover.src = url;
-
-                    // Handle cached case
                     if (els.cover.complete && els.cover.naturalWidth > 0) els.cover.onload();
                 }
             });
         } else {
-            // No image case, remove skeletons immediately
             if (els.cover.parentElement) els.cover.parentElement.classList.remove('skeleton');
-            if (els.title) els.title.classList.remove('skeleton-text');
-            if (els.artist) els.artist.classList.remove('skeleton-text');
         }
 
-        // Like Status Sync
-        if (window.FavoritesManager) {
-            updateLikeIcon(window.FavoritesManager.isLiked(trackData.id));
-        }
-
-        // Audio Source (Expanded fallbacks for maximum compatibility)
         const audioUrl = trackData.mp3_url || trackData.audio_url || trackData.download_url_mp3 ||
             trackData.preview_url || trackData.demo_file || trackData.tagged_file ||
             trackData.file_url || trackData.url_file || '';
 
         // Update Price Label (BeatStars Style)
-        if (els.priceLabel) {
-            const productType = (trackData.product_type || '').toLowerCase();
-            const price = parseFloat(trackData.price_basic) || 0;
+        // (already done above)
 
-            // BEATS: Always show price if > 0. FREE only if explicitly free.
-            if (productType === 'beat') {
-                els.priceLabel.innerText = price > 0 ? `$${price.toFixed(2)}` : 'FREE';
-            } else {
-                // KITS/PRESETS: Show FREE if is_free is true or price is 0
-                const isFree = trackData.is_free === true || String(trackData.is_free) === 'true' || price === 0;
-                els.priceLabel.innerText = isFree ? 'FREE' : `$${price.toFixed(2)}`;
-            }
-        }
-
+        // Ensure we have audioUrl
         if (!audioUrl) return;
 
         // 🔥 FIX: AUTHORIZE R2 URL (Start promise but don't blocking if image logic can handle UI)

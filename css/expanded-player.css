@@ -1,0 +1,246 @@
+.expanded-player-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #2b2e33;
+    /* Dark theme matching reference */
+    z-index: 10000;
+    display: flex;
+    flex-direction: column;
+    transform: translateY(100%);
+    transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+    will-change: transform;
+}
+
+.expanded-player-overlay.visible {
+    transform: translateY(0);
+}
+
+.ep-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 24px 20px;
+    height: 100%;
+    overflow-y: auto;
+}
+
+/* Header */
+.ep-header {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 25px;
+}
+
+.ep-close-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    color: #fff;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.ep-close-btn:active {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+/* Cover Wrapper */
+.ep-cover-wrapper {
+    width: 100%;
+    aspect-ratio: 1/1;
+    max-width: 320px;
+    margin: 0 auto 30px auto;
+    border-radius: 12px;
+    position: relative;
+    background: #222;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+}
+
+.ep-cover-wrapper img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Info Section */
+.ep-info-section {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.ep-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 8px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    line-height: 1.3;
+}
+
+.ep-subtitle {
+    font-size: 0.9rem;
+    color: #a3a3a3;
+    margin-bottom: 16px;
+}
+
+.ep-badges {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.ep-badge {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* Waveform */
+.ep-waveform-section {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 30px;
+}
+
+.ep-waveform-container {
+    flex: 1;
+    height: 48px;
+}
+
+.ep-time {
+    font-size: 0.8rem;
+    color: #ff9800;
+    /* Matching reference image tiny text color if possible, or simple #888 */
+    color: #e59e51;
+    font-family: monospace;
+    font-weight: 600;
+    width: 36px;
+    text-align: right;
+}
+
+/* Actions Row */
+.ep-actions-row {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #3c3f44;
+    /* Dark grey container */
+    padding: 6px 20px;
+    border-radius: 30px;
+    gap: 20px;
+    margin: 0 auto 40px auto;
+    width: fit-content;
+}
+
+.ep-action-btn {
+    background: transparent;
+    border: none;
+    color: #ccc;
+    font-size: 1.3rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 8px;
+}
+
+.ep-action-btn:active {
+    transform: scale(0.9);
+}
+
+.ep-btn-like {
+    background: #ef4444;
+    color: #fff;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 1.4rem;
+    border-radius: 4px;
+}
+
+.ep-action-separator {
+    width: 1px;
+    height: 24px;
+    background: rgba(255, 255, 255, 0.1);
+    margin: 0 5px;
+}
+
+/* Controls Row */
+.ep-controls-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 10px;
+    margin-bottom: 20px;
+}
+
+.ep-ctrl-small {
+    background: transparent;
+    border: none;
+    color: #fff;
+    font-size: 1.3rem;
+    cursor: pointer;
+}
+
+.ep-ctrl-med {
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    color: #fff;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    font-size: 1.3rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.ep-ctrl-large {
+    background: #fff;
+    border: none;
+    color: #000;
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    font-size: 2.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.1s;
+    box-shadow: 0 4px 15px rgba(255, 255, 255, 0.2);
+}
+
+.ep-ctrl-large:active {
+    transform: scale(0.95);
+}
+
+@media (min-width: 769px) {
+
+    /* Hide on desktop, since this is specialized for mobile modal */
+    .expanded-player-overlay {
+        display: none !important;
+    }
+}

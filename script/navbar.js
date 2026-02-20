@@ -191,11 +191,83 @@ function initSearch() {
     // Disable browser autocomplete
     searchInput.setAttribute('autocomplete', 'off');
 
+    // === MOBILE SEARCH LOGIC ===
+    const mobileInput = getEl('mobileSearchInput');
+    if (mobileInput) {
+        // Sync blur
+        mobileInput.addEventListener('blur', () => {
+            setTimeout(() => {
+                if (!NavbarState.search.isHovering && document.activeElement !== mobileInput) {
+                    closeSearchUI();
+                }
+            }, 250);
+        });
+
+        // Sync Focus
+        mobileInput.addEventListener('focus', () => {
+            // Move panel to mobile wrapper
+            const trendPanel = getEl('search-trending-panel');
+            const mobileWrapper = getEl('mobile-search-wrapper');
+            if (trendPanel && mobileWrapper) {
+                trendPanel.style.top = '100%';
+                trendPanel.style.marginTop = '-4px';
+                trendPanel.style.width = 'calc(100% - 32px)';
+                trendPanel.style.left = '16px';
+                mobileWrapper.appendChild(trendPanel);
+            }
+
+            closeAllUI(true);
+            openSearchUI();
+            const val = mobileInput.value.trim();
+            if (val.length === 0) {
+                renderHistoryAndTrends();
+            } else {
+                performSearch(val, NavbarState.search.currentCategory);
+            }
+        });
+
+        // Sync Input to trigger logic
+        mobileInput.addEventListener('input', (e) => {
+            const query = e.target.value.trim();
+            searchInput.value = query; // Sync desktop visual just in case
+            clearTimeout(NavbarState.search.debounceTimer);
+
+            if (query.length > 0) {
+                openSearchUI();
+                NavbarState.search.debounceTimer = setTimeout(() => {
+                    performSearch(query, NavbarState.search.currentCategory);
+                }, 300);
+            } else {
+                renderHistoryAndTrends();
+            }
+        });
+
+        // Sync Enter Key
+        mobileInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                const query = mobileInput.value.trim();
+                if (query.length > 0) {
+                    window.location.href = `/explorar.html?q=${encodeURIComponent(query)}&tab=${NavbarState.search.currentCategory}`;
+                }
+            }
+        });
+    }
+
     // Event Listeners
     searchContainer.addEventListener('mouseenter', () => NavbarState.search.isHovering = true);
     searchContainer.addEventListener('mouseleave', () => NavbarState.search.isHovering = false);
 
     searchInput.addEventListener('focus', () => {
+        // Move panel back to desktop container
+        const trendPanel = getEl('search-trending-panel');
+        if (trendPanel && searchContainer) {
+            trendPanel.style.top = 'calc(100% + 4px)';
+            trendPanel.style.marginTop = '0';
+            trendPanel.style.width = '100%';
+            trendPanel.style.left = '0';
+            searchContainer.appendChild(trendPanel);
+        }
+
         closeAllUI(true); // Close everything ELSE
         openSearchUI();
         const val = searchInput.value.trim();
@@ -1103,6 +1175,7 @@ window.initNavbarUI = async function () {
             e.target.closest('.navbar-icon-button') ||
             e.target.closest('.side-panel') ||
             e.target.closest('.navbar-search') ||
+            e.target.closest('.mobile-search-wrapper') ||
             e.target.closest('#search-trending-panel');
 
         if (!isInside) {

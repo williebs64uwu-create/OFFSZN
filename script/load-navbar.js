@@ -4,7 +4,7 @@
  * Dispatches a 'navbarLoaded' event so scripts inside navbar.js know when to initialize.
  */
 
-document.addEventListener('DOMContentLoaded', async () => {
+(async () => {
     const placeholder = document.getElementById('navbar-placeholder');
     if (!placeholder) {
         console.warn('load-navbar.js: No <div id="navbar-placeholder"> found on this page.');
@@ -34,4 +34,4 @@ document.addEventListener('DOMContentLoaded', async () => {
     } catch (error) {
         console.error('Error loading navbar component:', error);
     }
-});
+})();
