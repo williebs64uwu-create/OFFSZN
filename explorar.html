@@ -78,6 +78,8 @@
     <!-- ==================== EXTRACTED NAVBAR ==================== -->
     <header class="navbar">
         <div class="navbar-container">
+            <button class="hamburger-btn" id="hamburger-btn">☰</button>
+
             <div class="logo">
                 <a href="/index.html">
                     <img src="/images/LOGO OFFSZN.webp" alt="OFFSZN"
@@ -85,11 +87,52 @@
                 </a>
             </div>
 
-            <button class="hamburger-btn" id="hamburger-btn">☰</button>
+            <!-- MOBILE TOP-BAR ACTIONS (hidden on desktop) -->
+            <div class="mobile-topbar-actions" id="mobile-topbar-actions">
+                <div class="mobile-guest-actions" id="mobile-guest-actions" style="display: none;">
+                    <a href="/pages/login.html" class="mobile-login-link">Iniciar Sesión</a>
+                    <a href="/pages/register.html" class="mobile-join-btn">Únete</a>
+                </div>
+
+                <!-- 1. Auth Actions (Profile -> Messages -> Notif) -->
+                <div class="mobile-auth-actions" id="mobile-auth-actions" style="display: none;">
+
+                    <!-- Avatar (Profile) -->
+                    <div class="mobile-avatar-btn" id="mobile-avatar-btn"
+                        onclick="document.querySelector('.user-dropdown-menu').classList.toggle('show'); event.stopPropagation();">
+                        <span id="mobile-avatar-initial">W</span>
+                    </div>
+
+                    <!-- Messages (New) -->
+                    <a href="/mensajes.html" class="mobile-notif-btn" title="Mensajes">
+                        <i class="bi bi-chat-dots"></i>
+                        <!-- Optional badge for messages if needed later -->
+                    </a>
+
+                    <!-- Notifications -->
+                    <a href="/notificaciones.html" class="mobile-notif-btn" title="Notificaciones">
+                        <i class="bi bi-bell"></i>
+                        <span class="mobile-notif-badge" id="mobile-notif-badge" style="display:none;">0</span>
+                    </a>
+                </div>
+
+                <!-- 2. Cart (Last) -->
+                <a href="#" class="mobile-cart-btn" title="Carrito" onclick="toggleCartPanel(event)">
+                    <i class="bi bi-cart3"></i>
+                    <span class="mobile-cart-badge" id="mobile-cart-badge" style="display:none;">0</span>
+                </a>
+            </div>
 
             <div class="nav-container" id="nav-container">
+                <!-- Sidebar header: close + logo (mobile only) -->
+                <div class="sidebar-header">
+                    <button class="sidebar-close-btn" aria-label="Cerrar menú">✕</button>
+                    <a href="/index.html" class="sidebar-logo">
+                        <img src="/images/LOGO OFFSZN.webp" alt="OFFSZN" style="height: 28px; width: auto;">
+                    </a>
+                </div>
                 <div class="navbar-center">
-                    <ul class="navbar-links">
+                    <ul class="navbar-links desktop-menu-only">
                         <li><a href="/explorar.html">Explorar</a></li>
                         <li class="dropdown-parent">
                             <a onclick="toggleDropdown(this)" class="nav-toggle-link noselect"
@@ -195,6 +238,123 @@
                             <!-- Cursos moved to Dropdown -->
 
                     </ul>
+
+                    <!-- MOBILE SLIDING MENU (BeatStars Style) -->
+                    <div class="mobile-menu-slider-wrapper" id="mobile-menu-slider-wrapper">
+                        <div class="mobile-menu-slides" id="mobile-menu-slides">
+                            <!-- VIEW 1: MAIN MENU -->
+                            <div class="menu-slide" id="menu-view-main"
+                                style="overflow-y: hidden; padding-bottom: 20px;">
+                                <a href="/explorar.html" class="mobile-menu-link text-uppercase"
+                                    style="font-weight: 800; letter-spacing: 0.5px;">EXPLORAR</a>
+
+                                <div class="mobile-menu-link has-arrow text-uppercase" style="font-weight: 700;"
+                                    onclick="openSubmenu('beats')">
+                                    <span>BEATS</span>
+                                    <i class="bi bi-chevron-right"></i>
+                                </div>
+
+                                <div class="mobile-menu-link has-arrow text-uppercase" style="font-weight: 700;"
+                                    onclick="openSubmenu('kits')">
+                                    <span>KITS</span>
+                                    <i class="bi bi-chevron-right"></i>
+                                </div>
+
+                                <div class="mobile-menu-link has-arrow text-uppercase" style="font-weight: 700;"
+                                    onclick="openSubmenu('comunidad')">
+                                    <span>COMUNIDAD</span>
+                                    <i class="bi bi-chevron-right"></i>
+                                </div>
+
+                                <div class="mobile-menu-divider"></div>
+
+                                <a href="/mis-compras.html" class="mobile-menu-link text-uppercase"
+                                    style="font-size: 0.85rem; font-weight: 600;">COMPRAS</a>
+                                <a href="/favoritos.html" class="mobile-menu-link text-uppercase"
+                                    style="font-size: 0.85rem; font-weight: 600;">FAVORITOS</a>
+                                <a href="/gift-cards.html" class="mobile-menu-link text-uppercase"
+                                    style="font-size: 0.85rem; font-weight: 600;">GIFT CARDS</a>
+                                <a href="/historial.html" class="mobile-menu-link text-uppercase"
+                                    style="font-size: 0.85rem; font-weight: 600;">HISTORIAL</a>
+
+                                <div class="mobile-menu-divider"></div>
+
+                                <a href="/account-settings.html" class="mobile-menu-link text-uppercase"
+                                    style="font-size: 0.85rem; font-weight: 600;">CONFIGURACIÓN</a>
+                                <a href="/ayuda.html" class="mobile-menu-link text-uppercase"
+                                    style="font-size: 0.85rem; color: #888; font-weight: 600;">AYUDA</a>
+
+                                <!-- MEJORAR PLAN (Bottom) -->
+                                <div style="margin-top: 20px; padding: 20px 16px;">
+                                    <a href="/cuenta/planes.html"
+                                        style="display: block; background: linear-gradient(135deg, #1a1a1a 0%, #000 100%); border: 1px solid #333; border-radius: 12px; padding: 16px; text-decoration: none; position: relative; overflow: hidden;">
+                                        <div style="position: relative; z-index: 2;">
+                                            <span
+                                                style="color: #8b5cf6; font-size: 0.7rem; font-weight: 800; letter-spacing: 1px; display: block; margin-bottom: 4px;">OFFSZN
+                                                PRO</span>
+                                            <span
+                                                style="color: #fff; font-size: 1rem; font-weight: 700; display: block; margin-bottom: 4px;">Mejorar
+                                                Plan</span>
+                                            <span style="color: #888; font-size: 0.75rem;">Desbloquea todo el
+                                                potencial.</span>
+                                        </div>
+                                        <i class="bi bi-star-fill"
+                                            style="position: absolute; bottom: -10px; right: -10px; font-size: 4rem; color: rgba(139, 92, 246, 0.1); transform: rotate(15deg);"></i>
+                                    </a>
+                                </div>
+                            </div>
+
+                            <!-- VIEW 2: SUBMENUS CONTAINER -->
+                            <div class="menu-slide" id="menu-view-sub" style="overflow-y: hidden;">
+                                <div class="mobile-menu-header" onclick="closeSubmenu()">
+                                    <i class="bi bi-chevron-left"></i> MENÚ PRINCIPAL
+                                </div>
+
+                                <!-- SUBMENU: BEATS -->
+                                <div id="submenu-beats" class="submenu-content" style="display: none;">
+                                    <span class="mobile-section-title">BEATS</span>
+                                    <a href="/explorar.html" class="mobile-menu-link sub"><i class="bi bi-cart3"></i>
+                                        COMPRAR</a>
+                                    <a href="/servicios/custom-beats.html" class="mobile-menu-link sub"><i
+                                            class="bi bi-music-note-list"></i> SOLICITAR</a>
+                                    <a href="/vender.html" class="mobile-menu-link sub"><i
+                                            class="bi bi-cloud-arrow-up"></i> ENVIAR</a>
+                                </div>
+
+                                <!-- SUBMENU: KITS -->
+                                <div id="submenu-kits" class="submenu-content" style="display: none;">
+                                    <span class="mobile-section-title">KITS</span>
+                                    <a href="/recursos/drum-kits.html" class="mobile-menu-link sub"><i
+                                            class="bi bi-disc"></i> DRUM KITS</a>
+                                    <a href="/recursos/presets.html" class="mobile-menu-link sub"><i
+                                            class="bi bi-sliders"></i> PRESETS</a>
+                                    <a href="/recursos/samples-loops.html" class="mobile-menu-link sub"><i
+                                            class="bi bi-soundwave"></i> LOOPS</a>
+                                    <a href="/recursos/one-shots.html" class="mobile-menu-link sub"><i
+                                            class="bi bi-bullseye"></i> ONE SHOTS</a>
+                                    <a href="/recursos/recursos-gratis.html" class="mobile-menu-link sub highlight"><i
+                                            class="bi bi-gift"></i> DESCARGAS GRATIS</a>
+                                </div>
+
+                                <!-- SUBMENU: COMUNIDAD -->
+                                <div id="submenu-comunidad" class="submenu-content" style="display: none;">
+                                    <span class="mobile-section-title">COMUNIDAD</span>
+                                    <a href="/comunidad/feed.html" class="mobile-menu-link sub"><i
+                                            class="bi bi-collection-play"></i> FEED</a>
+                                    <a href="/studio/reels.html" class="mobile-menu-link sub"><i
+                                            class="bi bi-camera-video"></i> REELS</a>
+                                    <a href="/comunidad/productores.html" class="mobile-menu-link sub"><i
+                                            class="bi bi-people"></i> PRODUCTORES</a>
+                                    <a href="/comunidad/colaboraciones.html" class="mobile-menu-link sub"><i
+                                            class="bi bi-person-plus"></i> COLLABS</a>
+                                    <a href="/comunidad/eventos.html" class="mobile-menu-link sub"><i
+                                            class="bi bi-calendar-event"></i> EVENTOS</a>
+                                    <a href="/cursos/inicio.html" class="mobile-menu-link sub"><i
+                                            class="bi bi-mortarboard"></i> CURSOS</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
                     <!-- NEW: NAVBAR SEARCH (Wavs Style) -->
                     <!-- NEW: NAVBAR SEARCH (Wavs Style) with Internal Filter & Trending Panel -->
@@ -399,6 +559,105 @@
             </div>
         </div>
     </header>
+
+    <!-- MOBILE SEARCH BAR (below navbar, mobile only) -->
+    <div class="mobile-search-wrapper" id="mobile-search-wrapper">
+        <div class="mobile-search-inner">
+            <i class="bi bi-search"></i>
+            <input type="text" id="mobileSearchInput" placeholder="Buscar 'trap' o 'drill'...">
+        </div>
+    </div>
+
+    <script>
+        // Sync mobile topbar auth state with desktop nav
+        (function syncMobileTopbar() {
+            function sync() {
+                const desktopAuth = document.getElementById('nav-auth-section');
+                const desktopGuest = document.getElementById('nav-guest-section');
+                const mobileAuth = document.getElementById('mobile-auth-actions');
+                const mobileGuest = document.getElementById('mobile-guest-actions');
+
+                if (!mobileAuth || !mobileGuest) return;
+
+                // AUTH FIX: Check token directly
+                const token = window.AuthUtils ? window.AuthUtils.getAccessToken() : null;
+                const isLoggedIn = !!token;
+                const isGuest = !token;
+
+                if (isLoggedIn) {
+                    mobileAuth.style.display = 'flex';
+                    mobileGuest.style.display = 'none';
+                    // Sync avatar
+                    const desktopAvatar = document.getElementById('user-avatar-display');
+                    const mobileAvatarInit = document.getElementById('mobile-avatar-initial');
+                    if (desktopAvatar && mobileAvatarInit) {
+                        const img = desktopAvatar.querySelector('img');
+                        const mobileBtn = document.getElementById('mobile-avatar-btn');
+                        if (img && mobileBtn) {
+                            mobileBtn.innerHTML = `<img src="${img.src}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
+                        } else {
+                            mobileAvatarInit.textContent = desktopAvatar.textContent.trim().charAt(0);
+                        }
+                    }
+                } else if (isGuest) {
+                    mobileGuest.style.display = 'flex';
+                    mobileAuth.style.display = 'none';
+                }
+
+                // Sync cart badge
+                const desktopBadge = document.getElementById('cart-count-badge');
+                const mobileBadge = document.getElementById('mobile-cart-badge');
+                if (desktopBadge && mobileBadge) {
+                    mobileBadge.textContent = desktopBadge.textContent;
+                    mobileBadge.style.display = desktopBadge.style.display;
+                }
+
+                // Sync notif badge
+                const desktopNotif = document.getElementById('notification-badge');
+                const mobileNotif = document.getElementById('mobile-notif-badge');
+                if (desktopNotif && mobileNotif) {
+                    mobileNotif.textContent = desktopNotif.textContent;
+                    mobileNotif.style.display = desktopNotif.style.display;
+                }
+            }
+
+            // Sync on load and periodically (auth state can change async)
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', () => { setTimeout(sync, 1500); setInterval(sync, 3000); });
+            } else {
+                setTimeout(sync, 1500);
+                setInterval(sync, 3000);
+            }
+            // Also sync on auth event
+            window.addEventListener('offszn-session-ready', () => setTimeout(sync, 500));
+
+            // Sync mobile search with desktop search
+            document.addEventListener('DOMContentLoaded', () => {
+                const mobileInput = document.getElementById('mobileSearchInput');
+                const desktopInput = document.getElementById('navbarSearchInput');
+                if (mobileInput && desktopInput) {
+                    mobileInput.addEventListener('input', (e) => {
+                        desktopInput.value = e.target.value;
+                        desktopInput.dispatchEvent(new Event('input', { bubbles: true }));
+                    });
+                    mobileInput.addEventListener('keydown', (e) => {
+                        if (e.key === 'Enter') {
+                            desktopInput.value = mobileInput.value;
+                            desktopInput.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+                        }
+                    });
+                }
+            });
+            // Close profile dropdown when clicking outside on mobile
+            document.addEventListener('click', (e) => {
+                const dropdown = document.querySelector('.user-dropdown-menu.show');
+                const avatarBtn = document.getElementById('mobile-avatar-btn');
+                if (dropdown && !dropdown.contains(e.target) && avatarBtn && !avatarBtn.contains(e.target)) {
+                    dropdown.classList.remove('show');
+                }
+            });
+        })();
+    </script>
 
     <!-- EXPLORE FEED - Netflix Style -->
     <main id="explore-feed" class="pb-24 pt-20">
@@ -794,6 +1053,32 @@
     <!-- Removed redundant inline script -->
     <!-- Cookie Notice -->
     <script src="script/cookie-notice.js"></script>
+    <!-- === MOBILE MENU SCRIPT === -->
+    <script>
+        function openSubmenu(menuId) {
+            const slider = document.getElementById('mobile-menu-slides');
+
+            // Hide all submenus first
+            document.querySelectorAll('.submenu-content').forEach(el => el.style.display = 'none');
+
+            // Show the specific submenu
+            const targetSub = document.getElementById('submenu-' + menuId);
+            if (targetSub) {
+                targetSub.style.display = 'block';
+            }
+
+            if (slider) {
+                slider.style.transform = 'translateX(-50%)'; // Slide to View 2
+            }
+        }
+
+        function closeSubmenu() {
+            const slider = document.getElementById('mobile-menu-slides');
+            if (slider) {
+                slider.style.transform = 'translateX(0)'; // Back to View 1
+            }
+        }
+    </script>
 </body>
 
 </html>

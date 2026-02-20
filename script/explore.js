@@ -333,7 +333,17 @@ function renderTwoColLists(category = 'Todo') {
                 window.activeWavesurfers.push(ws);
             } else if (container) {
                 container.classList.remove('skeleton-waveform');
-                container.innerHTML = '<div style="font-size: 0.6rem; color: #333; padding-top: 8px; opacity: 0.5;">NO AUDIO</div>';
+
+                // GENERATE FAKE WAVEFORM (Visual Placeholder)
+                // Creates 30 random bars with low opacity
+                let fakeWaveformHtml = '<div class="fake-waveform">';
+                for (let i = 0; i < 30; i++) {
+                    const height = Math.floor(Math.random() * 16 + 4); // 4px to 20px
+                    fakeWaveformHtml += `<div class="fake-bar" style="height: ${height}px; opacity: 0.5;"></div>`;
+                }
+                fakeWaveformHtml += '</div>';
+
+                container.innerHTML = fakeWaveformHtml;
             }
         });
     }, 150);
@@ -367,6 +377,9 @@ function createListItemHtml(item, index, type) {
     }
 
     // Product with Waveform placeholder
+    const audioUrl = getProductAudio(item);
+    const hasAudio = !!audioUrl;
+
     return `
         <div class="list-item-smart" data-id="${item.id}" data-type="product">
             <div class="list-item-index">${index}</div>
@@ -377,12 +390,19 @@ function createListItemHtml(item, index, type) {
             </div>
             <div class="list-item-waveform skeleton-waveform"></div>
             <div class="list-item-value">
-                <div class="list-play-btn" onclick="event.stopPropagation(); window.playTrackById(${item.id})">
+                <div class="list-play-btn ${hasAudio ? '' : 'disabled'}" onclick="event.stopPropagation(); ${hasAudio ? `window.playTrackById(${item.id})` : ''}">
                     <i class="bi bi-play-fill"></i>
                 </div>
             </div>
         </div>
     `;
+}
+
+function getProductAudio(product) {
+    if (!product) return null;
+    return product.mp3_url || product.download_url_mp3 || product.preview_url ||
+        product.audio_url || product.tagged_file || product.demo_file ||
+        product.file_url || product.url_file;
 }
 
 /**

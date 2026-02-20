@@ -776,6 +776,12 @@ async function updateAuthUI(session) {
         if (authSection) authSection.style.display = 'flex';
         if (guestSection) guestSection.style.display = 'none';
 
+        // --- MOBILE SYNC ---
+        const mobileAuth = getEl('mobile-auth-actions');
+        const mobileGuest = getEl('mobile-guest-actions');
+        if (mobileAuth) mobileAuth.style.display = 'flex';
+        if (mobileGuest) mobileGuest.style.display = 'none';
+
         // 🚀 NEW: Hide promo banner for logged-in users
         const promoBanner = document.querySelector('.promo-banner');
         if (promoBanner) promoBanner.style.display = 'none';
@@ -845,6 +851,12 @@ async function updateAuthUI(session) {
         if (authSection) authSection.style.display = 'none';
         if (guestSection) guestSection.style.display = 'flex';
 
+        // --- MOBILE SYNC ---
+        const mobileAuth = getEl('mobile-auth-actions');
+        const mobileGuest = getEl('mobile-guest-actions');
+        if (mobileAuth) mobileAuth.style.display = 'none';
+        if (mobileGuest) mobileGuest.style.display = 'flex';
+
         // 🚀 NEW: Show promo banner for guest users
         const promoBanner = document.querySelector('.promo-banner');
         if (promoBanner) promoBanner.style.display = 'flex';
@@ -888,6 +900,17 @@ function updateUserVisuals(displayName, displayLetter, avatarUrl) {
             }
         } else {
             dropdownAvatarEl.innerText = displayLetter;
+        }
+    }
+
+    // 3. Mobile Avatar
+    const mobileBtn = document.getElementById('mobile-avatar-btn');
+    const mobileAvatarInit = document.getElementById('mobile-avatar-initial');
+    if (mobileBtn) {
+        if (avatarUrl) {
+            mobileBtn.innerHTML = `<img src="${avatarUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
+        } else if (mobileAvatarInit) {
+            mobileBtn.innerHTML = `<span id="mobile-avatar-initial">${displayLetter}</span>`;
         }
     }
 
@@ -1054,7 +1077,11 @@ async function syncSearchHistory(user) {
 
 
 // --- INIT ---
-document.addEventListener('DOMContentLoaded', async () => {
+window.initNavbarUI = async function () {
+    // Prevent double init if called both by DOMContentLoaded and fetch loader
+    if (window._navbarInitialized) return;
+    window._navbarInitialized = true;
+
     // Restore Currency
     const savedCurr = localStorage.getItem('userCurrency') || 'PEN';
     const currEl = getEl('current-currency');
@@ -1063,10 +1090,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Start Subsystems
     initSearch();
     await initAuth(); // Wait for auth to check user
-
-    // Sync Check
-    // If we have a user from initAuth, we should sync. 
-    // initAuth calls updateAuthUI, let's hook into onAuthStateChange actually.
 
     // Click Outside Listener (Global)
     document.addEventListener('click', function (e) {
@@ -1100,6 +1123,18 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Initialize Mobile Menu
     setupMobileMenu();
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+    // If the navbar is hardcoded in the HTML, init immediately
+    if (document.querySelector('.navbar')) {
+        window.initNavbarUI();
+    }
+});
+
+// If the navbar is dynamically loaded by load-navbar.js
+window.addEventListener('offszn-navbar-loaded', () => {
+    window.initNavbarUI();
 });
 
 /* ==================== MOBILE MENU LOGIC (NEW) ==================== */
@@ -1108,6 +1143,13 @@ function setupMobileMenu() {
     const navContainer = document.getElementById('nav-container');
 
     if (hamburgerBtn && navContainer) {
+        // === PORTAL: Move nav-container to body on mobile ===
+        // This escapes the navbar's stacking context (z-index + backdrop-filter)
+        // so the fixed-position sidebar renders above everything.
+        if (window.innerWidth <= 900) {
+            document.body.appendChild(navContainer);
+        }
+
         // Create Backdrop if not exists
         let backdrop = document.querySelector('.mobile-menu-backdrop');
         if (!backdrop) {
@@ -1116,24 +1158,36 @@ function setupMobileMenu() {
             document.body.appendChild(backdrop);
         }
 
+        let savedScrollY = 0;
+
+        const lockScroll = () => {
+            savedScrollY = window.scrollY;
+            document.body.classList.add('menu-open');
+            document.body.style.top = `-${savedScrollY}px`;
+        };
+
+        const unlockScroll = () => {
+            document.body.classList.remove('menu-open');
+            document.body.style.top = '';
+            window.scrollTo(0, savedScrollY);
+        };
+
         const toggleMenu = (e) => {
             if (e) e.stopPropagation();
             navContainer.classList.toggle('active');
             backdrop.classList.toggle('active');
-            hamburgerBtn.innerHTML = navContainer.classList.contains('active') ? '✕' : '☰';
 
             if (navContainer.classList.contains('active')) {
-                document.body.style.overflow = 'hidden'; // Prevent background scrolling
+                lockScroll();
             } else {
-                document.body.style.overflow = '';
+                unlockScroll();
             }
         };
 
         const closeMenu = () => {
             navContainer.classList.remove('active');
             backdrop.classList.remove('active');
-            hamburgerBtn.innerHTML = '☰';
-            document.body.style.overflow = '';
+            unlockScroll();
         };
 
         // Toggle
@@ -1142,6 +1196,15 @@ function setupMobileMenu() {
         // Close on Backdrop
         backdrop.addEventListener('click', closeMenu);
 
+        // Close on sidebar close button
+        const sidebarCloseBtn = navContainer.querySelector('.sidebar-close-btn');
+        if (sidebarCloseBtn) {
+            sidebarCloseBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                closeMenu();
+            });
+        }
+
         // Close on Link Click (except toggles)
         navContainer.querySelectorAll('a').forEach(link => {
             // If it's a toggle link (like 'Recursos'), let it toggle the submenu
@@ -1149,8 +1212,45 @@ function setupMobileMenu() {
                 link.addEventListener('click', closeMenu);
             }
         });
-
-        // Connect to Global UI Close
-        // (Optional: if you want closeAllUI to also close this menu, you can add state check there)
     }
 }
+
+
+// ==================== MOBILE MENU ACTIONS ==================== //
+window.openSubmenu = function (menuId) {
+    const slider = document.getElementById('mobile-menu-slides');
+
+    // Hide all submenus first
+    document.querySelectorAll('.submenu-content').forEach(el => el.style.display = 'none');
+
+    // Show the specific submenu
+    const targetSub = document.getElementById('submenu-' + menuId);
+    if (targetSub) {
+        targetSub.style.display = 'block';
+    }
+
+    if (slider) {
+        slider.style.transform = 'translateX(-50%)'; // Slide to View 2
+    }
+};
+
+window.closeSubmenu = function (e) {
+    if (e && e.stopPropagation) e.stopPropagation();
+    console.log('[DEBUG] closeSubmenu called');
+    const slider = document.getElementById('mobile-menu-slides');
+    if (slider) {
+        console.log('[DEBUG] slider found, applying translateX(0%)');
+        slider.style.transform = 'translateX(0%)'; // Back to View 1
+    } else {
+        console.error('[DEBUG] slider NOT found');
+    }
+};
+
+// Also export to global for inline onclick
+window.syncMobileCartBadge = function (count) {
+    const mobileBadge = document.getElementById('mobile-cart-badge');
+    if (mobileBadge) {
+        mobileBadge.textContent = count;
+        mobileBadge.style.display = count > 0 ? 'flex' : 'none';
+    }
+};

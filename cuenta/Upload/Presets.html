@@ -7213,7 +7213,7 @@
                     if (existingFiles.cover_url) await deleteFileFromStorage(existingFiles.cover_url, bucket);
 
                     try {
-                        const key = await uploadToR2(new File([formData.coverBlob], 'cover.jpg', { type: 'image/jpeg' }), 'covers');
+                        const key = await uploadToR2(new File([formData.coverBlob], 'cover.jpg', { type: 'image/jpeg' }), 'products/covers');
                         draftData.cover_url = key;
                         filesUploaded.cover = true;
                     } catch (coverError) {
@@ -7231,7 +7231,7 @@
                     if (existingFiles.preset_url) await deleteFileFromStorage(existingFiles.preset_url, bucket);
 
                     try {
-                        const key = await uploadToR2(formData.files.kit, 'kits');
+                        const key = await uploadToR2(formData.files.kit, 'secure-products');
                         draftData.preset_url = key;
                         filesUploaded.kit = true;
                     } catch (kitError) {
@@ -7249,7 +7249,7 @@
                     if (existingFiles.audio_before_url) await deleteFileFromStorage(existingFiles.audio_before_url, bucket);
 
                     try {
-                        const key = await uploadToR2(formData.files.audio, 'audio');
+                        const key = await uploadToR2(formData.files.audio, 'products/audio');
                         draftData.audio_before_url = key;
                         filesUploaded.audio = true;
                     } catch (audioError) {
@@ -7267,7 +7267,7 @@
                     if (existingFiles.audio_after_url) await deleteFileFromStorage(existingFiles.audio_after_url, bucket);
 
                     try {
-                        const key = await uploadToR2(formData.files.audio_after, 'audio');
+                        const key = await uploadToR2(formData.files.audio_after, 'products/audio');
                         draftData.audio_after_url = key;
                         filesUploaded.audio_after = true;
                     } catch (audioError) {
@@ -7504,7 +7504,7 @@
                 // 1. Subir cover a R2
                 let image_url = null;
                 if (formData.coverBlob && !filesUploaded.cover) {
-                    const key = await uploadToR2(new File([formData.coverBlob], 'cover.jpg', { type: 'image/jpeg' }), 'covers');
+                    const key = await uploadToR2(new File([formData.coverBlob], 'cover.jpg', { type: 'image/jpeg' }), 'products/covers');
                     image_url = `https://offszn-storage.41d0f49121d02c88f71fdb4da54a791d.r2.cloudflarestorage.com/${key}`;
                 } else if (filesUploaded.cover && formData.coverUrl) {
                     image_url = formData.coverUrl;
@@ -7514,7 +7514,7 @@
                 let kit_url = null;
                 if (formData.files.kit && !filesUploaded.kit) {
                     console.log(`🚀 [UPLOAD] Subiendo kit a R2 (Secure)`);
-                    const key = await uploadToR2(formData.files.kit, 'kits');
+                    const key = await uploadToR2(formData.files.kit, 'secure-products');
                     kit_url = key;
                 } else if (filesUploaded.kit && formData.kit_key) {
                     kit_url = formData.kit_key;
@@ -7524,7 +7524,7 @@
                 let audio_url = null;
                 if (formData.files.audio && !filesUploaded.audio) {
                     console.log(`🚀 [UPLOAD] Subiendo audio a R2`);
-                    const key = await uploadToR2(formData.files.audio, 'audio');
+                    const key = await uploadToR2(formData.files.audio, 'products/audio');
                     audio_url = `https://offszn-storage.41d0f49121d02c88f71fdb4da54a791d.r2.cloudflarestorage.com/${key}`;
                 } else if (filesUploaded.audio && formData.audioUrl) {
                     audio_url = formData.audioUrl;
@@ -7534,7 +7534,7 @@
                 let audio_after_url = null;
                 if ((selectedCategory === 'Preset_de_voces' || selectedCategory === 'Plantilla') && formData.files.audio_after && !filesUploaded.audio_after) {
                     console.log(`🚀 [UPLOAD] Subiendo audio after a R2`);
-                    const key = await uploadToR2(formData.files.audio_after, 'audio');
+                    const key = await uploadToR2(formData.files.audio_after, 'products/audio');
                     audio_after_url = `https://offszn-storage.41d0f49121d02c88f71fdb4da54a791d.r2.cloudflarestorage.com/${key}`;
                 } else if (filesUploaded.audio_after && formData.audioAfterUrl) {
                     audio_after_url = formData.audioAfterUrl;
@@ -8523,7 +8523,7 @@
                         await deleteFileFromStorage(window.originalProductData.image_url, 'preset-covers');
                     }
 
-                    const key = await uploadToR2(new File([formData.coverBlob], 'cover_edit.jpg', { type: 'image/jpeg' }), 'covers');
+                    const key = await uploadToR2(new File([formData.coverBlob], 'cover_edit.jpg', { type: 'image/jpeg' }), 'products/covers');
                     updates.image_url = `https://offszn-storage.41d0f49121d02c88f71fdb4da54a791d.r2.cloudflarestorage.com/${key}`;
                 }
 
@@ -8537,7 +8537,7 @@
                     }
 
                     console.log(`?? [UPDATE] Subiendo kit a R2 (Secure)`);
-                    const key = await uploadToR2(formData.files.kit, 'kits');
+                    const key = await uploadToR2(formData.files.kit, 'secure-products');
                     updates.kit_url = key; // Store Key
                 }
 
@@ -8551,7 +8551,7 @@
                     }
 
                     console.log(`?? [UPDATE] Subiendo audio a R2`);
-                    const key = await uploadToR2(formData.files.audio, 'audio');
+                    const key = await uploadToR2(formData.files.audio, 'products/audio');
                     updates.audio_url = `https://offszn-storage.41d0f49121d02c88f71fdb4da54a791d.r2.cloudflarestorage.com/${key}`;
                 }
 
@@ -8564,7 +8564,7 @@
                     }
 
                     console.log(`?? [UPDATE] Subiendo audio after a R2`);
-                    const key = await uploadToR2(formData.files.audio_after, 'audio');
+                    const key = await uploadToR2(formData.files.audio_after, 'products/audio');
                     updates.audio_after_url = `https://offszn-storage.41d0f49121d02c88f71fdb4da54a791d.r2.cloudflarestorage.com/${key}`;
                 }
 
