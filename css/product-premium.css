@@ -112,6 +112,23 @@
 
 /* Social Actions - Micro-interactions */
 /* Social Actions - Micro-interactions */
+.social-actions-wrapper {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 30px;
+    width: 100%;
+}
+
+@media (min-width: 993px) {
+
+    #btn-share .stat-value,
+    #btn-exclusivity .stat-value {
+        display: none !important;
+    }
+}
+
 .action-btn-icon {
     background: transparent;
     border: none;
@@ -685,6 +702,8 @@
 
     .social-actions-wrapper {
         display: flex;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
         gap: 40px;
         justify-content: center;
         width: 100%;
@@ -784,6 +803,119 @@
     .terms-accordion-content.mobile-hide {
         display: none !important;
     }
+
+    /* Layout Visibilities for Mobile */
+    .desktop-only-flex {
+        display: none !important;
+    }
+
+    .mobile-only-flex {
+        display: flex !important;
+    }
+
+    /* Touch Swipe Licenses Grid Override */
+    .licenses-grid-scrollable {
+        display: flex !important;
+        overflow-x: auto !important;
+        scroll-snap-type: x mandatory;
+        padding-bottom: 10px !important;
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+        gap: 12px;
+    }
+
+    .licenses-grid-scrollable::-webkit-scrollbar {
+        display: none;
+    }
+
+    .licenses-grid-scrollable .license-card-v2 {
+        flex: 0 0 82% !important;
+        /* Show 1 and peek the next */
+        scroll-snap-align: center;
+        max-width: none !important;
+    }
+
+    .cart-btn-mobile-fix {
+        width: 100% !important;
+        margin-top: 5px !important;
+        margin-bottom: 5px !important;
+        font-size: 1rem !important;
+        box-sizing: border-box !important;
+    }
+
+    /* Force horizontal scrolling for trending grid on mobile */
+    .trending-grid {
+        overflow-x: auto !important;
+        scroll-snap-type: x mandatory;
+        -webkit-overflow-scrolling: touch;
+        /* For smooth scrolling on iOS */
+        padding-bottom: 10px;
+        /* Space for scrollbar */
+        box-sizing: border-box !important;
+        width: 100% !important;
+    }
+
+    .trending-grid::-webkit-scrollbar {
+        display: none;
+        /* Hide scrollbar for Webkit browsers */
+    }
+
+    .trending-grid {
+        -ms-overflow-style: none;
+        /* Hide scrollbar for IE and Edge */
+        scrollbar-width: none;
+        /* Hide scrollbar for Firefox */
+    }
+
+    .trending-card {
+        flex: 0 0 70% !important;
+        /* Show 1 and peek the next on mobile */
+        min-width: 70% !important;
+        scroll-snap-align: start;
+    }
+
+    /* Prevent social icons from wrapping vertically on mobile */
+    .social-actions-wrapper {
+        flex-wrap: nowrap !important;
+        gap: 20px !important;
+        /* Smaller gap on mobile to fit 3 items */
+        padding: 0 10px;
+    }
+
+    /* Stop horizontal overflow in mobile footer */
+    body {
+        overflow-x: hidden !important;
+    }
+
+    .product-main-content {
+        max-width: 100vw;
+        box-sizing: border-box;
+    }
+
+    #buying-modules,
+    .licenses-layout-v2 {
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+        overflow: hidden !important;
+        /* Contain the scrollable grid nicely */
+    }
+
+    footer,
+    .site-footer {
+        max-width: 100vw;
+        overflow-x: hidden;
+        box-sizing: border-box;
+    }
+}
+
+/* Layout Visibilities for Desktop */
+.desktop-only-flex {
+    display: flex !important;
+}
+
+.mobile-only-flex {
+    display: none !important;
 }
 
 /* === VERTICAL LICENSE SELECTION MODAL === */
@@ -1092,9 +1224,33 @@
     }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 992px) {
+
+    /* Enable horizontal native swipe for Trending Products on Mobile */
     .trending-grid {
-        grid-template-columns: repeat(2, 1fr);
+        display: flex !important;
+        overflow-x: auto !important;
+        scroll-snap-type: x mandatory !important;
+        padding-bottom: 20px !important;
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+        gap: 15px;
+    }
+
+    .trending-grid::-webkit-scrollbar {
+        display: none;
+    }
+
+    .trending-card {
+        flex: 0 0 calc(50% - 7.5px) !important;
+        /* Exactly 2 cards visible per swipe */
+        scroll-snap-align: start;
+        max-width: none !important;
+    }
+
+    .nav-arrows {
+        display: none !important;
+        /* Hide the JS arrows on mobile */
     }
 }
 

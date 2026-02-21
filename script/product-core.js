@@ -404,7 +404,13 @@ function renderProductPage(product) {
                 </div>
                 
                 <!-- Buying Section & Footer -->
-<div class="section-headline" id="licenses-header" style="display: flex; justify-content: space-between; align-items: center;"><span>Licencias</span></div>
+<div class="section-headline" id="licenses-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-dim); padding-bottom: 5px; margin-bottom: 15px;">
+                    <span>Licencias</span>
+                    <!-- Comparar button only for Desktop -->
+                    <span class="desktop-only-flex" onclick="if(window.currentProductData && window.currentProductData.available_licenses) openLicenseComparisonModal(window.currentProductData.available_licenses)" style="font-size: 0.8rem; color: #888; cursor: pointer; align-items: center; gap: 5px; font-weight: 500;">
+                        <i class="bi bi-layout-sidebar-inset"></i> Comparar
+                    </span>
+                </div>
                 <div id="buying-modules"></div>
 
                 <!-- Description (Accordion) -->
@@ -952,76 +958,116 @@ async function renderBeatSpecifics(product) {
             };
         });
 
-        // 4. Render FEATURED Card (Only one)
-        const firstEnabledLicense = licenses.find(l => l.enabled);
+        // 4. Render Licenses (Desktop & Mobile separation)
+        const enabledLicenses = licenses.filter(l => l.enabled);
+        const firstEnabledLicense = enabledLicenses[0];
 
         // Store licenses for later use in addToCart
         if (window.currentProductData) {
             window.currentProductData.available_licenses = licenses;
         }
 
-        if (firstEnabledLicense) {
-            const lic = firstEnabledLicense;
-            const price = parseFloat(lic.price) || 0;
-            const priceStr = price > 0 ? `$${price.toFixed(2)}` : 'Gratis';
-
-            const card = document.createElement('div');
-            card.className = 'license-card-v2 featured-license-card selected';
-            card.id = `lic-card-${lic.id}`;
-            card.innerHTML = `
-                <div class="lic-card-header">
-                    <span class="lic-name">${lic.name}</span>
-                    <i class="bi bi-info-circle lic-details-trigger"></i>
-                </div>
-                <div class="lic-card-body">
-                    <span class="lic-files-preview">${getFilesPreview(lic.files, lic.name)}</span>
-                    <span class="lic-price-v2">${priceStr}</span>
-                </div>
-            `;
-
-            card.onclick = (e) => {
-                if (e.target.closest('.lic-details-trigger')) {
-                    openLicenseModal(lic, product);
-                } else {
-                    // Clicking the featured card opens the selection modal
-                    openLicenseSelectionModal(licenses);
-                }
-            };
-
+        if (enabledLicenses.length > 0) {
             buyBox.innerHTML = '';
-            buyBox.appendChild(card);
-        }
 
-        // 5. Action Footer (Lineal Purchase Button)
-        const footerActions = document.createElement('div');
-        footerActions.className = 'beat-actions-footer';
-        footerActions.style.marginTop = '20px';
-        footerActions.style.display = 'flex';
-        footerActions.style.flexDirection = 'column';
-        footerActions.style.gap = '10px';
+            // Mobile layout removed - using unified grid instead
 
-        const purchaseBtn = document.createElement('button');
-        purchaseBtn.className = 'btn-purchase-licenses';
-        purchaseBtn.innerHTML = 'COMPRAR LICENCIAS';
-        purchaseBtn.onclick = () => openLicenseSelectionModal(licenses);
-        footerActions.appendChild(purchaseBtn);
+            // --- UNIFIED GRID LAYOUT (All Cards + "AÑADIR AL CARRITO") ---
+            const desktopLayout = document.createElement('div');
+            desktopLayout.className = 'desktop-licenses-layout licenses-layout-v2';
+            desktopLayout.style.flexDirection = 'column';
+            desktopLayout.style.width = '100%';
 
-        // FREE DOWNLOAD BUTTON (Bypasses licenses if active)
-        if (product.is_free) {
-            const freeBtn = document.createElement('button');
-            freeBtn.className = 'btn-download-premium';
-            freeBtn.innerHTML = '<i class="bi bi-download"></i> DESCARGA GRATIS';
-            freeBtn.onclick = () => {
-                if (window.openDownloadGateModal) {
-                    window.openDownloadGateModal(product.audio_url, product.producer?.nickname, product.id);
+            const desktopGrid = document.createElement('div');
+            desktopGrid.className = 'licenses-grid-scrollable';
+            desktopGrid.style.display = 'grid';
+            let desktopCols = enabledLicenses.length > 3 ? 3 : enabledLicenses.length;
+            desktopGrid.style.gridTemplateColumns = `repeat(${desktopCols}, 1fr)`;
+            desktopGrid.style.gap = '12px';
+            desktopGrid.style.width = '100%';
+            desktopGrid.style.marginBottom = '15px';
+
+            const desktopLicensesToRender = enabledLicenses;
+            let desktopSelectedId = localStorage.getItem(`offszn_lic_select_${product.id}`);
+            if (!desktopLicensesToRender.find(l => l.id === desktopSelectedId)) {
+                desktopSelectedId = desktopLicensesToRender[0].id;
+                localStorage.setItem(`offszn_lic_select_${product.id}`, desktopSelectedId);
+            }
+
+            desktopLicensesToRender.forEach(lic => {
+                const dPrice = parseFloat(lic.price) || 0;
+                const dPriceStr = dPrice > 0 ? `$${dPrice.toFixed(2)}` : 'Gratis';
+
+                const dCard = document.createElement('div');
+                // Standard license-card-v2 (no 'featured' styling overrides)
+                dCard.className = `license-card-v2 desktop-lic-card ${lic.id === desktopSelectedId ? 'selected' : ''}`;
+                dCard.id = `desktop-lic-${lic.id}`;
+                dCard.style.cursor = 'pointer';
+                dCard.style.maxWidth = '100%';
+
+                dCard.innerHTML = `
+                    <div class="lic-card-header">
+                        <span class="lic-name">${lic.name}</span>
+                        <i class="bi bi-info-circle lic-details-trigger"></i>
+                    </div>
+                    <div class="lic-card-body" style="margin-top: 5px;">
+                        <span class="lic-files-preview">${getFilesPreview(lic.files, lic.name)}</span>
+                        <span class="lic-price-v2">${dPriceStr}</span>
+                    </div>
+                `;
+
+                dCard.onclick = (e) => {
+                    if (e.target.closest('.lic-details-trigger')) {
+                        openLicenseModal(lic, product);
+                    } else {
+                        // Unselect all desktop cards
+                        desktopGrid.querySelectorAll('.desktop-lic-card').forEach(c => c.classList.remove('selected'));
+                        dCard.classList.add('selected');
+                        // Save choice
+                        localStorage.setItem(`offszn_lic_select_${product.id}`, lic.id);
+                    }
+                };
+                desktopGrid.appendChild(dCard);
+            });
+
+            desktopLayout.appendChild(desktopGrid);
+
+            const dPurchaseBtn = document.createElement('button');
+            dPurchaseBtn.className = 'btn-purchase-kit cart-btn-mobile-fix'; // White bold button
+            dPurchaseBtn.style.padding = '16px';
+            dPurchaseBtn.style.fontSize = '1.1rem';
+            dPurchaseBtn.style.fontWeight = '800';
+            dPurchaseBtn.style.display = 'flex';
+            dPurchaseBtn.style.justifyContent = 'center';
+            dPurchaseBtn.style.alignItems = 'center';
+            dPurchaseBtn.style.gap = '10px';
+            dPurchaseBtn.innerHTML = '<i class="bi bi-cart-plus" style="font-size: 1.3rem;"></i> AÑADIR AL CARRITO';
+            dPurchaseBtn.onclick = () => {
+                const currentSelectedId = localStorage.getItem(`offszn_lic_select_${product.id}`) || desktopLicensesToRender[0].id;
+                if (window.addToCart) {
+                    window.addToCart(product.id, currentSelectedId);
                 } else {
-                    window.open(product.audio_url, '_blank');
+                    console.error("addToCart missing");
                 }
             };
-            footerActions.appendChild(freeBtn);
-        }
+            desktopLayout.appendChild(dPurchaseBtn);
 
-        buyBox.appendChild(footerActions);
+            if (product.is_free) {
+                const dFreeBtn = document.createElement('button');
+                dFreeBtn.className = 'btn-minimal-link';
+                dFreeBtn.style.margin = '10px auto 0';
+                dFreeBtn.style.fontSize = '0.9rem';
+                dFreeBtn.style.color = '#ccc';
+                dFreeBtn.innerHTML = '<i class="bi bi-download"></i> DESCARGA GRATIS';
+                dFreeBtn.onclick = () => {
+                    if (window.openDownloadGateModal) window.openDownloadGateModal(product.audio_url, product.producer?.nickname, product.id);
+                    else window.open(product.audio_url, '_blank');
+                };
+                desktopLayout.appendChild(dFreeBtn);
+            }
+
+            buyBox.appendChild(desktopLayout);
+        }
 
     } catch (err) {
         console.error("Error rendering beat licenses:", err);
