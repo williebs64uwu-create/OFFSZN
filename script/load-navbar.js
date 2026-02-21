@@ -13,8 +13,10 @@
 
     try {
         // Determine the base path based on the current URL depth, or just use absolute if on a server
-        // A simple fix for local files is to try './components/navbar.html' if on root, or '../' if in a subfolder.
-        const pathPrefix = window.location.pathname.includes('/pages/') || window.location.pathname.includes('/recursos/') || window.location.pathname.includes('/comunidad/') || window.location.pathname.includes('/cursos/') || window.location.pathname.includes('/studio/') || window.location.pathname.includes('/cuenta/') || window.location.pathname.includes('/servicios/') ? '../' : './';
+        let pathPrefix = '/';
+        if (window.location.protocol === 'file:') {
+            pathPrefix = window.location.pathname.includes('/pages/') || window.location.pathname.includes('/recursos/') || window.location.pathname.includes('/comunidad/') || window.location.pathname.includes('/cursos/') || window.location.pathname.includes('/studio/') || window.location.pathname.includes('/cuenta/') || window.location.pathname.includes('/servicios/') ? '../' : './';
+        }
         const response = await fetch(pathPrefix + 'components/navbar.html?v=' + new Date().getTime());
         if (!response.ok) {
             throw new Error(`Failed to load navbar: ${response.status}`);

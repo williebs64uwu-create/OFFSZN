@@ -489,9 +489,9 @@ function startHeroSlider() {
             currentX = e.changedTouches[0].screenX;
             const diffX = currentX - touchStartX;
 
-            // Only allow horizontal drag, add some resistance
+            // Only allow horizontal drag, 1:1 ratio for native feel
             if (Math.abs(diffX) > 10) {
-                heroSection.style.transform = `translateX(${diffX * 0.4}px)`;
+                heroSection.style.transform = `translateX(${diffX}px)`;
             }
         }, { passive: true });
 
@@ -834,12 +834,53 @@ function playTrack(product) {
             return;
         }
 
-        // 2. Standardize Audio URL
-        const audioUrl = product.mp3_url || product.download_url_mp3 || product.preview_url ||
-            product.audio_url || product.tagged_file || product.demo_file ||
-            product.file_url || product.url_file;
+        // 2. Derive Current Context Playlist
+        // Logic: Find the DOM container where the play button was clicked to infer the list context.
+        // Since playTrack is called globally from onclick, we'll build a context playlist 
+        // dynamically based on currently visible identical containers, or fallback to allProducts.
+        let contextList = [];
+        try {
+            // Find all visible list items
+            const visibleItemsDOM = Array.from(document.querySelectorAll('.list-item-smart, .grid-item-card'));
+            if (visibleItemsDOM.length > 0) {
+                // Try to guess context by grouping. 
+                // Simple approach: The entire Explore page DOM items form the play queue context
+                visibleItemsDOM.forEach(el => {
+                    const pid = el.getAttribute('data-id') || el.id.replace('card-', '');
+                    if (pid && allProducts) {
+                        const match = allProducts.find(p => p.id == pid);
+                        if (match && !contextList.some(t => t.id == match.id)) contextList.push(match);
+                    }
+                });
+            }
+        } catch (e) { console.warn("Could not derive DOM context array"); }
 
-        // 3. Construct Standardized Data (Matching profile-public.js pattern)
+        if (contextList.length === 0 && allProducts) contextList = allProducts.slice(0, 50); // limit fallback to 50
+
+        // 3. Format the queue for StickyPlayer
+        const formattedPlaylist = contextList.map(p => {
+            const audioUrl = p.mp3_url || p.download_url_mp3 || p.preview_url || p.audio_url || p.tagged_file || p.demo_file || p.file_url || p.url_file;
+            return {
+                ...p,
+                audio_url: audioUrl,
+                artist_users: {
+                    nickname: p.producer_nickname || 'OFFSZN Artist',
+                    id: p.producer_id,
+                    avatar_url: p.producer_avatar || null,
+                    is_verified: p.producer_is_verified || false
+                }
+            }
+        });
+
+        // 4. Send queue to Player
+        if (window.StickyPlayer.updatePlaylist && formattedPlaylist.length > 0) {
+            window.StickyPlayer.updatePlaylist(formattedPlaylist, 'Explorar');
+        }
+
+        // 5. Standardize Data for Current Track & Play
+        const audioUrl = product.mp3_url || product.download_url_mp3 || product.preview_url ||
+            product.audio_url || product.tagged_file || product.demo_file || product.file_url || product.url_file;
+
         const trackData = {
             ...product,
             audio_url: audioUrl,
@@ -905,8 +946,8 @@ function renderLeaderboard(producers) {
             <img src="${p.avatar_url || 'https://via.placeholder.com/60'}" class="lb-avatar" alt="${p.nickname}">
             <div class="lb-info">
                 <div class="lb-name">
-                    ${p.nickname} 
-                    ${p.is_verified ? '<i class="bi bi-patch-check-fill lb-verified"></i>' : ''}
+                    <span class="lb-nickname-text">${p.nickname}</span> 
+                    ${p.is_verified ? '<i class="bi bi-patch-check-fill lb-verified" style="flex-shrink: 0;"></i>' : ''}
                 </div>
                 <div class="lb-score">${p.score.toLocaleString()} pts</div>
             </div>

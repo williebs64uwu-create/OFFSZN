@@ -466,14 +466,14 @@ window.setActiveTab = function (tabName) {
     // Logic
     if (tabName === 'products') {
         if (trendingArea) trendingArea.style.display = 'flex';
-        if (trendingGrid) trendingGrid.style.display = 'grid';
+        if (trendingGrid) trendingGrid.style.display = '';
         if (toolbar) toolbar.style.display = 'flex';
         if (productsList) productsList.style.display = 'flex';
         servicesSection.style.display = 'none';
         aboutSection.style.display = 'none';
     } else if (tabName === 'services') {
         if (trendingArea) trendingArea.style.display = 'none';
-        if (trendingGrid) trendingGrid.style.display = 'none';
+        if (trendingGrid) trendingGrid.style.setProperty('display', 'none', 'important');
         if (toolbar) toolbar.style.display = 'none';
         if (productsList) productsList.style.display = 'none';
         servicesSection.style.display = 'block';
@@ -483,7 +483,7 @@ window.setActiveTab = function (tabName) {
         renderServicesTab(servicesSection);
     } else if (tabName === 'about') {
         if (trendingArea) trendingArea.style.display = 'none';
-        if (trendingGrid) trendingGrid.style.display = 'none';
+        if (trendingGrid) trendingGrid.style.setProperty('display', 'none', 'important');
         if (toolbar) toolbar.style.display = 'none';
         if (productsList) productsList.style.display = 'none';
         servicesSection.style.display = 'none';
@@ -1617,7 +1617,9 @@ async function renderTrending(items, user, collabStats = {}) {
                     img.src = authUrl;
                     if (img.complete) img.onload();
                 } else {
-                    img.style.opacity = 1;
+                    img.onload = () => { img.style.opacity = 1; };
+                    img.src = prod.image_url || 'https://via.placeholder.com/300';
+                    if (img.complete) img.onload();
                 }
             }
         }
@@ -1718,7 +1720,8 @@ async function renderProductList(items, user, collabStats = {}) {
             </div>
             <div class="list-col-tags">
                 <span id="duration-${waveformId}" style="font-size:0.75rem; color:#666; font-weight:700; margin-right:8px; min-width:30px;">--:--</span>
-                <span class="badge-outline badge-type">${prod.product_type || 'BEAT'}</span>
+                <span class="badge-outline badge-type">WAV</span>
+                <span class="badge-outline badge-type">STEMS</span>
             </div>
             <div class="list-col-price">
                  <button class="btn-list-price" onclick="event.stopPropagation(); window.location.href = '${seoLink}'">
@@ -1726,9 +1729,15 @@ async function renderProductList(items, user, collabStats = {}) {
                  </button>
             </div>
             <div class="list-col-actions" style="width:100%; justify-content:flex-end;">
+                <!-- Mobile only Play Button -->
+                <button class="btn-list-icon mobile-only-play" title="Reproducir" onclick="event.stopPropagation(); document.getElementById('btn-play-${waveformId}').click();">
+                    <i class="bi bi-play-fill"></i>
+                </button>
                 ${(() => {
                 const isLiked = window.FavoritesManager ? window.FavoritesManager.isLiked(prod.id) : false;
-                return `<button class="btn-list-icon" title="Like" style="${isLiked ? 'color:#ef4444;' : ''}"><i class="bi ${isLiked ? 'bi-heart-fill' : 'bi-heart'}"></i></button>`;
+                return `<button class="btn-list-icon" title="Like" style="${isLiked ? 'color:#ef4444;' : ''}">
+                            <i class="bi ${isLiked ? 'bi-heart-fill' : 'bi-heart'}"></i>
+                        </button>`;
             })()}
                 <button class="btn-list-icon" title="Download"><i class="bi bi-download"></i></button>
                 <button class="btn-list-icon" title="Más"><i class="bi bi-three-dots"></i></button>
@@ -1761,7 +1770,9 @@ async function renderProductList(items, user, collabStats = {}) {
                     img.src = authUrl;
                     if (img.complete) img.onload();
                 } else {
-                    img.style.opacity = 1;
+                    img.onload = () => { img.style.opacity = 1; };
+                    img.src = prod.image_url || 'https://via.placeholder.com/300';
+                    if (img.complete) img.onload();
                 }
             }
         }
@@ -1833,11 +1844,38 @@ async function renderProductList(items, user, collabStats = {}) {
 
 function setupProfileControls() {
     // 1. Search
+    const searchWrapper = document.querySelector('.pro-search');
     const searchInput = document.getElementById('profileSearch');
-    if (searchInput) {
+
+    if (searchWrapper && searchInput) {
+        // Mobile Toggle logic
+        searchWrapper.onclick = (e) => {
+            if (window.innerWidth <= 768) {
+                if (!searchWrapper.classList.contains('active')) {
+                    searchWrapper.classList.add('active');
+                    searchInput.focus();
+                    e.preventDefault(); // Prevent accidental bubble issues
+                }
+            }
+        };
+
+        // Close on blur if empty (optional, but clean)
+        searchInput.onblur = () => {
+            if (window.innerWidth <= 768 && !searchInput.value) {
+                searchWrapper.classList.remove('active');
+            }
+        };
+
         searchInput.oninput = (e) => {
             currentSearch = e.target.value.toLowerCase();
             applyFilters();
+        };
+
+        // Handle enter or search icon click (if already active)
+        searchInput.onkeydown = (e) => {
+            if (e.key === 'Enter') {
+                searchInput.blur();
+            }
         };
     }
 
@@ -1858,36 +1896,168 @@ function setupProfileControls() {
             applyFilters();
         }
     });
+
+    // 3. Mobile Filter Button Toggle (Custom Modal)
+    document.querySelector('.mobile-only-filter')?.addEventListener('click', () => {
+        document.getElementById('profileFiltersModal')?.classList.add('active');
+    });
+
+    // Close modal on outside click
+    document.getElementById('profileFiltersModal')?.addEventListener('click', (e) => {
+        if (e.target.id === 'profileFiltersModal') {
+            e.target.classList.remove('active');
+        }
+    });
+
+    // 4. Tempo Slider Initialization
+    initTempoSlider();
+
+    // 5. Key Selector Logic
+    document.querySelector('.key-selector-grid')?.addEventListener('click', (e) => {
+        const btn = e.target.closest('.key-btn');
+        if (btn) {
+            document.querySelectorAll('.key-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        }
+    });
+
+    // 6. Apply Button Action
+    document.getElementById('btnApplyFilters')?.addEventListener('click', () => {
+        applyFilters();
+        document.getElementById('profileFiltersModal')?.classList.remove('active');
+    });
+}
+
+function initTempoSlider() {
+    const minThumb = document.getElementById('tempo-thumb-min');
+    const maxThumb = document.getElementById('tempo-thumb-max');
+    const fill = document.querySelector('.tempo-slider-fill');
+    const minVal = document.getElementById('tempo-min');
+    const maxVal = document.getElementById('tempo-max');
+    const track = document.querySelector('.tempo-slider-track');
+
+    if (!minThumb || !maxThumb || !track) return;
+
+    let min = 40;
+    let max = 136;
+    const TOTAL_RANGE = 136 - 40;
+
+    const updateSlider = (percent, isMax) => {
+        const bpm = Math.round(40 + (percent / 100) * TOTAL_RANGE);
+        if (isMax) {
+            if (bpm < min + 5) return; // Keep minimum distance
+            max = bpm;
+            maxVal.innerText = max;
+            maxThumb.style.left = `${percent}%`;
+        } else {
+            if (bpm > max - 5) return;
+            min = bpm;
+            minVal.innerText = min;
+            minThumb.style.left = `${percent}%`;
+        }
+        fill.style.left = `${((min - 40) / TOTAL_RANGE) * 100}%`;
+        fill.style.width = `${((max - min) / TOTAL_RANGE) * 100}%`;
+
+        // Save state on track/modal if needed, or just let applyFilters read minVal/maxVal text
+    };
+
+    const handleDrag = (e, isMax) => {
+        const rect = track.getBoundingClientRect();
+        let x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
+        let percent = Math.min(Math.max((x / rect.width) * 100, 0), 100);
+        updateSlider(percent, isMax);
+    };
+
+    const addEvents = (thumb, isMax) => {
+        const start = (e) => {
+            const move = (ev) => handleDrag(ev, isMax);
+            const stop = () => {
+                document.removeEventListener('mousemove', move);
+                document.removeEventListener('mouseup', stop);
+                document.removeEventListener('touchmove', move);
+                document.removeEventListener('touchend', stop);
+            };
+            document.addEventListener('mousemove', move);
+            document.addEventListener('mouseup', stop);
+            document.addEventListener('touchmove', move);
+            document.addEventListener('touchend', stop);
+            e.preventDefault();
+        };
+        thumb.addEventListener('mousedown', start, { passive: false });
+        thumb.addEventListener('touchstart', start, { passive: false });
+    };
+
+    addEvents(minThumb, false);
+    addEvents(maxThumb, true);
 }
 
 
 function applyFilters() {
-    const list = document.getElementById('profileProductsList');
-    if (!list) return;
+    const modal = document.getElementById('profileFiltersModal');
+    if (!modal) return;
 
-    // Filter Logic
-    const filtered = productsCache.filter(p => {
+    // 1. Get Values from Modal
+    const sort = modal.querySelector('input[name="sort"]:checked')?.value || 'popular';
+
+    // File Types
+    const fileTypes = Array.from(modal.querySelectorAll('input[name="filetype"]:checked')).map(i => i.value);
+
+    // Categories
+    const categories = Array.from(modal.querySelectorAll('input[name="category"]:checked')).map(i => i.value);
+
+    // Tempo
+    const bpmMin = parseInt(document.getElementById('tempo-min').innerText);
+    const bpmMax = parseInt(document.getElementById('tempo-max').innerText);
+
+    // Key & Scale
+    const mode = modal.querySelector('input[name="mode"]:checked')?.value || 'minor';
+    const selectedKey = modal.querySelector('.key-btn.active')?.dataset.key || '';
+
+    // Licenses
+    const licenses = Array.from(modal.querySelectorAll('input[name="license"]:checked')).map(i => i.value);
+
+    // 2. Perform Filtering
+    let filtered = productsCache.filter(p => {
         // Text Search
-        const matchText = p.name.toLowerCase().includes(currentSearch);
+        if (currentSearch && !p.name.toLowerCase().includes(currentSearch)) return false;
 
-        // Category Filter
-        let matchCat = true;
-        if (currentFilter !== 'all') {
+        // Category Check
+        if (categories.length > 0) {
             const pType = (p.product_type || '').toLowerCase();
-            const filter = currentFilter.toLowerCase();
-
-            // Loose matching
-            if (filter === 'beat' || filter === 'beats') matchCat = pType.includes('beat');
-            else if (filter === 'drum kit' || filter === 'drumkit') matchCat = pType.includes('drum') || pType.includes('kit');
-            else if (filter === 'loop' || filter === 'loops') matchCat = pType.includes('loop') || pType.includes('sample');
-            else matchCat = pType === filter;
+            const match = categories.some(cat => pType.includes(cat));
+            if (!match) return false;
         }
-        return matchText && matchCat;
+
+        // BPM Check
+        if (p.bpm) {
+            if (p.bpm < bpmMin || p.bpm > bpmMax) return false;
+        }
+
+        // Key Check
+        if (selectedKey && p.key) {
+            const pKey = p.key.replace(/\s/g, ''); // Remove spaces
+            // Simple loose match for now
+            if (!pKey.includes(selectedKey)) return false;
+            // Mode check
+            if (mode === 'minor' && !pKey.toLowerCase().includes('m')) {
+                // If it doesn't have 'm', assume major (loose logic)
+            }
+        }
+
+        return true;
     });
 
-    // 3. Delegated Actions (Like, Download, etc) - Moved to DOMContentLoaded/Init 
+    // 3. Sorting
+    if (sort === 'trending' || sort === 'popular') {
+        const getScore = (p) => (p.views_count || 0) + (p.plays_count || 0) * 2 + (p.stats_likes || 0) * 10;
+        filtered.sort((a, b) => getScore(b) - getScore(a));
+    } else if (sort === 'recent') {
+        filtered.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+    } else if (sort === 'random') {
+        filtered.sort(() => Math.random() - 0.5);
+    }
 
-    // Get user data from DOM (fallback if not in cache)
+    // 4. Render
     const userNickname = document.getElementById('profileName')?.innerText || 'Unknown';
     const userData = {
         nickname: userNickname,
@@ -1932,6 +2102,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 const row = btn.closest('.list-row');
                 if (row && window.FavoritesManager) {
                     const prodId = row.dataset.id;
+
+                    // --- FAST FEEDBACK (Optimistic Toggle) ---
+                    const icon = btn.querySelector('i');
+                    const isCurrentlyLiked = icon.classList.contains('bi-heart-fill');
+
+                    if (isCurrentlyLiked) {
+                        icon.className = 'bi bi-heart';
+                        btn.style.color = '';
+                    } else {
+                        icon.className = 'bi bi-heart-fill';
+                        btn.style.color = '#ef4444';
+                    }
+
+                    // Animate
+                    btn.style.transform = "scale(1.2)";
+                    setTimeout(() => btn.style.transform = "scale(1)", 200);
+
+                    // Call backend manager
                     window.FavoritesManager.toggleLike(prodId, btn);
                 }
             }

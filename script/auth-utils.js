@@ -11,6 +11,9 @@ window.AuthUtils = {
     initSupabase: function () {
         if (window.supabaseClient) return; // Already initialized
 
+
+
+
         if (typeof window.supabase !== 'undefined' && window.supabase.createClient && window.SUPABASE_URL && window.SUPABASE_ANON_KEY) {
             window.supabaseClient = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
             console.log("✅ Supabase Client Initialized via AuthUtils");
@@ -158,6 +161,12 @@ window.AuthUtils = {
 
         // 🔥 PREVENT DOUBLE SIGNING: If already contains signature params, return as is
         if (typeof pathOrUrl === 'string' && pathOrUrl.includes('X-Amz-Signature')) {
+            return pathOrUrl;
+        }
+
+        // 🔥 ZERO LATENCY FIX: If the URL is already a Cloudflare public DEV URL (pub-...), 
+        // do NOT ask the backend to sign it. It's already public.
+        if (typeof pathOrUrl === 'string' && pathOrUrl.includes('pub-') && pathOrUrl.includes('.r2.dev')) {
             return pathOrUrl;
         }
 

@@ -308,7 +308,7 @@ function renderProductPage(product) {
               onclick="window.location.href='/@' + encodeURIComponent('${producerName}')"
               onmouseenter="window.showArtistCard(event, this)" 
               onmouseleave="window.hideArtistCard(event, this)"
-              style="color:#aaa; font-size:1rem; margin-bottom: 20px; display:inline-flex; align-items:center; cursor:pointer;">
+              style="display:inline-flex; align-items:center; cursor:pointer;">
             ${producerName} 
             <i class="bi bi-patch-check-fill" style="color:#A020F0; display:${isVerified ? 'inline' : 'none'}; margin-left:4px;"></i>
         </span>
@@ -356,14 +356,14 @@ function renderProductPage(product) {
             <!-- LEFT: SIDEBAR (Art, Player, Meta) -->
             <div class="product-sidebar">
                 <!-- Cover Art -->
-                <div class="product-cover-art${mainSkeletonClass}" style="position:relative;">
+                <div class="product-cover-art" style="position:relative;">
                     <img src="${initialImgMain}" 
                          id="product-main-art"
                          alt="${product.name}"
-                         class="${isR2Main ? 'skeleton-img-transition' : ''}"
+                         class=""
                          error="this.style.display='none'">
                      <!-- Player Target -->
-                     <div id="sidebar-player-target" style="position:absolute; bottom:15px; left:15px; right:15px;"></div>
+                     <div id="sidebar-player-target" style="position:absolute;"></div>
                 </div>
 
                 <!-- Social Actions -->
@@ -375,9 +375,15 @@ function renderProductPage(product) {
                 <div id="free-dl-container"></div>
 
                 <!-- Information List -->
-                <div class="info-list">
-                    <div style="font-size:0.8rem; color:#666; margin-bottom:5px; font-weight:700; text-transform:uppercase;">Información</div>
-                    ${metaRows}
+                <div class="info-list-container">
+                    <div class="section-headline info-headline" onclick="toggleAccordion('info')" style="cursor:pointer; margin-bottom: 5px;">
+                        <span>Información</span>
+                        <i class="bi bi-chevron-down chevron-icon" id="chevron-info" style="color:#666;"></i>
+                    </div>
+                    <div id="content-info" class="info-list terms-accordion-content">
+                        <div class="info-title-desktop" style="font-size:0.8rem; color:#666; margin-bottom:5px; font-weight:700; text-transform:uppercase;">Información</div>
+                        ${metaRows}
+                    </div>
                 </div>
 
                 <!-- Tags -->
@@ -390,7 +396,7 @@ function renderProductPage(product) {
             <div class="product-main-content">
                 
                 <!-- HEADER: Title & Producer -->
-                <div>
+                <div class="product-header-wrapper">
                     <h1 style="font-size:3rem; font-weight:800; line-height:1.1; margin-bottom:10px; word-break: break-word; overflow-wrap: break-word; hyphens: auto;">
                         ${product.name || 'Sin título'}
                     </h1>
@@ -402,11 +408,11 @@ function renderProductPage(product) {
                 <div id="buying-modules"></div>
 
                 <!-- Description (Accordion) -->
-                <div class="section-headline" onclick="toggleAccordion('desc')" style="cursor:pointer; margin-top:15px;">
+                <div class="section-headline mobile-hide" onclick="toggleAccordion('desc')" style="cursor:pointer; margin-top:15px;">
                     <span>Descripción</span>
                     <i class="bi bi-chevron-down chevron-icon" id="chevron-desc" style="color:#666;"></i>
                 </div>
-                <div id="content-desc" class="terms-accordion-content open" style="color:#888; font-size:1rem; line-height:1.6; white-space: pre-line; margin-top: 15px;">${(() => {
+                <div id="content-desc" class="terms-accordion-content open mobile-hide" style="color:#888; font-size:1rem; line-height:1.6; white-space: pre-line; margin-top: 15px;">${(() => {
             if (!product.description) return 'Sin descripción.';
 
             const fullDesc = product.description
@@ -429,12 +435,11 @@ function renderProductPage(product) {
         })()}
                 </div>
 
-                <!-- Terms (Accordion) -->
                 <div class="section-headline" onclick="toggleAccordion('terms')" style="cursor:pointer; margin-top:15px;">
                     <span>Términos de Uso</span>
-                    <i class="bi bi-chevron-down chevron-icon rotate" id="chevron-terms" style="color:#666;"></i>
+                    <i class="bi bi-chevron-right chevron-icon" id="chevron-terms" style="color:#666;"></i>
                 </div>
-<div id="content-terms" class="terms-accordion-content open" style="color:#888; font-size:0.9rem; line-height:1.6; margin-bottom:40px;">
+<div id="content-terms" class="terms-accordion-content" style="color:#888; font-size:0.9rem; line-height:1.6; margin-bottom:40px;">
                     ${(() => {
             if (product.product_type === 'beat') {
                 return `<p>Este producto está sujeto a licencias de uso. La descarga gratuita permite el uso únicamente para plataformas como YouTube y SoundCloud, sin monetización y sin fines comerciales. Para monetizar, distribuir en plataformas digitales (Spotify, Apple Music, etc.) o usos comerciales, es necesario adquirir la licencia correspondiente del productor/artista.</p>`;
@@ -540,7 +545,7 @@ function setupSocialInteractions(product) {
 
     // HTML for buttons (Icon top, Count bottom)
     container.innerHTML = `
-        <div style="display:flex; gap:30px; justify-content:center; width:100%;">
+        <div class="social-actions-wrapper">
             <button class="action-btn-icon ${likeClass}" id="btn-like" onclick="toggleLikeGlobal(this, '${product.id}', '${product.producer_id}')">
                 <i class="bi ${heartIcon}"></i>
                 <span class="stat-value">${product.stats_likes || 0}</span>
@@ -548,12 +553,12 @@ function setupSocialInteractions(product) {
             
             <button class="action-btn-icon" id="btn-share" onclick="openShareModal('${product.id}')">
                 <i class="bi bi-upload"></i>
-                <span class="stat-value">&nbsp;</span>
+                <span class="stat-value">Compartir</span>
             </button>
 
             <button class="action-btn-icon" id="btn-exclusivity" onclick="window.openExclusivityModal()">
                 <i class="bi bi-plus-lg"></i>
-                <span class="stat-value">&nbsp;</span>
+                <span class="stat-value">Más</span>
             </button>
         </div>
     `;
@@ -701,41 +706,87 @@ window.openShareModal = function (productId) {
 
     // --- 3. RENDER MODAL CONTENT ---
     const contentBox = backdrop.querySelector('.share-modal-content');
+    const product = window.currentProductData || {};
+    const producer = product.profiles || {};
+    const producerName = producer.nickname || 'Unknown';
+    const isVerified = producer.is_verified;
+
     if (contentBox) {
         contentBox.innerHTML = `
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:25px;">
-                 <h3 style="color:#fff; margin:0; font-weight:800;">Compartir</h3>
-                 <button onclick="closeShareModal()" style="background:none; border:none; color:#666; font-size:1.5rem; cursor:pointer;"><i class="bi bi-x"></i></button>
+            <div class="share-modal-header">
+                 <h3 style="color:#fff; margin:0; font-weight:800; font-size: 1.4rem;">Compartir</h3>
+                 <button onclick="closeShareModal()" class="share-modal-close-btn"><i class="bi bi-x-lg"></i></button>
+            </div>
+
+            <!-- Product Info Row -->
+            <div class="share-product-info">
+                <img src="${product.image_url || '/images/portada-default.png'}" class="share-product-img">
+                <div class="share-product-details">
+                    <div class="share-product-name-row">
+                        <span class="share-product-name">${product.name || 'Sin título'}</span>
+                    </div>
+                    <div class="share-producer-row">
+                        <span class="share-producer-name">${producerName}</span>
+                        ${isVerified ? '<i class="bi bi-patch-check-fill share-verified-icon"></i>' : ''}
+                    </div>
+                </div>
             </div>
             
-            <!-- Social Grid -->
-            <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:10px; margin-bottom:24px;">
-                ${socials.map(s => `
-                    <a href="${s.url}" target="_blank" class="social-share-btn" style="display:flex; flex-direction:column; align-items:center; gap:8px; text-decoration:none; color:#ccc;">
-                        <div style="width:48px; height:48px; background:#1a1a1a; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:1.4rem; color:${s.color}; transition:transform 0.2s; border:1px solid #333;"
-                             onmouseover="this.style.background='#222'; this.style.transform='translateY(-2px)'"
-                             onmouseout="this.style.background='#1a1a1a'; this.style.transform='translateY(0)'">
-                            <i class="bi ${s.icon}"></i>
-                        </div>
-                        <span style="font-size:0.7rem; font-weight:600;">${s.name}</span>
-                    </a>
-                `).join('')}
+            <!-- URL Fields -->
+            <div class="share-links-container">
+                <div class="share-field-group">
+                    <label>URL CORTA DEL MARKETPLACE</label>
+                    <div class="share-input-wrapper">
+                        <i class="bi bi-link-45deg"></i>
+                        <input type="text" value="${shortLink}" readonly id="link-short">
+                        <button onclick="copyToClipboard('${shortLink}', this)">Copiar</button>
+                    </div>
+                </div>
+
+                <div class="share-field-group">
+                    <label>URL COMPLETA DEL MARKETPLACE</label>
+                    <div class="share-input-wrapper">
+                        <i class="bi bi-link-45deg"></i>
+                        <input type="text" value="${window.location.href}" readonly id="link-full">
+                        <button onclick="copyToClipboard('${window.location.href}', this)">Copiar</button>
+                    </div>
+                </div>
             </div>
 
-            <div style="height:1px; background:#1a1a1a; width:100%; margin-bottom:24px;"></div>
-
-            <p style="color:#666; font-size:0.8rem; margin-bottom:10px; font-weight:700; text-transform:uppercase;">Enlace Corto</p>
-            <div class="share-link-box" id="share-link-box" style="padding:0; overflow:hidden; display:flex; align-items:center; height:50px; background:#111; border:1px solid #333; border-radius:12px;">
-                 <div style="padding:0 16px; color:#666; font-size:1.1rem;"><i class="bi bi-link-45deg"></i></div>
-                 <input type="text" id="share-url-text" readonly style="flex:1; background:transparent; border:none; color:#fff; padding:0 10px 0 0; outline:none; font-family:'Inter', sans-serif; font-size:0.95rem;" value="${shortLink}">
-                 <button onclick="copyShareLink()" class="btn-copy-share" style="height:100%; padding:0 24px; background:#fff; color:#000; border:none; font-weight:800; cursor:pointer; font-size:0.85rem;">
-                    COPIAR
-                 </button>
+            <!-- Social Grid -->
+            <div class="share-social-row">
+                <div class="social-share-item" onclick="openEmbedModal()">
+                    <div class="social-icon-circle"><i class="bi bi-code-slash"></i></div>
+                    <span>Embed</span>
+                </div>
+                ${socials.map(s => `
+                    <a href="${s.url}" target="_blank" class="social-share-item">
+                        <div class="social-icon-circle" style="color: #fff;"><i class="bi ${s.icon}"></i></div>
+                        <span>${s.name}</span>
+                    </a>
+                `).join('')}
             </div>
             
             <div id="share-status" style="height:20px; font-size:0.8rem; color:#4bff8f; margin-top:10px; text-align:center;"></div>
         `;
     }
+
+    // New helper for copying
+    window.copyToClipboard = function (text, btn) {
+        navigator.clipboard.writeText(text).then(() => {
+            const original = btn.innerText;
+            btn.innerText = 'Copiado!';
+            btn.style.color = '#4bff8f';
+            setTimeout(() => {
+                btn.innerText = original;
+                btn.style.color = '#3b82f6';
+            }, 2000);
+        });
+    };
+
+    window.openEmbedModal = function () {
+        alert("Función de incrustar próximamente.");
+    };
 
     // Logic to set URL (Legacy fallback for input if needed, but we set it in HTML above)
     // document.getElementById('share-url-text').value = shortLink;
@@ -901,39 +952,21 @@ async function renderBeatSpecifics(product) {
             };
         });
 
-        // 4. Render Grid
-        const licenseGrid = document.createElement('div');
-        licenseGrid.className = 'license-grid-v2';
+        // 4. Render FEATURED Card (Only one)
+        const firstEnabledLicense = licenses.find(l => l.enabled);
 
         // Store licenses for later use in addToCart
         if (window.currentProductData) {
             window.currentProductData.available_licenses = licenses;
         }
 
-        // 🔥 Inject Compare Button
-        const header = document.getElementById('licenses-header');
-        // Clear previous button if re-rendering
-        const existingBtn = document.getElementById('btn-compare-licenses');
-        if (existingBtn) existingBtn.remove();
-
-        if (header) {
-            const compareBtn = document.createElement('button');
-            compareBtn.id = 'btn-compare-licenses';
-            compareBtn.className = 'btn-minimal-link';
-            compareBtn.style.fontSize = '0.9rem';
-            compareBtn.innerHTML = '<i class="bi bi-layout-three-columns" style="margin-right:5px;"></i> Comparar';
-            compareBtn.onclick = () => openLicenseComparisonModal(licenses);
-            header.appendChild(compareBtn);
-        }
-
-        licenses.forEach(lic => {
-            if (!lic.enabled) return;
-
+        if (firstEnabledLicense) {
+            const lic = firstEnabledLicense;
             const price = parseFloat(lic.price) || 0;
             const priceStr = price > 0 ? `$${price.toFixed(2)}` : 'Gratis';
 
             const card = document.createElement('div');
-            card.className = 'license-card-v2';
+            card.className = 'license-card-v2 featured-license-card selected';
             card.id = `lic-card-${lic.id}`;
             card.innerHTML = `
                 <div class="lic-card-header">
@@ -950,31 +983,16 @@ async function renderBeatSpecifics(product) {
                 if (e.target.closest('.lic-details-trigger')) {
                     openLicenseModal(lic, product);
                 } else {
-                    selectLicense(lic.id);
+                    // Clicking the featured card opens the selection modal
+                    openLicenseSelectionModal(licenses);
                 }
             };
 
-            licenseGrid.appendChild(card);
-        });
-
-        buyBox.innerHTML = '';
-        buyBox.appendChild(licenseGrid);
-
-        // 🔥 Auto-select Logic (Persisted or Default)
-        const savedLicId = localStorage.getItem(`offszn_lic_select_${product.id}`);
-        const validLicIds = licenses.filter(l => l.enabled).map(l => l.id);
-
-        console.log(`[LicPersistence] Product ${product.id} - Saved: ${savedLicId}, Valid: ${validLicIds.join(',')}`);
-
-        if (savedLicId && validLicIds.includes(savedLicId)) {
-            console.log(`[LicPersistence] Restoring selection: ${savedLicId}`);
-            selectLicense(savedLicId);
-        } else if (validLicIds.length > 0) {
-            console.log(`[LicPersistence] Defaulting to first: ${validLicIds[0]}`);
-            selectLicense(validLicIds[0]);
+            buyBox.innerHTML = '';
+            buyBox.appendChild(card);
         }
 
-        // 5. Action Footer (Add to Cart + Free Download)
+        // 5. Action Footer (Lineal Purchase Button)
         const footerActions = document.createElement('div');
         footerActions.className = 'beat-actions-footer';
         footerActions.style.marginTop = '20px';
@@ -982,27 +1000,17 @@ async function renderBeatSpecifics(product) {
         footerActions.style.flexDirection = 'column';
         footerActions.style.gap = '10px';
 
-        const cartBtn = document.createElement('button');
-        cartBtn.className = 'btn-glass-primary';
-        cartBtn.innerHTML = '<i class="bi bi-cart-plus"></i> Añadir al Carrito';
-        cartBtn.onclick = () => {
-            const selected = document.querySelector('.license-card-v2.selected');
-            if (selected) {
-                const licId = selected.id.replace('lic-card-', '');
-                addToCart(product.id, licId);
-            } else {
-                alert('Por favor selecciona una licencia');
-            }
-        };
-        footerActions.appendChild(cartBtn);
+        const purchaseBtn = document.createElement('button');
+        purchaseBtn.className = 'btn-purchase-licenses';
+        purchaseBtn.innerHTML = 'COMPRAR LICENCIAS';
+        purchaseBtn.onclick = () => openLicenseSelectionModal(licenses);
+        footerActions.appendChild(purchaseBtn);
 
         // FREE DOWNLOAD BUTTON (Bypasses licenses if active)
         if (product.is_free) {
             const freeBtn = document.createElement('button');
-            freeBtn.className = 'btn-minimal-link';
-            freeBtn.style.justifyContent = 'center';
-            freeBtn.style.width = '100%';
-            freeBtn.innerHTML = '<i class="bi bi-download"></i> Descargar Gratis (MP3 con Tag)';
+            freeBtn.className = 'btn-download-premium';
+            freeBtn.innerHTML = '<i class="bi bi-download"></i> DESCARGA GRATIS';
             freeBtn.onclick = () => {
                 if (window.openDownloadGateModal) {
                     window.openDownloadGateModal(product.audio_url, product.producer?.nickname, product.id);
@@ -1143,6 +1151,93 @@ window.closeLicenseModal = function () {
         setTimeout(() => backdrop.style.display = 'none', 300);
     }
 }
+
+window.openLicenseSelectionModal = function (licenses) {
+    let backdrop = document.getElementById('lic-selection-backdrop');
+    if (!backdrop) {
+        backdrop = document.createElement('div');
+        backdrop.id = 'lic-selection-backdrop';
+        backdrop.className = 'share-modal-backdrop';
+        backdrop.onclick = (e) => { if (e.target === backdrop) closeLicenseSelectionModal(); };
+        document.body.appendChild(backdrop);
+    }
+
+    const enabledLicenses = licenses.filter(l => l.enabled);
+    const selectedId = localStorage.getItem(`offszn_lic_select_${window.currentProductData?.id}`) || enabledLicenses[0]?.id;
+
+    backdrop.innerHTML = `
+        <div class="share-modal-content lic-modal" style="max-width: 500px;">
+            <div class="lic-modal-header">
+                <h3 style="font-weight: 800;">Elegir Licencia</h3>
+                <button onclick="closeLicenseSelectionModal()" class="lic-modal-close"><i class="bi bi-x-lg"></i></button>
+            </div>
+            
+            <div class="lic-modal-body">
+                <div class="license-selection-list">
+                    ${enabledLicenses.map(l => {
+        const isSelected = l.id === selectedId;
+        return `
+                            <div class="license-list-item ${isSelected ? 'selected' : ''}" onclick="selectModalLicense('${l.id}', ${l.price})">
+                                <div class="license-item-info">
+                                    <span class="license-item-name">${l.name}</span>
+                                    <span class="license-item-files">${getFilesPreview(l.files, l.name)}</span>
+                                </div>
+                                <div class="license-item-price">$${parseFloat(l.price).toFixed(2)}</div>
+                            </div>
+                        `;
+    }).join('')}
+                </div>
+
+                <div class="modal-footer-actions">
+                    <div class="total-row">
+                        <span class="total-label">Subtotal</span>
+                        <span id="modal-subtotal" class="total-amount">$${parseFloat(enabledLicenses.find(l => l.id === selectedId)?.price || 0).toFixed(2)}</span>
+                    </div>
+                    
+                    <button class="btn-purchase-licenses" id="btn-modal-add-cart" onclick="confirmModalPurchase()">
+                        AÑADIR AL CARRITO
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+
+    backdrop.style.display = 'flex';
+    setTimeout(() => backdrop.classList.add('active'), 10);
+}
+
+window.closeLicenseSelectionModal = function () {
+    const backdrop = document.getElementById('lic-selection-backdrop');
+    if (backdrop) {
+        backdrop.classList.remove('active');
+        setTimeout(() => backdrop.style.display = 'none', 300);
+    }
+}
+
+window.selectModalLicense = function (id, price) {
+    document.querySelectorAll('.license-list-item').forEach(el => el.classList.remove('selected'));
+    const target = event.currentTarget;
+    if (target) target.classList.add('selected');
+
+    const subtotal = document.getElementById('modal-subtotal');
+    if (subtotal) subtotal.innerText = `$${parseFloat(price).toFixed(2)}`;
+
+    // Persist
+    if (window.currentProductData) {
+        localStorage.setItem(`offszn_lic_select_${window.currentProductData.id}`, id);
+    }
+}
+
+window.confirmModalPurchase = function () {
+    const selected = document.querySelector('.license-list-item.selected');
+    if (selected && window.currentProductData) {
+        // Find ID from the html or re-read from localStorage
+        const id = localStorage.getItem(`offszn_lic_select_${window.currentProductData.id}`);
+        addToCart(window.currentProductData.id, id);
+        closeLicenseSelectionModal();
+    }
+}
+
 
 window.selectLicenseAndClose = function (id) {
     if (window.currentProductData) {

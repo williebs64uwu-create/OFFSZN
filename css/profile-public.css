@@ -1128,18 +1128,70 @@ input:checked+.slider:before {
 }
 
 @media (max-width: 768px) {
-    .trending-grid {
-        grid-template-columns: repeat(2, 1fr);
-        /* 2 columns on mobile */
-        gap: 16px;
+    .section-header h2 {
+        font-size: 1.2rem !important;
     }
-}
 
-@media (max-width: 500px) {
     .trending-grid {
-        grid-template-columns: 1fr;
-        /* 1 column on small mobile */
-        gap: 12px;
+        display: flex !important;
+        overflow-x: auto !important;
+        scroll-snap-type: x mandatory !important;
+        gap: 12px !important;
+        padding-bottom: 12px !important;
+        /* Space for scrollbar if needed */
+        scrollbar-width: none;
+        /* Hide scrollbar Firefox */
+        -ms-overflow-style: none;
+        /* Hide scrollbar IE/Edge */
+        margin-right: -20px;
+        /* Bleed to edge */
+        padding-right: 20px;
+    }
+
+    .trending-grid::-webkit-scrollbar {
+        display: none;
+        /* Hide scrollbar Chrome/Safari */
+    }
+
+    .trending-card,
+    .skeleton-card {
+        width: 145px !important;
+        /* Smaller size as requested */
+        flex-shrink: 0 !important;
+        scroll-snap-align: start !important;
+        gap: 8px !important;
+    }
+
+    .skeleton-card-title {
+        height: 14px !important;
+    }
+
+    .skeleton-card-subtitle {
+        height: 10px !important;
+    }
+
+    .t-card-cover {
+        border-radius: 6px !important;
+    }
+
+    /* Small center play button always visible on mobile */
+    .t-play-btn {
+        opacity: 0.9 !important;
+        transform: translate(-50%, -50%) scale(0.7) !important;
+        width: 40px !important;
+        height: 40px !important;
+        background: rgba(0, 0, 0, 0.5) !important;
+        backdrop-filter: blur(4px) !important;
+        color: #fff !important;
+        border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    }
+
+    .t-card-info h4 {
+        font-size: 0.85rem !important;
+    }
+
+    .t-meta-row {
+        font-size: 0.7rem !important;
     }
 }
 
@@ -1408,6 +1460,14 @@ input:checked+.slider:before {
     color: #000;
     border-color: #fff;
     transform: scale(1.1);
+}
+
+.mobile-only-play {
+    display: none !important;
+}
+
+.mobile-only-filter {
+    display: none !important;
 }
 
 /* Mobile List Adjustments */
@@ -2161,35 +2221,280 @@ input:checked+.slider:before {
 
 /* Responsive */
 @media (max-width: 768px) {
+    .profile-header {
+        padding: 25px 16px 24px;
+        min-height: 240px;
+    }
+
     .profile-header-content {
         flex-direction: column;
         align-items: center;
         text-align: center;
+        gap: 12px;
     }
 
     .profile-avatar-img {
-        width: 160px;
-        height: 160px;
-        margin-bottom: 20px;
+        width: 110px;
+        height: 110px;
+        margin-bottom: 0;
     }
 
     .profile-details {
         align-items: center;
+        gap: 8px;
     }
 
     .profile-details h1 {
-        font-size: 2.2rem;
+        font-size: 1.5rem;
     }
 
     .profile-bio {
-        font-size: 0.9rem;
+        display: none;
+    }
+
+    .profile-actions {
+        position: static;
+        transform: none;
+        width: 100%;
+        justify-content: center;
+        margin-top: 4px;
+    }
+
+    .profile-stats {
+        gap: 12px !important;
+    }
+
+    .profile-stats .stat b {
+        font-size: 0.8rem !important;
+    }
+
+    .profile-stats .stat b div {
+        font-size: 0.6rem !important;
+    }
+
+    .social-links {
+        gap: 10px !important;
+    }
+
+    .social-links a,
+    .social-links div {
+        font-size: 0.85rem !important;
+        width: 16px !important;
+        height: 16px !important;
+    }
+
+    /* === NEW TRACKLIST REDESIGN (MOBILE V2) === */
+    .pro-toolbar-container {
+        padding: 0 16px;
+        margin-bottom: 12px;
+        justify-content: space-between !important;
+        gap: 0;
+    }
+
+    .toolbar-section.left {
+        gap: 0 !important;
+    }
+
+    /* Search Input Expansion Logic (MOBILE) */
+    .pro-search {
+        width: 40px !important;
+        background: rgba(255, 255, 255, 0.05) !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        padding: 0 10px !important;
+        justify-content: center !important;
+        transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), background 0.2s !important;
+        overflow: hidden;
+        cursor: pointer;
+        border-radius: 8px !important;
+        /* Rounded square initially */
+    }
+
+    .pro-search.active {
+        width: 100% !important;
+        flex: 1;
+        background: #111 !important;
+        border-color: #333 !important;
+        border-radius: 20px !important;
+        /* Pill when active as in Image 3 */
+        margin-right: 12px;
+        justify-content: flex-start !important;
+        padding: 0 15px !important;
+    }
+
+    .pro-search input {
+        display: none;
+        width: 0;
+        opacity: 0;
+        transition: opacity 0.2s;
+    }
+
+    .pro-search.active input {
+        display: block;
+        width: 100%;
+        opacity: 1;
+    }
+
+    .pro-search i {
+        color: #888 !important;
+        font-size: 1.1rem !important;
+        flex-shrink: 0;
+    }
+
+    .pro-search.active i {
+        color: #fff !important;
+        margin-right: 10px;
+    }
+
+    /* Hide divider and text filters on mobile */
+    .divider-v,
+    .filters-row {
+        display: none !important;
+    }
+
+    /* New Filter Icon on Right */
+    .toolbar-section.right {
+        display: flex;
+        align-items: center;
+    }
+
+    /* We use the existing Search icon logic but repositioned. 
+       Actually, let's make the "POPULAR" button look like a Filter icon on mobile. */
+    .toolbar-section.left .dropdown-wrapper {
+        display: none !important;
+        /* Hide Popular on left */
+    }
+
+    /* Final Toolar: Search Icon [Left] ... Filter icon [Right] */
+    .pro-toolbar-container::after {
+        display: none !important;
+    }
+
+    .toolbar-section.left {
+        display: none !important;
+        /* Hide Popular dropdown and text filters */
+    }
+
+    .toolbar-section.right {
+        order: -1;
+        /* Move Search section to the left */
+        width: 100%;
+        display: flex !important;
+        justify-content: space-between !important;
+        flex-direction: row !important;
+    }
+
+    .mobile-only-filter {
+        display: flex !important;
+        background: transparent !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        color: #fff !important;
+        width: 40px !important;
+        height: 40px !important;
+        border-radius: 8px !important;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem !important;
+        padding: 0 !important;
+    }
+
+    .list-row {
+        grid-template-columns: 50px 1fr auto !important;
+        grid-template-areas: "cover info actions";
+        gap: 12px !important;
+        padding: 12px 16px !important;
+        align-items: center;
+    }
+
+    .list-cover {
+        grid-area: cover;
+        display: block !important;
+        width: 50px !important;
+        height: 50px !important;
+    }
+
+    .list-cover img {
+        border-radius: 4px;
+    }
+
+    .list-col-info {
+        grid-area: info;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        min-width: 0;
+        text-align: left;
+    }
+
+    .list-track-title {
+        font-size: 0.9rem !important;
+        font-weight: 600;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .list-author-sub {
+        font-size: 0.75rem !important;
+        color: #888 !important;
+        margin-top: 0 !important;
+    }
+
+    /* Tags/Badges inside Info column on mobile */
+    .list-col-tags {
+        display: flex !important;
+        margin-top: 2px;
+        gap: 4px;
+    }
+
+    .badge-outline {
+        font-size: 0.6rem !important;
+        padding: 1px 4px !important;
+        background: rgba(255, 255, 255, 0.05) !important;
+    }
+
+    /* Hide price and waveform on mobile list */
+    .list-col-price,
+    .list-waveform-container {
+        display: none !important;
+    }
+
+    .list-col-player {
+        display: none !important;
+        /* We'll move play button to actions via JS or float */
+    }
+
+    .list-col-actions {
+        grid-area: actions;
+        display: flex !important;
+        gap: 6px !important;
+        width: auto !important;
+        justify-content: flex-end;
+    }
+
+    .btn-list-icon {
+        width: 32px !important;
+        height: 32px !important;
+        font-size: 0.9rem !important;
+        background: rgba(255, 255, 255, 0.08) !important;
+        border-radius: 50%;
+        display: flex !important;
+        align-items: center;
+        justify-content: center;
+        border: none !important;
+        color: #fff !important;
+    }
+
+    /* Manual placement of Play button via styling if JS change is too complex 
+       Actually, I'll update JS for structure but let's make CSS robust. */
+    .mobile-only-play {
+        display: flex !important;
+        background: #fff !important;
+        color: #000 !important;
     }
 }
 
 /* === ARTIST HOVER CARD === */
 .artist-hover-trigger {
-    cursor: pointer;
-    position: relative;
     transition: color 0.2s;
     border-bottom: 1px dotted rgba(255, 255, 255, 0.3);
 }
@@ -2383,4 +2688,285 @@ input:checked+.slider:before {
 .bio-mention:hover {
     text-decoration: underline;
     filter: brightness(1.2);
+}
+
+/* ==================== FILTERS MODAL (Spanish & B&W) ==================== */
+.filters-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #000;
+    z-index: 30000;
+    display: none;
+    /* Hidden by default */
+    flex-direction: column;
+    color: #fff;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+.filters-modal.active {
+    display: flex;
+}
+
+.fm-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 24px;
+    background: #000;
+    border-bottom: 2px solid #111;
+}
+
+.fm-header h2 {
+    font-size: 1.8rem;
+    font-weight: 800;
+    margin: 0;
+    letter-spacing: -1px;
+    text-transform: uppercase;
+}
+
+.btn-close-modal {
+    background: #111;
+    border: none;
+    color: #fff;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    cursor: pointer;
+}
+
+.fm-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px;
+    background: #000;
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+}
+
+.fm-section h3 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 20px;
+    color: #fff;
+    letter-spacing: -0.2px;
+}
+
+/* Radio/Checkbox Rows */
+.fm-options-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.fm-option {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    cursor: pointer;
+    font-size: 1rem;
+    color: #aaa;
+    font-weight: 500;
+}
+
+.fm-option input[type="radio"],
+.fm-option input[type="checkbox"] {
+    width: 24px;
+    height: 24px;
+    accent-color: #fff;
+    background: #000;
+    border: 2px solid #333;
+    appearance: none;
+    border-radius: 50%;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.2s;
+    flex-shrink: 0;
+}
+
+.fm-option input[type="checkbox"] {
+    border-radius: 4px;
+}
+
+.fm-option input:checked {
+    background: #fff;
+    border-color: #fff;
+}
+
+.fm-option input:checked::after {
+    content: "\F26E";
+    /* Bootstrap check icon code */
+    font-family: "bootstrap-icons";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #000;
+    font-size: 0.9rem;
+    font-weight: 900;
+}
+
+.fm-option span {
+    transition: color 0.2s;
+}
+
+.fm-option:hover span,
+.fm-option input:checked+span {
+    color: #fff;
+}
+
+/* Tempo Slider (B&W Style) */
+.tempo-range-container {
+    padding: 10px 0;
+}
+
+.tempo-values {
+    display: flex;
+    justify-content: flex-start;
+    gap: 40px;
+    margin-bottom: 24px;
+    font-weight: 800;
+    font-size: 2rem;
+    letter-spacing: -0.5px;
+}
+
+.tempo-slider-track {
+    height: 6px;
+    background: #111;
+    border-radius: 3px;
+    position: relative;
+    margin: 32px 0;
+}
+
+.tempo-slider-fill {
+    position: absolute;
+    height: 100%;
+    background: #fff;
+    border-radius: 3px;
+}
+
+.tempo-thumb {
+    width: 34px;
+    height: 34px;
+    background: #fff;
+    border-radius: 50%;
+    position: absolute;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    cursor: pointer;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+}
+
+.tempo-thumb::after {
+    content: "";
+    width: 2px;
+    height: 12px;
+    background: #000;
+    border-radius: 1px;
+}
+
+/* Key Selector Grid */
+.key-selector-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 12px;
+}
+
+.key-btn {
+    background: #000;
+    border: 2px solid #222;
+    color: #fff;
+    height: 58px;
+    border-radius: 14px;
+    font-size: 1rem;
+    font-weight: 800;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.key-btn.active {
+    background: #fff !important;
+    color: #000 !important;
+    border-color: #fff !important;
+}
+
+/* Footer UI */
+.fm-footer {
+    padding: 24px;
+    display: flex;
+    gap: 16px;
+    background: #000;
+    border-top: 2px solid #111;
+}
+
+.fm-btn-cancel {
+    background: #111;
+    color: #fff;
+    border: none;
+    height: 64px;
+    flex: 1;
+    border-radius: 100px;
+    font-weight: 800;
+    font-size: 1.1rem;
+    cursor: pointer;
+    text-transform: uppercase;
+}
+
+.fm-btn-apply {
+    background: #fff;
+    color: #000;
+    border: none;
+    height: 64px;
+    flex: 1;
+    border-radius: 100px;
+    font-weight: 800;
+    font-size: 1.1rem;
+    cursor: pointer;
+    text-transform: uppercase;
+}
+
+/* MOBILE ROW FIX: Ensure actions are visible */
+@media (max-width: 768px) {
+    .list-col-actions {
+        display: flex !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+        pointer-events: auto !important;
+        width: auto !important;
+        margin-left: auto;
+    }
+
+    .btn-list-icon {
+        opacity: 1 !important;
+        visibility: visible !important;
+        display: flex !important;
+        /* Ensure it's not hidden */
+    }
+
+    .mobile-only-play {
+        display: flex !important;
+        color: #000 !important;
+        /* Black icon on white disk */
+    }
+
+    /* Color handled by JS logic for better toggle visibility */
+
+    .list-row:hover .list-col-actions,
+    .list-row:active .list-col-actions {
+        opacity: 1 !important;
+    }
 }

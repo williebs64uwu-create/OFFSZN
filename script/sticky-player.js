@@ -10,6 +10,7 @@ window.StickyPlayer = (function () {
     let isPlaying = false;
     let volume = 0.8;
     let els = {};
+    let globalAudioEl = null; // Track global audio to prevent overlaps
 
     // PLAYLIST MANAGEMENT
     let playlist = []; // Array of track objects
@@ -20,6 +21,10 @@ window.StickyPlayer = (function () {
     let isNavigatingHistory = false;
     let playTimeout = null;
     let lastSyncTime = 0;
+
+    // Playback Tracking (Global to survive ws instance reuse)
+    let actualPlayTime = 0;
+    let lastTime = 0;
 
     // PERSISTENCE KEYS (kept for potential future use or session handling, but disabled on load)
     const STORAGE_KEY_STATE = 'sticky_player_state';
@@ -252,12 +257,14 @@ window.StickyPlayer = (function () {
         if (!container) init();
         container.classList.add('visible');
 
-        // Add skeletons to UI
-        if (els.cover) els.cover.parentElement.classList.add('skeleton');
-        if (els.title) els.title.classList.add('skeleton-text');
-        if (els.artist) els.artist.classList.add('skeleton-text');
+        // Update UI Text instantly without Skeletons
+        currentTrack = trackData;
+
+        // Remove skeleton classes completely since user requested instant visual updates
+        if (els.title) els.title.classList.remove('skeleton-text');
+        if (els.artist) els.artist.classList.remove('skeleton-text');
         const wfContainer = document.getElementById('sp-waveform');
-        if (wfContainer) wfContainer.classList.add('skeleton-waveform');
+        if (wfContainer) wfContainer.classList.remove('skeleton-waveform');
 
         currentTrack = trackData;
         // History Logic: Push CURRENT track to history before switching
@@ -275,8 +282,13 @@ window.StickyPlayer = (function () {
             });
         }
 
-        // COUNT PLAY (Debounced 5s - MOVED to ws.on('play'))
-        if (playTimeout) clearTimeout(playTimeout);
+        // Remove old playTimeout (legacy cleanup)
+        if (typeof playTimeout !== 'undefined' && playTimeout) clearTimeout(playTimeout);
+
+        // Reset global playback tracking for the new track
+        actualPlayTime = 0;
+        lastTime = 0;
+        if (currentTrack) currentTrack.hasBeenCounted = false;
 
         // Update Internal State
         currentTrack = trackData;
@@ -351,174 +363,147 @@ window.StickyPlayer = (function () {
         // Ensure we have audioUrl
         if (!audioUrl) return;
 
-        // 🔥 FIX: AUTHORIZE R2 URL (Start promise but don't blocking if image logic can handle UI)
-        const finalAudioUrl = await window.getAuthorizedUrl(audioUrl);
-
-        // 🔥 FIX: ALWAYS DESTROY OLD INSTANCE (Clean Slate)
-        // This force-recreates the WaveSurfer instance every time a track loads,
-        // preventing state corruption and ensuring fresh rendering (matching Profile Page behavior).
-        if (ws) {
-            try {
-                ws.destroy();
-                ws = null;
-            } catch (e) { console.warn("WS Destroy Error", e); }
+        // 🔥 ZERO LATENCY FIX & SYNC GESTURE FIX: 
+        // If it's a public Cloudflare URL, DO NOT AWAIT. Awaiting breaks the mobile user gesture token 
+        // in Safari/Chrome which causes the browser to pause audio until network idle (the 10 second delay).
+        let finalAudioUrl = audioUrl;
+        if (audioUrl.includes('pub-') && audioUrl.includes('.r2.dev')) {
+            finalAudioUrl = audioUrl; // Synchronous, keeping gesture alive
+        } else {
+            finalAudioUrl = await window.getAuthorizedUrl(audioUrl);
         }
 
-        // Ensure container is clean
-        if (wfContainer) {
-            wfContainer.innerHTML = '';
-            // Add skeleton back while loading
-            wfContainer.classList.add('skeleton-waveform');
-        }
+        // --- INSTANT WAVESURFER & AUDIO SWAP ---
+        if (!ws) {
+            // First time setup
+            // Append audio to DOM for higher Priority
+            globalAudioEl = document.createElement('audio');
+            globalAudioEl.crossOrigin = "anonymous";
+            globalAudioEl.style.display = "none";
+            document.body.appendChild(globalAudioEl);
 
-        // Create FRESH instance
-        ws = WaveSurfer.create({
-            container: '#sp-waveform',
-            waveColor: '#555',
-            progressColor: '#8b5cf6',
-            cursorColor: '#fff',
-            cursorWidth: 2,
-            barWidth: 2,
-            barGap: 2,
-            barRadius: 2,
-            height: 40,
-            normalize: true,
-            interact: true,
-            fillParent: true,
-            autoCenter: false,
-            minPxPerSec: 0,
-            hideScrollbar: true,
-            partialRender: true,
-            url: finalAudioUrl // Load URL directly in config like Profile
-        });
+            ws = WaveSurfer.create({
+                container: '#sp-waveform',
+                media: globalAudioEl,
+                waveColor: '#555',
+                progressColor: '#8b5cf6',
+                cursorColor: '#fff',
+                cursorWidth: 2,
+                barWidth: 2,
+                barGap: 2,
+                barRadius: 2,
+                height: 40,
+                normalize: true,
+                interact: true,
+                fillParent: true,
+                autoCenter: false,
+                minPxPerSec: 0,
+                hideScrollbar: true,
+                partialRender: true,
+                backend: 'MediaElement'
+            });
+            const currentWs = ws;
 
-        // Event Handlers for FRESH instance
-        ws.on('ready', () => {
-            if (wfContainer) wfContainer.classList.remove('skeleton-waveform');
-            if (els.totalTime) els.totalTime.innerText = formatTime(ws.getDuration());
+            // Event Handlers for FRESH instance
+            currentWs.on('ready', () => {
+                if (ws !== currentWs) return;
+                if (wfContainer) wfContainer.classList.remove('skeleton-waveform');
+                if (els.totalTime) els.totalTime.innerText = formatTime(currentWs.getDuration());
 
-            // Simple render check after a moment (no brute force loop)
-            setTimeout(() => {
-                if (ws && ws.renderer) {
-                    try { ws.renderer.reRender(); } catch (e) { }
-                }
-            }, 100);
+                setTimeout(() => {
+                    if (currentWs && currentWs.renderer) {
+                        try { currentWs.renderer.reRender(); } catch (e) { }
+                    }
+                }, 100);
 
-            if (autoPlay) {
-                ws.play();
-                isPlaying = true;
-                updatePlayBtn();
-            } else if (startTime > 0) {
-                const duration = ws.getDuration();
-                if (duration > 0) ws.seekTo(startTime / duration);
-            }
-        });
-
-        // 🔥 FIX: WAVEFORM DISAPPEARANCE BUG (Force Redraw Loop)
-        // V7 canvas sometimes clears itself or fails to scale if container is flex-resized.
-        // We use a brute-force approach to ensure it stays visible.
-        ws.on('ready', () => {
-            // Basic state
-            if (wfContainer) wfContainer.classList.remove('skeleton-waveform');
-            if (els.totalTime) els.totalTime.innerText = formatTime(ws.getDuration());
-
-            // Force redraw loop (0ms, 100ms, 300ms, 500ms, 1s)
-            // This ensures that if the container transitions from height 0 or display:none, 
-            // the canvas will eventually render correctly.
-            const forceRender = () => {
-                if (ws && ws.renderer) {
-                    try {
-                        // Trigger internal re-render or window resize event
-                        window.dispatchEvent(new Event('resize'));
-                    } catch (e) { }
-                }
-            };
-
-            [50, 150, 300, 500, 1000].forEach(ms => setTimeout(forceRender, ms));
-        });
-
-        // Robust Resize Observer
-        // This handles cases where the browser window doesn't change, but the layout does (e.g. keyboard open, bottom sheet)
-        if (window.ResizeObserver && wfContainer) {
-            const resizeObserver = new ResizeObserver(() => {
-                if (ws) {
-                    // Debounce resize trigger
-                    if (window._wsResizeTimer) clearTimeout(window._wsResizeTimer);
-                    window._wsResizeTimer = setTimeout(() => {
-                        try { window.dispatchEvent(new Event('resize')); } catch (e) { }
-                    }, 50);
+                if (startTime > 0) {
+                    const duration = currentWs.getDuration();
+                    if (duration > 0) currentWs.seekTo(startTime / duration);
                 }
             });
-            resizeObserver.observe(wfContainer);
-        }
 
-        // High frequency sync logic (from old play)
-        ws.on('timeupdate', () => {
-            const time = ws.getCurrentTime();
-            els.currTime.innerText = formatTime(time);
+            // 🔥 FIX: WAVEFORM DISAPPEARANCE BUG (Force Redraw Loop)
+            currentWs.on('ready', () => {
+                if (ws !== currentWs) return;
+                if (wfContainer) wfContainer.classList.remove('skeleton-waveform');
+                if (els.totalTime) els.totalTime.innerText = formatTime(currentWs.getDuration());
 
-            const now = Date.now();
-            if (now - lastSyncTime > 50) {
-                syncListWaveform(currentTrack, time);
-                lastSyncTime = now;
+                const forceRender = () => {
+                    if (currentWs && currentWs.renderer) {
+                        try { window.dispatchEvent(new Event('resize')); } catch (e) { }
+                    }
+                };
+
+                [50, 150, 300, 500, 1000].forEach(ms => setTimeout(forceRender, ms));
+            });
+
+            // Robust Resize Observer
+            if (window.ResizeObserver && wfContainer) {
+                const resizeObserver = new ResizeObserver(() => {
+                    if (ws === currentWs) {
+                        if (window._wsResizeTimer) clearTimeout(window._wsResizeTimer);
+                        window._wsResizeTimer = setTimeout(() => {
+                            try { window.dispatchEvent(new Event('resize')); } catch (e) { }
+                        }, 50);
+                    }
+                });
+                resizeObserver.observe(wfContainer);
             }
-        });
 
-        ws.on('interaction', () => {
-            syncListWaveform(currentTrack, ws.getCurrentTime());
-        });
+            // High frequency sync logic
+            currentWs.on('timeupdate', () => {
+                if (ws !== currentWs) return;
+                const time = currentWs.getCurrentTime();
+                els.currTime.innerText = formatTime(time);
 
-        ws.on('play', () => {
-            isPlaying = true;
-            updatePlayBtn();
-            updateListButton(currentTrack, true);
+                const now = Date.now();
+                if (now - lastSyncTime > 50) {
+                    syncListWaveform(currentTrack, time);
+                    lastSyncTime = now;
+                }
 
-            // ACCURATE PLAY STATS: Start 5s timer ONLY when audio actually starts
-            if (currentTrack && !currentTrack.hasBeenCounted) {
-                if (playTimeout) clearTimeout(playTimeout);
-                playTimeout = setTimeout(() => {
-                    if (isPlaying && currentTrack) {
+                if (currentTrack && !currentTrack.hasBeenCounted && isPlaying) {
+                    if (lastTime > 0 && time > lastTime && (time - lastTime) < 1.0) {
+                        actualPlayTime += (time - lastTime);
+                    }
+                    lastTime = time;
+
+                    if (actualPlayTime >= 5.0) {
                         trackPlay(currentTrack.id);
                         currentTrack.hasBeenCounted = true;
                         console.log(`[StickyPlayer] Play counted for ${currentTrack.name}`);
                     }
-                }, 5000); // 5 seconds of active playback
+                } else {
+                    lastTime = time;
+                }
+            });
+
+            currentWs.on('seeking', () => {
+                if (ws !== currentWs) return;
+                if (globalAudioEl) {
+                    const time = currentWs.getCurrentTime();
+                    if (Math.abs(globalAudioEl.currentTime - time) > 0.1) {
+                        globalAudioEl.currentTime = time;
+                    }
+                }
+                lastTime = currentWs.getCurrentTime();
+            });
+
+            // End of ws bindings
+        } else {
+            // Swapping existing instance
+            if (globalAudioEl) {
+                globalAudioEl.pause();
             }
-        });
+            // Visually keep the old waveform until load finishes
+        }
 
-        ws.on('pause', () => {
-            isPlaying = false;
-            updatePlayBtn();
-            updateListButton(currentTrack, false);
-            if (playTimeout) clearTimeout(playTimeout); // Stop counting if paused
-        });
-
-        ws.on('finish', () => {
-            isPlaying = false;
-            updatePlayBtn();
-            updateListButton(currentTrack, false);
-            if (playTimeout) clearTimeout(playTimeout);
-            playNext();
-        });
-
-        ws.on('error', (e) => {
-            console.error('[StickyPlayer] WaveSurfer error:', e);
-            if (wfContainer) wfContainer.classList.remove('skeleton-waveform');
-            console.warn("StickyPlayer: Playback failed (MediaError)", e);
-            isPlaying = false;
-            updatePlayBtn();
-            if (playTimeout) clearTimeout(playTimeout);
-            // Show toast if window.toast exists
-            if (window.toast) window.toast("Error: No se pudo reproducir este archivo.", "error");
-        });
-
+        // SWAP TRACK DATA INSTANTLY ON EXISTING INSTANCE
         ws.setVolume(volume);
-    }
 
-    function loadWaveSurferAudio(url, autoPlay, startTime) {
-        if (!ws) return;
-        // v7: Just load directly, it unbinds previous internally
-        ws.load(url);
+        // This natively commands the underlying `media` element to swap sources
+        // and keeps the waveform visually intact until the new one finishes parsing
+        ws.load(finalAudioUrl);
 
         ws.once('ready', () => {
             if (startTime > 0) {
@@ -529,17 +514,20 @@ window.StickyPlayer = (function () {
             }
 
             if (autoPlay) {
-                ws.play().catch(e => console.warn("Auto-play blocked", e));
+                globalAudioEl.play().catch(e => console.warn("Auto-play blocked", e));
                 isPlaying = true;
             } else {
-                ws.pause();
+                globalAudioEl.pause();
                 isPlaying = false;
             }
             updatePlayBtn();
             updateListButton(currentTrack, isPlaying);
             syncListWaveform(currentTrack, ws.getCurrentTime());
-            els.totalTime.innerText = formatTime(ws.getDuration());
+            if (els.totalTime) els.totalTime.innerText = formatTime(ws.getDuration());
         });
+
+        // --- PRELOAD NEXT TRACK (Beatstars Style Optimization) ---
+        preloadNextTrack();
     }
 
     // Standard Play (calls loadTrack)
@@ -586,9 +574,16 @@ window.StickyPlayer = (function () {
     }
 
     function togglePlay() {
-        if (!ws) return;
-        ws.playPause();
-        isPlaying = ws.isPlaying();
+        if (!ws || !globalAudioEl) return;
+
+        if (isPlaying) {
+            globalAudioEl.pause();
+            isPlaying = false;
+        } else {
+            globalAudioEl.play();
+            isPlaying = true;
+        }
+
         updatePlayBtn();
         updateListButton(currentTrack, isPlaying);
 
@@ -987,6 +982,57 @@ window.StickyPlayer = (function () {
         } catch (e) {
             console.error("[StickyPlayer] Error fetching licenses:", e);
             return [];
+        }
+    }
+
+    // PRELOAD NEXT TRACK LOGIC (Zero Latency Optimization)
+    function preloadNextTrack() {
+        if (!playlist || playlist.length === 0 || currentIndex === -1) return;
+
+        let nextIndex = currentIndex + 1;
+        if (nextIndex >= playlist.length) {
+            nextIndex = 0; // wrap around
+        }
+
+        const nextTrack = playlist[nextIndex];
+        if (!nextTrack) return;
+
+        const audioUrl = nextTrack.mp3_url || nextTrack.audio_url || nextTrack.download_url_mp3 ||
+            nextTrack.preview_url || nextTrack.demo_file || nextTrack.tagged_file ||
+            nextTrack.file_url || nextTrack.url_file || '';
+
+        if (!audioUrl) return;
+
+        // If it's a pub- url, we can preload directly without auth delays
+        if (audioUrl.includes('pub-') && audioUrl.includes('.r2.dev')) {
+            // BEATSTARS STRATEGY: 
+            // 1. Link preload for pure network byte caching
+            const linkId = 'preload-next-track-link';
+            let link = document.getElementById(linkId);
+            if (!link) {
+                link = document.createElement('link');
+                link.id = linkId;
+                link.rel = 'preload';
+                link.as = 'fetch';
+                link.crossOrigin = 'anonymous';
+                document.head.appendChild(link);
+            }
+            link.href = audioUrl;
+
+            // 2. Headless DOM Audio Element for browser decoding cache
+            const audioId = 'preload-next-track-audio';
+            let preAudio = document.getElementById(audioId);
+            if (!preAudio) {
+                preAudio = document.createElement('audio');
+                preAudio.id = audioId;
+                preAudio.preload = 'auto'; // Force browser to buffer
+                preAudio.style.display = 'none';
+                document.body.appendChild(preAudio);
+            }
+            // Only set src if changed to avoid breaking an active fetch
+            if (preAudio.src !== audioUrl) {
+                preAudio.src = audioUrl;
+            }
         }
     }
 
