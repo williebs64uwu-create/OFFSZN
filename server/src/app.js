@@ -23,7 +23,8 @@ import paypalRoutes from './infrastructure/http/routes/paypal.routes.js';
 import r2Routes from './infrastructure/http/routes/r2.routes.js';
 
 import cloudinaryRoutes from './infrastructure/http/routes/cloudinary.routes.js';
-import { submitNegotiation, respondNegotiation } from './infrastructure/http/controllers/NegotiationController.js';
+import { submitNegotiation, respondNegotiation, generatePurchaseToken, validatePurchaseToken, reportIssue } from './infrastructure/http/controllers/NegotiationController.js';
+import { authenticateTokenMiddleware } from './infrastructure/middlewares/authenticateTokenMiddleware.js';
 
 
 
@@ -141,6 +142,9 @@ app.use('/api/reels', reelsRoutes); // Isolated and High Priority
 app.post('/api/orders/mercadopago-webhook', handleMercadoPagoWebhook);
 app.post('/api/negotiate', submitNegotiation);
 app.post('/api/negotiate/respond', respondNegotiation);
+app.post('/api/negotiate/purchase-token', authenticateTokenMiddleware, generatePurchaseToken);
+app.get('/api/negotiate/validate-token', validatePurchaseToken);
+app.post('/api/negotiate/report', authenticateTokenMiddleware, reportIssue);
 
 app.use('/api/auth', authRoutes);
 app.use('/api', publicRoutes);
@@ -236,7 +240,65 @@ app.get([
     }
 });
 
-// --- 3.5 PROFILE SHORTCUT ROUTE (/:username) ---
+// --- 3.5 BIOLINK SHORTCUT ROUTE (/b/:username) ---
+// Supports both /b/@username and /b/username
+app.get([
+    '/b/@:username',
+    '/b/:username'
+], async (req, res, next) => {
+    const { username } = req.params;
+
+    // Serve Bio Template with OG Tags injected
+    const bioPagePath = path.join(rootPath, 'bio-demo.html');
+    if (!fs.existsSync(bioPagePath)) return next();
+
+    try {
+        // Fetch user basic data for OG Tags
+        const { supabase } = await import('./infrastructure/database/connection.js');
+        const { data: user } = await supabase
+            .from('users')
+            .select('nickname, role, avatar_url, bio')
+            .eq('nickname', username)
+            .single();
+
+        let html = fs.readFileSync(bioPagePath, 'utf8');
+
+        // Inject OG Tags if user found
+        if (user) {
+            const title = `${user.nickname} | ${user.role || 'Productor'} - OFFSZN`;
+            const description = user.bio || `Escucha los últimos beats y recursos de ${user.nickname} en OFFSZN.`;
+            const image = user.avatar_url || 'https://offszn.com/images/LOGO%20OFFSZN.webp';
+            const url = `https://offszn.com/b/${user.nickname}`;
+
+            const ogTags = `
+    <!-- Dynamic Open Graph Tags -->
+    <meta property="og:title" content="${title}">
+    <meta property="og:description" content="${description}">
+    <meta property="og:image" content="${image}">
+    <meta property="og:url" content="${url}">
+    <meta property="og:type" content="profile">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="${title}">
+    <meta name="twitter:description" content="${description}">
+    <meta name="twitter:image" content="${image}">
+            `;
+
+            // Insert tags right after <head>
+            html = html.replace('<head>', `<head>\n${ogTags}`);
+            // Also replace the standard title
+            html = html.replace('<title>Link in Bio - OFFSZN</title>', `<title>${title}</title>`);
+        }
+
+        res.send(html);
+
+    } catch (err) {
+        console.error("Error serving Biolink:", err);
+        // Fallback to static version
+        res.sendFile(bioPagePath);
+    }
+});
+
+// --- 3.6 PROFILE SHORTCUT ROUTE (/:username) ---
 // Supports both /@username and /username
 app.get(['/@:username', '/:username'], (req, res, next) => {
     const { username } = req.params;

@@ -433,21 +433,84 @@
         }
 
         .input-group input:focus {
-            border-color: var(--accent-purple);
+            border-color: #fff;
             outline: none;
-            box-shadow: 0 0 10px var(--accent-glow);
         }
 
-        .input-group .prefix {
+        /* Premium Floating Label Style */
+        .floating-group {
+            position: relative;
+            margin-bottom: 24px;
+            width: 100%;
+        }
+
+        .floating-group input,
+        .floating-group textarea {
+            width: 100%;
+            background: transparent;
+            border: 1px solid #222;
+            padding: 18px 16px 14px 16px;
+            border-radius: 12px;
+            color: #fff;
+            font-size: 15px;
+            font-family: var(--font-ui);
+            transition: 0.2s;
+            display: block;
+        }
+
+        .floating-group label {
             position: absolute;
-            left: 16px;
-            top: 40px;
-            color: #555;
-            font-weight: 700;
+            left: 12px;
+            top: 18px;
+            background: #0F0F0F;
+            padding: 0 6px;
+            color: #666;
+            font-size: 14px;
+            font-weight: 600;
+            pointer-events: none;
+            transition: 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .floating-group textarea {
+            min-height: 120px;
+            resize: none;
+        }
+
+        .floating-group input:focus,
+        .floating-group textarea:focus {
+            border-color: #fff;
+            outline: none;
+        }
+
+        .floating-group input:focus+label,
+        .floating-group input:not(:placeholder-shown)+label,
+        .floating-group textarea:focus+label,
+        .floating-group textarea:not(:placeholder-shown)+label {
+            top: -8px;
+            left: 10px;
+            font-size: 11px;
+            color: #fff;
+            background: #0F0F0F;
         }
 
         .input-group.has-prefix input {
             padding-left: 32px;
+        }
+
+        .floating-group.has-prefix input {
+            padding-left: 30px;
+        }
+
+        .floating-group .prefix {
+            position: absolute;
+            left: 14px;
+            top: 20px;
+            color: #fff;
+            font-weight: 700;
+            font-size: 15px;
+            z-index: 5;
         }
 
         .btn-submit {
@@ -503,6 +566,172 @@
         .empty-state p {
             color: #333;
             font-size: 14px;
+        }
+
+        /* Role Toggle */
+        .role-toggle {
+            display: flex;
+            gap: 0;
+            margin-bottom: 30px;
+            background: #0A0A0A;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 4px;
+            width: fit-content;
+        }
+
+        .role-btn {
+            padding: 10px 24px;
+            border: none;
+            background: transparent;
+            color: #666;
+            font-weight: 700;
+            font-size: 13px;
+            cursor: pointer;
+            border-radius: 10px;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .role-btn.active {
+            background: var(--accent-purple);
+            color: #fff;
+            box-shadow: 0 0 15px var(--accent-glow);
+        }
+
+        .role-btn .badge {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 800;
+        }
+
+        .role-btn.active .badge {
+            background: rgba(255, 255, 255, 0.25);
+        }
+
+        /* Buy Button */
+        .btn-buy-negotiated {
+            padding: 10px 20px;
+            border-radius: 10px;
+            border: none;
+            background: #10B981;
+            color: #fff;
+            font-weight: 800;
+            font-size: 13px;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+        }
+
+        .btn-buy-negotiated:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 5px 15px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-buy-negotiated:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Buyer accept/reject for counter-offers */
+        .btn-buyer-accept {
+            padding: 10px 20px;
+            border-radius: 10px;
+            border: none;
+            background: #10B981;
+            color: #fff;
+            font-weight: 700;
+            font-size: 13px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .btn-buyer-reject {
+            padding: 10px 20px;
+            border-radius: 10px;
+            border: 1px solid #333;
+            background: transparent;
+            color: #888;
+            font-weight: 700;
+            font-size: 13px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .btn-buyer-accept:hover {
+            background: #059669;
+        }
+
+        .btn-buyer-reject:hover {
+            color: #EF4444;
+            border-color: #EF4444;
+        }
+
+        /* Report Modal */
+        .report-reasons {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .report-reason-btn {
+            padding: 12px 16px;
+            background: #000;
+            border: 1px solid #222;
+            border-radius: 10px;
+            color: #888;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            text-align: left;
+            transition: 0.2s;
+        }
+
+        .report-reason-btn:hover {
+            border-color: #444;
+            color: #fff;
+        }
+
+        .report-reason-btn.selected {
+            border-color: #fff;
+            color: #fff;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .report-char-count {
+            font-size: 11px;
+            color: #666;
+            text-align: right;
+            margin-top: 5px;
+            font-weight: 600;
+        }
+
+        #reportDescription {
+            width: 100%;
+            background: #000;
+            border: 1px solid #222;
+            border-radius: 12px;
+            padding: 12px;
+            color: #fff;
+            font-size: 14px;
+            resize: none;
+            min-height: 100px;
+            transition: 0.2s;
+        }
+
+        #reportDescription:focus {
+            outline: none;
+            border-color: #555;
+            background: rgba(255, 255, 255, 0.02);
         }
 
         @media (max-width: 768px) {
@@ -589,9 +818,20 @@
             <div class="user-meta">
                 <h1 style="font-family: var(--font-display); font-weight: 800; font-size: 2rem; margin: 0;">
                     Negociaciones</h1>
-                <p style="color: var(--text-secondary); margin: 0; font-size: 0.95rem;">Gestiona las propuestas de
+                <p id="page-subtitle" style="color: var(--text-secondary); margin: 0; font-size: 0.95rem;">Gestiona las
+                    propuestas de
                     precios enviadas por los compradores.</p>
             </div>
+        </div>
+
+        <!-- Role Toggle -->
+        <div class="role-toggle">
+            <button class="role-btn active" id="role-producer" onclick="switchRole('producer')">
+                <i class="bi bi-inbox-fill"></i> Recibidas <span class="badge" id="badge-producer">0</span>
+            </button>
+            <button class="role-btn" id="role-buyer" onclick="switchRole('buyer')">
+                <i class="bi bi-send-fill"></i> Mis Propuestas <span class="badge" id="badge-buyer">0</span>
+            </button>
         </div>
 
         <div class="content-wrapper">
@@ -605,6 +845,10 @@
                     <div class="stat-label">Aceptadas</div>
                     <div class="stat-value" id="stat-accepted">--</div>
                 </div>
+                <div class="stat-card">
+                    <div class="stat-label">Rechazadas</div>
+                    <div class="stat-value" id="stat-rejected">--</div>
+                </div>
                 <div class="stat-card" style="border-color: rgba(139, 92, 246, 0.2);">
                     <div class="stat-label" style="color:var(--accent-purple)">Volumen Potencial</div>
                     <div class="stat-value" id="stat-volume">$0</div>
@@ -616,6 +860,7 @@
                 <button class="filter-btn" onclick="setFilter('pending', this)">Pendientes</button>
                 <button class="filter-btn" onclick="setFilter('countered', this)">Contra-ofertas</button>
                 <button class="filter-btn" onclick="setFilter('accepted', this)">Aceptadas</button>
+                <button class="filter-btn" onclick="setFilter('rejected', this)">Rechazadas</button>
             </nav>
 
             <div id="loading" style="text-align:center; padding:50px;">
@@ -623,21 +868,14 @@
             </div>
 
             <!-- Tab Content -->
-            <div id="all" class="tab-content active">
-                <div id="proposalsList" class="proposals-grid">
-                    <!-- Cards will be injected by JS -->
-                </div>
-                <div id="emptyState" class="empty-state" style="display: none;">
-                    <i class="bi bi-chat-left-dots"></i>
-                    <h3>No hay negociaciones</h3>
-                    <p>Las propuestas que recibas de tus clientes aparecerán aquí.</p>
-                </div>
+            <div id="proposalsList" class="proposals-grid">
+                <!-- Cards will be injected by JS -->
             </div>
-
-            <div id="pending" class="tab-content"></div>
-            <div id="countered" class="tab-content"></div>
-            <div id="accepted" class="tab-content"></div>
-        </div>
+            <div id="emptyState" class="empty-state" style="display: none;">
+                <i class="bi bi-chat-left-dots"></i>
+                <h3>No hay negociaciones</h3>
+                <p>Las propuestas que recibas de tus clientes aparecerán aquí.</p>
+            </div>
     </main>
 
     <!-- Modal Contra-Oferta -->
@@ -647,14 +885,53 @@
             <p style="color:#888; font-size:14px; margin-bottom:24px;">Propón un nuevo precio al comprador. Le
                 enviaremos un correo con tu oferta.</p>
 
-            <div class="input-group has-prefix">
-                <label>Nuevo monto</label>
+            <div class="floating-group has-prefix" style="margin-top:20px;">
                 <span class="prefix">$</span>
-                <input type="number" id="counterAmount" placeholder="Ej: 45">
+                <input type="text" id="counterAmount" placeholder=" " value="0.00" inputmode="numeric">
+                <label>MONTO DE CONTRA-OFERTA</label>
+                <div id="counterError"
+                    style="color:#EF4444; font-size:11px; margin-top:8px; display:none; font-weight:600;">
+                    El monto mínimo es $5.00 USD
+                </div>
             </div>
-
             <button class="btn-submit" onclick="submitCounterOffer()">ENVIAR PROPUESTA</button>
             <button class="btn-secondary" onclick="closeCounterModal()">CANCELAR</button>
+        </div>
+    </div>
+    </div>
+
+    <!-- Modal Reportar -->
+    <div class="modal-overlay" id="reportModal">
+        <div class="modal-card">
+            <h3 style="display:flex; align-items:center; gap:10px;"><i class="bi bi-flag-fill" style="color:#fff;"></i>
+                Reportar Problema</h3>
+            <p style="color:#888; font-size:14px; margin-bottom:20px;">Selecciona el motivo de tu reporte. Nuestro
+                equipo revisará tu caso.</p>
+
+            <div class="report-reasons">
+                <button class="report-reason-btn" onclick="selectReportReason(this, 'Comportamiento sospechoso')">
+                    <i class="bi bi-exclamation-triangle"></i> Comportamiento sospechoso
+                </button>
+                <button class="report-reason-btn" onclick="selectReportReason(this, 'Email falso o spam')">
+                    <i class="bi bi-envelope-slash"></i> Email falso o spam
+                </button>
+                <button class="report-reason-btn" onclick="selectReportReason(this, 'Oferta inapropiada')">
+                    <i class="bi bi-slash-circle"></i> Oferta inapropiada
+                </button>
+                <button class="report-reason-btn" onclick="selectReportReason(this, 'Otro problema')">
+                    <i class="bi bi-three-dots"></i> Otro problema
+                </button>
+            </div>
+
+            <div class="floating-group" id="report-desc-group" style="display:none; margin-top:25px;">
+                <textarea id="reportDescription" placeholder=" " maxlength="300"></textarea>
+                <label>DESCRIPCIÓN (OPCIONAL)</label>
+                <div id="reportCharCount" class="report-char-count">0/300</div>
+            </div>
+
+            <button class="btn-submit" style="background:#fff; color:#000; margin-top:20px;"
+                onclick="submitReport()">ENVIAR REPORTE</button>
+            <button class="btn-secondary" onclick="closeReportModal()">CANCELAR</button>
         </div>
     </div>
 
@@ -662,9 +939,14 @@
     <div id="toast-container" style="position:fixed; bottom:20px; right:20px; z-index:9999;"></div>
 
     <script>
-        let allProposals = [];
+        let producerProposals = [];
+        let buyerProposals = [];
         let currentFilter = 'all';
+        let currentRole = 'producer'; // 'producer' or 'buyer'
         let activeProposalId = null;
+        let selectedReportReason = null;
+        let currentUserId = null;
+        let currentUserEmail = null;
         let API_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000/api' : 'https://offszn-oc7c.onrender.com/api';
 
         document.addEventListener('DOMContentLoaded', init);
@@ -675,36 +957,53 @@
                 showToast("Error de conexión con la base de datos", "error");
                 return;
             }
-            // Priority 1: Supabase Session (Most robust)
             const { data: { session } } = await window.supabaseClient.auth.getSession();
-            let userId = session?.user?.id || localStorage.getItem('userId');
+            currentUserId = session?.user?.id || localStorage.getItem('userId');
+            currentUserEmail = session?.user?.email;
 
-            if (!userId) {
+            if (!currentUserId) {
                 console.warn("No active session found. Redirecting to login...");
                 window.location.href = '../pages/login.html';
                 return;
             }
 
-            // Sync to localStorage just in case other parts of the page need it
             if (session?.user?.id && !localStorage.getItem('userId')) {
                 localStorage.setItem('userId', session.user.id);
             }
 
-            await loadProposals();
+            await loadAllProposals();
         }
 
-        async function loadProposals() {
+        async function loadAllProposals() {
             try {
-                const userId = localStorage.getItem('userId');
-                const { data, error } = await window.supabaseClient
+                // 1. Fetch proposals I RECEIVED (as producer)
+                const { data: received, error: err1 } = await window.supabaseClient
                     .from('propuestas_offszn')
                     .select('*, products(id, name, image_url, price_basic, public_slug)')
-                    .eq('producer_id', userId)
+                    .eq('producer_id', currentUserId)
                     .order('created_at', { ascending: false });
 
-                if (error) throw error;
+                if (err1) throw err1;
+                producerProposals = received || [];
 
-                allProposals = data || [];
+                // 2. Fetch proposals I SENT (as buyer, by email)
+                if (currentUserEmail) {
+                    const { data: sent, error: err2 } = await window.supabaseClient
+                        .from('propuestas_offszn')
+                        .select('*, products(id, name, image_url, price_basic, public_slug)')
+                        .eq('email_offszn', currentUserEmail)
+                        .order('created_at', { ascending: false });
+
+                    if (err2) throw err2;
+                    buyerProposals = sent || [];
+                }
+
+                // Update badges
+                const prodActive = producerProposals.filter(p => p.status_offszn !== 'rejected').length;
+                const buyActive = buyerProposals.filter(p => p.status_offszn !== 'rejected').length;
+                document.getElementById('badge-producer').innerText = prodActive;
+                document.getElementById('badge-buyer').innerText = buyActive;
+
                 updateStats();
                 renderProposals();
 
@@ -716,33 +1015,72 @@
             }
         }
 
-        function updateStats() {
-            const pending = allProposals.filter(p => p.status_offszn === 'pending').length;
-            const countered = allProposals.filter(p => p.status_offszn === 'countered').length;
-            const accepted = allProposals.filter(p => p.status_offszn === 'accepted').length;
-            const counteredAmount = allProposals.filter(p => p.status_offszn === 'countered').reduce((acc, curr) => acc + (parseFloat(curr.counter_amount) || 0), 0);
-            const pendingAmount = allProposals.filter(p => p.status_offszn === 'pending').reduce((acc, curr) => acc + (parseFloat(curr.amount_offszn) || 0), 0);
+        function switchRole(role) {
+            currentRole = role;
+            currentFilter = 'all';
 
-            const volume = allProposals
+            // Update toggle buttons
+            document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(`role-${role}`).classList.add('active');
+
+            // Update subtitle
+            const subtitle = document.getElementById('page-subtitle');
+            if (role === 'producer') {
+                subtitle.innerText = 'Gestiona las propuestas de precios enviadas por los compradores.';
+            } else {
+                subtitle.innerText = 'Revisa el estado de tus propuestas enviadas a los productores.';
+            }
+
+            // Reset filter tabs
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            document.querySelector('.filter-btn').classList.add('active');
+
+            updateStats();
+            renderProposals();
+        }
+
+        function getActiveProposals() {
+            return currentRole === 'producer' ? producerProposals : buyerProposals;
+        }
+
+        function updateStats() {
+            const list = getActiveProposals();
+            const pending = list.filter(p => p.status_offszn === 'pending').length;
+            const countered = list.filter(p => p.status_offszn === 'countered').length;
+            const accepted = list.filter(p => p.status_offszn === 'accepted').length;
+            const rejected = list.filter(p => p.status_offszn === 'rejected').length;
+
+            const volume = list
                 .filter(p => p.status_offszn !== 'rejected')
                 .reduce((acc, curr) => acc + (parseFloat(curr.counter_amount) || parseFloat(curr.amount_offszn) || 0), 0);
 
             document.getElementById('stat-pending').innerText = pending + countered;
             document.getElementById('stat-accepted').innerText = accepted;
+            document.getElementById('stat-rejected').innerText = rejected;
             document.getElementById('stat-volume').innerText = `$${Math.round(volume)}`;
         }
 
         function renderProposals() {
             const container = document.getElementById('proposalsList');
             const empty = document.getElementById('emptyState');
+            const list = getActiveProposals();
 
             const filtered = currentFilter === 'all'
-                ? allProposals.filter(p => p.status_offszn !== 'rejected')
-                : allProposals.filter(p => p.status_offszn === currentFilter);
+                ? list.filter(p => p.status_offszn !== 'rejected')
+                : list.filter(p => p.status_offszn === currentFilter);
+
+            const emptyStateMessages = {
+                all: "Las propuestas que recibas de tus clientes aparecerán aquí.",
+                pending: "No hay propuestas pendientes de respuesta.",
+                countered: "No hay contra-ofertas activas en este momento.",
+                accepted: "No hay propuestas aceptadas todavía.",
+                rejected: "No tienes propuestas rechazadas en tu historial."
+            };
 
             if (filtered.length === 0) {
                 container.style.display = 'none';
                 empty.style.display = 'block';
+                empty.querySelector('p').innerText = emptyStateMessages[currentFilter] || emptyStateMessages.all;
                 return;
             }
 
@@ -757,10 +1095,10 @@
                 const product = p.products || {};
                 let img = product.image_url || '../images/portada-default.png';
 
-                // 🔥 Prefijar URL si es solo un filename de Supabase
                 if (img && !img.startsWith('http') && !img.startsWith('../') && !img.startsWith('/')) {
                     img = `https://qtjpvztgfyvjyjhhhpoouq.supabase.co/storage/v1/object/public/products/${img}`;
                 }
+
                 const statusClass = `status-${p.status_offszn}`;
                 const statusLabel = p.status_offszn === 'pending' ? 'Pendiente' :
                     p.status_offszn === 'accepted' ? 'Aceptada' :
@@ -769,16 +1107,46 @@
                 const displayAmount = p.counter_amount || p.amount_offszn;
                 const showCounter = p.status_offszn === 'pending';
                 const isFinal = p.status_offszn === 'accepted' || p.status_offszn === 'rejected';
-
-                // Determinar link del producto
                 const productLink = product.id ? `../item.html?id=${product.id}` : '#';
+
+                let actionsHTML = '';
+
+                if (currentRole === 'producer') {
+                    // Producer view: accept, counter, reject, report
+                    if (!isFinal) {
+                        actionsHTML = `
+                            <button class="btn-action btn-accept" data-label="Aceptar" onclick="actOnProposal('${p.id}', 'accepted')"><i class="bi bi-check-lg"></i></button>
+                            ${showCounter ? `<button class="btn-action btn-counter" data-label="Mejorar" onclick="openCounterModal('${p.id}')"><i class="bi bi-arrow-repeat"></i></button>` : ''}
+                            <button class="btn-action btn-reject" data-label="Rechazar" onclick="actOnProposal('${p.id}', 'rejected')"><i class="bi bi-x-lg"></i></button>
+                            <button class="btn-action" data-label="Reportar" onclick="openReportModal('${p.id}')" style="color:#EF4444;"><i class="bi bi-flag-fill"></i></button>
+                        `;
+                    } else {
+                        actionsHTML = `<button class="btn-action" data-label="Reportar" onclick="openReportModal('${p.id}')" style="color:#EF4444;"><i class="bi bi-flag-fill"></i></button>`;
+                    }
+                } else {
+                    // Buyer view
+                    if (p.status_offszn === 'accepted') {
+                        actionsHTML = `
+                            <button class="btn-buy-negotiated" onclick="buyNegotiated('${p.id}')">
+                                <i class="bi bi-bag-check-fill"></i> COMPRAR — $${displayAmount}
+                            </button>
+                        `;
+                    } else if (p.status_offszn === 'countered') {
+                        actionsHTML = `
+                            <button class="btn-buyer-accept" onclick="buyerAcceptCounter('${p.id}')">Aceptar $${displayAmount}</button>
+                            <button class="btn-buyer-reject" onclick="buyerRejectCounter('${p.id}')">Rechazar</button>
+                        `;
+                    } else if (p.status_offszn === 'pending') {
+                        actionsHTML = `<span style="color:#888; font-size:12px; font-weight:600;">Esperando respuesta...</span>`;
+                    }
+                }
 
                 card.innerHTML = `
                     <a href="${productLink}" target="_blank"><img src="${img}" class="prod-img"></a>
                     <div class="prod-info">
                         <h4 onclick="window.open('${productLink}', '_blank')" style="cursor:pointer; color:#fff;">${product.name || 'Producto Desconocido'}</h4>
                         <div style="display:flex; align-items:center; gap:8px; margin-top:2px;">
-                            <p style="margin:0; opacity:0.6; font-size:13px;">${p.email_offszn}</p>
+                            <p style="margin:0; opacity:0.6; font-size:13px;">${currentRole === 'producer' ? p.email_offszn : 'Tu propuesta'}</p>
                             ${p.selected_license ? `<span style="background:rgba(139, 92, 246, 0.1); color:var(--accent-purple); font-size:10px; padding:2px 8px; border-radius:100px; font-weight:800; text-transform:uppercase;">${p.selected_license}</span>` : ''}
                         </div>
                     </div>
@@ -790,11 +1158,7 @@
                         <span class="status-badge ${statusClass}">${statusLabel}</span>
                     </div>
                     <div class="action-btns">
-                        ${!isFinal ? `
-                            <button class="btn-action btn-accept" data-label="Aceptar" onclick="actOnProposal('${p.id}', 'accepted')"><i class="bi bi-check-lg"></i></button>
-                            ${showCounter ? `<button class="btn-action btn-counter" data-label="Mejorar" onclick="openCounterModal('${p.id}')"><i class="bi bi-arrow-repeat"></i></button>` : ''}
-                            <button class="btn-action btn-reject" data-label="Rechazar" onclick="actOnProposal('${p.id}', 'rejected')"><i class="bi bi-x-lg"></i></button>
-                        ` : '<div style="width:36px;"></div>'}
+                        ${actionsHTML}
                     </div>
                 `;
                 container.appendChild(card);
@@ -805,29 +1169,25 @@
             currentFilter = filter;
             document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
+
             renderProposals();
         }
-
+        // ============================================
+        // PRODUCER ACTIONS
+        // ============================================
         async function actOnProposal(id, status) {
             if (status === 'rejected' && !confirm("¿Estás seguro de rechazar esta oferta?")) return;
 
             try {
-                const proposal = allProposals.find(p => p.id === id);
-
-                // 1. Update Supabase
                 const { error } = await window.supabaseClient
                     .from('propuestas_offszn')
                     .update({ status_offszn: status, last_acted_by: 'producer' })
                     .eq('id', id);
 
                 if (error) throw error;
-
-                // 2. Notify via Backend
                 notifyBackend(id, status);
-
                 showToast(`Propuesta ${status === 'accepted' ? 'aceptada' : 'rechazada'}`, "success");
-                loadProposals();
-
+                loadAllProposals();
             } catch (err) {
                 console.error("Action error:", err);
                 showToast("Error al procesar acción", "error");
@@ -836,46 +1196,112 @@
 
         async function notifyBackend(id, status, counterAmount = null) {
             try {
-                const token = localStorage.getItem('sb-access-token');
+                const session = await window.supabaseClient.auth.getSession();
+                const token = session?.data?.session?.access_token;
                 await fetch(`${API_URL}/negotiate/respond`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${token}`
                     },
-                    body: JSON.stringify({
-                        proposalId: id,
-                        status: status,
-                        counterAmount: counterAmount
-                    })
+                    body: JSON.stringify({ proposalId: id, status, counterAmount })
                 });
             } catch (e) {
                 console.warn("Backend notification failed", e);
             }
         }
 
+        // Helper to format as money (Bank-style: 0.00)
+        function setupMoneyInput(elId, maxValue = 1000) {
+            const el = document.getElementById(elId);
+            if (!el) return;
+
+            el.addEventListener('input', function (e) {
+                // Get digits only
+                let value = this.value.replace(/\D/g, '');
+
+                // Convert to number (cents)
+                let cents = parseInt(value || 0);
+
+                // Limit to max
+                if (cents > maxValue * 100) cents = maxValue * 100;
+
+                // Format to XX.XX
+                let formatted = (cents / 100).toFixed(2);
+                this.value = formatted;
+            });
+
+            // Handle backspace properly (don't let it empty)
+            el.addEventListener('keydown', function (e) {
+                if (e.key === 'Backspace' && this.value === '0.00') {
+                    e.preventDefault();
+                }
+            });
+
+            // Initial value
+            if (!el.value) el.value = "0.00";
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            setupMoneyInput('counterAmount', 1000);
+
+            // Report Char Count
+            const reportText = document.getElementById('reportDescription');
+            const charCount = document.getElementById('reportCharCount');
+            if (reportText && charCount) {
+                reportText.addEventListener('input', () => {
+                    charCount.innerText = `${reportText.value.length}/300`;
+                });
+            }
+        });
+
+        // ============================================
+        // COUNTER OFFER (Producer)
+        // ============================================
         function openCounterModal(id) {
             activeProposalId = id;
-            const proposal = allProposals.find(p => p.id == id);
+            const proposal = producerProposals.find(p => p.id == id);
             if (proposal) {
                 const prodName = proposal.products ? proposal.products.name : 'Producto';
-                const currentOffer = proposal.amount_offszn;
-                // Actualizar titulo y placeholder
                 document.getElementById('counter-modal-title').innerText = `Mejorar Oferta: ${prodName}`;
-                document.getElementById('counterAmount').value = Math.round(currentOffer * 1.1); // Sugerir +10%
+                // Set initial value as 10% more than original as a suggestion, but formatted
+                const suggestion = (proposal.amount_offszn * 1.1).toFixed(2);
+                document.getElementById('counterAmount').value = suggestion;
             }
             document.getElementById('counterModal').classList.add('active');
+            // Assuming 'counterError' div exists in the HTML for the modal
+            const errorEl = document.getElementById('counterError');
+            if (errorEl) errorEl.style.display = 'none'; // Hide error on open
         }
 
         function closeCounterModal() {
             document.getElementById('counterModal').classList.remove('active');
             activeProposalId = null;
+            const errorEl = document.getElementById('counterError');
+            if (errorEl) errorEl.style.display = 'none'; // Hide error on close
         }
 
         async function submitCounterOffer() {
             const amount = document.getElementById('counterAmount').value;
-            if (!amount || amount < 5) {
-                showToast("Ingresa un monto válido", "error");
+            const amountNum = parseFloat(amount);
+            const errorEl = document.getElementById('counterError');
+
+            // Hide error initially
+            if (errorEl) errorEl.style.display = 'none';
+
+            if (!amountNum || amountNum < 5) {
+                if (errorEl) errorEl.style.display = 'block';
+                return;
+            }
+            if (amountNum > 1000) {
+                showToast("El monto máximo es $1000.00", "error");
+                return;
+            }
+
+            const proposal = producerProposals.find(p => p.id == activeProposalId);
+            if (proposal && amountNum === parseFloat(proposal.amount_offszn)) {
+                showToast("La contra-oferta no puede ser igual al monto original", "error");
                 return;
             }
 
@@ -883,27 +1309,156 @@
                 const id = activeProposalId;
                 const { error } = await window.supabaseClient
                     .from('propuestas_offszn')
-                    .update({
-                        status_offszn: 'countered',
-                        counter_amount: amount,
-                        last_acted_by: 'producer'
-                    })
+                    .update({ status_offszn: 'countered', counter_amount: amount, last_acted_by: 'producer' })
                     .eq('id', id);
 
                 if (error) throw error;
-
                 notifyBackend(id, 'countered', amount);
-
                 showToast("Contra-oferta enviada", "success");
                 closeCounterModal();
-                loadProposals();
-
+                loadAllProposals();
             } catch (err) {
                 console.error("Counter offer error:", err);
                 showToast("Error al enviar contra-oferta", "error");
             }
         }
 
+        // ============================================
+        // REPORT (Producer)
+        // ============================================
+        function openReportModal(id) {
+            activeProposalId = id;
+            selectedReportReason = null;
+            document.querySelectorAll('.report-reason-btn').forEach(b => b.classList.remove('selected'));
+            document.getElementById('reportDescription').value = '';
+            const charCount = document.getElementById('reportCharCount');
+            if (charCount) charCount.innerText = '0/300';
+            document.getElementById('report-desc-group').style.display = 'none';
+            document.getElementById('reportModal').classList.add('active');
+        }
+
+        function closeReportModal() {
+            document.getElementById('reportModal').classList.remove('active');
+            activeProposalId = null;
+            selectedReportReason = null;
+        }
+
+        function selectReportReason(btn, reason) {
+            selectedReportReason = reason;
+            document.querySelectorAll('.report-reason-btn').forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+            document.getElementById('report-desc-group').style.display = 'block';
+        }
+
+        async function submitReport() {
+            if (!selectedReportReason) {
+                showToast("Selecciona un motivo", "error");
+                return;
+            }
+
+            try {
+                const session = await window.supabaseClient.auth.getSession();
+                const token = session?.data?.session?.access_token;
+                const desc = document.getElementById('reportDescription').value;
+
+                const res = await fetch(`${API_URL}/negotiate/report`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        proposalId: activeProposalId,
+                        reason: selectedReportReason,
+                        description: desc
+                    })
+                });
+
+                const data = await res.json();
+                if (data.success) {
+                    showToast("Reporte enviado. Revisaremos tu caso.", "success");
+                    closeReportModal();
+                } else {
+                    showToast(data.error || "Error al enviar reporte", "error");
+                }
+            } catch (err) {
+                console.error("Report error:", err);
+                showToast("Error al enviar reporte", "error");
+            }
+        }
+
+        // ============================================
+        // BUYER ACTIONS
+        // ============================================
+        async function buyNegotiated(proposalId) {
+            try {
+                const btn = event.target.closest('.btn-buy-negotiated');
+                if (btn) { btn.disabled = true; btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Procesando...'; }
+
+                const session = await window.supabaseClient.auth.getSession();
+                const token = session?.data?.session?.access_token;
+
+                const res = await fetch(`${API_URL}/negotiate/purchase-token`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ proposalId })
+                });
+
+                const data = await res.json();
+                if (data.success && data.token) {
+                    window.location.href = `/pages/checkout.html?negotiate_token=${data.token}`;
+                } else {
+                    showToast(data.error || "Error al generar token de compra", "error");
+                    if (btn) { btn.disabled = false; btn.innerHTML = '<i class="bi bi-bag-check-fill"></i> COMPRAR'; }
+                }
+            } catch (err) {
+                console.error("Buy negotiated error:", err);
+                showToast("Error al procesar compra", "error");
+            }
+        }
+
+        async function buyerAcceptCounter(proposalId) {
+            if (!confirm("¿Aceptar esta contra-oferta? Podrás comprar al precio propuesto.")) return;
+
+            try {
+                const { error } = await window.supabaseClient
+                    .from('propuestas_offszn')
+                    .update({ status_offszn: 'accepted', last_acted_by: 'buyer' })
+                    .eq('id', proposalId);
+
+                if (error) throw error;
+                showToast("¡Contra-oferta aceptada! Ya puedes comprar.", "success");
+                loadAllProposals();
+            } catch (err) {
+                console.error("Accept counter error:", err);
+                showToast("Error al aceptar contra-oferta", "error");
+            }
+        }
+
+        async function buyerRejectCounter(proposalId) {
+            if (!confirm("¿Rechazar esta contra-oferta?")) return;
+
+            try {
+                const { error } = await window.supabaseClient
+                    .from('propuestas_offszn')
+                    .update({ status_offszn: 'rejected', last_acted_by: 'buyer' })
+                    .eq('id', proposalId);
+
+                if (error) throw error;
+                showToast("Contra-oferta rechazada", "success");
+                loadAllProposals();
+            } catch (err) {
+                console.error("Reject counter error:", err);
+                showToast("Error al rechazar", "error");
+            }
+        }
+
+        // ============================================
+        // TOAST
+        // ============================================
         function showToast(msg, type = 'success') {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');

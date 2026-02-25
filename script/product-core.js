@@ -53,6 +53,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         const sessionRes = await window.supabaseClient.auth.getSession();
         if (sessionRes.data && sessionRes.data.session) {
             currentUser = sessionRes.data.session.user;
+            // Ensure userId is in localStorage for consistency in other checks
+            localStorage.setItem('userId', currentUser.id);
             // Sync coupons if logged in
             if (currentUser.email) {
                 await syncClaimedCoupon(currentUser.email);
@@ -650,7 +652,7 @@ function renderProductPage(product) {
                         <div class="tab-pane" id="pane-promos">
                             <div class="promos-container" style="padding: 0;">
                                 ${(() => {
-            const isLoggedIn = !!localStorage.getItem('authToken');
+            const isLoggedIn = !!localStorage.getItem('userId');
             const claimedCode = localStorage.getItem('offszn_welcome_claimed');
             const isPending = localStorage.getItem('offszn_pending_coupon_claim') === 'true';
 
@@ -698,12 +700,12 @@ function renderProductPage(product) {
                 `;
             }
 
-            // 3. Fallback for logged-in users who already used their chance or aren't eligible
+            // 3. Fallback for logged-in users
             if (isLoggedIn) {
                 return `
                                         <div style="text-align:center; padding: 40px 20px; color:#666;">
-                                            <i class="bi bi- megaphone" style="font-size:2rem; display:block; margin-bottom:15px; opacity:0.5;"></i>
-                                            <div style="font-size:0.95rem; font-weight:500;">No tienes promociones personalizadas activas.</div>
+                                            <i class="bi bi-megaphone" style="font-size:2rem; display:block; margin-bottom:15px; opacity:0.3;"></i>
+                                            <div style="font-size:0.95rem; font-weight:500;">No hay promociones activas para ti en este momento.</div>
                                         </div>
                                     `;
             }
@@ -752,15 +754,16 @@ function renderProductPage(product) {
                                         
                                         <div class="negotiate-form-inline" style="background:rgba(255,255,255,0.03); padding:20px; border-radius:15px; border:1px solid rgba(255,255,255,0.05);">
                                             <div style="display:flex; flex-direction:column; gap:5px;">
-                                                <div class="floating-group">
-                                                    <span style="position:absolute; left:12px; top:50%; transform:translateY(-50%); color:#fff; font-weight:700; z-index:5;">$</span>
-                                                    <input type="number" id="offer-amount-inline" placeholder=" " style="padding-left:30px !important;">
-                                                    <label for="offer-amount-inline" style="left:30px;">Tu Oferta (USD)</label>
+                                                <div class="floating-group has-prefix">
+                                                    <span class="prefix">$</span>
+                                                    <input type="text" id="offer-amount-inline" inputmode="numeric" placeholder=" ">
+                                                    <label for="offer-amount-inline">TU OFERTA (USD)</label>
                                                 </div>
+                                                <div id="offer-error-inline" style="color: #ff4d4d; font-size: 0.8rem; margin-top: -15px; margin-bottom: 5px; display: none; font-weight: 600;">Monto mínimo $5.00</div>
 
                                                 <div class="floating-group" style="margin-top:10px;">
                                                     <input type="email" id="offer-email-inline" placeholder=" ">
-                                                    <label for="offer-email-inline">Tu Email</label>
+                                                    <label for="offer-email-inline">TU EMAIL</label>
                                                 </div>
 
                                                 <button class="btn-purchase-kit" style="height:50px !important; margin-top:10px; font-size:0.9rem; letter-spacing:0.3px;" onclick="window.submitNegotiationInline()">
@@ -939,6 +942,9 @@ function setupSocialInteractions(product) {
             });
         });
     }
+
+    // Initialize money input formatting for negotiation
+    setupMoneyInput('offer-amount-inline', 1000);
 }
 
 // Global wrapper to call FavoritesManager
@@ -2079,7 +2085,7 @@ function initABPlayerInContainer(beforeUrl, afterUrl, container, productId) {
     const formatTime = (time) => {
         const mins = Math.floor(time / 60);
         const secs = Math.floor(time % 60);
-        return `${mins}: ${secs.toString().padStart(2, '0')}`;
+        return `${mins}:${secs.toString().padStart(2, '0')}`;
     };
 
     playBtn.onclick = () => {
@@ -2582,18 +2588,53 @@ window.updateTermsTab = function (licenseId) {
 
 };
 
+// Helper to format as money (Bank-style: 0.00)
+function setupMoneyInput(elId, maxValue = 1000) {
+    const el = document.getElementById(elId);
+    if (!el) return;
+
+    el.addEventListener('input', function (e) {
+        let value = this.value.replace(/\D/g, '');
+        let cents = parseInt(value || 0);
+        if (cents > maxValue * 100) cents = maxValue * 100;
+        let formatted = (cents / 100).toFixed(2);
+        this.value = formatted;
+    });
+
+    el.addEventListener('keydown', function (e) {
+        if (e.key === 'Backspace' && this.value === '0.00') {
+            e.preventDefault();
+        }
+    });
+
+    if (!el.value || el.value === "") el.value = "0.00";
+}
+
 window.submitNegotiationInline = async function () {
-    const amount = document.getElementById('offer-amount-inline')?.value;
-    const email = document.getElementById('offer-email-inline')?.value;
-    const product = window.currentProductData;
-
-    const amountNum = parseFloat(amount);
-    if (!amount || amountNum < 10 || !email || !email.includes('@')) {
-        alert("La oferta minima es de $10 USD. Por favor, completa tu email correctamente.");
-        return;
-    }
-
     try {
+        const amount = document.getElementById('offer-amount-inline')?.value;
+        const email = document.getElementById('offer-email-inline')?.value;
+        const product = window.currentProductData;
+
+        const amountNum = parseFloat(amount || "0");
+        const errorEl = document.getElementById('offer-error-inline');
+
+        // Hide error initially
+        if (errorEl) errorEl.style.display = 'none';
+
+        if (!amountNum || amountNum < 5) {
+            if (errorEl) errorEl.style.display = 'block';
+            return;
+        }
+        if (amountNum > 1000) {
+            alert("El monto máximo de oferta es $1000.00");
+            return;
+        }
+        if (!email || !email.includes('@')) {
+            alert("Por favor, completa tu email correctamente.");
+            return;
+        }
+
         // --- 🔐 AUTH CONTEXT ---
         let userId = null;
         const { data: { session } } = await window.supabaseClient.auth.getSession();
@@ -2602,7 +2643,7 @@ window.submitNegotiationInline = async function () {
         const activeLicTab = document.querySelector('.lic-tab.active');
         const selectedLicense = activeLicTab ? activeLicTab.textContent.trim() : 'Standard';
 
-        // --- ⏳ RATE LIMIT: 24h per product/email ---
+        /* --- ⏳ RATE LIMIT: 24h per product/email (Comentado para pruebas) ---
         const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
         const { data: existing, error: checkError } = await window.supabaseClient
             .from('propuestas_offszn')
@@ -2616,6 +2657,7 @@ window.submitNegotiationInline = async function () {
             alert("Vuelve a negociar en un plazo de 24 horas cuando obtengas la respuesta.");
             return;
         }
+        */
 
         const { error } = await window.supabaseClient.from('propuestas_offszn').insert({
             product_id: product.id,
@@ -2646,7 +2688,7 @@ window.submitNegotiationInline = async function () {
         // Reset fields
         const amountEl = document.getElementById('offer-amount-inline');
         const emailEl = document.getElementById('offer-email-inline');
-        if (amountEl) amountEl.value = '';
+        if (amountEl) amountEl.value = '0.00';
         if (emailEl && !userId) emailEl.value = ''; // Only clear if guest
 
     } catch (err) {
@@ -2701,7 +2743,7 @@ window.generateWelcomeCoupon = function () {
 
                 <div class="floating-group" style="margin-bottom: 12px;">
                     <input type="email" id="coupon-email-input" placeholder=" ">
-                    <label for="coupon-email-input">Tu Email</label>
+                    <label for="coupon-email-input">TU EMAIL</label>
                 </div>
 
                 <button class="btn-glass-primary-v2" style="margin-top:5px; height:48px !important; width:100%; font-size:0.95rem; font-weight:800;" onclick="window.processCouponClaim()">

@@ -37,6 +37,8 @@
             }
         }
     </script>
+    <!-- Wavesurfer JS (For Audio Visualization) -->
+    <script src="https://unpkg.com/wavesurfer.js@7"></script>
     <style>
         body {
             background-color: #000;
@@ -52,219 +54,223 @@
         .text-shadow {
             text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
         }
+
+        @keyframes slideUpFade {
+            0% {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-cascade,
+        .animate-cascade-item {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+        }
+
+        #bioMainContainer.is-ready {
+            opacity: 1;
+        }
+
+        #bioMainContainer.is-ready .animate-cascade,
+        #bioMainContainer.is-ready .animate-cascade-item {
+            animation: slideUpFade 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        /* Pre-defined delays for static elements */
+        .delay-1 {
+            animation-delay: 0.1s;
+        }
+
+        .delay-2 {
+            animation-delay: 0.2s;
+        }
+
+        .delay-3 {
+            animation-delay: 0.3s;
+        }
+
+        .delay-4 {
+            animation-delay: 0.4s;
+        }
+
+        .delay-5 {
+            animation-delay: 0.5s;
+        }
     </style>
 </head>
 
 <body class="flex flex-col items-center min-h-screen py-10 px-4">
 
-    <!-- MAIN CONTAINER -->
-    <div class="w-full max-w-[480px] flex flex-col gap-6">
+    <!-- MAIN CONTAINER (Hidden initially for animation) -->
+    <div id="bioMainContainer" class="w-full max-w-[480px] flex flex-col gap-6 opacity-0 relative">
+
+        <!-- TOP ACTIONS BAR -->
+        <div class="flex items-center justify-between w-full mb-2 animate-cascade delay-1 z-20">
+            <!-- 1. Edit Mode Button (Hidden by default, shown for owner) -->
+            <button id="btnEditMode"
+                class="text-xs font-bold text-gray-400 hover:text-white transition-colors flex items-center gap-1 bg-zinc-900/50 px-3 py-1.5 rounded-full border border-white/5"
+                style="display: none;">
+                <i class="bi bi-pencil-fill text-[10px]"></i> Modo Edición
+            </button>
+            <div id="editModeSpacer" class="flex-1"></div>
+            <!-- 2. Share Button -->
+            <button id="btnShareBio"
+                class="w-8 h-8 rounded-full bg-zinc-900/50 border border-white/5 flex items-center justify-center text-gray-400 hover:text-white hover:bg-zinc-800 transition-colors ml-auto">
+                <i class="bi bi-share-fill text-sm"></i>
+            </button>
+        </div>
 
         <!-- 1. HEADER & AVATAR -->
         <div class="flex flex-col items-center text-center relative mb-4">
-            <!-- Glow Effect behind Avatar -->
-            <div class="absolute top-0 w-32 h-32 rounded-full bg-red-600 blur-[60px] opacity-60 z-0"></div>
-
-            <div class="relative z-10 w-28 h-28 rounded-full overflow-hidden border-2 border-zinc-800 shadow-2xl mb-4">
-                <img src="https://ui-avatars.com/api/?name=Prod+Offszn&background=random&size=256" alt="Avatar"
-                    class="w-full h-full object-cover">
+            <!-- Glow Effect behind Avatar (Hidden initially) -->
+            <div id="bioGlow"
+                class="absolute top-0 w-32 h-32 rounded-full bg-red-600 blur-[60px] opacity-0 z-0 transition-opacity duration-1000">
             </div>
 
-            <div class="relative z-10 flex items-center gap-2">
-                <h1 class="font-bakbak text-2xl uppercase tracking-wider">Willie Inspired | Mix & Mastering</h1>
-                <i class="bi bi-patch-check-fill text-blue-500 text-lg" title="Verified"></i>
+            <div
+                class="relative z-10 w-28 h-28 rounded-full overflow-hidden border-2 border-zinc-800 shadow-2xl mb-4 bg-zinc-900 animate-cascade delay-1">
+                <img id="bioAvatar"
+                    src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII="
+                    alt="Avatar" class="w-full h-full object-cover">
             </div>
 
-            <p class="relative z-10 text-sm font-semibold tracking-wide text-gray-300 mt-1">
-                🔥 HAZ QUE TU MÚSICA SUENE PRO 🎁
-            </p>
-            <p class="relative z-10 text-xs text-gray-400 mt-0.5 uppercase tracking-widest">
-                COMUNIDAD / PRESETS VOCALES
+            <div class="relative z-10 flex flex-col items-center gap-1 mt-2 animate-cascade delay-2">
+                <div class="flex items-center gap-2 justify-center">
+                    <h1 id="bioNameAndRole"
+                        class="font-sans font-bold text-xl md:text-2xl tracking-wide flex items-center flex-wrap justify-center gap-2">
+                        <span id="bioNameText"></span>
+                        <span id="bioRolePipe" class="mx-1 font-light opacity-50" style="display:none;"></span>
+                        <span id="bioRoleText" class="font-semibold"></span>
+                        <i id="bioVerified" class="bi bi-patch-check-fill text-blue-500 text-lg ml-1" title="Verified"
+                            style="display: none;"></i>
+                    </h1>
+                </div>
+            </div>
+
+            <p id="bioText"
+                class="relative z-10 text-sm md:text-md text-white mt-3 text-center tracking-wide max-w-[90%] whitespace-pre-wrap font-medium animate-cascade delay-3">
+                <!-- Bio -->
             </p>
         </div>
 
         <!-- 2. SOCIAL ICONS ROW -->
-        <div class="flex justify-center gap-5 text-2xl text-white mb-2">
-            <a href="#" class="hover:text-gray-300 transition-transform hover:-translate-y-1"><i
-                    class="bi bi-instagram"></i></a>
-            <a href="#" class="hover:text-gray-300 transition-transform hover:-translate-y-1"><i
-                    class="bi bi-tiktok"></i></a>
-            <a href="#" class="hover:text-gray-300 transition-transform hover:-translate-y-1"><i
-                    class="bi bi-youtube"></i></a>
-            <a href="#" class="hover:text-gray-300 transition-transform hover:-translate-y-1"><i
-                    class="bi bi-twitter-x"></i></a>
-            <a href="#" class="hover:text-gray-300 transition-transform hover:-translate-y-1"><i
-                    class="bi bi-linkedin"></i></a>
+        <div id="bioSocialIcons" class="flex justify-center gap-5 text-2xl text-white mb-2 animate-cascade delay-4">
+            <!-- Icons injected via JS -->
         </div>
 
-        <!-- 3. LINKS SECTION -->
-        <div class="flex flex-col gap-4">
-            <div class="text-center text-xs font-bold tracking-[0.2em] text-gray-400 mb-1">REDES SOCIALES</div>
-
-            <!-- Link Item 1 -->
-            <a href="#"
-                class="group relative flex items-center justify-between w-full p-1 pl-6 pr-1 bg-black border border-white rounded-full hover:bg-zinc-900 transition-all duration-300 transform hover:scale-[1.01]">
-                <div class="flex flex-col flex-1 py-3">
-                    <span class="font-bold text-sm tracking-wide group-hover:text-white transition-colors">🧬 PRESETS FL
-                        STUDIO</span>
-                    <span class="text-xs text-gray-500 font-medium">Presets Vocales PRO</span>
-                </div>
-                <!-- Thumbnail on Right -->
-                <div class="w-12 h-12 rounded-full overflow-hidden border border-zinc-800 bg-zinc-900 flex-shrink-0">
-                    <img src="https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?auto=format&fit=crop&q=80&w=100"
-                        class="w-full h-full object-cover">
-                </div>
-            </a>
-
-            <!-- Link Item 2 -->
-            <a href="#"
-                class="group relative flex items-center justify-between w-full p-1 pl-6 pr-1 bg-black border border-white rounded-full hover:bg-zinc-900 transition-all duration-300 transform hover:scale-[1.01]">
-                <div class="flex flex-col flex-1 py-3 justify-center">
-                    <span class="font-bold text-sm tracking-wide">COMUNIDAD DE DISCORD</span>
-                </div>
-                <div
-                    class="w-12 h-12 rounded-full overflow-hidden border border-zinc-800 bg-zinc-900 flex-shrink-0 flex items-center justify-center text-gray-500">
-                    <i class="bi bi-discord text-xl"></i>
-                </div>
-            </a>
-
-            <!-- Link Item 3 -->
-            <a href="#"
-                class="group relative flex items-center justify-between w-full p-1 pl-6 pr-1 bg-black border border-white rounded-full hover:bg-zinc-900 transition-all duration-300 transform hover:scale-[1.01]">
-                <div class="flex flex-col flex-1 py-3 justify-center">
-                    <span class="font-bold text-sm tracking-wide">TIKTOK</span>
-                    <span class="text-xs text-gray-500 font-medium">Subtitle (optional)</span>
-                </div>
-                <div
-                    class="w-12 h-12 rounded-full overflow-hidden border border-zinc-800 bg-zinc-900 flex-shrink-0 flex items-center justify-center text-gray-500">
-                    <i class="bi bi-tiktok text-xl"></i>
-                </div>
-            </a>
-
-            <!-- Link Item 4 -->
-            <a href="#"
-                class="group relative flex items-center justify-between w-full p-1 pl-6 pr-1 bg-black border border-white rounded-full hover:bg-zinc-900 transition-all duration-300 transform hover:scale-[1.01]">
-                <div class="flex flex-col flex-1 py-3 justify-center">
-                    <span class="font-bold text-sm tracking-wide">WHATSAPP</span>
-                    <span class="text-xs text-gray-500 font-medium">Business Account</span>
-                </div>
-                <div
-                    class="w-12 h-12 rounded-full overflow-hidden border border-zinc-800 bg-zinc-900 flex-shrink-0 flex items-center justify-center text-gray-500">
-                    <i class="bi bi-whatsapp text-xl text-red-600"></i>
-                </div>
-            </a>
-
-            <!-- Link Item 5 -->
-            <a href="#"
-                class="group relative flex items-center justify-between w-full p-1 pl-6 pr-1 bg-black border border-white rounded-full hover:bg-zinc-900 transition-all duration-300 transform hover:scale-[1.01]">
-                <div class="flex flex-col flex-1 py-3 justify-center">
-                    <span class="font-bold text-sm tracking-wide">INSTAGRAM</span>
-                </div>
-                <div
-                    class="w-12 h-12 rounded-full overflow-hidden border border-zinc-800 bg-zinc-900 flex-shrink-0 flex items-center justify-center text-gray-500">
-                    <i class="bi bi-instagram text-xl"></i>
-                </div>
-            </a>
-
-            <!-- Link Item 6 -->
-            <a href="#"
-                class="group relative flex items-center justify-between w-full p-1 pl-6 pr-1 bg-black border border-white rounded-full hover:bg-zinc-900 transition-all duration-300 transform hover:scale-[1.01]">
-                <div class="flex flex-col flex-1 py-3 justify-center">
-                    <span class="font-bold text-sm tracking-wide">BEATS</span>
-                </div>
-                <div
-                    class="w-12 h-12 rounded-full overflow-hidden border border-zinc-800 bg-zinc-900 flex-shrink-0 flex items-center justify-center text-gray-500">
-                    <i class="bi bi-youtube text-xl"></i>
-                </div>
-            </a>
-
-        </div>
-
-        <!-- 4. EMAIL COLLECTION -->
-        <div class="w-full bg-zinc-900/80 rounded-2xl p-6 border border-zinc-800 flex flex-col gap-3 text-center mt-4">
-            <div class="flex items-center justify-center gap-2 text-sm font-bold tracking-wide uppercase text-gray-200">
-                <i class="bi bi-envelope-fill text-red-500"></i> RECURSOS GRATIS CADA SEMANA
+        <!-- 3. MAIN "TIENDA DE BEATS" PRIORITY LINK -->
+        <a id="btnTiendaBeats" href="#"
+            class="group relative flex items-center w-full p-4 bg-black border border-white rounded-[16px] hover:bg-zinc-900 transition-all duration-300 transform hover:-translate-y-1 animate-cascade delay-5"
+            style="display: none;">
+            <div class="flex items-center absolute left-4">
+                <img src="/images/LOGO-OFFSZN.png" alt="OFFSZN" class="w-6 h-6 object-contain">
             </div>
-            <p class="text-xs text-gray-400 mb-2">Tips de producción, presets y descuentos exclusivos</p>
+            <div class="flex-1 flex justify-center text-center">
+                <span class="font-bold text-sm md:text-md tracking-wide">Tienda de Beats</span>
+            </div>
+        </a>
 
-            <input type="text" placeholder="First Name"
-                class="w-full bg-transparent border border-zinc-600 rounded-full py-3 px-5 text-sm text-white focus:outline-none focus:border-white transition-colors placeholder-gray-500">
-            <input type="email" placeholder="Email"
-                class="w-full bg-transparent border border-zinc-600 rounded-full py-3 px-5 text-sm text-white focus:outline-none focus:border-white transition-colors placeholder-gray-500">
-
-            <button
-                class="w-full bg-black hover:bg-zinc-800 text-white font-bold text-sm py-3 rounded-full mt-2 transition-colors border border-black hover:border-zinc-700 shadow-lg">
-                Suscríbete gratis
-            </button>
+        <!-- 4. LINKS SECTION (Large links) -->
+        <div id="bioSocialLinksContainer" class="flex flex-col gap-4 animate-cascade delay-6">
+            <div class="text-center text-xs font-bold tracking-[0.2em] text-gray-400 mb-1" id="titleRedes"
+                style="display:none;">REDES SOCIALES</div>
+            <div id="bioSocialLinks" class="flex flex-col gap-4">
+                <!-- Large links injected via JS -->
+            </div>
         </div>
 
-        <!-- 5. PRODUCT CARD SPECIFIC -->
-        <div class="flex flex-col gap-4 mt-6">
-            <div class="text-center text-xs font-bold tracking-[0.2em] text-gray-400 mb-1 uppercase">Preset Profesional
+        <!-- 5. RECENT PRODUCTS LIST -->
+        <div id="bioRecentProducts" class="flex flex-col gap-4 mt-6 animate-cascade delay-7" style="display: none;">
+            <div class="text-center text-xs font-bold tracking-[0.2em] text-gray-400 mb-1 uppercase">LO MÁS NUEVO
             </div>
 
-            <!-- Purple Card -->
-            <div
-                class="relative w-full bg-[#1e1e1e] rounded-xl overflow-hidden border border-zinc-800 flex flex-col md:flex-row shadow-2xl group hover:border-[#4f46e5]/50 transition-colors duration-300">
-
-                <!-- Left Image (Book Cover Style) -->
-                <div
-                    class="w-full md:w-[140px] h-[220px] md:h-auto bg-[#312e81] relative flex-shrink-0 p-4 flex items-center justify-center">
-                    <!-- Mockup Cover -->
-                    <img src="https://images.unsplash.com/photo-1619983081563-430f63602796?auto=format&fit=crop&q=80&w=300"
-                        class="shadow-2xl rounded-md transform group-hover:scale-105 transition-transform duration-500 w-full h-auto object-cover border border-white/10"
-                        style="box-shadow: -10px 10px 20px rgba(0,0,0,0.5);">
-                </div>
-
-                <!-- Right Content -->
-                <div class="flex-1 p-6 flex flex-col justify-center bg-[#0a0a0a]">
-
-                    <div class="flex items-start justify-between mb-2">
-                        <div>
-                            <h3 class="font-bold text-lg leading-tight text-white mb-1">Preset DEFINITIVO en FL STUDIO
-                            </h3>
-                            <p class="text-xs text-gray-400 leading-relaxed font-medium max-w-[200px]">Voces pro en
-                                segundos con el preset de voces para FL STUDIO</p>
-                        </div>
-                    </div>
-
-                    <!-- Waveform Visual -->
-                    <div class="h-8 w-full flex items-center gap-0.5 my-4 opacity-50">
-                        <div class="w-1 h-3 bg-indigo-500 rounded-full animate-pulse"></div>
-                        <div class="w-1 h-5 bg-indigo-500 rounded-full"></div>
-                        <div class="w-1 h-8 bg-indigo-500 rounded-full"></div>
-                        <div class="w-1 h-4 bg-indigo-500 rounded-full"></div>
-                        <div class="w-1 h-6 bg-indigo-500 rounded-full"></div>
-                        <div class="w-1 h-3 bg-indigo-500 rounded-full"></div>
-                        <div class="w-1 h-5 bg-indigo-500 rounded-full"></div>
-                        <div class="w-1 h-8 bg-indigo-500 rounded-full"></div>
-                        <div class="w-1 h-4 bg-indigo-500 rounded-full"></div>
-                        <div class="w-1 h-6 bg-indigo-500 rounded-full"></div>
-                        <div class="w-1 h-3 bg-indigo-500 rounded-full"></div>
-                        <div class="w-1 h-5 bg-indigo-500 rounded-full"></div>
-                        <div class="w-1 h-8 bg-indigo-500 rounded-full"></div>
-                        <div class="w-1 h-4 bg-indigo-500 rounded-full"></div>
-                    </div>
-
-                    <div class="flex items-center justify-between mt-auto pt-2">
-                        <span class="text-xl font-bold text-white">15 US$</span>
-
-                        <button
-                            class="bg-black border border-zinc-700 hover:bg-white hover:text-black text-white text-xs font-bold px-6 py-3 rounded-full transition-all duration-300 uppercase tracking-wider shadow-lg">
-                            LO QUIERO!
-                        </button>
-                    </div>
-                </div>
-
+            <div id="bioProductsList" class="flex flex-col gap-4">
+                <!-- Product Cards injected via JS -->
             </div>
         </div>
 
         <!-- Footer -->
-        <div class="mt-8 opacity-50 text-[10px] uppercase tracking-widest flex items-center gap-2">
-            <i class="bi bi-lightning-charge-fill"></i> Beacons
-        </div>
+        <a href="/explorar"
+            class="mt-8 opacity-50 hover:opacity-100 transition-opacity text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 w-full text-center pb-8 border-b-0 animate-cascade delay-8">
+            Diseñado con <img src="/images/LOGO-OFFSZN.png" alt="OFFSZN"
+                class="h-4 object-contain filter invert border-none">
+        </a>
 
     </div>
+
+    <!-- PLAYER OVERLAYS (Hidden) -->
+    <link rel="stylesheet" href="/css/sticky-player.css">
+    <div id="sticky-player-container"></div>
+
+    <!-- SHARE MODAL (Hidden by default) -->
+    <div id="bioShareModal"
+        class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-300">
+        <div
+            class="bg-[#111] border border-zinc-800 rounded-2xl w-full max-w-[360px] p-6 flex flex-col items-center transform scale-95 transition-transform duration-300 text-center relative shadow-2xl">
+            <!-- Close Button -->
+            <button id="btnCloseShare" class="absolute top-4 right-4 text-gray-500 hover:text-white transition-colors">
+                <i class="bi bi-x-lg"></i>
+            </button>
+
+            <h3 class="text-lg font-bold text-white mb-6 tracking-wide">COMPARTIR PERFIL</h3>
+
+            <!-- Avatar & Details -->
+            <div class="w-24 h-24 rounded-full overflow-hidden border-2 border-zinc-800 mb-4 bg-zinc-900 shadow-xl">
+                <img id="shareModalAvatar" src="" alt="Avatar" class="w-full h-full object-cover">
+            </div>
+            <h4 id="shareModalName" class="font-bold text-white text-xl mb-1">Nombre</h4>
+            <p id="shareModalUsername" class="text-sm text-gray-400 mb-8 tracking-wide">@username</p>
+
+            <!-- Quick Share Buttons -->
+            <div class="flex gap-4 mb-6">
+                <!-- WhatsApp -->
+                <button id="btnShareWA"
+                    class="w-12 h-12 rounded-full bg-[#25D366] text-white flex items-center justify-center text-xl hover:scale-110 transition-transform">
+                    <i class="bi bi-whatsapp"></i>
+                </button>
+                <!-- X (Twitter) -->
+                <button id="btnShareX"
+                    class="w-12 h-12 rounded-full bg-black border border-zinc-700 text-white flex items-center justify-center text-xl hover:scale-110 transition-transform">
+                    <i class="bi bi-twitter-x"></i>
+                </button>
+                <!-- Facebook -->
+                <button id="btnShareFB"
+                    class="w-12 h-12 rounded-full bg-[#1877F2] text-white flex items-center justify-center text-xl hover:scale-110 transition-transform">
+                    <i class="bi bi-facebook"></i>
+                </button>
+            </div>
+
+            <!-- Copy Link Native Input -->
+            <div class="w-full relative">
+                <input type="text" id="shareModalInput" readonly
+                    class="w-full bg-[#0a0a0a] border border-zinc-800 text-gray-300 text-sm rounded-lg pl-4 pr-12 py-3 focus:outline-none focus:border-zinc-500">
+                <button id="btnCopyShareLink"
+                    class="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-md bg-zinc-800 flex items-center justify-center text-white hover:bg-zinc-700 transition-colors">
+                    <i class="bi bi-copy text-sm"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+    <!-- Supabase -->
+    <script src="/script/sticky-player.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        window.SUPABASE_URL = "https://qtjpvztpgfymjhhpoouq.supabase.co";
+        window.SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0anB2enRwZ2Z5bWpoaHBvb3VxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3ODA5MTUsImV4cCI6MjA3NjM1NjkxNX0.YsItTFk3hSQaVuy707-z7Z-j34mXa03O0wWGAlAzjrw";
+        window.supabaseClient = supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
+    </script>
+    <script src="/script/auth-utils.js"></script>
+    <script src="/script/bio.js" type="module"></script>
 
 </body>
 

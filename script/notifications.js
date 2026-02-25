@@ -311,7 +311,9 @@
                                 })()
                                 : (n.type === 'new_message' && n.data?.conversation_id)
                                     ? `/mensajes.html?convId=${n.data.conversation_id}`
-                                    : null
+                                    : (n.type?.startsWith('negotiate_'))
+                                        ? '/cuenta/negociar'
+                                        : null
                     };
                 });
 
@@ -410,6 +412,7 @@
                     if (n.type === 'product_like') extraId = n.data?.product_id || '';
                     else if (n.type === 'new_follower') extraId = n.data?.follower_id || '';
                     else if (n.type === 'new_message') extraId = n.data?.conversation_id || '';
+                    else if (n.type?.startsWith('negotiate_') || n.type === 'negotiate_offer') extraId = n.data?.product_id || '';
 
                     extraId = extraId ? extraId.toString().replace(/"/g, '&quot;') : '';
 
@@ -498,6 +501,10 @@
                 case 'product_like': return 'fa-heart text-danger';
                 case 'product_published': return 'fa-rocket';
                 case 'new_message': return 'fa-comment-dots';
+                case 'negotiate_offer': return 'fa-sack-dollar';
+                case 'negotiate_accepted': return 'fa-sack-dollar';
+                case 'negotiate_rejected': return 'fa-circle-xmark';
+                case 'negotiate_counter': return 'fa-scale-balanced';
                 default: return 'fa-bell';
             }
         },
@@ -627,6 +634,8 @@
                 finalUrl = '/cuenta/colaboraciones.html?tab=recibidas';
             } else if (type === 'collab_accepted') {
                 finalUrl = '/cuenta/colaboraciones.html?tab=mis-invitaciones';
+            } else if (type?.startsWith('negotiate_') || type === 'negotiate_offer') {
+                finalUrl = '/cuenta/negociar';
             }
         }
 

@@ -11,7 +11,33 @@ export const createPayPalOrder = async (req, res) => {
         let cartItems = [];
 
         // 1. Get Cart Items (From DB if logged in, from Body if guest)
-        if (userId) {
+        const isNegotiation = req.body.isNegotiation || false;
+        const negotiateToken = req.body.negotiateToken;
+
+        if (isNegotiation && negotiateToken) {
+            // NEGOTIATION FLOW
+            const { data: proposal, error: propError } = await supabase
+                .from('propuestas_offszn')
+                .select('*, product:products(id, name, producer_id, image_url, mp3_url, wav_url, stems_url, kit_url)')
+                .eq('purchase_token', negotiateToken)
+                .single();
+
+            if (propError || !proposal) {
+                return res.status(404).json({ error: 'Token de negociación inválido o expirado' });
+            }
+
+            if (proposal.status_offszn !== 'accepted') {
+                return res.status(400).json({ error: 'Esta propuesta no ha sido aceptada' });
+            }
+
+            const agreedPrice = parseFloat(proposal.counter_amount || proposal.amount_offszn);
+            cartItems = [{
+                product: proposal.product,
+                license_name: proposal.selected_license || 'Standard',
+                variant_price: agreedPrice,
+                is_negotiation: true
+            }];
+        } else if (userId) {
             const { data, error: cartError } = await supabase
                 .from('cart_items')
                 .select('product:products(id, name, price_basic, producer_id, image_url, mp3_url, wav_url, stems_url, kit_url), license_name, variant_price')
@@ -118,31 +144,25 @@ export const createPayPalOrder = async (req, res) => {
             let verifiedPrice = 0;
 
             if (dbProd.product_type === 'beat') {
-                const licKey = (item.license_name || 'basic').toLowerCase();
-                const productOverride = dbProd.licenses ? dbProd.licenses[licKey]?.price : null;
-                const producerPrice = producer?.settings ? producer.settings[licKey]?.price : null;
-                const dbFieldMap = {
-                    basic: dbProd.price_basic,
-                    premium: dbProd.price_premium,
-                    trackout: dbProd.price_stems,
-                    stems: dbProd.price_stems,
-                    unlimited: dbProd.price_exclusive,
-                    exclusive: dbProd.price_exclusive
-                };
-
-                if (!verifiedPrice && dbProd.licenses) {
-                    const foundLicense = Object.values(dbProd.licenses).find(l =>
-                        String(l.name).toLowerCase() === licKey ||
-                        String(l.id).toLowerCase() === licKey
-                    );
-                    if (foundLicense) verifiedPrice = foundLicense.price;
-                }
-
-                if (!verifiedPrice || verifiedPrice === 0) {
-                    verifiedPrice = dbProd.price_basic || 0;
+                // For negotiation, we use the price from the proposal (already in verifiedPrice if we set it)
+                if (item.is_negotiation) {
+                    verifiedPrice = item.variant_price;
+                } else {
+                    const licKey = (item.license_name || 'basic').toLowerCase();
+                    const productOverride = dbProd.licenses ? dbProd.licenses[licKey]?.price : null;
+                    const producerPrice = producer?.license_settings ? producer.license_settings[licKey]?.price : null;
+                    const dbFieldMap = {
+                        basic: dbProd.price_basic,
+                        premium: dbProd.price_premium,
+                        trackout: dbProd.price_stems,
+                        stems: dbProd.price_stems,
+                        unlimited: dbProd.price_exclusive,
+                        exclusive: dbProd.price_exclusive
+                    };
+                    verifiedPrice = productOverride || dbFieldMap[licKey] || producerPrice || FACTORY_DEFAULTS[licKey] || 0;
                 }
             } else {
-                verifiedPrice = dbProd.price_basic || 0;
+                verifiedPrice = item.is_negotiation ? item.variant_price : (dbProd.price_basic || 0);
             }
 
             verifiedPrice = parseFloat(verifiedPrice);
@@ -277,6 +297,9 @@ export const createPayPalOrder = async (req, res) => {
         request.prefer("return=representation");
         request.requestBody({
             intent: 'CAPTURE',
+            application_context: {
+                shipping_preference: "NO_SHIPPING"
+            },
             purchase_units: purchaseUnits
         });
 
@@ -303,7 +326,29 @@ export const capturePayPalOrder = async (req, res) => {
         if (response.result.status === 'COMPLETED' || response.result.status === 'APPROVED') {
             // 1. Get Cart Items
             let cartItems = [];
-            if (userId) {
+            const isNegotiation = req.body.isNegotiation || false;
+            const negotiateToken = req.body.negotiateToken;
+
+            if (isNegotiation && negotiateToken) {
+                const { data: proposal, error: propError } = await supabase
+                    .from('propuestas_offszn')
+                    .select('*, product:products(id, name, producer_id, image_url, mp3_url, wav_url, stems_url, kit_url)')
+                    .eq('purchase_token', negotiateToken)
+                    .single();
+
+                if (propError || !proposal) {
+                    console.error("[PayPalCapture] Negotiation proposal not found during capture:", negotiateToken);
+                } else {
+                    const agreedPrice = parseFloat(proposal.counter_amount || proposal.amount_offszn);
+                    cartItems = [{
+                        product: proposal.product,
+                        license_name: proposal.selected_license || 'Standard',
+                        variant_price: agreedPrice,
+                        is_negotiation: true,
+                        proposal_id: proposal.id
+                    }];
+                }
+            } else if (userId) {
                 const { data, error: cartFetchError } = await supabase
                     .from('cart_items')
                     .select('product:products(id, name, producer_id, image_url, mp3_url, wav_url, stems_url, kit_url), license_name, variant_price')
@@ -313,7 +358,7 @@ export const capturePayPalOrder = async (req, res) => {
                 cartItems = data || [];
             } else {
                 cartItems = guestItems || [];
-                // Try to find user by email from PayPal if they are guests
+                // ...
                 const payerEmail = response.result.payer?.email_address;
                 if (payerEmail) {
                     const { data: existingUser } = await supabase
@@ -453,20 +498,24 @@ export const capturePayPalOrder = async (req, res) => {
                 let verifiedPrice = 0;
 
                 if (dbProd.product_type === 'beat') {
-                    const licKey = (item.license_name || 'basic').toLowerCase();
-                    const productOverride = dbProd.licenses ? dbProd.licenses[licKey]?.price : null;
-                    const producerPrice = producer?.license_settings ? producer.license_settings[licKey]?.price : null;
-                    const dbFieldMap = {
-                        basic: dbProd.price_basic,
-                        premium: dbProd.price_premium,
-                        trackout: dbProd.price_stems,
-                        stems: dbProd.price_stems,
-                        unlimited: dbProd.price_exclusive,
-                        exclusive: dbProd.price_exclusive
-                    };
-                    verifiedPrice = productOverride || dbFieldMap[licKey] || producerPrice || FACTORY_DEFAULTS[licKey] || 0;
+                    if (item.is_negotiation) {
+                        verifiedPrice = item.variant_price;
+                    } else {
+                        const licKey = (item.license_name || 'basic').toLowerCase();
+                        const productOverride = dbProd.licenses ? dbProd.licenses[licKey]?.price : null;
+                        const producerPrice = producer?.license_settings ? producer.license_settings[licKey]?.price : null;
+                        const dbFieldMap = {
+                            basic: dbProd.price_basic,
+                            premium: dbProd.price_premium,
+                            trackout: dbProd.price_stems,
+                            stems: dbProd.price_stems,
+                            unlimited: dbProd.price_exclusive,
+                            exclusive: dbProd.price_exclusive
+                        };
+                        verifiedPrice = productOverride || dbFieldMap[licKey] || producerPrice || FACTORY_DEFAULTS[licKey] || 0;
+                    }
                 } else {
-                    verifiedPrice = dbProd.price_basic || 0;
+                    verifiedPrice = item.is_negotiation ? item.variant_price : (dbProd.price_basic || 0);
                 }
 
                 verifiedPrice = parseFloat(verifiedPrice);
@@ -548,8 +597,20 @@ export const capturePayPalOrder = async (req, res) => {
                 }
             }
 
-            // 6. Clear Cart in DB
-            if (userId) {
+            // 6. Clear Cart in DB or Invalidate Negotiation Token
+            if (isNegotiation && negotiateToken) {
+                // Mark proposal as purchased and clear token
+                const proposalItem = cartItems.find(i => i.is_negotiation);
+                if (proposalItem?.proposal_id) {
+                    await supabase
+                        .from('propuestas_offszn')
+                        .update({
+                            status_offszn: 'purchased',
+                            purchase_token: null
+                        })
+                        .eq('id', proposalItem.proposal_id);
+                }
+            } else if (userId) {
                 const { error: clearError } = await supabase.from('cart_items').delete().eq('user_id', userId);
                 if (clearError) console.error("[PayPalCapture] Error clearing cart:", clearError);
             }
