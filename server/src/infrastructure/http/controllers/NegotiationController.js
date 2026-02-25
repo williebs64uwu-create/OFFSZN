@@ -124,10 +124,10 @@ export const respondNegotiation = async (req, res) => {
     }
 
     try {
-        // 1. Fetch Proposal Details
+        // 1. Fetch Proposal Details (without users join to avoid PGRST200 Schema Cache Error)
         const { data: proposal, error: propError } = await supabase
             .from('propuestas_offszn')
-            .select('*, products(name), users!producer_id(nickname, payment_methods)')
+            .select('*, products(name)')
             .eq('id', proposalId)
             .single();
 
@@ -136,9 +136,16 @@ export const respondNegotiation = async (req, res) => {
             return res.status(404).json({ error: 'Propuesta no encontrada' });
         }
 
+        // 1.5. Fetch Producer Details Manually
+        const { data: producer, error: prodError } = await supabase
+            .from('users')
+            .select('nickname, payment_methods')
+            .eq('id', proposal.producer_id)
+            .single();
+
         const buyerEmail = proposal.email_offszn;
         const productName = proposal.products?.name || 'Producto';
-        const producerName = proposal.users?.nickname || 'Productor';
+        const producerName = producer?.nickname || 'Productor';
         const finalAmount = counterAmount || proposal.counter_amount || proposal.amount_offszn;
 
         // 2. Setup Nodemailer
@@ -165,7 +172,7 @@ export const respondNegotiation = async (req, res) => {
                     <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
                     <p>Para completar la compra, contacta directamente al productor o espera a que se genere un link de pago personalizado (funcionalidad en desarrollo).</p>
                     <p><b>Productor:</b> ${producerName}</p>
-                    <p><b>Email de contacto:</b> ${proposal.users?.payment_methods?.paypal || proposal.users?.payment_methods?.email || 'N/A'}</p>
+                    <p><b>Email de contacto:</b> ${producer?.payment_methods?.paypal || producer?.payment_methods?.email || 'N/A'}</p>
                     <br>
                     <p>¡Gracias por usar OFFSZN!</p>
                 </div>
