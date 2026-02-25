@@ -109,7 +109,7 @@
             flex-direction: column;
             align-items: center;
             padding-top: 20px;
-            gap: 10px;
+            gap: 15px;
             position: fixed;
             left: 0;
             top: 0;
@@ -188,21 +188,18 @@
         }
 
         /* MAIN CONTENT - Adjusted margin */
-        /* MAIN CONTENT - Centered Layout (Matches Dashboard) */
-        .container {
-            margin-left: 80px;
-            /* width: calc(100% - 80px);  <-- Implied by flex:1 */
+        .main-content-elite {
             flex: 1;
+            margin-left: 80px;
+            width: calc(100% - 80px);
             padding: 24px 40px;
-            /* Reduced vertical padding (was 40px) */
             display: flex;
             flex-direction: column;
             align-items: center;
-            /* Centers the content block */
         }
 
         /* Constrain content width */
-        .container>* {
+        .main-content-elite>* {
             width: 100%;
             max-width: 1100px;
         }
@@ -812,30 +809,30 @@
     <!-- BACKGROUND -->
     <div class="radial-glow"></div>
 
-    <!-- SIDEBAR -->
-    <div class="sidebar-stub" style="justify-content:flex-start; gap:15px; align-items:center;">
+    <!-- SIDEBAR (Standard) -->
+    <div class="sidebar-stub" style="justify-content:flex-start; gap:15px;">
         <!-- Brand/Home -->
         <a href="/index.html" class="sidebar-logo-btn"
             style="margin-bottom:10px; display:flex; align-items:center; justify-content:center; width:44px; height:44px;">
             <img src="../images/LOGO-OFFSZN.png" style="width:38px; mix-blend-mode: screen;">
         </a>
 
-        <!-- 1. GESTI�N -->
+        <!-- 1. GESTIÓN -->
         <div style="width:40px; border-bottom:1px solid #222; margin:5px 0;"></div>
-        <a href="/cuenta/dashboard.html" class="sidebar-icon-btn" data-title="Dashboard"><i
-                class="bi bi-grid-fill"></i></a>
-        <a href="/cuenta/mis-kits.html" class="sidebar-icon-btn" data-title="Mis Beats/Kits"><i
-                class="bi bi-disc-fill"></i></a>
-        <a href="/cuenta/subir-kit.html" class="sidebar-icon-btn" data-title="Subir"><i
+        <a href="dashboard.html" class="sidebar-icon-btn" data-title="Dashboard"><i class="bi bi-grid-fill"></i></a>
+        <a href="mis-kits.html" class="sidebar-icon-btn" data-title="Mis Beats/Kits"><i class="bi bi-disc-fill"></i></a>
+        <a href="subir-kit.html" class="sidebar-icon-btn" data-title="Subir"><i
                 class="bi bi-cloud-arrow-up-fill"></i></a>
 
         <!-- 2. NEGOCIO -->
         <div style="width:40px; border-bottom:1px solid #222; margin:5px 0;"></div>
-        <a href="/cuenta/admin-licencias.html" class="sidebar-icon-btn active" data-title="Licencias"><i
+        <a href="admin-licencias.html" class="sidebar-icon-btn active" data-title="Licencias"><i
                 class="bi bi-file-earmark-music-fill"></i></a>
-        <a href="/cuenta/cupones.html" class="sidebar-icon-btn" data-title="Cupones"><i
+        <a href="negociar.html" class="sidebar-icon-btn" data-title="Negociar"><i
+                class="bi bi-chat-left-dots-fill"></i></a>
+        <a href="cupones.html" class="sidebar-icon-btn" data-title="Cupones"><i
                 class="bi bi-ticket-perforated-fill"></i></a>
-        <a href="/cuenta/colaboraciones.html" class="sidebar-icon-btn" data-title="Colaboraciones"><i
+        <a href="colaboraciones.html" class="sidebar-icon-btn" data-title="Colaboraciones"><i
                 class="bi bi-people-fill"></i></a>
 
         <!-- 3. ACADEMIA -->
@@ -847,18 +844,17 @@
 
         <!-- 4. SOCIAL -->
         <div style="width:40px; border-bottom:1px solid #222; margin:5px 0;"></div>
-        <a href="/cuenta/reels.html" class="sidebar-icon-btn" data-title="Reels"><i
-                class="bi bi-camera-reels-fill"></i></a>
+        <a href="reels.html" class="sidebar-icon-btn" data-title="Reels"><i class="bi bi-camera-reels-fill"></i></a>
 
-        <!-- UPGRADE BUTTON -->
-        <div>
-            <a href="/cuenta/planes.html" class="sidebar-icon-btn" data-title="Mejorar Plan" style="color:#FFD700;">
-                <i class="bi bi-rocket-takeoff-fill"></i>
-            </a>
-        </div>
+        <!-- UPGRADE BUTTON (ROCKET) -->
+        <a href="planes.html" class="sidebar-icon-btn" data-title="Mejorar Plan"
+            style="color:#FFD700; margin-top: 10px;">
+            <i class="bi bi-rocket-takeoff-fill"></i>
+        </a>
     </div>
 
-    <div class="container">
+    <!-- MAIN CONTENT -->
+    <main class="main-content-elite">
 
         <!-- SKELETON LOADING STATE -->
         <!-- SKELETON LOADING STATE -->
@@ -1167,439 +1163,439 @@
 
             </div>
         </div>
-    </div>
+        </div>
 
-    <!-- CUSTOM MODAL -->
-    <div class="custom-modal-overlay" id="confirmModal">
-        <div class="custom-modal">
-            <h3>¿Estás seguro?</h3>
-            <p>Se restablecerán los valores por defecto para esta licencia. Esto no guardará los cambios
-                automáticamente.</p>
-            <div class="modal-actions">
-                <button class="btn-modal-cancel" onclick="closeModal()">Cancelar</button>
-                <button class="btn-modal-confirm" onclick="confirmReset()">Sí, Restablecer</button>
+        <!-- CUSTOM MODAL -->
+        <div class="custom-modal-overlay" id="confirmModal">
+            <div class="custom-modal">
+                <h3>¿Estás seguro?</h3>
+                <p>Se restablecerán los valores por defecto para esta licencia. Esto no guardará los cambios
+                    automáticamente.</p>
+                <div class="modal-actions">
+                    <button class="btn-modal-cancel" onclick="closeModal()">Cancelar</button>
+                    <button class="btn-modal-confirm" onclick="confirmReset()">Sí, Restablecer</button>
+                </div>
             </div>
         </div>
-    </div>
 
-    <!-- LOGIC -->
-    <script>
-        // --- DEFAULTS ---
-        const defaults = {
-            basic: { name: 'Basic Lease', price: 20.00, enabled: true, files: { wav: false, stems: false }, usage: { streams: '50000', sales: '2000', radio: 'No Permitido' } },
-            premium: { name: 'Premium Lease', price: 50.00, enabled: true, files: { wav: true, stems: false }, usage: { streams: '500000', sales: '5000', radio: '2 Estaciones' } },
-            trackout: { name: 'Trackout Lease', price: 100.00, enabled: true, files: { wav: true, stems: true }, usage: { streams: '1000000', sales: '10000', radio: 'ILIMITADO' } },
-            unlimited: { name: 'Unlimited License', price: 300.00, enabled: true, files: { wav: true, stems: true }, usage: { streams: 'UNLIMITED', sales: 'UNLIMITED', radio: 'ILIMITADO' } }
-        };
+        <!-- LOGIC -->
+        <script>
+            // --- DEFAULTS ---
+            const defaults = {
+                basic: { name: 'Basic Lease', price: 20.00, enabled: true, files: { wav: false, stems: false }, usage: { streams: '50000', sales: '2000', radio: 'No Permitido' } },
+                premium: { name: 'Premium Lease', price: 50.00, enabled: true, files: { wav: true, stems: false }, usage: { streams: '500000', sales: '5000', radio: '2 Estaciones' } },
+                trackout: { name: 'Trackout Lease', price: 100.00, enabled: true, files: { wav: true, stems: true }, usage: { streams: '1000000', sales: '10000', radio: 'ILIMITADO' } },
+                unlimited: { name: 'Unlimited License', price: 300.00, enabled: true, files: { wav: true, stems: true }, usage: { streams: 'UNLIMITED', sales: 'UNLIMITED', radio: 'ILIMITADO' } }
+            };
 
-        let currentTab = null;
-        let currentLicenses = JSON.parse(JSON.stringify(defaults));
+            let currentTab = null;
+            let currentLicenses = JSON.parse(JSON.stringify(defaults));
 
-        // --- ELEMENTS ---
-        const els = {
-            name: document.getElementById('inputName'),
-            price: document.getElementById('inputPrice'),
-            enabled: document.getElementById('checkEnabled'),
-            wav: document.getElementById('checkWav'),
-            stems: document.getElementById('checkStems'),
-            streams: document.getElementById('limitStreams'),
-            sales: document.getElementById('limitSales'),
-            radio: document.getElementById('limitRadio'),
+            // --- ELEMENTS ---
+            const els = {
+                name: document.getElementById('inputName'),
+                price: document.getElementById('inputPrice'),
+                enabled: document.getElementById('checkEnabled'),
+                wav: document.getElementById('checkWav'),
+                stems: document.getElementById('checkStems'),
+                streams: document.getElementById('limitStreams'),
+                sales: document.getElementById('limitSales'),
+                radio: document.getElementById('limitRadio'),
 
-            // Preview
-            pBadge: document.getElementById('prevBadge'),
-            pPrice: document.getElementById('prevPrice'),
-            pStreams: document.getElementById('prevStreams'),
-            pSales: document.getElementById('prevSales'),
-            pRadio: document.getElementById('prevRadio'),
-            pFiles: document.getElementById('prevFiles'),
+                // Preview
+                pBadge: document.getElementById('prevBadge'),
+                pPrice: document.getElementById('prevPrice'),
+                pStreams: document.getElementById('prevStreams'),
+                pSales: document.getElementById('prevSales'),
+                pRadio: document.getElementById('prevRadio'),
+                pFiles: document.getElementById('prevFiles'),
 
-            overlay: document.getElementById('inactiveOverlay'),
-            enabledText: document.getElementById('enabledText')
-        };
+                overlay: document.getElementById('inactiveOverlay'),
+                enabledText: document.getElementById('enabledText')
+            };
 
-        // --- INIT ---
-        async function init() {
-            const { data: { session } } = await window.supabaseClient.auth.getSession();
+            // --- INIT ---
+            async function init() {
+                const { data: { session } } = await window.supabaseClient.auth.getSession();
 
-            if (!session) {
-                // ?? SEGURIDAD: Si no hay sesi�n, fuera de aqu�.
-                window.location.href = '/login.html';
-                return;
+                if (!session) {
+                    // ?? SEGURIDAD: Si no hay sesi�n, fuera de aqu�.
+                    window.location.href = '/login.html';
+                    return;
+                }
+
+                window.currentUser = session.user;
+
+                // ?? Minimum 2s Loading Time + Data Fetch
+                await Promise.all([
+                    loadLicenseSettings(),
+                    new Promise(resolve => setTimeout(resolve, 500))
+                ]);
+
+                // Reveal Content & Hide Skeletons
+                document.getElementById('skeleton-container').style.display = 'none';
+                document.getElementById('real-content').style.display = 'flex'; // Use flex to match original definition if any, or block
+
+                // ?? PERSISTENCIA DE TAB: Recuperamos la �ltima pesta�a visitada
+                const lastTab = localStorage.getItem('adminLastTab') || 'basic';
+                switchTab(lastTab);
+
+                setupListeners();
             }
 
-            window.currentUser = session.user;
+            // --- CORE LOGIC ---
+            function switchTab(tab) {
+                updateCurrentState(); // Guardamos el estado del tab anterior
+                currentTab = tab;
 
-            // ?? Minimum 2s Loading Time + Data Fetch
-            await Promise.all([
-                loadLicenseSettings(),
-                new Promise(resolve => setTimeout(resolve, 500))
-            ]);
+                // ?? RETENCI�N: Guardamos d�nde estamos para si recarga
+                localStorage.setItem('adminLastTab', tab);
 
-            // Reveal Content & Hide Skeletons
-            document.getElementById('skeleton-container').style.display = 'none';
-            document.getElementById('real-content').style.display = 'flex'; // Use flex to match original definition if any, or block
-
-            // ?? PERSISTENCIA DE TAB: Recuperamos la �ltima pesta�a visitada
-            const lastTab = localStorage.getItem('adminLastTab') || 'basic';
-            switchTab(lastTab);
-
-            setupListeners();
-        }
-
-        // --- CORE LOGIC ---
-        function switchTab(tab) {
-            updateCurrentState(); // Guardamos el estado del tab anterior
-            currentTab = tab;
-
-            // ?? RETENCI�N: Guardamos d�nde estamos para si recarga
-            localStorage.setItem('adminLastTab', tab);
-
-            document.querySelectorAll('.tab-btn').forEach(b => {
-                b.classList.remove('active');
-                if (b.getAttribute('onclick').includes(`'${tab}'`)) b.classList.add('active');
-            });
-
-            // Fallback safety if undefined
-            if (!currentLicenses[tab]) currentLicenses[tab] = JSON.parse(JSON.stringify(defaults[tab]));
-
-            const data = currentLicenses[tab];
-
-            // ?? CORRECCI�N CR�TICA: Asegurar que los inputs reciban valores v�lidos
-            els.name.value = data.name || defaults[tab].name;
-            els.price.value = data.price || defaults[tab].price;
-            els.enabled.checked = (data.enabled !== false);
-            els.wav.checked = data.files.wav;
-            els.stems.checked = data.files.stems;
-            els.streams.value = data.usage.streams;
-            els.sales.value = data.usage.sales;
-            els.radio.value = data.usage.radio;
-
-            toggleUnlimitedLock(tab === 'unlimited');
-            updatePreview();
-            validateAll();
-        }
-
-        function toggleUnlimitedLock(lock) {
-            if (lock) {
-                els.streams.value = "UNLIMITED";
-                els.sales.value = "UNLIMITED";
-                els.radio.value = "ILIMITADO";
-
-                els.streams.closest('.form-group').classList.add('unlimited-lock');
-                els.sales.closest('.form-group').classList.add('unlimited-lock');
-                els.radio.closest('.form-group').classList.add('unlimited-lock');
-
-                els.streams.disabled = true;
-                els.sales.disabled = true;
-                els.radio.disabled = true;
-            } else {
-                els.streams.closest('.form-group').classList.remove('unlimited-lock');
-                els.sales.closest('.form-group').classList.remove('unlimited-lock');
-                els.radio.closest('.form-group').classList.remove('unlimited-lock');
-
-                els.streams.disabled = false;
-                els.sales.disabled = false;
-                els.radio.disabled = false;
-            }
-        }
-
-        function updatePreview() {
-            // Sincronizar texto de la tarjeta con los inputs en tiempo real
-            els.pBadge.innerText = (els.name.value || "LICENCIA").toUpperCase();
-            els.pPrice.innerText = `$${els.price.value || "0.00"}`;
-
-            els.pStreams.innerText = formatNumber(els.streams.value);
-            els.pSales.innerText = formatNumber(els.sales.value);
-            els.pRadio.innerText = els.radio.value === "No Permitido" ? "No" : els.radio.value.replace('Estaciones', '').replace('Permitido', '').trim();
-
-            let files = "MP3";
-            if (els.wav.checked) files += "+WAV";
-            if (els.stems.checked) files += "+STEM";
-            els.pFiles.innerText = files;
-
-            // Inactive State Logic
-            if (els.enabled.checked) {
-                els.overlay.style.display = 'none';
-                els.enabledText.innerText = "ACTIVA";
-                els.enabledText.style.color = "#fff";
-                document.getElementById('previewCard').style.filter = "none";
-            } else {
-                els.overlay.style.display = 'flex';
-                els.enabledText.innerText = "INACTIVA";
-                els.enabledText.style.color = "#888";
-                document.getElementById('previewCard').style.filter = "grayscale(100%)";
-            }
-        }
-
-        function formatNumber(val) {
-            if (val === "UNLIMITED" || val === "ILIMITADO") return "ILIMITADO";
-            if (isNaN(val)) return val;
-            let num = parseInt(val);
-            if (num >= 1000000) return (num / 1000000).toFixed(0) + 'M';
-            if (num >= 1000) return (num / 1000).toFixed(0) + 'K';
-            return num;
-        }
-
-        function updateCurrentState() {
-            if (!currentLicenses[currentTab]) return;
-            const d = currentLicenses[currentTab];
-            d.name = els.name.value;
-            d.price = els.price.value;
-            d.enabled = els.enabled.checked;
-            d.files.wav = els.wav.checked;
-            d.files.stems = els.stems.checked;
-            d.usage.streams = els.streams.value;
-            d.usage.sales = els.sales.value;
-            d.usage.radio = els.radio.value;
-        }
-
-        // --- VALIDATION & LISTENERS ---
-        function setupListeners() {
-            const inputs = document.querySelectorAll('input, select');
-            const nameInput = document.getElementById('inputName');
-            const counter = document.getElementById('nameCounter');
-
-            if (nameInput && counter) {
-                nameInput.addEventListener('input', function () {
-                    counter.innerText = `${this.value.length}/20`;
-                });
-            }
-
-            inputs.forEach(i => {
-                i.addEventListener('input', () => {
-                    if (i.id === 'inputPrice') {
-                        let val = parseFloat(i.value);
-                        if (val >= 1000) i.value = "1000";
-                        else if (i.value.includes('.')) {
-                            const parts = i.value.split('.');
-                            if (parts[1].length > 2) i.value = parts[0] + '.' + parts[1].slice(0, 2);
-                        }
-                    }
-                    updatePreview();
-                    validateField(i);
+                document.querySelectorAll('.tab-btn').forEach(b => {
+                    b.classList.remove('active');
+                    if (b.getAttribute('onclick').includes(`'${tab}'`)) b.classList.add('active');
                 });
 
-                if (i.id === 'inputPrice') {
-                    i.addEventListener('blur', () => {
-                        let val = parseFloat(i.value);
-                        if (!isNaN(val)) {
-                            if (val === 1000) i.value = "1000";
-                            else i.value = val.toFixed(2);
-                        }
+                // Fallback safety if undefined
+                if (!currentLicenses[tab]) currentLicenses[tab] = JSON.parse(JSON.stringify(defaults[tab]));
+
+                const data = currentLicenses[tab];
+
+                // ?? CORRECCI�N CR�TICA: Asegurar que los inputs reciban valores v�lidos
+                els.name.value = data.name || defaults[tab].name;
+                els.price.value = data.price || defaults[tab].price;
+                els.enabled.checked = (data.enabled !== false);
+                els.wav.checked = data.files.wav;
+                els.stems.checked = data.files.stems;
+                els.streams.value = data.usage.streams;
+                els.sales.value = data.usage.sales;
+                els.radio.value = data.usage.radio;
+
+                toggleUnlimitedLock(tab === 'unlimited');
+                updatePreview();
+                validateAll();
+            }
+
+            function toggleUnlimitedLock(lock) {
+                if (lock) {
+                    els.streams.value = "UNLIMITED";
+                    els.sales.value = "UNLIMITED";
+                    els.radio.value = "ILIMITADO";
+
+                    els.streams.closest('.form-group').classList.add('unlimited-lock');
+                    els.sales.closest('.form-group').classList.add('unlimited-lock');
+                    els.radio.closest('.form-group').classList.add('unlimited-lock');
+
+                    els.streams.disabled = true;
+                    els.sales.disabled = true;
+                    els.radio.disabled = true;
+                } else {
+                    els.streams.closest('.form-group').classList.remove('unlimited-lock');
+                    els.sales.closest('.form-group').classList.remove('unlimited-lock');
+                    els.radio.closest('.form-group').classList.remove('unlimited-lock');
+
+                    els.streams.disabled = false;
+                    els.sales.disabled = false;
+                    els.radio.disabled = false;
+                }
+            }
+
+            function updatePreview() {
+                // Sincronizar texto de la tarjeta con los inputs en tiempo real
+                els.pBadge.innerText = (els.name.value || "LICENCIA").toUpperCase();
+                els.pPrice.innerText = `$${els.price.value || "0.00"}`;
+
+                els.pStreams.innerText = formatNumber(els.streams.value);
+                els.pSales.innerText = formatNumber(els.sales.value);
+                els.pRadio.innerText = els.radio.value === "No Permitido" ? "No" : els.radio.value.replace('Estaciones', '').replace('Permitido', '').trim();
+
+                let files = "MP3";
+                if (els.wav.checked) files += "+WAV";
+                if (els.stems.checked) files += "+STEM";
+                els.pFiles.innerText = files;
+
+                // Inactive State Logic
+                if (els.enabled.checked) {
+                    els.overlay.style.display = 'none';
+                    els.enabledText.innerText = "ACTIVA";
+                    els.enabledText.style.color = "#fff";
+                    document.getElementById('previewCard').style.filter = "none";
+                } else {
+                    els.overlay.style.display = 'flex';
+                    els.enabledText.innerText = "INACTIVA";
+                    els.enabledText.style.color = "#888";
+                    document.getElementById('previewCard').style.filter = "grayscale(100%)";
+                }
+            }
+
+            function formatNumber(val) {
+                if (val === "UNLIMITED" || val === "ILIMITADO") return "ILIMITADO";
+                if (isNaN(val)) return val;
+                let num = parseInt(val);
+                if (num >= 1000000) return (num / 1000000).toFixed(0) + 'M';
+                if (num >= 1000) return (num / 1000).toFixed(0) + 'K';
+                return num;
+            }
+
+            function updateCurrentState() {
+                if (!currentLicenses[currentTab]) return;
+                const d = currentLicenses[currentTab];
+                d.name = els.name.value;
+                d.price = els.price.value;
+                d.enabled = els.enabled.checked;
+                d.files.wav = els.wav.checked;
+                d.files.stems = els.stems.checked;
+                d.usage.streams = els.streams.value;
+                d.usage.sales = els.sales.value;
+                d.usage.radio = els.radio.value;
+            }
+
+            // --- VALIDATION & LISTENERS ---
+            function setupListeners() {
+                const inputs = document.querySelectorAll('input, select');
+                const nameInput = document.getElementById('inputName');
+                const counter = document.getElementById('nameCounter');
+
+                if (nameInput && counter) {
+                    nameInput.addEventListener('input', function () {
+                        counter.innerText = `${this.value.length}/20`;
                     });
                 }
 
-                i.addEventListener('change', () => {
-                    updatePreview();
-                    validateField(i);
-                });
-            });
-        }
-
-        function validateAll() {
-            document.querySelectorAll('input, select').forEach(validateField);
-            const nameInput = document.getElementById('inputName');
-            const counter = document.getElementById('nameCounter');
-            if (nameInput && counter) counter.innerText = `${nameInput.value.length}/20`;
-        }
-
-        function validateField(field) {
-            const group = field.closest('.form-group');
-            if (!group) return;
-
-            let isValid = false;
-            // Strict Price Validation (Min $5, Max $1000)
-            if (field.id === 'inputPrice') {
-                let val = parseFloat(field.value);
-                if (val >= 5 && val <= 1000) isValid = true;
-                if (val > 1000) { field.value = "1000"; isValid = true; }
-                if (val < 5 && field.value !== "") isValid = false;
-            }
-            else if (field.tagName === 'SELECT') isValid = true;
-            else if (field.type === 'text' && field.value.length > 2) isValid = true;
-            else if (field.type === 'number') isValid = true;
-
-            if (isValid) group.classList.add('valid');
-            else group.classList.remove('valid');
-        }
-
-        // --- SUPABASE LOAD/SAVE WITH SANITIZATION ---
-        async function loadLicenseSettings() {
-            try {
-                const { data, error } = await window.supabaseClient
-                    .from('users')
-                    .select('license_settings')
-                    .eq('id', window.currentUser.id)
-                    .maybeSingle();
-
-                if (data && data.license_settings) {
-                    const saved = data.license_settings;
-
-                    for (const key in defaults) {
-                        if (saved[key]) {
-                            // Mezclamos lo guardado con el default para que si falta un campo (como el precio), use el default
-                            currentLicenses[key] = {
-                                ...defaults[key],
-                                ...saved[key],
-                                // Validación extra de precio: si es null, vacío o NaN, forzar default
-                                price: (saved[key].price !== null && saved[key].price !== undefined && saved[key].price !== '' && !isNaN(saved[key].price)) ? saved[key].price : defaults[key].price,
-                                name: (saved[key].name && saved[key].name.trim() !== "") ? saved[key].name : defaults[key].name
-                            };
+                inputs.forEach(i => {
+                    i.addEventListener('input', () => {
+                        if (i.id === 'inputPrice') {
+                            let val = parseFloat(i.value);
+                            if (val >= 1000) i.value = "1000";
+                            else if (i.value.includes('.')) {
+                                const parts = i.value.split('.');
+                                if (parts[1].length > 2) i.value = parts[0] + '.' + parts[1].slice(0, 2);
+                            }
                         }
+                        updatePreview();
+                        validateField(i);
+                    });
+
+                    if (i.id === 'inputPrice') {
+                        i.addEventListener('blur', () => {
+                            let val = parseFloat(i.value);
+                            if (!isNaN(val)) {
+                                if (val === 1000) i.value = "1000";
+                                else i.value = val.toFixed(2);
+                            }
+                        });
                     }
-                    // console.log("Sincronización Elite Completada ✅"); // 🧹 CLEANUP
+
+                    i.addEventListener('change', () => {
+                        updatePreview();
+                        validateField(i);
+                    });
+                });
+            }
+
+            function validateAll() {
+                document.querySelectorAll('input, select').forEach(validateField);
+                const nameInput = document.getElementById('inputName');
+                const counter = document.getElementById('nameCounter');
+                if (nameInput && counter) counter.innerText = `${nameInput.value.length}/20`;
+            }
+
+            function validateField(field) {
+                const group = field.closest('.form-group');
+                if (!group) return;
+
+                let isValid = false;
+                // Strict Price Validation (Min $5, Max $1000)
+                if (field.id === 'inputPrice') {
+                    let val = parseFloat(field.value);
+                    if (val >= 5 && val <= 1000) isValid = true;
+                    if (val > 1000) { field.value = "1000"; isValid = true; }
+                    if (val < 5 && field.value !== "") isValid = false;
                 }
-            } catch (err) {
-                console.error("Error cargando configuración:", err);
-            }
-        }
+                else if (field.tagName === 'SELECT') isValid = true;
+                else if (field.type === 'text' && field.value.length > 2) isValid = true;
+                else if (field.type === 'number') isValid = true;
 
-        // DEFINICION DE VALORES POR DEFECTO (FACTORY DEFAULTS)
-        const LICENSE_DEFAULTS = {
-            'basic': {
-                name: 'Basic Lease',
-                price: 20.00,
-                streams: '5000',
-                sales: '500',
-                radio: 'No Permitido',
-                files: { mp3: true, wav: false, stems: false },
-                enabled: true
-            },
-            'premium': {
-                name: 'Premium Lease',
-                price: 50.00,
-                streams: '50000',
-                sales: '2000',
-                radio: '2 Estaciones',
-                files: { mp3: true, wav: true, stems: false },
-                enabled: true
-            },
-            'trackout': {
-                name: 'Trackout Lease',
-                price: 100.00,
-                streams: '500000',
-                sales: '10000',
-                radio: 'ILIMITADO',
-                files: { mp3: true, wav: true, stems: true },
-                enabled: true
-            },
-            'unlimited': {
-                name: 'Unlimited License',
-                price: 300.00,
-                streams: 'UNLIMITED',
-                sales: 'UNLIMITED',
-                radio: 'ILIMITADO',
-                files: { mp3: true, wav: true, stems: true },
-                enabled: true
-            }
-        };
-
-        // --- CUSTOM MODAL LOGIC ---
-        const modal = document.getElementById('confirmModal');
-
-        function resetToDefaults() {
-            // Open Modal
-            modal.classList.add('show');
-        }
-
-        function closeModal() {
-            modal.classList.remove('show');
-        }
-
-        // Close on outside click
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) closeModal();
-        });
-
-        function confirmReset() {
-            closeModal();
-
-            const defaults = LICENSE_DEFAULTS[currentTab];
-            if (!defaults) return;
-
-            // Update Inputs
-            document.getElementById('inputName').value = defaults.name;
-            document.getElementById('inputPrice').value = defaults.price.toFixed(2);
-            document.getElementById('limitStreams').value = defaults.streams;
-            document.getElementById('limitSales').value = defaults.sales;
-            document.getElementById('limitRadio').value = defaults.radio;
-
-            // Update Checkboxes
-            document.getElementById('checkWav').checked = defaults.files.wav;
-            document.getElementById('checkStems').checked = defaults.files.stems;
-            document.getElementById('checkEnabled').checked = defaults.enabled;
-
-            updatePreview();
-            // updateEnabledState(); // Removed: logic already in updatePreview
-        }
-
-
-
-        // Custom Toast Notification
-        window.showToast = (msg, type = 'success') => {
-            let container = document.getElementById('toastContainer');
-            if (!container) {
-                container = document.createElement('div');
-                container.id = 'toastContainer';
-                container.className = 'toast-container';
-                document.body.appendChild(container);
-            }
-            const toast = document.createElement('div');
-            toast.className = `elite-toast ${type}`;
-            const icon = type === 'success' ? 'bi-check-circle-fill' : 'bi-exclamation-triangle-fill';
-            toast.innerHTML = `<i class="bi ${icon}"></i> <span>${msg}</span>`;
-            container.appendChild(toast);
-            setTimeout(() => {
-                toast.style.animation = 'toastSlideUp 0.3s reverse forwards';
-                setTimeout(() => toast.remove(), 300);
-            }, 3000);
-        }
-
-        async function saveLicense() {
-            updateCurrentState();
-            const btn = document.querySelector('.btn-primary-full');
-            const originalHTML = btn.innerHTML;
-
-            // 1. Duplicate Name Check
-            const names = Object.values(currentLicenses).map(l => l.name.trim().toLowerCase());
-            const uniqueNames = new Set(names);
-            if (names.length !== uniqueNames.size) {
-                showToast("Error: No puedes tener dos licencias con el mismo nombre.", "error");
-                return;
+                if (isValid) group.classList.add('valid');
+                else group.classList.remove('valid');
             }
 
-            btn.innerHTML = '<div class="spinner-border text-dark" role="status" style="width: 1rem; height: 1rem;"></div> Guardando...';
+            // --- SUPABASE LOAD/SAVE WITH SANITIZATION ---
+            async function loadLicenseSettings() {
+                try {
+                    const { data, error } = await window.supabaseClient
+                        .from('users')
+                        .select('license_settings')
+                        .eq('id', window.currentUser.id)
+                        .maybeSingle();
 
-            try {
-                if (!window.currentUser) throw new Error("No User");
+                    if (data && data.license_settings) {
+                        const saved = data.license_settings;
 
-                await window.supabaseClient
-                    .from('users')
-                    .update({ license_settings: currentLicenses })
-                    .eq('id', window.currentUser.id);
+                        for (const key in defaults) {
+                            if (saved[key]) {
+                                // Mezclamos lo guardado con el default para que si falta un campo (como el precio), use el default
+                                currentLicenses[key] = {
+                                    ...defaults[key],
+                                    ...saved[key],
+                                    // Validación extra de precio: si es null, vacío o NaN, forzar default
+                                    price: (saved[key].price !== null && saved[key].price !== undefined && saved[key].price !== '' && !isNaN(saved[key].price)) ? saved[key].price : defaults[key].price,
+                                    name: (saved[key].name && saved[key].name.trim() !== "") ? saved[key].name : defaults[key].name
+                                };
+                            }
+                        }
+                        // console.log("Sincronización Elite Completada ✅"); // 🧹 CLEANUP
+                    }
+                } catch (err) {
+                    console.error("Error cargando configuración:", err);
+                }
+            }
 
-                // ?? CLEANUP: Logs eliminados para producci�n
+            // DEFINICION DE VALORES POR DEFECTO (FACTORY DEFAULTS)
+            const LICENSE_DEFAULTS = {
+                'basic': {
+                    name: 'Basic Lease',
+                    price: 20.00,
+                    streams: '5000',
+                    sales: '500',
+                    radio: 'No Permitido',
+                    files: { mp3: true, wav: false, stems: false },
+                    enabled: true
+                },
+                'premium': {
+                    name: 'Premium Lease',
+                    price: 50.00,
+                    streams: '50000',
+                    sales: '2000',
+                    radio: '2 Estaciones',
+                    files: { mp3: true, wav: true, stems: false },
+                    enabled: true
+                },
+                'trackout': {
+                    name: 'Trackout Lease',
+                    price: 100.00,
+                    streams: '500000',
+                    sales: '10000',
+                    radio: 'ILIMITADO',
+                    files: { mp3: true, wav: true, stems: true },
+                    enabled: true
+                },
+                'unlimited': {
+                    name: 'Unlimited License',
+                    price: 300.00,
+                    streams: 'UNLIMITED',
+                    sales: 'UNLIMITED',
+                    radio: 'ILIMITADO',
+                    files: { mp3: true, wav: true, stems: true },
+                    enabled: true
+                }
+            };
 
-                btn.innerHTML = '<i class="bi bi-check-lg"></i> Guardado!';
-                btn.style.background = "#0cbc87";
-                showToast("Cambios guardados exitosamente");
+            // --- CUSTOM MODAL LOGIC ---
+            const modal = document.getElementById('confirmModal');
 
+            function resetToDefaults() {
+                // Open Modal
+                modal.classList.add('show');
+            }
+
+            function closeModal() {
+                modal.classList.remove('show');
+            }
+
+            // Close on outside click
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) closeModal();
+            });
+
+            function confirmReset() {
+                closeModal();
+
+                const defaults = LICENSE_DEFAULTS[currentTab];
+                if (!defaults) return;
+
+                // Update Inputs
+                document.getElementById('inputName').value = defaults.name;
+                document.getElementById('inputPrice').value = defaults.price.toFixed(2);
+                document.getElementById('limitStreams').value = defaults.streams;
+                document.getElementById('limitSales').value = defaults.sales;
+                document.getElementById('limitRadio').value = defaults.radio;
+
+                // Update Checkboxes
+                document.getElementById('checkWav').checked = defaults.files.wav;
+                document.getElementById('checkStems').checked = defaults.files.stems;
+                document.getElementById('checkEnabled').checked = defaults.enabled;
+
+                updatePreview();
+                // updateEnabledState(); // Removed: logic already in updatePreview
+            }
+
+
+
+            // Custom Toast Notification
+            window.showToast = (msg, type = 'success') => {
+                let container = document.getElementById('toastContainer');
+                if (!container) {
+                    container = document.createElement('div');
+                    container.id = 'toastContainer';
+                    container.className = 'toast-container';
+                    document.body.appendChild(container);
+                }
+                const toast = document.createElement('div');
+                toast.className = `elite-toast ${type}`;
+                const icon = type === 'success' ? 'bi-check-circle-fill' : 'bi-exclamation-triangle-fill';
+                toast.innerHTML = `<i class="bi ${icon}"></i> <span>${msg}</span>`;
+                container.appendChild(toast);
                 setTimeout(() => {
-                    btn.innerHTML = originalHTML;
-                    btn.style.background = "";
-                }, 2000);
-            } catch (e) {
-                console.error(e);
-                showToast("Error al guardar: " + e.message, "error");
-                btn.innerHTML = "Error";
+                    toast.style.animation = 'toastSlideUp 0.3s reverse forwards';
+                    setTimeout(() => toast.remove(), 300);
+                }, 3000);
             }
-        }
 
-        document.addEventListener('DOMContentLoaded', () => {
-            init();
-        });
-    </script>
+            async function saveLicense() {
+                updateCurrentState();
+                const btn = document.querySelector('.btn-primary-full');
+                const originalHTML = btn.innerHTML;
+
+                // 1. Duplicate Name Check
+                const names = Object.values(currentLicenses).map(l => l.name.trim().toLowerCase());
+                const uniqueNames = new Set(names);
+                if (names.length !== uniqueNames.size) {
+                    showToast("Error: No puedes tener dos licencias con el mismo nombre.", "error");
+                    return;
+                }
+
+                btn.innerHTML = '<div class="spinner-border text-dark" role="status" style="width: 1rem; height: 1rem;"></div> Guardando...';
+
+                try {
+                    if (!window.currentUser) throw new Error("No User");
+
+                    await window.supabaseClient
+                        .from('users')
+                        .update({ license_settings: currentLicenses })
+                        .eq('id', window.currentUser.id);
+
+                    // ?? CLEANUP: Logs eliminados para producci�n
+
+                    btn.innerHTML = '<i class="bi bi-check-lg"></i> Guardado!';
+                    btn.style.background = "#0cbc87";
+                    showToast("Cambios guardados exitosamente");
+
+                    setTimeout(() => {
+                        btn.innerHTML = originalHTML;
+                        btn.style.background = "";
+                    }, 2000);
+                } catch (e) {
+                    console.error(e);
+                    showToast("Error al guardar: " + e.message, "error");
+                    btn.innerHTML = "Error";
+                }
+            }
+
+            document.addEventListener('DOMContentLoaded', () => {
+                init();
+            });
+        </script>
 
 </body>
 

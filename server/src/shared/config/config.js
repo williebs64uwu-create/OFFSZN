@@ -21,6 +21,12 @@ export const EMAILJS_TEMPLATE_ID = process.env.EMAILJS_TEMPLATE_ID;
 export const EMAILJS_PUBLIC_KEY = process.env.EMAILJS_PUBLIC_KEY;
 export const EMAILJS_PRIVATE_KEY = process.env.EMAILJS_PRIVATE_KEY;
 
+// SMTP / NODEMAILER
+export const SMTP_HOST = process.env.SMTP_HOST || 'smtp.gmail.com';
+export const SMTP_PORT = process.env.SMTP_PORT || 465;
+export const EMAIL_USER = process.env.EMAIL_USER;
+export const EMAIL_PASS = process.env.EMAIL_PASS; // App Password goes here
+
 export const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
 
 // CLOUDFLARE R2

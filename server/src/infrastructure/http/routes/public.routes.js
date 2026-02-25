@@ -4,6 +4,7 @@ import { Router } from 'express';
 import { getUserByNickname, getProductsByNickname, getAllProducers } from '../controllers/UserController.js';
 import { getAllProducts } from '../controllers/ProductController.js';
 import { getLeaderboard } from '../controllers/LeaderboardController.js';
+import { validateCoupon } from '../controllers/CouponController.js';
 
 const router = Router();
 
@@ -23,5 +24,8 @@ router.get('/producers', getAllProducers);
 
 // 5. Leaderboard (Top Productores)
 router.get('/leaderboard', getLeaderboard);
+
+// 6. Validar Cupón
+router.post('/coupons/validate', validateCoupon);
 
 export default router;

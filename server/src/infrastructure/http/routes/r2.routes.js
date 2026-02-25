@@ -101,6 +101,16 @@ router.post('/r2/download-url', async (req, res) => {
             return res.status(400).json({ error: 'Falta el key del archivo' });
         }
 
+        // 🔥 URL EXTRACTION: If the key is a full URL, extract just the path part
+        if (key.startsWith('http://') || key.startsWith('https://')) {
+            try {
+                const urlObj = new URL(key);
+                key = urlObj.pathname;
+            } catch (e) {
+                console.warn('[R2 Download] Invalid URL format passed as key:', key);
+            }
+        }
+
         // 🔥 KEY SANITIZATION: Ensure key doesn't start with / and doesn't have query params
         if (key.includes('?')) key = key.split('?')[0];
         while (key.startsWith('/')) key = key.substring(1);

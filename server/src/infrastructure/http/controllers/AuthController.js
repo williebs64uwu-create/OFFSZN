@@ -3,6 +3,33 @@ import { hashPassword, comparePassword } from '../../services/hashing/bcryptServ
 import { generateToken } from '../../auth/jwt/jwtUtil.js';
 import { v4 as uuidv4 } from 'uuid';
 
+export const checkEmailAvailability = async (req, res) => {
+    const { email } = req.body;
+
+    if (!email || !email.includes('@')) {
+        return res.status(400).json({ available: false, message: 'Email inválido.' });
+    }
+
+    try {
+        const { data: existingUser, error } = await supabase
+            .from('users')
+            .select('id')
+            .eq('email', email)
+            .maybeSingle();
+
+        if (error) throw error;
+
+        if (existingUser) {
+            return res.status(200).json({ available: false, message: 'Este email ya tiene una cuenta asociada.' });
+        } else {
+            return res.status(200).json({ available: true });
+        }
+    } catch (err) {
+        console.error("Error en checkEmailAvailability:", err.message);
+        res.status(500).json({ available: false, message: 'Error al verificar el email.' });
+    }
+};
+
 export const checkNicknameAvailability = async (req, res) => {
     const { nickname } = req.body;
 
@@ -15,19 +42,19 @@ export const checkNicknameAvailability = async (req, res) => {
             .from('users')
             .select('id')
             .eq('nickname', nickname)
-            .maybeSingle(); 
+            .maybeSingle();
 
         if (error) throw error;
 
         if (existingUser) {
-            return res.status(200).json({ available: false, message: 'Este nickname ya está en uso.' }); 
+            return res.status(200).json({ available: false, message: 'Este nickname ya está en uso.' });
         } else {
             return res.status(200).json({ available: true });
         }
 
     } catch (err) {
         console.error("Error en checkNicknameAvailability:", err.message);
-        res.status(500).json({ available: false, message: 'Error al verificar el nickname.' }); 
+        res.status(500).json({ available: false, message: 'Error al verificar el nickname.' });
     }
 };
 

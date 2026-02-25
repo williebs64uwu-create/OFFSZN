@@ -4,1444 +4,1318 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Notificaciones – offszn</title>
-    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <title>Notificaciones - OFFSZN</title>
     <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="/css/auth-ui.css">
     <link rel="stylesheet" href="/css/global-overlays.css">
     <link rel="stylesheet" href="/css/navbar.css">
-    <link rel="stylesheet" href="/css/sticky-player.css">
-    <link rel="stylesheet" href="/css/hover-card.css">
+    <link rel="stylesheet" href="/css/avatar-manager.css">
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Plus+Jakarta+Sans:wght@400;500;700;800&display=swap"
+        rel="stylesheet">
 
-    <!-- 1. Cargar Supabase (Head Inject) -->
+    <!-- 1. Cargar Supabase (Moved to Head for Global Access) -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
+        // --- GLOBAL SUPABASE CONFIG ---
+        // Moved here so it is available for Search AND Auth scripts immediately.
         window.SUPABASE_URL = "https://qtjpvztpgfymjhhpoouq.supabase.co";
         window.SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0anB2enRwZ2Z5bWpoaHBvb3VxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3ODA5MTUsImV4cCI6MjA3NjM1NjkxNX0.YsItTFk3hSQaVuy707-z7Z-j34mXa03O0wWGAlAzjrw";
+
         window.supabaseClient = null;
     </script>
     <script src="/script/auth-utils.js?v=11"></script>
+    <script src="/script/notifications.js"></script>
 
-    <script src="/script/notifications.js?v=26"></script>
+    <style>
+        .notifications-page {
+            padding-top: 10px;
+            min-height: 100vh;
+            background-color: #000;
+            color: #fff;
+        }
+
+        .notifications-container {
+            max-width: 680px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .notifications-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding: 0 4px;
+        }
+
+        .notifications-header h1 {
+            font-size: 1.75rem;
+            font-weight: 800;
+            margin: 0;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: linear-gradient(135deg, #fff 0%, #888 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .mark-read-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fff;
+            padding: 6px 12px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            backdrop-filter: blur(10px);
+            white-space: nowrap;
+        }
+
+        .mark-read-btn:hover {
+            background: #fff;
+            color: #000;
+            border-color: #fff;
+            transform: translateY(-1px);
+        }
+
+        .notification-group-title {
+            font-size: 0.75rem;
+            color: #fff;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-weight: 800;
+            margin: 32px 0 16px;
+            padding-left: 8px;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            opacity: 0.9;
+        }
+
+        .notification-group-title::after {
+            content: "";
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(90deg, rgba(255, 255, 255, 0.2) 0%, transparent 100%);
+        }
+
+        .notifications-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        /* CARD DESIGN MATCHING "IMAGE 2" */
+        .notif-item {
+            display: flex;
+            gap: 16px;
+            padding: 16px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 14px;
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            align-items: flex-start;
+        }
+
+        .notif-item:hover {
+            background: rgba(255, 255, 255, 0.07);
+            border-color: rgba(139, 92, 246, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+        }
+
+        .notif-item.unread {
+            background: rgba(139, 92, 246, 0.03);
+            border-color: rgba(139, 92, 246, 0.2);
+        }
+
+        /* INDICATOR FOR UNREAD */
+        .notif-badge-dot {
+            position: absolute;
+            top: 18px;
+            right: 18px;
+            width: 8px;
+            height: 8px;
+            background: #8b5cf6;
+            border-radius: 50%;
+            display: none;
+            box-shadow: 0 0 10px rgba(139, 92, 246, 0.6);
+        }
+
+        .notif-item.unread .notif-badge-dot {
+            display: block;
+        }
+
+        .notif-item-icon {
+            width: 44px;
+            height: 44px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            color: #fff;
+            font-size: 1.2rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .notif-item-content {
+            flex: 1;
+        }
+
+        .notif-item-title {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 4px;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            line-height: 1.3;
+            /* Truncation for very long strings */
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .notif-item-message {
+            font-size: 0.82rem;
+            color: #999;
+            line-height: 1.5;
+            margin-bottom: 4px;
+            display: -webkit-box;
+            line-clamp: 2;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .notif-item-message strong {
+            color: #fff;
+            font-weight: 700;
+        }
+
+        .notif-item-time {
+            font-size: 0.72rem;
+            color: #666;
+            font-weight: 500;
+        }
+
+        /* Consolidated & Refined Responsive Styles */
+        @media (max-width: 600px) {
+            .notifications-container {
+                padding: 12px 16px;
+            }
+
+            .notifications-header {
+                margin-bottom: 18px;
+            }
+
+            .notifications-header h1 {
+                font-size: 1.45rem;
+            }
+
+            .notification-group-title {
+                margin: 24px 0 12px;
+                font-size: 0.7rem;
+            }
+
+            .notif-item {
+                padding: 12px;
+                gap: 12px;
+                border-radius: 12px;
+            }
+
+            .notif-item-icon {
+                width: 36px;
+                height: 36px;
+                font-size: 1rem;
+                border-radius: 10px;
+            }
+
+            .notif-item-title {
+                font-size: 0.88rem;
+                margin-bottom: 2px;
+            }
+
+            .notif-item-message {
+                font-size: 0.78rem;
+                line-height: 1.4;
+                margin-bottom: 2px;
+            }
+
+            .notif-item-time {
+                font-size: 0.68rem;
+            }
+
+            .mark-read-btn {
+                padding: 4px 10px;
+                font-size: 0.72rem;
+                border-radius: 10px;
+            }
+        }
+    </style>
 </head>
-
-<style>
-    body {
-        background-color: #000;
-        color: #fff;
-        min-height: 100vh;
-        display: flex;
-        flex-direction: column;
-    }
-
-    .main-container {
-        max-width: 800px;
-        margin: 40px auto;
-        padding: 0 20px;
-        width: 100%;
-        flex: 1;
-    }
-
-    .page-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 24px;
-    }
-
-    .page-title {
-        font-family: 'Plus Jakarta Sans', sans-serif;
-        font-size: 1.5rem;
-        font-weight: 700;
-        margin: 0;
-    }
-
-    .mark-read-btn {
-        background: none;
-        border: none;
-        color: #3b82f6;
-        font-size: 0.9rem;
-        font-weight: 500;
-        cursor: pointer;
-        transition: color 0.2s;
-    }
-
-    .mark-read-btn:hover {
-        color: #60a5fa;
-        text-decoration: underline;
-    }
-
-    .notifications-list {
-        display: flex;
-        flex-direction: column;
-        gap: 1px;
-        /* Divider effect if we used borders, but we prefer clean bg */
-    }
-
-    .notif-item {
-        display: flex;
-        align-items: flex-start;
-        gap: 12px;
-        padding: 10px 16px;
-        border-radius: 12px;
-        background: #0c0c0c;
-        /* Distinct background */
-        border: 1px solid rgba(255, 255, 255, 0.03);
-        transition: all 0.2s;
-        position: relative;
-    }
-
-    .notif-item:hover {
-        background: #111;
-    }
-
-    .notif-item.unread {
-        background: rgba(59, 130, 246, 0.03);
-        border-color: rgba(59, 130, 246, 0.1);
-    }
-
-    .notif-avatar {
-        width: 48px;
-        height: 48px;
-        border-radius: 50%;
-        overflow: hidden;
-        flex-shrink: 0;
-        background: #222;
-    }
-
-    .notif-avatar img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
-
-    .notif-content {
-        flex: 1;
-        padding-right: 40px;
-        /* Space for menu */
-    }
-
-    .notif-text {
-        font-size: 0.95rem;
-        line-height: 1.4;
-        color: #eee;
-        margin-bottom: 4px;
-    }
-
-    .notif-text strong {
-        font-weight: 600;
-        color: #fff;
-    }
-
-    .notif-time {
-        font-size: 0.8rem;
-        color: #888;
-    }
-
-    .unread-dot {
-        width: 8px;
-        height: 8px;
-        background-color: #3b82f6;
-        /* Blue dot */
-        border-radius: 50%;
-        margin-top: 8px;
-        flex-shrink: 0;
-    }
-
-    /* MENU STYLES */
-    .notif-action-btn {
-        position: absolute;
-        top: 16px;
-        right: 16px;
-        width: 32px;
-        height: 32px;
-        border-radius: 50%;
-        background: transparent;
-        border: none;
-        color: #666;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: all 0.2s;
-    }
-
-    .notif-action-btn:hover {
-        background: #222;
-        color: #fff;
-    }
-
-    .menu-dropdown {
-        position: absolute;
-        top: 0;
-        /* Align with top of button */
-        left: 40px;
-        /* Move to the RIGHT of button (32px width + 8px gap) */
-        right: auto;
-        /* Unset right alignment */
-        background: #18181b;
-        border: 1px solid #27272a;
-        border-radius: 12px;
-        padding: 6px;
-        display: none;
-        z-index: 50;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-        min-width: 120px;
-    }
-
-    .menu-dropdown.active {
-        display: block;
-        animation: fadeIn 0.1s ease;
-    }
-
-    .menu-item {
-        width: 100%;
-        text-align: left;
-        background: none;
-        border: none;
-        padding: 8px 12px;
-        color: #ef4444;
-        /* Red for delete */
-        font-size: 0.85rem;
-        border-radius: 6px;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-
-    .menu-item:hover {
-        background: #27272a;
-    }
-
-    @keyframes fadeIn {
-        from {
-            opacity: 0;
-            transform: translateY(-4px);
-        }
-
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-    .empty-state {
-        text-align: center;
-        padding: 60px 0;
-        color: #555;
-    }
-</style>
-<style>
-    /* SKELETON LOADING STYLES */
-    .skeleton-item {
-        display: flex;
-        align-items: flex-start;
-        gap: 16px;
-        padding: 16px;
-        border-radius: 12px;
-        background: transparent;
-        position: relative;
-        overflow: hidden;
-    }
-
-    .skeleton-avatar {
-        width: 48px;
-        height: 48px;
-        border-radius: 50%;
-        background: #1a1a1c;
-        flex-shrink: 0;
-        position: relative;
-        overflow: hidden;
-    }
-
-    .skeleton-content {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-        justify-content: center;
-        padding-top: 4px;
-    }
-
-    .skeleton-line {
-        height: 14px;
-        background: #27272a;
-        border-radius: 4px;
-        position: relative;
-        overflow: hidden;
-    }
-
-    .skeleton-line.short {
-        width: 30%;
-        height: 12px;
-    }
-
-    .skeleton-line.long {
-        width: 90%;
-    }
-
-    /* SHIMMER ANIMATION */
-    .skeleton-avatar::after,
-    .skeleton-line::after {
-        content: "";
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(90deg,
-                rgba(255, 255, 255, 0) 0%,
-                rgba(255, 255, 255, 0.05) 50%,
-                rgba(255, 255, 255, 0) 100%);
-        transform: translateX(-100%);
-        animation: shimmer 1.5s infinite;
-    }
-
-    @keyframes shimmer {
-        100% {
-            transform: translateX(100%);
-        }
-    }
-</style>
-
 
 <body>
 
-    <!-- NAVBAR PLACEHOLDER (Will be injected by existing scripts if present, OR copy-pasted. 
-         Since user said "no tocar el nav bar", we assume it loads normally. 
-         But this is a separate page file. I should include the HEADER from the Navbar file provided in previous step.) 
-         Wait, I shouldn't just copy-paste the navbar code blindly if I can import it, but standard here seems to involve Full HTML.
-         I will use the Navbar HTML provided in the file I just read. -->
 
+
+    <!-- ==================== EXTRACTED NAVBAR ==================== -->
     <header class="navbar">
         <div class="navbar-container">
-            <div class="logo">
-                <a href="/index.html">
-                    <img src="/images/LOGO OFFSZN.webp" alt="OFFSZN"
-                        style="height: 80px; width: auto; display: block; transform: scale(1.5); transform-origin: left center;">
-                </a>
+            <div class="mobile-left-group" style="display: flex; align-items: center; gap: 16px;">
+                <button class="hamburger-btn" id="hamburger-btn" style="padding: 4px;">
+                    <svg width="26" height="20" viewBox="0 0 26 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M1 3H25M1 10H25M1 17H25" stroke="#ffffff" stroke-width="2" stroke-linecap="round" />
+                    </svg>
+                </button>
+
+                <div class="logo">
+                    <a href="/index.html">
+                        <img src="/images/LOGO OFFSZN.webp" alt="OFFSZN" class="mobile-logo-img">
+                    </a>
+                </div>
             </div>
-            <div class="navbar-center">
-                <ul class="navbar-links">
-                    <li><a href="/explorar.html">Explorar</a></li>
-                    <li class="dropdown-parent">
-                        <a onclick="toggleDropdown(this)" class="nav-toggle-link noselect"
-                            style="user-select: none; -webkit-user-select: none; cursor: pointer;"
-                            onselectstart="return false;">
-                            Recursos <i class="bi bi-chevron-down"></i>
-                        </a>
-                        <div class="dropdown-menu mega-columns">
-                            <!-- BOX 1: SONIDOS (Tools) -->
-                            <div class="mega-column-box">
-                                <span class="dropdown-section-title"
-                                    style="font-size: 0.7rem; letter-spacing: 1.5px; color:#555; margin-bottom: 12px; display:block; font-weight:800; padding-left: 6px;">
-                                    SONIDOS
-                                </span>
-                                <div class="dropdown-section">
-                                    <a href="/recursos/drum-kits" class="mega-nav-link"><i class="bi bi-disc"></i> Drum
-                                        Kits</a>
-                                    <a href="/recursos/presets" class="mega-nav-link"><i class="bi bi-sliders"></i>
-                                        Presets</a>
-                                    <a href="/recursos/samples-loops" class="mega-nav-link"><i
-                                            class="bi bi-soundwave"></i> Loops</a>
-                                    <a href="/recursos/one-shots" class="mega-nav-link"><i class="bi bi-bullseye"></i>
-                                        One-Shots</a>
-                                    <a href="/recursos/recursos-gratis" class="mega-nav-link"><i
-                                            class="bi bi-check-circle"></i>
-                                        Gratis</a>
+
+            <!-- MOBILE TOP-BAR ACTIONS (hidden on desktop) -->
+            <div class="mobile-topbar-actions" id="mobile-topbar-actions">
+                <div class="mobile-guest-actions" id="mobile-guest-actions"
+                    style="display: none; align-items: center; gap: 8px;">
+                    <a href="/pages/login.html" class="mobile-login-link">Iniciar Sesión</a>
+                    <a href="/pages/register.html" class="mobile-join-btn">Únete</a>
+                    <a href="#" class="mobile-cart-btn" title="Carrito" onclick="toggleCartPanel(event)"
+                        style="margin-left: 4px;">
+                        <i class="bi bi-cart3"></i>
+                        <span class="mobile-cart-badge" id="mobile-cart-badge-guest" style="display:none;">0</span>
+                    </a>
+                </div>
+
+                <!-- 1. Auth Actions (Profile -> Messages -> Notif -> Cart) -->
+                <div class="mobile-auth-actions" id="mobile-auth-actions" style="display: none; gap: 18px;">
+
+                    <!-- Avatar (Profile - Direct Link) -->
+                    <div class="mobile-avatar-btn" id="mobile-avatar-btn"
+                        onclick="if(window.currentUserNickname) window.location.href = '/@' + window.currentUserNickname;">
+                        <span id="mobile-avatar-initial">W</span>
+                    </div>
+
+                    <!-- Messages -->
+                    <a href="#" class="mobile-notif-btn" title="Mensajes"
+                        onclick="if(typeof openChat === 'function') openChat(); return false;">
+                        <i class="bi bi-chat-text"></i>
+                        <span class="mobile-notif-badge" id="mobile-msg-badge" style="display:none;">0</span>
+                    </a>
+
+                    <!-- Notifications -->
+                    <a href="/notificaciones.html" class="mobile-notif-btn" title="Notificaciones">
+                        <i class="bi bi-bell"></i>
+                        <span class="mobile-notif-badge" id="mobile-notif-badge" style="display:none;">0</span>
+                    </a>
+
+                    <!-- Cart -->
+                    <a href="#" class="mobile-cart-btn" title="Carrito" onclick="toggleCartPanel(event)">
+                        <i class="bi bi-cart3"></i>
+                        <span class="mobile-cart-badge" id="mobile-cart-badge" style="display:none;">0</span>
+                    </a>
+
+                </div>
+            </div>
+
+            <div class="nav-container" id="nav-container">
+                <!-- Sidebar header: close + logo (mobile only) -->
+                <div class="sidebar-header">
+                    <button class="sidebar-close-btn" aria-label="Cerrar menú">✕</button>
+                    <a href="/index.html" class="sidebar-logo">
+                        <img src="/images/LOGO OFFSZN.webp" alt="OFFSZN" style="height: 28px; width: auto;">
+                    </a>
+                </div>
+                <div class="navbar-center">
+                    <ul class="navbar-links desktop-menu-only">
+                        <li><a href="/explorar.html">Explorar</a></li>
+                        <li class="dropdown-parent">
+                            <a onclick="toggleDropdown(this)" class="nav-toggle-link noselect"
+                                style="user-select: none; -webkit-user-select: none; cursor: pointer;"
+                                onselectstart="return false;">
+                                Recursos <i class="bi bi-chevron-down"></i>
+                            </a>
+                            <div class="dropdown-menu mega-columns">
+                                <!-- BOX 1: SONIDOS (Tools) -->
+                                <div class="mega-column-box">
+                                    <span class="dropdown-section-title"
+                                        style="font-size: 0.7rem; letter-spacing: 1.5px; color:#555; margin-bottom: 12px; display:block; font-weight:800; padding-left: 6px;">
+                                        SONIDOS
+                                    </span>
+                                    <div class="dropdown-section">
+                                        <a href="/recursos/drum-kits" class="mega-nav-link"><i class="bi bi-disc"></i>
+                                            Drum
+                                            Kits</a>
+                                        <a href="/recursos/presets" class="mega-nav-link"><i class="bi bi-sliders"></i>
+                                            Presets</a>
+                                        <a href="/recursos/samples-loops" class="mega-nav-link"><i
+                                                class="bi bi-soundwave"></i> Loops</a>
+                                        <a href="/recursos/one-shots" class="mega-nav-link"><i
+                                                class="bi bi-bullseye"></i>
+                                            One-Shots</a>
+                                        <a href="/recursos/recursos-gratis" class="mega-nav-link"><i
+                                                class="bi bi-check-circle"></i>
+                                            Gratis</a>
+                                    </div>
+                                </div>
+
+                                <!-- BOX 2: COMUNIDAD (Swapped to Middle) -->
+                                <div class="mega-column-box">
+                                    <span class="dropdown-section-title"
+                                        style="font-size: 0.7rem; letter-spacing: 1.5px; color:#555; margin-bottom: 12px; display:block; font-weight:800; padding-left: 6px;">
+                                        COMUNIDAD
+                                    </span>
+                                    <div class="dropdown-section">
+                                        <a href="/comunidad/productores" class="mega-nav-link"><i
+                                                class="bi bi-people"></i>
+                                            Productores</a>
+                                        <a href="/comunidad/colaboraciones" class="mega-nav-link"><i
+                                                class="bi bi-person-plus"></i>
+                                            Collabs</a>
+                                        <a href="/comunidad/eventos" class="mega-nav-link"><i
+                                                class="bi bi-calendar-event"></i> Eventos</a>
+                                        <a href="/comunidad/feed" class="mega-nav-link"><i
+                                                class="bi bi-collection-play"></i> Feed</a>
+                                        <a href="/cursos/inicio" class="mega-nav-link">
+                                            <i class="bi bi-mortarboard"></i> Cursos <span
+                                                style="background: rgba(139, 92, 246, 0.1); color: #a78bfa; font-size: 0.6rem; padding: 1px 4px; border-radius: 4px; margin-left: 6px; border: 1px solid rgba(139, 92, 246, 0.2);">SOON</span>
+                                        </a>
+                                    </div>
+                                </div>
+
+                                <!-- BOX 3: GÉNEROS (Swapped to End) -->
+                                <div class="mega-column-box">
+                                    <span class="dropdown-section-title"
+                                        style="font-size: 0.7rem; letter-spacing: 1.5px; color:#555; margin-bottom: 12px; display:block; font-weight:800; padding-left: 6px;">
+                                        GÉNEROS
+                                    </span>
+                                    <div class="dropdown-section">
+                                        <a href="/recursos/beats" class="mega-nav-link">Hip-Hop</a>
+                                        <a href="/recursos/beats" class="mega-nav-link">Trap</a>
+                                        <a href="/recursos/beats" class="mega-nav-link">R&B</a>
+                                        <a href="/recursos/beats" class="mega-nav-link">Reggaetón</a>
+                                        <a href="/recursos/beats" class="mega-nav-link">Drill</a>
+                                        <a href="/recursos/beats" class="mega-nav-link"
+                                            style="color: rgba(255,255,255,0.6); font-size: 0.8rem; margin-top: 4px; transition: color 0.2s;">Ver
+                                            todos &rarr;</a>
+                                    </div>
                                 </div>
                             </div>
+                        </li>
 
-                            <!-- BOX 2: COMUNIDAD (Swapped to Middle) -->
-                            <div class="mega-column-box">
-                                <span class="dropdown-section-title"
-                                    style="font-size: 0.7rem; letter-spacing: 1.5px; color:#555; margin-bottom: 12px; display:block; font-weight:800; padding-left: 6px;">
-                                    COMUNIDAD
-                                </span>
+                        <!-- STUDIO / LAB (New Identity Feature) -->
+                        <li class="dropdown-parent">
+                            <a onclick="toggleDropdown(this)" class="nav-toggle-link noselect"
+                                style="user-select: none; -webkit-user-select: none; cursor: pointer;"
+                                onselectstart="return false;">
+                                Studio <span
+                                    style="background: rgba(139, 92, 246, 0.1); color: #a78bfa; font-size: 0.6rem; padding: 1px 4px; border-radius: 4px; margin-left: 4px; border: 1px solid rgba(139, 92, 246, 0.2);">BETA</span>
+                                <i class="bi bi-chevron-down"></i>
+                            </a>
+                            <div class="dropdown-menu" style="min-width: 250px; padding: 8px;">
                                 <div class="dropdown-section">
-                                    <a href="/comunidad/productores" class="mega-nav-link"><i class="bi bi-people"></i>
-                                        Productores</a>
-                                    <a href="/comunidad/colaboraciones" class="mega-nav-link"><i
-                                            class="bi bi-person-plus"></i>
-                                        Collabs</a>
-                                    <a href="/comunidad/eventos" class="mega-nav-link"><i
-                                            class="bi bi-calendar-event"></i> Eventos</a>
-                                    <a href="/comunidad/feed" class="mega-nav-link"><i
-                                            class="bi bi-collection-play"></i> Feed</a>
-                                    <a href="/cursos/inicio" class="mega-nav-link">
-                                        <i class="bi bi-mortarboard"></i> Cursos <span
-                                            style="background: rgba(139, 92, 246, 0.1); color: #a78bfa; font-size: 0.6rem; padding: 1px 4px; border-radius: 4px; margin-left: 6px; border: 1px solid rgba(139, 92, 246, 0.2);">SOON</span>
+                                    <span class="dropdown-section-title"
+                                        style="font-size: 0.7rem; letter-spacing: 1.5px; color:#555; margin-bottom: 8px; display:block; font-weight:800; padding: 0 8px;">
+                                        EXCLUSIVE TOOLS
+                                    </span>
+
+                                    <a href="/studio/reels" class="dropdown-item" style="border-radius: 8px;">
+                                        <i class="bi bi-collection-play"></i>
+                                        <div class="dropdown-item-content">
+                                            <div class="dropdown-item-title">Reels</div>
+                                            <div class="dropdown-item-desc" style="font-size: 0.7rem; color: #888;">
+                                                Descubre
+                                                tendencias visuales</div>
+                                        </div>
+                                    </a>
+                                </div>
+                            </div>
+                        </li>
+                        <!-- Cursos moved to Dropdown -->
+
+                    </ul>
+
+                    <!-- MOBILE SLIDING MENU (BeatStars Style) -->
+                    <div class="mobile-menu-slider-wrapper" id="mobile-menu-slider-wrapper">
+                        <div class="mobile-menu-slides" id="mobile-menu-slides">
+                            <!-- VIEW 1: MAIN MENU -->
+                            <div class="menu-slide" id="menu-view-main"
+                                style="overflow-y: auto; padding-bottom: 120px;">
+                                <a href="/explorar.html" class="mobile-menu-link text-uppercase"
+                                    style="font-weight: 800; letter-spacing: 0.5px;">EXPLORAR</a>
+
+                                <div class="mobile-menu-link has-arrow text-uppercase" style="font-weight: 700;"
+                                    onclick="openSubmenu('beats')">
+                                    <span>BEATS</span>
+                                    <i class="bi bi-chevron-right"></i>
+                                </div>
+
+                                <div class="mobile-menu-link has-arrow text-uppercase" style="font-weight: 700;"
+                                    onclick="openSubmenu('kits')">
+                                    <span>KITS</span>
+                                    <i class="bi bi-chevron-right"></i>
+                                </div>
+
+                                <div class="mobile-menu-link has-arrow text-uppercase" style="font-weight: 700;"
+                                    onclick="openSubmenu('comunidad')">
+                                    <span>COMUNIDAD</span>
+                                    <i class="bi bi-chevron-right"></i>
+                                </div>
+
+                                <div class="mobile-menu-divider"></div>
+
+                                <a href="/mis-compras.html" class="mobile-menu-link text-uppercase"
+                                    style="font-size: 0.85rem; font-weight: 600;">COMPRAS</a>
+                                <a href="/favoritos.html" class="mobile-menu-link text-uppercase"
+                                    style="font-size: 0.85rem; font-weight: 600;">FAVORITOS</a>
+                                <a href="/gift-cards.html" class="mobile-menu-link text-uppercase"
+                                    style="font-size: 0.85rem; font-weight: 600;">GIFT CARDS</a>
+                                <a href="/historial.html" class="mobile-menu-link text-uppercase"
+                                    style="font-size: 0.85rem; font-weight: 600;">HISTORIAL</a>
+
+                                <div class="mobile-menu-divider"></div>
+
+                                <a href="/account-settings.html" class="mobile-menu-link text-uppercase"
+                                    style="font-size: 0.85rem; font-weight: 600;">CONFIGURACIÓN</a>
+                                <a href="/ayuda.html" class="mobile-menu-link text-uppercase"
+                                    style="font-size: 0.85rem; color: #888; font-weight: 600;">AYUDA</a>
+
+                                <!-- MEJORAR PLAN (Bottom) -->
+                                <div style="margin-top: 10px; padding: 10px 16px;">
+                                    <a href="/cuenta/planes.html"
+                                        style="display: block; background: linear-gradient(135deg, #1a1a1a 0%, #000 100%); border: 1px solid #333; border-radius: 12px; padding: 16px; text-decoration: none; position: relative; overflow: hidden;">
+                                        <div style="position: relative; z-index: 2;">
+                                            <span
+                                                style="color: #8b5cf6; font-size: 0.7rem; font-weight: 800; letter-spacing: 1px; display: block; margin-bottom: 4px;">OFFSZN
+                                                PRO</span>
+                                            <span
+                                                style="color: #fff; font-size: 1rem; font-weight: 700; display: block; margin-bottom: 4px;">Mejorar
+                                                Plan</span>
+                                            <span style="color: #888; font-size: 0.75rem;">Desbloquea todo el
+                                                potencial.</span>
+                                        </div>
+                                        <i class="bi bi-star-fill"
+                                            style="position: absolute; bottom: -10px; right: -10px; font-size: 4rem; color: rgba(139, 92, 246, 0.1); transform: rotate(15deg);"></i>
                                     </a>
                                 </div>
                             </div>
 
-                            <!-- BOX 3: GÉNEROS (Swapped to End) -->
-                            <div class="mega-column-box">
-                                <span class="dropdown-section-title"
-                                    style="font-size: 0.7rem; letter-spacing: 1.5px; color:#555; margin-bottom: 12px; display:block; font-weight:800; padding-left: 6px;">
-                                    GÉNEROS
-                                </span>
-                                <div class="dropdown-section">
-                                    <a href="/recursos/beats" class="mega-nav-link">Hip-Hop</a>
-                                    <a href="/recursos/beats" class="mega-nav-link">Trap</a>
-                                    <a href="/recursos/beats" class="mega-nav-link">R&B</a>
-                                    <a href="/recursos/beats" class="mega-nav-link">Reggaetón</a>
-                                    <a href="/recursos/beats" class="mega-nav-link">Drill</a>
-                                    <a href="/recursos/beats" class="mega-nav-link"
-                                        style="color: rgba(255,255,255,0.6); font-size: 0.8rem; margin-top: 4px; transition: color 0.2s;">Ver
-                                        todos &rarr;</a>
+                            <!-- VIEW 2: SUBMENUS CONTAINER -->
+                            <div class="menu-slide" id="menu-view-sub" style="overflow-y: auto; padding-bottom: 120px;">
+                                <div class="mobile-menu-header" onclick="closeSubmenu(event)">
+                                    <i class="bi bi-chevron-left"></i> MENÚ PRINCIPAL
+                                </div>
+
+                                <!-- SUBMENU: BEATS -->
+                                <div id="submenu-beats" class="submenu-content" style="display: none;">
+                                    <span class="mobile-section-title">BEATS</span>
+                                    <a href="/explorar.html" class="mobile-menu-link sub"><i class="bi bi-cart3"></i>
+                                        COMPRAR</a>
+                                    <a href="/servicios/custom-beats.html" class="mobile-menu-link sub"><i
+                                            class="bi bi-music-note-list"></i> SOLICITAR</a>
+                                    <a href="/vender.html" class="mobile-menu-link sub"><i
+                                            class="bi bi-cloud-arrow-up"></i>
+                                        ENVIAR</a>
+                                </div>
+
+                                <!-- SUBMENU: KITS -->
+                                <div id="submenu-kits" class="submenu-content" style="display: none;">
+                                    <span class="mobile-section-title">KITS</span>
+                                    <a href="/recursos/drum-kits.html" class="mobile-menu-link sub"><i
+                                            class="bi bi-disc"></i> DRUM KITS</a>
+                                    <a href="/recursos/presets.html" class="mobile-menu-link sub"><i
+                                            class="bi bi-sliders"></i> PRESETS</a>
+                                    <a href="/recursos/samples-loops.html" class="mobile-menu-link sub"><i
+                                            class="bi bi-soundwave"></i> LOOPS</a>
+                                    <a href="/recursos/one-shots.html" class="mobile-menu-link sub"><i
+                                            class="bi bi-bullseye"></i> ONE SHOTS</a>
+                                    <a href="/recursos/recursos-gratis.html" class="mobile-menu-link sub highlight"><i
+                                            class="bi bi-gift"></i> DESCARGAS GRATIS</a>
+                                </div>
+
+                                <!-- SUBMENU: COMUNIDAD -->
+                                <div id="submenu-comunidad" class="submenu-content" style="display: none;">
+                                    <span class="mobile-section-title">COMUNIDAD</span>
+                                    <a href="/comunidad/feed.html" class="mobile-menu-link sub"><i
+                                            class="bi bi-collection-play"></i> FEED</a>
+                                    <a href="/studio/reels.html" class="mobile-menu-link sub"><i
+                                            class="bi bi-camera-video"></i> REELS</a>
+                                    <a href="/comunidad/productores.html" class="mobile-menu-link sub"><i
+                                            class="bi bi-people"></i> PRODUCTORES</a>
+                                    <a href="/comunidad/colaboraciones.html" class="mobile-menu-link sub"><i
+                                            class="bi bi-person-plus"></i> COLLABS</a>
+                                    <a href="/comunidad/eventos.html" class="mobile-menu-link sub"><i
+                                            class="bi bi-calendar-event"></i> EVENTOS</a>
+                                    <a href="/cursos/inicio.html" class="mobile-menu-link sub"><i
+                                            class="bi bi-mortarboard"></i> CURSOS</a>
                                 </div>
                             </div>
                         </div>
-                    </li>
+                    </div>
 
-                    <!-- STUDIO / LAB (New Identity Feature) -->
-                    <li class="dropdown-parent">
-                        <a onclick="toggleDropdown(this)" class="nav-toggle-link noselect"
-                            style="user-select: none; -webkit-user-select: none; cursor: pointer;"
-                            onselectstart="return false;">
-                            Studio <span
-                                style="background: rgba(139, 92, 246, 0.1); color: #a78bfa; font-size: 0.6rem; padding: 1px 4px; border-radius: 4px; margin-left: 4px; border: 1px solid rgba(139, 92, 246, 0.2);">BETA</span>
-                            <i class="bi bi-chevron-down"></i>
-                        </a>
-                        <div class="dropdown-menu" style="min-width: 250px; padding: 8px;">
-                            <div class="dropdown-section">
-                                <span class="dropdown-section-title"
-                                    style="font-size: 0.7rem; letter-spacing: 1.5px; color:#555; margin-bottom: 8px; display:block; font-weight:800; padding: 0 8px;">
-                                    EXCLUSIVE TOOLS
-                                </span>
-                                <a href="/studio/reels" class="dropdown-item" style="border-radius: 8px;">
-                                    <i class="bi bi-collection-play"></i>
-                                    <div class="dropdown-item-content">
-                                        <div class="dropdown-item-title">Reels</div>
-                                        <div class="dropdown-item-desc" style="font-size: 0.7rem; color: #888;">Descubre
-                                            tendencias visuales</div>
-                                    </div>
-                                </a>
+                    <!-- NEW: NAVBAR SEARCH (Wavs Style) -->
+                    <!-- NEW: NAVBAR SEARCH (Wavs Style) with Internal Filter & Trending Panel -->
+                    <div class="navbar-search"
+                        style="margin-left: 24px; flex: 1; max-width: 440px; position: relative;">
+                        <i class="bi bi-search"
+                            style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: #666; font-size: 0.85rem; z-index: 10;"></i>
+                        <input type="text" id="navbarSearchInput" placeholder="Buscar 'trap' o 'drill'..."
+                            style="width: 100%; background: #0f0f0f; border: 1px solid rgba(255,255,255,0.08); padding: 11px 110px 11px 42px; border-radius: 12px; color: #fff; font-size: 0.9rem; outline: none; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);">
+
+                        <!-- Internal Filter Trigger - Seamless Integration -->
+                        <div class="search-filter-trigger" onclick="toggleSearchFilter(event)"
+                            style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); display: flex; align-items: center; gap: 6px; cursor: pointer; padding: 4px 10px; background: rgba(255,255,255,0.05); border-radius: 8px; height: 28px; transition: background 0.2s;">
+                            <span id="search-filter-label"
+                                style="font-size: 0.75rem; color: #ccc; font-weight: 600; letter-spacing: 0.3px;">Todo</span>
+                            <i class="bi bi-chevron-down" style="font-size: 0.65rem; color: #888;"></i>
+                        </div>
+
+                        <!-- Filter Dropdown (Glassmorphism) -->
+                        <div id="search-filter-dropdown"
+                            style="position: absolute; top: calc(100% + 8px); right: 0; background: rgba(15, 15, 15, 0.95); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 6px; width: 140px; display: none; flex-direction: column; box-shadow: 0 10px 40px rgba(0,0,0,0.5); z-index: 1002; transform-origin: top right; animation: scaleIn 0.2s ease;">
+                            <div onclick="selectSearchFilter('Todo')" class="search-filter-item selected">Todo</div>
+                            <div onclick="selectSearchFilter('Beats')" class="search-filter-item">Beats</div>
+                            <div onclick="selectSearchFilter('Drum Kits')" class="search-filter-item">Drum Kits</div>
+                            <div onclick="selectSearchFilter('Samples')" class="search-filter-item">Samples</div>
+                            <div onclick="selectSearchFilter('Presets')" class="search-filter-item">Presets</div>
+                            <div onclick="selectSearchFilter('Plantillas')" class="search-filter-item">Plantillas</div>
+                            <div onclick="selectSearchFilter('Productores')" class="search-filter-item">Productores
                             </div>
                         </div>
-                    </li>
-                </ul>
 
-                <!-- NAVBAR SEARCH -->
-                <div class="navbar-search" style="margin-left: 24px; flex: 1; max-width: 440px; position: relative;">
-                    <i class="bi bi-search"
-                        style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: #666; font-size: 0.85rem; z-index: 10;"></i>
-                    <input type="text" id="navbarSearchInput" placeholder="Buscar 'trap' o 'drill'..."
-                        style="width: 100%; background: #0f0f0f; border: 1px solid rgba(255,255,255,0.08); padding: 11px 110px 11px 42px; border-radius: 12px; color: #fff; font-size: 0.9rem; outline: none; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);">
+                        <!-- Trending / Intelligent Panel (Appears on Focus) -->
+                        <!-- Trending / Intelligent Panel -->
+                        <div id="search-trending-panel"
+                            style="position: absolute; top: calc(100% + 4px); left: 0; width: 100%; background: #0a0a0a; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 12px; display: none; box-shadow: 0 20px 50px rgba(0,0,0,0.8); z-index: 1001;">
 
-                    <div class="search-filter-trigger" onclick="toggleSearchFilter(event)"
-                        style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); display: flex; align-items: center; gap: 6px; cursor: pointer; padding: 4px 10px; background: rgba(255,255,255,0.05); border-radius: 8px; height: 28px; transition: background 0.2s;">
-                        <span id="search-filter-label"
-                            style="font-size: 0.75rem; color: #ccc; font-weight: 600; letter-spacing: 0.3px;">Todo</span>
-                        <i class="bi bi-chevron-down" style="font-size: 0.65rem; color: #888;"></i>
-                    </div>
+                            <!-- Recent Searches (New) -->
+                            <div style="margin-bottom: 20px;">
+                                <span
+                                    style="display: block; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 0.7rem; color: #555; font-weight: 700; letter-spacing: 0.5px; margin-bottom: 8px; text-transform: uppercase;">Búsquedas
+                                    Recientes</span>
+                                <div style="display: flex; flex-direction: column; gap: 4px;">
+                                    <div class="recent-item" onclick="setSearch('Dark Piano')"><i
+                                            class="bi bi-clock-history"></i>
+                                        Dark
+                                        Piano</div>
+                                    <div class="recent-item" onclick="setSearch('Tainy Drums')"><i
+                                            class="bi bi-clock-history"></i>
+                                        Tainy
+                                        Drums</div>
+                                </div>
+                            </div>
 
-                    <div id="search-filter-dropdown"
-                        style="position: absolute; top: calc(100% + 8px); right: 0; background: rgba(15, 15, 15, 0.95); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 6px; width: 140px; display: none; flex-direction: column; box-shadow: 0 10px 40px rgba(0,0,0,0.5); z-index: 1002; transform-origin: top right; animation: scaleIn 0.2s ease;">
-                        <div onclick="selectSearchFilter('Todo')" class="search-filter-item selected">Todo</div>
-                        <div onclick="selectSearchFilter('Beats')" class="search-filter-item">Beats</div>
-                        <div onclick="selectSearchFilter('Drum Kits')" class="search-filter-item">Drum Kits</div>
-                        <div onclick="selectSearchFilter('Samples')" class="search-filter-item">Samples</div>
-                        <div onclick="selectSearchFilter('Presets')" class="search-filter-item">Presets</div>
-                        <div onclick="selectSearchFilter('Plantillas')" class="search-filter-item">Plantillas</div>
-                        <div onclick="selectSearchFilter('Productores')" class="search-filter-item">Productores</div>
-                    </div>
-
-                    <div id="search-trending-panel"
-                        style="position: absolute; top: calc(100% + 4px); left: 0; width: 100%; background: #0a0a0a; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 12px; display: none; box-shadow: 0 20px 50px rgba(0,0,0,0.8); z-index: 1001;">
-                        <div style="margin-bottom: 20px;">
                             <span
-                                style="display: block; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 0.7rem; color: #555; font-weight: 700; letter-spacing: 0.5px; margin-bottom: 8px; text-transform: uppercase;">Búsquedas
-                                Recientes</span>
-                            <div style="display: flex; flex-direction: column; gap: 4px;">
-                                <div class="recent-item" onclick="setSearch('Dark Piano')"><i
-                                        class="bi bi-clock-history"></i> Dark Piano</div>
-                                <div class="recent-item" onclick="setSearch('Tainy Drums')"><i
-                                        class="bi bi-clock-history"></i> Tainy Drums</div>
+                                style="display: block; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 0.7rem; color: #555; font-weight: 700; letter-spacing: 0.5px; margin-bottom: 12px; text-transform: uppercase;">Tendencias
+                                Ahora</span>
+                            <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                                <span class="trend-tag"><i class="bi bi-graph-up-arrow"></i> Dark Trap</span>
+                                <span class="trend-tag"><i class="bi bi-fire"></i> Reggaeton 2025</span>
+                                <span class="trend-tag">Drill UK</span>
                             </div>
                         </div>
-                        <span
-                            style="display: block; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 0.7rem; color: #555; font-weight: 700; letter-spacing: 0.5px; margin-bottom: 12px; text-transform: uppercase;">Tendencias
-                            Ahora</span>
-                        <div style="display: flex; flex-wrap: wrap; gap: 8px;">
-                            <span class="trend-tag"><i class="bi bi-graph-up-arrow"></i> Dark Trap</span>
-                            <span class="trend-tag"><i class="bi bi-fire"></i> Reggaeton 2025</span>
-                            <span class="trend-tag">Drill UK</span>
+                    </div>
+
+                    <!-- Search Overlay and Tags moved outside of hidden .navbar-search -->
+                    <!-- Search Overlay Backdrop -->
+                    <div id="search-overlay"></div>
+
+                    <!-- Active Tags Container (New) -->
+                    <div id="active-search-tags"></div>
+
+                    <div class="navbar-right">
+
+                        <!-- 1. CURRENCY (Always Visible) -->
+                        <div class="currency-dropdown" style="position: relative;">
+                            <button id="currency-toggle-btn" onclick="toggleCurrency(event)" class="nav-text-btn"
+                                style="background:none; border:none; color:#bbb; font-size:0.8rem; font-weight:600; cursor:pointer; padding:6px 8px; display:flex; align-items:center; gap:4px; outline:none; transition: all 0.2s;">
+                                <span id="current-currency">PEN</span> <i class="bi bi-caret-down-fill"
+                                    style="font-size:0.6rem;"></i>
+                            </button>
+                            <div id="currency-menu"
+                                style="position: absolute; top: 100%; left: 0; background: #141414; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 4px; display: none; flex-direction: column; min-width: 80px; box-shadow: 0 4px 12px rgba(0,0,0,0.5); z-index: 1005;">
+                                <div onclick="setCurrency('PEN')" class="currency-item"
+                                    style="padding:6px 12px; font-size:0.8rem; color:#ccc; cursor:pointer; border-radius:4px;">
+                                    PEN</div>
+                                <div onclick="setCurrency('USD')" class="currency-item"
+                                    style="padding:6px 12px; font-size:0.8rem; color:#ccc; cursor:pointer; border-radius:4px;">
+                                    USD</div>
+                            </div>
                         </div>
+
+                        <!-- 2. CART (Always Visible) -->
+                        <a href="#" class="nav-icon-btn" title="Carrito" data-label="Carrito"
+                            onclick="toggleCartPanel(event)">
+                            <i class="bi bi-cart3"></i>
+                            <span id="cart-count-badge" class="cart-label-count" style="display:none;">0</span>
+                        </a>
+
+                        <!-- 3. LOGGED IN ACTIONS (Hidden by default) -->
+                        <div id="nav-auth-section" style="display: flex; align-items: center; gap: 0.5rem;">
+
+                            <!-- NOTIFICACIONES -->
+                            <div class="notification-dropdown">
+                                <button class="nav-icon-btn" onclick="toggleNotificationDropdown(event)"
+                                    data-label="Notificaciones" style="user-select: none;"
+                                    onselectstart="return false;">
+                                    <i class="bi bi-bell"></i>
+                                    <span class="notification-badge" id="notification-badge"
+                                        style="display:none;">0</span>
+                                </button>
+                                <div class="notification-menu" id="notification-menu">
+                                    <div class="notification-header"
+                                        style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-bottom: 1px solid #222;">
+                                        <h4 style="margin: 0; font-size: 0.95rem; font-weight: 600; color: #fff;">
+                                            Notificaciones
+                                        </h4>
+                                        <a href="/notificaciones.html" class="notif-view-all">Ver todos</a>
+                                    </div>
+                                    <div id="notification-list" style="max-height: 400px; overflow-y: auto;">
+                                        <div class="notif-empty"
+                                            style="text-align: center; color: #fff; padding: 40px 20px;">
+                                            <div style="font-size: 2rem; margin-bottom: 16px; color: #666;"><i
+                                                    class="bi bi-bell"></i></div>
+                                            <h4 style="margin-bottom: 8px; font-size: 0.9rem; font-weight: 500;">
+                                                Cargando...
+                                            </h4>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- USER PROFILE -->
+                            <div class="user-dropdown">
+                                <div class="user-trigger" onclick="toggleUserDropdown(event)" style="cursor: pointer;">
+                                    <div id="user-avatar-display" class="user-avatar-placeholder">W</div>
+                                </div>
+                                <div class="user-dropdown-menu" style="width: 380px;">
+                                    <div class="user-dropdown-header"
+                                        onclick="window.location.href='/perfil-publico.html'"
+                                        style="display: flex; align-items: center; justify-content: space-between; gap: 12px; background-color: #232323; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 24px 16px; margin-bottom: 12px; cursor: pointer; transition: background-color 0.2s; user-select: none;"
+                                        onmouseover="this.style.backgroundColor='#2a2a2a'"
+                                        onmouseout="this.style.backgroundColor='#232323'">
+                                        <div style="display: flex; align-items: center; gap: 12px;">
+                                            <div class="user-dropdown-avatar-lg"
+                                                style="width: 48px; height: 48px; font-size: 1.2rem; border-radius: 50%;">
+                                                W
+                                            </div>
+                                            <div style="display: flex; flex-direction: column;">
+                                                <h4 id="dropdown-username"
+                                                    style="margin: 0; font-size: 1rem; color: #fff; font-weight: 600;">
+                                                    Willie
+                                                    Inspired</h4>
+                                                <span style="color: #999; font-size: 0.85rem;">0 Créditos</span>
+                                            </div>
+                                        </div>
+                                        <a href="/cuenta/planes.html" class="btn-subscribe-sm"
+                                            onclick="event.stopPropagation();"
+                                            style="padding: 6px 12px; font-size: 0.8rem;">
+                                            <i class="bi bi-plus-circle-fill"></i> Suscribirse
+                                        </a>
+                                    </div>
+
+                                    <div class="w-grid">
+                                        <a href="/cuenta/dashboard.html" class="w-grid-item"><i class="fas fa-columns"
+                                                style="transform: rotate(90deg);"></i><span>Dashboard</span></a>
+                                        <a href="/mis-compras.html" class="w-grid-item"><i
+                                                class="fas fa-layer-group"></i><span>Compras</span></a>
+                                        <a href="/mensajes.html" class="w-grid-item"><i
+                                                class="fas fa-envelope"></i><span>Mensajes</span></a>
+                                    </div>
+
+                                    <!-- LIST -->
+                                    <a href="/favoritos.html" class="w-list-item"><i class="fas fa-heart"></i> Mis
+                                        Favoritos</a>
+                                    <a href="/gift-cards.html" class="w-list-item"><i class="fas fa-gift"></i> Gift
+                                        Cards</a>
+                                    <a href="/historial.html" class="w-list-item"><i class="fas fa-history"></i>
+                                        Historial</a>
+                                    <div style="height: 1px; background: rgba(255,255,255,0.1); margin: 8px 0;"></div>
+                                    <a href="/account-settings.html" class="w-list-item"><i
+                                            class="fas fa-sliders-h"></i>
+                                        Configuración</a>
+                                    <a href="/ayuda.html" class="w-list-item"><i class="fas fa-question-circle"></i>
+                                        Centro
+                                        de
+                                        Ayuda</a>
+                                    <a href="#" id="navbar-logout-btn" class="w-list-item"
+                                        style="color: #ef4444; margin-top: 8px;">
+                                        <i class="fas fa-sign-out-alt" style="color: #ef4444;"></i> Cerrar Sesión
+                                    </a>
+                                </div>
+                            </div>
+
+                            <!-- UPLOAD BUTTON -->
+                            <a href="/cuenta/subir-kit.html" target=_blank class="btn-upload"><i
+                                    class="fas fa-cloud-upload-alt"></i>
+                                Subir</a>
+                        </div>
+
+                        <!-- 4. GUEST ACTIONS (Shown when Logged Out) -->
+                        <div id="nav-guest-section" style="display: none; align-items: center; gap: 0.5rem;">
+                            <!-- Separtor -->
+                            <div style="width:1px; height:24px; background:rgba(255,255,255,0.1); margin:0 4px;"></div>
+                            <a href="/pages/login.html" class="navbar-login-link">Iniciar Sesión</a>
+                            <a href="/pages/register.html" class="btn-join">Únete <i
+                                    class="bi bi-rocket-takeoff"></i></a>
+                        </div>
+
                     </div>
                 </div>
-                <div id="search-overlay"></div>
-                <div id="active-search-tags"></div>
             </div>
+        </div>
 
-            <button class="menu-toggle" id="menuToggle"></button>
-            <div class="navbar-right">
-
-                <!-- 1. CURRENCY (Always Visible) -->
-                <div class="currency-dropdown" style="position: relative;">
-                    <button id="currency-toggle-btn" onclick="toggleCurrency(event)" class="nav-text-btn"
-                        style="background:none; border:none; color:#bbb; font-size:0.8rem; font-weight:600; cursor:pointer; padding:6px 8px; display:flex; align-items:center; gap:4px; outline:none; transition: all 0.2s;">
-                        <span id="current-currency">PEN</span> <i class="bi bi-caret-down-fill"
-                            style="font-size:0.6rem;"></i>
-                    </button>
-                    <div id="currency-menu"
-                        style="position: absolute; top: 100%; left: 0; background: #141414; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 4px; display: none; flex-direction: column; min-width: 80px; box-shadow: 0 4px 12px rgba(0,0,0,0.5); z-index: 1005;">
-                        <div onclick="setCurrency('PEN')" class="currency-item"
-                            style="padding:6px 12px; font-size:0.8rem; color:#ccc; cursor:pointer; border-radius:4px;">
-                            PEN</div>
-                        <div onclick="setCurrency('USD')" class="currency-item"
-                            style="padding:6px 12px; font-size:0.8rem; color:#ccc; cursor:pointer; border-radius:4px;">
-                            USD</div>
-                    </div>
-                </div>
-
-                <!-- 2. CART (Always Visible) -->
-                <a href="#" class="nav-icon-btn" title="Carrito" data-label="Carrito" onclick="toggleCartPanel(event)">
-                    <i class="bi bi-cart3"></i>
-                    <span id="cart-count-badge" class="cart-label-count" style="display:none;">0</span>
-                </a>
-
-                <!-- 3. LOGGED IN ACTIONS (Hidden by default) -->
-                <div id="nav-auth-section" style="display: flex; align-items: center; gap: 0.5rem;">
-
-                    <!-- NOTIFICACIONES -->
-                    <div class="notification-dropdown">
-                        <button class="nav-icon-btn" onclick="toggleNotificationDropdown(event)"
-                            data-label="Notificaciones" style="user-select: none;" onselectstart="return false;">
-                            <i class="bi bi-bell"></i>
-                            <span class="notification-badge" id="notification-badge" style="display:none;">0</span>
-                        </button>
-                        <div class="notification-menu" id="notification-menu">
-                            <div class="notification-header"
-                                style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-bottom: 1px solid #222;">
-                                <h4 style="margin: 0; font-size: 0.95rem; font-weight: 600; color: #fff;">Notificaciones
-                                </h4>
-                                <a href="/notificaciones.html" class="notif-view-all">Ver todos</a>
-                            </div>
-                            <div id="notification-list" style="max-height: 400px; overflow-y: auto;">
-                                <div class="notif-empty" style="text-align: center; color: #fff; padding: 40px 20px;">
-                                    <div style="font-size: 2rem; margin-bottom: 16px; color: #666;"><i
-                                            class="bi bi-bell"></i></div>
-                                    <h4 style="margin-bottom: 8px; font-size: 0.9rem; font-weight: 500;">Cargando...
-                                    </h4>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- USER PROFILE -->
-                    <div class="user-dropdown">
-                        <div class="user-trigger" onclick="toggleUserDropdown(event)" style="cursor: pointer;">
-                            <div id="user-avatar-display" class="user-avatar-placeholder">W</div>
-                        </div>
-                        <div class="user-dropdown-menu" style="width: 380px;">
-                            <div class="user-dropdown-header" onclick="window.location.href='/perfil-publico.html'"
-                                style="display: flex; align-items: center; justify-content: space-between; gap: 12px; background-color: #232323; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 24px 16px; margin-bottom: 12px; cursor: pointer; transition: background-color 0.2s; user-select: none;"
-                                onmouseover="this.style.backgroundColor='#2a2a2a'"
-                                onmouseout="this.style.backgroundColor='#232323'">
-                                <div style="display: flex; align-items: center; gap: 12px;">
-                                    <div class="user-dropdown-avatar-lg"
-                                        style="width: 48px; height: 48px; font-size: 1.2rem; border-radius: 50%;">W
-                                    </div>
-                                    <div style="display: flex; flex-direction: column;">
-                                        <h4 id="dropdown-username"
-                                            style="margin: 0; font-size: 1rem; color: #fff; font-weight: 600;">Willie
-                                            Inspired</h4>
-                                        <span style="color: #999; font-size: 0.85rem;">0 Créditos</span>
-                                    </div>
-                                </div>
-                                <a href="/cuenta/planes.html" class="btn-subscribe-sm"
-                                    onclick="event.stopPropagation();" style="padding: 6px 12px; font-size: 0.8rem;">
-                                    <i class="bi bi-plus-circle-fill"></i> Suscribirse
-                                </a>
-                            </div>
-
-                            <div class="w-grid">
-                                <a href="/cuenta/dashboard.html" class="w-grid-item"><i class="fas fa-columns"
-                                        style="transform: rotate(90deg);"></i><span>Dashboard</span></a>
-                                <a href="/mis-compras2.html" class="w-grid-item"><i
-                                        class="fas fa-layer-group"></i><span>Compras</span></a>
-                                <a href="/mensajes.html" class="w-grid-item"><i
-                                        class="fas fa-envelope"></i><span>Mensajes</span></a>
-                            </div>
-
-                            <!-- LIST -->
-                            <a href="/favoritos.html" class="w-list-item"><i class="fas fa-heart"></i> Mis Favoritos</a>
-                            <a href="/gift-cards.html" class="w-list-item"><i class="fas fa-gift"></i> Gift Cards</a>
-                            <a href="/historial.html" class="w-list-item"><i class="fas fa-history"></i> Historial</a>
-                            <div style="height: 1px; background: rgba(255,255,255,0.1); margin: 8px 0;"></div>
-                            <a href="/account-settings.html" class="w-list-item"><i class="fas fa-sliders-h"></i>
-                                Configuración</a>
-                            <a href="/ayuda.html" class="w-list-item"><i class="fas fa-question-circle"></i> Centro de
-                                Ayuda</a>
-                            <a href="#" id="navbar-logout-btn" class="w-list-item"
-                                style="color: #ef4444; margin-top: 8px;">
-                                <i class="fas fa-sign-out-alt" style="color: #ef4444;"></i> Cerrar Sesión
-                            </a>
-                        </div>
-                    </div>
-
-                    <!-- UPLOAD BUTTON -->
-                    <a href="/cuenta/subir-kit.html" target=_blank class="btn-upload"><i
-                            class="fas fa-cloud-upload-alt"></i>
-                        Subir</a>
-                </div>
-
-                <!-- 4. GUEST ACTIONS (Shown when Logged Out) -->
-                <div id="nav-guest-section" style="display: none; align-items: center; gap: 0.5rem;">
-                    <!-- Separtor -->
-                    <div style="width:1px; height:24px; background:rgba(255,255,255,0.1); margin:0 4px;"></div>
-                    <a href="/pages/login.html" class="navbar-login-link">Iniciar Sesión</a>
-                    <a href="/pages/register.html" class="btn-join">Únete <i class="bi bi-rocket-takeoff"></i></a>
-                </div>
-
+        <!-- MOBILE SEARCH BAR (below navbar, mobile only) -->
+        <div class="mobile-search-wrapper" id="mobile-search-wrapper">
+            <div class="mobile-search-inner">
+                <i class="bi bi-search"></i>
+                <input type="text" id="mobileSearchInput" placeholder="Buscar 'trap' o 'drill'...">
             </div>
         </div>
     </header>
 
-    <main id="app-main" class="main-container">
-        <div class="page-header">
-            <h1 class="page-title">Notificaciones</h1>
-            <button class="mark-read-btn" onclick="window.NotificationsManager.markAllAsRead()">Marcar todo como
-                leído</button>
-        </div>
+    <main class="notifications-page">
+        <div class="notifications-container">
+            <div class="notifications-header">
+                <h1>Notificaciones</h1>
+                <button id="mark-all-read-btn" class="mark-read-btn">
+                    <i class="bi bi-check2-all"></i> Marcar leídos
+                </button>
+            </div>
 
-        <div id="full-notification-list" class="notifications-list">
-            <!-- SKELETONS (Immediate Render) -->
-            <div class="skeleton-item">
-                <div class="skeleton-avatar"></div>
-                <div class="skeleton-content">
-                    <div class="skeleton-line long"></div>
-                    <div class="skeleton-line short"></div>
+            <div id="full-notifications-list" class="notifications-list">
+                <!-- Skeletons: Dynamic loading via JS -->
+                <!-- Smooth gradient fade-out for a premium loading feel -->
+                <div class="notif-item" style="pointer-events: none; opacity: 1;">
+                    <div class="skeleton"
+                        style="width: 48px; height: 48px; border-radius: 8px; flex-shrink: 0; background: rgba(255,255,255,0.05);">
+                    </div>
+                    <div class="notif-item-content" style="width: 100%;">
+                        <div class="skeleton"
+                            style="width: 40%; height: 16px; margin-bottom: 8px; border-radius: 4px; background: rgba(255,255,255,0.05);">
+                        </div>
+                        <div class="skeleton"
+                            style="width: 70%; height: 14px; margin-bottom: 8px; border-radius: 4px; background: rgba(255,255,255,0.05);">
+                        </div>
+                        <div class="skeleton"
+                            style="width: 25%; height: 12px; border-radius: 4px; background: rgba(255,255,255,0.05);">
+                        </div>
+                    </div>
                 </div>
-            </div>
-            <div class="skeleton-item">
-                <div class="skeleton-avatar"></div>
-                <div class="skeleton-content">
-                    <div class="skeleton-line long"></div>
-                    <div class="skeleton-line short"></div>
+                <div class="notif-item" style="pointer-events: none; opacity: 0.9;">
+                    <div class="skeleton"
+                        style="width: 48px; height: 48px; border-radius: 8px; flex-shrink: 0; background: rgba(255,255,255,0.05);">
+                    </div>
+                    <div class="notif-item-content" style="width: 100%;">
+                        <div class="skeleton"
+                            style="width: 30%; height: 16px; margin-bottom: 8px; border-radius: 4px; background: rgba(255,255,255,0.05);">
+                        </div>
+                        <div class="skeleton"
+                            style="width: 60%; height: 14px; margin-bottom: 8px; border-radius: 4px; background: rgba(255,255,255,0.05);">
+                        </div>
+                        <div class="skeleton"
+                            style="width: 20%; height: 12px; border-radius: 4px; background: rgba(255,255,255,0.05);">
+                        </div>
+                    </div>
                 </div>
-            </div>
-            <div class="skeleton-item">
-                <div class="skeleton-avatar"></div>
-                <div class="skeleton-content">
-                    <div class="skeleton-line long"></div>
-                    <div class="skeleton-line short"></div>
+                <div class="notif-item" style="pointer-events: none; opacity: 0.8;">
+                    <div class="skeleton"
+                        style="width: 48px; height: 48px; border-radius: 8px; flex-shrink: 0; background: rgba(255,255,255,0.05);">
+                    </div>
+                    <div class="notif-item-content" style="width: 100%;">
+                        <div class="skeleton"
+                            style="width: 45%; height: 16px; margin-bottom: 8px; border-radius: 4px; background: rgba(255,255,255,0.05);">
+                        </div>
+                        <div class="skeleton"
+                            style="width: 80%; height: 14px; margin-bottom: 8px; border-radius: 4px; background: rgba(255,255,255,0.05);">
+                        </div>
+                        <div class="skeleton"
+                            style="width: 30%; height: 12px; border-radius: 4px; background: rgba(255,255,255,0.05);">
+                        </div>
+                    </div>
                 </div>
-            </div>
-            <div class="skeleton-item">
-                <div class="skeleton-avatar"></div>
-                <div class="skeleton-content">
-                    <div class="skeleton-line long"></div>
-                    <div class="skeleton-line short"></div>
+                <div class="notif-item" style="pointer-events: none; opacity: 0.7;">
+                    <div class="skeleton"
+                        style="width: 48px; height: 48px; border-radius: 8px; flex-shrink: 0; background: rgba(255,255,255,0.05);">
+                    </div>
+                    <div class="notif-item-content" style="width: 100%;">
+                        <div class="skeleton"
+                            style="width: 35%; height: 16px; margin-bottom: 8px; border-radius: 4px; background: rgba(255,255,255,0.05);">
+                        </div>
+                        <div class="skeleton"
+                            style="width: 50%; height: 14px; margin-bottom: 8px; border-radius: 4px; background: rgba(255,255,255,0.05);">
+                        </div>
+                        <div class="skeleton"
+                            style="width: 25%; height: 12px; border-radius: 4px; background: rgba(255,255,255,0.05);">
+                        </div>
+                    </div>
                 </div>
-            </div>
-            <div class="skeleton-item">
-                <div class="skeleton-avatar"></div>
-                <div class="skeleton-content">
-                    <div class="skeleton-line long"></div>
-                    <div class="skeleton-line short"></div>
+                <div class="notif-item" style="pointer-events: none; opacity: 0.6;">
+                    <div class="skeleton"
+                        style="width: 48px; height: 48px; border-radius: 8px; flex-shrink: 0; background: rgba(255,255,255,0.05);">
+                    </div>
+                    <div class="notif-item-content" style="width: 100%;">
+                        <div class="skeleton"
+                            style="width: 40%; height: 16px; margin-bottom: 8px; border-radius: 4px; background: rgba(255,255,255,0.05);">
+                        </div>
+                        <div class="skeleton"
+                            style="width: 65%; height: 14px; margin-bottom: 8px; border-radius: 4px; background: rgba(255,255,255,0.05);">
+                        </div>
+                        <div class="skeleton"
+                            style="width: 20%; height: 12px; border-radius: 4px; background: rgba(255,255,255,0.05);">
+                        </div>
+                    </div>
                 </div>
-            </div>
-            <div class="skeleton-item">
-                <div class="skeleton-avatar"></div>
-                <div class="skeleton-content">
-                    <div class="skeleton-line long"></div>
-                    <div class="skeleton-line short"></div>
+                <div class="notif-item" style="pointer-events: none; opacity: 0.5;">
+                    <div class="skeleton"
+                        style="width: 48px; height: 48px; border-radius: 8px; flex-shrink: 0; background: rgba(255,255,255,0.05);">
+                    </div>
+                    <div class="notif-item-content" style="width: 100%;">
+                        <div class="skeleton"
+                            style="width: 30%; height: 16px; margin-bottom: 8px; border-radius: 4px; background: rgba(255,255,255,0.05);">
+                        </div>
+                        <div class="skeleton"
+                            style="width: 55%; height: 14px; margin-bottom: 8px; border-radius: 4px; background: rgba(255,255,255,0.05);">
+                        </div>
+                        <div class="skeleton"
+                            style="width: 15%; height: 12px; border-radius: 4px; background: rgba(255,255,255,0.05);">
+                        </div>
+                    </div>
                 </div>
-            </div>
-            <div class="skeleton-item">
-                <div class="skeleton-avatar"></div>
-                <div class="skeleton-content">
-                    <div class="skeleton-line long"></div>
-                    <div class="skeleton-line short"></div>
+                <div class="notif-item" style="pointer-events: none; opacity: 0.4;">
+                    <div class="skeleton"
+                        style="width: 48px; height: 48px; border-radius: 8px; flex-shrink: 0; background: rgba(255,255,255,0.05);">
+                    </div>
+                    <div class="notif-item-content" style="width: 100%;">
+                        <div class="skeleton"
+                            style="width: 35%; height: 16px; margin-bottom: 8px; border-radius: 4px; background: rgba(255,255,255,0.05);">
+                        </div>
+                        <div class="skeleton"
+                            style="width: 50%; height: 14px; margin-bottom: 8px; border-radius: 4px; background: rgba(255,255,255,0.05);">
+                        </div>
+                        <div class="skeleton"
+                            style="width: 20%; height: 12px; border-radius: 4px; background: rgba(255,255,255,0.05);">
+                        </div>
+                    </div>
                 </div>
-            </div>
-            <div class="skeleton-item">
-                <div class="skeleton-avatar"></div>
-                <div class="skeleton-content">
-                    <div class="skeleton-line long"></div>
-                    <div class="skeleton-line short"></div>
+                <div class="notif-item" style="pointer-events: none; opacity: 0.3;">
+                    <div class="skeleton"
+                        style="width: 48px; height: 48px; border-radius: 8px; flex-shrink: 0; background: rgba(255,255,255,0.05);">
+                    </div>
+                    <div class="notif-item-content" style="width: 100%;">
+                        <div class="skeleton"
+                            style="width: 30%; height: 16px; margin-bottom: 8px; border-radius: 4px; background: rgba(255,255,255,0.05);">
+                        </div>
+                        <div class="skeleton"
+                            style="width: 60%; height: 14px; margin-bottom: 8px; border-radius: 4px; background: rgba(255,255,255,0.05);">
+                        </div>
+                        <div class="skeleton"
+                            style="width: 15%; height: 12px; border-radius: 4px; background: rgba(255,255,255,0.05);">
+                        </div>
+                    </div>
                 </div>
-            </div>
-            <div class="skeleton-item">
-                <div class="skeleton-avatar"></div>
-                <div class="skeleton-content">
-                    <div class="skeleton-line long"></div>
-                    <div class="skeleton-line short"></div>
+                <div class="notif-item" style="pointer-events: none; opacity: 0.2;">
+                    <div class="skeleton"
+                        style="width: 48px; height: 48px; border-radius: 8px; flex-shrink: 0; background: rgba(255,255,255,0.05);">
+                    </div>
+                    <div class="notif-item-content" style="width: 100%;">
+                        <div class="skeleton"
+                            style="width: 35%; height: 16px; margin-bottom: 8px; border-radius: 4px; background: rgba(255,255,255,0.05);">
+                        </div>
+                        <div class="skeleton"
+                            style="width: 45%; height: 14px; margin-bottom: 8px; border-radius: 4px; background: rgba(255,255,255,0.05);">
+                        </div>
+                        <div class="skeleton"
+                            style="width: 20%; height: 12px; border-radius: 4px; background: rgba(255,255,255,0.05);">
+                        </div>
+                    </div>
                 </div>
-            </div>
-            <div class="skeleton-item">
-                <div class="skeleton-avatar"></div>
-                <div class="skeleton-content">
-                    <div class="skeleton-line long"></div>
-                    <div class="skeleton-line short"></div>
+                <div class="notif-item" style="pointer-events: none; opacity: 0.1;">
+                    <div class="skeleton"
+                        style="width: 48px; height: 48px; border-radius: 8px; flex-shrink: 0; background: rgba(255,255,255,0.05);">
+                    </div>
+                    <div class="notif-item-content" style="width: 100%;">
+                        <div class="skeleton"
+                            style="width: 30%; height: 16px; margin-bottom: 8px; border-radius: 4px; background: rgba(255,255,255,0.05);">
+                        </div>
+                        <div class="skeleton"
+                            style="width: 50%; height: 14px; margin-bottom: 8px; border-radius: 4px; background: rgba(255,255,255,0.05);">
+                        </div>
+                        <div class="skeleton"
+                            style="width: 10%; height: 12px; border-radius: 4px; background: rgba(255,255,255,0.05);">
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </main>
+    <!-- ==================== SIDE PANELS (INJECTED MANUALLY FOR ANALYSIS) ==================== -->
 
-    <!-- GLOBAL FOOTER -->
-    <footer
-        style="background: #0a0a0a; border-top: 1px solid #222; padding: 60px 20px; color: #fff; font-family: 'Inter', sans-serif;">
-        <div class="container"
-            style="max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: 1.5fr 1fr 1fr 1fr; gap: 40px;">
-            <!-- Col 1: Brand -->
-            <div>
-                <h3 style="font-weight: 800; letter-spacing: -1px; margin-bottom: 20px;">OFFSZN</h3>
-                <p style="color: #666; font-size: 0.9rem; line-height: 1.6; margin-bottom: 24px;">
-                    El primer marketplace musical hecho en Perú <span style="font-size: 1rem;">🇵🇪</span>
-                </p>
-                <div style="display: flex; gap: 16px;">
-                    <a href="#" style="color: #444; font-size: 1.2rem; transition: color 0.2s;"
-                        onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#444'"><i
-                            class="fab fa-instagram"></i></a>
-                    <a href="#" style="color: #444; font-size: 1.2rem; transition: color 0.2s;"
-                        onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#444'"><i
-                            class="fab fa-discord"></i></a>
-                    <a href="#" style="color: #444; font-size: 1.2rem; transition: color 0.2s;"
-                        onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#444'"><i
-                            class="fab fa-youtube"></i></a>
-                    <a href="#" style="color: #444; font-size: 1.2rem; transition: color 0.2s;"
-                        onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#444'"><i
-                            class="fab fa-whatsapp"></i></a>
+    <!-- BACKDROP -->
+    <div class="overlay-backdrop" id="globalBackdrop" onclick="closeAllOverlays()"></div>
+
+    <!-- CART SIDE PANEL -->
+    <div class="side-panel" id="globalCartPanel">
+        <div class="panel-header">
+            <div class="panel-title" style="display: flex; align-items: center; gap: 12px;">
+                <div style="position: relative; display: flex;">
+                    <i class="fas fa-shopping-cart" style="font-size: 0.9rem; opacity: 0.7;"></i>
+                    <span id="cart-panel-count" class="notification-badge"
+                        style="position: absolute; top: -8px; right: -8px; display: flex; transform: scale(0.85);">0</span>
+                </div>
+                MI SELECCIÓN
+            </div>
+            <button class="panel-close" onclick="closeAllOverlays()">&times;</button>
+        </div>
+        <div class="panel-content" id="cart-items-container">
+            <div style="text-align:center; padding: 60px 0; color: #444;">
+                <i class="bi bi-cart-x"
+                    style="font-size: 3.5rem; opacity: 0.1; display: block; margin-bottom: 20px;"></i>
+                <p style="font-size: 0.9rem; color: #666; font-weight: 500;">No hay elementos en tu selección</p>
+            </div>
+        </div>
+        <div class="cart-total-section" id="cart-summary">
+            <div
+                style="display:flex; justify-content:space-between; margin-bottom:1.5rem; color:#fff; font-weight:800; font-size: 1.1rem; letter-spacing: -0.5px;">
+                <span
+                    style="color: #666; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; font-weight: 700;">Subtotal</span>
+                <span id="cart-total-price">$0.00</span>
+            </div>
+            <button class="btn-checkout-global" id="cart-checkout-btn"
+                onclick="window.location.href='/pages/checkout.html'">
+                PROCEDER AL PAGO
+            </button>
+
+            <!-- TRUST BADGES -->
+            <div
+                style="margin-top: 20px; text-align: center; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 15px;">
+                <p style="font-size: 0.65rem; color: #666; margin-bottom: 10px; letter-spacing: 1px; font-weight: 700;">
+                    METODOS DE PAGO SEGUROS</p>
+
+                <div style="display: flex; gap: 12px; justify-content: center; align-items: center; opacity: 0.8; filter: grayscale(100%); transition: filter 0.3s;"
+                    onmouseover="this.style.filter='grayscale(0%)'" onmouseout="this.style.filter='grayscale(100%)'">
+                    <!-- Global -->
+                    <i class="fab fa-cc-paypal" style="font-size: 26px; color: #fff;"></i>
+                    <i class="fab fa-cc-visa" style="font-size: 26px; color: #fff;"></i>
+                    <i class="fab fa-cc-mastercard" style="font-size: 26px; color: #fff;"></i>
+
+                    <!-- Local (Custom Badges) -->
+                    <div
+                        style="background: #742284; color: white; font-size: 0.7rem; font-weight: 800; padding: 2px 6px; border-radius: 4px; display: flex; align-items: center;">
+                        YAPE</div>
+                    <div
+                        style="background: #00d3de; color: white; font-size: 0.7rem; font-weight: 800; padding: 2px 6px; border-radius: 4px; display: flex; align-items: center;">
+                        PLIN</div>
                 </div>
             </div>
-
-            <!-- Col 2: Explorar -->
-            <div>
-                <h4
-                    style="font-size: 0.75rem; color: #444; font-weight: 700; letter-spacing: 1px; margin-bottom: 20px;">
-                    EXPLORAR</h4>
-                <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px;">
-                    <li><a href="/recursos/drum-kits"
-                            style="color: #ccc; text-decoration: none; font-size: 0.9rem; transition: color 0.2s;"
-                            onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#ccc'">Drum Kits</a>
-                    </li>
-                    <li><a href="/recursos/loops"
-                            style="color: #ccc; text-decoration: none; font-size: 0.9rem; transition: color 0.2s;"
-                            onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#ccc'">Loops &
-                            Samples</a></li>
-                    <li><a href="/recursos/presets"
-                            style="color: #ccc; text-decoration: none; font-size: 0.9rem; transition: color 0.2s;"
-                            onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#ccc'">Presets</a></li>
-                    <li><a href="/recursos/one-shots"
-                            style="color: #ccc; text-decoration: none; font-size: 0.9rem; transition: color 0.2s;"
-                            onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#ccc'">One-Shots</a>
-                    </li>
-                    <li><a href="/recursos/gratis"
-                            style="color: #3b82f6; text-decoration: none; font-size: 0.9rem; font-weight: 500;">Descargas
-                            Gratis</a></li>
-                </ul>
-            </div>
-
-            <!-- Col 3: Studio -->
-            <div>
-                <h4
-                    style="font-size: 0.75rem; color: #444; font-weight: 700; letter-spacing: 1px; margin-bottom: 20px;">
-                    STUDIO & COMUNIDAD</h4>
-                <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px;">
-                    <li><a href="/vender"
-                            style="color: #fff; text-decoration: none; font-size: 0.9rem; font-weight: 600;">Vender en
-                            OFFSZN</a></li>
-                    <li><a href="/comunidad/productores"
-                            style="color: #ccc; text-decoration: none; font-size: 0.9rem; transition: color 0.2s;"
-                            onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#ccc'">Productores /
-                            Collabs</a></li>
-                    <li><a href="/herramientas"
-                            style="color: #ccc; text-decoration: none; font-size: 0.9rem; transition: color 0.2s;"
-                            onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#ccc'">Herramientas &
-                            Upload</a></li>
-                    <li><a href="/blog"
-                            style="color: #ccc; text-decoration: none; font-size: 0.9rem; transition: color 0.2s;"
-                            onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#ccc'">Blog & Tips</a>
-                    </li>
-                </ul>
-            </div>
-
-            <!-- Col 4: Soporte -->
-            <div>
-                <h4
-                    style="font-size: 0.75rem; color: #444; font-weight: 700; letter-spacing: 1px; margin-bottom: 20px;">
-                    SOPORTE</h4>
-                <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px;">
-                    <li><a href="/licencias"
-                            style="color: #ccc; text-decoration: none; font-size: 0.9rem; transition: color 0.2s;"
-                            onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#ccc'">Información de
-                            Licencias</a></li>
-                    <li><a href="/contacto"
-                            style="color: #ccc; text-decoration: none; font-size: 0.9rem; transition: color 0.2s;"
-                            onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#ccc'">Centro de Ayuda /
-                            Contacto</a></li>
-                    <li><a href="/reembolsos"
-                            style="color: #ccc; text-decoration: none; font-size: 0.9rem; transition: color 0.2s;"
-                            onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#ccc'">Política de
-                            Reembolsos</a></li>
-                    <li><a href="/terminos"
-                            style="color: #ccc; text-decoration: none; font-size: 0.9rem; transition: color 0.2s;"
-                            onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#ccc'">Términos de
-                            Servicio</a></li>
-                </ul>
-            </div>
         </div>
+    </div>
 
-        <div class="container"
-            style="max-width: 1200px; margin: 40px auto 0; border-top: 1px solid #1a1a1a; padding-top: 30px; display: flex; justify-content: space-between; align-items: center;">
-            <p style="font-size: 0.8rem; color: #444;">&copy; 2026 OFFSZN. Todos los derechos reservados.</p>
-            <div style="display: flex; align-items: center; gap: 10px;">
-                <span style="font-size: 0.8rem; color: #444; margin-right: 10px;">Hecho con ♥ en Perú</span>
-                <i class="fab fa-cc-visa" style="color: #444; font-size: 1.5rem;"></i>
-                <i class="fab fa-cc-mastercard" style="color: #444; font-size: 1.5rem;"></i>
-                <i class="fab fa-cc-paypal" style="color: #444; font-size: 1.5rem;"></i>
-                <span
-                    style="background: #742284; color: #fff; font-size: 0.6rem; font-weight: 800; padding: 2px 4px; border-radius: 2px;">YAPE</span>
-            </div>
-        </div>
-    </footer>
-
-    <div id="sticky-player-container"></div>
-
-    <!-- SCRIPTS -->
+    <script src="/script/cart.js"></script>
+    <script src="/script/notifications.js"></script>
+    <script src="/script/avatar-manager.js"></script>
     <script src="/script/navbar.js?v=7" type="module"></script>
 
-    <!-- notifications.js already loaded in head -->
-    <script src="/script/hover-card.js"></script>
-    <script src="/script/sticky-player.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            if (window.StickyPlayer) window.StickyPlayer.init();
-        });
-    </script>
-    <!-- <script src="/script/router.js"></script> -->
-    <!-- Note: notifications.js handles the dropdown. We need a SEPARATE script logic for this page list -->
-
-    <script>
-        let fullNotifications = [];
-
         document.addEventListener('DOMContentLoaded', async () => {
-            await initPageNotifications();
-        });
+            // Safety Check
+            if (typeof window.supabaseClient === 'undefined') return;
 
-        async function initPageNotifications() {
-            // Wait for Supabase
-            if (!window.supabaseClient) {
-                setTimeout(initPageNotifications, 500);
-                return;
-            }
-
-            const { data: { session } } = await window.supabaseClient.auth.getSession();
-            if (!session) {
-                window.location.href = '/pages/login.html';
-                return;
-            }
-
-            fetchAndRender(session.user.id);
-        }
-
-        // Listen for Global Sync Event (fired by notifications.js)
-        window.addEventListener('notifications-updated', () => {
-            console.log("Global sync event received. Refreshing full list...");
-            window.supabaseClient.auth.getSession().then(({ data }) => {
-                if (data?.session?.user) {
-                    fetchAndRender(data.session.user.id);
+            // Wait for session to be ready
+            window.addEventListener('offszn-session-ready', async (e) => {
+                const user = e.detail.user;
+                if (user) {
+                    renderFullNotificationsPage(user.id);
+                } else {
+                    // Force login if no session (Notifications are private)
+                    window.location.href = '/pages/login.html';
                 }
             });
-        });
 
-        async function fetchAndRender(userId) {
-            try {
-                // 1. Fetch Real Notifications
-                const { data: realNotifs } = await window.supabaseClient
-                    .from('notifications')
-                    .select('*')
-                    .eq('user_id', userId)
-                    .order('created_at', { ascending: false })
-                    .limit(100); // Higher limit for full page
+            async function renderFullNotificationsPage(userId) {
+                const listContainer = document.getElementById('full-notifications-list');
+                if (!listContainer) return;
 
-                // 2. Fetch Pending Invites (Recibidas)
-                const { data: pending } = await window.supabaseClient
-                    .from('collab_invitations')
-                    .select('*, inviter:inviter_id(nickname, first_name, last_name, avatar_url)')
-                    .eq('collaborator_id', userId)
-                    .eq('status', 'pending');
+                const tenDaysAgo = new Date();
+                tenDaysAgo.setDate(tenDaysAgo.getDate() - 10);
+                const dateIso = tenDaysAgo.toISOString();
 
-                // 3. Fetch Accepted Invites (Enviadas & Aceptadas)
-                const { data: accepted } = await window.supabaseClient
-                    .from('collab_invitations')
-                    .select('*, collaborator:collaborator_id(nickname, first_name, last_name, avatar_url)')
-                    .eq('inviter_id', userId)
-                    .eq('status', 'accepted')
-                    .order('updated_at', { ascending: false })
-                    .limit(100);
+                try {
+                    // Use a more robust fetching approach if possible, or process them here.
+                    // For now, let's process them to get proper titles, messages and targetUrls.
+                    const { data: notifs, error } = await window.supabaseClient
+                        .from('notifications')
+                        .select('*')
+                        .eq('user_id', userId)
+                        .gt('created_at', dateIso)
+                        .order('created_at', { ascending: false })
+                        .limit(50);
 
-                // --- ENHANCEMENT: Collect Actor IDs AND Product IDs ---
-                const actorIds = new Set();
-                const productIds = new Set();
+                    if (error) throw error;
 
-                (realNotifs || []).forEach(n => {
-                    if (n.type === 'product_like' && n.data?.liker_id) actorIds.add(n.data.liker_id);
-                    if (n.type === 'product_like' && n.data?.product_id) productIds.add(n.data.product_id);
-                    if (n.type === 'new_follower' && n.data?.follower_id) actorIds.add(n.data.follower_id);
-                });
-
-                let actorsMap = {};
-                if (actorIds.size > 0) {
-                    const { data: actors } = await window.supabaseClient
-                        .from('users')
-                        .select('id, nickname, first_name, last_name, avatar_url')
-                        .in('id', Array.from(actorIds));
-
-                    if (actors) {
-                        actors.forEach(u => actorsMap[u.id] = u);
+                    if (!notifs || notifs.length === 0) {
+                        listContainer.innerHTML = `
+                            <div style="text-align: center; padding: 60px 20px;">
+                                <i class="bi bi-bell-slash" style="font-size: 3rem; color: #1a1a1a; margin-bottom: 20px; display: block;"></i>
+                                <h2 style="font-size: 1.1rem; color: #fff; margin-bottom: 10px; font-weight: 700;">Sin notificaciones</h2>
+                                <p style="color: #666; font-size: 0.85rem;">Te avisaremos cuando haya actividad relevante para ti.</p>
+                            </div>`;
+                        return;
                     }
-                }
 
-                // --- PATCH: Resolve Missing Follower IDs (Broken Notifications) ---
-                const missingNicknames = new Set();
-                (realNotifs || []).forEach(n => {
-                    if (n.type === 'new_follower' && !n.data?.follower_id) {
-                        // Extract name from "<strong>Name</strong>"
-                        // Assuming standard format "<strong>Name</strong> te empezó..."
-                        const match = (n.message || '').match(/<strong>(.*?)<\/strong>/);
-                        if (match && match[1]) missingNicknames.add(match[1]);
-                    }
-                });
+                    // --- PRE-PROCESS DATA ---
+                    notifs.forEach(n => {
+                        if (typeof n.data === 'string') {
+                            try { n.parsedData = JSON.parse(n.data); } catch (e) { n.parsedData = {}; }
+                        } else {
+                            n.parsedData = n.data || {};
+                        }
+                    });
 
-                if (missingNicknames.size > 0) {
-                    const { data: nickUsers } = await window.supabaseClient
-                        .from('users')
-                        .select('id, nickname, first_name')
-                        .in('nickname', Array.from(missingNicknames));
-
-                    if (nickUsers) {
-                        const nickMap = {};
-                        nickUsers.forEach(u => nickMap[u.nickname] = u.id);
-
-                        // Patch realNotifs in memory
-                        realNotifs.forEach(n => {
-                            if (n.type === 'new_follower' && !n.data?.follower_id) {
-                                const match = (n.message || '').match(/<strong>(.*?)<\/strong>/);
+                    // --- ROBUST ENHANCEMENT: Fetch Actors and Products for Rich Content ---
+                    const actorIds = new Set();
+                    const usernamesToFetch = new Set();
+                    const productIds = new Set();
+                    notifs.forEach(n => {
+                        const data = n.parsedData;
+                        if (n.type === 'product_like') {
+                            if (data.liker_id || data.user_id) actorIds.add(data.liker_id || data.user_id);
+                            if (data.product_id || data.id) productIds.add(data.product_id || data.id);
+                        }
+                        if (n.type === 'new_follower') {
+                            const fid = data.follower_id || data.id || n.actor_id || (data.user_id !== userId ? data.user_id : null);
+                            if (fid) {
+                                actorIds.add(fid);
+                            } else {
+                                // FALLBACK: Extract username from message if data is null/empty
+                                const match = n.message && n.message.match(/<strong[^>]*>(.*?)<\/strong>/);
                                 if (match && match[1]) {
-                                    const resolvedId = nickMap[match[1]];
-                                    if (resolvedId) {
-                                        if (!n.data) n.data = {};
-                                        n.data.follower_id = resolvedId;
-                                    }
+                                    n._extractedUsername = match[1];
+                                    usernamesToFetch.add(match[1]);
                                 }
                             }
-                        });
+                        }
+                    });
+
+                    let actorsMap = {};
+                    let actorsByNameMap = {};
+                    if (actorIds.size > 0) {
+                        const { data: actors } = await window.supabaseClient.from('users').select('id, nickname, first_name, avatar_url').in('id', Array.from(actorIds));
+                        if (actors) actors.forEach(u => { actorsMap[u.id] = u; if (u.nickname) actorsByNameMap[u.nickname] = u; });
                     }
-                }
 
-                let productsMap = {};
-                if (productIds.size > 0) {
-                    const { data: products } = await window.supabaseClient
-                        .from('products')
-                        .select('id, name, product_type')
-                        .in('id', Array.from(productIds));
-                    if (products) products.forEach(p => productsMap[p.id] = p);
-                }
+                    if (usernamesToFetch.size > 0) {
+                        const { data: rescued } = await window.supabaseClient.from('users').select('id, nickname, first_name, avatar_url').in('nickname', Array.from(usernamesToFetch));
+                        if (rescued) rescued.forEach(u => { actorsMap[u.id] = u; if (u.nickname) actorsByNameMap[u.nickname] = u; });
+                    }
 
-                // Process Real Notifications with Rich HTML (Replicating notifications.js logic)
-                const processedRealNotifs = (realNotifs || []).map(n => {
-                    let finalMessage = n.message || n.title;
+                    let productsMap = {};
+                    if (productIds.size > 0) {
+                        const { data: products } = await window.supabaseClient.from('products').select('id, name, product_type, public_slug').in('id', Array.from(productIds));
+                        if (products) products.forEach(p => productsMap[p.id] = p);
+                    }
 
-                    if (n.type === 'product_like' && n.data?.liker_id) {
-                        const actor = actorsMap[n.data.liker_id];
-                        if (actor) {
-                            const name = actor.nickname || actor.first_name || 'Alguien';
+                    // Process notifications for rich display
+                    const processed = notifs.map(n => {
+                        let msg = n.message;
+                        let url = n.targetUrl;
+                        let extraId = '';
 
-                            let prodName = 'tu producto';
-                            let categoryLabel = 'producto';
+                        // Use pre-parsed data to ensure consistency
+                        let data = n.parsedData || {};
 
-                            // Try to get from Map first (freshest), fall back to notification snapshot
-                            if (n.data?.product_id && productsMap[n.data.product_id]) {
-                                const p = productsMap[n.data.product_id];
-                                prodName = p.name;
-                                const cat = p.product_type || 'beat';
-                                categoryLabel = cat === 'beat' ? 'Beat' : (cat.charAt(0).toUpperCase() + cat.slice(1));
-                            } else if (n.data?.product_name) {
-                                prodName = n.data.product_name;
+                        if (n.type === 'product_like') {
+                            const pid = data?.product_id || data?.id || n.product_id;
+                            if (pid) extraId = pid;
+
+                            const lid = data?.liker_id || data?.user_id || n.actor_id;
+                            const actor = lid ? actorsMap[lid] : null;
+                            if (actor) {
+                                const name = actor.nickname || actor.first_name || 'Alguien';
+                                const p = productsMap[pid];
+                                const prodName = data?.product_name || (p ? p.name : 'tu producto');
+                                msg = `A <strong>${name}</strong> le gustó tu producto <strong>"${prodName}"</strong>.`;
+                            }
+                            if (pid) {
+                                const p = productsMap[pid];
+                                url = (p && window.createSeoLink) ? window.createSeoLink(p) : `/producto.html?id=${pid}`;
+                            }
+                        } else if (n.type === 'new_follower') {
+                            const fid = data?.follower_id || data?.id || n.actor_id || (data?.user_id !== userId ? data?.user_id : null);
+                            if (fid) extraId = fid;
+
+                            let actor = (fid && actorsMap[fid]) ? actorsMap[fid] : null;
+
+                            // Fallback to username Map
+                            if (!actor && n._extractedUsername) {
+                                actor = actorsByNameMap[n._extractedUsername];
+                                if (actor) extraId = actor.id;
                             }
 
-                            // Use standard strong tag for groupNotifications compatibility
-                            finalMessage = `A <strong>${name}</strong> le gustó tu ${categoryLabel} <strong>"${prodName}"</strong>.`;
+                            if (actor) {
+                                const name = actor.nickname || actor.first_name || 'Alguien';
+                                msg = `<strong>${name}</strong> comenzó a seguirte.`;
+                                url = window.createProfileLink ? window.createProfileLink(actor) : `/perfil-publico.html?id=${actor.id}`;
+                            } else {
+                                // Clean interactive bits if we still fail to find the actor
+                                msg = n.message.replace(/class="[^"]*artist-hover-trigger[^"]*"/g, '').replace(/onclick="[^"]*"/g, '');
+                            }
+                        } else if (n.type === 'new_message') {
+                            const convId = data?.conversation_id || data?.id || n.conversation_id;
+                            if (convId) extraId = convId;
+                            url = convId ? `/mensajes.html?convId=${convId}` : '/mensajes.html';
+                        } else if (n.type === 'collab_invitation') {
+                            url = '/cuenta/colaboraciones.html?tab=recibidas';
+                        } else if (n.type === 'collab_accepted') {
+                            url = '/cuenta/colaboraciones.html?tab=mis-invitaciones';
                         }
-                    } else if (n.type === 'new_follower' && n.data?.follower_id) {
-                        const actor = actorsMap[n.data.follower_id];
-                        if (actor) {
-                            const name = actor.nickname || actor.first_name || 'Alguien';
-                            finalMessage = `<strong>${name}</strong> comenzó a seguirte.`;
+
+                        // Final check: if we still have no URL but have an extraId, we'll let notifications.js handle it
+                        return { ...n, message: msg, targetUrl: url, extraId: extraId };
+                    });
+
+                    // Grouping Logic
+                    const grouped = groupNotifications(processed);
+
+                    // Render HTML
+                    let finalHtml = '';
+                    const groupOrder = ['Hoy', 'Ayer', 'Esta Semana', 'Anteriores'];
+
+                    groupOrder.forEach(groupName => {
+                        const items = grouped[groupName];
+                        if (items && items.length > 0) {
+                            finalHtml += `<div class="notification-group-title">${groupName}</div>`;
+                            items.forEach(n => {
+                                finalHtml += renderNotificationItem(n);
+                            });
                         }
-                    }
-                    return { ...n, message: finalMessage };
-                });
+                    });
 
-                // 4. Construct Virtuals (Identical logic to notifications.js)
-                const readInvites = JSON.parse(localStorage.getItem('readInvites') || '[]');
-                const deletedNotifs = JSON.parse(localStorage.getItem('deletedNotifs') || '[]');
+                    listContainer.innerHTML = finalHtml;
 
-                let list = [];
-
-                // A. Pending Invites
-                if (pending) {
-                    list.push(...pending.map(p => {
-                        const name = p.inviter?.nickname || p.inviter?.first_name || 'Alguien';
-                        // Add Split info
-                        const percent = p.royalty_percent ? `(${p.royalty_percent}%)` : '';
-                        const nameHtml = `<strong class="artist-hover-trigger" data-username="${name}" style="cursor:pointer;">${name}</strong>`;
-
-                        return {
-                            id: `invite-${p.id}`,
-                            type: 'collab_invitation',
-                            title: '¡Invitación Pendiente!',
-                            message: `${nameHtml} te invita a colaborar ${percent}.`,
-                            created_at: p.created_at,
-                            read: readInvites.includes(`invite-${p.id}`)
-                        };
-                    }));
+                } catch (err) {
+                    console.error("Error at Notifications Page:", err);
+                    listContainer.innerHTML = '<p style="color: #666; text-align: center; padding: 40px;">Error al cargar las notificaciones.</p>';
                 }
-
-                // B. Accepted Invites
-                if (accepted) {
-                    list.push(...accepted.map(p => {
-                        const name = p.collaborator?.nickname || p.collaborator?.first_name || 'Un usuario';
-                        return {
-                            id: `accepted-${p.id}`,
-                            type: 'collab_accepted',
-                            title: '¡Colaboración Aceptada!',
-                            message: `<strong>${name}</strong> aceptó tu invitación.`,
-                            created_at: p.updated_at || p.created_at,
-                            read: readInvites.includes(`accepted-${p.id}`)
-                        };
-                    }));
-                }
-
-                // 4. Merge
-                // Remove Filter to show all history
-                // Allow duplicates for now to ensure history is seen (User Request)
-
-                let combinedList = [...list, ...(processedRealNotifs || [])];
-
-                // Filter Deleted AND Self-Likes
-                combinedList = combinedList.filter(n => {
-                    if (deletedNotifs.includes(n.id)) return false;
-                    // Self-Notification Logic (Same as notifications.js)
-                    if (n.type === 'product_like' && n.data?.liker_id === userId) return false;
-                    return true;
-                });
-
-                // Sort by Date DESC
-                combinedList.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-
-                // 5. GROUPING LOGIC (Instagram Style)
-                const groupedList = groupNotifications(combinedList);
-
-                fullNotifications = groupedList;
-                renderList(groupedList);
-
-            } catch (err) {
-                console.error("Error fetching page notifs", err);
-            }
-        }
-
-        // Helper to Group Notifications
-        function groupNotifications(list) {
-            const grouped = [];
-            const map = new Map();
-
-            list.forEach(notif => {
-                let senderId = null;
-
-                // Extract Sender ID logic
-                if (notif.id.startsWith('invite-')) {
-                    // Try to group adjacent invites from same person if name is in message
-                    const match = notif.message.match(/<strong>(.*?)<\/strong>/);
-                    if (match) senderId = match[1] + '_' + notif.type;
-                } else if (notif.type === 'new_follower') {
-                    if (notif.data?.follower_id) senderId = notif.data.follower_id + '_' + notif.type;
-                }
-
-                // Fallback to unique ID
-                if (!senderId) senderId = notif.id;
-
-                if (map.has(senderId) && notif.type !== 'collab_accepted') {
-                    const parent = map.get(senderId);
-                    parent.count = (parent.count || 1) + 1;
-                    parent.latest_created_at = notif.created_at;
-                } else {
-                    const item = { ...notif, count: 1 };
-                    map.set(senderId, item);
-                    grouped.push(item);
-                }
-            });
-
-            return grouped;
-        }
-
-        async function renderList(list, append = false) {
-            const container = document.getElementById('full-notification-list'); // Keep original ID
-            if (!container) return; // Safety check for SPA transitions
-
-            if (!list || list.length === 0) {
-                if (!append) {
-                    container.innerHTML = `
-                    <div class="empty-state" style="text-align: center; padding: 60px 0; color: #555;">
-                        <i class="bi bi-bell-slash" style="font-size: 2rem; margin-bottom: 1rem; display:block;"></i>
-                        Sin notificaciones
-                    </div>`;
-                }
-                return;
             }
 
-            // New: Collect nicknames to prefetch
-            const prefetchSet = new Set();
+            function groupNotifications(notifs) {
+                const now = new Date();
+                const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
-            const html = list.map(n => {
-                const timeStr = timeAgo(n.created_at || n.latest_created_at);
-                const isUnread = !n.read;
-                let iconClass = 'bi-bell-fill';
+                const yesterday = new Date(today);
+                yesterday.setDate(yesterday.getDate() - 1);
 
-                // Icon Logic matching dropdown
-                if (n.type === 'collab_invitation') iconClass = 'bi-envelope-paper-fill'; // or handshake
-                if (n.type === 'collab_accepted') iconClass = 'bi-check-circle-fill';
-                if (n.type === 'new_follower') iconClass = 'bi-person-plus-fill';
+                const lastWeek = new Date(today);
+                lastWeek.setDate(lastWeek.getDate() - 7);
 
-                // Pass follower_id if available to the handler
-                let extraId = '';
-                if (n.type === 'product_like') extraId = n.data?.product_id || '';
-                else if (n.type === 'new_follower') extraId = n.data?.follower_id || '';
+                const groups = {
+                    'Hoy': [],
+                    'Ayer': [],
+                    'Esta Semana': [],
+                    'Anteriores': []
+                };
 
-                // Determine if deletable (Real DB IDs are UUIDs, Virtuals are 'invite-X')
-                const isReal = !n.id.startsWith('invite-') && !n.id.startsWith('accepted-');
+                notifs.forEach(n => {
+                    const d = new Date(n.created_at);
+                    if (d >= today) groups['Hoy'].push(n);
+                    else if (d >= yesterday) groups['Ayer'].push(n);
+                    else if (d >= lastWeek) groups['Esta Semana'].push(n);
+                    else groups['Anteriores'].push(n);
+                });
 
-                // Grouping Text
-                let countBadge = '';
-                if (n.count && n.count > 1) {
-                    // countBadge = `<span style="background:#222; border:1px solid #333; color:#aaa; font-size:0.7rem; padding:1px 6px; border-radius:4px; margin-left:6px; vertical-align:middle;">+${n.count - 1} más</span>`;
-                    countBadge = ''; // User requested removal
-                }
+                return groups;
+            }
 
-                // INJECT CLICKABLE PROFILE LINK WITH HOVER CARD
-                let displayMessage = n.message || n.title;
-                if (n.type === 'new_follower') {
-                    // Extract Username from <strong>Name</strong>
-                    // We assume the message format is "<strong>Name</strong> ..."
-                    const match = displayMessage.match(/<strong>(.*?)<\/strong>/);
-                    const username = match ? match[1] : 'Usuario';
+            function renderNotificationItem(n) {
+                const iconClass = getIconClass(n.type);
+                const timeStr = formatSimpleTimeAgo(n.created_at);
 
-                    // Create minimal artist data for hover card
-                    // We rely on hover-card.js to fetch the rest via nickname
-                    const artistData = JSON.stringify({
-                        nickname: username,
-                        // We don't have id/avatar yet, the card will fetch them
-                    }).replace(/'/g, "&apos;").replace(/"/g, "&quot;");
+                // Safety Fallbacks
+                const title = n.title || 'Novedad';
+                const message = n.message || 'Información de actividad.';
 
-                    prefetchSet.add(username); // Add to prefetch list
-
-                    // DEFAULT for new_follower: Use Hover Card + Link
-                    // The 'artist-hover-trigger' class will handle the hover card via HoverCardManager
-                    displayMessage = n.message.replace(
-                        /<strong>(.*?)<\/strong>/,
-                        `<strong class="artist-hover-trigger" 
-                                 data-artist='${artistData}' 
-                                 data-id="${extraId}" 
-                                 onmouseenter="window.showArtistCard(event, this)" 
-                                 onmouseleave="window.hideArtistCard(event, this)"
-                                 onclick="window.openProfile('${extraId}', event)" 
-                                 style="cursor: pointer;">$1</strong>`
-                    );
-                } else if (n.type === 'collab_invitation') {
-                    // Pattern: "Has sido invitado por <strong>Name</strong> ..."
-                    const match = displayMessage.match(/por\s+<strong>(.*?)<\/strong>/i);
-                    if (match && match[1]) {
-                        const username = match[1];
-                        const artistData = JSON.stringify({
-                            nickname: username
-                        }).replace(/'/g, "&apos;").replace(/"/g, "&quot;");
-
-                        prefetchSet.add(username); // Add to prefetch list
-
-                        displayMessage = displayMessage.replace(
-                            /<strong>(.*?)<\/strong>/,
-                            `<span class="artist-hover-trigger" 
-                                   style="font-weight:700; color:#fff; cursor:pointer;"
-                                   data-artist='${artistData}'
-                                   onmouseenter="window.showArtistCard(event, this)" 
-                                   onmouseleave="window.hideArtistCard(event, this)" 
-                                   onclick="event.stopPropagation(); window.handlePageItemClick('${n.id}', '${n.type}')">${username}</span>`
-                        );
-                    }
-                } else if (n.type === 'product_like' || n.type === 'collab_accepted') {
-                    // Generic Pattern: "A <strong>Name</strong> ..." or "<strong>Name</strong> aceptó..."
-                    // We replace the FIRST strong tag which is the user.
-                    const match = displayMessage.match(/<strong>(.*?)<\/strong>/);
-                    if (match && match[1]) {
-                        const username = match[1];
-                        const artistData = JSON.stringify({
-                            nickname: username
-                        }).replace(/'/g, "&apos;").replace(/"/g, "&quot;");
-
-                        prefetchSet.add(username);
-
-                        displayMessage = displayMessage.replace(
-                            /<strong>(.*?)<\/strong>/,
-                            `<span class="artist-hover-trigger" 
-                                   style="font-weight:700; color:#fff; cursor:pointer;"
-                                   data-artist='${artistData}'
-                                   onmouseenter="window.showArtistCard(event, this)" 
-                                   onmouseleave="window.hideArtistCard(event, this)" 
-                                   onclick="event.stopPropagation(); window.handlePageItemClick('${n.id}', '${n.type}', '${extraId}')">${username}</span>`
-                        );
-                    }
-                }
-                // Don't modify other types for now, or apply similar logic if they have usernames
-
+                const extraId = n.extraId || '';
                 return `
-                    <div class="notif-item ${isUnread ? 'unread' : ''}" style="cursor: pointer; position: relative;" 
-                         onclick="handlePageItemClick('${n.id}', '${n.type}', '${extraId}')">
-                        
-                        <div class="notif-avatar">
-                             <div style="width:100%;height:100%;background:#333;display:flex;align-items:center;justify-content:center; color: #fff;">
-                                <i class="bi ${iconClass}"></i>
-                             </div>
+                    <div class="notif-item ${n.read ? '' : 'unread'}" 
+                         data-id="${n.id}" 
+                         data-type="${n.type}" 
+                         data-extra-id="${extraId}"
+                         data-url="${n.targetUrl || ''}"
+                         onclick="handleNotificationItemClick(this)">
+                        <div class="notif-badge-dot"></div>
+                        <div class="notif-item-icon">
+                            <i class="fas ${iconClass}"></i>
                         </div>
-                        
-                        <div class="notif-content">
-                            <div class="notif-text">
-                                ${displayMessage} ${countBadge}
-                            </div>
-                            <div class="notif-time">${timeStr}</div>
+                        <div class="notif-item-content">
+                            <div class="notif-item-message">${message}</div>
+                            <div class="notif-item-time">${timeStr}</div>
                         </div>
-                        
-                        ${isUnread ? '<div class="unread-dot"></div>' : ''}
-                        
-                        <!-- Menu Button with dropdown -->
-                        <div style="position: absolute; top: 16px; right: 16px; z-index: 200;">
-                             <button class="notif-action-btn" style="position: static;" onclick="toggleMenu('${n.id}', event)">
-                                <i class="bi bi-three-dots"></i>
-                            </button>
-                            <div id="page-menu-${n.id}" class="menu-dropdown">
-                                <button class="menu-item" style="color: #eee;" onclick="handlePageItemClick('${n.id}', '${n.type}', '${extraId}'); event.stopPropagation();">
-                                    <i class="bi bi-eye"></i> Ver detalles
-                                </button>
-                                <button class="menu-item" style="color: #ef4444;" onclick="deleteNotif('${n.id}', event)">
-                                    <i class="bi bi-trash"></i> Eliminar
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-
-            if (append) container.insertAdjacentHTML('beforeend', html);
-            else container.innerHTML = html;
-
-            // --- RE-INIT HOVER CARDS ---
-            if (window.HoverCardManager) {
-                setTimeout(() => window.HoverCardManager.initTriggers(), 100);
+                    </div>`;
             }
 
-            // Trigger Prefetch (IMMEDIATE)
-            if (window.prefetchArtist) {
-                // RequestIdleCallback would be nicer but user wants speed
-                prefetchSet.forEach(nick => window.prefetchArtist(nick));
-            }
-        }
-
-        function timeAgo(date) {
-            const seconds = Math.floor((new Date() - new Date(date)) / 1000);
-
-            let interval = seconds / 31536000;
-            if (interval > 1) return "Hace " + Math.floor(interval) + " años";
-
-            interval = seconds / 2592000;
-            if (interval > 1) return "Hace " + Math.floor(interval) + " meses";
-
-            interval = seconds / 86400;
-            if (interval > 1) return "Hace " + Math.floor(interval) + " d";
-
-            interval = seconds / 3600;
-            if (interval > 1) return "Hace " + Math.floor(interval) + " h";
-
-            interval = seconds / 60;
-            if (interval > 1) return "Hace " + Math.floor(interval) + " min";
-
-            return "Hace un momento";
-        }
-
-        window.toggleMenu = function (id, e) {
-            if (e) {
-                e.preventDefault();
-                e.stopPropagation();
+            function getIconClass(type) {
+                switch (type) {
+                    case 'collab_invitation': return 'fa-handshake';
+                    case 'collab_accepted': return 'fa-check-circle';
+                    case 'new_follower': return 'fa-user-plus';
+                    case 'product_like': return 'fa-heart';
+                    case 'product_published': return 'fa-rocket';
+                    case 'new_message': return 'fa-comment-dots';
+                    default: return 'fa-bell';
+                }
             }
 
-            // Target the UNIQUE page menu ID
-            const menu = document.getElementById(`page-menu-${id}`);
-            const wasActive = menu && menu.classList.contains('active');
+            function formatSimpleTimeAgo(date) {
+                const seconds = Math.floor((new Date() - new Date(date)) / 1000);
+                if (seconds < 60) return "Hace un momento";
+                const mins = Math.floor(seconds / 60);
+                if (mins < 60) return `Hace ${mins} min`;
+                const hours = Math.floor(mins / 60);
+                if (hours < 24) return `Hace ${hours} h`;
+                const days = Math.floor(hours / 24);
+                if (days === 1) return "Ayer";
+                if (days < 7) return `Hace ${days} d`;
+                return new Date(date).toLocaleDateString();
+            }
 
-            // Close others
-            document.querySelectorAll('.menu-dropdown.active').forEach(m => {
-                m.classList.remove('active');
+            // Sync: If navbar marks all read, refresh this page too
+            window.addEventListener('notifications-updated', () => {
+                // If it was marked all read via navbar, we can re-fetch or just update visuals
+                // For simplicity, re-fetch if currently on this tab
+                if (document.visibilityState === 'visible' && window.NavbarState) {
+                    // Check if markRead was just triggered
+                }
             });
 
-            // Toggle Logic
-            if (menu && !wasActive) {
-                menu.classList.add('active');
-            }
-        };
-        // Close clicking outside
-        document.addEventListener('click', () => {
-            document.querySelectorAll('.menu-dropdown.active').forEach(m => m.classList.remove('active'));
+            // "Marcar todas como leídas" Button logic
+            document.getElementById('mark-all-read-btn')?.addEventListener('click', async () => {
+                if (window.NotificationsManager && window.NotificationsManager.markAllAsRead) {
+                    await window.NotificationsManager.markAllAsRead();
+                    // Instant refresh
+                    const { data: { session } } = await window.supabaseClient.auth.getSession();
+                    if (session?.user) renderFullNotificationsPage(session.user.id);
+                }
+            });
         });
-
-        window.deleteNotif = async function (id, e) {
-            // 1. Stop Click Propagation (Fixes Random Redirects)
-            if (e) {
-                e.preventDefault();
-                e.stopPropagation();
-            }
-
-            console.log(`[Visual Delete] Hiding notification: ${id}`);
-
-            // 2. Visual Delete Only: Hide locally for ALL IDs (No DB Delete)
-            const deleted = JSON.parse(localStorage.getItem('deletedNotifs') || '[]');
-            if (!deleted.includes(id)) {
-                deleted.push(id);
-                localStorage.setItem('deletedNotifs', JSON.stringify(deleted));
-            }
-
-            // OPTIMISTIC DOM REMOVAL (Immediate Feedback)
-            // Determine logic: 
-            // The item has an ID in the DOM? 'menu-ID' is the modal, but the row?
-            // Row is wrapped. We can find the button's closest .notif-item and hide it.
-            if (e && e.target) {
-                const row = e.target.closest('.notif-item');
-                if (row) {
-                    row.style.transition = 'opacity 0.2s, height 0.2s';
-                    row.style.opacity = '0';
-                    setTimeout(() => row.remove(), 200);
-                }
-            }
-
-            // 3. Refresh UI (Silent)
-            if (window.NotificationsManager) window.NotificationsManager.fetch();
-
-            // Local Page Update (Refresh data in background without showing skeletons)
-            const { data: { session } } = await window.supabaseClient.auth.getSession();
-            if (session) fetchAndRender(session.user.id);
-        };
-
-        // RENDER SKELETONS FUNCTION
-        function renderSkeletons() {
-            const container = document.getElementById('full-notification-list');
-            if (!container) return;
-
-            // Create 10 skeleton items
-            const skeletonsHTML = Array(10).fill(0).map(() => `
-                <div class="skeleton-item">
-                    <div class="skeleton-avatar"></div>
-                    <div class="skeleton-content">
-                        <div class="skeleton-line long"></div>
-                        <div class="skeleton-line short"></div>
-                    </div>
-                </div>
-            `).join('');
-
-            container.innerHTML = skeletonsHTML;
-        }
-
-        // Helper to Open Profile safely
-        window.openProfile = function (id, event) {
-            if (event) {
-                event.preventDefault();
-                event.stopPropagation();
-            }
-            if (id && id !== 'undefined' && id !== 'null') {
-                window.location.href = `/usuarios.html?id=${id}`;
-            } else {
-                console.warn('Cannot open profile: Invalid ID', id);
-            }
-        };
-
-        window.handlePageItemClick = async function (id, type, extraId) {
-            console.log(`[Click Logic] ID: ${id}, Type: ${type}, ExtraId: ${extraId}`); // DEBUG LOG
-
-            // 1. Mark as Read (Locally & DB)
-            const readInvites = JSON.parse(localStorage.getItem('readInvites') || '[]');
-            if ((id.startsWith('invite-') || id.startsWith('accepted-')) && !readInvites.includes(id)) {
-                readInvites.push(id);
-                localStorage.setItem('readInvites', JSON.stringify(readInvites));
-            } else if (!id.startsWith('invite-') && !id.startsWith('accepted-')) {
-                // Real DB item
-                await window.supabaseClient.from('notifications').update({ read: true }).eq('id', id);
-            }
-
-            // 2. Redirect Logic
-            if (type === 'collab_invitation') {
-                window.location.href = '/cuenta/colaboraciones.html?tab=recibidas';
-            } else if (type === 'collab_accepted') {
-                window.location.href = '/cuenta/colaboraciones.html?tab=mis-invitaciones';
-            } else if (type === 'new_follower') {
-                // REDIRECT TO PROFILE
-                if (extraId) {
-                    window.location.href = `/usuarios.html?id=${extraId}`;
-                } else {
-                    console.warn("No follower ID found. Cannot redirect.");
-                    // window.location.reload(); // DISABLE RELOAD LOOP
-                }
-            } else if (type === 'product_like') {
-                if (extraId && extraId !== 'undefined') {
-                    // Redirect to PUBLIC product page with sanitized logic
-                    const productId = extraId.split('?')[0].replace(/[^0-9]/g, '');
-                    if (productId) {
-                        window.location.href = `/producto.html?id=${productId}`;
-                    } else {
-                        window.location.href = '/cuenta/mis-kits.html';
-                    }
-                } else {
-                    window.location.href = '/cuenta/subir-kit.html';
-                }
-            }
-
-            // 3. Update Badge
-            if (window.NotificationsManager) window.NotificationsManager.fetch();
-        }
-        window.markAllRead = async function (e) {
-            if (e) e.preventDefault(); // Prevent link jump
-
-            const { data: { session } } = await window.supabaseClient.auth.getSession();
-            if (session) {
-                // 1. Mark Real DB Notifs
-                await window.supabaseClient
-                    .from('notifications')
-                    .update({ read: true })
-                    .eq('user_id', session.user.id);
-            }
-
-            // 2. Mark Virtual Invites (Local)
-            const readInvites = JSON.parse(localStorage.getItem('readInvites') || '[]');
-            if (window.fullNotifications) {
-                window.fullNotifications.forEach(n => {
-                    const isVirtual = n.id.startsWith('invite-') || n.id.startsWith('accepted-');
-                    if (isVirtual && !readInvites.includes(n.id)) {
-                        readInvites.push(n.id);
-                    }
-                });
-            }
-            localStorage.setItem('readInvites', JSON.stringify(readInvites));
-
-            // 3. Refresh Page List
-            if (session) fetchAndRender(session.user.id);
-
-            // 4. Refresh Dropdown & Badge (Global)
-            if (window.NotificationsManager) window.NotificationsManager.fetch();
-        };
-
     </script>
 </body>
 

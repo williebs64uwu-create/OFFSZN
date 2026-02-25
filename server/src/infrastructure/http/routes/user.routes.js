@@ -11,7 +11,8 @@ import {
     getMyProducts,
     updateMyProfile,
     getMyListenHistory,
-    clearMyListenHistory
+    clearMyListenHistory,
+    claimWelcomeCoupon
 } from '../controllers/UserController.js';
 import {
     followUser,
@@ -46,6 +47,7 @@ router.get('/me/favorites', getMyFavorites); // New
 router.post('/products/:id/like', toggleProductLike); // New
 router.put('/complete-onboarding', completeOnboarding);
 router.put('/me/onboarding', completeOnboarding);
+router.post('/me/claim-welcome-coupon', claimWelcomeCoupon);
 
 // ¡YA NO ESTÁN LAS RUTAS PÚBLICAS AQUÍ!
 

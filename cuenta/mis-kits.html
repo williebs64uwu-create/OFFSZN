@@ -1052,10 +1052,10 @@
         <div style="width:40px; border-bottom:1px solid #222; margin:5px 0;"></div>
         <a href="/cuenta/admin-licencias.html" class="sidebar-icon-btn" title="Licencias"><i
                 class="bi bi-file-earmark-music-fill"></i></a>
-        <!-- "Pagos y ajustes" renamed to "Cupones" per request -->
+        <a href="/cuenta/negociar.html" class="sidebar-icon-btn" title="Negociar"><i
+                class="bi bi-chat-left-dots-fill"></i></a>
         <a href="/cuenta/cupones.html" class="sidebar-icon-btn" title="Cupones"><i
                 class="bi bi-ticket-perforated-fill"></i></a>
-        <!-- Added Colaboraciones below -->
         <a href="/cuenta/colaboraciones.html" class="sidebar-icon-btn" title="Colaboraciones"><i
                 class="bi bi-people-fill"></i></a>
 
@@ -1070,12 +1070,11 @@
         <div style="width:40px; border-bottom:1px solid #222; margin:5px 0;"></div>
         <a href="/cuenta/reels.html" class="sidebar-icon-btn" title="Reels"><i class="bi bi-camera-reels-fill"></i></a>
 
-        <!-- UPGRADE BUTTON (Below Reels) -->
-        <div>
-            <a href="/cuenta/planes.html" class="sidebar-icon-btn" title="Mejorar Plan" style="color:#FFD700;">
-                <i class="bi bi-rocket-takeoff-fill"></i>
-            </a>
-        </div>
+        <!-- UPGRADE BUTTON (ROCKET) -->
+        <a href="/cuenta/planes.html" class="sidebar-icon-btn" title="Mejorar Plan"
+            style="color:#FFD700; margin-top: 10px;">
+            <i class="bi bi-rocket-takeoff-fill"></i>
+        </a>
     </div>
 
     <main class="main-content-elite">
@@ -2295,55 +2294,76 @@
                         else if (currentTab === 'presets') { table = 'preset_drafts'; draftBucket = 'preset-drafts'; }
                     }
 
+                    // --- CHECK IF PRODUCT WAS PURCHASED ---
+                    let isPurchased = false;
+                    if (!item.isDraft) {
+                        isPurchased = (item.sales_count > 0) || (item.downloads_count > 0);
+                        if (!isPurchased) {
+                            // Extra safety check in DB just in case counters are out of sync
+                            try {
+                                const { count } = await supabaseClient
+                                    .from('order_items')
+                                    .select('*', { count: 'exact', head: true })
+                                    .eq('product_id', id);
+                                if (count > 0) isPurchased = true;
+                            } catch (e) {
+                                console.warn("Could not verify order_items", e);
+                            }
+                        }
+                    }
+
                     // --- HYBRID STORAGE CLEANUP ---
-                    try {
-                        const filesToProcess = [];
+                    // Only delete files if it's a draft OR if it has NEVER been purchased
+                    if (item.isDraft || !isPurchased) {
+                        try {
+                            const filesToProcess = [];
 
-                        if (item.isDraft) {
-                            if (item.files_data) {
-                                Object.values(item.files_data).forEach(v => { if (v && typeof v === 'string') filesToProcess.push({ url: v, bucket: draftBucket }); });
+                            if (item.isDraft) {
+                                if (item.files_data) {
+                                    Object.values(item.files_data).forEach(v => { if (v && typeof v === 'string') filesToProcess.push({ url: v, bucket: draftBucket }); });
+                                }
+                                filesToProcess.push({ url: item.cover_url, bucket: draftBucket });
+                                filesToProcess.push({ url: item.beat_url || item.kit_url || item.preset_url || item.loop_url, bucket: draftBucket });
+                                filesToProcess.push({ url: item.audio_url || item.audio_before_url, bucket: draftBucket });
+                                filesToProcess.push({ url: item.audio_after_url, bucket: draftBucket });
+                            } else {
+                                // Public Bucket
+                                filesToProcess.push({ url: item.image_url, bucket: 'products' });
+                                filesToProcess.push({ url: item.audio_url, bucket: 'products' });
+                                filesToProcess.push({ url: item.mp3_url, bucket: 'products' });
+                                filesToProcess.push({ url: item.audio_after_url, bucket: 'products' });
+
+                                // Secure Bucket
+                                filesToProcess.push({ url: item.kit_url, bucket: 'secure-products' });
+                                filesToProcess.push({ url: item.wav_url, bucket: 'secure-products' });
+                                filesToProcess.push({ url: item.stems_url, bucket: 'secure-products' });
+                                filesToProcess.push({ url: item.preset_url, bucket: 'secure-products' });
+                                filesToProcess.push({ url: item.file_url, bucket: 'secure-products' });
                             }
-                            filesToProcess.push({ url: item.cover_url, bucket: draftBucket });
-                            filesToProcess.push({ url: item.beat_url || item.kit_url || item.preset_url || item.loop_url, bucket: draftBucket });
-                            filesToProcess.push({ url: item.audio_url || item.audio_before_url, bucket: draftBucket });
-                            filesToProcess.push({ url: item.audio_after_url, bucket: draftBucket });
-                        } else {
-                            // Public Bucket
-                            filesToProcess.push({ url: item.image_url, bucket: 'products' });
-                            filesToProcess.push({ url: item.audio_url, bucket: 'products' });
-                            filesToProcess.push({ url: item.mp3_url, bucket: 'products' });
-                            filesToProcess.push({ url: item.audio_after_url, bucket: 'products' });
 
-                            // Secure Bucket
-                            filesToProcess.push({ url: item.kit_url, bucket: 'secure-products' });
-                            filesToProcess.push({ url: item.wav_url, bucket: 'secure-products' });
-                            filesToProcess.push({ url: item.stems_url, bucket: 'secure-products' });
-                            filesToProcess.push({ url: item.preset_url, bucket: 'secure-products' });
-                            filesToProcess.push({ url: item.file_url, bucket: 'secure-products' });
-                        }
+                            // Separate R2 keys from Supabase paths
+                            const r2Keys = [];
+                            const supabaseTasks = [];
 
-                        // Separate R2 keys from Supabase paths
-                        const r2Keys = [];
-                        const supabaseTasks = [];
+                            for (const f of filesToProcess) {
+                                if (!f.url) continue;
 
-                        for (const f of filesToProcess) {
-                            if (!f.url) continue;
+                                const isR2 = f.url.includes('r2.cloudflarestorage.com') || f.url.includes('pub-') ||
+                                    (!f.url.startsWith('http') && f.url.includes('/'));
 
-                            const isR2 = f.url.includes('r2.cloudflarestorage.com') || f.url.includes('pub-') ||
-                                (!f.url.startsWith('http') && f.url.includes('/'));
-
-                            if (isR2) {
-                                r2Keys.push(f.url);
-                            } else if (f.url.includes('supabase.co')) {
-                                supabaseTasks.push(deleteFileFromStorage(f.url, f.bucket));
+                                if (isR2) {
+                                    r2Keys.push(f.url);
+                                } else if (f.url.includes('supabase.co')) {
+                                    supabaseTasks.push(deleteFileFromStorage(f.url, f.bucket));
+                                }
                             }
-                        }
 
-                        // Execute Deletions
-                        if (r2Keys.length > 0) await AuthUtils.deleteFromR2(r2Keys);
-                        if (supabaseTasks.length > 0) await Promise.all(supabaseTasks);
+                            // Execute Deletions
+                            if (r2Keys.length > 0) await AuthUtils.deleteFromR2(r2Keys);
+                            if (supabaseTasks.length > 0) await Promise.all(supabaseTasks);
 
-                    } catch (err) { console.warn(`Storage cleanup failed for item ${id}:`, err); }
+                        } catch (err) { console.warn(`Storage cleanup failed for item ${id}:`, err); }
+                    } // End if (item.isDraft || !isPurchased)
 
                     // --- DB DELETE / SOFT DELETE ---
                     if (item.isDraft) {
@@ -2351,29 +2371,34 @@
                         await supabaseClient.from(table).delete().eq('id', id);
                     } else {
                         // Published products are SOFT-DELETED (Hybrid)
-                        // This keeps metadata for Analytics while clearing file links
+                        // This keeps metadata for Analytics while hiding it from the store
 
                         // Add __DELETED__ tag to filter out later
                         let currentTags = Array.isArray(item.tags) ? [...item.tags] : [];
                         if (!currentTags.includes('__DELETED__')) currentTags.push('__DELETED__');
 
-                        // Try setting status to 'deleted' to satisfy constraints (e.g. non-null URLs for published items)
-                        const { error } = await supabaseClient.from('products').update({
+                        const updatePayload = {
                             status: 'deleted',     // Explicitly mark as deleted
                             visibility: 'private', // Hide from public
                             tags: currentTags,     // Tag for extra safety
-                            // Clear file links to free up storage space (files were deleted above)
-                            audio_url: null,
-                            mp3_url: null,
-                            wav_url: null,
-                            stems_url: null,
-                            kit_url: null,
-                            download_url_mp3: null,
-                            download_url_wav: null,
-                            download_url_stems: null,
-                            image_url: null,       // Clear cover image
-                            public_slug: `deleted_${Date.now()}_${id}` // Obfuscate slug to prevent access but keep unique constraint if any
-                        }).eq('id', id);
+                            public_slug: `deleted_${Date.now()}_${id}` // Obfuscate slug
+                        };
+
+                        // Only clear file URLs if we actually deleted the files!
+                        if (!isPurchased) {
+                            updatePayload.audio_url = null;
+                            updatePayload.mp3_url = null;
+                            updatePayload.wav_url = null;
+                            updatePayload.stems_url = null;
+                            updatePayload.kit_url = null;
+                            updatePayload.download_url_mp3 = null;
+                            updatePayload.download_url_wav = null;
+                            updatePayload.download_url_stems = null;
+                            updatePayload.image_url = null;       // Clear cover image
+                        }
+
+                        // Try setting status to 'deleted'
+                        const { error } = await supabaseClient.from('products').update(updatePayload).eq('id', id);
 
                         if (error) throw error;
                     }

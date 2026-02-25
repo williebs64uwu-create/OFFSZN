@@ -1148,9 +1148,7 @@
                         <button title="Descargar" class="fav-action-btn" onclick="event.stopPropagation(); window.location.href='/producto.html?id=${prod.id}'">
                             <i class="bi bi-download"></i>
                         </button>
-                         <button class="fav-action-btn">
-                            <i class="bi bi-three-dots"></i>
-                        </button>
+                         <button class="fav-action-btn btn-share-product" title="Compartir"><i class="bi bi-share"></i></button>
                     </div>
                 `;
 
@@ -1160,6 +1158,17 @@
                         window.StickyPlayer.play(prod);
                     }
                 };
+
+                // Initialize Share Logic
+                const shareBtnNode = row.querySelector('.btn-share-product');
+                if (shareBtnNode) {
+                    shareBtnNode.onclick = (e) => {
+                        e.preventDefault(); e.stopPropagation();
+                        if (window.openShareModal) {
+                            window.openShareModal(prod);
+                        }
+                    };
+                }
 
                 container.appendChild(row);
 

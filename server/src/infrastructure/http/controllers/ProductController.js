@@ -178,17 +178,17 @@ export const incrementPlayCount = async (req, res) => {
         // 2. Database Update (Fetch -> Increment -> Update)
         const { data: product, error: fetchError } = await supabase
             .from('products')
-            .select('views')
+            .select('plays_count')
             .eq('id', productId)
             .single();
 
         if (fetchError) throw fetchError;
 
-        const newCount = (product.views || 0) + 1;
+        const newCount = (product.plays_count || 0) + 1;
 
         const { error: updateError } = await supabase
             .from('products')
-            .update({ views: newCount })
+            .update({ plays_count: newCount })
             .eq('id', productId);
 
         if (updateError) throw updateError;
@@ -259,5 +259,59 @@ export const incrementDownloadCount = async (req, res) => {
     } catch (err) {
         console.error("Error incrementing download count:", err.message);
         res.status(500).json({ error: 'Error counting download' });
+    }
+};
+
+// --- VIEW COUNT LOGIC (Fixes direct Supabase 400 error) ---
+const viewRateLimit = new Map();
+
+export const incrementViewCount = async (req, res) => {
+    try {
+        const productId = req.params.id;
+        const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+
+        // 1. Rate Limit (Cooldown 1 minute)
+        const limitKey = `vw:${ip}:${productId}`;
+        const now = Date.now();
+        const COOLDOWN_MS = 60000;
+
+        if (viewRateLimit.has(limitKey)) {
+            const lastView = viewRateLimit.get(limitKey);
+            if (now - lastView < COOLDOWN_MS) {
+                return res.status(200).json({ message: 'View recorded (rate limited)', counted: false });
+            }
+        }
+        viewRateLimit.set(limitKey, now);
+
+        // 2. Fetch Product to get current views & producer_id
+        const { data: product, error: fetchError } = await supabase
+            .from('products')
+            .select('views_count, producer_id')
+            .eq('id', productId)
+            .single();
+
+        if (fetchError || !product) throw new Error("Producto no encontrado");
+
+        // 3. Increment in DB
+        const newCount = (product.views_count || 0) + 1;
+        await supabase
+            .from('products')
+            .update({ views_count: newCount })
+            .eq('id', productId);
+
+        // 4. Log in page_views (for Analytics Dashboard)
+        await supabase
+            .from('page_views')
+            .insert({
+                user_id: product.producer_id,
+                product_id: productId,
+                viewed_at: new Date().toISOString()
+            });
+
+        res.status(200).json({ message: 'View counted', views_count: newCount, counted: true });
+
+    } catch (err) {
+        console.error("Error in incrementViewCount:", err.message);
+        res.status(500).json({ error: 'Error logging view' });
     }
 };

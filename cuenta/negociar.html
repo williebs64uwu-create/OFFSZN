@@ -1,0 +1,930 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Negociaciones | OFFSZN Dashboard</title>
+
+    <!-- Supabase Config -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        window.SUPABASE_URL = "https://qtjpvztpgfymjhhpoouq.supabase.co";
+        window.SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0anB2enRwZ2Z5bWpoaHBvb3VxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3ODA5MTUsImV4cCI6MjA3NjM1NjkxNX0.YsItTFk3hSQaVuy707-z7Z-j34mXa03O0wWGAlAzjrw";
+        window.supabaseClient = null;
+    </script>
+    <link rel="icon" type="image/png" href="../images/LOGO-OFFSZN.png">
+
+    <!-- Fonts & Icons -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="../css/marketplace.css">
+    <link rel="stylesheet" href="../css/negociar-refined.css">
+
+    <!-- Auth Guard -->
+    <script src="/script/auth-utils.js?v=20"></script>
+    <script src="../script/auth-guard.js"></script>
+    <script src="/script/r2-loader.js"></script>
+
+    <style>
+        :root {
+            --bg-dark: #000000;
+            --card-bg: #0F0F0F;
+            --text-main: #FFFFFF;
+            --text-secondary: #888888;
+            --accent-purple: #8B5CF6;
+            --accent-glow: rgba(139, 92, 246, 0.4);
+            --border-color: #1A1A1A;
+            --success: #10B981;
+            --warning: #F59E0B;
+            --error: #EF4444;
+
+            --font-ui: 'Inter', sans-serif;
+            --font-display: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-family: var(--font-ui);
+            min-height: 100vh;
+            display: flex;
+            overflow-x: hidden;
+        }
+
+        /* Radial Background */
+        .radial-glow {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: radial-gradient(circle at 10% 10%, rgba(139, 92, 246, 0.05), transparent 50%);
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        /* Sidebar Mini Style */
+        .sidebar-stub {
+            width: 80px;
+            background: #000;
+            border-right: 1px solid var(--border-color);
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 20px;
+            gap: 10px;
+        }
+
+        .sidebar-icon-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+            font-size: 20px;
+            transition: 0.2s;
+            text-decoration: none;
+            position: relative;
+        }
+
+        .sidebar-icon-btn:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .sidebar-icon-btn.active {
+            color: #fff;
+            background: var(--accent-purple);
+            box-shadow: 0 0 10px var(--accent-glow);
+        }
+
+        .sidebar-icon-btn[data-title]:hover::after {
+            content: attr(data-title);
+            position: fixed;
+            left: 75px;
+            background: #111;
+            border: 1px solid #333;
+            color: #fff;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            white-space: nowrap;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+            pointer-events: none;
+            font-weight: 500;
+        }
+
+        /* Main Area */
+        .main-content-elite {
+            flex: 1;
+            margin-left: 80px;
+            padding: 40px;
+            width: calc(100% - 80px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .main-content-elite>* {
+            width: 100%;
+            max-width: 1400px;
+        }
+
+        .page-header {
+            margin-bottom: 40px;
+        }
+
+        .page-header h1 {
+            font-family: var(--font-display);
+            font-size: 32px;
+            font-weight: 800;
+            margin-bottom: 8px;
+        }
+
+        .page-header p {
+            color: var(--text-secondary);
+            font-size: 15px;
+        }
+
+        /* Stats Bar */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            padding: 24px;
+            border-radius: 16px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            block-size: 10px;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 800;
+            font-family: var(--font-display);
+        }
+
+        /* Filter Tabs */
+        .filter-nav {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 1px;
+        }
+
+        .filter-btn {
+            background: none;
+            border: none;
+            padding: 12px 20px;
+            color: #666;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+            position: relative;
+        }
+
+        .filter-btn:hover {
+            color: #fff;
+        }
+
+        .filter-btn.active {
+            color: var(--accent-purple);
+        }
+
+        .filter-btn.active::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: var(--accent-purple);
+            box-shadow: 0 0 10px var(--accent-glow);
+        }
+
+        /* Table/List Area */
+        .proposals-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .proposal-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 20px;
+            display: grid;
+            grid-template-columns: auto 1fr auto auto auto;
+            align-items: center;
+            gap: 24px;
+            transition: 0.2s;
+        }
+
+        .proposal-card:hover {
+            border-color: #333;
+            background: #141414;
+        }
+
+        .prod-img {
+            width: 56px;
+            height: 56px;
+            border-radius: 10px;
+            object-fit: cover;
+            background: #222;
+        }
+
+        .prod-info h4 {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .prod-info p {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .proposal-amount {
+            text-align: right;
+        }
+
+        .amount-val {
+            font-size: 18px;
+            font-weight: 800;
+            color: #fff;
+            font-family: var(--font-display);
+        }
+
+        .amount-orig {
+            font-size: 12px;
+            color: #555;
+            text-decoration: line-through;
+        }
+
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 30px;
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-pending {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+        }
+
+        .status-accepted {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .status-rejected {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--error);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
+        .status-countered {
+            background: rgba(139, 92, 246, 0.1);
+            color: var(--accent-purple);
+            border: 1px solid rgba(139, 92, 246, 0.2);
+        }
+
+        .action-btns {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-action {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            border: 1px solid #222;
+            background: #000;
+            color: #888;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .btn-action:hover {
+            border-color: #444;
+            color: #fff;
+        }
+
+        .btn-action.btn-accept:hover {
+            color: var(--success);
+            border-color: var(--success);
+        }
+
+        .btn-action.btn-reject:hover {
+            color: var(--error);
+            border-color: var(--error);
+        }
+
+        .btn-action.btn-counter:hover {
+            color: var(--accent-purple);
+            border-color: var(--accent-purple);
+        }
+
+        /* Modal Custom */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-card {
+            background: #0F0F0F;
+            border: 1px solid #222;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 400px;
+            padding: 32px;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-card h3 {
+            font-family: var(--font-display);
+            font-weight: 800;
+            margin-bottom: 20px;
+        }
+
+        .input-group {
+            margin-bottom: 24px;
+            position: relative;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 13px;
+            color: #666;
+            font-weight: 700;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+
+        .input-group input {
+            width: 100%;
+            background: #000;
+            border: 1px solid #222;
+            padding: 14px 16px;
+            border-radius: 12px;
+            color: #fff;
+            font-size: 16px;
+            font-family: var(--font-ui);
+            transition: 0.2s;
+        }
+
+        .input-group input:focus {
+            border-color: var(--accent-purple);
+            outline: none;
+            box-shadow: 0 0 10px var(--accent-glow);
+        }
+
+        .input-group .prefix {
+            position: absolute;
+            left: 16px;
+            top: 40px;
+            color: #555;
+            font-weight: 700;
+        }
+
+        .input-group.has-prefix input {
+            padding-left: 32px;
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 16px;
+            border-radius: 12px;
+            border: none;
+            background: #fff;
+            color: #000;
+            font-weight: 800;
+            font-size: 15px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-secondary {
+            width: 100%;
+            padding: 12px;
+            margin-top: 10px;
+            border: 1px solid #222;
+            background: transparent;
+            color: #666;
+            font-weight: 700;
+            border-radius: 12px;
+            cursor: pointer;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+            display: none;
+        }
+
+        .empty-state i {
+            font-size: 48px;
+            color: #222;
+            margin-bottom: 20px;
+            display: block;
+        }
+
+        .empty-state h3 {
+            font-size: 18px;
+            color: #444;
+            margin-bottom: 8px;
+        }
+
+        .empty-state p {
+            color: #333;
+            font-size: 14px;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                padding: 20px;
+            }
+
+            .proposal-card {
+                grid-template-columns: auto 1fr auto;
+                gap: 15px;
+            }
+
+            .action-btns {
+                grid-column: 1 / -1;
+                width: 100%;
+                justify-content: space-between;
+                border-top: 1px solid #1A1A1A;
+                padding-top: 15px;
+            }
+
+            .btn-action {
+                width: 31%;
+                border-radius: 8px;
+                font-size: 12px;
+                gap: 8px;
+            }
+
+            .btn-action::after {
+                content: attr(data-label);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="radial-glow"></div>
+
+    <!-- SIDEBAR (Standard) -->
+    <div class="sidebar-stub" style="justify-content:flex-start; gap:15px;">
+        <!-- Brand/Home -->
+        <a href="/index.html" class="sidebar-logo-btn"
+            style="margin-bottom:10px; display:flex; align-items:center; justify-content:center; width:44px; height:44px;">
+            <img src="../images/LOGO-OFFSZN.png" style="width:38px; mix-blend-mode: screen;">
+        </a>
+
+        <!-- 1. GESTIÓN -->
+        <div style="width:40px; border-bottom:1px solid #222; margin:5px 0;"></div>
+        <a href="dashboard.html" class="sidebar-icon-btn" data-title="Dashboard"><i class="bi bi-grid-fill"></i></a>
+        <a href="mis-kits.html" class="sidebar-icon-btn" data-title="Mis Beats/Kits"><i class="bi bi-disc-fill"></i></a>
+        <a href="subir-kit.html" class="sidebar-icon-btn" data-title="Subir"><i
+                class="bi bi-cloud-arrow-up-fill"></i></a>
+
+        <!-- 2. NEGOCIO -->
+        <div style="width:40px; border-bottom:1px solid #222; margin:5px 0;"></div>
+        <a href="admin-licencias.html" class="sidebar-icon-btn" data-title="Licencias"><i
+                class="bi bi-file-earmark-music-fill"></i></a>
+        <a href="negociar.html" class="sidebar-icon-btn active" data-title="Negociar"><i
+                class="bi bi-chat-left-dots-fill"></i></a>
+        <a href="cupones.html" class="sidebar-icon-btn" data-title="Cupones"><i
+                class="bi bi-ticket-perforated-fill"></i></a>
+        <a href="colaboraciones.html" class="sidebar-icon-btn" data-title="Colaboraciones"><i
+                class="bi bi-people-fill"></i></a>
+
+        <!-- 3. ACADEMIA -->
+        <div style="width:40px; border-bottom:1px solid #222; margin:5px 0;"></div>
+        <a href="/cuenta/cursos.html" class="sidebar-icon-btn" data-title="Cursos"><i
+                class="bi bi-mortarboard-fill"></i></a>
+        <a href="/cuenta/analiticas.html" class="sidebar-icon-btn" data-title="Estadísticas"><i
+                class="bi bi-bar-chart-fill"></i></a>
+
+        <!-- 4. SOCIAL -->
+        <div style="width:40px; border-bottom:1px solid #222; margin:5px 0;"></div>
+        <a href="reels.html" class="sidebar-icon-btn" data-title="Reels"><i class="bi bi-camera-reels-fill"></i></a>
+
+        <!-- UPGRADE BUTTON (ROCKET) -->
+        <a href="planes.html" class="sidebar-icon-btn" data-title="Mejorar Plan"
+            style="color:#FFD700; margin-top: 10px;">
+            <i class="bi bi-rocket-takeoff-fill"></i>
+        </a>
+    </div>
+
+    <main class="main-content-elite">
+        <div class="page-header">
+            <div class="user-meta">
+                <h1 style="font-family: var(--font-display); font-weight: 800; font-size: 2rem; margin: 0;">
+                    Negociaciones</h1>
+                <p style="color: var(--text-secondary); margin: 0; font-size: 0.95rem;">Gestiona las propuestas de
+                    precios enviadas por los compradores.</p>
+            </div>
+        </div>
+
+        <div class="content-wrapper">
+
+            <div class="stats-grid" id="stats-container">
+                <div class="stat-card">
+                    <div class="stat-label">Pendientes</div>
+                    <div class="stat-value" id="stat-pending">--</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Aceptadas</div>
+                    <div class="stat-value" id="stat-accepted">--</div>
+                </div>
+                <div class="stat-card" style="border-color: rgba(139, 92, 246, 0.2);">
+                    <div class="stat-label" style="color:var(--accent-purple)">Volumen Potencial</div>
+                    <div class="stat-value" id="stat-volume">$0</div>
+                </div>
+            </div>
+
+            <nav class="filter-nav">
+                <button class="filter-btn active" onclick="setFilter('all', this)">Todas</button>
+                <button class="filter-btn" onclick="setFilter('pending', this)">Pendientes</button>
+                <button class="filter-btn" onclick="setFilter('countered', this)">Contra-ofertas</button>
+                <button class="filter-btn" onclick="setFilter('accepted', this)">Aceptadas</button>
+            </nav>
+
+            <div id="loading" style="text-align:center; padding:50px;">
+                <div class="spinner-border text-light" role="status"></div>
+            </div>
+
+            <!-- Tab Content -->
+            <div id="all" class="tab-content active">
+                <div id="proposalsList" class="proposals-grid">
+                    <!-- Cards will be injected by JS -->
+                </div>
+                <div id="emptyState" class="empty-state" style="display: none;">
+                    <i class="bi bi-chat-left-dots"></i>
+                    <h3>No hay negociaciones</h3>
+                    <p>Las propuestas que recibas de tus clientes aparecerán aquí.</p>
+                </div>
+            </div>
+
+            <div id="pending" class="tab-content"></div>
+            <div id="countered" class="tab-content"></div>
+            <div id="accepted" class="tab-content"></div>
+        </div>
+    </main>
+
+    <!-- Modal Contra-Oferta -->
+    <div class="modal-overlay" id="counterModal">
+        <div class="modal-card">
+            <h3 id="counter-modal-title">Enviar Contra-oferta</h3>
+            <p style="color:#888; font-size:14px; margin-bottom:24px;">Propón un nuevo precio al comprador. Le
+                enviaremos un correo con tu oferta.</p>
+
+            <div class="input-group has-prefix">
+                <label>Nuevo monto</label>
+                <span class="prefix">$</span>
+                <input type="number" id="counterAmount" placeholder="Ej: 45">
+            </div>
+
+            <button class="btn-submit" onclick="submitCounterOffer()">ENVIAR PROPUESTA</button>
+            <button class="btn-secondary" onclick="closeCounterModal()">CANCELAR</button>
+        </div>
+    </div>
+
+    <!-- Toast Component -->
+    <div id="toast-container" style="position:fixed; bottom:20px; right:20px; z-index:9999;"></div>
+
+    <script>
+        let allProposals = [];
+        let currentFilter = 'all';
+        let activeProposalId = null;
+        let API_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000/api' : 'https://offszn-oc7c.onrender.com/api';
+
+        document.addEventListener('DOMContentLoaded', init);
+
+        async function init() {
+            // Priority 1: Supabase Session (Most robust)
+            const { data: { session } } = await window.supabaseClient.auth.getSession();
+            let userId = session?.user?.id || localStorage.getItem('userId');
+
+            if (!userId) {
+                console.warn("No active session found. Redirecting to login...");
+                window.location.href = '../pages/login.html';
+                return;
+            }
+
+            // Sync to localStorage just in case other parts of the page need it
+            if (session?.user?.id && !localStorage.getItem('userId')) {
+                localStorage.setItem('userId', session.user.id);
+            }
+
+            await loadProposals();
+        }
+
+        async function loadProposals() {
+            try {
+                const userId = localStorage.getItem('userId');
+                const { data, error } = await window.supabaseClient
+                    .from('propuestas_offszn')
+                    .select('*, products(id, name, image_url, price_basic, public_slug)')
+                    .eq('producer_id', userId)
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+
+                allProposals = data || [];
+                updateStats();
+                renderProposals();
+
+            } catch (err) {
+                console.error("Error fetching proposals:", err);
+                showToast("Error al cargar negociaciones", "error");
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+            }
+        }
+
+        function updateStats() {
+            const pending = allProposals.filter(p => p.status_offszn === 'pending').length;
+            const countered = allProposals.filter(p => p.status_offszn === 'countered').length;
+            const accepted = allProposals.filter(p => p.status_offszn === 'accepted').length;
+            const counteredAmount = allProposals.filter(p => p.status_offszn === 'countered').reduce((acc, curr) => acc + (parseFloat(curr.counter_amount) || 0), 0);
+            const pendingAmount = allProposals.filter(p => p.status_offszn === 'pending').reduce((acc, curr) => acc + (parseFloat(curr.amount_offszn) || 0), 0);
+
+            const volume = allProposals
+                .filter(p => p.status_offszn !== 'rejected')
+                .reduce((acc, curr) => acc + (parseFloat(curr.counter_amount) || parseFloat(curr.amount_offszn) || 0), 0);
+
+            document.getElementById('stat-pending').innerText = pending + countered;
+            document.getElementById('stat-accepted').innerText = accepted;
+            document.getElementById('stat-volume').innerText = `$${Math.round(volume)}`;
+        }
+
+        function renderProposals() {
+            const container = document.getElementById('proposalsList');
+            const empty = document.getElementById('emptyState');
+
+            const filtered = currentFilter === 'all'
+                ? allProposals.filter(p => p.status_offszn !== 'rejected')
+                : allProposals.filter(p => p.status_offszn === currentFilter);
+
+            if (filtered.length === 0) {
+                container.style.display = 'none';
+                empty.style.display = 'block';
+                return;
+            }
+
+            empty.style.display = 'none';
+            container.style.display = 'flex';
+            container.innerHTML = '';
+
+            filtered.forEach(p => {
+                const card = document.createElement('div');
+                card.className = 'proposal-card';
+
+                const product = p.products || {};
+                let img = product.image_url || '../images/portada-default.png';
+
+                // 🔥 Prefijar URL si es solo un filename de Supabase
+                if (img && !img.startsWith('http') && !img.startsWith('../') && !img.startsWith('/')) {
+                    img = `https://qtjpvztgfyvjyjhhhpoouq.supabase.co/storage/v1/object/public/products/${img}`;
+                }
+                const statusClass = `status-${p.status_offszn}`;
+                const statusLabel = p.status_offszn === 'pending' ? 'Pendiente' :
+                    p.status_offszn === 'accepted' ? 'Aceptada' :
+                        p.status_offszn === 'countered' ? 'En Negociación' : 'Rechazada';
+
+                const displayAmount = p.counter_amount || p.amount_offszn;
+                const showCounter = p.status_offszn === 'pending';
+                const isFinal = p.status_offszn === 'accepted' || p.status_offszn === 'rejected';
+
+                // Determinar link del producto
+                const productLink = product.id ? `../item.html?id=${product.id}` : '#';
+
+                card.innerHTML = `
+                    <a href="${productLink}" target="_blank"><img src="${img}" class="prod-img"></a>
+                    <div class="prod-info">
+                        <h4 onclick="window.open('${productLink}', '_blank')" style="cursor:pointer; color:#fff;">${product.name || 'Producto Desconocido'}</h4>
+                        <div style="display:flex; align-items:center; gap:8px; margin-top:2px;">
+                            <p style="margin:0; opacity:0.6; font-size:13px;">${p.email_offszn}</p>
+                            ${p.selected_license ? `<span style="background:rgba(139, 92, 246, 0.1); color:var(--accent-purple); font-size:10px; padding:2px 8px; border-radius:100px; font-weight:800; text-transform:uppercase;">${p.selected_license}</span>` : ''}
+                        </div>
+                    </div>
+                    <div class="proposal-amount">
+                        <div class="amount-val">$${displayAmount}</div>
+                        <div class="amount-orig">$${product.price_basic || '---'}</div>
+                    </div>
+                    <div class="status-col">
+                        <span class="status-badge ${statusClass}">${statusLabel}</span>
+                    </div>
+                    <div class="action-btns">
+                        ${!isFinal ? `
+                            <button class="btn-action btn-accept" data-label="Aceptar" onclick="actOnProposal('${p.id}', 'accepted')"><i class="bi bi-check-lg"></i></button>
+                            ${showCounter ? `<button class="btn-action btn-counter" data-label="Mejorar" onclick="openCounterModal('${p.id}')"><i class="bi bi-arrow-repeat"></i></button>` : ''}
+                            <button class="btn-action btn-reject" data-label="Rechazar" onclick="actOnProposal('${p.id}', 'rejected')"><i class="bi bi-x-lg"></i></button>
+                        ` : '<div style="width:36px;"></div>'}
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function setFilter(filter, btn) {
+            currentFilter = filter;
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            renderProposals();
+        }
+
+        async function actOnProposal(id, status) {
+            if (status === 'rejected' && !confirm("¿Estás seguro de rechazar esta oferta?")) return;
+
+            try {
+                const proposal = allProposals.find(p => p.id === id);
+
+                // 1. Update Supabase
+                const { error } = await window.supabaseClient
+                    .from('propuestas_offszn')
+                    .update({ status_offszn: status, last_acted_by: 'producer' })
+                    .eq('id', id);
+
+                if (error) throw error;
+
+                // 2. Notify via Backend
+                notifyBackend(id, status);
+
+                showToast(`Propuesta ${status === 'accepted' ? 'aceptada' : 'rechazada'}`, "success");
+                loadProposals();
+
+            } catch (err) {
+                console.error("Action error:", err);
+                showToast("Error al procesar acción", "error");
+            }
+        }
+
+        async function notifyBackend(id, status, counterAmount = null) {
+            try {
+                const token = localStorage.getItem('sb-access-token');
+                await fetch(`${API_URL}/negotiate/respond`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        proposalId: id,
+                        status: status,
+                        counterAmount: counterAmount
+                    })
+                });
+            } catch (e) {
+                console.warn("Backend notification failed", e);
+            }
+        }
+
+        function openCounterModal(id) {
+            activeProposalId = id;
+            const proposal = allProposals.find(p => p.id == id);
+            if (proposal) {
+                const prodName = proposal.products ? proposal.products.name : 'Producto';
+                const currentOffer = proposal.amount_offszn;
+                // Actualizar titulo y placeholder
+                document.getElementById('counter-modal-title').innerText = `Mejorar Oferta: ${prodName}`;
+                document.getElementById('counterAmount').value = Math.round(currentOffer * 1.1); // Sugerir +10%
+            }
+            document.getElementById('counterModal').classList.add('active');
+        }
+
+        function closeCounterModal() {
+            document.getElementById('counterModal').classList.remove('active');
+            activeProposalId = null;
+        }
+
+        async function submitCounterOffer() {
+            const amount = document.getElementById('counterAmount').value;
+            if (!amount || amount < 5) {
+                showToast("Ingresa un monto válido", "error");
+                return;
+            }
+
+            try {
+                const id = activeProposalId;
+                const { error } = await window.supabaseClient
+                    .from('propuestas_offszn')
+                    .update({
+                        status_offszn: 'countered',
+                        counter_amount: amount,
+                        last_acted_by: 'producer'
+                    })
+                    .eq('id', id);
+
+                if (error) throw error;
+
+                notifyBackend(id, 'countered', amount);
+
+                showToast("Contra-oferta enviada", "success");
+                closeCounterModal();
+                loadProposals();
+
+            } catch (err) {
+                console.error("Counter offer error:", err);
+                showToast("Error al enviar contra-oferta", "error");
+            }
+        }
+
+        function showToast(msg, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.style.cssText = `
+                background: ${type === 'success' ? '#10B981' : '#EF4444'};
+                color: #fff; padding: 12px 24px; border-radius: 12px;
+                font-size: 14px; font-weight: 700; margin-top: 10px;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+                animation: slideIn 0.3s ease-out;
+            `;
+            toast.innerText = msg;
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+    </script>
+    <style>
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+    </style>
+</body>
+
+</html>

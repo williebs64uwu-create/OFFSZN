@@ -274,6 +274,11 @@ window.StickyPlayer = (function () {
         }
         isNavigatingHistory = false; // Reset
 
+        // --- 🔥 FAVORITES SYNC ---
+        if (window.FavoritesManager) {
+            updateLikeIcon(window.FavoritesManager.isLiked(trackData.id));
+        }
+
         resetAllListButtons();
         lastSyncTime = 0; // Trigger instant sync for new track
         if (window.activeWavesurfers) {
@@ -306,7 +311,11 @@ window.StickyPlayer = (function () {
         if (els.title) els.title.classList.remove('skeleton-text');
         if (els.artist) els.artist.classList.remove('skeleton-text');
 
-        els.title.innerText = trackData.name || 'Untitled';
+        const cleanName = (name) => {
+            if (!name) return 'Untitled';
+            return name.replace(/_/g, ' ').replace(/\.(mp3|wav|zip|rar)$/i, '').replace(/\s+/g, ' ').trim();
+        };
+        els.title.innerText = cleanName(trackData.name);
         els.artist.innerHTML = '';
 
         // Resolve Producer/Artist Data
@@ -358,7 +367,10 @@ window.StickyPlayer = (function () {
             trackData.file_url || trackData.url_file || '';
 
         // Update Price Label (BeatStars Style)
-        // (already done above)
+        if (els.priceLabel) {
+            const isTrulyFree = trackData.is_free === true || String(trackData.is_free) === 'true' || Number(trackData.price_basic) === 0;
+            els.priceLabel.innerText = isTrulyFree ? 'FREE' : `$${trackData.price_basic !== undefined && trackData.price_basic !== null ? trackData.price_basic : '—'}`;
+        }
 
         // Ensure we have audioUrl
         if (!audioUrl) return;
@@ -863,7 +875,7 @@ window.StickyPlayer = (function () {
     function handleDownloadClick() {
         if (!currentTrack) return;
 
-        const isFree = currentTrack.is_free === true || String(currentTrack.is_free) === 'true';
+        const isFree = currentTrack.is_free === true || String(currentTrack.is_free) === 'true' || Number(currentTrack.price_basic) === 0;
         const productType = (currentTrack.product_type || '').toLowerCase();
 
         // GUEST/FREE: If it's a beat, prioritize MP3 (democratization/security)

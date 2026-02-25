@@ -858,11 +858,17 @@ document.addEventListener('DOMContentLoaded', () => {
   goToDashboardBtn.addEventListener('click', () => {
     // Smart Redirect
     const pendingDownload = localStorage.getItem('offszn_pending_download');
+    const returnUrl = localStorage.getItem('offszn_return_after_welcome');
+
     if (pendingDownload) {
       localStorage.removeItem('offszn_pending_download');
       // Add a flag for auto-opening the modal
       localStorage.setItem('offszn_auto_download_trigger', 'true');
       window.location.href = pendingDownload;
+    } else if (returnUrl) {
+      // Return to the product page where they claimed the coupon
+      localStorage.removeItem('offszn_return_after_welcome');
+      window.location.href = returnUrl;
     } else {
       // Default: Redirect to Public Profile
       const nick = userData.nickname || 'user';

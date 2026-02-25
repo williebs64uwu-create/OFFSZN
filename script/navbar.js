@@ -132,6 +132,11 @@ window.closeGuestModal = function () {
 };
 
 function handleSmartToggle(targetType, targetElement) {
+    // If mobile menu is open, close it (User requirement: close menu before opening overlays like cart)
+    if (typeof window.closeMobileMenu === 'function') {
+        window.closeMobileMenu();
+    }
+
     const ANY_OPEN = isAnyUIOpen();
     let THIS_WAS_OPEN = false;
 
@@ -747,9 +752,11 @@ async function initAuth() {
     const { data } = await window.supabaseClient.auth.getSession();
 
     // 🔒 ONBOARDING GUARD: Check if user has a nickname (profile complete)
-    if (data.session && data.session.user) {
-        // Skip if we are already on welcome page
-        if (!window.location.pathname.includes('/pages/welcome.html')) {
+    // 🛡️ REFINEMENT: Only trigger for CONFIRMED users. Guests waiting for email shouldn't be redirected.
+    if (data.session && data.session.user && data.session.user.email_confirmed_at) {
+        // Skip if we are already on welcome page (Supports both .html and clean URLs)
+        const isWelcomePage = window.location.pathname.startsWith('/pages/welcome');
+        if (!isWelcomePage) {
             try {
                 const { data: profile, error: profileError } = await window.supabaseClient
                     .from('users')
@@ -1216,13 +1223,6 @@ function setupMobileMenu() {
     const navContainer = document.getElementById('nav-container');
 
     if (hamburgerBtn && navContainer) {
-        // === PORTAL: Move nav-container to body on mobile ===
-        // This escapes the navbar's stacking context (z-index + backdrop-filter)
-        // so the fixed-position sidebar renders above everything.
-        if (window.innerWidth <= 900) {
-            document.body.appendChild(navContainer);
-        }
-
         // Create Backdrop if not exists
         let backdrop = document.querySelector('.mobile-menu-backdrop');
         if (!backdrop) {
@@ -1235,14 +1235,23 @@ function setupMobileMenu() {
 
         const lockScroll = () => {
             savedScrollY = window.scrollY;
+            const scrollBarWidth = window.innerWidth - document.documentElement.clientWidth;
+
+            document.documentElement.style.setProperty('--scrollbar-width', `${scrollBarWidth}px`);
+            document.documentElement.style.overflow = 'hidden';
             document.body.classList.add('menu-open');
-            document.body.style.top = `-${savedScrollY}px`;
+
+            // On mobile iOS, overflow:hidden might not be enough.
+            // But position:fixed on body causes jumps.
+            // We'll use a hybrid approach or keep it simple first.
+            // If the user says it jumps "up", let's try to just use overflow first.
         };
 
         const unlockScroll = () => {
+            document.documentElement.style.overflow = '';
             document.body.classList.remove('menu-open');
-            document.body.style.top = '';
-            window.scrollTo(0, savedScrollY);
+            document.documentElement.style.removeProperty('--scrollbar-width');
+            // No need to scrollTo if we didn't use position:fixed
         };
 
         const toggleMenu = (e) => {
@@ -1262,6 +1271,9 @@ function setupMobileMenu() {
             backdrop.classList.remove('active');
             unlockScroll();
         };
+
+        // Expose closeMenu globally so it can be called from toggleCartPanel
+        window.closeMobileMenu = closeMenu;
 
         // Toggle
         hamburgerBtn.addEventListener('click', toggleMenu);

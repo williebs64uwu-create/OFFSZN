@@ -126,7 +126,13 @@ window.PurchasesManager = (function () {
             if (!order.order_items) return;
             order.order_items.forEach(item => {
                 const product = item.products;
-                if (!product) return;
+
+                // --- MANEJO DE PRODUCTO ELIMINADO ---
+                if (!product) {
+                    const deletedRow = createDeletedPurchaseRow(order, item);
+                    fragment.appendChild(deletedRow);
+                    return;
+                }
 
                 const row = createPurchaseRow(order, item, product);
                 fragment.appendChild(row);
@@ -134,6 +140,37 @@ window.PurchasesManager = (function () {
         });
 
         container.appendChild(fragment);
+    }
+
+    function createDeletedPurchaseRow(order, item) {
+        const row = document.createElement('div');
+        row.className = 'purchase-row purchases-grid-layout';
+
+        const dateFormatted = new Date(order.created_at).toLocaleDateString('es-ES', {
+            day: '2-digit', month: '2-digit', year: 'numeric'
+        });
+
+        const isFree = order.total_price === 0 || item.price_at_purchase === 0;
+        const montoHtml = isFree ? `<span class="badge-free">FREE</span>` : `$${item.price_at_purchase || 0}`;
+        const licenseType = item.license_name || 'basic';
+
+        row.innerHTML = `
+            <img src="/images/portada-default.png" class="purchase-cover" style="opacity: 0.5; filter: grayscale(100%);" alt="Eliminado">
+            <div class="purchase-info">
+                <span class="purchase-name" style="color: #666; font-style: italic;">Producto no disponible</span>
+                <span class="purchase-producer" style="color: #ef4444; font-size: 0.8rem;">Eliminado por el autor</span>
+                <span style="font-size:0.75rem; color:#888;">${licenseType.toUpperCase()}</span>
+            </div>
+            <div class="purchase-monto" style="opacity: 0.7;">${montoHtml}</div>
+            <div class="purchase-date" style="opacity: 0.7;">${dateFormatted}</div>
+            <div class="purchase-id" style="opacity: 0.7;" title="Transacción: ${order.transaction_id}">${(order.transaction_id || '').substring(0, 10)}...</div>
+            <div class="purchase-actions">
+                <button class="download-btn disabled-cooldown" style="opacity:0.4; cursor:not-allowed;" title="Archivos no disponibles">
+                    <i class="bi bi-slash-circle"></i> No disponible
+                </button>
+            </div>
+        `;
+        return row;
     }
 
     function createPurchaseRow(order, item, product) {
@@ -209,7 +246,7 @@ window.PurchasesManager = (function () {
 
         // Row Content - Truncation is handled by CSS, but we inject clean data
         row.innerHTML = `
-            <img src="${product.image_url || '/images/default-cover.png'}" class="purchase-cover" alt="Portada" onerror="this.src='/images/default-cover.png'">
+            <img src="${product.image_url || '/images/portada-default.png'}" class="purchase-cover" alt="Portada" onerror="this.src='/images/portada-default.png'">
             <div class="purchase-info">
                 <span class="purchase-name" title="${product.name}">${product.name}</span>
                 <span class="purchase-producer">${producerName}</span>

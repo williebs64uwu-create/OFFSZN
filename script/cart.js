@@ -220,27 +220,31 @@ const CartManager = {
         // Render Items
         if (this.state.items.length === 0) {
             this.ui.container.innerHTML = `
-                <div style="text-align:center; padding: 40px 20px; color: #666;">
-                    <i class="bi bi-cart-x" style="font-size: 2rem; display:block; margin-bottom:10px;"></i>
-                    <p>Tu carrito está vacío.</p>
+                <div style="text-align:center; padding: 60px 20px; color: #444;">
+                    <i class="bi bi-cart-x" style="font-size: 3.5rem; opacity: 0.1; display: block; margin-bottom: 20px;"></i>
+                    <p style="font-size: 0.9rem; color: #666; font-weight: 500;">No hay elementos en tu selección</p>
                 </div>`;
-            if (this.ui.checkoutBtn) this.ui.checkoutBtn.disabled = true;
+            if (this.ui.checkoutBtn) {
+                this.ui.checkoutBtn.disabled = true;
+                this.ui.checkoutBtn.style.opacity = '0.5';
+                this.ui.checkoutBtn.style.pointerEvents = 'none';
+            }
         } else {
             this.ui.container.innerHTML = this.state.items.map(item => {
                 const displayPrice = parseFloat(item.variant_price) > 0 ? item.variant_price : item.product.price_basic;
                 const licName = item.license_name || item.product.product_type || 'Licencia';
 
                 return `
-                <div class="cart-item-row" style="display:flex; flex-direction:column; gap:8px; margin-bottom:12px; padding-bottom:12px; border-bottom:1px solid #1a1a1a;">
-                    <div style="display:flex; gap:12px;">
-                        <img src="${item.product.image_url}" style="width:60px; height:60px; object-fit:cover; border-radius:6px; border:1px solid #222;">
-                        <div style="flex:1; display:flex; flex-direction:column; justify-content:center;">
-                            <h4 style="margin:0; font-size:0.9rem; font-weight:600; color:#eee;">${item.product.name}</h4>
-                            <span style="font-size:0.8rem; color:#888;">${licName}</span>
+                <div class="cart-item-row" style="display:flex; flex-direction:column; gap:12px; margin-bottom:16px; padding-bottom:16px; border-bottom:1px solid rgba(255,255,255,0.05);">
+                    <div style="display:flex; gap:14px; align-items: center;">
+                        <img src="${item.product.image_url}" style="width:56px; height:56px; object-fit:cover; border-radius:10px; border:1px solid rgba(255,255,255,0.05);">
+                        <div style="flex:1; display:flex; flex-direction:column; min-width: 0;">
+                            <h4 style="margin:0; font-size:0.85rem; font-weight:700; color:#fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-transform: uppercase; letter-spacing: 0.3px;">${item.product.name}</h4>
+                            <span style="font-size:0.75rem; color:#666; margin-top: 2px;">${licName}</span>
                         </div>
-                        <div style="display:flex; flex-direction:column; align-items:flex-end; justify-content:center; gap:4px;">
-                            <span style="font-size:0.95rem; font-weight:700; color:#fff;">$${parseFloat(displayPrice).toFixed(2)}</span>
-                            <button onclick="CartManager.removeFromCart('${item.product.id}')" style="background:none; border:none; color:#555; font-size:0.9rem; cursor:pointer; transition:color 0.2s;" onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='#555'">
+                        <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px;">
+                            <span style="font-size:1rem; font-weight:800; color:#fff; font-family: 'Plus Jakarta Sans', sans-serif;">$${parseFloat(displayPrice).toFixed(2)}</span>
+                            <button onclick="CartManager.removeFromCart('${item.product.id}')" style="background:none; border:none; color:#444; font-size:0.85rem; cursor:pointer; padding: 4px; transition:all 0.2s; display: flex; align-items: center;" onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='#444'">
                                 <i class="bi bi-trash"></i>
                             </button>
                         </div>
@@ -248,7 +252,11 @@ const CartManager = {
                 </div>
             `;
             }).join('');
-            if (this.ui.checkoutBtn) this.ui.checkoutBtn.disabled = false;
+            if (this.ui.checkoutBtn) {
+                this.ui.checkoutBtn.disabled = false;
+                this.ui.checkoutBtn.style.opacity = '1';
+                this.ui.checkoutBtn.style.pointerEvents = 'auto';
+            }
         }
     },
 
@@ -258,6 +266,11 @@ const CartManager = {
         if (this.ui.countBadge) {
             this.ui.countBadge.innerText = count;
             this.ui.countBadge.style.display = count > 0 ? 'flex' : 'none';
+        }
+
+        // Sync with mobile badge helper if defined
+        if (typeof window.syncMobileCartBadge === 'function') {
+            window.syncMobileCartBadge(count);
         }
 
         // Update Panel Title Count
@@ -295,4 +308,12 @@ const CartManager = {
 
 document.addEventListener('DOMContentLoaded', () => {
     CartManager.init();
+});
+
+// 🚀 RACE CONDITION FIX: If navbar is loaded dynamically, re-init UI and update badge
+window.addEventListener('offszn-navbar-loaded', () => {
+    if (window.CartManager) {
+        window.CartManager.init(); // Re-scan DOM for new navbar elements
+        window.CartManager.updateBadge();
+    }
 });

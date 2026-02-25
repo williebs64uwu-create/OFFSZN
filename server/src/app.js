@@ -23,6 +23,7 @@ import paypalRoutes from './infrastructure/http/routes/paypal.routes.js';
 import r2Routes from './infrastructure/http/routes/r2.routes.js';
 
 import cloudinaryRoutes from './infrastructure/http/routes/cloudinary.routes.js';
+import { submitNegotiation, respondNegotiation } from './infrastructure/http/controllers/NegotiationController.js';
 
 
 
@@ -138,6 +139,8 @@ app.use((req, res, next) => {
 // --- 4. RUTAS API ---
 app.use('/api/reels', reelsRoutes); // Isolated and High Priority
 app.post('/api/orders/mercadopago-webhook', handleMercadoPagoWebhook);
+app.post('/api/negotiate', submitNegotiation);
+app.post('/api/negotiate/respond', respondNegotiation);
 
 app.use('/api/auth', authRoutes);
 app.use('/api', publicRoutes);

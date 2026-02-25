@@ -14,6 +14,11 @@ window.ExpandedPlayer = (function () {
     }
 
     function setupEvents() {
+        // Close when clicking backdrop (the area outside .ep-content)
+        container.onclick = (e) => {
+            if (e.target === container) close();
+        };
+
         const closeBtn = document.getElementById('ep-close-btn');
         closeBtn.onclick = close;
 
@@ -59,6 +64,24 @@ window.ExpandedPlayer = (function () {
                 }
             }, 50);
         };
+
+        const shareBtn = document.getElementById('ep-btn-options');
+        if (shareBtn) {
+            shareBtn.onclick = () => {
+                if (currentTrack && window.openShareModal) {
+                    window.openShareModal(currentTrack);
+                }
+            };
+        }
+
+        const shareBtnCtrl = document.getElementById('ep-btn-share');
+        if (shareBtnCtrl) {
+            shareBtnCtrl.onclick = () => {
+                if (currentTrack && window.openShareModal) {
+                    window.openShareModal(currentTrack);
+                }
+            };
+        }
     }
 
     async function open(track) {

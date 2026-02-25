@@ -262,34 +262,37 @@ window.completeGate = async function (url, productId) {
         setTimeout(async () => {
             try {
 
-                // R2 Key Resolution (If url doesn't start with http/blob)
+                // R2 Key Resolution (If url doesn't start with blob or data)
                 let finalUrl = url;
-                if (url && !url.startsWith('http') && !url.startsWith('blob:') && !url.startsWith('data:')) {
-                    console.log("[Gate] Detected R2/Storage Key. Resolving...", url);
-                    try {
-                        const token = localStorage.getItem('authToken'); // Need auth for R2 signing
-                        const headers = { 'Content-Type': 'application/json' };
-                        if (token) headers['Authorization'] = `Bearer ${token}`;
+                if (url && !url.startsWith('blob:') && !url.startsWith('data:')) {
+                    // Si es una URL de R2 directa (cloudflarestorage), o si es un path relativo
+                    if (!url.startsWith('http') || url.includes('cloudflarestorage.com') || url.includes('r2.dev')) {
+                        console.log("[Gate] Detected R2/Storage Key or R2 URL. Resolving...", url);
+                        try {
+                            const token = localStorage.getItem('authToken'); // Need auth for R2 signing
+                            const headers = { 'Content-Type': 'application/json' };
+                            if (token) headers['Authorization'] = `Bearer ${token}`;
 
-                        const res = await fetch('/api/r2/download-url', {
-                            method: 'POST',
-                            headers: headers,
-                            body: JSON.stringify({ key: url })
-                        });
+                            const res = await fetch('/api/r2/download-url', {
+                                method: 'POST',
+                                headers: headers,
+                                body: JSON.stringify({ key: url })
+                            });
 
-                        if (res.ok) {
-                            const data = await res.json();
-                            if (data.downloadUrl) {
-                                finalUrl = data.downloadUrl;
-                                console.log("[Gate] Resolved URL:", finalUrl);
+                            if (res.ok) {
+                                const data = await res.json();
+                                if (data.downloadUrl) {
+                                    finalUrl = data.downloadUrl;
+                                    console.log("[Gate] Resolved URL:", finalUrl);
+                                }
+                            } else {
+                                console.warn("[Gate] Failed to resolve R2 key. Status:", res.status);
                             }
-                        } else {
-                            console.warn("[Gate] Failed to resolve R2 key. Status:", res.status);
+                        } catch (r2Err) {
+                            console.error("[Gate] R2 Resolution Error:", r2Err);
                         }
-                    } catch (r2Err) {
-                        console.error("[Gate] R2 Resolution Error:", r2Err);
                     }
-                }
+                } // <-- Added closing brace for the outer if block
 
                 console.log("[Gate] Starting forced direct download via Fetch/Blob...");
                 const response = await fetch(finalUrl);

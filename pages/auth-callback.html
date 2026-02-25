@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+Ôªø<!DOCTYPE html>
 <html lang="es">
 
 <head>
@@ -14,7 +14,7 @@
   <script src="/script/auth-utils.js?v=11"></script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Autenticando... ó OFFSZN</title>
+  <title>Autenticando... OFFSZN</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
@@ -38,8 +38,8 @@
 
   <div class="text-center">
     <div class="inline-block spinner rounded-full h-12 w-12 border-4 border-zinc-700 border-t-white mb-4"></div>
-    <p class="text-white text-lg font-medium">Completando autenticaciÛn...</p>
-    <p class="text-zinc-500 text-sm mt-2">Ser·s redirigido en un momento</p>
+    <p class="text-white text-lg font-medium">Completando autenticaci√≥n...</p>
+    <p class="text-zinc-500 text-sm mt-2">Ser√°s redirigido en un momento</p>
   </div>
 
   <script>
@@ -52,20 +52,20 @@
         return;
       }
 
-      // Obtener el par·metro de redirect de la URL
+      // Obtener el parÔøΩmetro de redirect de la URL
       const urlParams = new URLSearchParams(window.location.search);
       const redirectParam = urlParams.get('redirect');
 
-      console.log('?? Auth Callback - Par·metro redirect:', redirectParam);
+      console.log('?? Auth Callback - ParÔøΩmetro redirect:', redirectParam);
 
       try {
-        // Obtener la sesiÛn actual de Supabase desde el hash de la URL
+        // Obtener la sesiÔøΩn actual de Supabase desde el hash de la URL
         const { data: { session }, error } = await supabaseClient.auth.getSession();
 
-        console.log('?? SesiÛn recibida:', session ? 'SÌ' : 'No');
+        console.log('?? SesiÔøΩn recibida:', session ? 'SÔøΩ' : 'No');
 
         if (error) {
-          console.error('? Error obteniendo sesiÛn:', error);
+          console.error('? Error obteniendo sesiÔøΩn:', error);
           throw error;
         }
 
@@ -80,15 +80,15 @@
 
           console.log('? OAuth exitoso, token guardado en localStorage y cookie');
 
-          // PequeÒo delay
+          // PequeÔøΩo delay
           await new Promise(resolve => setTimeout(resolve, 500));
 
-          // ?? LÛgica Inteligente de RedirecciÛn (V3)
+          // ?? LÔøΩgica Inteligente de RedirecciÔøΩn (V3)
           // Verificar si el usuario ya tiene un perfil COMPLETO en la tabla 'users'
           const user = session.user;
           console.log('?? Usuario:', user.email);
 
-          // Consultar perfil para ver si ya completÛ el onboarding (tiene nickname)
+          // Consultar perfil para ver si ya completÔøΩ el onboarding (tiene nickname)
           const { data: profile, error: profileError } = await supabaseClient
             .from('users')
             .select('nickname')
@@ -112,18 +112,18 @@
             console.log('? Sin onboarding completo -> Welcome');
             window.location.replace('/pages/welcome.html');
           } else {
-            // Ya tiene nickname -> Es Recurrente -> Perfil P˙blico (Directo)
+            // Ya tiene nickname -> Es Recurrente -> Perfil PÔøΩblico (Directo)
             const profilePath = `/@${profile.nickname}`;
             console.log(`?? Con onboarding completo -> Redirigiendo a ${profilePath}`);
             window.location.replace(profilePath);
           }
         } else {
-          throw new Error('No se recibiÛ sesiÛn de OAuth');
+          throw new Error('No se recibiÔøΩ sesiÔøΩn de OAuth');
         }
 
       } catch (error) {
         console.error('? Error en callback de OAuth:', error);
-        alert('Error al completar autenticaciÛn. Redirigiendo al registro...');
+        alert('Error al completar autenticaciÔøΩn. Redirigiendo al registro...');
         setTimeout(() => {
           window.location.replace('/pages/register.html');
         }, 1000);

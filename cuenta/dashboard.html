@@ -1218,7 +1218,7 @@
             <img src="../images/LOGO-OFFSZN.png" style="width:38px; mix-blend-mode: screen;">
         </a>
 
-        <!-- 1. GESTIóN -->
+        <!-- 1. GESTIÓN -->
         <div style="width:40px; border-bottom:1px solid #222; margin:5px 0;"></div>
         <a href="dashboard.html" class="sidebar-icon-btn active" data-title="Dashboard"><i
                 class="bi bi-grid-fill"></i></a>
@@ -1230,6 +1230,8 @@
         <div style="width:40px; border-bottom:1px solid #222; margin:5px 0;"></div>
         <a href="admin-licencias.html" class="sidebar-icon-btn" data-title="Licencias"><i
                 class="bi bi-file-earmark-music-fill"></i></a>
+        <a href="negociar.html" class="sidebar-icon-btn" data-title="Negociar"><i
+                class="bi bi-chat-left-dots-fill"></i></a>
         <a href="cupones.html" class="sidebar-icon-btn" data-title="Cupones"><i
                 class="bi bi-ticket-perforated-fill"></i></a>
         <a href="colaboraciones.html" class="sidebar-icon-btn" data-title="Colaboraciones"><i
@@ -1247,7 +1249,8 @@
         <a href="reels.html" class="sidebar-icon-btn" data-title="Reels"><i class="bi bi-camera-reels-fill"></i></a>
 
         <!-- UPGRADE BUTTON (ROCKET) -->
-        <a href="planes.html" class="sidebar-icon-btn" data-title="Mejorar Plan" style="color:#FFD700;">
+        <a href="planes.html" class="sidebar-icon-btn" data-title="Mejorar Plan"
+            style="color:#FFD700; margin-top: 10px;">
             <i class="bi bi-rocket-takeoff-fill"></i>
         </a>
     </div>
@@ -1693,12 +1696,15 @@
                 // B. PLAYS (Products)
                 const { data: products, error: prodErr } = await supabaseClient
                     .from('products')
-                    .select('views')
+                    .select('views_count, plays_count') // Fetch both for flexibility
                     .eq('producer_id', userId)
                     .eq('status', 'approved'); // Only active products count for stats
 
                 if (!prodErr && products) {
-                    products.forEach(p => totalPlays += (p.views || 0));
+                    products.forEach(p => {
+                        // We use plays_count for "PLAYS TOTALES" as requested by the icon mapping
+                        totalPlays += (p.plays_count || 0);
+                    });
                 }
             } catch (e) {
                 console.warn("Stats fetch failed (Plays):", e);
@@ -2165,7 +2171,9 @@
 
                 if (views && views.length > 0) {
                     views.forEach(v => {
-                        const vDate = new Date(v.viewed_at);
+                        const vDateRaw = v.viewed_at || v.created_at;
+                        if (!vDateRaw) return;
+                        const vDate = new Date(vDateRaw);
                         // Find how many days ago, map to index
                         const now = new Date();
                         const diffTime = Math.abs(now - vDate);

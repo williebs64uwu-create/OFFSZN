@@ -3,7 +3,7 @@
 import { Router } from 'express';
 import { authenticateTokenMiddleware } from '../../middlewares/authenticateTokenMiddleware.js';
 // ¡YA NO IMPORTAMOS 'getAllProducts'!
-import { createProduct, incrementPlayCount, incrementDownloadCount } from '../controllers/ProductController.js';
+import { createProduct, incrementPlayCount, incrementDownloadCount, incrementViewCount } from '../controllers/ProductController.js';
 
 const router = Router();
 
@@ -17,5 +17,6 @@ router.post('/products',
 
 router.post('/products/:id/play', incrementPlayCount);
 router.post('/products/:id/download', incrementDownloadCount);
+router.post('/products/:id/view', incrementViewCount);
 
 export default router;

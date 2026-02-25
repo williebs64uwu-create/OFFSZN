@@ -1,7 +1,43 @@
-/**
+﻿/**
  * PRODUCT CORE JS - Smart Template Controller
  * Logic to render OFFSZN products dynamically based on type.
  */
+
+// ============================================
+// API CONFIG
+// ============================================
+let API_URL = '';
+if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    API_URL = 'http://localhost:3000/api';
+} else {
+    API_URL = 'https://offszn-oc7c.onrender.com/api';
+}
+
+window.currentProductData = null;
+window.claimedCouponData = null; // Store fetched coupon info
+
+/** 
+ * 🔥 DB SYNC: Check if the user has a claimed welcome coupon in the DB.
+ * This ensures the "Coupon active" UI shows up even if they clear localStorage.
+ */
+async function syncClaimedCoupon(email) {
+    if (!email) return;
+    try {
+        const { data, error } = await window.supabaseClient
+            .from('cupones_bienvenida_offszn')
+            .select('codigo_offszn, status_offszn')
+            .eq('email_offszn', email)
+            .maybeSingle();
+
+        if (data && data.status_offszn === 'unclaimed') {
+            console.log("🎟️ Found active coupon in DB:", data.codigo_offszn);
+            localStorage.setItem('offszn_welcome_claimed', data.codigo_offszn);
+            window.claimedCouponData = data.codigo_offszn;
+        }
+    } catch (err) {
+        console.warn("[CouponSync] Failed to fetch from DB:", err);
+    }
+}
 
 document.addEventListener('DOMContentLoaded', async () => {
     // 1. Get Product Data from Clean URL or Params
@@ -12,11 +48,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     try {
-        // 0. Get Session (for "My Like" status)
+        // 0. Get Session (for "My Like" status and Coupons)
         let currentUser = null;
         const sessionRes = await window.supabaseClient.auth.getSession();
         if (sessionRes.data && sessionRes.data.session) {
             currentUser = sessionRes.data.session.user;
+            // Sync coupons if logged in
+            if (currentUser.email) {
+                await syncClaimedCoupon(currentUser.email);
+            }
         }
 
         // 2. Fetch Data from Supabase (Dual Lookup: ID or Slug)
@@ -119,6 +159,39 @@ document.addEventListener('DOMContentLoaded', async () => {
         // 3. Kick off the rendering
         renderProductPage(product);
 
+        // --- NEW: Pending Coupon Activation on Return from Onboarding ---
+        const pendingCoupon = localStorage.getItem('offszn_pending_coupon_claim');
+        if (pendingCoupon === 'true' && currentUser) {
+            localStorage.removeItem('offszn_pending_coupon_claim');
+            console.log("[Coupons] Detected return from onboarding. Activating coupon...");
+
+            try {
+                // 1. Generate real code via Backend (Unique)
+                const res = await fetch(`${API_URL.replace('/api', '')}/api/user/me/claim-welcome-coupon`, {
+                    method: 'POST',
+                    headers: AuthUtils.getAuthHeaderObj()
+                });
+
+                const data = await res.json();
+                if (data.coupon) {
+                    localStorage.setItem('offszn_welcome_claimed', data.coupon);
+                    window.claimedCouponData = data.coupon;
+                }
+
+                // 2. Re-render to show code
+                renderProductPage(product);
+
+                // 3. Switch to promos tab
+                setTimeout(() => {
+                    if (typeof window.switchProductTab === 'function') {
+                        window.switchProductTab('promos');
+                    }
+                }, 100);
+            } catch (err) {
+                console.error("[Coupons] Failed to claim via backend:", err);
+            }
+        }
+
         // --- DASHBOARD PERSISTENCE SPECIAL: Auto-trigger download gate after onboarding redirect ---
         const shouldAutoDownload = localStorage.getItem('offszn_auto_download_trigger');
         if (shouldAutoDownload === 'true' && product.is_free) {
@@ -133,14 +206,14 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         }
 
-        // 3.5 Increment Views (Background)
-        window.supabaseClient
-            .from('products')
-            .update({ views_count: (product.views_count || 0) + 1 })
-            .eq('id', product.id)
-            .then(({ error }) => {
-                if (error) console.warn("Error incrementing views:", error);
-            });
+        // 3.5 Increment Views (Backend API - Fixes 400 error)
+        (async () => {
+            try {
+                await fetch(`${API_URL}/products/${product.id}/view`, { method: 'POST' });
+            } catch (e) {
+                console.warn("Error logging view via API:", e.message);
+            }
+        })();
 
         // 4. Fetch Related Products (Background)
         fetchRelatedProducts(product);
@@ -224,6 +297,49 @@ function getProductIdFromUrl() {
 }
 
 /**
+ * Description Formatter: Preserves line breaks and handles truncation
+ */
+window.formatDescription = function (text, limit = 800) {
+    if (!text) return '';
+    const cleanText = text.trim();
+    // Preserve line breaks faithfully but limit to 1 maximum consecutive break
+    const faithfulText = cleanText.replace(/\n\s*\n+/g, '\n');
+    const htmlText = faithfulText.replace(/\n/g, '<br>');
+
+    if (faithfulText.length <= limit) return htmlText;
+
+    // Split at limit but try to avoid cutting a word if possible
+    const truncated = cleanText.substring(0, limit);
+    const truncatedHtml = truncated.replace(/\n/g, '<br>');
+
+    return `
+        <div class="desc-content-wrapper">
+            <div class="desc-short">${truncatedHtml}...</div>
+            <div class="desc-full" style="display:none;">${htmlText}</div>
+            <button class="desc-toggle-btn" onclick="window.toggleDescriptionDisplay(this)" style="background:none; border:none; color:#bb86fc; font-weight:700; padding:0; cursor:pointer; margin-top:5px; font-size:0.85rem;">Ver más</button>
+        </div>
+    `;
+}
+
+window.toggleDescriptionDisplay = function (btn) {
+    const wrapper = btn.closest('.desc-content-wrapper');
+    if (!wrapper) return;
+    const short = wrapper.querySelector('.desc-short');
+    const full = wrapper.querySelector('.desc-full');
+    const isShowingFull = full.style.display !== 'none';
+
+    if (isShowingFull) {
+        full.style.display = 'none';
+        short.style.display = 'block';
+        btn.innerText = 'Ver más';
+    } else {
+        full.style.display = 'block';
+        short.style.display = 'none';
+        btn.innerText = 'Ver menos';
+    }
+}
+
+/**
  * Main switch-case renderer
  */
 function renderProductPage(product) {
@@ -271,14 +387,68 @@ function renderProductPage(product) {
 
     metaRows += `<div class="info-row"><span class="info-label">Categoría</span> <span class="info-val" style="text-transform: capitalize;">${valToDisplay}</span></div>`;
 
-    if (product.product_type === 'drumkit' || product.product_type === 'loopkit' || product.product_type === 'preset') {
-        metaRows += `<div class="info-row"><span class="info-label">Archivos</span> <span class="info-val">${product.sounds_count || '1'}</span></div>`;
-    } else {
-        metaRows += `<div class="info-row"><span class="info-label">BPM</span> <span class="info-val">${product.bpm || '--'}</span></div>`;
-        metaRows += `<div class="info-row"><span class="info-label">Key</span> <span class="info-val">${(product.key || '')} ${(product.key_scale || '')}</span></div>`;
+    // Add BPM, Key & Plays to Sidebar for PC ONLY
+    if (pType === 'beat') {
+        metaRows += `
+            <div class="info-row desktop-only-flex">
+                <span class="info-label">BPM</span>
+                <span class="info-val">${product.bpm || '--'}</span>
+            </div>
+            <div class="info-row desktop-only-flex">
+                <span class="info-label">Key</span>
+                <span class="info-val" style="text-transform: capitalize;">${(product.key || '')} ${(product.key_scale || '') || '--'}</span>
+            </div>
+        `;
     }
 
-    metaRows += `<div class="info-row"><span class="info-label">Reproducciones</span> <span class="info-val">${product.plays_count || 0}</span></div>`;
+    // Reproducciones
+    metaRows += `
+        <div class="info-row desktop-only-flex" style="border-bottom: none;">
+            <span class="info-label">Reproducciones</span>
+            <span class="info-val">${product.plays_count || 0}</span>
+        </div>
+    `;
+
+    // Mobile Metadata (BPM/KEY) - Scoped for the Info Pane
+    const mobileMetaHTML = `
+        <div class="mobile-tech-specs mobile-only" style="margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 15px;">
+            <div class="tech-spec-row" style="display: flex; justify-content: space-between; padding: 8px 0;">
+                <span style="color: #888; font-size: 0.85rem;"><i class="bi bi-speedometer2"></i> BPM</span>
+                <b style="font-size: 0.95rem;">${product.bpm || '--'}</b>
+            </div>
+            <div class="tech-spec-row" style="display: flex; justify-content: space-between; padding: 8px 0;">
+                <span style="color: #888; font-size: 0.85rem;"><i class="bi bi-music-note"></i> KEY</span>
+                <b style="font-size: 0.95rem; text-transform: uppercase;">${(product.key || '')} ${(product.key_scale || '') || '--'}</b>
+            </div>
+        </div>
+    `;
+
+    // metaRows used for backward compatibility if needed, but we'll use techGrid now.
+    const formatDuration = (seconds) => {
+        if (!seconds || isNaN(seconds)) return '--';
+        const mins = Math.floor(seconds / 60);
+        const secs = Math.floor(seconds % 60);
+        return `${mins}:${secs.toString().padStart(2, '0')}`;
+    };
+
+    const displayDuration = product.duration ?
+        (typeof product.duration === 'string' && product.duration.includes(':') ? product.duration : formatDuration(product.duration))
+        : '--';
+
+    const techGrid = `
+        <div class="info-list tech-list-simple" style="margin-top:20px; width: 100%;">
+            <div class="info-row" style="display: flex; justify-content: space-between; align-items: center; border:none; padding: 5px 0; width: 100%;">
+                <span class="info-label"><i class="bi bi-speedometer2"></i> BPM</span>
+                <span class="info-val" style="font-weight: 800;">${product.bpm || '--'}</span>
+            </div>
+            <div class="info-row" style="display: flex; justify-content: space-between; align-items: center; border:none; padding: 5px 0; width: 100%;">
+                <span class="info-label"><i class="bi bi-music-note"></i> KEY</span>
+                <span class="info-val" style="font-weight: 800;">${(product.key || '')} ${(product.key_scale || '') || '--'}</span>
+            </div>
+        </div>
+    `;
+
+
 
     // 2. Collaborators/Producer Logic
     // Fix: Supabase might return producer as an object OR array depending on query.
@@ -288,7 +458,7 @@ function renderProductPage(product) {
 
     // Explicit Fallback using NICKNAME (per schema)
     const producerName = producerData?.nickname || 'Unknown Producer';
-    const isVerified = producerData?.is_verified;
+    const isVerified = producerData?.is_verified || producerData?.is_producer;
 
     // Use Hover Card Logic for Producer
     const producerDataJSON = JSON.stringify({
@@ -310,7 +480,7 @@ function renderProductPage(product) {
               onmouseleave="window.hideArtistCard(event, this)"
               style="display:inline-flex; align-items:center; cursor:pointer;">
             ${producerName} 
-            <i class="bi bi-patch-check-fill" style="color:#A020F0; display:${isVerified ? 'inline' : 'none'}; margin-left:4px;"></i>
+            <i class="bi bi-patch-check-fill" style="color:#007bff; display:${isVerified ? 'inline' : 'none'}; margin-left:4px;"></i>
         </span>
     `;
 
@@ -344,11 +514,11 @@ function renderProductPage(product) {
         }
     }
 
-    // --- 🧪 OPTIMIZATION: Check if it's R2 to avoid skeleton flash ---
+    // --- 🧪 OPTIMIZATION: Check if it's R2 ---
     const isR2Main = product.image_url && (product.image_url.includes('r2.cloudflarestorage.com') || product.image_url.includes('pub-') || (!product.image_url.startsWith('http') && product.image_url.includes('/')));
     const initialImgMain = isR2Main ? 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=' : (product.image_url || '/images/portada-default.png');
-    // Pre-apply skeleton class if R2
-    const mainSkeletonClass = isR2Main ? ' skeleton' : '';
+    // REMOVED skeleton animation as it causes a "line" glitch on loading
+    const mainSkeletonClass = '';
 
 
     container.innerHTML = `
@@ -361,26 +531,27 @@ function renderProductPage(product) {
                          id="product-main-art"
                          alt="${product.name}"
                          class=""
-                         error="this.style.display='none'">
+                         onerror="this.src='/images/portada-default.png'">
+                     <!-- Play Button Overlay -->
+                     <div class="product-cover-play-btn" onclick="if(window.playerCore && window.playerCore.currentTrackId === '${product.id}') { window.playerCore.togglePlay(); } else { document.getElementById('play-btn-${product.id}')?.click() || document.querySelector('.play-pause-btn')?.click(); }">
+                        <i class="bi bi-play-fill"></i>
+                     </div>
+                     <!-- Plays Badge (Bottom-Left, match Trending style) -->
+                     <div class="product-cover-badge desktop-only-flex">
+                        <i class="bi bi-music-note-beamed"></i> ${product.plays_count || 0}
+                     </div>
                      <!-- Player Target -->
                      <div id="sidebar-player-target" style="position:absolute;"></div>
                 </div>
 
-                <!-- Social Actions -->
-                <div class="action-row" id="social-actions-container" style="justify-content:center; margin-top:20px;">
+                <!-- Sidebar Actions Area (PC ONLY) -->
+                <div id="sidebar-social-actions-container" class="desktop-only-flex action-row sidebar-actions" style="justify-content:center; margin: 0 0 5px;">
                     <!-- Injected dynamically -->
                 </div>
 
-                <!-- Free Download Button (Sidebar) - Hidden by default -->
-                <div id="free-dl-container"></div>
-
                 <!-- Information List -->
                 <div class="info-list-container">
-                    <div class="section-headline info-headline" onclick="toggleAccordion('info')" style="cursor:pointer; margin-bottom: 5px;">
-                        <span>Información</span>
-                        <i class="bi bi-chevron-down chevron-icon" id="chevron-info" style="color:#666;"></i>
-                    </div>
-                    <div id="content-info" class="info-list terms-accordion-content">
+                    <div id="content-info" class="info-list">
                         <div class="info-title-desktop" style="font-size:0.8rem; color:#666; margin-bottom:5px; font-weight:700; text-transform:uppercase;">Información</div>
                         ${metaRows}
                     </div>
@@ -401,74 +572,226 @@ function renderProductPage(product) {
                         ${product.name || 'Sin título'}
                     </h1>
                     ${producerHTML}
+                    <div class="header-price-mobile-only">${product.product_type === 'beat' ? `$ ${product.price_basic || '--'}` : (product.price_basic ? `$ ${product.price_basic}` : '')}</div>
+                    
+                    <!-- Integrated Social Actions for Mobile Header Identity -->
+                    <div class="action-row mobile-only" id="social-actions-container" style="justify-content:flex-start; margin-top:10px;">
+                        <!-- Injected dynamically -->
+                    </div>
                 </div>
                 
                 <!-- Buying Section & Footer -->
-<div class="section-headline" id="licenses-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-dim); padding-bottom: 5px; margin-bottom: 15px;">
-                    <span>Licencias</span>
-                    <!-- Comparar button only for Desktop -->
-                    <span class="desktop-only-flex" onclick="if(window.currentProductData && window.currentProductData.available_licenses) openLicenseComparisonModal(window.currentProductData.available_licenses)" style="font-size: 0.8rem; color: #888; cursor: pointer; align-items: center; gap: 5px; font-weight: 500;">
-                        <i class="bi bi-layout-sidebar-inset"></i> Comparar
-                    </span>
+                <div class="buying-section-wrapper" style="margin-top:-10px; margin-bottom: 10px;">
+                    <div class="section-headline" id="licenses-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-dim); padding-bottom: 5px; margin-bottom: 15px;">
+                        <span>Licencias</span>
+                        <!-- Comparar button only for Desktop Beats -->
+                        ${pType === 'beat' ? `
+                        <span class="desktop-only-flex" onclick="if(window.currentProductData && window.currentProductData.available_licenses) openLicenseComparisonModal(window.currentProductData.available_licenses)" style="font-size: 0.8rem; color: #888; cursor: pointer; align-items: center; gap: 5px; font-weight: 500;">
+                            <i class="bi bi-layout-sidebar-inset"></i> Comparar
+                        </span>
+                        ` : ''}
+                    </div>
+                    <!-- PC Button Text: Añadir al Carrito | Mobile Button Text: Comprar (per user) -->
+                    <style>
+                        #btn-buy-main span::after { content: "Añadir al carrito"; }
+                        @media (max-width: 768px) {
+                            #btn-buy-main span::after { content: "Comprar"; }
+                        }
+                        #btn-buy-main span { font-size: 0; }
+                        #btn-buy-main span::after { font-size: 1.1rem; }
+                    </style>
+                    <div id="buying-modules"></div>
                 </div>
-                <div id="buying-modules"></div>
 
-                <!-- Description (Accordion) -->
-                <div class="section-headline mobile-hide" onclick="toggleAccordion('desc')" style="cursor:pointer; margin-top:15px;">
-                    <span>Descripción</span>
-                    <i class="bi bi-chevron-down chevron-icon" id="chevron-desc" style="color:#666;"></i>
-                </div>
-                <div id="content-desc" class="terms-accordion-content open mobile-hide" style="color:#888; font-size:1rem; line-height:1.6; white-space: pre-line; margin-top: 15px;">${(() => {
-            if (!product.description) return 'Sin descripción.';
+                <!-- NEW: Integrated Tabs System (Match Image: Información, Promociones, Negociar) -->
+                <div class="product-tabs-container">
+                    <div class="product-tabs-nav">
+                        <button class="tab-btn active" onclick="switchProductTab('info')">Información</button>
+                        <button class="tab-btn" onclick="switchProductTab('promos')">Promociones</button>
+                        <button class="tab-btn" onclick="switchProductTab('negotiate')">Negociar</button>
+                        <div class="tab-indicator"></div>
+                    </div>
 
-            const fullDesc = product.description
-                .replace(/\r\n/g, '\n')
-                .replace(/\n{3,}/g, '\n\n')
-                .trim();
+                    
+                    <div class="product-tab-panes">
+                        <!-- Pane: Información -->
+                        <div class="tab-pane active" id="pane-info">
+                            <!-- Dynamic Terms (Now at the top) -->
+                            <div id="dynamic-lic-terms" style="margin-top:0; border-top:none; padding-top:0;">
+                                <!-- Updated by JS when license is selected -->
+                            </div>
 
-            const limit = 800; // Truncate at 800 chars
+                            <!-- Description (PC & Mobile) -->
+                            <div class="about-section" style="margin-top: 10px;">
+                                <div style="color: #ccc; font-size: 0.95rem; line-height: 1.6;">
+                                    ${window.formatDescription(product.description, 1200)}
+                                </div>
+                            </div>
 
-            if (fullDesc.length <= limit) {
-                return fullDesc;
-            } else {
-                const shortDesc = fullDesc.substring(0, limit);
-                // YouTube Style: "...más" (bold). "Mostrar menos" (bold)
+
+                            <div class="credits-section mobile-only" style="margin-top: 5px; border:none; padding: 0;">
+                                <div style="color:#888; line-height:1.6; font-size:0.85rem;">
+                                    <span style="color:#777; font-weight:700;">Créditos:</span> Producido por <a href="/@${encodeURIComponent(producerName)}" style="color:#fff; font-weight:700; text-decoration:none; margin-left:4px;">${producerName}</a>
+                                    ${(() => {
+            if (!product.collaborators || product.collaborators.length === 0) return '';
+            const approved = product.collaborators.filter(c => c.status === 'accepted');
+            if (approved.length === 0) return '';
+            const links = approved.map(c => {
+                const nick = c.user?.nickname || 'Unknown';
+                return `<a href="/@${encodeURIComponent(nick)}" style="color:#fff; text-decoration:none; font-weight:700; margin-left:4px;">${nick}</a>`;
+            }).join(', ');
+            return `<br><span style="color:#777; font-weight:700;">Colaboraciones:</span> ${links}`;
+        })()}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Pane: Promociones -->
+                        <div class="tab-pane" id="pane-promos">
+                            <div class="promos-container" style="padding: 0;">
+                                ${(() => {
+            const isLoggedIn = !!localStorage.getItem('authToken');
+            const claimedCode = localStorage.getItem('offszn_welcome_claimed');
+            const isPending = localStorage.getItem('offszn_pending_coupon_claim') === 'true';
+
+            // 1. Prioritize claimed coupon
+            if (claimedCode) {
                 return `
-<span id="desc-short">${shortDesc}...<span onclick="window.toggleDesc(event)" style="font-weight:700; cursor:pointer; color:#fff;">más</span></span>
-<span id="desc-full" style="display:none;">${fullDesc}<br><br><span onclick="window.toggleDesc(event)" style="font-weight:700; cursor:pointer; color:#fff;">Mostrar menos</span></span>
-`;
+                        <div class="promo-card-v2 claimed-style" style="margin-top:0; text-align:left;">
+                            <div style="font-size:0.85rem; font-weight:800; color:#fff; letter-spacing:1.5px; margin-bottom:12px; display:flex; align-items:center; gap:8px; text-transform:uppercase;">
+                                <i class="bi bi-check-circle-fill"></i> Cupón activo
+                            </div>
+                            <div style="font-size:0.85rem; color:#888; margin-bottom:20px; line-height:1.5;">Usa este código en el checkout para obtener tu descuento.</div>
+                            
+                            <div class="coupon-box-minimal" style="padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); background: rgba(255,255,255,0.02); margin-bottom: 20px;">
+                                <span id="active-coupon-code" style="color:#fff; font-weight: 700; letter-spacing: 2px;">${claimedCode}</span>
+                                <button class="copy-coupon-btn" onclick="window.copyCouponToClipboard('${claimedCode}', this)" style="background: rgba(255,255,255,0.05); color: #ccc; padding: 6px 12px; border-radius: 6px; font-weight: 700; font-size: 0.7rem; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.2s ease;">
+                                    <i class="bi bi-clipboard" style="font-size: 0.8rem;"></i> COPIAR
+                                </button>
+                            </div>
+
+                            <div style="font-size:0.8rem; color:#555; text-align:center;">
+                                <span><i class="bi bi-info-circle"></i> Válido para tu primera compra.</span>
+                            </div>
+                        </div>
+                    `;
             }
+
+            // 2. Show pending state if intent saved
+            if (isPending) {
+                return `
+                    <div class="promo-card-v2 claimed-style" style="margin-top:15px; text-align:left;">
+                        <div style="font-size:0.85rem; font-weight:800; color:#fff; letter-spacing:1.5px; margin-bottom:12px; display:flex; align-items:center; gap:8px; text-transform:uppercase;">
+                            <i class="bi bi-clock-history"></i> Activación pendiente
+                        </div>
+                        <div style="font-size:0.9rem; color:#fff; font-weight:600; margin-bottom:10px;">¡Casi listo!</div>
+                        <div style="font-size:0.85rem; color:#888; margin-bottom:20px; line-height:1.5;">Tu cupón de 10% de descuento se activará automáticamente al <b>completar tu perfil</b>.</div>
+                        
+                        <div style="background:rgba(255,255,255,0.03); border:1px dashed rgba(255,255,255,0.1); border-radius:10px; padding:20px; text-align:center; color:#555;">
+                             EL CÓDIGO SE REVELARÁ AQUÍ
+                        </div>
+
+                        <div style="font-size:0.75rem; color:#555; margin-top:15px; background:rgba(255,255,255,0.01); padding:12px; border-radius:6px; border:1px solid rgba(255,255,255,0.03); text-align:center;">
+                            <span>Verifica tu email para continuar.</span>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // 3. Fallback for logged-in users who already used their chance or aren't eligible
+            if (isLoggedIn) {
+                return `
+                                        <div style="text-align:center; padding: 40px 20px; color:#666;">
+                                            <i class="bi bi- megaphone" style="font-size:2rem; display:block; margin-bottom:15px; opacity:0.5;"></i>
+                                            <div style="font-size:0.95rem; font-weight:500;">No tienes promociones personalizadas activas.</div>
+                                        </div>
+                                    `;
+            }
+
+            // 4. Default Guest View
+            return `
+                    <div class="promo-card-v2" id="welcome-promo-box" style="margin-top:15px; border-radius:15px; border:1px solid rgba(255,255,255,0.05); background:rgba(255,255,255,0.02); padding:25px; text-align:center;">
+                        <div style="font-size:0.85rem; font-weight:800; color:#fff; letter-spacing:2px; margin-bottom:12px; text-transform:uppercase;">Oferta de Bienvenida</div>
+                        <div style="color:#888; font-size:1rem; margin-bottom:25px; line-height:1.5;">Obtén un <b style="color:#fff;">10% OFF</b> inmediato en tu primera compra al unirte a la plataforma.</div>
+                        <button class="btn-glass-primary-v2" style="padding:15px 40px; border-radius:10px; width:100%; max-width:280px; margin:0 auto; display:block; font-size:0.9rem; font-weight:800;" onclick="window.generateWelcomeCoupon()">
+                            OBTENER MI DESCUENTO
+                        </button>
+                    </div>
+                `;
         })()}
+                            </div>
+                        </div>
+
+
+
+                        <!-- Pane: Negociar -->
+                        <div class="tab-pane" id="pane-negotiate">
+                            <div class="negotiate-pane-content">
+                                ${(() => {
+            const pType = (product.product_type || '').toLowerCase();
+            // Bloqueamos solo si es un producto gratuito que NO es un Beat.
+            // Los Beats, aunque tengan demo gratis, tienen licencias de pago.
+            if (product.is_free && pType !== 'beat') {
+                return `
+                                            <div style="text-align:center; padding: 20px 0;">
+                                                <div style="font-weight:800; color:#fff; font-size:1.2rem; margin-bottom:15px;">No se puede negociar este producto</div>
+                                                <div style="color:#888; font-size:1rem; margin-bottom:25px; line-height:1.4;">Este producto es gratuito, por lo que no es necesaria una negociación.</div>
+                                                
+                                                <button class="btn-glass-secondary" 
+                                                        style="padding:12px 25px; border-radius:10px; font-weight:700; font-size:0.9rem; border:1px solid rgba(255,255,255,0.1); background:rgba(255,255,255,0.03); color:#888; cursor:pointer; transition:0.2s;"
+                                                        onclick="window.location.href='/@${encodeURIComponent(producerName)}'">
+                                                    EXPLORAR MÁS DEL PRODUCTOR
+                                                </button>
+                                            </div>
+                                        `;
+            }
+
+            return `
+                                        <div style="font-weight:800; color:#fff; font-size:1.2rem; margin-bottom:5px;">¿Tienes un presupuesto diferente?</div>
+                                        <div style="color:#888; font-size:1rem; margin-bottom:25px; line-height:1.4;">Envía tu oferta directamente al productor y recibe una respuesta en menos de 24h.</div>
+                                        
+                                        <div class="negotiate-form-inline" style="background:rgba(255,255,255,0.03); padding:20px; border-radius:15px; border:1px solid rgba(255,255,255,0.05);">
+                                            <div style="display:flex; flex-direction:column; gap:5px;">
+                                                <div class="floating-group">
+                                                    <span style="position:absolute; left:12px; top:50%; transform:translateY(-50%); color:#fff; font-weight:700; z-index:5;">$</span>
+                                                    <input type="number" id="offer-amount-inline" placeholder=" " style="padding-left:30px !important;">
+                                                    <label for="offer-amount-inline" style="left:30px;">Tu Oferta (USD)</label>
+                                                </div>
+
+                                                <div class="floating-group" style="margin-top:10px;">
+                                                    <input type="email" id="offer-email-inline" placeholder=" ">
+                                                    <label for="offer-email-inline">Tu Email</label>
+                                                </div>
+
+                                                <button class="btn-purchase-kit" style="height:50px !important; margin-top:10px; font-size:0.9rem; letter-spacing:0.3px;" onclick="window.submitNegotiationInline()">
+                                                    ENVIAR PROPUESTA
+                                                </button>
+                                            </div>
+                                        </div>
+                                    `;
+        })()}
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="section-headline" onclick="toggleAccordion('terms')" style="cursor:pointer; margin-top:15px;">
-                    <span>Términos de Uso</span>
-                    <i class="bi bi-chevron-right chevron-icon" id="chevron-terms" style="color:#666;"></i>
-                </div>
-<div id="content-terms" class="terms-accordion-content" style="color:#888; font-size:0.9rem; line-height:1.6; margin-bottom:40px;">
-                    ${(() => {
-            if (product.product_type === 'beat') {
-                return `<p>Este producto está sujeto a licencias de uso. La descarga gratuita permite el uso únicamente para plataformas como YouTube y SoundCloud, sin monetización y sin fines comerciales. Para monetizar, distribuir en plataformas digitales (Spotify, Apple Music, etc.) o usos comerciales, es necesario adquirir la licencia correspondiente del productor/artista.</p>`;
-            } else {
-                return `<p>Este producto es 100% Libre de Regalías (Royalty Free).</p>
-                                ${product.is_free ? `<p style="margin-top:10px; color:#666; font-size:0.85rem;"><em>Considerar que antes costaba $${product.price_basic || '1.00'}. Leer los términos y condiciones del productor/artista despues de la descarga.</em></p>` : ''}`;
-            }
-        })()}
-                </div>
             </div>
         </div>
 
+
         <!-- RELATED PRODUCTS SECTION -->
         <div class="related-products-section">
-            <div class="section-header" style="margin-bottom: 24px; display:flex; justify-content:space-between; align-items:center;">
-                <h3 style="color:#fff; font-size:1.5rem; font-weight:800;">Recomendado para ti</h3>
-                <div class="nav-arrows" style="display:flex; gap:10px;">
-                    <button class="nav-arrow-btn" onclick="scrollRelated(-1)"><i class="bi bi-chevron-left"></i></button>
-                    <button class="nav-arrow-btn" onclick="scrollRelated(1)"><i class="bi bi-chevron-right"></i></button>
+            <div class="related-container">
+                <div class="section-header" style="margin-bottom:15px; display:flex; justify-content:space-between; align-items:center;">
+                    <h3 style="color:#fff; font-size:1.5rem; font-weight:800;">Recomendado para ti</h3>
+                    <div class="nav-arrows" style="display:flex; gap:10px;">
+                        <button class="nav-arrow-btn" onclick="scrollRelated(-1)"><i class="bi bi-chevron-left"></i></button>
+                        <button class="nav-arrow-btn" onclick="scrollRelated(1)"><i class="bi bi-chevron-right"></i></button>
+                    </div>
                 </div>
-            </div>
-            <div id="product-related-container" class="trending-grid">
-                <!-- JS Injects Recommendations Here -->
+                <div id="product-related-container" class="trending-grid">
+                    <!-- JS Injects Recommendations Here -->
+                </div>
             </div>
         </div>
     `;
@@ -530,7 +853,11 @@ function renderProductPage(product) {
         }
     }
 
+    // Initialize Tabs Indicator
+    setTimeout(() => window.switchProductTab('info'), 50);
+
     // 4. Free Download (Removed Sidebar Button per request)
+
     // if (product.is_free) { ... }
 }
 
@@ -539,35 +866,41 @@ function renderProductPage(product) {
  */
 // MICRO-INTERACTIONS & LOGIC
 function setupSocialInteractions(product) {
-    const container = document.getElementById('social-actions-container');
-    if (!container) return;
+    const headerContainer = document.getElementById('social-actions-container');
+    const sidebarContainer = document.getElementById('sidebar-social-actions-container');
+
+    // Safety check
+    if (!headerContainer && !sidebarContainer) return;
 
     // Use FavoritesManager for sync status if available
-    // FIX: Fallback to server data (product.user_has_liked) if FavoritesManager returns false (loading state).
-    // Logic: If EITHER thinks it's liked, show it as liked to prevent "Unliked -> Liked" +1 increment bug.
-    const isLiked = (window.FavoritesManager && window.FavoritesManager.isLiked(product.id)) || (product.user_has_liked || false);
+    const productIdStr = String(product.id);
+    const isLiked = (window.FavoritesManager && window.FavoritesManager.isLiked(productIdStr)) || (product.user_has_liked || false);
     const likeClass = isLiked ? 'liked' : '';
     const heartIcon = isLiked ? 'bi-heart-fill' : 'bi-heart';
 
     // HTML for buttons (Icon top, Count bottom)
-    container.innerHTML = `
+    const actionsHTML = `
         <div class="social-actions-wrapper">
-            <button class="action-btn-icon ${likeClass}" id="btn-like" onclick="toggleLikeGlobal(this, '${product.id}', '${product.producer_id}')">
+            <button class="action-btn-icon btn-like-action ${likeClass}" onclick="toggleLikeGlobal(this, '${product.id}', '${product.producer_id}')">
                 <i class="bi ${heartIcon}"></i>
-                <span class="stat-value">${product.stats_likes || 0}</span>
+                <span class="stat-value">${product.likes_count || 0}</span>
             </button>
             
             <button class="action-btn-icon" id="btn-share" onclick="openShareModal('${product.id}')">
-                <i class="bi bi-upload"></i>
-                <span class="stat-value">Compartir</span>
+                <i class="bi bi-share"></i>
+                <span class="stat-value" style="opacity:0;">0</span>
             </button>
+
 
             <button class="action-btn-icon" id="btn-exclusivity" onclick="window.openExclusivityModal()">
                 <i class="bi bi-plus-lg"></i>
-                <span class="stat-value">Más</span>
+                <span class="stat-value" style="opacity:0;">0</span>
             </button>
         </div>
     `;
+
+    if (headerContainer) headerContainer.innerHTML = actionsHTML;
+    if (sidebarContainer) sidebarContainer.innerHTML = actionsHTML;
 
     // Store current product for modal access
     window.currentProductData = product;
@@ -575,42 +908,35 @@ function setupSocialInteractions(product) {
     // Listen for external updates (e.g. from FavoritesManager)
     if (window.FavoritesManager) {
         window.FavoritesManager.subscribe((likedSet) => {
-            const btn = document.getElementById('btn-like');
-            if (!btn) return;
-
-            const icon = btn.querySelector('i');
-            const valSpan = btn.querySelector('.stat-value');
+            // Find ALL like buttons on the page (Mobile + Desktop)
+            const btns = document.querySelectorAll('.btn-like-action');
+            if (btns.length === 0) return;
 
             const isNowLiked = likedSet.has(String(product.id));
-            const wasLiked = btn.classList.contains('liked');
 
-            // Logic: Compare New State (Set) vs Old State (DOM)
-            // If they differ, update DOM and Count.
-            if (isNowLiked && !wasLiked) {
-                // User just Liked (or external sync)
-                btn.classList.add('liked');
-                icon.classList.remove('bi-heart');
-                icon.classList.add('bi-heart-fill');
+            btns.forEach(btn => {
+                const icon = btn.querySelector('i');
+                const valSpan = btn.querySelector('.stat-value');
+                const wasLiked = btn.classList.contains('liked');
 
-                // Increment Count
-                if (valSpan) {
-                    let val = parseInt(valSpan.innerText) || 0;
-                    valSpan.innerText = val + 1;
+                if (isNowLiked && !wasLiked) {
+                    btn.classList.add('liked');
+                    icon.classList.remove('bi-heart');
+                    icon.classList.add('bi-heart-fill');
+                    if (valSpan) {
+                        let val = parseInt(valSpan.innerText) || 0;
+                        valSpan.innerText = val + 1;
+                    }
+                } else if (!isNowLiked && wasLiked) {
+                    btn.classList.remove('liked');
+                    icon.classList.remove('bi-heart-fill');
+                    icon.classList.add('bi-heart');
+                    if (valSpan) {
+                        let val = parseInt(valSpan.innerText) || 0;
+                        valSpan.innerText = Math.max(0, val - 1);
+                    }
                 }
-            } else if (!isNowLiked && wasLiked) {
-                // User just Unliked (or external sync)
-                btn.classList.remove('liked');
-                icon.classList.remove('bi-heart-fill');
-                icon.classList.add('bi-heart');
-
-                // Decrement Count
-                if (valSpan) {
-                    let val = parseInt(valSpan.innerText) || 0;
-                    valSpan.innerText = Math.max(0, val - 1);
-                }
-            }
-            // If they are equal (isNowLiked == wasLiked), do nothing. 
-            // This prevents duplicate updates if subscriber fires multiple times.
+            });
         });
     }
 }
@@ -635,7 +961,6 @@ window.toggleLikeGlobal = function (btn, productId, producerId) {
     }
 }
 
-// Global functions for interactions (attached to window for onclick access)
 // Global functions for interactions (attached to window for onclick access)
 window.toggleLike = function (btn, productId) {
     if (window.toggleLikeGlobal) {
@@ -671,234 +996,186 @@ window.toggleAccordion = function (idSuffix) {
 
 
 window.openShareModal = function (productId) {
-    // Check if modal exists
     let backdrop = document.getElementById('share-modal-backdrop');
     if (!backdrop) {
         backdrop = document.createElement('div');
         backdrop.id = 'share-modal-backdrop';
         backdrop.className = 'share-modal-backdrop';
-
-        // Add click listener for backdrop closing
         backdrop.onclick = function (e) {
             if (e.target === backdrop) window.closeShareModal();
         };
-
-        // Initialize with placeholder content - will be updated below
-        backdrop.innerHTML = `<div class="share-modal-content"></div>`;
         document.body.appendChild(backdrop);
     }
 
-    // --- 1. GENERATE SHORT LINK ---
-    let shortLink = window.location.href; // Fallback
+    let shortLink = window.location.href;
     if (window.IdObfuscator && window.currentProductData) {
         const product = window.currentProductData;
         const code = window.IdObfuscator.encodeId(product.id);
-        if (code) {
-            shortLink = `${window.location.origin}/p/${code}`;
-        }
+        if (code) shortLink = `${window.location.origin}/p/${code}`;
     }
-
-    // --- 2. PREPARE SOCIAL LINKS ---
     const shareText = `Escucha "${window.currentProductData?.name || 'este beat'}" en OFFSZN 🔥`;
     const encodedLink = encodeURIComponent(shortLink);
     const encodedText = encodeURIComponent(shareText);
 
     const socials = [
-        { name: 'WhatsApp', icon: 'bi-whatsapp', color: '#25D366', url: `https://api.whatsapp.com/send?text=${encodedText}%20${encodedLink}` },
-        { name: 'Facebook', icon: 'bi-facebook', color: '#1877F2', url: `https://www.facebook.com/sharer/sharer.php?u=${encodedLink}` },
-        { name: 'Twitter', icon: 'bi-twitter-x', color: '#000000', url: `https://twitter.com/intent/tweet?text=${encodedText}&url=${encodedLink}` },
-        { name: 'Telegram', icon: 'bi-telegram', color: '#0088cc', url: `https://t.me/share/url?url=${encodedLink}&text=${encodedText}` }
+        { name: 'Twitter', icon: 'bi-twitter-x', url: `https://twitter.com/intent/tweet?text=${encodedText}&url=${encodedLink}` },
+        { name: 'WhatsApp', icon: 'bi-whatsapp', url: `https://api.whatsapp.com/send?text=${encodedText}%20${encodedLink}` },
+        { name: 'Facebook', icon: 'bi-facebook', url: `https://www.facebook.com/sharer/sharer.php?u=${encodedLink}` }
     ];
 
-    // --- 3. RENDER MODAL CONTENT ---
-    const contentBox = backdrop.querySelector('.share-modal-content');
     const product = window.currentProductData || {};
-    const producer = product.profiles || {};
-    const producerName = producer.nickname || 'Unknown';
-    const isVerified = producer.is_verified;
+    const producer = product.producer || {};
+    const coverImgSrc = document.getElementById('product-main-art')?.src || product.image_url || '/images/portada-default.png';
+    const safeLink = shortLink.replace(/'/g, '%27');
 
-    if (contentBox) {
-        contentBox.innerHTML = `
-            <div class="share-modal-header">
-                 <h3 style="color:#fff; margin:0; font-weight:800; font-size: 1.4rem;">Compartir</h3>
-                 <button onclick="closeShareModal()" class="share-modal-close-btn"><i class="bi bi-x-lg"></i></button>
-            </div>
+    backdrop.innerHTML = `
+        <div class="share-modal-content">
+            <div class="modal-pull-bar"></div>
+            <button class="share-modal-close-btn" onclick="window.closeShareModal()">&times;</button>
 
-            <!-- Product Info Row -->
-            <div class="share-product-info">
-                <img src="${product.image_url || '/images/portada-default.png'}" class="share-product-img">
-                <div class="share-product-details">
-                    <div class="share-product-name-row">
-                        <span class="share-product-name">${product.name || 'Sin título'}</span>
-                    </div>
-                    <div class="share-producer-row">
-                        <span class="share-producer-name">${producerName}</span>
-                        ${isVerified ? '<i class="bi bi-patch-check-fill share-verified-icon"></i>' : ''}
-                    </div>
-                </div>
-            </div>
-            
-            <!-- URL Fields -->
-            <div class="share-links-container">
-                <div class="share-field-group">
-                    <label>URL CORTA DEL MARKETPLACE</label>
-                    <div class="share-input-wrapper">
-                        <i class="bi bi-link-45deg"></i>
-                        <input type="text" value="${shortLink}" readonly id="link-short">
-                        <button onclick="copyToClipboard('${shortLink}', this)">Copiar</button>
-                    </div>
+            <div style="text-align:center; padding: 15px 15px 20px;">
+                <img src="${coverImgSrc}" style="width:140px; height:140px; border-radius:12px; object-fit:cover; border:1px solid rgba(255,255,255,0.1); margin:0 auto 20px; display:block;">
+                <div style="font-size:1.25rem; font-weight:800; color:#fff; margin-bottom:6px;">${product.name || 'Sin título'}</div>
+                <div style="font-size:0.9rem; color:#888; margin-bottom:28px;">${producer.nickname || 'Productor'}</div>
+
+                <div class="share-social-row" style="margin-bottom:28px; justify-content:center; gap:20px;">
+                    ${socials.map(s => `
+                        <a href="${s.url}" target="_blank" class="social-share-item">
+                            <div class="social-icon-circle"><i class="bi ${s.icon}"></i></div>
+                        </a>
+                    `).join('')}
                 </div>
 
-                <div class="share-field-group">
-                    <label>URL COMPLETA DEL MARKETPLACE</label>
-                    <div class="share-input-wrapper">
-                        <i class="bi bi-link-45deg"></i>
-                        <input type="text" value="${window.location.href}" readonly id="link-full">
-                        <button onclick="copyToClipboard('${window.location.href}', this)">Copiar</button>
-                    </div>
+                <div class="share-input-wrapper-v2">
+                    <input type="text" value="${shortLink}" readonly id="link-short-share">
+                    <button onclick="copyToClipboard('${safeLink}', this)">
+                        <i class="bi bi-copy"></i>
+                    </button>
                 </div>
             </div>
+        </div>
+    `;
 
-            <!-- Social Grid -->
-            <div class="share-social-row">
-                <div class="social-share-item" onclick="openEmbedModal()">
-                    <div class="social-icon-circle"><i class="bi bi-code-slash"></i></div>
-                    <span>Embed</span>
-                </div>
-                ${socials.map(s => `
-                    <a href="${s.url}" target="_blank" class="social-share-item">
-                        <div class="social-icon-circle" style="color: #fff;"><i class="bi ${s.icon}"></i></div>
-                        <span>${s.name}</span>
-                    </a>
-                `).join('')}
-            </div>
-            
-            <div id="share-status" style="height:20px; font-size:0.8rem; color:#4bff8f; margin-top:10px; text-align:center;"></div>
-        `;
-    }
-
-    // New helper for copying
-    window.copyToClipboard = function (text, btn) {
-        navigator.clipboard.writeText(text).then(() => {
-            const original = btn.innerText;
-            btn.innerText = 'Copiado!';
-            btn.style.color = '#4bff8f';
-            setTimeout(() => {
-                btn.innerText = original;
-                btn.style.color = '#3b82f6';
-            }, 2000);
-        });
-    };
-
-    window.openEmbedModal = function () {
-        alert("Función de incrustar próximamente.");
-    };
-
-    // Logic to set URL (Legacy fallback for input if needed, but we set it in HTML above)
-    // document.getElementById('share-url-text').value = shortLink;
-
-    // Show
     backdrop.style.display = 'flex';
-    setTimeout(() => backdrop.classList.add('active'), 10);
-
-    // Focus input for quick copying
     setTimeout(() => {
-        const input = document.getElementById('share-url-text');
-        if (input) input.select();
-    }, 100);
-}
+        backdrop.classList.add('active');
+        const contentBox = backdrop.querySelector('.share-modal-content');
+        if (contentBox && typeof initBottomSheetDrag === 'function') {
+            initBottomSheetDrag(contentBox, window.closeShareModal);
+        }
+    }, 10);
+};
+
+window.closeShareModal = function () {
+    const backdrop = document.getElementById('share-modal-backdrop');
+    if (backdrop) {
+        backdrop.classList.add('closing');
+        backdrop.classList.remove('active');
+        setTimeout(() => {
+            backdrop.style.display = 'none';
+            backdrop.classList.remove('closing');
+        }, 350);
+    }
+};
+
+window.copyToClipboard = function (text, btn) {
+    return navigator.clipboard.writeText(text).then(() => {
+        if (btn) {
+            const icon = btn.querySelector('i') || btn;
+            const originalClass = icon.className;
+            icon.className = 'bi bi-check-lg';
+            icon.style.color = '#4bff8f';
+            icon.style.transition = 'all 0.2s ease';
+            btn.style.pointerEvents = 'none';
+            setTimeout(() => {
+                icon.className = originalClass;
+                icon.style.color = '';
+                btn.style.pointerEvents = '';
+            }, 2000);
+        }
+    });
+};
+
 
 window.openExclusivityModal = function () {
     let backdrop = document.getElementById('exclusivity-modal-backdrop');
     if (!backdrop) {
         backdrop = document.createElement('div');
         backdrop.id = 'exclusivity-modal-backdrop';
-        backdrop.className = 'share-modal-backdrop'; // Reuse same glass backdrop styles
-
-        backdrop.onclick = function (e) {
-            if (e.target === backdrop) window.closeExclusivityModal();
-        };
-
-        backdrop.innerHTML = `
-            <div class="share-modal-content">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                     <h3 style="color:#fff; margin:0;">Exclusividad</h3>
-                     <button onclick="closeExclusivityModal()" style="background:none; border:none; color:#666; font-size:1.5rem; cursor:pointer;"><i class="bi bi-x"></i></button>
-                </div>
-                <p style="color:#ccc; font-size:1rem; margin-bottom:20px; line-height:1.5;">Contacta al productor para obtener la exclusividad de este producto.</p>
-                
-                <button onclick="contactProducerForExclusivity()" class="btn-glass-primary" style="width:100%; border-radius:30px; padding:12px; margin-top:10px;">
-                    CONTACTARLO
-                </button>
-            </div>
-        `;
+        backdrop.className = 'share-modal-backdrop';
+        backdrop.onclick = (e) => { if (e.target === backdrop) window.closeExclusivityModal(); };
         document.body.appendChild(backdrop);
     }
+
+    backdrop.innerHTML = `
+        <div class="share-modal-content" style="max-width: 480px; width: 95%; padding: 40px 30px; border-radius: 24px; background: #0a0a0a; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 50px 100px rgba(0,0,0,0.8);">
+            <div class="modal-pull-bar"></div>
+            <button class="share-modal-close-btn" onclick="window.closeExclusivityModal()" style="top: 20px; right: 20px;">&times;</button>
+
+            <div style="text-align:center;">
+                <div style="width: 70px; height: 70px; background: rgba(160, 32, 240, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 25px; border: 1px solid rgba(160, 32, 240, 0.2);">
+                    <i class="bi bi-gem" style="color: #A020F0; font-size: 2rem;"></i>
+                </div>
+
+                <div style="font-size:0.85rem; color:#A020F0; font-weight:800; text-transform:uppercase; letter-spacing:2px; margin-bottom:12px;">Licencia Exclusiva</div>
+                <h2 style="color: #fff; font-size: 1.75rem; font-weight: 800; margin-bottom: 20px; letter-spacing: -0.5px;">Sé el único dueño</h2>
+                
+                <p style="color:#888; font-size:1.05rem; margin-bottom:35px; line-height:1.7; font-weight:500; max-width: 320px; margin-left: auto; margin-right: auto;">
+                    Contacta directamente al productor para negociar la exclusividad total de este producto y retirarlo del catálogo.
+                </p>
+
+                <button onclick="contactProducerForExclusivity()" class="btn-purchase-kit" style="width:100%; height: 56px !important; font-size: 1.05rem; font-weight:800; border-radius: 12px; background: #fff; color: #000;">
+                    CONTACTAR AL PRODUCTOR
+                </button>
+
+                <div style="margin-top: 25px; font-size: 0.8rem; color: #444; font-weight: 600;">
+                    <i class="bi bi-shield-check"></i> TRANSACCIÓN SEGURA VÍA OFFSZN
+                </div>
+            </div>
+        </div>
+    `;
+
     backdrop.style.display = 'flex';
-    setTimeout(() => backdrop.classList.add('active'), 10);
-}
+    setTimeout(() => {
+        backdrop.classList.add('active');
+        const contentBox = backdrop.querySelector('.share-modal-content');
+        if (contentBox && typeof initBottomSheetDrag === 'function') {
+            initBottomSheetDrag(contentBox, window.closeExclusivityModal);
+        }
+    }, 10);
+};
 
 window.closeExclusivityModal = function () {
     const backdrop = document.getElementById('exclusivity-modal-backdrop');
     if (backdrop) {
+        backdrop.classList.add('closing');
         backdrop.classList.remove('active');
-        setTimeout(() => backdrop.style.display = 'none', 300);
+        setTimeout(() => {
+            backdrop.style.display = 'none';
+            backdrop.classList.remove('closing');
+        }, 350);
     }
-}
+};
+
 
 window.contactProducerForExclusivity = function () {
     const product = window.currentProductData;
     if (!product) return;
-
     const producerNickname = product.producer?.nickname || 'Productor';
     const productCategory = product.product_type || 'producto';
     let productLink = window.location.href;
-    if (window.createSeoLink) {
-        productLink = window.location.origin + window.createSeoLink(product);
-    }
-
-    const message = `Vi tu ${productCategory} ("${product.name}") ${productLink} estoy interesado en tener una versión exclusiva para negociarlo.`;
+    const message = `Vi tu ${productCategory}("${product.name}") ${productLink} estoy interesado en tener una versión exclusiva.`;
     const targetUrl = `/mensajes.html?user=${producerNickname}&msg=${encodeURIComponent(message)}`;
 
-    // --- CHECK AUTH ---
     const token = window.getAccessToken ? window.getAccessToken() : null;
     if (!token) {
-        // Redirect to login with return parameter
-        console.log("[Exclusivity] Guest detected. Redirecting to login w/ return...");
         window.location.href = `/pages/login.html?redirect=${encodeURIComponent(targetUrl)}`;
         return;
     }
-
-    // Redirect to chat with pre-filled message (Corrected path to mensajes.html)
     window.location.href = targetUrl;
-}
+};
 
-window.closeShareModal = function () {
-    const backdrop = document.getElementById('share-modal-backdrop');
-    if (backdrop) {
-        backdrop.classList.remove('active');
-        setTimeout(() => backdrop.style.display = 'none', 300);
-        // Clear status
-        const status = document.getElementById('share-status');
-        if (status) status.innerText = '';
-    }
-}
 
-window.copyShareLink = function () {
-    const input = document.getElementById('share-url-text');
-    input.select();
-    input.setSelectionRange(0, 99999); // Mobile
-
-    navigator.clipboard.writeText(input.value).then(() => {
-        const status = document.getElementById('share-status');
-        status.innerText = '¡Enlace copiado al portapapeles!';
-        setTimeout(() => status.innerText = '', 2000);
-
-        // Micro-anim on box
-        document.getElementById('share-link-box').style.borderColor = '#fff';
-        setTimeout(() => document.getElementById('share-link-box').style.borderColor = '#333', 200);
-    });
-}
 
 // Download Gate functions moved to script/download-gate.js
 
@@ -970,104 +1247,120 @@ async function renderBeatSpecifics(product) {
         if (enabledLicenses.length > 0) {
             buyBox.innerHTML = '';
 
-            // Mobile layout removed - using unified grid instead
+            // --- FUNCTION TO CREATE LAYOUT (Reusable) ---
+            const createBuyingLayout = (isMobile) => {
+                const container = document.createElement('div');
+                container.id = isMobile ? 'mobile-buying-container' : 'desktop-buying-container';
+                container.className = isMobile ? 'mobile-only-flex licenses-layout-v2' : 'desktop-only-flex licenses-layout-v2';
+                container.style.flexDirection = 'column';
+                container.style.width = '100%';
 
-            // --- UNIFIED GRID LAYOUT (All Cards + "AÑADIR AL CARRITO") ---
-            const desktopLayout = document.createElement('div');
-            desktopLayout.className = 'desktop-licenses-layout licenses-layout-v2';
-            desktopLayout.style.flexDirection = 'column';
-            desktopLayout.style.width = '100%';
+                const grid = document.createElement('div');
+                grid.className = 'licenses-grid-scrollable';
+                grid.style.display = 'grid';
+                let cols = enabledLicenses.length > 3 ? 3 : enabledLicenses.length;
+                grid.style.gridTemplateColumns = isMobile ? '1fr' : `repeat(${cols}, 1fr)`;
+                if (isMobile) {
+                    grid.style.display = 'flex';
+                    grid.style.overflowX = 'auto';
+                }
+                grid.style.gap = '12px';
+                grid.style.width = '100%';
+                grid.style.marginBottom = '15px';
 
-            const desktopGrid = document.createElement('div');
-            desktopGrid.className = 'licenses-grid-scrollable';
-            desktopGrid.style.display = 'grid';
-            let desktopCols = enabledLicenses.length > 3 ? 3 : enabledLicenses.length;
-            desktopGrid.style.gridTemplateColumns = `repeat(${desktopCols}, 1fr)`;
-            desktopGrid.style.gap = '12px';
-            desktopGrid.style.width = '100%';
-            desktopGrid.style.marginBottom = '15px';
+                let selectedId = localStorage.getItem(`offszn_lic_select_${product.id}`);
+                if (!enabledLicenses.find(l => l.id === selectedId)) {
+                    selectedId = enabledLicenses[0].id;
+                }
 
-            const desktopLicensesToRender = enabledLicenses;
-            let desktopSelectedId = localStorage.getItem(`offszn_lic_select_${product.id}`);
-            if (!desktopLicensesToRender.find(l => l.id === desktopSelectedId)) {
-                desktopSelectedId = desktopLicensesToRender[0].id;
-                localStorage.setItem(`offszn_lic_select_${product.id}`, desktopSelectedId);
-            }
+                enabledLicenses.forEach(lic => {
+                    const price = parseFloat(lic.price) || 0;
+                    const priceStr = price > 0 ? `$${price.toFixed(2)}` : 'Gratis';
 
-            desktopLicensesToRender.forEach(lic => {
-                const dPrice = parseFloat(lic.price) || 0;
-                const dPriceStr = dPrice > 0 ? `$${dPrice.toFixed(2)}` : 'Gratis';
+                    const card = document.createElement('div');
+                    card.className = `license-card-v2 ${isMobile ? 'mobile-lic-card' : 'desktop-lic-card'} ${lic.id === selectedId ? 'selected' : ''}`;
+                    card.id = `${isMobile ? 'mobile' : 'desktop'}-lic-${lic.id}`;
+                    card.style.cursor = 'pointer';
+                    card.style.maxWidth = '100%';
 
-                const dCard = document.createElement('div');
-                // Standard license-card-v2 (no 'featured' styling overrides)
-                dCard.className = `license-card-v2 desktop-lic-card ${lic.id === desktopSelectedId ? 'selected' : ''}`;
-                dCard.id = `desktop-lic-${lic.id}`;
-                dCard.style.cursor = 'pointer';
-                dCard.style.maxWidth = '100%';
+                    card.innerHTML = `
+                        <div class="lic-card-header">
+                            <span class="lic-name">${lic.name}</span>
+                            <i class="bi bi-info-circle lic-details-trigger"></i>
+                        </div>
+                        <div class="lic-card-body" style="margin-top: 5px;">
+                            <span class="lic-files-preview">${getFilesPreview(lic.files, lic.name)}</span>
+                            <span class="lic-price-v2">${priceStr}</span>
+                        </div>
+                    `;
 
-                dCard.innerHTML = `
-                    <div class="lic-card-header">
-                        <span class="lic-name">${lic.name}</span>
-                        <i class="bi bi-info-circle lic-details-trigger"></i>
-                    </div>
-                    <div class="lic-card-body" style="margin-top: 5px;">
-                        <span class="lic-files-preview">${getFilesPreview(lic.files, lic.name)}</span>
-                        <span class="lic-price-v2">${dPriceStr}</span>
-                    </div>
-                `;
+                    card.onclick = (e) => {
+                        if (e.target.closest('.lic-details-trigger')) {
+                            openLicenseModal(lic, product);
+                        } else {
+                            // Sync selection between mobile/desktop (ALL license cards)
+                            document.querySelectorAll('.license-card-v2').forEach(c => c.classList.remove('selected'));
 
-                dCard.onclick = (e) => {
-                    if (e.target.closest('.lic-details-trigger')) {
-                        openLicenseModal(lic, product);
-                    } else {
-                        // Unselect all desktop cards
-                        desktopGrid.querySelectorAll('.desktop-lic-card').forEach(c => c.classList.remove('selected'));
-                        dCard.classList.add('selected');
-                        // Save choice
-                        localStorage.setItem(`offszn_lic_select_${product.id}`, lic.id);
+                            // Highlight current and mirrored cards
+                            const allSameLic = document.querySelectorAll(`[id$="-lic-${lic.id}"]`);
+                            allSameLic.forEach(c => c.classList.add('selected'));
+
+                            localStorage.setItem(`offszn_lic_select_${product.id}`, lic.id);
+                            if (window.updateTermsTab) window.updateTermsTab(lic.id);
+                        }
+                    };
+                    grid.appendChild(card);
+                });
+
+                container.appendChild(grid);
+
+                const purchaseBtn = document.createElement('button');
+                purchaseBtn.className = 'btn-purchase-kit cart-btn-mobile-fix';
+                purchaseBtn.style.padding = '16px';
+                purchaseBtn.style.fontSize = '1.1rem';
+                purchaseBtn.style.fontWeight = '800';
+                purchaseBtn.style.display = 'flex';
+                purchaseBtn.style.justifyContent = 'center';
+                purchaseBtn.style.alignItems = 'center';
+                purchaseBtn.style.gap = '10px';
+
+                // Text remains "AÑADIR AL CARRITO" for PC, but "COMPRAR" for MOBILE
+                purchaseBtn.innerHTML = `<i class="bi bi-cart-plus" style="font-size: 1.3rem;"></i> ${isMobile ? 'COMPRAR' : 'AÑADIR AL CARRITO'}`;
+
+                purchaseBtn.onclick = () => {
+                    const currentSelectedId = localStorage.getItem(`offszn_lic_select_${product.id}`) || enabledLicenses[0].id;
+                    if (window.addToCart) {
+                        window.addToCart(product.id, currentSelectedId);
                     }
                 };
-                desktopGrid.appendChild(dCard);
-            });
+                container.appendChild(purchaseBtn);
 
-            desktopLayout.appendChild(desktopGrid);
-
-            const dPurchaseBtn = document.createElement('button');
-            dPurchaseBtn.className = 'btn-purchase-kit cart-btn-mobile-fix'; // White bold button
-            dPurchaseBtn.style.padding = '16px';
-            dPurchaseBtn.style.fontSize = '1.1rem';
-            dPurchaseBtn.style.fontWeight = '800';
-            dPurchaseBtn.style.display = 'flex';
-            dPurchaseBtn.style.justifyContent = 'center';
-            dPurchaseBtn.style.alignItems = 'center';
-            dPurchaseBtn.style.gap = '10px';
-            dPurchaseBtn.innerHTML = '<i class="bi bi-cart-plus" style="font-size: 1.3rem;"></i> AÑADIR AL CARRITO';
-            dPurchaseBtn.onclick = () => {
-                const currentSelectedId = localStorage.getItem(`offszn_lic_select_${product.id}`) || desktopLicensesToRender[0].id;
-                if (window.addToCart) {
-                    window.addToCart(product.id, currentSelectedId);
-                } else {
-                    console.error("addToCart missing");
+                if (product.is_free) {
+                    const freeBtn = document.createElement('button');
+                    freeBtn.className = 'btn-minimal-link';
+                    freeBtn.style.margin = '10px auto 0';
+                    freeBtn.style.fontSize = '0.9rem';
+                    freeBtn.style.color = '#ccc';
+                    freeBtn.innerHTML = '<i class="bi bi-download"></i> DESCARGA GRATIS MP3 CON TAG';
+                    freeBtn.onclick = () => {
+                        if (window.openDownloadGateModal) window.openDownloadGateModal(product.audio_url, product.producer?.nickname, product.id);
+                        else window.open(product.audio_url, '_blank');
+                    };
+                    container.appendChild(freeBtn);
                 }
+
+                return container;
             };
-            desktopLayout.appendChild(dPurchaseBtn);
 
-            if (product.is_free) {
-                const dFreeBtn = document.createElement('button');
-                dFreeBtn.className = 'btn-minimal-link';
-                dFreeBtn.style.margin = '10px auto 0';
-                dFreeBtn.style.fontSize = '0.9rem';
-                dFreeBtn.style.color = '#ccc';
-                dFreeBtn.innerHTML = '<i class="bi bi-download"></i> DESCARGA GRATIS';
-                dFreeBtn.onclick = () => {
-                    if (window.openDownloadGateModal) window.openDownloadGateModal(product.audio_url, product.producer?.nickname, product.id);
-                    else window.open(product.audio_url, '_blank');
-                };
-                desktopLayout.appendChild(dFreeBtn);
-            }
+            // Render both (CSS handles visibility)
+            buyBox.appendChild(createBuyingLayout(false)); // Desktop
+            buyBox.appendChild(createBuyingLayout(true));  // Mobile
 
-            buyBox.appendChild(desktopLayout);
+            // Initial Tab Update
+            const initialSelected = localStorage.getItem(`offszn_lic_select_${product.id}`) || enabledLicenses[0].id;
+            if (window.updateTermsTab) window.updateTermsTab(initialSelected);
         }
+
 
     } catch (err) {
         console.error("Error rendering beat licenses:", err);
@@ -1083,10 +1376,8 @@ function getFilesPreview(files, licenseName) {
     if (files?.wav) active.push('WAV');
     if (files?.stems) active.push('STEMS');
 
-    // 🔥 Unlimited check for Exclusivity
-    if (licenseName && licenseName.toLowerCase().includes('unlimited')) {
-        active.push('EXCLUSIVIDAD');
-    }
+    // Exclusivity check removed per request
+
 
     return active.join(', ');
 }
@@ -1124,23 +1415,20 @@ window.openLicenseModal = function (lic, product) {
     const priceStr = price > 0 ? `$${parseFloat(price).toFixed(2)}` : 'Gratis';
 
     backdrop.innerHTML = `
-        <div class="share-modal-content lic-modal">
+        <div class="share-modal-content lic-modal" id="modal-lic-container">
+            <div class="modal-pull-bar"></div>
             <div class="lic-modal-header">
-                <h3>Detalles de la Licencia</h3>
-                <button onclick="closeLicenseModal()" class="lic-modal-close"><i class="bi bi-x-lg"></i></button>
+                <h3 class="lic-modal-title">${lic.name || 'Detalles'}</h3>
             </div>
             
             <div class="lic-modal-body">
-                <div class="lic-top-info">
-                    <div class="lic-main-meta">
-                        <span class="lic-modal-name">${lic.name || 'Licencia'}</span>
-                        <span class="lic-modal-files">${getFilesPreview(lic.files, lic.name)}</span>
-                    </div>
-                    <div class="lic-modal-price">${priceStr}</div>
+                <div class="lic-top-info" style="flex-direction: column; align-items: center; text-align: center; gap: 8px;">
+                     <div class="lic-modal-price" style="font-size: 2.5rem; margin-bottom: 0;">${priceStr}</div>
+                     <div class="lic-modal-files">${getFilesPreview(lic.files, lic.name)}</div>
                 </div>
 
-                <div class="lic-section">
-                    <span class="lic-section-title">DETALLES DE USO</span>
+                <div class="lic-section" style="margin-top: 20px;">
+                    <span class="lic-section-title" style="text-align: center;">DETALLES DE USO</span>
                     <div class="lic-features-list">
                         <div class="lic-feature-item">
                             <i class="bi bi-music-note-beamed"></i>
@@ -1162,9 +1450,9 @@ window.openLicenseModal = function (lic, product) {
                 </div>
 
                 <div class="lic-section">
-                    <span class="lic-section-title">ARCHIVOS INCLUIDOS</span>
+                    <span class="lic-section-title" style="text-align: center;">ARCHIVOS INCLUIDOS</span>
                     <div class="lic-check-grid">
-                        <div class="lic-check-item active"> <!-- 🔥 MP3 ALWAYS GREEN -->
+                        <div class="lic-check-item active">
                             <i class="bi bi-check-circle-fill"></i> MP3
                         </div>
                         <div class="lic-check-item ${lic.files?.wav ? 'active' : ''}">
@@ -1179,7 +1467,7 @@ window.openLicenseModal = function (lic, product) {
                     </div>
                 </div>
 
-                <button class="btn-glass-primary-v2" style="width:100%; margin-top:20px;" onclick="selectLicenseAndClose('${lic.id}')">
+                <button class="btn-purchase-kit" style="width:100%; margin-top:10px; height: 50px !important;" onclick="selectLicenseAndClose('${lic.id}')">
                     OK, SELECCIONAR
                 </button>
             </div>
@@ -1187,8 +1475,15 @@ window.openLicenseModal = function (lic, product) {
     `;
 
     backdrop.style.display = 'flex';
-    setTimeout(() => backdrop.classList.add('active'), 10);
-}
+    setTimeout(() => {
+        backdrop.classList.add('active');
+        const modal = document.getElementById('modal-lic-container');
+        if (modal && typeof initBottomSheetDrag === 'function') {
+            initBottomSheetDrag(modal, closeLicenseModal);
+        }
+    }, 10);
+};
+
 
 window.closeLicenseModal = function () {
     const backdrop = document.getElementById('lic-details-backdrop');
@@ -1212,10 +1507,10 @@ window.openLicenseSelectionModal = function (licenses) {
     const selectedId = localStorage.getItem(`offszn_lic_select_${window.currentProductData?.id}`) || enabledLicenses[0]?.id;
 
     backdrop.innerHTML = `
-        <div class="share-modal-content lic-modal" style="max-width: 500px;">
+        <div class="share-modal-content lic-modal" id="modal-lic-selection-container" style="max-width: 500px;">
+            <div class="modal-pull-bar"></div>
             <div class="lic-modal-header">
-                <h3 style="font-weight: 800;">Elegir Licencia</h3>
-                <button onclick="closeLicenseSelectionModal()" class="lic-modal-close"><i class="bi bi-x-lg"></i></button>
+                <h3 class="lic-modal-title">Elegir Licencia</h3>
             </div>
             
             <div class="lic-modal-body">
@@ -1240,7 +1535,7 @@ window.openLicenseSelectionModal = function (licenses) {
                         <span id="modal-subtotal" class="total-amount">$${parseFloat(enabledLicenses.find(l => l.id === selectedId)?.price || 0).toFixed(2)}</span>
                     </div>
                     
-                    <button class="btn-purchase-licenses" id="btn-modal-add-cart" onclick="confirmModalPurchase()">
+                    <button class="btn-purchase-licenses" id="btn-modal-add-cart" onclick="confirmModalPurchase()" style="height: 50px !important;">
                         AÑADIR AL CARRITO
                     </button>
                 </div>
@@ -1249,8 +1544,15 @@ window.openLicenseSelectionModal = function (licenses) {
     `;
 
     backdrop.style.display = 'flex';
-    setTimeout(() => backdrop.classList.add('active'), 10);
-}
+    setTimeout(() => {
+        backdrop.classList.add('active');
+        const modal = document.getElementById('modal-lic-selection-container');
+        if (modal && typeof initBottomSheetDrag === 'function') {
+            initBottomSheetDrag(modal, closeLicenseSelectionModal);
+        }
+    }, 10);
+};
+
 
 window.closeLicenseSelectionModal = function () {
     const backdrop = document.getElementById('lic-selection-backdrop');
@@ -1368,19 +1670,6 @@ window.openLicenseComparisonModal = function (licenses) {
                 </div>
             </div>
             
-            <style>
-                .compare-cell { padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; text-align: center; color: #ccc; font-size: 0.9rem; }
-                .compare-cell.feature-col { justify-content: flex-start; text-align: left; font-weight: 600; color: #fff; background: rgba(255,255,255,0.02); }
-                .compare-cell.header { font-weight: 800; color: #fff; text-transform: uppercase; border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 15px; align-items: flex-end; }
-                .compare-cell.price { color: #00ff88; font-weight: bold; font-size: 1.1rem; }
-                .compare-cell.check i { font-size: 1.2rem; }
-                .compare-cell.check i.active { color: #00ff88; }
-                .compare-cell.check i.inactive { color: #444; }
-                
-                @media (max-width: 600px) {
-                    .compare-cell { font-size: 0.8rem; padding: 5px; }
-                     /* Force horizontal scroll on mobile */
-                }
             </style>
         </div>
     `;
@@ -1432,7 +1721,7 @@ function renderPresetSpecifics(product) {
             }
         };
     } else {
-        buyBtn.innerHTML = `Comprar Preset - $${product.price_basic || '0.00'}`;
+        buyBtn.innerHTML = `COMPRAR - $${product.price_basic || '0.00'}`;
         buyBtn.onclick = () => addToCart(product.id, 'basic');
     }
     buyBox.appendChild(buyBtn);
@@ -1503,7 +1792,7 @@ function renderGenericSpecifics(product) {
             window.open(downloadUrl, '_blank');
         };
     } else {
-        buyBtn.innerHTML = `Comprar - $${product.price_basic || '0.00'}`;
+        buyBtn.innerHTML = `COMPRAR - $${product.price_basic || '0.00'}`;
         buyBtn.onclick = () => addToCart(product.id, 'basic');
     }
     buyBox.appendChild(buyBtn);
@@ -1538,7 +1827,7 @@ function renderKitSpecifics(product) {
         };
     } else {
         // Paid Product
-        buyBtn.innerHTML = `COMPRAR KIT - $${product.price_basic || '0.00'}`;
+        buyBtn.innerHTML = `COMPRAR - $${product.price_basic || '0.00'}`;
         buyBtn.onclick = () => addToCart(product.id, 'basic');
     }
 
@@ -1590,10 +1879,11 @@ function initStandardPlayer(product) {
     } else {
         // OVERLAY BUTTON (Standard)
         playerTarget.innerHTML = `
-             <button class="play-btn-circle" id="${btnId}" style="width:50px; height:50px; font-size:1.5rem; box-shadow:0 4px 12px rgba(0,0,0,0.5);" onclick="toggleProductPlay('${product.id}')">
+            <button class="play-btn-circle" id="${btnId}" style="width:42px; height:42px; font-size:1.2rem; box-shadow:0 4px 12px rgba(0,0,0,0.5);">
                 <i class="bi bi-play-fill"></i>
             </button>
         `;
+
         // function addToCart... replacement pending verify
         window.toggleProductPlay = function (id) {
             // We need the product object. Since we are inside the closure or render loop, 
@@ -1789,7 +2079,7 @@ function initABPlayerInContainer(beforeUrl, afterUrl, container, productId) {
     const formatTime = (time) => {
         const mins = Math.floor(time / 60);
         const secs = Math.floor(time % 60);
-        return `${mins}:${secs.toString().padStart(2, '0')}`;
+        return `${mins}: ${secs.toString().padStart(2, '0')}`;
     };
 
     playBtn.onclick = () => {
@@ -2041,21 +2331,24 @@ function renderRelatedGrid(products, container) {
                 }
             };
         }
-        // 🔥 FIX: Authorize related image with skeleton
-        if (p.image_url) {
-            const imgId = `related-img-${p.id}`;
-            const img = document.getElementById(imgId);
-            if (img) {
-                const parent = img.parentElement;
-                if (parent) parent.classList.add('skeleton');
-
-                window.getAuthorizedUrl(p.image_url).then(url => {
+        // 🔥 FIX: Authorize related image WITHOUT skeleton (removes light line glitch)
+        const img = card.querySelector('img');
+        if (img && p.image_url) {
+            window.getAuthorizedUrl(p.image_url)
+                .then(url => {
                     if (url) {
-                        img.onload = () => { if (parent) parent.classList.remove('skeleton'); };
+                        img.onload = () => { /* No-op, skeleton removed */ };
+                        img.onerror = () => {
+                            img.src = '/images/portada-default.png';
+                        };
                         img.src = url;
                     }
+                })
+                .catch(() => {
+                    img.src = '/images/portada-default.png';
                 });
-            }
+        } else if (img) {
+            img.src = '/images/portada-default.png';
         }
 
         container.appendChild(card);
@@ -2094,7 +2387,7 @@ window.incrementProductStat = async function (id, column) {
         // 2. Determine Endpoint
         let endpoint = null;
         if (column === 'downloads_count') endpoint = `/api/products/${id}/download`;
-        else if (column === 'views') endpoint = `/api/products/${id}/play`;
+        else if (column === 'plays_count' || column === 'views') endpoint = `/api/products/${id}/play`;
 
         if (endpoint) {
             // Use Server-side API (More robust, IP-limited)
@@ -2220,21 +2513,626 @@ window.addToCart = (id, license) => {
     }
 };
 
-// GLOBAL: Description Toggle Function
-window.toggleDesc = function (e) {
-    if (e) e.stopPropagation(); // prevent accordion toggle
-    const short = document.getElementById('desc-short');
-    const full = document.getElementById('desc-full');
+// === TABS SYSTEM LOGIC (OFFSZN IDENTITY) ===
 
-    if (short && full) {
-        if (short.style.display !== 'none') {
-            // Expand
-            short.style.display = 'none';
-            full.style.display = 'inline';
-        } else {
-            // Collapse
-            short.style.display = 'inline';
-            full.style.display = 'none';
+window.switchProductTab = function (tabId) {
+    // 1. Update Buttons
+    const btns = document.querySelectorAll('.tab-btn');
+    btns.forEach(btn => btn.classList.remove('active'));
+
+    const activeBtn = document.querySelector(`.tab-btn[onclick*="'${tabId}'"]`);
+    if (activeBtn) {
+        activeBtn.classList.add('active');
+
+        // 2. Move Indicator
+        const indicator = document.querySelector('.tab-indicator');
+        if (indicator) {
+            indicator.style.width = activeBtn.offsetWidth + 'px';
+            indicator.style.left = activeBtn.offsetLeft + 'px';
         }
     }
+
+    // 3. Update Panes
+    document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('active'));
+    const targetPane = document.getElementById('pane-' + tabId);
+    if (targetPane) {
+        targetPane.classList.add('active');
+
+        // 🔥 AUTO-FILL: If navigating to negotiation, fill email if logged in
+        if (tabId === 'negotiate') {
+            const emailInput = targetPane.querySelector('#offer-email-inline');
+            if (emailInput && !emailInput.value) {
+                window.supabaseClient?.auth.getSession().then(({ data }) => {
+                    if (data?.session?.user?.email) {
+                        emailInput.value = data.session.user.email;
+                    }
+                });
+            }
+        }
+    }
+};
+
+
+window.updateTermsTab = function (licenseId) {
+    const pane = document.getElementById('dynamic-lic-terms');
+    if (!pane || !window.currentProductData) return;
+
+    const licenses = window.currentProductData.available_licenses || [];
+    const lic = licenses.find(l => l.id === licenseId);
+    if (!lic) return;
+
+    const price = parseFloat(lic.price) || 0;
+    const isUnlimited = lic.name.toLowerCase().includes('unlimited');
+    const checkColor = isUnlimited ? '#A020F0' : '#4bff8f';
+
+    pane.innerHTML = `
+        <div class="terms-content-v2" style="background:rgba(255,255,255,0.02); padding:15px; border-radius:12px; border:1px solid rgba(255,255,255,0.05);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                <span style="font-size:0.85rem; font-weight:800; color:#fff; text-transform:uppercase;">${lic.name}</span>
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px 15px; font-size:0.82rem; color:#888;">
+                <span style="display:flex; align-items:center; white-space:nowrap;"><i class="bi bi-check-circle-fill" style="color:${checkColor}; margin-right:6px; flex-shrink:0;"></i> ${getFilesPreview(lic.files, lic.name)}</span>
+                <span style="display:flex; align-items:center; white-space:nowrap;"><i class="bi bi-check-circle-fill" style="color:${checkColor}; margin-right:6px; flex-shrink:0;"></i> ${lic.streams || 'Limitado'} Streams</span>
+                <span style="display:flex; align-items:center; white-space:nowrap;"><i class="bi bi-check-circle-fill" style="color:${checkColor}; margin-right:6px; flex-shrink:0;"></i> ${lic.sales || 'Limitado'} Ventas</span>
+                <span style="display:flex; align-items:center; white-space:nowrap;"><i class="bi bi-check-circle-fill" style="color:${checkColor}; margin-right:6px; flex-shrink:0;"></i> PDF Oficial</span>
+            </div>
+
+        </div>
+    `;
+
+};
+
+window.submitNegotiationInline = async function () {
+    const amount = document.getElementById('offer-amount-inline')?.value;
+    const email = document.getElementById('offer-email-inline')?.value;
+    const product = window.currentProductData;
+
+    const amountNum = parseFloat(amount);
+    if (!amount || amountNum < 10 || !email || !email.includes('@')) {
+        alert("La oferta minima es de $10 USD. Por favor, completa tu email correctamente.");
+        return;
+    }
+
+    try {
+        // --- 🔐 AUTH CONTEXT ---
+        let userId = null;
+        const { data: { session } } = await window.supabaseClient.auth.getSession();
+        if (session) userId = session.user.id;
+
+        const activeLicTab = document.querySelector('.lic-tab.active');
+        const selectedLicense = activeLicTab ? activeLicTab.textContent.trim() : 'Standard';
+
+        // --- ⏳ RATE LIMIT: 24h per product/email ---
+        const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+        const { data: existing, error: checkError } = await window.supabaseClient
+            .from('propuestas_offszn')
+            .select('id')
+            .eq('product_id', product.id)
+            .eq('email_offszn', email)
+            .gt('created_at', yesterday)
+            .limit(1);
+
+        if (existing && existing.length > 0) {
+            alert("Vuelve a negociar en un plazo de 24 horas cuando obtengas la respuesta.");
+            return;
+        }
+
+        const { error } = await window.supabaseClient.from('propuestas_offszn').insert({
+            product_id: product.id,
+            producer_id: product.producer_id,
+            email_offszn: email,
+            amount_offszn: amountNum,
+            status_offszn: 'pending',
+            selected_license: selectedLicense
+        });
+
+        if (error) throw error;
+
+        // --- 📧 Email Notification via Server ---
+        fetch('/api/negotiate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                productId: product.id,
+                producerId: product.producer_id,
+                amount: amountNum,
+                email: email,
+                userId: userId
+            })
+        }).catch(err => console.warn('[Negotiation] Email notification failed (background):', err));
+
+        alert("¡Propuesta enviada con éxito! Se envió un correo a ti mismo y al productor.");
+
+        // Reset fields
+        const amountEl = document.getElementById('offer-amount-inline');
+        const emailEl = document.getElementById('offer-email-inline');
+        if (amountEl) amountEl.value = '';
+        if (emailEl && !userId) emailEl.value = ''; // Only clear if guest
+
+    } catch (err) {
+        console.error("Error submitting offer:", err);
+        if (err.message && err.message.includes('user_id')) {
+            alert("Hubo un error de base de datos. Por favor contacta soporte.");
+        } else {
+            alert("Hubo un error al enviar la propuesta.");
+        }
+    }
+};
+
+// === PROMO / NEGOTIATION / COUPON LOGIC ===
+
+window.generateWelcomeCoupon = function () {
+    const product = window.currentProductData;
+    if (!product) return;
+
+    const alreadyClaimed = localStorage.getItem('offszn_welcome_claimed');
+    if (alreadyClaimed) {
+        alert(`Ya tienes un código activo: ${alreadyClaimed}`);
+        return;
+    }
+
+    // Modal for email
+    let backdrop = document.getElementById('coupon-modal-backdrop');
+    if (!backdrop) {
+        backdrop = document.createElement('div');
+        backdrop.id = 'coupon-modal-backdrop';
+        backdrop.className = 'share-modal-backdrop bottom-sheet-layout';
+
+        backdrop.onclick = (e) => {
+            if (e.target === backdrop) window.closeCouponModal();
+        };
+
+        document.body.appendChild(backdrop);
+    }
+
+    backdrop.innerHTML = `
+        <div class="share-modal-content welcome-coupon-modal-content" id="coupon-modal-content" style="text-align:center;">
+            <div class="modal-pull-bar" id="coupon-pull-bar"></div>
+            
+            <div style="text-align:center; padding: 15px 20px 30px;">
+                <div style="font-size:0.8rem; color:#888; font-weight:800; text-transform:uppercase; letter-spacing:1.5px; margin-bottom:20px;">Cupón de Bienvenida</div>
+                
+                <i class="bi bi-gift" style="font-size:3rem; color:var(--accent-purple); margin-bottom:20px; display:block;"></i>
+                
+                <div style="color:#aaa; font-size:1rem; margin-bottom:15px; line-height:1.6; font-weight:500;">
+                    Introduce tu email para obtener un <b style="color:#fff;">10% OFF</b> en tu primera compra y activar beneficios exclusivos.
+                </div>
+
+
+                <div class="floating-group" style="margin-bottom: 12px;">
+                    <input type="email" id="coupon-email-input" placeholder=" ">
+                    <label for="coupon-email-input">Tu Email</label>
+                </div>
+
+                <button class="btn-glass-primary-v2" style="margin-top:5px; height:48px !important; width:100%; font-size:0.95rem; font-weight:800;" onclick="window.processCouponClaim()">
+                    OBTENER MI DESCUENTO
+                </button>
+
+
+            </div>
+        </div>
+    `;
+
+
+
+
+    backdrop.style.display = 'flex';
+    document.body.style.overflow = 'hidden'; // Block scroll
+
+    setTimeout(() => backdrop.classList.add('active'), 10);
+
+
+    const content = document.getElementById('coupon-modal-content');
+    const bar = document.getElementById('coupon-pull-bar');
+    if (content && bar) initBottomSheetDrag(content, window.closeCouponModal);
+};
+
+
+window.closeCouponModal = function () {
+    const b = document.getElementById('coupon-modal-backdrop');
+    if (b) {
+        b.classList.add('closing');
+        b.classList.remove('active');
+        document.body.style.overflow = ''; // Unlock scroll
+        setTimeout(() => {
+            b.style.display = 'none';
+            b.classList.remove('closing');
+        }, 400);
+    }
+};
+
+
+
+window.processCouponClaim = async function () {
+    const emailInput = document.getElementById('coupon-email-input');
+    const email = emailInput?.value;
+    const btn = document.querySelector('.btn-glass-primary-v2');
+
+    if (!email || !email.includes('@')) {
+        alert("Por favor, introduce un correo válido.");
+        return;
+    }
+
+    // 🛡️ ANTI-TYPO GUARD: Check for .cm (common typo for .com)
+    if (email.toLowerCase().endsWith('.cm') || email.toLowerCase().includes('gmail.cm')) {
+        const confirmTypo = confirm(`Tu email termina en ".cm" (${email}). ¿Es correcto? Quizás quisiste decir ".com".`);
+        if (!confirmTypo) return;
+    }
+
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> VERIFICANDO...';
+    }
+
+    try {
+        // Step 1: Check if email exists in DB
+        const checkRes = await fetch(`${API_URL}/auth/check-email`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email })
+        });
+
+        const checkData = await checkRes.json();
+
+        if (!checkData.available) {
+            alert("Este correo ya tiene una cuenta. Por favor, inicia sesión para acceder a tus beneficios.");
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = 'OBTENER MI DESCUENTO';
+            }
+            return;
+        }
+
+        // Step 2: Generate Welcome Coupon Code
+        const couponCode = 'OFFSZN-' + Math.random().toString(36).substring(2, 7).toUpperCase();
+
+        // Step 3: Save to DB before SignUp (or as part of the flow)
+        const { error: dbError } = await window.supabaseClient
+            .from('cupones_bienvenida_offszn')
+            .upsert({
+                email_offszn: email,
+                codigo_offszn: couponCode,
+                status_offszn: 'unclaimed'
+            });
+
+        if (dbError) {
+            console.error("❌ Error saving coupon claim:", dbError);
+            // We proceed anyway as SignUp is more important, or we can choose to fail.
+            // Let's at least keep a local record.
+        }
+
+        // Step 4: Trigger Supabase Auth Sign Up (to send verification email)
+        const tempPassword = 'OFFSZN-' + Math.random().toString(36).substring(2, 10).toUpperCase() + '!';
+        const redirectUrl = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+            ? window.location.origin + '/index.html'
+            : 'https://offszn-oc7c.onrender.com/index.html';
+
+        console.log("🚀 Iniciando SignUp en Supabase para:", email);
+        const { data: authData, error: authError } = await window.supabaseClient.auth.signUp({
+            email: email,
+            password: tempPassword,
+            options: {
+                emailRedirectTo: redirectUrl,
+                data: {
+                    welcome_coupon: true,
+                    coupon_code: couponCode
+                }
+            }
+        });
+
+        if (authError) {
+            console.error("❌ Error en Supabase SignUp:", authError);
+            throw authError;
+        }
+
+        console.log("✅ Resultado Auth:", authData);
+
+        // Step 3: Save intent to claim coupon after onboarding
+        localStorage.setItem('offszn_pending_coupon_claim', 'true');
+        localStorage.setItem('offszn_return_after_welcome', window.location.href);
+
+        // Update the Tab UI to show "Pending activation"
+        const box = document.getElementById('welcome-promo-box');
+        if (box) {
+            box.className = 'promo-card-v2 claimed-style';
+            box.innerHTML = `
+                <div style="font-size:0.85rem; font-weight:800; color:#fff; letter-spacing:1.5px; margin-bottom:12px; display:flex; align-items:center; gap:8px; text-transform:uppercase;">
+                    <i class="bi bi-clock-history"></i> Activación pendiente
+                </div>
+                <div style="font-size:0.9rem; color:#fff; font-weight:600; margin-bottom:10px;">¡Casi listo!</div>
+                <div style="font-size:0.85rem; color:#888; margin-bottom:20px; line-height:1.5;">Tu cupón de 10% de descuento se activará automáticamente al <b>completar tu perfil</b>.</div>
+                
+                <div style="background:rgba(255,255,255,0.03); border:1px dashed rgba(255,255,255,0.1); border-radius:10px; padding:20px; text-align:center; color:#555;">
+                     EL CÓDIGO SE REVELARÁ AQUÍ
+                </div>
+
+                <div style="font-size:0.75rem; color:#555; margin-top:15px; background:rgba(255,255,255,0.01); padding:12px; border-radius:6px; border:1px solid rgba(255,255,255,0.03); text-align: center;">
+                    <span>Revisa tu email: <b>${email}</b></span>
+                </div>
+            `;
+        }
+
+        window.closeCouponModal();
+        console.log("Coupon intent saved. User must finish onboarding to reveal.");
+
+    } catch (err) {
+        console.error("Error processing coupon claim:", err);
+        // If it's a Supabase error (like rate limit), show it clearly
+        const msg = err.message || "Error al procesar la solicitud.";
+        alert(`Aviso: ${msg}. Si el correo no llega en 5 minutos, intenta de nuevo o revisa tu carpeta de SPAM.`);
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = 'OBTENER MI DESCUENTO';
+        }
+    }
+};
+
+window.resetCouponClaim = async function () {
+    if (confirm("¿Quieres cambiar el email o cancelar la solicitud? Esto cerrará tu sesión temporal.")) {
+        try {
+            localStorage.removeItem('offszn_welcome_claimed');
+            if (window.supabaseClient) {
+                await window.supabaseClient.auth.signOut();
+            }
+            // Clear auth token for safety
+            localStorage.removeItem('authToken');
+            document.cookie = "sb-access-token=; path=/; max-age=0; SameSite=Strict; Secure";
+
+            window.location.reload();
+        } catch (e) {
+            console.error("Error resetting coupon claim:", e);
+            window.location.reload();
+        }
+    }
+};
+
+window.copyCouponToClipboard = function (text, btn) {
+    const originalHtml = btn.innerHTML;
+    const setCopiedState = () => {
+        btn.innerHTML = '<i class="bi bi-check-lg"></i> COPIADO';
+        btn.style.color = '#4bff8f';
+        btn.style.pointerEvents = 'none';
+        setTimeout(() => {
+            btn.innerHTML = originalHtml;
+            btn.style.color = '';
+            btn.style.pointerEvents = '';
+        }, 2000);
+    };
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(() => {
+            console.log("Coupon copied:", text);
+            setCopiedState();
+        }).catch(err => {
+            console.error("Failed to copy:", err);
+            fallbackCopy(text, setCopiedState);
+        });
+    } else {
+        fallbackCopy(text, setCopiedState);
+    }
+
+    function fallbackCopy(textToCopy, successCallback) {
+        try {
+            const el = document.createElement('textarea');
+            el.value = textToCopy;
+            el.style.position = 'fixed';
+            el.style.opacity = 0;
+            document.body.appendChild(el);
+            el.select();
+            document.execCommand('copy');
+            document.body.removeChild(el);
+            successCallback();
+        } catch (e) {
+            console.error('Fallback copy failed', e);
+            alert("No se pudo copiar automáticamente. Código: " + textToCopy);
+        }
+    }
+};
+
+
+
+window.openNegotiationModal = function () {
+    const product = window.currentProductData;
+    if (!product) return;
+
+    const producerName = product.producer?.nickname || 'Productor';
+    const currentPrice = product.price_basic || 0;
+
+    let backdrop = document.getElementById('negotiate-modal-backdrop');
+    if (!backdrop) {
+        backdrop = document.createElement('div');
+        backdrop.id = 'negotiate-modal-backdrop';
+        backdrop.className = 'share-modal-backdrop';
+        backdrop.onclick = (e) => { if (e.target === backdrop) window.closeNegotiationModal(); };
+        document.body.appendChild(backdrop);
+    }
+
+    backdrop.innerHTML = `
+        <div class="share-modal-content" id="negotiate-modal-content" style="max-width:450px;">
+            <div class="modal-pull-bar" id="negotiate-pull-bar"></div>
+            <div class="lic-modal-header" style="margin-bottom:20px; border-bottom:none; justify-content:center;">
+                <h3 style="font-weight:800; margin:0;">Haz una Propuesta</h3>
+            </div>
+            
+            <div style="color:#888; font-size:0.95rem; margin-bottom:20px; line-height:1.5;">
+                ¿Tienes un presupuesto diferente para <b style="color:#fff;">${product.name}</b>? Envíale tu oferta a <b style="color:#fff;">${producerName}</b> directamente.
+            </div>
+
+            <div class="negotiate-form" style="display:flex; flex-direction:column; gap:10px;">
+                <div class="floating-group">
+                    <span style="position:absolute; left:12px; top:50%; transform:translateY(-50%); color:#fff; font-weight:700; z-index:5;">$</span>
+                    <input type="number" id="offer-amount" placeholder=" " style="padding-left:30px !important;">
+                    <label for="offer-amount" style="left:30px;">Tu Oferta (USD)</label>
+                    <div style="font-size:0.75rem; color:#555; margin-top:5px;">Precio sugerido: $${currentPrice}</div>
+                </div>
+
+
+                <div class="floating-group">
+                    <input type="email" id="offer-email" placeholder=" ">
+                    <label for="offer-email">Tu Email</label>
+                </div>
+
+                <p style="font-size:0.75rem; color:#666; margin:0;">Límite: 1 propuesta por día. Te responderemos en menos de 24h.</p>
+
+                <button class="cart-btn-mobile-fix" style="width:100%; height:50px !important; margin-top:10px;" onclick="window.submitNegotiation()">
+                    LANZAR OFERTA
+                </button>
+            </div>
+        </div>
+    `;
+
+
+    backdrop.style.display = 'flex';
+    setTimeout(() => backdrop.classList.add('active'), 10);
+
+    const content = document.getElementById('negotiate-modal-content');
+    const bar = document.getElementById('negotiate-pull-bar');
+    if (content && bar) initBottomSheetDrag(content, window.closeNegotiationModal);
+};
+
+
+window.closeNegotiationModal = function () {
+    const backdrop = document.getElementById('negotiate-modal-backdrop');
+    if (backdrop) {
+        backdrop.classList.remove('active');
+        setTimeout(() => backdrop.style.display = 'none', 300);
+    }
+};
+
+window.submitNegotiation = async function () {
+    const amount = document.getElementById('offer-amount')?.value;
+    const email = document.getElementById('offer-email')?.value;
+    const product = window.currentProductData;
+    const btn = document.querySelector('.cart-btn-mobile-fix');
+
+    const amountNum = parseFloat(amount);
+    if (!amount || amountNum < 10 || !email || !email.includes('@')) {
+        alert("La oferta mínima es de $10 USD. Por favor, completa tu email correctamente.");
+        return;
+    }
+
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> PROCESANDO...';
+    }
+
+    try {
+        // Step 1: Check if email exists in DB
+        const checkRes = await fetch(`${API_URL}/auth/check-email`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email })
+        });
+
+        const checkData = await checkRes.json();
+
+        // If guest, trigger registration
+        if (checkData.available) {
+            const tempPassword = 'OFFSZN-' + Math.random().toString(36).substring(2, 10).toUpperCase() + '!';
+            const redirectUrl = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+                ? window.location.origin + '/index.html'
+                : 'https://offszn-oc7c.onrender.com/index.html';
+
+            const { error: authError } = await window.supabaseClient.auth.signUp({
+                email: email,
+                password: tempPassword,
+                options: { emailRedirectTo: redirectUrl }
+            });
+
+            if (authError) throw authError;
+            console.log("Guest registration triggered for negotiation.");
+        } else {
+            // For safety, warn them that they have an account (optional, but good for UX)
+            console.log("User already has an account. Continuing with proposal.");
+        }
+
+        const activeLicTab = document.querySelector('.lic-tab.active');
+        const selectedLicense = activeLicTab ? activeLicTab.textContent.trim() : 'Standard';
+
+        // Step 2: Save the proposal
+        const { error } = await window.supabaseClient.from('propuestas_offszn').insert({
+            product_id: product.id,
+            producer_id: product.producer_id,
+            email: email,
+            amount: amountNum,
+            status: 'pending',
+            selected_license: selectedLicense
+        });
+
+        if (error) throw error;
+
+        alert("¡Propuesta enviada con éxito! Revisa tu correo pronto para activar tu cuenta y ver la respuesta.");
+        window.closeNegotiationModal();
+
+    } catch (err) {
+        console.error("Error submitting offer:", err);
+        alert(err.message || "Hubo un error al enviar la propuesta. Inténtalo más tarde.");
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = 'LANZAR OFERTA';
+        }
+    }
+};
+
+/**
+ * Helper: Bottom Sheet Drag Logic (Bro Style)
+ */
+function initBottomSheetDrag(element, closeFn) {
+    let startY = 0;
+    let currentY = 0;
+    let isDragging = false;
+    let startTime = 0;
+
+    if (window.innerWidth > 992) return;
+
+    element.addEventListener('touchstart', (e) => {
+        startY = e.touches[0].clientY;
+        startTime = Date.now();
+        isDragging = true;
+        element.style.transition = 'none';
+    }, { passive: false });
+
+    element.addEventListener('touchmove', (e) => {
+        if (!isDragging) return;
+        currentY = e.touches[0].clientY - startY;
+
+        // Follow finger 1:1 if dragging down
+        if (currentY > 0) {
+            if (e.cancelable) e.preventDefault(); // Stop page scrolling only if cancelable
+            element.style.transform = `translateY(${currentY}px)`;
+        } else {
+            // Slight resistance when pulling up
+            const resistance = Math.abs(currentY) / 10;
+            element.style.transform = `translateY(-${resistance}px)`;
+        }
+    }, { passive: false });
+
+
+    element.addEventListener('touchend', (e) => {
+        if (!isDragging) return;
+        isDragging = false;
+
+        const duration = Date.now() - startTime;
+        const velocity = currentY / duration;
+
+        element.style.transition = 'transform 0.4s cubic-bezier(0.1, 0.9, 0.2, 1)';
+
+        if (currentY > 100 || (velocity > 0.4 && currentY > 20)) {
+            // Smoothly complete the close move
+            element.style.transform = 'translateY(100%)';
+            setTimeout(() => {
+                closeFn();
+                // Clear inline style after transition so it doesn't break next open
+                setTimeout(() => { element.style.transform = ''; }, 400);
+            }, 10);
+        } else {
+            element.style.transform = 'translateY(0)';
+            // Clear manual transform after snapping back
+            setTimeout(() => { if (!isDragging) element.style.transform = ''; }, 400);
+        }
+    }, { passive: false });
+
+
 }

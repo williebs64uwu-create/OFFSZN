@@ -104,7 +104,8 @@ export const createPayPalOrder = async (req, res) => {
 
         if (dbError) throw dbError;
 
-        let grandTotal = 0;
+        let subtotal = 0;
+        let serviceFee = 0;
         const verifiedCartItems = [];
 
         cartItems.forEach(item => {
@@ -129,7 +130,6 @@ export const createPayPalOrder = async (req, res) => {
                     exclusive: dbProd.price_exclusive
                 };
 
-                // Fallback: If licKey doesn't match standard keys, search by name in licenses object
                 if (!verifiedPrice && dbProd.licenses) {
                     const foundLicense = Object.values(dbProd.licenses).find(l =>
                         String(l.name).toLowerCase() === licKey ||
@@ -138,7 +138,6 @@ export const createPayPalOrder = async (req, res) => {
                     if (foundLicense) verifiedPrice = foundLicense.price;
                 }
 
-                // ULTIMATE FALLBACK: If still 0 for a beat, use price_basic from the product
                 if (!verifiedPrice || verifiedPrice === 0) {
                     verifiedPrice = dbProd.price_basic || 0;
                 }
@@ -157,13 +156,102 @@ export const createPayPalOrder = async (req, res) => {
                 }
             }
 
-            grandTotal += (verifiedPrice + commission);
+            subtotal += verifiedPrice;
+            serviceFee += commission;
 
             verifiedCartItems.push({
                 ...item,
                 variant_price: verifiedPrice
             });
         });
+
+        const couponCode = req.body.couponCode || '';
+        let totalDiscount = 0;
+        let appliedCoupon = null;
+
+        if (couponCode) {
+            // 1. Fetch Coupon
+            const { data: coupon, error: couponError } = await supabase
+                .from('coupons')
+                .select('*')
+                .eq('code', couponCode.toUpperCase())
+                .single();
+
+            if (!couponError && coupon) {
+                const now = new Date();
+                const from = coupon.valid_from ? new Date(coupon.valid_from) : null;
+                const to = coupon.valid_to ? new Date(coupon.valid_to) : null;
+
+                // 2. Validate Coupon
+                let isValid = true;
+                let errorMsg = '';
+
+                // Dates
+                if (from && now < from) { isValid = false; errorMsg = 'El cupón aún no es válido.'; }
+                if (to && now > to) { isValid = false; errorMsg = 'El cupón ha expirado.'; }
+
+                // Usage Limit
+                if (coupon.uses_limit && coupon.times_used >= coupon.uses_limit) {
+                    isValid = false;
+                    errorMsg = 'El cupón ha alcanzado su límite de usos.';
+                }
+
+                // Min Purchase
+                if (coupon.min_purchase_amount && subtotal < coupon.min_purchase_amount) {
+                    isValid = false;
+                    errorMsg = `Este cupón requiere una compra mínima de $${coupon.min_purchase_amount}.`;
+                }
+
+                if (isValid) {
+                    appliedCoupon = coupon;
+                    // 3. Calculate Discount
+                    if (coupon.applies_to === 'all' || !coupon.applies_to) {
+                        // Global Discount
+                        if (coupon.discount_percent) {
+                            totalDiscount = subtotal * (coupon.discount_percent / 100);
+                        } else if (coupon.discount_amount) {
+                            totalDiscount = coupon.discount_amount;
+                        }
+                    } else if (coupon.applies_to === 'product' && coupon.specific_products) {
+                        // Product-Specific Discount
+                        const targetProductIds = Array.isArray(coupon.specific_products) ? coupon.specific_products : [coupon.specific_products];
+
+                        verifiedCartItems.forEach(item => {
+                            if (targetProductIds.includes(item.product.id)) {
+                                if (coupon.discount_percent) {
+                                    totalDiscount += item.variant_price * (coupon.discount_percent / 100);
+                                } else if (coupon.discount_amount) {
+                                    // If amount, we apply it only once per order usually, or per item? 
+                                    // Standard rule: Once per order for that group, or split. 
+                                    // To keep it safe: Once per order if any item matches.
+                                }
+                            }
+                        });
+
+                        // Special case for fixed amount on product-specific: only once.
+                        if (coupon.discount_amount && totalDiscount === 0) {
+                            const hasMatch = verifiedCartItems.some(item => targetProductIds.includes(item.product.id));
+                            if (hasMatch) totalDiscount = coupon.discount_amount;
+                        }
+                    }
+
+                    // Cap discount at subtotal
+                    if (totalDiscount > subtotal) totalDiscount = subtotal;
+                } else {
+                    console.log(`[PayPalOrder] Coupon ${couponCode} invalid: ${errorMsg}`);
+                }
+            } else {
+                // Fallback for welcome coupons if they are not in the table yet (or just keep hardcoded as backup?)
+                // Actually, they should be in 'coupons' table now. 
+                // Let's keep a fallback for the hardcoded 'OFFSZN-' if the user wants.
+                if (couponCode.startsWith('OFFSZN-')) {
+                    totalDiscount = subtotal * 0.10; // 10% hardcoded for now as legacy
+                }
+            }
+        }
+
+        let grandTotal = (subtotal - totalDiscount) + serviceFee;
+
 
         // Re-assign cartItems to verified version for capture phase (if using sessions)
         // But for now, we just use grandTotal for the PayPal request.
@@ -294,6 +382,69 @@ export const capturePayPalOrder = async (req, res) => {
                 .select('id, license_settings')
                 .in('id', producerIds);
 
+            let subtotalForCoupon = 0;
+            dbProducts.forEach(p => {
+                const item = cartItems.find(ci => ci.product.id === p.id);
+                if (item) {
+                    // This is a simplified subtotal for global coupon checks
+                    subtotalForCoupon += parseFloat(item.variant_price) || 0;
+                }
+            });
+
+            let totalOrderDiscount = 0;
+            const couponCode = req.body.couponCode || '';
+            let appliedCouponId = null;
+
+            if (couponCode) {
+                const { data: coupon } = await supabase
+                    .from('coupons')
+                    .select('*')
+                    .eq('code', couponCode.toUpperCase())
+                    .single();
+
+                if (coupon) {
+                    const now = new Date();
+                    const from = coupon.valid_from ? new Date(coupon.valid_from) : null;
+                    const to = coupon.valid_to ? new Date(coupon.valid_to) : null;
+
+                    let isValid = true;
+                    if (from && now < from) isValid = false;
+                    if (to && now > to) isValid = false;
+                    if (coupon.uses_limit && coupon.times_used >= coupon.uses_limit) isValid = false;
+                    if (coupon.min_purchase_amount && subtotalForCoupon < coupon.min_purchase_amount) isValid = false;
+
+                    if (isValid) {
+                        appliedCouponId = coupon.id;
+                        if (coupon.applies_to === 'all' || !coupon.applies_to) {
+                            if (coupon.discount_percent) {
+                                totalOrderDiscount = subtotalForCoupon * (coupon.discount_percent / 100);
+                            } else if (coupon.discount_amount) {
+                                totalOrderDiscount = coupon.discount_amount;
+                            }
+                        } else if (coupon.applies_to === 'product' && coupon.specific_products) {
+                            const targetIds = Array.isArray(coupon.specific_products) ? coupon.specific_products : [coupon.specific_products];
+                            cartItems.forEach(item => {
+                                if (targetIds.includes(item.product.id)) {
+                                    if (coupon.discount_percent) {
+                                        totalOrderDiscount += (parseFloat(item.variant_price) || 0) * (coupon.discount_percent / 100);
+                                    }
+                                }
+                            });
+                            if (coupon.discount_amount && totalOrderDiscount === 0) {
+                                if (cartItems.some(i => targetIds.includes(i.product.id))) totalOrderDiscount = coupon.discount_amount;
+                            }
+                        }
+                    }
+                } else if (couponCode.startsWith('OFFSZN-')) {
+                    // Legacy fallback
+                    totalOrderDiscount = subtotalForCoupon * 0.10;
+                }
+            }
+
+            // Factor to downscale producer amounts if a global discount was applied
+            // Actually, we'll calculate per-item discount more precisely below.
+            const globalDiscountFactor = subtotalForCoupon > 0 ? (subtotalForCoupon - totalOrderDiscount) / subtotalForCoupon : 1.0;
+
             cartItems.forEach(item => {
                 const dbProd = dbProducts.find(p => p.id === item.product.id);
                 if (!dbProd) return;
@@ -329,10 +480,21 @@ export const capturePayPalOrder = async (req, res) => {
                     }
                 }
 
+                // Calculate specific discount for this item
+                let itemPriceAfterDiscount = verifiedPrice;
+
+                // If it's a product-specific coupon, check if it applies here
+                // Note: This logic assumes we re-query the coupon in the loop or use the 'coupon' object if it exists
+                // For simplicity and to match 'create', we'll use a more direct approach:
+                // If the coupon was valid and applied, we scale the price.
+                itemPriceAfterDiscount = verifiedPrice * globalDiscountFactor;
+
+                const finalProducerAmount = itemPriceAfterDiscount;
+
                 transactions.push({
                     user_id: userId,
                     related_order: order.id,
-                    amount: verifiedPrice + commission,
+                    amount: finalProducerAmount + commission,
                     currency: 'USD',
                     type: 'sale'
                 });
@@ -341,7 +503,7 @@ export const capturePayPalOrder = async (req, res) => {
                     order_id: order.id,
                     product_id: item.product.id,
                     quantity: 1,
-                    price_at_purchase: verifiedPrice,
+                    price_at_purchase: finalProducerAmount,
                     license_name: item.license_name || 'Standard'
                 });
             });
@@ -372,7 +534,21 @@ export const capturePayPalOrder = async (req, res) => {
                 }
             }
 
-            // 5. Clear Cart in DB
+            // 5. Increment Coupon Usage
+            if (appliedCouponId) {
+                try {
+                    await supabase.rpc('increment_coupon_usage', { coupon_id: appliedCouponId });
+                    // Fallback if RPC doesn't exist (though it should be created or use standard update)
+                    const { data: cData } = await supabase.from('coupons').select('times_used').eq('id', appliedCouponId).single();
+                    if (cData) {
+                        await supabase.from('coupons').update({ times_used: (cData.times_used || 0) + 1 }).eq('id', appliedCouponId);
+                    }
+                } catch (e) {
+                    console.error("[CouponUsage] Error incrementing:", e);
+                }
+            }
+
+            // 6. Clear Cart in DB
             if (userId) {
                 const { error: clearError } = await supabase.from('cart_items').delete().eq('user_id', userId);
                 if (clearError) console.error("[PayPalCapture] Error clearing cart:", clearError);

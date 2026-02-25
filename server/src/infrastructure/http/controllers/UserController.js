@@ -7,10 +7,10 @@ export const getMyPurchasedProducts = async (req, res) => {
         const { data: items, error: itemsError } = await supabase
             .from('order_items')
             .select(`
-                *, 
-                orders!inner (user_id, status), 
-                products (id, name, description, image_url, download_url_mp3, download_url_wav, download_url_stems) 
-            `)
+                *, 
+                orders!inner (user_id, status), 
+                products (id, name, description, image_url, download_url_mp3, download_url_wav, download_url_stems) 
+            `)
             .eq('orders.user_id', userId)
             .eq('orders.status', 'completed');
 
@@ -430,5 +430,70 @@ export const clearMyListenHistory = async (req, res) => {
     } catch (e) {
         console.error('Clear history error:', e);
         res.status(500).json({ error: 'Failed to clear history' });
+    }
+};
+
+// --- WELCOME COUPON LOGIC (Unique Server-Side Generation) ---
+export const claimWelcomeCoupon = async (req, res) => {
+    try {
+        const userId = req.user.userId;
+
+        // 1. Get User email
+        const { data: user, error: userError } = await supabase
+            .from('users')
+            .select('email')
+            .eq('id', userId)
+            .single();
+
+        if (userError || !user) throw new Error("Usuario no encontrado");
+
+        // 2. Check if already has a coupon
+        const { data: existing, error: checkError } = await supabase
+            .from('cupones_bienvenida_offszn')
+            .select('*')
+            .eq('email_offszn', user.email)
+            .maybeSingle();
+
+        if (existing) {
+            return res.status(200).json({
+                message: 'Cupón ya generado anteriormente',
+                coupon: existing.codigo_offszn,
+                status: existing.status_offszn
+            });
+        }
+
+        // 3. Generate UNIQUE code
+        let isUnique = false;
+        let code = '';
+        while (!isUnique) {
+            code = 'OFFSZN' + Math.random().toString(36).substring(2, 6).toUpperCase();
+            const { data: collision } = await supabase
+                .from('cupones_bienvenida_offszn')
+                .select('codigo_offszn')
+                .eq('codigo_offszn', code)
+                .maybeSingle();
+            if (!collision) isUnique = true;
+        }
+
+        // 4. Record in DB
+        const { error: insertError } = await supabase
+            .from('cupones_bienvenida_offszn')
+            .insert({
+                email_offszn: user.email,
+                codigo_offszn: code,
+                status_offszn: 'unclaimed',
+                created_at_offszn: new Date().toISOString()
+            });
+
+        if (insertError) throw insertError;
+
+        res.status(201).json({
+            message: 'Cupón de bienvenida generado!',
+            coupon: code
+        });
+
+    } catch (err) {
+        console.error("Error en claimWelcomeCoupon:", err.message);
+        res.status(500).json({ error: 'Error al generar cupón' });
     }
 };

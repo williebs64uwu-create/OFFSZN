@@ -28,6 +28,23 @@
         // Notify anyone listening (like navbar.js) that the elements now exist
         window.dispatchEvent(new CustomEvent('offszn-navbar-loaded'));
 
+        // Dynamically load share-modal.js so it's available globally
+        if (!document.getElementById('share-modal-script')) {
+            const script = document.createElement('script');
+            script.id = 'share-modal-script';
+            script.src = pathPrefix + 'script/share-modal.js?v=' + new Date().getTime();
+            document.body.appendChild(script);
+        }
+
+        // Dynamically load share-modal.css so it's available globally
+        if (!document.getElementById('share-modal-css')) {
+            const link = document.createElement('link');
+            link.id = 'share-modal-css';
+            link.rel = 'stylesheet';
+            link.href = pathPrefix + 'css/share-modal.css?v=' + new Date().getTime();
+            document.head.appendChild(link);
+        }
+
         // As a backward-compatible fallback, if initNavbarUI is defined, call it directly
         if (typeof window.initNavbarUI === 'function') {
             window.initNavbarUI();

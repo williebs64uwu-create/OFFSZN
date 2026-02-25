@@ -303,14 +303,15 @@
                                     const fid = n.data?.follower_id || n.data?.id || (n.data?.user_id !== currentUserId ? n.data?.user_id : null);
                                     let actor = (fid && actorsMap[fid]) ? actorsMap[fid] : null;
 
-                                    // Rescue logic for URL generation too
                                     if (!actor && n._extractedUsername) {
                                         actor = actorsByNameMap[n._extractedUsername];
                                     }
 
                                     return actor ? window.createProfileLink(actor) : null;
                                 })()
-                                : null
+                                : (n.type === 'new_message' && n.data?.conversation_id)
+                                    ? `/mensajes.html?convId=${n.data.conversation_id}`
+                                    : null
                     };
                 });
 
@@ -331,6 +332,7 @@
                         message: `${nameHtml} te invita a colaborar en el ${catLabel} <strong>"${prodName}"</strong> ${percent}.`,
                         created_at: invite.created_at,
                         read: readInvites.includes(inviteId),
+                        targetUrl: '/cuenta/colaboraciones.html?tab=recibidas',
                         data: { ...invite }
                     };
                 });
@@ -347,7 +349,8 @@
                         title: '¡Colaboración Aceptada!',
                         message: `${nameHtml} aceptó tu invitación.`,
                         created_at: invite.updated_at || invite.created_at,
-                        read: readInvites.includes(notifId)
+                        read: readInvites.includes(notifId),
+                        targetUrl: '/cuenta/colaboraciones.html?tab=mis-invitaciones'
                     };
                 });
 
@@ -422,10 +425,10 @@
                                 <i class="fas ${this.getIcon(n.type)}"></i>
                             </div>
                             <div class="notif-content">
-                                <div class="notif-title">${n.title || 'Notificación'}</div>
                                 <div class="notif-message">${n.message}</div>
                                 <div class="notif-time">${timeAgo(n.created_at)}</div>
                             </div>
+                            <div class="notif-badge-dot"></div>
                         </div>
                     `;
                 }).join('');
@@ -550,7 +553,9 @@
         const type = el.getAttribute('data-type');
         const extraId = el.getAttribute('data-extra-id');
         const url = el.getAttribute('data-url');
-        handleNotificationClick(id, type, extraId, url);
+        if (typeof window.handleNotificationClick === 'function') {
+            window.handleNotificationClick(id, type, extraId, url);
+        }
     };
 
 
@@ -593,60 +598,46 @@
     };
 
     window.handleNotificationClick = async function (id, type, extraId, targetUrl) {
-        // Optimistic UI Update - REMOVED: Stale localStorage usage. 
-        // We now rely on the reload/fetch to update the badge accurately.
-        const badge = document.getElementById('notification-badge');
-        // (Deleted optimistic -1 logic that used stale localStorage)
+        console.log(`[Notifications] Click Handled: ID=${id}, Type=${type}, ExtraId=${extraId}, Target=${targetUrl}`);
 
-        // 1. Handle Virtual (Local Storage)
-        if (id.startsWith('invite-') || id.startsWith('accepted-')) {
-            const readInvites = JSON.parse(localStorage.getItem('readInvites') || '[]');
-            if (!readInvites.includes(id)) {
-                readInvites.push(id);
-                localStorage.setItem('readInvites', JSON.stringify(readInvites));
-            }
-        }
-        // 2. Handle Real Notifications (DB)
-        else if (sbClient) {
-            await sbClient.from('notifications').update({ read: true }).eq('id', id);
+        // 1. Mark as Read immediately (Optimistic UI)
+        if (id && !id.startsWith('invite-') && !id.startsWith('accepted-') && sbClient) {
+            sbClient.from('notifications').update({ read: true }).eq('id', id).then(() => {
+                window.NotificationsManager.fetch();
+            });
         }
 
-        // Redirect Logic
-        // Redirect Logic (Prioritize calculated SEO URL)
-        if (targetUrl && targetUrl !== 'null' && targetUrl !== 'undefined') {
-            window.location.href = targetUrl;
-            return;
-        }
+        // 2. REDIRECTION LOGIC - Robust fallbacks
+        let finalUrl = (targetUrl && targetUrl !== '#' && targetUrl !== 'null' && targetUrl !== 'undefined') ? targetUrl : null;
 
-        if (type === 'collab_invitation') {
-            window.location.href = '/cuenta/colaboraciones.html?tab=recibidas';
-        } else if (type === 'collab_accepted') {
-            window.location.href = '/cuenta/colaboraciones.html?tab=mis-invitaciones';
-        } else if (type === 'new_follower') {
-            if (extraId) {
-                // Fallback
-                window.location.href = `/perfil-publico.html?id=${extraId}`;
-            } else {
-                window.location.reload();
-            }
-        } else if (type === 'product_like') {
-            if (extraId && extraId !== 'undefined') {
-                // Fallback
-                window.location.href = `/producto.html?id=${extraId}`;
-            } else {
-                window.location.href = '/cuenta/subir-kit.html';
-            }
-        } else if (type === 'new_message') {
-            if (extraId) {
-                window.location.href = `/mensajes.html?convId=${extraId}`;
-            } else {
-                window.location.href = '/mensajes.html';
+        // If no targetUrl, calculate from data
+        if (!finalUrl || finalUrl === '') {
+            if (type === 'new_message') {
+                finalUrl = extraId ? `/mensajes.html?convId=${extraId}` : '/mensajes.html';
+            } else if (type === 'product_like' || type === 'product_published') {
+                finalUrl = extraId ? `/producto.html?id=${extraId}` : '/cuenta/mis-kits.html';
+            } else if (type === 'new_follower') {
+                // FORCE Profile Link if we have an ID
+                if (extraId && extraId !== 'undefined' && extraId !== 'null') {
+                    finalUrl = `/perfil-publico.html?id=${extraId}`;
+                } else {
+                    finalUrl = '/explorar.html';
+                }
+            } else if (type === 'collab_invitation') {
+                finalUrl = '/cuenta/colaboraciones.html?tab=recibidas';
+            } else if (type === 'collab_accepted') {
+                finalUrl = '/cuenta/colaboraciones.html?tab=mis-invitaciones';
             }
         }
 
-
-        // Background Refresh
-        window.NotificationsManager.fetch();
+        // 3. APPLY REDIRECTION
+        if (finalUrl && finalUrl !== '#' && finalUrl !== '') {
+            console.log(`[Notifications] Final Redirect: ${finalUrl}`);
+            window.location.href = finalUrl;
+        } else {
+            console.warn("[Notifications] Fallback to Explore - No URL found");
+            window.location.href = '/explorar.html';
+        }
     };
 
     // Utils

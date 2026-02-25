@@ -1611,16 +1611,26 @@ async function renderTrending(items, user, collabStats = {}) {
         const authUrl = authorizedUrls[idx];
         if (prod.image_url) {
             const img = div.querySelector('img');
+            const parent = img?.parentElement;
+            if (parent) parent.classList.add('skeleton'); // Ensure skeleton is on
+
             if (img) {
+                img.onload = () => {
+                    if (parent) parent.classList.remove('skeleton');
+                    img.style.opacity = 1;
+                };
+                img.onerror = () => {
+                    if (parent) parent.classList.remove('skeleton');
+                    img.src = '/images/portada-default.png';
+                    img.style.opacity = 1;
+                };
+
                 if (authUrl) {
-                    img.onload = () => { img.style.opacity = 1; };
                     img.src = authUrl;
-                    if (img.complete) img.onload();
                 } else {
-                    img.onload = () => { img.style.opacity = 1; };
-                    img.src = prod.image_url || 'https://via.placeholder.com/300';
-                    if (img.complete) img.onload();
+                    img.src = prod.image_url || '/images/portada-default.png';
                 }
+                if (img.complete) img.onload();
             }
         }
 
@@ -1725,7 +1735,7 @@ async function renderProductList(items, user, collabStats = {}) {
             </div>
             <div class="list-col-price">
                  <button class="btn-list-price" onclick="event.stopPropagation(); window.location.href = '${seoLink}'">
-                    ${prod.is_free ? 'FREE' : '$' + (prod.price_basic || '—')}
+                    ${(() => { const pType = (prod.product_type || '').toLowerCase(); const isTrulyFree = pType !== 'beat' && (prod.is_free === true || String(prod.is_free) === 'true' || Number(prod.price_basic) === 0); let priceValue = prod.price_basic !== undefined && prod.price_basic !== null ? prod.price_basic : '20'; return isTrulyFree ? 'FREE' : '$' + priceValue; })()}
                  </button>
             </div>
             <div class="list-col-actions" style="width:100%; justify-content:flex-end;">
@@ -1740,7 +1750,7 @@ async function renderProductList(items, user, collabStats = {}) {
                         </button>`;
             })()}
                 <button class="btn-list-icon" title="Download"><i class="bi bi-download"></i></button>
-                <button class="btn-list-icon" title="Más"><i class="bi bi-three-dots"></i></button>
+                <button class="btn-list-icon btn-share-product" title="Compartir"><i class="bi bi-share"></i></button>
             </div>
         `;
 
@@ -1764,16 +1774,26 @@ async function renderProductList(items, user, collabStats = {}) {
         // Authorize Image
         if (prod.image_url) {
             const img = row.querySelector('img');
+            const parent = img?.parentElement;
+            if (parent) parent.classList.add('skeleton');
+
             if (img) {
+                img.onload = () => {
+                    if (parent) parent.classList.remove('skeleton');
+                    img.style.opacity = 1;
+                };
+                img.onerror = () => {
+                    if (parent) parent.classList.remove('skeleton');
+                    img.src = '/images/portada-default.png';
+                    img.style.opacity = 1;
+                };
+
                 if (authUrl) {
-                    img.onload = () => { img.style.opacity = 1; };
                     img.src = authUrl;
-                    if (img.complete) img.onload();
                 } else {
-                    img.onload = () => { img.style.opacity = 1; };
-                    img.src = prod.image_url || 'https://via.placeholder.com/300';
-                    if (img.complete) img.onload();
+                    img.src = prod.image_url || '/images/portada-default.png';
                 }
+                if (img.complete) img.onload();
             }
         }
 
@@ -1819,6 +1839,17 @@ async function renderProductList(items, user, collabStats = {}) {
                             } else {
                                 window.StickyPlayer.play(trackData);
                             }
+                        }
+                    };
+                }
+
+                // Initialize Share Logic
+                const shareBtnNode = row.querySelector('.btn-share-product');
+                if (shareBtnNode) {
+                    shareBtnNode.onclick = (e) => {
+                        e.preventDefault(); e.stopPropagation();
+                        if (window.openShareModal) {
+                            window.openShareModal({ ...prod, artist_users: user });
                         }
                     };
                 }

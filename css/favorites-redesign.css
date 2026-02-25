@@ -1,0 +1,417 @@
+/* ==================== FAVORITES REDESIGN CARDS ==================== */
+
+#favorites-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+    gap: 20px;
+    padding: 20px 0;
+}
+
+.fav-product-card {
+    background: #0d0d0d;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 18px;
+    overflow: hidden;
+    transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    height: 100%;
+}
+
+.fav-product-card:hover {
+    border-color: rgba(255, 255, 255, 0.15);
+    background: #111;
+}
+
+/* --- COVER AREA --- */
+.fav-card-cover {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1/1;
+    background: #111;
+    overflow: hidden;
+    cursor: pointer;
+}
+
+.fav-card-cover img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.4s ease;
+}
+
+.fav-product-card:hover .fav-card-cover img {
+    transform: none;
+}
+
+.fav-card-overlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: auto;
+    height: auto;
+    background: transparent;
+    opacity: 1;
+    z-index: 5;
+    pointer-events: none;
+}
+
+.fav-play-btn {
+    width: 48px;
+    height: 48px;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    color: #fff;
+    font-size: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    pointer-events: auto;
+}
+
+.fav-play-btn:hover {
+    transform: scale(1.08);
+    background: #fff;
+    color: #000;
+}
+
+.fav-play-btn i {
+    margin-left: 3px;
+}
+
+/* --- BADGES --- */
+.fav-badge-floating {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    background: #000;
+    color: #fff;
+    font-size: 0.65rem;
+    font-weight: 800;
+    padding: 4px 10px;
+    border-radius: 6px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    z-index: 3;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+/* --- INFO AREA --- */
+.fav-card-body {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    background: transparent;
+}
+
+.fav-card-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.fav-card-artist {
+    font-size: 0.8rem;
+    color: #888;
+    margin-bottom: 12px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-weight: 500;
+}
+
+/* --- WAVESURFER AREA --- */
+.fav-card-waveform {
+    height: 38px;
+    margin-bottom: 15px;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 8px;
+    overflow: hidden;
+    position: relative;
+    border: 1px solid rgba(255, 255, 255, 0.03);
+    display: none;
+}
+
+/* --- TAGS AREA --- */
+.fav-card-tags {
+    display: none;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 24px;
+}
+
+.fav-tag {
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.65rem;
+    font-weight: 800;
+    padding: 4px 10px;
+    border-radius: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+}
+
+/* --- ACTIONS AREA --- */
+.fav-card-footer {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    padding-top: 14px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    margin-top: auto;
+}
+
+.fav-card-footer .footer-left {
+    justify-self: start;
+}
+
+.fav-card-footer .footer-center {
+    justify-self: center;
+}
+
+.fav-card-footer .footer-right {
+    justify-self: end;
+}
+
+.fav-price-btn {
+    background: #1a1a1a;
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 100px;
+    padding: 6px 16px;
+    font-size: 0.85rem;
+    font-weight: 800;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    letter-spacing: 0.5px;
+}
+
+.fav-price-btn:hover {
+    background: #fff;
+    color: #000;
+    transform: scale(1.05);
+}
+
+.fav-icon-btn {
+    background: transparent;
+    border: none;
+    color: #888;
+    font-size: 1.25rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.fav-icon-btn:hover {
+    color: #fff;
+    transform: scale(1.1);
+}
+
+.fav-icon-btn.liked {
+    color: #fff;
+}
+
+.fav-icon-btn.liked:hover {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+/* ==================== SEARCH BAR REFINEMENTS (REMOVED) ==================== */
+
+.fav-search-container {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 2.5rem;
+}
+
+/* ==================== FILTER TABS REFINEMENT ==================== */
+
+.fav-filters-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    overflow-x: auto;
+    padding: 10px 0;
+    scrollbar-width: none;
+}
+
+.fav-filters-row::-webkit-scrollbar {
+    display: none;
+}
+
+.filter-tab {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: #999;
+    cursor: pointer;
+    padding: 10px 22px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    border-radius: 100px;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    white-space: nowrap;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.filter-tab:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.12);
+    transform: translateY(-1px);
+}
+
+.filter-tab.active {
+    color: #000;
+    background: #fff;
+    border-color: #fff;
+}
+
+/* --- RESPONSIVE ADJUSTMENTS --- */
+@media (max-width: 768px) {
+    #favorites-grid {
+        grid-template-columns: 1fr;
+        gap: 0;
+        /* Tight list feel */
+        padding: 0;
+    }
+
+    .fav-product-card {
+        flex-direction: row;
+        align-items: center;
+        height: 72px;
+        background: transparent;
+        border: none;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 0;
+        padding: 0 !important;
+        transition: background 0.2s;
+        gap: 16px;
+    }
+
+    .fav-product-card:hover {
+        transform: none !important;
+        background: rgba(255, 255, 255, 0.03);
+        box-shadow: none !important;
+    }
+
+    .fav-card-cover {
+        width: 52px !important;
+        height: 52px !important;
+        aspect-ratio: 1/1 !important;
+        border-radius: 8px;
+        overflow: hidden;
+        flex-shrink: 0;
+    }
+
+    .fav-card-cover img {
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: cover !important;
+    }
+
+    .fav-play-btn {
+        width: 32px;
+        height: 32px;
+        font-size: 1.1rem;
+    }
+
+    .fav-card-body {
+        padding: 0;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        flex-grow: 1;
+        gap: 12px;
+        background: transparent;
+        min-width: 0;
+        /* Crucial for ellipsis in nested flex */
+    }
+
+    .fav-info-main {
+        flex-grow: 1;
+        min-width: 0;
+        /* Constraints flex item to its container */
+        overflow: hidden;
+    }
+
+    .fav-card-title {
+        font-size: 0.9rem;
+        margin-bottom: 2px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: block;
+    }
+
+    .fav-card-artist {
+        font-size: 0.75rem;
+        margin-bottom: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: block;
+    }
+
+    .fav-card-waveform,
+    .fav-card-tags,
+    .fav-price-label,
+    .fav-badge-floating,
+    .desktop-action-btn {
+        display: none !important;
+    }
+
+    .fav-card-footer {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        border-top: none;
+        padding-top: 0;
+        margin-top: 0;
+        width: auto;
+    }
+
+    .fav-icon-group {
+        gap: 14px;
+    }
+
+    .fav-icon-btn {
+        font-size: 1.15rem;
+    }
+
+    .mobile-action-btn {
+        display: flex !important;
+    }
+
+    .fav-filters-row {
+        justify-content: flex-start;
+        padding-left: 20px;
+    }
+}
+
+@media (max-width: 480px) {
+    .fav-product-card {
+        height: 76px;
+        padding: 0 !important;
+        gap: 12px;
+    }
+
+    .fav-icon-group {
+        gap: 10px;
+    }
+}

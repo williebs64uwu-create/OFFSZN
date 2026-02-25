@@ -438,16 +438,7 @@ window.handleCoverClick = function (id) {
 };
 
 window.handleInfoClick = function (event, id, link) {
-    if (window.innerWidth <= 768 && window.ExpandedPlayer) {
-        if (typeof allProducts !== 'undefined') {
-            const product = allProducts.find(p => p.id == id);
-            if (product) {
-                window.ExpandedPlayer.open(product);
-                return;
-            }
-        }
-    }
-    window.location.href = link; // Fallback or desktop behavior
+    window.location.href = link;
 };
 
 function getProductAudio(product) {
@@ -764,14 +755,22 @@ function createProductCardHtml(product, format = 'standard') {
     const img = product.image_url || 'https://via.placeholder.com/400';
     const artist = product.producer_nickname || 'OFFSZN Artist';
 
+    const cleanName = (name) => {
+        if (!name) return 'Sin título';
+        return name.replace(/_/g, ' ').replace(/\.(mp3|wav|zip|rar)$/i, '').replace(/\s+/g, ' ').trim();
+    };
+
     if (format === 'premium-preset') {
-        const price = product.is_free ? 'FREE' : `$${product.price_basic || '20'}`;
+        const pType = (product.product_type || '').toLowerCase();
+        const isTrulyFree = pType !== 'beat' && (product.is_free === true || String(product.is_free) === 'true' || Number(product.price_basic) === 0);
+        let priceValue = product.price_basic !== undefined && product.price_basic !== null ? product.price_basic : '20';
+        const price = isTrulyFree ? 'FREE' : `$${priceValue}`;
         return `
             <div class="preset-card-premium" data-product-id="${product.id}">
                 <img src="${img}" alt="${product.name}">
                 <div class="preset-overlay">
                     <span class="preset-tag">PRESET</span>
-                    <h3 class="preset-title">${product.name}</h3>
+                    <h3 class="preset-title">${cleanName(product.name)}</h3>
                     <div class="preset-info">
                         <span class="preset-sub">${artist}</span>
                         <span class="preset-price">${price}</span>
@@ -789,7 +788,7 @@ function createProductCardHtml(product, format = 'standard') {
                 <button class="card-like-btn ${isLiked ? 'liked' : ''}"><i class="bi ${isLiked ? 'bi-heart-fill' : 'bi-heart'}"></i></button>
             </div>
             <div class="card-info">
-                <div class="card-title">${product.name}</div>
+                <div class="card-title">${cleanName(product.name)}</div>
                 <div class="card-producer">${artist}</div>
             </div>
         </div>

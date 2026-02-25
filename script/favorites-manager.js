@@ -89,10 +89,19 @@ window.FavoritesManager = (function () {
                 }
 
                 const products = await res.json();
-                likedItemIds = new Set(products.map(p => String(p.id)));
+
+                // --- 🔥 VISIBILITY FILTERING ---
+                // We only show products that are both PUBLIC and NOT DELETED
+                const visibleProducts = products.filter(p => {
+                    const isSoftDeleted = (p.public_slug && p.public_slug.startsWith('deleted_')) || p.status === 'deleted';
+                    const isPublic = (p.visibility === 'public');
+                    return isPublic && !isSoftDeleted;
+                });
+
+                likedItemIds = new Set(visibleProducts.map(p => String(p.id)));
 
                 // Cache full objects for rendering later (optional optimization)
-                cachedFavorites = products;
+                cachedFavorites = visibleProducts;
 
                 isInitialized = true;
                 console.log("FavoritesManager: Loaded", likedItemIds.size);
@@ -194,45 +203,52 @@ window.FavoritesManager = (function () {
     window.activeWavesurfers = activeWavesurfers; // EXPOSE FOR SYNC
 
     // 3. Render Favorites List (Horizontal)
-    async function renderFavorites(containerId) {
+    async function renderFavorites(containerId, forceDelay = false) {
         const container = document.getElementById(containerId);
         if (!container) return;
 
-        // Show Skeletons (Perfectly Aligned)
-        container.innerHTML = `
-            ${Array(6).fill(0).map(() => `
-                <div class="skeleton-fav-row" style="display: flex; align-items: center; gap: 16px; padding: 12px 16px; min-height: 76px;">
-                    <!-- Cover (56x56) -->
-                    <div class="skeleton" style="width:56px; height:56px; border-radius:8px;"></div>
-                    <!-- Info -->
-                    <div style="width: 200px; display:flex; flex-direction:column; gap:4px;">
-                        <div class="skeleton" style="width:140px; height:14px; border-radius:4px;"></div>
-                        <div class="skeleton" style="width:100px; height:10px; border-radius:2px;"></div>
+        // Show Skeletons (Perfectly Aligned PC vs Mobile)
+        const isMobile = window.innerWidth <= 768;
+
+        if (isMobile) {
+            container.innerHTML = `
+                ${Array(6).fill(0).map(() => `
+                    <div class="skeleton-fav-row" style="display: flex; align-items: center; gap: 16px; padding: 12px 16px; min-height: 76px;">
+                        <!-- Cover (48x48) -->
+                        <div class="skeleton" style="width:48px; height:48px; border-radius:8px; flex-shrink:0;"></div>
+                        <!-- Info -->
+                        <div style="flex-grow:1; min-width:0; display:flex; flex-direction:column; gap:6px;">
+                            <div class="skeleton" style="width:80%; height:12px; border-radius:4px;"></div>
+                            <div class="skeleton" style="width:50%; height:10px; border-radius:2px;"></div>
+                        </div>
+                        <!-- Actions -->
+                        <div style="display:flex; gap:12px; align-items:center;">
+                            <div class="skeleton" style="width:24px; height:24px; border-radius:50%;"></div>
+                            <div class="skeleton" style="width:24px; height:24px; border-radius:50%;"></div>
+                        </div>
                     </div>
-                    <!-- Player/Wave (Flex 1) -->
-                    <div style="display:flex; align-items:center; gap:16px; flex:1;">
-                        <div class="skeleton" style="width:36px; height:36px; border-radius:50%;"></div>
-                        <div class="skeleton-waveform" style="flex:1; height:30px; border-radius:4px;"></div>
-                        <div class="skeleton" style="width:40px; height:12px; border-radius:2px;"></div>
+                `).join('')}
+            `;
+        } else {
+            container.innerHTML = `
+                ${Array(10).fill(0).map(() => `
+                    <div class="skeleton-card" style="display: flex; flex-direction: column; gap: 12px; background: #0d0d0d; border-radius: 18px; border: 1px solid rgba(255,255,255,0.05); overflow: hidden; height: 100%;">
+                        <!-- Cover (Aspect 1/1) -->
+                        <div class="skeleton" style="width:100%; aspect-ratio:1/1;"></div>
+                        <!-- Info -->
+                        <div style="padding: 16px; display:flex; flex-direction:column; gap:8px; flex-grow:1;">
+                            <div class="skeleton" style="width:70%; height:16px; border-radius:4px;"></div>
+                            <div class="skeleton" style="width:40%; height:12px; border-radius:4px;"></div>
+                            <!-- Spacer for removed waveform/tags -->
+                            <div style="margin-top:auto; padding-top: 16px; display:flex; justify-content:space-between; align-items:center; border-top: 1px solid rgba(255,255,255,0.05);">
+                                <div class="skeleton" style="width:70px; height:28px; border-radius:20px;"></div>
+                                <div class="skeleton" style="width:60px; height:20px; border-radius:4px;"></div>
+                            </div>
+                        </div>
                     </div>
-                    <!-- Badges -->
-                    <div style="display:flex; gap:8px; align-items:center;">
-                        <div class="skeleton" style="width:70px; height:20px; border-radius:3px;"></div>
-                        <div class="skeleton" style="width:60px; height:20px; border-radius:3px; opacity:0.6;"></div>
-                    </div>
-                    <!-- Price -->
-                    <div style="text-align:center;">
-                        <div class="skeleton" style="width:80px; height:32px; border-radius:20px; margin:0 auto;"></div>
-                    </div>
-                    <!-- Actions -->
-                    <div style="display:flex; gap:8px; justify-content:center;">
-                        <div class="skeleton" style="width:24px; height:24px; border-radius:50%;"></div>
-                        <div class="skeleton" style="width:24px; height:24px; border-radius:50%;"></div>
-                        <div class="skeleton" style="width:24px; height:24px; border-radius:50%;"></div>
-                    </div>
-                </div>
-            `).join('')}
-        `;
+                `).join('')}
+            `;
+        }
 
         if (!isInitialized) await init();
 
@@ -241,7 +257,13 @@ window.FavoritesManager = (function () {
             return;
         }
 
-        applyFilters(containerId);
+        if (forceDelay) {
+            setTimeout(() => {
+                applyFilters(containerId);
+            }, 600);
+        } else {
+            applyFilters(containerId);
+        }
     }
 
     // 4. Client-side Filter (Optimized & Debounced)
@@ -271,6 +293,9 @@ window.FavoritesManager = (function () {
             // 1. Filter Logic (Instant)
             const safeSearch = currentSearch.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
             const filtered = cachedFavorites.filter(p => {
+                // 🛡️ SYNC CHECK: Only show items that are currently liked
+                if (!likedItemIds.has(String(p.id))) return false;
+
                 const term = safeSearch.toLowerCase();
                 const matchesSearch = p.name.toLowerCase().includes(term);
                 let matchesType = true;
@@ -335,115 +360,54 @@ window.FavoritesManager = (function () {
     function renderBatch(items, container, collabStats) {
         const fragment = document.createDocumentFragment();
         items.forEach((prod, index) => {
-            const row = createListRow(prod, index, collabStats);
-            fragment.appendChild(row);
+            const card = createCardRow(prod, index, collabStats);
+            fragment.appendChild(card);
         });
         container.appendChild(fragment);
     }
 
-    function createListRow(prod, index, collabStats = {}) {
-        const row = document.createElement('div');
-        row.className = 'list-row';
-        row.dataset.productId = prod.id;
+    function createCardRow(prod, index, collabStats = {}) {
+        const card = document.createElement('div');
+        card.className = 'fav-product-card';
+        card.dataset.productId = prod.id;
 
-        row.style.cssText = `
-            display: grid;
-            grid-template-columns: 60px 180px 1fr 220px 100px 140px;
-            gap: 24px;
-            align-items: center;
-            padding: 16px 24px;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
-            transition: background 0.2s;
-        `;
-        row.onmouseover = () => row.style.background = 'rgba(255,255,255,0.02)';
-        row.onmouseout = () => row.style.background = 'transparent';
-
-        // --- SOFT DELETE CHECK ---
         const isSoftDeleted = (prod.public_slug && prod.public_slug.startsWith('deleted_')) || prod.status === 'deleted';
-
-        if (isSoftDeleted) {
-            row.innerHTML = `
-                <div class="list-cover" style="opacity:0.5; filter:grayscale(100%);">
-                    <div style="width:56px; height:56px; border-radius:8px; background:#222; display:flex; align-items:center; justify-content:center; color:#555;">
-                        <i class="bi bi-eye-slash-fill" style="font-size:1.2rem;"></i>
-                    </div>
-                </div>
-                <div class="list-col-info" style="opacity:0.6;">
-                    <span style="color:#aaa; font-size:0.95rem; font-weight:600; text-decoration:line-through;">${prod.name}</span>
-                    <span style="color:#666; font-size:0.75rem; margin-top:2px;">Producto no disponible</span>
-                </div>
-                <!-- Empty Player Area -->
-                <div style="flex:1;"></div> 
-                
-                <!-- Badge Placeholder -->
-                <div style="text-align:center;">
-                    <span style="background:rgba(255,255,255,0.05); color:#666; font-size:0.65rem; padding:2px 8px; border-radius:4px;">REMOVED</span>
-                </div>
-
-                <!-- No Price -->
-                <div></div>
-
-                <!-- Actions: Contact Only -->
-                <div style="display:flex; justify-content:center;">
-                    <a href="/contacto.html?subject=Producto%20Eliminado%20${prod.id}" class="fav-action-btn" title="Contactar Soporte / Productor" style="width:auto; padding:0 12px; border-radius:100px; gap:6px; font-size:0.8rem; border:1px solid #333; text-decoration:none;">
-                        <i class="bi bi-envelope"></i> <span style="font-size:0.75rem;">Info</span>
-                    </a>
-                </div>
-            `;
-            // We don't attach audio data or play click handlers for deleted items
-            return row;
-        }
-
-        // --- STANDARD RENDER ---
+        const imgUrl = prod.image_url || '/images/portada-default.png';
+        const pType = (prod.product_type || 'beat').toUpperCase();
         const waveformId = `fav-waveform-track-${prod.id}-${index}`;
-        const user = prod.artist_users || { nickname: 'Unknown' };
-
+        const prodUser = prod.artist_users || { nickname: 'Unknown', id: prod.user_id };
         const audioUrl = prod.mp3_url || prod.audio_url || prod.download_url_mp3 || prod.demo_file || prod.tagged_file || prod.preview_url || '';
-        const imgUrl = prod.image_url || 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=';
+        const seoUrl = window.createSeoLink ? window.createSeoLink(prod) : '#';
 
+        // --- ARTIST HTML ---
         const createArtistSpan = (name, data, extraClass = '') => {
             const safeData = JSON.stringify(data).replace(/'/g, "&apos;").replace(/"/g, "&quot;");
             return `<span class="artist-hover-trigger ${extraClass}" data-artist='${safeData}' onmouseenter="if(window.showArtistCard) window.showArtistCard(event, this)" onmouseleave="if(window.hideArtistCard) window.hideArtistCard(event, this)">${name}</span>`;
         };
 
         const producerData = {
-            id: user.id || prod.user_id,
-            nickname: user.nickname,
-            avatar_url: user.avatar_url,
-            is_verified: user.is_verified,
-            stats: {
-                followers: 0 // Will be fetched
-            }
+            id: prodUser.id,
+            nickname: prodUser.nickname,
+            avatar_url: prodUser.avatar_url,
+            is_verified: prodUser.is_verified,
+            stats: { followers: 0 }
         };
-        let artistHtml = createArtistSpan(user.nickname, producerData, 'producer-link-thin');
+        let artistHtml = createArtistSpan(prodUser.nickname, producerData, 'producer-link-thin');
 
         let collabs = typeof prod.collaborators === 'string' ? JSON.parse(prod.collaborators) : (prod.collaborators || []);
         if (Array.isArray(collabs) && collabs.length > 0) {
             const valid = collabs.filter(c => (c.nickname || c.name) && (c.status === undefined || c.status === 'accepted'));
             if (valid.length > 0) {
-                artistHtml += `<span style="color:#666; margin-right:2px;">, </span>`;
-                artistHtml += valid.slice(0, 2).map(c => {
+                artistHtml += `<span style="color:#666;">, </span>` + valid.slice(0, 1).map(c => {
                     const cName = c.nickname || c.name;
-                    const pre = collabStats[cName] || {};
-                    const cData = {
-                        id: pre.id || '',
-                        nickname: cName,
-                        avatar_url: pre.avatar_url || c.avatar_url,
-                        is_verified: pre.is_verified || false,
-                        stats: {
-                            followers: pre.followers_count || 0
-                        }
-                    };
-                    return createArtistSpan(cName, cData, 'collaborator-link-thin');
-                }).join(`<span style="color:#666; margin-right:2px;">, </span>`);
-                if (valid.length > 2) artistHtml += `<span style="color:#666;">...</span>`;
+                    return createArtistSpan(cName, { nickname: cName }, 'collaborator-link-thin');
+                }).join('');
             }
         }
 
-        const pType = (prod.product_type || 'beat').toUpperCase();
-        let metaBadge = '';
-        let badgeContent = '';
-
+        // --- PRICE/TAGS ---
+        let mainBadge = pType;
+        let subBadge = '';
         if (pType.includes('BEAT')) {
             let licenseCount = 0;
             const l = prod.licenses || {};
@@ -451,76 +415,166 @@ window.FavoritesManager = (function () {
             if (l.premium?.enabled || prod.price_premium > 0) licenseCount++;
             if (l.trackout?.enabled || prod.price_stems > 0) licenseCount++;
             if (l.unlimited?.enabled || prod.price_exclusive > 0) licenseCount++;
-            const label = licenseCount === 1 ? 'Licencia' : 'Licencias';
-            if (licenseCount > 0) badgeContent = `${licenseCount} ${label}`;
+            if (licenseCount > 0) subBadge = `${licenseCount} ${licenseCount === 1 ? 'LICENCIA' : 'LICENCIAS'}`;
         } else {
             const c = prod.sounds_count || 0;
-            badgeContent = `${c} ${pType.includes('KIT') ? 'SONIDOS' : (pType.includes('LOOP') ? 'LOOPS' : 'PRESETS')}`;
+            subBadge = `${c} SONIDOS`;
         }
 
-        const typeBadge = `<span style="border: 1px solid #333; border-radius: 3px; min-width: 70px; padding: 2px 0; font-size: 0.65rem; color: #888; text-transform: uppercase; font-weight: 600; text-align: center; display: inline-block;">${pType}</span>`;
-        if (badgeContent) {
-            metaBadge = `<span style="border: 1px solid #333; padding: 2px 6px; font-size: 0.65rem; color: #aaa; border-radius: 3px; text-transform: uppercase; font-weight: 600; margin-left: 8px;">${badgeContent}</span>`;
+        const pTypeLow = (prod.product_type || '').toLowerCase();
+        const isTrulyFree = pTypeLow !== 'beat' && (prod.is_free === true || String(prod.is_free) === 'true' || Number(prod.price_basic) === 0);
+        let priceValue = prod.price_basic !== undefined && prod.price_basic !== null ? prod.price_basic : '20';
+        const priceText = isTrulyFree ? 'FREE' : `$${priceValue}`;
+
+        if (isSoftDeleted) {
+            card.innerHTML = `
+                <div class="fav-card-cover" style="opacity:0.3; filter:grayscale(1);">
+                    <img src="${imgUrl}" alt="deleted">
+                </div>
+                <div class="fav-card-body">
+                    <h4 class="fav-card-title">[ELIMINADO]</h4>
+                    <p class="fav-card-artist">Producto no disponible</p>
+                    <div class="fav-card-footer">
+                         <button class="fav-icon-btn liked" onclick="window.FavoritesManager.toggleLike(${prod.id}, this)">
+                            <i class="bi bi-heart-fill"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+            return card;
         }
 
-        // GENERATE SEO URL
-        const seoUrl = window.createSeoLink ? window.createSeoLink(prod) : '#';
+        const isMobile = window.innerWidth <= 768;
 
-        row.innerHTML = `
-            <div class="list-cover">
-                <img src="${imgUrl}" onerror="this.src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII='" alt="cover" style="width:56px; height:56px; object-fit:cover; border-radius:8px; background:#111;">
-            </div>
-            <div class="list-col-info" style="display:flex; flex-direction:column; justify-content:center;">
-                <span class="hover-text" style="color:#fff; font-weight:600; font-size:0.95rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; cursor:pointer;" onclick="window.location.href='${seoUrl}'">${prod.name}</span>
-                <span style="color:#666; font-size:0.75rem; margin-top:2px;">${artistHtml}</span>
-            </div>
-            <div class="list-col-player" style="display:flex; align-items:center; gap:16px;">
-                 <button id="btn-play-${waveformId}" style="width:36px; height:36px; border-radius:50%; background:#222; border:none; color:#fff; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background 0.2s; flex-shrink:0;">
-                    <i class="bi bi-play-fill" style="font-size:1.2rem; margin-left:2px;"></i>
-                </button>
-                <div class="list-waveform-container waveform-static-fallback" id="${waveformId}" style="height:32px; width:100%; position:relative; flex:1; opacity:0.8;">
-                    <!-- Static Line (CSS) -->
-                </div>
-                <div style="font-size:0.8rem; color:#666; font-family:monospace; min-width:40px; text-align:right;">
-                    <span id="fav-duration-${waveformId}">--:--</span>
+        const cleanName = (name) => {
+            if (!name) return 'Sin título';
+            return name.replace(/_/g, ' ').replace(/\.(mp3|wav|zip|rar)$/i, '').replace(/\s+/g, ' ').trim();
+        };
+
+        card.innerHTML = `
+            <div class="fav-card-cover" onclick="window.location.href='${seoUrl}'">
+                <img src="${imgUrl}" id="fav-img-${prod.id}" onerror="this.src='/images/portada-default.png'" alt="${prod.name}">
+                <div class="fav-badge-floating">${pType}</div>
+                <div class="fav-card-overlay">
+                    <button class="fav-play-btn" id="btn-play-${waveformId}">
+                        <i class="bi bi-play-fill"></i>
+                    </button>
                 </div>
             </div>
-            <div style="display:flex; align-items:center; white-space:nowrap;">
-                 ${typeBadge}${metaBadge}
-            </div>
-            <div style="text-align:center;">
-                <button style="background:#8b5cf6; border:none; color:#fff; font-size:0.8rem; padding:6px 14px; border-radius:20px; cursor:pointer; font-weight:700; min-width:80px;" onclick="window.location.href='${seoUrl}'">
-                    ${prod.is_free ? 'FREE' : '$' + (prod.price_basic || '—')}
-                </button>
-            </div>
-            <div style="display:flex; gap:8px; justify-content:center; align-items:center;">
-                <button title="Quitar de favoritos" class="fav-action-btn" style="color:#ef4444;" onclick="window.FavoritesManager.toggleLike(${prod.id}, this, '${user.id}')">
-                    <i class="bi bi-heart-fill"></i>
-                </button>
-                <button title="Descargar" class="fav-action-btn" onclick="window.location.href='${seoUrl}'">
-                    <i class="bi bi-download"></i>
-                </button>
-                 <button class="fav-action-btn">
-                    <i class="bi bi-three-dots"></i>
-                </button>
+            <div class="fav-card-body">
+                <div class="fav-info-main">
+                    <h4 class="fav-card-title" onclick="window.location.href='${seoUrl}'" style="cursor:pointer;">${cleanName(prod.name)}</h4>
+                    <p class="fav-card-artist">${artistHtml}</p>
+                </div>
+                
+                ${isMobile ? `
+                    <div class="fav-card-waveform" id="${waveformId}"></div>
+                    <div class="fav-card-tags">
+                        <span class="fav-tag">${pType}</span>
+                        ${subBadge ? `<span class="fav-tag">${subBadge}</span>` : ''}
+                    </div>
+                ` : `<!-- PC Simplified -->`}
+
+                <div class="fav-card-footer">
+                    <div class="footer-left">
+                        <button class="fav-price-btn">${priceText}</button>
+                    </div>
+                    <div class="footer-center">
+                        <button class="fav-icon-btn liked" title="Quitar de favoritos">
+                            <i class="bi bi-heart-fill"></i>
+                        </button>
+                    </div>
+                    <div class="footer-right">
+                        ${isMobile ? `
+                            <button class="fav-icon-btn mobile-action-btn" title="Compartir">
+                                <i class="bi bi-share"></i>
+                            </button>
+                        ` : `
+                            <button class="fav-icon-btn desktop-action-btn btn-more-options" title="Compartir">
+                                <i class="bi bi-share"></i>
+                            </button>
+                        `}
+                    </div>
+                </div>
             </div>
         `;
 
-        row.dataset.audioUrl = audioUrl;
-        row.dataset.waveformId = waveformId;
-        row.dataset.productId = prod.id;
-        row.dataset.trackData = JSON.stringify(prod);
-
-        // Attach Onclick to BUTTON only (Efficient)
-        const playBtn = row.querySelector(`#btn-play-${waveformId}`);
+        // --- ATTACH EVENT LISTENERS ---
+        const playBtn = card.querySelector(`#btn-play-${waveformId}`);
         if (playBtn) {
             playBtn.onclick = (e) => {
                 e.stopPropagation();
-                handlePlayClick(row, prod);
+                handlePlayClick(card, prod);
             };
         }
 
-        return row;
+        const priceBtn = card.querySelector('.fav-price-btn');
+        if (priceBtn) {
+            priceBtn.onclick = (e) => {
+                e.stopPropagation();
+                if (window.CartManager) window.CartManager.addItem(prod);
+            };
+        }
+
+        const heartBtn = card.querySelector('.fav-icon-btn.liked');
+        if (heartBtn) {
+            heartBtn.onclick = (e) => {
+                e.stopPropagation();
+                window.FavoritesManager.toggleLike(prod.id, heartBtn);
+            };
+        }
+
+        const shareBtn = card.querySelector('.mobile-action-btn[title="Compartir"]');
+        if (shareBtn) {
+            shareBtn.onclick = (e) => {
+                e.stopPropagation();
+                if (window.openShareModal) {
+                    window.openShareModal(prod);
+                } else {
+                    // Fallback to native share if modal is missing for some reason
+                    if (navigator.share) {
+                        navigator.share({
+                            title: prod.name,
+                            text: `Mira este ${pType} en OFFSZN`,
+                            url: window.location.origin + seoUrl
+                        }).catch(err => console.log('Error sharing:', err));
+                    } else {
+                        navigator.clipboard.writeText(window.location.origin + seoUrl);
+                        if (window.Notifications) window.Notifications.success("Enlace copiado al portapapeles");
+                    }
+                }
+            };
+        }
+
+        const shareBtnDesktop = card.querySelector('.btn-more-options');
+        if (shareBtnDesktop) {
+            shareBtnDesktop.onclick = (e) => {
+                e.stopPropagation();
+                if (window.openShareModal) {
+                    window.openShareModal(prod);
+                } else {
+                    navigator.clipboard.writeText(window.location.origin + seoUrl).then(() => {
+                        if (window.Notifications) window.Notifications.success("Enlace copiado al portapapeles");
+                    });
+                }
+            };
+        }
+
+        // --- 🧪 IMAGE OPTIMIZATION ---
+        // Let R2-Loader handle generic loading and fallback, but if it is unmistakably a Supabase raw object link,
+        // we can attempt a quick optimize. If not, just use the raw URL.
+        const imgEl = card.querySelector(`#fav-img-${prod.id}`);
+        if (imgEl) {
+            if (prod.image_url && prod.image_url.includes('.supabase.co') && prod.image_url.includes('/object/public/')) {
+                const optimizedUrlBase = prod.image_url.replace('/object/public/', '/render/image/public/');
+                const finalUrl = `${optimizedUrlBase}?width=400&quality=80&resize=contain`;
+                imgEl.src = finalUrl;
+            } else if (prod.image_url) {
+                imgEl.src = prod.image_url;
+            }
+        }
+
+        return card;
     }
 
     // --- LAZY WAVESURFER LOGIC ---
@@ -532,37 +586,22 @@ window.FavoritesManager = (function () {
 
         // 1. GLOBAL PLAYER SYNC (Sticky Player)
         if (window.StickyPlayer && window.StickyPlayer.play) {
-            // Use StickyPlayer as primary engine if available
-            // This avoids creating local WaveSurfer instances entirely if we want centralized playback
             const currentId = window.StickyPlayer.getCurrentTrackId();
-
-            // If clicking same track, toggle
             if (currentId == prod.id) {
                 window.StickyPlayer.togglePlay();
                 return;
             }
-
-            // Update Playlist & Play
-            // We only pass the current search results as context if possible, otherwise just this track
-            // Ideally we pass context: window.trendingProducts || cachedFavorites
-            // Filtered list is hard to access here without passing it down. 
-            // Minimal: Pass cachedFavorites
             window.StickyPlayer.updatePlaylist(cachedFavorites, 'favorites');
             window.StickyPlayer.play(prod);
             return;
         }
 
-        // 2. LOCAL FALLBACK (Only if StickyPlayer Missing)
-        // Check if WS exists for this row
+        // 2. LOCAL FALLBACK
         let ws = window.activeWavesurfers.find(w => w.customId === waveformId);
-
         if (!ws) {
-            // INIT ON DEMAND
-            if (btn) btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>';
-
+            if (btn) btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span>';
             try {
                 ws = await lazyLoadWaveSurfer(waveformId, audioUrl, row);
-                // Auto play once ready
                 ws.play();
                 if (btn) btn.innerHTML = '<i class="bi bi-pause-fill"></i>';
                 window.currentlyPlaying = ws;
@@ -571,32 +610,28 @@ window.FavoritesManager = (function () {
                 if (btn) btn.innerHTML = '<i class="bi bi-exclamation-circle"></i>';
             }
         } else {
-            // Already initialized, just toggle
             ws.playPause();
-            // Icon update handled by events
         }
     }
 
     function lazyLoadWaveSurfer(containerId, url, row) {
         return new Promise((resolve, reject) => {
             if (!window.WaveSurfer) return reject("WaveSurfer lib not found");
-
             const containerEl = document.getElementById(containerId);
             if (!containerEl) return reject("Container not found");
 
-            // Pause others
             if (window.activeWavesurfers) {
                 window.activeWavesurfers.forEach(w => w.pause());
             }
 
             const ws = WaveSurfer.create({
                 container: containerEl,
-                waveColor: '#666',
+                waveColor: 'rgba(255,255,255,0.1)',
                 progressColor: '#8b5cf6',
                 barWidth: 2,
-                barGap: 2,
+                barGap: 3,
                 barRadius: 2,
-                height: 28,
+                height: 36,
                 url: url,
                 normalize: true,
                 interact: true,
@@ -604,57 +639,41 @@ window.FavoritesManager = (function () {
             });
 
             ws.customId = containerId;
+            containerEl.innerHTML = '';
 
-            // REMOVE STATIC PLACEHOLDER
-            containerEl.classList.remove('waveform-static-fallback');
-            containerEl.innerHTML = ''; // Clear image/css placeholder if any
-
-            ws.on('ready', () => {
-                const dur = ws.getDuration();
-                const mins = Math.floor(dur / 60);
-                const secs = Math.floor(dur % 60);
-                const el = document.getElementById(`fav-duration-${containerId}`);
-                if (el) el.innerText = `${mins}:${secs < 10 ? '0' : ''}${secs}`;
-                resolve(ws);
-            });
-
+            ws.on('ready', () => resolve(ws));
             ws.on('play', () => {
                 const btn = document.getElementById(`btn-play-${containerId}`);
                 if (btn) btn.innerHTML = '<i class="bi bi-pause-fill"></i>';
-
-                // Pause other local instances
-                window.activeWavesurfers.forEach(w => {
-                    if (w !== ws) w.pause();
-                });
+                window.activeWavesurfers.forEach(w => { if (w !== ws) w.pause(); });
             });
-
             ws.on('pause', () => {
                 const btn = document.getElementById(`btn-play-${containerId}`);
                 if (btn) btn.innerHTML = '<i class="bi bi-play-fill"></i>';
             });
-
             ws.on('finish', () => {
                 const btn = document.getElementById(`btn-play-${containerId}`);
                 if (btn) btn.innerHTML = '<i class="bi bi-play-fill"></i>';
             });
-
             ws.on('error', (err) => {
                 if (err.name === 'AbortError') return;
-                console.warn("WS Error", err);
                 reject(err);
             });
-
             window.activeWavesurfers.push(ws);
         });
     }
 
-
-
     function setSearch(query) {
         currentSearch = query;
-        const container = document.querySelector('.products-grid');
-        if (container && container.id) applyFilters(container.id);
-        else if (cachedFavorites.length > 0) renderFavorites('favorites-grid');
+        const container = document.getElementById('favorites-grid');
+
+        // Visual feedback for expandable search
+        const searchBox = document.getElementById('favSearchBox');
+        if (searchBox) {
+            searchBox.classList.toggle('has-value', query.length > 0);
+        }
+
+        if (container) applyFilters('favorites-grid');
     }
 
     function isLiked(id) { return likedItemIds.has(String(id)); }
@@ -663,34 +682,35 @@ window.FavoritesManager = (function () {
 
     // --- REALTIME SYNC & ANIMATION ---
     function handleRealtimeUpdates(currentIds) {
-        // Find all rendered favorites in the DOM
-        const rows = document.querySelectorAll('.list-row[data-product-id]');
-        rows.forEach(row => {
-            const id = row.dataset.productId;
+        // Find if any currently displayed card is no longer liked
+        const cards = document.querySelectorAll('.fav-product-card[data-product-id]');
+        let hasRemoval = false;
 
-            // If the item is on screen BUT no longer in our favorite list -> REMOVE IT
-            if (!currentIds.has(String(id))) {
-                // Check if already animating to avoid double-trigger
-                if (row.classList.contains('fav-fade-out')) return;
-
-                // 1. Animate
-                row.classList.add('fav-fade-out');
-
-                // 2. Remove from DOM after animation
-                setTimeout(() => {
-                    row.remove();
-                    checkEmptyState();
-                }, 500); // Match CSS transition time
+        cards.forEach(card => {
+            if (!currentIds.has(String(card.dataset.productId))) {
+                hasRemoval = true;
             }
         });
+
+        // If something was removed, trigger the silent reload with skeletons
+        if (hasRemoval) {
+            // Check if we are already in a delay/skeleton state to avoid loops
+            if (window._isSilentReloading) return;
+            window._isSilentReloading = true;
+
+            window.FavoritesManager.renderFavorites('favorites-grid', true);
+
+            setTimeout(() => {
+                window._isSilentReloading = false;
+            }, 1000);
+        }
     }
 
     function checkEmptyState() {
         const container = document.getElementById('favorites-grid');
         if (container) {
-            // Check if any visible rows remain
-            const visibleRows = container.querySelectorAll('.list-row:not(.fav-fade-out)');
-            if (visibleRows.length === 0) {
+            const visibleCards = container.querySelectorAll('.fav-product-card:not(.fav-fade-out)');
+            if (visibleCards.length === 0) {
                 renderEmptyState(container);
             }
         }
@@ -710,10 +730,44 @@ window.FavoritesManager = (function () {
                     Explorar el Mercado
                 </a>
             </div>
-        `;
+            `;
     }
 
-    return { init, toggleLike, isLiked, subscribe, renderFavorites, setSearch, setFilterType };
+    function shareProduct(id) {
+        // Find product by id in cachedFavorites
+        const prod = cachedFavorites.find(p => String(p.id) === String(id));
+        if (!prod) return;
+        const pType = (prod.product_type || 'beat').toUpperCase();
+        const seoUrl = window.createSeoLink ? window.createSeoLink(prod) : '#';
+
+        if (navigator.share) {
+            navigator.share({
+                title: prod.name,
+                text: `Mira este ${pType} en OFFSZN`,
+                url: window.location.origin + seoUrl
+            }).catch(err => console.log('Error sharing:', err));
+        } else {
+            navigator.clipboard.writeText(window.location.origin + seoUrl);
+            if (window.toast) window.toast.show("Enlace copiado al portapapeles", "info");
+        }
+    }
+
+    function showOptions(id, el) {
+        if (window.toast) window.toast.show("Opciones pronto disponibles", "info");
+    }
+
+    return {
+        init,
+        toggleLike,
+        isLiked,
+        subscribe,
+        renderFavorites,
+        setSearch,
+        setFilterType,
+        handlePlayClick,
+        shareProduct,
+        showOptions
+    };
 })();
 
 // --- REFINED INITIALIZATION ---

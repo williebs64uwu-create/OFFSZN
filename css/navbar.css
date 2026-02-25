@@ -2001,6 +2001,7 @@
 
      /* BACKDROP FOR MOBILE MENU */
      .mobile-menu-backdrop {
+         position: fixed !important;
          top: 0;
          left: 0;
          width: 100%;
@@ -2011,11 +2012,15 @@
          opacity: 0;
          visibility: hidden;
          transition: 0.3s;
+         pointer-events: none;
+         /* Allow clicks to go through when inactive */
      }
 
      .mobile-menu-backdrop.active {
          opacity: 1;
          visibility: visible;
+         pointer-events: auto;
+         /* Catch clicks when active */
      }
  }
 
@@ -2055,9 +2060,22 @@
      /* Lock body scroll when menu is open */
      body.menu-open {
          overflow: hidden !important;
-         position: fixed !important;
-         width: 100% !important;
-         height: 100% !important;
+         /* Avoid shifting content if scrollbar disappears */
+         padding-right: var(--scrollbar-width, 0) !important;
+     }
+
+     /* Stability for header/search during menu open */
+     body.menu-open .navbar {
+         z-index: 20005 !important;
+     }
+
+     body.menu-open .mobile-search-wrapper {
+         z-index: 20004 !important;
+     }
+
+     body.menu-open .nav-container {
+         z-index: 20010 !important;
+         /* Ensure sidebar is above the fixed header elements */
      }
 
      .navbar-container {
