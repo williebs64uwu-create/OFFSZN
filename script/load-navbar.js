@@ -23,7 +23,7 @@
         }
 
         const html = await response.text();
-        placeholder.outerHTML = html; // Replaces the placeholder entirely with the <header class="navbar">
+        placeholder.outerHTML = html; // Replaces the placeholder entirely to avoid nested styling/double borders
 
         // Notify anyone listening (like navbar.js) that the elements now exist
         window.dispatchEvent(new CustomEvent('offszn-navbar-loaded'));

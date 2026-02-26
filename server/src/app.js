@@ -146,8 +146,16 @@ app.post('/api/negotiate/purchase-token', authenticateTokenMiddleware, generateP
 app.get('/api/negotiate/validate-token', validatePurchaseToken);
 app.post('/api/negotiate/report', authenticateTokenMiddleware, reportIssue);
 
-// --- 4.1 ENDPOINT DE SALUD (Cron Job Keep-Alive) ---
-app.get('/health', (req, res) => {
+// --- 4.1 ENDPOINT DE SALUD (Cron Job Keep-Alive con Seguridad) ---
+app.get('/api/health', (req, res) => {
+    const secret = req.headers['x-offszn-secret'];
+    const expectedSecret = 'offszn_keep_alive_2026_safe'; // Clave única para el Cron Job
+
+    if (secret !== expectedSecret) {
+        console.warn(`🔒 Acceso no autorizado a /api/health desde IP: ${req.ip}`);
+        return res.status(403).json({ error: 'Unauthorized' });
+    }
+
     res.status(200).send('OK');
 });
 
@@ -312,7 +320,7 @@ app.get(['/@:username', '/:username'], (req, res, next) => {
     const reserved = [
         'api', 'auth', 'dashboard', 'login', 'register', 'admin',
         'css', 'script', 'images', 'favicon.ico', '404', 'robots.txt',
-        'pages', 'welcome', 'home', 'index'
+        'pages', 'welcome', 'home', 'index', 'health', 'status'
     ];
     if (reserved.includes(username)) return next();
 
