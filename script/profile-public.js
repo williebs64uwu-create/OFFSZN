@@ -267,6 +267,9 @@ async function renderHeader(user) {
     const headerFollowBtn = document.getElementById('btnFollow');
     if (headerFollowBtn) headerFollowBtn.style.display = 'inline-block'; // Reveal
 
+    const headerShareBtn = document.getElementById('btnShareProfileGlobal');
+    if (headerShareBtn) headerShareBtn.style.display = 'inline-flex'; // Reveal
+
     const msgBtn = document.getElementById('btnMessage');
     if (msgBtn) {
         // Hide if viewing own profile
@@ -1264,6 +1267,7 @@ let isLoadingProducts = false; // LOCK to prevent AbortError overlap
 async function loadUserProducts(user) {
     if (isLoadingProducts) return;
     isLoadingProducts = true;
+    window.currentProfileData = user; // SAVE GLOBALLY AWAIT FOR SHARE MODAL
     const username = user.nickname;
     const trendGrid = document.getElementById('trendingGrid');
     const listContainer = document.getElementById('profileProductsList');

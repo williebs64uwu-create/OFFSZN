@@ -152,6 +152,11 @@
                 onclick="window.location.href='/account-settings.html'">
                 <i class="bi bi-gear-fill" style="margin-right:6px;"></i> Ajustes
               </button>
+              <button class="btn-secondary-compact" id="btnShareProfileGlobal"
+                style="display:none; padding: 8px 14px; justify-content: center;"
+                onclick="window.openProfileShareModal()">
+                <i class="bi bi-share"></i>
+              </button>
             </div>
 
             <!-- NEW: HORIZONTAL TABS -->
@@ -1164,6 +1169,184 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
   <script src="/script/avatar-manager.js"></script>
+  <!-- PROFILE SHARE MODAL -->
+  <div id="profileShareModal" class="guest-auth-modal" style="z-index: 100001;">
+    <div class="guest-auth-card" style="padding: 24px; width: 360px;">
+      <!-- Close Button -->
+      <button onclick="window.closeProfileShareModal()" class="guest-modal-close"
+        style="top: 16px; right: 16px; background: transparent; border: none; padding: 0;">
+        <i class="bi bi-x-lg"></i>
+      </button>
+
+      <!-- Profile Info -->
+      <div
+        style="width: 80px; height: 80px; border-radius: 50%; overflow: hidden; margin: 0 auto 16px; border: 2px solid #27272a;">
+        <img id="shareProfileModalAvatar" src="" alt="Profile" style="width: 100%; height: 100%; object-fit: cover;">
+      </div>
+      <h3 id="shareProfileModalTitle" style="font-size: 1.25rem; font-weight: 700; color: #fff; margin-bottom: 8px;">
+      </h3>
+      <p style="font-size: 0.875rem; color: #a1a1aa; margin-bottom: 24px;">Comparte este perfil con el mundo</p>
+
+      <!-- Share Options Container -->
+      <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px;">
+
+        <!-- Option: OFFSZN Profile -->
+        <div style="background: #000; border: 1px solid #27272a; border-radius: 12px; padding: 12px; text-align: left;">
+          <div
+            style="font-size: 0.75rem; color: #a1a1aa; font-weight: 600; margin-bottom: 8px; text-transform: uppercase;">
+            Compartir perfil OFFSZN</div>
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+            <span id="shareProfileModalOffsznLink"
+              style="font-size: 0.875rem; color: #d4d4d8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1;"></span>
+            <button onclick="window.copyProfileShareLink('offszn')" id="copyShareProfileOffsznBtn"
+              style="background: #fff; color: #000; font-size: 0.75rem; font-weight: 700; padding: 6px 12px; border-radius: 8px; border: none; cursor: pointer; white-space: nowrap;">
+              Copiar
+            </button>
+          </div>
+        </div>
+
+        <!-- Option: BIO Profile -->
+        <div style="background: #000; border: 1px solid #27272a; border-radius: 12px; padding: 12px; text-align: left;">
+          <div
+            style="font-size: 0.75rem; color: #a1a1aa; font-weight: 600; margin-bottom: 8px; text-transform: uppercase;">
+            Compartir perfil BIO</div>
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+            <span id="shareProfileModalBioLink"
+              style="font-size: 0.875rem; color: #d4d4d8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1;"></span>
+            <button onclick="window.copyProfileShareLink('bio')" id="copyShareProfileBioBtn"
+              style="background: #fff; color: #000; font-size: 0.75rem; font-weight: 700; padding: 6px 12px; border-radius: 8px; border: none; cursor: pointer; white-space: nowrap;">
+              Copiar
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Quick Share Buttons -->
+      <div style="display: flex; gap: 12px; justify-content: center;">
+        <button onclick="window.quickShareProfile('whatsapp')"
+          style="width: 40px; height: 40px; border-radius: 50%; background: #18181b; border: 1px solid #27272a; color: #fff; font-size: 1.125rem; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background 0.2s;"
+          onmouseover="this.style.background='#25D366'; this.style.borderColor='#25D366'"
+          onmouseout="this.style.background='#18181b'; this.style.borderColor='#27272a'"><i
+            class="bi bi-whatsapp"></i></button>
+        <button onclick="window.quickShareProfile('twitter')"
+          style="width: 40px; height: 40px; border-radius: 50%; background: #18181b; border: 1px solid #27272a; color: #fff; font-size: 1.125rem; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background 0.2s;"
+          onmouseover="this.style.background='#1DA1F2'; this.style.borderColor='#1DA1F2'"
+          onmouseout="this.style.background='#18181b'; this.style.borderColor='#27272a'"><i
+            class="bi bi-twitter-x"></i></button>
+        <button onclick="window.quickShareProfile('facebook')"
+          style="width: 40px; height: 40px; border-radius: 50%; background: #18181b; border: 1px solid #27272a; color: #fff; font-size: 1.125rem; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background 0.2s;"
+          onmouseover="this.style.background='#1877F2'; this.style.borderColor='#1877F2'"
+          onmouseout="this.style.background='#18181b'; this.style.borderColor='#27272a'"><i
+            class="bi bi-facebook"></i></button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // PROFILE SHARE MODAL LOGIC
+    window.openProfileShareModal = function () {
+      const modal = document.getElementById('profileShareModal');
+      const user = window.currentProfileData;
+      if (!modal || !user) return;
+
+      // Populate Data
+      document.getElementById('shareProfileModalTitle').innerText = user.nickname || 'Productor';
+
+      let avatarUrl = '/images/default-avatar.png';
+      const rawUrl = user.avatar_url;
+      // In profile-public.js, images are pre-authorized
+      if (rawUrl && window.globalCacheAuthorizedUrls && window.globalCacheAuthorizedUrls[rawUrl]) {
+        avatarUrl = window.globalCacheAuthorizedUrls[rawUrl];
+      } else if (rawUrl) {
+        avatarUrl = rawUrl;
+      }
+
+      const avatarImg = document.getElementById('shareProfileModalAvatar');
+      if (avatarImg) avatarImg.src = avatarUrl;
+
+      // Generate Links
+      const baseUrl = window.location.origin;
+      const offsznLink = baseUrl + '/@' + (user.nickname || user.id);
+      const bioLink = baseUrl + '/b/' + (user.nickname || user.id);
+
+      document.getElementById('shareProfileModalOffsznLink').innerText = offsznLink;
+      document.getElementById('shareProfileModalBioLink').innerText = bioLink;
+
+      // Show Modal
+      modal.classList.add('active');
+    };
+
+    window.closeProfileShareModal = function () {
+      const modal = document.getElementById('profileShareModal');
+      if (modal) {
+        modal.classList.remove('active');
+
+        // Reset buttons
+        setTimeout(() => {
+          const btnO = document.getElementById('copyShareProfileOffsznBtn');
+          if (btnO) { btnO.innerHTML = 'Copiar'; btnO.style.background = '#fff'; btnO.style.color = '#000'; }
+          const btnB = document.getElementById('copyShareProfileBioBtn');
+          if (btnB) { btnB.innerHTML = 'Copiar'; btnB.style.background = '#fff'; btnB.style.color = '#000'; }
+        }, 300);
+      }
+    };
+
+    window.copyProfileShareLink = function (type) {
+      const user = window.currentProfileData;
+      if (!user) return;
+      const baseUrl = window.location.origin;
+      let linkToCopy = '';
+      let btnId = '';
+
+      if (type === 'offszn') {
+        linkToCopy = baseUrl + '/@' + (user.nickname || user.id);
+        btnId = 'copyShareProfileOffsznBtn';
+      } else {
+        linkToCopy = baseUrl + '/b/' + (user.nickname || user.id);
+        btnId = 'copyShareProfileBioBtn';
+      }
+
+      navigator.clipboard.writeText(linkToCopy).then(() => {
+        const btn = document.getElementById(btnId);
+        if (btn) {
+          btn.innerHTML = '<i class="bi bi-check2"></i>';
+          btn.style.background = '#10b981'; // green
+          btn.style.color = '#fff';
+        }
+      });
+    };
+
+    window.quickShareProfile = function (platform) {
+      const user = window.currentProfileData;
+      if (!user) return;
+
+      const baseUrl = window.location.origin;
+      const link = baseUrl + '/@' + (user.nickname || user.id);
+      const textToShare = 'Mira el perfil de ' + user.nickname + ' en OFFSZN';
+
+      let shareUrl = '';
+      if (platform === 'whatsapp') {
+        shareUrl = 'https://api.whatsapp.com/send?text=' + encodeURIComponent(textToShare + " " + link);
+      } else if (platform === 'twitter') {
+        shareUrl = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(textToShare) + '&url=' + encodeURIComponent(link);
+      } else if (platform === 'facebook') {
+        shareUrl = 'https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(link);
+      }
+
+      if (shareUrl) {
+        window.open(shareUrl, '_blank', 'noopener,noreferrer');
+      }
+    };
+
+    // Close on backdrop click
+    document.getElementById('profileShareModal')?.addEventListener('click', function (e) {
+      if (e.target === this) {
+        window.closeProfileShareModal();
+      }
+    });
+  </script>
+
   <script src="/script/sticky-player.js?v=11"></script>
 
   <script>

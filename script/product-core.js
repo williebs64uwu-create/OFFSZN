@@ -535,7 +535,7 @@ function renderProductPage(product) {
                          class=""
                          onerror="this.src='/images/portada-default.png'">
                      <!-- Play Button Overlay -->
-                     <div class="product-cover-play-btn" onclick="if(window.playerCore && window.playerCore.currentTrackId === '${product.id}') { window.playerCore.togglePlay(); } else { document.getElementById('play-btn-${product.id}')?.click() || document.querySelector('.play-pause-btn')?.click(); }">
+                     <div class="product-cover-play-btn" onclick="window.playProductCover()">
                         <i class="bi bi-play-fill"></i>
                      </div>
                      <!-- Plays Badge (Bottom-Left, match Trending style) -->
@@ -863,6 +863,83 @@ function renderProductPage(product) {
 
     // if (product.is_free) { ... }
 }
+
+/**
+ * COVER PLAY BUTTON — Wires the overlay play button to StickyPlayer.
+ * Resolves R2 audio URLs and toggles play/pause state.
+ */
+window.playProductCover = async function () {
+    const product = window.currentProductData;
+    if (!product) return;
+
+    // If StickyPlayer is already playing THIS track, just toggle
+    if (window.StickyPlayer && window.StickyPlayer.getCurrentTrackId &&
+        String(window.StickyPlayer.getCurrentTrackId()) === String(product.id)) {
+        window.StickyPlayer.togglePlay();
+        // Update cover icon
+        const coverBtn = document.querySelector('.product-cover-play-btn i');
+        if (coverBtn) {
+            const isNowPlaying = window.StickyPlayer.isPlaying && window.StickyPlayer.isPlaying();
+            coverBtn.className = isNowPlaying ? 'bi bi-pause-fill' : 'bi bi-play-fill';
+        }
+        return;
+    }
+
+    // Build audio URL
+    let audioUrl = product.mp3_url || product.audio_url || product.download_url_mp3 ||
+        product.preview_url || product.demo_file || product.tagged_file ||
+        product.file_url || product.url_file || '';
+
+    if (!audioUrl) {
+        alert("Este producto no tiene vista previa de audio.");
+        return;
+    }
+
+    // Resolve R2 URL if needed
+    let finalAudioUrl = audioUrl;
+    if (window.getAuthorizedUrl && !(audioUrl.includes('pub-') && audioUrl.includes('.r2.dev'))) {
+        try {
+            finalAudioUrl = await window.getAuthorizedUrl(audioUrl);
+        } catch (e) {
+            console.warn("Error resolving audio URL:", e);
+        }
+    }
+
+    // Initialize StickyPlayer if not yet loaded
+    if (window.StickyPlayer && window.StickyPlayer.init) {
+        window.StickyPlayer.init();
+    }
+
+    // Resolve image URL
+    const coverImg = document.getElementById('product-main-art');
+    const imageUrl = coverImg ? coverImg.src : (product.image_url || '/images/portada-default.png');
+
+    // Resolve producer info
+    let producerData = product.producer;
+    if (Array.isArray(producerData)) producerData = producerData[0];
+    const producerName = producerData?.nickname || 'OFFSZN Artist';
+
+    // Play via StickyPlayer
+    if (window.StickyPlayer && window.StickyPlayer.play) {
+        window.StickyPlayer.play({
+            id: product.id,
+            name: product.name,
+            audio_url: finalAudioUrl,
+            mp3_url: finalAudioUrl,
+            image_url: imageUrl,
+            producer_nickname: producerName,
+            producer: producerData,
+            price_basic: product.price_basic,
+            is_free: product.is_free,
+            product_type: product.product_type
+        });
+
+        // Update cover icon to pause
+        const coverBtn = document.querySelector('.product-cover-play-btn i');
+        if (coverBtn) coverBtn.className = 'bi bi-pause-fill';
+    }
+};
+
 
 /**
  * MICRO-INTERACTIONS & LOGIC

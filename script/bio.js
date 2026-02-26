@@ -57,7 +57,20 @@ async function loadBioData(username) {
         await loadRecentProducts(user);
 
         // Ownership Check: Enable Edit Mode if viewer is the owner
-        const loggedUser = window.getUserId ? window.getUserId() : null;
+        let loggedUser = null;
+        const token = window.AuthUtils ? window.AuthUtils.getAccessToken() : null;
+        if (token) {
+            try {
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                loggedUser = payload.sub;
+            } catch (e) { }
+        }
+
+        if (!loggedUser) {
+            const { data: sessionData } = await window.supabaseClient.auth.getSession();
+            loggedUser = sessionData?.session?.user?.id;
+        }
+
         if (loggedUser && loggedUser === bioOwnerId) {
             const btnEdit = document.getElementById('btnEditMode');
             if (btnEdit) btnEdit.style.display = 'flex';
@@ -99,10 +112,10 @@ function renderBioHeader(user) {
     btnTienda.style.display = 'flex'; // Reveal Priority Link
 
     if (user.role) {
-        document.getElementById('bioRolePipe').style.display = 'inline-block';
+        document.getElementById('bioRoleText').style.display = 'inline-block';
         document.getElementById('bioRoleText').innerText = user.role;
     } else {
-        document.getElementById('bioRolePipe').style.display = 'none';
+        document.getElementById('bioRoleText').style.display = 'none';
         document.getElementById('bioRoleText').innerText = '';
     }
 
@@ -173,6 +186,12 @@ function renderSocials(user) {
         return;
     }
 
+    // DEBUG — remove once order issue confirmed fixed
+    console.log('%c[BioLink Debug]', 'color: #3b82f6; font-weight: bold;');
+    console.log('socials JSONB keys:', Object.keys(socialsObj));
+    console.log('socials_order from DB:', user.socials_order);
+    console.log('Full socials object:', socialsObj);
+
     const icons = {
         instagram: { class: 'bi-instagram', isLarge: true },
         tiktok: { class: 'bi-tiktok', isLarge: true },
@@ -191,36 +210,53 @@ function renderSocials(user) {
     let hasLargeLinks = false;
     let hasSmallLinks = false;
 
-    // We only create small icons for certain networks usually, but the user wants them all.
-    // Let's clear arrays first.
+    // Clear containers first
     smallContainer.innerHTML = '';
     largeContainer.innerHTML = '';
 
-    // Ordered iteration based on common preferences
-    const orderedKeys = ['whatsapp', 'youtube', 'spotify', 'tiktok', 'instagram', 'discord', 'website', 'twitter', 'facebook', 'linkedin'];
+    // Build ordered keys: user's saved order first, then any defaults not in the saved order
+    const defaultOrderedKeys = ['whatsapp', 'youtube', 'spotify', 'tiktok', 'instagram', 'discord', 'website', 'twitter', 'facebook', 'linkedin'];
 
-    orderedKeys.forEach(k => {
+    let customOrderedKeys = [];
+    try {
+        if (user.socials_order) {
+            customOrderedKeys = typeof user.socials_order === 'string' ? JSON.parse(user.socials_order) : user.socials_order;
+        }
+    } catch (e) { }
+
+    // Keys that exist in user-defined order go first, then append any others not in that order
+    const allKnownKeys = Object.keys(socialsObj);
+    const seenKeys = new Set(customOrderedKeys);
+    const remainingKeys = allKnownKeys.filter(k => !seenKeys.has(k));
+    // Ensure default fallback order for the remaining keys
+    const orderedRemaining = defaultOrderedKeys.filter(k => remainingKeys.includes(k));
+    const finalOrderedKeys = [...customOrderedKeys, ...orderedRemaining];
+
+    // Helper to build href from val
+    function buildHref(k, val) {
+        if (val.startsWith('http')) return val;
+        if (k === 'instagram') return `https://instagram.com/${val}`;
+        if (k === 'tiktok') return `https://tiktok.com/@${val}`;
+        if (k === 'twitter') return `https://twitter.com/${val}`;
+        if (k === 'youtube') return `https://youtube.com/@${val}`;
+        if (k === 'whatsapp') {
+            const cleanNum = val.replace(/\D/g, '');
+            return `https://wa.me/${cleanNum}`;
+        }
+        return val;
+    }
+
+    // Render in strict order
+    finalOrderedKeys.forEach(k => {
         const val = socialsObj[k];
         if (!val) return;
 
         const iconDef = icons[k];
         if (!iconDef) return;
 
-        // Build URL
-        let href = val;
-        if (!val.startsWith('http')) {
-            if (k === 'instagram') href = `https://instagram.com/${val}`;
-            else if (k === 'tiktok') href = `https://tiktok.com/@${val}`;
-            else if (k === 'twitter') href = `https://twitter.com/${val}`;
-            else if (k === 'youtube') href = `https://youtube.com/@${val}`;
-            else if (k === 'whatsapp') {
-                // Clean number
-                const cleanNum = val.replace(/\\D/g, '');
-                href = `https://wa.me/${cleanNum}`;
-            }
-        }
+        const href = buildHref(k, val);
 
-        // Add to Small Icons (EVERY icon goes here now to match the user screenshot)
+        // Small icon row (all socials)
         hasSmallLinks = true;
         const smallA = document.createElement('a');
         smallA.href = href;
@@ -229,24 +265,27 @@ function renderSocials(user) {
         smallA.innerHTML = `<i class="bi ${iconDef.class} text-xl md:text-2xl"></i>`;
         smallContainer.appendChild(smallA);
 
-        // Add to Large Pills if applicable
+        // Large pill links
         if (iconDef.isLarge) {
             hasLargeLinks = true;
             const linkLabel = iconDef.label || k.toUpperCase();
-
-            // Large Link Styling matching Tienda de Beats
-            const largeStr = `
-                <a href="${href}" target="_blank"
-                    class="group relative flex items-center w-full p-4 bg-black border border-white rounded-[16px] hover:bg-zinc-900 transition-all duration-300 transform hover:-translate-y-1">
-                    <div class="flex items-center absolute left-4">
-                        <i class="bi ${iconDef.class} text-xl md:text-2xl text-white"></i>
-                    </div>
-                    <div class="flex-1 flex justify-center text-center">
-                        <span class="font-bold text-sm md:text-md tracking-wide group-hover:text-white transition-colors">${linkLabel}</span>
-                    </div>
-                </a>
+            const largeA = document.createElement('a');
+            largeA.href = href;
+            largeA.target = '_blank';
+            largeA.dataset.network = k;
+            largeA.className = 'group relative flex items-center w-full p-4 bg-black border border-white rounded-[16px] transition-all duration-300 transform bio-sortable-link';
+            largeA.innerHTML = `
+                <div class="flex items-center absolute left-4">
+                    <i class="bi ${iconDef.class} text-xl md:text-2xl text-white"></i>
+                </div>
+                <div class="flex-1 flex justify-center text-center">
+                    <span class="font-bold text-sm md:text-md tracking-wide pointer-events-none">${linkLabel}</span>
+                </div>
+                <div class="drag-handle absolute right-4 text-gray-500 hover:text-white cursor-grab active:cursor-grabbing hidden" style="pointer-events: auto;">
+                    <i class="bi bi-grip-vertical text-xl"></i>
+                </div>
             `;
-            largeContainer.insertAdjacentHTML('beforeend', largeStr);
+            largeContainer.appendChild(largeA);
         }
     });
 
@@ -258,6 +297,273 @@ function renderSocials(user) {
     }
 }
 
+function initializeBioFeatures() {
+    // --- SHARE MODAL LOGIC ---
+    const btnShare = document.getElementById('btnShareBio');
+    const shareModal = document.getElementById('bioShareModal');
+    const btnCloseShare = document.getElementById('btnCloseShare');
+    const inputShare = document.getElementById('shareModalInput');
+    const btnCopyShare = document.getElementById('btnCopyShareLink');
+
+    if (btnShare && shareModal) {
+        btnShare.onclick = () => {
+            // Populate Modal Data
+            if (currentProfileData) {
+                document.getElementById('shareModalName').innerText = currentProfileData.nickname || 'User';
+                document.getElementById('shareModalUsername').innerText = `@${currentProfileData.handle || currentProfileData.nickname || 'user'}`;
+
+                const avatarImg = document.getElementById('shareModalAvatar');
+                const mainAvatar = document.getElementById('bioAvatar');
+                avatarImg.src = mainAvatar ? mainAvatar.src : '/images/portada-default.png';
+
+                const shareUrl = window.location.href;
+                inputShare.value = shareUrl;
+
+                // Setup native share buttons
+                const text = `Mira el perfil de música de ${currentProfileData.nickname} en OFFSZN 🔥`;
+                document.getElementById('btnShareWA').onclick = () => window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text + " " + shareUrl)}`);
+                document.getElementById('btnShareX').onclick = () => window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(text)}`);
+                document.getElementById('btnShareFB').onclick = () => window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`);
+            }
+
+            shareModal.classList.remove('opacity-0', 'pointer-events-none');
+            shareModal.querySelector('div').classList.remove('scale-95');
+        };
+
+        const closeModal = () => {
+            shareModal.classList.add('opacity-0', 'pointer-events-none');
+            shareModal.querySelector('div').classList.add('scale-95');
+        };
+
+        btnCloseShare.onclick = closeModal;
+        shareModal.onclick = (e) => {
+            if (e.target === shareModal) closeModal();
+        };
+
+        btnCopyShare.onclick = () => {
+            inputShare.select();
+            document.execCommand('copy');
+            const icon = btnCopyShare.querySelector('i');
+            icon.className = 'bi bi-check-lg text-green-500';
+            setTimeout(() => icon.className = 'bi bi-copy text-sm', 2000);
+        };
+    }
+
+    // --- EDIT MODE LOGIC ---
+    const btnEdit = document.getElementById('btnEditMode');
+
+    if (btnEdit) {
+        btnEdit.onclick = () => {
+            isEditMode = !isEditMode;
+            const linkBlocks = document.querySelectorAll('.bio-sortable-link');
+
+            if (isEditMode) {
+                btnEdit.classList.remove('text-gray-400', 'bg-zinc-900/50');
+                btnEdit.classList.add('text-white', 'bg-blue-600', 'border-blue-500');
+                btnEdit.innerHTML = '<i class="bi bi-pencil-fill text-[10px]"></i> Modo Edición';
+
+                // Prevent navigation + show handles
+                linkBlocks.forEach(link => {
+                    link.dataset.href = link.href;
+                    link.removeAttribute('href');
+                    const handle = link.querySelector('.drag-handle');
+                    if (handle) handle.classList.remove('hidden');
+                });
+
+                // Init custom real-time drag
+                initCustomDragSort(document.getElementById('bioSocialLinks'), async () => {
+                    await saveNewLinksOrder();
+                    // Show auto-save checkmark
+                    const prev = btnEdit.innerHTML;
+                    btnEdit.innerHTML = '<i class="bi bi-check-lg text-[10px]"></i> Guardado';
+                    btnEdit.classList.add('bg-green-600');
+                    btnEdit.classList.remove('bg-blue-600');
+                    setTimeout(() => {
+                        btnEdit.innerHTML = prev;
+                        btnEdit.classList.remove('bg-green-600');
+                        btnEdit.classList.add('bg-blue-600');
+                    }, 1500);
+                });
+
+            } else {
+                btnEdit.classList.add('text-gray-400', 'bg-zinc-900/50');
+                btnEdit.classList.remove('text-white', 'bg-blue-600', 'border-blue-500');
+                btnEdit.innerHTML = '<i class="bi bi-pencil-fill text-[10px]"></i> Modo Edición';
+
+                linkBlocks.forEach(link => {
+                    link.href = link.dataset.href;
+                    const handle = link.querySelector('.drag-handle');
+                    if (handle) handle.classList.add('hidden');
+                });
+
+                destroyCustomDragSort(document.getElementById('bioSocialLinks'));
+            }
+        };
+    }
+}
+
+async function saveNewLinksOrder() {
+    if (!bioOwnerId || !currentProfileData) return;
+
+    const container = document.getElementById('bioSocialLinks');
+    if (!container) return;
+
+    // Ordered iteration based on DOM sequence
+    const orderedElements = container.querySelectorAll('.bio-sortable-link');
+    const newOrderedKeys = Array.from(orderedElements).map(el => el.dataset.network).filter(Boolean);
+
+    try {
+        const { error } = await window.supabaseClient
+            .from('users')
+            .update({ socials_order: newOrderedKeys })
+            .eq('id', bioOwnerId);
+
+        if (error) throw error;
+
+        // Update local state
+        currentProfileData.socials_order = newOrderedKeys;
+    } catch (error) {
+        console.error("Error saving new link order:", error);
+        alert("Hubo un error al guardar el orden. Intenta nuevamente.");
+    }
+}
+
+// ── Custom Drag-and-Drop ─────────────────────────────────────────────────────
+// Real-time reflow: visual clone follows cursor, real element collapses and  
+// re-inserts in the new position immediately — no ghost placeholder gap.
+// ─────────────────────────────────────────────────────────────────────────────
+
+let _dragListeners = null; // store so we can remove them
+
+function destroyCustomDragSort(container) {
+    if (!container || !_dragListeners) return;
+    container.removeEventListener('mousedown', _dragListeners.onDown);
+    container.removeEventListener('touchstart', _dragListeners.onDown);
+    _dragListeners = null;
+}
+
+function initCustomDragSort(container, onDropCallback) {
+    if (!container) return;
+    destroyCustomDragSort(container); // clean up previous instance
+
+    function onDown(e) {
+        const handle = e.target.closest('.drag-handle');
+        if (!handle) return;
+        e.preventDefault();
+
+        const el = handle.closest('.bio-sortable-link');
+        if (!el) return;
+
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        const rect = el.getBoundingClientRect();
+        const offsetY = clientY - rect.top;
+        const elH = rect.height;
+        const gap = parseFloat(getComputedStyle(container).gap) || 0;
+
+        // 1. Create floating clone (GPU-accelerated, no scale)
+        const clone = el.cloneNode(true);
+        clone.style.cssText = `
+            position: fixed; left: ${rect.left}px; top: ${rect.top}px;
+            width: ${rect.width}px; height: ${elH}px;
+            z-index: 9999; pointer-events: none; border-radius: 16px;
+            border: 1.5px solid #3b82f6;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.6); background: #111;
+            will-change: top;
+        `;
+        document.body.appendChild(clone);
+
+        // 2. Create spacer
+        const spacer = document.createElement('div');
+        spacer.style.cssText = `
+            height: ${elH}px; border-radius: 16px;
+            border: 1.5px dashed rgba(59,130,246,0.4);
+            background: rgba(59,130,246,0.05);
+            pointer-events: none;
+        `;
+
+        // 3. Remove original, insert spacer
+        const elIndex = Array.from(container.children).indexOf(el);
+        el.remove();
+        if (elIndex < container.children.length) {
+            container.insertBefore(spacer, container.children[elIndex]);
+        } else {
+            container.appendChild(spacer);
+        }
+
+        function getVisibleItems() {
+            return Array.from(container.children).filter(c => c !== spacer);
+        }
+
+        let lastNewIdx = -1;
+
+        function onMove(ev) {
+            ev.preventDefault();
+            const cy = ev.touches ? ev.touches[0].clientY : ev.clientY;
+
+            // Instant clone tracking
+            const cRect = container.getBoundingClientRect();
+            const top = Math.max(Math.min(cy - offsetY, cRect.bottom - elH), cRect.top);
+            clone.style.top = top + 'px';
+
+            // Swap detection
+            const spacerTop = spacer.getBoundingClientRect().top;
+            const movingUp = top < spacerTop;
+            const items = getVisibleItems();
+            let newIdx = items.length;
+
+            if (movingUp) {
+                for (let i = 0; i < items.length; i++) {
+                    const r = items[i].getBoundingClientRect();
+                    if (top < r.top + r.height * 0.4) { newIdx = i; break; }
+                }
+            } else {
+                const bot = top + elH;
+                for (let i = 0; i < items.length; i++) {
+                    const r = items[i].getBoundingClientRect();
+                    if (bot < r.top + r.height * 0.6) { newIdx = i; break; }
+                }
+            }
+
+            if (newIdx === lastNewIdx) return;
+            lastNewIdx = newIdx;
+
+            // Instant DOM swap — no animation, no transitions, zero overhead
+            spacer.remove();
+            if (newIdx >= items.length) container.appendChild(spacer);
+            else container.insertBefore(spacer, items[newIdx]);
+        }
+
+        function onUp() {
+            clone.remove();
+
+            // Insert real element where spacer is
+            container.insertBefore(el, spacer);
+            spacer.remove();
+
+            // Clear styles
+            Array.from(container.children).forEach(c => {
+                c.style.transition = '';
+                c.style.transform = '';
+            });
+
+            if (onDropCallback) onDropCallback();
+
+            document.removeEventListener('mousemove', onMove);
+            document.removeEventListener('touchmove', onMove);
+            document.removeEventListener('mouseup', onUp);
+            document.removeEventListener('touchend', onUp);
+        }
+
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('touchmove', onMove, { passive: false });
+        document.addEventListener('mouseup', onUp);
+        document.addEventListener('touchend', onUp);
+    }
+
+    container.addEventListener('mousedown', onDown);
+    container.addEventListener('touchstart', onDown, { passive: false });
+    _dragListeners = { onDown };
+}
 async function loadRecentProducts(user) {
     try {
         const { data, error } = await window.supabaseClient
