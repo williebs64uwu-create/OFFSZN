@@ -146,6 +146,11 @@ app.post('/api/negotiate/purchase-token', authenticateTokenMiddleware, generateP
 app.get('/api/negotiate/validate-token', validatePurchaseToken);
 app.post('/api/negotiate/report', authenticateTokenMiddleware, reportIssue);
 
+// --- 4.1 ENDPOINT DE SALUD (Cron Job Keep-Alive) ---
+app.get('/health', (req, res) => {
+    res.status(200).send('OK');
+});
+
 app.use('/api/auth', authRoutes);
 app.use('/api', publicRoutes);
 app.use('/api', productRoutes);

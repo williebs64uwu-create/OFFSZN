@@ -158,8 +158,17 @@ window.togglePromoOptions = function () {
 };
 
 window.updatePromoTotal = function () {
-    const buyQty = parseInt(document.getElementById('promoBuyQty')?.value) || 2;
-    const getQty = parseInt(document.getElementById('promoGetQty')?.value) || 1;
+    let buyQtyInput = document.getElementById('promoBuyQty');
+    let getQtyInput = document.getElementById('promoGetQty');
+
+    let buyQty = parseInt(buyQtyInput?.value) || 2;
+    let getQty = parseInt(getQtyInput?.value) || 1;
+
+    // Límite de 20 solicitado por el usuario
+    if (buyQty > 20) { buyQty = 20; if (buyQtyInput) buyQtyInput.value = 20; }
+    if (getQty > 20) { getQty = 20; if (getQtyInput) getQtyInput.value = 20; }
+    if (buyQty < 1) { buyQty = 1; if (buyQtyInput) buyQtyInput.value = 1; }
+    if (getQty < 1) { getQty = 1; if (getQtyInput) getQtyInput.value = 1; }
 
     document.getElementById('promoBuyDisplay').innerText = buyQty;
     document.getElementById('promoTotalDisplay').innerText = buyQty + getQty;
@@ -213,17 +222,17 @@ window.savePromotion = async function () {
             if (error) throw error;
         }
 
-        // Éxito
-        saveBtn.innerText = '¡Guardado!';
-        saveBtn.style.backgroundColor = '#22c55e'; // verde
-        saveBtn.style.borderColor = '#22c55e';
+        // Éxito - Mantener Premium B&W
+        saveBtn.innerText = '✓ Guardado';
+        saveBtn.style.backgroundColor = '#000';
         saveBtn.style.color = '#fff';
+        saveBtn.style.border = '1px solid #fff';
 
         setTimeout(() => {
             saveBtn.innerText = originalText;
-            saveBtn.style.backgroundColor = '';
-            saveBtn.style.borderColor = '';
-            saveBtn.style.color = '';
+            saveBtn.style.backgroundColor = '#fff';
+            saveBtn.style.color = '#000';
+            saveBtn.style.border = 'none';
             saveBtn.disabled = false;
         }, 2500);
 

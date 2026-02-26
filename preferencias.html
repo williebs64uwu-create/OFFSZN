@@ -39,6 +39,54 @@
     </script>
     <script src="/script/auth-utils.js?v=11"></script>
 
+    <style>
+        /* Custom Switch toggle */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(255, 255, 255, 0.2);
+            transition: .3s;
+            border-radius: 24px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .3s;
+            border-radius: 50%;
+        }
+
+        input:checked+.slider {
+            background-color: #fff;
+        }
+
+        input:checked+.slider:before {
+            transform: translateX(20px);
+            background-color: #000;
+        }
+    </style>
 </head>
 
 <body>
@@ -483,7 +531,7 @@
                                 <div class="label" style="font-size: 13px; color: #aaa; margin-bottom: 8px;">Pagan por
                                     (Cantidad)</div>
                                 <div class="input-with-icon" style="position: relative;">
-                                    <input type="number" class="input-field" id="promoBuyQty" value="2" min="1"
+                                    <input type="number" class="input-field" id="promoBuyQty" value="2" min="1" max="20"
                                         style="width: 100%; height: 44px; padding-left: 40px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: #fff; outline: none;">
                                     <i class="bi bi-cart"
                                         style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #666;"></i>
@@ -493,7 +541,7 @@
                                 <div class="label" style="font-size: 13px; color: #aaa; margin-bottom: 8px;">Se llevan
                                     Gratis</div>
                                 <div class="input-with-icon" style="position: relative;">
-                                    <input type="number" class="input-field" id="promoGetQty" value="1" min="1"
+                                    <input type="number" class="input-field" id="promoGetQty" value="1" min="1" max="20"
                                         style="width: 100%; height: 44px; padding-left: 40px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: #fff; outline: none;">
                                     <i class="bi bi-gift"
                                         style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #666;"></i>
@@ -507,8 +555,10 @@
                                     id="promoBuyDisplay">2</span></span>
                         </div>
                         <div style="margin-top: 20px; text-align: right;">
-                            <button class="btn btn-primary" id="savePromoBtn" onclick="savePromotion()"
-                                style="min-width: 140px;">Guardar Oferta</button>
+                            <button class="btn" id="savePromoBtn" onclick="savePromotion()"
+                                style="min-width: 140px; background: #fff; color: #000; border: none; font-weight: 700; border-radius: 8px; padding: 10px 24px; cursor: pointer; transition: all 0.2s;"
+                                onmouseover="this.style.background='#e5e5e5'"
+                                onmouseout="this.style.background='#fff'">Guardar Oferta</button>
                         </div>
                     </div>
                 </div>
