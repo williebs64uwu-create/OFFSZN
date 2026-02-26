@@ -345,7 +345,9 @@ function initializeBioFeatures() {
             document.execCommand('copy');
             const icon = btnCopyShare.querySelector('i');
             icon.className = 'bi bi-check-lg text-green-500';
-            setTimeout(() => icon.className = 'bi bi-copy text-sm', 2000);
+            setTimeout(() => {
+                icon.className = 'bi bi-copy text-sm group-hover:text-white transition-colors duration-200';
+            }, 2000);
         };
     }
 
@@ -361,6 +363,33 @@ function initializeBioFeatures() {
                 btnEdit.classList.remove('text-gray-400', 'bg-zinc-900/50');
                 btnEdit.classList.add('text-white', 'bg-blue-600', 'border-blue-500');
                 btnEdit.innerHTML = '<i class="bi bi-pencil-fill text-[10px]"></i> Modo Edición';
+
+                // Show edit tutorial modal only once
+                if (localStorage.getItem('offszn_bio_edit_tutorial_shown') !== 'true') {
+                    const tutorialModal = document.getElementById('editModeTutorialModal');
+                    const video = document.getElementById('editTutorialVideo');
+                    const btnClose = document.getElementById('btnCloseEditTutorial');
+                    const btnUnderstand = document.getElementById('btnUnderstandEdit');
+
+                    if (tutorialModal && video && btnClose && btnUnderstand) {
+                        tutorialModal.classList.remove('opacity-0', 'pointer-events-none');
+                        tutorialModal.querySelector('div').classList.remove('scale-95');
+                        video.play().catch(() => { }); // ignore autoplay policy errors
+
+                        const closeTutorial = () => {
+                            tutorialModal.classList.add('opacity-0', 'pointer-events-none');
+                            tutorialModal.querySelector('div').classList.add('scale-95');
+                            video.pause();
+                            localStorage.setItem('offszn_bio_edit_tutorial_shown', 'true');
+                        };
+
+                        btnClose.onclick = closeTutorial;
+                        btnUnderstand.onclick = closeTutorial;
+                        tutorialModal.onclick = (e) => {
+                            if (e.target === tutorialModal) closeTutorial();
+                        };
+                    }
+                }
 
                 // Prevent navigation + show handles
                 linkBlocks.forEach(link => {

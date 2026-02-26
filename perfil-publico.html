@@ -1171,7 +1171,7 @@
   <script src="/script/avatar-manager.js"></script>
   <!-- PROFILE SHARE MODAL -->
   <div id="profileShareModal" class="guest-auth-modal" style="z-index: 100001;">
-    <div class="guest-auth-card" style="padding: 24px; width: 360px;">
+    <div class="guest-auth-card" style="padding: 24px; width: 90%; max-width: 500px;">
       <!-- Close Button -->
       <button onclick="window.closeProfileShareModal()" class="guest-modal-close"
         style="top: 16px; right: 16px; background: transparent; border: none; padding: 0;">
@@ -1196,8 +1196,9 @@
             style="font-size: 0.75rem; color: #a1a1aa; font-weight: 600; margin-bottom: 8px; text-transform: uppercase;">
             Compartir perfil OFFSZN</div>
           <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
-            <span id="shareProfileModalOffsznLink"
-              style="font-size: 0.875rem; color: #d4d4d8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1;"></span>
+            <a id="shareProfileModalOffsznLink" target="_blank"
+              style="font-size: 0.875rem; color: #d4d4d8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; text-decoration: none; transition: color 0.2s;"
+              onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#d4d4d8'"></a>
             <button onclick="window.copyProfileShareLink('offszn')" id="copyShareProfileOffsznBtn"
               style="background: #fff; color: #000; font-size: 0.75rem; font-weight: 700; padding: 6px 12px; border-radius: 8px; border: none; cursor: pointer; white-space: nowrap;">
               Copiar
@@ -1211,8 +1212,9 @@
             style="font-size: 0.75rem; color: #a1a1aa; font-weight: 600; margin-bottom: 8px; text-transform: uppercase;">
             Compartir perfil BIO</div>
           <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
-            <span id="shareProfileModalBioLink"
-              style="font-size: 0.875rem; color: #d4d4d8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1;"></span>
+            <a id="shareProfileModalBioLink" target="_blank"
+              style="font-size: 0.875rem; color: #d4d4d8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; text-decoration: none; transition: color 0.2s;"
+              onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#d4d4d8'"></a>
             <button onclick="window.copyProfileShareLink('bio')" id="copyShareProfileBioBtn"
               style="background: #fff; color: #000; font-size: 0.75rem; font-weight: 700; padding: 6px 12px; border-radius: 8px; border: none; cursor: pointer; white-space: nowrap;">
               Copiar
@@ -1271,7 +1273,9 @@
       const bioLink = baseUrl + '/b/' + (user.nickname || user.id);
 
       document.getElementById('shareProfileModalOffsznLink').innerText = offsznLink;
+      document.getElementById('shareProfileModalOffsznLink').href = offsznLink;
       document.getElementById('shareProfileModalBioLink').innerText = bioLink;
+      document.getElementById('shareProfileModalBioLink').href = bioLink;
 
       // Show Modal
       modal.classList.add('active');
