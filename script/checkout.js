@@ -590,11 +590,11 @@ const CheckoutManager = {
         }
 
         return window.supabaseClient.auth.getSession().then(({ data: { session } }) => {
-          return fetch(`${self.API_URL} /orders/paypal / capture`, {
+          return fetch(`${self.API_URL}/orders/paypal/capture`, {
             method: 'post',
             headers: {
               'Content-Type': 'application/json',
-              'Authorization': session ? `Bearer ${session.access_token} ` : ''
+              'Authorization': session ? `Bearer ${session.access_token}` : ''
             },
             body: JSON.stringify(body)
           });
