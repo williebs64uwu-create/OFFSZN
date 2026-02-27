@@ -279,8 +279,8 @@ app.get([
         if (user) {
             const title = `${user.nickname} | ${user.role || 'Productor'} - OFFSZN`;
             const description = user.bio || `Escucha los últimos beats y recursos de ${user.nickname} en OFFSZN.`;
-            const image = user.avatar_url || 'https://offszn.com/images/LOGO%20OFFSZN.webp';
-            const url = `https://offszn.com/b/${user.nickname}`;
+            const image = user.avatar_url || 'https://offszn.lat/images/LOGO%20OFFSZN.webp';
+            const url = `https://offszn.lat/b/${user.nickname}`;
 
             const ogTags = `
     <!-- Dynamic Open Graph Tags -->

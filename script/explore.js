@@ -114,19 +114,30 @@ async function fetchData() {
             fetch(`${API_URL}/me/following`, { headers: { 'Authorization': `Bearer ${token}` } })
                 .then(r => r.ok ? r.json() : [])
                 .catch(() => []),
-            // We can also fetch /api/me if needed, but following is priority for this view
         ];
+    } else {
+        // 🔒 ZERO LATENCY GUEST: Skip waiting for user data
+        window.currentUserFollowing = new Set();
     }
 
     try {
         // Fetch Content + User Data in Parallel
-        const [productsRes, producersRes, leaderboardRes, followingData] = await Promise.all([
+        const promises = [
             fetch(`${API_URL}/products`),
             fetch(`${API_URL}/producers`),
             fetch(`${API_URL}/leaderboard`),
-            // If logged in, this resolves to the list. If not, it resolves to an empty array immediately
-            token ? userPromises[0] : Promise.resolve([])
-        ]);
+        ];
+
+        if (token) {
+            promises.push(userPromises[0]);
+        }
+
+        const results = await Promise.all(promises);
+
+        const productsRes = results[0];
+        const producersRes = results[1];
+        const leaderboardRes = results[2];
+        const followingData = token ? results[3] : [];
 
         // Process Content
         if (productsRes.ok) allProducts = await productsRes.json();

@@ -64,9 +64,10 @@ window.FavoritesManager = (function () {
                 subscribe(handleRealtimeUpdates);
             }
 
-            let token = window.getAccessToken();
+            let token = (window.AuthUtils && window.AuthUtils.getAccessToken) ? window.AuthUtils.getAccessToken() : (window.getAccessToken ? window.getAccessToken() : null);
             if (!token) {
-                console.log("FavoritesManager: No session found, waiting...");
+                console.log("FavoritesManager: No active session (Guest mode). Skipping fetch.");
+                isInitialized = true;
                 return;
             }
 
