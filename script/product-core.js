@@ -452,6 +452,42 @@ function injectDynamicSEO(product) {
     scriptTag.type = 'application/ld+json';
     scriptTag.setAttribute('data-seo', 'product');
     scriptTag.textContent = JSON.stringify(schema);
+
+    // 4. Breadcrumb Schema (Home > Resources > Type > Name)
+    let breadcrumbScript = document.getElementById('breadcrumb-schema');
+    if (!breadcrumbScript) {
+        breadcrumbScript = document.createElement('script');
+        breadcrumbScript.id = 'breadcrumb-schema';
+        breadcrumbScript.type = 'application/ld+json';
+        document.head.appendChild(breadcrumbScript);
+    }
+
+    const breadcrumbs = {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+            {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Inicio",
+                "item": "https://offszn.lat/"
+            },
+            {
+                "@type": "ListItem",
+                "position": 2,
+                "name": product.product_type === 'beat' ? "Beats" : "Recursos",
+                "item": product.product_type === 'beat' ? "https://offszn.lat/recursos/beats-instrumentales" : "https://offszn.lat/explorar.html"
+            },
+            {
+                "@type": "ListItem",
+                "position": 3,
+                "name": product.name,
+                "item": productUrl
+            }
+        ]
+    };
+    breadcrumbScript.textContent = JSON.stringify(breadcrumbs);
+
     document.head.appendChild(scriptTag);
 
     console.log('✅ [SEO] Dynamic metadata injected for:', product.name);
@@ -1082,7 +1118,7 @@ function setupSocialInteractions(product) {
                 <span class="stat-value">${product.likes_count || 0}</span>
             </button>
             
-            <button class="action-btn-icon" id="btn-share" onclick="openShareModal('${product.id}')">
+            <button class="action-btn-icon" id="btn-share" onclick="openShareModal(window.currentProductData)">
                 <i class="bi bi-share"></i>
                 <span class="stat-value" style="opacity:0;">0</span>
             </button>
@@ -1194,88 +1230,6 @@ window.toggleAccordion = function (idSuffix) {
 
 
 
-window.openShareModal = function (productId) {
-    let backdrop = document.getElementById('share-modal-backdrop');
-    if (!backdrop) {
-        backdrop = document.createElement('div');
-        backdrop.id = 'share-modal-backdrop';
-        backdrop.className = 'share-modal-backdrop';
-        backdrop.onclick = function (e) {
-            if (e.target === backdrop) window.closeShareModal();
-        };
-        document.body.appendChild(backdrop);
-    }
-
-    let shortLink = window.location.href;
-    if (window.IdObfuscator && window.currentProductData) {
-        const product = window.currentProductData;
-        const code = window.IdObfuscator.encodeId(product.id);
-        if (code) shortLink = `${window.location.origin}/p/${code}`;
-    }
-    const shareText = `Escucha "${window.currentProductData?.name || 'este beat'}" en OFFSZN 🔥`;
-    const encodedLink = encodeURIComponent(shortLink);
-    const encodedText = encodeURIComponent(shareText);
-
-    const socials = [
-        { name: 'Twitter', icon: 'bi-twitter-x', url: `https://twitter.com/intent/tweet?text=${encodedText}&url=${encodedLink}` },
-        { name: 'WhatsApp', icon: 'bi-whatsapp', url: `https://api.whatsapp.com/send?text=${encodedText}%20${encodedLink}` },
-        { name: 'Facebook', icon: 'bi-facebook', url: `https://www.facebook.com/sharer/sharer.php?u=${encodedLink}` }
-    ];
-
-    const product = window.currentProductData || {};
-    const producer = product.producer || {};
-    const coverImgSrc = document.getElementById('product-main-art')?.src || product.image_url || '/images/portada-default.png';
-    const safeLink = shortLink.replace(/'/g, '%27');
-
-    backdrop.innerHTML = `
-        <div class="share-modal-content">
-            <div class="modal-pull-bar"></div>
-            <button class="share-modal-close-btn" onclick="window.closeShareModal()">&times;</button>
-
-            <div style="text-align:center; padding: 15px 15px 20px;">
-                <img src="${coverImgSrc}" style="width:140px; height:140px; border-radius:12px; object-fit:cover; border:1px solid rgba(255,255,255,0.1); margin:0 auto 20px; display:block;">
-                <div style="font-size:1.25rem; font-weight:800; color:#fff; margin-bottom:6px;">${product.name || 'Sin título'}</div>
-                <div style="font-size:0.9rem; color:#888; margin-bottom:28px;">${producer.nickname || 'Productor'}</div>
-
-                <div class="share-social-row" style="margin-bottom:28px; justify-content:center; gap:20px;">
-                    ${socials.map(s => `
-                        <a href="${s.url}" target="_blank" class="social-share-item">
-                            <div class="social-icon-circle"><i class="bi ${s.icon}"></i></div>
-                        </a>
-                    `).join('')}
-                </div>
-
-                <div class="share-input-wrapper-v2">
-                    <input type="text" value="${shortLink}" readonly id="link-short-share">
-                    <button onclick="copyToClipboard('${safeLink}', this)">
-                        <i class="bi bi-copy"></i>
-                    </button>
-                </div>
-            </div>
-        </div>
-    `;
-
-    backdrop.style.display = 'flex';
-    setTimeout(() => {
-        backdrop.classList.add('active');
-        const contentBox = backdrop.querySelector('.share-modal-content');
-        if (contentBox && typeof initBottomSheetDrag === 'function') {
-            initBottomSheetDrag(contentBox, window.closeShareModal);
-        }
-    }, 10);
-};
-
-window.closeShareModal = function () {
-    const backdrop = document.getElementById('share-modal-backdrop');
-    if (backdrop) {
-        backdrop.classList.add('closing');
-        backdrop.classList.remove('active');
-        setTimeout(() => {
-            backdrop.style.display = 'none';
-            backdrop.classList.remove('closing');
-        }, 350);
-    }
-};
 
 window.copyToClipboard = function (text, btn) {
     return navigator.clipboard.writeText(text).then(() => {

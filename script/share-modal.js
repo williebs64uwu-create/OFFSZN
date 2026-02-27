@@ -57,7 +57,7 @@
                 <button class="share-modal-close-btn" onclick="window.closeShareModal()">&times;</button>
 
                 <div style="text-align:center; padding: 15px 15px 20px;">
-                    <img src="${coverImgSrc}" style="width:140px; height:140px; border-radius:12px; object-fit:cover; border:1px solid rgba(255,255,255,0.1); margin:0 auto 20px; display:block;">
+                    <img id="share-modal-cover" src="/images/portada-default.png" style="width:140px; height:140px; border-radius:12px; object-fit:cover; border:1px solid rgba(255,255,255,0.1); margin:0 auto 20px; display:block;">
                     <div style="font-size:1.15rem; font-weight:800; color:#fff; margin-bottom:6px; line-height: 1.4; word-break: break-word;">${displayName}</div>
                     <div style="font-size:0.9rem; color:#888; margin-bottom:28px;">${producerName}</div>
 
@@ -78,6 +78,17 @@
                 </div>
             </div>
         `;
+
+        // Resolve Image URL
+        if (window.getAuthorizedUrl && coverImgSrc.startsWith('http')) {
+            window.getAuthorizedUrl(coverImgSrc).then(url => {
+                const imgEl = document.getElementById('share-modal-cover');
+                if (imgEl && url) imgEl.src = url;
+            });
+        } else {
+            const imgEl = document.getElementById('share-modal-cover');
+            if (imgEl) imgEl.src = coverImgSrc;
+        }
 
         backdrop.style.display = 'flex';
         setTimeout(() => {

@@ -113,6 +113,9 @@ async function loadUserProfile(username) {
         // We render this ASAP so the user sees the profile info while products load.
         renderHeader(user);
 
+        // 3.1 Inject Dynamic SEO for Profiles
+        injectProfileSEO(user);
+
         // 4. Fetch User Products (via API) - SYNC WAIT
         // We wait for the products fetch to complete so we can remove ALL skeletons together.
         await loadUserProducts(user);
@@ -2176,3 +2179,71 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+
+// --- DYNAMIC SEO FOR PROFILES ---
+function injectProfileSEO(user) {
+    if (!user) return;
+
+    const nickname = user.nickname || "Productor";
+    const role = user.role || "Productor Musical";
+    const bio = user.bio ? user.bio.substring(0, 160) : `Mira el perfil oficial de ${nickname} en OFFSZN. Escucha sus beats, descarga sus kits y colabora.`;
+    const profileUrl = window.location.href;
+    const avatar = user.avatar_url || "https://offszn.lat/images/LOGO%20OFFSZN.webp";
+
+    // 1. Browser Title
+    document.title = `${nickname} | Perfil Oficial de Productor en OFFSZN`;
+
+    // 2. Meta Tags
+    let metaDesc = document.querySelector('meta[name="description"]');
+    if (!metaDesc) {
+        metaDesc = document.createElement('meta');
+        metaDesc.name = "description";
+        document.head.appendChild(metaDesc);
+    }
+    metaDesc.content = bio;
+
+    // Open Graph
+    updateMetaTag('property', 'og:title', `${nickname} - OFFSZN`);
+    updateMetaTag('property', 'og:description', bio);
+    updateMetaTag('property', 'og:url', profileUrl);
+    updateMetaTag('property', 'og:type', 'profile');
+    if (avatar) updateMetaTag('property', 'og:image', avatar);
+
+    // Profile specific OG
+    updateMetaTag('property', 'profile:username', nickname);
+
+    // 3. JSON-LD Schema (Person / MusicGroup)
+    let schemaScript = document.getElementById('profile-schema');
+    if (!schemaScript) {
+        schemaScript = document.createElement('script');
+        schemaScript.id = 'profile-schema';
+        schemaScript.type = 'application/ld+json';
+        document.head.appendChild(schemaScript);
+    }
+
+    const schema = {
+        "@context": "https://schema.org",
+        "@type": "Person",
+        "name": nickname,
+        "description": bio,
+        "url": profileUrl,
+        "image": avatar,
+        "jobTitle": role,
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": profileUrl
+        }
+    };
+
+    schemaScript.textContent = JSON.stringify(schema);
+}
+
+function updateMetaTag(attr, value, content) {
+    let el = document.querySelector(`meta[${attr}="${value}"]`);
+    if (!el) {
+        el = document.createElement('meta');
+        el.setAttribute(attr, value);
+        document.head.appendChild(el);
+    }
+    el.content = content;
+}

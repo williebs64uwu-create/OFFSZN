@@ -24,6 +24,23 @@ window.closeNewMessageModal = closeNewMessageModal;
 window.startChatFromModal = startChatFromModal;
 window.toggleMessageMenu = toggleMessageMenu;
 window.copyMessageText = copyMessageText;
+window.backToSidebar = backToSidebar;
+window.toggleMobileView = toggleMobileView;
+
+// ===== NAVIGATION HELPERS =====
+function toggleMobileView(showChat) {
+    const root = document.getElementById('chatSystemRoot');
+    if (!root) return;
+    if (showChat) {
+        root.classList.add('show-chat');
+    } else {
+        root.classList.remove('show-chat');
+    }
+}
+
+function backToSidebar() {
+    toggleMobileView(false);
+}
 
 // ===== INITIALIZATION =====
 // 🛡️ SPA SAFEGUARD
@@ -576,6 +593,15 @@ async function loadConversations(opts = {}) {
         .order('updated_at', { ascending: false });
 
     listContainer.innerHTML = '';
+    if (!conversations || conversations.length === 0) {
+        listContainer.innerHTML = `
+            <div style="padding: 40px 20px; text-align: center; opacity: 0.5;">
+                <p style="font-size: 0.9rem;">No tienes mensajes aún.</p>
+            </div>
+        `;
+        revealPlaceholderContent();
+        return;
+    }
 
     // Prepare data for rendering and cache
     const chatsToRender = [];
@@ -668,7 +694,10 @@ function renderConversationList(chats, container) {
 
         const previewDiv = document.createElement('div');
         previewDiv.className = 'chat-preview';
-        previewDiv.textContent = `${chat.lastMsg} • ${timeAgoStr}`;
+        previewDiv.innerHTML = `
+            <span class="chat-preview-text">${chat.lastMsg}</span>
+            <span class="chat-preview-date">${timeAgoStr}</span>
+        `;
 
         const infoDiv = document.createElement('div');
         infoDiv.className = 'chat-info';
@@ -683,6 +712,7 @@ function renderConversationList(chats, container) {
 
 // ===== OPEN CHAT (UPDATED) =====
 async function openChat(convId, name, avatar, userId) {
+    toggleMobileView(true);
     currentConversationId = convId;
     localStorage.setItem('OFFSZN_LAST_CONV_ID', convId);
 
@@ -797,7 +827,10 @@ async function openChat(convId, name, avatar, userId) {
     if (messages) {
         messages.forEach(msg => renderMessage(msg));
     }
-    scrollToBottom();
+    // Delay scroll slightly to ensure DOM is fully ready and transitions (if any) are occurring
+    requestAnimationFrame(() => {
+        scrollToBottom();
+    });
 }
 
 // ===== SEND MESSAGE =====
@@ -1237,7 +1270,12 @@ function setupRealtime() {
                         const preview = item.querySelector('.chat-preview');
                         const text = payload.new.content || '📷 Foto';
                         const short = text.length > 25 ? text.substring(0, 22) + '...' : text;
-                        if (preview) preview.textContent = `${short} • Ahora`;
+                        if (preview) {
+                            preview.innerHTML = `
+                                <span class="chat-preview-text">${short}</span>
+                                <span class="chat-preview-date">Ahora</span>
+                            `;
+                        }
 
                         // ONLY PREPEND IF PRINCIPAL IS ACTIVE
                         const tabPrincipal = document.getElementById('tabPrincipal');
@@ -1256,7 +1294,12 @@ function setupRealtime() {
                         const preview = item.querySelector('.chat-preview');
                         const text = payload.new.content || '📷 Foto';
                         const short = text.length > 25 ? text.substring(0, 22) + '...' : text;
-                        if (preview) preview.textContent = `${short} • Ahora`;
+                        if (preview) {
+                            preview.innerHTML = `
+                                <span class="chat-preview-text">${short}</span>
+                                <span class="chat-preview-date">Ahora</span>
+                            `;
+                        }
                         const list = document.getElementById('conversationsList');
                         if (list) list.prepend(item);
                     } else {
