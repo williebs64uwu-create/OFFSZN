@@ -2,6 +2,9 @@
  * load-navbar.js
  * Injects the exact same extracted navbar HTML block into any page.
  * Dispatches a 'navbarLoaded' event so scripts inside navbar.js know when to initialize.
+ * 
+ * 🔥 FOUC FIX: Immediately injects a lightweight skeleton that matches the navbar's
+ * dimensions and background, eliminating the black flash between page loads.
  */
 
 (async () => {
@@ -11,13 +14,39 @@
         return;
     }
 
+    // 🔥 FOUC FIX: Immediately inject a skeleton that matches navbar dimensions
+    // This prevents the "black flash" by reserving space with matching background
+    placeholder.innerHTML = `
+        <header style="
+            background: #000;
+            height: 64px;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            padding: 0 24px;
+            box-sizing: border-box;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+        ">
+            <div style="display:flex; align-items:center; gap:16px; width:100%;">
+                <div style="width:100px; height:28px; background:rgba(255,255,255,0.04); border-radius:6px;"></div>
+                <div style="flex:1; max-width:440px; height:40px; background:rgba(255,255,255,0.03); border-radius:12px; margin-left:24px;"></div>
+                <div style="margin-left:auto; display:flex; gap:12px; align-items:center;">
+                    <div style="width:36px; height:36px; background:rgba(255,255,255,0.04); border-radius:50%;"></div>
+                    <div style="width:36px; height:36px; background:rgba(255,255,255,0.04); border-radius:50%;"></div>
+                </div>
+            </div>
+        </header>`;
+
     try {
         // Determine the base path based on the current URL depth, or just use absolute if on a server
         let pathPrefix = '/';
         if (window.location.protocol === 'file:') {
             pathPrefix = window.location.pathname.includes('/pages/') || window.location.pathname.includes('/recursos/') || window.location.pathname.includes('/comunidad/') || window.location.pathname.includes('/cursos/') || window.location.pathname.includes('/studio/') || window.location.pathname.includes('/cuenta/') || window.location.pathname.includes('/servicios/') ? '../' : './';
         }
-        const response = await fetch(pathPrefix + 'components/navbar.html?v=20');
+        const response = await fetch(pathPrefix + 'components/navbar.html?v=21');
         if (!response.ok) {
             throw new Error(`Failed to load navbar: ${response.status}`);
         }
@@ -54,3 +83,4 @@
         console.error('Error loading navbar component:', error);
     }
 })();
+

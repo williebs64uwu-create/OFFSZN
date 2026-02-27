@@ -543,6 +543,14 @@ function renderActualResults(results) {
         return;
     }
 
+    // Helper: Sanitize text for safe HTML rendering (prevents &amp; etc. showing raw)
+    const sanitizeText = (text) => {
+        if (!text) return '';
+        const el = document.createElement('span');
+        el.textContent = text;
+        return el.innerHTML;
+    };
+
     let html = '';
     if (hasFallback) {
         html += `<div style="padding:4px 10px 8px; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 0.7rem; color: #555; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase;">Tal vez te interese:</div>`;
@@ -559,10 +567,15 @@ function renderActualResults(results) {
             }
         }
 
+        // Sanitize title for display (prevents &, <, > from showing as raw entities)
+        const safeTitle = sanitizeText(item.title);
+        const safeTitleAttr = (item.title || '').replace(/"/g, '&quot;').replace(/'/g, "\\'");
+
         // IMAGE LOGIC: Prefer image_url, fallback to icon
+        // Use a unique data-r2-src to sign async after render
         let imgHtml = '';
         if (item.img) {
-            imgHtml = `<img src="${item.img}" style="width:36px; height:36px; border-radius:6px; object-fit:cover;" alt="${item.title}" onerror="if(window.AvatarManager) window.AvatarManager.handleError(this, '${item.title.replace(/'/g, "\\'")}')">`;
+            imgHtml = `<img data-r2-src="${item.img}" src="" style="width:36px; height:36px; border-radius:6px; object-fit:cover; background:#1a1a1a;" alt="${safeTitleAttr}" onerror="if(window.AvatarManager) window.AvatarManager.handleError(this, '${safeTitleAttr}')">`;
         } else {
             let icon = item.type === 'user' ? 'person-circle' : (item.type === 'kit' ? 'box-seam' : 'music-note-beamed');
             imgHtml = `<div class="result-img" style="display:flex;align-items:center;justify-content:center;color:#666; background:rgba(255,255,255,0.05); border-radius:50%; width:36px; height:36px;"><i class="bi bi-${icon}"></i></div>`;
@@ -574,16 +587,37 @@ function renderActualResults(results) {
             (window.createSeoLink ? window.createSeoLink(item) : `/producto.html?id=${item.id}`);
 
         html += `
-            <div class="search-result-item" onclick="handleResultClick('${targetUrl}', '${item.title.replace(/'/g, "\\'")}')">
+            <div class="search-result-item" onclick="handleResultClick('${targetUrl}', '${safeTitleAttr}')">
                 ${imgHtml}
                 <div class="result-info">
-                    <div class="result-title">${item.title}</div>
-                    <div class="result-meta">${item.producer || item.stats || item.price || ''}</div>
+                    <div class="result-title">${safeTitle}</div>
+                    <div class="result-meta">${sanitizeText(item.producer || item.stats || item.price || '')}</div>
                 </div>
                 ${item.price ? `<div style="font-size:0.8rem; color:#8b5cf6; font-weight:600;">${displayPrice}</div>` : ''}
             </div>`;
     });
     trendPanel.innerHTML = html;
+
+    // 🔥 POST-RENDER: Sign R2 images asynchronously for instant display
+    trendPanel.querySelectorAll('img[data-r2-src]').forEach(async (img) => {
+        const rawSrc = img.getAttribute('data-r2-src');
+        if (!rawSrc) return;
+        try {
+            if (window.getAuthorizedUrl) {
+                const signedUrl = await window.getAuthorizedUrl(rawSrc);
+                if (signedUrl) {
+                    img.src = signedUrl;
+                    img.style.opacity = '1';
+                }
+            } else {
+                // Fallback: Use raw URL directly (might work for public R2 buckets)
+                img.src = rawSrc;
+            }
+        } catch (e) {
+            // Fallback on error
+            img.src = rawSrc;
+        }
+    });
 }
 
 function renderHistoryAndTrends() {

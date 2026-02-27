@@ -153,7 +153,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             product.producer.followers_count = followersRes.count || 0;
         }
 
-        // 3. Kick off the rendering
+        // 3. Inject Dynamic SEO (Title, Meta, Schema JSON-LD)
+        injectDynamicSEO(product);
+
+        // 4. Kick off the rendering
         renderProductPage(product);
 
         // --- NEW: Pending Coupon Activation on Return from Onboarding ---
@@ -334,6 +337,124 @@ window.toggleDescriptionDisplay = function (btn) {
         short.style.display = 'none';
         btn.innerText = 'Ver menos';
     }
+}
+
+/**
+ * 🔥 SEO: Dynamically inject title, meta tags, OG tags, and JSON-LD Schema
+ * This makes each product page discoverable by Google with rich snippets.
+ */
+function injectDynamicSEO(product) {
+    // 1. Build SEO data
+    const producerData = Array.isArray(product.producer) ? product.producer[0] : product.producer;
+    const producerName = producerData?.nickname || 'OFFSZN';
+    const pType = (product.product_type || '').toLowerCase();
+    const categoryLabel = pType === 'beat' ? 'Beat' : pType === 'drumkit' ? 'Drum Kit' : pType === 'preset' ? 'Preset' : 'Producto';
+    const price = product.price_basic || product.price || 0;
+    const currency = 'USD';
+    const coverUrl = product.image_url || 'https://offszn.lat/images/LOGO OFFSZN.webp';
+    const productUrl = window.location.href;
+
+    // 2. Set Document Title (MOST IMPORTANT for Google)
+    document.title = `${product.name} - ${producerName} | OFFSZN`;
+
+    // 3. Set or Update Meta Description
+    let metaDesc = document.querySelector('meta[name="description"]');
+    if (!metaDesc) {
+        metaDesc = document.createElement('meta');
+        metaDesc.name = 'description';
+        document.head.appendChild(metaDesc);
+    }
+    const descText = product.is_free
+        ? `Descarga gratis "${product.name}" por ${producerName}. ${categoryLabel} disponible en OFFSZN.lat`
+        : `Escucha y compra "${product.name}" por ${producerName}. ${categoryLabel} a $${price}. Licencia disponible en OFFSZN.lat`;
+    metaDesc.content = descText;
+
+    // 4. Set Canonical URL
+    let canonical = document.querySelector('link[rel="canonical"]');
+    if (!canonical) {
+        canonical = document.createElement('link');
+        canonical.rel = 'canonical';
+        document.head.appendChild(canonical);
+    }
+    canonical.href = productUrl;
+
+    // 5. Set Open Graph Tags
+    const ogTags = {
+        'og:title': `${product.name} - ${producerName} | OFFSZN`,
+        'og:description': descText,
+        'og:image': coverUrl,
+        'og:url': productUrl,
+        'og:type': 'product',
+        'og:site_name': 'OFFSZN',
+        'og:locale': 'es_PE'
+    };
+
+    for (const [prop, content] of Object.entries(ogTags)) {
+        let tag = document.querySelector(`meta[property="${prop}"]`);
+        if (!tag) {
+            tag = document.createElement('meta');
+            tag.setAttribute('property', prop);
+            document.head.appendChild(tag);
+        }
+        tag.content = content;
+    }
+
+    // 6. Set Twitter Card Tags
+    const twitterTags = {
+        'twitter:card': 'summary_large_image',
+        'twitter:title': `${product.name} - ${producerName} | OFFSZN`,
+        'twitter:description': descText,
+        'twitter:image': coverUrl
+    };
+
+    for (const [name, content] of Object.entries(twitterTags)) {
+        let tag = document.querySelector(`meta[name="${name}"]`);
+        if (!tag) {
+            tag = document.createElement('meta');
+            tag.name = name;
+            document.head.appendChild(tag);
+        }
+        tag.content = content;
+    }
+
+    // 7. Inject Product Schema JSON-LD (Rich Snippets with Price)
+    const schema = {
+        '@context': 'https://schema.org',
+        '@type': 'Product',
+        'name': product.name,
+        'description': product.description || descText,
+        'image': coverUrl,
+        'brand': { '@type': 'Brand', 'name': 'OFFSZN' },
+        'creator': { '@type': 'Person', 'name': producerName },
+        'category': categoryLabel,
+        'offers': {
+            '@type': 'Offer',
+            'price': String(price),
+            'priceCurrency': currency,
+            'availability': 'https://schema.org/InStock',
+            'url': productUrl,
+            'seller': { '@type': 'Organization', 'name': 'OFFSZN' }
+        }
+    };
+
+    // Add BPM and Key for beats
+    if (pType === 'beat') {
+        schema.additionalProperty = [];
+        if (product.bpm) schema.additionalProperty.push({ '@type': 'PropertyValue', 'name': 'BPM', 'value': String(product.bpm) });
+        if (product.key) schema.additionalProperty.push({ '@type': 'PropertyValue', 'name': 'Key', 'value': `${product.key} ${product.key_scale || ''}`.trim() });
+    }
+
+    // Remove any existing product schema
+    const existingSchema = document.querySelector('script[data-seo="product"]');
+    if (existingSchema) existingSchema.remove();
+
+    const scriptTag = document.createElement('script');
+    scriptTag.type = 'application/ld+json';
+    scriptTag.setAttribute('data-seo', 'product');
+    scriptTag.textContent = JSON.stringify(schema);
+    document.head.appendChild(scriptTag);
+
+    console.log('✅ [SEO] Dynamic metadata injected for:', product.name);
 }
 
 /**
