@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
 
     // 1. Determinar API_URL dinámicamente
-    let API_URL = `${window.OFFSZN_CONFIG?.API_BASE_URL || 'https://offszn-oc7c.onrender.com'}/api`;
+    let API_URL = `${window.OFFSZN_CONFIG?.API_BASE_URL || 'https://offszn.lat'}/api`;
 
     const chatIcon = document.getElementById('chatIcon');
     const chatWindow = document.getElementById('chatWindow');

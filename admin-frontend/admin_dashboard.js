@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
         API_URL = 'http://localhost:3000/api';
     } else {
-        API_URL = 'https://offszn-academy.onrender.com/api';
+        API_URL = 'https://offszn.lat/api';
     }
 
     if (logoutButton) {
@@ -43,8 +43,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     mainContent.innerHTML = '<h1>Sección no encontrada</h1>';
             }
         } catch (error) {
-             console.error(`Error cargando sección ${section}:`, error);
-             mainContent.innerHTML = `<h1 style="color: red;">Error al cargar ${section}</h1><p>${error.message}</p>`;
+            console.error(`Error cargando sección ${section}:`, error);
+            mainContent.innerHTML = `<h1 style="color: red;">Error al cargar ${section}</h1><p>${error.message}</p>`;
         }
     }
 
@@ -160,8 +160,8 @@ document.addEventListener('DOMContentLoaded', () => {
             mainContent.querySelector('.btn-cancel').addEventListener('click', () => loadContent('products'));
 
         } catch (error) {
-             console.error("Error al cargar formulario de edición:", error);
-             mainContent.innerHTML = `<h2 style="color:red;">Error cargando producto para editar</h2><p>${error.message}</p><button onclick="loadContent('products')">Volver</button>`;
+            console.error("Error al cargar formulario de edición:", error);
+            mainContent.innerHTML = `<h2 style="color:red;">Error cargando producto para editar</h2><p>${error.message}</p><button onclick="loadContent('products')">Volver</button>`;
         }
     }
 
@@ -202,14 +202,14 @@ document.addEventListener('DOMContentLoaded', () => {
             messageDiv.textContent = '¡Producto creado exitosamente!';
             messageDiv.classList.add('success');
             form.reset();
-            setTimeout(() => loadContent('products'), 1500); 
+            setTimeout(() => loadContent('products'), 1500);
 
         } catch (error) {
             messageDiv.textContent = `Error: ${error.message}`;
             messageDiv.classList.add('error');
         } finally {
-             submitButton.disabled = false;
-             submitButton.textContent = 'Guardar Producto';
+            submitButton.disabled = false;
+            submitButton.textContent = 'Guardar Producto';
         }
     }
 
@@ -255,27 +255,27 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) {
             messageDiv.textContent = `Error: ${error.message}`;
             messageDiv.classList.add('error');
-             submitButton.disabled = false;
-             submitButton.textContent = 'Actualizar Producto';
+            submitButton.disabled = false;
+            submitButton.textContent = 'Actualizar Producto';
         }
     }
 
     async function handleDeleteProduct(productId) {
-         if (!confirm(`¿Estás seguro de que quieres eliminar el producto con ID ${productId}? Esta acción no se puede deshacer.`)) {
-             return;
-         }
+        if (!confirm(`¿Estás seguro de que quieres eliminar el producto con ID ${productId}? Esta acción no se puede deshacer.`)) {
+            return;
+        }
 
-         const rowToDelete = mainContent.querySelector(`button.btn-delete[data-id="${productId}"]`)?.closest('tr');
-         if (rowToDelete) rowToDelete.style.opacity = '0.5';
+        const rowToDelete = mainContent.querySelector(`button.btn-delete[data-id="${productId}"]`)?.closest('tr');
+        if (rowToDelete) rowToDelete.style.opacity = '0.5';
 
         try {
-            const response = await fetch(`${API_URL}/admin/products/${productId}`, { 
+            const response = await fetch(`${API_URL}/admin/products/${productId}`, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
             });
-             const data = await response.json();
+            const data = await response.json();
 
             if (!response.ok) {
                 throw new Error(data.error || `Error ${response.status} al eliminar`);
@@ -287,20 +287,20 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) {
             console.error(`Error al eliminar producto ${productId}:`, error);
             alert(`Error al eliminar: ${error.message}`);
-             if (rowToDelete) rowToDelete.style.opacity = '1';
+            if (rowToDelete) rowToDelete.style.opacity = '1';
         }
     }
 
     function addProductListeners() {
-         const newBtn = mainContent.querySelector('.btn-new-product');
-         if(newBtn) newBtn.addEventListener('click', showNewProductForm);
+        const newBtn = mainContent.querySelector('.btn-new-product');
+        if (newBtn) newBtn.addEventListener('click', showNewProductForm);
 
-         mainContent.querySelectorAll('.btn-edit').forEach(btn => {
-             btn.addEventListener('click', (e) => showEditProductForm(e.target.dataset.id));
-         });
-         mainContent.querySelectorAll('.btn-delete').forEach(btn => {
-             btn.addEventListener('click', (e) => handleDeleteProduct(e.target.dataset.id));
-         });
+        mainContent.querySelectorAll('.btn-edit').forEach(btn => {
+            btn.addEventListener('click', (e) => showEditProductForm(e.target.dataset.id));
+        });
+        mainContent.querySelectorAll('.btn-delete').forEach(btn => {
+            btn.addEventListener('click', (e) => handleDeleteProduct(e.target.dataset.id));
+        });
     }
 
 

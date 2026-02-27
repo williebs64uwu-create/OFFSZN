@@ -5,7 +5,7 @@ let currentUserId = null;
 let currentAudio = null;
 
 // URL de la API
-let API_URL = `${window.OFFSZN_CONFIG?.API_BASE_URL || 'https://offszn-oc7c.onrender.com'}/api`;
+let API_URL = `${window.OFFSZN_CONFIG?.API_BASE_URL || 'https://offszn.lat'}/api`;
 
 // ============================================
 // OBTENER NICKNAME DESDE LA URL (¡CORREGIDO!)

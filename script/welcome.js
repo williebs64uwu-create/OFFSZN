@@ -37,7 +37,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let avatarFile = null;
   let cropper = null;
 
-  const API_URL = `${window.OFFSZN_CONFIG?.API_BASE_URL || 'https://offszn-oc7c.onrender.com'}/api`;
+  const API_URL = `${window.OFFSZN_CONFIG?.API_BASE_URL || 'https://offszn.lat'}/api`;
   const token = localStorage.getItem('authToken');
 
   // ELEMENTOS DEL DOM

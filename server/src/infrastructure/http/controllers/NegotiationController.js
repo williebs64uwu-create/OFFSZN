@@ -81,7 +81,7 @@ export const submitNegotiation = async (req, res) => {
                         <p style="color:#888; margin:0;"><b style="color:#fff;">Email del interesado:</b> ${email}</p>
                     </div>
                     <p style="color:#888; line-height:1.5;">Puedes aceptar, rechazar o enviar una contra-oferta desde tu panel de negociaciones.</p>
-                    <a href="https://offszn-oc7c.onrender.com/cuenta/negociar" style="display:inline-block; background:#8B5CF6; color:#fff; padding:14px 30px; border-radius:10px; text-decoration:none; font-weight:700; margin-top:15px;">VER PROPUESTAS</a>
+                    <a href="https://offszn.lat/cuenta/negociar" style="display:inline-block; background:#8B5CF6; color:#fff; padding:14px 30px; border-radius:10px; text-decoration:none; font-weight:700; margin-top:15px;">VER PROPUESTAS</a>
                     <hr style="border:0; border-top:1px solid #222; margin:25px 0;">
                     <p style="font-size:0.75rem; color:#555;">Este es un mensaje automático de OFFSZN. ¿Tienes algún problema? Responde a este correo.</p>
                 </div>
@@ -99,7 +99,7 @@ export const submitNegotiation = async (req, res) => {
                     <h2 style="color: #8B5CF6;">¡Propuesta enviada!</h2>
                     <p style="color:#ccc; line-height:1.6;">Hemos enviado tu oferta de <b style="color:#fff;">$${amount} USD</b> por <b style="color:#fff;">${productName}</b> a ${producerName}.</p>
                     <p style="color:#888; line-height:1.5;">El productor revisará tu propuesta y recibirás un correo con la respuesta. Puedes ver el estado de tus propuestas en tu panel de negociaciones.</p>
-                    <a href="https://offszn-oc7c.onrender.com/cuenta/negociar" style="display:inline-block; background:#8B5CF6; color:#fff; padding:14px 30px; border-radius:10px; text-decoration:none; font-weight:700; margin-top:15px;">VER MIS PROPUESTAS</a>
+                    <a href="https://offszn.lat/cuenta/negociar" style="display:inline-block; background:#8B5CF6; color:#fff; padding:14px 30px; border-radius:10px; text-decoration:none; font-weight:700; margin-top:15px;">VER MIS PROPUESTAS</a>
                     <hr style="border:0; border-top:1px solid #222; margin:25px 0;">
                     <p style="font-size:0.75rem; color:#555;">¿Tienes algún problema? Escríbenos a ${EMAIL_USER}</p>
                 </div>
@@ -194,7 +194,7 @@ export const respondNegotiation = async (req, res) => {
         let html = '';
 
         if (status === 'accepted') {
-            const purchaseUrl = `https://offszn-oc7c.onrender.com/cuenta/negociar`;
+            const purchaseUrl = `https://offszn.lat/cuenta/negociar`;
             subject = `✅ ¡Oferta aceptada! Tu propuesta para "${productName}" fue aprobada`;
             html = `
                 <div style="font-family: 'Segoe UI', sans-serif; padding: 30px; background: #0a0a0a; border-radius: 12px; color: #fff; max-width: 600px;">
@@ -240,7 +240,7 @@ export const respondNegotiation = async (req, res) => {
                         <p style="color:#fff; font-size:1.5rem; font-weight:800; margin:0;">$${counterAmount} USD</p>
                     </div>
                     <p style="color:#888; line-height:1.5;">Puedes aceptar esta contra-oferta o continuar la negociación desde tu panel.</p>
-                    <a href="https://offszn-oc7c.onrender.com/cuenta/negociar" style="display:inline-block; background:#8B5CF6; color:#fff; padding:14px 30px; border-radius:10px; text-decoration:none; font-weight:700; margin-top:15px;">VER NEGOCIACIÓN</a>
+                    <a href="https://offszn.lat/cuenta/negociar" style="display:inline-block; background:#8B5CF6; color:#fff; padding:14px 30px; border-radius:10px; text-decoration:none; font-weight:700; margin-top:15px;">VER NEGOCIACIÓN</a>
                     <hr style="border:0; border-top:1px solid #222; margin:25px 0;">
                     <p style="font-size:0.75rem; color:#555;">¿Tienes algún problema? Escríbenos a ${EMAIL_USER}</p>
                 </div>

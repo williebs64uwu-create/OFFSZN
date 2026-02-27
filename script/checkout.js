@@ -17,7 +17,7 @@ const CheckoutManager = {
 
   init: async function () {
     // Define API_URL based on environment
-    this.API_URL = `${window.OFFSZN_CONFIG?.API_BASE_URL || 'https://offszn-oc7c.onrender.com'}/api`;
+    this.API_URL = `${window.OFFSZN_CONFIG?.API_BASE_URL || 'https://offszn.lat'}/api`;
 
     console.log("Checkout Manager Initialized");
 

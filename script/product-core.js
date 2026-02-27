@@ -6,7 +6,7 @@
 // ============================================
 // API CONFIG
 // ============================================
-let API_URL = `${window.OFFSZN_CONFIG?.API_BASE_URL || 'https://offszn-oc7c.onrender.com'}/api`;
+let API_URL = `${window.OFFSZN_CONFIG?.API_BASE_URL || 'https://offszn.lat'}/api`;
 
 window.currentProductData = null;
 window.claimedCouponData = null; // Store fetched coupon info
@@ -2919,7 +2919,7 @@ window.processCouponClaim = async function () {
         const tempPassword = 'OFFSZN-' + Math.random().toString(36).substring(2, 10).toUpperCase() + '!';
         const redirectUrl = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
             ? window.location.origin + '/index.html'
-            : 'https://offszn-oc7c.onrender.com/index.html';
+            : 'https://offszn.lat/index.html';
 
         console.log("🚀 Iniciando SignUp en Supabase para:", email);
         const { data: authData, error: authError } = await window.supabaseClient.auth.signUp({
@@ -3146,7 +3146,7 @@ window.submitNegotiation = async function () {
             const tempPassword = 'OFFSZN-' + Math.random().toString(36).substring(2, 10).toUpperCase() + '!';
             const redirectUrl = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
                 ? window.location.origin + '/index.html'
-                : 'https://offszn-oc7c.onrender.com/index.html';
+                : 'https://offszn.lat/index.html';
 
             const { error: authError } = await window.supabaseClient.auth.signUp({
                 email: email,

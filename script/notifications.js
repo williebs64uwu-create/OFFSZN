@@ -74,7 +74,7 @@
                         const { data: { session } } = await sbClient.auth.getSession();
                         if (session?.access_token) {
                             try {
-                                const API_URL = `${window.OFFSZN_CONFIG?.API_BASE_URL || 'https://offszn-oc7c.onrender.com'}/api`;
+                                const API_URL = `${window.OFFSZN_CONFIG?.API_BASE_URL || 'https://offszn.lat'}/api`;
 
                                 const res = await fetch(`${API_URL}/me/following`, {
                                     headers: { 'Authorization': `Bearer ${session.access_token}` }

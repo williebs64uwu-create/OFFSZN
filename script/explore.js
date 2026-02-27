@@ -13,7 +13,7 @@ const EXPLORE_CONFIG = {
 };
 
 // API Configuration
-const API_URL = `${window.OFFSZN_CONFIG?.API_BASE_URL || 'https://offszn-oc7c.onrender.com'}/api`;
+const API_URL = `${window.OFFSZN_CONFIG?.API_BASE_URL || 'https://offszn.lat'}/api`;
 
 // State
 let allProducts = [];

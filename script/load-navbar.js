@@ -17,7 +17,7 @@
         if (window.location.protocol === 'file:') {
             pathPrefix = window.location.pathname.includes('/pages/') || window.location.pathname.includes('/recursos/') || window.location.pathname.includes('/comunidad/') || window.location.pathname.includes('/cursos/') || window.location.pathname.includes('/studio/') || window.location.pathname.includes('/cuenta/') || window.location.pathname.includes('/servicios/') ? '../' : './';
         }
-        const response = await fetch(pathPrefix + 'components/navbar.html?v=' + new Date().getTime());
+        const response = await fetch(pathPrefix + 'components/navbar.html?v=20');
         if (!response.ok) {
             throw new Error(`Failed to load navbar: ${response.status}`);
         }
@@ -32,7 +32,7 @@
         if (!document.getElementById('share-modal-script')) {
             const script = document.createElement('script');
             script.id = 'share-modal-script';
-            script.src = pathPrefix + 'script/share-modal.js?v=' + new Date().getTime();
+            script.src = pathPrefix + 'script/share-modal.js?v=20';
             document.body.appendChild(script);
         }
 
@@ -41,7 +41,7 @@
             const link = document.createElement('link');
             link.id = 'share-modal-css';
             link.rel = 'stylesheet';
-            link.href = pathPrefix + 'css/share-modal.css?v=' + new Date().getTime();
+            link.href = pathPrefix + 'css/share-modal.css?v=20';
             document.head.appendChild(link);
         }
 

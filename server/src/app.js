@@ -30,26 +30,23 @@ import { authenticateTokenMiddleware } from './infrastructure/middlewares/authen
 
 
 
-const app = express()
+const app = express();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const rootPath = path.join(__dirname, '../../'); // Project Root
+const rootPath = path.join(__dirname, '../../');
 
 // --- 1. CONFIGURACIÓN CORS ROBUSTA ---
 const allowedOrigins = [
-    'https://offszn-oc7c.onrender.com',  // Nuevo Deploy en Producción
-    'https://offszn.onrender.com',       // Tu Frontend Producción
+    'https://offszn.lat',
+    'https://www.offszn.lat',
+    'https://offszn-oc7c.onrender.com',
+    'https://offszn.onrender.com',
     'https://offszn1.onrender.com',
-    'https://offszn-academy.onrender.com', // Tu Backend
-    'https://offszn.lat',                // NUEVO DOMINIO
-    'https://www.offszn.lat',            // NUEVO DOMINIO WWW
-    'http://localhost:5500',             // Local
-    'http://127.0.0.1:5500',             // Local IP
-    'http://127.0.0.1:5501',              // Local Live Server alt
-    'http://127.0.0.1:5502',
-    'http://127.0.0.1:5503',
-    'http://127.0.0.1:5504',
-    'http://localhost:3000'              // Backend Self-Serving
+    'https://offszn-academy.onrender.com',
+    'http://localhost:5500',
+    'http://127.0.0.1:5500',
+    'http://127.0.0.1:5501',
+    'http://localhost:3000'
 ];
 
 const corsOptions = {
