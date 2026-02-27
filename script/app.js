@@ -6,9 +6,7 @@ let cursos = [];
 let presets = [];
 
 // Fetch al backend
-const API_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
-  ? 'http://localhost:3000/api'
-  : 'https://offszn-oc7c.onrender.com/api';
+const API_URL = `${window.OFFSZN_CONFIG?.API_BASE_URL || 'https://offszn-oc7c.onrender.com'}/api`;
 
 fetch(`${API_URL}/products`)
   .then(res => {

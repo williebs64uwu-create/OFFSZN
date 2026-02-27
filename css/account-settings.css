@@ -368,13 +368,14 @@ textarea.form-input::-webkit-scrollbar-thumb:hover {
 .forgot-password-link {
     color: var(--text-secondary);
     font-size: 0.85rem;
-    text-decoration: none;
+    text-decoration: underline;
+    /* Default underline as requested */
     transition: color 0.2s;
 }
 
 .forgot-password-link:hover {
-    color: var(--accent);
-    text-decoration: underline;
+    color: #fff;
+    /* White on hover for contrast */
 }
 
 @keyframes fadeIn {
@@ -393,11 +394,155 @@ textarea.form-input::-webkit-scrollbar-thumb:hover {
 @media (max-width: 992px) {
     .settings-container {
         flex-direction: column;
-        padding: 0 20px;
+        padding: 0 16px;
+        gap: 12px;
+        /* Reduced from 20px */
+        margin-top: 10px;
+        /* Reduced from 20px */
     }
 
     .settings-sidebar {
         width: 100%;
+        position: relative;
+        z-index: 100;
+    }
+
+    .profile-card {
+        display: none !important;
+    }
+
+    .settings-section-title {
+        font-size: 1.6rem;
+        /* Slightly smaller */
+        margin-bottom: 20px;
+        /* Reduced from 30px */
+        text-align: center;
+    }
+
+    .settings-group {
+        padding: 24px 20px;
+        /* Reduced from 40px */
+        border-radius: 16px;
+        margin-bottom: 20px;
+    }
+
+    .avatar-edit-wrapper {
+        margin-bottom: 20px;
+        padding: 16px;
+        gap: 16px;
+    }
+
+    .form-grid {
+        gap: 20px;
+        /* Reduced from 30px */
+    }
+
+    .settings-nav {
+        display: none;
+        flex-direction: column;
+        background: #121214;
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        position: absolute;
+        top: 60px;
+        left: 0;
+        width: 100%;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        padding: 8px;
+        box-sizing: border-box;
+    }
+
+    .settings-nav.open {
+        display: flex;
+        animation: slideDown 0.2s ease;
+    }
+
+    .settings-nav-item {
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .settings-nav-item:hover {
+        transform: none;
+    }
+
+    .form-actions {
+        flex-direction: column-reverse;
+        gap: 16px;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+    }
+
+    .form-actions button {
+        width: 100%;
+        max-width: 280px;
+    }
+
+    .forgot-password-link {
+        font-size: 0.9rem;
+        padding: 5px 0;
+    }
+
+    /* DROPDOWN TRIGGER */
+    .settings-mobile-trigger {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: #121214;
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 14px 20px;
+        cursor: pointer;
+        width: 100%;
+        box-sizing: border-box;
+        transition: all 0.2s;
+    }
+
+    .settings-mobile-trigger:hover {
+        background: rgba(255, 255, 255, 0.03);
+        border-color: rgba(255, 255, 255, 0.15);
+    }
+
+    .settings-mobile-trigger .trigger-content {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-weight: 700;
+        font-size: 1rem;
+        color: #fff;
+    }
+
+    .settings-mobile-trigger i {
+        font-size: 1.2rem;
+    }
+
+    .trigger-arrow {
+        transition: transform 0.3s ease;
+        color: var(--text-secondary);
+    }
+
+    .settings-nav.open~.settings-mobile-trigger .trigger-arrow,
+    .settings-mobile-trigger.active .trigger-arrow {
+        transform: rotate(180deg);
+    }
+
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+}
+
+@media (min-width: 993px) {
+    .settings-mobile-trigger {
+        display: none !important;
     }
 }
 

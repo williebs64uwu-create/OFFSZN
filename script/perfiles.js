@@ -5,12 +5,7 @@ let currentUserId = null;
 let currentAudio = null;
 
 // URL de la API
-let API_URL = '';
-if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-  API_URL = 'http://localhost:3000/api';
-} else {
-  API_URL = 'https://offszn-oc7c.onrender.com/api'; // (Tu URL de Render)
-}
+let API_URL = `${window.OFFSZN_CONFIG?.API_BASE_URL || 'https://offszn-oc7c.onrender.com'}/api`;
 
 // ============================================
 // OBTENER NICKNAME DESDE LA URL (¡CORREGIDO!)

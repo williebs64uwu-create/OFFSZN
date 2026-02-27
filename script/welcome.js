@@ -37,7 +37,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let avatarFile = null;
   let cropper = null;
 
-  const API_URL = 'https://offszn-oc7c.onrender.com/api';
+  const API_URL = `${window.OFFSZN_CONFIG?.API_BASE_URL || 'https://offszn-oc7c.onrender.com'}/api`;
   const token = localStorage.getItem('authToken');
 
   // ELEMENTOS DEL DOM
@@ -715,7 +715,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
           const { data: { session } } = await supabaseClient.auth.getSession();
           if (session) {
-            const avatarRes = await fetch('/api/cloudinary/avatar', {
+            const avatarRes = await fetch(`${API_URL.replace('/api', '')}/api/cloudinary/avatar`, {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',

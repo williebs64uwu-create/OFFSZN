@@ -41,6 +41,8 @@ const allowedOrigins = [
     'https://offszn.onrender.com',       // Tu Frontend Producción
     'https://offszn1.onrender.com',
     'https://offszn-academy.onrender.com', // Tu Backend
+    'https://offszn.lat',                // NUEVO DOMINIO
+    'https://www.offszn.lat',            // NUEVO DOMINIO WWW
     'http://localhost:5500',             // Local
     'http://127.0.0.1:5500',             // Local IP
     'http://127.0.0.1:5501',              // Local Live Server alt

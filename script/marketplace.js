@@ -9,12 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
         console.warn("Marketplace: Global Supabase client not found. Some features may be limited.");
     }
 
-    let API_URL = '';
-    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-        API_URL = 'http://localhost:3000/api';
-    } else {
-        API_URL = 'https://offszn-oc7c.onrender.com/api';
-    }
+    let API_URL = `${window.OFFSZN_CONFIG?.API_BASE_URL || 'https://offszn-oc7c.onrender.com'}/api`;
 
     // --- 2. ESTADO GLOBAL ---
     let allProducts = []; // Guardamos todos los productos aquí

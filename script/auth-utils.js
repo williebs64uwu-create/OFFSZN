@@ -11,9 +11,8 @@ window.AuthUtils = {
     initSupabase: function () {
         if (window.supabaseClient) return; // Already initialized
 
-
-
-
+        const API_URL = `${window.OFFSZN_CONFIG?.API_BASE_URL || 'https://offszn-oc7c.onrender.com'}/api`;
+        this._apiUrl = API_URL;
         if (typeof window.supabase !== 'undefined' && window.supabase.createClient && window.SUPABASE_URL && window.SUPABASE_ANON_KEY) {
             window.supabaseClient = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
             console.log("✅ Supabase Client Initialized via AuthUtils");
@@ -218,7 +217,7 @@ window.AuthUtils = {
         // --- SIGNING VIA API ---
         try {
             const token = this.getAccessToken(); // Use self
-            const response = await fetch('/api/r2/download-url', {
+            const response = await fetch(`${this._apiUrl}/r2/download-url`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -274,7 +273,7 @@ window.AuthUtils = {
 
         try {
             const token = this.getAccessToken();
-            const response = await fetch('/api/r2/delete-files', {
+            const response = await fetch(`${this._apiUrl}/r2/delete-files`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

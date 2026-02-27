@@ -17,9 +17,7 @@ const CheckoutManager = {
 
   init: async function () {
     // Define API_URL based on environment
-    this.API_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
-      ? 'http://localhost:3000/api'
-      : 'https://offszn-oc7c.onrender.com/api';
+    this.API_URL = `${window.OFFSZN_CONFIG?.API_BASE_URL || 'https://offszn-oc7c.onrender.com'}/api`;
 
     console.log("Checkout Manager Initialized");
 

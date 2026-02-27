@@ -78,12 +78,12 @@ window.AvatarManager = {
                         </div>
 
                         <!-- Initial Selection Buttons (STAYS IN POSITION) -->
-                        <div id="avatarUploadButtons" style="display: flex; gap: 12px; width: 100%; justify-content: center; flex-wrap: nowrap;">
-                            <button class="ctrl-btn btn-change-source" onclick="AvatarManager.triggerFileInput()" style="flex: 1; min-width: 140px; height: 44px; border-radius: 10px; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1);">
+                        <div id="avatarUploadButtons" style="display: flex; flex-direction: column; gap: 12px; width: 100%; align-items: center;">
+                            <button class="ctrl-btn btn-change-source" onclick="AvatarManager.triggerFileInput()" style="width: 100%; max-width: 280px; height: 44px; border-radius: 10px; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1);">
                                 <i class="bi bi-image"></i> Subir Imagen
                             </button>
                             
-                            <div class="avatar-gif-section" id="avatarGifSection" style="display:none; flex: 1; min-width: 140px;">
+                            <div class="avatar-gif-section" id="avatarGifSection" style="display:none; width: 100%; max-width: 280px;">
                                 <button class="ctrl-btn btn-gif-upload" onclick="AvatarManager.triggerGifInput()" style="background:#7c3aed11; border:1px solid #7c3aed44; color:#a78bfa; width:100%; height:44px; padding:0 10px; border-radius:10px; font-size:13px; cursor:pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
                                     <i class="bi bi-filetype-gif"></i> Subir GIF <span style="background:#7c3aed;color:#fff;padding:2px 6px;border-radius:4px;font-size:10px;">PRO</span>
                                 </button>
@@ -92,9 +92,8 @@ window.AvatarManager = {
                         </div>
                     </div>
 
-                    <div class="avatar-modal-footer">
-                        <button class="avatar-btn-cancel" onclick="AvatarManager.close()">Cancelar</button>
-                        <button id="avatarSaveBtn" class="avatar-btn-save" onclick="AvatarManager.save()" style="display: none;">Guardar Avatar</button>
+                    <div class="avatar-modal-footer" style="padding: 10px 24px 24px 24px; justify-content: center;">
+                        <button id="avatarSaveBtn" class="avatar-btn-save" onclick="AvatarManager.save()" style="display: none; width: 100%; max-width: 280px;">Guardar Avatar</button>
                     </div>
                 </div>
                 <!-- Hidden input for file selection (Strict: JPG, PNG, JFIF) -->

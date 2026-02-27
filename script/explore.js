@@ -13,9 +13,7 @@ const EXPLORE_CONFIG = {
 };
 
 // API Configuration
-const API_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
-    ? 'http://localhost:3000/api'
-    : 'https://offszn-oc7c.onrender.com/api';
+const API_URL = `${window.OFFSZN_CONFIG?.API_BASE_URL || 'https://offszn-oc7c.onrender.com'}/api`;
 
 // State
 let allProducts = [];
@@ -113,7 +111,7 @@ async function fetchData() {
     let userPromises = [];
     if (token) {
         userPromises = [
-            fetch('/api/me/following', { headers: { 'Authorization': `Bearer ${token}` } })
+            fetch(`${API_URL}/me/following`, { headers: { 'Authorization': `Bearer ${token}` } })
                 .then(r => r.ok ? r.json() : [])
                 .catch(() => []),
             // We can also fetch /api/me if needed, but following is priority for this view
