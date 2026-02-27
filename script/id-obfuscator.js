@@ -115,7 +115,7 @@ function fromShuffledBase(str) {
 // Global exposure
 // STANDARD OBFUSCATOR
 window.encodeProductLink = (id) => {
-    return '/producto.html?p=' + window.IdObfuscator.encodeId(id);
+    return '/p/' + window.IdObfuscator.encodeId(id);
 };
 
 window.decodeProductLink = (code) => {

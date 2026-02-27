@@ -25,12 +25,14 @@
 
         const displayName = cleanName(product.name);
         let shortLink = window.location.href;
-        // Generate actual link for the product instead of relying on current page url in case we are on explore
-        if (window.createSeoLink) {
-            shortLink = window.location.origin + window.createSeoLink(product);
+        // Generate actual short link for the product instead of relying on current page url or giant SEO link
+        if (window.encodeProductLink) {
+            shortLink = window.location.origin + window.encodeProductLink(product.id);
         } else if (window.IdObfuscator) {
             const code = window.IdObfuscator.encodeId(product.id);
-            if (code) shortLink = `${window.location.origin}/p/${code}`;
+            if (code) shortLink = `${window.location.origin}/producto.html?p=${code}`;
+        } else if (window.createSeoLink) {
+            shortLink = window.location.origin + window.createSeoLink(product);
         }
 
         const shareText = `Escucha "${displayName}" en OFFSZN 🔥`;

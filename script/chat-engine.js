@@ -737,6 +737,7 @@ async function openChat(convId, name, avatar, userId) {
     let roleText = '';
     let socials = {};
 
+    // 4. Update Header
     if (userId) {
         const { data: userDetails } = await supabase
             .from('users')
@@ -746,9 +747,10 @@ async function openChat(convId, name, avatar, userId) {
 
         if (userDetails) {
             if (userDetails.is_producer) {
-                roleText = "PRODUCTOR MUSICAL";
+                roleText = "Productor musical"; // Not uppercase
             } else if (userDetails.role && userDetails.role !== 'user') {
-                roleText = userDetails.role.toUpperCase();
+                // Keep original casing, just capitalize first letter if needed, or leave as is
+                roleText = userDetails.role.charAt(0).toUpperCase() + userDetails.role.slice(1);
             }
             socials = userDetails.socials || {};
             if (typeof socials === 'string') {
@@ -769,40 +771,72 @@ async function openChat(convId, name, avatar, userId) {
 
     document.getElementById('currentChatStatus').textContent = roleText;
 
-    // RENDER SOCIALS IN HEADER
+    // RENDER SOCIALS IN HEADER DROPDOWN
     const actionsContainer = document.querySelector('.chat-actions');
     if (actionsContainer) {
         actionsContainer.innerHTML = '';
         const icons = {
             instagram: 'bi-instagram',
-            youtube: 'bi-youtube',
             tiktok: 'bi-tiktok',
+            youtube: 'bi-youtube',
             spotify: 'bi-spotify',
             twitter: 'bi-twitter-x'
         };
 
-        const socialGroup = document.createElement('div');
-        socialGroup.className = 'header-socials';
-
-        Object.keys(socials).forEach(key => {
-            const k = key.toLowerCase();
-            const val = socials[key];
-            if (val && icons[k]) {
-                const a = document.createElement('a');
-                let href = val;
-                if (!val.startsWith('http')) {
-                    if (k === 'instagram') href = `https://instagram.com/${val}`;
-                    else if (k === 'tiktok') href = `https://tiktok.com/@${val}`;
-                    else if (k === 'youtube') href = `https://youtube.com/@${val}`;
-                }
-                a.href = href;
-                a.target = '_blank';
-                a.className = 'header-social-link';
-                a.innerHTML = `<i class="bi ${icons[k]}"></i>`;
-                socialGroup.appendChild(a);
-            }
+        // Custom order as requested: IG, TT, YT
+        const order = ['instagram', 'tiktok', 'youtube'];
+        const socialKeys = Object.keys(socials).sort((a, b) => {
+            const idxA = order.indexOf(a.toLowerCase());
+            const idxB = order.indexOf(b.toLowerCase());
+            if (idxA === -1 && idxB === -1) return 0;
+            if (idxA === -1) return 1;
+            if (idxB === -1) return -1;
+            return idxA - idxB;
         });
-        actionsContainer.appendChild(socialGroup);
+
+        const activeSocials = socialKeys.filter(k => socials[k]);
+
+        if (activeSocials.length > 0) {
+            // Create Three Dots Button
+            const moreBtn = document.createElement('button');
+            moreBtn.className = 'header-more-btn';
+            moreBtn.innerHTML = '<i class="bi bi-three-dots"></i>';
+
+            // Create Dropdown Container
+            const dropdown = document.createElement('div');
+            dropdown.className = 'header-socials-dropdown';
+            dropdown.id = 'headerSocialsDropdown';
+
+            activeSocials.forEach(key => {
+                const k = key.toLowerCase();
+                const val = socials[key];
+                if (val && icons[k]) {
+                    const a = document.createElement('a');
+                    let href = val;
+                    if (!val.startsWith('http')) {
+                        if (k === 'instagram') href = `https://instagram.com/${val}`;
+                        else if (k === 'tiktok') href = `https://tiktok.com/@${val}`;
+                        else if (k === 'youtube') href = `https://youtube.com/@${val}`;
+                    }
+                    a.href = href;
+                    a.target = '_blank';
+                    a.className = 'dropdown-social-item';
+
+                    // Capitalize label for UI
+                    const label = k.charAt(0).toUpperCase() + k.slice(1);
+                    a.innerHTML = `<i class="bi ${icons[k]}"></i> <span>${label}</span>`;
+                    dropdown.appendChild(a);
+                }
+            });
+
+            moreBtn.onclick = (e) => {
+                e.stopPropagation();
+                dropdown.classList.toggle('active');
+            };
+
+            actionsContainer.appendChild(moreBtn);
+            actionsContainer.appendChild(dropdown);
+        }
     }
 
     const feedInner = document.getElementById('messagesFeedInner');
@@ -1516,6 +1550,7 @@ function toggleMessageMenu(msgId, event) {
 // Close menus on outside click
 document.addEventListener('click', () => {
     document.querySelectorAll('.oz-msg-menu.active').forEach(m => m.classList.remove('active'));
+    document.querySelectorAll('.header-socials-dropdown.active').forEach(m => m.classList.remove('active'));
 });
 
 async function copyMessageText(msgId, event) {
