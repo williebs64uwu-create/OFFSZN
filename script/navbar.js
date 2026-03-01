@@ -1272,20 +1272,15 @@ function setupMobileMenu() {
             const scrollBarWidth = window.innerWidth - document.documentElement.clientWidth;
 
             document.documentElement.style.setProperty('--scrollbar-width', `${scrollBarWidth}px`);
-            document.documentElement.style.overflow = 'hidden';
-            document.body.classList.add('menu-open');
 
-            // On mobile iOS, overflow:hidden might not be enough.
-            // But position:fixed on body causes jumps.
-            // We'll use a hybrid approach or keep it simple first.
-            // If the user says it jumps "up", let's try to just use overflow first.
+            // Only apply overflow:hidden to body to prevent double-scrollbar or double-offset issues
+            // that cause the navbar (fixed/sticky) to jump on some mobile browsers.
+            document.body.classList.add('menu-open');
         };
 
         const unlockScroll = () => {
-            document.documentElement.style.overflow = '';
             document.body.classList.remove('menu-open');
             document.documentElement.style.removeProperty('--scrollbar-width');
-            // No need to scrollTo if we didn't use position:fixed
         };
 
         const toggleMenu = (e) => {

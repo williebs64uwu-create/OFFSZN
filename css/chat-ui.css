@@ -312,14 +312,14 @@ body:has(.chat-wrapper) {
     background: #444;
 }
 
-.chat-item {
+.chat-item,
+.oz-chat-row {
     display: flex;
     padding: 12px 20px;
     gap: 12px;
     cursor: pointer;
     transition: background 0.2s;
     position: relative;
-    /* overflow: hidden; REMOVED to prevent dropdown cutoff */
     align-items: center;
 }
 
@@ -337,7 +337,8 @@ body:has(.chat-wrapper) {
     background: var(--chat-hover);
 }
 
-.chat-item-options {
+.chat-item-options,
+.oz-chat-dots {
     position: absolute;
     right: 15px;
     top: 50%;
@@ -420,7 +421,8 @@ body:has(.chat-wrapper) {
 }
 
 
-.chat-avatar {
+.chat-avatar,
+.oz-chat-avatar {
     width: 48px;
     height: 48px;
     border-radius: 50%;
@@ -442,7 +444,8 @@ body:has(.chat-wrapper) {
     object-fit: cover;
 }
 
-.chat-info {
+.chat-info,
+.oz-chat-info {
     flex: 1;
     display: flex;
     flex-direction: column;
@@ -450,14 +453,18 @@ body:has(.chat-wrapper) {
     overflow: hidden;
 }
 
-.chat-name {
+.chat-name,
+.oz-chat-name {
     color: #fff;
     font-weight: 600;
     font-size: 0.95rem;
     margin-bottom: 4px;
+    display: flex;
+    align-items: center;
 }
 
-.chat-preview {
+.chat-preview,
+.oz-chat-preview-wrap {
     color: var(--chat-subtext);
     font-size: 0.85rem;
     white-space: nowrap;
@@ -469,12 +476,25 @@ body:has(.chat-wrapper) {
     max-width: 180px;
 }
 
+.oz-chat-preview-text {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.oz-chat-time {
+    color: #555;
+    font-size: 0.75rem;
+    margin-left: auto;
+    white-space: nowrap;
+}
+
 .unread-dot {
     width: 8px;
     height: 8px;
     background: var(--chat-accent);
     border-radius: 50%;
-    margin-left: auto;
+    margin-left: 8px;
 }
 
 .delete-chat-btn {
@@ -1846,4 +1866,77 @@ body:has(.chat-wrapper) {
         right: 0;
         border-left: 1px solid #1a1a1a;
     }
+}
+
+/* =========================================
+   V3 UNIQUE CHAT IDENTIFIERS (Pinning Fix)
+   ========================================= */
+.offszn-v3-chat-row {
+    display: flex;
+    padding: 12px 20px;
+    gap: 12px;
+    cursor: pointer;
+    transition: background 0.2s;
+    position: relative;
+    align-items: center;
+}
+
+.offszn-v3-chat-row:hover {
+    background: #1a1a1a;
+}
+
+.offszn-v3-chat-row.active {
+    background: #222222;
+    border-left: 3px solid #a855f7;
+    box-shadow: inset 4px 0 10px rgba(168, 85, 247, 0.05);
+}
+
+.offszn-v3-chat-name {
+    color: #fff;
+    font-weight: 600;
+    font-size: 0.95rem;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.offszn-v3-pin-icon {
+    color: #a855f7 !important;
+    font-size: 0.85rem !important;
+    filter: drop-shadow(0 0 4px rgba(168, 85, 247, 0.4)) !important;
+    display: inline-block !important;
+    vertical-align: middle !important;
+}
+
+.offszn-v3-pin-icon::before {
+    /* Rely on bi-pin-fill class from JS template instead of hardcoded unicode */
+    font-size: inherit;
+}
+
+.offszn-v3-dots {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #888;
+    cursor: pointer;
+    opacity: 0.5;
+    transition: all 0.2s;
+    z-index: 5;
+}
+
+.offszn-v3-chat-row:hover .offszn-v3-dots {
+    opacity: 1;
+}
+
+.offszn-v3-dots:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
 }

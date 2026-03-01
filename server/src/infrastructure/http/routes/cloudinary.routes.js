@@ -35,7 +35,7 @@ const MAX_AVATAR_SIZE = 30 * 1024 * 1024;
 router.post('/avatar', authenticateTokenMiddleware, async (req, res) => {
     try {
         const userId = req.user.userId;
-        const { image, isGif, fileSize, crop } = req.body;
+        const { image, isGif, fileSize, crop, context } = req.body;
 
         if (!image) {
             return res.status(400).json({ error: 'No se proporcionó imagen' });
@@ -70,11 +70,15 @@ router.post('/avatar', authenticateTokenMiddleware, async (req, res) => {
             .single();
 
         const oldUrl = currentUser?.avatar_url;
-        const publicId = userId; // Simpler ID, folder 'avatars/' handles separation
+
+        // 🔥 If context is 'group', use a unique ID to avoid overwriting user avatar
+        // This also prevents multiple groups from sharing/overwriting the same image file
+        const publicId = context === 'group' ? `group_${Date.now()}_${userId}` : userId;
+        const folder = context === 'group' ? 'groups' : 'avatars';
 
         // 🔥 ALWAYS UPLOAD NEW IMAGE
         const uploadResult = await cloudinary.uploader.upload(image, {
-            folder: 'avatars',
+            folder: folder,
             public_id: publicId,
             overwrite: true,
             invalidate: true,
@@ -107,9 +111,9 @@ router.post('/avatar', authenticateTokenMiddleware, async (req, res) => {
 
             if (isGif) {
                 options.flags = 'animated';
-                displayUrl = cloudinary.url(`avatars/${publicId}.gif`, options);
+                displayUrl = cloudinary.url(`${folder}/${publicId}.gif`, options);
             } else {
-                displayUrl = cloudinary.url(`avatars/${publicId}`, {
+                displayUrl = cloudinary.url(`${folder}/${publicId}`, {
                     ...options,
                     quality: 'auto',
                     fetch_format: 'auto'
@@ -119,7 +123,7 @@ router.post('/avatar', authenticateTokenMiddleware, async (req, res) => {
             displayUrl = uploadResult ? uploadResult.secure_url : oldUrl;
         } else {
             // Regular auto-cropped version
-            displayUrl = cloudinary.url(`avatars/${publicId}`, {
+            displayUrl = cloudinary.url(`${folder}/${publicId}`, {
                 width: 500,
                 height: 500,
                 crop: 'fill',
@@ -131,13 +135,15 @@ router.post('/avatar', authenticateTokenMiddleware, async (req, res) => {
             });
         }
 
-        // 🔥 Update user profile with display URL
-        const { error: updateError } = await supabase
-            .from('users')
-            .update({ avatar_url: displayUrl })
-            .eq('id', userId);
+        // 🔥 Update user profile with display URL (ONLY if not a group context)
+        if (context !== 'group') {
+            const { error: updateError } = await supabase
+                .from('users')
+                .update({ avatar_url: displayUrl })
+                .eq('id', userId);
 
-        if (updateError) throw updateError;
+            if (updateError) throw updateError;
+        }
 
         // 🔥 CLEANUP: Delete old avatar from Supabase bucket (if it was there)
         if (oldUrl && oldUrl.includes('supabase')) {

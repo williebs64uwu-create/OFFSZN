@@ -12,6 +12,10 @@ let currentConversationId = null;
 let emojiPicker = null;
 let isInitialized = false;
 let replyToId = null; // State for current reply
+let _loadedPrincipal = false;
+let _loadedGroups = false;
+let _groupsCache = [];
+let _isInitialLoading = true; // V14: Ironclad guard for skeletons
 
 // ===== GLOBAL EXPORTS (For HTML onclicks) =====
 window.onReplyClick = onReplyClick;
@@ -66,6 +70,7 @@ document.addEventListener('offszn:page-changed', (e) => {
 async function initChat() {
     if (isInitialized) return;
     isInitialized = true;
+    _isInitialLoading = true; // Ensure guard is set
 
     console.log("💬 Chat Engine Initialized");
     // initUI(); // Assuming initUI() is defined elsewhere or will be added.
@@ -125,28 +130,39 @@ async function initChat() {
     }
 
     if (directConvId) {
-        // Handle direct conversation link ASAP
-        const directPromise = supabase
-            .from('conversation_participants')
-            .select('conversation_id, user_id')
-            .eq('conversation_id', directConvId)
-            .neq('user_id', currentUser.id)
-            .limit(1)
-            .maybeSingle();
+        // Handle direct conversation link (DMs or Groups) ASAP
+        supabase
+            .from('conversations')
+            .select('id, is_group, group_name, group_avatar_url')
+            .eq('id', directConvId)
+            .single()
+            .then(async ({ data: conv, error }) => {
+                if (conv && !error) {
+                    if (conv.is_group) {
+                        openChat(conv.id, conv.group_name || 'Grupo', conv.group_avatar_url, null, true);
+                    } else {
+                        // It's a DM, find the other participant
+                        const { data: participation } = await supabase
+                            .from('conversation_participants')
+                            .select('user_id')
+                            .eq('conversation_id', directConvId)
+                            .neq('user_id', currentUser.id)
+                            .maybeSingle();
 
-        directPromise.then(async ({ data: participation, error }) => {
-            if (participation && !error) {
-                const { data: targetUser } = await supabase
-                    .from('users')
-                    .select('id, nickname, avatar_url')
-                    .eq('id', participation.user_id)
-                    .single();
+                        if (participation) {
+                            const { data: targetUser } = await supabase
+                                .from('users')
+                                .select('id, nickname, avatar_url')
+                                .eq('id', participation.user_id)
+                                .single();
 
-                if (targetUser) {
-                    openChat(directConvId, targetUser.nickname, targetUser.avatar_url, targetUser.id);
+                            if (targetUser) {
+                                openChat(directConvId, targetUser.nickname, targetUser.avatar_url, targetUser.id, false);
+                            }
+                        }
+                    }
                 }
-            }
-        });
+            });
     }
 
     await Promise.all([p1, p2, p3]);
@@ -233,7 +249,7 @@ function setupEventListeners() {
             if (convList) { convList.style.display = ''; convList.style.opacity = '1'; }
             if (skelDiv) skelDiv.style.display = 'none';
             // INSTANT: Render from cache (data already loaded), no Supabase re-fetch
-            _renderFromCache();
+            loadConversations({ skipSkeletons: true });
         };
     }
     // Solicitudes tab logic removed
@@ -250,7 +266,8 @@ function setupEventListeners() {
                 searchInputEl.placeholder = 'Solo Principal';
                 searchInputEl.value = '';
             }
-            showGrupos();
+            // Unified load for groups
+            loadConversations({ skipSkeletons: true });
         };
     }
 
@@ -323,110 +340,9 @@ function toggleEditMode() {
 
 // Solicitudes logic removed
 
+// showGrupos refactored to be a simple trigger for loadConversations
 async function showGrupos() {
-    const listContainer = document.getElementById('conversationsList');
-    // Ensure conversationsList is visible
-    if (listContainer) { listContainer.style.display = ''; listContainer.style.opacity = '1'; }
-    // Hide initial skeletons
-    const skelDiv = document.getElementById('chatSidebarSkeletons');
-    if (skelDiv) skelDiv.style.display = 'none';
-    // Show lightweight inline skeletons (only 5 for Grupos, not 50)
-    listContainer.innerHTML = _renderGruposSkeletons();
-
-    // 1. Show "Crear nuevo grupo" button at top
-    const headerDiv = document.createElement('div');
-    headerDiv.style.cssText = 'padding: 8px 16px; border-bottom: 1px solid #0a0a0a;';
-    headerDiv.innerHTML = `
-        <button onclick="event.stopPropagation(); openGroupModal();" style="
-            width: 100%;
-            padding: 8px 16px;
-            background: #0f0f0f;
-            border: 1px solid #1a1a1a;
-            border-radius: 8px;
-            color: #ccc;
-            font-size: 0.82rem;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            transition: all 0.2s;
-        " onmouseenter="this.style.background='#161616'; this.style.color='#fff'" onmouseleave="this.style.background='#0f0f0f'; this.style.color='#ccc'">
-            <i class="bi bi-plus-lg" style="font-size: 0.9rem;"></i> Crear nuevo grupo
-        </button>
-    `;
-
-    // 2. Fetch user's group conversations
-    const { data: participations } = await supabase
-        .from('conversation_participants')
-        .select('conversation_id, is_pinned')
-        .eq('user_id', currentUser.id);
-
-    if (!participations || participations.length === 0) {
-        listContainer.innerHTML = '';
-        listContainer.appendChild(headerDiv);
-        const emptyDiv = document.createElement('div');
-        emptyDiv.style.cssText = 'padding: 40px 20px; text-align: center; color: #555;';
-        emptyDiv.innerHTML = '<i class="bi bi-people" style="font-size: 2.5rem; display:block; margin-bottom:10px; opacity:0.3;"></i><p style="font-size:0.9rem;">No tienes grupos aún</p>';
-        listContainer.appendChild(emptyDiv);
-        return;
-    }
-
-    const convIds = participations.map(p => p.conversation_id);
-
-    const { data: groupConversations } = await supabase
-        .from('conversations')
-        .select('*')
-        .in('id', convIds)
-        .eq('is_group', true)
-        .order('updated_at', { ascending: false });
-
-    listContainer.innerHTML = '';
-    listContainer.appendChild(headerDiv);
-
-    if (!groupConversations || groupConversations.length === 0) {
-        const emptyDiv = document.createElement('div');
-        emptyDiv.style.cssText = 'padding: 40px 20px; text-align: center; color: #555;';
-        emptyDiv.innerHTML = '<i class="bi bi-people" style="font-size: 2.5rem; display:block; margin-bottom:10px; opacity:0.3;"></i><p style="font-size:0.9rem;">No tienes grupos aún</p>';
-        listContainer.appendChild(emptyDiv);
-        return;
-    }
-
-    // Unified sorting logic
-    const chatsToRender = groupConversations.map(conv => {
-        const myParticipancy = participations.find(p => p.conversation_id === conv.id);
-        const localPinned = JSON.parse(localStorage.getItem('offszn_pinned_chats') || '[]');
-        let isPinned = localPinned.includes(conv.id);
-
-        if (myParticipancy?.is_pinned && !isPinned && localPinned.length < 3) {
-            isPinned = true;
-            localPinned.push(conv.id);
-            localStorage.setItem('offszn_pinned_chats', JSON.stringify(localPinned));
-        }
-
-        return {
-            id: conv.id,
-            name: conv.group_name || 'Grupo',
-            avatar: conv.group_avatar_url || null,
-            lastMsg: 'Grupo',
-            created_at: conv.updated_at,
-            userId: null,
-            isGroup: true,
-            isPinned
-        };
-    });
-
-    chatsToRender.sort((a, b) => {
-        if (a.isPinned && !b.isPinned) return -1;
-        if (!a.isPinned && b.isPinned) return 1;
-        return new Date(b.created_at) - new Date(a.created_at);
-    });
-
-    // Reuse the general render logic for consistency
-    renderConversationList(chatsToRender, listContainer);
-
-    // Prepend the "Crear nuevo grupo" button if logic above cleared it (it did)
-    listContainer.prepend(headerDiv);
+    loadConversations({ skipSkeletons: true });
 }
 
 function _updateTabIndicator(activeTab) {
@@ -662,7 +578,7 @@ function openGroupModal() {
         <div id="grp_step1" style="display:flex; flex-direction:column; height:100%; padding:24px;">
             <div style="display:flex;align-items:center;margin-bottom:20px;width:100%;">
                 <button id="grp_closeBtn" style="background:none;border:none;color:#fff;cursor:pointer;padding:0;display:flex;align-items:center;">
-                    <i class="bi bi-arrow-left-short" style="font-size: 2rem; color: #adff2f;"></i>
+                    <i class="bi bi-arrow-left-short" style="font-size: 2rem; color: #a855f7;"></i>
                 </button>
                 <h3 style="margin:0;font-size:1.1rem;color:#fff;flex:1;text-align:center;margin-right:32px;">Nuevo Grupo</h3>
                 <div style="flex:0 0 32px"></div> <!-- Spacer -->
@@ -700,7 +616,7 @@ function openGroupModal() {
         <div id="grp_step2" class="grp-step-2" style="height:100%; padding:24px; display:none; flex-direction:column;">
             <div style="display:flex;align-items:center;margin-bottom:40px;width:100%;">
                 <button id="grp_backBtn" style="background:none;border:none;color:#fff;cursor:pointer;padding:0;display:flex;align-items:center;">
-                    <i class="bi bi-arrow-left-short" style="font-size: 2rem; color: #adff2f;"></i>
+                    <i class="bi bi-arrow-left-short" style="font-size: 2rem; color: #a855f7;"></i>
                 </button>
                 <h3 style="margin:0;font-size:1.1rem;color:#fff;flex:1;text-align:center;margin-right:32px;">Foto del Grupo</h3>
                 <div style="flex:0 0 32px"></div> <!-- Spacer -->
@@ -1129,11 +1045,18 @@ async function _grpCreateChat() {
             try {
                 // Final Crop based on user pan/scroll
                 const croppedBase64 = await _cropGroupAvatar();
+                const token = window.AuthUtils ? window.AuthUtils.getAccessToken() : null;
 
                 const res = await fetch('/api/cloudinary/avatar', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ image: croppedBase64 })
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        image: croppedBase64,
+                        context: 'group' // 🔥 Tell backend it's a group to avoid overwriting user avatar
+                    })
                 });
                 const cloudData = await res.json();
                 if (cloudData.success) {
@@ -1261,21 +1184,26 @@ async function loadUserProfile() {
 }
 
 function finalizeGlobalLoading() {
+    console.log("🏁 Finalizing Global Load - Revealing Inbox");
+    _isInitialLoading = false;
+
     const tabP = document.getElementById('tabPrincipal');
     const tabG = document.getElementById('tabGrupos');
     const isOnGrupos = tabG && tabG.classList.contains('active');
 
-    // 1. Reveal Tab text
-    if (tabP) tabP.innerText = 'Principal';
+    // 1. Reveal Tab text (in case it was changed to 'Cargando...')
+    if (tabP && tabP.innerText.includes('...')) tabP.innerText = 'Principal';
 
     // 2. Hide Sidebar Skeletons & Reveal Conversation List
     const skels = document.getElementById('chatSidebarSkeletons');
     const convList = document.getElementById('conversationsList');
 
     if (isOnGrupos) {
-        // User already switched to Grupos during skeleton delay — just hide skeletons
         if (skels) skels.style.display = 'none';
-        // convList is already visible from showGrupos()
+        if (convList) {
+            convList.style.display = 'block';
+            convList.style.opacity = '1';
+        }
     } else {
         // Normal flow — fade out skeletons, reveal Principal chats
         if (skels) {
@@ -1284,14 +1212,17 @@ function finalizeGlobalLoading() {
             setTimeout(() => {
                 skels.style.display = 'none';
                 if (convList) {
+                    convList.style.display = 'block';
                     convList.style.opacity = '0';
-                    convList.style.display = '';
                     requestAnimationFrame(() => {
                         convList.style.transition = 'opacity 0.3s ease';
                         convList.style.opacity = '1';
                     });
                 }
             }, 300);
+        } else if (convList) {
+            convList.style.display = 'block';
+            convList.style.opacity = '1';
         }
     }
 
@@ -1346,12 +1277,19 @@ async function loadConversations(opts = {}) {
     // opts.keepSkeletons = true means we simply fetch data but don't touch the DOM skeletons yet
     // because finalizeGlobalLoading will handle the "big reveal"
 
-    // RACE CONDITION CHECK: Only load if Principal is active
-    const tabPrincipal = document.getElementById('tabPrincipal');
-    if (!tabPrincipal || !tabPrincipal.classList.contains('active')) return;
-
     const listContainer = document.getElementById('conversationsList');
     const skelDiv = document.getElementById('chatSidebarSkeletons');
+
+    // UX OPTIMIZATION: If we already have data, don't show skeletons or clear list
+    if (_loadedPrincipal && !opts.forceRefresh) {
+        opts.skipSkeletons = true;
+    }
+
+    const shouldShowSkeletons = !opts.keepSkeletons && !opts.skipSkeletons;
+
+    if (shouldShowSkeletons && skelDiv) skelDiv.style.display = 'block';
+    // DON'T dim the list container yet, wait for data to render to avoid "black screen"
+    // if (shouldShowSkeletons && listContainer) listContainer.style.opacity = '0.3';
 
     // 0. CACHING STRATEGY (Instant Load with Pinning Priority)
     const cachedData = localStorage.getItem('OFFSZN_CHATS_CACHE');
@@ -1365,7 +1303,7 @@ async function loadConversations(opts = {}) {
             if (cache && cache.length > 0) {
                 cache = cache.map(c => ({
                     ...c,
-                    isPinned: localPinned.includes(c.id)
+                    isPinned: localPinned.map(String).includes(String(c.id))
                 }));
 
                 cache.sort((a, b) => {
@@ -1374,19 +1312,41 @@ async function loadConversations(opts = {}) {
                     return new Date(b.created_at) - new Date(a.created_at);
                 });
 
-                renderConversationList(cache, listContainer);
-                if (skelDiv) skelDiv.style.display = 'none';
+                // PASS hideSkeletons: false to keep skeletons visible while cache paints
+                renderConversationList(cache, listContainer, { hideSkeletons: false });
             }
         } catch (e) { console.error('Cache parse error', e); }
     }
 
     // 1. Get all conversations I am part of
-    const { data: participations, error } = await supabase
-        .from('conversation_participants')
-        .select('conversation_id, is_pinned')
-        .eq('user_id', currentUser.id);
+    // DEFENSIVE: Try to fetch with is_deleted_offszn, if fails (missing column), fall back to simple query
+    let participationsData = null;
+    let participancyError = null;
 
-    if (!participations || participations.length === 0) {
+    try {
+        const { data, error } = await supabase
+            .from('conversation_participants')
+            .select('conversation_id, is_pinned, is_deleted_offszn')
+            .eq('user_id', currentUser.id)
+            .or('is_deleted_offszn.eq.false,is_deleted_offszn.is.null');
+
+        if (error) throw error;
+        participationsData = data;
+    } catch (e) {
+        // Fallback for when the column doesn't exist yet
+        const { data, error } = await supabase
+            .from('conversation_participants')
+            .select('conversation_id, is_pinned')
+            .eq('user_id', currentUser.id);
+
+        participationsData = data;
+        participancyError = error;
+    }
+
+    const participations = participationsData;
+    const error = participancyError;
+
+    if (error || !participations || participations.length === 0) {
         listContainer.innerHTML = '<div style="padding:20px; text-align:center; color:#666;">No tienes mensajes aún.</div>';
         localStorage.removeItem('OFFSZN_CHATS_CACHE');
         revealPlaceholderContent();
@@ -1413,21 +1373,23 @@ async function loadConversations(opts = {}) {
     const profileMap = {};
     profiles.forEach(p => profileMap[p.id] = p);
 
-    // 4. Get the last message for each conversation
-    // (Still hard to do in one query without a view, but we'll use a Promise.all)
-    const lastMsgsPromises = conversationIds.map(cid =>
-        supabase.from('messages')
-            .select('content, attachment_url, created_at')
-            .eq('conversation_id', cid)
-            .order('created_at', { ascending: false })
-            .limit(1)
-            .maybeSingle()
-    );
-    const lastMsgResults = await Promise.all(lastMsgsPromises);
+    // 4. BATCH LAST MESSAGES: Fetch recent messages once to optimize speed
+    // We fetch the latest 100 messages from the table; usually covers the "last message" for active chats.
+    const { data: recentMessages } = await supabase
+        .from('messages')
+        .select('conversation_id, content, attachment_url, created_at')
+        .in('conversation_id', conversationIds)
+        .order('created_at', { ascending: false })
+        .limit(150);
+
     const lastMsgMap = {};
-    lastMsgResults.forEach((res, idx) => {
-        if (res.data) lastMsgMap[conversationIds[idx]] = res.data;
-    });
+    if (recentMessages) {
+        recentMessages.forEach(msg => {
+            if (!lastMsgMap[msg.conversation_id]) {
+                lastMsgMap[msg.conversation_id] = msg;
+            }
+        });
+    }
 
     // 5. Get conversations ordered by updated_at
     const { data: conversations } = await supabase
@@ -1436,12 +1398,12 @@ async function loadConversations(opts = {}) {
         .in('id', conversationIds)
         .order('updated_at', { ascending: false });
 
-    listContainer.innerHTML = '';
+    // NO CLEAR HERE: Delayed clear until renderConversationList to avoid black flicker
     if (!conversations || conversations.length === 0) {
         listContainer.innerHTML = `
-                < div style = "padding: 40px 20px; text-align: center; opacity: 0.5;" >
+                <div style="padding: 40px 20px; text-align: center; opacity: 0.5;">
                 <p style="font-size: 0.9rem;">No tienes mensajes aún.</p>
-            </div >
+            </div>
                     `;
         revealPlaceholderContent();
         return;
@@ -1456,12 +1418,13 @@ async function loadConversations(opts = {}) {
         const myParticipancy = participations.find(p => p.conversation_id === conv.id);
 
         // SOURCE OF TRUTH: Local Storage (Optimistic) > Database
-        let isPinned = localPinned.includes(conv.id);
+        let isPinned = localPinned.map(String).includes(String(conv.id));
 
         // Initial sync: if DB says pinned and we don't have it locally, adopt it (up to limit of 3)
-        if (myParticipancy?.is_pinned && !isPinned && localPinned.length < 3) {
+        const dbIsPinned = myParticipancy?.is_pinned || false;
+        if (dbIsPinned && !isPinned && localPinned.length < 3) {
             isPinned = true;
-            localPinned.push(conv.id);
+            localPinned.push(String(conv.id));
             localStorage.setItem('offszn_pinned_chats', JSON.stringify(localPinned));
         }
 
@@ -1526,12 +1489,11 @@ async function loadConversations(opts = {}) {
     });
 
     // Render Fresh Data
-    renderConversationList(chatsToRender, listContainer);
+    // PASS hideSkeletons: true to finally reveal the fresh list
+    // V14: Only actually hides skeletons if _isInitialLoading is false
+    renderConversationList(chatsToRender, listContainer, { hideSkeletons: true });
 
-    // Ensure skeletons are hidden after fresh data render
-    // (only relevant for non-initial loads; initial load handled by finalizeGlobalLoading)
-    if (!opts.keepSkeletons && skelDiv) skelDiv.style.display = 'none';
-
+    _loadedPrincipal = true;
     revealPlaceholderContent();
 }
 
@@ -1545,103 +1507,136 @@ function revealPlaceholderContent() {
     }
 }
 
-function renderConversationList(chats, container) {
+function renderConversationList(chats, container, opts = { hideSkeletons: true }) {
+    if (!container) return;
+
+    // V14 Guard: If we are in initial loading, we NEVER hide skeletons or clear container
+    // unless explicitly forced by finalizeGlobalLoading (which sets _isInitialLoading = false)
+    const shouldActuallyHide = opts.hideSkeletons && !_isInitialLoading;
+
+    // 1. Detection: Which tab are we on?
     const tabPrincipal = document.getElementById('tabPrincipal');
-    if (tabPrincipal && !tabPrincipal.classList.contains('active')) {
+    const tabGrupos = document.getElementById('tabGrupos');
+    const isGroupsTab = tabGrupos && tabGrupos.classList.contains('active');
+
+    // 2. Strict Filtering: Principal = DMs only, Grupos = Groups only
+    const filteredChats = chats.filter(chat => {
+        if (isGroupsTab) return chat.isGroup === true;
+        // Principal Tab: ONLY Direct Messages
+        return !chat.isGroup;
+    });
+
+    // 3. Delayed Clear: Clear now that we are ready to paint
+    if (filteredChats.length > 0 || shouldActuallyHide) {
+        container.innerHTML = '';
+        container.style.opacity = '1';
+    }
+
+    // 4. Sidebar Skeletons: Hide them ONLY IF fresh data is ready AND time is up
+    if (shouldActuallyHide) {
+        const skelDiv = document.getElementById('chatSidebarSkeletons');
+        if (skelDiv) skelDiv.style.display = 'none';
+    }
+
+    // 5. Groups Tab Specific: Add "Nuevo Grupo" button
+    if (isGroupsTab && (filteredChats.length > 0 || shouldActuallyHide)) {
+        const headerDiv = document.createElement('div');
+        headerDiv.style.cssText = 'padding: 8px 16px; border-bottom: 1px solid #111;';
+        headerDiv.innerHTML = `
+            <button onclick="event.stopPropagation(); openGroupModal();" style="
+                width: 100%;
+                padding: 10px 16px;
+                background: #0f0f0f;
+                border: 1px solid #1a1a1a;
+                border-radius: 8px;
+                color: #ccc;
+                font-size: 0.82rem;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 8px;
+                transition: all 0.2s;
+            " onmouseenter="this.style.background='#161616'; this.style.color='#fff'" onmouseleave="this.style.background='#0f0f0f'; this.style.color='#ccc'">
+                <i class="bi bi-plus-lg" style="font-size: 0.9rem; color: #a855f7;"></i> Crear nuevo grupo
+            </button>
+        `;
+        container.appendChild(headerDiv);
+    }
+
+    if (filteredChats.length === 0) {
+        const text = isGroupsTab ? 'No tienes grupos aún.' : 'No tienes mensajes aún.';
+        const emptyDiv = document.createElement('div');
+        emptyDiv.style.cssText = 'padding: 40px 20px; text-align: center; color: #555;';
+        emptyDiv.innerHTML = `
+            <i class="bi ${isGroupsTab ? 'bi-people' : 'bi-chat-dots'}" style="font-size: 2rem; display:block; margin-bottom:10px; opacity:0.3;"></i>
+            <p style="font-size:0.85rem;">${text}</p>
+        `;
+        container.appendChild(emptyDiv);
         return;
     }
-    container.innerHTML = '';
 
-    // Safety check for skeletons container if it was cleared
-    // Actually we just clear everything so skeletons are gone
-
-    if (chats.length === 0) {
-        container.innerHTML = '<div style="padding:20px; text-align:center; color:#666;">No tienes mensajes aún.</div>';
-        return;
-    }
-
-    chats.forEach(chat => {
+    filteredChats.forEach(chat => {
         const timeAgoStr = formatTime(chat.created_at);
-
-        const div = document.createElement('div');
-        div.className = 'oz-chat-row';
-        div.setAttribute('data-id', chat.id);
-        div.setAttribute('data-time', new Date(chat.created_at).getTime());
-        div.onclick = () => openChat(chat.id, chat.name, chat.avatar, chat.userId, chat.isGroup || false);
-
-        // Highlight if active
-        if (currentConversationId === chat.id) div.classList.add('active');
-
-        const avatarDiv = document.createElement('div');
-        avatarDiv.className = 'oz-chat-avatar';
-        if (chat.isGroup) {
-            avatarDiv.innerHTML = `<div style="width:100%;height:100%;border-radius:50%;background:#262626;display:flex;align-items:center;justify-content:center;"><i class="bi bi-people-fill" style="font-size:1.1rem;color:#8b5cf6;"></i></div>`;
-        } else {
-            avatarDiv.innerHTML = renderAvatar(chat.avatar, chat.name);
-        }
-
-        const nameDiv = document.createElement('div');
-        nameDiv.className = 'oz-chat-name';
-        nameDiv.textContent = chat.name;
-
         const isPinned = chat.isPinned || false;
         const pinText = isPinned ? 'Desfijar' : 'Fijar';
         const pinIcon = isPinned ? 'bi-pin-angle' : 'bi-pin-angle-fill';
 
-        // Check if pin limit reached (max 3) — disable "Fijar" visually for unpinned chats
+        // Check pin limit
         let pinnedCount = 0;
         try { pinnedCount = (JSON.parse(localStorage.getItem('offszn_pinned_chats')) || []).length; } catch (e) { }
         const pinDisabled = !isPinned && pinnedCount >= 3;
+        const pinStyle = pinDisabled ? 'opacity: 0.35; pointer-events: none; cursor: default;' : '';
 
-        if (isPinned) {
-            const pIcon = document.createElement('i');
-            pIcon.className = 'bi bi-pin-fill';
-            pIcon.style.cssText = 'color:#adff2f; font-size:0.85rem; margin-left:6px; display:inline-block; vertical-align:middle; filter: drop-shadow(0 0 4px rgba(173, 255, 47, 0.4));';
-            nameDiv.appendChild(pIcon);
+        const div = document.createElement('div');
+        div.className = `offszn-v3-chat-row ${String(currentConversationId) === String(chat.id) ? 'active' : ''}`;
+        div.setAttribute('data-id', chat.id);
+        div.setAttribute('data-time', new Date(chat.created_at).getTime());
+        div.onclick = () => openChat(chat.id, chat.name, chat.avatar, chat.userId, chat.isGroup || false);
+
+        div.innerHTML = `
+            <div class="oz-chat-avatar">
+                ${chat.isGroup && !chat.avatar ?
+                `<div style="width:100%;height:100%;border-radius:50%;background:#262626;display:flex;align-items:center;justify-content:center;"><i class="bi bi-people-fill" style="font-size:1.1rem;color:#8b5cf6;"></i></div>` :
+                renderAvatar(chat.avatar, chat.name)
+            }
+            </div>
+            <div class="oz-chat-info">
+                <div class="offszn-v3-chat-name">
+                    <span>${chat.name}</span>
+                    ${isPinned ? `<i class="bi bi-pin-fill offszn-v3-pin-icon"></i>` : ''}
+                </div>
+                <div class="oz-chat-preview-wrap">
+                    <span class="oz-chat-preview-text">${chat.lastMsg}</span>
+                    <span class="oz-chat-time">${timeAgoStr}</span>
+                </div>
+            </div>
+            <div class="offszn-v3-dots" title="Opciones">
+                <i class="bi bi-three-dots"></i>
+            </div>
+            <div class="chat-action-menu">
+                <div class="chat-action-item" onclick="togglePinChat('${chat.id}', event)" style="${pinStyle}">
+                    <i class="bi ${pinIcon}"></i> ${pinText}
+                </div>
+                <div class="chat-action-item delete" onclick="deleteLocalChat('${chat.id}', event)">
+                    <i class="bi bi-trash3"></i> Borrar
+                </div>
+            </div>
+        `;
+
+        // Action Menu Listener
+        const dots = div.querySelector('.offszn-v3-dots');
+        const menu = div.querySelector('.chat-action-menu');
+        if (dots && menu) {
+            dots.onclick = (e) => {
+                e.stopPropagation();
+                document.querySelectorAll('.chat-action-menu.show').forEach(m => {
+                    if (m !== menu) m.classList.remove('show');
+                });
+                menu.classList.toggle('show');
+            };
         }
 
-        const previewDiv = document.createElement('div');
-        previewDiv.className = 'oz-chat-preview-wrap';
-        previewDiv.innerHTML = `
-            <span class="oz-chat-preview-text">${chat.lastMsg}</span>
-            <span class="oz-chat-time">${timeAgoStr}</span>
-        `;
-
-        const optionsBtn = document.createElement('div');
-        optionsBtn.className = 'oz-chat-dots';
-        optionsBtn.innerHTML = '<i class="bi bi-three-dots"></i>';
-
-        const menuOpts = document.createElement('div');
-        menuOpts.className = 'chat-action-menu';
-
-        const pinStyle = pinDisabled ? 'opacity: 0.35; pointer-events: none; cursor: default;' : '';
-        menuOpts.innerHTML = `
-            <div class="chat-action-item" onclick="togglePinChat('${chat.id}', event)" style="${pinStyle}">
-                <i class="bi ${pinIcon}"></i> ${pinText}
-            </div>
-            <div class="chat-action-item delete" onclick="deleteLocalChat('${chat.id}', event)">
-                <i class="bi bi-trash3"></i> Borrar
-            </div>
-        `;
-
-        optionsBtn.onclick = (e) => {
-            e.stopPropagation();
-            // Close others
-            document.querySelectorAll('.chat-action-menu.show').forEach(m => {
-                if (m !== menuOpts) m.classList.remove('show');
-            });
-            menuOpts.classList.toggle('show');
-        };
-
-        const infoDiv = document.createElement('div');
-        infoDiv.className = 'oz-chat-info';
-        infoDiv.appendChild(nameDiv);
-        infoDiv.appendChild(previewDiv);
-
-        div.appendChild(avatarDiv);
-        div.appendChild(infoDiv);
-        div.appendChild(optionsBtn);
-        div.appendChild(menuOpts);
         container.appendChild(div);
     });
 }
@@ -1675,8 +1670,8 @@ async function openChat(convId, name, avatar, userId, isGroup = false) {
     }
 
     // Update active state in sidebar
-    document.querySelectorAll('.chat-item').forEach(item => {
-        item.classList.toggle('active', item.getAttribute('data-id') === convId);
+    document.querySelectorAll('.offszn-v3-chat-row').forEach(item => {
+        item.classList.toggle('active', String(item.getAttribute('data-id')) === String(convId));
     });
 
     // Update header
@@ -1722,14 +1717,14 @@ async function openChat(convId, name, avatar, userId, isGroup = false) {
     }
 
     const avatarEl = document.getElementById('currentChatAvatar');
-    if (isGroup) {
+    if (isGroup && !avatar) {
         avatarEl.innerHTML = `<div style="width:100%;height:100%;border-radius:50%;background:#262626;display:flex;align-items:center;justify-content:center;"><i class="bi bi-people-fill" style="font-size:1.2rem;color:#8b5cf6;"></i></div>`;
         avatarEl.style.cursor = 'default';
         avatarEl.onclick = null;
     } else {
         avatarEl.innerHTML = renderAvatar(avatar, name);
         avatarEl.style.cursor = 'pointer';
-        avatarEl.onclick = () => window.location.href = `/ @${name} `;
+        avatarEl.onclick = () => window.location.href = isGroup ? '#' : `/ @${name} `;
     }
 
     document.getElementById('currentChatStatus').textContent = roleText;
@@ -2635,7 +2630,7 @@ async function fetchSingleMessage(id) {
 
 // Close action menus when clicking outside
 document.addEventListener('click', (e) => {
-    if (!e.target.closest('.oz-chat-dots') && !e.target.closest('.chat-action-menu')) {
+    if (!e.target.closest('.offszn-v3-dots') && !e.target.closest('.chat-action-menu')) {
         document.querySelectorAll('.chat-action-menu.show').forEach(m => m.classList.remove('show'));
     }
 });
@@ -2644,7 +2639,7 @@ document.addEventListener('click', (e) => {
 window.togglePinChat = async function (convId, e) {
     if (e) e.stopPropagation();
 
-    const row = document.querySelector(`.oz-chat-row[data-id="${convId}"]`);
+    const row = document.querySelector(`.offszn-v3-chat-row[data-id="${convId}"]`);
     if (!row) return;
 
     // 1. OPTIMISTIC UPDATE: Instant UI feedback
@@ -2653,7 +2648,7 @@ window.togglePinChat = async function (convId, e) {
 
     const isNowPinned = !currentPinned.includes(convId);
 
-    // LIMIT CHECK: Max 3 pinned — silently block (UI already shows disabled state)
+    // LIMIT CHECK: Max 3 pinned
     if (isNowPinned && currentPinned.length >= 3) {
         const menu = row.querySelector('.chat-action-menu');
         if (menu) menu.classList.remove('show');
@@ -2665,31 +2660,27 @@ window.togglePinChat = async function (convId, e) {
     if (menu) menu.classList.remove('show');
 
     // Update icons and text in DOM immediately
-    const nameDiv = row.querySelector('.oz-chat-name');
-    const pinAction = row.querySelector('.chat-action-item i.bi-pin-angle, .chat-action-item i.bi-pin-angle-fill');
-    const pinActionText = pinAction?.parentElement;
+    const nameDiv = row.querySelector('.offszn-v3-chat-name');
+    const pinActionItem = row.querySelector('.chat-action-item'); // The first item is always Pin/Unpin
 
     if (isNowPinned) {
         // Add pin icon to row
-        if (!nameDiv.querySelector('.bi-pin-fill')) {
+        if (!nameDiv.querySelector('.offszn-v3-pin-icon')) {
             const pIcon = document.createElement('i');
-            pIcon.className = 'bi bi-pin-fill';
-            pIcon.style.cssText = 'color:#adff2f; font-size:0.85rem; margin-left:6px; display:inline-block; vertical-align:middle; filter: drop-shadow(0 0 4px rgba(173, 255, 47, 0.4));';
+            pIcon.className = 'bi bi-pin-fill offszn-v3-pin-icon';
             nameDiv.appendChild(pIcon);
         }
         // Update menu internal
-        if (pinAction) {
-            pinAction.className = 'bi bi-pin-angle'; // Tilted for "unpin" action
-            pinActionText.innerHTML = `<i class="bi bi-pin-angle"></i> Desfijar`;
+        if (pinActionItem) {
+            pinActionItem.innerHTML = `<i class="bi bi-pin-angle"></i> Desfijar`;
         }
     } else {
         // Remove pin icon from row
-        const pIcon = nameDiv.querySelector('.bi-pin-fill');
+        const pIcon = nameDiv.querySelector('.offszn-v3-pin-icon');
         if (pIcon) pIcon.remove();
         // Update menu internal
-        if (pinAction) {
-            pinAction.className = 'bi bi-pin-angle-fill';
-            pinActionText.innerHTML = `<i class="bi bi-pin-angle-fill"></i> Fijar`;
+        if (pinActionItem) {
+            pinActionItem.innerHTML = `<i class="bi bi-pin-angle-fill"></i> Fijar`;
         }
     }
 
@@ -2760,27 +2751,38 @@ window.deleteLocalChat = async function (convId, e) {
     if (e) e.stopPropagation();
     if (!confirm('¿Seguro que deseas eliminar este chat? Desaparecerá de tu lista hasta recibir un nuevo mensaje.')) return;
 
-    // 1. OPTIMISTIC UPDATE: Remove from DOM and Cache immediately
-    const item = document.querySelector(`.oz-chat-row[data-id="${convId}"]`);
-    if (item) item.remove();
+    // 1. OPTIMISTIC UPDATE: Hide instantly
+    // FIXED SELECTOR: Targeted the specific chat row class
+    const item = document.querySelector(`.offszn-v3-chat-row[data-id="${convId}"]`);
+    if (item) {
+        item.style.opacity = '0';
+        item.style.transition = 'opacity 0.2s ease';
+        setTimeout(() => item.remove(), 200);
+    }
 
     if (currentConversationId === convId) {
         document.getElementById('activeChatContainer').style.display = 'none';
-        document.getElementById('chatPlaceholder').style.display = 'flex';
+        const placeholder = document.getElementById('chatPlaceholder');
+        if (placeholder) {
+            // Instant Reset - No skeletons for deletion speed
+            const msgList = document.getElementById('messagesList');
+            if (msgList) msgList.innerHTML = '';
+            placeholder.style.display = 'flex';
+        }
         currentConversationId = null;
     }
 
-    // Update Cache
+    // Update Local Cache instantly so refreshing doesn't bring it back
     const cachedData = localStorage.getItem('OFFSZN_CHATS_CACHE');
     if (cachedData) {
         try {
             let cache = JSON.parse(cachedData);
-            cache = cache.filter(c => c.id !== convId);
+            cache = cache.filter(c => String(c.id) !== String(convId));
             localStorage.setItem('OFFSZN_CHATS_CACHE', JSON.stringify(cache));
         } catch (e) { }
     }
 
-    // 2. BACKGROUND SYNC
+    // 2. BACKGROUND SYNC (AWAIT THIS BEFORE REFRESH TO PREVENT REAPPEARING)
     try {
         const { error } = await supabase
             .from('conversation_participants')
@@ -2792,6 +2794,9 @@ window.deleteLocalChat = async function (convId, e) {
     } catch (err) {
         console.error('Error deleting chat from DB:', err);
     }
+
+    // 3. TRIGGER SILENT REFRESH (Background sync - now safe because DB is updated)
+    loadConversations({ forceRefresh: true, skipSkeletons: true });
 };
 
 // =========================================
@@ -2914,3 +2919,5 @@ window.applyFilters = function () {
 
 // Initialize filter listeners on load
 setTimeout(setupFilterListeners, 1000); // Small delay to ensure DOM is ready
+
+// V14: Mandatory Initialization Finalizer (Consolidated above)
