@@ -115,19 +115,22 @@
         <div class="chat-wrapper" id="chatSystemRoot" style="display: flex; opacity: 1;">
             <!-- SIDEBAR -->
             <div class="chat-sidebar">
-                <div class="sidebar-header">
-                    <div class="sidebar-title">
-                        <span id="chatMyUsername">
-                            <div class="skeleton-line skeleton-pulse"
-                                style="width: 120px; height: 18px; border-radius: 4px;"></div>
-                        </span>
+                <div class="chat-sidebar-header">
+                    <div class="tabs-nav-wrapper">
+                        <div class="tabs-nav-left">
+                            <button class="tab-btn active" id="tabPrincipal">Principal</button>
+                            <button class="tab-btn" id="tabGrupos">Grupos</button>
+                            <div class="tab-indicator" id="tabIndicator" style="transition:none"></div>
+                        </div>
+                        <div class="tabs-nav-right">
+                            <button class="tab-btn-icon" id="btnFilterChats" title="Filtrar">
+                                <i class="bi bi-funnel"></i>
+                            </button>
+                            <button class="action-btn" id="btnNewMessage" title="Nuevo Mensaje">
+                                <i class="bi bi-plus-lg"></i>
+                            </button>
+                        </div>
                     </div>
-                    <button class="action-btn"><i class="bi bi-pencil-square"></i></button>
-                </div>
-
-                <div class="tabs-nav">
-                    <button class="tab-btn active" id="tabPrincipal">Principal</button>
-                    <button class="tab-btn" id="tabSolicitudes">Solicitudes</button>
                 </div>
 
                 <div class="search-bar-container">
@@ -138,12 +141,10 @@
                 </div>
 
                 <!-- STORIES / ACTIVE USERS -->
-                <div class="stories-row" id="chatActiveUsers">
-                    <!-- Injected via JS -->
-                </div>
+                <div class="stories-row" id="chatActiveUsers"></div>
 
                 <!-- CONVERSATIONS LIST -->
-                <div class="chat-list" id="conversationsList">
+                <div class="chat-list">
                     <!-- Skeletons (Initial state) -->
                     <div id="chatSidebarSkeletons">
                         <div class="skeleton-chat-item skeleton-pulse">
@@ -202,7 +203,23 @@
                                 <div class="skeleton-line preview"></div>
                             </div>
                         </div>
+                        <div class="skeleton-chat-item skeleton-pulse">
+                            <div class="skeleton-avatar"></div>
+                            <div class="skeleton-info">
+                                <div class="skeleton-line name"></div>
+                                <div class="skeleton-line preview"></div>
+                            </div>
+                        </div>
+                        <div class="skeleton-chat-item skeleton-pulse">
+                            <div class="skeleton-avatar"></div>
+                            <div class="skeleton-info">
+                                <div class="skeleton-line name"></div>
+                                <div class="skeleton-line preview"></div>
+                            </div>
+                        </div>
                     </div>
+                    <!-- Dynamic conversations rendered here (hidden until skeletons finish) -->
+                    <div id="conversationsList" style="display:none"></div>
                 </div>
             </div>
 
@@ -274,8 +291,6 @@
                                 <textarea class="chat-input" placeholder="Envía un mensaje..." id="messageInput"
                                     rows="1"></textarea>
 
-                                <!-- Image Upload Trigger removed as requested -->
-
                                 <!-- Send Button -->
                                 <button class="input-btn" id="sendBtn">
                                     <i class="bi bi-send-fill" style="color: #8b5cf6;"></i>
@@ -286,6 +301,7 @@
                 </div>
             </div>
         </div>
+
     </main>
 
     <!-- STYLES -->
@@ -304,19 +320,18 @@
         });
     </script>
     <!-- <script src="/script/router.js"></script> -->
-    <script src="/script/chat-engine.js" type="module"></script> <!-- CHAT ENGINE -->
+    <script src="/script/chat-engine.js?v=24" type="module"></script> <!-- CHAT ENGINE -->
 
-    <div id="chatGlobalLoader"
-        style="position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background: #000; z-index: 999; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #fff; font-family: 'Inter', sans-serif;">
-    </div>
 
     <!-- ==================== NEW MESSAGE MODAL ==================== -->
     <div id="newMessageModalOverlay" class="chat-modal-overlay" onclick="closeNewMessageModal(event)">
         <div class="chat-modal-container" onclick="event.stopPropagation()">
             <div class="chat-modal-header">
-                <div style="flex:0 0 24px"></div> <!-- Spacer for centering -->
+                <button class="chat-modal-back" onclick="closeNewMessageModal()">
+                    <i class="bi bi-arrow-left-short" style="font-size: 2rem; color: #adff2f;"></i>
+                </button>
                 <div class="chat-modal-title">Nuevo mensaje</div>
-                <button class="chat-modal-close" onclick="closeNewMessageModal()">&times;</button>
+                <div style="flex:0 0 40px"></div> <!-- Spacer -->
             </div>
             <div class="chat-modal-search">
                 <span class="chat-modal-label">Para:</span>
@@ -332,6 +347,57 @@
             <div class="chat-modal-footer">
                 <button id="modalChatBtn" class="chat-modal-btn" onclick="startChatFromModal()">Chat</button>
             </div>
+        </div>
+    </div>
+
+    <!-- ==================== FILTER OVERLAY ==================== -->
+    <div id="filterOverlay" class="oz-filter-overlay">
+        <div class="filter-header">
+            <button class="filter-back" onclick="closeFilterOverlay()">
+                <i class="bi bi-chevron-left"></i>
+            </button>
+            <h2 class="filter-title">Filtros</h2>
+            <button class="filter-clear" onclick="clearAllFilters()">Limpiar</button>
+        </div>
+        <div class="filter-content">
+            <div class="filter-section">
+                <h3 class="filter-section-title">Roles</h3>
+                <div class="filter-chips" id="filterRoles">
+                    <button class="filter-chip" data-type="role" data-value="Productor Musical">Productores</button>
+                    <button class="filter-chip" data-type="role" data-value="Artista / Cantante">Artistas</button>
+                    <button class="filter-chip" data-type="role"
+                        data-value="Ingeniero de Mezcla/Master">Ingenieros</button>
+                    <button class="filter-chip" data-type="role"
+                        data-value="Compositor / Songwriter">Compositores</button>
+                    <button class="filter-chip" data-type="role" data-value="Músico / Instrumentista">Músicos</button>
+                </div>
+            </div>
+
+            <div class="filter-section">
+                <h3 class="filter-section-title">Experiencia</h3>
+                <div class="filter-chips" id="filterExperience">
+                    <button class="filter-chip" data-type="experience"
+                        data-value="Principiante (0-1 año)">Principiante</button>
+                    <button class="filter-chip" data-type="experience"
+                        data-value="Intermedio (1-3 años)">Intermedio</button>
+                    <button class="filter-chip" data-type="experience" data-value="Avanzado (3+ años)">Avanzado</button>
+                </div>
+            </div>
+
+            <div class="filter-section">
+                <h3 class="filter-section-title">DAWs</h3>
+                <div class="filter-chips" id="filterDAWs">
+                    <button class="filter-chip" data-type="daw" data-value="FL Studio">FL Studio</button>
+                    <button class="filter-chip" data-type="daw" data-value="Ableton Live">Ableton</button>
+                    <button class="filter-chip" data-type="daw" data-value="Logic Pro">Logic Pro</button>
+                    <button class="filter-chip" data-type="daw" data-value="Pro Tools">Pro Tools</button>
+                    <button class="filter-chip" data-type="daw" data-value="Studio One">Studio One</button>
+                    <button class="filter-chip" data-type="daw" data-value="Cubase">Cubase</button>
+                </div>
+            </div>
+        </div>
+        <div class="filter-footer">
+            <button class="filter-apply-btn" onclick="applyFilters()">Ver resultados</button>
         </div>
     </div>
 

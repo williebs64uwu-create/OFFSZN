@@ -51,7 +51,7 @@
     } else {
         // Fallback: Show skeleton if no cache exists
         placeholder.innerHTML = `
-            <header style="background: #000; height: 64px; width: 100%; display: flex; align-items: center; padding: 0 24px; box-sizing: border-box; position: sticky; top: 0; z-index: 1000; border-bottom: 1px solid rgba(255,255,255,0.06);">
+            <header style="background: #050505; height: 64px; width: 100%; display: flex; align-items: center; padding: 0 24px; box-sizing: border-box; position: sticky; top: 0; z-index: 1000; border-bottom: 1px solid rgba(255,255,255,0.06);">
                 <div style="display:flex; align-items:center; gap:16px; width:100%;">
                     <div style="width:100px; height:28px; background:rgba(255,255,255,0.04); border-radius:6px;"></div>
                     <div style="flex:1; max-width:440px; height:40px; background:rgba(255,255,255,0.03); border-radius:12px; margin-left:24px;"></div>

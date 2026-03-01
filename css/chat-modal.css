@@ -7,8 +7,8 @@
     left: 0;
     width: 100vw;
     height: 100vh;
-    background: rgba(0, 0, 0, 0.6);
-    backdrop-filter: blur(4px);
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(8px);
     z-index: 9999;
     display: none;
     /* Hidden by default */
@@ -25,9 +25,9 @@
 
 /* Modal Container */
 .chat-modal-container {
-    background: #262626;
-    width: 400px;
-    max-width: 90%;
+    background: #050505;
+    width: 440px;
+    max-width: 100%;
     height: 600px;
     max-height: 80vh;
     border-radius: 12px;
@@ -35,9 +35,9 @@
     flex-direction: column;
     overflow: hidden;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-    transform: scale(1.1);
+    transform: scale(1.05);
     transition: transform 0.2s cubic-bezier(0.1, 0.9, 0.2, 1);
-    border: 1px solid #363636;
+    border: 1px solid #1a1a1a;
 }
 
 .chat-modal-overlay.active .chat-modal-container {
@@ -49,8 +49,18 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 12px 16px;
-    border-bottom: 1px solid #363636;
+    padding: 16px;
+    border-bottom: 1px solid #1a1a1a;
+}
+
+.chat-modal-back {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .chat-modal-title {
@@ -75,8 +85,8 @@
 .chat-modal-search {
     display: flex;
     align-items: center;
-    padding: 8px 16px;
-    border-bottom: 1px solid #363636;
+    padding: 10px 16px;
+    border-bottom: 1px solid #1a1a1a;
 }
 
 .chat-modal-label {
@@ -182,9 +192,12 @@
 }
 
 .chat-modal-item.selected .chat-modal-selection {
-    background: #0095f6;
-    /* Instagram Blue or use #8b5cf6 for OFFSZN purple */
-    border-color: #0095f6;
+    background: #fff;
+    border-color: #fff;
+}
+
+.chat-modal-item.selected .chat-modal-selection::after {
+    color: #000;
 }
 
 .chat-modal-selection::after {
@@ -201,15 +214,15 @@
 /* Footer / Action Button */
 .chat-modal-footer {
     padding: 16px;
-    border-top: 1px solid #363636;
+    border-top: 1px solid #1a1a1a;
 }
 
 .chat-modal-btn {
     width: 100%;
-    padding: 12px;
-    background: #0095f6;
-    color: #fff;
-    font-weight: 600;
+    padding: 14px;
+    background: #fff;
+    color: #000;
+    font-weight: 700;
     border: none;
     border-radius: 8px;
     cursor: pointer;
@@ -224,24 +237,63 @@
     pointer-events: all;
 }
 
-/* Skeletons for Modal */
+/* Full Screen Mobile */
+@media (max-width: 768px) {
+    .chat-modal-container {
+        width: 100%;
+        height: 100dvh;
+        max-height: 100dvh;
+        border-radius: 0;
+        border: none;
+    }
+
+    .chat-modal-overlay {
+        background: #050505;
+        backdrop-filter: none;
+    }
+
+    .chat-modal-overlay.active .chat-modal-container {
+        transform: none;
+    }
+
+    .chat-modal-container {
+        transform: translateY(20px);
+        transition: transform 0.3s cubic-bezier(0.1, 0.9, 0.2, 1);
+    }
+
+    .chat-modal-overlay.active .chat-modal-container {
+        transform: translateY(0);
+    }
+}
+
+/* Skeletons */
 .modal-skeleton-item {
     display: flex;
     align-items: center;
-    padding: 8px 16px;
+    padding: 12px 16px;
+    gap: 12px;
 }
 
 .modal-skeleton-avatar {
     width: 44px;
     height: 44px;
     border-radius: 50%;
-    background: #333;
-    margin-right: 12px;
+    background: #1a1a1a;
+}
+
+.modal-skeleton-text {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
 }
 
 .modal-skeleton-line {
-    height: 10px;
-    background: #333;
+    height: 12px;
+    background: #1a1a1a;
     border-radius: 4px;
-    width: 100px;
+}
+
+.modal-skeleton-line.short {
+    width: 60%;
 }

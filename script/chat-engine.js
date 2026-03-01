@@ -18,6 +18,7 @@ window.onReplyClick = onReplyClick;
 window.cancelReply = cancelReply;
 window.onReactClick = onReactClick;
 window.submitReaction = submitReaction;
+window.removeReaction = removeReaction;
 window.scrollToMessage = scrollToMessage;
 window.openNewMessageModal = openNewMessageModal;
 window.closeNewMessageModal = closeNewMessageModal;
@@ -26,6 +27,8 @@ window.toggleMessageMenu = toggleMessageMenu;
 window.copyMessageText = copyMessageText;
 window.backToSidebar = backToSidebar;
 window.toggleMobileView = toggleMobileView;
+window.openGroupModal = openGroupModal;
+window.closeGroupModal = closeGroupModal;
 
 // ===== NAVIGATION HELPERS =====
 function toggleMobileView(showChat) {
@@ -77,7 +80,9 @@ async function initChat() {
     currentUser = session.user;
 
     // Show UI (Skeletons visible by default in HTML)
-    // We wait for EVERYTHING to load before revealing text to keep it sync
+    // Replace HTML skeletons with 50 JS-generated ones for full coverage
+    const skelDiv = document.getElementById('chatSidebarSkeletons');
+    if (skelDiv) skelDiv.innerHTML = _renderChatSkeletons();
 
     // Setup everything
     setupEventListeners();
@@ -87,7 +92,7 @@ async function initChat() {
 
     const p1 = loadUserProfile();
     const p2 = loadConversations({ keepSkeletons: true });
-    const p3 = new Promise(resolve => setTimeout(resolve, 800)); // Reduced delay to 800ms
+    const p3 = new Promise(resolve => setTimeout(resolve, 2000)); // Mandatory ~2s skeleton display
 
     // --- INSTANT PRE-FILL TRICK ---
     // Handle ?user=nickname parameter ASAP
@@ -149,6 +154,10 @@ async function initChat() {
     // SYNC REVEAL: All data is ready
     finalizeGlobalLoading();
 
+    // FORCE INDICATOR NOW — respect whichever tab is active
+    const activeTab = document.querySelector('.tab-btn.active');
+    if (activeTab) _updateTabIndicator(activeTab);
+
     setupRealtime();
 
 
@@ -184,8 +193,8 @@ function setupEventListeners() {
         sendBtn.addEventListener('click', sendMessage);
     }
 
-    // Search
-    const searchInput = document.querySelector('.search-input-wrapper input');
+    // Search (sidebar only - scoped to avoid conflict with group modal search)
+    const searchInput = document.querySelector('.search-bar-container .search-input-wrapper input');
     if (searchInput) {
         let debounceTimer;
         searchInput.addEventListener('input', (e) => {
@@ -196,39 +205,73 @@ function setupEventListeners() {
 
     // Tab buttons
     const tabPrincipal = document.getElementById('tabPrincipal');
-    const tabSolicitudes = document.getElementById('tabSolicitudes');
-    const searchInputEl = document.querySelector('.search-input-wrapper input');
+    const tabGrupos = document.getElementById('tabGrupos');
+    const searchInputEl = document.querySelector('.search-bar-container .search-input-wrapper input');
 
-    if (tabPrincipal && tabSolicitudes) {
+    function deactivateAllTabs() {
+        [tabPrincipal, tabGrupos].forEach(t => { if (t) t.classList.remove('active'); });
+    }
+
+    if (tabPrincipal) {
+        // Initial call to set indicator position ASAP
+        setTimeout(() => _updateTabIndicator(tabPrincipal), 100);
+
         tabPrincipal.onclick = () => {
             if (tabPrincipal.classList.contains('active')) return;
+            if (isEditMode) toggleEditMode();
+            deactivateAllTabs();
             tabPrincipal.classList.add('active');
-            tabSolicitudes.classList.remove('active');
+            _updateTabIndicator(tabPrincipal);
             if (searchInputEl) {
                 searchInputEl.disabled = false;
                 searchInputEl.parentElement.style.opacity = '1';
                 searchInputEl.placeholder = 'Buscar';
             }
-            loadConversations();
+            // Ensure conversationsList is visible and skeletons are hidden
+            const convList = document.getElementById('conversationsList');
+            const skelDiv = document.getElementById('chatSidebarSkeletons');
+            if (convList) { convList.style.display = ''; convList.style.opacity = '1'; }
+            if (skelDiv) skelDiv.style.display = 'none';
+            // INSTANT: Render from cache (data already loaded), no Supabase re-fetch
+            _renderFromCache();
         };
-        tabSolicitudes.onclick = () => {
-            if (tabSolicitudes.classList.contains('active')) return;
-            tabSolicitudes.classList.add('active');
-            tabPrincipal.classList.remove('active');
+    }
+    // Solicitudes tab logic removed
+    if (tabGrupos) {
+        tabGrupos.onclick = () => {
+            if (tabGrupos.classList.contains('active')) return;
+            if (isEditMode) toggleEditMode();
+            deactivateAllTabs();
+            tabGrupos.classList.add('active');
+            _updateTabIndicator(tabGrupos);
             if (searchInputEl) {
                 searchInputEl.disabled = true;
                 searchInputEl.parentElement.style.opacity = '0.5';
                 searchInputEl.placeholder = 'Solo Principal';
                 searchInputEl.value = '';
             }
-            showSolicitudes();
+            showGrupos();
         };
     }
 
-    // Edit button (Pencil)
-    const editBtn = document.querySelector('.sidebar-header .action-btn');
-    if (editBtn) {
-        editBtn.addEventListener('click', toggleEditMode);
+    // Filter button
+    const filterBtn = document.getElementById('btnFilterChats');
+    if (filterBtn) {
+        filterBtn.onclick = (e) => {
+            e.stopPropagation();
+            // Optional: Toggle active state if it becomes a tab
+            // For now just alert or toggle a visual state
+            filterBtn.classList.toggle('active');
+        };
+    }
+
+    // New Chat button (+)
+    const plusBtn = document.getElementById('btnNewMessage');
+    if (plusBtn) {
+        plusBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            openNewMessageModal();
+        });
     }
 
     // Emoji picker
@@ -243,7 +286,15 @@ function toggleEditMode() {
     const items = document.querySelectorAll('.chat-item');
     items.forEach(item => {
         let delBtn = item.querySelector('.delete-chat-btn');
+        const dateEl = item.querySelector('.chat-preview-date');
+
         if (isEditMode) {
+            // Hide the time with a fade
+            if (dateEl) {
+                dateEl.style.transition = 'opacity 0.2s ease';
+                dateEl.style.opacity = '0';
+                dateEl.style.pointerEvents = 'none';
+            }
             if (!delBtn) {
                 delBtn = document.createElement('button');
                 delBtn.className = 'delete-chat-btn';
@@ -259,39 +310,184 @@ function toggleEditMode() {
             }
             delBtn.style.display = 'flex';
         } else {
+            // Restore the time
+            if (dateEl) {
+                dateEl.style.transition = 'opacity 0.2s ease';
+                dateEl.style.opacity = '1';
+                dateEl.style.pointerEvents = '';
+            }
             if (delBtn) delBtn.style.display = 'none';
         }
     });
 }
 
-async function deleteConversation(convId) {
-    if (!convId) return;
-    const { error } = await supabase
+// Solicitudes logic removed
+
+async function showGrupos() {
+    const listContainer = document.getElementById('conversationsList');
+    // Ensure conversationsList is visible
+    if (listContainer) { listContainer.style.display = ''; listContainer.style.opacity = '1'; }
+    // Hide initial skeletons
+    const skelDiv = document.getElementById('chatSidebarSkeletons');
+    if (skelDiv) skelDiv.style.display = 'none';
+    // Show lightweight inline skeletons (only 5 for Grupos, not 50)
+    listContainer.innerHTML = _renderGruposSkeletons();
+
+    // 1. Show "Crear nuevo grupo" button at top
+    const headerDiv = document.createElement('div');
+    headerDiv.style.cssText = 'padding: 8px 16px; border-bottom: 1px solid #0a0a0a;';
+    headerDiv.innerHTML = `
+        <button onclick="event.stopPropagation(); openGroupModal();" style="
+            width: 100%;
+            padding: 8px 16px;
+            background: #0f0f0f;
+            border: 1px solid #1a1a1a;
+            border-radius: 8px;
+            color: #ccc;
+            font-size: 0.82rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s;
+        " onmouseenter="this.style.background='#161616'; this.style.color='#fff'" onmouseleave="this.style.background='#0f0f0f'; this.style.color='#ccc'">
+            <i class="bi bi-plus-lg" style="font-size: 0.9rem;"></i> Crear nuevo grupo
+        </button>
+    `;
+
+    // 2. Fetch user's group conversations
+    const { data: participations } = await supabase
         .from('conversation_participants')
-        .delete()
-        .eq('conversation_id', convId)
+        .select('conversation_id, is_pinned')
         .eq('user_id', currentUser.id);
 
-    if (error) {
-        console.error('Error deleting conversation:', error);
-        alert('Error al eliminar chat');
-    } else {
-        if (currentConversationId === convId) {
-            currentConversationId = null;
-            document.getElementById('activeChatContainer').style.display = 'none';
-            document.getElementById('chatPlaceholder').style.display = 'flex';
-            localStorage.removeItem('OFFSZN_LAST_CONV_ID');
-        }
-        loadConversations();
+    if (!participations || participations.length === 0) {
+        listContainer.innerHTML = '';
+        listContainer.appendChild(headerDiv);
+        const emptyDiv = document.createElement('div');
+        emptyDiv.style.cssText = 'padding: 40px 20px; text-align: center; color: #555;';
+        emptyDiv.innerHTML = '<i class="bi bi-people" style="font-size: 2.5rem; display:block; margin-bottom:10px; opacity:0.3;"></i><p style="font-size:0.9rem;">No tienes grupos aún</p>';
+        listContainer.appendChild(emptyDiv);
+        return;
     }
+
+    const convIds = participations.map(p => p.conversation_id);
+
+    const { data: groupConversations } = await supabase
+        .from('conversations')
+        .select('*')
+        .in('id', convIds)
+        .eq('is_group', true)
+        .order('updated_at', { ascending: false });
+
+    listContainer.innerHTML = '';
+    listContainer.appendChild(headerDiv);
+
+    if (!groupConversations || groupConversations.length === 0) {
+        const emptyDiv = document.createElement('div');
+        emptyDiv.style.cssText = 'padding: 40px 20px; text-align: center; color: #555;';
+        emptyDiv.innerHTML = '<i class="bi bi-people" style="font-size: 2.5rem; display:block; margin-bottom:10px; opacity:0.3;"></i><p style="font-size:0.9rem;">No tienes grupos aún</p>';
+        listContainer.appendChild(emptyDiv);
+        return;
+    }
+
+    // Unified sorting logic
+    const chatsToRender = groupConversations.map(conv => {
+        const myParticipancy = participations.find(p => p.conversation_id === conv.id);
+        const localPinned = JSON.parse(localStorage.getItem('offszn_pinned_chats') || '[]');
+        let isPinned = localPinned.includes(conv.id);
+
+        if (myParticipancy?.is_pinned && !isPinned && localPinned.length < 3) {
+            isPinned = true;
+            localPinned.push(conv.id);
+            localStorage.setItem('offszn_pinned_chats', JSON.stringify(localPinned));
+        }
+
+        return {
+            id: conv.id,
+            name: conv.group_name || 'Grupo',
+            avatar: conv.group_avatar_url || null,
+            lastMsg: 'Grupo',
+            created_at: conv.updated_at,
+            userId: null,
+            isGroup: true,
+            isPinned
+        };
+    });
+
+    chatsToRender.sort((a, b) => {
+        if (a.isPinned && !b.isPinned) return -1;
+        if (!a.isPinned && b.isPinned) return 1;
+        return new Date(b.created_at) - new Date(a.created_at);
+    });
+
+    // Reuse the general render logic for consistency
+    renderConversationList(chatsToRender, listContainer);
+
+    // Prepend the "Crear nuevo grupo" button if logic above cleared it (it did)
+    listContainer.prepend(headerDiv);
 }
 
-function showSolicitudes() {
-    const listContainer = document.getElementById('conversationsList');
-    listContainer.innerHTML = `
-        <div style="padding: 40px 20px; text-align: center; color: #666;">
-            <i class="bi bi-person-plus" style="font-size: 3rem; display: block; margin-bottom: 10px; opacity: 0.3;"></i>
-            <p>Aún no tienes solicitudes</p>
+function _updateTabIndicator(activeTab) {
+    const indicator = document.getElementById('tabIndicator');
+    if (!indicator || !activeTab) return;
+
+    // Use offsetLeft and offsetWidth for smooth sliding
+    indicator.style.width = `${activeTab.offsetWidth}px`;
+    indicator.style.left = `${activeTab.offsetLeft}px`;
+
+    // Re-enable transition after first paint (was disabled inline for instant load)
+    requestAnimationFrame(() => {
+        indicator.style.transition = '';
+    });
+}
+
+function _renderChatSkeletons() {
+    let html = '';
+    for (let i = 0; i < 50; i++) {
+        html += `
+            <div class="skeleton-chat-item skeleton-pulse" style="padding: 12px 20px;">
+                <div class="skeleton-avatar"></div>
+                <div class="skeleton-info">
+                    <div class="skeleton-line name" style="width: 40%"></div>
+                    <div class="skeleton-line preview" style="width: 70%"></div>
+                </div>
+            </div>
+        `;
+    }
+    return html;
+}
+
+function _renderGruposSkeletons() {
+    let html = '';
+    for (let i = 0; i < 15; i++) {
+        html += `
+            <div class="skeleton-chat-item skeleton-pulse" style="padding: 12px 20px;">
+                <div class="skeleton-avatar"></div>
+                <div class="skeleton-info">
+                    <div class="skeleton-line name" style="width: 45%"></div>
+                    <div class="skeleton-line preview" style="width: 30%"></div>
+                </div>
+            </div>
+        `;
+    }
+    return html;
+}
+
+function _renderMessageSkeletons() {
+    let html = '';
+    for (let i = 0; i < 6; i++) {
+        const type = i % 2 === 0 ? 'received' : 'sent';
+        const size = i % 3 === 0 ? 'sm' : (i % 3 === 1 ? 'lg' : '');
+        html += `
+            <div class="skeleton-bubble ${type} ${size ? 'skeleton-bubble-' + size : ''} skeleton-pulse" 
+                 style="margin-bottom: 12px; height: 40px; border-radius: 20px;"></div>
+        `;
+    }
+    return `
+        <div class="skeleton-bubbles-container">
+            ${html}
         </div>
     `;
 }
@@ -407,6 +603,591 @@ async function handleUserSearch(query) {
     });
 }
 
+// ===== GROUP CHAT LOGIC (Fully JS-DOM isolated) =====
+let selectedGroupUsers = [];
+const MAX_GROUP_MEMBERS = 9;
+let grpDebounceTimer = null;
+
+function openGroupModal() {
+    selectedGroupUsers = [];
+
+    // Remove any existing modal first
+    const existing = document.getElementById('grp_overlay');
+    if (existing) existing.remove();
+
+    // BUILD MODAL DOM FROM SCRATCH
+    const overlay = document.createElement('div');
+    overlay.id = 'grp_overlay';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.75);display:flex;align-items:center;justify-content:center;z-index:99999;backdrop-filter:blur(4px);animation:fadeInOverlay 0.2s ease;';
+
+    const panel = document.createElement('div');
+    panel.id = 'grp_panel';
+    panel.style.cssText = 'background:#111;border-radius:16px;border:1px solid #222;width:95%;max-width:420px;max-height:90vh;display:flex;flex-direction:column;animation:slideUpModal 0.25s ease;position:relative;overflow:hidden;';
+
+    const style = document.createElement('style');
+    style.innerHTML = `
+        .grp-float-input {
+            width: 100%; padding: 14px 12px; border: 1px solid #333; border-radius: 8px; background: transparent; color: #fff; font-size: 0.95rem; box-sizing: border-box; outline: none; transition: border-color 0.3s;
+        }
+        .grp-float-input:focus { border-color: #fff; }
+        .grp-float-label {
+            position: absolute; left: 12px; top: 14px; padding: 0 4px; font-size: 0.95rem; color: #888; background: #111; pointer-events: none; transition: 0.25s ease all;
+        }
+        .grp-float-input:focus ~ .grp-float-label,
+        .grp-float-input:not(:placeholder-shown) ~ .grp-float-label {
+            top: -8px; font-size: 0.75rem; color: #fff;
+        }
+        .grp-float-input:not(:focus):not(:placeholder-shown) ~ .grp-float-label {
+            color: #888;
+        }
+        .grp-float-counter {
+            position: absolute; right: 12px; top: -8px; padding: 0 4px; font-size: 0.75rem; color: #888; background: #111; pointer-events: none; opacity: 0; transition: opacity 0.25s;
+        }
+        .grp-float-input:focus ~ .grp-float-counter,
+        .grp-float-input:not(:placeholder-shown) ~ .grp-float-counter {
+            opacity: 1;
+        }
+        .grp-skeleton-pulse {
+            animation: grpPulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes grpPulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: .4; }
+        }
+    `;
+    overlay.appendChild(style);
+
+    panel.innerHTML = `
+        <!-- STEP 1: Details & Participants -->
+        <div id="grp_step1" style="display:flex; flex-direction:column; height:100%; padding:24px;">
+            <div style="display:flex;align-items:center;margin-bottom:20px;width:100%;">
+                <button id="grp_closeBtn" style="background:none;border:none;color:#fff;cursor:pointer;padding:0;display:flex;align-items:center;">
+                    <i class="bi bi-arrow-left-short" style="font-size: 2rem; color: #adff2f;"></i>
+                </button>
+                <h3 style="margin:0;font-size:1.1rem;color:#fff;flex:1;text-align:center;margin-right:32px;">Nuevo Grupo</h3>
+                <div style="flex:0 0 32px"></div> <!-- Spacer -->
+            </div>
+            
+            <div style="position:relative; margin-bottom: 24px; margin-top: 8px;">
+                <input type="text" id="grp_nameInput" placeholder=" " maxlength="40" class="grp-float-input">
+                <label class="grp-float-label">Nombre del Grupo <span style="color:#999">*</span></label>
+                <div id="grp_nameCounter" class="grp-float-counter">0/40</div>
+            </div>
+
+            <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:12px;">
+                <label style="font-size:0.8rem;color:#888;margin:0;">Participantes</label>
+                <span id="grp_counter" style="font-size:0.75rem;font-weight:600;color:#999;">0/9</span>
+            </div>
+            
+            <div id="grp_selectedUsers" style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:16px;"></div>
+
+            <div style="margin-bottom:16px;background:transparent;border:1px solid #333;border-radius:8px;display:flex;align-items:center;padding:10px 14px;gap:8px;transition:border-color 0.2s;">
+                <i class="bi bi-search" style="color:#555;font-size:0.9rem;"></i>
+                <input type="text" id="grp_searchInput" placeholder="Buscar usuarios..."
+                    style="background:none;border:none;color:#fff;font-size:0.9rem;width:100%;outline:none;">
+            </div>
+            
+            <div id="grp_usersList" class="chat-custom-scrollbar" style="flex:1;min-height:200px;overflow-y:auto;display:flex;flex-direction:column;gap:4px;margin-bottom:20px;padding-right:4px;">
+                <!-- Content here will be populated dynamically -->
+            </div>
+            
+            <button id="grp_nextBtn" style="width:100%;border-radius:8px;padding:14px;font-weight:600;font-size:0.95rem;background:#fff;color:#000;border:none;cursor:pointer;opacity:0.5;pointer-events:none;transition: all 0.2s;">
+                SIGUIENTE
+            </button>
+        </div>
+
+        <!-- STEP 2: Avatar Setup -->
+        <div id="grp_step2" class="grp-step-2" style="height:100%; padding:24px; display:none; flex-direction:column;">
+            <div style="display:flex;align-items:center;margin-bottom:40px;width:100%;">
+                <button id="grp_backBtn" style="background:none;border:none;color:#fff;cursor:pointer;padding:0;display:flex;align-items:center;">
+                    <i class="bi bi-arrow-left-short" style="font-size: 2rem; color: #adff2f;"></i>
+                </button>
+                <h3 style="margin:0;font-size:1.1rem;color:#fff;flex:1;text-align:center;margin-right:32px;">Foto del Grupo</h3>
+                <div style="flex:0 0 32px"></div> <!-- Spacer -->
+            </div>
+
+            <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+                <div id="grp_avatarPreview" class="grp-avatar-preview">
+                    <i class="bi bi-camera-fill" style="font-size:2.5rem; color:#444;"></i>
+                </div>
+                
+                <p style="color:#888; font-size:0.9rem; margin-bottom:32px; max-width:250px; line-height:1.4;">
+                    Elige una foto para tu grupo. También puedes subir un <b>GIF (PRO)</b>.
+                </p>
+
+                <input type="file" id="grp_fileInput" accept="image/*,.gif" style="display:none;">
+                <button id="grp_uploadBtn" style="background:#1a1a1a; border:1px solid #333; color:#fff; padding:10px 24px; border-radius:30px; font-size:0.9rem; cursor:pointer; margin-bottom:12px; transition:all 0.2s;">
+                    Subir Imagen
+                </button>
+            </div>
+
+            <button id="grp_finalBtn" style="width:100%;border-radius:8px;padding:14px;font-weight:600;font-size:0.95rem;background:#fff;color:#000;border:none;cursor:pointer;transition: all 0.2s;">
+                CREAR GRUPO
+            </button>
+        </div>
+    `;
+
+
+    overlay.appendChild(panel);
+    document.body.appendChild(overlay);
+
+    // EVENTS — all scoped to this modal, no external interference
+    // Close on overlay background click (NOT on panel)
+    overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) closeGroupModal();
+    });
+
+    // Stop all clicks inside panel from bubbling to overlay or document
+    panel.addEventListener('click', (e) => e.stopPropagation());
+
+    // Close button
+    document.getElementById('grp_closeBtn').onclick = () => closeGroupModal();
+
+    // Name input — update submit state and counter
+    document.getElementById('grp_nameInput').oninput = (e) => {
+        const counter = document.getElementById('grp_nameCounter');
+        if (counter) counter.innerText = `${e.target.value.length}/40`;
+        _grpUpdateSubmit();
+    };
+
+    // Search input — debounced
+    document.getElementById('grp_searchInput').oninput = (e) => {
+        const val = e.target.value;
+        const listItems = document.getElementById('grp_usersList');
+        if (listItems) listItems.innerHTML = _grpGetSkeletonHtml();
+
+        clearTimeout(grpDebounceTimer);
+        grpDebounceTimer = setTimeout(() => _grpSearch(val), 400);
+    };
+
+    // Step navigation
+    document.getElementById('grp_nextBtn').onclick = () => {
+        document.getElementById('grp_step1').style.display = 'none';
+        document.getElementById('grp_step2').style.display = 'flex';
+    };
+
+    document.getElementById('grp_backBtn').onclick = () => {
+        document.getElementById('grp_step1').style.display = 'flex';
+        document.getElementById('grp_step2').style.display = 'none';
+    };
+
+    // Avatar selection
+    const fileInput = document.getElementById('grp_fileInput');
+    const avatarPreview = document.getElementById('grp_avatarPreview');
+    const uploadBtn = document.getElementById('grp_uploadBtn');
+
+    uploadBtn.onclick = () => fileInput.click();
+    avatarPreview.onclick = () => fileInput.click();
+
+    fileInput.onchange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            window.selectedGroupAvatarBase64 = event.target.result;
+            const isGif = file.type === 'image/gif';
+
+            avatarPreview.innerHTML = `<img id="grp_img_el" src="${event.target.result}" style="width:100%;height:100%;object-fit:cover;cursor:move;user-select:none;touch-action:none;">`;
+            avatarPreview.style.borderStyle = 'solid';
+            avatarPreview.style.borderColor = '#fff'; // White border as requested
+
+            if (!isGif) {
+                // Full 2D Panning + Scroll wheel support
+                const img = document.getElementById('grp_img_el');
+                let isDragging = false;
+                let startX = 0, startY = 0;
+                let currentX = 0, currentY = 0;
+                let offsetX = 0, offsetY = 0;
+
+                function applyTransform() {
+                    img.style.transform = `translate(${offsetX}px, ${offsetY}px)`;
+                    window.grp_offset_x = offsetX;
+                    window.grp_offset_y = offsetY;
+                }
+
+                // Mouse drag
+                img.onmousedown = (e) => {
+                    e.preventDefault();
+                    isDragging = true;
+                    startX = e.clientX;
+                    startY = e.clientY;
+                    currentX = offsetX;
+                    currentY = offsetY;
+                };
+                document.addEventListener('mouseup', () => isDragging = false);
+                document.addEventListener('mousemove', (e) => {
+                    if (!isDragging) return;
+                    e.preventDefault();
+                    offsetX = currentX + (e.clientX - startX);
+                    offsetY = currentY + (e.clientY - startY);
+                    applyTransform();
+                });
+
+                // Scroll wheel for vertical repositioning
+                avatarPreview.addEventListener('wheel', (e) => {
+                    e.preventDefault();
+                    offsetY -= e.deltaY * 0.5;
+                    applyTransform();
+                }, { passive: false });
+
+                // Touch support for mobile
+                img.ontouchstart = (e) => {
+                    isDragging = true;
+                    startX = e.touches[0].clientX;
+                    startY = e.touches[0].clientY;
+                    currentX = offsetX;
+                    currentY = offsetY;
+                };
+                img.ontouchend = () => isDragging = false;
+                img.ontouchmove = (e) => {
+                    if (!isDragging) return;
+                    offsetX = currentX + (e.touches[0].clientX - startX);
+                    offsetY = currentY + (e.touches[0].clientY - startY);
+                    applyTransform();
+                };
+            }
+        };
+        reader.readAsDataURL(file);
+    };
+
+    // Submit button
+    document.getElementById('grp_finalBtn').onclick = () => _grpCreateChat();
+
+    // Initial state
+    const list = document.getElementById('grp_usersList');
+    if (list) list.innerHTML = _grpGetSkeletonHtml();
+    _grpUpdateSelectedChips();
+    _grpSearch('');
+
+    // Focus name input
+    setTimeout(() => {
+        const ni = document.getElementById('grp_nameInput');
+        if (ni) ni.focus();
+    }, 50);
+}
+
+function closeGroupModal() {
+    const overlay = document.getElementById('grp_overlay');
+    if (overlay) overlay.remove(); // Completely remove from DOM
+}
+
+function _grpGetSkeletonHtml() {
+    let html = '';
+    for (let i = 0; i < 10; i++) {
+        html += `
+        <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;opacity:0.7;">
+            <div class="grp-skeleton-pulse" style="width:36px;height:36px;border-radius:50%;background:#222;flex-shrink:0;"></div>
+            <div class="grp-skeleton-pulse" style="flex:1;">
+                <div style="height:12px;width:60%;background:#222;border-radius:4px;margin-bottom:6px;"></div>
+                <div style="height:10px;width:40%;background:#222;border-radius:4px;"></div>
+            </div>
+            <div class="grp-skeleton-pulse" style="width:20px;height:20px;border-radius:50%;background:#222;flex-shrink:0;"></div>
+        </div>`;
+    }
+    return html;
+}
+
+// Internal: search users
+async function _grpSearch(query) {
+    const list = document.getElementById('grp_usersList');
+    if (!list) return;
+
+    if (!query || query.trim().length < 2) {
+        list.innerHTML = _grpGetSkeletonHtml();
+
+        // Fetch recent DMs
+        const { data: recent, error: recentErr } = await supabase
+            .from('conversations')
+            .select(`
+                id,
+                is_group,
+                updated_at,
+                conversation_participants!inner(user_id),
+                participants:conversation_participants(
+                    user:users!user_id(id, nickname, avatar_url, first_name, last_name)
+                )
+            `)
+            .eq('is_group', false)
+            .eq('conversation_participants.user_id', currentUser.id)
+            .order('updated_at', { ascending: false })
+            .limit(10);
+
+        if (recentErr || !recent || recent.length === 0) {
+            list.innerHTML = '<div style="text-align:center;color:#555;padding:20px;font-size:0.85rem;">Busca usuarios para agregarlos.</div>';
+            return;
+        }
+
+        // Extract the other user from each DM
+        const profiles = recent.map(conv => {
+            const otherPart = conv.participants.find(p => p.user && p.user.id !== currentUser.id);
+            return otherPart ? otherPart.user : null;
+        }).filter(u => u !== null);
+
+        // Deduplicate
+        const uniqueProfiles = [];
+        const seenIds = new Set();
+        for (const p of profiles) {
+            if (!seenIds.has(p.id)) {
+                seenIds.add(p.id);
+                uniqueProfiles.push(p);
+            }
+        }
+
+        if (uniqueProfiles.length === 0) {
+            list.innerHTML = '<div style="text-align:center;color:#555;padding:20px;font-size:0.85rem;">Busca usuarios para agregarlos.</div>';
+            return;
+        }
+
+        _grpRenderUserList(uniqueProfiles, list);
+        return;
+    }
+    list.innerHTML = _grpGetSkeletonHtml();
+
+    const { data: profiles, error } = await supabase
+        .from('users')
+        .select('id, nickname, avatar_url, first_name, last_name')
+        .ilike('nickname', `%${query}%`)
+        .neq('id', currentUser.id)
+        .limit(15);
+
+    if (error || !profiles || profiles.length === 0) {
+        list.innerHTML = '<div style="text-align:center;color:#555;padding:20px;font-size:0.85rem;">No se encontraron usuarios.</div>';
+        return;
+    }
+
+    _grpRenderUserList(profiles, list);
+}
+
+function _grpRenderUserList(profiles, list) {
+    list.innerHTML = '';
+    profiles.forEach(user => {
+        const isSelected = selectedGroupUsers.some(u => u.id === user.id);
+        const row = document.createElement('div');
+        row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:8px;cursor:pointer;transition:background 0.15s;';
+        row.onmouseenter = () => row.style.background = '#1a1a1a';
+        row.onmouseleave = () => row.style.background = 'transparent';
+
+        row.innerHTML = `
+            <div style="width:36px;height:36px;border-radius:50%;flex-shrink:0;">
+                ${renderAvatar(user.avatar_url, user.nickname)}
+            </div>
+            <span style="flex:1;font-size:0.9rem;color:#fff;">${user.nickname}</span>
+            <i data-uid="${user.id}" class="bi ${isSelected ? 'bi-check-circle-fill' : 'bi-circle'}" style="font-size:1.15rem;color:${isSelected ? '#fff' : '#444'};transition:color 0.2s;"></i>
+        `;
+
+        row.onclick = (e) => {
+            e.stopPropagation();
+            const icon = row.querySelector('i');
+            const idx = selectedGroupUsers.findIndex(u => u.id === user.id);
+
+            if (idx >= 0) {
+                selectedGroupUsers.splice(idx, 1);
+                icon.className = 'bi bi-circle';
+                icon.style.color = '#444';
+            } else {
+                if (selectedGroupUsers.length >= MAX_GROUP_MEMBERS) {
+                    const counter = document.getElementById('grp_counter');
+                    if (counter) {
+                        counter.style.color = '#ef4444';
+                        setTimeout(() => counter.style.color = '#999', 800);
+                    }
+                    return;
+                }
+                selectedGroupUsers.push(user);
+                icon.className = 'bi bi-check-circle-fill';
+                icon.style.color = '#fff';
+            }
+            _grpUpdateCounter();
+            _grpUpdateSubmit();
+            _grpUpdateSelectedChips();
+        };
+
+        list.appendChild(row);
+    });
+}
+
+function _grpUpdateSelectedChips() {
+    const container = document.getElementById('grp_selectedUsers');
+    if (!container) return;
+
+    container.innerHTML = '';
+    if (selectedGroupUsers.length === 0) {
+        container.style.display = 'none';
+        return;
+    }
+
+    container.style.display = 'flex';
+    selectedGroupUsers.forEach(user => {
+        const chip = document.createElement('div');
+        chip.style.cssText = 'display:flex;align-items:center;gap:6px;background:#1a1a1a;border:1px solid #333;padding:4px;padding-right:8px;border-radius:20px;cursor:pointer;animation:fadeInOverlay 0.2s ease;';
+        chip.innerHTML = `
+            <div style="width:20px;height:20px;border-radius:50%;flex-shrink:0;font-size:0.75rem;">
+                ${renderAvatar(user.avatar_url, user.nickname)}
+            </div>
+            <span style="font-size:0.8rem;color:#ccc;">${user.nickname}</span>
+            <i class="bi bi-x-circle-fill" style="color:#666;font-size:0.8rem;transition:color 0.15s;" onmouseenter="this.style.color='#ef4444'" onmouseleave="this.style.color='#666'"></i>
+        `;
+
+        chip.onclick = (e) => {
+            e.stopPropagation();
+            const idx = selectedGroupUsers.findIndex(u => u.id === user.id);
+            if (idx >= 0) {
+                selectedGroupUsers.splice(idx, 1);
+                _grpUpdateCounter();
+                _grpUpdateSubmit();
+                _grpUpdateSelectedChips();
+                // Toggle the circle if visible in the list without re-rendering
+                const listIcon = document.querySelector(`#grp_usersList i[data-uid="${user.id}"]`);
+                if (listIcon) {
+                    listIcon.className = 'bi bi-circle';
+                    listIcon.style.color = '#444';
+                }
+            }
+        };
+
+        container.appendChild(chip);
+    });
+}
+
+function _grpUpdateCounter() {
+    const counter = document.getElementById('grp_counter');
+    if (counter) counter.innerText = `${selectedGroupUsers.length} / ${MAX_GROUP_MEMBERS}`;
+}
+
+function _grpUpdateSubmit() {
+    const btn = document.getElementById('grp_nextBtn');
+    if (!btn) return;
+    const hasMembers = selectedGroupUsers.length > 0;
+    btn.style.opacity = hasMembers ? '1' : '0.5';
+    btn.style.pointerEvents = hasMembers ? 'auto' : 'none';
+}
+
+// Helper to crop the group avatar using canvas to preserve pan/scroll
+async function _cropGroupAvatar() {
+    const img = document.getElementById('grp_img_el');
+    if (!img) return window.selectedGroupAvatarBase64;
+
+    return new Promise((resolve) => {
+        const canvas = document.createElement('canvas');
+        const size = 160; // Size of the preview container
+        canvas.width = size;
+        canvas.height = size;
+        const ctx = canvas.getContext('2d');
+
+        // Draw circles for clip
+        ctx.beginPath();
+        ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
+        ctx.clip();
+
+        // Calculate actual dimensions to maintain aspect ratio and fill
+        const imgAspect = img.naturalWidth / img.naturalHeight;
+        let drawW, drawH;
+        if (imgAspect > 1) {
+            drawH = size;
+            drawW = size * imgAspect;
+        } else {
+            drawW = size;
+            drawH = size / imgAspect;
+        }
+
+        // Apply the user's offsets
+        const x = (window.grp_offset_x || 0);
+        const y = (window.grp_offset_y || 0);
+
+        // Center then offset
+        ctx.drawImage(img, (size - drawW) / 2 + x, (size - drawH) / 2 + y, drawW, drawH);
+
+        resolve(canvas.toDataURL('image/jpeg', 0.9));
+    });
+}
+
+async function _grpCreateChat() {
+    const nameInput = document.getElementById('grp_nameInput');
+    const groupName = nameInput ? nameInput.value.trim() : '';
+
+    if (!groupName) {
+        document.getElementById('grp_backBtn').click(); // Go back to name step
+        setTimeout(() => {
+            nameInput.style.borderColor = '#ef4444';
+            nameInput.focus();
+        }, 100);
+        return;
+    }
+
+    const finalBtn = document.getElementById('grp_finalBtn');
+    if (finalBtn) {
+        finalBtn.disabled = true;
+        finalBtn.innerText = 'Creando...';
+    }
+
+    try {
+        let avatarUrl = null;
+
+        // 1. Upload to Cloudinary if image selected
+        if (window.selectedGroupAvatarBase64) {
+            try {
+                // Final Crop based on user pan/scroll
+                const croppedBase64 = await _cropGroupAvatar();
+
+                const res = await fetch('/api/cloudinary/avatar', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ image: croppedBase64 })
+                });
+                const cloudData = await res.json();
+                if (cloudData.success) {
+                    avatarUrl = cloudData.url;
+                }
+            } catch (err) {
+                console.error('Cloudinary upload error:', err);
+                // Continue without avatar if upload fails? Or alert?
+            }
+        }
+
+        // 2. Create conversation
+        const { data: conv, error: convError } = await supabase
+            .from('conversations')
+            .insert({
+                is_group: true,
+                group_name: groupName,
+                group_avatar_url: avatarUrl,
+                admin_id: currentUser.id
+            })
+            .select()
+            .single();
+
+        if (convError) throw convError;
+
+        // 3. Insert all participants
+        const participants = [
+            { conversation_id: conv.id, user_id: currentUser.id },
+            ...selectedGroupUsers.map(u => ({ conversation_id: conv.id, user_id: u.id }))
+        ];
+
+        const { error: partError } = await supabase
+            .from('conversation_participants')
+            .insert(participants);
+
+        if (partError) throw partError;
+
+        // 4. Close and refresh
+        closeGroupModal();
+        window.selectedGroupAvatarBase64 = null; // Clear state
+        await loadConversations();
+        openChat(conv.id, groupName, avatarUrl, null, true);
+
+    } catch (err) {
+        console.error('createGroupChat error:', err);
+        alert('Error al crear el grupo. Intenta de nuevo.');
+    } finally {
+        if (finalBtn) {
+            finalBtn.disabled = false;
+            finalBtn.innerText = 'CREAR GRUPO';
+        }
+    }
+}
+
 // ===== START NEW CHAT =====
 async function startNewChat(targetUser) {
     if (!targetUser || targetUser.id === currentUser.id) {
@@ -473,7 +1254,6 @@ async function loadUserProfile() {
             .single();
 
         const myName = profileData?.nickname || profileData?.first_name || currentUser.email.split('@')[0];
-        // Store for finalize step
         window.tempUserName = myName;
     } catch (e) {
         window.tempUserName = 'Usuario';
@@ -481,29 +1261,83 @@ async function loadUserProfile() {
 }
 
 function finalizeGlobalLoading() {
-    // 1. Reveal Username
-    const nameEl = document.getElementById('chatMyUsername');
-    if (nameEl && window.tempUserName) nameEl.innerText = window.tempUserName;
-
-    // 2. Reveal Tabs
     const tabP = document.getElementById('tabPrincipal');
-    const tabS = document.getElementById('tabSolicitudes');
-    if (tabP) tabP.innerText = 'Principal';
-    if (tabS) tabS.innerText = 'Solicitudes';
+    const tabG = document.getElementById('tabGrupos');
+    const isOnGrupos = tabG && tabG.classList.contains('active');
 
-    // 3. Hide Sidebar Skeletons (List)
+    // 1. Reveal Tab text
+    if (tabP) tabP.innerText = 'Principal';
+
+    // 2. Hide Sidebar Skeletons & Reveal Conversation List
     const skels = document.getElementById('chatSidebarSkeletons');
-    if (skels) skels.style.display = 'none';
+    const convList = document.getElementById('conversationsList');
+
+    if (isOnGrupos) {
+        // User already switched to Grupos during skeleton delay — just hide skeletons
+        if (skels) skels.style.display = 'none';
+        // convList is already visible from showGrupos()
+    } else {
+        // Normal flow — fade out skeletons, reveal Principal chats
+        if (skels) {
+            skels.style.transition = 'opacity 0.3s ease';
+            skels.style.opacity = '0';
+            setTimeout(() => {
+                skels.style.display = 'none';
+                if (convList) {
+                    convList.style.opacity = '0';
+                    convList.style.display = '';
+                    requestAnimationFrame(() => {
+                        convList.style.transition = 'opacity 0.3s ease';
+                        convList.style.opacity = '1';
+                    });
+                }
+            }, 300);
+        }
+    }
+
+    // 3. Tab Indicator — respect whichever tab is active
+    const activeTab = isOnGrupos ? tabG : tabP;
+    if (activeTab) {
+        _updateTabIndicator(activeTab);
+        const sidebar = document.querySelector('.chat-sidebar');
+        if (sidebar) sidebar.style.opacity = '1';
+    }
 
     // 4. Reveal Placeholder Content (Main Area)
     revealPlaceholderContent();
+}
 
-    // 5. REMOVE GLOBAL LOADER OVERLAY
-    const loader = document.getElementById('chatGlobalLoader');
-    if (loader) {
-        loader.style.transition = 'opacity 0.5s ease';
-        loader.style.opacity = '0';
-        setTimeout(() => loader.remove(), 550);
+// ===== INSTANT CACHE RENDER (for tab switching, no Supabase call) =====
+function _renderFromCache() {
+    const listContainer = document.getElementById('conversationsList');
+    if (!listContainer) return;
+
+    const cachedData = localStorage.getItem('OFFSZN_CHATS_CACHE');
+    if (!cachedData) {
+        // No cache — fallback to full load
+        loadConversations();
+        return;
+    }
+
+    try {
+        let chats = JSON.parse(cachedData);
+        if (!chats || chats.length === 0) {
+            loadConversations();
+            return;
+        }
+
+        const localPinned = JSON.parse(localStorage.getItem('offszn_pinned_chats') || '[]');
+        chats = chats.map(c => ({ ...c, isPinned: localPinned.includes(c.id) }));
+        chats.sort((a, b) => {
+            if (a.isPinned && !b.isPinned) return -1;
+            if (!a.isPinned && b.isPinned) return 1;
+            return new Date(b.created_at) - new Date(a.created_at);
+        });
+
+        renderConversationList(chats, listContainer);
+    } catch (e) {
+        console.error('Cache render error, falling back to full load:', e);
+        loadConversations();
     }
 }
 
@@ -517,21 +1351,31 @@ async function loadConversations(opts = {}) {
     if (!tabPrincipal || !tabPrincipal.classList.contains('active')) return;
 
     const listContainer = document.getElementById('conversationsList');
+    const skelDiv = document.getElementById('chatSidebarSkeletons');
 
-    // Check if we are already showing real content or just starting
-    // If we have skeletons (first load), we don't clear them immediately to avoid flickering
-    // but we will replace them once we have data.
-
-    // 0. CACHING STRATEGY (Instant Load)
+    // 0. CACHING STRATEGY (Instant Load with Pinning Priority)
     const cachedData = localStorage.getItem('OFFSZN_CHATS_CACHE');
-    if (cachedData) {
+    const localPinned = JSON.parse(localStorage.getItem('offszn_pinned_chats') || '[]');
+
+    if (cachedData && !opts.keepSkeletons) {
+        // Only render from cache on SUBSEQUENT calls (tab switch, search reset)
+        // On initial load (keepSkeletons=true), we skip this to show mandatory skeletons
         try {
-            const cache = JSON.parse(cachedData);
+            let cache = JSON.parse(cachedData);
             if (cache && cache.length > 0) {
+                cache = cache.map(c => ({
+                    ...c,
+                    isPinned: localPinned.includes(c.id)
+                }));
+
+                cache.sort((a, b) => {
+                    if (a.isPinned && !b.isPinned) return -1;
+                    if (!a.isPinned && b.isPinned) return 1;
+                    return new Date(b.created_at) - new Date(a.created_at);
+                });
+
                 renderConversationList(cache, listContainer);
-                // Hide skeletons immediately if we have cache
-                const skeletons = document.getElementById('chatSidebarSkeletons');
-                if (skeletons) skeletons.style.display = 'none';
+                if (skelDiv) skelDiv.style.display = 'none';
             }
         } catch (e) { console.error('Cache parse error', e); }
     }
@@ -539,7 +1383,7 @@ async function loadConversations(opts = {}) {
     // 1. Get all conversations I am part of
     const { data: participations, error } = await supabase
         .from('conversation_participants')
-        .select('conversation_id')
+        .select('conversation_id, is_pinned')
         .eq('user_id', currentUser.id);
 
     if (!participations || participations.length === 0) {
@@ -560,10 +1404,10 @@ async function loadConversations(opts = {}) {
 
     const otherUserIds = [...new Set(allParticipants.map(p => p.user_id))];
 
-    // 3. Get all other users' profiles in one go
+    // 3. Get all other users' profiles in one go (with metadata for filtering)
     const { data: profiles } = await supabase
         .from('users')
-        .select('id, nickname, avatar_url')
+        .select('id, nickname, avatar_url, role, experience, daws')
         .in('id', otherUserIds);
 
     const profileMap = {};
@@ -595,10 +1439,10 @@ async function loadConversations(opts = {}) {
     listContainer.innerHTML = '';
     if (!conversations || conversations.length === 0) {
         listContainer.innerHTML = `
-            <div style="padding: 40px 20px; text-align: center; opacity: 0.5;">
+                < div style = "padding: 40px 20px; text-align: center; opacity: 0.5;" >
                 <p style="font-size: 0.9rem;">No tienes mensajes aún.</p>
-            </div>
-        `;
+            </div >
+                    `;
         revealPlaceholderContent();
         return;
     }
@@ -607,13 +1451,41 @@ async function loadConversations(opts = {}) {
     const chatsToRender = [];
 
     conversations.forEach(conv => {
-        const otherParticipancy = allParticipants.find(p => p.conversation_id === conv.id);
-        if (!otherParticipancy) return;
+        let name, avatar, userId, isGroup = false;
+        let role = null, experience = null, daws = [];
+        const myParticipancy = participations.find(p => p.conversation_id === conv.id);
 
-        const profile = profileMap[otherParticipancy.user_id];
-        const name = profile?.nickname || 'Usuario';
-        const avatar = profile?.avatar_url || null;
-        const userId = otherParticipancy.user_id;
+        // SOURCE OF TRUTH: Local Storage (Optimistic) > Database
+        let isPinned = localPinned.includes(conv.id);
+
+        // Initial sync: if DB says pinned and we don't have it locally, adopt it (up to limit of 3)
+        if (myParticipancy?.is_pinned && !isPinned && localPinned.length < 3) {
+            isPinned = true;
+            localPinned.push(conv.id);
+            localStorage.setItem('offszn_pinned_chats', JSON.stringify(localPinned));
+        }
+
+        if (conv.is_group) {
+            // GROUP CONVERSATION
+            isGroup = true;
+            name = conv.group_name || 'Grupo';
+            avatar = conv.group_avatar_url || null;
+            userId = null;
+        } else {
+            // DM CONVERSATION
+            const otherParticipancy = allParticipants.find(p => p.conversation_id === conv.id);
+            if (!otherParticipancy) return;
+
+            const profile = profileMap[otherParticipancy.user_id];
+            name = profile?.nickname || 'Usuario';
+            avatar = profile?.avatar_url || null;
+            userId = otherParticipancy.user_id;
+
+            // Add metadata for filtering
+            role = profile?.role || null;
+            experience = profile?.experience || null;
+            daws = profile?.daws || [];
+        }
 
         const lastMsgObj = lastMsgMap[conv.id];
         let lastMsg = 'Empezar conversación';
@@ -634,15 +1506,31 @@ async function loadConversations(opts = {}) {
             avatar,
             lastMsg,
             created_at,
-            userId
+            userId,
+            isGroup,
+            isPinned,
+            role: isGroup ? 'Grupo' : role,
+            experience: isGroup ? null : experience,
+            daws: isGroup ? [] : daws
         });
     });
 
     // Save to Cache
     localStorage.setItem('OFFSZN_CHATS_CACHE', JSON.stringify(chatsToRender));
 
+    // Sort chats: first by pinned (isPinned DESC), then by date DESC
+    chatsToRender.sort((a, b) => {
+        if (a.isPinned && !b.isPinned) return -1;
+        if (!a.isPinned && b.isPinned) return 1;
+        return new Date(b.created_at) - new Date(a.created_at);
+    });
+
     // Render Fresh Data
     renderConversationList(chatsToRender, listContainer);
+
+    // Ensure skeletons are hidden after fresh data render
+    // (only relevant for non-initial loads; initial load handled by finalizeGlobalLoading)
+    if (!opts.keepSkeletons && skelDiv) skelDiv.style.display = 'none';
 
     revealPlaceholderContent();
 }
@@ -660,7 +1548,6 @@ function revealPlaceholderContent() {
 function renderConversationList(chats, container) {
     const tabPrincipal = document.getElementById('tabPrincipal');
     if (tabPrincipal && !tabPrincipal.classList.contains('active')) {
-        console.warn("Attempted to render conversation list while on Solicitudes tab. Blocked.");
         return;
     }
     container.innerHTML = '';
@@ -677,44 +1564,96 @@ function renderConversationList(chats, container) {
         const timeAgoStr = formatTime(chat.created_at);
 
         const div = document.createElement('div');
-        div.className = 'chat-item';
+        div.className = 'oz-chat-row';
         div.setAttribute('data-id', chat.id);
-        div.onclick = () => openChat(chat.id, chat.name, chat.avatar, chat.userId);
+        div.setAttribute('data-time', new Date(chat.created_at).getTime());
+        div.onclick = () => openChat(chat.id, chat.name, chat.avatar, chat.userId, chat.isGroup || false);
 
         // Highlight if active
         if (currentConversationId === chat.id) div.classList.add('active');
 
         const avatarDiv = document.createElement('div');
-        avatarDiv.className = 'chat-avatar';
-        avatarDiv.innerHTML = renderAvatar(chat.avatar, chat.name);
+        avatarDiv.className = 'oz-chat-avatar';
+        if (chat.isGroup) {
+            avatarDiv.innerHTML = `<div style="width:100%;height:100%;border-radius:50%;background:#262626;display:flex;align-items:center;justify-content:center;"><i class="bi bi-people-fill" style="font-size:1.1rem;color:#8b5cf6;"></i></div>`;
+        } else {
+            avatarDiv.innerHTML = renderAvatar(chat.avatar, chat.name);
+        }
 
         const nameDiv = document.createElement('div');
-        nameDiv.className = 'chat-name';
+        nameDiv.className = 'oz-chat-name';
         nameDiv.textContent = chat.name;
 
+        const isPinned = chat.isPinned || false;
+        const pinText = isPinned ? 'Desfijar' : 'Fijar';
+        const pinIcon = isPinned ? 'bi-pin-angle' : 'bi-pin-angle-fill';
+
+        // Check if pin limit reached (max 3) — disable "Fijar" visually for unpinned chats
+        let pinnedCount = 0;
+        try { pinnedCount = (JSON.parse(localStorage.getItem('offszn_pinned_chats')) || []).length; } catch (e) { }
+        const pinDisabled = !isPinned && pinnedCount >= 3;
+
+        if (isPinned) {
+            const pIcon = document.createElement('i');
+            pIcon.className = 'bi bi-pin-fill';
+            pIcon.style.cssText = 'color:#adff2f; font-size:0.85rem; margin-left:6px; display:inline-block; vertical-align:middle; filter: drop-shadow(0 0 4px rgba(173, 255, 47, 0.4));';
+            nameDiv.appendChild(pIcon);
+        }
+
         const previewDiv = document.createElement('div');
-        previewDiv.className = 'chat-preview';
+        previewDiv.className = 'oz-chat-preview-wrap';
         previewDiv.innerHTML = `
-            <span class="chat-preview-text">${chat.lastMsg}</span>
-            <span class="chat-preview-date">${timeAgoStr}</span>
+            <span class="oz-chat-preview-text">${chat.lastMsg}</span>
+            <span class="oz-chat-time">${timeAgoStr}</span>
         `;
 
+        const optionsBtn = document.createElement('div');
+        optionsBtn.className = 'oz-chat-dots';
+        optionsBtn.innerHTML = '<i class="bi bi-three-dots"></i>';
+
+        const menuOpts = document.createElement('div');
+        menuOpts.className = 'chat-action-menu';
+
+        const pinStyle = pinDisabled ? 'opacity: 0.35; pointer-events: none; cursor: default;' : '';
+        menuOpts.innerHTML = `
+            <div class="chat-action-item" onclick="togglePinChat('${chat.id}', event)" style="${pinStyle}">
+                <i class="bi ${pinIcon}"></i> ${pinText}
+            </div>
+            <div class="chat-action-item delete" onclick="deleteLocalChat('${chat.id}', event)">
+                <i class="bi bi-trash3"></i> Borrar
+            </div>
+        `;
+
+        optionsBtn.onclick = (e) => {
+            e.stopPropagation();
+            // Close others
+            document.querySelectorAll('.chat-action-menu.show').forEach(m => {
+                if (m !== menuOpts) m.classList.remove('show');
+            });
+            menuOpts.classList.toggle('show');
+        };
+
         const infoDiv = document.createElement('div');
-        infoDiv.className = 'chat-info';
+        infoDiv.className = 'oz-chat-info';
         infoDiv.appendChild(nameDiv);
         infoDiv.appendChild(previewDiv);
 
         div.appendChild(avatarDiv);
         div.appendChild(infoDiv);
+        div.appendChild(optionsBtn);
+        div.appendChild(menuOpts);
         container.appendChild(div);
     });
 }
 
 // ===== OPEN CHAT (UPDATED) =====
-async function openChat(convId, name, avatar, userId) {
+async function openChat(convId, name, avatar, userId, isGroup = false) {
     toggleMobileView(true);
     currentConversationId = convId;
     localStorage.setItem('OFFSZN_LAST_CONV_ID', convId);
+
+    // Store group flag for message rendering
+    window._currentChatIsGroup = isGroup;
 
     // 4. Update Header
     cancelReply(); // FIX: Clear any lingering reply preview
@@ -728,6 +1667,13 @@ async function openChat(convId, name, avatar, userId) {
     if (placeholder) placeholder.style.display = 'none';
     activeCont.style.display = 'flex';
 
+    // Show message skeletons while loading
+    const messagesFeed = document.getElementById('messagesList'); // Re-checking the id in mensajes.html
+    const messagesFeedInner = document.querySelector('.messages-feed-inner');
+    if (messagesFeedInner) {
+        messagesFeedInner.innerHTML = _renderMessageSkeletons();
+    }
+
     // Update active state in sidebar
     document.querySelectorAll('.chat-item').forEach(item => {
         item.classList.toggle('active', item.getAttribute('data-id') === convId);
@@ -737,8 +1683,14 @@ async function openChat(convId, name, avatar, userId) {
     let roleText = '';
     let socials = {};
 
-    // 4. Update Header
-    if (userId) {
+    if (isGroup) {
+        // GROUP HEADER: show member count
+        const { data: members } = await supabase
+            .from('conversation_participants')
+            .select('user_id')
+            .eq('conversation_id', convId);
+        roleText = `${members ? members.length : '?'} miembros`;
+    } else if (userId) {
         const { data: userDetails } = await supabase
             .from('users')
             .select('role, is_producer, socials')
@@ -747,9 +1699,8 @@ async function openChat(convId, name, avatar, userId) {
 
         if (userDetails) {
             if (userDetails.is_producer) {
-                roleText = "Productor musical"; // Not uppercase
+                roleText = "Productor musical";
             } else if (userDetails.role && userDetails.role !== 'user') {
-                // Keep original casing, just capitalize first letter if needed, or leave as is
                 roleText = userDetails.role.charAt(0).toUpperCase() + userDetails.role.slice(1);
             }
             socials = userDetails.socials || {};
@@ -761,93 +1712,110 @@ async function openChat(convId, name, avatar, userId) {
 
     const nameEl = document.getElementById('currentChatName');
     nameEl.textContent = name;
-    nameEl.style.cursor = 'pointer';
-    nameEl.onclick = () => window.location.href = `/@${name}`;
+
+    if (isGroup) {
+        nameEl.style.cursor = 'default';
+        nameEl.onclick = null;
+    } else {
+        nameEl.style.cursor = 'pointer';
+        nameEl.onclick = () => window.location.href = `/ @${name} `;
+    }
 
     const avatarEl = document.getElementById('currentChatAvatar');
-    avatarEl.innerHTML = renderAvatar(avatar, name);
-    avatarEl.style.cursor = 'pointer';
-    avatarEl.onclick = () => window.location.href = `/@${name}`;
+    if (isGroup) {
+        avatarEl.innerHTML = `<div style="width:100%;height:100%;border-radius:50%;background:#262626;display:flex;align-items:center;justify-content:center;"><i class="bi bi-people-fill" style="font-size:1.2rem;color:#8b5cf6;"></i></div>`;
+        avatarEl.style.cursor = 'default';
+        avatarEl.onclick = null;
+    } else {
+        avatarEl.innerHTML = renderAvatar(avatar, name);
+        avatarEl.style.cursor = 'pointer';
+        avatarEl.onclick = () => window.location.href = `/ @${name} `;
+    }
 
     document.getElementById('currentChatStatus').textContent = roleText;
 
-    // RENDER SOCIALS IN HEADER DROPDOWN
+    // RENDER SOCIALS IN HEADER DROPDOWN (Skip for groups)
     const actionsContainer = document.querySelector('.chat-actions');
     if (actionsContainer) {
         actionsContainer.innerHTML = '';
-        const icons = {
-            instagram: 'bi-instagram',
-            tiktok: 'bi-tiktok',
-            youtube: 'bi-youtube',
-            spotify: 'bi-spotify',
-            twitter: 'bi-twitter-x'
-        };
-
-        // Custom order as requested: IG, TT, YT
-        const order = ['instagram', 'tiktok', 'youtube'];
-        const socialKeys = Object.keys(socials).sort((a, b) => {
-            const idxA = order.indexOf(a.toLowerCase());
-            const idxB = order.indexOf(b.toLowerCase());
-            if (idxA === -1 && idxB === -1) return 0;
-            if (idxA === -1) return 1;
-            if (idxB === -1) return -1;
-            return idxA - idxB;
-        });
-
-        const activeSocials = socialKeys.filter(k => socials[k]);
-
-        if (activeSocials.length > 0) {
-            // Create Three Dots Button
-            const moreBtn = document.createElement('button');
-            moreBtn.className = 'header-more-btn';
-            moreBtn.innerHTML = '<i class="bi bi-three-dots"></i>';
-
-            // Create Dropdown Container
-            const dropdown = document.createElement('div');
-            dropdown.className = 'header-socials-dropdown';
-            dropdown.id = 'headerSocialsDropdown';
-
-            activeSocials.forEach(key => {
-                const k = key.toLowerCase();
-                const val = socials[key];
-                if (val && icons[k]) {
-                    const a = document.createElement('a');
-                    let href = val;
-                    if (!val.startsWith('http')) {
-                        if (k === 'instagram') href = `https://instagram.com/${val}`;
-                        else if (k === 'tiktok') href = `https://tiktok.com/@${val}`;
-                        else if (k === 'youtube') href = `https://youtube.com/@${val}`;
-                    }
-                    a.href = href;
-                    a.target = '_blank';
-                    a.className = 'dropdown-social-item';
-
-                    // Capitalize label for UI
-                    const label = k.charAt(0).toUpperCase() + k.slice(1);
-                    a.innerHTML = `<i class="bi ${icons[k]}"></i> <span>${label}</span>`;
-                    dropdown.appendChild(a);
-                }
-            });
-
-            moreBtn.onclick = (e) => {
-                e.stopPropagation();
-                dropdown.classList.toggle('active');
+        if (isGroup) {
+            // No socials dropdown for group chats
+        } else {
+            const icons = {
+                instagram: 'bi-instagram',
+                tiktok: 'bi-tiktok',
+                youtube: 'bi-youtube',
+                spotify: 'bi-spotify',
+                twitter: 'bi-twitter-x'
             };
 
-            actionsContainer.appendChild(moreBtn);
-            actionsContainer.appendChild(dropdown);
-        }
+            // Custom order as requested: IG, TT, YT
+            const order = ['instagram', 'tiktok', 'youtube'];
+            const socialKeys = Object.keys(socials).sort((a, b) => {
+                const idxA = order.indexOf(a.toLowerCase());
+                const idxB = order.indexOf(b.toLowerCase());
+                if (idxA === -1 && idxB === -1) return 0;
+                if (idxA === -1) return 1;
+                if (idxB === -1) return -1;
+                return idxA - idxB;
+            });
+
+            const activeSocials = socialKeys.filter(k => socials[k]);
+
+            if (activeSocials.length > 0) {
+                // Create Three Dots Button
+                const moreBtn = document.createElement('button');
+                moreBtn.className = 'header-more-btn';
+                moreBtn.innerHTML = '<i class="bi bi-three-dots"></i>';
+
+                // Create Dropdown Container
+                const dropdown = document.createElement('div');
+                dropdown.className = 'header-socials-dropdown';
+                dropdown.id = 'headerSocialsDropdown';
+
+                activeSocials.forEach(key => {
+                    const k = key.toLowerCase();
+                    const val = socials[key];
+                    if (val && icons[k]) {
+                        const a = document.createElement('a');
+                        let href = val;
+                        if (!val.startsWith('http')) {
+                            if (k === 'instagram') href = `https://instagram.com/${val}`;
+                            else if (k === 'tiktok') href = `https://tiktok.com/@${val}`;
+                            else if (k === 'youtube') href = `https://youtube.com/@${val}`;
+                        }
+                        a.href = href;
+                        a.target = '_blank';
+                        a.className = 'dropdown-social-item';
+
+                        // Capitalize label for UI
+                        const label = k.charAt(0).toUpperCase() + k.slice(1);
+                        a.innerHTML = `<i class="bi ${icons[k]}"></i> <span>${label}</span>`;
+                        dropdown.appendChild(a);
+                    }
+                });
+
+                moreBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    dropdown.classList.toggle('active');
+                };
+
+                actionsContainer.appendChild(moreBtn);
+                actionsContainer.appendChild(dropdown);
+            }
+        } // end else (not group)
     }
 
     const feedInner = document.getElementById('messagesFeedInner');
-    feedInner.innerHTML = '<div style="padding:20px; text-align:center; color:#666;">Cargando mensajes...</div>';
+    feedInner.innerHTML = _renderMessageSkeletons();
 
     const { data: messages } = await supabase
         .from('messages')
         .select(`
             *, 
+            sender:users!sender_id(nickname, avatar_url),
             message_reactions(user_id, emoji),
-            parent:messages!reply_to_id(
+            parent:reply_to_id(
                 content, 
                 sender_id, 
                 attachment_type,
@@ -861,11 +1829,13 @@ async function openChat(convId, name, avatar, userId) {
     if (messages) {
         messages.forEach(msg => renderMessage(msg));
     }
-    // Delay scroll slightly to ensure DOM is fully ready and transitions (if any) are occurring
+    // Delay scroll slightly to ensure DOM is fully ready
     requestAnimationFrame(() => {
         scrollToBottom();
     });
 }
+
+
 
 // ===== SEND MESSAGE =====
 async function sendMessage() {
@@ -875,6 +1845,7 @@ async function sendMessage() {
     if (!text || !currentConversationId) return;
 
     input.value = '';
+    input.style.height = 'auto'; // Reset the computed height so it shrinks back
 
     // Optimistic UI for chat bubble
     const renderTime = Date.now();
@@ -1004,6 +1975,10 @@ function renderMessage(msg) {
         feedInner.appendChild(header);
     }
 
+    // Current sender name (for received headers and reply actions)
+    const senderData = Array.isArray(msg.sender) ? msg.sender[0] : msg.sender;
+    const senderNick = senderData?.nickname || 'Usuario';
+
     // 2. REPLY PREVIEW
     let replyHtml = '';
     // Handle array or object return from Supabase
@@ -1015,10 +1990,6 @@ function renderMessage(msg) {
         if (pContent) {
             const shortReply = pContent.length > 50 ? pContent.substring(0, 47) + '...' : pContent;
             const pIsMe = parentMsg.sender_id === currentUser.id;
-
-            // Current sender name (for received headers)
-            const senderData = Array.isArray(msg.sender) ? msg.sender[0] : msg.sender;
-            const senderNick = senderData?.nickname || 'Usuario';
 
             // Parent sender name
             const parentSenderData = Array.isArray(parentMsg.sender) ? parentMsg.sender[0] : parentMsg.sender;
@@ -1052,7 +2023,7 @@ function renderMessage(msg) {
             <button class="msg-action-btn" onclick="onReactClick('${msg.id}', event)" ${!msg.id ? 'style="opacity:0.5; pointer-events:none;"' : ''}>
                 <i class="bi bi-emoji-smile"></i>
             </button>
-            <button class="msg-action-btn" onclick="onReplyClick('${msg.id}', '${isMe ? 'Tú' : 'Usuario'}', '${msg.content?.replace(/'/g, "\\'").replace(/"/g, '&quot;')}')" ${!msg.id ? 'style="opacity:0.5; pointer-events:none;"' : ''}>
+            <button class="msg-action-btn" onclick="onReplyClick('${msg.id}', '${isMe ? 'Tú' : (senderNick.replace(/'/g, "\\'"))}', '${msg.content?.replace(/'/g, "\\'").replace(/"/g, '&quot;')}')" ${!msg.id ? 'style="opacity:0.5; pointer-events:none;"' : ''}>
                 <i class="bi bi-reply-fill"></i>
             </button>
             <div class="oz-menu-container">
@@ -1089,7 +2060,8 @@ function renderMessage(msg) {
         const displayEmoji = myReaction ? myReaction.emoji : reactions[reactions.length - 1].emoji;
 
         if (displayEmoji) {
-            reactionHtml = `<div class="message-reaction-bubble" onclick="submitReaction('${msg.id}', '${displayEmoji}', event)">${displayEmoji}</div>`;
+            const clickAction = myReaction ? `removeReaction('${msg.id}', event)` : `submitReaction('${msg.id}', '${displayEmoji}', event)`;
+            reactionHtml = `<div class="message-reaction-bubble" onclick="${clickAction}">${displayEmoji}</div>`;
         }
     }
 
@@ -1104,16 +2076,21 @@ function renderMessage(msg) {
     }
 
     // Structure matches Image 2 and modern chat apps
-    const senderData = Array.isArray(msg.sender) ? msg.sender[0] : msg.sender;
     const avatarHtml = !isMe ? `
         <div class="oz-msg-avatar">
             ${renderAvatar(senderData?.avatar_url, senderData?.nickname)}
         </div>
     ` : '';
 
+    // GROUP CHAT: Show sender name above received messages
+    const groupSenderLabel = (!isMe && window._currentChatIsGroup)
+        ? `<div style="font-size:0.75rem;font-weight:600;color:#8b5cf6;margin-bottom:2px;padding-left:4px;">${senderNick}</div>`
+        : '';
+
     msgDiv.innerHTML = `
         ${avatarHtml}
         <div class="oz-msg-body">
+            ${groupSenderLabel}
             ${replyHtml}
             <div class="oz-msg-container">
                 <div class="oz-bubble">
@@ -1240,6 +2217,28 @@ async function submitReaction(msgId, emoji, event) {
     if (error) {
         console.error('Error adding reaction:', error);
         // Revert UI?
+    }
+}
+
+async function removeReaction(msgId, event) {
+    if (event) event.stopPropagation();
+
+    // 1. OPTIMISTIC UI UPDATE
+    const msgDiv = document.getElementById(`msg-${msgId}`);
+    if (msgDiv) {
+        const bubble = msgDiv.querySelector('.oz-bubble');
+        const reactionEl = bubble?.querySelector('.message-reaction-bubble');
+        if (reactionEl) reactionEl.remove();
+    }
+
+    // 2. DB UPDATE
+    const { error } = await supabase
+        .from('message_reactions')
+        .delete()
+        .match({ message_id: msgId, user_id: currentUser.id });
+
+    if (error) {
+        console.error('Error removing reaction:', error);
     }
 }
 
@@ -1427,14 +2426,34 @@ async function searchUsersForModal(query) {
     const list = document.getElementById('modalResultsList');
     // Using simple HTML string for skeleton here
     list.innerHTML = `
-        <div class="modal-skeleton-item"><div class="modal-skeleton-avatar"></div><div class="modal-skeleton-line"></div></div>
-        <div class="modal-skeleton-item"><div class="modal-skeleton-avatar"></div><div class="modal-skeleton-line"></div></div>
-        <div class="modal-skeleton-item"><div class="modal-skeleton-avatar"></div><div class="modal-skeleton-line"></div></div>
+        <div class="modal-skeleton-item">
+            <div class="modal-skeleton-avatar skeleton-pulse"></div>
+            <div class="modal-skeleton-text">
+                <div class="modal-skeleton-line skeleton-pulse"></div>
+                <div class="modal-skeleton-line short skeleton-pulse"></div>
+            </div>
+        </div>
+        <div class="modal-skeleton-item">
+            <div class="modal-skeleton-avatar skeleton-pulse"></div>
+            <div class="modal-skeleton-text">
+                <div class="modal-skeleton-line skeleton-pulse"></div>
+                <div class="modal-skeleton-line short skeleton-pulse"></div>
+            </div>
+        </div>
+        <div class="modal-skeleton-item">
+            <div class="modal-skeleton-avatar skeleton-pulse"></div>
+            <div class="modal-skeleton-text">
+                <div class="modal-skeleton-line skeleton-pulse"></div>
+                <div class="modal-skeleton-line short skeleton-pulse"></div>
+            </div>
+        </div>
     `;
 
     let dbQuery = supabase
         .from('users')
         .select('id, nickname, avatar_url, first_name, last_name')
+        .not('nickname', 'is', null)
+        .not('first_name', 'is', null)
         .neq('id', currentUser.id)
         .limit(20);
 
@@ -1461,7 +2480,7 @@ async function searchUsersForModal(query) {
         if (isSelected) item.classList.add('selected');
 
         const avatarUrl = u.avatar_url;
-        const initial = u.nickname.charAt(0).toUpperCase();
+        const initial = u.nickname && u.nickname.length > 0 ? u.nickname.charAt(0).toUpperCase() : '?';
 
         let avatarHtml = '';
         if (avatarUrl && avatarUrl.length > 10) {
@@ -1598,8 +2617,9 @@ async function fetchSingleMessage(id) {
         .from('messages')
         .select(`
             *, 
+            sender:users!sender_id(nickname, avatar_url),
             message_reactions(user_id, emoji),
-            parent:messages!reply_to_id(
+            parent:reply_to_id(
                 content, 
                 sender_id, 
                 attachment_type,
@@ -1611,3 +2631,286 @@ async function fetchSingleMessage(id) {
     return data;
 }
 
+
+
+// Close action menus when clicking outside
+document.addEventListener('click', (e) => {
+    if (!e.target.closest('.oz-chat-dots') && !e.target.closest('.chat-action-menu')) {
+        document.querySelectorAll('.chat-action-menu.show').forEach(m => m.classList.remove('show'));
+    }
+});
+
+// Context Menu Handlers
+window.togglePinChat = async function (convId, e) {
+    if (e) e.stopPropagation();
+
+    const row = document.querySelector(`.oz-chat-row[data-id="${convId}"]`);
+    if (!row) return;
+
+    // 1. OPTIMISTIC UPDATE: Instant UI feedback
+    let currentPinned = [];
+    try { currentPinned = JSON.parse(localStorage.getItem('offszn_pinned_chats')) || []; } catch (e) { }
+
+    const isNowPinned = !currentPinned.includes(convId);
+
+    // LIMIT CHECK: Max 3 pinned — silently block (UI already shows disabled state)
+    if (isNowPinned && currentPinned.length >= 3) {
+        const menu = row.querySelector('.chat-action-menu');
+        if (menu) menu.classList.remove('show');
+        return;
+    }
+
+    // CLOSE MENU IMMEDIATELY
+    const menu = row.querySelector('.chat-action-menu');
+    if (menu) menu.classList.remove('show');
+
+    // Update icons and text in DOM immediately
+    const nameDiv = row.querySelector('.oz-chat-name');
+    const pinAction = row.querySelector('.chat-action-item i.bi-pin-angle, .chat-action-item i.bi-pin-angle-fill');
+    const pinActionText = pinAction?.parentElement;
+
+    if (isNowPinned) {
+        // Add pin icon to row
+        if (!nameDiv.querySelector('.bi-pin-fill')) {
+            const pIcon = document.createElement('i');
+            pIcon.className = 'bi bi-pin-fill';
+            pIcon.style.cssText = 'color:#adff2f; font-size:0.85rem; margin-left:6px; display:inline-block; vertical-align:middle; filter: drop-shadow(0 0 4px rgba(173, 255, 47, 0.4));';
+            nameDiv.appendChild(pIcon);
+        }
+        // Update menu internal
+        if (pinAction) {
+            pinAction.className = 'bi bi-pin-angle'; // Tilted for "unpin" action
+            pinActionText.innerHTML = `<i class="bi bi-pin-angle"></i> Desfijar`;
+        }
+    } else {
+        // Remove pin icon from row
+        const pIcon = nameDiv.querySelector('.bi-pin-fill');
+        if (pIcon) pIcon.remove();
+        // Update menu internal
+        if (pinAction) {
+            pinAction.className = 'bi bi-pin-angle-fill';
+            pinActionText.innerHTML = `<i class="bi bi-pin-angle-fill"></i> Fijar`;
+        }
+    }
+
+    // Update local cache pointers
+    if (isNowPinned) {
+        currentPinned.push(convId);
+    } else {
+        currentPinned = currentPinned.filter(id => id !== convId);
+    }
+    localStorage.setItem('offszn_pinned_chats', JSON.stringify(currentPinned));
+
+    // Update the OFFSZN_CHATS_CACHE if it exists
+    const cachedData = localStorage.getItem('OFFSZN_CHATS_CACHE');
+    if (cachedData) {
+        try {
+            let cache = JSON.parse(cachedData);
+            const chatIdx = cache.findIndex(c => c.id === convId);
+            if (chatIdx !== -1) {
+                cache[chatIdx].isPinned = isNowPinned;
+                localStorage.setItem('OFFSZN_CHATS_CACHE', JSON.stringify(cache));
+            }
+        } catch (e) { }
+    }
+
+    // REORDER DOM IMMEDIATELY
+    const container = row.parentElement;
+    if (container) {
+        if (isNowPinned) {
+            // Move to top (or after other pinned)
+            container.prepend(row);
+        } else {
+            // Re-sort chronologically among non-pinned
+            const rows = Array.from(container.children);
+            const myTime = parseInt(row.getAttribute('data-time') || 0);
+
+            // Find the correct spot: after all pinned, then by time DESC
+            let inserted = false;
+            for (const other of rows) {
+                if (other === row) continue;
+                const otherIsPinned = !!other.querySelector('.bi-pin-fill');
+                const otherTime = parseInt(other.getAttribute('data-time') || 0);
+
+                if (!otherIsPinned && otherTime < myTime) {
+                    container.insertBefore(row, other);
+                    inserted = true;
+                    break;
+                }
+            }
+            if (!inserted) container.appendChild(row);
+        }
+    }
+
+    // 2. BACKGROUND SYNC
+    try {
+        const { error } = await supabase
+            .from('conversation_participants')
+            .update({ is_pinned: isNowPinned })
+            .eq('conversation_id', convId)
+            .eq('user_id', currentUser.id);
+
+        if (error) throw error;
+    } catch (err) {
+        console.error('Error syncing pin to DB:', err);
+    }
+};
+
+window.deleteLocalChat = async function (convId, e) {
+    if (e) e.stopPropagation();
+    if (!confirm('¿Seguro que deseas eliminar este chat? Desaparecerá de tu lista hasta recibir un nuevo mensaje.')) return;
+
+    // 1. OPTIMISTIC UPDATE: Remove from DOM and Cache immediately
+    const item = document.querySelector(`.oz-chat-row[data-id="${convId}"]`);
+    if (item) item.remove();
+
+    if (currentConversationId === convId) {
+        document.getElementById('activeChatContainer').style.display = 'none';
+        document.getElementById('chatPlaceholder').style.display = 'flex';
+        currentConversationId = null;
+    }
+
+    // Update Cache
+    const cachedData = localStorage.getItem('OFFSZN_CHATS_CACHE');
+    if (cachedData) {
+        try {
+            let cache = JSON.parse(cachedData);
+            cache = cache.filter(c => c.id !== convId);
+            localStorage.setItem('OFFSZN_CHATS_CACHE', JSON.stringify(cache));
+        } catch (e) { }
+    }
+
+    // 2. BACKGROUND SYNC
+    try {
+        const { error } = await supabase
+            .from('conversation_participants')
+            .delete()
+            .eq('conversation_id', convId)
+            .eq('user_id', currentUser.id);
+
+        if (error) throw error;
+    } catch (err) {
+        console.error('Error deleting chat from DB:', err);
+    }
+};
+
+// =========================================
+// ADVANCED FILTER LOGIC
+// =========================================
+let activeFilters = {
+    role: [],
+    experience: [],
+    daws: []
+};
+
+function setupFilterListeners() {
+    const filterBtn = document.getElementById('btnFilterChats');
+    if (filterBtn) {
+        filterBtn.addEventListener('click', () => {
+            window.openFilterOverlay();
+        });
+    }
+
+    // Chip selection logic
+    document.querySelectorAll('.filter-chip').forEach(chip => {
+        chip.addEventListener('click', () => {
+            const type = chip.getAttribute('data-type'); // role, experience, daw
+            const value = chip.getAttribute('data-value');
+            const dataKey = type === 'daw' ? 'daws' : type;
+
+            if (chip.classList.contains('active')) {
+                chip.classList.remove('active');
+                activeFilters[dataKey] = activeFilters[dataKey].filter(v => v !== value);
+            } else {
+                chip.classList.add('active');
+                activeFilters[dataKey].push(value);
+            }
+        });
+    });
+}
+
+window.openFilterOverlay = function () {
+    const overlay = document.getElementById('filterOverlay');
+    if (overlay) overlay.classList.add('show');
+};
+
+window.closeFilterOverlay = function () {
+    const overlay = document.getElementById('filterOverlay');
+    if (overlay) overlay.classList.remove('show');
+};
+
+window.clearAllFilters = function () {
+    activeFilters = { role: [], experience: [], daws: [] };
+    document.querySelectorAll('.filter-chip.active').forEach(c => c.classList.remove('active'));
+    window.applyFilters();
+};
+
+window.applyFilters = function () {
+    // If on Grupos tab, switch to Principal first
+    const tabPrincipal = document.getElementById('tabPrincipal');
+    const tabGrupos = document.getElementById('tabGrupos');
+    if (tabGrupos && tabGrupos.classList.contains('active')) {
+        // Switch to Principal tab
+        tabGrupos.classList.remove('active');
+        if (tabPrincipal) {
+            tabPrincipal.classList.add('active');
+            _updateTabIndicator(tabPrincipal);
+        }
+    }
+
+    const cachedData = localStorage.getItem('OFFSZN_CHATS_CACHE');
+    if (!cachedData) {
+        window.closeFilterOverlay();
+        return;
+    }
+
+    try {
+        const chats = JSON.parse(cachedData);
+        let filtered = chats;
+
+        // Apply Role filter
+        if (activeFilters.role.length > 0) {
+            filtered = filtered.filter(c => activeFilters.role.includes(c.role));
+        }
+
+        // Apply Experience filter
+        if (activeFilters.experience.length > 0) {
+            filtered = filtered.filter(c => activeFilters.experience.includes(c.experience));
+        }
+
+        // Apply DAW filter
+        if (activeFilters.daws.length > 0) {
+            filtered = filtered.filter(c => {
+                if (!c.daws || !Array.isArray(c.daws)) return false;
+                return activeFilters.daws.some(fd => c.daws.includes(fd));
+            });
+        }
+
+        // Sort: pinned first, then by date
+        const localPinned = JSON.parse(localStorage.getItem('offszn_pinned_chats') || '[]');
+        filtered = filtered.map(c => ({ ...c, isPinned: localPinned.includes(c.id) }));
+        filtered.sort((a, b) => {
+            if (a.isPinned && !b.isPinned) return -1;
+            if (!a.isPinned && b.isPinned) return 1;
+            return new Date(b.created_at) - new Date(a.created_at);
+        });
+
+        const listContainer = document.getElementById('conversationsList');
+        if (listContainer) {
+            renderConversationList(filtered, listContainer);
+        }
+
+        // Hide skeletons if still visible
+        const skelDiv = document.getElementById('chatSidebarSkeletons');
+        if (skelDiv) skelDiv.style.display = 'none';
+
+        window.closeFilterOverlay();
+
+    } catch (e) {
+        console.error('Error applying filters:', e);
+        window.closeFilterOverlay();
+    }
+};
+
+// Initialize filter listeners on load
+setTimeout(setupFilterListeners, 1000); // Small delay to ensure DOM is ready
