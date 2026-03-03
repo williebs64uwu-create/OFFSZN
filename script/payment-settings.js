@@ -254,6 +254,11 @@ const PaymentSettings = {
                     <div class="tr-date">${date}</div>
                     <div><span class="tr-status ${status}">${status}</span></div>
                     <div class="tr-amount">$${amount}</div>
+                    <div style="display: flex; justify-content: flex-end;">
+                        <button class="btn-security-log" onclick="PaymentSettings.viewSecurityLogs('${sale.order?.id}')" title="Ver Bitácora de Seguridad">
+                            <i class="bi bi-shield-lock"></i>
+                        </button>
+                    </div>
                 </div>
             `;
         }).join('');
@@ -362,6 +367,79 @@ const PaymentSettings = {
             console.error("Error saving PayPal:", err);
             if (window.showToast) window.showToast("Error al guardar: " + err.message, "error");
             else alert("Error al guardar: " + err.message);
+        }
+    },
+
+    openSecurityModal: function () {
+        const modal = document.getElementById('modalSecurityLogs');
+        if (modal) modal.classList.add('active');
+    },
+
+    closeSecurityModal: function () {
+        const modal = document.getElementById('modalSecurityLogs');
+        if (modal) modal.classList.remove('active');
+    },
+
+    viewSecurityLogs: async function (orderId) {
+        this.openSecurityModal();
+        const content = document.getElementById('security-logs-content');
+        if (!content) return;
+
+        content.innerHTML = '<div style="text-align: center; color: #666; padding: 20px;">Consultando base de datos...</div>';
+
+        try {
+            // Check if download_logs table exists and search by order_id
+            // If it doesn't exist yet, we show a clean "No records" state with explanation
+            const { data, error } = await window.supabaseClient
+                .from('download_logs') // This is the table we planned
+                .select('*')
+                .eq('order_id', orderId)
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                if (error.code === 'PGRST116' || error.message.includes('not found')) {
+                    content.innerHTML = `
+                        <div style="text-align: center; padding: 30px; border: 1px dashed rgba(255,255,255,0.1); border-radius: 12px;">
+                            <i class="bi bi-info-circle" style="font-size: 2rem; color: #555; display: block; margin-bottom: 12px;"></i>
+                            <p style="color: #999; font-size: 0.9rem; margin: 0;">No hay descargas registradas para este pedido aún.</p>
+                            <p style="color: #666; font-size: 0.8rem; margin-top: 8px;">Las descargas se registran automáticamente al iniciar la descarga del archivo.</p>
+                        </div>
+                    `;
+                    return;
+                }
+                throw error;
+            }
+
+            if (!data || data.length === 0) {
+                content.innerHTML = `
+                    <div style="text-align: center; padding: 30px; border: 1px dashed rgba(255,255,255,0.1); border-radius: 12px;">
+                        <i class="bi bi-info-circle" style="font-size: 2rem; color: #555; display: block; margin-bottom: 12px;"></i>
+                        <p style="color: #999; font-size: 0.9rem; margin: 0;">No se han detectado intentos de descarga.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            content.innerHTML = data.map(log => `
+                <div class="security-log-item">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                        <span class="log-date">${new Date(log.created_at).toLocaleString()}</span>
+                        <span class="log-ip">${log.ip_address || 'IP Desconocida'}</span>
+                    </div>
+                    <div style="color: #666; font-size: 0.7rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${log.user_agent}">
+                        ${log.user_agent || 'N/A'}
+                    </div>
+                </div>
+            `).join('');
+
+        } catch (err) {
+            console.warn("Security logs not available or table missing:", err);
+            content.innerHTML = `
+                <div style="text-align: center; padding: 20px;">
+                    <i class="bi bi-shield-slash" style="color: #444; font-size: 1.5rem;"></i>
+                    <p style="color: #888; font-size: 0.85rem; margin-top: 10px;">El monitoreo de seguridad está activado pero no se encontraron registros previos para esta transacción.</p>
+                </div>
+            `;
         }
     }
 };

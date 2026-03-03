@@ -192,57 +192,62 @@ window.PurchasesManager = (function () {
         let actionsHtml = '';
         const orderId = order.id;
         const productId = product.id;
+        const pType = product.product_type || '';
+        const isKit = ['drumkit', 'loopkit', 'preset'].includes(pType);
 
-        // Optimized Buttons with simple tooltips if needed
-        if (product.mp3_url) {
-            actionsHtml += `<button class="download-btn" onclick="window.PurchasesManager.downloadFile(this, ${orderId}, '${productId}', 'mp3')" title="Bajar MP3"><i class="bi bi-music-note-beamed"></i> MP3</button>`;
-        }
-        if (product.wav_url) {
-            actionsHtml += `<button class="download-btn" onclick="window.PurchasesManager.downloadFile(this, ${orderId}, '${productId}', 'wav')" title="Bajar WAV"><i class="bi bi-music-note-beamed"></i> WAV</button>`;
-        }
-        if (product.stems_url) {
-            actionsHtml += `<button class="download-btn" onclick="window.PurchasesManager.downloadFile(this, ${orderId}, '${productId}', 'stems')" title="Bajar STEMS"><i class="bi bi-archive"></i> STEMS</button>`;
-        }
-        if (product.kit_url || product.product_type === 'drumkit' || product.product_type === 'loopkit' || product.product_type === 'preset') {
-            actionsHtml += `<button class="download-btn" onclick="window.PurchasesManager.downloadFile(this, ${orderId}, '${productId}', 'kit')" title="Bajar ZIP"><i class="bi bi-box-seam"></i> ZIP</button>`;
+        // 🛡️ PERMISSION LOGIC:
+        // FREE beats  → MP3 only (no WAV, no STEMS, no PDF)
+        // FREE kits   → ZIP only (no PDF)
+        // PAID items  → all applicable buttons + PDF license
+        if (isFree && pType === 'beat') {
+            // FREE BEAT: Only MP3
+            if (product.mp3_url) {
+                actionsHtml += `<button class="download-btn" onclick="window.PurchasesManager.downloadFile(this, ${orderId}, '${productId}', 'mp3')" title="Bajar MP3"><i class="bi bi-music-note-beamed"></i> MP3</button>`;
+            }
+        } else if (isFree && isKit) {
+            // FREE KIT: Only ZIP
+            if (product.kit_url) {
+                actionsHtml += `<button class="download-btn" onclick="window.PurchasesManager.downloadFile(this, ${orderId}, '${productId}', 'kit')" title="Bajar ZIP"><i class="bi bi-box-seam"></i> ZIP</button>`;
+            }
+        } else {
+            // PAID: Show all available file buttons
+            if (product.mp3_url) {
+                actionsHtml += `<button class="download-btn" onclick="window.PurchasesManager.downloadFile(this, ${orderId}, '${productId}', 'mp3')" title="Bajar MP3"><i class="bi bi-music-note-beamed"></i> MP3</button>`;
+            }
+            if (product.wav_url) {
+                actionsHtml += `<button class="download-btn" onclick="window.PurchasesManager.downloadFile(this, ${orderId}, '${productId}', 'wav')" title="Bajar WAV"><i class="bi bi-music-note-beamed"></i> WAV</button>`;
+            }
+            if (product.stems_url) {
+                actionsHtml += `<button class="download-btn" onclick="window.PurchasesManager.downloadFile(this, ${orderId}, '${productId}', 'stems')" title="Bajar STEMS"><i class="bi bi-archive"></i> STEMS</button>`;
+            }
+            if (product.kit_url || isKit) {
+                actionsHtml += `<button class="download-btn" onclick="window.PurchasesManager.downloadFile(this, ${orderId}, '${productId}', 'kit')" title="Bajar ZIP"><i class="bi bi-box-seam"></i> ZIP</button>`;
+            }
         }
 
-        // License PDF Generation Logic
+        // License PDF — ONLY for PAID purchases (free downloads don't include a usage license)
         const licenseType = item.license_name || 'basic';
-        const purchaseDataObj = null; // Placeholder as we can't easily serialize object to HTML attribute
 
-        // We will attach the data via a global map or simply pass ID and regenerate info? 
-        // Better: Function that constructs data on the fly if we pass necessary params.
-        // But we have 'order' and 'item' here.
+        if (!isFree) {
+            const buyerName = window.currentUser?.user_metadata?.nickname || window.currentUser?.email?.split('@')[0] || 'Cliente';
+            const buyerEmail = window.currentUser?.email || '';
 
-        // Strategy: Serialize a minimal set of data needed, or look it up.
-        // Let's us encodeURI a JSON string? Might be too large.
-        // Alternative: window.PurchasesManager.generateLicense(orderId, itemId);
-        // And we store the items in a map.
+            const pdfData = {
+                productName: product.name,
+                producerName: producerName,
+                amount: item.price_at_purchase,
+                buyerName: buyerName,
+                buyerEmail: buyerEmail,
+                purchaseDate: order.created_at,
+                orderId: order.id,
+                licenseType: licenseType,
+                productType: product.product_type,
+                licenseSettings: product.users?.license_settings || {}
+            };
 
-        // Let's modify the architecture slightly to store items.
-        // Or just pass the RAW values needed.
-        const buyerName = window.currentUser?.user_metadata?.nickname || window.currentUser?.email?.split('@')[0] || 'Cliente';
-        const buyerEmail = window.currentUser?.email || '';
-
-        // JSON Stringify safe for HTML attribute
-        const pdfData = {
-            productName: product.name,
-            producerName: producerName,
-            amount: item.price_at_purchase,
-            buyerName: buyerName,
-            buyerEmail: buyerEmail,
-            purchaseDate: order.created_at,
-            orderId: order.id,
-            licenseType: licenseType,
-            productType: product.product_type,
-            licenseSettings: product.users?.license_settings || {} // We need to fetch producer settings!
-        };
-
-        // Escaping for HTML attribute
-        const pdfDataStr = encodeURIComponent(JSON.stringify(pdfData));
-
-        actionsHtml += `<button class="download-btn primary" onclick="window.PurchasesManager.generatePDF(this, '${pdfDataStr}')" title="Descargar Licencia de Uso"><i class="bi bi-file-earmark-pdf"></i> PDF</button>`;
+            const pdfDataStr = encodeURIComponent(JSON.stringify(pdfData));
+            actionsHtml += `<button class="download-btn primary" onclick="window.PurchasesManager.generatePDF(this, '${pdfDataStr}')" title="Descargar Licencia de Uso"><i class="bi bi-file-earmark-pdf"></i> PDF</button>`;
+        }
 
         // Row Content - Truncation is handled by CSS, but we inject clean data
         row.innerHTML = `

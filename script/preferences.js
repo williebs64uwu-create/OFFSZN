@@ -1,15 +1,18 @@
 document.addEventListener('DOMContentLoaded', async () => {
-    // 1. Basic UI Init (Sidebar active state handled by HTML)
+    // Initialize Custom Selector UI
+    initPromoSelector();
+
+    // Basic UI Init
     const loadPromise = loadPreferences();
     const sidebarPromise = loadSidebarAvatar();
     const promoPromise = loadPromotion();
 
-    // Minimum 2-second delay for premium skeleton feel (Project standard)
+    // Minimum delay for premium skeleton feel
     const delayPromise = new Promise(resolve => setTimeout(resolve, 2000));
 
     await Promise.all([loadPromise, sidebarPromise, promoPromise, delayPromise]);
 
-    // Remove ALL Skeletons from the page (Sidebar + Content + Radios)
+    // Remove Skeletons
     document.querySelectorAll('.skeleton-base').forEach(el => {
         el.classList.remove('skeleton-base');
         el.classList.remove('skeleton-circle');
@@ -18,6 +21,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 });
 
+// --- Upload Preferences (Radio Buttons) ---
 async function loadPreferences() {
     try {
         const { data: { user } } = await supabaseClient.auth.getUser();
@@ -26,7 +30,6 @@ async function loadPreferences() {
             return;
         }
 
-        // Fetch profile preference
         const { data, error } = await supabaseClient
             .from('profiles')
             .select('upload_defaults_preference')
@@ -35,10 +38,7 @@ async function loadPreferences() {
 
         if (error) throw error;
 
-        // Default to 'last_used' if null (Global Default Change)
         const pref = data?.upload_defaults_preference || 'last_used';
-
-        // Update UI
         const radio = document.querySelector(`input[name="uploadDefaults"][value="${pref}"]`);
         if (radio) radio.checked = true;
 
@@ -47,33 +47,26 @@ async function loadPreferences() {
     }
 }
 
-async function saveUploadPreference(value) {
+window.saveUploadPreference = async function (value) {
     try {
         const { data: { user } } = await supabaseClient.auth.getUser();
         if (!user) return;
 
-        const { error } = await supabaseClient
+        await supabaseClient
             .from('profiles')
             .update({ upload_defaults_preference: value })
             .eq('id', user.id);
-
-        if (error) throw error;
-
-        // Toast removed per user request for less intrusive feel
-
     } catch (error) {
         console.error('Error saving preference:', error);
-        alert('Error al guardar cambios');
     }
 }
 
-// Simple Sidebar Avatar Loader to match Account Settings look
+// --- Sidebar Avatar ---
 async function loadSidebarAvatar() {
     try {
         const { data: { user } } = await supabaseClient.auth.getUser();
         if (!user) return;
 
-        // Fetch visual profile data
         const { data: profile, error } = await supabaseClient
             .from('users')
             .select('nickname, avatar_url, first_name, last_name, role')
@@ -86,7 +79,6 @@ async function loadSidebarAvatar() {
         const sidebarName = document.getElementById('sidebarName');
         const sidebarRole = document.getElementById('sidebarRole');
 
-        // 1. Avatar
         if (sidebarAvatar) {
             if (profile.avatar_url) {
                 sidebarAvatar.innerHTML = `<img src="${profile.avatar_url}" alt="Avatar" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`;
@@ -94,28 +86,19 @@ async function loadSidebarAvatar() {
                 sidebarAvatar.textContent = (profile.nickname || 'U').charAt(0).toUpperCase();
             }
         }
-
-        // 2. Name (First Name + Last Name OR Nickname)
         if (sidebarName) {
             const fullName = [profile.first_name, profile.last_name].filter(Boolean).join(' ');
             sidebarName.textContent = fullName || profile.nickname || 'Usuario';
         }
-
-        // 3. Role
         if (sidebarRole) {
-            // Capitalize role if needed or mapped
             sidebarRole.textContent = (profile.role === 'admin') ? 'Administrador' : 'Productor';
         }
-
     } catch (e) {
-        console.warn('Error loading sidebar info:', e);
+        console.warn('Sidebar load failed:', e);
     }
 }
 
-// ========================================
-// PROMOTIONS LOGIC (NUEVO)
-// ========================================
-
+// --- Promotion Logic ---
 async function loadPromotion() {
     try {
         const { data: { user } } = await supabaseClient.auth.getUser();
@@ -127,126 +110,182 @@ async function loadPromotion() {
             .eq('producer_id', user.id)
             .maybeSingle();
 
-        if (error) {
-            console.error('Error loading promotion:', error);
-            return;
-        }
-
-        const promoToggle = document.getElementById('promoToggleInput');
-        const buyQty = document.getElementById('promoBuyQty');
-        const getQty = document.getElementById('promoGetQty');
+        if (error) return;
 
         if (data) {
-            if (promoToggle) promoToggle.checked = data.active;
-            if (buyQty) buyQty.value = data.buy_quantity;
-            if (getQty) getQty.value = data.get_quantity;
-        }
+            // Determine promo value for UI sync
+            let val = 'custom';
+            if (!data.active) val = 'none';
+            else if (data.buy_quantity === 1 && data.get_quantity === 1) val = '2,1';
+            else if (data.buy_quantity === 1 && data.get_quantity === 2) val = '3,1';
 
-        togglePromoOptions();
+            // Initial manual values (hidden unless custom)
+            document.getElementById('promoBuyQty').value = data.buy_quantity;
+            document.getElementById('promoGetQty').value = data.get_quantity;
+
+            handlePromoSelector(val);
+        } else {
+            handlePromoSelector('2,1'); // Default
+        }
     } catch (error) {
-        console.error('Error loading promotion:', error);
+        console.error('Promo load error:', error);
     }
 }
 
-window.togglePromoOptions = function () {
-    const toggle = document.getElementById('promoToggleInput');
-    const container = document.getElementById('promoOptionsContainer');
-    if (toggle && container) {
-        container.style.display = toggle.checked ? 'block' : 'none';
-        updatePromoTotal();
-    }
-};
+function updatePromoSummary() {
+    const buyQty = parseInt(document.getElementById('promoBuyQty')?.value) || 0;
+    const getQty = parseInt(document.getElementById('promoGetQty')?.value) || 0;
+    const summary = document.getElementById('promoSummary');
 
-window.updatePromoTotal = function () {
-    let buyQtyInput = document.getElementById('promoBuyQty');
-    let getQtyInput = document.getElementById('promoGetQty');
+    // Check if "None" is active
+    const activeTab = document.querySelector('.promo-tab.active');
+    const isNone = activeTab && activeTab.dataset.value === 'none';
 
-    let buyQty = parseInt(buyQtyInput?.value) || 2;
-    let getQty = parseInt(getQtyInput?.value) || 1;
-
-    // Límite de 20 solicitado por el usuario
-    if (buyQty > 20) { buyQty = 20; if (buyQtyInput) buyQtyInput.value = 20; }
-    if (getQty > 20) { getQty = 20; if (getQtyInput) getQtyInput.value = 20; }
-    if (buyQty < 1) { buyQty = 1; if (buyQtyInput) buyQtyInput.value = 1; }
-    if (getQty < 1) { getQty = 1; if (getQtyInput) getQtyInput.value = 1; }
-
-    document.getElementById('promoBuyDisplay').innerText = buyQty;
-    document.getElementById('promoTotalDisplay').innerText = buyQty + getQty;
-};
-
-// Listeners
-document.getElementById('promoBuyQty')?.addEventListener('input', updatePromoTotal);
-document.getElementById('promoGetQty')?.addEventListener('input', updatePromoTotal);
-
-window.savePromotion = async function () {
-    const saveBtn = document.getElementById('savePromoBtn');
-    const originalText = saveBtn.innerText;
-
-    try {
-        saveBtn.innerText = 'Guardando...';
-        saveBtn.disabled = true;
-
-        const { data: { user } } = await supabaseClient.auth.getUser();
-        if (!user) return;
-
-        const isActive = document.getElementById('promoToggleInput')?.checked || false;
-        const buyQty = parseInt(document.getElementById('promoBuyQty')?.value) || 2;
-        const getQty = parseInt(document.getElementById('promoGetQty')?.value) || 1;
-
-        const { data: existingPromo } = await supabaseClient
-            .from('promociones_offszn_seguro')
-            .select('id')
-            .eq('producer_id', user.id)
-            .maybeSingle();
-
-        if (existingPromo) {
-            const { error } = await supabaseClient
-                .from('promociones_offszn_seguro')
-                .update({
-                    buy_quantity: buyQty,
-                    get_quantity: getQty,
-                    active: isActive
-                })
-                .eq('id', existingPromo.id);
-            if (error) throw error;
+    if (summary) {
+        if (isNone || (buyQty === 0 && getQty === 0)) {
+            summary.innerHTML = `<span style="color: #666; font-size: 0.8rem;">Promoción Desactivada</span>`;
         } else {
-            const { error } = await supabaseClient
-                .from('promociones_offszn_seguro')
-                .insert({
-                    producer_id: user.id,
-                    buy_quantity: buyQty,
-                    get_quantity: getQty,
-                    discount_percent: 100, // Siempre gratis adicional
-                    active: isActive
-                });
-            if (error) throw error;
+            summary.innerHTML = `Compra <span style="color: #fff; font-weight: 700;">${buyQty}</span> y Lleva <span style="color: #fff; font-weight: 700;">${getQty}</span> Gratis`;
         }
-
-        // Éxito - Mantener Premium B&W
-        saveBtn.innerText = '✓ Guardado';
-        saveBtn.style.backgroundColor = '#000';
-        saveBtn.style.color = '#fff';
-        saveBtn.style.border = '1px solid #fff';
-
-        setTimeout(() => {
-            saveBtn.innerText = originalText;
-            saveBtn.style.backgroundColor = '#fff';
-            saveBtn.style.color = '#000';
-            saveBtn.style.border = 'none';
-            saveBtn.disabled = false;
-        }, 2500);
-
-    } catch (error) {
-        console.error('Error saving promotion:', error);
-        saveBtn.innerText = 'Error al guardar';
-        saveBtn.style.backgroundColor = '#ef4444'; // rojo
-        saveBtn.style.borderColor = '#ef4444';
-
-        setTimeout(() => {
-            saveBtn.innerText = originalText;
-            saveBtn.style.backgroundColor = '';
-            saveBtn.style.borderColor = '';
-            saveBtn.disabled = false;
-        }, 2500);
     }
+}
+
+function initPromoSelector() {
+    const trigger = document.getElementById('promoCustomTrigger');
+    const optionsList = document.getElementById('promoOptionsList');
+    const options = document.querySelectorAll('.custom-option');
+    const tabs = document.querySelectorAll('.promo-tab');
+
+    if (!trigger || !optionsList) return;
+
+    trigger.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isOpen = optionsList.style.display === 'block';
+        if (!isOpen) {
+            optionsList.style.display = 'block';
+            trigger.classList.add('active');
+        } else {
+            closeAllCustomDropdowns();
+        }
+    });
+
+    options.forEach(opt => {
+        opt.addEventListener('click', () => {
+            const val = opt.dataset.value;
+            handlePromoSelector(val);
+            closeAllCustomDropdowns();
+        });
+    });
+
+    tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            handlePromoSelector(tab.dataset.value);
+        });
+    });
+
+    document.addEventListener('click', () => closeAllCustomDropdowns());
+}
+
+function closeAllCustomDropdowns() {
+    const list = document.getElementById('promoOptionsList');
+    const trigger = document.getElementById('promoCustomTrigger');
+    if (list) list.style.display = 'none';
+    if (trigger) trigger.classList.remove('active');
+}
+
+function handlePromoSelector(value) {
+    // 1. Sync Mobile
+    const display = document.getElementById('promoSelectedDisplay');
+    document.querySelectorAll('.custom-option').forEach(opt => {
+        if (opt.dataset.value === value) {
+            opt.classList.add('selected');
+            if (display) display.textContent = opt.textContent;
+        } else {
+            opt.classList.remove('selected');
+        }
+    });
+
+    // 2. Sync Desktop
+    document.querySelectorAll('.promo-tab').forEach(tab => {
+        tab.classList.toggle('active', tab.dataset.value === value);
+    });
+
+    // 3. Logic
+    const customRow = document.getElementById('customPromoRow');
+    let buy = 2, get = 1;
+
+    if (value === 'none') {
+        buy = 0; get = 0;
+        customRow.style.display = 'none';
+    } else if (value === '2,1') {
+        buy = 1; get = 1; // 2x1: Llevas 2, pagas 1
+        customRow.style.display = 'none';
+    } else if (value === '3,1') {
+        buy = 1; get = 2; // 3x1: Llevas 3, pagas 1
+        customRow.style.display = 'none';
+    } else if (value === 'custom') {
+        customRow.style.display = 'grid';
+        buy = parseInt(document.getElementById('promoBuyQty').value) || 2;
+        get = parseInt(document.getElementById('promoGetQty').value) || 1;
+    }
+
+    updatePromoValues(buy, get);
+}
+
+function updatePromoValues(buy, get) {
+    document.getElementById('promoBuyQty').value = buy;
+    document.getElementById('promoGetQty').value = get;
+    const dbuy = document.getElementById('displayBuyQty');
+    const dget = document.getElementById('displayGetQty');
+    if (dbuy) dbuy.textContent = buy;
+    if (dget) dget.textContent = get;
+    updatePromoSummary();
+    autosavePromotion();
+}
+
+window.adjustQty = function (id, delta) {
+    const input = document.getElementById(id);
+    if (!input) return;
+    let val = (parseInt(input.value) || 0) + delta;
+    if (val < 1) val = 1;
+    if (val > 20) val = 20;
+    input.value = val;
+    // Manual adjustment only from "custom" so we just update values
+    updatePromoValues(
+        parseInt(document.getElementById('promoBuyQty').value),
+        parseInt(document.getElementById('promoGetQty').value)
+    );
+};
+
+let autosaveTimer;
+window.autosavePromotion = function () {
+    clearTimeout(autosaveTimer);
+    autosaveTimer = setTimeout(async () => {
+        try {
+            const { data: { user } } = await supabaseClient.auth.getUser();
+            if (!user) return;
+
+            // Active status is FALSE if "none" is selected
+            const activeTab = document.querySelector('.promo-tab.active');
+            const isActive = activeTab && activeTab.dataset.value !== 'none';
+
+            const buy = parseInt(document.getElementById('promoBuyQty')?.value) || 0;
+            const get = parseInt(document.getElementById('promoGetQty')?.value) || 0;
+
+            const { data: existing } = await supabaseClient
+                .from('promociones_offszn_seguro')
+                .select('id')
+                .eq('producer_id', user.id)
+                .maybeSingle();
+
+            if (existing) {
+                await supabaseClient.from('promociones_offszn_seguro').update({ buy_quantity: buy, get_quantity: get, active: isActive }).eq('id', existing.id);
+            } else {
+                await supabaseClient.from('promociones_offszn_seguro').insert({ producer_id: user.id, buy_quantity: buy, get_quantity: get, discount_percent: 100, active: isActive });
+            }
+            console.log('Promotion autosaved (Active:', isActive, ')');
+        } catch (e) {
+            console.error('Autosave failed:', e);
+        }
+    }, 800);
 };
