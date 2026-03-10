@@ -1,5 +1,68 @@
 # Errores Comunes de Desarrollo en OFFSZN
 
+## 9. Bloqueo de Pasarelas de Pago (PayPal CSP)
+
+**Descripción del error:**
+El SDK de PayPal no carga o los botones no aparecen en la página de checkout, lanzando errores de `Content Security Policy (CSP)` en la consola.
+
+**Cuándo ocurre:**
+Sucede cuando Helmet.js está configurado por defecto y no permite conexiones externas a los dominios de PayPal.
+
+**Solución:**
+Actualizar las directivas de Helmet en `app.js` permitiendo explícitamente los dominios de PayPal en:
+- `scriptSrc`: `paypal.com`, `sandbox.paypal.com`
+- `imgSrc`: `paypalobjects.com`, `*.paypal.com`
+- `connectSrc`: `api.paypal.com`, `api-m.paypal.com`
+- `frameSrc`: `paypal.com`
+
+## 10. Interferencia de COOP/COEP con Popups (Google/PayPal Auth)
+
+**Descripción del error:**
+Los popups de autenticación (como los de Google o PayPal) se abren pero no pueden devolver el token a la ventana principal, o la ventana se queda en blanco.
+
+**Cuándo ocurre:**
+Al habilitar políticas estrictas para FFmpeg.wasm (`Cross-Origin-Embedder-Policy: require-corp`), estas bloquean la comunicación entre ventanas de distinto origen.
+
+**Solución:**
+- Establecer `crossOriginEmbedderPolicy: false` en la configuración global de Helmet.
+- Desactivar `crossOriginOpenerPolicy: false` globalmente para permitir que los popups se comuniquen con el `window.opener`.
+
+## 11. Errores 404 en Activos Estáticos (Logos de Yape/Plin en Producción)
+
+**Descripción del error:**
+Imágenes que cargan localmente (como `/images/yape.png`) devuelven 404 al desplegar en producción (Render/Vercel).
+
+**Cuándo ocurre:**
+Debido a la estructura de carpetas `root/public` vs `server/public` y cómo el servidor Express sirve los archivos estáticos.
+
+**Solución:**
+Unificar el middleware de archivos estáticos en `app.js` para buscar en ambas rutas y priorizar la carpeta de servidor para activos críticos:
+```javascript
+app.use(express.static(path.join(__dirname, '../../public')));
+app.use(express.static(path.join(__dirname, '../public')));
+```
+
+
+## 8. Scripts Globales Faltantes en SPA/Páginas Independientes (Search/Favorites)
+
+**Descripción del error:**
+Botones de interactividad (Like, Compartir, Reproducir) no funcionan o lanzan `ReferenceError` porque los managers globales no están cargados.
+
+**Cuándo ocurre:**
+Al crear nuevas páginas o componentes (como `search.html`) y olvidar importar scripts de soporte como `favorites-manager.js` o `share-modal.js`.
+
+**Solución:**
+Asegurarse de incluir los scripts necesarios en el pie del `<body>` antes del script específico de la página:
+```html
+<script src="/script/favorites-manager.js"></script>
+<script src="/script/share-modal.js"></script>
+<script src="/script/search.js" type="module"></script>
+```
+
+**Mejora de UX (Mar 10, 2026):**
+Se reemplazaron los badges de formato ("WAV/STEMS") por información técnica relevante (**BPM** y **KEY**) en formato de cuadrados (`.info-square-v2`) para cumplir con estándares de la industria musical.
+
+
 ## 1. ERR_BLOCKED_BY_RESPONSE.NotSameOriginAfterDefaultedToSameOriginByCoep
 
 **Descripción del error:**

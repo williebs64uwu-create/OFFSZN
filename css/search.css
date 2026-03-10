@@ -29,19 +29,23 @@
     background: #000;
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 20px;
-    padding: 28px;
+    padding: 24px 20px 10px;
+    /* Reduced bottom padding */
     display: flex;
     flex-direction: column;
-    gap: 32px;
+    gap: 8px;
+    /* Very tight gap as per ref image */
+    /* Tightened gap as per ref */
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
 }
 
 .sidebar-main-title {
-    font-size: 1.25rem;
+    font-size: 1rem;
     font-weight: 800;
     color: #fff;
-    margin-bottom: -8px;
-    letter-spacing: -0.5px;
+    margin-bottom: 8px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
 }
 
 .results-header {
@@ -289,7 +293,50 @@
     background: rgba(239, 68, 68, 0.05);
 }
 
-/* --- Results Area --- */
+#search-results-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding-top: 8px;
+}
+
+/* Red heart for likes */
+.action-icon.liked {
+    color: #ff4d4d !important;
+}
+
+/* Square badges for BPM/Key */
+.info-square-v2 {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #fff;
+    min-width: 42px;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.info-square-v2:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+
+.search-section-title {
+    color: #fff;
+    font-size: 0.9rem;
+    font-weight: 700;
+    margin: 32px 0 16px;
+    opacity: 0.9;
+    /* Removed border-left and text-transform: uppercase as requested */
+}
+
 .search-results-wrapper {
     flex: 1;
     display: flex;
@@ -322,28 +369,60 @@
 
 /* --- Track Card (Horizontal Row) --- */
 .track-row {
-    background: var(--card-bg);
-    border: 1px solid var(--border-soft);
-    border-radius: 12px;
-    padding: 12px 20px;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 0;
+    padding: 16px 10px;
     display: flex;
     align-items: center;
     gap: 20px;
-    transition: background 0.2s, transform 0.2s;
-    cursor: pointer;
+    transition: background 0.2s;
+    cursor: default;
 }
 
 .track-row:hover {
-    background: #161616;
-    border-color: rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.03);
 }
 
-.track-thumb {
+/* Thumbnail Play Overlay */
+.thumb-container {
+    position: relative;
     width: 60px;
     height: 60px;
     border-radius: 8px;
-    object-fit: cover;
+    overflow: hidden;
     flex-shrink: 0;
+    cursor: pointer;
+}
+
+.track-thumb {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: filter 0.2s;
+}
+
+.thumb-play-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.2s;
+    color: #fff;
+    font-size: 1.5rem;
+    z-index: 2;
+}
+
+.thumb-container:hover .thumb-play-overlay {
+    opacity: 1;
+}
+
+.thumb-container:hover .track-thumb {
+    filter: brightness(0.7);
 }
 
 .track-left {
@@ -357,12 +436,30 @@
     display: flex;
     flex-direction: column;
     gap: 4px;
+    align-items: flex-start;
+    text-align: left;
 }
 
 .track-title {
     font-weight: 700;
     font-size: 1rem;
     color: #fff;
+    cursor: pointer;
+    transition: text-decoration 0.2s;
+}
+
+.track-title:hover {
+    text-decoration: underline !important;
+}
+
+.producer-name {
+    cursor: pointer;
+    transition: text-decoration 0.2s, color 0.2s;
+}
+
+.producer-name:hover {
+    text-decoration: underline !important;
+    color: #fff !important;
 }
 
 .track-meta {
@@ -405,7 +502,7 @@
     font-size: 0.85rem;
     color: var(--text-dim);
     min-width: 40px;
-    text-align: center;
+    text-align: left;
 }
 
 .track-badges {
@@ -441,11 +538,29 @@
     transform: scale(1.05);
 }
 
+.track-actions-right {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-left: auto;
+    min-width: 250px;
+    justify-content: flex-end;
+}
+
 .track-actions {
     display: flex;
     gap: 15px;
     color: var(--text-dim);
     font-size: 1.1rem;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    pointer-events: none;
+    align-items: center;
+}
+
+.track-row:hover .track-actions {
+    opacity: 1;
+    pointer-events: auto;
 }
 
 .action-icon {
@@ -481,22 +596,189 @@
     transform: scale(1.05);
 }
 
-/* --- Shared Results Styles --- */
-.search-section-title {
-    font-family: inherit;
-    font-weight: 800;
+/* --- Filter Accordion --- */
+.filter-group {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    padding: 8px 0;
+    /* Tight padding as per ref */
+    margin: 0;
+    transition: none;
+    /* Removed "crazy" animation */
 }
 
-.track-title,
-.producer-nickname {
-    color: #fff !important;
+.filter-header,
+.filter-header-static,
+.filter-header-flex {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    user-select: none;
+}
+
+.filter-header {
+    cursor: pointer;
+}
+
+.filter-header:hover .filter-title {
+    color: #fff;
+}
+
+.filter-title {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.85rem;
+    /* Slightly larger as per ref */
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: rgba(255, 255, 255, 0.9);
+    /* White as per ref */
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.filter-title i {
+    font-size: 1rem;
+}
+
+/* --- Skeletons --- */
+.filter-skeleton-container {
+    display: none;
+    /* Hidden by default */
+    padding: 8px 0;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.filter-skeleton {
+    height: 20px;
+    background: linear-gradient(90deg, #111 25%, #222 50%, #111 75%);
+    background-size: 200% 100%;
+    animation: skeleton-shimmer 2s infinite linear;
+    border-radius: 4px;
+}
+
+.filter-skeleton.header {
+    width: 60%;
+    margin-bottom: 8px;
+}
+
+.filter-skeleton.option {
+    width: 40%;
+}
+
+.filter-skeleton.slider {
+    height: 4px;
+    width: 100%;
+    margin: 15px 0;
+}
+
+@keyframes skeleton-shimmer {
+    0% {
+        background-position: 200% 0;
+    }
+
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+.filter-content.loading .filter-skeleton-container {
+    display: flex;
+    /* Shown only while loading */
+}
+
+.filter-content.loading>*:not(.filter-skeleton-container) {
+    display: none;
+}
+
+.filter-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+    margin-top: 0;
+}
+
+.filter-group.active .filter-content {
+    max-height: 800px;
+    margin-top: 8px;
+}
+
+/* Standard (non-accordion) content */
+.filter-group:not(.accordion) .filter-content {
+    max-height: none;
+    overflow: visible;
+    margin-top: 8px;
+}
+
+.filter-search-container {
+    position: relative;
+    margin-bottom: 12px;
+}
+
+.filter-search-container i {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #555;
+    font-size: 0.9rem;
+}
+
+.filter-search-input {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 8px 12px 8px 32px;
+    color: #fff;
+    font-size: 0.85rem;
+    outline: none;
+}
+
+.filter-options-scroll {
+    max-height: 250px;
+    overflow-y: auto;
+    padding-right: 4px;
+}
+
+/* Custom Scrollbar for Filters */
+.filter-options-scroll::-webkit-scrollbar {
+    width: 4px;
+}
+
+.filter-options-scroll::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.filter-options-scroll::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+}
+
+.show-more-btn {
+    background: none;
+    border: none;
+    color: #8b5cf6;
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 8px 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: color 0.2s;
+}
+
+.show-more-btn:hover {
+    color: #a78bfa;
 }
 
 /* --- Mobile Logic --- */
 @media (max-width: 992px) {
     .search-sidebar {
         display: none;
-        /* In production, this would be a bottom sheet or toggle */
     }
 
     .track-row {
@@ -638,6 +920,12 @@
 .fallback-card-producer {
     font-size: 0.75rem;
     color: #666;
+    cursor: pointer;
+}
+
+.fallback-card-producer:hover {
+    text-decoration: underline;
+    color: #fff;
 }
 
 .fallback-card-price {
@@ -648,6 +936,115 @@
 }
 
 
+
+/* --- Skeletons & Recommendations Polish --- */
+.recommendation-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 32px;
+    /* Increased gap for better spacing */
+    margin-top: 10px;
+}
+
+.recommendation-card {
+    cursor: pointer;
+    transition: transform 0.3s ease;
+}
+
+.recommendation-card:hover {
+    transform: translateY(-5px);
+}
+
+.recommendation-card-img-wrapper {
+    position: relative;
+    padding-bottom: 100%;
+    overflow: hidden;
+    border-radius: 16px;
+    margin-bottom: 16px;
+    background: #111;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.recommendation-card img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.recommendation-card-title {
+    font-weight: 700;
+    font-size: 0.95rem;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+    color: #fff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.recommendation-card-producer {
+    font-size: 0.8rem;
+    color: #666;
+}
+
+/* Skeleton Pulse Animation */
+@keyframes skeleton-pulse {
+    0% {
+        opacity: 0.6;
+    }
+
+    50% {
+        opacity: 0.3;
+    }
+
+    100% {
+        opacity: 0.6;
+    }
+}
+
+.skeleton {
+    background: #1a1a1a;
+    border-radius: 8px;
+    animation: skeleton-pulse 1.5s ease-in-out infinite;
+}
+
+.skeleton-row {
+    height: 84px;
+    width: 100%;
+    border-radius: 12px;
+    margin-bottom: 12px;
+    background: #111;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.skeleton-card {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.skeleton-card-img {
+    aspect-ratio: 1;
+    border-radius: 16px;
+    width: 100%;
+}
+
+.skeleton-text {
+    height: 14px;
+    border-radius: 4px;
+}
+
+.skeleton-text.short {
+    width: 40%;
+}
+
+.skeleton-text.medium {
+    width: 70%;
+}
 
 .premium-select {
     appearance: none;

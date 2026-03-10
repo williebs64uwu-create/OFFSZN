@@ -19,8 +19,37 @@ let currentFilters = {
     bpmMin: 40,
     bpmMax: 250,
     doubleTempo: false,
-    key: 'All'
+    keys: []
 };
+
+// --- Skeletons ---
+function showResultsSkeletons(count = 15) {
+    const container = document.getElementById('search-results-container');
+    if (!container) return;
+
+    let html = '';
+    for (let i = 0; i < count; i++) {
+        html += `<div class="skeleton-row skeleton"></div>`;
+    }
+    container.innerHTML = html;
+}
+
+function showRecommendationSkeletons(count = 4) {
+    const container = document.getElementById('recommendations-container');
+    if (!container) return;
+
+    let html = '';
+    for (let i = 0; i < count; i++) {
+        html += `
+            <div class="skeleton-card">
+                <div class="skeleton-card-img skeleton"></div>
+                <div class="skeleton-text medium skeleton"></div>
+                <div class="skeleton-text short skeleton"></div>
+            </div>
+        `;
+    }
+    container.innerHTML = html;
+}
 
 // --- Utilities ---
 function getProductUrl(product) {
@@ -116,16 +145,14 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 async function initSearchPage() {
+    // Show skeletons immediately
+    showResultsSkeletons(15);
+    showRecommendationSkeletons(4);
+
     // 1. Get Query from URL
     const urlParams = new URLSearchParams(window.location.search);
     currentQuery = urlParams.get('q') || '';
     const category = urlParams.get('cat') || 'Todo';
-
-    // 2. Initial UI feedback
-    const resultsContainer = document.getElementById('search-results-container');
-    if (resultsContainer) {
-        resultsContainer.innerHTML = '<div class="loading-spinner" style="padding: 50px; text-align: center; color: #888;">Cargando resultados...</div>';
-    }
 
     // 3. Perform Initial Search (Includes fetching and rendering)
     await performSearch();
@@ -133,8 +160,12 @@ async function initSearchPage() {
     // 4. Set Initial Sidebar State from URL if any
     parseUrlFilters(urlParams);
 
-    // 5. Setup Listeners
     setupFilterListeners();
+
+    // 6. Hide Filter Skeletons
+    document.querySelectorAll('.filter-content.loading').forEach(el => {
+        el.classList.remove('loading');
+    });
 }
 
 async function fetchProducts() {
@@ -151,8 +182,8 @@ async function fetchProducts() {
 
         if (error) throw error;
         return products || [];
-    } catch (e) {
-        console.error("Error fetching products:", e);
+    } catch (err) {
+        console.error("Error fetching products:", err);
         return [];
     }
 }
@@ -167,8 +198,7 @@ async function fetchProducers() {
         const { data, error } = await window.supabaseClient
             .from('users')
             .select('id, nickname, avatar_url, is_verified, is_producer, bio')
-            .eq('is_producer', true)
-            .limit(100);
+            .eq('is_producer', true); // Removed limit to ensure all producers are available
 
         if (error) throw error;
         return data || [];
@@ -190,13 +220,14 @@ async function performSearch() {
 
     // Enrich products with producer data for easier rendering
     allProducts = fetchedProducts.map(p => {
-        const producer = fetchedProducers.find(pr => pr.id === p.producer_id || pr.id === p.user_id); // Assuming producer_id or user_id links to users.id
+        const producer = fetchedProducers.find(pr => pr.id === p.producer_id || pr.id === p.user_id);
+        const nameFallback = producer?.nickname || p.producer_nickname || 'OFFSZN';
         return {
             ...p,
-            producer_name: producer?.nickname || 'OFFSZN Artist',
-            producer_nickname: producer?.nickname,
+            producer_name: nameFallback,
+            producer_nickname: nameFallback, // Simplified
             producer_avatar: producer?.avatar_url,
-            producer_is_verified: producer?.is_verified || false
+            producer_is_verified: (producer?.is_verified || p.producer_is_verified) || false
         };
     });
     allProducers = fetchedProducers; // Store all fetched producers
@@ -243,7 +274,14 @@ async function performSearch() {
 }
 
 function parseUrlFilters(params) {
-    if (params.has('cat')) currentFilters.categories = params.get('cat').split(',');
+    if (params.has('cat')) {
+        const cat = params.get('cat');
+        if (cat && cat !== 'Todo' && cat !== 'Todas') {
+            currentFilters.categories = cat.split(',');
+        } else {
+            currentFilters.categories = [];
+        }
+    }
     if (params.has('genre')) currentFilters.genres = params.get('genre').split(',');
 }
 
@@ -318,31 +356,40 @@ function setupFilterListeners() {
     const priceSlider = document.getElementById('price-max-slider');
     const priceDisplay = document.getElementById('price-display');
     if (priceSlider) {
+        const updatePriceDisplay = (val) => {
+            if (!priceDisplay) return;
+            const formatted = window.CurrencyManager?.format(val) || `$${val}`;
+            // If it's at the maximum (1000), we can show it's any price up to that, 
+            // but the user wants to see the range clearly.
+            priceDisplay.textContent = val >= 1000 ? 'Cualquiera' : formatted;
+        };
+
         priceSlider.addEventListener('input', (e) => {
             const val = parseFloat(e.target.value);
-            currentFilters.priceMax = val === 1000 ? null : val;
-            if (priceDisplay) {
-                const formatted = window.CurrencyManager?.format(val) || `$${val}`;
-                priceDisplay.textContent = val === 1000 ? `Hasta ${formatted}` : formatted;
-            }
+            currentFilters.priceMax = val >= 1000 ? 1000000 : val; // Set very high if "Cualquiera"
+            updatePriceDisplay(val);
             applyFilters();
         });
 
         // Initial state sync
-        const initialVal = parseFloat(priceSlider.value);
-        if (priceDisplay) {
-            priceDisplay.textContent = initialVal === 1000 ? 'Cualquiera' : (window.CurrencyManager?.format(initialVal) || `$${initialVal}`);
-        }
+        updatePriceDisplay(parseFloat(priceSlider.value));
     }
 
-    // Key Filter
-    const keyFilter = document.getElementById('key-filter');
-    if (keyFilter) {
-        keyFilter.addEventListener('change', (e) => {
-            currentFilters.key = e.target.value;
+    // Key Initializer
+    initKeyFilters();
+
+    // Accordion Listeners
+    document.querySelectorAll('.key-check').forEach(check => {
+        check.addEventListener('change', (e) => {
+            const val = e.target.value;
+            if (e.target.checked) {
+                if (!currentFilters.keys.includes(val)) currentFilters.keys.push(val);
+            } else {
+                currentFilters.keys = currentFilters.keys.filter(k => k !== val);
+            }
             applyFilters();
         });
-    }
+    });
 
     // Clear Filters
     const clearBtn = document.getElementById('clear-filters-btn');
@@ -351,20 +398,19 @@ function setupFilterListeners() {
             currentFilters = {
                 categories: [],
                 genres: [],
-                priceMax: null,
+                priceMax: 1000,
                 bpmMin: 40,
                 bpmMax: 250,
                 doubleTempo: false,
-                key: 'All'
+                keys: []
             };
             // Reset UI
-            document.querySelectorAll('.category-check').forEach(c => c.checked = false);
+            document.querySelectorAll('.category-check, .key-check').forEach(c => c.checked = false);
             if (bpmMinSlider) bpmMinSlider.value = 40;
             if (bpmMaxSlider) bpmMaxSlider.value = 250;
             if (bpmDisplay) bpmDisplay.textContent = '40 - 250';
             if (priceSlider) priceSlider.value = 1000;
             if (priceDisplay) priceDisplay.textContent = 'Cualquiera';
-            if (keyFilter) keyFilter.value = 'All';
             if (doubleTempoCheck) doubleTempoCheck.checked = false;
 
             applyFilters();
@@ -397,7 +443,9 @@ function applyFilters() {
     }
 
     // 2. Category Filter
-    if (currentFilters.categories.length > 0) {
+    if (currentFilters.categories.length > 0 &&
+        !currentFilters.categories.includes('Todo') &&
+        !currentFilters.categories.includes('Todas')) {
         results = results.filter(p => currentFilters.categories.includes(p.product_type));
     }
 
@@ -429,8 +477,11 @@ function applyFilters() {
     }
 
     // 5. Key Filter
-    if (currentFilters.key && currentFilters.key !== 'All') {
-        results = results.filter(p => (p.key || '').includes(currentFilters.key));
+    if (currentFilters.keys && currentFilters.keys.length > 0) {
+        results = results.filter(p => {
+            const pk = (p.key || p.key_scale || '').trim();
+            return currentFilters.keys.includes(pk);
+        });
     }
 
     // Sort by Match Score Relevance
@@ -482,12 +533,12 @@ function renderRecommendations() {
     }
 
     container.innerHTML = recommendations.map(p => `
-        <div class="recommendation-card" onclick="window.location.href='${getProductUrl(p)}'" style="cursor:pointer;">
-            <div style="position:relative; padding-bottom:100%; overflow:hidden; border-radius:12px; margin-bottom:12px;">
-                <img crossorigin="anonymous" src="${p.image_url || '/images/portada-default.png'}" style="position:absolute; top:0; left:0; width:100%; height:100%; object-fit:cover;">
+        <div class="recommendation-card" onclick="window.location.href='${getProductUrl(p)}'">
+            <div class="recommendation-card-img-wrapper">
+                <img crossorigin="anonymous" src="${p.image_url || '/images/portada-default.png'}" alt="${escapeHTML(p.name)}">
             </div>
-            <div style="font-weight:700; font-size:0.9rem; text-transform:uppercase; margin-bottom:4px;">${escapeHTML(p.name)}</div>
-            <div style="font-size:0.8rem; color:#888;">${escapeHTML(p.producer_name || 'OFFSZN')}</div>
+            <div class="recommendation-card-title">${escapeHTML(p.name)}</div>
+            <div class="recommendation-card-producer">${escapeHTML(p.producer_name || 'OFFSZN')}</div>
         </div>
     `).join('');
 
@@ -516,14 +567,14 @@ function renderResults(products, producers, exactProducer) {
 
     // B. PRODUCTS (Tracks)
     if (products.length > 0) {
-        html += `<div class="search-section-title" style="color: #fff; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; margin: 30px 0 15px; border-left: 3px solid #fff; padding-left: 10px;">Productos</div>`;
+        // "Productos" title removed per user request
         html += products.map(p => renderTrackRow(p)).join('');
     }
 
     // C. REMAINING PRODUCERS (if not exact or if more than 1)
     const otherProducers = producers.filter(p => p.id !== exactProducer?.id);
     if (otherProducers.length > 0) {
-        html += `<div class="search-section-title" style="color: #fff; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; margin: 50px 0 15px; border-left: 3px solid #fff; padding-left: 10px;">Productores</div>`;
+        html += `<div class="search-section-title">Productores</div>`;
         html += otherProducers.map(p => renderProducerRow(p)).join('');
     }
 
@@ -568,32 +619,39 @@ function renderTrackRow(p) {
     }
 
     return `
-        <div class="track-row" data-product-id="${p.id}" onclick="window.location.href='${productUrl}'">
+        <div class="track-row" data-product-id="${p.id}">
             <div class="track-left">
-                <img crossorigin="anonymous" src="${imgUrl}" class="track-thumb" alt="cover">
+                <div class="thumb-container" onclick="window.location.href='${productUrl}'">
+                    <img crossorigin="anonymous" src="${imgUrl}" class="track-thumb" alt="cover">
+                    <div class="thumb-play-overlay">
+                        <i class="bi bi-play-fill"></i>
+                    </div>
+                </div>
                 <div class="track-info">
-                    <div class="track-title" style="color: #fff; font-weight: 700;">${escapeHTML(p.name)}</div>
-                    <div class="track-meta" style="color: rgba(255,255,255,0.6); font-size: 0.8rem; display: flex; align-items: center; gap: 8px;">
-                        <span class="producer-name">${escapeHTML(producer)}</span>
-                        <span style="opacity: 0.3;">/</span>
-                        <span class="product-type" style="text-transform: uppercase;">${escapeHTML(type)}</span>
+                    <div class="track-title" onclick="window.location.href='${productUrl}'">${escapeHTML(p.name)}</div>
+                    <div class="track-meta">
+                        <span class="producer-name" onclick="event.stopPropagation(); window.location.href='/@${encodeURIComponent(p.producer_nickname || 'producer')}'">${escapeHTML(producer)}</span>
+                        <span class="meta-separator">•</span>
+                        <span class="product-type">${escapeHTML(type)}</span>
                     </div>
                 </div>
             </div>
-            
-            <div class="track-tags" style="display: flex; gap: 8px; margin-left: auto; margin-right: 20px;">
-                <span class="badge-tag">WAV</span>
-                <span class="badge-tag">STEMS</span>
+
+            <div class="track-center" style="display: flex; gap: 8px; align-items: center; margin-right: 40px;">
+                <div class="info-square-v2">${p.bpm || '--'}</div>
+                <span style="color: rgba(255,255,255,0.2); font-weight: 300;">|</span>
+                <div class="info-square-v2" style="min-width: 60px;">${p.key || p.key_scale || '--'}</div>
             </div>
 
-            <button class="track-price-btn" onclick="handleAddToCart(event, '${p.id}')">
-                ${displayPrice}
-            </button>
-
-            <div class="track-actions">
-                <i class="bi bi-heart action-icon" onclick="handleLike(event, '${p.id}')"></i>
-                <i class="bi bi-download action-icon" onclick="handleDownloadRedirect(event, '${productUrl}')"></i>
-                <i class="bi bi-share action-icon" onclick="handleShare(event, '${p.id}')"></i>
+            <div class="track-actions-right">
+                <div class="track-actions">
+                    <i class="bi bi-heart action-icon" onclick="event.stopPropagation(); window.FavoritesManager?.toggleLike('${p.id}', this, ${JSON.stringify(p).replace(/"/g, '&quot;')})" title="Like"></i>
+                    <i class="bi bi-download action-icon" onclick="event.stopPropagation(); window.openDownloadModal?.('${p.id}')" title="Download"></i>
+                    <i class="bi bi-share action-icon" onclick="event.stopPropagation(); window.openShareModal?.(${JSON.stringify(p).replace(/"/g, '&quot;')})" title="Share"></i>
+                </div>
+                <button class="track-price-btn" onclick="event.stopPropagation(); window.location.href='${productUrl}'">
+                    ${displayPrice}
+                </button>
             </div>
         </div>
     `;
@@ -654,11 +712,14 @@ window.handleTrackPlay = (e, id) => {
         product.audio_url || product.tagged_file || product.demo_file ||
         product.file_url || product.url_file;
 
+    // Fix for naming: prioritize nickname
+    const pName = product.producer_name || product.producer_nickname || 'OFFSZN';
+
     const trackData = {
         ...product,
         audio_url: audioUrl,
         artist_users: {
-            nickname: product.producer_name || 'OFFSZN Artist',
+            nickname: pName,
             id: product.producer_id,
             avatar_url: product.producer_avatar || null,
             is_verified: product.producer_is_verified || false
@@ -672,11 +733,12 @@ window.handleTrackPlay = (e, id) => {
                 const aUrl = p.mp3_url || p.download_url_mp3 || p.preview_url ||
                     p.audio_url || p.tagged_file || p.demo_file ||
                     p.file_url || p.url_file;
+                const pNick = p.producer_name || p.producer_nickname || 'OFFSZN';
                 return {
                     ...p,
                     audio_url: aUrl,
                     artist_users: {
-                        nickname: p.producer_name || 'OFFSZN Artist',
+                        nickname: pNick,
                         id: p.producer_id,
                         avatar_url: p.producer_avatar || null,
                         is_verified: p.producer_is_verified || false
@@ -701,21 +763,11 @@ window.handleAddToCart = (e, id) => {
     }
 };
 
-window.handleLike = (e, id) => {
+window.handleLike = (e, id, el) => {
     e.stopPropagation();
-    const icon = e.currentTarget;
-    const isLiked = icon.classList.contains('liked');
-
-    if (window.FavoritesManager) {
-        if (isLiked) {
-            window.FavoritesManager.remove(id);
-            icon.classList.remove('liked', 'bi-heart-fill');
-            icon.classList.add('bi-heart');
-        } else {
-            window.FavoritesManager.add(id);
-            icon.classList.add('liked', 'bi-heart-fill');
-            icon.classList.remove('bi-heart');
-        }
+    const icon = el || e.currentTarget;
+    if (window.FavoritesManager && typeof window.FavoritesManager.toggleLike === 'function') {
+        window.FavoritesManager.toggleLike(id, icon);
     }
 };
 
@@ -726,7 +778,13 @@ window.handleDownloadRedirect = (e, url) => {
 
 window.handleShare = (e, id) => {
     e.stopPropagation();
-    if (window.ShareManager) {
+    // Find product in local cache - use loose equality for ID matching
+    const prod = filteredResults.find(p => String(p.id) === String(id)) ||
+        allProducts.find(p => String(p.id) === String(id));
+
+    if (prod && window.openShareModal) {
+        window.openShareModal(prod);
+    } else if (window.ShareManager && typeof window.ShareManager.open === 'function') {
         window.ShareManager.open(id);
     }
 };
@@ -789,16 +847,121 @@ function renderFallbackItem(p) {
     const price = window.CurrencyManager?.formatFromString(p.price_basic) || p.price_basic;
     const productUrl = getProductUrl(p);
     return `
-        <div class="fallback-card" onclick="window.location.href='${productUrl}'">
+        <div class="fallback-card" data-product-id="${p.id}" onclick="window.location.href='${productUrl}'">
             <div class="fallback-card-img">
                 <img crossorigin="anonymous" src="${p.image_url || '/images/portada-default.png'}">
                 <div class="fallback-card-overlay"><i class="bi bi-play-fill"></i></div>
             </div>
             <div class="fallback-card-info">
                 <span class="fallback-card-name">${escapeHTML(p.name)}</span>
-                <span class="fallback-card-producer">${escapeHTML(p.producer_name || 'OFFSZN')}</span>
+                <span class="fallback-card-producer" onclick="event.stopPropagation(); window.location.href='/@${encodeURIComponent(p.producer_nickname || 'producer')}'">${escapeHTML(p.producer_name || 'OFFSZN')}</span>
                 <span class="fallback-card-price">${price}</span>
             </div>
         </div>
     `;
+}
+
+// Subscription for Realtime Favorite Updates
+if (window.FavoritesManager) {
+    window.FavoritesManager.subscribe(() => {
+        syncLikes();
+    });
+}
+
+function syncLikes() {
+    const rows = document.querySelectorAll('.track-row, .fallback-card');
+    rows.forEach(row => {
+        const productId = row.getAttribute('data-product-id');
+        if (!productId) return;
+
+        const isLiked = window.FavoritesManager?.isLiked?.(productId);
+        const heart = row.querySelector('.bi-heart, .bi-heart-fill');
+        if (heart) {
+            heart.className = isLiked ? 'bi bi-heart-fill liked action-icon' : 'bi bi-heart action-icon';
+        }
+    });
+}
+
+// Subscribe to FavoritesManager updates
+if (window.FavoritesManager && typeof window.FavoritesManager.subscribe === 'function') {
+    window.FavoritesManager.subscribe(syncLikes);
+}
+
+// Initial Sync
+window.addEventListener('load', () => {
+    setTimeout(syncLikes, 1000);
+});
+
+// --- Accordion Helpers ---
+window.toggleFilterAccordion = function (header) {
+    const group = header.closest('.filter-group');
+    const icon = header.querySelector('.accordion-icon');
+    const isActive = group.classList.toggle('active');
+
+    if (icon) {
+        icon.classList.toggle('bi-chevron-down', !isActive);
+        icon.classList.toggle('bi-chevron-up', isActive);
+    }
+};
+
+window.filterOptions = function (input) {
+    const term = input.value.toLowerCase();
+    const container = input.closest('.filter-content').querySelector('.filter-options');
+    const options = container.querySelectorAll('.premium-checkbox');
+
+    options.forEach(opt => {
+        const text = opt.querySelector('.label-text').textContent.toLowerCase();
+        opt.style.display = text.includes(term) ? 'flex' : 'none';
+    });
+};
+
+window.toggleShowMoreKeys = function (btn) {
+    const container = document.getElementById('key-options-container');
+    const isExpanded = container.classList.toggle('expanded');
+    const btnText = btn.querySelector('.btn-text');
+    const icon = btn.querySelector('i');
+
+    if (isExpanded) {
+        btnText.textContent = 'Show Less';
+        icon.classList.replace('bi-plus', 'bi-dash');
+    } else {
+        btnText.textContent = 'Show 30 more';
+        icon.classList.replace('bi-dash', 'bi-plus');
+    }
+    initKeyFilters();
+};
+
+function initKeyFilters() {
+    const container = document.getElementById('key-options-container');
+    if (!container) return;
+
+    const allKeys = [
+        'C', 'Cm', 'C#', 'C#m', 'D', 'Dm', 'D#', 'D#m', 'E', 'Em', 'F', 'Fm',
+        'F#', 'F#m', 'G', 'Gm', 'G#', 'G#m', 'A', 'Am', 'A#', 'A#m', 'B', 'Bm'
+    ];
+
+    const commonKeys = ['C', 'Cm', 'Am', 'Fm', 'Dm'];
+    const isExpanded = container.classList.contains('expanded');
+    const shownKeys = isExpanded ? allKeys : commonKeys;
+
+    container.innerHTML = allKeys.map(key => `
+        <label class="premium-checkbox" style="display: ${shownKeys.includes(key) ? 'flex' : 'none'}">
+            <input type="checkbox" class="key-check" value="${key}" ${currentFilters.keys.includes(key) ? 'checked' : ''}>
+            <span class="checkmark"></span>
+            <span class="label-text">${key}</span>
+        </label>
+    `).join('');
+
+    // Re-attach listeners because we re-rendered
+    container.querySelectorAll('.key-check').forEach(check => {
+        check.addEventListener('change', (e) => {
+            const val = e.target.value;
+            if (e.target.checked) {
+                if (!currentFilters.keys.includes(val)) currentFilters.keys.push(val);
+            } else {
+                currentFilters.keys = currentFilters.keys.filter(k => k !== val);
+            }
+            applyFilters();
+        });
+    });
 }

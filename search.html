@@ -16,6 +16,7 @@
     <link rel="stylesheet" href="/css/navbar.css">
     <link rel="stylesheet" href="/css/avatar-manager.css">
     <link rel="stylesheet" href="/css/search.css">
+    <link rel="stylesheet" href="/css/share-modal.css">
     <link rel="stylesheet" href="/css/sticky-player.css">
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -570,84 +571,97 @@
     <main class="search-main-container">
         <!-- Sidebar Filters -->
         <aside class="search-sidebar">
-            <h2 class="sidebar-main-title">Filtros</h2>
-
             <div class="filter-group">
-                <span class="filter-title">Categoría</span>
-                <div class="filter-options">
-                    <label class="premium-checkbox">
-                        <input type="checkbox" class="category-check" value="beat">
-                        <span class="checkmark"></span>
-                        <span class="label-text">Beats</span>
-                    </label>
-                    <label class="premium-checkbox">
-                        <input type="checkbox" class="category-check" value="kit">
-                        <span class="checkmark"></span>
-                        <span class="label-text">Drum Kits</span>
-                    </label>
-                    <label class="premium-checkbox">
-                        <input type="checkbox" class="category-check" value="preset">
-                        <span class="checkmark"></span>
-                        <span class="label-text">Presets</span>
-                    </label>
-                    <label class="premium-checkbox">
-                        <input type="checkbox" class="category-check" value="template">
-                        <span class="checkmark"></span>
-                        <span class="label-text">Plantillas</span>
-                    </label>
+                <div class="filter-header-static">
+                    <span class="filter-title"><i class="bi bi-grid"></i> CATEGORÍA</span>
+                </div>
+                <div class="filter-content loading">
+                    <div class="filter-skeleton-container">
+                        <div class="filter-skeleton option"></div>
+                        <div class="filter-skeleton option" style="width: 35%;"></div>
+                        <div class="filter-skeleton option" style="width: 45%;"></div>
+                        <div class="filter-skeleton option" style="width: 30%;"></div>
+                    </div>
+                    <div class="filter-options">
+                        <label class="premium-checkbox">
+                            <input type="checkbox" class="category-check" value="beat">
+                            <span class="checkmark"></span>
+                            <span class="label-text">Beats</span>
+                        </label>
+                        <label class="premium-checkbox">
+                            <input type="checkbox" class="category-check" value="kit">
+                            <span class="checkmark"></span>
+                            <span class="label-text">Drum Kits</span>
+                        </label>
+                        <label class="premium-checkbox">
+                            <input type="checkbox" class="category-check" value="preset">
+                            <span class="checkmark"></span>
+                            <span class="label-text">Presets</span>
+                        </label>
+                        <label class="premium-checkbox">
+                            <input type="checkbox" class="category-check" value="template">
+                            <span class="checkmark"></span>
+                            <span class="label-text">Plantillas</span>
+                        </label>
+                    </div>
                 </div>
             </div>
 
             <!-- BPM Range Slider (Dual Handle) -->
             <div class="filter-group">
                 <div class="filter-header-flex">
-                    <span class="filter-title">Tempo (BPM)</span>
+                    <span class="filter-title"><i class="bi bi-speedometer2"></i> TEMPO</span>
                     <span id="bpm-range-display" class="filter-value-display">40 - 250</span>
                 </div>
-                <div class="dual-range-container">
-                    <div class="slider-track"></div>
-                    <input type="range" id="bpm-min-slider" min="40" max="250" value="40" class="range-handle">
-                    <input type="range" id="bpm-max-slider" min="40" max="250" value="250" class="range-handle">
-                </div>
-                <div class="filter-sub-action">
-                    <label class="premium-checkbox sm">
-                        <input type="checkbox" id="double-tempo-check">
-                        <span class="checkmark"></span>
-                        <span class="label-text">Doble Tempo</span>
-                    </label>
+                <div class="filter-content loading">
+                    <div class="filter-skeleton-container">
+                        <div class="filter-skeleton slider"></div>
+                        <div class="filter-skeleton option" style="width: 40%;"></div>
+                    </div>
+                    <div class="dual-range-container">
+                        <div class="slider-track"></div>
+                        <input type="range" id="bpm-min-slider" min="40" max="250" value="40" class="range-handle">
+                        <input type="range" id="bpm-max-slider" min="40" max="250" value="250" class="range-handle">
+                    </div>
+                    <div class="filter-sub-action">
+                        <label class="premium-checkbox sm">
+                            <input type="checkbox" id="double-tempo-check">
+                            <span class="checkmark"></span>
+                            <span class="label-text">Doble Tempo</span>
+                        </label>
+                    </div>
                 </div>
             </div>
 
             <div class="filter-group">
                 <div class="filter-header-flex">
-                    <span class="filter-title">Precio Máximo</span>
+                    <span class="filter-title"><i class="bi bi-tag"></i> PRECIO</span>
                     <span id="price-display" class="filter-value-display">Cualquiera</span>
                 </div>
-                <div class="single-range-container">
-                    <input type="range" id="price-max-slider" min="10" max="1000" value="1000" step="10"
-                        class="premium-slider">
+                <div class="filter-content loading">
+                    <div class="filter-skeleton-container">
+                        <div class="filter-skeleton slider"></div>
+                    </div>
+                    <div class="single-range-container">
+                        <input type="range" id="price-max-slider" min="10" max="1000" value="1000" step="10"
+                            class="premium-slider">
+                    </div>
                 </div>
             </div>
 
-            <div class="filter-group">
-                <span class="filter-title">Tonalidad (Key)</span>
-                <div class="premium-select-wrapper">
-                    <select id="key-filter" class="premium-select">
-                        <option value="All">Todas</option>
-                        <option value="C">C</option>
-                        <option value="C#">C# / Db</option>
-                        <option value="D">D</option>
-                        <option value="D#">D# / Eb</option>
-                        <option value="E">E</option>
-                        <option value="F">F</option>
-                        <option value="F#">F# / Gb</option>
-                        <option value="G">G</option>
-                        <option value="G#">G# / Ab</option>
-                        <option value="A">A</option>
-                        <option value="A#">A# / Bb</option>
-                        <option value="B">B</option>
-                    </select>
-                    <i class="bi bi-chevron-down"></i>
+            <!-- Filter Group: Key (The focus of the request) -->
+            <div class="filter-group accordion">
+                <div class="filter-header" onclick="toggleFilterAccordion(this)">
+                    <span class="filter-title"><i class="bi bi-music-note-beamed"></i> KEY</span>
+                    <i class="bi bi-chevron-down accordion-icon"></i>
+                </div>
+                <div class="filter-content">
+                    <div class="filter-options filter-options-scroll" id="key-options-container">
+                        <!-- Key options will be injected here via JS -->
+                    </div>
+                    <button class="show-more-btn" onclick="toggleShowMoreKeys(this)">
+                        <i class="bi bi-plus"></i> <span class="btn-text">Show 30 more</span>
+                    </button>
                 </div>
             </div>
 
@@ -678,10 +692,8 @@
             <div class="recommendation-section" style="margin-top: 60px;">
                 <h3
                     style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.2rem; margin-bottom: 24px; color: #fff;">
-                    Tal
-                    vez te interese</h3>
-                <div id="recommendations-container"
-                    style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px;">
+                    Tal vez te interese</h3>
+                <div id="recommendations-container" class="recommendation-grid">
                     <!-- Recommendations injected here -->
                 </div>
             </div>
@@ -755,7 +767,10 @@
     <script src="/script/notifications.js"></script>
     <script src="/script/avatar-manager.js"></script>
     <script src="/script/navbar.js?v=20" type="module"></script>
+    <script src="/script/favorites-manager.js"></script>
+    <script src="/script/share-modal.js"></script>
     <script src="/script/r2-loader.js"></script>
+
     <script src="/script/search.js?v=2" type="module"></script>
 
     <!-- ==================== FOOTER ==================== -->

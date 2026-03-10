@@ -159,7 +159,8 @@ window.FavoritesManager = (function () {
             buttonElement.classList.toggle('active', !isLikedOriginal);
 
             // Toggle icon classes
-            const icon = buttonElement.querySelector('i');
+            // Detect if buttonElement is already the <i> or contains one
+            const icon = buttonElement.tagName === 'I' ? buttonElement : buttonElement.querySelector('i');
             if (icon) {
                 if (isLikedOriginal) {
                     icon.classList.remove('bi-heart-fill');
