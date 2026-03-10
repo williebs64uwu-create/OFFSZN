@@ -92,18 +92,20 @@ export const renderVideo = async (req, res) => {
         await writeFile(coverPath, coverFile.buffer);
         await writeFile(audioPath, audioFile.buffer);
 
-        // 5. Run FFmpeg natively (1080p, high quality for YouTube — ~10-15 sec server-side)
+        // 5. Run FFmpeg natively (Optimized for Free Tier: 720p, 1 thread, ultrafast, max memory control)
         const ffmpegArgs = [
             '-loop', '1',
             '-i', coverPath,
             '-i', audioPath,
-            '-filter_complex', '[0:v]scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2:color=black,format=yuv420p[v]',
+            '-threads', '1', // STRICT RAM LIMIT: 1 Thread only
+            '-filter_complex', '[0:v]scale=1280:720:force_original_aspect_ratio=decrease,pad=1280:720:(ow-iw)/2:(oh-ih)/2:color=black,format=yuv420p[v]',
             '-map', '[v]',
             '-map', '1:a',
             '-c:v', 'libx264',
-            '-preset', 'medium',
+            '-preset', 'ultrafast', // FASTEST, LEAST RAM
             '-tune', 'stillimage',
-            '-crf', '18',
+            '-crf', '28', // Lower quality but consumes less resources
+            '-max_muxing_queue_size', '1024', // Prevent memory buffer overflows
             '-g', '9999',
             '-c:a', 'copy',
             '-r', '1',
