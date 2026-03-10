@@ -7,11 +7,15 @@ import { authenticateTokenMiddleware } from '../../middlewares/authenticateToken
 import { incrementYoutubeUpload, getYoutubeQuota } from '../controllers/YouTubeController.js';
 import { renderVideo } from '../controllers/VideoRenderController.js';
 
+import os from 'os';
+
 const router = Router();
 
-// Multer config: memory storage with size limits
+// Multer config: disk storage to prevent RAM exhaustion on Free Tier
 const upload = multer({
-    storage: multer.memoryStorage(),
+    storage: multer.diskStorage({
+        destination: os.tmpdir()
+    }),
     limits: {
         fileSize: 50 * 1024 * 1024, // 50MB max per field (audio)
         files: 2 // Max 2 files (cover + audio)

@@ -83,14 +83,11 @@ export const renderVideo = async (req, res) => {
             });
         }
 
-        // 4. Create temp directory and write files
-        tmpDir = await mkdtemp(join(tmpdir(), 'offszn-render-'));
-        coverPath = join(tmpDir, 'cover.jpg');
-        audioPath = join(tmpDir, 'audio.mp3');
+        // 4. Use disk paths provided by multer, and create output path
+        coverPath = coverFile.path;
+        audioPath = audioFile.path;
+        tmpDir = await mkdtemp(join(tmpdir(), 'offszn-render-out-'));
         outputPath = join(tmpDir, 'output.mp4');
-
-        await writeFile(coverPath, coverFile.buffer);
-        await writeFile(audioPath, audioFile.buffer);
 
         // 5. Run FFmpeg natively (Optimized for Free Tier: 720p, 1 thread, ultrafast, max memory control)
         const ffmpegArgs = [
@@ -133,16 +130,17 @@ export const renderVideo = async (req, res) => {
             });
         });
 
-        // 6. Stream the output file back to client
-        const videoBuffer = await readFile(outputPath);
-
+        // 6. Stream the output file back to client (No Memory Buffering)
         res.set({
-            'Content-Type': 'video/mp4',
-            'Content-Length': videoBuffer.length,
-            'Content-Disposition': 'attachment; filename="render.mp4"',
             'Cache-Control': 'no-store'
         });
-        res.send(videoBuffer);
+
+        await new Promise((resolve, reject) => {
+            res.download(outputPath, 'render.mp4', (err) => {
+                if (err) reject(err);
+                else resolve();
+            });
+        });
 
     } catch (err) {
         console.error('[VideoRender] Error:', err.message);
