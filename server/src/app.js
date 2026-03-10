@@ -258,7 +258,9 @@ app.use((req, res, next) => {
 
 // C1. Serve Static Files from Server Public (Prioritize this for moved assets)
 const publicPath = path.join(__dirname, '../../public');
+const serverPublicPath = path.join(__dirname, '../public'); // New server public path
 app.use(express.static(publicPath));
+app.use(express.static(serverPublicPath));
 
 // C. Serve Static Files from Root
 app.use(express.static(rootPath));

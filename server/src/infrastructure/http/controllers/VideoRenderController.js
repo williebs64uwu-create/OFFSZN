@@ -104,7 +104,8 @@ export const renderVideo = async (req, res) => {
             '-crf', '28', // Lower quality but consumes less resources
             '-max_muxing_queue_size', '1024', // Prevent memory buffer overflows
             '-g', '9999',
-            '-c:a', 'copy',
+            '-c:a', 'aac',
+            '-b:a', '128k',
             '-r', '1',
             '-pix_fmt', 'yuv420p',
             '-shortest',
@@ -115,12 +116,12 @@ export const renderVideo = async (req, res) => {
 
         await new Promise((resolve, reject) => {
             const proc = execFile(ffmpegPath.path, ffmpegArgs, {
-                timeout: 60000, // 60s kill switch
+                timeout: 95000, // 95s kill switch (Render limit is ~100s)
                 maxBuffer: 10 * 1024 * 1024 // 10MB stderr buffer
             }, (error, stdout, stderr) => {
                 if (error) {
                     if (error.killed) {
-                        reject(new Error('FFmpeg timeout: proceso cancelado después de 60s'));
+                        reject(new Error('FFmpeg timeout: proceso cancelado después de 95s'));
                     } else {
                         reject(new Error('FFmpeg error: ' + (error.message || 'desconocido')));
                     }
