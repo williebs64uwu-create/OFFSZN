@@ -37,6 +37,7 @@ import { globalLimiter } from './infrastructure/middlewares/rateLimiter.middlewa
 
 const app = express();
 app.disable('x-powered-by'); // Deshabilita el header que delata el uso de Express
+app.set('trust proxy', 1); // Confiar en el proxy de Render para express-rate-limit
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
