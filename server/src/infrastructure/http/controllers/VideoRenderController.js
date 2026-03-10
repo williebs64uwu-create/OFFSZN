@@ -92,6 +92,7 @@ export const renderVideo = async (req, res) => {
         // 5. Run FFmpeg natively (Optimized for Free Tier: 720p, 1 thread, ultrafast, max memory control)
         const ffmpegArgs = [
             '-loop', '1',
+            '-r', '1', // Input framerate: Read image only once per second (CRITICAL FOR SPEED)
             '-i', coverPath,
             '-i', audioPath,
             '-threads', '1', // STRICT RAM LIMIT: 1 Thread only
@@ -101,12 +102,12 @@ export const renderVideo = async (req, res) => {
             '-c:v', 'libx264',
             '-preset', 'ultrafast', // FASTEST, LEAST RAM
             '-tune', 'stillimage',
-            '-crf', '28', // Lower quality but consumes less resources
-            '-max_muxing_queue_size', '1024', // Prevent memory buffer overflows
-            '-g', '9999',
+            '-crf', '28', // Standard quality for 720p
+            '-max_muxing_queue_size', '1024',
+            '-g', '2', // Frequent keyframes for low framerate compatibility
             '-c:a', 'aac',
             '-b:a', '128k',
-            '-r', '1',
+            '-r', '1', // Output framerate: 1 frame per second
             '-pix_fmt', 'yuv420p',
             '-shortest',
             '-movflags', '+faststart',
