@@ -12,33 +12,44 @@
         href="https://fonts.googleapis.com/css2?family=Bakbak+One&family=Open+Sans:ital,wght@0,300..800;1,300..800&family=Plus+Jakarta+Sans:wght@400;500;700;800&display=swap"
         rel="stylesheet">
     <!-- Icons -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
+        integrity="sha384-tViUnnbYAV00FLIhhi3v/dWt3Jxw4gZQcNoSCxCIFNJVCx7/D55/wXsrNIRANwdD" crossorigin="anonymous">
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        'bakbak': ['"Bakbak One"', 'sans-serif'],
-                        'sans': ['"Plus Jakarta Sans"', 'sans-serif'],
-                        'open': ['"Open Sans"', 'sans-serif'],
-                    },
-                    colors: {
-                        'offszn-red': '#ff0000',
-                        'offszn-gray': '#111111',
-                        'offszn-border': '#333333',
-                    },
-                    boxShadow: {
-                        'glow': '0 0 60px -10px rgba(255, 0, 0, 0.4)',
-                        'glow-purple': '0 0 60px -10px rgba(126, 34, 206, 0.4)',
+        function initTailwind() {
+            if (typeof tailwind !== 'undefined') {
+                tailwind.config = {
+                    theme: {
+                        extend: {
+                            fontFamily: {
+                                'bakbak': ['"Bakbak One"', 'sans-serif'],
+                                'sans': ['"Plus Jakarta Sans"', 'sans-serif'],
+                                'open': ['"Open Sans"', 'sans-serif'],
+                            },
+                            colors: {
+                                'offszn-red': '#ff0000',
+                                'offszn-gray': '#111111',
+                                'offszn-border': '#333333',
+                            },
+                            boxShadow: {
+                                'glow': '0 0 60px -10px rgba(255, 0, 0, 0.4)',
+                                'glow-purple': '0 0 60px -10px rgba(126, 34, 206, 0.4)',
+                            }
+                        }
                     }
                 }
+            } else {
+                console.error("Tailwind not loaded, retrying...");
+                setTimeout(initTailwind, 200);
             }
         }
+        initTailwind();
     </script>
     <!-- Wavesurfer JS (For Audio Visualization) -->
-    <script src="https://unpkg.com/wavesurfer.js@7"></script>
+    <script src="https://unpkg.com/wavesurfer.js@7.8.1/dist/wavesurfer.min.js"
+        integrity="sha384-ygSlewnyW7eIcr0I3npaYTWqi639jP4H2JJa14SEBek0g9cxj4TYZ4Jj029Fq7ww"
+        crossorigin="anonymous"></script>
 
     <style>
         body {
@@ -290,13 +301,18 @@
 
     <!-- Scripts -->
 
-    <!-- Supabase -->
-    <script src="/script/sticky-player.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="/env.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.48.1"
+        integrity="sha384-o2Uz8M8jf3RRbNF9dFLYtjA2ohqUgp6vUxr43Uzvt8MJkkLNvpXvLCUVbWh+cadK"
+        crossorigin="anonymous"></script>
     <script>
-        window.SUPABASE_URL = "https://qtjpvztpgfymjhhpoouq.supabase.co";
-        window.SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0anB2enRwZ2Z5bWpoaHBvb3VxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3ODA5MTUsImV4cCI6MjA3NjM1NjkxNX0.YsItTFk3hSQaVuy707-z7Z-j34mXa03O0wWGAlAzjrw";
-        window.supabaseClient = supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
+        window.supabaseClient = null;
+        // Reiniciar Auth después de cargar env.js
+        window.addEventListener('load', () => {
+            if (window.AuthUtils && typeof window.AuthUtils.initSupabase === 'function') {
+                window.AuthUtils.initSupabase();
+            }
+        });
     </script>
     <script src="/script/auth-utils.js"></script>
     <script src="/script/bio.js" type="module"></script>

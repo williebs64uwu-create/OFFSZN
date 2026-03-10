@@ -1,21 +1,26 @@
-// Tasa fija para visualización (debe coincidir aprox con la del backend)
+// Tasa fija para visualización (legacy - prefer CurrencyManager)
 const TASA_VISUAL = 3.80;
 
 function cambiarMonedaGlobal(monedaDestino) {
-    // Guardar preferencia
-    localStorage.setItem('user_currency', monedaDestino);
+    // Use CurrencyManager if available
+    if (window.CurrencyManager) {
+        window.CurrencyManager.setCurrency(monedaDestino);
+        window.CurrencyManager.updateAllPrices();
+        return;
+    }
 
-    // Buscar todos los elementos de precio
+    // Legacy fallback
+    localStorage.setItem('user_currency', monedaDestino);
     const precios = document.querySelectorAll('.product-price, .cart-item-price');
 
     precios.forEach(el => {
-        // Asumimos que el elemento tiene un atributo data-price-usd="20"
         const precioBaseUSD = parseFloat(el.dataset.priceUsd);
-
         if (!precioBaseUSD) return;
 
         if (monedaDestino === 'PEN') {
             el.textContent = `S/ ${(precioBaseUSD * TASA_VISUAL).toFixed(2)}`;
+        } else if (monedaDestino === 'EUR') {
+            el.textContent = `€${(precioBaseUSD * 0.92).toFixed(2)}`;
         } else {
             el.textContent = `$ ${precioBaseUSD.toFixed(2)}`;
         }
@@ -35,7 +40,7 @@ window.copyToClipboard = function (text) {
         try {
             document.execCommand('copy');
         } catch (err) {
-            console.error('Fallback: Oops, unable to copy', err);
+            // Silent fail
         }
         document.body.removeChild(textArea);
         return Promise.resolve();
@@ -45,8 +50,7 @@ window.copyToClipboard = function (text) {
 
 // Al cargar la página
 document.addEventListener('DOMContentLoaded', () => {
-    const pref = localStorage.getItem('user_currency') || 'PEN';
+    const pref = (window.CurrencyManager ? window.CurrencyManager.getCurrency() : localStorage.getItem('user_currency')) || 'PEN';
     const selector = document.getElementById('currencySelector');
     if (selector) selector.value = pref;
-    // (Aquí llamarías a cambiarMonedaGlobal si los productos ya se renderizaron)
 });

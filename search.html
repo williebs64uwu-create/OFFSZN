@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OFFSZN | Componente Navbar</title>
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
+        integrity="sha384-tViUnnbYAV00FLIhhi3v/dWt3Jxw4gZQcNoSCxCIFNJVCx7/D55/wXsrNIRANwdD" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+        integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw=="
+        crossorigin="anonymous" referrerpolicy="no-referrer">
+    <link rel="stylesheet" href="/css/auth-ui.css">
+    <link rel="stylesheet" href="/css/global-overlays.css">
+    <link rel="stylesheet" href="/css/navbar.css">
+    <link rel="stylesheet" href="/css/avatar-manager.css">
+    <link rel="stylesheet" href="/css/search.css">
+    <link rel="stylesheet" href="/css/sticky-player.css">
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Plus+Jakarta+Sans:wght@400;500;700;800&display=swap"
+        rel="stylesheet">
+
+    <!-- 1. Cargar Configuración Segura y Supabase -->
+    <script src="/env.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.48.1"
+        integrity="sha384-o2Uz8M8jf3RRbNF9dFLYtjA2ohqUgp6vUxr43Uzvt8MJkkLNvpXvLCUVbWh+cadK"
+        crossorigin="anonymous"></script>
+    <script>
+        window.supabaseClient = null;
+        // Reiniciar Auth después de cargar env.js
+        window.addEventListener('load', () => {
+            if (window.AuthUtils && typeof window.AuthUtils.initSupabase === 'function') {
+                window.AuthUtils.initSupabase();
+            }
+        });
+    </script>
+    <script src="/script/auth-utils.js?v=11"></script>
+    <script src="/script/id-obfuscator.js"></script>
+</head>
+
+<body>
+
+
+
+    <!-- ==================== EXTRACTED NAVBAR ==================== -->
+    <header class="navbar">
+        <div class="navbar-container">
+            <div class="mobile-left-group" style="display: flex; align-items: center; gap: 16px;">
+                <button class="hamburger-btn" id="hamburger-btn" style="padding: 4px;">
+                    <svg width="26" height="20" viewBox="0 0 26 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M1 3H25M1 10H25M1 17H25" stroke="#ffffff" stroke-width="2" stroke-linecap="round" />
+                    </svg>
+                </button>
+
+                <div class="logo">
+                    <a href="/index.html">
+                        <img src="/images/LOGO OFFSZN.webp" alt="OFFSZN" class="mobile-logo-img">
+                    </a>
+                </div>
+            </div>
+
+            <!-- MOBILE TOP-BAR ACTIONS (hidden on desktop) -->
+            <div class="mobile-topbar-actions" id="mobile-topbar-actions">
+                <div class="mobile-guest-actions" id="mobile-guest-actions"
+                    style="display: none; align-items: center; gap: 8px;">
+                    <a href="/pages/login.html" class="mobile-login-link">Iniciar Sesión</a>
+                    <a href="/pages/register.html" class="mobile-join-btn">Únete</a>
+                    <a href="#" class="mobile-cart-btn" title="Carrito" onclick="toggleCartPanel(event)"
+                        style="margin-left: 4px;">
+                        <i class="bi bi-cart3"></i>
+                        <span class="mobile-cart-badge" id="mobile-cart-badge-guest" style="display:none;">0</span>
+                    </a>
+                </div>
+
+                <!-- 1. Auth Actions (Profile -> Messages -> Notif -> Cart) -->
+                <div class="mobile-auth-actions" id="mobile-auth-actions" style="display: none; gap: 18px;">
+
+                    <!-- Avatar (Profile - Direct Link) -->
+                    <div class="mobile-avatar-btn" id="mobile-avatar-btn"
+                        onclick="if(window.currentUserNickname) window.location.href = '/@' + window.currentUserNickname;">
+                        <span id="mobile-avatar-initial">W</span>
+                    </div>
+
+                    <!-- Messages: Smart logic to open chat if on chat page, or redirect to messages -->
+                    <a href="/mensajes.html" class="mobile-notif-btn" title="Mensajes">
+                        <i class="bi bi-chat-text"></i>
+                        <span class="mobile-notif-badge" id="mobile-msg-badge" style="display:none;">0</span>
+                    </a>
+
+                    <!-- Notifications -->
+                    <a href="/notificaciones.html" class="mobile-notif-btn" title="Notificaciones">
+                        <i class="bi bi-bell"></i>
+                        <span class="mobile-notif-badge" id="mobile-notif-badge" style="display:none;">0</span>
+                    </a>
+
+                    <!-- Cart -->
+                    <a href="#" class="mobile-cart-btn" title="Carrito" onclick="toggleCartPanel(event)">
+                        <i class="bi bi-cart3"></i>
+                        <span class="mobile-cart-badge" id="mobile-cart-badge" style="display:none;">0</span>
+                    </a>
+
+                </div>
+            </div>
+
+            <div class="nav-container" id="nav-container">
+                <!-- Sidebar header: close + logo (mobile only) -->
+                <div class="sidebar-header">
+                    <button class="sidebar-close-btn" aria-label="Cerrar menú"><i class="bi bi-x"></i></button>
+                    <a href="/index.html" class="sidebar-logo">
+                        <img src="/images/LOGO OFFSZN.webp" alt="OFFSZN" style="height: 28px; width: auto;">
+                    </a>
+                </div>
+                <div class="navbar-center">
+                    <ul class="navbar-links desktop-menu-only">
+                        <li><a href="/explorar.html">Explorar</a></li>
+                        <li class="dropdown-parent">
+                            <a onclick="toggleDropdown(this)" class="nav-toggle-link noselect"
+                                style="user-select: none; -webkit-user-select: none; cursor: pointer;"
+                                onselectstart="return false;">
+                                Recursos <i class="bi bi-chevron-down"></i>
+                            </a>
+                            <div class="dropdown-menu mega-columns">
+                                <!-- BOX 1: SONIDOS (Tools) -->
+                                <div class="mega-column-box">
+                                    <span class="dropdown-section-title"
+                                        style="font-size: 0.7rem; letter-spacing: 1.5px; color:#555; margin-bottom: 12px; display:block; font-weight:800; padding-left: 6px;">
+                                        SONIDOS
+                                    </span>
+                                    <div class="dropdown-section">
+                                        <a href="/recursos/drum-kits" class="mega-nav-link"><i class="bi bi-disc"></i>
+                                            Drum
+                                            Kits</a>
+                                        <a href="/recursos/presets" class="mega-nav-link"><i class="bi bi-sliders"></i>
+                                            Presets</a>
+                                        <a href="/recursos/samples-loops" class="mega-nav-link"><i
+                                                class="bi bi-soundwave"></i> Loops</a>
+                                        <a href="/recursos/one-shots" class="mega-nav-link"><i
+                                                class="bi bi-bullseye"></i>
+                                            One-Shots</a>
+                                        <a href="/recursos/recursos-gratis" class="mega-nav-link"><i
+                                                class="bi bi-check-circle"></i>
+                                            Gratis</a>
+                                    </div>
+                                </div>
+
+                                <!-- BOX 2: COMUNIDAD (Swapped to Middle) -->
+                                <div class="mega-column-box">
+                                    <span class="dropdown-section-title"
+                                        style="font-size: 0.7rem; letter-spacing: 1.5px; color:#555; margin-bottom: 12px; display:block; font-weight:800; padding-left: 6px;">
+                                        COMUNIDAD
+                                    </span>
+                                    <div class="dropdown-section">
+                                        <a href="/comunidad/productores" class="mega-nav-link"><i
+                                                class="bi bi-people"></i>
+                                            Productores</a>
+                                        <a href="/comunidad/colaboraciones" class="mega-nav-link"><i
+                                                class="bi bi-person-plus"></i>
+                                            Collabs</a>
+                                        <a href="/comunidad/eventos" class="mega-nav-link"><i
+                                                class="bi bi-calendar-event"></i> Eventos</a>
+                                        <a href="/comunidad/feed" class="mega-nav-link"><i
+                                                class="bi bi-collection-play"></i> Feed</a>
+                                        <a href="/cursos/inicio" class="mega-nav-link">
+                                            <i class="bi bi-mortarboard"></i> Cursos <span
+                                                style="background: rgba(139, 92, 246, 0.1); color: #a78bfa; font-size: 0.6rem; padding: 1px 4px; border-radius: 4px; margin-left: 6px; border: 1px solid rgba(139, 92, 246, 0.2);">SOON</span>
+                                        </a>
+                                    </div>
+                                </div>
+
+                                <!-- BOX 3: GÉNEROS (Swapped to End) -->
+                                <div class="mega-column-box">
+                                    <span class="dropdown-section-title"
+                                        style="font-size: 0.7rem; letter-spacing: 1.5px; color:#555; margin-bottom: 12px; display:block; font-weight:800; padding-left: 6px;">
+                                        GÉNEROS
+                                    </span>
+                                    <div class="dropdown-section">
+                                        <a href="/recursos/beats" class="mega-nav-link">Hip-Hop</a>
+                                        <a href="/recursos/beats" class="mega-nav-link">Trap</a>
+                                        <a href="/recursos/beats" class="mega-nav-link">R&B</a>
+                                        <a href="/recursos/beats" class="mega-nav-link">Reggaetón</a>
+                                        <a href="/recursos/beats" class="mega-nav-link">Drill</a>
+                                        <a href="/recursos/beats" class="mega-nav-link"
+                                            style="color: rgba(255,255,255,0.6); font-size: 0.8rem; margin-top: 4px; transition: color 0.2s;">Ver
+                                            todos &rarr;</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </li>
+
+                        <!-- STUDIO / LAB (New Identity Feature) -->
+                        <li class="dropdown-parent">
+                            <a onclick="toggleDropdown(this)" class="nav-toggle-link noselect"
+                                style="user-select: none; -webkit-user-select: none; cursor: pointer;"
+                                onselectstart="return false;">
+                                Studio <span
+                                    style="background: rgba(139, 92, 246, 0.1); color: #a78bfa; font-size: 0.6rem; padding: 1px 4px; border-radius: 4px; margin-left: 4px; border: 1px solid rgba(139, 92, 246, 0.2);">BETA</span>
+                                <i class="bi bi-chevron-down"></i>
+                            </a>
+                            <div class="dropdown-menu" style="min-width: 250px; padding: 8px;">
+                                <div class="dropdown-section">
+                                    <span class="dropdown-section-title"
+                                        style="font-size: 0.7rem; letter-spacing: 1.5px; color:#555; margin-bottom: 8px; display:block; font-weight:800; padding: 0 8px;">
+                                        EXCLUSIVE TOOLS
+                                    </span>
+
+                                    <a href="/studio/reels" class="dropdown-item" style="border-radius: 8px;">
+                                        <i class="bi bi-collection-play"></i>
+                                        <div class="dropdown-item-content">
+                                            <div class="dropdown-item-title">Reels</div>
+                                            <div class="dropdown-item-desc" style="font-size: 0.7rem; color: #888;">
+                                                Descubre
+                                                tendencias visuales</div>
+                                        </div>
+                                    </a>
+                                </div>
+                            </div>
+                        </li>
+                        <!-- Cursos moved to Dropdown -->
+
+                    </ul>
+
+                    <!-- MOBILE SLIDING MENU (BeatStars Style) -->
+                    <div class="mobile-menu-slider-wrapper" id="mobile-menu-slider-wrapper">
+                        <div class="mobile-menu-slides" id="mobile-menu-slides">
+                            <!-- VIEW 1: MAIN MENU -->
+                            <div class="menu-slide" id="menu-view-main"
+                                style="overflow-y: auto; padding-bottom: 120px;">
+                                <a href="/explorar.html" class="mobile-menu-link text-uppercase"
+                                    style="font-weight: 800; letter-spacing: 0.5px;">EXPLORAR</a>
+
+                                <div class="mobile-menu-link has-arrow text-uppercase" style="font-weight: 700;"
+                                    onclick="openSubmenu('beats')">
+                                    <span>BEATS</span>
+                                    <i class="bi bi-chevron-right"></i>
+                                </div>
+
+                                <div class="mobile-menu-link has-arrow text-uppercase" style="font-weight: 700;"
+                                    onclick="openSubmenu('kits')">
+                                    <span>KITS</span>
+                                    <i class="bi bi-chevron-right"></i>
+                                </div>
+
+                                <div class="mobile-menu-link has-arrow text-uppercase" style="font-weight: 700;"
+                                    onclick="openSubmenu('comunidad')">
+                                    <span>COMUNIDAD</span>
+                                    <i class="bi bi-chevron-right"></i>
+                                </div>
+
+                                <div class="mobile-menu-divider"></div>
+
+                                <a href="/mis-compras.html" class="mobile-menu-link text-uppercase"
+                                    style="font-size: 0.85rem; font-weight: 600;">COMPRAS</a>
+                                <a href="/favoritos.html" class="mobile-menu-link text-uppercase"
+                                    style="font-size: 0.85rem; font-weight: 600;">FAVORITOS</a>
+                                <a href="/gift-cards.html" class="mobile-menu-link text-uppercase"
+                                    style="font-size: 0.85rem; font-weight: 600;">GIFT CARDS</a>
+                                <a href="/historial.html" class="mobile-menu-link text-uppercase"
+                                    style="font-size: 0.85rem; font-weight: 600;">HISTORIAL</a>
+
+                                <div class="mobile-menu-divider"></div>
+
+                                <a href="/account-settings.html" class="mobile-menu-link text-uppercase"
+                                    style="font-size: 0.85rem; font-weight: 600;">CONFIGURACIÓN</a>
+                                <a href="/ayuda.html" class="mobile-menu-link text-uppercase"
+                                    style="font-size: 0.85rem; color: #888; font-weight: 600;">AYUDA</a>
+
+                                <!-- MEJORAR PLAN (Bottom) -->
+                                <div style="margin-top: -10px; padding: 10px 16px;">
+                                    <a href="/cuenta/planes.html"
+                                        style="display: block; background: linear-gradient(135deg, #1a1a1a 0%, #000 100%); border: 1px solid #333; border-radius: 12px; padding: 10px 10px; text-decoration: none; position: relative; overflow: hidden;">
+                                        <div style="position: relative; z-index: 2;">
+                                            <span
+                                                style="color: #8b5cf6; font-size: 0.65rem; font-weight: 800; letter-spacing: 1px; display: block; margin-bottom: 2px;">OFFSZN
+                                                PRO</span>
+                                            <span
+                                                style="color: #fff; font-size: 0.95rem; font-weight: 700; display: block; margin-bottom: 0px;">Mejorar
+                                                Plan</span>
+                                            <span style="color: #888; font-size: 0.7rem;">Desbloquea todo el
+                                                potencial.</span>
+                                        </div>
+                                        <i class="bi bi-star-fill"
+                                            style="position: absolute; bottom: -8px; right: -8px; font-size: 3.5rem; color: rgba(139, 92, 246, 0.08); transform: rotate(15deg);"></i>
+                                    </a>
+                                </div>
+                            </div>
+
+                            <!-- VIEW 2: SUBMENUS CONTAINER -->
+                            <div class="menu-slide" id="menu-view-sub" style="overflow-y: auto; padding-bottom: 120px;">
+                                <div class="mobile-menu-header" onclick="closeSubmenu(event)">
+                                    <i class="bi bi-chevron-left"></i> MENÚ PRINCIPAL
+                                </div>
+
+                                <!-- SUBMENU: BEATS -->
+                                <div id="submenu-beats" class="submenu-content" style="display: none;">
+                                    <span class="mobile-section-title">BEATS</span>
+                                    <a href="/explorar.html" class="mobile-menu-link sub"><i class="bi bi-cart3"></i>
+                                        COMPRAR</a>
+                                    <a href="/servicios/custom-beats.html" class="mobile-menu-link sub"><i
+                                            class="bi bi-music-note-list"></i> SOLICITAR</a>
+                                    <a href="/vender.html" class="mobile-menu-link sub"><i
+                                            class="bi bi-cloud-arrow-up"></i>
+                                        ENVIAR</a>
+                                </div>
+
+                                <!-- SUBMENU: KITS -->
+                                <div id="submenu-kits" class="submenu-content" style="display: none;">
+                                    <span class="mobile-section-title">KITS</span>
+                                    <a href="/recursos/drum-kits.html" class="mobile-menu-link sub"><i
+                                            class="bi bi-disc"></i> DRUM KITS</a>
+                                    <a href="/recursos/presets.html" class="mobile-menu-link sub"><i
+                                            class="bi bi-sliders"></i> PRESETS</a>
+                                    <a href="/recursos/samples-loops.html" class="mobile-menu-link sub"><i
+                                            class="bi bi-soundwave"></i> LOOPS</a>
+                                    <a href="/recursos/one-shots.html" class="mobile-menu-link sub"><i
+                                            class="bi bi-bullseye"></i> ONE SHOTS</a>
+                                    <a href="/recursos/recursos-gratis.html" class="mobile-menu-link sub highlight"><i
+                                            class="bi bi-gift"></i> DESCARGAS GRATIS</a>
+                                </div>
+
+                                <!-- SUBMENU: COMUNIDAD -->
+                                <div id="submenu-comunidad" class="submenu-content" style="display: none;">
+                                    <span class="mobile-section-title">COMUNIDAD</span>
+                                    <a href="/comunidad/feed.html" class="mobile-menu-link sub"><i
+                                            class="bi bi-collection-play"></i> FEED</a>
+                                    <a href="/studio/reels.html" class="mobile-menu-link sub"><i
+                                            class="bi bi-camera-video"></i> REELS</a>
+                                    <a href="/comunidad/productores.html" class="mobile-menu-link sub"><i
+                                            class="bi bi-people"></i> PRODUCTORES</a>
+                                    <a href="/comunidad/colaboraciones.html" class="mobile-menu-link sub"><i
+                                            class="bi bi-person-plus"></i> COLLABS</a>
+                                    <a href="/comunidad/eventos.html" class="mobile-menu-link sub"><i
+                                            class="bi bi-calendar-event"></i> EVENTOS</a>
+                                    <a href="/cursos/inicio.html" class="mobile-menu-link sub"><i
+                                            class="bi bi-mortarboard"></i> CURSOS</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- NEW: NAVBAR SEARCH (Wavs Style) -->
+                    <!-- NEW: NAVBAR SEARCH (Wavs Style) with Internal Filter & Trending Panel -->
+                    <div class="navbar-search"
+                        style="margin-left: 24px; flex: 1; max-width: 440px; position: relative;">
+                        <i class="bi bi-search"
+                            style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: #666; font-size: 0.85rem; z-index: 10;"></i>
+                        <input type="text" id="navbarSearchInput" placeholder="Buscar 'trap' o 'drill'..."
+                            style="width: 100%; background: #0f0f0f; border: 1px solid rgba(255,255,255,0.08); padding: 11px 110px 11px 42px; border-radius: 12px; color: #fff; font-size: 0.9rem; outline: none; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);">
+
+                        <!-- NEW: Clear Button ("X") -->
+                        <i id="search-clear-btn" class="bi bi-x-circle-fill"
+                            style="position: absolute; right: 92px; top: 50%; transform: translateY(-50%); color: #444; font-size: 1rem; cursor: pointer; display: none; z-index: 11; transition: color 0.2s;"
+                            onmouseover="this.style.color='#666'" onmouseout="this.style.color='#444'"></i>
+
+                        <!-- Internal Filter Trigger - Seamless Integration -->
+                        <div class="search-filter-trigger" onclick="toggleSearchFilter(event)"
+                            style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); display: flex; align-items: center; gap: 6px; cursor: pointer; padding: 4px 10px; background: rgba(255,255,255,0.05); border-radius: 8px; height: 28px; transition: background 0.2s;">
+                            <span id="search-filter-label"
+                                style="font-size: 0.75rem; color: #ccc; font-weight: 600; letter-spacing: 0.3px;">Todo</span>
+                            <i class="bi bi-chevron-down" style="font-size: 0.65rem; color: #888;"></i>
+                        </div>
+
+                        <!-- Filter Dropdown (Glassmorphism) -->
+                        <div id="search-filter-dropdown"
+                            style="position: absolute; top: calc(100% + 8px); right: 0; background: rgba(15, 15, 15, 0.95); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 6px; width: 140px; display: none; flex-direction: column; box-shadow: 0 10px 40px rgba(0,0,0,0.5); z-index: 1002; transform-origin: top right; animation: scaleIn 0.2s ease;">
+                            <div onclick="selectSearchFilter('Todo')" class="search-filter-item selected">Todo</div>
+                            <div onclick="selectSearchFilter('Beats')" class="search-filter-item">Beats</div>
+                            <div onclick="selectSearchFilter('Drum Kits')" class="search-filter-item">Drum Kits</div>
+                            <div onclick="selectSearchFilter('Samples')" class="search-filter-item">Samples</div>
+                            <div onclick="selectSearchFilter('Presets')" class="search-filter-item">Presets</div>
+                            <div onclick="selectSearchFilter('Plantillas')" class="search-filter-item">Plantillas</div>
+                            <div onclick="selectSearchFilter('Productores')" class="search-filter-item">Productores
+                            </div>
+                        </div>
+
+                        <!-- Trending / Intelligent Panel (Appears on Focus) -->
+                        <!-- Trending / Intelligent Panel -->
+                        <div id="search-trending-panel"
+                            style="position: absolute; top: calc(100% + 4px); left: 0; width: 100%; background: #0a0a0a; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 12px; display: none; box-shadow: 0 20px 50px rgba(0,0,0,0.8); z-index: 1001;">
+
+                            <!-- Recent Searches (New) -->
+                            <div style="margin-bottom: 20px;">
+                                <span
+                                    style="display: block; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 0.7rem; color: #555; font-weight: 700; letter-spacing: 0.5px; margin-bottom: 8px; text-transform: uppercase;">Búsquedas
+                                    Recientes</span>
+                                <div style="display: flex; flex-direction: column; gap: 4px;">
+                                    <div class="recent-item" onclick="setSearch('Dark Piano')"><i
+                                            class="bi bi-clock-history"></i>
+                                        Dark
+                                        Piano</div>
+                                    <div class="recent-item" onclick="setSearch('Tainy Drums')"><i
+                                            class="bi bi-clock-history"></i>
+                                        Tainy
+                                        Drums</div>
+                                </div>
+                            </div>
+
+                            <span
+                                style="display: block; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 0.7rem; color: #555; font-weight: 700; letter-spacing: 0.5px; margin-bottom: 12px; text-transform: uppercase;">Tendencias
+                                Ahora</span>
+                            <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                                <span class="trend-tag"><i class="bi bi-graph-up-arrow"></i> Dark Trap</span>
+                                <span class="trend-tag"><i class="bi bi-fire"></i> Reggaeton 2025</span>
+                                <span class="trend-tag">Drill UK</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Search Overlay and Tags moved outside of hidden .navbar-search -->
+                    <!-- Search Overlay Backdrop -->
+                    <div id="search-overlay"></div>
+
+                    <!-- Active Tags Container (New) -->
+                    <div id="active-search-tags"></div>
+
+                    <div class="navbar-right">
+
+                        <!-- 1. CURRENCY (Always Visible) -->
+                        <div class="currency-dropdown" style="position: relative;">
+                            <button id="currency-toggle-btn" onclick="toggleCurrency(event)" class="nav-text-btn"
+                                style="background:none; border:none; color:#bbb; font-size:0.8rem; font-weight:600; cursor:pointer; padding:6px 8px; display:flex; align-items:center; gap:4px; outline:none; transition: all 0.2s;">
+                                <span id="current-currency">PEN</span> <i class="bi bi-caret-down-fill"
+                                    style="font-size:0.6rem;"></i>
+                            </button>
+                            <div id="currency-menu"
+                                style="position: absolute; top: 100%; left: 0; background: #141414; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 4px; display: none; flex-direction: column; min-width: 80px; box-shadow: 0 4px 12px rgba(0,0,0,0.5); z-index: 1005;">
+                                <div onclick="setCurrency('PEN')" class="currency-item"
+                                    style="padding:6px 12px; font-size:0.8rem; color:#ccc; cursor:pointer; border-radius:4px;">
+                                    PEN</div>
+                                <div onclick="setCurrency('USD')" class="currency-item"
+                                    style="padding:6px 12px; font-size:0.8rem; color:#ccc; cursor:pointer; border-radius:4px;">
+                                    USD</div>
+                            </div>
+                        </div>
+
+                        <!-- 2. CART (Always Visible) -->
+                        <a href="#" class="nav-icon-btn" title="Carrito" data-label="Carrito"
+                            onclick="toggleCartPanel(event)">
+                            <i class="bi bi-cart3"></i>
+                            <span id="cart-count-badge" class="cart-label-count" style="display:none;">0</span>
+                        </a>
+
+                        <!-- 3. LOGGED IN ACTIONS (Hidden by default) -->
+                        <div id="nav-auth-section" style="display: flex; align-items: center; gap: 0.5rem;">
+
+                            <!-- NOTIFICACIONES -->
+                            <div class="notification-dropdown">
+                                <button class="nav-icon-btn" onclick="toggleNotificationDropdown(event)"
+                                    data-label="Notificaciones" style="user-select: none;"
+                                    onselectstart="return false;">
+                                    <i class="bi bi-bell"></i>
+                                    <span class="notification-badge" id="notification-badge"
+                                        style="display:none;">0</span>
+                                </button>
+                                <div class="notification-menu" id="notification-menu">
+                                    <div class="notification-header"
+                                        style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-bottom: 1px solid #222;">
+                                        <h4 style="margin: 0; font-size: 0.95rem; font-weight: 600; color: #fff;">
+                                            Notificaciones
+                                        </h4>
+                                        <a href="/notificaciones.html" class="notif-view-all">Ver todos</a>
+                                    </div>
+                                    <div id="notification-list" style="max-height: 400px; overflow-y: auto;">
+                                        <div class="notif-empty"
+                                            style="text-align: center; color: #fff; padding: 40px 20px;">
+                                            <div style="font-size: 2rem; margin-bottom: 16px; color: #666;"><i
+                                                    class="bi bi-bell"></i></div>
+                                            <h4 style="margin-bottom: 8px; font-size: 0.9rem; font-weight: 500;">
+                                                Cargando...
+                                            </h4>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- USER PROFILE -->
+                            <div class="user-dropdown">
+                                <div class="user-trigger" onclick="toggleUserDropdown(event)" style="cursor: pointer;">
+                                    <div id="user-avatar-display" class="user-avatar-placeholder">W</div>
+                                </div>
+                                <div class="user-dropdown-menu" style="width: 380px;">
+                                    <div class="user-dropdown-header"
+                                        onclick="window.location.href='/perfil-publico.html'"
+                                        style="display: flex; align-items: center; justify-content: space-between; gap: 12px; background-color: #232323; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 24px 16px; margin-bottom: 12px; cursor: pointer; transition: background-color 0.2s; user-select: none;"
+                                        onmouseover="this.style.backgroundColor='#2a2a2a'"
+                                        onmouseout="this.style.backgroundColor='#232323'">
+                                        <div style="display: flex; align-items: center; gap: 12px;">
+                                            <div class="user-dropdown-avatar-lg"
+                                                style="width: 48px; height: 48px; font-size: 1.2rem; border-radius: 50%;">
+                                                W
+                                            </div>
+                                            <div style="display: flex; flex-direction: column;">
+                                                <h4 id="dropdown-username"
+                                                    style="margin: 0; font-size: 1rem; color: #fff; font-weight: 600;">
+                                                    Willie
+                                                    Inspired</h4>
+                                                <span style="color: #999; font-size: 0.85rem;">0 Créditos</span>
+                                            </div>
+                                        </div>
+                                        <a href="/cuenta/planes.html" class="btn-subscribe-sm"
+                                            onclick="event.stopPropagation();"
+                                            style="padding: 6px 12px; font-size: 0.8rem;">
+                                            <i class="bi bi-plus-circle-fill"></i> Suscribirse
+                                        </a>
+                                    </div>
+
+                                    <div class="w-grid">
+                                        <a href="/cuenta/dashboard.html" class="w-grid-item"><i class="fas fa-columns"
+                                                style="transform: rotate(90deg);"></i><span>Dashboard</span></a>
+                                        <a href="/mis-compras.html" class="w-grid-item"><i
+                                                class="fas fa-layer-group"></i><span>Compras</span></a>
+                                        <a href="/mensajes.html" class="w-grid-item"><i
+                                                class="fas fa-envelope"></i><span>Mensajes</span></a>
+                                    </div>
+
+                                    <!-- LIST -->
+                                    <a href="/favoritos.html" class="w-list-item"><i class="fas fa-heart"></i> Mis
+                                        Favoritos</a>
+                                    <a href="/gift-cards.html" class="w-list-item"><i class="fas fa-gift"></i> Gift
+                                        Cards</a>
+                                    <a href="/historial.html" class="w-list-item"><i class="fas fa-history"></i>
+                                        Historial</a>
+                                    <div style="height: 1px; background: rgba(255,255,255,0.1); margin: 8px 0;"></div>
+                                    <a href="/account-settings.html" class="w-list-item"><i
+                                            class="fas fa-sliders-h"></i>
+                                        Configuración</a>
+                                    <a href="/ayuda.html" class="w-list-item"><i class="fas fa-question-circle"></i>
+                                        Centro
+                                        de
+                                        Ayuda</a>
+                                    <a href="#" id="navbar-logout-btn" class="w-list-item"
+                                        style="color: #ef4444; margin-top: 8px;">
+                                        <i class="fas fa-sign-out-alt" style="color: #ef4444;"></i> Cerrar Sesión
+                                    </a>
+                                </div>
+                            </div>
+
+                            <!-- UPLOAD BUTTON -->
+                            <a href="/cuenta/subir-kit.html" target=_blank class="btn-upload"><i
+                                    class="fas fa-cloud-upload-alt"></i>
+                                Subir</a>
+                        </div>
+
+                        <!-- 4. GUEST ACTIONS (Shown when Logged Out) -->
+                        <div id="nav-guest-section" style="display: none; align-items: center; gap: 0.5rem;">
+                            <!-- Separtor -->
+                            <div style="width:1px; height:24px; background:rgba(255,255,255,0.1); margin:0 4px;"></div>
+                            <a href="/pages/login.html" class="navbar-login-link">Iniciar Sesión</a>
+                            <a href="/pages/register.html" class="btn-join">Únete <i
+                                    class="bi bi-rocket-takeoff"></i></a>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- MOBILE SEARCH BAR (below navbar, mobile only) -->
+        <div class="mobile-search-wrapper" id="mobile-search-wrapper">
+            <div class="mobile-search-inner">
+                <i class="bi bi-search"></i>
+                <input type="text" id="mobileSearchInput" placeholder="Buscar 'trap' o 'drill'...">
+            </div>
+        </div>
+    </header>
+
+    <main class="search-main-container">
+        <!-- Sidebar Filters -->
+        <aside class="search-sidebar">
+            <h2 class="sidebar-main-title">Filtros</h2>
+
+            <div class="filter-group">
+                <span class="filter-title">Categoría</span>
+                <div class="filter-options">
+                    <label class="premium-checkbox">
+                        <input type="checkbox" class="category-check" value="beat">
+                        <span class="checkmark"></span>
+                        <span class="label-text">Beats</span>
+                    </label>
+                    <label class="premium-checkbox">
+                        <input type="checkbox" class="category-check" value="kit">
+                        <span class="checkmark"></span>
+                        <span class="label-text">Drum Kits</span>
+                    </label>
+                    <label class="premium-checkbox">
+                        <input type="checkbox" class="category-check" value="preset">
+                        <span class="checkmark"></span>
+                        <span class="label-text">Presets</span>
+                    </label>
+                    <label class="premium-checkbox">
+                        <input type="checkbox" class="category-check" value="template">
+                        <span class="checkmark"></span>
+                        <span class="label-text">Plantillas</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- BPM Range Slider (Dual Handle) -->
+            <div class="filter-group">
+                <div class="filter-header-flex">
+                    <span class="filter-title">Tempo (BPM)</span>
+                    <span id="bpm-range-display" class="filter-value-display">40 - 250</span>
+                </div>
+                <div class="dual-range-container">
+                    <div class="slider-track"></div>
+                    <input type="range" id="bpm-min-slider" min="40" max="250" value="40" class="range-handle">
+                    <input type="range" id="bpm-max-slider" min="40" max="250" value="250" class="range-handle">
+                </div>
+                <div class="filter-sub-action">
+                    <label class="premium-checkbox sm">
+                        <input type="checkbox" id="double-tempo-check">
+                        <span class="checkmark"></span>
+                        <span class="label-text">Doble Tempo</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="filter-group">
+                <div class="filter-header-flex">
+                    <span class="filter-title">Precio Máximo</span>
+                    <span id="price-display" class="filter-value-display">Cualquiera</span>
+                </div>
+                <div class="single-range-container">
+                    <input type="range" id="price-max-slider" min="10" max="1000" value="1000" step="10"
+                        class="premium-slider">
+                </div>
+            </div>
+
+            <div class="filter-group">
+                <span class="filter-title">Tonalidad (Key)</span>
+                <div class="premium-select-wrapper">
+                    <select id="key-filter" class="premium-select">
+                        <option value="All">Todas</option>
+                        <option value="C">C</option>
+                        <option value="C#">C# / Db</option>
+                        <option value="D">D</option>
+                        <option value="D#">D# / Eb</option>
+                        <option value="E">E</option>
+                        <option value="F">F</option>
+                        <option value="F#">F# / Gb</option>
+                        <option value="G">G</option>
+                        <option value="G#">G# / Ab</option>
+                        <option value="A">A</option>
+                        <option value="A#">A# / Bb</option>
+                        <option value="B">B</option>
+                    </select>
+                    <i class="bi bi-chevron-down"></i>
+                </div>
+            </div>
+
+            <button id="clear-filters-btn" class="btn-clear-filters">Limpiar Filtros</button>
+        </aside>
+
+        <!-- Results Area -->
+        <section class="search-results-wrapper">
+            <div class="results-header">
+                <div class="results-count">
+                    <span id="results-count-val">0</span> Resultados
+                </div>
+                <div class="results-sort">
+                    <select class="sort-select">
+                        <option value="relevance">Más Relevantes</option>
+                        <option value="newest">Más Recientes</option>
+                        <option value="price_low">Precio: Menor a Mayor</option>
+                        <option value="price_high">Precio: Mayor a Menor</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="search-results-container">
+                <!-- Results will be injected here -->
+            </div>
+
+            <!-- Recommendation Section -->
+            <div class="recommendation-section" style="margin-top: 60px;">
+                <h3
+                    style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.2rem; margin-bottom: 24px; color: #fff;">
+                    Tal
+                    vez te interese</h3>
+                <div id="recommendations-container"
+                    style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px;">
+                    <!-- Recommendations injected here -->
+                </div>
+            </div>
+        </section>
+    </main>
+    <!-- ==================== SIDE PANELS (INJECTED MANUALLY FOR ANALYSIS) ==================== -->
+
+    <!-- BACKDROP -->
+    <div class="overlay-backdrop" id="globalBackdrop" onclick="closeAllOverlays()"></div>
+
+    <!-- CART SIDE PANEL -->
+    <div class="side-panel" id="globalCartPanel">
+        <div class="panel-header">
+            <div class="panel-title" style="display: flex; align-items: center; gap: 8px;">
+                <div style="position: relative; display: flex;">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span id="cart-panel-count" class="notification-badge"
+                        style="position: absolute; top: -6px; right: -6px; display: flex;">1</span>
+                </div>
+                Tu Carrito
+            </div>
+            <button class="panel-close" onclick="closeAllOverlays()">&times;</button>
+        </div>
+        <!-- ID CHANGED: globalCartItems -> cart-items-container to match script/cart.js -->
+        <div class="panel-content" id="cart-items-container">
+            <div style="text-align:center; padding: 40px 0; color: #666;">
+                <i class="fas fa-shopping-basket" style="font-size: 3rem; margin-bottom: 10px;"></i>
+                <p>Tu carrito está vacío</p>
+            </div>
+        </div>
+        <!-- ID ADDED: cart-summary (needed by script) -->
+        <div class="cart-total-section" id="cart-summary">
+            <div style="display:flex; justify-content:space-between; margin-bottom:1rem; color:#fff; font-weight:700;">
+                <span>Total:</span>
+                <!-- ID CHANGED for JS compatibility -->
+                <span id="cart-total-price">$0.00</span>
+            </div>
+            <!-- ID CHANGED for JS compatibility -->
+            <button class="btn-checkout-global" id="cart-checkout-btn"
+                onclick="window.location.href='/pages/checkout.html'">
+                <i class="bi bi-lock-fill" style="margin-right:6px;"></i> Ir a Pagar Seguro
+            </button>
+
+            <!-- TRUST BADGES -->
+            <div
+                style="margin-top: 20px; text-align: center; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 15px;">
+                <p style="font-size: 0.65rem; color: #666; margin-bottom: 10px; letter-spacing: 1px; font-weight: 700;">
+                    METODOS DE PAGO SEGUROS</p>
+
+                <div style="display: flex; gap: 12px; justify-content: center; align-items: center; opacity: 0.8; filter: grayscale(100%); transition: filter 0.3s;"
+                    onmouseover="this.style.filter='grayscale(0%)'" onmouseout="this.style.filter='grayscale(100%)'">
+                    <!-- Global -->
+                    <i class="fab fa-cc-paypal" style="font-size: 26px; color: #fff;"></i>
+                    <i class="fab fa-cc-visa" style="font-size: 26px; color: #fff;"></i>
+                    <i class="fab fa-cc-mastercard" style="font-size: 26px; color: #fff;"></i>
+
+                    <!-- Local (Custom Badges) -->
+                    <div
+                        style="background: #742284; color: white; font-size: 0.7rem; font-weight: 800; padding: 2px 6px; border-radius: 4px; display: flex; align-items: center;">
+                        YAPE</div>
+                    <div
+                        style="background: #00d3de; color: white; font-size: 0.7rem; font-weight: 800; padding: 2px 6px; border-radius: 4px; display: flex; align-items: center;">
+                        PLIN</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/script/sticky-player.js"></script>
+    <script src="/script/cart.js"></script>
+    <script src="/script/notifications.js"></script>
+    <script src="/script/avatar-manager.js"></script>
+    <script src="/script/navbar.js?v=20" type="module"></script>
+    <script src="/script/r2-loader.js"></script>
+    <script src="/script/search.js?v=2" type="module"></script>
+
+    <!-- ==================== FOOTER ==================== -->
+    <!-- Este div es el placeholder donde se inyectará el componente de footer (Desktop/Mobile) -->
+    <!-- Se carga mediante /script/footer.js -->
+    <div id="footer-placeholder"></div>
+
+</body>
+
+</html>

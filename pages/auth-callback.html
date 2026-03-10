@@ -52,20 +52,20 @@
         return;
       }
 
-      // Obtener el par�metro de redirect de la URL
+      // Obtener el par?metro de redirect de la URL
       const urlParams = new URLSearchParams(window.location.search);
       const redirectParam = urlParams.get('redirect');
 
-      console.log('?? Auth Callback - Par�metro redirect:', redirectParam);
+      console.log('?? Auth Callback - Par?metro redirect:', redirectParam);
 
       try {
-        // Obtener la sesi�n actual de Supabase desde el hash de la URL
+        // Obtener la sesi?n actual de Supabase desde el hash de la URL
         const { data: { session }, error } = await supabaseClient.auth.getSession();
 
-        console.log('?? Sesi�n recibida:', session ? 'S�' : 'No');
+        console.log('?? Sesi?n recibida:', session ? 'S?' : 'No');
 
         if (error) {
-          console.error('? Error obteniendo sesi�n:', error);
+          console.error('? Error obteniendo sesi?n:', error);
           throw error;
         }
 
@@ -80,15 +80,15 @@
 
           console.log('? OAuth exitoso, token guardado en localStorage y cookie');
 
-          // Peque�o delay
+          // Peque?o delay
           await new Promise(resolve => setTimeout(resolve, 500));
 
-          // ?? L�gica Inteligente de Redirecci�n (V3)
+          // ?? L?gica Inteligente de Redirecci?n (V3)
           // Verificar si el usuario ya tiene un perfil COMPLETO en la tabla 'users'
           const user = session.user;
-          console.log('👤 Usuario:', user.email);
+          console.log('?? Usuario:', user.email);
 
-          // Consultar perfil para ver si ya complet� el onboarding (tiene nickname)
+          // Consultar perfil para ver si ya complet? el onboarding (tiene nickname)
           const { data: profile, error: profileError } = await supabaseClient
             .from('users')
             .select('nickname')
@@ -96,34 +96,34 @@
             .single();
 
           if (profileError && profileError.code !== 'PGRST116') { // PGRST116 is "No rows found" which is fine (new user)
-            console.error('❌ Error verificando perfil:', profileError);
+            console.error('? Error verificando perfil:', profileError);
             alert('Error verificando tu cuenta. Por favor contacta soporte.');
             return;
           }
 
           const hasCompletedOnboarding = profile && profile.nickname;
-          console.log('✅ Perfil completado:', hasCompletedOnboarding);
+          console.log('? Perfil completado:', hasCompletedOnboarding);
 
           if (redirectParam === 'carrito') {
-            console.log('🛒 Redirigiendo al carrito...');
+            console.log('?? Redirigiendo al carrito...');
             window.location.replace('/carrito.html');
           } else if (!hasCompletedOnboarding) {
             // No tiene nickname -> Es Nuevo o Incompleto -> Welcome (Onboarding)
-            console.log('👋 Sin onboarding completo -> Welcome');
+            console.log('?? Sin onboarding completo -> Welcome');
             window.location.replace('/pages/welcome.html');
           } else {
-            // Ya tiene nickname -> Es Recurrente -> Perfil P�blico (Directo)
+            // Ya tiene nickname -> Es Recurrente -> Perfil P?blico (Directo)
             const profilePath = `/@${profile.nickname}`;
             console.log(`?? Con onboarding completo -> Redirigiendo a ${profilePath}`);
             window.location.replace(profilePath);
           }
         } else {
-          throw new Error('No se recibi� sesi�n de OAuth');
+          throw new Error('No se recibi? sesi?n de OAuth');
         }
 
       } catch (error) {
         console.error('? Error en callback de OAuth:', error);
-        alert('Error al completar autenticaci�n. Redirigiendo al registro...');
+        alert('Error al completar autenticaci?n. Redirigiendo al registro...');
         setTimeout(() => {
           window.location.replace('/pages/register.html');
         }, 1000);

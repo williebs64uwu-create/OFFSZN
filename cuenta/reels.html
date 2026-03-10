@@ -185,12 +185,12 @@
             padding: 10px 0;
             border: 1px solid rgba(255, 255, 255, 0.1);
 
-            /* Animación Sutil */
+            /* Animaci�n Sutil */
             opacity: 0;
             transform: translateY(10px);
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             visibility: hidden;
-            /* Evita interacción invisible */
+            /* Evita interacci�n invisible */
         }
 
         /* SHOW SLIDER ON HOVER */
@@ -730,7 +730,7 @@
             position: relative;
         }
 
-        /* ⭐ CUSTOM SCROLLBAR */
+        /* ? CUSTOM SCROLLBAR */
         .modal-right::-webkit-scrollbar {
             width: 6px;
         }
@@ -763,7 +763,7 @@
         }
 
         /* MEDIA CONTROLS CONTAINER */
-        /* Nuevo diseño de control de volumen vertical */
+        /* Nuevo dise�o de control de volumen vertical */
         .media-controls {
             position: absolute;
             left: 20px;
@@ -1227,6 +1227,7 @@
         <a href="/cuenta/reels.html" class="sidebar-icon-btn active" data-title="Reels"><i
                 class="bi bi-camera-reels-fill"></i></a>
 
+
         <!-- UPGRADE BUTTON (ROCKET) -->
         <a href="/cuenta/planes.html" class="sidebar-icon-btn" data-title="Mejorar Plan"
             style="color:#FFD700; margin-top: 10px;">
@@ -1434,7 +1435,7 @@
                     <p style="font-size:11px; color:#666; text-align:center; margin-top:5px;">Subiendo y procesando...
                     </p>
                 </div>
-                <!-- ⭐ MENSAJE DE ADVERTENCIA DURANTE SUBIDA -->
+                <!-- ? MENSAJE DE ADVERTENCIA DURANTE SUBIDA -->
                 <div id="uploadWarning"
                     style="display:none; background:rgba(255,152,0,0.1); border:1px solid rgba(255,152,0,0.3); border-radius:8px; padding:12px; margin-top:12px;">
                     <p style="color:#FF9800; font-size:12px; margin:0; text-align:center;">
@@ -2006,15 +2007,15 @@
             const text = input.value;
             document.getElementById('charCount').innerText = text.length;
 
-            // ⭐ VALIDACIÓN EN TIEMPO REAL DE HASHTAGS
+            // ? VALIDACI�N EN TIEMPO REAL DE HASHTAGS
             const hashtags = text.match(/#[a-zA-Z0-9_]+/g) || [];
 
-            // ⭐ DETECTAR DUPLICADOS (case-insensitive)
+            // ? DETECTAR DUPLICADOS (case-insensitive)
             const hashtagsLower = hashtags.map(h => h.toLowerCase());
             const uniqueHashtags = new Set(hashtagsLower);
 
             if (uniqueHashtags.size < hashtags.length) {
-                // Hay duplicados! Encontrar el último y removerlo
+                // Hay duplicados! Encontrar el �ltimo y removerlo
                 const lastHashtagIndex = text.lastIndexOf('#');
                 if (lastHashtagIndex !== -1) {
                     input.value = text.substring(0, lastHashtagIndex);
@@ -2031,7 +2032,7 @@
                     input.value = text.substring(0, lastHashtagIndex);
                     document.getElementById('charCount').innerText = input.value.length;
                 }
-                // ⭐ NO TOAST - Bloqueo silencioso
+                // ? NO TOAST - Bloqueo silencioso
             }
         }
 
@@ -2064,7 +2065,7 @@
         }
         // ... (The rest of the file logic continues correctly from previous context)
 
-        // --- LÓGICA DE RECORTE (TRIMMER) & EDITOR INTERACTION ---
+        // --- L�GICA DE RECORTE (TRIMMER) & EDITOR INTERACTION ---
         let isDraggingWindow = false;
         let dragStartX = 0;
         let initialStartVal = 0;
@@ -2144,7 +2145,7 @@
             const eEl = document.getElementById('rangeEnd');
             let sVal = parseFloat(sEl.value);
             let eVal = parseFloat(eEl.value);
-            const minGap = 10; // ⭐ BLOQUEO INSTAGRAM - 10 SEGUNDOS MÍNIMO
+            const minGap = 10; // ? BLOQUEO INSTAGRAM - 10 SEGUNDOS M�NIMO
             if (isStart) {
                 // Moving Start: Must not get closer than 10s to End
                 if (sVal > eVal - minGap) {
@@ -2219,7 +2220,7 @@
                     if (e.lengthComputable) {
                         const pct = (e.loaded / e.total) * 100;
 
-                        // ⭐ MOSTRAR BARRA DE PROGRESO
+                        // ? MOSTRAR BARRA DE PROGRESO
                         const progressBar = document.getElementById('progressBar');
                         const progressContainer = document.getElementById('progressBarContainer');
 
@@ -2244,7 +2245,7 @@
                 xhr.onerror = () => reject(new Error("Network Error"));
                 xhr.send(formData);
             });
-            // ⭐ OCULTAR BARRA AL TERMINAR
+            // ? OCULTAR BARRA AL TERMINAR
             document.getElementById('progressBarContainer').style.display = 'none';
         }
 
@@ -2260,7 +2261,7 @@
                 showToast("El corte debe ser de mínimo 10 segundos.", "error");
                 return;
             }
-            // ⭐ BLOQUEAR INTERFAZ DURANTE SUBIDA
+            // ? BLOQUEAR INTERFAZ DURANTE SUBIDA
             isUploading = true;
             btn.innerText = "Subiendo...";
             btn.disabled = true;
@@ -2268,7 +2269,7 @@
             btnCancel.style.opacity = '0.5';
             btnCancel.style.cursor = 'not-allowed';
             if (warningMsg) warningMsg.style.display = 'block';
-            // ⭐ PREVENIR CIERRE DE PESTAÑA
+            // ? PREVENIR CIERRE DE PESTAA
             window.onbeforeunload = function () {
                 return "Hay una subida en progreso. ¿Estás seguro de que quieres salir?";
             };
@@ -2309,7 +2310,7 @@
                     error = err;
                 }
                 if (error) throw error;
-                // ⭐ SUCCESS - Desbloquear y cerrar
+                // ? SUCCESS - Desbloquear y cerrar
                 showToast("Reel publicado correctamente", "success");
 
                 // Esperar 500ms para que el usuario vea el toast de éxito
@@ -2321,7 +2322,7 @@
                 console.error(e);
                 showToast("Error: " + e.message, "error");
             } finally {
-                // ⭐ DESBLOQUEAR INTERFAZ
+                // ? DESBLOQUEAR INTERFAZ
                 isUploading = false;
                 window.onbeforeunload = null; // Remover protección
                 btn.innerText = "Publicar Video";
@@ -2332,7 +2333,7 @@
                 if (warningMsg) warningMsg.style.display = 'none';
             }
         }
-        // --- DELETE LOGIC (SIN CONFIRMACIÓN) ---
+        // --- DELETE LOGIC (SIN CONFIRMACI�N) ---
         async function deleteReel(id) {
             if (!id) return;
 
@@ -2348,7 +2349,7 @@
                     accessToken = session?.access_token;
                 }
 
-                console.log('🔍 Delete attempt - User ID:', userId, 'Has Token:', !!accessToken);
+                console.log('?? Delete attempt - User ID:', userId, 'Has Token:', !!accessToken);
 
                 if (!userId || !accessToken) {
                     showToast("Error: Usuario no autenticado", "error");
@@ -2360,12 +2361,12 @@
                     method: 'DELETE',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${accessToken}`,  // ⭐ TOKEN REQUERIDO
+                        'Authorization': `Bearer ${accessToken}`,  // ? TOKEN REQUERIDO
                         'x-user-id': userId
                     }
                 });
 
-                console.log('🔍 Delete response status:', response.status);
+                console.log('?? Delete response status:', response.status);
 
                 if (!response.ok) {
                     const data = await response.json();
@@ -2375,7 +2376,7 @@
                 showToast("Video eliminado", "success");
                 loadReels();
             } catch (e) {
-                console.error('❌ Delete error:', e);
+                console.error('? Delete error:', e);
                 showToast(e.message, "error");
             }
         }
@@ -2444,7 +2445,7 @@
         function showToast(msg, type = 'info') {
             // Prevent duplicate toasts
             const toastKey = `${type}:${msg}`;
-            if (activeToastMessages.has(toastKey)) return; // ⭐ ANTI-DUPLICADO
+            if (activeToastMessages.has(toastKey)) return; // ? ANTI-DUPLICADO
 
             activeToastMessages.add(toastKey);
             let container = document.getElementById('toastContainer');
@@ -2474,7 +2475,7 @@
                 el.classList.remove('active');
                 setTimeout(() => {
                     el.remove();
-                    activeToastMessages.delete(toastKey); // ⭐ Permitir el mismo mensaje después
+                    activeToastMessages.delete(toastKey); // ? Permitir el mismo mensaje despu�s
                 }, 400);
             }, 4000);
         }

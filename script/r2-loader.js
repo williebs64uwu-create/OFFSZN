@@ -78,8 +78,6 @@
 
         // 2. Start observing DOM for new images
         observer.observe(document.body, { childList: true, subtree: true });
-
-        console.log("🛡️ R2-Loader: Initialized and watching for resources.");
     }
 
     if (document.readyState === 'loading') {

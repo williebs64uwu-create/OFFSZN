@@ -9,7 +9,7 @@ window.NavbarState = {
     search: {
         debounceTimer: null,
         currentCategory: 'Todo',
-        history: (JSON.parse(localStorage.getItem('offszn_search_history')) || ['Dark Piano', 'Tainy Drums']).slice(0, 5),
+        history: (JSON.parse(localStorage.getItem('offszn_search_history')) || [{ type: 'text', term: 'Dark Piano' }, { type: 'text', term: 'Tainy Drums' }]).slice(0, 5),
         selectedIndex: -1,
         activeTags: [],
         isHovering: false,
@@ -185,86 +185,83 @@ function handleSmartToggle(targetType, targetElement) {
 
 // ==================== SEARCH LOGIC ==================== //
 
-function initSearch() {
-    const searchInput = getEl('navbarSearchInput');
-    const searchContainer = document.querySelector('.navbar-search');
-    const trendPanel = getEl('search-trending-panel');
-    const searchOverlay = getEl('search-overlay');
+function sanitizeSearchQuery(query) {
+    if (!query) return '';
+    // 1. Trim leading/trailing spaces
+    // 2. Replace multiple spaces with a single space
+    // 3. Remove characters that could break basic search logic but keep common ones
+    // 4. Remove emojis or very weird chars if any, but keep alphanumeric
+    return query.trim().replace(/\s+/g, ' ').replace(/[^\w\s\u00C0-\u017F]/gi, '');
+}
 
-    if (!searchInput || !trendPanel) return; // Search not present on this page
+/**
+ * Normalizes a string for comparison: removes spaces, accents, and converts to lowercase.
+ */
+function normalizeString(str) {
+    if (!str) return '';
+    return str.toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "") // Remove accents
+        .replace(/\s+/g, '')             // Remove all spaces
+        .replace(/[^\w]/g, '');          // Remove symbols
+}
 
-    // Disable browser autocomplete
-    searchInput.setAttribute('autocomplete', 'off');
+/**
+ * Basic Dice Coefficient for fuzzy string similarity (0 to 1)
+ */
+function getSimilarity(s1, s2) {
+    const n1 = normalizeString(s1);
+    const n2 = normalizeString(s2);
+    if (n1 === n2) return 1.0;
+    if (n1.length < 2 || n2.length < 2) return 0;
 
-    // === MOBILE SEARCH LOGIC ===
-    const mobileInput = getEl('mobileSearchInput');
-    if (mobileInput) {
-        // Sync blur
-        mobileInput.addEventListener('blur', () => {
-            setTimeout(() => {
-                if (!NavbarState.search.isHovering && document.activeElement !== mobileInput) {
-                    closeSearchUI();
-                }
-            }, 250);
-        });
+    const bigrams1 = new Set();
+    for (let i = 0; i < n1.length - 1; i++) bigrams1.add(n1.substring(i, i + 2));
+    const bigrams2 = new Set();
+    for (let i = 0; i < n2.length - 1; i++) bigrams2.add(n2.substring(i, i + 2));
 
-        // Sync Focus
-        mobileInput.addEventListener('focus', () => {
-            // Move panel to mobile wrapper
-            const trendPanel = getEl('search-trending-panel');
-            const mobileWrapper = getEl('mobile-search-wrapper');
-            if (trendPanel && mobileWrapper) {
-                trendPanel.style.top = '100%';
-                trendPanel.style.marginTop = '-4px';
-                trendPanel.style.width = 'calc(100% - 32px)';
-                trendPanel.style.left = '16px';
-                mobileWrapper.appendChild(trendPanel);
-            }
-
-            closeAllUI(true);
-            openSearchUI();
-            const val = mobileInput.value.trim();
-            if (val.length === 0) {
-                renderHistoryAndTrends();
-            } else {
-                performSearch(val, NavbarState.search.currentCategory);
-            }
-        });
-
-        // Sync Input to trigger logic
-        mobileInput.addEventListener('input', (e) => {
-            const query = e.target.value.trim();
-            searchInput.value = query; // Sync desktop visual just in case
-            clearTimeout(NavbarState.search.debounceTimer);
-
-            if (query.length > 0) {
-                openSearchUI();
-                NavbarState.search.debounceTimer = setTimeout(() => {
-                    performSearch(query, NavbarState.search.currentCategory);
-                }, 300);
-            } else {
-                renderHistoryAndTrends();
-            }
-        });
-
-        // Sync Enter Key
-        mobileInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                const query = mobileInput.value.trim();
-                if (query.length > 0) {
-                    window.location.href = `/explorar.html?q=${encodeURIComponent(query)}&tab=${NavbarState.search.currentCategory}`;
-                }
-            }
-        });
+    let intersection = 0;
+    for (const b of bigrams1) {
+        if (bigrams2.has(b)) intersection++;
     }
+    return (2.0 * intersection) / (bigrams1.size + bigrams2.size);
+}
 
-    // Event Listeners
-    searchContainer.addEventListener('mouseenter', () => NavbarState.search.isHovering = true);
-    searchContainer.addEventListener('mouseleave', () => NavbarState.search.isHovering = false);
+function initSearch() {
+    const searchContainer = document.querySelector('.navbar-search');
+    const searchInput = getEl('navbarSearchInput');
+    const mobileInput = getEl('mobileSearchInput');
+    const searchOverlay = getEl('search-overlay');
+    const trendPanel = getEl('search-trending-panel');
+    const clearBtn = getEl('search-clear-btn');
 
+    if (!searchContainer || !searchInput || !trendPanel) return;
+
+    // Helper to handle search input (shared logic)
+    const handleSearchInput = (inputEl) => {
+        const query = sanitizeSearchQuery(inputEl.value);
+
+        // Sync values if they both exist
+        if (inputEl === searchInput && mobileInput) mobileInput.value = inputEl.value;
+        if (inputEl === mobileInput && searchInput) searchInput.value = inputEl.value;
+
+        if (clearBtn) clearBtn.style.display = query.length > 0 ? 'block' : 'none';
+
+        if (query.length > 0) {
+            openSearchUI();
+            if (NavbarState.search.debounceTimer) clearTimeout(NavbarState.search.debounceTimer);
+            NavbarState.search.debounceTimer = setTimeout(() => {
+                performSearch(query, NavbarState.search.currentCategory);
+            }, 300);
+        } else {
+            // Cancel any pending search if cleared
+            if (NavbarState.search.debounceTimer) clearTimeout(NavbarState.search.debounceTimer);
+            renderHistoryAndTrends();
+        }
+    };
+
+    // Desktop Input Listeners
     searchInput.addEventListener('focus', () => {
-        // Move panel back to desktop container
-        const trendPanel = getEl('search-trending-panel');
         if (trendPanel && searchContainer) {
             trendPanel.style.top = 'calc(100% + 4px)';
             trendPanel.style.marginTop = '0';
@@ -272,17 +269,12 @@ function initSearch() {
             trendPanel.style.left = '0';
             searchContainer.appendChild(trendPanel);
         }
-
-        closeAllUI(true); // Close everything ELSE
+        closeAllUI(true);
         openSearchUI();
-        const val = searchInput.value.trim();
-        if (val.length === 0) {
-            renderHistoryAndTrends();
-        } else {
-            // Re-run search to ensure currency updates and results appear
-            performSearch(val, NavbarState.search.currentCategory);
-        }
+        handleSearchInput(searchInput);
     });
+
+    searchInput.addEventListener('input', () => handleSearchInput(searchInput));
 
     searchInput.addEventListener('blur', () => {
         setTimeout(() => {
@@ -292,25 +284,63 @@ function initSearch() {
         }, 250);
     });
 
+    // Mobile Input Listeners
+    if (mobileInput) {
+        mobileInput.addEventListener('focus', () => {
+            const mobileWrapper = getEl('mobile-search-wrapper');
+            if (trendPanel && mobileWrapper) {
+                trendPanel.style.top = '100%';
+                trendPanel.style.marginTop = '-4px';
+                trendPanel.style.width = 'calc(100% - 32px)';
+                trendPanel.style.left = '16px';
+                mobileWrapper.appendChild(trendPanel);
+            }
+            closeAllUI(true);
+            openSearchUI();
+            handleSearchInput(mobileInput);
+        });
+
+        mobileInput.addEventListener('input', () => handleSearchInput(mobileInput));
+
+        mobileInput.addEventListener('blur', () => {
+            setTimeout(() => {
+                if (!NavbarState.search.isHovering && document.activeElement !== mobileInput) {
+                    closeSearchUI();
+                }
+            }, 250);
+        });
+
+        mobileInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                const query = mobileInput.value.trim();
+                const cat = NavbarState.search.currentCategory || 'Todo';
+                if (query.length > 0) {
+                    window.location.href = `/search.html?q=${encodeURIComponent(query)}&cat=${cat}`;
+                }
+            }
+        });
+    }
+
+    // Clear Button Logic
+    if (clearBtn) {
+        clearBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            searchInput.value = '';
+            if (mobileInput) mobileInput.value = '';
+            clearBtn.style.display = 'none';
+            searchInput.focus();
+            renderHistoryAndTrends();
+        });
+    }
+
+    // Common Listeners
+    searchContainer.addEventListener('mouseenter', () => NavbarState.search.isHovering = true);
+    searchContainer.addEventListener('mouseleave', () => NavbarState.search.isHovering = false);
     if (searchOverlay) searchOverlay.addEventListener('click', closeSearchUI);
 
-    searchInput.addEventListener('input', (e) => {
-        const query = e.target.value.trim();
-        clearTimeout(NavbarState.search.debounceTimer);
-
-        if (query.length > 0) {
-            openSearchUI();
-            NavbarState.search.debounceTimer = setTimeout(() => {
-                performSearch(query, NavbarState.search.currentCategory);
-            }, 300);
-        } else {
-            renderHistoryAndTrends();
-        }
-    });
-
-    // Keyboard Nav
+    // Keyboard Nav (Desktop)
     searchInput.addEventListener('keydown', (e) => {
-        const items = trendPanel.querySelectorAll('.search-result-item, .recent-item, .trend-tag'); // Selectable items
+        const items = trendPanel.querySelectorAll('.search-result-item, .recent-item, .trend-tag');
         if (items.length === 0) return;
 
         if (e.key === 'Escape') {
@@ -330,11 +360,7 @@ function initSearch() {
                 items[NavbarState.search.selectedIndex].click();
             } else {
                 const val = searchInput.value.trim();
-                // Save history immediately
-                if (val) saveToHistory(val);
-                console.log("Searching for:", val);
-                // Redirect to Explore page with query
-                window.location.href = 'explorar.html?q=' + encodeURIComponent(val) + '&type=' + encodeURIComponent(NavbarState.search.currentCategory);
+                if (val) performSearch(val, NavbarState.search.currentCategory, true);
             }
         }
     });
@@ -375,7 +401,45 @@ function highlightItem(items) {
     }
 }
 
-async function performSearch(query, category) {
+window.NavbarSearchCache = {
+    products: null,
+    users: null,
+    profileMap: {},
+    lastFetch: 0
+};
+
+async function getSearchCache() {
+    if (!window.supabaseClient) return null;
+    const now = Date.now();
+    if (window.NavbarSearchCache.products && window.NavbarSearchCache.users && (now - window.NavbarSearchCache.lastFetch < 300000)) {
+        return window.NavbarSearchCache;
+    }
+
+    try {
+        const [pRes, uRes] = await Promise.all([
+            window.supabaseClient.from('products').select('*').eq('visibility', 'public').neq('status', 'draft'),
+            window.supabaseClient.from('users').select('id, nickname, avatar_url, is_verified, is_producer, bio').eq('is_producer', true)
+        ]);
+
+        let profileMap = {};
+        if (uRes.data) {
+            uRes.data.forEach(u => profileMap[u.id] = u);
+        }
+
+        window.NavbarSearchCache = {
+            products: pRes.data || [],
+            users: uRes.data || [],
+            profileMap: profileMap,
+            lastFetch: now
+        };
+        return window.NavbarSearchCache;
+    } catch (err) {
+        console.error("Cache fetch error:", err);
+        return null;
+    }
+}
+
+async function performSearch(query, category, autoRedirectExact = false) {
     try {
         const trendPanel = getEl('search-trending-panel');
         if (trendPanel) {
@@ -393,140 +457,140 @@ async function performSearch(query, category) {
         }
 
         let realResults = [];
-        // Supabase Search Logic
-        if (typeof window.supabaseClient !== 'undefined') {
-            // PRO SEARCH: Search in Name OR Description
-            // Note: .or() requires the column filters to be inside parentheses
-            let productsQuery = window.supabaseClient
-                .from('products')
-                .select('id, name, price_basic, image_url, product_type, producer_id, description')
-                .or(`name.ilike.%${query}%,description.ilike.%${query}%`)
-                .limit(3); // Limited to 3 as requested
+        const cache = await getSearchCache();
 
-            if (category && category !== 'Todo') {
-                // 2. Filtrar por Tipo y Categoría (si aplica)
-                const filterMap = {
-                    'Beats': { type: 'beat' },
-                    'Drum Kits': { type: 'drumkit' },
-                    'Samples': { type: 'loopkit' },
-                    'Presets': { type: 'preset' },
-                    'Plantillas': { type: 'preset', category: 'Plantilla' },
-                    'Voces': { type: 'preset', category: 'Preset_de_voces' },
-                    'Plugins': { type: 'preset', category: 'plugin_vst' },
-                    'Instrumentos': { type: 'preset', category: 'instrumento' }
-                };
+        if (!cache) return; // Fallback if supabase fails
 
-                if (filterMap[category]) {
-                    const filter = filterMap[category];
-                    if (filter.type) {
-                        productsQuery = productsQuery.eq('product_type', filter.type);
-                    }
-                    if (filter.category) {
-                        productsQuery = productsQuery.eq('category', filter.category);
-                    }
-                }
-            }
-            // VISIBILITY FILTER: Only show public AND published products (Strict)
-            productsQuery = productsQuery
-                .eq('visibility', 'public')
-                .neq('status', 'draft') // Explicitly exclude drafts
-                .order('created_at', { ascending: false }); // Newest first
+        // RACE CONDITION FIX
+        if (getEl('navbarSearchInput').value.trim() === '') return;
 
-            // USERS SEARCH: Run if 'Todo' OR explicitly 'Productores'
-            let usersQuery = null;
-            if (category === 'Todo' || category === 'Productores') {
-                usersQuery = window.supabaseClient
-                    .from('users')
-                    .select('nickname, avatar_url')
-                    .ilike('nickname', `%${query}%`)
-                    .limit(3);
-            }
+        const lQuery = query.toLowerCase().trim();
+        const normQuery = normalizeString(lQuery);
 
-            // FILTER PRODUCTS: If 'Productores', don't search products
-            if (category === 'Productores') {
-                productsQuery = Promise.resolve({ data: [] });
-            }
-
-            // Execute Queries Parallel
-            const promises = [productsQuery];
-            if (usersQuery) promises.push(usersQuery);
-
-            const results = await Promise.all(promises);
-            const pRes = results[0];
-            const uRes = usersQuery ? results[1] : { data: [] };
-
-            // RACE CONDITION FIX: If user cleared input while waiting, discard results
-            if (getEl('navbarSearchInput').value.trim() === '') return;
-
-            // --- FALLBACK: IF NO RESULTS MATCH, FETCH TOP 3 ---
-            if ((!pRes.data || pRes.data.length === 0) && (!uRes.data || uRes.data.length === 0)) {
-                const { data: popular } = await window.supabaseClient
-                    .from('products')
-                    .select('id, name, price_basic, image_url, product_type, producer_id')
-                    .eq('visibility', 'public')
-                    .neq('status', 'draft')
-                    .order('plays_count', { ascending: false })
-                    .limit(3);
-
-                if (popular && popular.length > 0) {
-                    pRes.data = popular.map(item => ({ ...item, isFallback: true }));
-                }
-            }
-
-            if (pRes.data && pRes.data.length > 0) {
-                // Fetch Profiles manually to avoid join errors
-                const producerIds = [...new Set(pRes.data.map(p => p.producer_id).filter(id => id))];
-                let profileMap = {};
-
-                if (producerIds.length > 0) {
-                    // Fetch specifically from 'users' table for 'nickname'
-                    const { data: users } = await window.supabaseClient
-                        .from('users')
-                        .select('id, nickname')
-                        .in('id', producerIds);
-
-                    if (users) {
-                        users.forEach(u => {
-                            profileMap[u.id] = u.nickname || 'OFFSZN';
-                        });
-                    }
-                }
-
-                realResults = [...realResults, ...pRes.data.map(p => {
-                    return {
-                        type: p.product_type === 'beat' ? 'beat' : 'kit', // Added type for icon logic
-                        id: p.id,
-                        title: p.name || 'Untitled', // Renamed name to title
-                        producer: profileMap[p.producer_id] || 'OFFSZN',
-                        price: p.price_basic ? `$${p.price_basic}` : 'Free',
-                        img: p.image_url,
-                        isFallback: p.isFallback || false
-                    };
-                })];
-            }
-
-            // --- COMBINE AND PRIORITIZE ---
-            // 1. Products are already in realResults (up to 3)
-            // 2. If we have less than 3 items, fill with users
-            if (uRes && uRes.data && realResults.length < 3) {
-                const remainingSlots = 3 - realResults.length;
-                const userItems = uRes.data.slice(0, remainingSlots).map(u => ({
-                    type: 'user',
-                    title: u.nickname || 'OFFSZN',
-                    stats: 'Producer',
-                    img: u.avatar_url
-                }));
-                realResults = [...realResults, ...userItems];
-            }
-
-            // Final safety slice to exactly 3
-            realResults = realResults.slice(0, 3);
+        // --- 1. SEARCH USERS ---
+        let matchedUsers = [];
+        if (!category || category === 'Todo' || category === 'Productores') {
+            matchedUsers = cache.users.filter(u => {
+                const nick = (u.nickname || '').toLowerCase();
+                const normNick = normalizeString(nick);
+                const similarity = getSimilarity(nick, lQuery);
+                return nick.includes(lQuery) || normNick.includes(normQuery) || similarity > 0.7;
+            }).slice(0, 3);
         }
+
+        // --- 2. SEARCH PRODUCTS ---
+        let matchedProducts = [];
+        if (!category || category !== 'Productores') {
+            matchedProducts = cache.products.filter(p => {
+                const name = (p.name || '').toLowerCase();
+                const normName = normalizeString(name);
+                const producer = cache.profileMap[p.producer_id]; // Fallback if producer missing
+                const prodName = producer ? (producer.nickname || '').toLowerCase() : '';
+                const normProd = normalizeString(prodName);
+
+                const matchesCat = (!category || category === 'Todo') ? true :
+                    (category === 'Beats' ? p.product_type === 'beat' :
+                        category === 'Drum Kits' ? p.product_type === 'kit' :
+                            category === 'Presets' ? p.product_type === 'preset' :
+                                category === 'Plantillas' ? p.product_type === 'template' : true);
+
+                if (!matchesCat) return false;
+
+                return name.includes(lQuery) || normName.includes(normQuery) || prodName.includes(lQuery) || normProd.includes(normQuery);
+            }).slice(0, 3);
+        }
+
+        // --- FALLBACK: IF NO RESULTS MATCH, FETCH TOP 3 ---
+        if (matchedProducts.length === 0 && matchedUsers.length === 0) {
+            matchedProducts = [...cache.products].sort((a, b) => (b.plays_count || 0) - (a.plays_count || 0)).slice(0, 3).map(item => ({ ...item, isFallback: true }));
+        }
+
+        if (matchedProducts.length > 0) {
+            realResults = [...matchedProducts.map(p => {
+                const producer = cache.profileMap[p.producer_id];
+                return {
+                    type: p.product_type === 'beat' ? 'beat' : 'kit',
+                    product_type: p.product_type,
+                    name: p.name,
+                    public_slug: p.public_slug,
+                    id: p.id,
+                    title: p.name || 'Untitled',
+                    producer: producer ? producer.nickname : 'OFFSZN',
+                    price: p.price_basic ? `$${p.price_basic}` : 'Free',
+                    img: p.image_url,
+                    isFallback: p.isFallback || false
+                };
+            })];
+        }
+
+        // --- COMBINE AND PRIORITIZE ---
+        if (matchedUsers.length > 0 && realResults.length < 3) {
+            const remainingSlots = 3 - realResults.length;
+            const userItems = matchedUsers.slice(0, remainingSlots).map(u => ({
+                type: 'user',
+                title: u.nickname || 'OFFSZN',
+                stats: 'Producer',
+                img: u.avatar_url,
+                id: u.id
+            }));
+            realResults = [...realResults, ...userItems];
+        } else if (matchedUsers.length > 0 && realResults.length >= 3) {
+            const userItem = {
+                type: 'user',
+                title: matchedUsers[0].nickname || 'OFFSZN',
+                stats: 'Producer',
+                img: matchedUsers[0].avatar_url,
+                id: matchedUsers[0].id
+            };
+            realResults.pop();
+            realResults.unshift(userItem);
+        }
+
         NavbarState.search.lastResults = realResults; // Cache for instant currency
+
+        if (autoRedirectExact) {
+            const normQuery = normalizeString(query);
+            // Find EXACT match or HIGH SIMILARITY match for typo resilience
+            const exactMatch = realResults.find(r => {
+                const normTitle = normalizeString(r.title);
+                const normName = normalizeString(r.name || '');
+                const similarity = Math.max(getSimilarity(r.title, query), getSimilarity(r.name || '', query));
+
+                return normTitle === normQuery || normName === normQuery || similarity > 0.85;
+            });
+
+            if (exactMatch && !exactMatch.isFallback) {
+                // Save to history with correct type before redirecting
+                const termObj = exactMatch.type === 'user' ?
+                    { type: 'user', term: exactMatch.title, subtitle: 'Producer', img: exactMatch.img } :
+                    { type: exactMatch.type, term: exactMatch.title, subtitle: exactMatch.producer || exactMatch.price, img: exactMatch.img, id: exactMatch.id };
+
+                await window.saveToHistory(termObj);
+
+                // Navigate directly to exact match
+                let targetUrl = exactMatch.type === 'user' ?
+                    `/@${encodeURIComponent(exactMatch.title)}` :
+                    (window.createSeoLink ? window.createSeoLink(exactMatch) : `/producto.html?id=${exactMatch.id}`);
+                window.location.href = targetUrl;
+                return;
+            }
+
+            // NO EXACT MATCH -> REDIRECT TO SEARCH PAGE
+            const cat = NavbarState.search.currentCategory || 'Todo';
+            window.location.href = `/search.html?q=${encodeURIComponent(query)}&cat=${cat}`;
+            return;
+        }
+
         renderActualResults(realResults);
     } catch (err) {
         console.error("Search Error", err);
-        renderActualResults([]);
+        // On error, if it was an Enter press, still try to go to search page
+        if (autoRedirectExact) {
+            const cat = NavbarState.search.currentCategory || 'Todo';
+            window.location.href = `/search.html?q=${encodeURIComponent(query)}&cat=${cat}`;
+        } else {
+            renderActualResults([]);
+        }
     }
 }
 
@@ -543,8 +607,7 @@ function renderActualResults(results) {
         return;
     }
 
-    // Helper: Sanitize text for safe HTML rendering (prevents &amp; etc. showing raw)
-    const sanitizeText = (text) => {
+    const sanitizeTextLocal = (text) => {
         if (!text) return '';
         const el = document.createElement('span');
         el.textContent = text;
@@ -555,82 +618,128 @@ function renderActualResults(results) {
     if (hasFallback) {
         html += `<div style="padding:4px 10px 8px; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 0.7rem; color: #555; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase;">Tal vez te interese:</div>`;
     }
-    results.forEach(item => {
-        // CURRENCY LOGIC
-        let displayPrice = item.price;
-        const userCurrency = localStorage.getItem('userCurrency') || 'USD';
-        // FIX: Check if price exists before trying to replace (Users don't have price)
-        if (userCurrency === 'PEN' && item.price && item.price !== 'Free') {
-            const numPrice = parseFloat(item.price.replace('$', ''));
-            if (!isNaN(numPrice)) {
-                displayPrice = `S/${(numPrice * 3.8).toFixed(2)}`;
-            }
-        }
 
-        // Sanitize title for display (prevents &, <, > from showing as raw entities)
-        const safeTitle = sanitizeText(item.title);
-        const safeTitleAttr = (item.title || '').replace(/"/g, '&quot;').replace(/'/g, "\\'");
+    for (let i = 0; i < results.length; i++) {
+        const item = results[i];
+        const isUser = item.type === 'user';
 
-        // IMAGE LOGIC: Prefer image_url, fallback to icon
-        // Use a unique data-r2-src to sign async after render
-        let imgHtml = '';
-        if (item.img) {
-            imgHtml = `<img data-r2-src="${item.img}" src="" style="width:36px; height:36px; border-radius:6px; object-fit:cover; background:#1a1a1a;" alt="${safeTitleAttr}" onerror="if(window.AvatarManager) window.AvatarManager.handleError(this, '${safeTitleAttr}')">`;
-        } else {
-            let icon = item.type === 'user' ? 'person-circle' : (item.type === 'kit' ? 'box-seam' : 'music-note-beamed');
-            imgHtml = `<div class="result-img" style="display:flex;align-items:center;justify-content:center;color:#666; background:rgba(255,255,255,0.05); border-radius:50%; width:36px; height:36px;"><i class="bi bi-${icon}"></i></div>`;
-        }
-
-        // CLICK ACTION
-        let targetUrl = item.type === 'user' ?
+        // Target URL Logic
+        const targetUrl = isUser ?
             `/@${encodeURIComponent(item.title)}` :
             (window.createSeoLink ? window.createSeoLink(item) : `/producto.html?id=${item.id}`);
 
+        // Data for history saving
+        const itemData = encodeURIComponent(JSON.stringify(item));
+
+        // Price Formatting if available
+        let displayPrice = item.price || '';
+        if (item.price && window.CurrencyManager) {
+            displayPrice = window.CurrencyManager.formatFromString(item.price);
+        }
+
+        const isSelected = (i === NavbarState.search.selectedIndex);
+
         html += `
-            <div class="search-result-item" onclick="handleResultClick('${targetUrl}', '${safeTitleAttr}')">
-                ${imgHtml}
-                <div class="result-info">
-                    <div class="result-title">${safeTitle}</div>
-                    <div class="result-meta">${sanitizeText(item.producer || item.stats || item.price || '')}</div>
+            <div class="search-result-item ${isSelected ? 'selected' : ''}" 
+                 onclick="handleResultClick('${targetUrl}', '${itemData}')">
+                <div class="result-img">
+                    <img data-r2-src="${item.img || (isUser ? 'https://ui-avatars.com/api/?name=' + encodeURIComponent(item.title || 'User') + '&background=random' : '/images/portada-default.png')}" 
+                         src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" 
+                         alt="thumb" style="width:100%; height:100%; border-radius:${isUser ? '50%' : '6px'}; object-fit:cover;">
                 </div>
-                ${item.price ? `<div style="font-size:0.8rem; color:#8b5cf6; font-weight:600;">${displayPrice}</div>` : ''}
-            </div>`;
-    });
+                <div class="result-info">
+                    <div class="result-title" style="color:#fff; font-weight:600; font-size:0.9rem;">${sanitizeTextLocal(item.title)}</div>
+                    <div class="result-meta" style="color:#666; font-size:0.75rem;">${sanitizeTextLocal(isUser ? (item.stats || 'Producer') : (item.producer || 'OFFSZN'))}</div>
+                </div>
+                ${!isUser && item.price ? `<div style="font-size:0.8rem; color:#8b5cf6; font-weight:600;">${displayPrice}</div>` : ''}
+            </div>
+        `;
+    }
     trendPanel.innerHTML = html;
 
-    // 🔥 POST-RENDER: Sign R2 images asynchronously for instant display
-    trendPanel.querySelectorAll('img[data-r2-src]').forEach(async (img) => {
-        const rawSrc = img.getAttribute('data-r2-src');
-        if (!rawSrc) return;
-        try {
-            if (window.getAuthorizedUrl) {
-                const signedUrl = await window.getAuthorizedUrl(rawSrc);
-                if (signedUrl) {
-                    img.src = signedUrl;
-                    img.style.opacity = '1';
+    // 🔥 POST-RENDER: Sign R2 images asynchronously
+    const signImages = async () => {
+        const images = trendPanel.querySelectorAll('img[data-r2-src]');
+        if (images.length === 0) return;
+
+        if (!window.getAuthorizedUrl) {
+            let waited = 0;
+            while (!window.getAuthorizedUrl && waited < 2000) {
+                await new Promise(r => setTimeout(r, 100));
+                waited += 100;
+            }
+        }
+
+        images.forEach(async (img) => {
+            const rawSrc = img.getAttribute('data-r2-src');
+            if (!rawSrc) return;
+
+            if (rawSrc.includes('cloudinary.com') || rawSrc.includes('googleusercontent.com')) {
+                img.src = rawSrc;
+                return;
+            }
+
+            try {
+                if (window.getAuthorizedUrl) {
+                    const signedUrl = await window.getAuthorizedUrl(rawSrc);
+                    if (signedUrl) img.src = signedUrl;
+                } else {
+                    img.src = rawSrc;
                 }
-            } else {
-                // Fallback: Use raw URL directly (might work for public R2 buckets)
+            } catch (e) {
                 img.src = rawSrc;
             }
-        } catch (e) {
-            // Fallback on error
-            img.src = rawSrc;
-        }
-    });
+        });
+    };
+    signImages();
 }
 
 function renderHistoryAndTrends() {
     const trendPanel = getEl('search-trending-panel');
     if (!trendPanel) return;
 
-    const historyHtml = NavbarState.search.history.map(term =>
-        `<div class="recent-item" onclick="setSearch('${term}')">
-            <i class="bi bi-clock-history"></i> 
-            <span style="flex:1;">${term}</span>
-            <i class="bi bi-x history-delete-btn" onclick="deleteHistoryItem('${term}', event)" title="Eliminar"></i>
-         </div>`
-    ).join('');
+    const sanitizeTextLocal = (text) => {
+        if (!text) return '';
+        const el = document.createElement('span');
+        el.textContent = text;
+        return el.innerHTML;
+    };
+
+    const historyHtml = NavbarState.search.history.map(item => {
+        let historyObj = typeof item === 'string' ? { type: 'text', term: item } : item;
+        // fallback robust check
+        if (!historyObj.term) historyObj = { type: 'text', term: historyObj };
+
+        const safeTerm = historyObj.term.replace(/\\/g, "\\\\").replace(/'/g, "\\'").replace(/"/g, "&quot;");
+
+        let iconHtml = '<i class="bi bi-clock-history"></i>';
+        if (historyObj.img) {
+            iconHtml = `<img data-r2-src="${historyObj.img}" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" style="width:24px; height:24px; border-radius:${historyObj.type === 'user' ? '50%' : '6px'}; object-fit:cover; background:#1a1a1a;">`;
+        } else if (historyObj.type === 'user') {
+            iconHtml = '<i class="bi bi-person-circle" style="color:#888;"></i>';
+        } else if (historyObj.type === 'beat' || historyObj.type === 'kit') {
+            iconHtml = `<i class="bi ${historyObj.type === 'kit' ? 'bi-box-seam' : 'bi-music-note-beamed'}" style="color:#888;"></i>`;
+        }
+
+        let subtitleHtml = historyObj.subtitle ? `<span style="font-size:0.7rem; color:#666; margin-left:8px;">• ${sanitizeTextLocal(historyObj.subtitle)}</span>` : '';
+
+        // Include full data for rich redirects
+        const historyData = encodeURIComponent(JSON.stringify({
+            term: historyObj.term,
+            type: historyObj.type,
+            id: historyObj.id,
+            public_slug: historyObj.public_slug,
+            product_type: historyObj.product_type,
+            img: historyObj.img,
+            subtitle: historyObj.subtitle
+        }));
+
+        return `<div class="recent-item" onclick="setSearchRich('${historyData}', event)">
+            ${iconHtml}
+            <span style="flex:1; margin-left: 8px;">${sanitizeTextLocal(historyObj.term)}${subtitleHtml}</span>
+            <i class="bi bi-x history-delete-btn" onclick="deleteHistoryItem('${safeTerm}', event)" title="Eliminar"></i>
+         </div>`;
+    }).join('');
 
     let historySection = NavbarState.search.history.length > 0 ? `
         <div style="margin-bottom: 20px;">
@@ -645,46 +754,123 @@ function renderHistoryAndTrends() {
         ${historySection}
         <span style="display: block; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 0.7rem; color: #555; font-weight: 700; letter-spacing: 0.5px; margin-bottom: 12px; text-transform: uppercase;">Tendencias Ahora</span>
         <div style="display: flex; flex-wrap: wrap; gap: 8px;">
-            <span class="trend-tag" onclick="setSearch('Dark Trap')"><i class="bi bi-graph-up-arrow"></i> Dark Trap</span>
-            <span class="trend-tag" onclick="setSearch('Reggaeton 2025')"><i class="bi bi-fire"></i> Reggaeton 2025</span>
-            <span class="trend-tag" onclick="setSearch('Drill UK')">Drill UK</span>
+            <span class="trend-tag" onclick="setSearch('Dark Trap', event)"><i class="bi bi-graph-up-arrow"></i> Dark Trap</span>
+            <span class="trend-tag" onclick="setSearch('Reggaeton 2025', event)"><i class="bi bi-fire"></i> Reggaeton 2025</span>
         </div>`;
+
+    // 🔥 POST-RENDER: Sign R2 images in history items
+    const signHistoryImages = async () => {
+        const imgs = trendPanel.querySelectorAll('img[data-r2-src]');
+        if (imgs.length === 0) return;
+        // Wait for getAuthorizedUrl if not ready
+        if (!window.getAuthorizedUrl) {
+            let waited = 0;
+            while (!window.getAuthorizedUrl && waited < 2000) {
+                await new Promise(r => setTimeout(r, 100));
+                waited += 100;
+            }
+        }
+        imgs.forEach(async (img) => {
+            const rawSrc = img.getAttribute('data-r2-src');
+            if (!rawSrc) return;
+            // Public URLs don't need signing
+            if (rawSrc.includes('cloudinary.com') || rawSrc.includes('googleusercontent.com')) {
+                img.src = rawSrc;
+                return;
+            }
+            try {
+                if (window.getAuthorizedUrl) {
+                    const signedUrl = await window.getAuthorizedUrl(rawSrc);
+                    if (signedUrl) img.src = signedUrl;
+                } else {
+                    img.src = rawSrc;
+                }
+            } catch (e) {
+                img.src = rawSrc;
+            }
+        });
+    };
+    signHistoryImages();
 }
 
 // Global functions for HTML onclick attributes
-window.setSearch = function (text) {
+window.setSearch = function (text, event, type = 'text', id = '') {
+    if (event) event.stopPropagation();
     const searchInput = getEl('navbarSearchInput');
     if (searchInput) {
         searchInput.value = text;
-        saveToHistory(text);
-        // addTag(text); // REMOVED: No distinct visual tags wanted
-        searchInput.dispatchEvent(new Event('input'));
+
+        // Instant search and redirect if exact match
+        performSearch(text, NavbarState.search.currentCategory, true);
     }
-}
+};
+
+window.setSearchRich = function (historyDataEncoded, event) {
+    if (event) event.stopPropagation();
+    try {
+        const item = JSON.parse(decodeURIComponent(historyDataEncoded));
+        const searchInput = getEl('navbarSearchInput');
+        if (searchInput) {
+            searchInput.value = item.term;
+
+            if (item.type === 'user') {
+                window.location.href = `/@${encodeURIComponent(item.term)}`;
+                return;
+            } else if (item.type === 'beat' || item.type === 'kit' || item.type === 'preset' || item.type === 'template') {
+                const url = window.createSeoLink ? window.createSeoLink({
+                    id: item.id,
+                    name: item.term,
+                    public_slug: item.public_slug,
+                    product_type: item.type
+                }) : `/producto.html?id=${item.id}`;
+                window.location.href = url;
+                return;
+            }
+
+            // Fallback for plain text
+            performSearch(item.term, NavbarState.search.currentCategory, true);
+        }
+    } catch (e) {
+        console.warn("setSearchRich failed:", e);
+    }
+};
 
 window.deleteHistoryItem = async function (term, e) {
     if (e) e.stopPropagation();
-    console.log("🗑️ Deleting history item:", term);
 
     const lowerTerm = term.toLowerCase().trim();
     const fullHistory = JSON.parse(localStorage.getItem('offszn_search_history')) || [];
 
-    // Case-insensitive filtering
-    const updatedFullHistory = fullHistory.filter(t => t.toLowerCase().trim() !== lowerTerm);
+    // Case-insensitive filtering, supporting both old string arrays and new object arrays
+    const updatedFullHistory = fullHistory.filter(t => {
+        const textVal = typeof t === 'string' ? t : t.term;
+        return textVal.toLowerCase().trim() !== lowerTerm;
+    });
 
     // Use Universal Sync
     await window.updateUniversalSearchHistory(updatedFullHistory);
 }
 
-async function saveToHistory(term) {
-    const lowerTerm = term.toLowerCase().trim();
+window.saveToHistory = async function (termObj) {
+    // Overload check: if passed a string, assume it's a plain text search
+    if (typeof termObj === 'string') {
+        termObj = { type: 'text', term: termObj };
+    }
+
+    // Safety check just in case
+    if (!termObj || !termObj.term) return;
+
+    const lowerTerm = termObj.term.toLowerCase().trim();
     let fullHistory = JSON.parse(localStorage.getItem('offszn_search_history')) || [];
 
     // Remove if exists
-    fullHistory = fullHistory.filter(t => t.toLowerCase().trim() !== lowerTerm);
+    fullHistory = fullHistory.filter(t => {
+        const textVal = typeof t === 'string' ? t : t.term;
+        return textVal.toLowerCase().trim() !== lowerTerm;
+    });
 
     // Add to front
-    fullHistory.unshift(term);
+    fullHistory.unshift(termObj);
 
     // Limit storage to 50
     if (fullHistory.length > 50) fullHistory.pop();
@@ -876,10 +1062,6 @@ async function initAuth() {
 async function updateAuthUI(session) {
     const authSection = getEl('nav-auth-section');
     const guestSection = getEl('nav-guest-section');
-    const avatarEl = getEl('user-avatar-display');
-    const dropdownNameEl = getEl('dropdown-username');
-    const userNameDisplayEl = getEl('user-name-display');
-    const dropdownAvatarEl = document.querySelector('.user-dropdown-avatar-lg');
 
     if (session) {
         // --- GLOBAL STATE FOR OTHER SCRIPTS ---
@@ -919,47 +1101,45 @@ async function updateAuthUI(session) {
         // 2. FETCH FRESH DATA (Background)
         if (typeof window.supabaseClient !== 'undefined') {
             try {
-                const { data: profile } = await window.supabaseClient
-                    .from('users')
-                    .select('nickname, avatar_url')
-                    .eq('id', session.user.id)
-                    .single();
+                // Fetch fundamental details
+                const [{ data: userProfile }, { data: profileExtra }] = await Promise.all([
+                    window.supabaseClient.from('users').select('nickname, avatar_url, reward_balance').eq('id', session.user.id).single(),
+                    window.supabaseClient.from('profiles').select('plan').eq('id', session.user.id).single()
+                ]);
 
-                if (profile) {
+                if (userProfile || profileExtra) {
                     let needsUpdate = false;
 
-                    if (profile.nickname && profile.nickname !== cachedNick) {
-                        displayName = profile.nickname;
+                    if (userProfile?.nickname && userProfile.nickname !== cachedNick) {
+                        displayName = userProfile.nickname;
                         window.currentUserNickname = displayName;
                         displayLetter = displayName.charAt(0).toUpperCase();
-                        localStorage.setItem('offszn_cached_nickname', profile.nickname);
+                        localStorage.setItem('offszn_cached_nickname', userProfile.nickname);
                         needsUpdate = true;
                     }
 
-                    if (profile.avatar_url && profile.avatar_url !== cachedAvatar) {
-                        avatarUrl = profile.avatar_url;
-                        localStorage.setItem('offszn_cached_avatar', profile.avatar_url);
+                    if (userProfile?.avatar_url && userProfile.avatar_url !== cachedAvatar) {
+                        avatarUrl = userProfile.avatar_url;
+                        localStorage.setItem('offszn_cached_avatar', userProfile.avatar_url);
                         needsUpdate = true;
                     }
 
-                    // Only repaint if data changed
-                    if (needsUpdate) {
-                        updateUserVisuals(displayName, displayLetter, avatarUrl);
+                    const plan = profileExtra?.plan || 'free';
+                    const rewardBalance = userProfile?.reward_balance || 0;
+
+                    // Repaint with fresh data
+                    updateUserVisuals(displayName, displayLetter, avatarUrl, plan, rewardBalance);
+
+                    // Dynamic Profile Link
+                    const dropdownHeader = document.querySelector('.user-dropdown-header');
+                    if (dropdownHeader) {
+                        dropdownHeader.onclick = () => window.location.href = `/@${displayName}`;
                     }
                 }
             } catch (err) {
                 console.warn("Navbar: Could not fetch profile data", err);
             }
         }
-
-        // Dynamic Profile Link
-        const dropdownHeader = document.querySelector('.user-dropdown-header');
-        if (dropdownHeader) {
-            dropdownHeader.onclick = () => window.location.href = `/@${displayName}`;
-        }
-
-
-
     } else {
         if (authSection) authSection.style.display = 'none';
         if (guestSection) guestSection.style.display = 'flex';
@@ -983,11 +1163,17 @@ async function updateAuthUI(session) {
 }
 
 // Helper to update DOM elements
-function updateUserVisuals(displayName, displayLetter, avatarUrl) {
+function updateUserVisuals(displayName, displayLetter, avatarUrl, plan = 'free', rewardBalance = 0) {
     const avatarEl = getEl('user-avatar-display');
     const dropdownAvatarEl = document.querySelector('.user-dropdown-avatar-lg');
     const dropdownNameEl = getEl('dropdown-username');
     const userNameDisplayEl = getEl('user-name-display');
+
+    // New Plan Elements
+    const planBtn = getEl('nav-user-plan-btn');
+    const balanceEl = getEl('dropdown-reward-balance');
+    const mobilePlanTag = getEl('mobile-plan-tag');
+    const mobilePlanTitle = getEl('mobile-plan-title');
 
     // 1. Navbar Avatar (Small)
     if (avatarEl) {
@@ -1029,6 +1215,32 @@ function updateUserVisuals(displayName, displayLetter, avatarUrl) {
 
     if (dropdownNameEl) dropdownNameEl.innerText = displayName;
     if (userNameDisplayEl) userNameDisplayEl.innerText = displayName;
+
+    // 4. Plan & Balance Update
+    if (balanceEl) balanceEl.innerText = `${rewardBalance} Créditos`;
+
+    if (plan && plan !== 'free') {
+        const planUpper = plan.toUpperCase();
+        if (planBtn) {
+            planBtn.innerHTML = `<i class="bi bi-star-fill"></i> PLAN ${planUpper}`;
+            planBtn.style.background = 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)';
+            planBtn.style.color = '#fff';
+            planBtn.style.border = 'none';
+            planBtn.style.boxShadow = '0 4px 12px rgba(139, 92, 246, 0.3)';
+        }
+        if (mobilePlanTag) mobilePlanTag.innerText = `OFFSZN ${planUpper}`;
+        if (mobilePlanTitle) mobilePlanTitle.innerText = 'Tu Plan Actual';
+    } else {
+        if (planBtn) {
+            planBtn.innerHTML = `<i class="bi bi-plus-circle-fill"></i> Suscribirse`;
+            planBtn.style.background = '';
+            planBtn.style.color = '';
+            planBtn.style.border = '';
+            planBtn.style.boxShadow = '';
+        }
+        if (mobilePlanTag) mobilePlanTag.innerText = 'OFFSZN PRO';
+        if (mobilePlanTitle) mobilePlanTitle.innerText = 'Mejorar Plan';
+    }
 }
 
 
@@ -1053,18 +1265,32 @@ window.setCurrency = function (curr) {
     const el = getEl('current-currency');
     if (el) el.innerText = curr;
 
-    // Close manu manually or via helper
+    // Close menu manually or via helper
     const cMenu = getEl('currency-menu');
     if (cMenu) cMenu.classList.remove('active');
     const cBtn = getEl('currency-toggle-btn');
     if (cBtn) cBtn.classList.remove('active-currency');
 
     highlightCurrencyItem(curr);
-    localStorage.setItem('userCurrency', curr);
 
-    // Instant Re-render if we have cached results
-    if (NavbarState.search.lastResults && NavbarState.search.lastResults.length > 0) {
-        renderActualResults(NavbarState.search.lastResults);
+    // Use CurrencyManager if available (handles localStorage + event dispatch)
+    if (window.CurrencyManager) {
+        window.CurrencyManager.setCurrency(curr);
+    } else {
+        localStorage.setItem('userCurrency', curr);
+    }
+
+    // Reload page to refresh all prices — EXCEPT checkout/cart (don't disrupt payment)
+    const path = window.location.pathname.toLowerCase();
+    const skipReload = ['/checkout', '/venta', '/cart', '/cuenta/ventas'];
+    const shouldSkip = skipReload.some(p => path.includes(p));
+    if (!shouldSkip) {
+        window.location.reload();
+    } else {
+        // On checkout pages, just re-render search results if open
+        if (NavbarState.search.lastResults && NavbarState.search.lastResults.length > 0) {
+            renderActualResults(NavbarState.search.lastResults);
+        }
     }
 }
 
@@ -1108,13 +1334,39 @@ window.selectSearchFilter = function (label) {
 };
 
 // Helper for clicking results (Ensures save completes before redirect)
-window.handleResultClick = async function (url, title) {
-    // Prevent default if necessary, but this is an onclick handler
+window.handleResultClick = async function (url, itemDataString) {
     try {
-        await saveToHistory(title);
+        if (itemDataString) {
+            // Support both raw JSON and URI-encoded JSON (backward compat)
+            let parsed;
+            try {
+                parsed = JSON.parse(itemDataString);
+            } catch (_) {
+                parsed = JSON.parse(decodeURIComponent(itemDataString));
+            }
+            const item = parsed;
+            let termObj = { type: 'text', term: item.title };
+
+            if (item.type === 'user') {
+                termObj = { type: 'user', term: item.title, subtitle: 'Producer', img: item.img };
+            } else {
+                termObj = {
+                    type: item.product_type || item.type,
+                    term: item.title,
+                    subtitle: item.producer || item.price,
+                    img: item.img,
+                    id: item.id,
+                    public_slug: item.public_slug,
+                    product_type: item.product_type || item.type
+                };
+            }
+            await window.saveToHistory(termObj);
+        }
     } catch (e) {
-        console.warn("History save failed, proceeding:", e);
+        console.warn("History save failed or format error, proceeding:", e);
     }
+
+    if (NavbarState.search.debounceTimer) clearTimeout(NavbarState.search.debounceTimer);
     window.location.href = url;
 };
 
@@ -1165,10 +1417,21 @@ async function syncSearchHistory(user) {
             ? profiles[0].search_history
             : [];
 
-        // C. Merge: Local (Guest) + Remote -> Unique Set
-        // We prioritize Local (most recent) + Remote
-        const mergedSet = new Set([...localHistory, ...remoteHistory]);
-        const mergedArray = Array.from(mergedSet).slice(0, 50); // Limit to 50 for full history
+        // Normalize legacy string items to objects for deduplication
+        const normalize = (val) => typeof val === 'string' ? { type: 'text', term: val } : val;
+
+        const localNormalized = localHistory.map(normalize);
+        const remoteNormalized = remoteHistory.map(normalize);
+
+        // Deduplicate using 'term' as unique key (case insensitive)
+        const mergedMap = new Map();
+        [...remoteNormalized, ...localNormalized].forEach(item => {
+            if (item && item.term) {
+                mergedMap.set(item.term.toLowerCase().trim(), item); // Local overrides remote due to order
+            }
+        });
+
+        const mergedArray = Array.from(mergedMap.values()).slice(0, 50); // Limit to 50 for full history
 
         // D. Save Back to Profile
         const { error: updateError } = await supabaseClient
@@ -1196,7 +1459,7 @@ window.initNavbarUI = async function () {
     window._navbarInitialized = true;
 
     // Restore Currency
-    const savedCurr = localStorage.getItem('userCurrency') || 'PEN';
+    const savedCurr = (window.CurrencyManager ? window.CurrencyManager.getCurrency() : localStorage.getItem('userCurrency')) || 'PEN';
     const currEl = getEl('current-currency');
     if (currEl) currEl.innerText = savedCurr;
 

@@ -32,6 +32,7 @@ export const authenticateTokenMiddleware = async (req, res, next) => {
         }
 
         req.user = {
+            id: user.id,
             userId: user.id,
             email: user.email,
         };

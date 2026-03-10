@@ -59,7 +59,7 @@
     /* Nav Stub */
     .nav-stub {
         width: 100%;
-        padding: 20px 40px;
+        padding: 5px 40px;
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -124,16 +124,16 @@
     /* Header */
     .header {
         text-align: center;
-        margin-top: 40px;
-        margin-bottom: 40px;
+        margin-top: 8px;
+        margin-bottom: 16px;
         padding: 0 20px;
     }
 
     .header h1 {
         font-family: 'Plus Jakarta Sans', sans-serif;
-        font-size: 48px;
+        font-size: 42px;
         font-weight: 800;
-        margin-bottom: 16px;
+        margin-bottom: 12px;
         background: linear-gradient(135deg, #fff 0%, #aaa 100%);
         background-clip: text;
         -webkit-background-clip: text;
@@ -142,32 +142,38 @@
 
     .header p {
         color: var(--text-secondary);
-        font-size: 18px;
+        font-size: 16px;
         max-width: 600px;
         margin: 0 auto;
     }
 
     /* Currency Toggle */
     .currency-toggle-wrapper {
-        margin-bottom: 40px;
-        background: #111;
+        margin-bottom: 24px;
+        background: #0A0A0A;
         border: 1px solid #222;
         padding: 4px;
         border-radius: 100px;
         display: inline-flex;
         position: relative;
+        overflow: hidden;
+        min-width: 200px;
+        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.5);
     }
 
     .currency-option {
-        padding: 8px 24px;
+        flex: 1;
+        padding: 10px 0;
         border-radius: 100px;
         cursor: pointer;
-        font-size: 14px;
-        font-weight: 600;
-        color: #666;
-        transition: 0.2s;
+        font-size: 13px;
+        font-weight: 700;
+        color: #555;
+        transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         z-index: 2;
         position: relative;
+        text-align: center;
+        width: 100px;
     }
 
     .currency-option.active {
@@ -182,113 +188,150 @@
         height: calc(100% - 8px);
         background: #FFD700;
         border-radius: 100px;
-        transition: none;
-        /* Instant toggle, no animation */
         z-index: 1;
-    }
-
-    /* Prevent flicker on load */
-    .no-transition .toggle-bg {
-        transition: none !important;
+        transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 2px 10px rgba(255, 215, 0, 0.3);
     }
 
     /* Pricing Grid */
     .pricing-grid {
         display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 32px;
-        max-width: 900px;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px;
+        max-width: 1100px;
         width: 100%;
-        padding: 0 20px 80px 20px;
+        padding: 0 20px 40px 20px;
+        margin: 0 auto;
     }
 
-    /* Card Styles */
+    /* Card Styles - CARD IN CARD (Apple Style) */
     .pricing-card {
-        background: var(--card-bg);
-        border: 1px solid var(--border-color);
-        border-radius: 24px;
-        padding: 40px;
+        background: #080808;
+        border: 1px solid #141414;
+        border-radius: 32px;
+        padding: 12px;
         display: flex;
         flex-direction: column;
+        text-align: left;
         position: relative;
-        transition: 0.2s;
-        overflow: hidden;
     }
 
-    /* Reduced Hover as requested */
-    .pricing-card:hover {
+    .plan-header-box {
+        background: #111111;
+        border: 1px solid #1A1A1A;
+        border-radius: 24px;
+        padding: 30px;
+        display: flex;
+        flex-direction: column;
+        transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        z-index: 2;
+        position: relative;
+    }
+
+    .pricing-card:hover .plan-header-box {
+        transform: translateY(-4px);
         border-color: #333;
     }
 
-    .pricing-card.pro {
-        border-color: var(--accent-purple);
-        background: linear-gradient(180deg, rgba(139, 92, 246, 0.05) 0%, rgba(15, 15, 15, 1) 100%);
-        box-shadow: 0 20px 40px -10px rgba(139, 92, 246, 0.15);
+    .pricing-card.starter .plan-header-box {
+        border-color: rgba(139, 92, 246, 0.2);
     }
 
-    .card-header {
-        margin-bottom: 32px;
+    .pricing-card.pro .plan-header-box {
+        border-color: rgba(255, 215, 0, 0.2);
     }
 
     .plan-name {
-        font-family: 'Plus Jakarta Sans', sans-serif;
-        font-size: 24px;
+        font-size: 13px;
         font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 2px;
         margin-bottom: 8px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
+        color: #666;
     }
 
     .plan-price {
-        font-size: 42px;
+        font-size: 44px;
         font-weight: 800;
         font-family: 'Plus Jakarta Sans', sans-serif;
         color: #fff;
+        margin-bottom: 12px;
+        display: flex;
+        align-items: baseline;
+        gap: 4px;
     }
 
     .plan-price span {
         font-size: 16px;
-        color: var(--text-secondary);
+        color: #555;
         font-weight: 500;
     }
 
-    .features-list {
-        list-style: none;
-        margin-bottom: 40px;
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        gap: 16px;
+    .plan-desc {
+        color: #888;
+        font-size: 14px;
+        line-height: 1.5;
+        margin-bottom: 0;
     }
 
-    .features-list li {
+    .features-container {
+        padding: 30px 20px;
+        flex: 1;
+    }
+
+    /* Features List */
+    .feature-list {
+        margin-top: 15px;
+        padding-top: 0;
+        border-top: none;
+        list-style: none;
+    }
+
+    .feature-item {
         display: flex;
         align-items: center;
         gap: 12px;
-        color: #ccc;
-        font-size: 15px;
+        margin-bottom: 16px;
+        font-size: 14px;
+        color: #AAA;
     }
 
-    .features-list li i {
-        color: var(--success);
+    .feature-item i {
         font-size: 18px;
+        color: #fff;
     }
 
-    .pricing-card.pro .features-list li i {
-        color: var(--accent-purple);
-    }
-
-    .pricing-card.pro .features-list li i.bi-star-fill {
+    .feature-item .val-gold {
         color: #FFD700;
+        font-weight: 600;
     }
 
+    .feature-item .val-purple {
+        color: #A78BFA;
+        font-weight: 600;
+    }
+
+    .feature-item .val-dim {
+        color: #444;
+    }
+
+    .feature-subhead {
+        font-size: 11px;
+        font-weight: 800;
+        color: #555;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 20px;
+        display: block;
+    }
+
+    /* Buttons */
     .btn-plan {
         width: 100%;
-        padding: 16px;
-        border-radius: 12px;
+        padding: 14px;
+        border-radius: 10px;
         font-weight: 700;
-        font-size: 16px;
+        font-size: 14px;
         cursor: pointer;
         transition: 0.2s;
         border: none;
@@ -299,33 +342,33 @@
 
     .btn-basic {
         background: transparent;
-        border: 1px solid #333;
-        color: #fff;
+        border: 1px solid #222;
+        color: #444;
     }
-
-    /* .btn-basic:hover { background: rgba(255, 255, 255, 0.05); } */
 
     .btn-pro {
         background: #FFD700;
         color: #000;
-        box-shadow: 0 4px 15px rgba(255, 215, 0, 0.2);
     }
 
     .btn-pro:hover {
         background: #e6c200;
     }
 
-    .badge-recommended {
-        position: absolute;
-        top: 20px;
-        right: 20px;
-        background: rgba(139, 92, 246, 0.2);
-        color: #A78BFA;
-        font-size: 12px;
+    /* Tags */
+    .tag-badge {
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-size: 10px;
         font-weight: 700;
-        padding: 6px 12px;
-        border-radius: 50px;
-        border: 1px solid rgba(139, 92, 246, 0.3);
+        margin-left: 5px;
+        vertical-align: middle;
+    }
+
+    .badge-gold {
+        background: rgba(255, 215, 0, 0.2);
+        color: #FFD700;
+        border: 1px solid rgba(255, 215, 0, 0.3);
     }
 
     /* PAYMENT MODAL */
@@ -489,13 +532,25 @@
         transition: 0.2s;
     }
 
-    .btn-whatsapp:hover {
-        background: #128C7E;
+    /* Tooltip / Note styles can be added here if needed */
+    .table-note {
+        font-size: 11px;
+        color: #444;
+        margin-top: 5px;
+        display: block;
     }
 
-    @media (max-width: 768px) {
+    @media (max-width: 991px) {
         .pricing-grid {
-            grid-template-columns: 1fr;
+            grid-template-columns: repeat(3, minmax(280px, 1fr));
+            overflow-x: auto;
+            scroll-snap-type: x mandatory;
+            padding-bottom: 20px;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .pricing-card {
+            scroll-snap-align: center;
         }
 
         .yape-layout {
@@ -536,8 +591,7 @@
     </div>
 
     <div class="header entry-anim" style="animation-delay: 0.1s;">
-        <h1>Elige tu potencia</h1>
-        <p>Precios ajustados a tu realidad. Cancela cuando quieras.</p>
+        <h1>Elige tu experiencia</h1>
     </div>
 
     <!-- Currency Toggle -->
@@ -548,401 +602,290 @@
     </div>
 
     <div class="pricing-grid">
-
-        <!-- BASIC -->
-        <div class="pricing-card entry-anim" style="animation-delay: 0.3s;">
-            <div class="card-header">
-                <div class="plan-name">0$ Básico</div>
+        <!-- BSICO -->
+        <div class="pricing-card entry-anim" style="animation-delay: 0.2s;">
+            <div class="plan-header-box">
+                <div class="plan-name">Bsico Plan</div>
                 <div class="plan-price" id="price-basic">$0<span>/mes</span></div>
-                <p style="color:#666; font-size:14px; margin-top:8px;">Para arrancar con fuerza.</p>
+                <p class="plan-desc">Para productores que estn dando sus primeros pasos.</p>
+                <button id="btn-plan-free" class="btn-plan btn-basic" style="margin-top: 25px;">Elegir Bsico</button>
             </div>
 
-            <ul class="features-list">
-                <li style="color:#fff;"><i class="bi bi-check-circle-fill" style="color:#fff;"></i> <strong>100
-                        Subidas</strong></li>
-                <li style="opacity:0.6;"><i class="bi bi-check-circle-fill"></i> Analytics Básicas</li>
-                <li style="opacity:0.6;"><i class="bi bi-check-circle-fill"></i> Soporte por Email</li>
-                <li class="hook-glow" style="color:#fff;"><i class="bi bi-star-fill"></i> <strong>5% Comisión</strong>
-                </li>
-            </ul>
+            <div class="features-container">
+                <span class="feature-subhead">Empieza con:</span>
+                <ul class="feature-list">
+                    <li class="feature-item"><i class="bi bi-check-circle-fill"></i> 30 subidas de productos</li>
+                    <li class="feature-item"><i class="bi bi-check-circle-fill"></i> 5% Comision por Venta</li>
+                    <li class="feature-item"><i class="bi bi-check-circle-fill"></i> 1 YouTube + OFFSZN / mes</li>
+                    <li class="feature-item"><i class="bi bi-x-circle-fill val-dim"></i> <span class="val-dim">0
+                            Creditos Mensuales</span></li>
+                    <li class="feature-item"><i class="bi bi-check-circle-fill"></i> 1 Solicitud / dia</li>
+                    <li class="feature-item"><i class="bi bi-check-circle-fill"></i> Soporte Estndar</li>
+                </ul>
+            </div>
+        </div>
 
-            <button class="btn-plan btn-basic" disabled style="opacity:0.5; cursor:default;">Tu Plan Actual</button>
+        <!-- STARTER -->
+        <div class="pricing-card starter entry-anim" style="animation-delay: 0.3s;">
+            <div class="plan-header-box">
+                <div class="plan-name" style="color:#A78BFA;">Starter Plan</div>
+                <div class="plan-price" id="price-starter">$5<span>/mes</span></div>
+                <p class="plan-desc">Desbloquea mas libertad y empieza a escalar tu marca.</p>
+                <button id="btn-plan-starter" onclick="goToCheckout('starter')" class="btn-plan"
+                    style="background:#8B5CF6; color:#fff; border:none; margin-top: 25px;">Mejorar a Starter</button>
+            </div>
+
+            <div class="features-container">
+                <span class="feature-subhead">Todo en Bsico mas:</span>
+                <ul class="feature-list">
+                    <li class="feature-item"><i class="bi bi-check-circle-fill" style="color:#A78BFA;"></i> <span
+                            class="val-purple">60 subidas de productos</span></li>
+                    <li class="feature-item"><i class="bi bi-check-circle-fill" style="color:#A78BFA;"></i> <span
+                            class="val-purple">3% Comision por Venta</span></li>
+                    <li class="feature-item"><i class="bi bi-check-circle-fill" style="color:#A78BFA;"></i> <span
+                            class="val-purple">5 YouTube + OFFSZN / mes</span></li>
+                    <li class="feature-item"><i class="bi bi-check-circle-fill" style="color:#A78BFA;"></i> <span
+                            class="val-purple">60 Creditos Mensuales</span></li>
+                    <li class="feature-item"><i class="bi bi-check-circle-fill"></i> 5 Solicitudes / dia</li>
+                    <li class="feature-item"><i class="bi bi-check-circle-fill"></i> Insignia Morada</li>
+                    <li class="feature-item"><i class="bi bi-check-circle-fill"></i> Soporte Prioritario</li>
+                </ul>
+            </div>
         </div>
 
         <!-- PRO -->
         <div class="pricing-card pro entry-anim" style="animation-delay: 0.4s;">
-            <div class="badge-recommended">MÁS POPULAR</div>
-            <div class="card-header">
-                <div class="plan-name" style="color:#fff;">Pro</div>
-                <div class="plan-price" id="price-pro">$5<span>/mes</span></div>
-                <p style="color:#888; font-size:14px; margin-top:8px;">Todo ilimitado. 0 comisiones.</p>
+            <div class="plan-header-box">
+                <div class="plan-name" style="color:#FFD700;">PRO Plan <span class="tag-badge badge-gold">POPULAR</span>
+                </div>
+                <div class="plan-price" id="price-pro">$7<span>/mes</span></div>
+                <p class="plan-desc">La experiencia definitiva para los productores Elite.</p>
+                <button id="btn-plan-pro" onclick="goToCheckout('pro')" class="btn-plan btn-pro"
+                    style="margin-top: 25px;">Mejorar a
+                    PRO</button>
             </div>
 
-            <ul class="features-list">
-                <li style="color:#FFD700;"><i class="bi bi-check-circle-fill" style="color:#FFD700;"></i>
-                    <strong>Subidas Ilimitadas</strong>
-                </li>
-                <li style="color:#fff;"><i class="bi bi-palette-fill" style="color:#fff;"></i> <strong>Diseño de Tienda
-                        Premium</strong></li>
-                <li style="color:#fff;"><i class="bi bi-people-fill" style="color:#fff;"></i> <strong>Comunidad
-                        Exclusiva</strong></li>
-                <li style="color:#FFD700;"><i class="bi bi-patch-check-fill" style="color:#FFD700;"></i>
-                    <strong>Insignia PRO</strong>
-                </li>
-                <li style="color:#FFD700;"><i class="bi bi-star-fill" style="color:#FFD700;"></i> <strong>0%
-                        Comisión</strong></li>
-                <li style="opacity:0.6;"><i class="bi bi-check-circle-fill"></i> Analytics Avanzadas</li>
-                <li style="opacity:0.6;"><i class="bi bi-check-circle-fill"></i> Soporte Prioritario 24/7</li>
-            </ul>
-
-            <button onclick="openPaymentModal()" class="btn-plan btn-pro">Mejorar a Pro</button>
-        </div>
-
-    </div>
-
-    <!-- PAYMENT SELECTION MODAL -->
-    <div class="modal-overlay" id="paymentModal" onclick="if(event.target === this) closePaymentModal()">
-        <div class="payment-modal">
-            <div class="payment-header">
-                <h3 style="color:#fff; font-size:18px;">Elige Método de Pago</h3>
-                <button onclick="closePaymentModal()"
-                    style="background:none; border:none; color:#666; cursor:pointer; font-size:20px;"><i
-                        class="bi bi-x-lg"></i></button>
-            </div>
-            <div class="payment-body">
-                <p style="color:#888; font-size:14px; margin-bottom:10px;">Estás adquiriendo <strong>Pro</strong>
-                    por <span id="modalPriceDisplay" style="color:#fff; font-weight:700;">$5.00 / mes</span>.</p>
-
-                <!-- PayPal -->
-                <div id="cont-paypal">
-                    <button class="payment-method-btn" onclick="toggleMethod('paypal')">
-                        <div style="display:flex; align-items:center;">
-                            <i class="bi bi-paypal method-icon" style="color:#003087;"></i>
-                            <span>PayPal</span>
-                        </div>
-                        <i class="bi bi-chevron-down"></i>
-                    </button>
-                    <div id="details-paypal" class="method-details">
-                        <div id="paypal-button-container"></div>
-                        <p style="color:#666; font-size:12px; margin-top:10px; text-align:center;">¿Problemas? <a
-                                href="#" onclick="openWhatsApp('general')" style="color:#888;">Contáctanos</a></p>
-                    </div>
-                </div>
-
-                <!-- Mercado Pago / Yape -->
-                <div id="cont-mp">
-                    <button class="payment-method-btn" onclick="toggleMethod('mp')">
-                        <div style="display:flex; align-items:center;">
-                            <i class="bi bi-qr-code-scan method-icon" style="color:#009EE3;"></i>
-                            <span>Yape </span>
-                        </div>
-                        <i class="bi bi-chevron-down"></i>
-                    </button>
-                    <div id="details-mp" class="method-details">
-                        <div class="yape-layout">
-                            <!-- Left: QR -->
-                            <div class="yape-left" style="text-align: center;">
-                                <!-- Cropped Container -->
-                                <div
-                                    style="width: 180px; height: 180px; overflow: hidden; border-radius: 12px; display: inline-block; margin-bottom: 8px; border: 2px solid #fff; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
-                                    <!-- Scale up and move down more -->
-                                    <img src="/images/yape.jpg"
-                                        style="width: 100%; height: 100%; object-fit: cover; object-position: center; transform: scale(1.35) translateY(15px);"
-                                        alt="Yape/Plin QR">
-                                </div>
-                                <br>
-                                <a href="/images/yape.jpg" download="OFFSZN_Yape_QR.jpg"
-                                    style="color:#888; font-size:12px; text-decoration:none; display:inline-block; border-bottom:1px dotted #888;">
-                                    <i class="bi bi-download"></i> Descargar Imagen Completa
-                                </a>
-                            </div>
-
-                            <!-- Right: Instructions -->
-                            <div class="yape-right">
-                                <p style="color:#fff; font-size:15px; margin-bottom:8px;">Escanea para yapear <strong
-                                        id="yapeAmount" style="color:#00D79D; font-size:18px;">S/ 19.00</strong></p>
-                                <p style="color:#aaa; font-size:13px; line-height:1.4; margin-bottom:15px;">
-                                    1. Abre tu Yape o Plin.<br>
-                                    2. Escanea el QR o descarga la imagen.<br>
-                                    3. Envía la captura para activar tu cuenta.
-                                </p>
-                                <a href="#" onclick="openWhatsApp('yape')" class="btn-whatsapp">
-                                    <i class="bi bi-whatsapp"></i> Enviar Comprobante
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Western Union -->
-                <div id="cont-wu">
-                    <button class="payment-method-btn" onclick="toggleMethod('wu')">
-                        <div style="display:flex; align-items:center;">
-                            <i class="bi bi-bank method-icon" style="color:#FFD700;"></i>
-                            <span>Western Union</span>
-                        </div>
-                        <i class="bi bi-chevron-down"></i>
-                    </button>
-                    <div id="details-wu" class="method-details">
-                        <p style="color:#ccc; font-size:13px; line-height:1.6;">
-                            <strong>Nombre:</strong> Wilbert Garay Sosa<br>
-                            <strong>DNI:</strong> 23847731<br>
-                            <strong>Destino:</strong> Lima<br>
-                            <strong>País:</strong> Perú<br>
-                            <br>
-                            <em style="color:#e6c200; font-size:12px;">* Las comisiones de envío/agencia son
-                                cubiertas por el cliente.</em><br><br>
-                        </p>
-                        <a href="#" onclick="openWhatsApp('wu')" class="btn-whatsapp">
-                            <i class="bi bi-whatsapp"></i> Enviar MTCN / Soporte
-                        </a>
-                    </div>
-                </div>
-
+            <div class="features-container">
+                <span class="feature-subhead">Todo en Starter mas:</span>
+                <ul class="feature-list">
+                    <li class="feature-item"><i class="bi bi-check-circle-fill" style="color:#FFD700;"></i> <span
+                            class="val-gold">Subidas ilimitadas de productos</span></li>
+                    <li class="feature-item"><i class="bi bi-check-circle-fill" style="color:#FFD700;"></i> <span
+                            class="val-gold">0% Comision por Venta</span></li>
+                    <li class="feature-item"><i class="bi bi-check-circle-fill" style="color:#FFD700;"></i> <span
+                            class="val-gold">30 YouTube + OFFSZN / mes</span></li>
+                    <li class="feature-item"><i class="bi bi-check-circle-fill" style="color:#FFD700;"></i> <span
+                            class="val-gold">100 Creditos Mensuales</span></li>
+                    <li class="feature-item"><i class="bi bi-check-circle-fill"></i> Solicitudes Ilimitadas</li>
+                    <li class="feature-item"><i class="bi bi-check-circle-fill"></i> Insignia Dorada</li>
+                    <li class="feature-item"><i class="bi bi-check-circle-fill"></i> Promocion en Feed</li>
+                    <li class="feature-item"><i class="bi bi-check-circle-fill"></i> Soporte 24/7 VIP</li>
+                </ul>
             </div>
         </div>
-    </div>
 
-    <!-- Supabase & Auth -->
+        <!-- SUCCESS MODAL (After Returning from MP) -->
+        <div class="modal-overlay" id="successModal" onclick="if(event.target === this) closeSuccessModal()">
+            <div class="payment-modal" style="text-align: center; padding: 40px 20px;">
+                <div style="font-size: 50px; color: #10b981; margin-bottom: 20px;">
+                    <i class="bi bi-check-circle-fill"></i>
+                </div>
+                <h3
+                    style="color:#fff; font-size:24px; margin-bottom: 10px; font-family: 'Plus Jakarta Sans', sans-serif;">
+                    Felicidades!</h3>
+                <p style="color:#aaa; font-size:16px; margin-bottom:25px;" id="successMessage">
+                    Tu pago ha sido procesado. Ahora eres nivel <strong id="successPlanName"
+                        style="color:#fff;">PRO</strong>. Empieza a usar tus beneficios.
+                </p>
+                <button onclick="window.location.href='/cuenta/dashboard.html'" class="btn-plan btn-pro"
+                    style="margin-top: 0;">
+                    Ir a mi Dashboard
+                </button>
+            </div>
+        </div>
 
-    <script src="/script/auth-guard.js"></script>
+        <!-- Supabase & Auth -->
 
-    <script>
-        // --- CURRENCY STATE ---
-        // Load saved currency or default to USD
-        let currentCurrency = localStorage.getItem('offszn_currency') || 'USD';
+        <script src="/script/auth-guard.js"></script>
 
-        const rates = {
-            'USD': { symbol: '$', price: 5, basic: 0, label: 'USD $' },
-            'PEN': { symbol: 'S/', price: 19, basic: 0, label: 'PEN S/' }
-        };
+        <script>
+            // --- CURRENCY STATE ---
+            // Load saved currency or default to USD
+            let currentCurrency = localStorage.getItem('offszn_currency') || 'USD';
 
-        // Initialize UI Immediately (No Flash)
-        const wrapper = document.querySelector('.currency-toggle-wrapper');
-        wrapper.classList.add('no-transition'); // Disable transition
+            const rates = {
+                'USD': { symbol: '$', starter: 5, pro: 7, basic: 0, label: 'USD $' },
+                'PEN': { symbol: 'S/', starter: 19, pro: 25, basic: 0, label: 'PEN S/' }
+            };
 
-        setCurrency(currentCurrency);
+            let selectedPlanForModal = 'pro';
 
-        // Re-enable transition after a small tick
-        setTimeout(() => {
-            wrapper.classList.remove('no-transition');
-        }, 50);
+            // Initialize UI Immediately (No Flash)
+            const wrapper = document.querySelector('.currency-toggle-wrapper');
+            wrapper.classList.add('no-transition'); // Disable transition
 
-        function setCurrency(curr) {
-            currentCurrency = curr;
-            localStorage.setItem('offszn_currency', curr);
+            setCurrency(currentCurrency);
 
-            // UI Toggle
-            document.querySelectorAll('.currency-option').forEach(el => el.classList.remove('active'));
-            document.getElementById('opt-' + curr).classList.add('active');
+            // Re-enable transition after a small tick
+            setTimeout(() => {
+                wrapper.classList.remove('no-transition');
+            }, 50);
 
-            const bg = document.getElementById('toggleBg');
-            bg.style.transform = curr === 'PEN' ? 'translateX(100%)' : 'translateX(0)';
+            function setCurrency(curr) {
+                currentCurrency = curr;
+                localStorage.setItem('offszn_currency', curr);
 
-            // Update Text
-            const data = rates[curr];
-            document.getElementById('price-pro').innerHTML = `${data.symbol}${data.price}<span>/mes</span>`;
-            document.getElementById('price-basic').innerHTML = `${data.symbol}${data.basic}<span>/mes</span>`;
+                // UI Toggle
+                document.querySelectorAll('.currency-option').forEach(el => el.classList.remove('active'));
+                document.getElementById('opt-' + curr).classList.add('active');
 
-            // Update Yape Amount Text
-            if (curr === 'PEN') {
-                document.getElementById('yapeAmount').innerText = 'S/ 19.00';
-            } else {
-                document.getElementById('yapeAmount').innerText = '$5.00';
+                const bg = document.getElementById('toggleBg');
+                bg.style.transform = curr === 'PEN' ? 'translateX(100%)' : 'translateX(0)';
+
+                // Update Text
+                const data = rates[curr];
+                document.getElementById('price-starter').innerHTML = `${data.symbol}${data.starter}<span>/mes</span>`;
+                document.getElementById('price-pro').innerHTML = `${data.symbol}${data.pro}<span>/mes</span>`;
+                document.getElementById('price-basic').innerHTML = `${data.symbol}${data.basic}<span>/mes</span>`;
             }
-        }
 
-        // --- PAYMENT MODAL ---
-        function openPaymentModal() {
-            // Update Modal Price Display
-            const data = rates[currentCurrency];
-            document.getElementById('modalPriceDisplay').innerText = `${data.symbol}${data.price.toFixed(2)} / mes`;
-
-            document.getElementById('paymentModal').classList.add('active');
-
-            // --- FILTER METHODS BY CURRENCY (Requested Logic) ---
-            if (currentCurrency === 'PEN') {
-                // Soles: Only Yape
-                document.getElementById('cont-mp').style.display = 'block';
-                document.getElementById('cont-paypal').style.display = 'none';
-                document.getElementById('cont-wu').style.display = 'none';
-            } else {
-                // USD: PayPal & WU (Hide Yape/MP to avoid confusion or keep as option? User implied specific separation)
-                // Let's hide MP for USD to be clean as per user's "when soles only yape" checks.
-                document.getElementById('cont-mp').style.display = 'none';
-                document.getElementById('cont-paypal').style.display = 'block';
-                document.getElementById('cont-wu').style.display = 'block';
+            function goToCheckout(plan) {
+                window.location.href = `checkout.html?plan=${plan}&currency=${currentCurrency}`;
             }
-        }
 
-        function closePaymentModal() {
-            document.getElementById('paymentModal').classList.remove('active');
-            // Reset accordions
-            document.querySelectorAll('.method-details').forEach(el => el.classList.remove('show'));
-        }
+            // --- PLAN STATUS CHECK (NEW) ---
+            async function checkPlanStatus() {
+                try {
+                    const { data: { session } } = await window.supabaseClient.auth.getSession();
+                    if (!session) return;
 
-        function toggleMethod(methodId) {
-            // Close others
-            document.querySelectorAll('.method-details').forEach(el => {
-                if (el.id !== 'details-' + methodId) el.classList.remove('show');
-            });
-            // Toggle current
-            const target = document.getElementById('details-' + methodId);
-            target.classList.toggle('show');
+                    const { data: profile } = await window.supabaseClient
+                        .from('profiles')
+                        .select('plan')
+                        .eq('id', session.user.id)
+                        .single();
 
-            // If PayPal, render only if empty
-            if (methodId === 'paypal' && target.classList.contains('show')) {
-                renderPayPal();
-            }
-        }
-
-        // --- PAYPAL RENDER (One-Time Payment Mode) ---
-        let paypalRendered = false;
-        function renderPayPal() {
-            if (paypalRendered) return;
-            document.getElementById('paypal-button-container').innerHTML = '';
-
-            if (window.paypal) {
-                paypal.Buttons({
-                    style: {
-                        shape: 'rect',
-                        color: 'gold',
-                        layout: 'vertical',
-                        label: 'pay'
-                    },
-                    createOrder: function (data, actions) {
-                        return actions.order.create({
-                            purchase_units: [{
-                                description: "OFFSZN Pro Artist (1 Mes)",
-                                amount: {
-                                    value: '5.00' // $5.00 USD Fixed
-                                }
-                            }]
-                        });
-                    },
-                    onApprove: async function (data, actions) {
-                        // Capture the transaction
-                        const orderData = await actions.order.capture();
-                        console.log("Pago Capturado:", orderData);
-
-                        // AUTOMATIC PROVISIONING LOGIC
-                        if (window.supabaseClient && window.currentUser) {
-                            try {
-                                const { error } = await window.supabaseClient
-                                    .from('subscriptions')
-                                    .insert({
-                                        user_id: window.currentUser.id,
-                                        plan_id: 'pro_monthly_manual',
-                                        status: 'active',
-                                        provider: 'paypal_onetime',
-                                        provider_subscription_id: orderData.id,
-                                        // Set expiration 30 days from now
-                                        current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
-                                    });
-
-                                if (error) throw error;
-
-                                await window.supabaseClient
-                                    .from('profiles')
-                                    .update({ plan: 'pro' })
-                                    .eq('id', window.currentUser.id);
-
-                                alert("¡Pago Exitoso! Tu cuenta ahora es PRO por 30 días 🌟");
-                                window.location.href = 'dashboard.html';
-
-                            } catch (err) {
-                                console.error("Error provisioning:", err);
-                                alert("Pago recibido, pero hubo un error actualizando tu perfil. Contacta a soporte.");
-                            }
-                        } else {
-                            alert("Pago recibido. Por favor recarga la página.");
-                        }
+                    if (profile) {
+                        const currentPlan = profile.plan || 'free';
+                        updatePlanButtons(currentPlan);
                     }
-                }).render('#paypal-button-container');
-                paypalRendered = true;
-            } else {
-                document.getElementById('paypal-button-container').innerText = "Error loading PayPal SDK";
-            }
-        }
-
-        // --- WHATSAPP SUPPORT ---
-        // --- WHATSAPP SUPPORT ---
-        function openWhatsApp(type) {
-            if (type === 'wu') {
-                window.open('https://wa.link/f6re2z', '_blank');
-            } else if (type === 'yape') {
-                window.open('https://wa.link/l31al5', '_blank');
-            } else {
-                // General contact (Calculated fallback or direct link)
-                window.open('https://wa.link/l31al5', '_blank');
-            }
-        }
-    </script>
-    <!-- Particles Background Script (Vanilla JS - No Dependencies) -->
-    <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-            canvas.style.position = 'fixed';
-            canvas.style.top = '0';
-            canvas.style.left = '0';
-            canvas.style.width = '100%';
-            canvas.style.height = '100%';
-            canvas.style.zIndex = '-1'; // Behind everything
-            canvas.style.pointerEvents = 'none';
-            document.body.prepend(canvas);
-
-            let particles = [];
-            const particleCount = 60; // Enough for subtle effect
-
-            function resize() {
-                canvas.width = window.innerWidth;
-                canvas.height = window.innerHeight;
-            }
-            window.addEventListener('resize', resize);
-            resize();
-
-            class Particle {
-                constructor() {
-                    this.x = Math.random() * canvas.width;
-                    this.y = Math.random() * canvas.height;
-                    this.vx = (Math.random() - 0.5) * 0.15; // Slow movement
-                    this.vy = (Math.random() - 0.5) * 0.15;
-                    this.size = Math.random() * 1.5;
-                    this.alpha = Math.random() * 0.4 + 0.1;
-                }
-                update() {
-                    this.x += this.vx;
-                    this.y += this.vy;
-                    if (this.x < 0) this.x = canvas.width;
-                    if (this.x > canvas.width) this.x = 0;
-                    if (this.y < 0) this.y = canvas.height;
-                    if (this.y > canvas.height) this.y = 0;
-                }
-                draw() {
-                    ctx.fillStyle = `rgba(255, 255, 255, ${this.alpha})`;
-                    ctx.beginPath();
-                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                    ctx.fill();
+                } catch (err) {
+                    console.error("Error checking plan status:", err);
                 }
             }
 
-            // Init
-            for (let i = 0; i < particleCount; i++) {
-                particles.push(new Particle());
-            }
+            function updatePlanButtons(activePlan) {
+                const plans = ['free', 'starter', 'pro'];
+                plans.forEach(p => {
+                    const btn = document.getElementById(`btn-plan-${p}`);
+                    if (!btn) return;
 
-            function animate() {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                particles.forEach(p => {
-                    p.update();
-                    p.draw();
+                    if (p === activePlan) {
+                        btn.innerText = 'Tu Plan Actual';
+                        btn.disabled = true;
+                        btn.style.opacity = '0.6';
+                        btn.style.cursor = 'default';
+                        btn.style.background = '#222';
+                        btn.style.color = '#888';
+                        btn.style.border = '1px solid #333';
+                        btn.removeAttribute('onclick');
+                    } else {
+                        // Upgrade/Downgrade labels could go here
+                    }
                 });
-                requestAnimationFrame(animate);
             }
-            animate();
-        });
-    </script>
+
+            // Run on load
+            document.addEventListener('DOMContentLoaded', checkPlanStatus);
+        </script>
+        <!-- Particles Background Script (Vanilla JS - No Dependencies) -->
+        <script>
+            document.addEventListener("DOMContentLoaded", () => {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                canvas.style.position = 'fixed';
+                canvas.style.top = '0';
+                canvas.style.left = '0';
+                canvas.style.width = '100%';
+                canvas.style.height = '100%';
+                canvas.style.zIndex = '-1'; // Behind everything
+                canvas.style.pointerEvents = 'none';
+                document.body.prepend(canvas);
+
+                let particles = [];
+                const particleCount = 60; // Enough for subtle effect
+
+                function resize() {
+                    canvas.width = window.innerWidth;
+                    canvas.height = window.innerHeight;
+                }
+                window.addEventListener('resize', resize);
+                resize();
+
+                class Particle {
+                    constructor() {
+                        this.x = Math.random() * canvas.width;
+                        this.y = Math.random() * canvas.height;
+                        this.vx = (Math.random() - 0.5) * 0.15; // Slow movement
+                        this.vy = (Math.random() - 0.5) * 0.15;
+                        this.size = Math.random() * 1.5;
+                        this.alpha = Math.random() * 0.4 + 0.1;
+                    }
+                    update() {
+                        this.x += this.vx;
+                        this.y += this.vy;
+                        if (this.x < 0) this.x = canvas.width;
+                        if (this.x > canvas.width) this.x = 0;
+                        if (this.y < 0) this.y = canvas.height;
+                        if (this.y > canvas.height) this.y = 0;
+                    }
+                    draw() {
+                        ctx.fillStyle = `rgba(255, 255, 255, ${this.alpha})`;
+                        ctx.beginPath();
+                        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                }
+
+                // Init
+                for (let i = 0; i < particleCount; i++) {
+                    particles.push(new Particle());
+                }
+
+                function animate() {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    particles.forEach(p => {
+                        p.update();
+                        p.draw();
+                    });
+                    requestAnimationFrame(animate);
+                }
+                animate();
+            });
+
+            // --- SUCCESS MODAL LOGIC & REDIRECTION ---
+            document.addEventListener('DOMContentLoaded', () => {
+                const urlParams = new URLSearchParams(window.location.search);
+                const isUpgradeSuccess = urlParams.get('upgrade') === 'success';
+                const planKey = urlParams.get('plan');
+
+                if (isUpgradeSuccess && planKey) {
+                    const planName = planKey === 'starter' ? 'STARTER' : 'PRO';
+                    const planColor = planKey === 'starter' ? '#A78BFA' : '#FFD700';
+
+                    document.getElementById('successPlanName').innerText = planName;
+                    document.getElementById('successPlanName').style.color = planColor;
+                    document.getElementById('successModal').classList.add('active');
+
+                    // Clean URL
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                }
+            });
+
+            function closeSuccessModal() {
+                document.getElementById('successModal').classList.remove('active');
+            }
+        </script>
 </body>
 
 </html>

@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Checkout - OFFSZN</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <script src="/env.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="/script/auth-utils.js?v=11"></script>
+
+    <style>
+        :root {
+            --bg-dark: #000000;
+            --bg-box: #0A0A0A;
+            --border-color: #1A1A1A;
+            --text-primary: #FFFFFF;
+            --text-secondary: #888888;
+            --accent-purple: #8B5CF6;
+            --accent-gold: #FFD700;
+            --yape-purple: #6A1EA5;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        /* ========== SINGLE FRAME ========== */
+        .checkout-box {
+            position: relative;
+            width: 100%;
+            background: var(--bg-box);
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            padding: 36px 32px;
+            display: flex;
+            gap: 32px;
+        }
+
+        /* PEN = horizontal (2 cols), USD = vertical (1 col) */
+        .checkout-box.layout-horizontal {
+            max-width: 750px;
+            flex-direction: row;
+        }
+
+        .checkout-box.layout-vertical {
+            max-width: 420px;
+            flex-direction: column;
+        }
+
+        /* Left / Right columns (PEN horizontal) */
+        .checkout-left {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            min-width: 0;
+        }
+
+        .checkout-right {
+            flex: 1.1;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            min-width: 0;
+        }
+
+        @media (max-width: 640px) {
+            .checkout-box.layout-horizontal {
+                flex-direction: column;
+                max-width: 420px;
+                gap: 20px;
+                padding: 28px 20px;
+            }
+        }
+
+        /* ========== X CLOSE BUTTON ========== */
+        .btn-close-x {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            border-radius: 50%;
+            transition: background 0.2s ease;
+            z-index: 5;
+        }
+
+        .btn-close-x:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .btn-close-x svg {
+            width: 16px;
+            height: 16px;
+            stroke: #666;
+            stroke-width: 2;
+            transition: stroke 0.2s ease;
+        }
+
+        .btn-close-x:hover svg {
+            stroke: #fff;
+        }
+
+        /* ========== BRAND HEADER ========== */
+        .brand-header {
+            text-align: center;
+        }
+
+        .brand-header img {
+            width: 38px;
+        }
+
+        /* ========== ORDER SUMMARY ========== */
+        .order-summary {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 20px;
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 14px;
+        }
+
+        .summary-row:last-child {
+            margin-bottom: 0;
+            padding-top: 14px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            font-weight: 700;
+            font-size: 18px;
+        }
+
+        .summary-row span:first-child {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .plan-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 100px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .badge-starter {
+            background: rgba(139, 92, 246, 0.1);
+            color: var(--accent-purple);
+            border: 1px solid rgba(139, 92, 246, 0.2);
+        }
+
+        .badge-pro {
+            background: rgba(255, 215, 0, 0.1);
+            color: var(--accent-gold);
+            border: 1px solid rgba(255, 215, 0, 0.2);
+        }
+
+        /* ========== MESSAGE BOX ========== */
+        #messageBox {
+            text-align: center;
+            font-size: 14px;
+            padding: 12px;
+            border-radius: 10px;
+            display: none;
+        }
+
+        #messageBox.error {
+            color: #ef4444;
+            background: rgba(239, 68, 68, 0.05);
+            border: 1px solid rgba(239, 68, 68, 0.1);
+        }
+
+        /* ========== BUTTONS ========== */
+        .btn-cancel {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            padding: 14px;
+            border-radius: 100px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            background: transparent;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-cancel:hover {
+            color: var(--text-primary);
+            border-color: rgba(255, 255, 255, 0.25);
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        /* PayPal loading skeleton */
+        #paypalLoading {
+            background: rgba(255, 255, 255, 0.04);
+            border-radius: 100px;
+            height: 55px;
+            animation: shimmer 1.5s infinite;
+        }
+
+        @keyframes shimmer {
+
+            0%,
+            100% {
+                opacity: 0.5;
+            }
+
+            50% {
+                opacity: 1;
+            }
+        }
+
+        /* ========== YAPE QR FLOW ========== */
+        .yape-flow {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .yape-steps {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .yape-step {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 12px 14px;
+            background: rgba(106, 30, 165, 0.06);
+            border: 1px solid rgba(106, 30, 165, 0.12);
+            border-radius: 14px;
+        }
+
+        .yape-step-num {
+            flex-shrink: 0;
+            width: 26px;
+            height: 26px;
+            background: var(--yape-purple);
+            color: #fff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 12px;
+        }
+
+        .yape-step-text {
+            font-size: 13px;
+            color: #ccc;
+            line-height: 1.5;
+        }
+
+        .yape-step-text strong {
+            color: #fff;
+        }
+
+        /* No white wrapper — transparent QR */
+        .yape-qr-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .yape-qr-wrapper img {
+            width: 200px;
+            height: 200px;
+            object-fit: contain;
+            border-radius: 12px;
+        }
+
+        .btn-whatsapp {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            padding: 15px;
+            border-radius: 100px;
+            border: none;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 15px;
+            background: #25D366;
+            color: #fff;
+            text-decoration: none;
+            transition: opacity 0.2s ease, transform 0.15s ease;
+        }
+
+        .btn-whatsapp:hover {
+            opacity: 0.9;
+            transform: scale(1.01);
+            color: #fff;
+        }
+
+        .btn-whatsapp:active {
+            transform: scale(0.99);
+        }
+
+        .yape-note,
+        .terms-note {
+            text-align: center;
+            font-size: 11px;
+            color: #555;
+            line-height: 1.6;
+        }
+
+        .yape-note a,
+        .terms-note a {
+            color: #888;
+            text-decoration: underline;
+            transition: color 0.2s ease;
+        }
+
+        .yape-note a:hover,
+        .terms-note a:hover {
+            color: #fff;
+        }
+
+        /* ========== GLOW ========== */
+        .bg-glow {
+            position: fixed;
+            width: 700px;
+            height: 700px;
+            background: radial-gradient(circle, rgba(255, 215, 0, 0.04) 0%, transparent 60%);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .bg-glow.starter {
+            background: radial-gradient(circle, rgba(139, 92, 246, 0.06) 0%, transparent 60%);
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="bg-glow" id="bgGlow"></div>
+
+    <!-- ============================================================
+         PEN LAYOUT (Horizontal — Yape QR)
+         ============================================================ -->
+    <div class="checkout-box layout-horizontal" id="checkoutPEN" style="display:none;">
+
+        <!-- X Close -->
+        <button class="btn-close-x" onclick="history.back()" aria-label="Cerrar">
+            <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+        </button>
+
+        <!-- Left column -->
+        <div class="checkout-left">
+            <div class="brand-header">
+                <img src="/images/LOGO-OFFSZN.png" alt="OFFSZN">
+            </div>
+
+            <div class="order-summary">
+                <div class="summary-row">
+                    <span>Plan Seleccionado</span>
+                    <span id="planBadgePEN" class="plan-badge">---</span>
+                </div>
+                <div class="summary-row">
+                    <span>Frecuencia</span>
+                    <span style="color:#fff;">Mensual</span>
+                </div>
+                <div class="summary-row">
+                    <span>Total a Pagar</span>
+                    <span id="planPricePEN" style="color:#fff;">S/ 0.00</span>
+                </div>
+            </div>
+
+            <a href="javascript:history.back()" class="btn-cancel">Cancelar y Volver</a>
+        </div>
+
+        <!-- Right column -->
+        <div class="checkout-right">
+            <div class="yape-flow" id="yapeFlow">
+                <div class="yape-steps">
+                    <div class="yape-step">
+                        <div class="yape-step-num">1</div>
+                        <div class="yape-step-text">
+                            <strong>Escanea el QR</strong> con tu app de Yape y envía el monto exacto.
+                        </div>
+                    </div>
+                    <div class="yape-step">
+                        <div class="yape-step-num">2</div>
+                        <div class="yape-step-text">
+                            <strong>Envía tu comprobante</strong> por WhatsApp con tu usuario de OFFSZN.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="yape-qr-wrapper">
+                    <img src="/images/yape.jpg" alt="QR Yape OFFSZN">
+                </div>
+
+                <a href="https://wa.link/2g75ar" target="_blank" rel="noopener" class="btn-whatsapp">
+                    <i class="bi bi-whatsapp" style="font-size:20px;"></i>
+                    Enviar comprobante por WhatsApp
+                </a>
+
+                <p class="yape-note">
+                    Tu plan se activará una vez verificado el pago.<br>
+                    Tiempo de activación: <strong>menos de 24 horas</strong>.<br><br>
+                    Al pagar, aceptas los <a href="/legal/terminos-de-servicio.html" target="_blank"
+                        rel="noopener">Términos y Condiciones</a> de OFFSZN.
+                </p>
+            </div>
+
+            <div id="messageBoxPEN" class="error"></div>
+        </div>
+    </div>
+
+    <!-- ============================================================
+         USD LAYOUT (Vertical — PayPal)
+         ============================================================ -->
+    <div class="checkout-box layout-vertical" id="checkoutUSD" style="display:none;">
+
+        <!-- X Close -->
+        <button class="btn-close-x" onclick="history.back()" aria-label="Cerrar">
+            <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+        </button>
+
+        <div class="brand-header">
+            <img src="/images/LOGO-OFFSZN.png" alt="OFFSZN">
+        </div>
+
+        <div class="order-summary">
+            <div class="summary-row">
+                <span>Plan Seleccionado</span>
+                <span id="planBadgeUSD" class="plan-badge">---</span>
+            </div>
+            <div class="summary-row">
+                <span>Frecuencia</span>
+                <span style="color:#fff;">Mensual</span>
+            </div>
+            <div class="summary-row">
+                <span>Total a Pagar</span>
+                <span id="planPriceUSD" style="color:#fff;">$0.00</span>
+            </div>
+        </div>
+
+        <!-- PayPal loading skeleton -->
+        <div id="paypalLoading" style="display:none;"></div>
+        <!-- PayPal buttons -->
+        <div id="paypal-button-container"></div>
+
+        <p class="terms-note">
+            Al pagar, aceptas los <a href="/legal/terminos-de-servicio.html" target="_blank" rel="noopener">Términos y
+                Condiciones</a> de OFFSZN.
+        </p>
+
+        <div id="messageBoxUSD" class="error"></div>
+
+        <a href="javascript:history.back()" class="btn-cancel">Cancelar y Volver</a>
+    </div>
+
+    <script src="/script/auth-guard.js"></script>
+
+    <script>
+        const API_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+            ? 'http://localhost:3000'
+            : 'https://offszn-oc7c.onrender.com';
+
+        const VALID_PLANS = ['starter', 'pro'];
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const rawPlanId = urlParams.get('plan');
+        const selectedPlanId = VALID_PLANS.includes(rawPlanId) ? rawPlanId : null;
+        const rawCurrency = (urlParams.get('currency') || localStorage.getItem('offszn_currency') || 'USD').toUpperCase();
+        const selectedCurrency = (rawCurrency === 'PEN' || rawCurrency === 'USD') ? rawCurrency : 'USD';
+
+        const plans = {
+            starter: { name: 'Starter Plan', priceUSD: '$5.00', pricePEN: 'S/ 19.00', badgeClass: 'badge-starter', glow: 'starter' },
+            pro: { name: 'PRO Plan', priceUSD: '$7.00', pricePEN: 'S/ 25.00', badgeClass: 'badge-pro', glow: '' }
+        };
+
+        function escapeHTML(str) {
+            const d = document.createElement('div');
+            d.textContent = str;
+            return d.innerHTML;
+        }
+
+        function showMessage(msg, currency) {
+            const id = currency === 'PEN' ? 'messageBoxPEN' : 'messageBoxUSD';
+            const box = document.getElementById(id);
+            box.textContent = msg;
+            box.style.display = 'block';
+        }
+
+        async function getAuthToken() {
+            try {
+                if (window.supabaseClient) {
+                    const { data } = await window.supabaseClient.auth.getSession();
+                    return data?.session?.access_token || '';
+                }
+            } catch (e) { /* silent */ }
+            return localStorage.getItem('sb-qtjpvztpgfymjhhpoouq-auth-token')
+                ? JSON.parse(localStorage.getItem('sb-qtjpvztpgfymjhhpoouq-auth-token'))?.access_token || ''
+                : '';
+        }
+
+        // ================================================
+        //  PAYPAL FLOW  (USD — vertical layout)
+        // ================================================
+        async function initPayPalFlow(planId) {
+            const clientId = window.PAYPAL_CLIENT_ID;
+            if (!clientId) { showMessage('Error de configuración PayPal.', 'USD'); return; }
+
+            document.getElementById('paypalLoading').style.display = 'block';
+
+            const script = document.createElement('script');
+            script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&currency=USD&disable-funding=credit,card&merchant-id=MXV5F6X8JXG4S`;
+            script.setAttribute('data-sdk-integration-source', 'button-factory');
+
+            script.onload = () => {
+                document.getElementById('paypalLoading').style.display = 'none';
+
+                paypal.Buttons({
+                    style: { layout: 'vertical', color: 'white', shape: 'pill', label: 'pay', height: 50 },
+
+                    createOrder: async () => {
+                        const token = await getAuthToken();
+                        const res = await fetch(`${API_URL}/api/subscriptions/paypal/create`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                            body: JSON.stringify({ plan: planId })
+                        });
+                        const data = await res.json();
+                        if (!res.ok) throw new Error(data.error || 'Error al crear orden PayPal.');
+                        return data.id;
+                    },
+
+                    onApprove: async (ppData) => {
+                        const token = await getAuthToken();
+                        const res = await fetch(`${API_URL}/api/subscriptions/paypal/capture`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                            body: JSON.stringify({ orderID: ppData.orderID, plan: planId })
+                        });
+                        const result = await res.json();
+                        if (!res.ok) { showMessage(result.error || 'Error al confirmar pago.', 'USD'); return; }
+                        if (result.status === 'approved') {
+                            window.location.href = `/cuenta/planes.html?upgrade=success&plan=${planId}`;
+                        }
+                    },
+
+                    onError: () => {
+                        showMessage('Ocurrió un error con PayPal. Intenta de nuevo.', 'USD');
+                    }
+                }).render('#paypal-button-container');
+            };
+
+            script.onerror = () => { showMessage('No se pudo cargar PayPal. Recarga la página.', 'USD'); };
+            document.head.appendChild(script);
+        }
+
+        // ================================================
+        //  MAIN INIT
+        // ================================================
+        async function initCheckout() {
+            if (!selectedPlanId) {
+                window.location.href = 'planes.html';
+                return;
+            }
+
+            const planData = plans[selectedPlanId];
+
+            if (planData.glow) document.getElementById('bgGlow').classList.add(planData.glow);
+
+            if (selectedCurrency === 'PEN') {
+                // Show horizontal layout
+                const penBox = document.getElementById('checkoutPEN');
+                penBox.style.display = 'flex';
+
+                const badge = document.getElementById('planBadgePEN');
+                badge.textContent = planData.name.toUpperCase();
+                badge.className = `plan-badge ${planData.badgeClass}`;
+                document.getElementById('planPricePEN').textContent = planData.pricePEN;
+
+                document.getElementById('yapeFlow').style.display = 'flex';
+            } else {
+                // Show vertical layout
+                const usdBox = document.getElementById('checkoutUSD');
+                usdBox.style.display = 'flex';
+
+                const badge = document.getElementById('planBadgeUSD');
+                badge.textContent = planData.name.toUpperCase();
+                badge.className = `plan-badge ${planData.badgeClass}`;
+                document.getElementById('planPriceUSD').textContent = planData.priceUSD;
+
+                await initPayPalFlow(selectedPlanId);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', initCheckout);
+    </script>
+</body>
+
+</html>

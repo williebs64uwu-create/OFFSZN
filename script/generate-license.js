@@ -9,7 +9,7 @@ if (!supabase) {
 
 export async function generarLicencia(purchaseData) {
   try {
-    console.log('🔄 Generando licencia dinámica...', purchaseData);
+    // console.log('🔄 Generando licencia dinámica...', purchaseData);
 
     const {
       productName,
@@ -95,6 +95,13 @@ export async function generarLicencia(purchaseData) {
       if (videoProjects !== "UNLIMITED") videoProjects = `up to ${videoProjects} projects`;
     }
 
+    // 5. Advanced Logic (Publishing, Royalties, Credits)
+    const producerPublishing = config.publishing ?? 50;
+    const licenseePublishing = 100 - producerPublishing;
+    const producerRoyalties = config.royalties ?? 0;
+    const creditsValue = `Produced by ${producerName}`;
+    const thankYou = config.thankYou || "";
+
     // 2. The Master Template text (Comprehensive Version)
     const template = `Non-Exclusive ${licenseName} Agreement
 
@@ -123,7 +130,7 @@ b. The Licensee is permitted to:
 
 For clarity, this License does not permit the sale, distribution, or exploitation of the Beat in its original, unmodified form. Any unauthorized sale constitutes a material breach.
 
-i. Royalties: Licensee shall not be required to account for or pay any royalties to the Producer derived from the exploitation of the New Song, with the exception of mechanical royalties.
+i. Royalties: Licensee shall not be required to account for or pay any royalties to the Producer derived from the exploitation of the New Song, with the exception of mechanical royalties and a ${producerRoyalties}% share of any net income derived from the New Song as specified in the ${producerPublishing}/${licenseePublishing} split.
 
 Restrictions on the Use of the Beat:
 I. Rights are NON-TRANSFERABLE.
@@ -137,10 +144,10 @@ VI. The New Song is a "derivative work".
 The Producer remains the sole owner of the Beat.
 a. Licensee does not own the master or sound recording rights in the New Song (only the lyrics/melody they added).
 b. Publishing Splits:
-- Licensee owns 50% of the Writer’s Share.
-- Producer owns 50% of the Writer’s Share.
-• The Producer shall own and administer 50% of the Publisher’s Share.
-• Licensee must register these shares with their PRO (ASCAP/BMI/etc) identifying the Producer as a 50% owner.
+- Licensee owns ${licenseePublishing}% of the Writer’s Share.
+- Producer owns ${producerPublishing}% of the Writer’s Share.
+• The Producer shall own and administer ${producerPublishing}% of the Publisher’s Share.
+• Licensee must register these shares with their PRO (ASCAP/BMI/etc) identifying the Producer as a ${producerPublishing}% owner.
 c. Acceptance: Licensee accepts these terms by paying the License Fee.
 d. Submission of Final Song: Licensee agrees to deliver the final mixed version of the New Song to Producer for approval solely to ensure accurate crediting.
 
@@ -150,7 +157,7 @@ Producer agrees to issue a mechanical license for any "Controlled Composition".
 • International: Industry-wide prevailing rate.
 
 7. Credit
-a. Licensee shall credit Producer as "Produced by ${producerName}" (or Producer's Brand Name) on all releases.
+a. Licensee shall credit Producer as "${creditsValue}" on all releases.
 b. Licensee shall check all proofs for accuracy.
 c. Failure to credit: Licensee must use reasonable efforts to cure any mistakes immediately.
 
@@ -183,21 +190,65 @@ IN WITNESS WHEREOF, the parties have executed this Agreement as of the date of p
     // Black Background
     page1.drawRectangle({ x: 0, y: 0, width, height, color: rgb(0, 0, 0) });
 
-    // Header Design
-    page1.drawText(isDrumKit ? 'OFFSZN' : 'OFFSZN', {
-      x: 50, y: height - 80, size: 48, font: boldFont,
-      color: rgb(0.45, 0.04, 0.72)
+    // --- LOGO & HEADER ---
+    try {
+      // Use the PNG version for PDF embedding
+      const logoUrl = '/images/LOGO-OFFSZN.png';
+      const logoBytes = await fetch(logoUrl).then(res => res.arrayBuffer());
+      const logoImage = await pdfDoc.embedPng(logoBytes);
+
+      const targetWidth = 160; // Slightly smaller for better proportions
+      const logoDims = logoImage.scale(targetWidth / logoImage.width);
+
+      // Ensure it doesn't clip (50pt margin from top)
+      const logoY = height - 40 - logoDims.height;
+
+      page1.drawImage(logoImage, {
+        x: 50,
+        y: logoY,
+        width: logoDims.width,
+        height: logoDims.height,
+      });
+    } catch (err) {
+      console.warn("Logo not found or could not be loaded, skipping image header.", err);
+      // Fallback text if image fails
+      page1.drawText('OFFSZN', {
+        x: 50, y: height - 100, size: 40, font: boldFont,
+        color: rgb(0.45, 0.04, 0.72)
+      });
+    }
+
+    // --- ISSUANCE & VERIFICATION DATA ---
+    const verificationHash = btoa(orderId + buyerEmail).substring(0, 16).toUpperCase();
+    // Add internal metadata to the PDF document
+    pdfDoc.setProducer('OFFSZN Platform');
+    pdfDoc.setCreator('OFFSZN Legal Engine');
+    pdfDoc.setSubject(`Verification Code: ${verificationHash}`);
+    pdfDoc.setKeywords(['OFFSZN', orderId, verificationHash, 'Peru']);
+
+    // Display verification data (top right area)
+    const topInfoY = height - 60;
+    const rightInfoX = width - 230;
+
+    page1.drawText(`OFFSZN AUTHENTICITY CHECK`, {
+      x: rightInfoX, y: topInfoY, size: 7, font: boldFont, color: rgb(0.4, 0.4, 0.4)
+    });
+    page1.drawText(`CODE: ${verificationHash}`, {
+      x: rightInfoX, y: topInfoY - 10, size: 7, font, color: rgb(0.4, 0.4, 0.4)
+    });
+    page1.drawText(`ISSUED: LIMA, PERU`, {
+      x: rightInfoX, y: topInfoY - 20, size: 7, font, color: rgb(0.4, 0.4, 0.4)
     });
 
     page1.drawText(isDrumKit ? 'PURCHASE INVOICE' : 'LICENSE CERTIFICATE', {
-      x: 50, y: height - 120, size: 18, font: font,
+      x: 50, y: height - 135, size: 16, font: font,
       color: rgb(0.8, 0.8, 0.8)
     });
 
     page1.drawLine({
-      start: { x: 50, y: height - 140 },
-      end: { x: width - 50, y: height - 140 },
-      thickness: 2, color: rgb(0.45, 0.04, 0.72)
+      start: { x: 50, y: height - 150 },
+      end: { x: width - 50, y: height - 150 },
+      thickness: 1.5, color: rgb(0.45, 0.04, 0.72)
     });
 
     // Purchase Information Section
@@ -241,6 +292,15 @@ IN WITNESS WHEREOF, the parties have executed this Agreement as of the date of p
       yPos -= 25;
     });
 
+    // --- FOOTER INFO (Legalweight) ---
+    const footerY = 60;
+    page1.drawText('OFFSZN DIGITAL SIGNATURE & VERIFICATION SYSTEM', {
+      x: 50, y: footerY + 12, size: 7, font: boldFont, color: rgb(0.3, 0.3, 0.3)
+    });
+    page1.drawText('THIS LICENSE IS VALID GLOBALLY BUT GOVERNED BY THE LAWS OF LIMA, PERU.', {
+      x: 50, y: footerY + 2, size: 7, font, color: rgb(0.3, 0.3, 0.3)
+    });
+
     if (isDrumKit) {
       yPos -= 80;
       page1.drawText('IMPORTANT NOTICE:', { x: 50, y: yPos, size: 12, font: boldFont, color: rgb(0.45, 0.04, 0.72) });
@@ -250,9 +310,6 @@ IN WITNESS WHEREOF, the parties have executed this Agreement as of the date of p
       page1.drawText(`to use the ${productType === 'preset' ? 'presets' : 'sounds'} contained in this pack for music production.`, { x: 50, y: yPos, size: 10, font, color: rgb(0.8, 0.8, 0.8) });
       yPos -= 15;
       page1.drawText('Resale or redistribution of the raw files is strictly prohibited.', { x: 50, y: yPos, size: 10, font, color: rgb(0.8, 0.8, 0.8) });
-
-      yPos -= 100;
-      page1.drawText('Jurisdiction: Lima, Peru', { x: 50, y: yPos, size: 8, font, color: rgb(0.4, 0.4, 0.4) });
     }
 
     // --- PAGE 2+: CONTRACT TEXT (Skip for Drum Kits) ---
@@ -322,7 +379,7 @@ IN WITNESS WHEREOF, the parties have executed this Agreement as of the date of p
     document.body.removeChild(link);
     URL.revokeObjectURL(link.href);
 
-    console.log('✅ Licencia generada y descargada');
+    // console.log('✅ Licencia generada y descargada');
     return true;
 
   } catch (error) {

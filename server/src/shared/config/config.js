@@ -8,6 +8,7 @@ config({ path: path.resolve(__dirname, '../../../.env') });
 
 export const PORT = process.env.PORT || 3000;
 export const SUPABASE_URL = process.env.SUPABASE_URL;
+export const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
 export const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY;
 
 export const JWT_SECRET = process.env.JWT_SECRET || process.env.SUPABASE_JWT_SECRET;

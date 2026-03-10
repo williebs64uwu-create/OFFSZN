@@ -1040,7 +1040,7 @@
             style="margin-bottom:10px; display:flex; align-items:center; justify-content:center; width:44px; height:44px;">
             <img src="../images/LOGO-OFFSZN.png" style="width:38px; mix-blend-mode: screen;"></a>
 
-        <!-- 1. GESTI�N -->
+        <!-- 1. GESTI?N -->
         <div style="width:40px; border-bottom:1px solid #222; margin:5px 0;"></div>
         <a href="/cuenta/dashboard.html" class="sidebar-icon-btn" title="Dashboard"><i class="bi bi-grid-fill"></i></a>
         <a href="/cuenta/mis-kits.html" class="sidebar-icon-btn active" title="Mis Beats/Kits"><i
@@ -1909,10 +1909,10 @@
                     // Extraer key si es URL completa
                     let key = pathOrUrl;
                     if (pathOrUrl.startsWith('http')) {
-                        // Intentar extraer la parte despu�s del dominio si es una URL p�blica
-                        // Esto depende de c�mo estructures tus URLs p�blicas.
-                        // Si guardaste el KEY en la BD (lo ideal),     �salo directo.
-                        // Si guardaste la URL p�blica, necesitamos parsearla.
+                        // Intentar extraer la parte despu?s del dominio si es una URL p?blica
+                        // Esto depende de c?mo estructures tus URLs p?blicas.
+                        // Si guardaste el KEY en la BD (lo ideal),     ?salo directo.
+                        // Si guardaste la URL p?blica, necesitamos parsearla.
                         // Asumiremos que si empieza con http, intentamos sacar el pathname sin la primera barra
                         try {
                             const urlObj = new URL(pathOrUrl);
@@ -1947,7 +1947,7 @@
                 } catch (e) {
                     console.warn(`?? Cleanup failed for R2 file ${pathOrUrl}:`, e);
                 }
-                return; // Terminar aqu� si era R2
+                return; // Terminar aqu? si era R2
             }
 
             // 2. LOGICA LEGACY (SUPABASE STORAGE)
@@ -2145,7 +2145,7 @@
                 content.innerHTML = `
                     <label style="color:#ccc; font-size:12px; font-weight:600;">Escribe las nuevas etiquetas separadas por coma</label>
                     <input type="text" id="bulkInputTags" class="elite-input" placeholder="Trap, Dark, Hard...">
-                    <div style="margin-top:8px; font-size:11px; color:#666;">Nota: Reemplazaé las etiquetas existentes.</div>
+                    <div style="margin-top:8px; font-size:11px; color:#666;">Nota: Reemplaza las etiquetas existentes.</div>
                 `;
             } else if (action === 'artwork') {
                 title.textContent = 'Cambiar Portada';
@@ -2407,7 +2407,10 @@
                 showToast("Producto eliminado", "success");
                 closeDeleteModal();
                 deselectAll();
-                setTimeout(() => loadProducts(currentTab, currentStatus), 500);
+                setTimeout(() => {
+                    loadProducts(currentTab, currentStatus);
+                    initUploadLimit(); // ?? Refresh counter after deletion
+                }, 500);
 
             } catch (e) {
                 console.error("Delete Error:", e);
@@ -2528,9 +2531,12 @@
 
         /* ===== UPLOAD LIMIT LOGIC ===== */
         async function initUploadLimit() {
-            // ðŸ”¥ CONFIG: UPLOAD LIMIT
-            const MAX_UPLOAD_LIMIT = 100; // RELEASE: Change to 50 if needed
-            // const MAX_UPLOAD_LIMIT = 50; 
+            // ?? PLAN-BASED UPLOAD LIMITS
+            const PLAN_LIMITS = {
+                free: 30,
+                starter: 60,
+                pro: Infinity // Unlimited
+            };
 
             const userId = localStorage.getItem('userId');
             if (!userId) return;
@@ -2544,12 +2550,7 @@
                     .single();
 
                 const userPlan = profile?.plan || 'free';
-
-                // If PRO, no limit
-                if (userPlan === 'pro') {
-                    // Optional: Show "Ilimitado" or just hide counter
-                    return;
-                }
+                const MAX_UPLOAD_LIMIT = PLAN_LIMITS[userPlan] || PLAN_LIMITS.free;
 
                 // 2. Count ALL Products (Active + Drafts)
                 const tables = [
@@ -2581,10 +2582,16 @@
                 });
 
                 // 3. Update UI (Inject Counter)
-                updateLimitUI(totalCount, MAX_UPLOAD_LIMIT);
+                if (userPlan === 'pro') {
+                    updateLimitUI(totalCount, Infinity);
+                } else {
+                    updateLimitUI(totalCount, MAX_UPLOAD_LIMIT);
+                }
 
-                // 4. Intercept Button
-                setupLimitInterceptor(totalCount, MAX_UPLOAD_LIMIT);
+                // 4. Intercept Button (only for non-pro)
+                if (userPlan !== 'pro') {
+                    setupLimitInterceptor(totalCount, MAX_UPLOAD_LIMIT);
+                }
 
             } catch (err) {
                 console.warn("Error checking upload limit:", err);
@@ -2595,10 +2602,15 @@
             const btn = document.getElementById('btnCreateNew');
             if (!btn) return;
 
+            // ?? FIX: Remove existing badge first (prevents stacking after re-render)
+            const existingBadge = btn.parentElement.querySelector('.limit-badge');
+            if (existingBadge) existingBadge.remove();
+
             // Create Badge
             const badge = document.createElement('div');
             badge.className = 'limit-badge';
-            badge.innerHTML = `<i class="bi bi-cloud-upload"></i> ${current}/${max}`;
+            const maxLabel = max === Infinity ? '8' : max;
+            badge.innerHTML = `<i class="bi bi-cloud-upload"></i> ${current}/${maxLabel}`;
             badge.style.cssText = `
                 position: absolute;
                 bottom: -24px;
@@ -2613,11 +2625,13 @@
             btn.parentElement.style.position = 'relative';
             btn.parentElement.appendChild(badge);
 
-            // Color warning if close to limit
-            if (current >= max) {
-                badge.style.color = '#ef4444';
-            } else if (current >= max * 0.8) {
-                badge.style.color = '#F59E0B';
+            // Color warning if close to limit (skip for unlimited)
+            if (max !== Infinity) {
+                if (current >= max) {
+                    badge.style.color = '#ef4444';
+                } else if (current >= max * 0.8) {
+                    badge.style.color = '#F59E0B';
+                }
             }
         }
 
@@ -2850,7 +2864,7 @@
 
                 // 3. PROCESS ALL ITEMS FOR COVERS (Sign URLs if needed)
                 await Promise.all(allItems.map(async item => {
-                    // ðŸ”¥ FIX: Check files_data.cover for drafts first
+                    // 🔥 FIX: Check files_data.cover for drafts first
                     // Ensure files_data is parsed if it's a string (Supabase quirk)
                     if (item.files_data && typeof item.files_data === 'string') {
                         try { item.files_data = JSON.parse(item.files_data); } catch (e) { console.warn('Failed to parse files_data', e); }
@@ -3444,7 +3458,7 @@
                 style="width:60px; height:60px; background:rgba(255, 215, 0, 0.1); border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 20px auto; border:1px solid rgba(255, 215, 0, 0.2);">
                 <i class="bi bi-rocket-takeoff-fill" style="font-size:24px; color:#FFD700;"></i>
             </div>
-            <h3 style="color:#fff; margin-bottom:12px;">Límite Alcanzado!</h3>
+            <h3 style="color:#fff; margin-bottom:12px;">¡Límite Alcanzado!</h3>
             <p style="color:#aaa; font-size:14px; line-height:1.5; margin-bottom:24px;">
                 Tu plan <strong>Básico</strong> permite hasta <strong>100 productos</strong> (incluyendo borradores).
                 <br><br>

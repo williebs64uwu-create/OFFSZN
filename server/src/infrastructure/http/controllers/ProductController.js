@@ -29,16 +29,18 @@ export const getAllProducts = async (req, res) => {
                 ? product.users.nickname
                 : 'Anónimo';
 
-            // Creamos un nuevo objeto limpio para el frontend
-            delete product.users; // Quitamos el objeto anidado 'users'
+            const p = { ...product };
+            delete p.users;
 
             return {
-                ...product,
+                ...p,
+                id: String(p.id),
+                producer_id: String(p.producer_id),
                 producer_nickname: producerNickname
             };
         });
 
-        res.status(200).json(formattedData); // Enviamos la data formateada
+        res.status(200).json(formattedData);
 
     } catch (err) {
         console.error("Error en getAllProducts (catch):", err.message);
@@ -75,6 +77,38 @@ export const createProduct = async (req, res) => {
             return res.status(400).json({ error: 'Un producto de pago debe tener un archivo MP3.' });
         }
 
+        // 🔥 PLAN-BASED UPLOAD LIMIT ENFORCEMENT
+        const PLAN_LIMITS = { free: 30, starter: 60, pro: Infinity };
+
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('plan')
+            .eq('id', userId)
+            .single();
+
+        const userPlan = profile?.plan || 'free';
+        const maxLimit = PLAN_LIMITS[userPlan] || PLAN_LIMITS.free;
+
+        if (maxLimit !== Infinity) {
+            // Count all products + drafts
+            const countTables = [
+                supabase.from('products').select('*', { count: 'exact', head: true }).eq('producer_id', userId).neq('status', 'deleted'),
+                supabase.from('beat_drafts').select('*', { count: 'exact', head: true }).eq('user_id', userId),
+                supabase.from('drumkit_drafts').select('*', { count: 'exact', head: true }).eq('user_id', userId),
+                supabase.from('loopkit_drafts').select('*', { count: 'exact', head: true }).eq('user_id', userId),
+                supabase.from('preset_drafts').select('*', { count: 'exact', head: true }).eq('user_id', userId)
+            ];
+
+            const results = await Promise.all(countTables);
+            const totalCount = results.reduce((sum, r) => sum + (r.count || 0), 0);
+
+            if (totalCount >= maxLimit) {
+                return res.status(403).json({
+                    error: `Has alcanzado el límite de ${maxLimit} productos para tu plan "${userPlan}". Mejora tu plan para subir más.`
+                });
+            }
+        }
+
         const productData = {
             producer_id: userId,
             name: title,
@@ -106,6 +140,11 @@ export const createProduct = async (req, res) => {
             .single();
 
         if (insertError) throw insertError;
+
+        if (newProduct) {
+            newProduct.id = String(newProduct.id);
+            newProduct.producer_id = String(newProduct.producer_id);
+        }
 
         res.status(201).json({ message: '¡Producto publicado exitosamente!', product: newProduct });
 
@@ -148,7 +187,7 @@ export const incrementPlayCount = async (req, res) => {
                 // DELETE old if exists, then INSERT new is a clean way to "Move to Top".
                 try {
                     await supabase.from('listening_history').delete().match({ user_id: userId, product_id: productId });
-                    await supabase.from('listening_history').insert({ user_id: userId, product_id: productId, played_at: new Date() });
+                    await supabase.from('listening_history').insert({ user_id: userId, product_id: productId, played_at: new Date().toISOString() });
                 } catch (e) {
                     console.error("History tracking error", e);
                 }

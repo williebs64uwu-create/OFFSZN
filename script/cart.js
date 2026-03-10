@@ -11,7 +11,66 @@ const CartManager = {
         user: null
     },
 
+    injectCartUIIfNeeded: function () {
+        if (!document.getElementById('globalCartPanel')) {
+            const cartHtml = `
+  <div class="overlay-backdrop" id="globalBackdrop" onclick="if(window.closeAllOverlays) window.closeAllOverlays()"></div>
+  <div class="side-panel" id="globalCartPanel">
+    <div class="panel-header">
+      <div class="panel-title" style="display: flex; align-items: center; gap: 12px;">
+        <div style="position: relative; display: flex;">
+          <i class="fas fa-shopping-cart" style="font-size: 0.9rem; opacity: 0.7;"></i>
+          <span id="cart-panel-count" class="notification-badge"
+            style="position: absolute; top: -8px; right: -8px; display: flex; transform: scale(0.85);">0</span>
+        </div>
+        MI SELECCIÓN
+      </div>
+      <button class="panel-close" onclick="if(window.closeAllOverlays) window.closeAllOverlays()">&times;</button>
+    </div>
+    <div class="panel-content" id="cart-items-container">
+      <div style="text-align:center; padding: 60px 0; color: #444;">
+        <i class="bi bi-cart-x" style="font-size: 3.5rem; opacity: 0.1; display: block; margin-bottom: 20px;"></i>
+        <p style="font-size: 0.9rem; color: #666; font-weight: 500;">No hay elementos en tu selección</p>
+      </div>
+    </div>
+    <div class="cart-total-section" id="cart-summary">
+      <div
+        style="display:flex; justify-content:space-between; margin-bottom:1.5rem; color:#fff; font-weight:800; font-size: 1.1rem; letter-spacing: -0.5px;">
+        <span
+          style="color: #666; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; font-weight: 700;">Subtotal</span>
+        <span id="cart-total-price">$0.00</span>
+      </div>
+      <button class="btn-checkout-global" id="cart-checkout-btn" onclick="window.location.href='/pages/checkout.html'">
+        PROCEDER AL PAGO
+      </button>
+
+      <div
+        style="margin-top: 20px; text-align: center; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 15px;">
+        <p style="font-size: 0.65rem; color: #666; margin-bottom: 10px; letter-spacing: 1px; font-weight: 700;">
+          METODOS DE PAGO SEGUROS</p>
+
+        <div
+          style="display: flex; gap: 12px; justify-content: center; align-items: center; opacity: 0.8; filter: grayscale(100%); transition: filter 0.3s;"
+          onmouseover="this.style.filter='grayscale(0%)'" onmouseout="this.style.filter='grayscale(100%)'">
+          <i class="fab fa-cc-paypal" style="font-size: 26px; color: #fff;"></i>
+          <i class="fab fa-cc-visa" style="font-size: 26px; color: #fff;"></i>
+          <i class="fab fa-cc-mastercard" style="font-size: 26px; color: #fff;"></i>
+
+          <div class="badge-yape">YAPE</div>
+          <div
+            style="background: #00d3de; color: white; font-size: 0.7rem; font-weight: 800; padding: 2px 6px; border-radius: 4px; display: flex; align-items: center;">
+            PLIN</div>
+        </div>
+      </div>
+    </div>
+  </div>`;
+            document.body.insertAdjacentHTML('beforeend', cartHtml);
+        }
+    },
+
     init: async function () {
+        this.injectCartUIIfNeeded();
+
         // UI Elements
         this.ui = {
             panel: document.getElementById('globalCartPanel'),
@@ -22,6 +81,7 @@ const CartManager = {
         };
 
         // Auth Listener
+
         const supabaseClient = window.supabaseClient; // Use global
 
         if (supabaseClient) {
@@ -226,6 +286,7 @@ const CartManager = {
 
         // 2. Calcular precios base
         this.state.items.forEach(i => {
+            if (!i.product) return;
             const price = parseFloat(i.variant_price) > 0 ? parseFloat(i.variant_price) : (parseFloat(i.product.price_basic) || 0);
             originalTotal += price * i.quantity;
         });
@@ -311,11 +372,12 @@ const CartManager = {
                 const displayPrice = parseFloat(item.variant_price) > 0 ? item.variant_price : item.product.price_basic;
                 const licName = item.license_name || item.product.product_type || 'Licencia';
                 const isFree = item.isPromotionFree;
+                const imgId = `cart-row-img-${item.product.id}`;
 
                 return `
                 <div class="cart-item-row" style="display:flex; flex-direction:column; gap:12px; margin-bottom:16px; padding-bottom:16px; border-bottom:1px solid rgba(255,255,255,0.05);">
                     <div style="display:flex; gap:14px; align-items: center;">
-                        <img src="${item.product.image_url}" style="width:56px; height:56px; object-fit:cover; border-radius:10px; border:1px solid rgba(255,255,255,0.05);">
+                        <img id="${imgId}" src="/images/portada-default.png" style="width:56px; height:56px; object-fit:cover; border-radius:10px; border:1px solid rgba(255,255,255,0.05);">
                         <div style="flex:1; display:flex; flex-direction:column; min-width: 0;">
                             <h4 style="margin:0; font-size:0.85rem; font-weight:700; color:#fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-transform: uppercase; letter-spacing: 0.3px;">${item.product.name}</h4>
                             <span style="font-size:0.75rem; color:#666; margin-top: 2px;">${licName}</span>
@@ -344,6 +406,17 @@ const CartManager = {
             ` : '';
 
             this.ui.container.innerHTML = promosHtml + itemsHtml;
+
+            // Async load images
+            this.state.items.forEach(item => {
+                const imgId = `cart-row-img-${item.product.id}`;
+                if (item.product.image_url && window.getAuthorizedUrl) {
+                    window.getAuthorizedUrl(item.product.image_url).then(url => {
+                        const img = document.getElementById(imgId);
+                        if (img && url) img.src = url;
+                    });
+                }
+            });
             if (this.ui.checkoutBtn) {
                 this.ui.checkoutBtn.disabled = false;
                 this.ui.checkoutBtn.style.opacity = '1';

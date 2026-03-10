@@ -21,6 +21,7 @@ window.StickyPlayer = (function () {
     let isNavigatingHistory = false;
     let playTimeout = null;
     let lastSyncTime = 0;
+    let loadingTrackId = null; // Race condition protection
 
     // Playback Tracking (Global to survive ws instance reuse)
     let actualPlayTime = 0;
@@ -43,8 +44,9 @@ window.StickyPlayer = (function () {
                     <div id="sp-badges" class="sp-badges" style="display:flex; gap:4px; margin-top:2px;"></div>
                 </div>
                 <div class="sp-actions">
-                    <button class="sp-icon-btn" id="sp-like-btn" title="Like"><i class="bi bi-heart"></i></button>
-                    <button class="sp-icon-btn" id="sp-dl-btn" title="Download"><i class="bi bi-download"></i></button>
+                    <button class="sp-icon-btn" id="sp-like-btn" title="Favorito"><i class="bi bi-heart"></i></button>
+                    <button class="sp-icon-btn" id="sp-share-btn" title="Compartir"><i class="bi bi-share"></i></button>
+                    <button class="sp-icon-btn" id="sp-dl-btn" title="Ir al producto"><i class="bi bi-download"></i></button>
                 </div>
             </div>
 
@@ -70,6 +72,9 @@ window.StickyPlayer = (function () {
                         </div>
                     </div>
                 </div>
+                <button class="sp-secondary-btn" id="sp-secondary-btn" style="display:none; background:rgba(255,255,255,0.05); border:1px solid #333; color:#fff; border-radius:20px; padding:8px 16px; font-size:0.85rem; font-weight:700; cursor:pointer; align-items:center; gap:6px; transition:0.2s;">
+                    <i class="bi bi-eye"></i> <span>DETALLES</span>
+                </button>
                 <button class="sp-buy-btn" id="sp-buy-btn">
                     <i class="bi bi-cart-plus"></i> <span id="sp-price-label">FREE</span>
                 </button>
@@ -92,7 +97,8 @@ window.StickyPlayer = (function () {
             volTrack: document.getElementById('sp-vol-track'),
             volFill: document.getElementById('sp-vol-fill'),
             buyBtn: document.getElementById('sp-buy-btn'),
-            priceLabel: document.getElementById('sp-price-label')
+            priceLabel: document.getElementById('sp-price-label'),
+            secondaryBtn: document.getElementById('sp-secondary-btn')
         };
 
         // Event Listeners
@@ -122,11 +128,28 @@ window.StickyPlayer = (function () {
             };
         }
 
+        if (els.secondaryBtn) {
+            els.secondaryBtn.onclick = (e) => {
+                e.stopPropagation();
+                if (currentTrack && currentTrack.is_custom_request && window.showRequestDetails) {
+                    window.showRequestDetails(currentTrack.request_data);
+                }
+            };
+        }
+
         const dlBtn = document.getElementById('sp-dl-btn');
         if (dlBtn) {
             dlBtn.onclick = (e) => {
                 e.stopPropagation();
                 handleDownloadClick();
+            };
+        }
+
+        const shareBtn = document.getElementById('sp-share-btn');
+        if (shareBtn) {
+            shareBtn.onclick = (e) => {
+                e.stopPropagation();
+                handleShareClick();
             };
         }
 
@@ -245,42 +268,48 @@ window.StickyPlayer = (function () {
     }
 
     // UPDATE PLAYLIST (Called from profile-public.js)
-    function updatePlaylist(tracks, artistUsername) {
-        playlist = tracks || [];
-        currentArtist = artistUsername;
-        playHistory = [];
-        console.log(`[StickyPlayer] Playlist updated: ${playlist.length} tracks from ${currentArtist} `);
+    function updatePlaylist(newList, contextName = 'unknown') {
+        if (!newList || !Array.isArray(newList)) return;
+        playlist = newList;
+        // console.log(`[StickyPlayer] Playlist updated: ${playlist.length} tracks from ${currentArtist} `);
     }
 
     // Unified Load Logic
     async function loadTrack(trackData, autoPlay = true, startTime = 0) {
         if (!container) init();
+        const thisTrackId = String(trackData.id);
+        loadingTrackId = thisTrackId;
+
         container.classList.add('visible');
 
-        // Update UI Text instantly without Skeletons
+        // History Logic: Push OLD track to history BEFORE switching
+        if (!isNavigatingHistory && currentTrack && String(currentTrack.id) !== thisTrackId) {
+            navigationHistory.push(currentTrack);
+            if (navigationHistory.length > 50) navigationHistory.shift();
+        }
+        isNavigatingHistory = false;
+
+        // Set current track ONCE (was previously set 3 times causing bugs)
         currentTrack = trackData;
 
-        // Remove skeleton classes completely since user requested instant visual updates
+        // Remove skeleton classes
         if (els.title) els.title.classList.remove('skeleton-text');
         if (els.artist) els.artist.classList.remove('skeleton-text');
         const wfContainer = document.getElementById('sp-waveform');
         if (wfContainer) wfContainer.classList.remove('skeleton-waveform');
 
-        currentTrack = trackData;
-        // History Logic: Push CURRENT track to history before switching
-        if (!isNavigatingHistory && currentTrack && currentTrack.id !== trackData.id) {
-            navigationHistory.push(currentTrack);
-            if (navigationHistory.length > 50) navigationHistory.shift();
-        }
-        isNavigatingHistory = false; // Reset
-
-        // --- 🔥 FAVORITES SYNC ---
+        // --- FAVORITES SYNC ---
         if (window.FavoritesManager) {
             updateLikeIcon(window.FavoritesManager.isLiked(trackData.id));
         }
 
+        // --- HISTORY RECORDING ---
+        if (window.incrementProductStat) {
+            window.incrementProductStat(trackData.id, 'plays_count');
+        }
+
         resetAllListButtons();
-        lastSyncTime = 0; // Trigger instant sync for new track
+        lastSyncTime = 0;
         if (window.activeWavesurfers) {
             window.activeWavesurfers.forEach(wsItem => {
                 try { wsItem.seekTo(0); } catch (e) { }
@@ -293,10 +322,7 @@ window.StickyPlayer = (function () {
         // Reset global playback tracking for the new track
         actualPlayTime = 0;
         lastTime = 0;
-        if (currentTrack) currentTrack.hasBeenCounted = false;
-
-        // Update Internal State
-        currentTrack = trackData;
+        currentTrack.hasBeenCounted = false;
 
         // Update playlist index if valid
         if (playlist.length > 0) {
@@ -366,10 +392,41 @@ window.StickyPlayer = (function () {
             trackData.preview_url || trackData.demo_file || trackData.tagged_file ||
             trackData.file_url || trackData.url_file || '';
 
-        // Update Price Label (BeatStars Style)
+        // Update Price Label & Buttons (BeatStars Style)
         if (els.priceLabel) {
-            const isTrulyFree = trackData.is_free === true || String(trackData.is_free) === 'true' || Number(trackData.price_basic) === 0;
-            els.priceLabel.innerText = isTrulyFree ? 'FREE' : `$${trackData.price_basic !== undefined && trackData.price_basic !== null ? trackData.price_basic : '—'}`;
+            if (trackData.is_custom_request) {
+                // Custom Request Mode
+                els.secondaryBtn.style.display = 'flex';
+                els.priceLabel.innerText = 'TOMAR TRABAJO';
+                if (els.buyBtn) {
+                    const icon = els.buyBtn.querySelector('i');
+                    if (icon) icon.className = 'bi bi-briefcase';
+
+                    // Owner check
+                    const currentUserId = window.currentUserId || localStorage.getItem('userId');
+                    const isOwnRequest = currentUserId === trackData.artist_users?.id;
+                    if (isOwnRequest) {
+                        els.buyBtn.disabled = true;
+                        els.priceLabel.innerText = 'TU SOLICITUD';
+                        els.buyBtn.style.opacity = '0.5';
+                    } else {
+                        els.buyBtn.disabled = false;
+                        els.buyBtn.style.opacity = '1';
+                    }
+                }
+            } else {
+                // Regular Product Mode
+                els.secondaryBtn.style.display = 'none';
+                const isTrulyFree = trackData.is_free === true || String(trackData.is_free) === 'true' || Number(trackData.price_basic) === 0;
+                const rawPrice = trackData.price_basic !== undefined && trackData.price_basic !== null ? trackData.price_basic : null;
+                els.priceLabel.innerText = isTrulyFree ? 'FREE' : (window.CurrencyManager && rawPrice !== null ? window.CurrencyManager.format(parseFloat(rawPrice) || 0) : (rawPrice !== null ? `$${rawPrice}` : '—'));
+                if (els.buyBtn) {
+                    const icon = els.buyBtn.querySelector('i');
+                    if (icon) icon.className = 'bi bi-cart-plus';
+                    els.buyBtn.disabled = false;
+                    els.buyBtn.style.opacity = '1';
+                }
+            }
         }
 
         // Ensure we have audioUrl
@@ -385,6 +442,12 @@ window.StickyPlayer = (function () {
             finalAudioUrl = await window.getAuthorizedUrl(audioUrl);
         }
 
+        // --- RACE CONDITION CHECK ---
+        if (loadingTrackId !== thisTrackId) {
+            console.log(`[StickyPlayer] Ignoring outdated load for ${trackData.name}`);
+            return;
+        }
+
         // --- INSTANT WAVESURFER & AUDIO SWAP ---
         if (!ws) {
             // First time setup
@@ -397,8 +460,8 @@ window.StickyPlayer = (function () {
             ws = WaveSurfer.create({
                 container: '#sp-waveform',
                 media: globalAudioEl,
-                waveColor: '#555',
-                progressColor: '#8b5cf6',
+                waveColor: '#333',
+                progressColor: '#fff',
                 cursorColor: '#fff',
                 cursorWidth: 2,
                 barWidth: 2,
@@ -478,16 +541,13 @@ window.StickyPlayer = (function () {
                     if (lastTime > 0 && time > lastTime && (time - lastTime) < 1.0) {
                         actualPlayTime += (time - lastTime);
                     }
-                    lastTime = time;
-
-                    if (actualPlayTime >= 5.0) {
-                        trackPlay(currentTrack.id);
-                        currentTrack.hasBeenCounted = true;
-                        console.log(`[StickyPlayer] Play counted for ${currentTrack.name}`);
+                    if (actualPlayTime >= 30) {
+                        window.incrementProductStat(currentTrack.id, 'plays_count');
+                        // console.log(`[StickyPlayer] Play counted for ${currentTrack.name}`);
+                        currentTrack.hasBeenCounted = true; // Mark locally as well
                     }
-                } else {
-                    lastTime = time;
                 }
+                lastTime = time;
             });
 
             currentWs.on('seeking', () => {
@@ -518,6 +578,8 @@ window.StickyPlayer = (function () {
         ws.load(finalAudioUrl);
 
         ws.once('ready', () => {
+            if (loadingTrackId !== thisTrackId) return; // Race condition check
+
             if (startTime > 0) {
                 const duration = ws.getDuration();
                 if (duration > 0) ws.seekTo(startTime / duration);
@@ -547,7 +609,8 @@ window.StickyPlayer = (function () {
         if (!trackData) return;
 
         // If same track, just toggle instead of reloading everything
-        if (currentTrack && currentTrack.id === trackData.id) {
+        // Use String() to prevent precision loss or BigInt mismatch
+        if (currentTrack && String(currentTrack.id) === String(trackData.id)) {
             togglePlay();
             return;
         }
@@ -616,17 +679,21 @@ window.StickyPlayer = (function () {
     function updateListButton(track, playing) {
         if (!track || !track.id) return;
 
-        // Selector: Matches any button containing both "btn-play" and the track ID
-        // Handles both "btn-play-waveform-ID-index" and "btn-play-waveform - ID - suffix"
-        const btns = document.querySelectorAll(`[id*="btn-play-"][id*="${track.id}"]`);
+        // Selector: Matches any button containing "btn-play-waveform-" AND the track ID
+        // We use a regex match on the ID list to ensure we don't match partial IDs (e.g. ID 1 matching 10)
+        const tid = String(track.id);
+        const btns = document.querySelectorAll(`[id^="btn-play-waveform-"]`);
 
-        const updateBtn = (btn) => {
-            btn.innerHTML = playing ?
-                '<i class="bi bi-pause-fill"></i>' :
-                '<i class="bi bi-play-fill"></i>';
-        };
-
-        btns.forEach(updateBtn);
+        btns.forEach(btn => {
+            const idParts = btn.id.split('-');
+            // Typical ID format: btn-play-waveform-ID-suffix
+            // We check if the ID part matches our track ID
+            if (idParts.includes(tid)) {
+                btn.innerHTML = playing ?
+                    '<i class="bi bi-pause-fill"></i>' :
+                    '<i class="bi bi-play-fill"></i>';
+            }
+        });
     }
 
     function resetAllListButtons() {
@@ -726,7 +793,7 @@ window.StickyPlayer = (function () {
     }
 
     function getCurrentTrackId() {
-        return currentTrack ? currentTrack.id : null;
+        return currentTrack ? String(currentTrack.id) : null;
     }
 
     // NEXT TRACK - Sequential with random fallback
@@ -840,14 +907,15 @@ window.StickyPlayer = (function () {
 
             if (fetchErr) throw fetchErr;
 
-            // 2. Increment
-            const newCount = (data.plays_count || 0) + 1;
+            if (fetchErr) throw fetchErr;
+
+            const newCount = (data.play_count || 0) + 1;
             await window.supabaseClient
                 .from('products')
-                .update({ plays_count: newCount })
+                .update({ play_count: newCount })
                 .eq('id', id);
 
-            console.log(`[StickyPlayer] Play counted for ${id}. New total: ${newCount}`);
+            // console.log(`[StickyPlayer] Play counted for ${id}. New total: ${newCount}`);
         } catch (e) {
             console.warn("Play count error:", e);
         }
@@ -875,40 +943,33 @@ window.StickyPlayer = (function () {
     function handleDownloadClick() {
         if (!currentTrack) return;
 
-        const isFree = currentTrack.is_free === true || String(currentTrack.is_free) === 'true' || Number(currentTrack.price_basic) === 0;
-        const productType = (currentTrack.product_type || '').toLowerCase();
+        // "descargar = ir al producto" - Per user request
+        const seoLink = window.createSeoLink ? window.createSeoLink(currentTrack) : `/producto.html?id=${currentTrack.id}`;
+        window.location.href = seoLink;
+    }
 
-        // GUEST/FREE: If it's a beat, prioritize MP3 (democratization/security)
-        // KITS: Use ZIP/WAV.
-        let audioUrl = '';
-        if (productType === 'beat') {
-            audioUrl = currentTrack.download_url_mp3 || currentTrack.mp3_url || currentTrack.audio_url || currentTrack.demo_file || '';
+    function handleShareClick() {
+        if (currentTrack && window.openShareModal) {
+            window.openShareModal(currentTrack);
         } else {
-            const mainAssetUrl = currentTrack.download_url_wav || currentTrack.download_url_stems || currentTrack.wav_url || currentTrack.stems_url;
-            audioUrl = mainAssetUrl || currentTrack.download_url_mp3 || currentTrack.mp3_url || currentTrack.audio_url || currentTrack.demo_file || '';
-        }
-
-        if (isFree) {
-            if (window.openDownloadGateModal) {
-                if (!window.currentProductData) window.currentProductData = currentTrack;
-                window.openDownloadGateModal(audioUrl, currentTrack.producer?.nickname, currentTrack.id);
-            } else {
-                if (audioUrl) {
-                    window.open(audioUrl, '_blank');
-                    trackDownload(currentTrack.id);
-                } else {
-                    alert("Descarga no disponible.");
-                }
-            }
-        } else {
-            // PAID: Redirect to product page (Requested: Like "View Product")
-            const seoLink = window.createSeoLink ? window.createSeoLink(currentTrack) : `/producto.html?id=${currentTrack.id}`;
-            window.location.href = seoLink;
+            console.warn("Share modal not available or no track loaded.");
         }
     }
 
     async function handleBuyClick() {
         if (!currentTrack) return;
+
+        // --- CUSTOM REQUEST LOGIC ---
+        if (currentTrack.is_custom_request && currentTrack.request_data) {
+            // Re-use logic from feed.js
+            if (window.handleClaimRequest) {
+                window.handleClaimRequest(currentTrack.request_data.id, els.buyBtn);
+            } else {
+                // Fallback: alert if function not found
+                alert("Para tomar el trabajo utiliza el botón en la tarjeta principal.");
+            }
+            return;
+        }
 
         const price = parseFloat(currentTrack.price_basic) || 0;
         const isFree = (currentTrack.is_free === true || String(currentTrack.is_free) === 'true' || price === 0) && currentTrack.product_type !== 'beat';
@@ -992,7 +1053,7 @@ window.StickyPlayer = (function () {
                 };
             });
         } catch (e) {
-            console.error("[StickyPlayer] Error fetching licenses:", e);
+            // console.error("[StickyPlayer] Error fetching licenses:", e);
             return [];
         }
     }
@@ -1077,25 +1138,64 @@ window.StickyPlayer = (function () {
  * GLOBAL STATS HELPER
  */
 window.incrementProductStat = async function (id, column) {
-    if (!window.supabaseClient || !id) return;
+    if (!id) return;
+
+    // 1. Check LocalStorage Guard (Prevent duplicate counts in same browser session)
+    const storageKey = 'offszn_counted_stats';
+    const countedStr = localStorage.getItem(storageKey) || '{}';
+    let counted = {};
     try {
-        const { data, error: fetchErr } = await window.supabaseClient
-            .from('products')
-            .select(column)
-            .eq('id', id)
-            .single();
+        counted = JSON.parse(countedStr);
+    } catch (e) { counted = {}; }
 
-        if (fetchErr) throw fetchErr;
+    if (!counted[column]) counted[column] = [];
+    if (counted[column].includes(String(id))) {
+        return; // Already counted recently
+    }
 
-        const newCount = (data[column] || 0) + 1;
-        await window.supabaseClient
-            .from('products')
-            .update({ [column]: newCount })
-            .eq('id', id);
+    try {
+        // 2. Determine Endpoint
+        // Backend expects 'plays_count' or 'downloads_count'
+        let endpoint = null;
+        if (column === 'plays_count' || column === 'views') endpoint = `/api/products/${id}/play`;
+        else if (column === 'downloads_count') endpoint = `/api/products/${id}/download`;
 
-        console.log(`[Stats] ${column} incremented for ${id} to ${newCount}`);
-    } catch (e) {
-        console.warn(`[Stats] Error incrementing ${column}:`, e);
+        if (endpoint) {
+            // Use Server-side API (Logs history and increments counter)
+            const token = window.AuthUtils ? window.AuthUtils.getAccessToken() : localStorage.getItem('authToken');
+            const headers = { 'Content-Type': 'application/json' };
+            if (token) headers['Authorization'] = `Bearer ${token}`;
+
+            const res = await fetch(endpoint, { method: 'POST', headers });
+            if (!res.ok) throw new Error(`API Error: ${res.status}`);
+
+            const data = await res.json();
+            if (data.counted) {
+                // Mark as counted locally only if server confirmed
+                counted[column].push(String(id));
+                localStorage.setItem(storageKey, JSON.stringify(counted));
+            }
+        } else if (window.supabaseClient) {
+            // Fallback for direct Supabase update (non-critical columns)
+            const { data: prod, error: fetchErr } = await window.supabaseClient
+                .from('products')
+                .select(column)
+                .eq('id', id)
+                .single();
+
+            if (!fetchErr && prod) {
+                const newCount = (prod[column] || 0) + 1;
+                await window.supabaseClient
+                    .from('products')
+                    .update({ [column]: newCount })
+                    .eq('id', id);
+
+                counted[column].push(String(id));
+                localStorage.setItem(storageKey, JSON.stringify(counted));
+            }
+        }
+    } catch (err) {
+        console.warn(`[Stats] Error incrementing ${column} for ${id}:`, err);
     }
 };
 

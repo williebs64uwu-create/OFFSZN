@@ -7,8 +7,11 @@
     <title>Explorar - OFFSZN</title>
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
     <!-- Bootstrap Icons -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
+        integrity="sha384-tViUnnbYAV00FLIhhi3v/dWt3Jxw4gZQcNoSCxCIFNJVCx7/D55/wXsrNIRANwdD" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+        integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw=="
+        crossorigin="anonymous" referrerpolicy="no-referrer">
     <link rel="stylesheet" href="/css/auth-ui.css">
     <link rel="stylesheet" href="/css/global-overlays.css">
     <link rel="stylesheet" href="/css/navbar.css?v=13">
@@ -48,31 +51,38 @@
     <meta name="twitter:image" content="https://offszn.lat/images/LOGO OFFSZN.webp">
 
     <!-- 1. Cargar Supabase (Moved to Head for Global Access) -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="/env.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.48.1"
+        integrity="sha384-o2Uz8M8jf3RRbNF9dFLYtjA2ohqUgp6vUxr43Uzvt8MJkkLNvpXvLCUVbWh+cadK"
+        crossorigin="anonymous"></script>
     <script>
-        // --- GLOBAL SUPABASE CONFIG ---
-        // Moved here so it is available for Search AND Auth scripts immediately.
-        window.SUPABASE_URL = "https://qtjpvztpgfymjhhpoouq.supabase.co";
-        window.SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0anB2enRwZ2Z5bWpoaHBvb3VxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3ODA5MTUsImV4cCI6MjA3NjM1NjkxNX0.YsItTFk3hSQaVuy707-z7Z-j34mXa03O0wWGAlAzjrw";
-
         window.supabaseClient = null;
-        // Initialization handled by auth-utils.js
+        // Reiniciar Auth después de cargar env.js
+        window.addEventListener('load', () => {
+            if (window.AuthUtils && typeof window.AuthUtils.initSupabase === 'function') {
+                window.AuthUtils.initSupabase();
+            }
+        });
     </script>
     <script src="/script/auth-utils.js?v=11"></script>
     <script src="/script/r2-loader.js?v=1"></script>
     <script src="/script/id-obfuscator.js?v=11"></script>
     <script src="/script/notifications.js?v=26"></script>
     <!-- EmailJS Library -->
-    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4.4.1/dist/email.min.js"
+        integrity="sha384-SALc35EccAf6RzGw4iNsyj7kTPr33K7RoGzYu+7heZhT8s0GZouafRiCg1qy44AS"
+        crossorigin="anonymous"></script>
     <script>
         (function () {
-            if (typeof emailjs !== 'undefined') {
-                emailjs.init("If_WAVcuXiGSPp2SB");
+            if (typeof emailjs !== 'undefined' && window.EMAILJS_PUBLIC_KEY) {
+                emailjs.init(window.EMAILJS_PUBLIC_KEY);
             }
         })();
     </script>
     <!-- 2. GSAP for Premium Animations -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"
+        integrity="sha384-g4NTh/Iv5PPU4xPyhEWqPcwtNXOvdaDI8LLnyYfyNZOjKJeYQyjzQ9X5275eBjpt" crossorigin="anonymous"
+        referrerpolicy="no-referrer"></script>
 </head>
 
 <body>
@@ -81,7 +91,7 @@
 
     <!-- ==================== DYNAMIC NAVBAR ==================== -->
     <div id="navbar-placeholder"></div>
-    <script src="/script/load-navbar.js?v=23"></script>
+    <script src="/script/load-navbar.js?v=20"></script>
     <!-- EXPLORE FEED - Netflix Style -->
     <main id="explore-feed" class="pb-24 pt-20">
         <!-- Hero Banner Skeleton -->
@@ -472,7 +482,7 @@
     <script src="/script/cart.js"></script>
     <!-- notifications.js already loaded in head via auth-utils dependencies if needed, or by navbar -->
 
-    <script src="/script/navbar.js?v=19" type="module"></script>
+    <script src="/script/navbar.js?v=20" type="module"></script>
     <script src="/script/download-gate.js"></script>
     <script src="/script/sticky-player.js"></script>
     <script src="/script/expanded-player.js"></script>

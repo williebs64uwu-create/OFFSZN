@@ -14,8 +14,11 @@
   <meta property="og:title" content="Perfil de Productor - OFFSZN">
   <meta property="og:description" content="Beats, Sounds y más en OFFSZN.">
   <!-- Bootstrap Icons -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
+    integrity="sha384-tViUnnbYAV00FLIhhi3v/dWt3Jxw4gZQcNoSCxCIFNJVCx7/D55/wXsrNIRANwdD" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw=="
+    crossorigin="anonymous" referrerpolicy="no-referrer">
   <link rel="stylesheet" href="/css/auth-ui.css">
   <link rel="stylesheet" href="/css/global-overlays.css">
   <link rel="stylesheet" href="/css/navbar.css">
@@ -25,7 +28,10 @@
   <link rel="stylesheet" href="/css/download-gate.css">
   <link rel="stylesheet" href="/css/sticky-player.css">
   <link rel="stylesheet" href="/css/avatar-manager.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
+  <link rel="stylesheet" href="/css/share-modal.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css"
+    integrity="sha512-hvNR0F/e2J7zPPfLC9auFe3/SE0yG4aJCOd/qxew74NN7eyiSKjr7xJJMu1Jy2wf7FXITpWS1E/RY8yzuXN7VA=="
+    crossorigin="anonymous" referrerpolicy="no-referrer">
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -34,29 +40,36 @@
     rel="stylesheet">
 
   <!-- Wavesurfer JS (For Audio Visualization) -->
-  <script src="https://unpkg.com/wavesurfer.js@7"></script>
+  <script src="https://unpkg.com/wavesurfer.js@7.8.1/dist/wavesurfer.min.js"
+    integrity="sha384-ygSWewnYW7eIcr0I3npaYTWqi639jP4H2JJa14SEBeK0g9cxj4TYZ4JjO29Fq7ww"
+    crossorigin="anonymous"></script>
 
   <!-- 1. Cargar Supabase (Moved to Head for Global Access) -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/env.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.48.1"
+    integrity="sha384-o2Uz8M8jf3RRbNF9dFLYtjA2ohqUgp6vUxr43Uzvt8MJkkLNvpXvLCUVbWh+cadK"
+    crossorigin="anonymous"></script>
   <script>
-    // --- GLOBAL SUPABASE CONFIG ---
-    // Moved here so it is available for Search AND Auth scripts immediately.
-    window.SUPABASE_URL = "https://qtjpvztpgfymjhhpoouq.supabase.co";
-    window.SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0anB2enRwZ2Z5bWpoaHBvb3VxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3ODA5MTUsImV4cCI6MjA3NjM1NjkxNX0.YsItTFk3hSQaVuy707-z7Z-j34mXa03O0wWGAlAzjrw";
-
     window.supabaseClient = null;
   </script>
   <script src="/script/auth-utils.js?v=11"></script>
 
   <script src="/script/notifications.js?v=26"></script>
   <!-- EmailJS Library -->
-  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4.4.1/dist/email.min.js"
+    integrity="sha384-SALc35EccAf6RzGw4iNsyj7kTPr33K7RoGzYu+7heZhT8s0GZouafRiCg1qy44AS"
+    crossorigin="anonymous"></script>
   <script>
-    (function () {
+    window.addEventListener('load', () => {
       if (typeof emailjs !== 'undefined') {
         emailjs.init("If_WAVcuXiGSPp2SB");
       }
-    })();
+
+      // Initialize Supabase if AuthUtils is ready
+      if (window.AuthUtils && typeof window.AuthUtils.initSupabase === 'function') {
+        window.AuthUtils.initSupabase();
+      }
+    });
   </script>
 </head>
 
@@ -64,7 +77,7 @@
 
   <!-- ==================== EXTRACTED NAVBAR ==================== -->
   <div id="navbar-placeholder"></div>
-  <script src="/script/load-navbar.js?v=23"></script>
+  <script src="/script/load-navbar.js?v=20"></script>
 
   <!-- ==================== PUBLIC PROFILE UI ==================== -->
   <main id="app-main">
@@ -96,7 +109,7 @@
               <div id="profileRole" class="profile-role">
                 <div class="skeleton skeleton-profile-meta" style="width:100px;"></div>
               </div>
-              <span class="dot-separator">•</span>
+              <span class="dot-separator">.</span>
               <div id="profileLocation">
                 <div class="skeleton skeleton-profile-meta" style="width:80px; display:inline-block;"></div>
               </div>
@@ -444,7 +457,7 @@
 
   <script src="/script/cart.js?v=11"></script>
   <script src="/script/favorites-manager.js?v=11"></script>
-  <script src="/script/navbar.js?v=11" type="module"></script>
+  <script src="/script/navbar.js?v=20" type="module"></script>
   <script src="/script/id-obfuscator.js?v=11"></script>
   <script src="/script/profile-public.js?v=11" type="module"></script>
   <script src="/script/hover-card.js?v=11"></script>
@@ -736,7 +749,7 @@
                 <div onclick="ProfilePersonalizer.applyBanner('solid:#5b21b6')" style="background: #5b21b6;"
                   class="banner-option" title="Deep Violet"></div>
                 <div onclick="ProfilePersonalizer.applyBanner('solid:#a855f7')" style="background: #a855f7;"
-                  class="banner-option" title="Orchid neón"></div>
+                  class="banner-option" title="Orchid neon"></div>
                 <div onclick="ProfilePersonalizer.applyBanner('solid:#c084fc')" style="background: #c084fc;"
                   class="banner-option" title="Light Purple"></div>
                 <div onclick="ProfilePersonalizer.applyBanner('solid:#4c1d95')" style="background: #4c1d95;"
@@ -982,7 +995,7 @@
 
                 <div id="previewRole"
                   style="color: #b3b3b3; font-size: 0.9rem; font-weight: 500; letter-spacing: 0.2px;">
-                  Productor • Artista</div>
+                  Productor | Artista</div>
 
                 <!-- STATS & SOCIALS ROW -->
                 <div style="display: flex; align-items: center; gap: 32px; margin-top: 4px;">
@@ -1077,7 +1090,7 @@
         </div>
       </div>
 
-      <!-- Categoría -->
+      <!-- Categora -->
       <div class="fm-section">
         <h3>Categoría</h3>
         <div class="fm-options-grid">

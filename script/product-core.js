@@ -8,6 +8,21 @@
 // ============================================
 let API_URL = `${window.OFFSZN_CONFIG?.API_BASE_URL || 'https://offszn.lat'}/api`;
 
+/**
+ * Utility: Sanitizes strings for DOM injection
+ */
+function escapeHTML(str) {
+    if (!str) return '';
+    const map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+    };
+    return str.replace(/[&<>"']/g, m => map[m]);
+}
+
 window.currentProductData = null;
 window.claimedCouponData = null; // Store fetched coupon info
 
@@ -25,12 +40,11 @@ async function syncClaimedCoupon(email) {
             .maybeSingle();
 
         if (data && data.status_offszn === 'unclaimed') {
-            console.log("🎟️ Found active coupon in DB:", data.codigo_offszn);
+
             localStorage.setItem('offszn_welcome_claimed', data.codigo_offszn);
             window.claimedCouponData = data.codigo_offszn;
         }
     } catch (err) {
-        console.warn("[CouponSync] Failed to fetch from DB:", err);
     }
 }
 
@@ -70,21 +84,25 @@ document.addEventListener('DOMContentLoaded', async () => {
                 .neq('status', 'deleted') // Soft Delete Check
                 .maybeSingle();
 
-            // 🔥 COLLISION FIX: If we decoded the ID from a slug, verify it's the RIGHT product!
-            // If the product slug doesn't match the requested slug, it's a collision (e.g. "advantage" -> ID 158)
+            // 🔥 SEO REDIRECT: If we found product via ID but the slug doesn't match the official public_slug,
+            // we redirect to the correct canonical URL instead of failing.
             if (data && urlData.slug && data.public_slug && data.public_slug !== urlData.slug) {
-                console.warn(`🚨 [Collision] ID ${urlData.id} found, but slug '${data.public_slug}' mismatch with URL '${urlData.slug}'. Falling back to slug lookup.`);
-                product = null;
-            } else {
-                product = data;
-                error = err;
+                const currentPath = window.location.pathname;
+                const newPath = currentPath.replace(urlData.slug, data.public_slug);
+                if (newPath !== currentPath) {
+                    window.location.replace(newPath);
+                    return; // Prevent further execution
+                }
             }
+            product = data;
+            error = err;
         }
 
         // Attempt 2: Slug Lookup (Fallback if ID failed or was invalid/collision)
         // This fixes cases where the URL parser mistakenly decodes part of the name (e.g. "bpm") as an ID.
+        // Attempt 2: Slug Lookup (Fallback if ID failed or was invalid/collision)
+        // This fixes cases where the URL parser mistakenly decodes part of the name (e.g. "bpm") as an ID.
         if (!product && urlData.slug) {
-            if (urlData.id) console.warn("⚠️ ID lookup failed/empty. Falling back to public_slug:", urlData.slug);
 
             const { data, error: err } = await window.supabaseClient
                 .from('products')
@@ -98,12 +116,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         if (error) {
-            console.error("Supabase Error Full:", error);
             throw error;
         }
 
         if (!product) {
-            console.warn("Product not found for:", urlData);
             throw new Error("Producto no encontrado.");
         }
 
@@ -163,7 +179,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const pendingCoupon = localStorage.getItem('offszn_pending_coupon_claim');
         if (pendingCoupon === 'true' && currentUser) {
             localStorage.removeItem('offszn_pending_coupon_claim');
-            console.log("[Coupons] Detected return from onboarding. Activating coupon...");
+
 
             try {
                 // 1. Generate real code via Backend (Unique)
@@ -188,7 +204,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                     }
                 }, 100);
             } catch (err) {
-                console.error("[Coupons] Failed to claim via backend:", err);
             }
         }
 
@@ -196,7 +211,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const shouldAutoDownload = localStorage.getItem('offszn_auto_download_trigger');
         if (shouldAutoDownload === 'true' && product.is_free) {
             localStorage.removeItem('offszn_auto_download_trigger');
-            console.log("[AutoDownload] Triggering modal after onboarding redirect...");
+
             const producerName = product.producer?.nickname || 'Productor';
             const downloadUrl = product.download_url;
             if (downloadUrl) {
@@ -211,7 +226,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             try {
                 await fetch(`${API_URL}/products/${product.id}/view`, { method: 'POST' });
             } catch (e) {
-                console.warn("Error logging view via API:", e.message);
             }
         })();
 
@@ -219,11 +233,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         fetchRelatedProducts(product);
 
     } catch (err) {
-        console.error("Error loading product:", err);
+        // 🛡️ SECURITY: Sanitize error message to prevent XSS if error comes from malicious input
+        const safeErrMsg = (err.message || "Error desconocido").replace(/[<>{}\[\]]/g, '');
         document.getElementById('product-page-container').innerHTML = `
             <div style="text-align:center; padding:100px;">
                 <h2>Error al cargar el producto</h2>
-                <p>${err.message}</p>
+                <p>${safeErrMsg}</p>
                 <a href="explorar.html" style="color:var(--accent-purple)">Volver a explorar</a>
             </div>
         `;
@@ -251,7 +266,7 @@ function getProductIdFromUrl() {
         const code = pathParts[pathParts.length - 1];
         if (code && window.IdObfuscator) {
             const decodedId = window.IdObfuscator.decodeId(code);
-            console.log(`Debug: Short Link Detected. Code: ${code} -> ID: ${decodedId}`);
+
             if (decodedId && !isNaN(decodedId)) {
                 return { id: decodedId, slug: null };
             }
@@ -263,13 +278,13 @@ function getProductIdFromUrl() {
         const segments = lastPart.split('-');
         const code = segments.pop(); // Try to extract last part as code
 
-        console.log("Debug: Extracted segment from URL path:", lastPart);
+
 
         // Check if last segment is a valid ID code
         if (code && window.IdObfuscator) {
             const decodedId = window.IdObfuscator.decodeId(code);
             if (decodedId && !isNaN(decodedId)) {
-                console.log("Debug: Decoded ID from segment:", decodedId);
+
                 return { id: decodedId, slug: lastPart };
             }
         }
@@ -286,9 +301,10 @@ function getProductIdFromUrl() {
 
     // 3. Legacy ID check: ?id=UUID
     if (legacyId) {
-        // Simple check if it's a number (obfuscated code) vs UUID
-        if (!isNaN(legacyId) && window.IdObfuscator) {
-            return { id: window.IdObfuscator.decodeId(legacyId), slug: null };
+        // Robust check: matches both numeric (shuffled) and UUIDs
+        if (!isNaN(legacyId) && legacyId.length < 15 && window.IdObfuscator) {
+            const decoded = window.IdObfuscator.decodeId(legacyId);
+            if (decoded) return { id: decoded, slug: null };
         }
         return { id: legacyId, slug: null };
     }
@@ -301,7 +317,7 @@ function getProductIdFromUrl() {
  */
 window.formatDescription = function (text, limit = 800) {
     if (!text) return '';
-    const cleanText = text.trim();
+    const cleanText = escapeHTML(text.trim());
     // Preserve line breaks faithfully but limit to 1 maximum consecutive break
     const faithfulText = cleanText.replace(/\n\s*\n+/g, '\n');
     const htmlText = faithfulText.replace(/\n/g, '<br>');
@@ -353,9 +369,11 @@ function injectDynamicSEO(product) {
     const currency = 'USD';
     const coverUrl = product.image_url || 'https://offszn.lat/images/LOGO OFFSZN.webp';
     const productUrl = window.location.href;
+    const safeProductName = escapeHTML(product.name);
+    const safeProducerName = escapeHTML(producerName);
 
     // 2. Set Document Title (MOST IMPORTANT for Google)
-    document.title = `${product.name} - ${producerName} | OFFSZN`;
+    document.title = `${safeProductName} - ${safeProducerName} | OFFSZN`;
 
     // 3. Set or Update Meta Description
     let metaDesc = document.querySelector('meta[name="description"]');
@@ -402,7 +420,7 @@ function injectDynamicSEO(product) {
     // 6. Set Twitter Card Tags
     const twitterTags = {
         'twitter:card': 'summary_large_image',
-        'twitter:title': `${product.name} - ${producerName} | OFFSZN`,
+        'twitter:title': `${safeProductName} - ${safeProducerName} | OFFSZN`,
         'twitter:description': descText,
         'twitter:image': coverUrl
     };
@@ -421,8 +439,8 @@ function injectDynamicSEO(product) {
     const schema = {
         '@context': 'https://schema.org',
         '@type': 'Product',
-        'name': product.name,
-        'description': product.description || descText,
+        'name': safeProductName,
+        'description': escapeHTML(product.description || descText),
         'image': coverUrl,
         'brand': { '@type': 'Brand', 'name': 'OFFSZN' },
         'creator': { '@type': 'Person', 'name': producerName },
@@ -481,7 +499,7 @@ function injectDynamicSEO(product) {
             {
                 "@type": "ListItem",
                 "position": 3,
-                "name": product.name,
+                "name": safeProductName,
                 "item": productUrl
             }
         ]
@@ -490,7 +508,7 @@ function injectDynamicSEO(product) {
 
     document.head.appendChild(scriptTag);
 
-    console.log('✅ [SEO] Dynamic metadata injected for:', product.name);
+
 }
 
 /**
@@ -612,12 +630,14 @@ function renderProductPage(product) {
 
     // Explicit Fallback using NICKNAME (per schema)
     const producerName = producerData?.nickname || 'Unknown Producer';
+    const safeProducerName = escapeHTML(producerName);
     const isVerified = producerData?.is_verified || producerData?.is_producer;
+
 
     // Use Hover Card Logic for Producer
     const producerDataJSON = JSON.stringify({
         id: product.producer_id,
-        nickname: producerName,
+        nickname: safeProducerName,
         avatar_url: producerData?.avatar_url,
         is_verified: isVerified,
         stats: {
@@ -629,11 +649,11 @@ function renderProductPage(product) {
     let producerHTML = `
         <span class="artist-hover-trigger producer-link-thin" 
               data-artist="${producerDataJSON}"
-              onclick="window.location.href='/@' + encodeURIComponent('${producerName}')"
+              onclick="window.location.href='/@' + encodeURIComponent('${producerName.replace(/'/g, "\\'")}')"
               onmouseenter="window.showArtistCard(event, this)" 
               onmouseleave="window.hideArtistCard(event, this)"
               style="display:inline-flex; align-items:center; cursor:pointer;">
-            ${producerName} 
+            ${safeProducerName} 
             <i class="bi bi-patch-check-fill" style="color:#007bff; display:${isVerified ? 'inline' : 'none'}; margin-left:4px;"></i>
         </span>
     `;
@@ -683,8 +703,9 @@ function renderProductPage(product) {
                 <div class="product-cover-art" style="position:relative;">
                     <img src="${initialImgMain}" 
                          id="product-main-art"
-                         alt="${product.name}"
+                         alt="${escapeHTML(product.name)}"
                          class=""
+                         crossorigin="anonymous"
                          onerror="this.src='/images/portada-default.png'">
                      <!-- Play Button Overlay -->
                      <div class="product-cover-play-btn" onclick="window.playProductCover()">
@@ -723,10 +744,10 @@ function renderProductPage(product) {
                 <!-- HEADER: Title & Producer -->
                 <div class="product-header-wrapper">
                     <h1 style="font-size:3rem; font-weight:800; line-height:1.1; margin-bottom:10px; word-break: break-word; overflow-wrap: break-word; hyphens: auto;">
-                        ${product.name || 'Sin título'}
+                        ${escapeHTML(product.name) || 'Sin título'}
                     </h1>
                     ${producerHTML}
-                    <div class="header-price-mobile-only">${product.product_type === 'beat' ? `$ ${product.price_basic || '--'}` : (product.price_basic ? `$ ${product.price_basic}` : '')}</div>
+                    <div class="header-price-mobile-only">${product.product_type === 'beat' ? (window.CurrencyManager ? window.CurrencyManager.format(product.price_basic || 0) : `$ ${product.price_basic || '--'}`) : (product.price_basic ? (window.CurrencyManager ? window.CurrencyManager.format(product.price_basic) : `$ ${product.price_basic}`) : '')}</div>
                     
                     <!-- Integrated Social Actions for Mobile Header Identity -->
                     <div class="action-row mobile-only" id="social-actions-container" style="justify-content:flex-start; margin-top:10px;">
@@ -979,7 +1000,7 @@ function renderProductPage(product) {
     }
 
     // 3. Delegate specific rendering
-    console.log(`[Render] Product Type: ${product.product_type} | Category: ${product.category}`);
+
 
     const type = (product.product_type || '').toLowerCase();
     const category = (product.category || '').toLowerCase();
@@ -1053,7 +1074,6 @@ window.playProductCover = async function () {
         try {
             finalAudioUrl = await window.getAuthorizedUrl(audioUrl);
         } catch (e) {
-            console.warn("Error resolving audio URL:", e);
         }
     }
 
@@ -1192,7 +1212,6 @@ window.toggleLikeGlobal = function (btn, productId, producerId) {
         }
         */
     } else {
-        console.warn("FavoritesManager not loaded");
     }
 }
 
@@ -1428,7 +1447,7 @@ async function renderBeatSpecifics(product) {
 
                 enabledLicenses.forEach(lic => {
                     const price = parseFloat(lic.price) || 0;
-                    const priceStr = price > 0 ? `$${price.toFixed(2)}` : 'Gratis';
+                    const priceStr = price > 0 ? (window.CurrencyManager ? window.CurrencyManager.format(price) : `$${price.toFixed(2)}`) : 'Gratis';
 
                     const card = document.createElement('div');
                     card.className = `license-card-v2 ${isMobile ? 'mobile-lic-card' : 'desktop-lic-card'} ${lic.id === selectedId ? 'selected' : ''}`;
@@ -1516,7 +1535,6 @@ async function renderBeatSpecifics(product) {
 
 
     } catch (err) {
-        console.error("Error rendering beat licenses:", err);
         buyBox.innerHTML = '<p style="color:red;">Error al cargar las licencias.</p>';
     }
 
@@ -1544,9 +1562,8 @@ function selectLicense(id) {
         if (window.currentProductData) {
             const key = `offszn_lic_select_${window.currentProductData.id}`;
             localStorage.setItem(key, id);
-            console.log(`[LicPersistence] Saved selection '${id}' to '${key}'`);
+
         } else {
-            console.warn("[LicPersistence] Cannot save selection - No currentProductData");
         }
     }
 }
@@ -1853,7 +1870,7 @@ function renderPresetSpecifics(product) {
         productType === 'plantilla' ||
         (product.audio_before_url && product.audio_before_url !== 'null');
 
-    console.log(`[PresetRender] isAB: ${isAB} | Before: ${product.audio_before_url} | After: ${product.audio_after_url}`);
+
 
     const buyBox = document.getElementById('buying-modules');
     if (!buyBox) return;
@@ -1874,7 +1891,7 @@ function renderPresetSpecifics(product) {
             }
         };
     } else {
-        buyBtn.innerHTML = `COMPRAR - $${product.price_basic || '0.00'}`;
+        buyBtn.innerHTML = `COMPRAR - ${window.CurrencyManager ? window.CurrencyManager.format(parseFloat(product.price_basic) || 0) : '$' + (product.price_basic || '0.00')}`;
         buyBtn.onclick = () => addToCart(product.id, 'basic');
     }
     buyBox.appendChild(buyBtn);
@@ -1917,7 +1934,7 @@ function renderPresetSpecifics(product) {
                 }
             };
             header.appendChild(abLink);
-            console.log("[A/B] Button injected for Preset/Plantilla");
+
         }
 
         // Use standard player in sidebar as backup/preview
@@ -1945,7 +1962,7 @@ function renderGenericSpecifics(product) {
             window.open(downloadUrl, '_blank');
         };
     } else {
-        buyBtn.innerHTML = `COMPRAR - $${product.price_basic || '0.00'}`;
+        buyBtn.innerHTML = `COMPRAR - ${window.CurrencyManager ? window.CurrencyManager.format(parseFloat(product.price_basic) || 0) : '$' + (product.price_basic || '0.00')}`;
         buyBtn.onclick = () => addToCart(product.id, 'basic');
     }
     buyBox.appendChild(buyBtn);
@@ -1980,7 +1997,7 @@ function renderKitSpecifics(product) {
         };
     } else {
         // Paid Product
-        buyBtn.innerHTML = `COMPRAR - $${product.price_basic || '0.00'}`;
+        buyBtn.innerHTML = `COMPRAR - ${window.CurrencyManager ? window.CurrencyManager.format(parseFloat(product.price_basic) || 0) : '$' + (product.price_basic || '0.00')}`;
         buyBtn.onclick = () => addToCart(product.id, 'basic');
     }
 
@@ -2075,7 +2092,6 @@ function initStandardPlayer(product) {
  */
 window.openABModal = async function (beforeUrl, afterUrl, product) {
     if (!beforeUrl || beforeUrl === 'null' || !afterUrl || afterUrl === 'null') {
-        console.warn("A/B files not available for this product");
         return;
     }
 
@@ -2248,7 +2264,7 @@ function initABPlayerInContainer(beforeUrl, afterUrl, container, productId) {
                 if (window.incrementProductStat) {
                     window.incrementProductStat(productId, 'plays_count');
                 } else {
-                    console.log("[A/B] Play tracking fallback skip");
+
                 }
                 hasCountedPlay = true;
             }
@@ -2411,7 +2427,6 @@ async function fetchRelatedProducts(currentProduct) {
 
         renderRelatedGrid(allRelated, container);
     } catch (err) {
-        console.error("Error fetching related products:", err);
     }
 }
 
@@ -2520,73 +2535,13 @@ window.scrollRelated = function (direction) {
 /**
  * STATS LOGIC: Increment counters in Supabase
  */
-window.incrementProductStat = async function (id, column) {
-    // 1. Check LocalStorage Guard (Fast Client-side check)
-    const storageKey = 'offszn_counted_stats';
-    const countedStr = localStorage.getItem(storageKey) || '{}';
-    let counted = {};
-    try {
-        counted = JSON.parse(countedStr);
-    } catch (e) { counted = {}; }
-
-    if (!counted[column]) counted[column] = [];
-
-    if (counted[column].includes(String(id))) {
-        console.log(`[Stats] ${column} already counted for ${id} in this session.`);
-        return;
-    }
-
-    try {
-        // 2. Determine Endpoint
-        let endpoint = null;
-        if (column === 'downloads_count') endpoint = `/api/products/${id}/download`;
-        else if (column === 'plays_count' || column === 'views') endpoint = `/api/products/${id}/play`;
-
-        if (endpoint) {
-            // Use Server-side API (More robust, IP-limited)
-            const token = localStorage.getItem('sb-access-token'); // Simple token retrieval
-            const headers = { 'Content-Type': 'application/json' };
-            if (token) headers['Authorization'] = `Bearer ${token}`;
-
-            const res = await fetch(endpoint, { method: 'POST', headers });
-            if (!res.ok) throw new Error(`API Error: ${res.status}`);
-
-            const data = await res.json();
-            if (data.counted) {
-                // Mark as counted locally only if server actually counted it
-                counted[column].push(String(id));
-                localStorage.setItem(storageKey, JSON.stringify(counted));
-            }
-            console.log(`[Stats] ${column} synced via API:`, data.message);
-        } else if (window.supabaseClient) {
-            // Fallback for other columns (e.g. shares, etc if they exist)
-            const { data, error: fetchErr } = await window.supabaseClient
-                .from('products')
-                .select(column)
-                .eq('id', id)
-                .single();
-
-            if (fetchErr) throw fetchErr;
-
-            const newCount = (data[column] || 0) + 1;
-            await window.supabaseClient
-                .from('products')
-                .update({ [column]: newCount })
-                .eq('id', id);
-
-            counted[column].push(String(id));
-            localStorage.setItem(storageKey, JSON.stringify(counted));
-            console.log(`[Stats] ${column} incremented via direct DB for ${id} to ${newCount}`);
-        }
-    } catch (e) {
-        console.warn(`[Stats] Error incrementing ${column}:`, e);
-    }
-}
+// incrementProductStat is now globally provided by sticky-player.js
+// to ensure consistent history recording and stat tracking across all pages.
 
 // --- 10. GLOBAL CART OVERRIDE (CRITICAL FIX FOR LICENSE PRICE) ---
 // This ensures that when "Add to Cart" is clicked, we grab the CURRENTLY SELECTED license price.
 window.addToCart = (id, license) => {
-    console.log("[Cart] Add requested for ID:", id);
+
 
     // 1. Get Product Data from global scope (set in init or passed)
     let product = window.currentProductData;
@@ -2597,7 +2552,6 @@ window.addToCart = (id, license) => {
     }
 
     if (!product) {
-        console.error("No product data found for cart add");
         alert("Error: Datos del producto no cargados.");
         return;
     }
@@ -2654,14 +2608,13 @@ window.addToCart = (id, license) => {
 
     };
 
-    console.log(`[Cart] Adding ${product.name} - License: ${licenseName} ($${finalPrice})`);
+
 
     // 4. Call Manager
     if (window.CartManager) {
         window.CartManager.addToCart(checkProduct);
         window.CartManager.openCart(); // Auto-open sidebar
     } else {
-        console.error("CartManager not initialized");
         alert("Error: Carrito no disponible. Recarga la página.");
     }
 };
@@ -2839,7 +2792,6 @@ window.submitNegotiationInline = async function () {
         if (emailEl && !userId) emailEl.value = ''; // Only clear if guest
 
     } catch (err) {
-        console.error("Error submitting offer:", err);
         if (err.message && err.message.includes('user_id')) {
             alert("Hubo un error de base de datos. Por favor contacta soporte.");
         } else {
@@ -2985,7 +2937,6 @@ window.processCouponClaim = async function () {
             });
 
         if (dbError) {
-            console.error("❌ Error saving coupon claim:", dbError);
             // We proceed anyway as SignUp is more important, or we can choose to fail.
             // Let's at least keep a local record.
         }
@@ -2996,7 +2947,7 @@ window.processCouponClaim = async function () {
             ? window.location.origin + '/index.html'
             : 'https://offszn.lat/index.html';
 
-        console.log("🚀 Iniciando SignUp en Supabase para:", email);
+
         const { data: authData, error: authError } = await window.supabaseClient.auth.signUp({
             email: email,
             password: tempPassword,
@@ -3010,11 +2961,10 @@ window.processCouponClaim = async function () {
         });
 
         if (authError) {
-            console.error("❌ Error en Supabase SignUp:", authError);
             throw authError;
         }
 
-        console.log("✅ Resultado Auth:", authData);
+
 
         // Step 3: Save intent to claim coupon after onboarding
         localStorage.setItem('offszn_pending_coupon_claim', 'true');
@@ -3042,10 +2992,9 @@ window.processCouponClaim = async function () {
         }
 
         window.closeCouponModal();
-        console.log("Coupon intent saved. User must finish onboarding to reveal.");
+
 
     } catch (err) {
-        console.error("Error processing coupon claim:", err);
         // If it's a Supabase error (like rate limit), show it clearly
         const msg = err.message || "Error al procesar la solicitud.";
         alert(`Aviso: ${msg}. Si el correo no llega en 5 minutos, intenta de nuevo o revisa tu carpeta de SPAM.`);
@@ -3070,7 +3019,6 @@ window.resetCouponClaim = async function () {
 
             window.location.reload();
         } catch (e) {
-            console.error("Error resetting coupon claim:", e);
             window.location.reload();
         }
     }
@@ -3091,10 +3039,9 @@ window.copyCouponToClipboard = function (text, btn) {
 
     if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(text).then(() => {
-            console.log("Coupon copied:", text);
+
             setCopiedState();
         }).catch(err => {
-            console.error("Failed to copy:", err);
             fallbackCopy(text, setCopiedState);
         });
     } else {
@@ -3113,7 +3060,6 @@ window.copyCouponToClipboard = function (text, btn) {
             document.body.removeChild(el);
             successCallback();
         } catch (e) {
-            console.error('Fallback copy failed', e);
             alert("No se pudo copiar automáticamente. Código: " + textToCopy);
         }
     }
@@ -3230,10 +3176,10 @@ window.submitNegotiation = async function () {
             });
 
             if (authError) throw authError;
-            console.log("Guest registration triggered for negotiation.");
+
         } else {
             // For safety, warn them that they have an account (optional, but good for UX)
-            console.log("User already has an account. Continuing with proposal.");
+
         }
 
         const activeLicTab = document.querySelector('.lic-tab.active');
@@ -3255,7 +3201,6 @@ window.submitNegotiation = async function () {
         window.closeNegotiationModal();
 
     } catch (err) {
-        console.error("Error submitting offer:", err);
         alert(err.message || "Hubo un error al enviar la propuesta. Inténtalo más tarde.");
     } finally {
         if (btn) {

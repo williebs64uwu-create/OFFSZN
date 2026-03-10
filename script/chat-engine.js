@@ -2,6 +2,14 @@
 // Use the global client initialized by auth-utils.js
 const supabase = window.supabaseClient;
 
+// 🛡️ SECURITY UTILITY: Anti-XSS Sanitizer
+function escapeHTML(str) {
+    if (!str) return '';
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+}
+
 // Safety check (Non-blocking log, verified in init)
 if (!supabase && window.location.pathname.includes('chat')) {
     console.warn("Chat Engine: Global Supabase not found yet. It should be initialized by auth-utils.js.");
@@ -72,7 +80,7 @@ async function initChat() {
     isInitialized = true;
     _isInitialLoading = true; // Ensure guard is set
 
-    console.log("💬 Chat Engine Initialized");
+    // console.log("💬 Chat Engine Initialized");
     // initUI(); // Assuming initUI() is defined elsewhere or will be added.
 
     const { data: { session } } = await supabase.auth.getSession();
@@ -888,7 +896,7 @@ function _grpRenderUserList(profiles, list) {
             <div style="width:36px;height:36px;border-radius:50%;flex-shrink:0;">
                 ${renderAvatar(user.avatar_url, user.nickname)}
             </div>
-            <span style="flex:1;font-size:0.9rem;color:#fff;">${user.nickname}</span>
+            <span style="flex:1;font-size:0.9rem;color:#fff;">${escapeHTML(user.nickname)}</span>
             <i data-uid="${user.id}" class="bi ${isSelected ? 'bi-check-circle-fill' : 'bi-circle'}" style="font-size:1.15rem;color:${isSelected ? '#fff' : '#444'};transition:color 0.2s;"></i>
         `;
 
@@ -941,7 +949,7 @@ function _grpUpdateSelectedChips() {
             <div style="width:20px;height:20px;border-radius:50%;flex-shrink:0;font-size:0.75rem;">
                 ${renderAvatar(user.avatar_url, user.nickname)}
             </div>
-            <span style="font-size:0.8rem;color:#ccc;">${user.nickname}</span>
+            <span style="font-size:0.8rem;color:#ccc;">${escapeHTML(user.nickname)}</span>
             <i class="bi bi-x-circle-fill" style="color:#666;font-size:0.8rem;transition:color 0.15s;" onmouseenter="this.style.color='#ef4444'" onmouseleave="this.style.color='#666'"></i>
         `;
 
@@ -1147,7 +1155,7 @@ async function startNewChat(targetUser) {
 
     const { data: conv, error: convError } = await supabase
         .from('conversations')
-        .insert({ is_group: false })
+        .insert({ is_group: false, admin_id: currentUser.id })
         .select()
         .single();
 
@@ -1184,7 +1192,7 @@ async function loadUserProfile() {
 }
 
 function finalizeGlobalLoading() {
-    console.log("🏁 Finalizing Global Load - Revealing Inbox");
+    // console.log("🏁 Finalizing Global Load - Revealing Inbox");
     _isInitialLoading = false;
 
     const tabP = document.getElementById('tabPrincipal');
@@ -1431,7 +1439,7 @@ async function loadConversations(opts = {}) {
         if (conv.is_group) {
             // GROUP CONVERSATION
             isGroup = true;
-            name = conv.group_name || 'Grupo';
+            name = escapeHTML(conv.group_name || 'Grupo');
             avatar = conv.group_avatar_url || null;
             userId = null;
         } else {
@@ -1440,7 +1448,7 @@ async function loadConversations(opts = {}) {
             if (!otherParticipancy) return;
 
             const profile = profileMap[otherParticipancy.user_id];
-            name = profile?.nickname || 'Usuario';
+            name = escapeHTML(profile?.nickname || 'Usuario');
             avatar = profile?.avatar_url || null;
             userId = otherParticipancy.user_id;
 
@@ -1457,7 +1465,7 @@ async function loadConversations(opts = {}) {
         if (lastMsgObj) {
             created_at = lastMsgObj.created_at;
             if (lastMsgObj.content) {
-                lastMsg = lastMsgObj.content;
+                lastMsg = escapeHTML(lastMsgObj.content);
                 if (lastMsg.length > 25) lastMsg = lastMsg.substring(0, 22) + '...';
             }
             else if (lastMsgObj.attachment_url) lastMsg = '📷 Foto';
@@ -1972,7 +1980,7 @@ function renderMessage(msg) {
 
     // Current sender name (for received headers and reply actions)
     const senderData = Array.isArray(msg.sender) ? msg.sender[0] : msg.sender;
-    const senderNick = senderData?.nickname || 'Usuario';
+    const senderNick = escapeHTML(senderData?.nickname || 'Usuario');
 
     // 2. REPLY PREVIEW
     let replyHtml = '';
@@ -1988,7 +1996,7 @@ function renderMessage(msg) {
 
             // Parent sender name
             const parentSenderData = Array.isArray(parentMsg.sender) ? parentMsg.sender[0] : parentMsg.sender;
-            const parentNick = parentSenderData?.nickname || 'Usuario';
+            const parentNick = escapeHTML(parentSenderData?.nickname || 'Usuario');
 
             const pIsSender = parentMsg.sender_id === msg.sender_id;
 
@@ -2066,7 +2074,7 @@ function renderMessage(msg) {
         contentHtml = `<img src="${msg.attachment_url}" style="max-height: 250px; border-radius: 12px; cursor: pointer; display: block;" onclick="window.open('${msg.attachment_url}', '_blank')">`;
     } else {
         const urlRegex = /(https?:\/\/[^\s]+)/g;
-        const rawContent = msg.content || '';
+        const rawContent = escapeHTML(msg.content || '');
         contentHtml = rawContent.replace(urlRegex, (url) => `<a href="${url}" target="_blank" style="color: inherit; text-decoration: underline;">${url}</a>`);
     }
 
@@ -2079,7 +2087,7 @@ function renderMessage(msg) {
 
     // GROUP CHAT: Show sender name above received messages
     const groupSenderLabel = (!isMe && window._currentChatIsGroup)
-        ? `<div style="font-size:0.75rem;font-weight:600;color:#8b5cf6;margin-bottom:2px;padding-left:4px;">${senderNick}</div>`
+        ? `<div style="font-size:0.75rem;font-weight:600;color:#8B5CF6;margin-bottom:2px;padding-left:4px;">${senderNick}</div>`
         : '';
 
     msgDiv.innerHTML = `
@@ -2242,7 +2250,8 @@ function renderAvatar(url, name) {
     if (url && url.length > 10) {
         return `<img src="${url}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`;
     }
-    const initial = (name || 'U').charAt(0).toUpperCase();
+    const safeName = escapeHTML(name || 'U');
+    const initial = safeName.charAt(0).toUpperCase();
     return `<div style="width:100%; height:100%; background:#333; color:#a78bfa; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:1.2rem; border-radius:50%; border:1px solid #444;">${initial}</div>`;
 }
 
@@ -2489,8 +2498,8 @@ async function searchUsersForModal(query) {
                 ${avatarHtml}
             </div>
             <div class="chat-modal-user-info">
-                <div class="chat-modal-username">${u.nickname}</div>
-                <div class="chat-modal-fullname">${u.first_name || ''} ${u.last_name || ''}</div>
+                <div class="chat-modal-username">${escapeHTML(u.nickname)}</div>
+                <div class="chat-modal-fullname">${escapeHTML(u.first_name || '')} ${escapeHTML(u.last_name || '')}</div>
             </div>
             <div class="chat-modal-selection"></div>
         `;

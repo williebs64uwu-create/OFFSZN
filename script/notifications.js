@@ -20,10 +20,7 @@
             if (product.public_slug) return `/beat/${product.public_slug}`;
             return `/producto.html?id=${product.id}`;
         };
-    }
-
-    console.log("[Notifications] System v26 - Loaded");
-    // --- IMMEDIATE ACTION: Kill any phantom placeholders (like "4") as soon as script loads ---
+    }    // --- IMMEDIATE ACTION: Kill any phantom placeholders (like "4") as soon as script loads ---
     (function () {
         const badge = document.getElementById('notification-badge');
         if (badge) {

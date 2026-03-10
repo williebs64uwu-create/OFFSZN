@@ -66,7 +66,6 @@ window.FavoritesManager = (function () {
 
             let token = (window.AuthUtils && window.AuthUtils.getAccessToken) ? window.AuthUtils.getAccessToken() : (window.getAccessToken ? window.getAccessToken() : null);
             if (!token) {
-                console.log("FavoritesManager: No active session (Guest mode). Skipping fetch.");
                 isInitialized = true;
                 return;
             }
@@ -78,14 +77,13 @@ window.FavoritesManager = (function () {
                 });
 
                 if (res.status === 401 || res.status === 403) {
-                    console.log("FavoritesManager: No active session (Guest mode)");
                     isInitialized = true; // Mark as initialized so it stops trying
                     return;
                 }
 
                 if (!res.ok) {
-                    console.warn("FavoritesManager: API error, skipping load.");
                     isInitialized = true;
+                    notifySubscribers();
                     return;
                 }
 
@@ -105,12 +103,13 @@ window.FavoritesManager = (function () {
                 cachedFavorites = visibleProducts;
 
                 isInitialized = true;
-                console.log("FavoritesManager: Loaded", likedItemIds.size);
                 notifySubscribers();
             } catch (err) {
-                console.error("FavoritesManager: Load Error", err);
+                // Silently handle load errors as per user request
+                isInitialized = true;
+                notifySubscribers();
             } finally {
-                initPromise = null; // Clear promise so retry is possible on failure (optional)
+                initPromise = null;
             }
         })();
 
@@ -152,9 +151,26 @@ window.FavoritesManager = (function () {
         notifySubscribers();
 
         // Visual Feedback
-        if (buttonElement && buttonElement.classList) {
-            buttonElement.style.transform = "scale(1.2)";
+        if (buttonElement) {
+            buttonElement.style.transform = "scale(1.3)";
             setTimeout(() => buttonElement.style.transform = "scale(1)", 200);
+
+            // Toggle active class
+            buttonElement.classList.toggle('active', !isLikedOriginal);
+
+            // Toggle icon classes
+            const icon = buttonElement.querySelector('i');
+            if (icon) {
+                if (isLikedOriginal) {
+                    icon.classList.remove('bi-heart-fill');
+                    icon.classList.add('bi-heart');
+                    icon.style.color = '';
+                } else {
+                    icon.classList.remove('bi-heart');
+                    icon.classList.add('bi-heart-fill');
+                    icon.style.color = '#ef4444';
+                }
+            }
         }
 
         try {
@@ -180,7 +196,7 @@ window.FavoritesManager = (function () {
             }
 
         } catch (err) {
-            console.error("FavoritesManager: Sync Error", err);
+            // console.error("FavoritesManager: Sync Error", err);
             // Revert on error
             if (isLikedOriginal) likedItemIds.add(idStr);
             else likedItemIds.delete(idStr);
@@ -354,7 +370,7 @@ window.FavoritesManager = (function () {
             }
 
         } catch (err) {
-            console.error("Error applying filters:", err);
+            // console.error("Error applying filters:", err);
         }
     }
 
@@ -538,7 +554,7 @@ window.FavoritesManager = (function () {
                             title: prod.name,
                             text: `Mira este ${pType} en OFFSZN`,
                             url: window.location.origin + seoUrl
-                        }).catch(err => console.log('Error sharing:', err));
+                        }).catch(err => { /* console.log('Error sharing:', err) */ });
                     } else {
                         navigator.clipboard.writeText(window.location.origin + seoUrl);
                         if (window.Notifications) window.Notifications.success("Enlace copiado al portapapeles");
@@ -607,7 +623,7 @@ window.FavoritesManager = (function () {
                 if (btn) btn.innerHTML = '<i class="bi bi-pause-fill"></i>';
                 window.currentlyPlaying = ws;
             } catch (e) {
-                console.error("Error lazy loading WS:", e);
+                // console.error("Error lazy loading WS:", e);
                 if (btn) btn.innerHTML = '<i class="bi bi-exclamation-circle"></i>';
             }
         } else {
@@ -746,7 +762,7 @@ window.FavoritesManager = (function () {
                 title: prod.name,
                 text: `Mira este ${pType} en OFFSZN`,
                 url: window.location.origin + seoUrl
-            }).catch(err => console.log('Error sharing:', err));
+            }).catch(err => { /* console.log('Error sharing:', err) */ });
         } else {
             navigator.clipboard.writeText(window.location.origin + seoUrl);
             if (window.toast) window.toast.show("Enlace copiado al portapapeles", "info");

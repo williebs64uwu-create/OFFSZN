@@ -391,6 +391,19 @@ export const validatePurchaseToken = async (req, res) => {
 
         const agreedPrice = proposal.counter_amount || proposal.amount_offszn;
 
+        // Fetch producer plan for commission display and paypal email for checkout
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('plan')
+            .eq('id', proposal.products?.producer_id)
+            .single();
+
+        const { data: producer } = await supabase
+            .from('users')
+            .select('payment_methods')
+            .eq('id', proposal.products?.producer_id)
+            .single();
+
         return res.status(200).json({
             valid: true,
             proposalId: proposal.id,
@@ -402,7 +415,9 @@ export const validatePurchaseToken = async (req, res) => {
             licenseName: proposal.selected_license || 'Standard',
             agreedPrice: parseFloat(agreedPrice),
             originalPrice: proposal.products?.price_basic,
-            buyerEmail: proposal.email_offszn
+            buyerEmail: proposal.email_offszn,
+            producerPlan: profile?.plan || 'free',
+            producerPaypalEmail: producer?.payment_methods?.paypal || null
         });
 
     } catch (err) {

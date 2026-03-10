@@ -1,9 +1,20 @@
-// script/siguiendo.js
-
 let followingData = {
     sidebar: null,
     list: []
 };
+
+function escapeHTML(str) {
+    if (!str) return "";
+    return str.replace(/[&<>"']/g, function (m) {
+        return {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#039;'
+        }[m];
+    });
+}
 
 document.addEventListener('DOMContentLoaded', async () => {
     // 1. Inject Skeletons IMMEDIATELY
@@ -31,7 +42,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
         await Promise.all([timerPromise, fetchPromise]);
     } catch (err) {
-        console.error("Error during parallel load:", err);
+        // Log generic error
     } finally {
         // 5. Render and Reveal Everything Simultaneously
         renderEverything();
@@ -50,7 +61,7 @@ async function loadSidebarData(userId) {
         if (error) throw error;
         followingData.sidebar = user;
     } catch (err) {
-        console.error("Error loading sidebar info:", err);
+        // Silently fail or log generic
     }
 }
 
@@ -100,7 +111,6 @@ async function fetchFollowingList(userId) {
 
         followingData.list = profiles;
     } catch (err) {
-        console.error("Error loading following list:", err);
         followingData.list = null; // Error state
     }
 }
@@ -118,7 +128,13 @@ function renderEverything() {
 
         if (sidebarAvatar) {
             if (user.avatar_url) {
-                sidebarAvatar.innerHTML = `<img src="${user.avatar_url}" alt="Avatar" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">`;
+                sidebarAvatar.innerHTML = '';
+                const img = document.createElement('img');
+                img.src = user.avatar_url;
+                img.alt = "Avatar";
+                img.crossOrigin = "anonymous";
+                img.style.cssText = "width:100%; height:100%; border-radius:50%; object-fit:cover;";
+                sidebarAvatar.appendChild(img);
             } else {
                 sidebarAvatar.textContent = (user.nickname || 'U').charAt(0).toUpperCase();
             }
@@ -223,13 +239,20 @@ function createProducerCard(user) {
         }
     };
 
-    const initial = (user.nickname || user.first_name || 'U').charAt(0).toUpperCase();
-    const avatarContent = user.avatar_url
-        ? `<img src="${user.avatar_url}" alt="${user.nickname}" onerror="if(window.AvatarManager) window.AvatarManager.handleError(this, '${user.nickname.replace(/'/g, "\\'")}')" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`
+    const nicknameEscaped = escapeHTML(user.nickname);
+    const initial = (nicknameEscaped || escapeHTML(user.first_name) || 'U').charAt(0).toUpperCase();
+    const avatarUrl = user.avatar_url;
+
+    // Sanitize nickname for handle error to prevent XSS in attribute
+    const nicknameForError = nicknameEscaped.replace(/'/g, "\\'");
+
+    const avatarContent = avatarUrl
+        ? `<img src="${avatarUrl}" alt="${nicknameEscaped}" crossorigin="anonymous" onerror="if(window.AvatarManager) window.AvatarManager.handleError(this, '${nicknameForError}')" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`
         : `<div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; background: #222; border: 1px solid #333; border-radius:50%; font-size:2.5rem; font-weight:700; color:#fff;">${initial}</div>`;
 
     // Get follower count
-    const followerCount = user.follower_count || 0;
+    const followerCount = parseInt(user.follower_count) || 0;
+    const roleEscaped = escapeHTML(user.role || 'Productor');
 
     card.innerHTML = `
         <div style="width: 80px; height: 80px; border-radius: 50%; overflow: hidden; border: 2px solid rgba(255, 255, 255, 0.1); flex-shrink: 0; margin-bottom: 8px;">
@@ -237,11 +260,11 @@ function createProducerCard(user) {
         </div>
         <div style="display: flex; flex-direction: column; gap: 2px; width: 100%; flex: 1; min-height: 0; overflow: hidden;">
             <div style="font-size: 0.9rem; font-weight: 600; color: #fff; display: flex; align-items: center; justify-content: center; gap: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                ${user.nickname}
+                ${nicknameEscaped}
                 ${user.is_verified ? '<i class="bi bi-patch-check-fill" style="color: #fff; font-size: 0.8rem;"></i>' : ''}
             </div>
             <div style="font-size: 0.75rem; color: #999; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                ${user.role || 'Productor'}
+                ${roleEscaped}
             </div>
             <div style="font-size: 0.7rem; color: #666; margin-top: 2px;">
                 <i class="bi bi-people" style="margin-right: 2px;"></i>${followerCount} ${followerCount === 1 ? 'seguidor' : 'seguidores'}

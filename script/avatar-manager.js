@@ -52,7 +52,7 @@ window.AvatarManager = {
                     
                     <div class="avatar-modal-body">
                         <div class="avatar-crop-container">
-                            <img id="avatarCropImg" src="" alt="Cropper">
+                            <img id="avatarCropImg" crossorigin="anonymous" src="" alt="Cropper">
                         </div>
                     </div>
 
@@ -492,7 +492,12 @@ window.AvatarManager = {
         const toast = document.createElement('div');
         toast.className = `elite-toast ${isError ? 'error' : 'success'}`;
         const icon = isError ? 'bi-exclamation-triangle-fill' : 'bi-check-circle-fill';
-        toast.innerHTML = `<i class="bi ${icon}"></i> <span>${message}</span>`;
+        const iconEl = document.createElement('i');
+        iconEl.className = `bi ${icon}`;
+        const spanEl = document.createElement('span');
+        spanEl.textContent = message;
+        toast.appendChild(iconEl);
+        toast.appendChild(spanEl);
 
         container.appendChild(toast);
 
@@ -513,7 +518,10 @@ window.AvatarManager = {
 
         const parent = img.parentElement;
         if (parent) {
-            parent.innerHTML = `<span>${initial}</span>`;
+            parent.innerHTML = '';
+            const span = document.createElement('span');
+            span.textContent = initial;
+            parent.appendChild(span);
             // Re-apply common placeholder styles if needed
             parent.classList.add('user-avatar-placeholder');
         }

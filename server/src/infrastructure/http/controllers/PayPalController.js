@@ -1,8 +1,156 @@
 import paypal from '@paypal/checkout-server-sdk';
 import paypalClient from '../paypalClient.js';
 import { supabase } from '../../database/connection.js';
-import { PLATFORM_PAYPAL_EMAIL } from '../../../shared/config/config.js';
+import { PLATFORM_PAYPAL_EMAIL, PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET, PAYPAL_ENVIRONMENT } from '../../../shared/config/config.js';
 import { sendReceiptEmail } from '../../../shared/utils/email.js';
+import { v4 as uuidv4 } from 'uuid';
+
+// --- PayPal OAuth Config ---
+const PAYPAL_OAUTH_URL = PAYPAL_ENVIRONMENT === 'live'
+    ? 'https://www.paypal.com/signin/authorize'
+    : 'https://www.sandbox.paypal.com/signin/authorize';
+
+const PAYPAL_API_BASE = PAYPAL_ENVIRONMENT === 'live'
+    ? 'https://api-m.paypal.com'
+    : 'https://api-m.sandbox.paypal.com';
+
+// This should match what's registered in PayPal Developer Dashboard
+// For local dev: http://localhost:3000/api/auth/paypal/callback
+const REDIRECT_URI = process.env.PAYPAL_REDIRECT_URI || 'http://localhost:3000/api/auth/paypal/callback';
+
+/**
+ * Inicia el flujo de OAuth para conectar PayPal
+ */
+export const connectPayPal = async (req, res) => {
+    try {
+        const userId = req.user.userId;
+        const state = `${userId}_${uuidv4()}`;
+
+        // Guardamos el state en una cookie segura para validarlo en el callback
+        res.cookie('paypal_auth_state', state, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'Lax', // Agregado para seguridad y compatibilidad
+            maxAge: 300000 // 5 minutos
+        });
+
+        const params = new URLSearchParams({
+            client_id: PAYPAL_CLIENT_ID,
+            response_type: 'code',
+            scope: 'openid profile email',
+            redirect_uri: REDIRECT_URI,
+            state: state
+        });
+
+        const authUrl = `${PAYPAL_OAUTH_URL}?${params.toString()}`;
+        console.log(`[PayPalOAuth] Sending auth URL for user ${userId}`);
+
+        // CAMBIADO: Retornar JSON en lugar de redirección directa para soportar Authorization Headers en el primer paso
+        return res.json({ url: authUrl });
+    } catch (err) {
+        console.error('❌ Error in connectPayPal:', err);
+        res.status(500).json({ error: 'Error al iniciar conexión con PayPal' });
+    }
+};
+
+/**
+ * Maneja el callback de PayPal después de la autorización del usuario
+ */
+export const callbackPayPal = async (req, res) => {
+    const { code, state, error: ppError } = req.query;
+    const savedState = req.cookies.paypal_auth_state;
+
+    try {
+        if (ppError) {
+            console.error('[PayPalOAuth] User denied or error:', ppError);
+            return res.redirect('/cuenta/transacciones?paypal=error&msg=denied');
+        }
+
+        if (!state || state !== savedState) {
+            console.error('[PayPalOAuth] Invalid state:', { received: state, saved: savedState });
+            return res.redirect('/cuenta/transacciones?paypal=error&msg=invalid_state');
+        }
+
+        const userId = state.split('_')[0];
+        res.clearCookie('paypal_auth_state');
+
+        // 1. Intercambiar código por token de acceso
+        const tokenResponse = await fetch(`${PAYPAL_API_BASE}/v1/oauth2/token`, {
+            method: 'POST',
+            headers: {
+                'Authorization': 'Basic ' + Buffer.from(`${PAYPAL_CLIENT_ID}:${PAYPAL_CLIENT_SECRET}`).toString('base64'),
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: new URLSearchParams({
+                grant_type: 'authorization_code',
+                code: code,
+                redirect_uri: REDIRECT_URI
+            })
+        });
+
+        const tokenData = await tokenResponse.json();
+        if (!tokenResponse.ok) {
+            throw new Error(tokenData.error_description || 'Token exchange failed');
+        }
+
+        // 2. Obtener información del usuario verificado
+        const userResponse = await fetch(`${PAYPAL_API_BASE}/v1/identity/openidconnect/userinfo?schema=openid`, {
+            headers: {
+                'Authorization': `Bearer ${tokenData.access_token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        const userData = await userResponse.json();
+        if (!userResponse.ok) {
+            throw new Error('Failed to fetch user info');
+        }
+
+        console.log(`[PayPalOAuth] Verified info for user ${userId}:`, { email: userData.email, payer_id: userData.payer_id });
+
+        // 3. Actualizar perfil en Supabase
+        const verifiedEmail = userData.email;
+        const payerId = userData.payer_id;
+
+        // Obtenemos los métodos actuales para no sobreescribir otros métodos de pago si existieran
+        const { data: userProfile } = await supabase.from('users').select('payment_methods').eq('id', userId).single();
+        const currentMethods = userProfile?.payment_methods || {};
+        currentMethods.paypal = verifiedEmail;
+
+        const { error: updateError } = await supabase
+            .from('users')
+            .update({
+                payment_methods: currentMethods,
+                paypal_verified: true,
+                paypal_payer_id: payerId
+            })
+            .eq('id', userId);
+
+        if (updateError) throw updateError;
+
+        res.redirect('/cuenta/transacciones?paypal=success');
+
+    } catch (err) {
+        console.error('[PayPalOAuth] Callback Error:', err);
+        res.redirect(`/cuenta/transacciones?paypal=error&msg=${encodeURIComponent(err.message)}`);
+    }
+};
+
+
+// --- Helper: Map Display License Name to Internal Key ---
+const mapLicenseToKey = (name) => {
+    if (!name) return 'basic';
+    const n = name.toLowerCase();
+    // Spanish mapping
+    if (n.includes('básica') || n.includes('basica')) return 'basic';
+    if (n.includes('premium')) return 'premium';
+    if (n.includes('stems') || n.includes('trackout')) return 'trackout';
+    if (n.includes('ilimitada') || n.includes('unlimited')) return 'unlimited';
+    if (n.includes('exclusiva') || n.includes('exclusive')) return 'exclusive';
+    // Direct matches
+    if (['basic', 'premium', 'stems', 'trackout', 'unlimited', 'exclusive'].includes(n)) return n;
+    return 'basic';
+};
 
 export const createPayPalOrder = async (req, res) => {
     try {
@@ -57,20 +205,23 @@ export const createPayPalOrder = async (req, res) => {
 
         // 2. Fetch Producer details for PayPal Emails AND LICENSE SETTINGS
         const producerIds = [...new Set(cartItems.map(item => item.product.producer_id))];
-        const { data: producers, error: producerError } = await supabase
-            .from('users')
-            .select('id, payment_methods, license_settings, nickname')
-            .in('id', producerIds);
+        const [{ data: producers, error: producerError }, { data: profiles, error: profileError }] = await Promise.all([
+            supabase.from('users').select('id, payment_methods, license_settings, nickname').in('id', producerIds),
+            supabase.from('profiles').select('id, plan').in('id', producerIds)
+        ]);
 
         if (producerError) console.error('[PayPalDebug] Error fetching producers:', producerError);
+        if (profileError) console.error('[PayPalDebug] Error fetching profiles:', profileError);
 
         const producerMap = new Map();
         producers?.forEach(u => {
+            const profile = profiles?.find(p => p.id === u.id);
             producerMap.set(u.id, {
                 id: u.id,
                 email: u.payment_methods?.paypal,
                 settings: u.license_settings,
-                nickname: u.nickname
+                nickname: u.nickname,
+                plan: profile?.plan || 'free'
             });
         });
 
@@ -124,11 +275,13 @@ export const createPayPalOrder = async (req, res) => {
         const productIds = cartItems.map(item => item.product.id);
         const { data: dbProducts, error: dbError } = await supabase
             .from('products')
-            .select('id, name, price_basic, price_premium, price_stems, price_exclusive, product_type, licenses, producer_id')
+            .select('id, name, price_basic, price_premium, price_stems, price_exclusive, product_type, licenses, producer_id, status')
             .in('id', productIds)
-            .eq('status', 'approved');
+            .or('status.eq.approved,status.eq.published');
 
         if (dbError) throw dbError;
+
+        console.log(`[PayPalOrder] DB Products found: ${dbProducts?.length || 0}/${productIds.length}`);
 
         let subtotal = 0;
         let serviceFee = 0;
@@ -138,17 +291,19 @@ export const createPayPalOrder = async (req, res) => {
             const prodIdToFind = String(item.product?.id);
             const dbProd = dbProducts.find(p => String(p.id) === prodIdToFind);
 
-            if (!dbProd) return;
+            if (!dbProd) {
+                console.warn(`[PayPalOrder] Product ${prodIdToFind} not found in DB or not approved/publishedStatus: ${item.product?.id}`);
+                return;
+            }
 
             const producer = producerMap.get(dbProd.producer_id);
             let verifiedPrice = 0;
 
             if (dbProd.product_type === 'beat') {
-                // For negotiation, we use the price from the proposal (already in verifiedPrice if we set it)
                 if (item.is_negotiation) {
                     verifiedPrice = item.variant_price;
                 } else {
-                    const licKey = (item.license_name || 'basic').toLowerCase();
+                    const licKey = mapLicenseToKey(item.license_name || 'basic');
                     const productOverride = dbProd.licenses ? dbProd.licenses[licKey]?.price : null;
                     const producerPrice = producer?.license_settings ? producer.license_settings[licKey]?.price : null;
                     const dbFieldMap = {
@@ -160,6 +315,10 @@ export const createPayPalOrder = async (req, res) => {
                         exclusive: dbProd.price_exclusive
                     };
                     verifiedPrice = productOverride || dbFieldMap[licKey] || producerPrice || FACTORY_DEFAULTS[licKey] || 0;
+
+                    if (verifiedPrice === 0) {
+                        console.warn(`[PayPalOrder] Price verified as 0 for beat ${dbProd.id} with licKey ${licKey}. Input name was: ${item.license_name}`);
+                    }
                 }
             } else {
                 verifiedPrice = item.is_negotiation ? item.variant_price : (dbProd.price_basic || 0);
@@ -169,15 +328,30 @@ export const createPayPalOrder = async (req, res) => {
 
             let commission = 0;
             if (verifiedPrice > 0) {
-                if (verifiedPrice < 20) {
-                    commission = 1.00;
+                const producerProfile = profiles?.find(p => p.id === dbProd.producer_id);
+                const producerPlan = producerProfile?.plan || 'free';
+
+                if (producerPlan === 'starter') {
+                    if (verifiedPrice < 20) {
+                        commission = 0.50;
+                    } else {
+                        commission = verifiedPrice * 0.03;
+                    }
+                } else if (producerPlan === 'pro') {
+                    commission = 0;
                 } else {
-                    commission = verifiedPrice * 0.05;
+                    if (verifiedPrice < 20) {
+                        commission = 1.00;
+                    } else {
+                        commission = verifiedPrice * 0.05;
+                    }
                 }
             }
 
             subtotal += verifiedPrice;
             serviceFee += commission;
+
+            console.log(`[PayPalOrder] Item: ${dbProd.name} | Plan: ${producer?.plan || 'free'} | Price: ${verifiedPrice} | Fee: ${commission.toFixed(2)}`);
 
             verifiedCartItems.push({
                 ...item,
@@ -270,28 +444,76 @@ export const createPayPalOrder = async (req, res) => {
             }
         }
 
-        let grandTotal = (subtotal - totalDiscount) + serviceFee;
+        // --- REFACTOR: Multi-Payee Split ---
+        const purchaseUnits = [];
+        const producerGroups = new Map();
 
+        if (!verifiedCartItems || verifiedCartItems.length === 0) {
+            console.error('[PayPalOrder] No items were verified successfully.');
+            return res.status(400).json({ error: 'No se pudieron verificar los productos en el carrito. Asegúratede que estén activos.' });
+        }
 
-        // Re-assign cartItems to verified version for capture phase (if using sessions)
-        // But for now, we just use grandTotal for the PayPal request.
+        // Distribution factor for global discounts
+        const globalDiscountFactor = subtotal > 0 ? (subtotal - totalDiscount) / subtotal : 1.0;
+        console.log(`[PayPalOrder] Subtotal: ${subtotal}, Discount: ${totalDiscount}, Factor: ${globalDiscountFactor}`);
 
-        const platformPayee = (!PLATFORM_PAYPAL_EMAIL || !PLATFORM_PAYPAL_EMAIL.includes('@'))
-            ? { merchant_id: PLATFORM_PAYPAL_EMAIL || 'BK7AFKN36JSWW' }
-            : { email_address: PLATFORM_PAYPAL_EMAIL };
+        // Group items by producer
+        verifiedCartItems.forEach(item => {
+            const pId = item.product.producer_id;
+            if (!producerGroups.has(pId)) {
+                producerGroups.set(pId, 0);
+            }
+            const itemNet = (parseFloat(item.variant_price) || 0) * globalDiscountFactor;
+            producerGroups.set(pId, producerGroups.get(pId) + itemNet);
+        });
 
-        const purchaseUnits = [{
-            reference_id: 'offszn_combined_order',
-            amount: {
-                currency_code: 'USD',
-                value: grandTotal.toFixed(2)
-            },
-            description: `OFFSZN Purchase - ${cartItems.length} items`,
-            payee: platformPayee
-        }];
+        // 1. Create units for each producer
+        producerGroups.forEach((netAmount, pId) => {
+            const producer = producerMap.get(pId);
+            if (netAmount > 0 && producer?.email) {
+                purchaseUnits.push({
+                    reference_id: `prod_${pId}_${uuidv4().substring(0, 8)}`,
+                    amount: {
+                        currency_code: 'USD',
+                        value: netAmount.toFixed(2)
+                    },
+                    description: `Pago para ${producer.nickname || 'Productor'} - OFFSZN`,
+                    payee: { email_address: producer.email }
+                });
+            }
+        });
 
-        console.log('[PayPalOrder] Grand Total:', grandTotal);
-        console.log('[PayPalDebug-V4] Single-Payee Purchase Units:', JSON.stringify(purchaseUnits, null, 2));
+        // 2. Create unit for platform commission
+        if (serviceFee > 0) {
+            const platformPayee = (!PLATFORM_PAYPAL_EMAIL || !PLATFORM_PAYPAL_EMAIL.includes('@'))
+                ? { merchant_id: PLATFORM_PAYPAL_EMAIL || 'BK7AFKN36JSWW' }
+                : { email_address: PLATFORM_PAYPAL_EMAIL };
+
+            purchaseUnits.push({
+                reference_id: `offszn_fee_${uuidv4().substring(0, 8)}`,
+                amount: {
+                    currency_code: 'USD',
+                    value: serviceFee.toFixed(2)
+                },
+                description: 'Tarifa de servicio - OFFSZN',
+                payee: platformPayee
+            });
+        }
+
+        console.log(`[PayPalOrder] Setup Complete. Total Units: ${purchaseUnits.length} | Units Detail:`, JSON.stringify(purchaseUnits.map(u => ({ ref: u.reference_id, amt: u.amount.value, payee: u.payee })), null, 2));
+
+        if (purchaseUnits.length === 0) {
+            console.error('[PayPalOrder] Empty purchase units array.');
+            return res.status(400).json({ error: 'La orden no contiene unidades de compra válidas.' });
+        }
+
+        const grandTotalCalculated = purchaseUnits.reduce((acc, unit) => acc + parseFloat(unit.amount.value), 0);
+        if (grandTotalCalculated <= 0) {
+            console.error('[PayPalOrder] Grand Total is 0 or negative:', grandTotalCalculated);
+            return res.status(400).json({ error: 'El total de la orden debe ser mayor a 0.' });
+        }
+
+        console.log('[PayPalOrder] Multi-Payee Setup Complete. Units:', purchaseUnits.length, 'Total:', grandTotalCalculated.toFixed(2));
 
         const request = new paypal.orders.OrdersCreateRequest();
         request.prefer("return=representation");
@@ -340,6 +562,26 @@ export const capturePayPalOrder = async (req, res) => {
                     console.error("[PayPalCapture] Negotiation proposal not found during capture:", negotiateToken);
                 } else {
                     const agreedPrice = parseFloat(proposal.counter_amount || proposal.amount_offszn);
+
+                    // Fetch producer plan for commission calculation
+                    const { data: profile } = await supabase
+                        .from('profiles')
+                        .select('plan')
+                        .eq('id', proposal.product?.producer_id) // Corrected from proposal.products?.producer_id
+                        .single();
+
+                    const producerPlan = profile?.plan || 'free';
+                    let commission = 0;
+
+                    if (producerPlan === 'starter') {
+                        commission = agreedPrice < 20 ? 0.50 : agreedPrice * 0.03;
+                    } else if (producerPlan === 'pro') {
+                        commission = 0;
+                    } else {
+                        commission = agreedPrice < 20 ? 1.00 : agreedPrice * 0.05;
+                    }
+
+                    const total = (agreedPrice + commission).toFixed(2); // Use agreedPrice directly, it's already a float
                     cartItems = [{
                         product: proposal.product,
                         license_name: proposal.selected_license || 'Standard',
@@ -422,10 +664,13 @@ export const capturePayPalOrder = async (req, res) => {
                 .eq('status', 'approved');
 
             const producerIds = [...new Set(dbProducts.map(p => p.producer_id))];
-            const { data: producerSettings } = await supabase
-                .from('users')
-                .select('id, license_settings')
-                .in('id', producerIds);
+            const [{ data: producerSettings, error: pSetError }, { data: producerPlans, error: pPlanError }] = await Promise.all([
+                supabase.from('users').select('id, license_settings').in('id', producerIds),
+                supabase.from('profiles').select('id, plan').in('id', producerIds)
+            ]);
+
+            if (pSetError) console.error("[PayPalCapture] Error fetching producer settings:", pSetError);
+            if (pPlanError) console.error("[PayPalCapture] Error fetching producer plans:", pPlanError);
 
             let subtotalForCoupon = 0;
             dbProducts.forEach(p => {
@@ -501,7 +746,7 @@ export const capturePayPalOrder = async (req, res) => {
                     if (item.is_negotiation) {
                         verifiedPrice = item.variant_price;
                     } else {
-                        const licKey = (item.license_name || 'basic').toLowerCase();
+                        const licKey = mapLicenseToKey(item.license_name || 'basic');
                         const productOverride = dbProd.licenses ? dbProd.licenses[licKey]?.price : null;
                         const producerPrice = producer?.license_settings ? producer.license_settings[licKey]?.price : null;
                         const dbFieldMap = {
@@ -522,10 +767,26 @@ export const capturePayPalOrder = async (req, res) => {
 
                 let commission = 0;
                 if (verifiedPrice > 0) {
-                    if (verifiedPrice < 20) {
-                        commission = 1.00;
+                    const producerProfile = producerPlans?.find(pp => pp.id === dbProd.producer_id);
+                    const producerPlan = producerProfile?.plan || 'free';
+
+                    if (producerPlan === 'starter') {
+                        // Starter: 3% (min $0.50 if < $20)
+                        if (verifiedPrice < 20) {
+                            commission = 0.50;
+                        } else {
+                            commission = verifiedPrice * 0.03;
+                        }
+                    } else if (producerPlan === 'pro') {
+                        // Pro: 0%
+                        commission = 0;
                     } else {
-                        commission = verifiedPrice * 0.05;
+                        // Free: 5% (min $1.00 if < $20)
+                        if (verifiedPrice < 20) {
+                            commission = 1.00;
+                        } else {
+                            commission = verifiedPrice * 0.05;
+                        }
                     }
                 }
 

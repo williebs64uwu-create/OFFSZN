@@ -209,7 +209,7 @@ function mostrarProductos(products) {
 
   grid.innerHTML = products.map(product => {
 
-    let imgUrl = "https://via.placeholder.com/300x180/7209b7/000000?text=OFFSZN";
+    let imgUrl = "/images/portada-default.png"; // OFFSZN Default placeholder
     if (product.image_url) {
       try {
         const optimizedUrlBase = product.image_url.replace('/object/', '/render/image/');

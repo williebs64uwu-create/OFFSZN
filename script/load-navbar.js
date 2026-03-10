@@ -20,9 +20,8 @@
      * 4. If different, update DOM and cache.
      */
 
-    // 1. Check if navbar is already statically injected (performance optimization)
-    if (document.querySelector('header.navbar')) {
-        console.log('load-navbar.js: Navbar already present in DOM. Skipping fetch.');
+    if (placeholder && document.querySelector('header.navbar')) {
+        placeholder.remove();
         if (placeholder) placeholder.remove();
         window.dispatchEvent(new CustomEvent('offszn-navbar-loaded'));
         initGlobalDependencies();
@@ -30,7 +29,6 @@
     }
 
     if (!placeholder) {
-        console.warn('load-navbar.js: No <div id="navbar-placeholder"> found on this page.');
         return;
     }
 

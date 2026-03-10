@@ -18,20 +18,42 @@ export const getMyFavorites = async (req, res) => {
             return res.status(200).json([]);
         }
 
-        const productIds = likes.map(l => l.target_id);
+        const productIds = likes.map(l => l.target_id).filter(id => id != null && id !== undefined && id !== 'undefined');
 
-        // 2. Fetch Products Details
+        if (productIds.length === 0) {
+            return res.status(200).json([]);
+        }
+
+        // 2. Fetch Products (simplified - no FK join to avoid schema errors)
         const { data: products, error: productsError } = await supabase
             .from('products')
-            .select(`
-                *,
-                artist_users:users!products_producer_id_fkey(nickname, avatar_url, is_verified, id)
-            `)
+            .select('*')
             .in('id', productIds);
 
         if (productsError) throw productsError;
 
-        res.status(200).json(products || []);
+        // 3. Fetch producer data separately
+        const producerIds = [...new Set((products || []).map(p => p.producer_id).filter(Boolean))];
+        let producerMap = {};
+
+        if (producerIds.length > 0) {
+            const { data: producers } = await supabase
+                .from('users')
+                .select('id, nickname, avatar_url, is_verified')
+                .in('id', producerIds);
+
+            if (producers) {
+                producers.forEach(p => { producerMap[p.id] = p; });
+            }
+        }
+
+        // 4. Merge producer data into products
+        const enriched = (products || []).map(p => ({
+            ...p,
+            artist_users: producerMap[p.producer_id] || null
+        }));
+
+        res.status(200).json(enriched);
 
     } catch (err) {
         console.error("Error getMyFavorites:", err.message);

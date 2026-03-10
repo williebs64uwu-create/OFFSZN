@@ -1,25 +1,42 @@
 const PaymentSettings = {
     userId: null,
 
+    escapeHTML: function (str) {
+        if (!str) return "";
+        return str.replace(/[&<>"']/g, function (m) {
+            return {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            }[m];
+        });
+    },
+
     // Store fetched data
     data: {
         sidebar: null,
         status: null,
+        isVerified: false,
         sales: []
     },
 
     init: async function () {
+        // 0. Handle OAuth Redirect Params
+        this.handleUrlParams();
+
         // 1. Inject Skeletons IMMEDIATELY
         this.injectSidebarSkeletons();
         this.injectSalesSkeletons();
         this.injectButtonSkeleton();
         this.injectEmailSkeleton();
-        this.injectPayPalStatusSkeleton();
+        // this.injectPayPalStatusSkeleton();
 
-        console.log("Payment Settings Initialized");
+        // console.log("Payment Settings Initialized with OAuth Flow");
 
         if (!window.supabaseClient) {
-            console.warn("PaymentSettings: Supabase client not found.");
+            // console.warn("PaymentSettings: Supabase client not found.");
             return;
         }
 
@@ -53,6 +70,21 @@ const PaymentSettings = {
         this.setupListeners();
     },
 
+    handleUrlParams: function () {
+        const params = new URLSearchParams(window.location.search);
+        const paypalStatus = params.get('paypal');
+
+        if (paypalStatus === 'success') {
+            if (window.showToast) window.showToast("¡PayPal conectado y verificado correctamente!", "success");
+            // Clean URL
+            window.history.replaceState({}, document.title, window.location.pathname);
+        } else if (paypalStatus === 'error') {
+            const msg = params.get('msg') || 'Error desconocido';
+            if (window.showToast) window.showToast("Error al conectar PayPal: " + msg, "error");
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
+    },
+
     getSession: async function () {
         const { data: { session } } = await window.supabaseClient.auth.getSession();
         return session;
@@ -70,7 +102,7 @@ const PaymentSettings = {
             if (error) throw error;
             this.data.sidebar = data;
         } catch (err) {
-            console.error("Error fetching sidebar data:", err);
+            // console.error("Error fetching sidebar data:", err);
         }
     },
 
@@ -78,13 +110,14 @@ const PaymentSettings = {
         try {
             const { data: user, error } = await window.supabaseClient
                 .from('users')
-                .select('payment_methods')
+                .select('payment_methods, paypal_verified')
                 .eq('id', this.userId)
                 .single();
             if (error) throw error;
             this.data.status = user?.payment_methods?.paypal;
+            this.data.isVerified = user?.paypal_verified || false;
         } catch (err) {
-            console.error("Error fetching payment status:", err);
+            // console.error("Error fetching payment status:", err);
         }
     },
 
@@ -107,7 +140,7 @@ const PaymentSettings = {
             // Filter
             this.data.sales = data.filter(item => item.product && item.product.producer_id === this.userId);
         } catch (err) {
-            console.error("Error fetching sales history:", err);
+            // console.error("Error fetching sales history:", err);
             this.data.sales = null; // Mark as error
         }
     },
@@ -139,26 +172,63 @@ const PaymentSettings = {
         if (!container) return;
 
         // Matches .transaction-item .tx-grid structure exactly
-        container.innerHTML = Array(5).fill(0).map(() => `
-            <div class="skeleton-row">
-                <div style="display:flex; align-items:center; gap:12px;">
-                    <div class="skeleton-base skeleton-circle" style="width:40px; height:40px;"></div>
-                    <div style="flex:1;">
-                        <div class="skeleton-base skeleton-text" style="width:120px; margin-bottom:6px;"></div>
-                        <div class="skeleton-base skeleton-text" style="width:160px; margin-bottom:0;"></div>
-                    </div>
-                </div>
-                <div class="skeleton-base skeleton-text" style="width:80px; margin-bottom:0;"></div>
-                <div><div class="skeleton-base skeleton-status"></div></div>
-                <div class="skeleton-base skeleton-amount"></div>
-            </div>
-        `).join('');
+        container.innerHTML = '';
+        for (let i = 0; i < 5; i++) {
+            const row = document.createElement('div');
+            row.className = 'skeleton-row';
+
+            const leftCol = document.createElement('div');
+            leftCol.style.display = 'flex';
+            leftCol.style.alignItems = 'center';
+            leftCol.style.gap = '12px';
+
+            const circle = document.createElement('div');
+            circle.className = 'skeleton-base skeleton-circle';
+            circle.style.width = '40px';
+            circle.style.height = '40px';
+
+            const info = document.createElement('div');
+            info.style.flex = '1';
+            const text1 = document.createElement('div');
+            text1.className = 'skeleton-base skeleton-text';
+            text1.style.width = '120px';
+            text1.style.marginBottom = '6px';
+            const text2 = document.createElement('div');
+            text2.className = 'skeleton-base skeleton-text';
+            text2.style.width = '160px';
+            text2.style.marginBottom = '0';
+
+            info.appendChild(text1);
+            info.appendChild(text2);
+            leftCol.appendChild(circle);
+            leftCol.appendChild(info);
+
+            const date = document.createElement('div');
+            date.className = 'skeleton-base skeleton-text';
+            date.style.width = '80px';
+            date.style.marginBottom = '0';
+
+            const statusContainer = document.createElement('div');
+            const status = document.createElement('div');
+            status.className = 'skeleton-base skeleton-status';
+            statusContainer.appendChild(status);
+
+            const amount = document.createElement('div');
+            amount.className = 'skeleton-base skeleton-amount';
+
+            row.appendChild(leftCol);
+            row.appendChild(date);
+            row.appendChild(statusContainer);
+            row.appendChild(amount);
+
+            container.appendChild(row);
+        }
     },
 
     injectButtonSkeleton: function () {
         const btn = document.getElementById('btn-connect-paypal');
         if (btn) {
-            console.log("Applying skeleton to PayPal button");
+            // console.log("Applying skeleton to PayPal button");
             btn.classList.add('btn-loading-skeleton');
         }
     },
@@ -166,7 +236,15 @@ const PaymentSettings = {
     injectEmailSkeleton: function () {
         const emailEl = document.getElementById('paypal-display-email');
         if (emailEl) {
-            emailEl.innerHTML = `<div class="skeleton-base" style="width: 160px; height: 16px; border-radius: 4px; display: inline-block; vertical-align: middle;"></div>`;
+            emailEl.innerHTML = '';
+            const skeleton = document.createElement('div');
+            skeleton.className = 'skeleton-base';
+            skeleton.style.width = "160px";
+            skeleton.style.height = "16px";
+            skeleton.style.borderRadius = "4px";
+            skeleton.style.display = "inline-block";
+            skeleton.style.verticalAlign = "middle";
+            emailEl.appendChild(skeleton);
         }
     },
 
@@ -174,7 +252,14 @@ const PaymentSettings = {
         const label = document.getElementById('paypal-status-label');
         const dot = document.getElementById('paypal-status-dot');
         if (label) {
-            label.innerHTML = `<div class="skeleton-base" style="width: 70px; height: 14px; border-radius: 4px; display: inline-block;"></div>`;
+            label.innerHTML = '';
+            const skeleton = document.createElement('div');
+            skeleton.className = "skeleton-base";
+            skeleton.style.width = "70px";
+            skeleton.style.height = "14px";
+            skeleton.style.borderRadius = "4px";
+            skeleton.style.display = "inline-block";
+            label.appendChild(skeleton);
         }
         if (dot) {
             dot.style.backgroundColor = "rgba(255,255,255,0.05)";
@@ -193,8 +278,17 @@ const PaymentSettings = {
         if (roleEl) roleEl.textContent = data.role || 'Productor';
 
         if (avatarEl) {
+            avatarEl.innerHTML = '';
             if (data.avatar_url) {
-                avatarEl.innerHTML = `<img src="${data.avatar_url}" alt="Avatar" style="width:100%; height:100%; border-radius:inherit; object-fit:cover;">`;
+                const img = document.createElement('img');
+                img.src = data.avatar_url;
+                img.alt = "Avatar";
+                img.crossOrigin = "anonymous";
+                img.style.width = "100%";
+                img.style.height = "100%";
+                img.style.borderRadius = "inherit";
+                img.style.objectFit = "cover";
+                avatarEl.appendChild(img);
                 avatarEl.style.background = "transparent";
             } else {
                 avatarEl.textContent = (data.nickname || data.email || 'U').charAt(0).toUpperCase();
@@ -215,53 +309,110 @@ const PaymentSettings = {
         const mySales = this.data.sales;
 
         if (mySales === null) {
-            container.innerHTML = `<p style="color:#ef4444; text-align:center;">Error al cargar el historial.</p>`;
+            container.innerHTML = '';
+            const p = document.createElement('p');
+            p.style.color = "#ef4444";
+            p.style.textAlign = "center";
+            p.textContent = "Error al cargar el historial.";
+            container.appendChild(p);
             return;
         }
 
         if (mySales.length === 0) {
-            container.innerHTML = `
-                <div style="text-align: center; padding: 40px; color: var(--text-secondary);">
-                    <i class="bi bi-clipboard-data" style="font-size: 3rem; opacity: 0.2; display: block; margin-bottom: 16px;"></i>
-                    <p>No tienes ventas registradas aún.</p>
-                    <a href="/cuenta/subir-kit.html" style="color: var(--accent); font-weight: 600; text-decoration: none;">¡Sube tu primer producto!</a>
-                </div>
-            `;
+            container.innerHTML = '';
+            const div = document.createElement('div');
+            div.style.textAlign = "center";
+            div.style.padding = "40px";
+            div.style.color = "var(--text-secondary)";
+
+            const i = document.createElement('i');
+            i.className = "bi bi-clipboard-data";
+            i.style.fontSize = "3rem";
+            i.style.opacity = "0.2";
+            i.style.display = "block";
+            i.style.marginBottom = "16px";
+
+            const p = document.createElement('p');
+            p.textContent = "No tienes ventas registradas aún.";
+
+            const a = document.createElement('a');
+            a.href = "/cuenta/subir-kit.html";
+            a.style.color = "var(--accent)";
+            a.style.fontWeight = "600";
+            a.style.textDecoration = "none";
+            a.textContent = "¡Sube tu primer producto!";
+
+            div.appendChild(i);
+            div.appendChild(p);
+            div.appendChild(a);
+            container.appendChild(div);
             return;
         }
 
-        // Use .tx-grid + .transaction-item
-        container.innerHTML = mySales.map(sale => {
-            const date = new Date(sale.created_at).toLocaleDateString('es-ES', {
+        container.innerHTML = '';
+        mySales.forEach(sale => {
+            const dateStr = new Date(sale.created_at).toLocaleDateString('es-ES', {
                 day: '2-digit',
                 month: 'short',
                 year: 'numeric'
             });
             const customerName = sale.order?.buyer?.nickname || "Usuario Anónimo";
             const customerEmail = sale.order?.buyer?.email || "N/A";
-            const status = sale.order?.status || 'completed';
-            const amount = parseFloat(sale.price_at_purchase).toFixed(2);
+            const statusStr = sale.order?.status || 'completed';
+            const amountStr = parseFloat(sale.price_at_purchase).toFixed(2);
 
-            return `
-                <div class="transaction-item tx-grid">
-                    <div class="tr-customer">
-                        <i class="bi bi-person-circle" style="font-size: 1.5rem; color: #444;"></i>
-                        <div class="tr-customer-info">
-                            <h4>${customerName}</h4>
-                            <p>${customerEmail}</p>
-                        </div>
-                    </div>
-                    <div class="tr-date">${date}</div>
-                    <div><span class="tr-status ${status}">${status}</span></div>
-                    <div class="tr-amount">$${amount}</div>
-                    <div style="display: flex; justify-content: flex-end;">
-                        <button class="btn-security-log" onclick="PaymentSettings.viewSecurityLogs('${sale.order?.id}')" title="Ver Bitácora de Seguridad">
-                            <i class="bi bi-shield-lock"></i>
-                        </button>
-                    </div>
-                </div>
-            `;
-        }).join('');
+            const row = document.createElement('div');
+            row.className = 'transaction-item tx-grid';
+
+            const customerDiv = document.createElement('div');
+            customerDiv.className = 'tr-customer';
+            const icon = document.createElement('i');
+            icon.className = 'bi bi-person-circle';
+            icon.style.fontSize = '1.5rem';
+            icon.style.color = '#444';
+            const infoDiv = document.createElement('div');
+            infoDiv.className = 'tr-customer-info';
+            const h4 = document.createElement('h4');
+            h4.textContent = customerName;
+            const p = document.createElement('p');
+            p.textContent = customerEmail;
+            infoDiv.appendChild(h4);
+            infoDiv.appendChild(p);
+            customerDiv.appendChild(icon);
+            customerDiv.appendChild(infoDiv);
+
+            const dateDiv = document.createElement('div');
+            dateDiv.className = 'tr-date';
+            dateDiv.textContent = dateStr;
+
+            const statusContainer = document.createElement('div');
+            const statusSpan = document.createElement('span');
+            statusSpan.className = `tr-status ${statusStr}`;
+            statusSpan.textContent = statusStr;
+            statusContainer.appendChild(statusSpan);
+
+            const amountDiv = document.createElement('div');
+            amountDiv.className = 'tr-amount';
+            amountDiv.textContent = `$${amountStr}`;
+
+            const actionDiv = document.createElement('div');
+            actionDiv.style.display = 'flex';
+            actionDiv.style.justifyContent = 'flex-end';
+            const logBtn = document.createElement('button');
+            logBtn.className = 'btn-security-log';
+            logBtn.title = "Ver Bitácora de Seguridad";
+            logBtn.innerHTML = '<i class="bi bi-shield-lock"></i>'; // Static icon is okay
+            logBtn.onclick = () => this.viewSecurityLogs(sale.order?.id);
+            actionDiv.appendChild(logBtn);
+
+            row.appendChild(customerDiv);
+            row.appendChild(dateDiv);
+            row.appendChild(statusContainer);
+            row.appendChild(amountDiv);
+            row.appendChild(actionDiv);
+
+            container.appendChild(row);
+        });
     },
 
     updateUI: function (paypalEmail) {
@@ -269,6 +420,7 @@ const PaymentSettings = {
         const dot = document.getElementById('paypal-status-dot');
         const emailDisplay = document.getElementById('paypal-display-email');
         const btn = document.getElementById('btn-connect-paypal');
+        const isVerified = this.data.isVerified;
 
         if (!label || !dot) return;
 
@@ -277,11 +429,19 @@ const PaymentSettings = {
         if (dot) dot.style.backgroundColor = "";
 
         if (paypalEmail && this.isValidEmail(paypalEmail)) {
-            label.textContent = "Conectado";
+            label.innerHTML = '';
+            if (isVerified) {
+                const icon = document.createElement('i');
+                icon.className = 'bi bi-patch-check-fill';
+                label.appendChild(icon);
+                label.appendChild(document.createTextNode(' Verificado'));
+            } else {
+                label.textContent = 'Conectado';
+            }
             label.style.color = "#10b981";
             dot.className = "status-dot online";
             if (emailDisplay) emailDisplay.textContent = paypalEmail;
-            if (btn) btn.textContent = "Actualizar PayPal";
+            if (btn) btn.textContent = isVerified ? "Cambiar Cuenta PayPal" : "Verificar PayPal";
         } else {
             label.textContent = "No configurado";
             label.style.color = "#ef4444";
@@ -299,74 +459,54 @@ const PaymentSettings = {
     setupListeners: function () {
         const btn = document.getElementById('btn-connect-paypal');
         if (btn) {
-            // Remove old listeners? No easy way, but this element persists. 
-            // Better to clone or check if listener added. 
-            // For now, assuming simple page load.
-            btn.onclick = () => this.openModal();
-        }
-
-        const saveBtn = document.getElementById('btn-save-paypal');
-        if (saveBtn) {
-            saveBtn.onclick = () => this.save();
+            btn.onclick = () => this.startOAuthFlow();
         }
     },
 
-    openModal: function () {
-        const modal = document.getElementById('modalPayPal');
-        if (modal) modal.classList.add('active');
-    },
-
-    closeModal: function () {
-        const modal = document.getElementById('modalPayPal');
-        if (modal) modal.classList.remove('active');
-        const input = document.getElementById('inputPaypalEmail');
-        if (input) input.value = "";
-    },
-
-    save: async function () {
-        const input = document.getElementById('inputPaypalEmail');
-        let email = input.value.trim().toLowerCase();
-
-        email = email.match(/[a-zA-Z0-9._%+-]+@?[a-zA-Z0-9.-]+\.?[a-zA-Z]{0,}/)?.[0] || email;
-
-        if (!this.isValidEmail(email)) {
-            if (window.showToast) window.showToast("Por favor ingresa un correo de PayPal válido.", "error");
-            else alert("Por favor ingresa un correo de PayPal válido.");
-            return;
-        }
-
+    startOAuthFlow: async function () {
         try {
-            const { data: user } = await window.supabaseClient
-                .from('users')
-                .select('payment_methods')
-                .eq('id', this.userId)
-                .single();
+            // 1. Obtener el token de la sesión actual de Supabase
+            const { data: { session }, error: sessionError } = await window.supabaseClient.auth.getSession();
 
-            const currentMethods = user?.payment_methods || {};
-            currentMethods.paypal = email;
+            if (sessionError || !session) {
+                console.error('❌ No se pudo obtener la sesión:', sessionError);
+                if (window.showToast) window.showToast('Sesión expirada. Por favor, inicia sesión de nuevo.', 'error');
+                return;
+            }
 
-            const { error } = await window.supabaseClient
-                .from('users')
-                .update({ payment_methods: currentMethods })
-                .eq('id', this.userId);
+            const token = session.access_token;
 
-            if (error) throw error;
+            // 2. Llamar al backend para obtener la URL de PayPal con el header de Auth
+            const response = await fetch('/api/auth/paypal/connect', {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Accept': 'application/json'
+                }
+            });
 
-            if (window.showToast) window.showToast("PayPal configurado correctamente.", "success");
-            else alert("PayPal configurado correctamente.");
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Error al iniciar conexión');
+            }
 
-            this.closeModal();
+            const data = await response.json();
 
-            // Reload just status and render it
-            await this.fetchStatus();
-            this.renderStatus();
-
-            if (window.checkPaymentSetup) window.checkPaymentSetup(this.userId);
+            // 3. Si tenemos la URL, redirigimos
+            if (data.url) {
+                // console.log('🚀 Redirigiendo a PayPal...');
+                window.location.href = data.url;
+            } else {
+                throw new Error('No se recibió la URL de redirección');
+            }
 
         } catch (err) {
-            console.error("Error saving PayPal:", err);
-            if (window.showToast) window.showToast("Error al guardar: " + err.message, "error");
-            else alert("Error al guardar: " + err.message);
+            console.error('❌ Error en startOAuthFlow:', err);
+            if (window.showToast) {
+                window.showToast(err.message || 'Error al conectar con PayPal', 'error');
+            } else {
+                alert('Error al conectar con PayPal: ' + err.message);
+            }
         }
     },
 
@@ -385,68 +525,147 @@ const PaymentSettings = {
         const content = document.getElementById('security-logs-content');
         if (!content) return;
 
-        content.innerHTML = '<div style="text-align: center; color: #666; padding: 20px;">Consultando base de datos...</div>';
+        content.innerHTML = '';
+        const loading = document.createElement('div');
+        loading.style.textAlign = 'center';
+        loading.style.color = '#666';
+        loading.style.padding = '20px';
+        loading.textContent = 'Consultando base de datos...';
+        content.appendChild(loading);
 
         try {
-            // Check if download_logs table exists and search by order_id
-            // If it doesn't exist yet, we show a clean "No records" state with explanation
             const { data, error } = await window.supabaseClient
-                .from('download_logs') // This is the table we planned
+                .from('download_logs')
                 .select('*')
                 .eq('order_id', orderId)
                 .order('created_at', { ascending: false });
 
             if (error) {
                 if (error.code === 'PGRST116' || error.message.includes('not found')) {
-                    content.innerHTML = `
-                        <div style="text-align: center; padding: 30px; border: 1px dashed rgba(255,255,255,0.1); border-radius: 12px;">
-                            <i class="bi bi-info-circle" style="font-size: 2rem; color: #555; display: block; margin-bottom: 12px;"></i>
-                            <p style="color: #999; font-size: 0.9rem; margin: 0;">No hay descargas registradas para este pedido aún.</p>
-                            <p style="color: #666; font-size: 0.8rem; margin-top: 8px;">Las descargas se registran automáticamente al iniciar la descarga del archivo.</p>
-                        </div>
-                    `;
+                    content.innerHTML = '';
+                    const div = document.createElement('div');
+                    div.style.textAlign = "center";
+                    div.style.padding = "30px";
+                    div.style.border = "1px dashed rgba(255,255,255,0.1)";
+                    div.style.borderRadius = "12px";
+
+                    const i = document.createElement('i');
+                    i.className = "bi bi-info-circle";
+                    i.style.fontSize = "2rem";
+                    i.style.color = "#555";
+                    i.style.display = "block";
+                    i.style.marginBottom = "12px";
+
+                    const p1 = document.createElement('p');
+                    p1.style.color = "#999";
+                    p1.style.fontSize = "0.9rem";
+                    p1.style.margin = "0";
+                    p1.textContent = "No hay descargas registradas para este pedido aún.";
+
+                    const p2 = document.createElement('p');
+                    p2.style.color = "#666";
+                    p2.style.fontSize = "0.8rem";
+                    p2.style.marginTop = "8px";
+                    p2.textContent = "Las descargas se registran automáticamente al iniciar la descarga del archivo.";
+
+                    div.appendChild(i);
+                    div.appendChild(p1);
+                    div.appendChild(p2);
+                    content.appendChild(div);
                     return;
                 }
                 throw error;
             }
 
             if (!data || data.length === 0) {
-                content.innerHTML = `
-                    <div style="text-align: center; padding: 30px; border: 1px dashed rgba(255,255,255,0.1); border-radius: 12px;">
-                        <i class="bi bi-info-circle" style="font-size: 2rem; color: #555; display: block; margin-bottom: 12px;"></i>
-                        <p style="color: #999; font-size: 0.9rem; margin: 0;">No se han detectado intentos de descarga.</p>
-                    </div>
-                `;
+                content.innerHTML = '';
+                const div = document.createElement('div');
+                div.style.textAlign = "center";
+                div.style.padding = "30px";
+                div.style.border = "1px dashed rgba(255,255,255,0.1)";
+                div.style.borderRadius = "12px";
+
+                const i = document.createElement('i');
+                i.className = "bi bi-info-circle";
+                i.style.fontSize = "2rem";
+                i.style.color = "#555";
+                i.style.display = "block";
+                i.style.marginBottom = "12px";
+
+                const p = document.createElement('p');
+                p.style.color = "#999";
+                p.style.fontSize = "0.9rem";
+                p.style.margin = "0";
+                p.textContent = "No se han detectado intentos de descarga.";
+
+                div.appendChild(i);
+                div.appendChild(p);
+                content.appendChild(div);
                 return;
             }
 
-            content.innerHTML = data.map(log => `
-                <div class="security-log-item">
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
-                        <span class="log-date">${new Date(log.created_at).toLocaleString()}</span>
-                        <span class="log-ip">${log.ip_address || 'IP Desconocida'}</span>
-                    </div>
-                    <div style="color: #666; font-size: 0.7rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${log.user_agent}">
-                        ${log.user_agent || 'N/A'}
-                    </div>
-                </div>
-            `).join('');
+            content.innerHTML = '';
+            data.forEach(log => {
+                const item = document.createElement('div');
+                item.className = 'security-log-item';
+
+                const top = document.createElement('div');
+                top.style.display = 'flex';
+                top.style.justifyContent = 'space-between';
+                top.style.marginBottom = '4px';
+
+                const date = document.createElement('span');
+                date.className = 'log-date';
+                date.textContent = new Date(log.created_at).toLocaleString();
+
+                const ip = document.createElement('span');
+                ip.className = 'log-ip';
+                ip.textContent = log.ip_address || 'IP Desconocida';
+
+                top.appendChild(date);
+                top.appendChild(ip);
+
+                const ua = document.createElement('div');
+                ua.style.color = '#666';
+                ua.style.fontSize = '0.7rem';
+                ua.style.whiteSpace = 'nowrap';
+                ua.style.overflow = 'hidden';
+                ua.style.textOverflow = 'ellipsis';
+                ua.textContent = log.user_agent || 'N/A';
+                ua.title = log.user_agent || 'N/A';
+
+                item.appendChild(top);
+                item.appendChild(ua);
+                content.appendChild(item);
+            });
 
         } catch (err) {
-            console.warn("Security logs not available or table missing:", err);
-            content.innerHTML = `
-                <div style="text-align: center; padding: 20px;">
-                    <i class="bi bi-shield-slash" style="color: #444; font-size: 1.5rem;"></i>
-                    <p style="color: #888; font-size: 0.85rem; margin-top: 10px;">El monitoreo de seguridad está activado pero no se encontraron registros previos para esta transacción.</p>
-                </div>
-            `;
+            content.innerHTML = '';
+            const div = document.createElement('div');
+            div.style.textAlign = "center";
+            div.style.padding = "20px";
+
+            const i = document.createElement('i');
+            i.className = 'bi bi-shield-slash';
+            i.style.color = '#444';
+            i.style.fontSize = '1.5rem';
+
+            const p = document.createElement('p');
+            p.style.color = '#888';
+            p.style.fontSize = '0.85rem';
+            p.style.marginTop = '10px';
+            p.textContent = 'El monitoreo de seguridad está activado pero no se encontraron registros previos para esta transacción.';
+
+            div.appendChild(i);
+            div.appendChild(p);
+            content.appendChild(div);
         }
     }
 };
 
-// Make it global for inline onclick handlers
+// Make it global
 window.PaymentSettings = PaymentSettings;
-window.paymentsettings = PaymentSettings; // Case-insensitive fallback
+window.paymentsettings = PaymentSettings;
 
 // Auto-init
 document.addEventListener('DOMContentLoaded', () => PaymentSettings.init());

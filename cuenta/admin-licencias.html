@@ -264,10 +264,10 @@
         }
 
         .tab-btn.active {
-            background: var(--accent-purple);
-            color: #fff;
-            border-color: var(--accent-purple);
-            box-shadow: 0 4px 15px var(--accent-glow);
+            background: #fff;
+            color: #000;
+            border-color: #fff;
+            box-shadow: 0 4px 15px rgba(255, 255, 255, 0.2);
         }
 
         /* --- GRID LAYOUT --- */
@@ -343,7 +343,6 @@
             cursor: pointer;
             transition: all 0.2s;
             flex: 1;
-            /* Match width */
             display: flex;
             align-items: center;
             justify-content: center;
@@ -382,7 +381,8 @@
         /* Input & Select Styling - Enhanced Visibility */
         input[type="text"],
         input[type="number"],
-        .select-pro {
+        .select-pro,
+        .textarea-pro {
             width: 100%;
             background: #121212;
             border: 1px solid #333;
@@ -458,6 +458,96 @@
             color: #888;
         }
 
+        /* --- ADVANCED OPTIONS ACCORDION --- */
+        .advanced-accordion {
+            margin-top: 1.5rem;
+            border: 1px solid var(--border-subtle);
+            border-radius: 12px;
+            overflow: hidden;
+            background: rgba(255, 255, 255, 0.02);
+            transition: all 0.3s ease;
+        }
+
+        .advanced-header {
+            padding: 14px 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            user-select: none;
+            background: rgba(255, 255, 255, 0.03);
+            transition: background 0.2s;
+        }
+
+        .advanced-header:hover {
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .advanced-header span {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #aaa;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .advanced-header i {
+            transition: transform 0.3s ease;
+            color: #666;
+        }
+
+        .advanced-accordion.open .advanced-header i {
+            transform: rotate(180deg);
+        }
+
+        .advanced-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out, padding 0.3s;
+            padding: 0 18px;
+        }
+
+        .advanced-accordion.open .advanced-content {
+            max-height: 600px;
+            padding: 18px;
+        }
+
+        .textarea-pro {
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        /* Custom Scrollbar for Textarea */
+        .textarea-pro::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .textarea-pro::-webkit-scrollbar-track {
+            background: #0a0a0a;
+            border-radius: 12px;
+        }
+
+        .textarea-pro::-webkit-scrollbar-thumb {
+            background: #333;
+            border-radius: 12px;
+            border: 2px solid #0a0a0a;
+        }
+
+        .textarea-pro::-webkit-scrollbar-thumb:hover {
+            background: #444;
+        }
+
+        .input-group-badge {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #555;
+            font-size: 0.8rem;
+            font-weight: 700;
+            pointer-events: none;
+        }
+
         /* --- PRO TOGGLES --- */
         .checkbox-group-pro {
             display: flex;
@@ -494,22 +584,19 @@
         /* --- SAVE BUTTON --- */
         .btn-primary-full {
             background: #fff;
-            /* White button for high contrast/clean look */
             color: #000;
             border: none;
-            width: 100%;
-            padding: 16px;
-            border-radius: 50px;
-            /* Pill shape */
+            padding: 12px 24px;
+            border-radius: 12px;
             font-weight: 800;
             font-size: 0.95rem;
             cursor: pointer;
             transition: transform 0.1s, opacity 0.2s;
+            flex: 1;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 10px;
-            margin-top: 2rem;
             text-transform: uppercase;
             letter-spacing: 1px;
         }
@@ -944,8 +1031,8 @@
                     <!-- Actions Footer (Matched Margins) -->
                     <!-- Actions Footer (Matched Margins) -->
                     <div class="actions-footer" style="display: flex; gap: 1rem; margin-top: 2rem; padding-top: 0;">
-                        <div class="skeleton" style="flex: 1; height: 56px; border-radius: 12px;"></div>
-                        <div class="skeleton" style="flex: 1; height: 56px; border-radius: 50px;"></div>
+                        <div class="skeleton" style="flex: 1; height: 50px; border-radius: 12px;"></div>
+                        <div class="skeleton" style="flex: 1; height: 50px; border-radius: 12px;"></div>
                     </div>
                 </div>
 
@@ -1069,52 +1156,139 @@
                     <div class="form-section">
                         <div class="form-section-title">Límites de Uso</div>
                         <div class="form-grid">
+
                             <div class="form-group">
-                                <label>Streams Monetizados <i class="bi bi-question-circle-fill info-icon"
-                                        title="Total acumulado en todas las plataformas"></i></label>
-                                <select id="limitStreams" class="select-pro">
-                                    <option value="5000">5,000</option>
-                                    <option value="10000">10,000</option>
-                                    <option value="50000">50,000</option>
-                                    <option value="100000">100,000</option>
-                                    <option value="500000">500,000</option>
-                                    <option value="1000000">1,000,000</option>
-                                    <option value="UNLIMITED">ILIMITADO</option>
-                                </select>
+                                <label>Streams Monetizados</label>
+                                <div class="select-wrapper" style="position: relative;">
+                                    <select id="limitStreams" style="display: none;">
+                                        <option value="5000">5,000</option>
+                                        <option value="10000">10,000</option>
+                                        <option value="50000">50,000</option>
+                                        <option value="100000">100,000</option>
+                                        <option value="500000">500,000</option>
+                                        <option value="1000000">1,000,000</option>
+                                        <option value="UNLIMITED">ILIMITADO</option>
+                                    </select>
+                                    <div class="input-field select-pro" id="trigger-limitStreams"
+                                        onclick="window.toggleCustomSelect('limitStreams', event)"
+                                        style="padding: 0 16px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; height: 45px; user-select: none;">
+                                        <span id="display-limitStreams">5,000</span>
+                                        <svg style="width: 16px; height: 16px; color: #666; transition: transform 0.3s;"
+                                            id="chevron-limitStreams" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2">
+                                            <polyline points="6 9 12 15 18 9"></polyline>
+                                        </svg>
+                                    </div>
+                                    <div id="list-limitStreams" class="custom-scrollbar custom-dropdown-list"
+                                        style="display: none; position: absolute; top: calc(100% + 4px); left: 0; width: 100%; max-height: 200px; overflow-y: auto; background: #1a1a1a; border: 1px solid #333; border-radius: 8px; z-index: 9999; box-shadow: 0 4px 20px rgba(0,0,0,0.8);">
+                                    </div>
+                                </div>
                             </div>
 
                             <div class="form-group">
-                                <label>Unidades de Venta <i class="bi bi-question-circle-fill info-icon"
-                                        title="Descargas digitales permitidas"></i></label>
-                                <select id="limitSales" class="select-pro">
-                                    <option value="500">500</option>
-                                    <option value="2000">2,000</option>
-                                    <option value="5000">5,000</option>
-                                    <option value="10000">10,000</option>
-                                    <option value="UNLIMITED">ILIMITADO</option>
-                                </select>
+                                <label>Unidades de Venta</label>
+                                <div class="select-wrapper" style="position: relative;">
+                                    <select id="limitSales" style="display: none;">
+                                        <option value="500">500</option>
+                                        <option value="2000">2,000</option>
+                                        <option value="5000">5,000</option>
+                                        <option value="10000">10,000</option>
+                                        <option value="UNLIMITED">ILIMITADO</option>
+                                    </select>
+                                    <div class="input-field select-pro" id="trigger-limitSales"
+                                        onclick="window.toggleCustomSelect('limitSales', event)"
+                                        style="padding: 0 16px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; height: 45px; user-select: none;">
+                                        <span id="display-limitSales">500</span>
+                                        <svg style="width: 16px; height: 16px; color: #666; transition: transform 0.3s;"
+                                            id="chevron-limitSales" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2">
+                                            <polyline points="6 9 12 15 18 9"></polyline>
+                                        </svg>
+                                    </div>
+                                    <div id="list-limitSales" class="custom-scrollbar custom-dropdown-list"
+                                        style="display: none; position: absolute; top: calc(100% + 4px); left: 0; width: 100%; max-height: 200px; overflow-y: auto; background: #1a1a1a; border: 1px solid #333; border-radius: 8px; z-index: 9999; box-shadow: 0 4px 20px rgba(0,0,0,0.8);">
+                                    </div>
+                                </div>
                             </div>
 
                             <div class="form-group">
-                                <label>Radio / Broadcasting <i class="bi bi-question-circle-fill info-icon"
-                                        title="Estaciones de radio permitidas"></i></label>
-                                <select id="limitRadio" class="select-pro">
-                                    <option value="No Permitido">No Permitido</option>
-                                    <option value="2 Estaciones">2 Estaciones</option>
-                                    <option value="ILIMITADO">ILIMITADO</option>
-                                </select>
+                                <label>Radio / Broadcasting</label>
+                                <div class="select-wrapper" style="position: relative;">
+                                    <select id="limitRadio" style="display: none;">
+                                        <option value="No Permitido">No Permitido</option>
+                                        <option value="2 Estaciones">2 Estaciones</option>
+                                        <option value="ILIMITADO">ILIMITADO</option>
+                                    </select>
+                                    <div class="input-field select-pro" id="trigger-limitRadio"
+                                        onclick="window.toggleCustomSelect('limitRadio', event)"
+                                        style="padding: 0 16px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; height: 45px; user-select: none;">
+                                        <span id="display-limitRadio">No Permitido</span>
+                                        <svg style="width: 16px; height: 16px; color: #666; transition: transform 0.3s;"
+                                            id="chevron-limitRadio" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2">
+                                            <polyline points="6 9 12 15 18 9"></polyline>
+                                        </svg>
+                                    </div>
+                                    <div id="list-limitRadio" class="custom-scrollbar custom-dropdown-list"
+                                        style="display: none; position: absolute; top: calc(100% + 4px); left: 0; width: 100%; max-height: 200px; overflow-y: auto; background: #1a1a1a; border: 1px solid #333; border-radius: 8px; z-index: 9999; box-shadow: 0 4px 20px rgba(0,0,0,0.8);">
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <!-- SECTION 3: ADVANCED OPTIONS (Accordion) -->
+                        <div class="advanced-accordion" id="advancedAccordion">
+                            <div class="advanced-header" onclick="toggleAdvanced()">
+                                <span><i class="bi bi-gear-fill" style="margin-right: 8px;"></i> Opciones
+                                    Avanzadas</span>
+                                <i class="bi bi-chevron-down"></i>
+                            </div>
+                            <div class="advanced-content">
+                                <div class="form-grid">
+                                    <div class="form-group">
+                                        <label>Publishing %</label>
+                                        <div style="position: relative;">
+                                            <input type="number" id="inputPublishing" min="0" max="100" step="1"
+                                                placeholder="Ej: 50">
+                                            <span class="input-group-badge">%</span>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Regalías %</label>
+                                        <div style="position: relative;">
+                                            <input type="number" id="inputRoyalties" min="0" max="100" step="1"
+                                                placeholder="Ej: 50">
+                                            <span class="input-group-badge">%</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+
+                                <div class="form-group" style="margin-top: 1.5rem; width: 100%;">
+                                    <label>Mensaje Personalizado</label>
+                                    <textarea id="inputThankYou" class="textarea-pro" maxlength="300"
+                                        style="min-height: 120px; resize: vertical; border-radius: 12px; width: 100%;"
+                                        placeholder="Ej: Gracias por tu compra!"></textarea>
+                                    <div style="display: flex; justify-content: flex-end; margin-top: 8px;">
+                                        <span class="char-counter" id="thankYouCounter"
+                                            style="position: static;">0/300</span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="actions-footer">
-                        <button class="btn-secondary" onclick="resetToDefaults()">
+                    <div class="skeleton-actions">
+                        <button class="btn-secondary" style="border-radius:12px; flex:1;" id="btnResetTab">
+
                             <i class="bi bi-arrow-counterclockwise"></i> Restablecer Valores
                         </button>
-                        <button class="btn-primary-full" onclick="saveLicense()">
-                            <i class="bi bi-cloud-arrow-up-fill"></i> Guardar Cambios
+                        <button class="btn-primary-full" id="btnSaveTab">
+                            <i class="bi bi-cloud-arrow-up"></i> Guardar Cambios
                         </button>
                     </div>
+
                 </div>
 
                 <!-- RIGHT: PREVIEW PANEL (Bento Style) -->
@@ -1164,28 +1338,14 @@
             </div>
         </div>
         </div>
-
-        <!-- CUSTOM MODAL -->
-        <div class="custom-modal-overlay" id="confirmModal">
-            <div class="custom-modal">
-                <h3>¿Estás seguro?</h3>
-                <p>Se restablecerán los valores por defecto para esta licencia. Esto no guardará los cambios
-                    automáticamente.</p>
-                <div class="modal-actions">
-                    <button class="btn-modal-cancel" onclick="closeModal()">Cancelar</button>
-                    <button class="btn-modal-confirm" onclick="confirmReset()">Sí, Restablecer</button>
-                </div>
-            </div>
-        </div>
-
         <!-- LOGIC -->
         <script>
             // --- DEFAULTS ---
             const defaults = {
-                basic: { name: 'Basic Lease', price: 20.00, enabled: true, files: { wav: false, stems: false }, usage: { streams: '50000', sales: '2000', radio: 'No Permitido' } },
-                premium: { name: 'Premium Lease', price: 50.00, enabled: true, files: { wav: true, stems: false }, usage: { streams: '500000', sales: '5000', radio: '2 Estaciones' } },
-                trackout: { name: 'Trackout Lease', price: 100.00, enabled: true, files: { wav: true, stems: true }, usage: { streams: '1000000', sales: '10000', radio: 'ILIMITADO' } },
-                unlimited: { name: 'Unlimited License', price: 300.00, enabled: true, files: { wav: true, stems: true }, usage: { streams: 'UNLIMITED', sales: 'UNLIMITED', radio: 'ILIMITADO' } }
+                basic: { name: 'Basic Lease', price: 20.00, enabled: true, files: { wav: false, stems: false }, usage: { streams: '50000', sales: '2000', radio: 'No Permitido' }, publishing: 50, royalties: 50, credits: '', thankYou: 'Felicidades por tu licencia! Esta instrumental tiene el potencial de llevar tu tema al siguiente nivel. Estoy emocionado por escuchar lo que crearás; la constancia y calidad siempre ganan. A romperla en el estudio! ' },
+                premium: { name: 'Premium Lease', price: 50.00, enabled: true, files: { wav: true, stems: false }, usage: { streams: '500000', sales: '5000', radio: '2 Estaciones' }, publishing: 50, royalties: 50, credits: '', thankYou: 'Felicidades por tu licencia! Esta instrumental tiene el potencial de llevar tu tema al siguiente nivel. Estoy emocionado por escuchar lo que crearás; la constancia y calidad siempre ganan. A romperla en el estudio! ' },
+                trackout: { name: 'Trackout Lease', price: 100.00, enabled: true, files: { wav: true, stems: true }, usage: { streams: '1000000', sales: '10000', radio: 'ILIMITADO' }, publishing: 50, royalties: 50, credits: '', thankYou: 'Felicidades por tu licencia!  Esta instrumental tiene el potencial de llevar tu tema al siguiente nivel. Estoy emocionado por escuchar lo que crearás; la constancia y calidad siempre ganan. A romperla en el estudio! ' },
+                unlimited: { name: 'Unlimited License', price: 300.00, enabled: true, files: { wav: true, stems: true }, usage: { streams: 'UNLIMITED', sales: 'UNLIMITED', radio: 'ILIMITADO' }, publishing: 50, royalties: 50, credits: '', thankYou: 'Felicidades por tu licencia!  Esta instrumental tiene el potencial de llevar tu tema al siguiente nivel. Estoy emocionado por escuchar lo que crearás; la constancia y calidad siempre ganan. A romperla en el estudio! ' }
             };
 
             let currentTab = null;
@@ -1211,7 +1371,12 @@
                 pFiles: document.getElementById('prevFiles'),
 
                 overlay: document.getElementById('inactiveOverlay'),
-                enabledText: document.getElementById('enabledText')
+                enabledText: document.getElementById('enabledText'),
+
+                // Advanced
+                publishing: document.getElementById('inputPublishing'),
+                royalties: document.getElementById('inputRoyalties'),
+                thankYou: document.getElementById('inputThankYou')
             };
 
             // --- INIT ---
@@ -1219,7 +1384,7 @@
                 const { data: { session } } = await window.supabaseClient.auth.getSession();
 
                 if (!session) {
-                    // ?? SEGURIDAD: Si no hay sesi�n, fuera de aqu�.
+                    // ?? SEGURIDAD: Si no hay sesin, fuera de aqu.
                     window.location.href = '/login.html';
                     return;
                 }
@@ -1236,7 +1401,12 @@
                 document.getElementById('skeleton-container').style.display = 'none';
                 document.getElementById('real-content').style.display = 'flex'; // Use flex to match original definition if any, or block
 
-                // ?? PERSISTENCIA DE TAB: Recuperamos la �ltima pesta�a visitada
+                // Initialize custom drops
+                initCustomSelect('limitStreams');
+                initCustomSelect('limitSales');
+                initCustomSelect('limitRadio');
+
+                // ?? PERSISTENCIA DE TAB: Recuperamos la ltima pestaa visitada
                 const lastTab = localStorage.getItem('adminLastTab') || 'basic';
                 switchTab(lastTab);
 
@@ -1248,7 +1418,7 @@
                 updateCurrentState(); // Guardamos el estado del tab anterior
                 currentTab = tab;
 
-                // ?? RETENCI�N: Guardamos d�nde estamos para si recarga
+                // ?? RETENCIN: Guardamos dnde estamos para si recarga
                 localStorage.setItem('adminLastTab', tab);
 
                 document.querySelectorAll('.tab-btn').forEach(b => {
@@ -1261,7 +1431,7 @@
 
                 const data = currentLicenses[tab];
 
-                // ?? CORRECCI�N CR�TICA: Asegurar que los inputs reciban valores v�lidos
+                // ?? CORRECCIN CRTICA: Asegurar que los inputs reciban valores vlidos
                 els.name.value = data.name || defaults[tab].name;
                 els.price.value = data.price || defaults[tab].price;
                 els.enabled.checked = (data.enabled !== false);
@@ -1271,9 +1441,37 @@
                 els.sales.value = data.usage.sales;
                 els.radio.value = data.usage.radio;
 
+                // Sync Advanced
+                els.publishing.value = data.publishing ?? defaults[tab].publishing;
+                els.royalties.value = data.royalties ?? defaults[tab].royalties;
+
+                // Set default thankYou
+                els.thankYou.value = data.thankYou || defaults[tab].thankYou;
+
+
+
                 toggleUnlimitedLock(tab === 'unlimited');
                 updatePreview();
                 validateAll();
+                updateCharCounters();
+
+                // Sync the custom dropdowns visually after values are applied natively
+                if (typeof window.syncCustomSelects === 'function') {
+                    window.syncCustomSelects();
+                }
+            }
+
+            // --- INFO MODAL LOGIC ---
+
+
+            window.toggleAdvanced = () => {
+                const acc = document.getElementById('advancedAccordion');
+                acc.classList.toggle('open');
+            };
+
+            function updateCharCounters() {
+                document.getElementById('thankYouCounter').innerText = `${els.thankYou.value.length}/300`;
+                document.getElementById('nameCounter').innerText = `${els.name.value.length}/20`;
             }
 
             function toggleUnlimitedLock(lock) {
@@ -1348,17 +1546,33 @@
                 d.usage.streams = els.streams.value;
                 d.usage.sales = els.sales.value;
                 d.usage.radio = els.radio.value;
+
+                d.publishing = parseInt(els.publishing.value) || 0;
+                d.royalties = parseInt(els.royalties.value) || 0;
+                d.thankYou = els.thankYou.value;
             }
 
             // --- VALIDATION & LISTENERS ---
             function setupListeners() {
-                const inputs = document.querySelectorAll('input, select');
+                const inputs = document.querySelectorAll('input, select, textarea');
                 const nameInput = document.getElementById('inputName');
-                const counter = document.getElementById('nameCounter');
+                const nameCounter = document.getElementById('nameCounter');
+                const thankYouInput = document.getElementById('inputThankYou');
+                const thankYouCounter = document.getElementById('thankYouCounter');
 
-                if (nameInput && counter) {
+                if (nameInput && nameCounter) {
                     nameInput.addEventListener('input', function () {
-                        counter.innerText = `${this.value.length}/20`;
+                        nameCounter.innerText = `${this.value.length}/20`;
+                    });
+                }
+
+                if (thankYouInput && thankYouCounter) {
+                    thankYouInput.addEventListener('input', function () {
+                        // Sanitize: Replace 2 or more consecutive newlines with exactly 2 newlines (1 empty line max)
+                        this.value = this.value.replace(/\n\s*\n\s*\n/g, '\n\n');
+
+                        thankYouCounter.innerText = `${this.value.length}/200`;
+                        updatePreview();
                     });
                 }
 
@@ -1372,8 +1586,16 @@
                                 if (parts[1].length > 2) i.value = parts[0] + '.' + parts[1].slice(0, 2);
                             }
                         }
+
+                        // Integer only for percentages
+                        if (i.id === 'inputPublishing' || i.id === 'inputRoyalties') {
+                            i.value = i.value.replace(/[^0-9]/g, '');
+                            if (parseInt(i.value) > 100) i.value = "100";
+                        }
+
                         updatePreview();
                         validateField(i);
+                        updateCharCounters();
                     });
 
                     if (i.id === 'inputPrice') {
@@ -1425,9 +1647,13 @@
                 try {
                     const { data, error } = await window.supabaseClient
                         .from('users')
-                        .select('license_settings')
+                        .select('license_settings, nickname')
                         .eq('id', window.currentUser.id)
                         .maybeSingle();
+
+                    if (data) {
+                        window.currentUserNickname = data.nickname;
+                    }
 
                     if (data && data.license_settings) {
                         const saved = data.license_settings;
@@ -1438,13 +1664,17 @@
                                 currentLicenses[key] = {
                                     ...defaults[key],
                                     ...saved[key],
-                                    // Validación extra de precio: si es null, vacío o NaN, forzar default
+                                    // Validacin extra de precio: si es null, vaco o NaN, forzar default
                                     price: (saved[key].price !== null && saved[key].price !== undefined && saved[key].price !== '' && !isNaN(saved[key].price)) ? saved[key].price : defaults[key].price,
-                                    name: (saved[key].name && saved[key].name.trim() !== "") ? saved[key].name : defaults[key].name
+                                    name: (saved[key].name && saved[key].name.trim() !== "") ? saved[key].name : defaults[key].name,
+                                    publishing: saved[key].publishing ?? defaults[key].publishing,
+                                    royalties: saved[key].royalties ?? defaults[key].royalties,
+                                    credits: saved[key].credits ?? defaults[key].credits,
+                                    thankYou: saved[key].thankYou ?? defaults[key].thankYou
                                 };
                             }
                         }
-                        // console.log("Sincronización Elite Completada ✅"); // 🧹 CLEANUP
+                        // console.log("Sincronización Elite Completada ?"); // ?? CLEANUP
                     }
                 } catch (err) {
                     console.error("Error cargando configuración:", err);
@@ -1460,7 +1690,11 @@
                     sales: '500',
                     radio: 'No Permitido',
                     files: { mp3: true, wav: false, stems: false },
-                    enabled: true
+                    enabled: true,
+                    publishing: 50,
+                    royalties: 50,
+                    credits: '',
+                    thankYou: 'Felicidades por tu licencia! ?? Esta instrumental tiene el potencial de llevar tu tema al siguiente nivel. Estoy emocionado por escuchar lo que crearás; la constancia y calidad siempre ganan. A romperla en el estudio! ??'
                 },
                 'premium': {
                     name: 'Premium Lease',
@@ -1469,7 +1703,11 @@
                     sales: '2000',
                     radio: '2 Estaciones',
                     files: { mp3: true, wav: true, stems: false },
-                    enabled: true
+                    enabled: true,
+                    publishing: 50,
+                    royalties: 50,
+                    credits: '',
+                    thankYou: 'Felicidades por tu licencia! ?? Esta instrumental tiene el potencial de llevar tu tema al siguiente nivel. Estoy emocionado por escuchar lo que crearás; la constancia y calidad siempre ganan. A romperla en el estudio! ??'
                 },
                 'trackout': {
                     name: 'Trackout Lease',
@@ -1478,7 +1716,11 @@
                     sales: '10000',
                     radio: 'ILIMITADO',
                     files: { mp3: true, wav: true, stems: true },
-                    enabled: true
+                    enabled: true,
+                    publishing: 50,
+                    royalties: 50,
+                    credits: '',
+                    thankYou: 'Felicidades por tu licencia! ?? Esta instrumental tiene el potencial de llevar tu tema al siguiente nivel. Estoy emocionado por escuchar lo que crearás; la constancia y calidad siempre ganan. A romperla en el estudio! ??'
                 },
                 'unlimited': {
                     name: 'Unlimited License',
@@ -1487,34 +1729,20 @@
                     sales: 'UNLIMITED',
                     radio: 'ILIMITADO',
                     files: { mp3: true, wav: true, stems: true },
-                    enabled: true
+                    enabled: true,
+                    publishing: 50,
+                    royalties: 50,
+                    credits: '',
+                    thankYou: 'Felicidades por tu licencia! ?? Esta instrumental tiene el potencial de llevar tu tema al siguiente nivel. Estoy emocionado por escuchar lo que crearás; la constancia y calidad siempre ganan. A romperla en el estudio! ??'
                 }
             };
 
-            // --- CUSTOM MODAL LOGIC ---
-            const modal = document.getElementById('confirmModal');
-
-            function resetToDefaults() {
-                // Open Modal
-                modal.classList.add('show');
-            }
-
-            function closeModal() {
-                modal.classList.remove('show');
-            }
-
-            // Close on outside click
-            modal.addEventListener('click', (e) => {
-                if (e.target === modal) closeModal();
-            });
-
-            function confirmReset() {
-                closeModal();
-
+            // --- INSTANT RESET LOGIC ---
+            async function resetToDefaults() {
                 const defaults = LICENSE_DEFAULTS[currentTab];
                 if (!defaults) return;
 
-                // Update Inputs
+                // Sync UI with defaults
                 document.getElementById('inputName').value = defaults.name;
                 document.getElementById('inputPrice').value = defaults.price.toFixed(2);
                 document.getElementById('limitStreams').value = defaults.streams;
@@ -1526,12 +1754,18 @@
                 document.getElementById('checkStems').checked = defaults.files.stems;
                 document.getElementById('checkEnabled').checked = defaults.enabled;
 
+                // Update Advanced
+                els.publishing.value = defaults.publishing;
+                els.royalties.value = defaults.royalties;
+                els.thankYou.value = defaults.thankYou;
+
                 updatePreview();
-                // updateEnabledState(); // Removed: logic already in updatePreview
+                validateAll();
+                updateCharCounters();
+
+                // Automatically save changes to the database
+                await saveLicense();
             }
-
-
-
             // Custom Toast Notification
             window.showToast = (msg, type = 'success') => {
                 let container = document.getElementById('toastContainer');
@@ -1552,10 +1786,126 @@
                 }, 3000);
             }
 
+            // --- CUSTOM DROPDOWNS LOGIC ---
+            function initCustomSelect(selectId) {
+                const hiddenSelect = document.getElementById(selectId);
+                const customList = document.getElementById('list-' + selectId);
+                if (!hiddenSelect || !customList) return;
+
+                customList.innerHTML = Array.from(hiddenSelect.options).map(opt => `
+                    <div class="custom-option" 
+                        onclick="window.selectCustomOption('${selectId}', '${opt.value}')" 
+                        style="padding: 10px 14px; cursor: pointer; color: #ccc; border-bottom: 1px solid rgba(255,255,255,0.05); transition: background 0.2s; font-size: 14px;">
+                        ${opt.text}
+                    </div>
+                `).join('');
+
+                customList.querySelectorAll('.custom-option').forEach(el => {
+                    el.onmouseenter = () => { el.style.background = 'rgba(255,255,255,0.05)'; el.style.color = '#fff'; };
+                    el.onmouseleave = () => { el.style.background = 'transparent'; el.style.color = '#ccc'; };
+                });
+            }
+
+            window.toggleCustomSelect = function (selectId, e) {
+                if (e) e.stopPropagation();
+                // Close others first
+                document.querySelectorAll('.custom-dropdown-list').forEach(l => {
+                    if (l.id !== 'list-' + selectId) l.style.display = 'none';
+                });
+                document.querySelectorAll('[id^="chevron-"]').forEach(c => {
+                    if (c.id !== 'chevron-' + selectId) {
+                        c.style.transform = 'rotate(0deg)';
+                        c.style.color = '#666';
+                    }
+                });
+
+                const list = document.getElementById('list-' + selectId);
+                const chevron = document.getElementById('chevron-' + selectId);
+                if (!list) return;
+
+                const isVisible = list.style.display === 'block';
+                list.style.display = isVisible ? 'none' : 'block';
+                if (chevron) {
+                    chevron.style.transform = isVisible ? 'rotate(0deg)' : 'rotate(180deg)';
+                    chevron.style.color = isVisible ? '#fff' : '#666';
+                }
+            };
+
+            window.selectCustomOption = function (selectId, value) {
+                const hiddenSelect = document.getElementById(selectId);
+                const display = document.getElementById('display-' + selectId);
+                const list = document.getElementById('list-' + selectId);
+                const chevron = document.getElementById('chevron-' + selectId);
+
+                if (hiddenSelect) {
+                    hiddenSelect.value = value;
+                    hiddenSelect.dispatchEvent(new Event('change')); // Trigger event for updates
+                }
+
+                if (display) {
+                    const option = hiddenSelect.querySelector(`option[value="${value}"]`);
+                    display.textContent = option ? option.textContent : value;
+                    display.style.color = '#fff';
+                }
+
+                if (list) list.style.display = 'none';
+                if (chevron) {
+                    chevron.style.transform = 'rotate(0deg)';
+                    chevron.style.color = '#666';
+                }
+            };
+
+            window.syncCustomSelects = function () {
+                ['limitStreams', 'limitSales', 'limitRadio'].forEach(selectId => {
+                    const select = document.getElementById(selectId);
+                    const display = document.getElementById('display-' + selectId);
+                    if (select && display) {
+                        const opt = select.options[select.selectedIndex];
+                        if (opt) {
+                            display.textContent = opt.textContent;
+                            display.style.color = '#fff';
+                        }
+                    }
+                });
+            };
+
+            // Global click outside to close dropdowns
+            document.addEventListener('click', () => {
+                document.querySelectorAll('.custom-dropdown-list').forEach(l => l.style.display = 'none');
+                document.querySelectorAll('[id^="chevron-"]').forEach(c => {
+                    c.style.transform = 'rotate(0deg)';
+                    c.style.color = '#666';
+                });
+            });
+
+            let isSaving = false;
             async function saveLicense() {
-                updateCurrentState();
+                if (isSaving) return;
+
                 const btn = document.querySelector('.btn-primary-full');
+                const btnReset = document.getElementById('btnResetTab');
+
+                if (btn.disabled || btn.classList.contains('saving-lock')) return;
+
+                updateCurrentState();
                 const originalHTML = btn.innerHTML;
+
+                // Set lock
+                isSaving = true;
+
+                // Lock Save
+                btn.disabled = true;
+                btn.classList.add('saving-lock');
+                btn.style.opacity = '0.5';
+                btn.style.pointerEvents = 'none';
+
+                // Lock Reset
+                if (btnReset) {
+                    btnReset.disabled = true;
+                    btnReset.classList.add('saving-lock');
+                    btnReset.style.opacity = '0.5';
+                    btnReset.style.pointerEvents = 'none';
+                }
 
                 // 1. Duplicate Name Check
                 const names = Object.values(currentLicenses).map(l => l.name.trim().toLowerCase());
@@ -1575,28 +1925,69 @@
                         .update({ license_settings: currentLicenses })
                         .eq('id', window.currentUser.id);
 
-                    // ?? CLEANUP: Logs eliminados para producci�n
+                    // ?? CLEANUP: Logs eliminados para producci?n
 
                     btn.innerHTML = '<i class="bi bi-check-lg"></i> Guardado!';
                     btn.style.background = "#0cbc87";
                     showToast("Cambios guardados exitosamente");
 
                     setTimeout(() => {
+                        // Unlock Save
                         btn.innerHTML = originalHTML;
                         btn.style.background = "";
+                        btn.disabled = false;
+                        btn.classList.remove('saving-lock');
+                        btn.style.opacity = '1';
+                        btn.style.pointerEvents = 'auto';
+
+                        // Unlock Reset
+                        if (btnReset) {
+                            btnReset.disabled = false;
+                            btnReset.classList.remove('saving-lock');
+                            btnReset.style.opacity = '1';
+                            btnReset.style.pointerEvents = 'auto';
+                        }
+
+                        isSaving = false;
                     }, 2000);
                 } catch (e) {
                     console.error(e);
                     showToast("Error al guardar: " + e.message, "error");
                     btn.innerHTML = "Error";
+
+                    // Error Unlock Save
+                    btn.disabled = false;
+                    btn.classList.remove('saving-lock');
+                    btn.style.opacity = '1';
+                    btn.style.pointerEvents = 'auto';
+
+                    // Error Unlock Reset
+                    if (btnReset) {
+                        btnReset.disabled = false;
+                        btnReset.classList.remove('saving-lock');
+                        btnReset.style.opacity = '1';
+                        btnReset.style.pointerEvents = 'auto';
+                    }
+
+                    isSaving = false;
                 }
             }
 
             document.addEventListener('DOMContentLoaded', () => {
                 init();
+
+                // Reconnect buttons that were detached
+                const btnSave = document.getElementById('btnSaveTab');
+                const btnReset = document.getElementById('btnResetTab');
+
+                if (btnSave) {
+                    btnSave.addEventListener('click', saveLicense);
+                }
+                if (btnReset) {
+                    btnReset.addEventListener('click', resetToDefaults);
+                }
             });
         </script>
-
 </body>
 
 </html>

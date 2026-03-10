@@ -11,9 +11,9 @@
 const YouTubeUploader = (function () {
     // Configuration
     const CONFIG = {
-        // 🔥 FIX: Use ESM builds explicitly and INCLUDE WASM URL
-        FFMPEG_CORE_URL: 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm/ffmpeg-core.js',
-        FFMPEG_WASM_URL: 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm/ffmpeg-core.wasm',
+        // FFmpeg v0.11.6 + Single-Threaded Core (core-st v0.11.1)
+        FFMPEG_LIB_URL: 'https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js',
+        FFMPEG_CORE_URL: 'https://cdn.jsdelivr.net/npm/@ffmpeg/core-st@0.11.1/dist/ffmpeg-core.js',
 
         // This is the SAME client ID used in youtube-importer.js. 
         // We will need 'https://www.googleapis.com/auth/youtube.upload' scope.
@@ -257,7 +257,9 @@ const YouTubeUploader = (function () {
             };
         }
 
-        // 🔥 ATTACH PUBLISH LISTENER (was missing)
+        // 🔥 ELIMINADO PARA OFFSZN: No sobrescribir el onclick de publishBtn
+        // ya que la subida a OFFSZN debe ejecutarse en el handlePublish real.
+        /*
         if (publishBtn) {
             publishBtn.onclick = async () => {
                 if (!renderedVideoBlob) {
@@ -273,56 +275,50 @@ const YouTubeUploader = (function () {
                 }
             };
         }
+        */
     }
 
-    // ... init functions ...
-
     /**
-     * Load FFmpeg using ESM Dynamic Imports
-     * This avoids the "Worker from CDN" SecurityError seen with UMD builds.
+     * Load FFmpeg v0.11.6 (Single-Threaded Core @ffmpeg/core-st@0.11.1)
+     * Uses jsdelivr CDN which is whitelisted in CSP.
+     * core-st is compiled WITHOUT threading — no SharedArrayBuffer/COOP/COEP needed.
      */
-    /**
-     * Cargar FFmpeg desde archivos locales (Manual Download)
-     */
-    /**
- * Load FFmpeg v0.11.0 (Manual Local)
- */
     async function loadFFmpeg() {
         if (ffmpeg) return ffmpeg;
-        console.log('⏳ Loading FFmpeg v0.10.1 (Single Threaded)...');
+        console.log('⏳ Loading FFmpeg v0.11.6 (core-st@0.11.1)...');
 
         try {
-            // 1. Inyectar Libreria Global (v0.10.1)
+            // Safety polyfill: some ffmpeg init code may check for SAB existence
+            if (typeof SharedArrayBuffer === 'undefined') {
+                window.SharedArrayBuffer = ArrayBuffer;
+            }
+
+            // 1. Load the FFmpeg library (v0.11.6)
             if (!window.FFmpeg) {
                 await new Promise((resolve, reject) => {
                     const script = document.createElement('script');
-                    script.src = '/ffmpeg_std/ffmpeg.min.js'; // Single Threaded Lib
+                    script.src = CONFIG.FFMPEG_LIB_URL;
                     script.onload = resolve;
-                    script.onerror = () => reject(new Error('Falta /ffmpeg_std/ffmpeg.min.js'));
+                    script.onerror = () => reject(new Error('Failed to load ffmpeg.min.js'));
                     document.head.appendChild(script);
                 });
             }
 
-            // 2. Crear Instancia
+            // 2. Create instance with core-st (truly single-threaded, no SAB)
             const { createFFmpeg, fetchFile } = window.FFmpeg;
-            // Exponer fetchFile para generateVideo
             window.FFmpegUtil = { fetchFile };
 
-            // FIX: Use Absolute URL to prevent file:// issues
-            // v0.10.1 logic is slightly different internally but API is same
-            const corePath = new URL('/ffmpeg_std/ffmpeg-core.js', window.location.href).href;
-            console.log('🔧 Core Path Absolute (ST):', corePath);
+            console.log('🔧 Core Path (core-st):', CONFIG.FFMPEG_CORE_URL);
 
             ffmpeg = createFFmpeg({
                 log: true,
-                corePath: corePath,
-                // key: disable multithreading implicitly by using this core
+                corePath: CONFIG.FFMPEG_CORE_URL,
             });
 
-            // 3. Cargar
+            // 3. Load
             await ffmpeg.load();
 
-            console.log('✅ FFmpeg Loaded & Ready (v0.11 Local)');
+            console.log('✅ FFmpeg Loaded & Ready (v0.11.6, core-st@0.11.1)');
             return { ffmpeg, fetchFile };
 
         } catch (error) {
@@ -332,10 +328,10 @@ const YouTubeUploader = (function () {
     }
 
     /**
-     * Generate Video (v0.11 API)
+     * Generate Video using FFmpeg
      */
     async function generateVideo(coverBlob, audioBlob) {
-        console.log('🎥 Generating video (v0.11)...', coverBlob, audioBlob);
+        console.log('🎥 Generating video (ffmpeg v0.11.6)...', coverBlob, audioBlob);
 
         if (!ffmpeg || !ffmpeg.isLoaded()) {
             await loadFFmpeg();
@@ -346,7 +342,7 @@ const YouTubeUploader = (function () {
         // Determine Extensions
         const audioExt = audioBlob.type.includes('wav') ? 'wav' : 'mp3';
 
-        // Write Files to Virtual FS (v0.11 Syntax)
+        // Write Files to Virtual FS
         ffmpeg.FS('writeFile', 'input.jpg', await fetchFile(coverBlob));
         ffmpeg.FS('writeFile', `audio.${audioExt}`, await fetchFile(audioBlob));
 
@@ -361,6 +357,7 @@ const YouTubeUploader = (function () {
             '-c:v', 'libx264',
             '-tune', 'stillimage',
             '-preset', 'ultrafast',
+            '-vf', 'scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2:color=black',
             '-c:a', 'aac',
             '-b:a', '192k',
             '-pix_fmt', 'yuv420p',
@@ -453,68 +450,96 @@ const YouTubeUploader = (function () {
     }
 
     /**
-     * Call YouTube Data API (videos.insert) using Resumable Upload
+     * Helper to update the progress bar UI
+     * @param {number} percent 0-100
+     * @param {string} text Optional status text
      */
-    async function uploadToAPI(blob, metadata, token) {
-        console.log('📤 uploadToAPI called with:', { size: blob.size, metadata });
+    function updateProgressBar(percent, text) {
+        const bar = document.getElementById('publishProgressBar');
+        if (bar) bar.style.width = `${percent}%`;
+        const textEl = document.getElementById('publishOverlayText');
+        if (textEl && text) textEl.innerText = text;
+    }
 
-        const snippet = {
-            title: metadata.title,
-            description: metadata.description,
-            tags: metadata.tags,
-            categoryId: '10' // Music
-        };
-        const status = {
-            privacyStatus: 'public' // or private/unlisted
-        };
+    /**
+     * Call YouTube Data API (videos.insert) using Resumable Upload
+     * Switch to XMLHttpRequest for real progress tracking
+     */
+    function uploadToAPI(blob, metadata, token) {
+        return new Promise(async (resolve, reject) => {
+            try {
+                console.log('📤 uploadToAPI called with:', { size: blob.size, metadata });
+                updateProgressBar(5, 'Iniciando sesión de subida...');
 
-        const uploadData = new FormData();
-        uploadData.append('snippet', JSON.stringify(snippet));
-        uploadData.append('status', JSON.stringify(status));
+                const snippet = {
+                    title: metadata.title,
+                    description: metadata.description,
+                    tags: metadata.tags,
+                    categoryId: '10' // Music
+                };
+                const status = {
+                    privacyStatus: 'public'
+                };
 
-        // START RESUMABLE SESSION
-        console.log('📤 Initiating Resumable Session...');
-        const initResponse = await fetch('https://www.googleapis.com/upload/youtube/v3/videos?uploadType=resumable&part=snippet,status', {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ snippet, status })
+                // START RESUMABLE SESSION
+                const initResponse = await fetch('https://www.googleapis.com/upload/youtube/v3/videos?uploadType=resumable&part=snippet,status', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ snippet, status })
+                });
+
+                if (!initResponse.ok) {
+                    const err = await initResponse.json().catch(() => ({ error: { message: initResponse.statusText } }));
+                    throw new Error(err.error?.message || 'Error iniciando sesión de subida');
+                }
+
+                const uploadUrl = initResponse.headers.get('Location');
+                if (!uploadUrl) throw new Error('No se recibió URL de subida (Location header)');
+
+                updateProgressBar(10, 'Subiendo video a YouTube...');
+
+                // UPLOAD BYTES using XHR for events
+                const xhr = new XMLHttpRequest();
+                xhr.open('PUT', uploadUrl, true);
+
+                // Track Progress
+                xhr.upload.onprogress = (e) => {
+                    if (e.lengthComputable) {
+                        // Rescale progress: 10% to 95%
+                        const percent = Math.round((e.loaded / e.total) * 85) + 10;
+                        updateProgressBar(percent, `Subiendo: ${percent}%`);
+                    }
+                };
+
+                xhr.onload = () => {
+                    if (xhr.status >= 200 && xhr.status < 300) {
+                        try {
+                            const resp = JSON.parse(xhr.responseText);
+                            updateProgressBar(100, '¡Subida completada!');
+                            resolve(resp);
+                        } catch (e) {
+                            reject(new Error('Respuesta de YouTube inválida'));
+                        }
+                    } else {
+                        try {
+                            const err = JSON.parse(xhr.responseText);
+                            reject(new Error(err.error?.message || `Error en la subida: ${xhr.status}`));
+                        } catch (e) {
+                            reject(new Error(`Error en la subida: ${xhr.status}`));
+                        }
+                    }
+                };
+
+                xhr.onerror = () => reject(new Error('Error de red durante la subida'));
+                xhr.send(blob);
+
+            } catch (err) {
+                reject(err);
+            }
         });
-
-        if (!initResponse.ok) {
-            const errText = await initResponse.text();
-            console.error('❌ Init Failed:', initResponse.status, errText);
-            throw new Error(`Failed to initiate upload: ${initResponse.status} ${errText}`);
-        }
-
-        const uploadUrl = initResponse.headers.get('Location');
-        console.log('✅ Resumable Session Created. Upload URL:', uploadUrl);
-
-        if (!uploadUrl) {
-            throw new Error('No Location header found in resumable init response.');
-        }
-
-        // UPLOAD BYTES
-        console.log('📤 Uploading bytes...');
-        const uploadResponse = await fetch(uploadUrl, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'video/mp4'
-            },
-            body: blob
-        });
-
-        if (!uploadResponse.ok) {
-            const errText = await uploadResponse.text();
-            console.error('❌ Upload Failed:', uploadResponse.status, errText);
-            throw new Error(`Failed to upload video bytes: ${uploadResponse.status}`);
-        }
-
-        const jsonResp = await uploadResponse.json();
-        console.log('✅ Upload Complete!', jsonResp);
-        return jsonResp;
     }
 
 

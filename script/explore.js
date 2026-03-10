@@ -28,6 +28,18 @@ function isExplorePage() {
     return !!document.getElementById('explore-rows-container');
 }
 
+// 🛡️ SECURITY: XSS Sanitizer for dynamic innerHTML injection
+function escapeHTML(str) {
+    if (!str) return '';
+    return String(str).replace(/[&<>'"]/g, tag => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        "'": '&#39;',
+        '"': '&quot;'
+    }[tag] || tag));
+}
+
 // ------------------- INITIALIZATION -------------------
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -66,7 +78,6 @@ function getProductUrl(product) {
 window.getProductUrl = getProductUrl;
 
 async function initExplore() {
-    console.log("🚀 Explore V3 Initializing...");
     initGlobalListeners();
 
     // 🔥 OPTIMIZATION: Fire all data fetches in parallel
@@ -96,15 +107,12 @@ async function fetchData() {
     const hasSessionHint = document.cookie.includes('sb-access-token') || localStorage.getItem('authToken');
 
     if (!token && hasSessionHint) {
-        console.log("⏳ Explore: Session hint found, waiting for token refresh...");
         while (!token && attempts < 20) { // Max 2 seconds
             await new Promise(r => setTimeout(r, 100));
             token = window.AuthUtils.getAccessToken();
             attempts++;
             if (token) break;
         }
-        if (token) console.log(`✅ Explore: Token secured after ${attempts * 100}ms`);
-        else console.warn("⚠️ Explore: Token wait timed out. Proceeding as guest.");
     }
 
     // Initialize user state promises
@@ -147,7 +155,6 @@ async function fetchData() {
         // Process User State (Reliable)
         if (followingData && Array.isArray(followingData)) {
             window.currentUserFollowing = new Set(followingData);
-            console.log("✅ User Following Loaded:", window.currentUserFollowing.size);
         } else {
             window.currentUserFollowing = window.currentUserFollowing || new Set();
         }
@@ -329,7 +336,6 @@ function renderTwoColLists(category = 'Todo') {
                 });
 
                 ws.on('error', (e) => {
-                    console.warn(`Explore Waveform Error [ID: ${id}]:`, e);
                     container.classList.remove('skeleton-waveform');
                     container.innerHTML = '<div style="font-size: 0.6rem; color: #555; padding-top: 8px; font-weight: 500;">PREVIEW UNAVAILABLE</div>';
                 });
@@ -395,9 +401,9 @@ function renderTwoColLists(category = 'Todo') {
 }
 
 function createListItemHtml(item, index, type) {
-    const name = item.name || item.nickname || 'Sin nombre';
-    const sub = type === 'product' ? (item.producer_nickname || 'OFFSZN Artist') : `${item.products_count || 0} productos`;
-    const img = item.image_url || item.avatar_url || 'https://via.placeholder.com/60';
+    const name = escapeHTML(item.name || item.nickname || 'Sin nombre');
+    const sub = type === 'product' ? escapeHTML(item.producer_nickname || 'OFFSZN Artist') : `${item.products_count || 0} productos`;
+    const img = escapeHTML(item.image_url || item.avatar_url || '/images/portada-default.png');
     const isCircle = type === 'producer' ? 'circle' : '';
 
     // SEO Link
@@ -426,14 +432,14 @@ function createListItemHtml(item, index, type) {
     return `
         <div class="list-item-smart" data-id="${item.id}" data-type="product">
             <div class="list-item-index">${index}</div>
-            <img src="${img}" class="list-item-img" alt="cover" onclick="event.stopPropagation(); window.handleCoverClick(${item.id})">
-            <div class="list-item-info" onclick="event.stopPropagation(); window.handleInfoClick(event, ${item.id}, '${link}')">
+            <img src="${img}" class="list-item-img" alt="cover" onclick="event.stopPropagation(); window.handleCoverClick('${item.id}')">
+            <div class="list-item-info" onclick="event.stopPropagation(); window.handleInfoClick(event, '${item.id}', '${link}')">
                 <div class="list-item-name">${name}</div>
                 <div class="list-item-sub">${sub}</div>
             </div>
-            <div class="list-item-waveform skeleton-waveform" onclick="event.stopPropagation(); window.handleInfoClick(event, ${item.id}, '${link}')"></div>
+            <div class="list-item-waveform skeleton-waveform" onclick="event.stopPropagation(); window.handleInfoClick(event, '${item.id}', '${link}')"></div>
             <div class="list-item-value">
-                <div class="list-play-btn ${hasAudio ? '' : 'disabled'}" id="btn-play-waveform-${item.id}-${index}" onclick="event.stopPropagation(); ${hasAudio ? `window.playTrackById(${item.id})` : ''}">
+                <div class="list-play-btn ${hasAudio ? '' : 'disabled'}" id="btn-play-waveform-${item.id}-${index}" onclick="event.stopPropagation(); ${hasAudio ? `window.playTrackById('${item.id}')` : ''}">
                     <i class="bi bi-play-fill"></i>
                 </div>
             </div>
@@ -443,7 +449,7 @@ function createListItemHtml(item, index, type) {
 
 // Global Handlers for List Interactions
 window.handleCoverClick = function (id) {
-    window.playTrackById(id);
+    window.playTrackById(String(id));
 };
 
 window.handleInfoClick = function (event, id, link) {
@@ -550,9 +556,10 @@ function renderHeroSlide(product) {
     const heroSection = document.getElementById('explore-hero-container');
     if (!heroSection) return;
 
-    const imgUrl = product.image_url || 'https://via.placeholder.com/400';
-    const producer = product.producer_nickname || 'Artista';
-    const type = (product.product_type || 'Beat').toUpperCase();
+    const imgUrl = escapeHTML(product.image_url || '/images/portada-default.png');
+    const producer = escapeHTML(product.producer_nickname || 'Artista');
+    const type = escapeHTML((product.product_type || 'Beat').toUpperCase());
+    const productName = escapeHTML(product.name || 'Sin título');
 
     const dotsHtml = heroProducts.map((_, i) =>
         `<div class="hero-dot ${i === currentHeroIndex ? 'active' : ''}" onclick="window.navToHero(${i})"></div>`
@@ -568,7 +575,7 @@ function renderHeroSlide(product) {
             
             <div class="hero-content" style="opacity: 0; transform: translateY(15px);">
                 <span class="hero-tag desktop-only">Destacado</span>
-                <h1 class="hero-title">${product.name}</h1>
+                <h1 class="hero-title">${productName}</h1>
                 <p class="hero-subtitle desktop-only">Una creación de <strong>${producer}</strong> • ${type}</p>
                 
                 <!-- Mobile info row -->
@@ -628,7 +635,7 @@ function renderHeroSlide(product) {
     const mobilePlayBtn = heroSection.querySelector('#hero-mobile-play');
     const heroCard = heroSection.querySelector('#hero-card-clickable');
 
-    const doPlay = () => window.playTrack ? window.playTrack(product) : console.log("Play:", product);
+    const doPlay = () => window.playTrack ? window.playTrack(product) : null;
 
     if (playBtn) playBtn.onclick = (e) => { e.stopPropagation(); doPlay(); };
     if (mobilePlayBtn) mobilePlayBtn.onclick = (e) => { e.stopPropagation(); doPlay(); };
@@ -735,7 +742,7 @@ function createShelfRow(title, items, format = 'standard') {
         const cards = row.querySelectorAll('.product-card-smart, .preset-card-premium');
         cards.forEach(card => {
             const id = card.dataset.productId;
-            const item = items.find(i => i.id == id);
+            const item = items.find(i => String(i.id) === String(id));
 
             // Standard Card Actions
             const playBtn = card.querySelector('.quick-play-btn');
@@ -761,19 +768,19 @@ function initShelfNavigation(row, containerId, cardStep) {
 
 function createProductCardHtml(product, format = 'standard') {
     const isLiked = window.FavoritesManager ? window.FavoritesManager.isLiked(product.id) : false;
-    const img = product.image_url || 'https://via.placeholder.com/400';
-    const artist = product.producer_nickname || 'OFFSZN Artist';
+    const img = escapeHTML(product.image_url || '/images/portada-default.png');
+    const artist = escapeHTML(product.producer_nickname || 'OFFSZN Artist');
 
     const cleanName = (name) => {
         if (!name) return 'Sin título';
-        return name.replace(/_/g, ' ').replace(/\.(mp3|wav|zip|rar)$/i, '').replace(/\s+/g, ' ').trim();
+        return escapeHTML(name.replace(/_/g, ' ').replace(/\.(mp3|wav|zip|rar)$/i, '').replace(/\s+/g, ' ').trim());
     };
 
     if (format === 'premium-preset') {
         const pType = (product.product_type || '').toLowerCase();
         const isTrulyFree = pType !== 'beat' && (product.is_free === true || String(product.is_free) === 'true' || Number(product.price_basic) === 0);
         let priceValue = product.price_basic !== undefined && product.price_basic !== null ? product.price_basic : '20';
-        const price = isTrulyFree ? 'FREE' : `$${priceValue}`;
+        const price = isTrulyFree ? 'FREE' : (window.CurrencyManager ? window.CurrencyManager.format(parseFloat(priceValue) || 0) : `$${priceValue}`);
         return `
             <div class="preset-card-premium" data-product-id="${product.id}">
                 <img src="${img}" alt="${product.name}">
@@ -837,7 +844,9 @@ function playTrack(product) {
     if (!product) return;
     if (window.StickyPlayer) {
         // 1. Toggle Logic: If same track, toggle instead of reloading
-        if (window.StickyPlayer.getCurrentTrackId() == product.id) {
+        // Standardize IDs to strings to prevent precision issues
+        const currentId = window.StickyPlayer.getCurrentTrackId();
+        if (currentId && String(currentId) === String(product.id)) {
             window.StickyPlayer.togglePlay();
             return;
         }
@@ -909,9 +918,12 @@ function playTrack(product) {
 window.playTrack = playTrack;
 
 window.playTrackById = function (id) {
+    if (!id || id === 'undefined') return;
     if (!allProducts) return;
-    const product = allProducts.find(p => p.id == id);
+    const idStr = String(id);
+    const product = allProducts.find(p => String(p.id) === idStr);
     if (product) playTrack(product);
+    else console.warn('[Explore] Product not found for ID:', id);
 };
 
 // --- Missing Helpers Restored ---
@@ -935,48 +947,66 @@ function showErrorState() {
  * Leaderboard Renderer
  */
 function renderLeaderboard(producers) {
-    // Determine Top 10 (or less)
+    // Determine Top 10
     const top10 = producers.slice(0, 10);
-    const midPoint = Math.ceil(top10.length / 2);
 
-    // Split for 2 columns
-    const leftCol = top10.slice(0, midPoint);
-    const rightCol = top10.slice(midPoint);
-
-    const createRow = (p, i) => {
+    const createProducerCardHtml = (p) => {
         const isFollowing = window.currentUserFollowing && window.currentUserFollowing.has(p.id);
-        const btnClass = isFollowing ? 'lb-follow-btn following' : 'lb-follow-btn';
-        const btnText = isFollowing ? 'Siguiendo' : '<i class="bi bi-plus"></i> Seguir';
+        const btnClass = isFollowing ? 'lb-follow-btn-sp following' : 'lb-follow-btn-sp';
+        const btnText = isFollowing ? 'Siguiendo' : 'Seguir';
+
+        // Determine border class for Top 3
+        let borderClass = '';
+        if (p.rank === 1) borderClass = 'rank-1';
+        else if (p.rank === 2) borderClass = 'rank-2';
+        else if (p.rank === 3) borderClass = 'rank-3';
+
+        const safeAvatar = escapeHTML(p.avatar_url || '/images/portada-default.png'); // Default fallback
+        const safeNickname = escapeHTML(p.nickname || 'Productor');
 
         return `
-        <div class="leaderboard-item" onclick="window.location.href='/@${p.nickname}'">
-            <div class="lb-rank ${p.rank <= 3 ? 'top-rank' : ''}">#${p.rank}</div>
-            <img src="${p.avatar_url || 'https://via.placeholder.com/60'}" class="lb-avatar" alt="${p.nickname}">
-            <div class="lb-info">
-                <div class="lb-name">
-                    <span class="lb-nickname-text">${p.nickname}</span> 
-                    ${p.is_verified ? '<i class="bi bi-patch-check-fill lb-verified" style="flex-shrink: 0;"></i>' : ''}
+        <div class="producer-card-circle-sp" onclick="window.location.href='/@${safeNickname}'">
+            <div class="producer-avatar-wrapper">
+                <div class="lb-badge-sp">#${p.rank}</div>
+                <div class="producer-avatar-sp ${borderClass}">
+                    <img src="${safeAvatar}" alt="${safeNickname}">
                 </div>
-                <div class="lb-score">${p.score.toLocaleString()} pts</div>
             </div>
-             <button class="${btnClass}" onclick="event.stopPropagation(); toggleFollow('${p.id}', this)">
-                ${btnText}
-            </button>
+            <div class="producer-info-sp">
+                <div class="producer-name-sp">
+                    ${safeNickname}
+                </div>
+                <div class="producer-score-sp">${(p.score || 0).toLocaleString()} pts</div>
+                <button class="${btnClass}" onclick="event.stopPropagation(); toggleFollow('${p.id}', this)">
+                    ${btnText}
+                </button>
+            </div>
         </div>
-    `};
+        `;
+    };
+
+    const rowId = `lb-shelf-${Math.random().toString(36).substr(2, 9)}`;
+
+    // Initialize shelf navigation arrows after DOM injection
+    setTimeout(() => {
+        const rowContainer = document.getElementById(rowId);
+        if (rowContainer) {
+            const row = rowContainer.closest('.explore-row');
+            if (row) initShelfNavigation(row, rowId, 840);
+        }
+    }, 150);
 
     return `
         <div class="explore-row leaderboard-section" style="margin-top: 40px; margin-bottom: 60px;">
             <div class="row-header" style="justify-content: flex-start; margin-bottom: 30px;">
                 <h2 class="row-title">Top Productores del Mes</h2>
             </div>
-            <div class="leaderboard-grid">
-                <div class="lb-col">
-                    ${leftCol.map(p => createRow(p, p.rank)).join('')}
+            <div class="shelf-wrapper">
+                <button class="btn-nav prev"><i class="bi bi-chevron-left"></i></button>
+                <div class="shelf-container" id="${rowId}">
+                    ${top10.map(p => createProducerCardHtml(p)).join('')}
                 </div>
-                <div class="lb-col">
-                    ${rightCol.map(p => createRow(p, p.rank)).join('')}
-                </div>
+                <button class="btn-nav next"><i class="bi bi-chevron-right"></i></button>
             </div>
         </div>
     `;

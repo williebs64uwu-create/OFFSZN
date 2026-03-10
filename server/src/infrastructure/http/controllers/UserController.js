@@ -320,28 +320,120 @@ export const getProductsByNickname = async (req, res) => {
 
 export const getAllProducers = async (req, res) => {
     try {
-        const { data: producers, error } = await supabase
+        const { genre, specialty, search, sort = 'trending', role } = req.query;
+        const limit = parseInt(req.query.limit) || 20;
+        const page = parseInt(req.query.page) || 1;
+        const from = (page - 1) * limit;
+        const to = from + limit - 1;
+
+        let query = supabase
             .from('users')
-            .select('id, nickname, first_name, last_name, avatar_url, bio, role, is_verified')
-            .eq('is_producer', true)
-            .limit(20);
+            .select('id, nickname, first_name, last_name, avatar_url, profile_cover:banner_url, bio, role, is_verified, genres, specialty', { count: 'exact' });
+
+        if (!role) {
+            query = query.eq('is_producer', true);
+        }
+
+        if (genre) {
+            query = query.contains('genres', [genre]);
+        }
+        if (specialty) {
+            query = query.eq('specialty', specialty);
+        }
+
+        // --- Search Sanitization (Improved) ---
+        // Splits by space and matches all keywords in nickname OR first_name OR last_name
+        if (search && search.trim()) {
+            const keywords = search.trim().split(/\s+/).filter(k => k.length > 0);
+            if (keywords.length > 0) {
+                // If single word, simple ilike. If multiple, we match ALL keywords.
+                // Note: For simplicity and performance, we'll use single keyword logic or ilike nickname
+                // but we can join them with .or() if we want "willie inspired" to match "willieinspired"
+                // A better approach for "willie inspired" matches "willieinspired" is to remove spaces from nickname column in DB during comparison, 
+                // but since we only have ilike here, we'll try to match parts.
+
+                const terms = keywords.map(k => `nickname.ilike.%${k}%`);
+                query = query.or(terms.join(','));
+            }
+        }
+
+        // --- Role Filtering (Realistic & Accurate) ---
+        if (role) {
+            const roleList = role.split(',').map(r => r.trim().toLowerCase()).filter(Boolean);
+            if (roleList.length > 0) {
+                const orParts = roleList.map(lowRole => {
+                    if (lowRole === 'productores') {
+                        return 'role.ilike.%Productor%';
+                    } else if (lowRole === 'artistas') {
+                        return 'role.ilike.%Artista%';
+                    } else if (lowRole === 'compositores') {
+                        return 'role.ilike.%Compositor%';
+                    } else if (lowRole === 'ingenieros' || lowRole === 'ingenieros de mezcla/master') {
+                        return 'role.ilike.%Ingeniero%';
+                    } else if (lowRole === 'instrumentistas' || lowRole === 'instrumentista') {
+                        return 'role.ilike.%Músico%,role.ilike.%Instrumentista%';
+                    } else if (lowRole === 'oyentes' || lowRole === 'fan y consumidor' || lowRole === 'fan / consumidor') {
+                        return 'role.ilike.%Fan%,role.ilike.%Consumidor%,role.ilike.%Oyente%';
+                    }
+                    return `role.ilike.%${lowRole}%`;
+                });
+                query = query.or(orParts.join(','));
+            }
+        }
+
+        // Sorting Logic: Photo-First Rule
+        // Push users without photos (avatar_url and banner_url) to the end
+        // EXCEPTION: If sort is 'recent' or 'a-z', we prioritize chronology/alphabet over photos
+        if (sort !== 'recent' && sort !== 'a-z') {
+            query = query.order('avatar_url', { ascending: false, nullsFirst: false })
+                .order('banner_url', { ascending: false, nullsFirst: false });
+        }
+
+        if (sort === 'a-z') {
+            query = query.order('nickname', { ascending: true });
+        } else if (sort === 'recent') {
+            query = query.order('created_at', { ascending: false });
+        } else if (sort === 'popular') {
+            query = query.order('is_verified', { ascending: false }).order('created_at', { ascending: false });
+        } else {
+            // Trending/Default
+            query = query.order('is_verified', { ascending: false }).order('created_at', { ascending: false });
+        }
+
+        const { data: producers, count, error } = await query
+            .range(from, to);
 
         if (error) throw error;
 
-        // Fetch counts for each producer
-        const formattedProducers = await Promise.all(producers.map(async (p) => {
-            const [followersRes, productsRes] = await Promise.all([
-                supabase.from('followers').select('*', { count: 'exact', head: true }).eq('user_id', p.id),
-                supabase.from('products').select('*', { count: 'exact', head: true }).eq('producer_id', p.id).eq('status', 'approved')
-            ]);
-            return {
-                ...p,
-                followers_count: followersRes.count || 0,
-                products_count: productsRes.count || 0
-            };
+        // --- BULK FETCH METADATA (Optimization to avoid 500/503 errors) ---
+        const producerIds = producers.map(p => p.id);
+        const [followersData, productsData] = await Promise.all([
+            supabase.from('followers').select('user_id').in('user_id', producerIds),
+            supabase.from('products').select('producer_id').in('producer_id', producerIds).eq('status', 'approved')
+        ]);
+
+        const followersCountMap = {};
+        followersData.data?.forEach(f => {
+            followersCountMap[f.user_id] = (followersCountMap[f.user_id] || 0) + 1;
+        });
+
+        const productsCountMap = {};
+        productsData.data?.forEach(p => {
+            productsCountMap[p.producer_id] = (productsCountMap[p.producer_id] || 0) + 1;
+        });
+
+        const formattedProducers = producers.map(p => ({
+            ...p,
+            followers_count: followersCountMap[p.id] || 0,
+            products_count: productsCountMap[p.id] || 0
         }));
 
-        res.status(200).json(formattedProducers);
+        res.status(200).json({
+            producers: formattedProducers,
+            total: count,
+            page: parseInt(page),
+            totalPages: Math.ceil(count / limit)
+        });
     } catch (err) {
         console.error("Error getAllProducers:", err.message);
         res.status(500).json({ error: 'Error al cargar productores' });
@@ -379,7 +471,10 @@ export const getMyListenHistory = async (req, res) => {
             const p = item.products;
             if (p.producer_id) producerIds.add(p.producer_id);
             return {
-                ...p, // Spread product details
+                ...p,
+                // Ensure product_id is always present (client uses this, not just 'id')
+                product_id: String(item.product_id || p.id),
+                id: String(p.id),    // Convert to string to prevent BigInt precision loss in JSON
                 played_at: item.played_at
             };
         });

@@ -26,7 +26,7 @@ window.PurchasesManager = (function () {
                     startManager();
                 } else if (attempts >= maxAttempts) {
                     clearInterval(checkSupabase);
-                    console.error("❌ Supabase failed to initialize after 10 attempts.");
+                    // console.error("❌ Supabase failed to initialize after 10 attempts.");
                 }
             }, 500);
             return;
@@ -43,7 +43,7 @@ window.PurchasesManager = (function () {
         const { data: { session }, error: sessionError } = await window.supabaseClient.auth.getSession();
 
         if (sessionError || !session) {
-            console.warn("No active session found. Redirecting to login...");
+            // console.warn("No active session found. Redirecting to login...");
             // Redirect with a query param to come back after login
             const currentPath = window.location.pathname.split('/').pop() || 'index.html';
             window.location.href = `/pages/login.html?redirect=${currentPath}`;
@@ -113,7 +113,7 @@ window.PurchasesManager = (function () {
             renderPurchases(orders, container);
 
         } catch (err) {
-            console.error("Error fetching purchases:", err);
+            // console.error("Error fetching purchases:", err);
             renderErrorState(container);
         }
     }
@@ -157,7 +157,7 @@ window.PurchasesManager = (function () {
         row.innerHTML = `
             <img src="/images/portada-default.png" class="purchase-cover" style="opacity: 0.5; filter: grayscale(100%);" alt="Eliminado">
             <div class="purchase-info">
-                <span class="purchase-name" style="color: #666; font-style: italic;">Producto no disponible</span>
+                <span class="purchase-name" style="color: #666; font-style: italic;"></span>
                 <span class="purchase-producer" style="color: #ef4444; font-size: 0.8rem;">Eliminado por el autor</span>
                 <span style="font-size:0.75rem; color:#888;">${licenseType.toUpperCase()}</span>
             </div>
@@ -170,6 +170,11 @@ window.PurchasesManager = (function () {
                 </button>
             </div>
         `;
+
+        // Secure Text Injection
+        const nameSpan = row.querySelector('.purchase-name');
+        if (nameSpan) nameSpan.textContent = 'Producto no disponible';
+
         return row;
     }
 
@@ -253,8 +258,8 @@ window.PurchasesManager = (function () {
         row.innerHTML = `
             <img src="${product.image_url || '/images/portada-default.png'}" class="purchase-cover" alt="Portada" onerror="this.src='/images/portada-default.png'">
             <div class="purchase-info">
-                <span class="purchase-name" title="${product.name}">${product.name}</span>
-                <span class="purchase-producer">${producerName}</span>
+                <span class="purchase-name" title=""></span>
+                <span class="purchase-producer"></span>
                 <span style="font-size:0.75rem; color:#888;">${licenseType.toUpperCase()}</span>
             </div>
             <div class="purchase-monto">${montoHtml}</div>
@@ -264,6 +269,15 @@ window.PurchasesManager = (function () {
                 ${actionsHtml}
             </div>
         `;
+
+        // 🛡️ SECURE TEXT INJECTION (Prevent XSS)
+        const nameSpan = row.querySelector('.purchase-name');
+        const producerSpan = row.querySelector('.purchase-producer');
+        if (nameSpan) {
+            nameSpan.textContent = product.name;
+            nameSpan.title = product.name; // Set title securely too
+        }
+        if (producerSpan) producerSpan.textContent = producerName;
 
         return row;
     }
@@ -310,7 +324,7 @@ window.PurchasesManager = (function () {
 
             if (window.toast) window.toast.success('Descarga iniciada');
         } catch (err) {
-            console.error("Download Error:", err);
+            // console.error("Download Error:", err);
             if (window.toast) window.toast.error(err.message || 'Error en la descarga');
             else alert(err.message);
         } finally {
@@ -352,7 +366,7 @@ window.PurchasesManager = (function () {
 
                 <a href="/explorar.html" class="download-btn primary" style="margin-top: 50px; display: inline-flex; padding: 14px 28px;">Explorar Marketplace <i class="bi bi-arrow-right" style="margin-left:8px;"></i></a>
             </div>
-        `;
+            `;
     }
 
     function renderErrorState(container) {
@@ -364,7 +378,7 @@ window.PurchasesManager = (function () {
                 <p class="empty-subtitle">No logramos conectar con el servidor. Reconecta e intenta de nuevo.</p>
                 <button onclick="location.reload()" class="download-btn" style="margin: 0 auto; display: flex;">Reintentar</button>
             </div>
-        `;
+            `;
     }
 
     async function generatePDF(btnElement, dataStr) {
@@ -390,7 +404,7 @@ window.PurchasesManager = (function () {
             await window.generarLicencia(data);
             if (window.toast) window.toast.success('Licencia descargada');
         } catch (err) {
-            console.error("PDF Gen Error:", err);
+            // console.error("PDF Gen Error:", err);
             if (window.toast) window.toast.error('Error al generar licencia');
             else alert('Error al generar licencia');
         } finally {

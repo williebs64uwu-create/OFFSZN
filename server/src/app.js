@@ -3,6 +3,7 @@ import cors from 'cors'
 import path from 'path'
 import fs from 'fs'
 import { fileURLToPath } from 'url'
+import helmet from 'helmet';
 import { PORT } from '../src/shared/config/config.js'
 import { checkConnection } from './infrastructure/database/connection.js'
 
@@ -21,43 +22,59 @@ import { handleMercadoPagoWebhook } from './infrastructure/http/controllers/Orde
 import chatRoutes from './infrastructure/http/routes/chat.routes.js';
 import paypalRoutes from './infrastructure/http/routes/paypal.routes.js';
 import r2Routes from './infrastructure/http/routes/r2.routes.js';
+import subscriptionRoutes from './infrastructure/http/routes/subscription.routes.js';
+import requestRoutes from './infrastructure/http/routes/request.routes.js';
+import youtubeRoutes from './infrastructure/http/routes/youtube.routes.js';
 
 import cloudinaryRoutes from './infrastructure/http/routes/cloudinary.routes.js';
 import { submitNegotiation, respondNegotiation, generatePurchaseToken, validatePurchaseToken, reportIssue } from './infrastructure/http/controllers/NegotiationController.js';
 import { authenticateTokenMiddleware } from './infrastructure/middlewares/authenticateTokenMiddleware.js';
+import { globalLimiter } from './infrastructure/middlewares/rateLimiter.middleware.js';
 
 
 
 
 
 const app = express();
+app.disable('x-powered-by'); // Deshabilita el header que delata el uso de Express
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const rootPath = path.join(__dirname, '../../');
 
+// --- 0. SECURITY HEADERS (MANDATORY FOR FFMPEG WASM) ---
+// We apply this only to pages that need FFmpeg and their cleaning scripts
+// to avoid breaking external resources (like avatars/images) on the rest of the site.
+app.use((req, res, next) => {
+    const ffmpegPaths = [
+        '/legal/offszn-debug',
+        // '/cuenta/Upload/Beats', // 🔥 REMOVED: This strict COOP header blocks Google Auth Popup callbacks. The new Clean Pipeline doesn't need it.
+        '/ffmpeg_clean',
+        '/offszn-debug'
+    ];
+
+    if (ffmpegPaths.some(p => req.path.startsWith(p))) {
+        res.setHeader("Cross-Origin-Opener-Policy", "same-origin");
+        res.setHeader("Cross-Origin-Embedder-Policy", "require-corp");
+        res.setHeader("Cross-Origin-Resource-Policy", "same-origin");
+    }
+
+    next();
+});
+
 // --- 1. CONFIGURACIÓN CORS ROBUSTA ---
 const allowedOrigins = [
     'https://offszn.lat',
-    'https://www.offszn.lat',
-    'https://offszn-oc7c.onrender.com',
-    'https://offszn.onrender.com',
-    'https://offszn1.onrender.com',
-    'https://offszn-academy.onrender.com',
-    'http://localhost:5500',
-    'http://127.0.0.1:5500',
-    'http://127.0.0.1:5501',
     'http://localhost:3000'
 ];
 
 const corsOptions = {
     origin: function (origin, callback) {
-        // Permitir requests sin origen (como mobile apps o curl) y self-origin
         if (!origin) return callback(null, true);
         if (allowedOrigins.indexOf(origin) !== -1) {
             callback(null, true);
         } else {
             console.log("⚠️ CORS Warning (dev):", origin);
-            // En desarrollo, a veces conviene ser permisivo si usas localhost:3000
             callback(null, true);
         }
     },
@@ -67,22 +84,63 @@ const corsOptions = {
     optionsSuccessStatus: 200
 };
 
-// --- 1.1 SECURITY HEADERS (COOP/COEP) ---
-// Critical for FFmpeg WASM (SharedArrayBuffer) AND Google OAuth (Popups)
-app.use((req, res, next) => {
-    // 1. Allow Popups to communicate (Google Auth)
-    res.setHeader("Cross-Origin-Opener-Policy", "same-origin-allow-popups");
-
-    // 2. Embedder Policy (Optional for v0.11 but good for v0.12)
-    // If we use require-corp, we might need to serve assets with correct headers too.
-    // For now, let's start with just COOP to fix Auth.
-    // res.setHeader("Cross-Origin-Embedder-Policy", "require-corp"); 
-
-    next();
-});
-
 // --- 2. MIDDLEWARES GLOBALES ---
-// A. Security Check firstodo
+// A. Security Headers with Helmet
+app.use(helmet({
+    contentSecurityPolicy: {
+        directives: {
+            defaultSrc: ["'self'"],
+            scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "blob:",
+                "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com", "https://unpkg.com",
+                "https://cdn.tailwindcss.com", "https://apis.google.com", "https://accounts.google.com",
+                "https://*.gstatic.com",
+                // PayPal
+                "https://www.paypal.com", "https://www.sandbox.paypal.com"
+            ],
+            scriptSrcAttr: ["'unsafe-inline'"],
+            styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com", "https://cdn.tailwindcss.com"],
+            fontSrc: ["'self'", "https://fonts.gstatic.com", "https://cdn.jsdelivr.net", "data:", "https://cdnjs.cloudflare.com"],
+            imgSrc: ["'self'", "data:", "blob:",
+                "https://images.unsplash.com", "https://*.supabase.co",
+                "https://*.r2.dev", "https://*.cloudflarestorage.com", "https://*.r2.cloudflarestorage.com",
+                "https://res.cloudinary.com", "https://via.placeholder.com",
+                "https://*.ytimg.com", "https://*.ggpht.com", "https://*.googleusercontent.com",
+                "https://ui-avatars.com",
+                // PayPal
+                "https://www.paypalobjects.com", "https://*.paypal.com"
+            ],
+            mediaSrc: ["'self'", "data:", "blob:", "https://*.supabase.co", "https://*.r2.dev", "https://*.cloudflarestorage.com", "https://*.r2.cloudflarestorage.com"],
+            connectSrc: ["'self'", "blob:",
+                "https://*.supabase.co", "wss://*.supabase.co",
+                "https://*.cloudflarestorage.com", "https://*.r2.cloudflarestorage.com", "https://*.r2.dev",
+                "https://api.emailjs.com",
+                // PayPal
+                "https://api.paypal.com", "https://www.paypal.com", "https://www.sandbox.paypal.com",
+                "https://api-m.paypal.com", "https://api-m.sandbox.paypal.com",
+                "https://cdn.jsdelivr.net", "https://unpkg.com", "https://offszn.lat",
+                "http://localhost:*",
+                "https://*.googleapis.com", "https://accounts.google.com",
+                "https://*.ytimg.com", "https://*.ggpht.com"
+            ],
+            frameSrc: ["'self'",
+                "https://www.youtube.com", "https://www.youtube-nocookie.com",
+                "https://open.spotify.com",
+                // PayPal
+                "https://www.paypal.com", "https://www.sandbox.paypal.com",
+                "https://accounts.google.com", "https://*.googleapis.com"
+            ],
+            objectSrc: ["'none'"],
+            upgradeInsecureRequests: null,
+        },
+    },
+    crossOriginEmbedderPolicy: false,
+    crossOriginOpenerPolicy: false, // 🔥 REQUIRED: Without this, Google OAuth popup can't send token back to opener
+    hsts: {
+        maxAge: 31536000, // 1 año en segundos
+        includeSubDomains: true,
+        preload: true
+    }
+}));
 
 // Aplicar CORS a todo
 app.use(cors(corsOptions));
@@ -93,51 +151,35 @@ app.use((req, res, next) => {
     next();
 });
 
-// --- 2. PARSEO DE JSON ---
+// --- 2.1 PARSEO DE JSON & COOKIES ---
 import cookieParser from 'cookie-parser'
 import jwt from 'jsonwebtoken'
-import { JWT_SECRET } from '../src/shared/config/config.js'
+import { JWT_SECRET, SUPABASE_URL, SUPABASE_ANON_KEY, EMAILJS_PUBLIC_KEY } from '../src/shared/config/config.js'
 
-// ... imports ...
+// --- PUBLIC ENVIRONMENT VARIABLES ---
+app.get('/env.js', (req, res) => {
+    res.type('.js');
+    res.send(`
+        window.SUPABASE_URL = "${SUPABASE_URL || 'https://qtjpvztpgfymjhhpoouq.supabase.co'}";
+        window.SUPABASE_ANON_KEY = "${SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0anB2enRwZ2Z5bWpoaHBvb3VxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3ODA5MTUsImV4cCI6MjA3NjM1NjkxNX0.YsItTFk3hSQaVuy707-z7Z-j34mXa03O0wWGAlAzjrw'}";
+        window.EMAILJS_PUBLIC_KEY = "${EMAILJS_PUBLIC_KEY || 'If_WAVcuXiGSPp2SB'}";
+        window.PAYPAL_CLIENT_ID = "${process.env.PAYPAL_CLIENT_ID || ''}";
+    `);
+});
 
-// --- 2.0 CLOUDINARY ROUTES (before global JSON parser — needs 30MB limit) ---
+// --- 2.2 CLOUDINARY ROUTES (before global JSON parser — needs 30MB limit) ---
 app.use('/api/cloudinary', express.json({ limit: '30mb' }), cloudinaryRoutes);
 
-// --- 2. PARSEO DE JSON & COOKIES ---
-app.use(express.json())
-app.use(cookieParser())
+app.use(express.json());
+app.use(cookieParser());
 
-// --- 2.5 SECURITY MIDDLEWARE (DISABLED PER USER REQUEST) ---
-/*
-app.use((req, res, next) => {
-    // Only protect dashboard routes
-    if (!req.path.startsWith('/cuenta')) return next();
+// --- 2.3 GLOBAL RATE LIMITING ---
+// Protege toda la aplicación contra ataques de fuerza bruta básicos o Ddos
+app.use('/api', globalLimiter);
 
-    // 1. Get Token from Cookie
-    const token = req.cookies['sb-access-token'];
-
-    if (!token) {
-        console.log(`⛔ Security Block: No Token for ${req.path}`);
-        return res.redirect('/index.html?error=unauthorized');
-    }
-
-    // 2. Verify Token (Server-Side)
-    try {
-        // Supabase signs with JWT_SECRET. We verify it here.
-        jwt.verify(token, JWT_SECRET);
-        // If valid, proceed
-        next();
-    } catch (err) {
-        console.error(`⛔ Security Block: Invalid Token for ${req.path}`, err.message);
-        // Clear the bad cookie
-        res.clearCookie('sb-access-token');
-        return res.redirect('/index.html?error=invalid_token');
-    }
-});
-*/
-
-// --- 4. RUTAS API ---
-app.use('/api/reels', reelsRoutes); // Isolated and High Priority
+// --- RESTO DE RUTAS API (Omitidas para evitar borrado accidental) ---
+// (Líneas 139-173 del archivo original que fueron movidas o borradas se restauran a continuación)
+app.use('/api/reels', reelsRoutes);
 app.post('/api/orders/mercadopago-webhook', handleMercadoPagoWebhook);
 app.post('/api/negotiate', submitNegotiation);
 app.post('/api/negotiate/respond', respondNegotiation);
@@ -145,32 +187,27 @@ app.post('/api/negotiate/purchase-token', authenticateTokenMiddleware, generateP
 app.get('/api/negotiate/validate-token', validatePurchaseToken);
 app.post('/api/negotiate/report', authenticateTokenMiddleware, reportIssue);
 
-// --- 4.1 ENDPOINT DE SALUD (Cron Job Keep-Alive con Seguridad) ---
 app.get('/api/health', (req, res) => {
     const secret = req.headers['x-offszn-secret'];
-    const expectedSecret = 'offszn_keep_alive_2026_safe'; // Clave única para el Cron Job
-
-    if (secret !== expectedSecret) {
-        console.warn(`🔒 Acceso no autorizado a /api/health desde IP: ${req.ip}`);
-        return res.status(403).json({ error: 'Unauthorized' });
-    }
-
+    const expectedSecret = 'offszn_keep_alive_2026_safe';
+    if (secret !== expectedSecret) return res.status(403).json({ error: 'Unauthorized' });
     res.status(200).send('OK');
 });
 
-app.use('/api/auth', authRoutes);
 app.use('/api', publicRoutes);
+app.use('/api', requestRoutes);
+app.use('/api/auth', authRoutes);
 app.use('/api', productRoutes);
 app.use('/api', cartRoutes);
 app.use('/api', orderRoutes);
 app.use('/api', userRoutes);
 app.use('/api/admin', adminRoutes);
-// app.use('/api', chatbotRouter);
 app.use('/api', profileRoutes);
 app.use('/api', chatRoutes);
 app.use('/api', paypalRoutes);
 app.use('/api', r2Routes);
-
+app.use('/api', subscriptionRoutes);
+app.use('/api', youtubeRoutes);
 
 // --- 3. CLEAN URLS & STATIC FILES (MIDDLEWARE) ---
 
@@ -185,8 +222,9 @@ app.use((req, res, next) => {
 
 // B. Clean URLs (Force Redirects & Internal Rewrites)
 app.use((req, res, next) => {
-    // Skip API routes
-    if (req.path.startsWith('/api')) return next();
+    // Skip API routes and FFmpeg/Debug folders to avoid loops or blocking
+    const skipPaths = ['/api', '/ffmpeg_clean', '/offszn-debug', '/legal/offszn-debug', '/env.js'];
+    if (skipPaths.some(p => req.path.startsWith(p))) return next();
 
     // 1. Force Redirect: Remove .html from browser address bar
     if (req.path.endsWith('.html')) {
@@ -194,7 +232,6 @@ app.use((req, res, next) => {
         const search = req.originalUrl.split('?')[1];
         const queryString = search ? '?' + search : '';
 
-        // Special case: /index or /folder/index -> / or /folder
         if (cleanPath.endsWith('/index')) {
             const rootPathRedirect = cleanPath.slice(0, -6) || '/';
             return res.redirect(301, rootPathRedirect + queryString);
@@ -211,8 +248,6 @@ app.use((req, res, next) => {
     if (!path.extname(req.path)) {
         const possibleHtml = path.join(rootPath, req.path + '.html');
         if (fs.existsSync(possibleHtml)) {
-            // Check if it's the index.html specifically being called by '/'
-            // Express handles '/' with express.static usually, but we want to be explicit
             return res.sendFile(possibleHtml);
         }
     }
@@ -355,6 +390,23 @@ app.use((req, res, next) => {
 
     // Servir 404.html con status 404 real
     res.status(404).sendFile(path.join(rootPath, '404.html'));
+});
+
+// --- 6. GLOBAL ERROR HANDLER ---
+// Captura cualquier error asíncrono o síncrono no controlado (Fase 4 Seguridad)
+app.use((err, req, res, next) => {
+    console.error(`[Server Error] en ${req.method} ${req.url}:`, err.message);
+
+    // Evitar romper la app si las cabeceras ya se eviaron
+    if (res.headersSent) {
+        return next(err);
+    }
+
+    const status = err.status || err.statusCode || 500;
+
+    res.status(status).json({
+        error: "Ocurrió un error interno en el servidor. Por favor intenta de nuevo más tarde."
+    });
 });
 
 // Chequeo de BD

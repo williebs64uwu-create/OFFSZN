@@ -8,11 +8,13 @@ export const getLeaderboard = async (req, res) => {
         console.log("Fetching producers with avatars...");
         const { data: producers, error: userError } = await supabase
             .from('users')
-            .select('id, nickname, avatar_url, banner_url, bio, is_verified')
+            .select('id, nickname, avatar_url, banner_url, bio, is_verified, role')
             .eq('is_producer', true)
             .not('avatar_url', 'is', null) // Must have avatar
             .neq('avatar_url', '')       // Must not be empty string
-            .not('id', 'in', '("38c4925a-5a0b-4905-a1a3-8f7ecc939394","0382a813-85c7-46c3-8d2c-61a5692adffd")'); // Exclude Testeo2 and WillieInspired (Admin) by ID as requested
+            .not('avatar_url', 'ilike', '%via.placeholder.com%') // No placeholders
+            .not('avatar_url', 'ilike', '%dummyimage.com%')      // No placeholders
+            .not('id', 'in', '("38c4925a-5a0b-4905-a1a3-8f7ecc939394","0382a813-85c7-46c3-8d2c-61a5692adffd","d8eafb25-0a6d-48fd-8a7f-3e79a328dfb8","4afe9d29-1b86-4af4-83fa-a78e87448555","ff68a2fd-49cb-41e6-b207-492ac683eea6")'); // Exclude test accounts and admins from leaderboard rank
 
         if (userError) {
             console.error("User Fetch Error:", userError);
@@ -70,6 +72,14 @@ export const getLeaderboard = async (req, res) => {
             // Profile Completion (50 pts) - Bonus for Banner or Bio
             if (p.banner_url || (p.bio && p.bio.length > 5)) baseScore += 50;
 
+            // --- SPECIAL EXCEPTIONS (Manual Boosts) ---
+            // 1patboy_ (ID: ba3b36d9-945f-4d0e-9b86-984cf93b43e2) - Requested +1000 base points
+            const isTarget = p.id === 'ba3b36d9-945f-4d0e-9b86-984cf93b43e2' ||
+                (p.nickname && p.nickname.toLowerCase() === '1patboy_');
+            if (isTarget) {
+                baseScore += 1000;
+            }
+
             scores[p.id] = baseScore;
         });
 
@@ -87,12 +97,20 @@ export const getLeaderboard = async (req, res) => {
             }
         });
 
+        const productCounts = {};
+        products?.forEach(prod => {
+            productCounts[prod.producer_id] = (productCounts[prod.producer_id] || 0) + 1;
+        });
+
         // 5. Sort and Format
         const leaderboard = producers.map(p => ({
             id: p.id,
             nickname: p.nickname,
             avatar_url: p.avatar_url,
+            profile_cover: p.banner_url,
+            role: p.role,
             is_verified: p.is_verified,
+            products_count: productCounts[p.id] || 0,
             score: scores[p.id] || 0,
             trend: 'neutral'
         }))

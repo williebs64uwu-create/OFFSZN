@@ -14,10 +14,14 @@ const CheckoutManager = {
   appliedCoupon: null,
   couponData: null,
   negotiateData: null, // For negotiation-based checkout
+  producerPlans: {}, // New: cache for producer plans
 
   init: async function () {
     // Define API_URL based on environment
-    this.API_URL = `${window.OFFSZN_CONFIG?.API_BASE_URL || 'https://offszn.lat'}/api`;
+    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    this.API_URL = window.OFFSZN_CONFIG?.API_BASE_URL
+      ? `${window.OFFSZN_CONFIG.API_BASE_URL}/api`
+      : (isLocal ? 'http://localhost:3000/api' : 'https://offszn.lat/api');
 
     console.log("Checkout Manager Initialized");
 
@@ -46,8 +50,17 @@ const CheckoutManager = {
     // Wait for CartManager to be ready (it loads async)
     await this.waitForCart();
 
+    // Load producer plans AND payment status for correct commission display + blocking
+    await this.loadProducerPlans();
+
     this.renderOrderSummary();
-    this.initPayPal();
+
+    // Check if order is blocked BEFORE rendering PayPal buttons
+    if (this.blockedItems && this.blockedItems.length > 0) {
+      this.updatePayPalButtonsVisibility();
+    } else {
+      this.initPayPal();
+    }
 
     if (this.appliedCoupon) {
       this.updateCouponUI(true);
@@ -89,9 +102,17 @@ const CheckoutManager = {
     const savings = d.originalPrice ? (d.originalPrice - d.agreedPrice).toFixed(2) : null;
 
     // Commission
+    const plan = d.producerPlan || 'free';
     let commission = 0;
     if (d.agreedPrice > 0) {
-      commission = d.agreedPrice < 20 ? 1.00 : d.agreedPrice * 0.05;
+      if (plan === 'pro') {
+        commission = 0;
+      } else if (plan === 'starter') {
+        commission = d.agreedPrice < 20 ? 0.50 : d.agreedPrice * 0.03;
+      } else {
+        // Free
+        commission = d.agreedPrice < 20 ? 1.00 : d.agreedPrice * 0.05;
+      }
     }
     const total = (d.agreedPrice + commission).toFixed(2);
 
@@ -155,10 +176,54 @@ const CheckoutManager = {
   },
 
   initNegotiatePayPal: function () {
-    if (!window.paypal) {
-      console.error("PayPal SDK not loaded.");
-      return;
+    const merchantIds = new Set(['MXV5F6X8JXG4S']); // Platform fee recipient
+
+    if (this.negotiateData && this.negotiateData.producerPaypalEmail) {
+      merchantIds.add(this.negotiateData.producerPaypalEmail);
     }
+
+    const merchantIdArr = Array.from(merchantIds);
+    const merchantIdString = merchantIdArr.join(',');
+    const clientId = 'ATPgFaKnGSf4hJZEN_lkw82QVO2sNc6O9d6QX7GcWBny9tqchRoXpZ89UxkUtD1U2ZWsbv9uAkwruu2B';
+
+    // Check if PayPal is already loaded
+    const existingScript = document.getElementById('paypal-sdk-script');
+    if (existingScript) {
+      if (existingScript.getAttribute('data-merchant-id-string') === merchantIdString && window.paypal) {
+        this.renderNegotiatePayPalButtons();
+        return;
+      } else {
+        existingScript.remove();
+        delete window.paypal;
+        const container = document.getElementById('paypal-button-container');
+        if (container) container.innerHTML = '';
+      }
+    }
+
+    const script = document.createElement('script');
+    script.id = 'paypal-sdk-script';
+
+    // Dynamic merchant string handling
+    if (merchantIdArr.length > 1) {
+      script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&currency=USD&merchant-id=*`;
+      script.setAttribute('data-merchant-id', merchantIdString);
+    } else if (merchantIdArr.length === 1) {
+      script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&currency=USD&merchant-id=${merchantIdArr[0]}`;
+    } else {
+      // Fallback
+      script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&currency=USD`;
+    }
+    script.setAttribute('data-merchant-id-string', merchantIdString); // Track for caching
+
+    script.onload = () => {
+      this.renderNegotiatePayPalButtons();
+    };
+    script.onerror = () => console.error("Failed to load PayPal SDK in negotiate checkout");
+    document.head.appendChild(script);
+  },
+
+  renderNegotiatePayPalButtons: function () {
+    if (!window.paypal) return;
 
     const self = this;
 
@@ -269,12 +334,18 @@ const CheckoutManager = {
         ? parseFloat(item.variant_price)
         : (parseFloat(item.product.price_basic) || 0);
 
+      const producerId = item.product.producer_id;
+      const plan = this.producerPlans[producerId] || 'free';
+
       let commission = 0;
       if (price > 0) {
-        if (price < 20) {
-          commission = 1.00;
+        if (plan === 'pro') {
+          commission = 0;
+        } else if (plan === 'starter') {
+          commission = price < 20 ? 0.50 : price * 0.03;
         } else {
-          commission = price * 0.05;
+          // Free
+          commission = price < 20 ? 1.00 : price * 0.05;
         }
       }
 
@@ -323,11 +394,125 @@ const CheckoutManager = {
 
     return {
       items: processedItems,
-      subtotal: subtotal.toFixed(2),
-      discountAmount: discountAmount.toFixed(2),
-      serviceFee: serviceFee.toFixed(2),
-      total: total.toFixed(2)
+      subtotal: subtotal,
+      discountAmount: discountAmount,
+      serviceFee: serviceFee,
+      total: total
     };
+  },
+
+  loadProducerPlans: async function () {
+    const items = CartManager.state.items;
+    if (!items || items.length === 0) return;
+
+    const producerIds = [...new Set(items.map(item => item.product.producer_id))];
+
+    try {
+      // Fetch payment_methods from users table
+      const { data, error } = await window.supabaseClient
+        .from('users')
+        .select('id, payment_methods')
+        .in('id', producerIds);
+
+      if (error) throw error;
+
+      // Fetch plan + username from profiles for commission display + bio links
+      const { data: profiles, error: pError } = await window.supabaseClient
+        .from('profiles')
+        .select('id, plan, username')
+        .in('id', producerIds);
+
+      if (pError) throw pError;
+
+      this.producerData = {};
+      data.forEach(u => {
+        const profile = profiles.find(p => p.id === u.id);
+        this.producerData[u.id] = {
+          plan: profile?.plan || 'free',
+          username: profile?.username || null,
+          hasPayPal: !!(u.payment_methods?.paypal && u.payment_methods.paypal.includes('@')),
+          paypalEmail: u.payment_methods?.paypal || null
+        };
+        // Backwards compatibility for calculateTotals
+        this.producerPlans[u.id] = profile?.plan || 'free';
+      });
+
+      console.log("[CheckoutManager] Producer data loaded:", this.producerData);
+
+      this.checkBlockedStatus();
+    } catch (err) {
+      console.warn("Failed to load producer data for checkout", err);
+    }
+  },
+
+  checkBlockedStatus: function () {
+    const items = CartManager.state.items;
+    this.blockedItems = [];
+
+    items.forEach(item => {
+      const pData = this.producerData?.[item.product.producer_id];
+      if (pData && !pData.hasPayPal) {
+        // Avoid duplicates for the same producer
+        if (!this.blockedItems.find(b => b.producerId === item.product.producer_id)) {
+          this.blockedItems.push({
+            productId: item.product.id,
+            productName: item.product.name,
+            producerId: item.product.producer_id,
+            username: pData.username
+          });
+        }
+      }
+    });
+
+    if (this.blockedItems.length > 0) {
+      console.warn("[CheckoutManager] Order blocked due to missing producer PayPal:", this.blockedItems);
+      this.renderOrderSummary();
+      this.updatePayPalButtonsVisibility();
+    }
+  },
+
+  updatePayPalButtonsVisibility: function () {
+    const container = document.getElementById('paypal-button-container');
+    const warning = document.getElementById('checkout-blocked-warning');
+
+    if (!container) return;
+
+    if (this.blockedItems && this.blockedItems.length > 0) {
+      container.style.display = 'none';
+
+      // Build producer links
+      const producerLinks = this.blockedItems.map(b => {
+        const displayName = b.username || 'Productor';
+        const link = b.username ? `/${b.username}` : `/producto.html?id=${b.productId}`;
+        return `<a href="${link}" target="_blank" style="color:#fff; text-decoration:underline; font-weight:600; font-size:0.85rem;">${displayName}</a>`;
+      }).join(', ');
+
+      if (!warning) {
+        const newWarning = document.createElement('div');
+        newWarning.id = 'checkout-blocked-warning';
+        newWarning.style.cssText = 'padding:15px; background:transparent; border:1px solid rgba(255,255,255,0.15); border-radius:10px; color:#fff; text-align:center; margin-top:10px; max-width: 100%;';
+        newWarning.innerHTML = `
+          <div style="margin-bottom:8px; display: flex; align-items: center; justify-content: center; gap: 10px;">
+            <i class="bi bi-exclamation-circle" style="font-size:1rem; color:#888;"></i>
+            <span style="font-weight:700; font-size:0.8rem; text-transform:uppercase; letter-spacing:1px; color: #888;">Sujeto a Verificación</span>
+          </div>
+          <p style="font-size:0.75rem; line-height:1.4; margin-bottom:8px; color: #666;">
+            El productor no tiene configurado PayPal.<br>
+            Contacta para habilitar la compra:
+          </p>
+          <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 8px;">
+            ${producerLinks}
+          </div>
+        `;
+        container.parentNode.insertBefore(newWarning, container);
+      } else {
+        const linksDiv = warning.querySelector('div:last-child');
+        if (linksDiv) linksDiv.innerHTML = producerLinks;
+      }
+    } else {
+      container.style.display = 'block';
+      if (warning) warning.remove();
+    }
   },
 
   // --- COUPON LOGIC ---
@@ -427,7 +612,7 @@ const CheckoutManager = {
     const { items, subtotal, discountAmount, serviceFee, total } = this.calculateTotals();
 
     if (items.length === 0) {
-      container.innerHTML = `<div class="empty-cart-msg" style="text-align: center; padding: 40px; color: #666;">Tu carrito está vacío. <a href="explorar.html" style="color: #8b5cf6;">Ir a explorar</a></div>`;
+      container.innerHTML = `<div class="empty-cart-msg" style="text-align: center; padding: 40px; color: #666;">Tu carrito está vacío. <a href="/explorar.html" style="color: #fff; text-decoration:underline;">Ir a explorar</a></div>`;
       return;
     }
 
@@ -439,12 +624,15 @@ const CheckoutManager = {
         const isBlocked = this.blockedItems?.some(b => String(b.productId) === String(item.product.id));
         let priceHTML = '';
 
+        const pData = this.producerData?.[item.product.producer_id];
+        const contactLink = pData?.username ? `/${pData.username}` : `/producto.html?id=${item.product.id}`;
+
         if (isBlocked) {
           priceHTML = `
-                <button onclick="CheckoutManager.contactProducer('${item.product.id}', '${item.product.name}', '${item.product.producer_id}')" 
-                        style="background: rgba(139, 92, 246, 0.1); border: 1px solid #8b5cf6; color: #8b5cf6; padding: 4px 10px; border-radius: 6px; font-size: 0.7rem; cursor: pointer; font-weight: 600;">
-                    Contactar Productor
-                </button>
+                <a href="${contactLink}" target="_blank" 
+                        style="display:inline-block; background: transparent; border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 4px 10px; border-radius: 6px; font-size: 0.7rem; cursor: pointer; font-weight: 600; text-decoration:none; text-transform:uppercase; letter-spacing:0.5px;">
+                    Contactar
+                </a>
             `;
         } else {
           if (item.product.product_type === 'beat') {
@@ -453,51 +641,57 @@ const CheckoutManager = {
               priceHTML = `
                     <div style="font-size:1.05rem; font-weight:700; color:#fff; font-family: 'Plus Jakarta Sans', sans-serif;">$${item.price.toFixed(2)}</div>
                     <div style="font-size:0.8rem; color:#666; text-decoration:line-through;">$${parseFloat(basicPrice).toFixed(2)}</div>
-                    <div style="font-size:0.75rem; color:#555;">+ $${item.commission.toFixed(2)} tarifa</div>
+                    <div style="font-size:0.75rem; color:#444;">+ $${item.commission.toFixed(2)}</div>
                   `;
             } else {
               priceHTML = `
                     <div style="font-size:1.05rem; font-weight:700; color:#fff; font-family: 'Plus Jakarta Sans', sans-serif;">$${item.price.toFixed(2)}</div>
-                    <div style="font-size:0.75rem; color:#555;">+ $${item.commission.toFixed(2)} tarifa</div>
+                    <div style="font-size:0.75rem; color:#444;">+ $${item.commission.toFixed(2)}</div>
                 `;
             }
           } else {
             priceHTML = `
                 <div style="font-size:1.05rem; font-weight:700; color:#fff; font-family: 'Plus Jakarta Sans', sans-serif;">$${item.price.toFixed(2)}</div>
-                <div style="font-size:0.75rem; color:#555;">+ $${item.commission.toFixed(2)} tarifa</div>
+                <div style="font-size:0.75rem; color:#444;">+ $${item.commission.toFixed(2)}</div>
               `;
           }
         }
 
-        const imgId = `cart-img-${item.product.id}`;
+        const fallbackImg = '/images/portada-default.png';
+        const imgId = `checkout-img-${item.product.id}`;
 
         html += `
-            <div class="checkout-item ${isBlocked ? 'blocked' : ''}" style="padding:16px 0; display:flex; gap:16px; align-items:center; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 24px;">
-              <div class="checkout-item-img">
-                <img id="${imgId}" src="/images/portada-default.png" style="width:64px; height:64px; border-radius:6px; object-fit:cover; border:1px solid rgba(255,255,255,0.08);">
+            <div class="checkout-item ${isBlocked ? 'blocked' : ''}" style="padding:16px 0; display:flex; gap:16px; align-items:center; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 20px;">
+              <div class="checkout-item-img" style="position:relative; width:56px; height:56px; flex-shrink:0;">
+                <img id="${imgId}" src="${fallbackImg}" 
+                     onerror="this.src='${fallbackImg}'; this.onerror=null;"
+                     style="width:100%; height:100%; border-radius:6px; object-fit:cover; border:1px solid rgba(255,255,255,0.08); background:#111;">
               </div>
-              <div class="checkout-item-details" style="flex:1;">
-                <div style="font-size:1rem; font-weight:600; color:#eee; margin-bottom:6px; font-family: 'Plus Jakarta Sans', sans-serif;">"${item.product.name}"</div>
-                <div style="font-size:0.75rem; color:#777; text-transform:uppercase; letter-spacing:0.5px; font-weight: 500;">${item.license_name || item.product.product_type}</div>
+              <div class="checkout-item-details" style="flex:1; min-width:0;">
+                <div class="checkout-item-name truncate" style="font-size:0.95rem; font-weight:600; color:#eee; margin-bottom:4px; font-family: 'Plus Jakarta Sans', sans-serif;">"${item.product.name}"</div>
+                <div style="font-size:0.7rem; color:#555; text-transform:uppercase; letter-spacing:0.5px; font-weight: 500;">${item.license_name || item.product.product_type}</div>
                 ${isBlocked ? `
-                    <div class="blocked-warning" style="color: #ef4444; font-size: 0.75rem; margin-top: 8px; font-weight: 500;">
-                        <i class="bi bi-exclamation-triangle-fill"></i> El productor no ha activado su método de pago.
+                    <div class="blocked-warning" style="color: #666; font-size: 0.65rem; margin-top: 6px; font-weight: 500;">
+                        <i class="bi bi-exclamation-circle-fill"></i> Productor sin PayPal configurado.
                     </div>
                 ` : ''}
               </div>
-              <div class="checkout-item-price" style="text-align:right;">
-                ${priceHTML}
+              <div class="checkout-item-price" style="text-align:right; display:flex; align-items:center; gap:12px;">
+                <div style="display:flex; flex-direction:column; align-items:flex-end;">
+                  ${priceHTML}
+                </div>
+                <button onclick="CheckoutManager.removeFromCheckout('${item.product.id}')" class="remove-item-btn" title="Eliminar del carrito">
+                   <i class="bi bi-x"></i>
+                </button>
               </div>
             </div>
           `;
 
-        // Async load authorized image URL
+        // Load authorized image URL
         if (window.getAuthorizedUrl && item.product.image_url) {
           window.getAuthorizedUrl(item.product.image_url).then(url => {
             const imgEl = document.getElementById(imgId);
-            if (imgEl && url) {
-              imgEl.src = url;
-            }
+            if (imgEl && url) imgEl.src = url;
           });
         }
       });
@@ -506,15 +700,15 @@ const CheckoutManager = {
 
     html += `
         <div class="checkout-totals" style="padding-top:12px;">
-          <div class="total-row" style="display:flex; justify-content:space-between; color:#888; font-size:0.95rem; margin-bottom:12px;">
-            <span>Subtotal (Productores)</span>
-            <span style="color: #ccc;">$${subtotal.toFixed(2)}</span>
+          <div class="total-row" style="display:flex; justify-content:space-between; color:#555; font-size:0.9rem; margin-bottom:10px;">
+            <span>Subtotal</span>
+            <span style="color: #888;">$${subtotal.toFixed(2)}</span>
           </div>
       `;
 
-    if (this.discount > 0) {
+    if (discountAmount > 0) {
       html += `
-          <div class="total-row" style="display:flex; justify-content:space-between; color:#4ade80; font-size:0.9rem; margin-bottom:12px; font-weight:500;">
+          <div class="total-row" style="display:flex; justify-content:space-between; color:#fff; font-size:0.9rem; margin-bottom:10px; font-weight:500;">
             <span>Ahorro aplicado</span>
             <span>-$${discountAmount.toFixed(2)}</span>
           </div>
@@ -522,13 +716,13 @@ const CheckoutManager = {
     }
 
     html += `
-          <div class="total-row" style="display:flex; justify-content:space-between; color:#888; font-size:0.95rem; margin-bottom:24px;">
+          <div class="total-row" style="display:flex; justify-content:space-between; color:#555; font-size:0.9rem; margin-bottom:20px;">
             <span>Tarifa de servicio</span>
-            <span style="color: #ccc;">$${serviceFee.toFixed(2)}</span>
+            <span style="color: #888;">$${serviceFee.toFixed(2)}</span>
           </div>
-          <div class="total-row grand-total" style="display:flex; justify-content:space-between; align-items: center; color:#fff; padding-top:20px; border-top:1px solid rgba(255,255,255,0.1); font-family:'Plus Jakarta Sans', sans-serif;">
-            <span style="font-size: 1.1rem; font-weight: 600;">Total a pagar</span>
-            <span style="font-size: 1.6rem; font-weight: 800;">$${total.toFixed(2)}</span>
+          <div class="total-row grand-total" style="display:flex; justify-content:space-between; align-items: center; color:#fff; padding-top:20px; border-top:1px solid rgba(255,255,255,0.05); font-family:'Plus Jakarta Sans', sans-serif;">
+            <span style="font-size: 1rem; font-weight: 600; text-transform:uppercase; letter-spacing:1px; color:#666;">Total</span>
+            <span style="font-size: 1.5rem; font-weight: 800;">$${total.toFixed(2)}</span>
           </div>
         </div>
       `;
@@ -536,12 +730,91 @@ const CheckoutManager = {
     container.innerHTML = html;
   },
 
+  removeFromCheckout: function (productId) {
+    if (window.CartManager) {
+      CartManager.removeFromCart(productId);
+      // Wait a bit for the removal to propagate and re-check blocked status
+      setTimeout(() => {
+        this.checkBlockedStatus();
+        this.renderOrderSummary();
+        // If all blocked items were removed, PayPal buttons should reappear
+        const stillBlocked = CartManager.state.items.some(item => {
+          const pData = this.producerData?.[item.product.producer_id];
+          return pData && !pData.hasPayPal;
+        });
+        if (!stillBlocked) {
+          this.blockedItems = [];
+          this.updatePayPalButtonsVisibility();
+          this.initPayPal();
+        }
+      }, 100);
+    }
+  },
+
   // --- PAYPAL INTEGRATION ---
   initPayPal: function () {
-    if (!window.paypal) {
-      console.error("PayPal SDK not loaded.");
-      return;
+    const merchantIds = new Set();
+
+    // Only include platform merchant ID if there is a service fee
+    const totals = this.calculateTotals();
+    if (totals.serviceFee > 0) {
+      merchantIds.add('MXV5F6X8JXG4S'); // Platform fee recipient
     }
+
+    // Add all producer emails from the cart
+    CartManager.state.items.forEach(item => {
+      const pData = this.producerData?.[item.product.producer_id];
+      if (pData && pData.hasPayPal && pData.paypalEmail) {
+        merchantIds.add(pData.paypalEmail);
+      }
+    });
+
+    const merchantIdArr = Array.from(merchantIds);
+    const merchantIdString = merchantIdArr.join(',');
+    const clientId = 'ATPgFaKnGSf4hJZEN_lkw82QVO2sNc6O9d6QX7GcWBny9tqchRoXpZ89UxkUtD1U2ZWsbv9uAkwruu2B';
+
+    // Check if PayPal is already loaded with the correct merchant string
+    const existingScript = document.getElementById('paypal-sdk-script');
+    if (existingScript) {
+      if (existingScript.getAttribute('data-merchant-id-string') === merchantIdString && window.paypal) {
+        this.renderPayPalButtons();
+        return;
+      } else {
+        // Remove old script and window.paypal object if the configuration changed
+        existingScript.remove();
+        delete window.paypal;
+        const container = document.getElementById('paypal-button-container');
+        if (container) container.innerHTML = '';
+      }
+    }
+
+    const script = document.createElement('script');
+    script.id = 'paypal-sdk-script';
+
+    // Dynamic merchant string handling
+    if (merchantIdArr.length > 1) {
+      script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&currency=USD&merchant-id=*`;
+      script.setAttribute('data-merchant-id', merchantIdString);
+    } else if (merchantIdArr.length === 1) {
+      script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&currency=USD&merchant-id=${merchantIdArr[0]}`;
+    } else {
+      // Fallback
+      script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&currency=USD`;
+    }
+    script.setAttribute('data-merchant-id-string', merchantIdString); // Provide an exact flag to track change since data-merchant-id may not exist
+
+    script.onload = () => {
+      this.renderPayPalButtons();
+    };
+    script.onerror = () => console.error("Failed to load PayPal SDK");
+    document.head.appendChild(script);
+  },
+
+  renderPayPalButtons: function () {
+    if (!window.paypal) return;
+
+    const container = document.getElementById('paypal-button-container');
+    if (container) container.innerHTML = '';
 
     const self = this;
 
@@ -611,8 +884,12 @@ const CheckoutManager = {
       },
 
       onError: function (err) {
-        console.error(err);
-        alert("Ocurrió un error con PayPal. Intenta nuevamente.");
+        console.error("PayPal Error:", err);
+        if (err.message && err.message.includes('Some producers have no payment method')) {
+          alert("Alerta: Uno o más productores en tu carrito aún no han configurado su cuenta bancaria/PayPal. \n\nRevisa el resumen de tu pedido, contacta al productor o elimina el beat de tu carrito para poder continuar.");
+        } else {
+          alert("Ocurrió un error al procesar la solicitud con PayPal. Intenta nuevamente.");
+        }
       }
     }).render('#paypal-button-container');
   },
@@ -652,10 +929,10 @@ const CheckoutManager = {
     this.discount = 0;
     this.appliedCoupon = null;
     localStorage.removeItem('offszn_applied_coupon');
-    localStorage.removeItem('offszn_welcome_claimed'); // Also clear the "claimed" state to prevent accidental reuse
+    localStorage.removeItem('offszn_welcome_claimed');
 
     window.location.href = `/pages/success.html${orderId ? '?order_id=' + orderId : ''}`;
-  }
+  },
 };
 
 // Auto-Init

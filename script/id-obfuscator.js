@@ -94,7 +94,7 @@ function fromShuffledBase(str) {
 
     // 0. Check Legacy Mappings first
     if (LEGACY_MAPPINGS.hasOwnProperty(str)) {
-        console.log(`🔧 [IdObfuscator] Legacy code detected: ${str} -> ${LEGACY_MAPPINGS[str]}`);
+        // console.log(`🔧 [IdObfuscator] Legacy code detected: ${str} -> ${LEGACY_MAPPINGS[str]}`);
         return LEGACY_MAPPINGS[str];
     }
 
@@ -107,8 +107,10 @@ function fromShuffledBase(str) {
     }
 
     // Reverse offset
+    if ((n - 74) % 321 !== 0) return null; // STRICT CHECK: Must be a perfect reverse
+
     n = (n - 74) / 321;
-    if (isNaN(n) || !isFinite(n)) return null;
+    if (isNaN(n) || !isFinite(n) || n < 0) return null;
     return Math.floor(n);
 }
 

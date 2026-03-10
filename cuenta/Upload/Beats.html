@@ -3476,36 +3476,8 @@
     </header>
 
     <main>
-        <!-- ?? STRATEGY SELECTION MODAL (Initial View) -->
-        <div id="upload-strategy-hub" style="display:block;">
-            <div style="text-align:center; margin-bottom:40px;">
-                <h1 style="font-size:2.5rem; font-weight:800; margin-bottom:10px;">Nuevas herramientas disponibles</h1>
-                <p style="color:#888;">
-                    - Detector de BPM y KEY automatico <br>
-                    - Importar desde YOUTUBE
-                </p>
-            </div>
-
-            <div class="yt-hub-grid">
-                <!-- OPTION 1: STANDARD UPLOAD -->
-                <div class="yt-hub-card" onclick="showMainUploadForm()">
-                    <div class="yt-hub-icon" style="color:#fff;"><i class="bi bi-cloud-arrow-up-fill"></i></div>
-                    <h2>Subir a OFFSZN</h2>
-                    <p>Sube tu producto directamente a la tienda.</p>
-                    <div class="yt-hub-btn secondary">Comenzar</div>
-                </div>
-                <!-- OPTION 2: YOUTUBE + OFFZSN -->
-                <div class="yt-hub-card secondary" style="opacity: 0.6; cursor: not-allowed;">
-                    <div class="yt-hub-icon" style="color:#ef4444;"><i class="bi bi-youtube"></i></div>
-                    <h2>Subir a YOUTUBE <br>y OFFSZN</h2>
-                    <p>Genera video automático y publica en ambas plataformas.</p>
-                    <div class="yt-hub-btn" style="background: #333; color: #888;">Próximamente</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- ?? MAIN UPLOAD FORM (Hidden initially) -->
-        <div id="main-upload-container" style="display:none;" class="fade-in">
+        <!-- 🔥 MAIN UPLOAD FORM (Visible by default — old hub removed) -->
+        <div id="main-upload-container" style="display:block;" class="fade-in">
             <div class="steps-container">
                 <div class="steps-line"></div>
                 <div class="steps-progress" id="stepsProgress"></div>
@@ -3550,7 +3522,7 @@
                                 </div>
                             </div>
                             <!-- YOUTUBE IMPORT BUTTON -->
-                            <div onclick="document.getElementById('yt-importer-modal').style.display='flex'; handleImportClick();"
+                            <div onclick="handleImportClick();"
                                 style="margin-top: 12px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); color: #fff; padding: 10px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s;"
                                 onmouseover="this.style.background='rgba(255,255,255,0.05)'; this.style.borderColor='rgba(255,255,255,0.3)'"
                                 onmouseout="this.style.background='rgba(0,0,0,0.5)'; this.style.borderColor='rgba(255,255,255,0.1)'">
@@ -4021,8 +3993,9 @@
 
     <script>
         function showMainUploadForm() {
-            document.getElementById('upload-strategy-hub').style.display = 'none';
-            document.getElementById('main-upload-container').style.display = 'block';
+            // Hub removed — form is always visible now
+            const mc = document.getElementById('main-upload-container');
+            if (mc) mc.style.display = 'block';
             const qa = document.querySelector('.quick-actions');
             if (qa) qa.style.display = 'block';
         }
@@ -4582,6 +4555,16 @@
                 }
                 isDirty = true;
                 window.history.replaceState({}, document.title, window.location.pathname); // Clean URL
+            }
+
+            // ========================================
+            // 🔥 AUTO-ACTIVATE YOUTUBE MODE IF yt=true
+            // ========================================
+            if (urlParamsYT.get('yt') === 'true') {
+                console.log('📹 [INIT] yt=true detected — enabling YouTube Upload Mode');
+                if (typeof enableYouTubeUploadMode === 'function') {
+                    enableYouTubeUploadMode();
+                }
             }
 
             // Event listeners básicos
@@ -8134,16 +8117,32 @@
                     }
 
                     // 1. Upload to YouTube
-                    // Prepare minimal metadata for YouTube (Full metadata is in local vars)
+                    // 🔥 DYNAMIC DESCRIPTION TEMPLATE
+                    const beatTitle = document.getElementById('titleInput').value || 'Sin Título';
+                    let slugBase = beatTitle;
+                    if (window.currentUserNickname) {
+                        slugBase = `${window.currentUserNickname}-${slugBase}`;
+                    }
+                    const beatSlug = typeof generatePublicSlug === 'function'
+                        ? generatePublicSlug(slugBase)
+                        : slugBase.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, '').replace(/-+/g, '-');
+                    const beatLink = `https://offszn.lat/beat/${beatSlug}`;
+                    const beatKey = document.querySelector('#keyInput')?.value || 'N/A';
+                    const beatBpm = document.getElementById('bpmInput')?.value || 'N/A';
+                    const userDesc = document.getElementById('descInput').value || '';
+                    const tagList = tags.map(t => `#${t.replace(/\s+/g, '')}`).join(' ');
+
+                    const finalDescription = `🛒Comprar/Descargar: ${beatLink}\nKey: ${beatKey}\nBPM: ${beatBpm}\n\n${userDesc}\n\n${tagList}`;
+
                     const ytMetadata = {
-                        title: document.getElementById('titleInput').value || 'Sin Título',
-                        description: document.getElementById('descInput').value || '',
-                        tags: tags // Global tags
+                        title: beatTitle,
+                        description: finalDescription,
+                        tags: tags
                     };
 
                     console.log('📹 [PUBLISH] Uploading to YouTube...', ytMetadata);
 
-                    // This throws if video is not generated yet
+                    // This throws if video is not generated yet or auth fails
                     await window.YouTubeUploader.handleUpload(ytMetadata);
 
                     showToast('Video subido a YouTube correctamente 📹', 'success');
@@ -8155,6 +8154,19 @@
                     console.error('YouTube Upload Error:', error);
                     showToast(error.message || 'Error al subir a YouTube', 'error');
                     window.isPublishing = false;
+
+                    const overlay = document.getElementById('publishOverlay');
+                    if (overlay) {
+                        const title = document.getElementById('publishOverlayTitle');
+                        const text = document.getElementById('publishOverlayText');
+                        if (title) title.innerText = 'ERROR EN YOUTUBE';
+                        if (text) text.innerHTML = `<span style="color:#ef4444;">${error.message || 'Error desconocido'}</span>`;
+
+                        // Show retry button
+                        const retryBtn = document.getElementById('publishRetryBtn');
+                        if (retryBtn) retryBtn.style.display = 'block';
+                    }
+
                     if (btn) {
                         btn.disabled = false;
                         btn.innerHTML = originalText;
@@ -10430,19 +10442,58 @@
             initCustomVisibilitySelect();
         });
     </script>
-    <!-- ðŸ”¥ PUBLISH OVERLAY -->
+    <!-- 🔥 PUBLISH OVERLAY -->
     <div id="publishOverlay"
-        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 9999; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(10px);">
-        <div class="spinner"
-            style="width: 50px; height: 50px; border: 4px solid rgba(255,255,255,0.1); border-left-color: #8b5cf6; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 24px;">
-        </div>
+        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 9999; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(10px); padding: 20px;">
+
         <h3 id="publishOverlayTitle"
-            style="font-size: 24px; font-weight: 700; margin-bottom: 8px; color: #fff; letter-spacing: -0.5px;">
-            PUBLICANDO ARCHIVO...</h3>
-        <p id="publishOverlayText" style="color: #888; font-size: 15px; font-weight: 500;">Por favor, no cierres esta
-            página.</p>
+            style="font-size: 24px; font-weight: 700; margin-bottom: 24px; color: #fff; letter-spacing: -0.5px; text-align: center; text-transform: uppercase;">
+            SUBIENDO A YOUTUBE Y OFFSZN</h3>
+
+        <!-- 🔥 RECTANGULAR PROGRESS BAR -->
+        <div
+            style="width: 100%; max-width: 500px; height: 12px; background: rgba(255,255,255,0.1); border-radius: 6px; overflow: hidden; margin-bottom: 16px; border: 1px solid rgba(255,255,255,0.05);">
+            <div id="publishProgressBar"
+                style="width: 0%; height: 100%; background: linear-gradient(90deg, #8b5cf6, #d8b4fe); transition: width 0.3s ease; box-shadow: 0 0 15px rgba(139, 92, 246, 0.5);">
+            </div>
+        </div>
+
+        <p id="publishOverlayText"
+            style="color: #aaa; font-size: 15px; font-weight: 500; text-align: center; margin-bottom: 24px;">
+            Porfavor no cierres la página
+        </p>
+
+        <!-- 🔥 RETRY BUTTON (Hidden by default) -->
+        <button id="publishRetryBtn" onclick="retryPublish()"
+            style="display: none; padding: 12px 32px; background: #fff; color: #000; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 15px rgba(255,255,255,0.2);">
+            REINTENTAR AHORA
+        </button>
+
+        <script>
+            function retryPublish() {
+                const retryBtn = document.getElementById('publishRetryBtn');
+                if (retryBtn) retryBtn.style.display = 'none';
+
+                // Reset progress bar
+                const bar = document.getElementById('publishProgressBar');
+                if (bar) bar.style.width = '0%';
+
+                // Clear text
+                const text = document.getElementById('publishOverlayText');
+                if (text) text.innerText = 'Reintentando publicación...';
+
+                // Allow publishing again
+                window.isPublishing = false;
+
+                // Trigger handlePublish
+                if (typeof handlePublish === 'function') {
+                    handlePublish();
+                }
+            }
+        </script>
     </div>
     <style>
+        /* Keep spin for other potential uses if needed, but the main overlay uses the bar now */
         @keyframes spin {
             0% {
                 transform: rotate(0deg);
@@ -10455,7 +10506,7 @@
     </style>
     <!-- Google Identity Services -->
     <!-- Google Scripts Fix -->
-    <script src="../../script/youtube-uploader.js"></script>
+    <script src="../../script/youtube-uploader-v2.js"></script>
     <script src="../../script/youtube-importer.js"></script>
     <script src="https://accounts.google.com/gsi/client" onload="gisLoaded()" async defer></script>
     <script src="https://apis.google.com/js/api.js" onload="gapiLoaded()" async defer></script>
@@ -10466,12 +10517,12 @@
 
         function enableYouTubeUploadMode() {
             window.isYouTubeUpload = true;
-            console.log('?? YouTube Upload Mode ENABLED');
+            console.log('📹 YouTube Upload Mode ENABLED');
 
-            // ?? GUARD: Prevent starting if no user
+            // 🛑 GUARD: Prevent starting if no user
             if (!userId) {
                 showToast('Error: No se ha detectado el usuario. Recarga la página.', 'error');
-                console.error('? Blocked YouTube Upload: userId is null');
+                console.error('🛑 Blocked YouTube Upload: userId is null');
                 return;
             }
 
@@ -10480,14 +10531,61 @@
 
             // Initialize Uploader (Loads GAPI if needed)
             if (window.YouTubeUploader) {
-                window.YouTubeUploader.init({
-                    // Config passed from auth-utils if needed, or hardcoded for now
-                });
+                window.YouTubeUploader.init();
             }
 
             // Show Form
             showMainUploadForm();
         }
+
+        // 🔥 GOOGLE AUTH HELPERS (Used by YouTubeUploader v2)
+        function gisLoaded() {
+            console.log('✅ GIS Loaded');
+            const CLIENT_ID = '804444303530-bl8gtp4sdjkcnrkjl1295vns59tqp4tc.apps.googleusercontent.com';
+            const SCOPES = 'https://www.googleapis.com/auth/youtube.upload https://www.googleapis.com/auth/youtube.readonly';
+
+            window._googleTokenClient = google.accounts.oauth2.initTokenClient({
+                client_id: CLIENT_ID,
+                scope: SCOPES,
+                callback: (resp) => {
+                    // This is a proxy, actual logic is handled per-request in YouTubeUploader.requestAuth
+                    if (window._googleAuthCallback) window._googleAuthCallback(resp);
+                },
+                error_callback: (err) => {
+                    console.error('🛑 GIS Error:', err);
+                    // Silently reset state if user cancels popup or denies access
+                    if (err.type === 'popup_closed' || err.type === 'access_denied') {
+                        window.isPublishing = false;
+                        const btn = document.getElementById('publishNow');
+                        if (btn) {
+                            btn.disabled = false;
+                            btn.innerHTML = btn.dataset.originalText || 'Publicar Ahora';
+                        }
+                        hideLoading();
+                    }
+                }
+            });
+            window._gisInited = true;
+        }
+
+        function gapiLoaded() {
+            gapi.load('client', async () => {
+                await gapi.client.init({
+                    discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/youtube/v3/rest']
+                });
+                window._gapiInited = true;
+                console.log('✅ GAPI Loaded');
+            });
+        }
+
+        window._googleRequestAuth = function (callback) {
+            window._googleAuthCallback = callback;
+            if (window._googleTokenClient) {
+                window._googleTokenClient.requestAccessToken({ prompt: 'consent' });
+            } else {
+                showToast('Google API no está lista. Por favor espera o recarga.', 'error');
+            }
+        };
     </script>
 </body>
 

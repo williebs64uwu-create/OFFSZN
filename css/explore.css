@@ -545,11 +545,12 @@
 
 .shelf-container {
     display: flex;
-    justify-content: center;
-    /* Center items when they don't overflow */
+    justify-content: flex-start;
     overflow-x: auto;
-    gap: 20px;
-    padding: 10px 0 25px 0;
+    gap: 32px;
+    /* Aumentado ligeramente para ocupar más espacio horizontal */
+    padding: 20px 100px 40px 100px;
+    /* Aumentado para centrar más el bloque de 6 */
     scroll-behavior: smooth;
     scroll-snap-type: x mandatory;
     scrollbar-width: none;
@@ -955,7 +956,36 @@
 @media (max-width: 768px) {
     .explore-list-grid {
         grid-template-columns: 1fr;
-        padding-bottom: -50px;
+        padding-bottom: 20px;
+    }
+
+    .shelf-container {
+        padding: 10px 1.5rem 30px 1.5rem !important;
+        gap: 16px !important;
+    }
+
+    .product-card-smart,
+    .card-cover-wrapper {
+        width: 160px !important;
+        flex: 0 0 160px !important;
+    }
+
+    .card-cover-wrapper {
+        height: 160px !important;
+    }
+
+    .leaderboard-section .shelf-wrapper {
+        margin-left: 0 !important;
+        max-width: 100% !important;
+    }
+
+    .leaderboard-section .shelf-container {
+        padding: 10px 1.5rem 30px 1.5rem !important;
+        gap: 16px !important;
+    }
+
+    .btn-nav {
+        display: none !important;
     }
 }
 
@@ -1306,132 +1336,189 @@
 }
 
 
-/* LEADERBOARD STYLES */
+/* LEADERBOARD STYLES - SPOTIFY STYLE */
 .leaderboard-section {
     padding: 0 1.5rem;
-    /* Align with other rows */
+    width: 100%;
 }
 
-.leaderboard-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    /* 2 Columns */
-    gap: 40px;
-    /* Space between columns */
+/* Alinear bloque con el título (dejando espacio exacto para que la flecha coincida con la T) */
+.leaderboard-section .shelf-wrapper {
+    /* 1230px es el cálculo exacto de 6 cards (180px) + 5 gaps (30px) */
+    max-width: 1230px;
+    margin-left: 56px;
+    /* Empuja todo el bloque 56px a la derecha para dar lugar a la flecha izquierda */
+    position: relative;
+    padding: 0;
 }
 
-@media (max-width: 900px) {
-    .leaderboard-grid {
-        grid-template-columns: 1fr;
-        /* Stack on mobile */
-        gap: 20px;
-    }
+.leaderboard-section .shelf-container {
+    padding: 20px 0px 40px 0px;
+    gap: 30px;
+    justify-content: flex-start;
+    box-sizing: border-box;
 }
 
-.lb-col {
+/* Empujar flechas totalmente fuera de la caja para que no choquen con las cards */
+.leaderboard-section .btn-nav.prev {
+    left: -56px;
+}
+
+.leaderboard-section .btn-nav.next {
+    right: -56px;
+}
+
+/* Container for the new producer cards */
+.producer-card-circle-sp {
+    position: relative;
+    flex: 0 0 180px;
+    /* Tamaño ajustado para 6 en pantalla */
+    width: 180px;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    align-items: flex-start;
+    text-align: left;
+    padding: 16px;
+    border-radius: 8px;
+    background: transparent;
+    cursor: pointer;
+    scroll-snap-align: start;
+    z-index: 1;
+    /* Ensure card content is on top */
 }
 
-.leaderboard-item {
+/* Spotify style fade-in & scale out background from center */
+.producer-card-circle-sp::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: #1a1a1a;
+    border-radius: 8px;
+    z-index: -1;
+    opacity: 0;
+    transform: scale(0);
+    /* Start from zero at the center */
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+}
+
+.producer-card-circle-sp:hover::before {
+    opacity: 1;
+    transform: scale(1);
+    /* Expand to full size */
+}
+
+.producer-avatar-wrapper {
+    position: relative;
+    margin-bottom: 16px;
+    width: 100%;
+}
+
+.lb-badge-sp {
+    position: absolute;
+    top: -4px;
+    left: -4px;
+    background: #111;
+    color: #fff;
+    font-size: 0.8rem;
+    font-weight: 800;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
     display: flex;
     align-items: center;
-    gap: 16px;
-    padding: 12px 16px;
-    background: #111;
-    border-radius: 12px;
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    transition: all 0.2s;
-    cursor: pointer;
-}
-
-.leaderboard-item:hover {
-    background: #1a1a1a;
-    border-color: rgba(255, 255, 255, 0.1);
-    transform: translateX(4px);
-}
-
-.lb-rank {
-    font-size: 1.1rem;
-    font-weight: 800;
-    color: #444;
-    width: 24px;
-    text-align: center;
-}
-
-.lb-rank.top-rank {
-    color: #ffd700;
-    /* Gold */
-    text-shadow: 0 0 10px rgba(255, 215, 0, 0.2);
-}
-
-.lb-avatar {
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    object-fit: cover;
+    justify-content: center;
     border: 2px solid #222;
+    z-index: 5;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
 }
 
-.lb-info {
-    flex: 1;
+.producer-avatar-sp {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    border-radius: 50%;
+    overflow: hidden;
+    background: #1a1a1a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    border: 3px solid transparent;
+}
+
+/* Rank borders */
+.producer-avatar-sp.rank-1 {
+    border-color: #FFD700;
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+}
+
+.producer-avatar-sp.rank-2 {
+    border-color: #C0C0C0;
+    box-shadow: 0 0 20px rgba(192, 192, 192, 0.2);
+}
+
+.producer-avatar-sp.rank-3 {
+    border-color: #CD7F32;
+    box-shadow: 0 0 20px rgba(205, 127, 50, 0.2);
+}
+
+.producer-avatar-sp img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.producer-info-sp {
     display: flex;
     flex-direction: column;
-    min-width: 0;
+    align-items: flex-start;
+    gap: 4px;
+    width: 100%;
 }
 
-.lb-name {
+.producer-name-sp {
     color: #fff;
+    font-size: 1.05rem;
     font-weight: 700;
-    font-size: 0.95rem;
     display: flex;
     align-items: center;
     gap: 6px;
     width: 100%;
-}
-
-.lb-nickname-text {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
-.lb-verified {
-    color: #8b5cf6;
-    font-size: 0.8rem;
+.producer-score-sp {
+    font-size: 0.85rem;
+    color: #A7A7A7;
+    /* Spotify subtitle grey */
+    font-weight: 500;
+    margin-bottom: 8px;
 }
 
-.lb-score {
-    color: #888;
-    font-size: 0.8rem;
-    font-weight: 600;
-}
-
-.lb-follow-btn {
-    background: rgba(255, 255, 255, 0.05);
-    border: none;
+.lb-follow-btn-sp {
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.4);
     color: #fff;
     font-size: 0.75rem;
-    font-weight: 600;
-    padding: 6px 12px;
-    border-radius: 20px;
+    font-weight: 700;
+    padding: 6px 18px;
+    border-radius: 40px;
     cursor: pointer;
     transition: all 0.2s;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    flex-shrink: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
-.lb-follow-btn:hover {
+.lb-follow-btn-sp:hover {
+    border-color: #fff;
+    transform: scale(1.05);
+}
+
+.lb-follow-btn-sp.following {
     background: #fff;
+    border-color: #fff;
     color: #000;
-}
-
-.lb-follow-btn.following {
-    background: #8b5cf6;
-    color: #fff;
 }
 
 

@@ -1,3 +1,16 @@
+/**
+ * UTILS: Sanitization
+ */
+function escapeHTML(str) {
+    if (!str) return '';
+    return str.toString()
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
     // Initialize Custom Selector UI
     initPromoSelector();
@@ -43,7 +56,7 @@ async function loadPreferences() {
         if (radio) radio.checked = true;
 
     } catch (error) {
-        console.error('Error loading preferences:', error);
+        // console.error('Error loading preferences:', error);
     }
 }
 
@@ -57,7 +70,7 @@ window.saveUploadPreference = async function (value) {
             .update({ upload_defaults_preference: value })
             .eq('id', user.id);
     } catch (error) {
-        console.error('Error saving preference:', error);
+        // console.error('Error saving preference:', error);
     }
 }
 
@@ -81,7 +94,8 @@ async function loadSidebarAvatar() {
 
         if (sidebarAvatar) {
             if (profile.avatar_url) {
-                sidebarAvatar.innerHTML = `<img src="${profile.avatar_url}" alt="Avatar" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`;
+                const safeUrl = escapeHTML(profile.avatar_url);
+                sidebarAvatar.innerHTML = `<img crossorigin="anonymous" src="${safeUrl}" alt="Avatar" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`;
             } else {
                 sidebarAvatar.textContent = (profile.nickname || 'U').charAt(0).toUpperCase();
             }
@@ -94,7 +108,7 @@ async function loadSidebarAvatar() {
             sidebarRole.textContent = (profile.role === 'admin') ? 'Administrador' : 'Productor';
         }
     } catch (e) {
-        console.warn('Sidebar load failed:', e);
+        // console.warn('Sidebar load failed:', e);
     }
 }
 
@@ -128,7 +142,7 @@ async function loadPromotion() {
             handlePromoSelector('2,1'); // Default
         }
     } catch (error) {
-        console.error('Promo load error:', error);
+        // console.error('Promo load error:', error);
     }
 }
 
@@ -155,6 +169,7 @@ function initPromoSelector() {
     const optionsList = document.getElementById('promoOptionsList');
     const options = document.querySelectorAll('.custom-option');
     const tabs = document.querySelectorAll('.promo-tab');
+    const chevron = document.getElementById('promoChevron');
 
     if (!trigger || !optionsList) return;
 
@@ -164,6 +179,7 @@ function initPromoSelector() {
         if (!isOpen) {
             optionsList.style.display = 'block';
             trigger.classList.add('active');
+            if (chevron) chevron.classList.add('open');
         } else {
             closeAllCustomDropdowns();
         }
@@ -189,8 +205,11 @@ function initPromoSelector() {
 function closeAllCustomDropdowns() {
     const list = document.getElementById('promoOptionsList');
     const trigger = document.getElementById('promoCustomTrigger');
+    const chevron = document.getElementById('promoChevron');
+
     if (list) list.style.display = 'none';
     if (trigger) trigger.classList.remove('active');
+    if (chevron) chevron.classList.remove('open');
 }
 
 function handlePromoSelector(value) {
@@ -283,9 +302,9 @@ window.autosavePromotion = function () {
             } else {
                 await supabaseClient.from('promociones_offszn_seguro').insert({ producer_id: user.id, buy_quantity: buy, get_quantity: get, discount_percent: 100, active: isActive });
             }
-            console.log('Promotion autosaved (Active:', isActive, ')');
+            // console.log('Promotion autosaved (Active:', isActive, ')');
         } catch (e) {
-            console.error('Autosave failed:', e);
+            // console.error('Autosave failed:', e);
         }
     }, 800);
 };

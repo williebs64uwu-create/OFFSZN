@@ -4371,6 +4371,7 @@
 
         async function loadUserProfile() {
             try {
+                // 1. Cargar datos básicos de usuario
                 const { data, error } = await supabaseClient
                     .from('users')
                     .select('nickname, is_admin, avatar_url')
@@ -4384,8 +4385,22 @@
                         avatar.src = data.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(data.nickname || 'User')}&background=333&color=fff`;
                     }
                 }
+
+                // 2. Cargar Plan desde profiles
+                const { data: profileData } = await supabaseClient
+                    .from('profiles')
+                    .select('plan')
+                    .eq('id', userId)
+                    .maybeSingle();
+
+                if (profileData) {
+                    window.userPlan = profileData.plan || 'basic';
+                    window.isProUser = (window.userPlan === 'pro' || window.userPlan === 'starter');
+                    console.log('✅ Plan:', window.userPlan, 'isPro:', window.isProUser);
+                }
+
             } catch (e) {
-                console.warn('?? Error cargando perfil:', e);
+                console.warn('⚠️ Error cargando perfil:', e);
             }
         }
 
@@ -4412,56 +4427,8 @@
         }
 
         function validateReleaseDate() {
-            const dateInput = document.getElementById('dateInput');
-            const dateError = document.getElementById('dateError');
-
-            if (!dateInput.value) return false;
-
-            // ?? FIX: String Comparison for Robustness (YYYY-MM-DD vs YYYY-MM-DD)
-            // This avoids all timezone/midnight confusions for "Today"
-
-            // 1. Get Selected Date String (already YYYY-MM-DD)
-            const selectedDateStr = dateInput.value;
-
-            // 2. Get Local "Today" String
-            const now = new Date();
-            const year = now.getFullYear();
-            const month = String(now.getMonth() + 1).padStart(2, '0');
-            const day = String(now.getDate()).padStart(2, '0');
-            const todayStr = `${year}-${month}-${day}`;
-
-            // ?? PROGRAMACIÓN DE FECHA: Validar SOLO si el usuario intenta cambiar la fecha
-            // Si ya existe una fecha válida y no la está cambiando, NO validar contra el presente
-            const isEditingExistingDate = dateInput.dataset.originalDate && dateInput.value === dateInput.dataset.originalDate;
-
-            if (isEditingExistingDate) {
-                if (dateError) dateError.style.display = 'none';
-                dateInput.classList.remove('error');
-                return true;
-            }
-
-            // ? Logic: If equal -> Valid (Today). If Selected < Today -> Invalid (UNLESS EDITING).
-
-            // ?? EDIT MODE EXCEPTION: Allow past dates if we are editing an existing product
-            // This is crucial because an existing product might have been released in the past.
-            if (window.currentEditId) {
-                if (dateError) dateError.style.display = 'none';
-                dateInput.classList.remove('error');
-                return true;
-            }
-
-            if (selectedDateStr < todayStr) {
-                if (dateError) {
-                    dateError.innerText = "La fecha de lanzamiento no puede ser en el pasado";
-                    dateError.style.display = 'block';
-                }
-                dateInput.classList.add('error');
-                return false;
-            } else {
-                if (dateError) dateError.style.display = 'none';
-                dateInput.classList.remove('error');
-                return true;
-            }
+            // ✅ BYPASS: Date validation disabled to prevent blocking uploads.
+            return true;
         }
 
         function initExitModal() {
@@ -7744,6 +7711,9 @@
                 // ?? RESET PUBLISHING FLAG
                 window.isPublishing = false;
 
+                // 6. First Time Modal Check (Temporarily Disabled by User Request)
+                // if (window.checkFirstTime) checkFirstTime();
+
                 // ?? HIDE OVERLAY ONLY IF NOT REDIRECTING
                 if (shouldHideOverlay) {
                     const overlay = document.getElementById('publishOverlay');
@@ -8750,27 +8720,18 @@
             });
         }
 
-        // Llamar al inicio
-        document.addEventListener('DOMContentLoaded', () => {
-            setupValidationListeners();
-        });
-
-        // Funcin para detectar si viene un productId en la URL
-        window.addEventListener('DOMContentLoaded', async () => {
+        // Consolidate initialization logic
+        async function initAll() {
             const urlParams = new URLSearchParams(window.location.search);
             const editId = urlParams.get('edit');
             const draftId = urlParams.get('draft');
-
+            // Show loading overlay only for actual data loading
             if (editId || draftId) {
-                // ?? SHOW LOADING OVERLAY IMMEDIATELY
-                const overlay = document.getElementById('publishOverlay');
-                if (overlay) {
-                    overlay.querySelector('h3').textContent = 'Cargando producto...';
-                    overlay.querySelector('p').innerHTML = 'Por favor espera un momento.';
-                    overlay.style.display = 'flex';
-                }
+                showLoading('Cargando producto...', 'Por favor espera un momento.');
+            }
 
-                isProductLoading = true; // Set loading guard
+            try {
+                // Common init tasks
                 await checkAuth();
                 await loadUserProfile();
 
@@ -8779,7 +8740,19 @@
                 } else if (draftId) {
                     await loadDraft(draftId);
                 }
+            } catch (error) {
+                console.error('Initialization error:', error);
+                // Errors are usually handled inside load functions, but catch-all for safety
+            } finally {
+                // Ensure loading is hidden regardless of outcome
+                hideLoading();
             }
+        }
+
+        // Llamar al inicio
+        document.addEventListener('DOMContentLoaded', () => {
+            setupValidationListeners();
+            initAll();
         });
         // ========================================
         // SISTEMA DE AYUDA
@@ -8787,9 +8760,9 @@
         async function checkFirstTime() {
             try {
                 const { data, error } = await supabaseClient
-                    .from('user_settings')
+                    .from('profiles')
                     .select('first_upload_done')
-                    .eq('user_id', userId)
+                    .eq('id', userId)
                     .single();
 
                 // Si no existe el registro o first_upload_done es false, mostrar modal
@@ -8807,19 +8780,15 @@
             }
         }
 
-        window.closeFirstTimeModal = function () {
+        window.closeFirstTimeModal = async function () {
             document.getElementById('firstTimeModal')?.classList.remove('active');
 
             // Marcar como completado
             try {
-                supabaseClient
-                    .from('user_settings')
-                    .upsert({
-                        user_id: userId,
-                        first_upload_done: true
-                    }, {
-                        onConflict: 'user_id'
-                    });
+                await supabaseClient
+                    .from('profiles')
+                    .update({ first_upload_done: true })
+                    .eq('id', userId);
             } catch (e) {
                 console.warn('No se pudo guardar preferencia:', e);
             }

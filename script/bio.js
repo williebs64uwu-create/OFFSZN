@@ -4,6 +4,13 @@
 window.activeWavesurfers = window.activeWavesurfers || [];
 window.currentlyPlaying = window.currentlyPlaying || null;
 
+function escapeHTML(str) {
+    if (!str) return '';
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+}
+
 function initBioLink() {
     // 1. Get Username from URL
     const path = window.location.pathname;
@@ -664,7 +671,7 @@ async function loadRecentProducts(user) {
                     <div class="flex-1 p-4 flex flex-col justify-center">
                         <div class="flex items-start justify-between mb-1">
                             <div>
-                                <h3 class="font-bold text-md leading-tight text-white mb-0.5">${p.name || ''}</h3>
+                                <h3 class="font-bold text-md leading-tight text-white mb-0.5">${escapeHTML(p.name || '')}</h3>
                                 <p class="text-[10px] text-gray-400 font-medium uppercase tracking-wider">${p.product_type || p.type || ''}</p>
                                 ${metaInfo}
                             </div>

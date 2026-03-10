@@ -1,4 +1,17 @@
 
+/**
+ * UTILS: Sanitization
+ */
+function escapeHTML(str) {
+    if (!str) return '';
+    return str.toString()
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
 let currentUser = null;
 let currentProfileData = null;
 let cropper = null; // Store cropper instance
@@ -9,7 +22,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     // Use the global client initialized by auth-utils.js
     if (!window.supabaseClient) {
-        console.error("Critical: Global Supabase not found in account-settings.js. Ensure auth-utils.js is loaded.");
+        // console.error("Critical: Global Supabase not found in account-settings.js. Ensure auth-utils.js is loaded.");
         return;
     }
 
@@ -32,7 +45,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     try {
         await Promise.all([timerPromise, fetchPromise]);
     } catch (err) {
-        console.error("Error during parallel load:", err);
+        // console.error("Error during parallel load:", err);
     } finally {
         // 5. Render and Reveal Everything Simultaneously
         renderUserData();
@@ -54,7 +67,7 @@ async function loadUserData() {
         if (error) throw error;
         currentProfileData = data;
     } catch (err) {
-        console.error("Error loading profile:", err);
+        // console.error("Error loading profile:", err);
     }
 }
 
@@ -71,11 +84,16 @@ function renderUserData() {
     if (sidebarRole) sidebarRole.textContent = data.role || 'Sin rol';
 
     if (sidebarAvatar) {
+        sidebarAvatar.innerHTML = '';
         if (data.avatar_url) {
-            sidebarAvatar.innerHTML = `<img src="${data.avatar_url}" alt="Avatar">`;
+            const img = document.createElement('img');
+            img.src = data.avatar_url;
+            img.alt = "Avatar";
+            img.crossOrigin = "anonymous";
+            sidebarAvatar.appendChild(img);
             sidebarAvatar.classList.add('has-image');
         } else {
-            sidebarAvatar.innerHTML = (data.nickname || data.email || 'U').charAt(0).toUpperCase();
+            sidebarAvatar.textContent = (data.nickname || data.email || 'U').charAt(0).toUpperCase();
             sidebarAvatar.classList.remove('has-image');
         }
     }
@@ -102,10 +120,15 @@ function renderUserData() {
 
     const formAvatar = document.getElementById('formAvatar');
     if (formAvatar) {
+        formAvatar.innerHTML = '';
         if (data.avatar_url) {
-            formAvatar.innerHTML = `<img src="${data.avatar_url}" alt="Avatar">`;
+            const img = document.createElement('img');
+            img.src = data.avatar_url;
+            img.alt = "Avatar";
+            img.crossOrigin = "anonymous";
+            formAvatar.appendChild(img);
         } else {
-            formAvatar.innerHTML = (data.nickname || data.email || 'U').charAt(0).toUpperCase();
+            formAvatar.textContent = (data.nickname || data.email || 'U').charAt(0).toUpperCase();
         }
     }
 
@@ -157,7 +180,7 @@ function injectSkeletons() {
 
     // Buttons
     document.querySelectorAll('.btn-primary-sm, .btn-change-avatar').forEach(btn => {
-        btn.classList.add('btn-loading-skeleton');
+        // btn.classList.add('btn-loading-skeleton');
     });
 
     // Form Avatar
@@ -495,7 +518,7 @@ async function saveProfileChanges(e, type) {
 
     } catch (err) {
         showToast(err.message || "Error al guardar cambios.", 'error');
-        console.error(err);
+        // console.error(err);
     } finally {
         btn.disabled = false;
         btn.textContent = originalText;
@@ -619,7 +642,7 @@ async function checkNickname(nick, submitBtn) {
             if (submitBtn) submitBtn.disabled = false;
         }
     } catch (err) {
-        console.error(err);
+        // console.error(err);
         status.textContent = "Error al verificar";
         if (submitBtn) submitBtn.disabled = false; // Allow try anyway
     }
@@ -789,8 +812,13 @@ function showToast(message, type = 'success') {
     `;
 
     // Add icon based on type
-    const icon = type === 'error' ? '<i class="bi bi-exclamation-circle-fill"></i>' : '<i class="bi bi-check-circle-fill"></i>';
-    toast.innerHTML = `${icon} <span>${message}</span>`;
+    const iconClass = type === 'error' ? 'bi-exclamation-circle-fill' : 'bi-check-circle-fill';
+    const iconEl = document.createElement('i');
+    iconEl.className = `bi ${iconClass}`;
+    const spanEl = document.createElement('span');
+    spanEl.textContent = message;
+    toast.appendChild(iconEl);
+    toast.appendChild(spanEl);
 
     // Add animation styles if not present
     if (!document.getElementById('toast-style')) {
@@ -897,23 +925,41 @@ class MentionsManager {
     renderResults() {
         if (!this.isActive) return;
 
+        this.dropdown.innerHTML = '';
+
         if (this.filteredUsers.length === 0) {
-            this.dropdown.innerHTML = '<div class="mention-empty">No se encontraron usuarios</div>';
+            const empty = document.createElement('div');
+            empty.className = 'mention-empty';
+            empty.textContent = 'No se encontraron usuarios';
+            this.dropdown.appendChild(empty);
             return;
         }
 
-        this.dropdown.innerHTML = this.filteredUsers.map((user, index) => `
-            <div class="mention-item ${index === this.selectedIndex ? 'selected' : ''}" data-index="${index}">
-                <img src="${user.avatar_url || 'https://raw.githubusercontent.com/williebs64uwu/OFFSZN-Assets/main/default-avatar.png'}" class="mention-avatar" onerror="this.src='https://raw.githubusercontent.com/williebs64uwu/OFFSZN-Assets/main/default-avatar.png'">
-                <span class="mention-nickname">@${user.nickname}</span>
-            </div>
-        `).join('');
+        this.filteredUsers.forEach((user, index) => {
+            const item = document.createElement('div');
+            item.className = `mention-item ${index === this.selectedIndex ? 'selected' : ''}`;
+            item.dataset.index = index;
 
-        // Add click listeners
-        this.dropdown.querySelectorAll('.mention-item').forEach(item => {
-            item.onclick = () => {
-                this.selectUser(this.filteredUsers[item.dataset.index]);
+            const img = document.createElement('img');
+            const defaultAvatarUrl = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.nickname || 'User') + '&background=random';
+            img.src = user.avatar_url || defaultAvatarUrl;
+            img.className = 'mention-avatar';
+            img.onerror = () => {
+                img.src = defaultAvatarUrl;
             };
+
+            const span = document.createElement('span');
+            span.className = 'mention-nickname';
+            span.textContent = `@${user.nickname}`;
+
+            item.appendChild(img);
+            item.appendChild(span);
+
+            item.onclick = () => {
+                this.selectUser(this.filteredUsers[index]);
+            };
+
+            this.dropdown.appendChild(item);
         });
     }
 
