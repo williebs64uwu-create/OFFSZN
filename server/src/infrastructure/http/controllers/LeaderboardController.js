@@ -8,7 +8,7 @@ export const getLeaderboard = async (req, res) => {
         console.log("Fetching producers with avatars...");
         const { data: producers, error: userError } = await supabase
             .from('users')
-            .select('id, nickname, avatar_url, banner_url, bio, is_verified, role')
+            .select('id, nickname, avatar_url, banner_url, bio, is_verified, role, r2_version')
             .eq('is_producer', true)
             .not('avatar_url', 'is', null) // Must have avatar
             .neq('avatar_url', '')       // Must not be empty string
@@ -110,6 +110,7 @@ export const getLeaderboard = async (req, res) => {
             profile_cover: p.banner_url,
             role: p.role,
             is_verified: p.is_verified,
+            r2_version: p.r2_version || 'v1',
             products_count: productCounts[p.id] || 0,
             score: scores[p.id] || 0,
             trend: 'neutral'

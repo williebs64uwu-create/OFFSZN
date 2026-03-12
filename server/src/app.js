@@ -72,7 +72,7 @@ const allowedOrigins = [
 const corsOptions = {
     origin: function (origin, callback) {
         if (!origin) return callback(null, true);
-        if (allowedOrigins.indexOf(origin) !== -1) {
+        if (allowedOrigins.indexOf(origin) !== -1 || origin.startsWith('http://localhost') || origin === 'null') {
             callback(null, true);
         } else {
             console.log("⚠️ CORS Warning (dev):", origin);
@@ -81,7 +81,7 @@ const corsOptions = {
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'apikey', 'X-Client-Info'],
     optionsSuccessStatus: 200
 };
 
@@ -110,7 +110,7 @@ app.use(helmet({
                 // PayPal
                 "https://www.paypalobjects.com", "https://*.paypal.com"
             ],
-            mediaSrc: ["'self'", "data:", "blob:", "https://*.supabase.co", "https://*.r2.dev", "https://*.cloudflarestorage.com", "https://*.r2.cloudflarestorage.com"],
+            mediaSrc: ["'self'", "data:", "blob:", "https://*.supabase.co", "https://*.r2.dev", "https://*.cloudflarestorage.com", "https://*.r2.cloudflarestorage.com", "https://res.cloudinary.com"],
             connectSrc: ["'self'", "blob:",
                 "https://*.supabase.co", "wss://*.supabase.co",
                 "https://*.cloudflarestorage.com", "https://*.r2.cloudflarestorage.com", "https://*.r2.dev",
@@ -121,7 +121,7 @@ app.use(helmet({
                 "https://cdn.jsdelivr.net", "https://unpkg.com", "https://offszn.lat",
                 "https://offszn-oc7c.onrender.com", "https://*.onrender.com",
                 "http://localhost:*",
-                "https://*.googleapis.com", "https://accounts.google.com",
+                "https://*.googleapis.com", "https://accounts.google.com", "https://apis.google.com",
                 "https://*.ytimg.com", "https://*.ggpht.com"
             ],
             frameSrc: ["'self'",
@@ -129,7 +129,7 @@ app.use(helmet({
                 "https://open.spotify.com",
                 // PayPal
                 "https://www.paypal.com", "https://www.sandbox.paypal.com",
-                "https://accounts.google.com", "https://*.googleapis.com"
+                "https://accounts.google.com", "https://*.googleapis.com", "https://apis.google.com"
             ],
             objectSrc: ["'none'"],
             upgradeInsecureRequests: null,

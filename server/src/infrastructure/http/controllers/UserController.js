@@ -9,7 +9,7 @@ export const getMyPurchasedProducts = async (req, res) => {
             .select(`
                 *, 
                 orders!inner (user_id, status), 
-                products (id, name, description, image_url, download_url_mp3, download_url_wav, download_url_stems) 
+                products (id, name, description, image_url, r2_version, download_url_mp3, download_url_wav, download_url_stems) 
             `)
             .eq('orders.user_id', userId)
             .eq('orders.status', 'completed');
@@ -99,7 +99,7 @@ export const completeOnboarding = async (req, res) => {
             .from('users')
             .update(updateData)
             .eq('id', userId)
-            .select('id, email, nickname, role, first_name, last_name, created_at, is_admin, socials, is_producer, paypal_email');
+            .select('id, email, nickname, role, first_name, last_name, created_at, is_admin, socials, is_producer, paypal_email, r2_version');
 
         if (updateError) throw updateError;
         if (!updatedUser || updatedUser.length === 0) {
@@ -121,7 +121,7 @@ export const getCurrentUser = async (req, res) => {
 
         const { data: user, error } = await supabase
             .from('users')
-            .select('id, email, nickname, role, first_name, last_name, created_at, is_admin, is_producer, paypal_email')
+            .select('id, email, nickname, role, first_name, last_name, created_at, is_admin, is_producer, paypal_email, r2_version')
             .eq('id', userId)
             .single();
 
@@ -227,7 +227,7 @@ export const getUserByNickname = async (req, res) => {
 
         const { data: user, error } = await supabase
             .from('users')
-            .select('id, nickname, first_name, last_name, avatar_url, bio, role, socials, socials_order, is_verified, is_producer, created_at, experience, daws, banner_url')
+            .select('id, nickname, first_name, last_name, avatar_url, bio, role, socials, socials_order, is_verified, is_producer, created_at, experience, daws, banner_url, r2_version')
             .ilike('nickname', nickname)
             .maybeSingle();
 
@@ -279,7 +279,7 @@ export const getProductsByNickname = async (req, res) => {
                 *,
                 collab_invitations (
                     status,
-                    users!fk_collab_collaborator_public_users ( id, nickname, avatar_url, is_verified )
+                    users!fk_collab_collaborator_public_users ( id, nickname, avatar_url, is_verified, r2_version )
                 )
             `)
             .eq('producer_id', user.id)
@@ -299,6 +299,7 @@ export const getProductsByNickname = async (req, res) => {
                 nickname: inv.users.nickname,
                 avatar_url: inv.users.avatar_url,
                 is_verified: inv.users.is_verified,
+                r2_version: inv.users.r2_version || 'v1',
                 status: inv.status // Pass status so frontend can filter
             }));
 
@@ -328,7 +329,7 @@ export const getAllProducers = async (req, res) => {
 
         let query = supabase
             .from('users')
-            .select('id, nickname, first_name, last_name, avatar_url, profile_cover:banner_url, bio, role, is_verified, genres, specialty', { count: 'exact' });
+            .select('id, nickname, first_name, last_name, avatar_url, profile_cover:banner_url, bio, role, is_verified, genres, specialty, r2_version', { count: 'exact' });
 
         if (!role) {
             query = query.eq('is_producer', true);
@@ -482,7 +483,7 @@ export const getMyListenHistory = async (req, res) => {
         if (producerIds.size > 0) {
             const { data: producers } = await supabase
                 .from('users')
-                .select('id, nickname, avatar_url, is_verified')
+                .select('id, nickname, avatar_url, is_verified, r2_version')
                 .in('id', Array.from(producerIds));
 
             const producerMap = new Map();
@@ -497,6 +498,7 @@ export const getMyListenHistory = async (req, res) => {
                         prod.producer_name = producer.nickname; // Add for StickyPlayer fallback
                         prod.producer_avatar = producer.avatar_url;
                         prod.producer_verified = producer.is_verified;
+                        prod.producer_r2_version = producer.r2_version || 'v1';
                         // Construct minimal user object for existing frontend helpers
                         prod.artist_users = producer; // Matches StickyPlayer.js expects
                     }

@@ -81,9 +81,8 @@
             </div>
         `;
 
-        // Resolve Image URL
         if (window.getAuthorizedUrl && coverImgSrc.startsWith('http')) {
-            window.getAuthorizedUrl(coverImgSrc).then(url => {
+            window.getAuthorizedUrl(coverImgSrc, product.r2_version || 'v1').then(url => {
                 const imgEl = document.getElementById('share-modal-cover');
                 if (imgEl && url) imgEl.src = url;
             });

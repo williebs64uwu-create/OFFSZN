@@ -21,6 +21,7 @@ let currentFilters = {
     doubleTempo: false,
     keys: []
 };
+let renderTimeout = null; // Debounce for results rendering
 
 // --- Skeletons ---
 function showResultsSkeletons(count = 15) {
@@ -152,20 +153,15 @@ async function initSearchPage() {
     // 1. Get Query from URL
     const urlParams = new URLSearchParams(window.location.search);
     currentQuery = urlParams.get('q') || '';
-    const category = urlParams.get('cat') || 'Todo';
 
-    // 3. Perform Initial Search (Includes fetching and rendering)
-    await performSearch();
-
-    // 4. Set Initial Sidebar State from URL if any
+    // 2. Set Initial Sidebar State from URL if any
     parseUrlFilters(urlParams);
 
+    // 3. Setup Filter Listeners (Initializes visuals immediately)
     setupFilterListeners();
 
-    // 6. Hide Filter Skeletons
-    document.querySelectorAll('.filter-content.loading').forEach(el => {
-        el.classList.remove('loading');
-    });
+    // 4. Perform Initial Search (Async)
+    await performSearch();
 }
 
 async function fetchProducts() {
@@ -197,7 +193,7 @@ async function fetchProducers() {
         // Fetch users who are producers
         const { data, error } = await window.supabaseClient
             .from('users')
-            .select('id, nickname, avatar_url, is_verified, is_producer, bio')
+            .select('id, nickname, avatar_url, is_verified, is_producer, bio, r2_version')
             .eq('is_producer', true); // Removed limit to ensure all producers are available
 
         if (error) throw error;
@@ -305,7 +301,7 @@ function setupFilterListeners() {
     const bpmDisplay = document.getElementById('bpm-range-display');
 
     if (bpmMinSlider && bpmMaxSlider) {
-        const track = document.querySelector('.slider-track');
+        const track = bpmMinSlider.parentElement.querySelector('.slider-track');
         const updateBpm = (e) => {
             let min = parseInt(bpmMinSlider.value);
             let max = parseInt(bpmMaxSlider.value);
@@ -425,94 +421,104 @@ function setupFilterListeners() {
 }
 
 function applyFilters() {
-    // This function now primarily re-filters based on currentFilters state
-    // and then calls renderResults.
-    let results = [...allProducts];
+    // Show skeletons immediately
+    showResultsSkeletons(10);
 
-    // 1. Text Search
-    if (currentQuery) {
-        const q = currentQuery.toLowerCase().trim();
-        const normQ = normalizeString(q);
+    // Skip full filter logic if products aren't fetched yet
+    if (allProducts.length === 0) return;
 
-        results = results.map(p => {
-            const score = getMatchScore(p, q, normQ);
-            return { ...p, _matchScore: score };
-        }).filter(p => p._matchScore > 0);
-    } else {
-        results = results.map(p => ({ ...p, _matchScore: 100 }));
-    }
+    // Clear previous timeout to debounce rapid changes
+    if (renderTimeout) clearTimeout(renderTimeout);
 
-    // 2. Category Filter
-    if (currentFilters.categories.length > 0 &&
-        !currentFilters.categories.includes('Todo') &&
-        !currentFilters.categories.includes('Todas')) {
-        results = results.filter(p => currentFilters.categories.includes(p.product_type));
-    }
+    renderTimeout = setTimeout(() => {
+        // This function now primarily re-filters based on currentFilters state
+        // and then calls renderResults.
+        let results = [...allProducts];
 
-    // 3. BPM Filter (Range + Double Tempo)
-    if (currentFilters.bpmMin !== null || currentFilters.bpmMax !== null) {
-        results = results.filter(p => {
-            if (!p.bpm) return true;
-            const b = parseInt(p.bpm);
-            const min = currentFilters.bpmMin || 0;
-            const max = currentFilters.bpmMax || 999;
+        // 1. Text Search
+        if (currentQuery) {
+            const q = currentQuery.toLowerCase().trim();
+            const normQ = normalizeString(q);
 
-            const matchNormal = b >= min && b <= max;
-            if (currentFilters.doubleTempo) {
-                const matchDouble = b >= (min * 2) && b <= (max * 2);
-                const matchHalf = b >= (min / 2) && b <= (max / 2);
-                return matchNormal || matchDouble || matchHalf;
-            }
-            return matchNormal;
-        });
-    }
+            results = results.map(p => {
+                const score = getMatchScore(p, q, normQ);
+                return { ...p, _matchScore: score };
+            }).filter(p => p._matchScore > 0);
+        } else {
+            results = results.map(p => ({ ...p, _matchScore: 100 }));
+        }
 
-    // 4. Price Filter
-    if (currentFilters.priceMax !== null) {
-        const max = currentFilters.priceMax;
-        results = results.filter(p => {
-            const price = parseFloat(p.price_basic) || 0;
-            return price <= max;
-        });
-    }
+        // 2. Category Filter
+        if (currentFilters.categories.length > 0 &&
+            !currentFilters.categories.includes('Todo') &&
+            !currentFilters.categories.includes('Todas')) {
+            results = results.filter(p => currentFilters.categories.includes(p.product_type));
+        }
 
-    // 5. Key Filter
-    if (currentFilters.keys && currentFilters.keys.length > 0) {
-        results = results.filter(p => {
-            const pk = (p.key || p.key_scale || '').trim();
-            return currentFilters.keys.includes(pk);
-        });
-    }
+        // 3. BPM Filter (Range + Double Tempo)
+        if (currentFilters.bpmMin !== null || currentFilters.bpmMax !== null) {
+            results = results.filter(p => {
+                if (!p.bpm) return true;
+                const b = parseInt(p.bpm);
+                const min = currentFilters.bpmMin || 0;
+                const max = currentFilters.bpmMax || 999;
 
-    // Sort by Match Score Relevance
-    results.sort((a, b) => b._matchScore - a._matchScore);
+                const matchNormal = b >= min && b <= max;
+                if (currentFilters.doubleTempo) {
+                    const matchDouble = b >= (min * 2) && b <= (max * 2);
+                    const matchHalf = b >= (min / 2) && b <= (max / 2);
+                    return matchNormal || matchDouble || matchHalf;
+                }
+                return matchNormal;
+            });
+        }
 
-    filteredResults = results;
-    // Re-evaluate producers based on the currentQuery for rendering
-    const query = (currentQuery || '').toLowerCase().trim();
-    const normQuery = normalizeString(query);
+        // 4. Price Filter
+        if (currentFilters.priceMax !== null) {
+            const max = currentFilters.priceMax;
+            results = results.filter(p => {
+                const price = parseFloat(p.price_basic) || 0;
+                return price <= max;
+            });
+        }
 
-    let matchedProducers = [];
-    let exactProducer = null;
+        // 5. Key Filter
+        if (currentFilters.keys && currentFilters.keys.length > 0) {
+            results = results.filter(p => {
+                const pk = (p.key || p.key_scale || '').trim();
+                return currentFilters.keys.includes(pk);
+            });
+        }
 
-    if (query !== '' || (currentFilters.categories && currentFilters.categories.includes('Productores'))) {
-        matchedProducers = allProducers.filter(p => {
-            const nick = (p.nickname || '').toLowerCase();
-            const normNick = normalizeString(nick);
-            const similarity = getSimilarity(nick, query);
-            return nick.includes(query) || normNick.includes(normQuery) || similarity > 0.7;
-        });
+        // Sort by Match Score Relevance
+        results.sort((a, b) => b._matchScore - a._matchScore);
 
-        exactProducer = matchedProducers.find(p => {
-            if (query === '') return false;
-            const normNick = normalizeString(p.nickname);
-            const similarity = getSimilarity(p.nickname, query);
-            return normNick === normQuery || similarity > 0.85;
-        });
-    }
+        filteredResults = results;
+        // Re-evaluate producers based on the currentQuery for rendering
+        const query = (currentQuery || '').toLowerCase().trim();
+        const normQuery = normalizeString(query);
 
-    renderResults(filteredResults, matchedProducers, exactProducer);
-    renderRecommendations();
+        let matchedProducers = [];
+        let exactProducer = null;
+
+        if (query !== '' || (currentFilters.categories && currentFilters.categories.includes('Productores'))) {
+            matchedProducers = allProducers.filter(p => {
+                const nick = (p.nickname || '').toLowerCase();
+                const normNick = normalizeString(nick);
+                const similarity = getSimilarity(nick, query);
+                const isMatch = nick.includes(query) || normNick.includes(normQuery) || similarity > 0.7;
+
+                if (query !== '') {
+                    const exactSimilarity = getSimilarity(p.nickname, query);
+                    if (normNick === normalizeString(query) || exactSimilarity > 0.85) exactProducer = p;
+                }
+                return isMatch;
+            });
+        }
+
+        renderResults(filteredResults, matchedProducers, exactProducer);
+        renderRecommendations();
+    }, 300); // 300ms delay to allow skeletons to breathe and feel premium
 }
 
 function renderRecommendations() {
@@ -622,7 +628,7 @@ function renderTrackRow(p) {
         <div class="track-row" data-product-id="${p.id}">
             <div class="track-left">
                 <div class="thumb-container" onclick="window.location.href='${productUrl}'">
-                    <img crossorigin="anonymous" src="${imgUrl}" class="track-thumb" alt="cover">
+                    <img crossorigin="anonymous" src="${imgUrl}" data-r2-version="${p.r2_version || 'v1'}" class="track-thumb" alt="cover">
                     <div class="thumb-play-overlay">
                         <i class="bi bi-play-fill"></i>
                     </div>
@@ -633,18 +639,30 @@ function renderTrackRow(p) {
                         <span class="producer-name" onclick="event.stopPropagation(); window.location.href='/@${encodeURIComponent(p.producer_nickname || 'producer')}'">${escapeHTML(producer)}</span>
                         <span class="meta-separator">•</span>
                         <span class="product-type">${escapeHTML(type)}</span>
+                        
+                        <div class="track-stats-inline">
+                            ${(() => {
+                                const pTypeLower = (p.product_type || '').toLowerCase();
+                                if (pTypeLower === 'loopkit' || pTypeLower === 'drumkit') {
+                                    return `<div class="stat-pill-v2">${p.sounds_count || 0} sonidos</div>`;
+                                } else if (pTypeLower === 'preset') {
+                                    return `<div class="stat-pill-v2">${escapeHTML(p.category || 'Preset')}</div>`;
+                                } else {
+                                    return `
+                                        <div class="stat-pill-v2">${p.bpm || '--'}</div>
+                                        <span class="meta-separator-v2">|</span>
+                                        <div class="stat-pill-v2">${p.key || p.key_scale || '--'}</div>
+                                    `;
+                                }
+                            })()}
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <div class="track-center" style="display: flex; gap: 8px; align-items: center; margin-right: 40px;">
-                <div class="info-square-v2">${p.bpm || '--'}</div>
-                <span style="color: rgba(255,255,255,0.2); font-weight: 300;">|</span>
-                <div class="info-square-v2" style="min-width: 60px;">${p.key || p.key_scale || '--'}</div>
-            </div>
-
             <div class="track-actions-right">
                 <div class="track-actions">
+                    <i class="bi bi-stars action-icon" onclick="event.stopPropagation();" title="Generar"></i>
                     <i class="bi bi-heart action-icon" onclick="event.stopPropagation(); window.FavoritesManager?.toggleLike('${p.id}', this, ${JSON.stringify(p).replace(/"/g, '&quot;')})" title="Like"></i>
                     <i class="bi bi-download action-icon" onclick="event.stopPropagation(); window.openDownloadModal?.('${p.id}')" title="Download"></i>
                     <i class="bi bi-share action-icon" onclick="event.stopPropagation(); window.openShareModal?.(${JSON.stringify(p).replace(/"/g, '&quot;')})" title="Share"></i>
@@ -665,7 +683,7 @@ function renderExactProducerCard(p) {
     return `
         <div class="exact-match-card" onclick="window.location.href='${profileUrl}'" style="cursor:pointer; background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 24px; display: flex; align-items: center; gap: 20px; transition: all 0.3s ease; margin-bottom: 30px;">
             <div style="position: relative;">
-                <img crossorigin="anonymous" src="${avatar}" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid #fff;">
+                <img crossorigin="anonymous" src="${avatar}" data-r2-version="${p.r2_version || 'v1'}" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid #fff;">
                 ${p.is_verified ? '<i class="bi bi-patch-check-fill" style="position: absolute; bottom: 0; right: 0; color: #fff; font-size: 1.2rem; background: #000; border-radius: 50%;"></i>' : ''}
             </div>
             <div style="flex: 1;">
@@ -685,7 +703,7 @@ function renderProducerRow(p) {
 
     return `
         <div class="producer-row" onclick="window.location.href='${profileUrl}'" style="cursor:pointer; display: flex; align-items: center; gap: 16px; padding: 12px; border-radius: 12px; transition: background 0.2s; margin-bottom: 8px;">
-            <img crossorigin="anonymous" src="${avatar}" style="width: 48px; height: 48px; border-radius: 50%; object-fit: cover; background: #1a1a1a;">
+            <img crossorigin="anonymous" src="${avatar}" data-r2-version="${p.r2_version || 'v1'}" style="width: 48px; height: 48px; border-radius: 50%; object-fit: cover; background: #1a1a1a;">
             <div style="flex: 1;">
                 <div style="color: #fff; font-weight: 600; display: flex; align-items: center; gap: 6px;">
                     ${escapeHTML(p.nickname)}

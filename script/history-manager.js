@@ -382,7 +382,7 @@ window.HistoryManager = (function () {
         });
 
         // Resolve R2 URL
-        window.getAuthorizedUrl(audioUrl).then(url => {
+        window.getAuthorizedUrl(audioUrl, item.r2_version || 'v1').then(url => {
             if (url) wsRow.load(url);
         });
 

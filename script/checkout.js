@@ -5,6 +5,18 @@
  */
 
 const CheckoutManager = {
+  // Utility for sanitization
+  escapeHTML: function (str) {
+      if (!str) return '';
+      return String(str).replace(/[&<>'"]/g, tag => ({
+          '&': '&amp;',
+          '<': '&lt;',
+          '>': '&gt;',
+          "'": '&#39;',
+          '"': '&quot;'
+      }[tag] || tag));
+  },
+
   // CONFIGURATION
   currency: 'USD',
 
@@ -129,11 +141,11 @@ const CheckoutManager = {
       <div class="checkout-items-list" style="margin-bottom: 24px;">
         <div class="checkout-item" style="padding:16px 0; display:flex; gap:16px; align-items:center; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 24px;">
           <div class="checkout-item-img">
-            <img id="${imgId}" src="/images/portada-default.png" style="width:64px; height:64px; border-radius:6px; object-fit:cover; border:1px solid rgba(255,255,255,0.08);">
+            <img id="${imgId}" src="/images/portada-default.png" data-r2-version="${d.r2_version || 'v1'}" crossorigin="anonymous" style="width:64px; height:64px; border-radius:6px; object-fit:cover; border:1px solid rgba(255,255,255,0.08);">
           </div>
           <div class="checkout-item-details" style="flex:1;">
-            <div style="font-size:1rem; font-weight:600; color:#eee; margin-bottom:6px; font-family: 'Plus Jakarta Sans', sans-serif;">"${d.productName}"</div>
-            <div style="font-size:0.75rem; color:#777; text-transform:uppercase; letter-spacing:0.5px; font-weight: 500;">${d.licenseName} • Negociado</div>
+            <div style="font-size:1rem; font-weight:600; color:#eee; margin-bottom:6px; font-family: 'Plus Jakarta Sans', sans-serif;">"${this.escapeHTML(d.productName)}"</div>
+            <div style="font-size:0.75rem; color:#777; text-transform:uppercase; letter-spacing:0.5px; font-weight: 500;">${this.escapeHTML(d.licenseName)} • Negociado</div>
           </div>
           <div class="checkout-item-price" style="text-align:right;">
             <div style="font-size:1.05rem; font-weight:700; color:#fff; font-family: 'Plus Jakarta Sans', sans-serif;">$${d.agreedPrice.toFixed(2)}</div>
@@ -166,7 +178,7 @@ const CheckoutManager = {
 
     // Authorized URL for image
     if (window.getAuthorizedUrl && d.productImage) {
-      window.getAuthorizedUrl(d.productImage).then(url => {
+      window.getAuthorizedUrl(d.productImage, d.r2_version || 'v1').then(url => {
         const imgEl = document.getElementById(imgId);
         if (imgEl && url) {
           imgEl.src = url;
@@ -659,17 +671,19 @@ const CheckoutManager = {
 
         const fallbackImg = '/images/portada-default.png';
         const imgId = `checkout-img-${item.product.id}`;
+        const safeName = this.escapeHTML(item.product.name);
+        const safeLicName = this.escapeHTML(item.license_name || item.product.product_type);
 
         html += `
             <div class="checkout-item ${isBlocked ? 'blocked' : ''}" style="padding:16px 0; display:flex; gap:16px; align-items:center; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 20px;">
               <div class="checkout-item-img" style="position:relative; width:56px; height:56px; flex-shrink:0;">
-                <img id="${imgId}" src="${fallbackImg}" 
+                <img id="${imgId}" src="${fallbackImg}" data-r2-version="${item.product.r2_version || 'v1'}" crossorigin="anonymous"
                      onerror="this.src='${fallbackImg}'; this.onerror=null;"
                      style="width:100%; height:100%; border-radius:6px; object-fit:cover; border:1px solid rgba(255,255,255,0.08); background:#111;">
               </div>
               <div class="checkout-item-details" style="flex:1; min-width:0;">
-                <div class="checkout-item-name truncate" style="font-size:0.95rem; font-weight:600; color:#eee; margin-bottom:4px; font-family: 'Plus Jakarta Sans', sans-serif;">"${item.product.name}"</div>
-                <div style="font-size:0.7rem; color:#555; text-transform:uppercase; letter-spacing:0.5px; font-weight: 500;">${item.license_name || item.product.product_type}</div>
+                <div class="checkout-item-name truncate" style="font-size:0.95rem; font-weight:600; color:#eee; margin-bottom:4px; font-family: 'Plus Jakarta Sans', sans-serif;">"${safeName}"</div>
+                <div style="font-size:0.7rem; color:#555; text-transform:uppercase; letter-spacing:0.5px; font-weight: 500;">${safeLicName}</div>
                 ${isBlocked ? `
                     <div class="blocked-warning" style="color: #666; font-size: 0.65rem; margin-top: 6px; font-weight: 500;">
                         <i class="bi bi-exclamation-circle-fill"></i> Productor sin PayPal configurado.
@@ -689,7 +703,7 @@ const CheckoutManager = {
 
         // Load authorized image URL
         if (window.getAuthorizedUrl && item.product.image_url) {
-          window.getAuthorizedUrl(item.product.image_url).then(url => {
+          window.getAuthorizedUrl(item.product.image_url, item.product.r2_version || 'v1').then(url => {
             const imgEl = document.getElementById(imgId);
             if (imgEl && url) imgEl.src = url;
           });

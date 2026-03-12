@@ -1,4 +1,4 @@
-﻿/**
+/**
  * PRODUCT CORE JS - Smart Template Controller
  * Logic to render OFFSZN products dynamically based on type.
  */
@@ -701,7 +701,7 @@ function renderProductPage(product) {
             <div class="product-sidebar">
                 <!-- Cover Art -->
                 <div class="product-cover-art" style="position:relative;">
-                    <img src="${initialImgMain}" 
+                    <img src="${initialImgMain}" data-r2-version="${product.r2_version || 'v1'}" 
                          id="product-main-art"
                          alt="${escapeHTML(product.name)}"
                          class=""
@@ -1019,7 +1019,7 @@ function renderProductPage(product) {
     if (product.image_url) {
         const img = document.getElementById('product-main-art');
         if (img) {
-            window.getAuthorizedUrl(product.image_url).then(url => {
+            window.getAuthorizedUrl(product.image_url, product.r2_version || 'v1').then(url => {
                 if (url) {
                     img.onload = () => { img.style.opacity = 1; };
                     img.src = url;
@@ -1072,7 +1072,7 @@ window.playProductCover = async function () {
     let finalAudioUrl = audioUrl;
     if (window.getAuthorizedUrl && !(audioUrl.includes('pub-') && audioUrl.includes('.r2.dev'))) {
         try {
-            finalAudioUrl = await window.getAuthorizedUrl(audioUrl);
+            finalAudioUrl = await window.getAuthorizedUrl(audioUrl, product.r2_version || 'v1');
         } catch (e) {
         }
     }
@@ -2097,8 +2097,8 @@ window.openABModal = async function (beforeUrl, afterUrl, product) {
 
     // 🔥 FIX: Authorize both R2 URLs in parallel
     const [signedBefore, signedAfter] = await Promise.all([
-        window.getAuthorizedUrl(beforeUrl),
-        window.getAuthorizedUrl(afterUrl)
+        window.getAuthorizedUrl(beforeUrl, product.r2_version || 'v1'),
+        window.getAuthorizedUrl(afterUrl, product.r2_version || 'v1')
     ]);
 
     const productName = product.name;
@@ -2456,7 +2456,7 @@ function renderRelatedGrid(products, container) {
         // Use EXACTLY the same structure as Profile Trending Cards (Trending / Packs)
         card.innerHTML = `
             <div class="t-card-cover">
-                <img src="${p.image_url || '/images/portada-default.png'}" 
+                <img src="${p.image_url || '/images/portada-default.png'}" data-r2-version="${p.r2_version || 'v1'}" 
                      id="related-img-${p.id}"
                      alt="${p.name}"
                      onerror="this.src='/images/portada-default.png'"
@@ -2502,7 +2502,7 @@ function renderRelatedGrid(products, container) {
         // 🔥 FIX: Authorize related image WITHOUT skeleton (removes light line glitch)
         const img = card.querySelector('img');
         if (img && p.image_url) {
-            window.getAuthorizedUrl(p.image_url)
+            window.getAuthorizedUrl(p.image_url, p.r2_version || 'v1')
                 .then(url => {
                     if (url) {
                         img.onload = () => { /* No-op, skeleton removed */ };

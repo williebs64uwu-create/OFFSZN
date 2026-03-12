@@ -117,7 +117,7 @@ window.ExpandedPlayer = (function () {
         const rawImg = track.image_url || '';
         coverEl.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=';
         if (rawImg) {
-            window.getAuthorizedUrl(rawImg).then(url => {
+            window.getAuthorizedUrl(rawImg, track.r2_version || 'v1').then(url => {
                 if (url) coverEl.src = url;
             });
         }
@@ -171,7 +171,7 @@ window.ExpandedPlayer = (function () {
             try { ws.destroy(); } catch (e) { }
         }
 
-        const finalAudioUrl = await window.getAuthorizedUrl(audioUrl);
+        const finalAudioUrl = await window.getAuthorizedUrl(audioUrl, track.r2_version || 'v1');
 
         ws = WaveSurfer.create({
             container: '#ep-waveform',

@@ -23,8 +23,6 @@
 .search-sidebar {
     width: 300px;
     flex-shrink: 0;
-    position: sticky;
-    top: 100px;
     height: fit-content;
     background: #000;
     border: 1px solid rgba(255, 255, 255, 0.08);
@@ -37,6 +35,27 @@
     /* Very tight gap as per ref image */
     /* Tightened gap as per ref */
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+    position: sticky;
+    top: 100px;
+    max-height: calc(100vh - 120px);
+    overflow-y: auto;
+}
+
+.search-sidebar::-webkit-scrollbar {
+    width: 4px;
+}
+
+.search-sidebar::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.search-sidebar::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+}
+
+.search-sidebar:hover::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
 }
 
 .sidebar-main-title {
@@ -297,7 +316,7 @@
     display: flex;
     flex-direction: column;
     gap: 12px;
-    padding-top: 8px;
+    padding-top: 0;
 }
 
 /* Red heart for likes */
@@ -373,12 +392,16 @@
     border: none;
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 0;
-    padding: 16px 10px;
+    padding: 10px 10px; /* More compact vertical padding */
     display: flex;
     align-items: center;
     gap: 20px;
     transition: background 0.2s;
     cursor: default;
+}
+
+.track-row:first-child {
+    padding-top: 4px; /* Minimize top spacing on the first result */
 }
 
 .track-row:hover {
@@ -430,14 +453,17 @@
     align-items: center;
     gap: 20px;
     flex: 1;
+    min-width: 0; /* Important for ellipsis in children */
 }
 
 .track-info {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 2px; /* Tighter gap */
     align-items: flex-start;
     text-align: left;
+    min-width: 0; /* Important for ellipsis in children */
+    overflow: hidden;
 }
 
 .track-title {
@@ -446,6 +472,10 @@
     color: #fff;
     cursor: pointer;
     transition: text-decoration 0.2s;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%;
 }
 
 .track-title:hover {
@@ -463,8 +493,35 @@
 }
 
 .track-meta {
-    font-size: 0.8rem;
-    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.82rem;
+    color: rgba(255, 255, 255, 0.4);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.track-stats-inline {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: 4px;
+}
+
+.stat-pill-v2 {
+    background: rgba(255, 255, 255, 0.08);
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.72rem;
+    font-weight: 800;
+    color: rgba(255, 255, 255, 0.9);
+    min-width: 32px;
+    text-align: center;
+}
+
+.meta-separator-v2 {
+    color: rgba(255, 255, 255, 0.1);
+    font-weight: 300;
+    margin: 0 4px;
 }
 
 .track-play-btn {
@@ -498,12 +555,7 @@
     opacity: 0.6;
 }
 
-.track-meta {
-    font-size: 0.85rem;
-    color: var(--text-dim);
-    min-width: 40px;
-    text-align: left;
-}
+/* Consolidated into .track-meta above */
 
 .track-badges {
     display: flex;
@@ -541,17 +593,17 @@
 .track-actions-right {
     display: flex;
     align-items: center;
-    gap: 15px;
+    gap: 32px; /* Even more space between icons group and price */
     margin-left: auto;
-    min-width: 250px;
+    min-width: 450px; /* Much wider to give "air" as requested */
     justify-content: flex-end;
 }
 
 .track-actions {
     display: flex;
-    gap: 15px;
+    gap: 28px; /* High spacing between each tool */
     color: var(--text-dim);
-    font-size: 1.1rem;
+    font-size: 1.2rem; /* Larger for better visibility */
     opacity: 0;
     transition: opacity 0.2s ease;
     pointer-events: none;

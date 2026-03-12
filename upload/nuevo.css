@@ -1,0 +1,333 @@
+@import url('antiguo.css');
+
+/* --- License Management UI (Step 2) --- */
+
+.license-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1); /* More marked border */
+    border-radius: 12px;
+    padding: 12px 16px;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 8px;
+    position: relative;
+    max-width: 100%;
+}
+
+/* Active states with purple glow and stronger border */
+.license-card.active {
+    background: rgba(139, 92, 246, 0.02);
+    border-color: rgba(139, 92, 246, 0.4); /* Much more marked */
+    box-shadow: 0 0 15px rgba(139, 92, 246, 0.05);
+}
+
+/* Green Glow for Free Download card */
+.license-card.free-download-card.active {
+    background: rgba(34, 197, 94, 0.02);
+    border-color: rgba(34, 197, 94, 0.5); /* Much more marked */
+    box-shadow: 0 0 15px rgba(34, 197, 94, 0.05);
+}
+
+/* Inactive state - Less ghostly, more structure */
+.license-card:not(.active) {
+    border-color: rgba(255, 255, 255, 0.08); /* Marked border even when inactive */
+    background: rgba(255, 255, 255, 0.015);
+}
+
+.license-main-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.license-left-group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+}
+
+.offszn_nombre {
+    font-size: 15px;
+    font-weight: 600;
+    color: #ffffff;
+    line-height: 1.2;
+}
+
+/* Improved visibility for inactive text */
+.license-card:not(.active) .offszn_nombre {
+    color: rgba(255, 255, 255, 0.4); /* Brighter than before */
+}
+
+.license-card:not(.active) .license-status-row {
+    color: rgba(255, 255, 255, 0.3);
+}
+
+.license-card:not(.active) .slider {
+    background-color: rgba(255, 255, 255, 0.1); /* Less ghostly toggle bg */
+}
+
+/* --- Price Box Styling - Compact Pill --- */
+.price-box {
+    display: flex;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 6px 12px;
+    min-width: 100px;
+    max-width: 120px;
+    justify-content: space-between;
+    gap: 6px;
+}
+
+.price-box .currency {
+    color: rgba(255, 255, 255, 0.3);
+    font-size: 14px;
+    font-weight: 500;
+    user-select: none;
+}
+
+.license-price-input {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    color: #ffffff;
+    width: 100%;
+    text-align: right;
+    font-family: 'Inter', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    outline: none !important;
+    padding: 0;
+    margin: 0;
+}
+
+/* Hide spin buttons */
+.license-price-input::-webkit-outer-spin-button,
+.license-price-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  appearance: none;
+  margin: 0;
+}
+
+.license-price-input[type=number] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+/* Toggle Switch Styling */
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 38px;
+    height: 20px;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(255, 255, 255, 0.2);
+    transition: .3s;
+    border-radius: 20px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 14px;
+    width: 14px;
+    left: 3px;
+    bottom: 3px;
+    background-color: #ffffff;
+    transition: .3s;
+    border-radius: 50%;
+}
+
+input:checked + .slider {
+    background-color: #8b5cf6; /* OFFSZN Purple */
+}
+
+input:checked + .slider:before {
+    transform: translateX(18px);
+}
+
+/* Status Rows */
+.license-status-row {
+    font-size: 11px;
+    font-weight: 500;
+    margin-left: 50px;
+}
+
+.status-error {
+    color: #fca5a5; /* Even brighter red for better visibility */
+}
+
+.status-success {
+    color: rgba(255, 255, 255, 0.4);
+}
+
+.free-download-card .status-success {
+    color: #4ade80; /* Brighter green */
+}
+
+/* Free Download Specifics */
+.free-download-description {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.4);
+    line-height: 1.4;
+    margin-top: -2px;
+    margin-left: 50px;
+}
+
+.free-download-description strong {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+/* Section Separator */
+#licensesContainer > .free-download-card::before {
+    content: '';
+    display: block;
+    width: 100%;
+    height: 1px;
+    background: rgba(255, 255, 255, 0.08);
+    margin: 4px 0 12px 0;
+}
+
+/* --- Step 1 Error Messages --- */
+.offszn-error-msg {
+    color: #ef4444;
+    font-size: 13px;
+    font-weight: 500;
+    margin-top: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    animation: fadeIn 0.3s ease;
+}
+
+.offszn-error-msg i {
+    font-size: 15px;
+}
+
+/* --- Vertical Volume Slider --- */
+.volume-control {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+}
+
+.player-time {
+    font-size: 13px;
+    font-weight: 500;
+    color: #ffffff;
+    min-width: 80px;
+}
+
+.volume-slider-container {
+    position: absolute;
+    bottom: 44px; /* Moved closer to avoid losing hover */
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1a1b1e;
+    padding: 16px 10px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    height: 140px;
+    width: 34px;
+    z-index: 1000;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+}
+
+/* Hover Bridge: ensures the menu stays open while moving mouse from icon to slider */
+.volume-slider-container::before {
+    content: '';
+    position: absolute;
+    bottom: -15px;
+    left: 0;
+    width: 100%;
+    height: 20px;
+    background: transparent;
+}
+
+.volume-control:hover .volume-slider-container {
+    display: flex;
+}
+
+.volume-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 6px;
+    height: 100%;
+    background: #333336;
+    outline: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.volume-slider::-webkit-slider-runnable-track {
+    width: 6px;
+    border-radius: 4px;
+}
+
+/* Bolita eliminada: thumb invisible */
+.volume-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 6px;
+    height: 1px;
+    background: transparent;
+    cursor: pointer;
+}
+
+.volume-slider::-moz-range-thumb {
+    width: 6px;
+    height: 1px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+}
+
+/* Circle Mute Button */
+#muteBtn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+#muteBtn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Loop Button Active State (White/Premium) */
+#loopBtn.active {
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+    border-color: rgba(255, 255, 255, 0.3);
+}

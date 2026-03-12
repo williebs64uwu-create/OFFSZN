@@ -273,7 +273,7 @@ async function initWaveSurfer(playBtn, containerId, request) {
     // Background load the real waveform
     setTimeout(async () => {
         try {
-            const url = await AuthUtils.getAuthorizedUrl(request.preview_url);
+            const url = await AuthUtils.getAuthorizedUrl(request.preview_url, request.r2_version || 'v1');
             container.innerHTML = ''; // Clear placeholder
             ws = WaveSurfer.create({
                 container: container,

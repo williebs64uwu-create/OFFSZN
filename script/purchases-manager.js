@@ -95,7 +95,8 @@ window.PurchasesManager = (function () {
                                 id,
                                 nickname,
                                 license_settings
-                            )
+                            ),
+                            r2_version
                         )
                     )
                 `)
@@ -256,7 +257,10 @@ window.PurchasesManager = (function () {
 
         // Row Content - Truncation is handled by CSS, but we inject clean data
         row.innerHTML = `
-            <img src="${product.image_url || '/images/portada-default.png'}" class="purchase-cover" alt="Portada" onerror="this.src='/images/portada-default.png'">
+            <img src="${product.image_url || '/images/portada-default.png'}" 
+                 data-r2-version="${product.r2_version || 'v1'}" 
+                 class="purchase-cover" alt="Portada" 
+                 onerror="this.src='/images/portada-default.png'">
             <div class="purchase-info">
                 <span class="purchase-name" title=""></span>
                 <span class="purchase-producer"></span>

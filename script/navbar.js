@@ -315,6 +315,9 @@ function initSearch() {
                 const query = mobileInput.value.trim();
                 const cat = NavbarState.search.currentCategory || 'Todo';
                 if (query.length > 0) {
+                    if (window.saveToHistory) {
+                        window.saveToHistory({ type: 'text', term: query });
+                    }
                     window.location.href = `/search.html?q=${encodeURIComponent(query)}&cat=${cat}`;
                 }
             }
@@ -418,7 +421,7 @@ async function getSearchCache() {
     try {
         const [pRes, uRes] = await Promise.all([
             window.supabaseClient.from('products').select('*').eq('visibility', 'public').neq('status', 'draft'),
-            window.supabaseClient.from('users').select('id, nickname, avatar_url, is_verified, is_producer, bio').eq('is_producer', true)
+            window.supabaseClient.from('users').select('id, nickname, avatar_url, is_verified, is_producer, bio, r2_version').eq('is_producer', true)
         ]);
 
         let profileMap = {};
@@ -518,6 +521,7 @@ async function performSearch(query, category, autoRedirectExact = false) {
                     producer: producer ? producer.nickname : 'OFFSZN',
                     price: p.price_basic ? `$${p.price_basic}` : 'Free',
                     img: p.image_url,
+                    r2_version: p.r2_version || 'v1',
                     isFallback: p.isFallback || false
                 };
             })];
@@ -531,6 +535,7 @@ async function performSearch(query, category, autoRedirectExact = false) {
                 title: u.nickname || 'OFFSZN',
                 stats: 'Producer',
                 img: u.avatar_url,
+                r2_version: u.r2_version || 'v1',
                 id: u.id
             }));
             realResults = [...realResults, ...userItems];
@@ -540,6 +545,7 @@ async function performSearch(query, category, autoRedirectExact = false) {
                 title: matchedUsers[0].nickname || 'OFFSZN',
                 stats: 'Producer',
                 img: matchedUsers[0].avatar_url,
+                r2_version: matchedUsers[0].r2_version || 'v1',
                 id: matchedUsers[0].id
             };
             realResults.pop();
@@ -562,8 +568,8 @@ async function performSearch(query, category, autoRedirectExact = false) {
             if (exactMatch && !exactMatch.isFallback) {
                 // Save to history with correct type before redirecting
                 const termObj = exactMatch.type === 'user' ?
-                    { type: 'user', term: exactMatch.title, subtitle: 'Producer', img: exactMatch.img } :
-                    { type: exactMatch.type, term: exactMatch.title, subtitle: exactMatch.producer || exactMatch.price, img: exactMatch.img, id: exactMatch.id };
+                    { type: 'user', term: exactMatch.title, subtitle: 'Producer', img: exactMatch.img, r2_version: exactMatch.r2_version } :
+                    { type: exactMatch.type, term: exactMatch.title, subtitle: exactMatch.producer || exactMatch.price, img: exactMatch.img, id: exactMatch.id, r2_version: exactMatch.r2_version };
 
                 await window.saveToHistory(termObj);
 
@@ -577,6 +583,9 @@ async function performSearch(query, category, autoRedirectExact = false) {
 
             // NO EXACT MATCH -> REDIRECT TO SEARCH PAGE
             const cat = NavbarState.search.currentCategory || 'Todo';
+            if (window.saveToHistory) {
+                await window.saveToHistory({ type: 'text', term: query });
+            }
             window.location.href = `/search.html?q=${encodeURIComponent(query)}&cat=${cat}`;
             return;
         }
@@ -587,6 +596,9 @@ async function performSearch(query, category, autoRedirectExact = false) {
         // On error, if it was an Enter press, still try to go to search page
         if (autoRedirectExact) {
             const cat = NavbarState.search.currentCategory || 'Todo';
+            if (window.saveToHistory) {
+                await window.saveToHistory({ type: 'text', term: query });
+            }
             window.location.href = `/search.html?q=${encodeURIComponent(query)}&cat=${cat}`;
         } else {
             renderActualResults([]);
@@ -643,7 +655,8 @@ function renderActualResults(results) {
             <div class="search-result-item ${isSelected ? 'selected' : ''}" 
                  onclick="handleResultClick('${targetUrl}', '${itemData}')">
                 <div class="result-img">
-                    <img data-r2-src="${item.img || (isUser ? 'https://ui-avatars.com/api/?name=' + encodeURIComponent(item.title || 'User') + '&background=random' : '/images/portada-default.png')}" 
+                     <img data-r2-version="${item.r2_version || 'v1'}"
+                          data-r2-src="${item.img || (isUser ? 'https://ui-avatars.com/api/?name=' + encodeURIComponent(item.title || 'User') + '&background=random' : '/images/portada-default.png')}" 
                          src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" 
                          alt="thumb" style="width:100%; height:100%; border-radius:${isUser ? '50%' : '6px'}; object-fit:cover;">
                 </div>
@@ -681,7 +694,8 @@ function renderActualResults(results) {
 
             try {
                 if (window.getAuthorizedUrl) {
-                    const signedUrl = await window.getAuthorizedUrl(rawSrc);
+                    const r2Version = img.getAttribute('data-r2-version') || 'v1';
+                    const signedUrl = await window.getAuthorizedUrl(rawSrc, r2Version);
                     if (signedUrl) img.src = signedUrl;
                 } else {
                     img.src = rawSrc;
@@ -780,7 +794,8 @@ function renderHistoryAndTrends() {
             }
             try {
                 if (window.getAuthorizedUrl) {
-                    const signedUrl = await window.getAuthorizedUrl(rawSrc);
+                    const r2Version = img.getAttribute('data-r2-version') || 'v1';
+                    const signedUrl = await window.getAuthorizedUrl(rawSrc, r2Version);
                     if (signedUrl) img.src = signedUrl;
                 } else {
                     img.src = rawSrc;

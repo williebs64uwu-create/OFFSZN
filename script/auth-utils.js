@@ -183,9 +183,10 @@ window.AuthUtils = {
      * Resolves a path or URL to an authorized/signed URL if it's an R2 resource.
      * Supports Hybrid (Supabase/R2) logic.
      * @param {string} pathOrUrl The path or URL to resolve
+     * @param {string} version Optional R2 version ('v1' or 'v2')
      * @returns {Promise<string|null>} The authorized URL
      */
-    getAuthorizedUrl: async function (pathOrUrl) {
+    getAuthorizedUrl: async function (pathOrUrl, version = 'v1') {
         if (!pathOrUrl) return null;
 
         // --- CACHE CHECK ---
@@ -264,7 +265,7 @@ window.AuthUtils = {
                     'Content-Type': 'application/json',
                     'Authorization': token ? `Bearer ${token}` : undefined
                 },
-                body: JSON.stringify({ key })
+                body: JSON.stringify({ key, version })
             });
 
             if (!response.ok) {
@@ -285,9 +286,10 @@ window.AuthUtils = {
     /**
      * Deletes one or more files from Cloudflare R2 via API.
      * @param {string|string[]} keys Single key or array of keys to delete.
+     * @param {string} version Optional R2 version ('v1' or 'v2')
      * @returns {Promise<boolean>} True if operation completed.
      */
-    deleteFromR2: async function (keys) {
+    deleteFromR2: async function (keys, version = 'v1') {
         if (!keys) return true;
         const keysArray = Array.isArray(keys) ? keys : [keys];
         if (keysArray.length === 0) return true;
@@ -320,7 +322,7 @@ window.AuthUtils = {
                     'Content-Type': 'application/json',
                     'Authorization': token ? `Bearer ${token}` : undefined
                 },
-                body: JSON.stringify({ keys: cleanKeys })
+                body: JSON.stringify({ keys: cleanKeys, version })
             });
 
             if (!response.ok) {

@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 
 <head>
@@ -2707,49 +2707,7 @@
 
 
 
-        async function getAuthorizedUrl(pathOrUrl) {
-            if (!pathOrUrl || pathOrUrl === '/images/portada-default.png') return pathOrUrl;
-
-            // Si es una URL de R2 (cloudflarestorage), necesitamos firmarla.
-            const isR2Url = pathOrUrl.includes('r2.cloudflarestorage.com') ||
-                pathOrUrl.includes('pub-') ||
-                (pathOrUrl.startsWith('http') === false);
-
-            if (!isR2Url && pathOrUrl.startsWith('http')) return pathOrUrl;
-
-            let key = pathOrUrl;
-            if (pathOrUrl.startsWith('http')) {
-                try {
-                    const urlObj = new URL(pathOrUrl);
-                    key = urlObj.pathname.substring(1);
-                } catch (e) {
-                    console.warn("Error parsing URL in getAuthorizedUrl:", pathOrUrl);
-                }
-            }
-
-            try {
-                const session = await supabaseClient.auth.getSession();
-                const token = session.data.session?.access_token;
-                if (!token) return pathOrUrl;
-
-                const response = await fetch('/api/r2/download-url', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: JSON.stringify({ key })
-                });
-
-                if (!response.ok) return pathOrUrl;
-                const { downloadUrl } = await response.json();
-                return downloadUrl;
-            } catch (error) {
-                console.error('Error getting authorized URL:', error);
-                return pathOrUrl;
-            }
-        }
-
+        // Using global window.getAuthorizedUrl from auth-utils.js
         async function loadProducts(type, status = 'all') {
             const container = document.getElementById('productsContainer');
 
@@ -2885,10 +2843,10 @@
                         (!coverPath.startsWith('http') && coverPath.startsWith('products/'));
 
                     if (isR2Key) {
-                        item.signed_cover_url = await getAuthorizedUrl(coverPath);
+                        item.signed_cover_url = await window.getAuthorizedUrl(coverPath, item.r2_version || 'v1');
                     } else if (coverPath.startsWith('http')) {
                         if (coverPath.includes('r2.cloudflarestorage.com') || !coverPath.includes('supabase.co')) {
-                            item.signed_cover_url = await getAuthorizedUrl(coverPath);
+                            item.signed_cover_url = await window.getAuthorizedUrl(coverPath, item.r2_version || 'v1');
                         } else {
                             item.signed_cover_url = coverPath; // Public Supabase URL
                         }

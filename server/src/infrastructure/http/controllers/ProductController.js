@@ -11,7 +11,7 @@ export const getAllProducts = async (req, res) => {
             // para traer los datos de 'users'.
             .select(`
                 *, 
-                users!products_producer_id_fkey ( nickname ) 
+                users!products_producer_id_fkey ( nickname, r2_version ) 
             `)
             .eq('status', 'approved')
             .eq('visibility', 'public');
@@ -29,6 +29,10 @@ export const getAllProducts = async (req, res) => {
                 ? product.users.nickname
                 : 'Anónimo';
 
+            const producerR2Version = (product.users && product.users.r2_version)
+                ? product.users.r2_version
+                : 'v1';
+
             const p = { ...product };
             delete p.users;
 
@@ -36,7 +40,8 @@ export const getAllProducts = async (req, res) => {
                 ...p,
                 id: String(p.id),
                 producer_id: String(p.producer_id),
-                producer_nickname: producerNickname
+                producer_nickname: producerNickname,
+                producer_r2_version: producerR2Version
             };
         });
 
@@ -65,7 +70,8 @@ export const createProduct = async (req, res) => {
             mp3_url,
             wav_url,
             stems_url,
-            product_type
+            product_type,
+            r2_version
         } = req.body;
         //const productFile = req.file;
 
@@ -125,6 +131,7 @@ export const createProduct = async (req, res) => {
             download_url_mp3: mp3_url,
             download_url_wav: wav_url || null,
             download_url_stems: stems_url || null,
+            r2_version: r2_version || 'v1',
 
             is_free: isFree,
             price_basic: licenses?.basic || null,

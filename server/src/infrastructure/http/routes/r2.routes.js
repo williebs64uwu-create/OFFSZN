@@ -75,15 +75,18 @@ router.post('/r2/upload-url', authenticateTokenMiddleware, async (req, res) => {
 
         // Siempre usar el bucket principal
         const bucket = R2_BUCKET_NAME;
+        // 🔥 NEW: Default to current version (v2) for new uploads
+        const version = req.body.version || 'v2';
 
-        const uploadUrl = await getPresignedUploadUrl(finalKey, finalFileType, bucket);
+        const uploadUrl = await getPresignedUploadUrl(finalKey, finalFileType, version);
 
         // Si es sensible, la Public URL no servirá directamente (requiere firma)
         // Devolvemos el key final (con el prefijo secure-products si aplica)
         res.json({
             uploadUrl,
             key: finalKey,
-            publicUrl: isSensitive ? null : getPublicUrl(finalKey)
+            r2_version: version, // Return version for DB saving
+            publicUrl: isSensitive ? null : getPublicUrl(finalKey, version)
         });
     } catch (error) {
         console.error('Error al generar R2 upload URL:', error);
@@ -95,11 +98,14 @@ router.post('/r2/upload-url', authenticateTokenMiddleware, async (req, res) => {
 // MODIFICADO: Ahora permite acceso público a ciertas rutas (covers, previews) sin token.
 router.post('/r2/download-url', async (req, res) => {
     try {
-        let { key, expiresIn } = req.body;
+        let { key, expiresIn, version } = req.body;
 
         if (!key) {
             return res.status(400).json({ error: 'Falta el key del archivo' });
         }
+
+        // 🔥 Default to v1 if not specified (legacy support)
+        const finalVersion = version || 'v1';
 
         // 🔥 URL EXTRACTION: If the key is a full URL, extract just the path part
         if (key.startsWith('http://') || key.startsWith('https://')) {
@@ -137,7 +143,7 @@ router.post('/r2/download-url', async (req, res) => {
             }
         }
 
-        const downloadUrl = await getPresignedDownloadUrl(key, expiresIn || 3600);
+        const downloadUrl = await getPresignedDownloadUrl(key, expiresIn || 3600, finalVersion);
         res.json({ downloadUrl });
     } catch (error) {
         console.error('Error al generar R2 download URL:', error);
@@ -147,18 +153,15 @@ router.post('/r2/download-url', async (req, res) => {
 
 router.post('/r2/delete-files', authenticateTokenMiddleware, async (req, res) => {
     try {
-        const { keys } = req.body;
+        const { keys, version } = req.body;
 
         if (!keys || !Array.isArray(keys) || keys.length === 0) {
             return res.status(400).json({ error: 'Se requiere un array de claves (keys).' });
         }
 
-        console.log(`[R2 Endpoint] Solicitud de eliminación para ${keys.length} archivos por usuario ${req.user.userId}`);
+        console.log(`[R2 Endpoint] Removal request for ${keys.length} files by user ${req.user.userId} (Version: ${version || 'v1'})`);
 
-        // TODO: Validar ownership si es necesario, aunque R2 es agnóstico del usuario.
-        // Asumimos que si tiene token válido y conoce la key (que incluye userId), es legítimo.
-
-        await deleteFromR2(keys);
+        await deleteFromR2(keys, version || 'v1');
 
         res.json({ message: 'Archivos eliminados correctamente (o procesados silent).' });
 
@@ -170,14 +173,14 @@ router.post('/r2/delete-files', authenticateTokenMiddleware, async (req, res) =>
 
 router.post('/r2/copy-file', authenticateTokenMiddleware, async (req, res) => {
     try {
-        const { sourceKey, destinationKey } = req.body;
+        const { sourceKey, destinationKey, version } = req.body;
 
         if (!sourceKey || !destinationKey) {
             return res.status(400).json({ error: 'Faltan sourceKey o destinationKey' });
         }
 
-        console.log(`[R2 Endpoint] Copying file for user ${req.user.userId}`);
-        await copyFileInR2(sourceKey, destinationKey);
+        console.log(`[R2 Endpoint] Copying file for user ${req.user.userId} (Version: ${version || 'v1'})`);
+        await copyFileInR2(sourceKey, destinationKey, version || 'v1');
 
         res.json({ message: 'Archivo copiado correctamente' });
 

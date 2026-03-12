@@ -14,6 +14,18 @@ window.FavoritesManager = (function () {
     // 1. Initialize (with Promise Singleton Pattern)
     let initPromise = null;
 
+    // 🛡️ SECURITY: XSS Sanitizer for dynamic innerHTML injection
+    function escapeHTML(str) {
+        if (!str) return '';
+        return String(str).replace(/[&<>'"]/g, tag => ({
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            "'": '&#39;',
+            '"': '&quot;'
+        }[tag] || tag));
+    }
+
     function init() {
         if (isInitialized) return Promise.resolve();
 
@@ -197,7 +209,6 @@ window.FavoritesManager = (function () {
             }
 
         } catch (err) {
-            // console.error("FavoritesManager: Sync Error", err);
             // Revert on error
             if (isLikedOriginal) likedItemIds.add(idStr);
             else likedItemIds.delete(idStr);
@@ -371,7 +382,6 @@ window.FavoritesManager = (function () {
             }
 
         } catch (err) {
-            // console.error("Error applying filters:", err);
         }
     }
 
@@ -400,7 +410,7 @@ window.FavoritesManager = (function () {
         // --- ARTIST HTML ---
         const createArtistSpan = (name, data, extraClass = '') => {
             const safeData = JSON.stringify(data).replace(/'/g, "&apos;").replace(/"/g, "&quot;");
-            return `<span class="artist-hover-trigger ${extraClass}" data-artist='${safeData}' onmouseenter="if(window.showArtistCard) window.showArtistCard(event, this)" onmouseleave="if(window.hideArtistCard) window.hideArtistCard(event, this)">${name}</span>`;
+            return `<span class="artist-hover-trigger ${extraClass}" data-artist='${safeData}' onmouseenter="if(window.showArtistCard) window.showArtistCard(event, this)" onmouseleave="if(window.hideArtistCard) window.hideArtistCard(event, this)">${escapeHTML(name)}</span>`;
         };
 
         const producerData = {
@@ -466,13 +476,13 @@ window.FavoritesManager = (function () {
 
         const cleanName = (name) => {
             if (!name) return 'Sin título';
-            return name.replace(/_/g, ' ').replace(/\.(mp3|wav|zip|rar)$/i, '').replace(/\s+/g, ' ').trim();
+            return escapeHTML(name.replace(/_/g, ' ').replace(/\.(mp3|wav|zip|rar)$/i, '').replace(/\s+/g, ' ').trim());
         };
 
         card.innerHTML = `
             <div class="fav-card-cover" onclick="window.location.href='${seoUrl}'">
-                <img src="${imgUrl}" id="fav-img-${prod.id}" onerror="this.src='/images/portada-default.png'" alt="${prod.name}">
-                <div class="fav-badge-floating">${pType}</div>
+                <img src="${escapeHTML(imgUrl)}" id="fav-img-${prod.id}" onerror="this.src='/images/portada-default.png'" alt="${escapeHTML(prod.name)}" crossorigin="anonymous">
+                <div class="fav-badge-floating">${escapeHTML(pType)}</div>
                 <div class="fav-card-overlay">
                     <button class="fav-play-btn" id="btn-play-${waveformId}">
                         <i class="bi bi-play-fill"></i>
@@ -488,8 +498,8 @@ window.FavoritesManager = (function () {
                 ${isMobile ? `
                     <div class="fav-card-waveform" id="${waveformId}"></div>
                     <div class="fav-card-tags">
-                        <span class="fav-tag">${pType}</span>
-                        ${subBadge ? `<span class="fav-tag">${subBadge}</span>` : ''}
+                        <span class="fav-tag">${escapeHTML(pType)}</span>
+                        ${subBadge ? `<span class="fav-tag">${escapeHTML(subBadge)}</span>` : ''}
                     </div>
                 ` : `<!-- PC Simplified -->`}
 
@@ -555,7 +565,7 @@ window.FavoritesManager = (function () {
                             title: prod.name,
                             text: `Mira este ${pType} en OFFSZN`,
                             url: window.location.origin + seoUrl
-                        }).catch(err => { /* console.log('Error sharing:', err) */ });
+                        }).catch(err => { });
                     } else {
                         navigator.clipboard.writeText(window.location.origin + seoUrl);
                         if (window.Notifications) window.Notifications.success("Enlace copiado al portapapeles");
@@ -619,12 +629,12 @@ window.FavoritesManager = (function () {
         if (!ws) {
             if (btn) btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span>';
             try {
-                ws = await lazyLoadWaveSurfer(waveformId, audioUrl, row);
+                const finalAudioUrl = window.getAuthorizedUrl ? await window.getAuthorizedUrl(audioUrl, prod.r2_version || 'v1') : audioUrl;
+                ws = await lazyLoadWaveSurfer(waveformId, finalAudioUrl, row);
                 ws.play();
                 if (btn) btn.innerHTML = '<i class="bi bi-pause-fill"></i>';
                 window.currentlyPlaying = ws;
             } catch (e) {
-                // console.error("Error lazy loading WS:", e);
                 if (btn) btn.innerHTML = '<i class="bi bi-exclamation-circle"></i>';
             }
         } else {
@@ -653,7 +663,8 @@ window.FavoritesManager = (function () {
                 url: url,
                 normalize: true,
                 interact: true,
-                cursorWidth: 0
+                cursorWidth: 0,
+                backend: 'MediaElement'
             });
 
             ws.customId = containerId;
@@ -763,7 +774,7 @@ window.FavoritesManager = (function () {
                 title: prod.name,
                 text: `Mira este ${pType} en OFFSZN`,
                 url: window.location.origin + seoUrl
-            }).catch(err => { /* console.log('Error sharing:', err) */ });
+            }).catch(err => {});
         } else {
             navigator.clipboard.writeText(window.location.origin + seoUrl);
             if (window.toast) window.toast.show("Enlace copiado al portapapeles", "info");

@@ -140,7 +140,7 @@ function renderBioHeader(user) {
     if (user.avatar_url && !isR2) {
         avatarImg.src = user.avatar_url;
     } else if (isR2 && window.getAuthorizedUrl) {
-        window.getAuthorizedUrl(user.avatar_url).then(url => {
+        window.getAuthorizedUrl(user.avatar_url, user.r2_version || 'v1').then(url => {
             avatarImg.src = url;
             avatarImg.parentElement.classList.remove('bg-zinc-900');
         }).catch(() => {
@@ -624,7 +624,7 @@ async function loadRecentProducts(user) {
 
             if (isR2Image && window.getAuthorizedUrl) {
                 try {
-                    finalImageUrl = await window.getAuthorizedUrl(p.image_url);
+                    finalImageUrl = await window.getAuthorizedUrl(p.image_url, p.r2_version || 'v1');
                 } catch (e) { console.error("Error resolving product image", e); }
             }
             return { ...p, finalImageUrl };
@@ -655,13 +655,13 @@ async function loadRecentProducts(user) {
                 <div class="relative w-full bg-[#0a0a0a] rounded-xl overflow-hidden border border-zinc-800 flex flex-col md:flex-row shadow-2xl group hover:border-zinc-500 transition-colors duration-300">
                     <!-- Cover -->
                     <div class="w-full md:w-[120px] aspect-square bg-zinc-900 relative flex-shrink-0 p-3 flex items-center justify-center">
-                        <img src="${p.finalImageUrl}"
+                        <img src="${p.finalImageUrl}" data-r2-version="${p.r2_version || 'v1'}"
                             class="shadow-2xl rounded-md transform group-hover:scale-105 transition-transform duration-500 w-full h-full object-cover border border-white/5"
                             style="box-shadow: -5px 5px 15px rgba(0,0,0,0.5);"
                             crossorigin="anonymous">
                         
                         <!-- Mini Play Button Overlay (Optional UI touch) -->
-                        <button onclick="playBioPreview('${p.id}', '${p.audio_url || p.mp3_url || ''}', this, '${(p.name || '').replace(/'/g, "\\'").replace(/"/g, "&quot;")}', '${p.finalImageUrl}')" 
+                        <button onclick="playBioPreview('${p.id}', '${p.audio_url || p.mp3_url || ''}', this, '${(p.name || '').replace(/'/g, "\\'").replace(/"/g, "&quot;")}', '${p.finalImageUrl}', '${p.r2_version || 'v1'}')" 
                                 class="absolute flex items-center justify-center w-10 h-10 bg-black/60 rounded-full text-white backdrop-blur-sm hover:scale-110 hover:bg-white hover:text-black transition-all border border-white/20">
                             <i class="bi bi-play-fill text-xl ml-1"></i>
                         </button>
@@ -699,7 +699,7 @@ async function loadRecentProducts(user) {
 }
 
 // Global Play Function strictly for Bio Preview that links to Sticky Player
-window.playBioPreview = async function (id, url, btnContent, title, cover) {
+window.playBioPreview = async function (id, url, btnContent, title, cover, r2_version = 'v1') {
     if (!url || url === 'undefined') {
         alert("Este producto no tiene vista previa de audio.");
         return;
@@ -724,7 +724,7 @@ window.playBioPreview = async function (id, url, btnContent, title, cover) {
         // Resolve URL (for R2)
         let finalUrl = url;
         if ((url.includes('r2.cloudflarestorage.com') || url.includes('pub-')) && window.getAuthorizedUrl) {
-            finalUrl = await window.getAuthorizedUrl(url);
+            finalUrl = await window.getAuthorizedUrl(url, r2_version);
         }
 
         // Resolve Author Name

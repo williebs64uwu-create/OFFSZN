@@ -170,7 +170,7 @@ async function renderHeader(user) {
 
         // Background Auth for R2
         if (isR2) {
-            window.getAuthorizedUrl(user.avatar_url).then(url => {
+            window.getAuthorizedUrl(user.avatar_url, user.r2_version || 'v1').then(url => {
                 const img = document.getElementById('profileAvatarImg');
                 if (img) {
                     img.onload = () => { img.style.opacity = 1; };
@@ -1519,18 +1519,18 @@ async function loadUserProducts(user) {
 
         // --- PRE-WARM IMAGE CACHE (For Synchronized Reveal) ---
         const urlsToWarm = [];
-        if (user.avatar_url) urlsToWarm.push(user.avatar_url);
+        if (user.avatar_url) urlsToWarm.push({url: user.avatar_url, version: user.r2_version || 'v1'});
 
         // Trending
         if (window.trendingProducts) {
-            window.trendingProducts.slice(0, 5).forEach(p => { if (p.image_url) urlsToWarm.push(p.image_url); });
+            window.trendingProducts.slice(0, 5).forEach(p => { if (p.image_url) urlsToWarm.push({url: p.image_url, version: p.r2_version || 'v1'}); });
         }
 
         // Main List (First 15 for instant reveal)
-        productsCache.slice(0, 15).forEach(p => { if (p.image_url) urlsToWarm.push(p.image_url); });
+        productsCache.slice(0, 15).forEach(p => { if (p.image_url) urlsToWarm.push({url: p.image_url, version: p.r2_version || 'v1'}); });
 
         if (urlsToWarm.length > 0 && window.getAuthorizedUrl) {
-            await Promise.all(urlsToWarm.map(url => window.getAuthorizedUrl(url).catch(() => null)));
+            await Promise.all(urlsToWarm.map(obj => window.getAuthorizedUrl(obj.url, obj.version).catch(() => null)));
         }
 
         // 1. Start all preparation in parallel
@@ -1706,7 +1706,7 @@ async function renderTrending(items, user, collabStats = {}) {
     // 1. Pre-authorize ALL images in parallel while skeletons stay visible
     const authPromises = items.map(prod => {
         if (!prod.image_url) return Promise.resolve(null);
-        return window.getAuthorizedUrl(prod.image_url);
+        return window.getAuthorizedUrl(prod.image_url, prod.r2_version || 'v1');
     });
     const authorizedUrls = await Promise.all(authPromises);
 
@@ -1902,7 +1902,7 @@ async function renderProductList(items, user, collabStats = {}) {
     // 1. Pre-authorize ALL images in parallel
     const authPromises = items.map(prod => {
         if (!prod.image_url) return Promise.resolve(null);
-        return window.getAuthorizedUrl(prod.image_url);
+        return window.getAuthorizedUrl(prod.image_url, prod.r2_version || 'v1');
     });
     const authorizedUrls = await Promise.all(authPromises);
 
@@ -2181,7 +2181,7 @@ async function renderProductList(items, user, collabStats = {}) {
         // Initialize WaveSurfer
         if (audioUrl && window.WaveSurfer) {
             try {
-                const finalAudioUrl = await window.getAuthorizedUrl(audioUrl);
+                const finalAudioUrl = await window.getAuthorizedUrl(audioUrl, prod.r2_version || 'v1');
                 const ws = WaveSurfer.create({
                     container: document.getElementById(waveformId),
                     waveColor: '#666',

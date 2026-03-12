@@ -45,7 +45,7 @@ router.get('/', async (req, res) => {
 router.post('/', async (req, res) => {
     try {
         const userId = req.headers['x-user-id'];
-        const { title, url, trim_start, trim_end, scheduled_at } = req.body;
+        const { title, url, trim_start, trim_end, scheduled_at, r2_version } = req.body;
 
         if (!userId) {
             return res.status(401).json({ error: 'Unauthorized' });
@@ -66,7 +66,8 @@ router.post('/', async (req, res) => {
                 url,
                 trim_start: parseFloat(trim_start) || 0,
                 trim_end: parseFloat(trim_end) || 0,
-                scheduled_at: scheduled_at || null
+                scheduled_at: scheduled_at || null,
+                r2_version: r2_version || 'v1'
             }])
             .select()
             .single();

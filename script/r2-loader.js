@@ -39,7 +39,8 @@
                 el.style.transition = 'opacity 0.4s ease';
 
                 try {
-                    const authorizedUrl = await window.getAuthorizedUrl(originalSrc);
+                    const r2Version = el.getAttribute('data-r2-version') || 'v1';
+                    const authorizedUrl = await window.getAuthorizedUrl(originalSrc, r2Version);
                     if (authorizedUrl && authorizedUrl !== originalSrc) {
                         el.onload = () => { el.style.opacity = '1'; };
                         el.src = authorizedUrl;

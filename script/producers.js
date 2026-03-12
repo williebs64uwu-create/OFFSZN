@@ -543,7 +543,7 @@ function setupModalListeners() {
             });
 
             if (!response.ok) throw new Error('Error al obtener URL de subida');
-            const { uploadUrl, key } = await response.json();
+            const { uploadUrl, key, r2_version, publicUrl } = await response.json();
 
             // 2. Upload to R2 directly with progress
             const xhr = new XMLHttpRequest();
@@ -566,9 +566,10 @@ function setupModalListeners() {
                 xhr.send(file);
             });
 
-            maquetaUrl = key;
+            maquetaUrl = key; // Keep using key for custom requests (they use backend signing)
+            maquetaVersion = r2_version; // We should probably store the version too
             maquetaName.textContent = `Archivo Listo: ${file.name}`;
-            return key;
+            return { key, r2_version, publicUrl };
         } catch (err) {
             console.error("Upload error:", err);
             throw err;

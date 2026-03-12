@@ -372,7 +372,7 @@ window.StickyPlayer = (function () {
         }
 
         if (rawImg) {
-            window.getAuthorizedUrl(rawImg).then(url => {
+            window.getAuthorizedUrl(rawImg, trackData.r2_version || 'v1').then(url => {
                 if (url) {
                     els.cover.onload = () => {
                         if (els.cover.parentElement) els.cover.parentElement.classList.remove('skeleton');
@@ -439,7 +439,7 @@ window.StickyPlayer = (function () {
         if (audioUrl.includes('pub-') && audioUrl.includes('.r2.dev')) {
             finalAudioUrl = audioUrl; // Synchronous, keeping gesture alive
         } else {
-            finalAudioUrl = await window.getAuthorizedUrl(audioUrl);
+            finalAudioUrl = await window.getAuthorizedUrl(audioUrl, trackData.r2_version || 'v1');
         }
 
         // --- RACE CONDITION CHECK ---

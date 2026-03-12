@@ -42,6 +42,34 @@ app.use(express.static(path.join(__dirname, '../../public')));
 app.use(express.static(path.join(__dirname, '../public')));
 ```
 
+## 12. Credenciales Supabase Expuestas en Páginas Huérfanas (404.html)
+
+**Descripción del error:**
+Los logs de seguridad detectan la estructura de credenciales clave `window.SUPABASE_ANON_KEY` codificada estáticamente en archivos en la raíz del proyecto.
+
+**Cuándo ocurre:**
+Ocurre frecuentemente en plantillas simples o páginas aisladas (como `404.html` o `index.html` original) donde en lugar de cargar el manejador global del entorno se pegaron directamente las APIs.
+
+**Solución:**
+Eliminar íntegramente las variables estáticas y referenciar el handler encargado desde la raíz:
+```html
+<script src="/env.js"></script>
+```
+
+## 13. Exposición de Credenciales en Funcionalidades "Beta" (Studio/Reels)
+
+**Descripción del error:**
+Al desarrollar módulos nuevos o bajo etiquetas "BETA" (`studio/reels.html`), se tiende a replicar el error de configuración estática de Supabase, ignorando la arquitectura global de `/env.js`.
+
+**Cuándo ocurre:**
+Ocurre en archivos que se crean como prototipos rápidos y luego se integran al flujo principal sin pasar por un auditoría de secretos.
+
+**Solución:**
+Estandarizar la cabecera de todos los archivos `.html` nuevos para que incluyan la carga de entorno dinámica:
+```html
+<script src="/env.js"></script>
+```
+
 
 ## 8. Scripts Globales Faltantes en SPA/Páginas Independientes (Search/Favorites)
 

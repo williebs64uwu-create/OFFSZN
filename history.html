@@ -527,11 +527,11 @@
                         targetUrl = `/producto.html?id=${historyObj.id}`;
                     }
                 } else if (historyObj.unresolved) {
-                    isDisabled = true;
+                    // It was saved as a text search, just link to the search page instead of being "No disponible"
+                    targetUrl = `/search.html?q=${safeUrlTerm}&cat=Todo`;
                 } else {
-                    // Generic text search - User wants these to be "not clickable" if they don't exist as entity
-                    // But if it was saved as text and not resolved, we mark as disabled.
-                    isDisabled = true;
+                    // Generic text search 
+                    targetUrl = `/search.html?q=${safeUrlTerm}&cat=Todo`;
                 }
 
                 let iconHtml = '<i class="bi bi-clock-history"></i>';
@@ -548,6 +548,7 @@
                     if (historyObj.type === 'user') subtitle = 'Producer';
                     else if (historyObj.type === 'beat') subtitle = 'Beat';
                     else if (historyObj.type === 'kit') subtitle = 'Sound Kit';
+                    else subtitle = 'Búsqueda';
                 }
 
                 return `

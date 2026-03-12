@@ -1,11 +1,14 @@
 import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectsCommand, CopyObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
-// CORRECCIÓN AQUÍ: Subimos 2 niveles para buscar en src/config/config.js
-// Si tu config está en otro lado, avísame, pero esta es la ruta estándar.
-import { R2_ENDPOINT, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET_NAME, R2_SECURE_BUCKET_NAME } from '../../shared/config/config.js';
+import { 
+    R2_ENDPOINT, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET_NAME,
+    R2_ENDPOINT_V2, R2_ACCESS_KEY_ID_V2, R2_SECRET_ACCESS_KEY_V2, R2_BUCKET_NAME_V2,
+    R2_CURRENT_VERSION 
+} from '../../shared/config/config.js';
 
-const s3Client = new S3Client({
+// V1 Client (Old Account)
+const s3ClientV1 = new S3Client({
     region: "auto",
     endpoint: R2_ENDPOINT,
     credentials: {
@@ -14,14 +17,32 @@ const s3Client = new S3Client({
     }
 });
 
+// V2 Client (New Account - Default for new writes)
+const s3ClientV2 = new S3Client({
+    region: "auto",
+    endpoint: R2_ENDPOINT_V2,
+    credentials: {
+        accessKeyId: R2_ACCESS_KEY_ID_V2,
+        secretAccessKey: R2_SECRET_ACCESS_KEY_V2,
+    }
+});
+
 /**
- * Genera una URL firmada para subir un archivo directamente desde el cliente.
- * @param {string} key - La ruta/nombre del archivo en R2.
- * @param {string} contentType - El tipo de contenido del archivo (ej. audio/mpeg).
- * @param {string} bucket - (Opcional) Nombre del bucket destino.
- * @returns {Promise<string>} - La URL firmada.
+ * Helper to get the correct client and bucket based on version.
  */
-export const getPresignedUploadUrl = async (key, contentType, bucket = R2_BUCKET_NAME) => {
+const getClientAndBucket = (version = R2_CURRENT_VERSION) => {
+    if (version === 'v1') {
+        return { client: s3ClientV1, bucket: R2_BUCKET_NAME };
+    }
+    return { client: s3ClientV2, bucket: R2_BUCKET_NAME_V2 };
+};
+
+/**
+ * Genera una URL firmada para subir un archivo.
+ */
+export const getPresignedUploadUrl = async (key, contentType, version = R2_CURRENT_VERSION) => {
+    const { client, bucket } = getClientAndBucket(version);
+    
     const command = new PutObjectCommand({
         Bucket: bucket,
         Key: key,
@@ -29,124 +50,102 @@ export const getPresignedUploadUrl = async (key, contentType, bucket = R2_BUCKET
     });
 
     try {
-        const signedUrl = await getSignedUrl(s3Client, command, { expiresIn: 3600 }); // 1 hora
+        const signedUrl = await getSignedUrl(client, command, { expiresIn: 3600 });
         return signedUrl;
     } catch (error) {
-        console.error("Error al generar URL de subida R2:", error);
+        console.error(`Error al generar URL de subida R2 (${version}):`, error);
         throw error;
     }
 };
 
 /**
- * Genera una URL firmada para descargar o reproducir un archivo privado.
- * @param {string} key - La ruta/nombre del archivo en R2.
- * @param {number} expiresIn - Tiempo de expiración en segundos (defecto 3600).
- * @returns {Promise<string>} - La URL firmada.
+ * Genera una URL firmada para descargar.
  */
-export const getPresignedDownloadUrl = async (key, expiresIn = 3600) => {
+export const getPresignedDownloadUrl = async (key, expiresIn = 3600, version = 'v1') => {
+    // 💡 IMPORTANTE: El backend pasará la versión que sacó de la DB
+    const { client, bucket } = getClientAndBucket(version);
+
     const command = new GetObjectCommand({
-        Bucket: R2_BUCKET_NAME,
+        Bucket: bucket,
         Key: key
     });
 
     try {
-        const signedUrl = await getSignedUrl(s3Client, command, { expiresIn });
+        const signedUrl = await getSignedUrl(client, command, { expiresIn });
         return signedUrl;
     } catch (error) {
-        console.error("Error al generar URL de descarga R2:", error);
+        console.error(`Error al generar URL de descarga R2 (${version}):`, error);
         throw error;
     }
 };
 
 /**
- * Helper para construir la URL pública (si el bucket está configurado como público)
- * Nota: R2 puede requerir un dominio personalizado o configuración específica para accesos públicos directos.
+ * URL pública (Solo para V2 por ahora si está público, o V1 si tiene dominio)
  */
-export const getPublicUrl = (key) => {
-    // 🔥 KEY SANITIZATION: Remove leading slashes
+export const getPublicUrl = (key, version = 'v1') => {
     let cleanKey = key;
     while (cleanKey.startsWith('/')) cleanKey = cleanKey.substring(1);
 
-    const baseUrl = R2_ENDPOINT.replace('https://', `https://${R2_BUCKET_NAME}.`);
+    const { bucket } = getClientAndBucket(version);
+    const endpoint = version === 'v1' ? R2_ENDPOINT : R2_ENDPOINT_V2;
+
+    const baseUrl = endpoint.replace('https://', `https://${bucket}.`);
     return `${baseUrl}/${cleanKey}`;
 };
 
 /**
  * Elimina múltiples archivos de R2.
- * @param {string[]} keys - Array de claves (rutas) de los archivos a eliminar.
- * @returns {Promise<void>}
  */
-export const deleteFromR2 = async (keys) => {
+export const deleteFromR2 = async (keys, version = 'v1') => {
     if (!keys || keys.length === 0) return;
 
-    // 🔥 FIX: Sanitize keys (remove leading slashes)
+    const { client, bucket } = getClientAndBucket(version);
     const sanitizedKeys = keys.map(k => k.startsWith('/') ? k.substring(1) : k);
-
-    // R2/S3 requiere que el array sea de objetos { Key: 'key' }
     const objects = sanitizedKeys.map(key => ({ Key: key }));
 
-    console.log(`[R2 Storage] Attempting to delete ${objects.length} objects from ${R2_BUCKET_NAME}`);
-    console.log(`[R2 Storage] Sample Keys:`, JSON.stringify(objects.slice(0, 3))); // Log first 3 keys
+    console.log(`[R2 Storage] Deleting ${objects.length} from ${bucket} (${version})`);
 
-    // 🔥 FIX: Single Bucket Architecture
-    // All files are in OFF-SZN STORAGE (even 'secure-products/' folder)
     try {
         const command = new DeleteObjectsCommand({
-            Bucket: R2_BUCKET_NAME,
+            Bucket: bucket,
             Delete: {
                 Objects: objects,
-                Quiet: false // ENABLE VERBOSE OUTPUT
+                Quiet: false
             }
         });
 
-        const response = await s3Client.send(command);
+        const response = await client.send(command);
+        console.log(`✅ [R2 Storage] Deleted items from ${version}:`, response.Deleted?.length || 0);
 
-        if (response.Deleted && response.Deleted.length > 0) {
-            console.log(`✅ [R2 Storage] Successfully deleted ${response.Deleted.length} items from R2.`);
-        } else {
-            console.warn(`⚠️ [R2 Storage] No items were reported as deleted by R2.`);
+        if (response.Errors?.length > 0) {
+            console.error(`❌ [R2 Storage] Errors in ${version}:`, response.Errors);
         }
-
-        if (response.Errors && response.Errors.length > 0) {
-            console.error(`❌ [R2 Storage] Errors deleting items:`, JSON.stringify(response.Errors));
-        }
-
     } catch (error) {
-        console.error("Error al eliminar archivos de R2 (Global):", error);
-        // No lanzamos error para no romper el flujo del frontend, pero logueamos.
-        // throw error; 
+        console.error(`Error al eliminar de R2 (${version}):`, error);
     }
 };
 
 /**
- * Copia un archivo dentro del mismo bucket (o entre buckets si se configura).
- * @param {string} sourceKey - Clave de origen.
- * @param {string} destinationKey - Clave de destino.
- * @returns {Promise<void>}
+ * Copia un archivo (Solo dentro del mismo bucket por ahora).
  */
-export const copyFileInR2 = async (sourceKey, destinationKey) => {
+export const copyFileInR2 = async (sourceKey, destinationKey, version = 'v1') => {
+    const { client, bucket } = getClientAndBucket(version);
+    
     try {
-        // Sanitize keys
         const src = sourceKey.startsWith('/') ? sourceKey.substring(1) : sourceKey;
         const dest = destinationKey.startsWith('/') ? destinationKey.substring(1) : destinationKey;
-
-        // R2 requires CopySource to be 'BucketName/Key' URL encoded
-        // However, AWS SDK usually handles this if we pass Bucket and CopySource
-        // For S3/R2, CopySource = `Bucket/${Key}`
-        const copySource = `${R2_BUCKET_NAME}/${src}`;
-
-        console.log(`[R2 COPY] Copying from ${copySource} to ${dest}`);
+        const copySource = `${bucket}/${src}`;
 
         const command = new CopyObjectCommand({
-            Bucket: R2_BUCKET_NAME,
-            CopySource: encodeURI(copySource), // Important for special chars
+            Bucket: bucket,
+            CopySource: encodeURI(copySource),
             Key: dest
         });
 
-        await s3Client.send(command);
-        console.log(`✅ [R2 COPY] Success: ${dest}`);
+        await client.send(command);
+        console.log(`✅ [R2 COPY] Success in ${version}: ${dest}`);
     } catch (error) {
-        console.error(`❌ [R2 COPY] Failed from ${sourceKey} to ${destinationKey}:`, error);
+        console.error(`❌ [R2 COPY] Failed in ${version}:`, error);
         throw error;
     }
 };

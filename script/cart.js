@@ -5,6 +5,18 @@
  */
 
 const CartManager = {
+    // Utility for sanitization
+    escapeHTML: function (str) {
+        if (!str) return '';
+        return String(str).replace(/[&<>'"]/g, tag => ({
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            "'": '&#39;',
+            '"': '&quot;'
+        }[tag] || tag));
+    },
+
     state: {
         items: [], // [{ product: {id, name, price, image_url...}, quantity: 1 }]
         isOpen: false,
@@ -370,16 +382,17 @@ const CartManager = {
             // Render Items
             const itemsHtml = this.state.items.map(item => {
                 const displayPrice = parseFloat(item.variant_price) > 0 ? item.variant_price : item.product.price_basic;
-                const licName = item.license_name || item.product.product_type || 'Licencia';
+                const licName = this.escapeHTML(item.license_name || item.product.product_type || 'Licencia');
                 const isFree = item.isPromotionFree;
                 const imgId = `cart-row-img-${item.product.id}`;
+                const safeName = this.escapeHTML(item.product.name);
 
                 return `
                 <div class="cart-item-row" style="display:flex; flex-direction:column; gap:12px; margin-bottom:16px; padding-bottom:16px; border-bottom:1px solid rgba(255,255,255,0.05);">
                     <div style="display:flex; gap:14px; align-items: center;">
-                        <img id="${imgId}" src="/images/portada-default.png" style="width:56px; height:56px; object-fit:cover; border-radius:10px; border:1px solid rgba(255,255,255,0.05);">
+                        <img id="${imgId}" src="/images/portada-default.png" data-r2-version="${item.product.r2_version || 'v1'}" crossorigin="anonymous" style="width:56px; height:56px; object-fit:cover; border-radius:10px; border:1px solid rgba(255,255,255,0.05);">
                         <div style="flex:1; display:flex; flex-direction:column; min-width: 0;">
-                            <h4 style="margin:0; font-size:0.85rem; font-weight:700; color:#fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-transform: uppercase; letter-spacing: 0.3px;">${item.product.name}</h4>
+                            <h4 style="margin:0; font-size:0.85rem; font-weight:700; color:#fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-transform: uppercase; letter-spacing: 0.3px;">${safeName}</h4>
                             <span style="font-size:0.75rem; color:#666; margin-top: 2px;">${licName}</span>
                         </div>
                         <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px;">
@@ -411,7 +424,7 @@ const CartManager = {
             this.state.items.forEach(item => {
                 const imgId = `cart-row-img-${item.product.id}`;
                 if (item.product.image_url && window.getAuthorizedUrl) {
-                    window.getAuthorizedUrl(item.product.image_url).then(url => {
+                    window.getAuthorizedUrl(item.product.image_url, item.product.r2_version || 'v1').then(url => {
                         const img = document.getElementById(imgId);
                         if (img && url) img.src = url;
                     });

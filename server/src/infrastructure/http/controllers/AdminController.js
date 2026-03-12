@@ -45,7 +45,7 @@ export const getAllAdminUsers = async (req, res) => {
 
 export const createAdminProduct = async (req, res) => {
     try {
-        const { name, description, price, image_url, download_url } = req.body;
+        const { name, description, price, image_url, download_url, r2_version } = req.body;
 
         if (!name || !description || !price || !image_url || !download_url) {
             return res.status(400).json({ error: 'Todos los campos son requeridos' });
@@ -61,7 +61,8 @@ export const createAdminProduct = async (req, res) => {
                 description: description,
                 price: parseFloat(price), 
                 image_url: image_url,
-                download_url: download_url
+                download_url: download_url,
+                r2_version: r2_version || 'v2'
             })
             .select() 
             .single();
@@ -81,7 +82,7 @@ export const createAdminProduct = async (req, res) => {
 export const updateAdminProduct = async (req, res) => {
     try {
         const { id } = req.params;
-        const { name, description, price, image_url, download_url } = req.body;
+        const { name, description, price, image_url, download_url, r2_version } = req.body;
 
         if (!name || !description || !price || !image_url || !download_url) {
             return res.status(400).json({ error: 'Todos los campos son requeridos' });
@@ -101,7 +102,8 @@ export const updateAdminProduct = async (req, res) => {
                 description: description,
                 price: parseFloat(price),
                 image_url: image_url,
-                download_url: download_url
+                download_url: download_url,
+                r2_version: r2_version
             })
             .eq('id', id) 
             .select() 

@@ -106,7 +106,7 @@ export const renderVideo = async (req, res) => {
             '-max_muxing_queue_size', '1024',
             '-g', '2', // Frequent keyframes for low framerate compatibility
             '-c:a', 'aac',
-            '-b:a', '128k',
+            '-b:a', '320k',
             '-r', '1', // Output framerate: 1 frame per second
             '-pix_fmt', 'yuv420p',
             '-shortest',
