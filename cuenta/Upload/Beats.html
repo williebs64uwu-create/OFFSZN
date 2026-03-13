@@ -8642,14 +8642,35 @@
                     return cleanName + ext;
                 }
 
-                let image_url = null;
-                let r2_version = 'v1'; // Default
+                // 🔥 INITIALIZE UPDATES OBJECT WITH ALL FORM DATA
+                let updates = {
+                    name: document.getElementById('titleInput').value || 'Sin Título',
+                    description: document.getElementById('descInput')?.value || '',
+                    release_date: document.getElementById('dateInput').value,
+                    visibility: document.getElementById('visibilityInput').value || 'public',
+                    bpm: document.getElementById('bpmInput')?.value ? parseInt(document.getElementById('bpmInput').value) : null,
+                    key: document.getElementById('keyInput')?.value || null,
+                    price_basic: document.getElementById('price-basic')?.value ? parseFloat(document.getElementById('price-basic').value) : null,
+                    price_premium: document.getElementById('price-premium')?.value ? parseFloat(document.getElementById('price-premium').value) : null,
+                    price_stems: document.getElementById('price-trackout')?.value ? parseFloat(document.getElementById('price-trackout').value) : null,
+                    price_exclusive: document.getElementById('price-unlimited')?.value ? parseFloat(document.getElementById('price-unlimited').value) : null,
+                    tags: tags,
+                    collaborators: collaborators,
+                    producer_id: userId,
+                    producer_nickname: window.currentUserNickname || null,
+                    product_type: 'beat',
+                    category: 'beat',
+                    status: 'approved',
+                    r2_version: 'v2' // Default to v2 for new/edited uploads
+                };
 
                 if (formData.coverBlob) {
                     console.log('📂 [PUBLISH-UPLOAD] Subiendo Cover a R2 (products/covers)...');
                     const coverFile = new File([formData.coverBlob], 'cover.jpg', { type: 'image/jpeg' });
                     const uploadResult = await uploadToR2(coverFile, 'products/covers');
-                    image_url = uploadResult.publicUrl;
+                    updates.image_url = uploadResult.publicUrl;
+                } else if (window.originalProductData?.image_url) {
+                    updates.image_url = window.originalProductData.image_url;
                 }
 
                 // 2. Upload NEW Files to R2 if exist
@@ -8698,13 +8719,27 @@
                     updates.stems_url = key; // Store Key
                 }
 
-                // 4. Update Database
-                const { error: updateError } = await supabaseClient
-                    .from('products')
-                    .update(updates)
-                    .eq('id', window.currentEditId);
+                // 4. Update or Insert into Database
+                let result;
+                if (window.currentEditId) {
+                    console.log('📝 [PUBLISH] Actualizando producto existente:', window.currentEditId);
+                    result = await supabaseClient
+                        .from('products')
+                        .update(updates)
+                        .eq('id', window.currentEditId);
+                } else {
+                    console.log('🆕 [PUBLISH] Creando nuevo producto...');
+                    result = await supabaseClient
+                        .from('products')
+                        .insert([updates])
+                        .select();
+                    
+                    if (!result.error && result.data && result.data[0]) {
+                        window.currentEditId = result.data[0].id; // Set ID for collab sync
+                    }
+                }
 
-                if (updateError) throw updateError;
+                if (result.error) throw result.error;
 
                 // ?? LOGICA COLABORADORES (SYNC: ADD & REMOVE)
                 try {
@@ -8800,7 +8835,7 @@
                 window.isPublishing = false;
                 if (btn) {
                     btn.disabled = false;
-                    btn.innerHTML = originalText;
+                    btn.innerHTML = originalBtnText;
                 }
             }
         }

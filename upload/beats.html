@@ -92,7 +92,7 @@
                                 </div>
                             </div>
                             <!-- YOUTUBE IMPORT BUTTON -->
-                            <div onclick="handleImportClick();"
+                            <div id="youtubeImportBtn" onclick="handleImportClick();"
                                 style="margin-top: 12px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); color: #fff; padding: 10px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s;"
                                 onmouseover="this.style.background='rgba(255,255,255,0.05)'; this.style.borderColor='rgba(255,255,255,0.3)'"
                                 onmouseout="this.style.background='rgba(0,0,0,0.5)'; this.style.borderColor='rgba(255,255,255,0.1)'">
@@ -484,116 +484,81 @@
                         </div>
                     </div>
                 </div>
-
                 <!-- STEP 3 -->
                 <div class="form-step" id="step3">
-                    <h3 class="section-title">Colaboradores (Max 5)</h3>
-                    <div class="form-group">
-                        <div style="position: relative; margin-bottom: 20px;">
-                            <input type="text" class="input-field" id="collabSearch" placeholder="Buscar usuario..."
-                                maxlength="20" autocomplete="off" style="max-width: 400px;">
-                            <div id="collabDropdown" class="collab-dropdown" style="display: none;"></div>
-                        </div>
-                    </div>
+                    <div class="off-collab-section">
+                        <h3 class="section-title">Colaboradores (Max 5)</h3>
 
-                    <div class="collab-list" id="collabList">
-                        <div class="collab-row" id="mainUserRow">
-                            <div class="user-info">
-                                <img id="mainUserAvatar"
-                                    src="https://ui-avatars.com/api/?name=User&background=333&color=fff"
-                                    class="user-avatar" style="object-fit: cover;"
-                                    onerror="this.src='/default-avatar.png'">
-                                <span style="font-weight: 600;">Tú (Propietario)</span>
-                            </div>
-                            <div>Rol Principal</div>
-                            <div style="display: flex; align-items: center; gap: 4px;">
-                                <input type="number" class="input-field" id="mainUserPercent" value="100" readonly
-                                    style="text-align: right;">
-                                <span>%</span>
-                            </div>
-                            <div></div>
+                        <div class="off-collab-search-wrapper">
+                            <input type="text" class="off-collab-search-input" id="collabSearch"
+                                placeholder="Buscar usuario por nombre o nickname..." maxlength="20" autocomplete="off">
+                            <div id="collabDropdown" class="off-collab-dropdown"></div>
                         </div>
-                    </div>
-                    <div id="collabError" class="alert alert-error" style="margin-top: 12px;"></div>
 
+                        <div id="collabList" class="off-collab-list"></div>
+
+                        <div id="collabError" class="alert alert-error" style="margin-top: 12px; display:none;"></div>
+                    </div>
                 </div>
-
-                <!-- STEP 4 -->
-                <div class="form-step" id="step4">
-                    <h3 class="section-title">Vista Previa del Beat</h3>
-                    <div class="preview-layout">
-                        <div class="marketplace-card-preview">
-                            <h4 style="margin-bottom: 16px; font-size: 14px; color: #888;">Cómo se verá en el
-                                marketplace
-                            </h4>
-                            <div class="drumkit-card">
-                                <div class="card-cover" id="previewCardCover">
-                                    <span style="color: #666;">Sin portada</span>
-                                </div>
-                                <div class="card-content">
-                                    <h3 id="previewCardTitle">Sin título</h3>
-                                    <div class="card-tags" id="previewCardTags"></div>
-                                    <div class="card-producer"
-                                        style="font-size: 13px; color: #888; margin-bottom: 8px;">
-                                        <span id="previewCardProducer">Productor</span>
-                                    </div>
-                                    <!-- El precio se genera dinámicamente en renderPreview() -->
-                                </div>
-                            </div>
+            
+            <!-- STEP 4 -->
+            <div class="form-step" id="step4">
+            <h3 class="section-title">Vista Previa del Beat</h3>
+            <div class="preview-layout">
+                <div class="marketplace-card-preview">
+                    <h4 style="margin-bottom: 16px; font-size: 14px; color: #888;">Cómo se verá en el
+                        marketplace
+                    </h4>
+                    <div class="drumkit-card">
+                        <div class="card-cover" id="previewCardCover">
+                            <span style="color: #666;">Sin portada</span>
                         </div>
-
-                        <div class="verification-panel">
-                            <h4 style="margin-bottom: 20px; font-size: 18px; font-weight: 700;">Verificar Información
-                            </h4>
-                            <div class="verification-section">
-                                <div class="verification-label">Archivos</div>
-                                <div class="verification-items" id="verifyFiles"></div>
+                        <div class="card-content">
+                            <h3 id="previewCardTitle">Sin título</h3>
+                            <div class="card-tags" id="previewCardTags"></div>
+                            <div class="card-producer" style="font-size: 13px; color: #888; margin-bottom: 8px;">
+                                <span id="previewCardProducer">Productor</span>
                             </div>
-                            <div class="verification-section">
-                                <div class="verification-label">Detalles</div>
-                                <div class="verification-items" id="verifyDetails"></div>
-                            </div>
-                            <div class="verification-section" id="verifyCollabSection" style="display: none;">
-                                <div class="verification-label">Colaboradores</div>
-                                <div class="verification-items" id="verifyCollabs"></div>
-                            </div>
-
-                            <div
-                                style="margin-top: 20px; text-align: center; padding: 15px; border-radius: 8px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1);">
-                                <span style="font-size: 13px; color: #aaa;">💡 ¿Quieres agregar una promoción (Ej: 2x1)
-                                    a tus Beats?</span>
-                                <a href="/cuenta/preferencias.html" target="_blank"
-                                    style="margin-left: 10px; color: #fff; font-size: 13px; font-weight: 600; text-decoration: underline; text-underline-offset: 4px; transition: color 0.2s;"
-                                    onmouseover="this.style.color='#ccc'" onmouseout="this.style.color='#fff'">Ver
-                                    Ofertas Activas</a>
-                            </div>
+                            <!-- El precio se genera dinámicamente en renderPreview() -->
                         </div>
                     </div>
                 </div>
-            </form>
-            <!-- Cierre del main-upload-container -->
+
+                <div class="verification-panel">
+                    <h4 style="margin-bottom: 20px; font-size: 18px; font-weight: 700;">Verificar Información
+                    </h4>
+                    <div class="verification-section">
+                        <div class="verification-label">Archivos</div>
+                        <div class="verification-items" id="verifyFiles"></div>
+                    </div>
+                    <div class="verification-section">
+                        <div class="verification-label">Detalles</div>
+                        <div class="verification-items" id="verifyDetails"></div>
+                    </div>
+                    <div class="verification-section" id="verifyCollabSection" style="display: none;">
+                        <div class="verification-label">Colaboradores</div>
+                        <div class="verification-items" id="verifyCollabs"></div>
+                    </div>
+
+                    <div
+                        style="margin-top: 20px; text-align: center; padding: 15px; border-radius: 8px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1);">
+                        <span style="font-size: 13px; color: #aaa;">💡 ¿Quieres agregar una promoción (Ej: 2x1)
+                            a tus Beats?</span>
+                        <a href="/cuenta/preferencias.html" target="_blank"
+                            style="margin-left: 10px; color: #fff; font-size: 13px; font-weight: 600; text-decoration: underline; text-underline-offset: 4px; transition: color 0.2s;"
+                            onmouseover="this.style.color='#ccc'" onmouseout="this.style.color='#fff'">Ver
+                            Ofertas Activas</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        </form>
+        <!-- Cierre del main-upload-container -->
         </div>
     </main>
 
 
 
-    <!-- YOUTUBE SELECTION MODAL -->
-    <div id="yt-importer-modal" class="yt-modal"
-        style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:9999; align-items:center; justify-content:center; backdrop-filter:blur(5px);">
-        <div class="yt-modal-content"
-            style="background:#111; width:90%; max-width:800px; height:80vh; border-radius:16px; border:1px solid #333; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 20px 50px rgba(0,0,0,0.5);">
-            <div class="yt-modal-header"
-                style="padding:20px; border-bottom:1px solid #222; display:flex; justify-content:space-between; align-items:center;">
-                <h2 style="margin:0; font-size:1.2rem; font-weight:700;">Selecciona un Video</h2>
-                <button class="yt-close" onclick="document.getElementById('yt-importer-modal').style.display='none'"
-                    style="background:none; border:none; color:#fff; font-size:1.5rem; cursor:pointer;">&times;</button>
-            </div>
-            <div id="yt-video-list"
-                style="flex:1; overflow-y:auto; padding:20px; display:grid; grid-template-columns:repeat(auto-fill, minmax(200px, 1fr)); gap:16px;">
-                <!-- Videos injected here -->
-            </div>
-        </div>
-    </div>
 
     <div class="modal-overlay" id="cropModal">
         <div class="modal" style="max-width: 600px;">
@@ -696,7 +661,8 @@
                 <!-- REEMPLAZA TODO EL .volume-control -->
                 <div class="volume-control">
                     <div class="volume-slider-container">
-                        <input type="range" class="volume-slider" id="volumeSlider" min="0" max="100" value="100" orient="vertical">
+                        <input type="range" class="volume-slider" id="volumeSlider" min="0" max="100" value="100"
+                            orient="vertical">
                     </div>
                     <button class="player-control-btn" id="muteBtn" onclick="toggleMute()">
                         <svg id="volumeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">

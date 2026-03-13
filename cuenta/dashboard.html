@@ -1,12 +1,12 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 
 <head>
     <!-- Supabase Config & Auth Utils -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.48.1"></script>
+    <script src="/env.js"></script>
     <script>
-        window.SUPABASE_URL = "https://qtjpvztpgfymjhhpoouq.supabase.co";
-        window.SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0anB2enRwZ2Z5bWpoaHBvb3VxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3ODA5MTUsImV4cCI6MjA3NjM1NjkxNX0.YsItTFk3hSQaVuy707-z7Z-j34mXa03O0wWGAlAzjrw";
+        // window.SUPABASE_URL and window.SUPABASE_ANON_KEY are now loaded from /env.js
         window.supabaseClient = null;
     </script>
     <script src="/script/auth-utils.js?v=11"></script>
@@ -1218,7 +1218,7 @@
             <img src="/images/LOGO OFFSZN.webp" style="width:38px;">
         </a>
 
-        <!-- 1. GESTI�N -->
+        <!-- 1. GESTIÓN -->
         <div style="width:40px; border-bottom:1px solid #222; margin:5px 0;"></div>
         <a href="dashboard.html" class="sidebar-icon-btn active" data-title="Dashboard"><i
                 class="bi bi-grid-fill"></i></a>
@@ -1514,7 +1514,7 @@
         const supabaseClient = window.supabaseClient;
 
         if (!supabaseClient) {
-            console.error("Critical: Global Supabase client not found.");
+            // console.error("Critical: Global Supabase client not found.");
         }
 
         // System Defaults (Elite Standard)
@@ -1529,7 +1529,7 @@
 
         // 2. MAIN LOGIC
         document.addEventListener('DOMContentLoaded', async () => {
-            console.log("?? Dashboard: Initializing...");
+            // console.log("?? Dashboard: Initializing...");
 
             try {
                 // Get User from the shared client
@@ -1542,7 +1542,7 @@
                 }
 
                 const userId = user.id;
-                console.log("? Dashboard: User Identified:", userId);
+                // console.log("? Dashboard: User Identified:", userId);
 
                 // Run loaders in parallel for speed, but handle errors individually
                 // We use Promise.allSettled to ensure one failure doesn't stop others
@@ -1555,7 +1555,7 @@
                 ]);
 
             } catch (err) {
-                console.error("?? CRITICAL DASHBOARD ERROR:", err);
+                // console.error("?? CRITICAL DASHBOARD ERROR:", err);
                 // Last ditch effort to remove skeletons if everything explodes
                 document.querySelectorAll('.skeleton').forEach(el => el.classList.remove('skeleton'));
                 document.querySelectorAll('.skeleton-text').forEach(el => el.classList.remove('skeleton-text'));
@@ -1791,7 +1791,7 @@
                 renderActivities(globalActivities);
 
             } catch (e) {
-                console.error("Activity Feed Error", e);
+                // console.error("Activity Feed Error", e);
                 // Even on error, show "No activity" or clear skeletons
                 container.innerHTML = `<div class="empty-main-state"><p>Sin actividad reciente</p></div>`;
             }
@@ -1969,6 +1969,7 @@
                         desc: 'Nuevo Lanzamiento',
                         price: p.price_usd,
                         img: p.image_url,
+                        r2_version: p.r2_version, // CAPTURE R2 VERSION
                         link: `/cuenta/mis-kits.html?tab=${tabName}`
                     });
                 });
@@ -2039,7 +2040,7 @@
                 renderActivities(globalActivities);
 
             } catch (e) {
-                console.error("Activity Load Error:", e);
+                // console.error("Activity Load Error:", e);
                 container.innerHTML = '<p style="color:#666; text-align:center; padding:20px;">Error actualizando actividad.</p>';
             }
         }
@@ -2069,9 +2070,9 @@
 
                 if (item.type === 'product') {
                     const typeLabel = typeMap[item.category] || 'Producto';
-                    // ?? AUTHORIZE R2 IMAGE
-                    const authorizedImg = item.img ? await AuthUtils.getAuthorizedUrl(item.img) : 'https://via.placeholder.com/80';
-                    thumb = `<img src="${authorizedImg}" class="activity-thumb" alt="" style="width:48px; height:48px; border-radius:6px; object-fit:cover;">`;
+                    // ?? AUTHORIZE R2 IMAGE WITH VERSION
+                    const authorizedImg = item.img ? await AuthUtils.getAuthorizedUrl(item.img, item.r2_version || 'v1') : 'https://via.placeholder.com/80';
+                    thumb = `<img src="${authorizedImg}" data-r2-version="${item.r2_version || 'v1'}" crossorigin="anonymous" class="activity-thumb" alt="" style="width:48px; height:48px; border-radius:6px; object-fit:cover;">`;
                     typeBadge = `<span class="activity-type-badge" style="font-size:10px; padding:2px 6px; border-radius:4px; background:#222; color:#aaa; margin-left:auto;">${typeLabel}</span>`;
                 } else if (item.type === 'sale') {
                     thumb = `<div style="width:48px; height:48px; border-radius:6px; display:flex; align-items:center; justify-content:center; background:rgba(16, 185, 129, 0.2); color:#10B981;"><i class="bi bi-currency-dollar"></i></div>`;

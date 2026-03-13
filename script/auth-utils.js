@@ -44,6 +44,10 @@ window.AuthUtils = {
      */
     initSupabase: function () {
         const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        
+        // 🔥 DEBUG: Enable logging on local
+        if (isLocal) window.OFFSZN_DEBUG = true;
+
         const API_URL = window.OFFSZN_CONFIG?.API_BASE_URL
             ? `${window.OFFSZN_CONFIG.API_BASE_URL}/api`
             : (isLocal ? 'http://localhost:3000/api' : 'https://offszn.lat/api');
@@ -186,7 +190,7 @@ window.AuthUtils = {
      * @param {string} version Optional R2 version ('v1' or 'v2')
      * @returns {Promise<string|null>} The authorized URL
      */
-    getAuthorizedUrl: async function (pathOrUrl, version = 'v1') {
+    getAuthorizedUrl: async function (pathOrUrl, version = 'v2') {
         if (!pathOrUrl) return null;
 
         // --- CACHE CHECK ---
@@ -210,14 +214,15 @@ window.AuthUtils = {
         const isR2Url = (
             pathOrUrl.includes('r2.cloudflarestorage.com') ||
             pathOrUrl.includes('pub-') ||
-            // Local Relative path check (Should be R2)
+            pathOrUrl.startsWith('@') || // NEW: Support @ prefix
+            // Relative path check: Detect by extension or folder structure
             (!pathOrUrl.startsWith('http') &&
                 !pathOrUrl.startsWith('data:') &&
                 !pathOrUrl.startsWith('/images') &&
                 !pathOrUrl.startsWith('/assets') &&
                 !pathOrUrl.startsWith('/icon') &&
                 !pathOrUrl.startsWith('/script') &&
-                pathOrUrl.includes('/')
+                (pathOrUrl.includes('/') || /\.(jpg|jpeg|png|webp|gif|svg|mp3|wav|zip)$/i.test(pathOrUrl) || pathOrUrl.startsWith('@'))
             )
         );
 
@@ -225,7 +230,9 @@ window.AuthUtils = {
         // We skip this for full HTTP URLs to avoid 400 errors from sensitive servers (like Supabase storage)
         let processedPath = pathOrUrl;
         if (!pathOrUrl.startsWith('http')) {
-            processedPath = pathOrUrl.replace(/\/\/+/g, "/");
+            // Clean @ prefix only for v1 logic or as a general rule before signing
+            processedPath = pathOrUrl.startsWith('@') ? pathOrUrl.substring(1) : pathOrUrl;
+            processedPath = processedPath.replace(/\/\/+/g, "/");
         }
 
         if (!isR2Url && processedPath.startsWith('http')) {
@@ -242,12 +249,14 @@ window.AuthUtils = {
             const r2Base = '.r2.cloudflarestorage.com/';
             if (processedPath.includes(r2Base)) {
                 key = processedPath.split(r2Base)[1];
-            } else {
-                try {
-                    const urlObj = new URL(pathOrUrl);
-                    key = urlObj.pathname; // Note: pathname starts with / usually
-                } catch (e) { }
             }
+        }
+
+        // 🔥 AUTO-DETECT VERSION FROM URL IF POSSIBLE
+        if (pathOrUrl.includes('offsznlatbucket') || pathOrUrl.includes('42fc23b11a6c329b76b2babc20afcbf7')) {
+            version = 'v2';
+        } else if (pathOrUrl.includes('offszn-storage') || pathOrUrl.includes('41d0f49121d02c88f71fdb4da54a791d') || pathOrUrl.includes('pub-')) {
+            version = 'v1';
         }
 
         // 🔥 KEY CLEANUP: R2 keys must NOT start with / and must NOT have query params
@@ -267,6 +276,11 @@ window.AuthUtils = {
                 },
                 body: JSON.stringify({ key, version })
             });
+
+            // Success logs removed as requested by user
+            if (window.OFFSZN_DEBUG && !response.ok) {
+                console.warn(`[R2-Signing] Error: ${response.status} for Key: ${key} | Version: ${version}`);
+            }
 
             if (!response.ok) {
                 console.warn(`AuthUtils: Failed to sign R2 key: ${key}`, response.status);
@@ -289,7 +303,7 @@ window.AuthUtils = {
      * @param {string} version Optional R2 version ('v1' or 'v2')
      * @returns {Promise<boolean>} True if operation completed.
      */
-    deleteFromR2: async function (keys, version = 'v1') {
+    deleteFromR2: async function (keys, version = 'v2') {
         if (!keys) return true;
         const keysArray = Array.isArray(keys) ? keys : [keys];
         if (keysArray.length === 0) return true;

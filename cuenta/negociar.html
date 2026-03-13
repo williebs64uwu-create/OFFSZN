@@ -3,15 +3,17 @@
 
 <head>
     <!-- Supabase Config & Auth Utils -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.48.1"></script>
+    <script src="/env.js"></script>
     <script>
-        window.SUPABASE_URL = "https://qtjpvztpgfymjhhpoouq.supabase.co";
-        window.SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0anB2enRwZ2Z5bWpoaHBvb3VxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3ODA5MTUsImV4cCI6MjA3NjM1NjkxNX0.YsItTFk3hSQaVuy707-z7Z-j34mXa03O0wWGAlAzjrw";
+        // Use credentials from /env.js
+        window.SUPABASE_URL = window.SUPABASE_URL || "";
+        window.SUPABASE_ANON_KEY = window.SUPABASE_ANON_KEY || "";
 
-        // Robust Init Fallback
-        if (typeof supabase !== 'undefined') {
+        if (typeof supabase !== 'undefined' && window.SUPABASE_URL) {
             window.supabaseClient = supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
         } else {
+            console.warn("Supabase client could not be initialized from env.js");
             window.supabaseClient = null;
         }
     </script>
@@ -979,7 +981,7 @@
                 // 1. Fetch proposals I RECEIVED (as producer)
                 const { data: received, error: err1 } = await window.supabaseClient
                     .from('propuestas_offszn')
-                    .select('*, products(id, name, image_url, price_basic, public_slug)')
+                    .select('*, products(id, name, image_url, price_basic, public_slug, r2_version)')
                     .eq('producer_id', currentUserId)
                     .order('created_at', { ascending: false });
 
@@ -990,7 +992,7 @@
                 if (currentUserEmail) {
                     const { data: sent, error: err2 } = await window.supabaseClient
                         .from('propuestas_offszn')
-                        .select('*, products(id, name, image_url, price_basic, public_slug)')
+                        .select('*, products(id, name, image_url, price_basic, public_slug, r2_version)')
                         .eq('email_offszn', currentUserEmail)
                         .order('created_at', { ascending: false });
 
@@ -1060,7 +1062,7 @@
             document.getElementById('stat-volume').innerText = `$${Math.round(volume)}`;
         }
 
-        function renderProposals() {
+        async function renderProposals() {
             const container = document.getElementById('proposalsList');
             const empty = document.getElementById('emptyState');
             const list = getActiveProposals();
@@ -1088,15 +1090,16 @@
             container.style.display = 'flex';
             container.innerHTML = '';
 
-            filtered.forEach(p => {
+            for (const p of filtered) {
                 const card = document.createElement('div');
                 card.className = 'proposal-card';
 
                 const product = p.products || {};
                 let img = product.image_url || '../images/portada-default.png';
 
-                if (img && !img.startsWith('http') && !img.startsWith('../') && !img.startsWith('/')) {
-                    img = `https://qtjpvztgfyvjyjhhhpoouq.supabase.co/storage/v1/object/public/products/${img}`;
+                // ?? AUTHORIZE R2 IMAGE
+                if (img && window.AuthUtils) {
+                    img = await window.AuthUtils.getAuthorizedUrl(img, product.r2_version || 'v1');
                 }
 
                 const statusClass = `status-${p.status_offszn}`;
@@ -1142,7 +1145,7 @@
                 }
 
                 card.innerHTML = `
-                    <a href="${productLink}" target="_blank"><img src="${img}" class="prod-img"></a>
+                    <a href="${productLink}" target="_blank"><img src="${img}" data-r2-version="${product.r2_version || 'v1'}" crossorigin="anonymous" class="prod-img"></a>
                     <div class="prod-info">
                         <h4 onclick="window.open('${productLink}', '_blank')" style="cursor:pointer; color:#fff;">${product.name || 'Producto Desconocido'}</h4>
                         <div style="display:flex; align-items:center; gap:8px; margin-top:2px;">
@@ -1162,7 +1165,7 @@
                     </div>
                 `;
                 container.appendChild(card);
-            });
+            }
         }
 
         function setFilter(filter, btn) {

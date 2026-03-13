@@ -413,7 +413,7 @@ function createListItemHtml(item, index, type) {
         return `
             <div class="list-item-smart" data-id="${item.id}" data-type="producer" onclick="window.location.href='${link}'">
                 <div class="list-item-index">${index}</div>
-                <img src="${img}" data-r2-version="${item.r2_version || 'v1'}" class="list-item-img circle" alt="cover">
+                <img src="${img}" data-r2-version="${item.r2_version || 'v2'}" crossorigin="anonymous" class="list-item-img circle" alt="cover">
                 <div class="list-item-info">
                     <div class="list-item-name">${name}</div>
                     <div class="list-item-sub">${sub}</div>
@@ -432,7 +432,7 @@ function createListItemHtml(item, index, type) {
     return `
         <div class="list-item-smart" data-id="${item.id}" data-type="product">
             <div class="list-item-index">${index}</div>
-            <img src="${img}" data-r2-version="${item.r2_version || 'v1'}" class="list-item-img" alt="cover" onclick="event.stopPropagation(); window.handleCoverClick('${item.id}')">
+            <img src="${img}" data-r2-version="${item.r2_version || 'v2'}" crossorigin="anonymous" class="list-item-img" alt="cover" onclick="event.stopPropagation(); window.handleCoverClick('${item.id}')">
             <div class="list-item-info" onclick="event.stopPropagation(); window.handleInfoClick(event, '${item.id}', '${link}')">
                 <div class="list-item-name">${name}</div>
                 <div class="list-item-sub">${sub}</div>
@@ -594,7 +594,7 @@ function renderHeroSlide(product) {
             </div>
 
             <div class="hero-image-container desktop-only" style="opacity: 0; transform: translateX(20px) translateY(-50%);">
-                <img src="${imgUrl}" data-r2-version="${product.r2_version || 'v1'}" alt="cover" class="hero-image">
+                <img src="${imgUrl}" data-r2-version="${product.r2_version || 'v2'}" crossorigin="anonymous" alt="cover" class="hero-image">
             </div>
 
             <!-- Mobile Purple Play Button -->
@@ -607,6 +607,9 @@ function renderHeroSlide(product) {
             </div>
         </div>
     `;
+
+    // 🔥 FIX: Sign Hero Images after render
+    if (window.signR2Images) window.signR2Images(heroSection);
 
     // Premium GSAP Entrance - Synchronized and Fast
     const heroEl = heroSection.querySelector('.explore-hero');
@@ -783,7 +786,7 @@ function createProductCardHtml(product, format = 'standard') {
         const price = isTrulyFree ? 'FREE' : (window.CurrencyManager ? window.CurrencyManager.format(parseFloat(priceValue) || 0) : `$${priceValue}`);
         return `
             <div class="preset-card-premium" data-product-id="${product.id}">
-                <img src="${img}" data-r2-version="${product.r2_version || 'v1'}" alt="${product.name}">
+                <img src="${img}" data-r2-version="${product.r2_version || 'v2'}" crossorigin="anonymous" alt="${product.name}">
                 <div class="preset-overlay">
                     <span class="preset-tag">PRESET</span>
                     <h3 class="preset-title">${cleanName(product.name)}</h3>
@@ -799,7 +802,7 @@ function createProductCardHtml(product, format = 'standard') {
     return `
         <div class="product-card-smart" data-product-id="${product.id}">
             <div class="card-cover-wrapper">
-                <img src="${img}" alt="${product.name}">
+                <img src="${img}" data-r2-version="${product.r2_version || 'v2'}" crossorigin="anonymous" alt="${product.name}">
                 <button class="quick-play-btn"><i class="bi bi-play-fill"></i></button>
                 <button class="card-like-btn ${isLiked ? 'liked' : ''}"><i class="bi ${isLiked ? 'bi-heart-fill' : 'bi-heart'}"></i></button>
             </div>
@@ -1074,6 +1077,32 @@ async function toggleFollow(producerId, btn) {
         btn.disabled = false;
     }
 }
+
+/**
+ * 🔥 R2 SIGNING UTILITY: Asynchronously signs all R2 images in the target container
+ */
+window.signR2Images = async function(container = document) {
+    if (!window.AuthUtils || !window.AuthUtils.getAuthorizedUrl) return;
+
+    const images = container.querySelectorAll('img[data-r2-version]');
+    await Promise.all(Array.from(images).map(async img => {
+        const rawSrc = img.getAttribute('src'); // Use original attribute, NOT resolved .src
+        const currentSrc = img.src;
+        
+        // Only sign if it's a relative path OR an R2 URL that isn't already signed
+        const needsSigning = (rawSrc && !rawSrc.startsWith('http')) || 
+                           (currentSrc.includes('r2.cloudflarestorage.com') && !currentSrc.includes('X-Amz-Signature'));
+        
+        if (needsSigning) {
+            const version = img.getAttribute('data-r2-version') || 'v2'; // Default to v2 for Explore
+            const signedUrl = await window.AuthUtils.getAuthorizedUrl(rawSrc || currentSrc, version);
+            
+            if (signedUrl && signedUrl !== currentSrc) {
+                img.src = signedUrl;
+            }
+        }
+    }));
+};
 
 // Make globally available for onclick handlers
 window.toggleFollow = toggleFollow;

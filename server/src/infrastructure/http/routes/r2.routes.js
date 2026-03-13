@@ -112,6 +112,17 @@ router.post('/r2/download-url', async (req, res) => {
             try {
                 const urlObj = new URL(key);
                 key = urlObj.pathname;
+                
+                // If the bucket name is the first part of the path, remove it
+                const bucketNames = [R2_BUCKET_NAME, R2_SECURE_BUCKET_NAME, 'offsznlatbucket'];
+                for (const b of bucketNames) {
+                    // Handle both /bucket/key and bucket/key styles
+                    const normalizedPath = key.startsWith('/') ? key : `/${key}`;
+                    if (normalizedPath.startsWith(`/${b}/`)) {
+                        key = normalizedPath.substring(b.length + 2);
+                        break;
+                    }
+                }
             } catch (e) {
                 console.warn('[R2 Download] Invalid URL format passed as key:', key);
             }

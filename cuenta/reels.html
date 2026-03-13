@@ -1,12 +1,12 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 
 <head>
     <!-- Supabase Config & Auth Utils -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Supabase Config & Auth Utils -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.48.1"></script>
+    <script src="/env.js"></script>
     <script>
-        window.SUPABASE_URL = "https://qtjpvztpgfymjhhpoouq.supabase.co";
-        window.SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0anB2enRwZ2Z5bWpoaHBvb3VxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3ODA5MTUsImV4cCI6MjA3NjM1NjkxNX0.YsItTFk3hSQaVuy707-z7Z-j34mXa03O0wWGAlAzjrw";
         window.supabaseClient = null;
     </script>
     <script src="/script/auth-utils.js?v=11"></script>
@@ -1586,6 +1586,20 @@
             const [_, { data }] = await Promise.all([minTime, fetchReels]);
 
             userReels = data || [];
+
+            // Authorize R2 URLs before rendering
+            if (window.AuthUtils) {
+                for (let reel of userReels) {
+                    if (window.AuthUtils.isR2Url(reel.url)) {
+                        reel.authorizedUrl = await window.AuthUtils.getAuthorizedUrl(reel.url, reel.r2_version || 'v1');
+                    } else {
+                        reel.authorizedUrl = reel.url;
+                    }
+                }
+            } else {
+                userReels.forEach(r => r.authorizedUrl = r.url);
+            }
+
             renderReels();
         }
 
@@ -1630,8 +1644,8 @@
                     <div class="reel-card">
                         <div class="reel-video-container" onclick="togglePlay(this)">
                             
-                            <video class="reel-video" loop muted playsinline preload="metadata">
-                                <source src="${reel.url}" type="video/mp4">
+                            <video class="reel-video" loop muted playsinline preload="metadata" crossorigin="anonymous">
+                                <source src="${reel.authorizedUrl || reel.url}" type="video/mp4">
                             </video>
                             
                             <!-- PLAY OVERLAY -->

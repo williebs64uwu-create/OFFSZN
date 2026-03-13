@@ -6,6 +6,32 @@ const MAX_SIZES = {
     STEMS: 50 * 1024 * 1024    // 50 MB
 };
 
+// --- Toast Utility (Fallback) ---
+window.showToast = window.showToast || ((message, type = 'success') => {
+    if (typeof Toastify !== 'undefined') {
+        Toastify({
+            text: message,
+            duration: 3000,
+            gravity: "top",
+            position: "right",
+            style: {
+                background: type === 'success' ? "#222" : "#991b1b",
+                color: "#fff",
+                borderRadius: "8px",
+                border: "1px solid #333"
+            }
+        }).showToast();
+    } else {
+        console.log(`[TOAST] ${type.toUpperCase()}: ${message}`);
+        // Simple fallback alert if Toastify is missing
+        const toast = document.createElement('div');
+        toast.textContent = message;
+        toast.style.cssText = `position:fixed; top:20px; right:20px; padding:12px 24px; background:${type === 'success' ? '#222' : '#991b1b'}; color:#fff; border-radius:8px; z-index:10000; border:1px solid #333; font-family:sans-serif;`;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 3000);
+    }
+});
+
 // --- Local State (Exposed globally for synchronization) ---
 window.uploaderState = {
     cover: null,
@@ -14,7 +40,10 @@ window.uploaderState = {
     stems: null,
     stemsLink: null,
     currentStep: 1,
-    loop: false
+    loop: false,
+    tags: [],
+    collaborators: [],
+    currentUser: null
 };
 let uploaderState = window.uploaderState;
 
@@ -28,10 +57,72 @@ const DEFAULT_LICENSES = {
 
 let licensesState = {};
 
-function initLicenses() {
-    licensesState = JSON.parse(JSON.stringify(DEFAULT_LICENSES));
+async function initLicenses() {
+    console.log('?? [LICENSES] Initializing with "Last Used" logic...');
+    
+    // Default fallback
+    let settings = JSON.parse(JSON.stringify(DEFAULT_LICENSES));
+
+    try {
+        if (window.supabaseClient) {
+            const { data: { session } } = await window.supabaseClient.auth.getSession();
+            if (session?.user?.id) {
+                const { data, error } = await window.supabaseClient
+                    .from('users')
+                    .select('license_settings')
+                    .eq('id', session.user.id)
+                    .maybeSingle();
+
+                if (data && data.license_settings) {
+                    console.log('✅ [LICENSES] Settings found in Supabase.');
+                    // Merge Supabase settings with defaults to ensure all IDs exist
+                    Object.keys(data.license_settings).forEach(id => {
+                        if (settings[id]) {
+                            settings[id].price = data.license_settings[id].price;
+                            settings[id].enabled = data.license_settings[id].enabled;
+                        }
+                    });
+                }
+            }
+        }
+    } catch (err) {
+        console.error('❌ [LICENSES] Error fetching last used settings:', err);
+    }
+
+    // 🔥 Enforce $1000 cap on load
+    Object.keys(settings).forEach(id => {
+        if (settings[id].price > 1000) {
+            console.warn(`?? [LICENSES] Capping price for ${id} from ${settings[id].price} to 1000`);
+            settings[id].price = 1000;
+        }
+    });
+
+    licensesState = settings;
     renderLicenses();
 }
+
+/**
+ * Persists the current license configuration to Supabase.
+ * Call this after a successful publish.
+ */
+window.saveLastUsedLicenses = async () => {
+    try {
+        if (!window.supabaseClient) return;
+        const { data: { session } } = await window.supabaseClient.auth.getSession();
+        if (!session?.user?.id) return;
+
+        console.log('💾 [LICENSES] Saving last used settings...');
+        const { error } = await window.supabaseClient
+            .from('users')
+            .update({ license_settings: licensesState })
+            .eq('id', session.user.id);
+
+        if (error) throw error;
+        console.log('✅ [LICENSES] Settings saved.');
+    } catch (err) {
+        console.error('❌ [LICENSES] Error saving last used settings:', err);
+    }
+};
 
 window.renderLicenses = () => {
     const container = document.getElementById('licensesContainer');
@@ -66,9 +157,15 @@ window.renderLicenses = () => {
         }
 
         const isComplete = missingFiles.length === 0;
-        const statusText = isComplete 
+        let statusText = isComplete 
             ? `Archivo: Cargado ${requiredDisplay}` 
             : `Archivo: Faltante ${requiredDisplay}`;
+
+        if (!isComplete) {
+            if (id === 'premium') statusText = 'Falta: Wav';
+            else if (id === 'unlimited' || id === 'exclusive') statusText = 'Falta: Stems';
+            else if (id === 'basic') statusText = 'Falta: Mp3';
+        }
 
         card.innerHTML = `
             <div class="license-main-row">
@@ -116,7 +213,7 @@ function renderFreeDownloadToggle(container) {
             </div>
         </div>
         <div class="free-download-description">
-            Los usuarios podrán descargar el archivo <strong>MP3 con Tag</strong> gratuitamente a cambio de seguirte o dejar su email (uso promocional).
+            Los usuarios podrán descargar el archivo MP3 con Tag gratis a cambio de seguirte en OFFSZN.
         </div>
         <div class="license-status-row ${mp3Uploaded ? 'status-success' : 'status-error'}">
              <span>Estado del archivo: ${mp3Uploaded ? '<span class="check-icon">✓</span> Listo' : 'Faltante'}</span>
@@ -142,7 +239,10 @@ window.toggleLicense = (id) => {
 
 window.updateLicensePrice = (id, price) => {
     if (licensesState[id]) {
-        licensesState[id].price = parseFloat(price);
+        let p = parseFloat(price);
+        if (p > 1000) p = 1000;
+        licensesState[id].price = p;
+        window.renderLicenses(); // Re-render to show correction
     }
 };
 
@@ -668,7 +768,7 @@ window.saveStemsLink = () => {
 
 // --- Main Init ---
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     initPlayer();
     initCoverHandlers();
     setupFileSlot('mp3Tagged', 'mp3_tagged', MAX_SIZES.MP3, 'Cambiar MP3', '.mp3');
@@ -679,7 +779,8 @@ document.addEventListener('DOMContentLoaded', () => {
     initVisibilityDropdown();
     initKeyDropdown();
     initDateTime();
-    initLicenses();
+    await initLicenses();
+    initTagsInput();
 
     // --- Next Button Trigger ---
     document.getElementById('nextBtn')?.addEventListener('click', () => {
@@ -863,6 +964,8 @@ function initKeyDropdown() {
 
             list.style.display = 'none';
             if (chevron) chevron.style.transform = 'rotate(0deg)';
+            
+            if (window.renderPreview) window.renderPreview();
         });
 
         item.onmouseenter = () => item.style.background = 'rgba(255,255,255,0.05)';
@@ -890,3 +993,897 @@ function initDateTime() {
     dateInput.value = `${year}-${month}-${day}`;
     dateInput.readOnly = true;
 }
+
+// --- Tag Logic ---
+
+function initTagsInput() {
+    const tagIn = document.getElementById('tagInput');
+    if (!tagIn) return;
+
+    tagIn.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            const val = tagIn.value.trim();
+            if (val) addTag(val);
+        }
+    });
+
+    tagIn.addEventListener('blur', () => {
+        const val = tagIn.value.trim();
+        if (val) addTag(val);
+    });
+
+    tagIn.addEventListener('input', () => {
+        if (tagIn.value.length > 30) {
+            tagIn.value = tagIn.value.substring(0, 30);
+        }
+    });
+}
+
+window.addTag = (tag) => {
+    if (uploaderState.tags.length >= 3) return;
+    
+    // Max 30 chars
+    const cleanTag = tag.substring(0, 30).trim();
+    if (!cleanTag) return;
+
+    // Duplicates check
+    if (uploaderState.tags.some(t => t.toLowerCase() === cleanTag.toLowerCase())) {
+        const input = document.getElementById('tagInput');
+        if (input) input.value = '';
+        return;
+    }
+
+    uploaderState.tags.push(cleanTag);
+    renderTags();
+    window.renderPreview();
+    const input = document.getElementById('tagInput');
+    if (input) input.value = '';
+};
+
+window.removeTag = (tag) => {
+    uploaderState.tags = uploaderState.tags.filter(t => t !== tag);
+    renderTags();
+    window.renderPreview();
+};
+
+window.clearTags = () => {
+    uploaderState.tags = [];
+    renderTags();
+    window.renderPreview();
+};
+
+function renderTags() {
+    const container = document.getElementById('tagsContainer');
+    const tagIn = document.getElementById('tagInput');
+    if (!container || !tagIn) return;
+
+    // Keep the input, but clear the chips
+    const chips = container.querySelectorAll('.tag-chip');
+    chips.forEach(c => c.remove());
+
+    uploaderState.tags.forEach(tag => {
+        const chip = document.createElement('div');
+        chip.className = 'tag-chip';
+        chip.innerHTML = `${tag} <span onclick="window.removeTag('${tag}')">×</span>`;
+        container.insertBefore(chip, tagIn);
+    });
+
+    // Check limits
+    if (uploaderState.tags.length >= 3) {
+        tagIn.disabled = true;
+        tagIn.placeholder = 'Límite alcanzado';
+        tagIn.style.cursor = 'not-allowed';
+    } else {
+        tagIn.disabled = false;
+        tagIn.placeholder = 'Escribe un tag...';
+        tagIn.style.cursor = 'text';
+    }
+}
+
+// Porting support functions for Auto Tag
+const STOP_WORDS = ['de', 'la', 'que', 'el', 'en', 'y', 'a', 'los', 'del', 'se', 'las', 'por', 'un', 'para', 'con', 'no', 'una', 'su', 'al', 'lo', 'como', 'más', 'pero', 'sus', 'le', 'ya', 'o', 'fue', 'este', 'ha', 'sido', 'porque', 'muy', 'sin', 'sobre', 'ser', 'me', 'hasta', 'hay', 'donde', 'quien', 'desde', 'todo', 'nos', 'durante', 'estados', 'todos', 'uno', 'les', 'ni', 'contra', 'otros', 'fueron', 'ese', 'eso', 'había', 'ante', 'unos', 'ella', 'entre', 'poco'];
+
+const MEGA_TAG_POOL = ['Trap', 'Drill', 'Rage', 'Hyperpop', 'RnB', 'Afrobeats', 'Dancehall', 'Reggaeton', 'Boom Bap', 'Lo-Fi', 'Phonk', 'Dark Trap', 'EDM', 'House', 'Deep House', 'Techno', 'Dubstep', 'Pop', 'Latin Trap', 'Jersey Club', 'Footwork', 'Trance', 'Cloud Rap', 'Alternative', 'Synthwave', 'DnB', 'Future Bass', 'Ambient', 'Cinematic', 'Hardstyle', 'Dark', 'Emotional', 'Melodic', 'Aggressive', 'Chill', 'Atmospheric', 'Spacey', 'Bouncy', 'Sad', 'Mystery', 'Energetic', 'Smooth', 'Vintage', 'Retro', 'Futuristic', 'Epic', 'Uplifting', 'Minimal', 'Dreamy', 'Gritty', 'Warm', 'Cold', 'Organic', 'Digital', 'Punchy', 'Clean', 'Dirty', 'Distorted', 'Drake', 'Travis Scott', 'Future', 'Metro Boomin', 'Kanye West', 'Lil Uzi Vert', 'Playboi Carti', 'Yeat', 'Ken Carson', 'Destroy Lonely', 'Baby Keem', 'The Weeknd', 'Bryson Tiller', 'Bad Bunny', 'Feid', 'Jhayco', 'Anuel AA', 'Myke Towers', 'Peso Pluma', 'Natanael Cano', 'Rosalía', 'Billie Eilish', 'SZA', 'Doja Cat', 'Skrillex', 'Kaytranada', 'Fred again..', 'Lil Durk', 'Pop Smoke', 'Ice Spice', 'Don Toliver', 'Juice WRLD', 'XXXTentacion', 'Cordae', 'J. Cole', 'Kendrick Lamar', 'Rauw Alejandro', 'Mora', 'Quevedo', '808s', 'Kicks', 'Snares', 'Hi-hats', 'Open hats', 'Cymbals', 'Percs', 'Fills', 'Loops', 'Vox samples', 'FX', 'Risers', 'Impacts', 'Sweeps', 'One shots', 'Melody loops', 'Chord stabs', 'Drum loops', 'Basslines', 'Breaks', 'Transitions', 'Ambient textures', 'Guitar loops', 'Piano loops', 'Synth loops', 'Brass hits', 'Strings', 'Pads', 'Arps', 'High quality', 'Analog', 'Digital', 'Clean', 'Dark', 'Hard hitting', 'Crisp', 'Warm', 'Glitchy', 'Processed', 'Raw', 'Mastered', 'Unmastered', 'Distorted', 'Layered', 'Dry', 'Wet', 'Stereo', 'Mono', 'Punchy', 'Vintage', 'Modern', 'Saturated', 'Looped', 'Chopped', 'Beatmaking', 'Vocal processing', 'Trap beats', 'Drill beats', 'Emotional beats', 'Club tracks', 'Industry beats', 'Type beats', 'Film scoring', 'Game Audio', 'Live performance', 'Remixes', 'Sound design', 'TikTok edits', 'Reels content', 'YouTube beats', 'Background music', 'Freestyles', 'Cyphers', 'Hard Trap', 'Detroit style', 'NY Drill', 'UK Drill', 'Club vibes', 'Emotional trap', 'Dark rage', 'PluggnB', 'West Coast', 'Miami bass', 'Phonk cowbell', 'Memphis style', 'Latin trap club', 'Afro chill', 'Afro fusion', 'Jersey bounce', 'Rage glitch', 'Ambient score', 'Cyberpunk', 'Ethereal', 'Slow + Reverb', 'FL Studio', 'Ableton Live', 'Logic Pro', 'Pro Tools', 'Studio One', 'Cubase', 'Reason', 'Bitwig', 'Reaper'];
+
+async function generateTagsSmart(title, description) {
+    let candidates = new Set();
+    const words = (title + ' ' + description).toLowerCase()
+        .replace(/[^\w\s]/g, '')
+        .split(/\s+/)
+        .filter(w => w.length > 2 && !STOP_WORDS.includes(w));
+
+    words.forEach(w => candidates.add(w));
+    
+    const pool = [...MEGA_TAG_POOL].sort(() => Math.random() - 0.5);
+    pool.slice(0, 10).forEach(tag => candidates.add(tag.toLowerCase()));
+
+    return Array.from(candidates);
+}
+
+window.quickAutoFillTags = async function() {
+    const title = document.getElementById('titleInput')?.value.trim();
+    const desc = document.getElementById('descInput')?.value.trim();
+    const suggestionContainer = document.getElementById('tagsSuggestions');
+
+    if (!title) {
+        notify('Escribe un título primero', 'error');
+        return;
+    }
+
+    if (uploaderState.tags.length >= 3) {
+        notify('Límite de 3 tags alcanzado', 'info');
+        return;
+    }
+
+    const suggestions = await generateTagsSmart(title, desc);
+    const available = suggestions.filter(s => !uploaderState.tags.includes(s));
+
+    if (available.length === 0) {
+        notify('No hay más sugerencias', 'info');
+        return;
+    }
+
+    if (suggestionContainer) {
+        suggestionContainer.innerHTML = '<small style="color: #666; width: 100%; margin-bottom: 4px;">Sugerencias:</small>';
+        suggestionContainer.style.display = 'flex';
+        
+        available.slice(0, 3).forEach(tag => {
+            const span = document.createElement('span');
+            span.className = 'tag-suggestion';
+            span.textContent = tag;
+            span.onclick = () => {
+                if (uploaderState.tags.length < 3) {
+                    addTag(tag);
+                    span.remove();
+                    if (uploaderState.tags.length >= 3) suggestionContainer.style.display = 'none';
+                }
+            };
+            suggestionContainer.appendChild(span);
+        });
+    }
+};
+
+// --- Publish Interceptor Hook ---
+// Intercepts the global handlePublish function to save license settings before publishing.
+// --- Publish Override ---
+// We completely override window.handlePublish to fix the broken legacy logic for NEW beats.
+// This version handles: 
+// 1. Capturing ALL Step 1 (Title, Cover, MP3, WAV, Stems, Visibility, Date, Desc)
+// 2. Capturing ALL Step 2 (BPM, Key, Tags, Licenses, Free Download)
+// 3. Database: INSERT for new beats, UPDATE for editing.
+// 4. Cleanup: Delete beat_drafts after success.
+// 5. Integration: YouTube Upload + License Settings persistence.
+
+window.handlePublish = async function() {
+    console.log('🚀 [PUBLISH] Initiating new handlePublish override...');
+
+    // 1. Double Submission Prevention
+    if (window.isPublishing) return;
+    window.isPublishing = true;
+
+    const btn = document.getElementById('publishNow');
+    const originalText = btn ? btn.innerHTML : 'Publicar Ahora';
+    
+    // 2. Auth Check
+    const { data: { session } } = await window.supabaseClient.auth.getSession();
+    const userId = session?.user?.id;
+    
+    if (!userId) {
+        console.error('🛑 Blocked Publish: userId is null.');
+        showToast('Error: No se detectó sesión de usuario. Recarga la página.', 'error');
+        window.isPublishing = false;
+        return;
+    }
+
+    try {
+        // 3. YouTube Pre-Interception (Reuse legacy uploader if active)
+        if (window.isYouTubeUpload && window.YouTubeUploader) {
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = 'Subiendo a YouTube...';
+            }
+            const beatTitle = document.getElementById('titleInput').value || 'Sin Título';
+            const beatKey = document.querySelector('#keyInput')?.value || 'N/A';
+            const beatBpm = document.getElementById('bpmInput')?.value || 'N/A';
+            const userDesc = document.getElementById('descInput').value || '';
+            const tagList = uploaderState.tags.map(t => `#${t.replace(/\s+/g, '')}`).join(' ');
+
+            const ytMetadata = {
+                title: beatTitle,
+                description: `🛒 Comprar/Descargar: (Pendiente)\nKey: ${beatKey}\nBPM: ${beatBpm}\n\n${userDesc}\n\n${tagList}`,
+                tags: uploaderState.tags
+            };
+
+            await window.YouTubeUploader.handleUpload(ytMetadata);
+            showToast('Video subido a YouTube correctamente 📹', 'success');
+        }
+
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = 'Procesando...';
+        }
+
+        // 4. General Validations
+        if (!validateStep(1) || !validateStep(2)) {
+            showToast('Completa todos los campos obligatorios', 'error');
+            window.isPublishing = false;
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
+            return;
+        }
+
+        // --- Royalty Split Validation ---
+        const totalPerc = window.calculateCurrentOwnerPercent() + uploaderState.collaborators.reduce((acc, c) => acc + (c.percent || 0), 0);
+        if (Math.round(totalPerc) !== 100) {
+            showToast('La suma de regalías debe ser exactamente 100%', 'error');
+            window.isPublishing = false;
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
+            return;
+        }
+
+        // Show Overlay
+        const overlay = document.getElementById('publishOverlay');
+        if (overlay) {
+            const title = document.getElementById('publishOverlayTitle');
+            if (title) title.innerText = 'PUBLICANDO ARCHIVO...';
+            overlay.style.display = 'flex';
+        }
+
+        // 5. File Uploads to R2
+        let image_url = window.originalProductData?.image_url || null;
+        let audio_url = window.originalProductData?.audio_url || null;
+        let mp3_url = window.originalProductData?.mp3_url || null;
+        let wav_url = window.originalProductData?.wav_url || null;
+        let stems_url = window.originalProductData?.stems_url || null;
+        let r2_version = window.originalProductData?.r2_version || 'v2';
+
+        // Helper to sanitize
+        const sanitize = (name) => name.replace(/[^\w\s.-]/g, '').replace(/\s+/g, '_').substring(0, 100);
+
+        // Cover
+        if (formData.coverBlob) {
+            console.log('📂 [PUBLISH] Uploading Cover...');
+            const coverFile = new File([formData.coverBlob], 'cover.jpg', { type: 'image/jpeg' });
+            const res = await uploadToR2(coverFile, 'products/covers');
+            image_url = res.publicUrl;
+        }
+
+        // MP3 (Tagged)
+        if (formData.files.mp3_tagged) {
+            console.log('📂 [PUBLISH] Uploading MP3...');
+            const key = await uploadToR2(formData.files.mp3_tagged, 'beats/mp3');
+            audio_url = `https://offszn-storage.41d0f49121d02c88f71fdb4da54a791d.r2.cloudflarestorage.com/${key}`;
+            mp3_url = audio_url;
+        }
+
+        // WAV (Untagged)
+        if (formData.files.wav_untagged) {
+            console.log('📂 [PUBLISH] Uploading WAV...');
+            wav_url = await uploadToR2(formData.files.wav_untagged, 'secure-products/beats/wav');
+        }
+
+        // Stems (Logic: File vs Link)
+        if (formData.files.stems) {
+            console.log('📂 [PUBLISH] Uploading Stems ZIP...');
+            stems_url = await uploadToR2(formData.files.stems, 'secure-products/beats/stems');
+        }
+
+        // 6. Build Final Data Object
+        const finalData = {
+            producer_id: userId,
+            name: document.getElementById('titleInput').value,
+            description: document.getElementById('descInput').value || '',
+            release_date: document.getElementById('dateInput').value || null,
+            visibility: document.getElementById('visibilityInput').value || 'public',
+            bpm: parseInt(document.getElementById('bpmInput')?.value) || null,
+            key: document.getElementById('keyInput')?.value || 'Sin tonalidad',
+            tags: uploaderState.tags,
+            image_url,
+            audio_url,
+            mp3_url,
+            wav_url,
+            stems_url,
+            // stems_link: uploaderState.stemsLink || null, // stems_link is not in the schema, we'll rely on license_settings jsonb for this if needed
+            r2_version: 'v2',
+            price_basic: licensesState.offszn_basic.enabled ? licensesState.offszn_basic.price : null,
+            price_premium: licensesState.offszn_premium.enabled ? licensesState.offszn_premium.price : null,
+            price_stems: licensesState.offszn_stems.enabled ? licensesState.offszn_stems.price : null,
+            price_exclusive: licensesState.offszn_exclusive.enabled ? licensesState.offszn_exclusive.price : null,
+            is_free: licensesState.offszn_free_download.enabled,
+            licenses: licensesState, // Save the full state for future reference
+            collaborators: uploaderState.collaborators.map(c => ({
+                id: c.id,
+                name: c.name,
+                role: c.role,
+                percent: c.percent,
+                is_guest: c.is_guest
+            }))
+        };
+
+        // 7. DB Operation (INSERT vs UPDATE)
+        let product_id = window.currentEditId;
+        if (!product_id) {
+            console.log('✨ [PUBLISH] INSERTING new product...');
+            const { data, error } = await supabaseClient.from('products').insert([finalData]).select('id').single();
+            if (error) throw error;
+            product_id = data.id;
+        } else {
+            console.log('📝 [PUBLISH] UPDATING existing product:', product_id);
+            const { error } = await supabaseClient.from('products').update(finalData).eq('id', product_id);
+            if (error) throw error;
+        }
+
+        // 8. Collaborator Invitations Logic
+        if (product_id && uploaderState.collaborators.length > 0) {
+            console.log('✉️ [PUBLISH] Creating collaborator invitations...');
+            const invitations = uploaderState.collaborators.map(c => ({
+                product_id: product_id,
+                inviter_id: userId,
+                collaborator_id: c.is_guest ? null : c.id,
+                guest_name: c.is_guest ? c.name : null,
+                role: c.role,
+                royalty_percent: c.percent,
+                status: 'pending'
+            }));
+
+            const { error: collabError } = await supabaseClient.from('collab_invitations').upsert(invitations, {
+                onConflict: 'product_id, collaborator_id' // Basic conflict handling if editing
+            });
+            
+            if (collabError) {
+                console.warn('⚠️ Collab invitations error:', collabError);
+            }
+        }
+
+        // 9. Persistence & Cleanup
+        await window.saveLastUsedLicenses(); // Save license settings to user profile
+        
+        if (currentDraftId) {
+            await supabaseClient.from('beat_drafts').delete().eq('id', currentDraftId);
+        }
+
+        isDirty = false;
+        showToast('¡Beat publicado con éxito!', 'success');
+        
+        setTimeout(() => {
+            window.location.href = '/cuenta/mis-kits.html';
+        }, 1500);
+
+    } catch (err) {
+        console.error('❌ [PUBLISH] Error:', err);
+        showToast('Error al publicar: ' + err.message, 'error');
+        if (overlay) overlay.style.display = 'none';
+        window.isPublishing = false;
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }
+    }
+};
+
+// --- Collaborators Logic (Step 3) ---
+
+let collabSearchTimeout = null;
+let availableUsers = [];
+let currentSearchQuery = '';
+
+window.initCollaborators = async () => {
+    const input = document.getElementById('collabSearch');
+    if (!input) return;
+
+    // Fetch current user info for "Tú" row
+    try {
+        if (window.supabaseClient) {
+            const { data: { session } } = await window.supabaseClient.auth.getSession();
+            if (session?.user?.id) {
+                const { data, error } = await window.supabaseClient
+                    .from('users')
+                    .select('id, nickname, avatar_url, first_name, last_name')
+                    .eq('id', session.user.id)
+                    .maybeSingle();
+                
+                if (data) {
+                    uploaderState.currentUser = data;
+                    renderCollabs(); // Initial render for "Tú"
+                }
+            }
+        }
+    } catch (err) {
+        console.error('❌ [COLLABS] Error fetching current user:', err);
+    }
+
+    input.addEventListener('input', (e) => {
+        const query = e.target.value.trim();
+        currentSearchQuery = query;
+        clearTimeout(collabSearchTimeout);
+
+        if (query.length < 1) {
+            hideCollabDropdown();
+            return;
+        }
+
+        collabSearchTimeout = setTimeout(() => searchUsers(query), 300);
+    });
+
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.collab-search-container')) {
+            hideCollabDropdown();
+        }
+    });
+};
+
+async function searchUsers(query) {
+    try {
+        if (!window.supabaseClient) return;
+        const { data: { session } } = await window.supabaseClient.auth.getSession();
+        const currentUserId = session?.user?.id;
+
+        const { data, error } = await window.supabaseClient
+            .from('users')
+            .select('id, nickname, avatar_url')
+            .ilike('nickname', `%${query}%`)
+            .neq('id', currentUserId)
+            .limit(5);
+
+        if (error) throw error;
+        availableUsers = data || [];
+        renderCollabDropdown();
+    } catch (err) {
+        console.error('❌ [COLLABS] Search error:', err);
+    }
+}
+
+function renderCollabDropdown() {
+    const dropdown = document.getElementById('collabDropdown');
+    if (!dropdown) return;
+
+    let html = '';
+
+    if (availableUsers.length > 0) {
+        html = availableUsers.map(user => `
+            <div class="off-collab-item" onclick="selectCollaborator('${user.id}')">
+                <img src="${user.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.nickname || 'U')}&background=333&color=fff`}" 
+                     class="off-collab-avatar" 
+                     onerror="this.src='https://ui-avatars.com/api/?name=U&background=333&color=fff'">
+                <span class="off-collab-name">${user.nickname}</span>
+            </div>
+        `).join('');
+    }
+
+    const alreadyExists = availableUsers.some(u => u.nickname.toLowerCase() === currentSearchQuery.toLowerCase());
+    if (currentSearchQuery.length >= 2 && !alreadyExists) {
+        html += `
+            <div class="off-collab-item" onclick="selectCollaborator('GUEST:${currentSearchQuery}')">
+                <div class="off-collab-avatar" style="display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.05);color:#8b5cf6;">
+                    <span>👤</span>
+                </div>
+                <div style="display:flex;flex-direction:column;flex:1;">
+                    <span class="off-collab-name">Invitar "${currentSearchQuery}"</span>
+                    <span style="font-size:11px;color:#666;">Usuario no encontrado</span>
+                </div>
+                <i class="fas fa-plus" style="color:#8b5cf6;font-size:12px;"></i>
+            </div>
+        `;
+    }
+
+    if (!html) {
+        dropdown.innerHTML = '<div class="off-collab-no-results">No se encontraron usuarios</div>';
+    } else {
+        dropdown.innerHTML = html;
+    }
+    
+    // Update IDs for safety if needed, but keeping collabDropdown for now as it's the target
+    dropdown.className = 'off-collab-dropdown';
+    dropdown.style.display = 'block';
+}
+
+function hideCollabDropdown() {
+    const dropdown = document.getElementById('collabDropdown');
+    if (dropdown) dropdown.style.display = 'none';
+}
+
+window.selectCollaborator = (userId) => {
+    if (uploaderState.collaborators.length >= 4) {
+        showToast('Máximo 5 colaboradores (tú + 4)', 'error');
+        return;
+    }
+
+    if (userId.startsWith('GUEST:')) {
+        const guestName = userId.replace('GUEST:', '');
+        if (uploaderState.collaborators.some(c => c.name === guestName)) {
+            showToast('Este colaborador ya fue agregado', 'error');
+            return;
+        }
+
+        uploaderState.collaborators.push({
+            id: `guest_${Date.now()}`,
+            name: guestName,
+            avatar_url: null,
+            role: 'Productor',
+            percent: 0,
+            is_guest: true,
+            invite_link: `https://offszn.lat/pages/register?invite=${encodeURIComponent(guestName)}`
+        });
+    } else {
+        const user = availableUsers.find(u => u.id === userId);
+        if (!user) return;
+
+        if (uploaderState.collaborators.some(c => c.id === userId)) {
+            showToast('Este usuario ya fue agregado', 'error');
+            return;
+        }
+
+        uploaderState.collaborators.push({
+            id: user.id,
+            name: user.nickname,
+            avatar_url: user.avatar_url,
+            role: 'Productor',
+            percent: 0,
+            is_guest: false
+        });
+    }
+
+    document.getElementById('collabSearch').value = '';
+    hideCollabDropdown();
+    renderCollabs();
+};
+
+window.renderCollabs = () => {
+    const list = document.getElementById('collabList');
+    if (!list) return;
+
+    const owner = uploaderState.currentUser || { nickname: 'Tú', avatar_url: null };
+    
+    // MATCH IMAGE 3 LAYOUT
+    let html = `
+        <div class="off-collab-row owner">
+            <div class="off-collab-user-info">
+                <img src="${owner.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(owner.nickname || 'U')}&background=333&color=fff`}" 
+                     class="off-collab-avatar" 
+                     onerror="this.src='https://ui-avatars.com/api/?name=U&background=333&color=fff'">
+                <span class="off-collab-name">${owner.nickname} (Propietario)</span>
+            </div>
+            <div class="off-collab-mid-role">Rol Principal</div>
+            <div class="off-collab-controls">
+                <div class="off-collab-percent-wrapper">
+                    <input type="number" id="mainUserPercent" value="100" 
+                           oninput="updateMainUserPercent(this.value)"
+                           onkeydown="if(['e', 'E', '+', '-', '.'].includes(event.key)) event.preventDefault();"
+                           min="0" max="100">
+                    <span>%</span>
+                </div>
+                <div style="width:36px;"></div> <!-- Spacer matching SVG delete btn width -->
+            </div>
+        </div>
+    `;
+
+    html += uploaderState.collaborators.map((c, i) => `
+        <div style="margin-bottom:12px;">
+            <div class="off-collab-row">
+                <div class="off-collab-user-info">
+                    <img src="${c.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(c.name || 'U')}&background=333&color=fff`}" 
+                         class="off-collab-avatar" 
+                         onerror="this.src='https://ui-avatars.com/api/?name=U&background=333&color=fff'">
+                    <span class="off-collab-name">${c.name}</span>
+                </div>
+                <div class="off-collab-controls">
+                    <div class="off-collab-role-custom">
+                        <div class="off-collab-role-trigger" onclick="toggleCollabRoleDropdown(${i}, event)">
+                            <span id="roleDisplay_${i}">${c.role}</span>
+                            <i id="roleChevron_${i}">
+                                <svg width="10" height="10" viewBox="0 0 16 16" fill="currentColor"><path fill-rule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z"/></svg>
+                            </i>
+                        </div>
+                        <div class="off-collab-role-list" id="roleList_${i}">
+                            <div class="off-collab-role-item ${c.role === 'Productor' ? 'selected' : ''}" onclick="selectCollabRole(${i}, 'Productor')">Productor</div>
+                            <div class="off-collab-role-item ${c.role === 'Ingeniero' ? 'selected' : ''}" onclick="selectCollabRole(${i}, 'Ingeniero')">Ingeniero</div>
+                            <div class="off-collab-role-item ${c.role === 'Artista' ? 'selected' : ''}" onclick="selectCollabRole(${i}, 'Artista')">Artista</div>
+                        </div>
+                    </div>
+                    <div class="off-collab-percent-wrapper">
+                        <input type="number" value="${c.percent}" 
+                               oninput="updateCollabPercent(${i}, this.value)" 
+                               onkeydown="if(['e', 'E', '+', '-', '.'].includes(event.key)) event.preventDefault();"
+                               min="0" max="100"
+                               tabindex="${i + 2}">
+                        <span>%</span>
+                    </div>
+                    <button type="button" class="off-collab-delete" onclick="removeCollab(${i})" title="Eliminar">
+                        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/><path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/></svg>
+                    </button>
+                </div>
+            </div>
+            ${c.is_guest ? `
+                <div class="off-collab-invite-box">
+                    <p>Comparte este link para que se una a OFFSZN:</p>
+                    <div class="off-collab-invite-row">
+                        <input type="text" value="${c.invite_link}" readonly onclick="this.select()">
+                        <button type="button" onclick="copyInviteLink('${c.invite_link}', this)">
+                            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"/><path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z"/></svg>
+                        </button>
+                    </div>
+                </div>
+            ` : ''}
+        </div>
+    `).join('');
+
+    list.innerHTML = html;
+    list.className = 'off-collab-list';
+    updateMainUserPercentUI(); // Use the UI-only update for first load
+};
+
+window.removeCollab = (index) => {
+    uploaderState.collaborators.splice(index, 1);
+    syncCollabInputs(); // Re-sync inputs after removal
+    renderCollabs(); // Re-render to update UI
+};
+
+window.updateCollab = (index, field, value) => {
+    uploaderState.collaborators[index][field] = value;
+};
+
+window.toggleCollabRoleDropdown = (index, e) => {
+    if (e) e.stopPropagation();
+    // Close others
+    document.querySelectorAll('.off-collab-role-list').forEach((list, i) => {
+        if (i !== index) list.style.display = 'none';
+        const chev = document.getElementById(`roleChevron_${i}`);
+        if (chev && i !== index) chev.style.transform = 'rotate(0deg)';
+    });
+
+    const list = document.getElementById(`roleList_${index}`);
+    const chevron = document.getElementById(`roleChevron_${index}`);
+    if (!list) return;
+
+    const isVisible = list.style.display === 'block';
+    list.style.display = isVisible ? 'none' : 'block';
+    if (chevron) chevron.style.transform = isVisible ? 'rotate(0deg)' : 'rotate(180deg)';
+};
+
+window.selectCollabRole = (index, role) => {
+    uploaderState.collaborators[index].role = role;
+    
+    // UI Update without full re-render
+    const display = document.getElementById(`roleDisplay_${index}`);
+    if (display) display.textContent = role;
+    
+    const list = document.getElementById(`roleList_${index}`);
+    if (list) {
+        list.style.display = 'none';
+        list.querySelectorAll('.off-collab-role-item').forEach(item => {
+            item.classList.toggle('selected', item.textContent === role);
+        });
+    }
+    
+    const chevron = document.getElementById(`roleChevron_${index}`);
+    if (chevron) chevron.style.transform = 'rotate(0deg)';
+};
+
+// SMART REBALANCE: Mantiene la suma en 100% ajustando otros campos automáticamente
+window.calculateCurrentOwnerPercent = () => {
+    const collabsSum = uploaderState.collaborators.reduce((acc, c) => acc + (c.percent || 0), 0);
+    return Math.max(0, 100 - collabsSum);
+};
+
+window.syncCollabInputs = () => {
+    const inputs = document.querySelectorAll('.off-collab-percent-wrapper input');
+    // El primer input es el dueño, los demás son colaboradores (index + 1)
+    uploaderState.collaborators.forEach((c, i) => {
+        const input = inputs[i + 1];
+        if (input) input.value = c.percent;
+    });
+};
+
+window.updateMainUserPercentUI = () => {
+    const input = document.getElementById('mainUserPercent');
+    if (input) {
+        const remaining = window.calculateCurrentOwnerPercent();
+        input.value = remaining;
+    }
+};
+
+window.updateCollabPercent = (index, value) => {
+    let newVal = parseInt(value.toString().replace(/[^\d]/g, '')) || 0;
+    if (newVal > 100) newVal = 100;
+
+    const collab = uploaderState.collaborators[index];
+    const oldVal = collab.percent || 0;
+    let diff = newVal - oldVal;
+
+    if (diff > 0) {
+        // Aumentando: quitar al dueño primero
+        let ownerP = window.calculateCurrentOwnerPercent();
+        let takeFromOwner = Math.min(diff, ownerP);
+        diff -= takeFromOwner;
+
+        // Si falta, quitar a otros
+        if (diff > 0) {
+            for (let i = 0; i < uploaderState.collaborators.length; i++) {
+                if (i === index) continue;
+                let c = uploaderState.collaborators[i];
+                let take = Math.min(diff, c.percent || 0);
+                c.percent = (c.percent || 0) - take;
+                diff -= take;
+                if (diff <= 0) break;
+            }
+        }
+        collab.percent = newVal - diff; // Por si sum > 100 literal
+    } else {
+        // Disminuyendo: el dueño absorbe
+        collab.percent = newVal;
+    }
+
+    window.syncCollabInputs();
+    window.updateMainUserPercentUI();
+};
+
+window.updateMainUserPercent = (value) => {
+    let newVal = parseInt(value.toString().replace(/[^\d]/g, '')) || 0;
+    if (newVal > 100) newVal = 100;
+
+    let currentOwner = window.calculateCurrentOwnerPercent();
+    let diff = newVal - currentOwner;
+
+    if (diff > 0) {
+        // Dueño quiere más: quitar a colaboradores
+        for (let i = 0; i < uploaderState.collaborators.length; i++) {
+            let c = uploaderState.collaborators[i];
+            let take = Math.min(diff, c.percent || 0);
+            c.percent = (c.percent || 0) - take;
+            diff -= take;
+            if (diff <= 0) break;
+        }
+    }
+    // Si diff < 0 (dueño quiere menos), los colaboradores NO se auto-asignan puntos, 
+    // simplemente el dueño bajará a newVal y la diferencia queda "disponible" (dueño sube).
+    // Espera, el calculateCurrentOwnerPercent siempre calcula 100 - sum. 
+    // Si queremos que el dueño sea 20 y antes era 50, sum de collabs debe subir a 80? No.
+    // Solo permitimos que el dueño "empuje" a los demás.
+    
+    window.syncCollabInputs();
+    window.updateMainUserPercentUI();
+};
+
+window.copyInviteLink = (link, btn) => {
+    const fallbackCopy = (text) => {
+        const textArea = document.createElement("textarea");
+        textArea.value = text;
+        textArea.style.position = "fixed";
+        textArea.style.left = "-9999px";
+        textArea.style.top = "0";
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        try {
+            document.execCommand('copy');
+            showToast('Link de invitación copiado', 'success');
+        } catch (err) {
+            showToast('Error al copiar link', 'error');
+        }
+        document.body.removeChild(textArea);
+    };
+
+    if (!navigator.clipboard || !navigator.clipboard.writeText) {
+        fallbackCopy(link);
+    } else {
+        navigator.clipboard.writeText(link).then(() => {
+            showToast('Link de invitación copiado', 'success');
+        }).catch(() => {
+            fallbackCopy(link);
+        });
+    }
+
+    const originalHtml = btn.innerHTML;
+    btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M12.736 3.97a.733.733 0 0 1 1.047 0c.286.289.29.756.01 1.05L7.88 12.01a.733.733 0 0 1-1.065.02L3.217 8.384a.757.757 0 0 1 0-1.06.733.733 0 0 1 1.047 0l3.052 3.093 5.42-6.446z"/></svg>`;
+    setTimeout(() => { btn.innerHTML = originalHtml; }, 2000);
+};
+
+// Initialize on DOM Load
+document.addEventListener('DOMContentLoaded', () => {
+    initCollaborators();
+    
+    // Global click-outside to close all custom dropdowns
+    document.addEventListener('click', () => {
+        // Roles
+        document.querySelectorAll('.off-collab-role-list').forEach(list => list.style.display = 'none');
+        document.querySelectorAll('.off-collab-role-trigger i').forEach(chev => chev.style.transform = 'rotate(0deg)');
+        
+        // Collab search dropdown
+        hideCollabDropdown();
+
+        // Publish dropdown
+        const publishList = document.getElementById('publishDropdownContent');
+        if (publishList) publishList.style.display = 'none';
+    });
+
+    // Real-time Preview Listeners
+    document.getElementById('titleInput')?.addEventListener('input', () => window.renderPreview());
+    document.getElementById('bpmInput')?.addEventListener('input', () => window.renderPreview());
+    // Key is updated via click on custom dropdown items, should call renderPreview there too.
+    
+    // Initial render
+    window.renderPreview();
+});
+
+window.togglePublishDropdown = (e) => {
+    if (e) e.stopPropagation();
+    const list = document.getElementById('publishDropdownContent');
+    if (!list) return;
+
+    const isVisible = list.style.display === 'block';
+    list.style.display = isVisible ? 'none' : 'block';
+};
+
+window.renderPreview = () => {
+    console.log('--- Rendering Preview Step 4 ---');
+    const u = uploaderState.currentUser;
+    const userName = u ? (u.full_name || `${u.first_name || ''} ${u.last_name || ''}`.trim() || u.display_name || u.nickname || 'Productor') : 'Productor';
+
+    // Preview Card Elements
+    const cardTitle = document.getElementById('previewCardTitle');
+    const cardProducer = document.getElementById('previewCardProducer');
+    const cardTags = document.getElementById('previewCardTags');
+    const cardCover = document.getElementById('previewCardCover');
+    
+    // Values from state if possible, otherwise DOM (as failback)
+    const currentTitle = uploaderState.title || document.getElementById('titleInput')?.value || 'Sin título';
+    const currentBpm = uploaderState.bpm || document.getElementById('bpmInput')?.value || '--';
+    const currentKey = uploaderState.key || document.getElementById('keyDisplay')?.textContent || 'Sin tonalidad';
+
+    if (cardTitle) cardTitle.textContent = currentTitle;
+    if (cardProducer) cardProducer.textContent = userName;
+    
+    if (cardTags) {
+        cardTags.innerHTML = uploaderState.tags.map(t => `<span class="card-tag">#${t}</span>`).join('');
+    }
+
+    // Cover Preview
+    if (cardCover && uploaderState.cover) {
+        const url = URL.createObjectURL(uploaderState.cover);
+        cardCover.style.backgroundImage = `url(${url})`;
+        cardCover.style.backgroundSize = 'cover';
+        cardCover.style.backgroundPosition = 'center';
+        cardCover.innerHTML = ''; // Remove "Sin portada"
+    }
+
+    // Verification Panel
+    const verifyDetails = document.getElementById('verifyDetails');
+    if (verifyDetails) {
+        verifyDetails.innerHTML = `
+            <div class="verify-item"><span>BPM:</span> <strong>${currentBpm}</strong></div>
+            <div class="verify-item"><span>Key (Tonalidad):</span> <strong>${currentKey}</strong></div>
+        `;
+    }
+
+    // Files Verification
+    const verifyFiles = document.getElementById('verifyFiles');
+    if (verifyFiles && uploaderState) {
+        let filesHtml = '';
+        if (uploaderState.mp3_tagged) filesHtml += `<div class="verify-file-row"><i class="bi bi-check-circle-fill"></i> MP3 (Tagged)</div>`;
+        if (uploaderState.wav_untagged) filesHtml += `<div class="verify-file-row"><i class="bi bi-check-circle-fill"></i> WAV (Untagged)</div>`;
+        if (uploaderState.stems || uploaderState.stemsLink) filesHtml += `<div class="verify-file-row"><i class="bi bi-check-circle-fill"></i> STEMS</div>`;
+        
+        verifyFiles.innerHTML = filesHtml || '<div style="color: #666; font-size: 13px;">Ningún archivo seleccionado</div>';
+    }
+
+    // Collabs Verification
+    const verifyCollabs = document.getElementById('verifyCollabs');
+    const collabSection = document.getElementById('verifyCollabSection');
+    if (verifyCollabs && uploaderState.collaborators.length > 0) {
+        if (collabSection) collabSection.style.display = 'block';
+        verifyCollabs.innerHTML = uploaderState.collaborators.map(c => `
+            <div class="verify-item">
+                <span>${c.display_name}</span>
+                <strong>${c.profit_share}%</strong>
+            </div>
+        `).join('');
+    } else if (collabSection) {
+        collabSection.style.display = 'none';
+    }
+};

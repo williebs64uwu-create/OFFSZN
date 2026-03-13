@@ -17,6 +17,7 @@
             const isR2 = (
                 src.includes('r2.cloudflarestorage.com') ||
                 src.includes('pub-') ||
+                src.startsWith('@') || // NEW: Support @ prefix
                 // Relative path check: Must NOT start with http, NOT be data:, NOT be local static asset folders
                 (!src.startsWith('http') &&
                     !src.startsWith('data:') &&
@@ -25,7 +26,7 @@
                     !src.startsWith('/icon') &&
                     !src.startsWith('/banners') &&
                     !src.startsWith('/fonts') &&
-                    src.includes('/') // Must have some folder structure
+                    (src.includes('/') || /\.(jpg|jpeg|png|webp|gif|svg|mp3|wav|zip)$/i.test(src))
                 )
             );
 
@@ -39,10 +40,14 @@
                 el.style.transition = 'opacity 0.4s ease';
 
                 try {
-                    const r2Version = el.getAttribute('data-r2-version') || 'v1';
+                    const r2Version = el.getAttribute('data-r2-version') || 'v2';
                     const authorizedUrl = await window.getAuthorizedUrl(originalSrc, r2Version);
+                    
                     if (authorizedUrl && authorizedUrl !== originalSrc) {
-                        el.onload = () => { el.style.opacity = '1'; };
+                        el.onload = () => { 
+                            el.style.opacity = '1'; 
+                            el.classList.add('r2-loaded');
+                        };
                         el.src = authorizedUrl;
                         if (el.complete) el.onload();
                     } else {

@@ -174,7 +174,8 @@ async function fetchProducts() {
         const { data: products, error } = await window.supabaseClient
             .from('products')
             .select('*')
-            .neq('status', 'deleted');
+            .neq('status', 'deleted')
+            .eq('visibility', 'public');
 
         if (error) throw error;
         return products || [];
@@ -628,7 +629,7 @@ function renderTrackRow(p) {
         <div class="track-row" data-product-id="${p.id}">
             <div class="track-left">
                 <div class="thumb-container" onclick="window.location.href='${productUrl}'">
-                    <img crossorigin="anonymous" src="${imgUrl}" data-r2-version="${p.r2_version || 'v1'}" class="track-thumb" alt="cover">
+                    <img crossorigin="anonymous" src="${imgUrl}" data-r2-version="${p.r2_version || 'v2'}" class="track-thumb" alt="cover">
                     <div class="thumb-play-overlay">
                         <i class="bi bi-play-fill"></i>
                     </div>
@@ -683,7 +684,7 @@ function renderExactProducerCard(p) {
     return `
         <div class="exact-match-card" onclick="window.location.href='${profileUrl}'" style="cursor:pointer; background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 24px; display: flex; align-items: center; gap: 20px; transition: all 0.3s ease; margin-bottom: 30px;">
             <div style="position: relative;">
-                <img crossorigin="anonymous" src="${avatar}" data-r2-version="${p.r2_version || 'v1'}" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid #fff;">
+                <img crossorigin="anonymous" src="${avatar}" data-r2-version="${p.r2_version || 'v2'}" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid #fff;">
                 ${p.is_verified ? '<i class="bi bi-patch-check-fill" style="position: absolute; bottom: 0; right: 0; color: #fff; font-size: 1.2rem; background: #000; border-radius: 50%;"></i>' : ''}
             </div>
             <div style="flex: 1;">
@@ -703,7 +704,7 @@ function renderProducerRow(p) {
 
     return `
         <div class="producer-row" onclick="window.location.href='${profileUrl}'" style="cursor:pointer; display: flex; align-items: center; gap: 16px; padding: 12px; border-radius: 12px; transition: background 0.2s; margin-bottom: 8px;">
-            <img crossorigin="anonymous" src="${avatar}" data-r2-version="${p.r2_version || 'v1'}" style="width: 48px; height: 48px; border-radius: 50%; object-fit: cover; background: #1a1a1a;">
+            <img crossorigin="anonymous" src="${avatar}" data-r2-version="${p.r2_version || 'v2'}" style="width: 48px; height: 48px; border-radius: 50%; object-fit: cover; background: #1a1a1a;">
             <div style="flex: 1;">
                 <div style="color: #fff; font-weight: 600; display: flex; align-items: center; gap: 6px;">
                     ${escapeHTML(p.nickname)}
@@ -867,7 +868,7 @@ function renderFallbackItem(p) {
     return `
         <div class="fallback-card" data-product-id="${p.id}" onclick="window.location.href='${productUrl}'">
             <div class="fallback-card-img">
-                <img crossorigin="anonymous" src="${p.image_url || '/images/portada-default.png'}">
+                <img crossorigin="anonymous" src="${p.image_url || '/images/portada-default.png'}" data-r2-version="${p.r2_version || 'v2'}">
                 <div class="fallback-card-overlay"><i class="bi bi-play-fill"></i></div>
             </div>
             <div class="fallback-card-info">

@@ -24,6 +24,7 @@ export const getUserProfile = async (req, res) => {
                 following:followers!followers_follower_id_fkey(count),
                 products:products!products_producer_id_fkey(count)
             `)
+            .eq('products.visibility', 'public')
             .ilike('nickname', nickname)
             .single();
 
@@ -99,6 +100,7 @@ export const getUserProducts = async (req, res) => {
             `)
             .eq('producer_id', user.id)
             .eq('status', 'approved')
+            .eq('visibility', 'public')
             .order('created_at', { ascending: false });
 
         if (productsError) throw productsError;
