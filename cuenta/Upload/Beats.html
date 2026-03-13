@@ -5122,7 +5122,8 @@
 
                 // 🔥 MP3 Preview (check both audio_url and mp3_url)
                 const mp3Url = product.audio_url || product.mp3_url;
-                if (mp3Url) {
+                // Resilience: Ignore malformed URLs containing [object Object]
+                if (mp3Url && !String(mp3Url).includes('[object Object]')) {
                     const fileName = mp3Url.split('/').pop();
                     setDropZoneSuccess('mp3TaggedDropZone', fileName);
                     filesUploaded.mp3_tagged = true;
@@ -5142,6 +5143,8 @@
                             console.warn('Error loading wavesurfer audio:', waveErr);
                         }
                     }
+                } else if (mp3Url) {
+                    console.warn('⚠️ MP3 URL is malformed, skipping preview loading.');
                 }
 
                 // 🔥 WAV Preview
@@ -8268,6 +8271,12 @@
         async function getAuthorizedUrl(pathOrUrl, version = 'v1') {
             if (!pathOrUrl) return null;
 
+            // Resilience: Reject malformed [object Object] entries early
+            if (typeof pathOrUrl === 'string' && pathOrUrl.includes('[object Object]')) {
+                console.warn('[getAuthorizedUrl] Rejecting malformed path:', pathOrUrl);
+                return null;
+            }
+
             // ðŸ”¥ FIX: Si es una URL de R2 (cloudflarestorage), necesitamos firmarla sí o sí.
             // Si es Supabase (http...) y público, lo dejamos pasar.
             // Si es un KEY (no http), lo firmamos.
@@ -8375,22 +8384,22 @@
                 }
 
                 if (formData.files.mp3_tagged) {
-                    const key = await uploadToR2(formData.files.mp3_tagged, 'beats/mp3');
-                    updates.audio_url = `https://offszn-storage.41d0f49121d02c88f71fdb4da54a791d.r2.cloudflarestorage.com/${key}`;
+                    const uploadResult = await uploadToR2(formData.files.mp3_tagged, 'beats/mp3');
+                    updates.audio_url = uploadResult.publicUrl;
                     updates.mp3_url = updates.audio_url;
-                    final_r2_version = 'v2';
+                    final_r2_version = uploadResult.r2_version;
                 }
 
                 if (formData.files.wav_untagged) {
-                    const key = await uploadToR2(formData.files.wav_untagged, 'secure-products/beats/wav');
-                    updates.wav_url = key;
-                    final_r2_version = 'v2';
+                    const uploadResult = await uploadToR2(formData.files.wav_untagged, 'secure-products/beats/wav');
+                    updates.wav_url = uploadResult.key;
+                    final_r2_version = uploadResult.r2_version;
                 }
 
                 if (formData.files.stems) {
-                    const key = await uploadToR2(formData.files.stems, 'secure-products/beats/stems');
-                    updates.stems_url = key;
-                    final_r2_version = 'v2';
+                    const uploadResult = await uploadToR2(formData.files.stems, 'secure-products/beats/stems');
+                    updates.stems_url = uploadResult.key;
+                    final_r2_version = uploadResult.r2_version;
                 }
 
                 // Apply the version update if any file was uploaded
@@ -8669,6 +8678,7 @@
                     const coverFile = new File([formData.coverBlob], 'cover.jpg', { type: 'image/jpeg' });
                     const uploadResult = await uploadToR2(coverFile, 'products/covers');
                     updates.image_url = uploadResult.publicUrl;
+                    updates.r2_version = uploadResult.r2_version; // Sync version
                 } else if (window.originalProductData?.image_url) {
                     updates.image_url = window.originalProductData.image_url;
                 }
@@ -8677,46 +8687,49 @@
 
                 // MP3 Tagged
                 if (formData.files.mp3_tagged) {
-                    console.log(`?? [EDIT] Subiendo nuevo MP3 Tagged a R2...`);
+                    console.log(`📂 [EDIT] Subiendo nuevo MP3 Tagged a R2...`);
 
-                    // ?? CLEANUP OLD MP3
+                    // 🗑️ CLEANUP OLD MP3
                     if (window.originalProductData && (window.originalProductData.mp3_url || window.originalProductData.audio_url)) {
-                        console.log('?? [CLEANUP] Eliminando MP3 anterior...');
+                        console.log('🗑️ [CLEANUP] Eliminando MP3 anterior...');
                         const oldUrl = window.originalProductData.mp3_url || window.originalProductData.audio_url;
                         await deleteFileFromStorage(oldUrl, 'beats');
                     }
 
-                    const key = await uploadToR2(formData.files.mp3_tagged, 'beats/mp3');
-                    updates.mp3_url = `https://offszn-storage.41d0f49121d02c88f71fdb4da54a791d.r2.cloudflarestorage.com/${key}`;
+                    const uploadResult = await uploadToR2(formData.files.mp3_tagged, 'beats/mp3');
+                    updates.mp3_url = uploadResult.publicUrl;
                     updates.audio_url = updates.mp3_url;
+                    updates.r2_version = uploadResult.r2_version; // Sync version
                 }
 
                 // WAV Untagged
                 if (formData.files.wav_untagged) {
-                    console.log(`?? [EDIT] Subiendo nuevo WAV a R2 (Secure)...`);
+                    console.log(`📂 [EDIT] Subiendo nuevo WAV a R2 (Secure)...`);
 
-                    // ?? CLEANUP OLD WAV
+                    // 🗑️ CLEANUP OLD WAV
                     if (window.originalProductData && window.originalProductData.wav_url) {
-                        console.log('?? [CLEANUP] Eliminando WAV anterior...');
+                        console.log('🗑️ [CLEANUP] Eliminando WAV anterior...');
                         await deleteFileFromStorage(window.originalProductData.wav_url, 'secure-beats');
                     }
 
-                    const key = await uploadToR2(formData.files.wav_untagged, 'secure-products/beats/wav');
-                    updates.wav_url = key; // Store Key
+                    const uploadResult = await uploadToR2(formData.files.wav_untagged, 'secure-products/beats/wav');
+                    updates.wav_url = uploadResult.key; // Store Key for sensitive
+                    updates.r2_version = uploadResult.r2_version; // Sync version
                 }
 
                 // Stems
                 if (formData.files.stems) {
-                    console.log(`?? [EDIT] Subiendo nuevos Stems a R2 (Secure)...`);
+                    console.log(`📂 [EDIT] Subiendo nuevos Stems a R2 (Secure)...`);
 
-                    // ?? CLEANUP OLD STEMS
+                    // 🗑️ CLEANUP OLD STEMS
                     if (window.originalProductData && window.originalProductData.stems_url) {
-                        console.log('?? [CLEANUP] Eliminando Stems anteriores...');
+                        console.log('🗑️ [CLEANUP] Eliminando Stems anteriores...');
                         await deleteFileFromStorage(window.originalProductData.stems_url, 'secure-beats');
                     }
 
-                    const key = await uploadToR2(formData.files.stems, 'secure-products/beats/stems');
-                    updates.stems_url = key; // Store Key
+                    const uploadResult = await uploadToR2(formData.files.stems, 'secure-products/beats/stems');
+                    updates.stems_url = uploadResult.key; // Store Key for sensitive
+                    updates.r2_version = uploadResult.r2_version; // Sync version
                 }
 
                 // 4. Update or Insert into Database

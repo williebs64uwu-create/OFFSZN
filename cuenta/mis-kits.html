@@ -1897,57 +1897,16 @@
         async function deleteFileFromStorage(pathOrUrl, bucket) {
             if (!pathOrUrl) return;
 
-            // 1. CHEQUEO R2 (Si es URL completa de R2 o tiene estructura de key de R2)
-            // Nuestros keys de R2 suelen empezar con "uploads/" o "products/" y no son URLs de Supabase
-            // O si es una URL completa de Cloudflare R2
+            // 1. CHEQUEO R2 (Centralized logic via AuthUtils)
             const isR2Url = pathOrUrl.includes('r2.cloudflarestorage.com') ||
-                pathOrUrl.includes('pub-') || // Dominios custom R2
-                (pathOrUrl.startsWith('uploads/') && !pathOrUrl.includes('supabase'));
+                pathOrUrl.includes('pub-') || 
+                (pathOrUrl.startsWith('uploads/') && !pathOrUrl.includes('supabase')) ||
+                pathOrUrl.startsWith('@');
 
             if (isR2Url) {
-                try {
-                    // Extraer key si es URL completa
-                    let key = pathOrUrl;
-                    if (pathOrUrl.startsWith('http')) {
-                        // Intentar extraer la parte despu?s del dominio si es una URL p?blica
-                        // Esto depende de c?mo estructures tus URLs p?blicas.
-                        // Si guardaste el KEY en la BD (lo ideal),     ?salo directo.
-                        // Si guardaste la URL p?blica, necesitamos parsearla.
-                        // Asumiremos que si empieza con http, intentamos sacar el pathname sin la primera barra
-                        try {
-                            const urlObj = new URL(pathOrUrl);
-                            key = urlObj.pathname.substring(1); // Quitar '/' inicial
-                        } catch (e) {
-                            console.warn("No se pudo parsear URL R2, usando string original:", pathOrUrl);
-                        }
-                    }
-
-                    console.log(`[R2] Solicitando eliminación de: ${key}`);
-
-                    const session = await supabaseClient.auth.getSession();
-                    const token = session.data.session?.access_token;
-
-                    if (!token) throw new Error("No hay sesión para eliminar en R2");
-
-                    const response = await fetch('/api/r2/delete-files', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${token}`
-                        },
-                        body: JSON.stringify({ keys: [key] })
-                    });
-
-                    if (!response.ok) {
-                        const errData = await response.json();
-                        throw new Error(errData.error || 'Error en endpoint delete R2');
-                    }
-                    console.log(`[R2] Eliminado correctamente: ${key}`);
-
-                } catch (e) {
-                    console.warn(`?? Cleanup failed for R2 file ${pathOrUrl}:`, e);
-                }
-                return; // Terminar aqu? si era R2
+                // Now uses AuthUtils which detects v1/v2 automatically
+                await AuthUtils.deleteFromR2(pathOrUrl);
+                return;
             }
 
             // 2. LOGICA LEGACY (SUPABASE STORAGE)
@@ -1958,9 +1917,9 @@
                     if (parts.length > 1) path = parts[1];
                     else return;
                 }
-                console.log(`?? Deleting from Supabase ${bucket}:`, path);
+                console.log(`🗑️ Deleting from Supabase ${bucket}:`, path);
                 await supabaseClient.storage.from(bucket).remove([path]);
-            } catch (e) { console.warn(`?? Cleanup failed for ${pathOrUrl} in ${bucket}:`, e); }
+            } catch (e) { console.warn(`⚠️ Cleanup failed for ${pathOrUrl} in ${bucket}:`, e); }
         }
 
         // 1. CONFIG

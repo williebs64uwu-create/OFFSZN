@@ -303,15 +303,22 @@ window.AuthUtils = {
      * @param {string} version Optional R2 version ('v1' or 'v2')
      * @returns {Promise<boolean>} True if operation completed.
      */
-    deleteFromR2: async function (keys, version = 'v2') {
+    deleteFromR2: async function (keys, version = null) {
         if (!keys) return true;
         const keysArray = Array.isArray(keys) ? keys : [keys];
         if (keysArray.length === 0) return true;
 
         // Clean keys: Ensure only the path part is sent (no query params, no base URL)
-        const cleanKeys = keysArray.map(k => {
-            if (!k) return null;
+        const v1Keys = [];
+        const v2Keys = [];
+
+        keysArray.forEach(k => {
+            if (!k || typeof k !== 'string') return;
+            
             let key = k;
+            let detectedVersion = version;
+
+            // Extract key from full URL if needed
             if (k.startsWith('http')) {
                 const r2Base = '.r2.cloudflarestorage.com/';
                 if (k.includes(r2Base)) {
@@ -322,34 +329,54 @@ window.AuthUtils = {
                         key = urlObj.pathname.substring(1);
                     } catch (e) { }
                 }
+
+                // Auto-detect version from URL if not explicitly provided
+                if (!detectedVersion) {
+                    if (k.includes('offsznlatbucket') || k.includes('42fc23b11a6c329b76b2babc20afcbf7')) {
+                        detectedVersion = 'v2';
+                    } else if (k.includes('offszn-storage') || k.includes('41d0f49121d02c88f71fdb4da54a791d') || k.includes('pub-')) {
+                        detectedVersion = 'v1';
+                    }
+                }
             }
-            return key;
-        }).filter(k => k);
 
-        if (cleanKeys.length === 0) return true;
+            // Cleanup Key
+            if (key.includes('?')) key = key.split('?')[0];
+            while (key.startsWith('/')) key = key.substring(1);
 
-        try {
-            const token = this.getAccessToken();
-            const response = await fetch(`${this._apiUrl}/r2/delete-files`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': token ? `Bearer ${token}` : undefined
-                },
-                body: JSON.stringify({ keys: cleanKeys, version })
-            });
+            // Default fallback if still no version
+            if (!detectedVersion) detectedVersion = 'v1';
 
-            if (!response.ok) {
-                const error = await response.json();
-                console.error("AuthUtils: Failed to delete from R2:", error);
+            if (detectedVersion === 'v2') v2Keys.push(key);
+            else v1Keys.push(key);
+        });
+
+        const deleteBatch = async (batchKeys, batchVersion) => {
+            if (batchKeys.length === 0) return true;
+            try {
+                const token = this.getAccessToken();
+                const response = await fetch(`${this._apiUrl}/r2/delete-files`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': token ? `Bearer ${token}` : undefined
+                    },
+                    body: JSON.stringify({ keys: batchKeys, version: batchVersion })
+                });
+                return response.ok;
+            } catch (error) {
+                console.error(`AuthUtils: Error deleting batch (${batchVersion}):`, error);
                 return false;
             }
+        };
 
-            return true;
-        } catch (error) {
-            console.error('AuthUtils: Error deleting from R2:', error);
-            return false;
-        }
+        // Parallel execution for both versions
+        const results = await Promise.all([
+            deleteBatch(v1Keys, 'v1'),
+            deleteBatch(v2Keys, 'v2')
+        ]);
+
+        return results.every(res => res);
     },
 
     /**

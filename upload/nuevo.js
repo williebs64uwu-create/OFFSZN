@@ -49,10 +49,10 @@ let uploaderState = window.uploaderState;
 
 // --- Licensing Logic ---
 const DEFAULT_LICENSES = {
-    basic: { name: 'Basic', price: 20.00, enabled: true, features: ['MP3 Tagged'], id: 'basic' },
-    premium: { name: 'Premium', price: 50.00, enabled: true, features: ['MP3 Tagged', 'WAV Untagged'], id: 'premium' },
-    unlimited: { name: 'Unlimited', price: 100.00, enabled: true, features: ['MP3 Tagged', 'WAV Untagged', 'Stems'], id: 'unlimited' },
-    exclusive: { name: 'Exclusive', price: 300.00, enabled: true, features: ['MP3 Tagged', 'WAV Untagged', 'Stems'], id: 'exclusive' }
+    offszn_basic: { name: 'Basic', price: 20.00, enabled: true, features: ['MP3 Tagged'], id: 'offszn_basic' },
+    offszn_premium: { name: 'Premium', price: 50.00, enabled: true, features: ['MP3 Tagged', 'WAV Untagged'], id: 'offszn_premium' },
+    offszn_unlimited: { name: 'Unlimited', price: 100.00, enabled: true, features: ['MP3 Tagged', 'WAV Untagged', 'Stems'], id: 'offszn_unlimited' },
+    offszn_exclusive: { name: 'Exclusive', price: 300.00, enabled: true, features: ['MP3 Tagged', 'WAV Untagged', 'Stems'], id: 'offszn_exclusive' }
 };
 
 let licensesState = {};
@@ -75,11 +75,12 @@ async function initLicenses() {
 
                 if (data && data.license_settings) {
                     console.log('✅ [LICENSES] Settings found in Supabase.');
-                    // Merge Supabase settings with defaults to ensure all IDs exist
+                    // Merge Supabase settings with defaults, handling legacy non-prefixed keys
                     Object.keys(data.license_settings).forEach(id => {
-                        if (settings[id]) {
-                            settings[id].price = data.license_settings[id].price;
-                            settings[id].enabled = data.license_settings[id].enabled;
+                        const targetId = id.startsWith('offszn_') ? id : `offszn_${id}`;
+                        if (settings[targetId]) {
+                            settings[targetId].price = data.license_settings[id].price;
+                            settings[targetId].enabled = data.license_settings[id].enabled;
                         }
                     });
                 }
@@ -143,15 +144,15 @@ window.renderLicenses = () => {
         let missingFiles = [];
         let requiredDisplay = '';
         
-        if (id === 'basic') {
+        if (id === 'offszn_basic') {
             requiredDisplay = '(MP3 TAGGED)';
             if (!hasMP3) missingFiles.push('MP3');
         }
-        if (id === 'premium') {
+        if (id === 'offszn_premium') {
             requiredDisplay = '(MP3 + WAV)';
             if (!hasMP3 || !hasWAV) missingFiles.push('Archivos');
         }
-        if (id === 'unlimited' || id === 'exclusive') {
+        if (id === 'offszn_unlimited' || id === 'offszn_exclusive') {
             requiredDisplay = '(STEMS)';
             if (!hasMP3 || !hasWAV || !hasStems) missingFiles.push('STEMS');
         }
@@ -162,9 +163,9 @@ window.renderLicenses = () => {
             : `Archivo: Faltante ${requiredDisplay}`;
 
         if (!isComplete) {
-            if (id === 'premium') statusText = 'Falta: Wav';
-            else if (id === 'unlimited' || id === 'exclusive') statusText = 'Falta: Stems';
-            else if (id === 'basic') statusText = 'Falta: Mp3';
+            if (id === 'offszn_premium') statusText = 'Falta: Wav';
+            else if (id === 'offszn_unlimited' || id === 'offszn_exclusive') statusText = 'Falta: Stems';
+            else if (id === 'offszn_basic') statusText = 'Falta: Mp3';
         }
 
         card.innerHTML = `
@@ -593,6 +594,87 @@ function updateVolumeSliderBackground(slider, val) {
     // val is 0-100. We want a white fill from bottom to val, and grey from val up.
     // CSS gradient 'to top' means 0% is bottom, 100% is top.
     slider.style.background = `linear-gradient(to top, #ffffff ${val}%, #333336 ${val}%)`;
+}
+
+// --- Validation Helpers ---
+
+function clearInlineErrors() {
+    document.querySelectorAll('.error-message').forEach(el => el.remove());
+    document.querySelectorAll('.input-field.error, .upload-zone.error').forEach(el => el.classList.remove('error'));
+}
+
+function showInlineError(elementId, message) {
+    const el = document.getElementById(elementId);
+    if (!el) return;
+    el.classList.add('error');
+    
+    let container = el.closest('.form-group') || el.parentElement;
+    let errorDiv = container.querySelector('.error-message');
+    if (!errorDiv) {
+        errorDiv = document.createElement('div');
+        errorDiv.className = 'error-message';
+        errorDiv.style.color = '#ef4444';
+        errorDiv.style.fontSize = '12px';
+        errorDiv.style.marginTop = '4px';
+        errorDiv.style.display = 'flex';
+        errorDiv.style.alignItems = 'center';
+        errorDiv.style.gap = '4px';
+        container.appendChild(errorDiv);
+    }
+    errorDiv.innerHTML = `<i class="bi bi-info-circle"></i> ${message}`;
+}
+
+function validateReleaseDate() {
+    const input = document.getElementById('dateInput');
+    if (!input || !input.value) return false;
+    return true; // Per user request: bypass past date check
+}
+
+function validateStep(step) {
+    clearInlineErrors();
+    let isValid = true;
+
+    if (step === 1) {
+        if (!uploaderState.mp3_tagged) {
+            showInlineError('mp3TaggedDropZone', 'Debes subir el MP3 Tagged (Preview)');
+            isValid = false;
+        }
+        if (!uploaderState.cover) {
+            showInlineError('coverDropZone', 'Debes subir una portada (1080x1080px)');
+            isValid = false;
+        }
+        if (!document.getElementById('titleInput').value.trim()) {
+            showInlineError('titleInput', 'El título es obligatorio');
+            isValid = false;
+        }
+        if (!validateReleaseDate()) {
+            showInlineError('dateInput', 'La fecha de lanzamiento es obligatoria');
+            isValid = false;
+        }
+    }
+
+    if (step === 2) {
+        const enabledLics = Object.values(licensesState).filter(l => l.enabled);
+        if (enabledLics.length === 0) {
+            showToast('Debes habilitar al menos una licencia', 'error');
+            isValid = false;
+        }
+        if (uploaderState.tags.length === 0) {
+            showInlineError('tagInput', 'Debes agregar al menos 1 tag');
+            isValid = false;
+        }
+        const bpmVal = parseInt(document.getElementById('bpmInput')?.value);
+        if (!bpmVal || bpmVal < 1) {
+            showInlineError('bpmInput', 'Debes especificar el BPM');
+            isValid = false;
+        }
+    }
+
+    if (!isValid) {
+        const firstErr = document.querySelector('.error-message');
+        if (firstErr) firstErr.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+    return isValid;
 }
 
 function updateVolumeIcon(v) {
@@ -1155,6 +1237,69 @@ window.quickAutoFillTags = async function() {
 // 4. Cleanup: Delete beat_drafts after success.
 // 5. Integration: YouTube Upload + License Settings persistence.
 
+// --- R2 Storage Logic ---
+async function uploadToR2(file, folder = 'uploads', onProgress = null) {
+    try {
+        const { data: { session } } = await window.supabaseClient.auth.getSession();
+        const token = session?.access_token;
+        if (!token) throw new Error('No hay sesión activa para subir a R2');
+
+        // 1. Get Signed URL from Backend (Forcing v2/Account 2)
+        const response = await fetch('/api/r2/upload-url', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                fileName: file.name,
+                fileType: file.type || 'application/octet-stream',
+                folder: folder,
+                fileSize: file.size,
+                version: 'v2' // 🔥 ALWAYS use Account 2
+            })
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Error al obtener URL de R2');
+        }
+
+        const { uploadUrl, key, publicUrl } = await response.json();
+
+        // 2. Direct Upload using XMLHttpRequest for progress tracking
+        return new Promise((resolve, reject) => {
+            const xhr = new XMLHttpRequest();
+            xhr.open('PUT', uploadUrl);
+            xhr.setRequestHeader('Content-Type', file.type || 'application/octet-stream');
+
+            if (onProgress && xhr.upload) {
+                xhr.upload.onprogress = (e) => {
+                    if (e.lengthComputable) {
+                        const percentComplete = (e.loaded / e.total) * 100;
+                        onProgress(percentComplete);
+                    }
+                };
+            }
+
+            xhr.onload = () => {
+                if (xhr.status >= 200 && xhr.status < 300) {
+                    console.log(`✅ [R2] Archivo subido con éxito: ${key}`);
+                    resolve({ key, publicUrl });
+                } else {
+                    reject(new Error(`La subida directa a R2 falló con status ${xhr.status}`));
+                }
+            };
+
+            xhr.onerror = () => reject(new Error('Error de red al subir a R2'));
+            xhr.send(file);
+        });
+    } catch (error) {
+        console.error('❌ Error en uploadToR2:', error);
+        throw error;
+    }
+}
+
 window.handlePublish = async function() {
     console.log('🚀 [PUBLISH] Initiating new handlePublish override...');
 
@@ -1176,13 +1321,23 @@ window.handlePublish = async function() {
         return;
     }
 
+    const overlay = document.getElementById('publishOverlay');
+    const overlayTitle = document.getElementById('publishOverlayTitle');
+    const overlayText = document.getElementById('publishOverlayText');
+    const progressBar = document.getElementById('publishProgressBar');
+
     try {
+        // Reset progress bar
+        if (progressBar) progressBar.style.width = '0%';
+
         // 3. YouTube Pre-Interception (Reuse legacy uploader if active)
         if (window.isYouTubeUpload && window.YouTubeUploader) {
             if (btn) {
                 btn.disabled = true;
                 btn.innerHTML = 'Subiendo a YouTube...';
             }
+            if (overlayText) overlayText.innerText = 'Subiendo a YouTube...';
+            
             const beatTitle = document.getElementById('titleInput').value || 'Sin Título';
             const beatKey = document.querySelector('#keyInput')?.value || 'N/A';
             const beatBpm = document.getElementById('bpmInput')?.value || 'N/A';
@@ -1228,10 +1383,9 @@ window.handlePublish = async function() {
         }
 
         // Show Overlay
-        const overlay = document.getElementById('publishOverlay');
         if (overlay) {
-            const title = document.getElementById('publishOverlayTitle');
-            if (title) title.innerText = 'PUBLICANDO ARCHIVO...';
+            if (overlayTitle) overlayTitle.innerText = 'SUBIENDO PRODUCTO...';
+            if (overlayText) overlayText.innerText = 'por favor no cierres esta pestaña';
             overlay.style.display = 'flex';
         }
 
@@ -1241,38 +1395,50 @@ window.handlePublish = async function() {
         let mp3_url = window.originalProductData?.mp3_url || null;
         let wav_url = window.originalProductData?.wav_url || null;
         let stems_url = window.originalProductData?.stems_url || null;
-        let r2_version = window.originalProductData?.r2_version || 'v2';
 
-        // Helper to sanitize
-        const sanitize = (name) => name.replace(/[^\w\s.-]/g, '').replace(/\s+/g, '_').substring(0, 100);
+        // Progress Tracking State
+        const filesToUpload = [];
+        if (uploaderState.cover) filesToUpload.push({ file: uploaderState.cover, folder: 'products/covers', type: 'cover' });
+        if (uploaderState.mp3_tagged) filesToUpload.push({ file: uploaderState.mp3_tagged, folder: 'beats/mp3', type: 'mp3' });
+        if (uploaderState.wav_untagged) filesToUpload.push({ file: uploaderState.wav_untagged, folder: 'secure-products/beats/wav', type: 'wav' });
+        if (uploaderState.stems) filesToUpload.push({ file: uploaderState.stems, folder: 'secure-products/beats/stems', type: 'stems' });
 
-        // Cover
-        if (formData.coverBlob) {
-            console.log('📂 [PUBLISH] Uploading Cover...');
-            const coverFile = new File([formData.coverBlob], 'cover.jpg', { type: 'image/jpeg' });
-            const res = await uploadToR2(coverFile, 'products/covers');
-            image_url = res.publicUrl;
+        const totalFiles = filesToUpload.length;
+        let filesProcessed = 0;
+
+        for (const item of filesToUpload) {
+            const currentFileIndex = filesProcessed;
+            const progressHandler = (p) => {
+                const individualContribution = 100 / totalFiles;
+                const baseProgress = currentFileIndex * individualContribution;
+                const currentFileProgress = (p / 100) * individualContribution;
+                const totalProgress = baseProgress + currentFileProgress;
+                if (progressBar) progressBar.style.width = `${totalProgress}%`;
+                
+                let fileDesc = 'Archivo';
+                if (item.type === 'cover') fileDesc = 'Portada';
+                if (item.type === 'mp3') fileDesc = 'Audio MP3';
+                if (item.type === 'wav') fileDesc = 'Audio WAV';
+                if (item.type === 'stems') fileDesc = 'Stems ZIP';
+                
+                if (overlayText) overlayText.innerText = `Subiendo ${fileDesc}: ${Math.round(p)}%`;
+            };
+
+            const res = await uploadToR2(item.file, item.folder, progressHandler);
+            
+            if (item.type === 'cover') image_url = res.publicUrl;
+            if (item.type === 'mp3') {
+                audio_url = `https://offszn-storage.41d0f49121d02c88f71fdb4da54a791d.r2.cloudflarestorage.com/${res.key}`;
+                mp3_url = audio_url;
+            }
+            if (item.type === 'wav') wav_url = res.key;
+            if (item.type === 'stems') stems_url = res.key;
+
+            filesProcessed++;
         }
 
-        // MP3 (Tagged)
-        if (formData.files.mp3_tagged) {
-            console.log('📂 [PUBLISH] Uploading MP3...');
-            const key = await uploadToR2(formData.files.mp3_tagged, 'beats/mp3');
-            audio_url = `https://offszn-storage.41d0f49121d02c88f71fdb4da54a791d.r2.cloudflarestorage.com/${key}`;
-            mp3_url = audio_url;
-        }
-
-        // WAV (Untagged)
-        if (formData.files.wav_untagged) {
-            console.log('📂 [PUBLISH] Uploading WAV...');
-            wav_url = await uploadToR2(formData.files.wav_untagged, 'secure-products/beats/wav');
-        }
-
-        // Stems (Logic: File vs Link)
-        if (formData.files.stems) {
-            console.log('📂 [PUBLISH] Uploading Stems ZIP...');
-            stems_url = await uploadToR2(formData.files.stems, 'secure-products/beats/stems');
-        }
+        if (progressBar) progressBar.style.width = '100%';
+        if (overlayText) overlayText.innerText = '¡Archivos subidos! Guardando datos...';
 
         // 6. Build Final Data Object
         const finalData = {
@@ -1293,9 +1459,9 @@ window.handlePublish = async function() {
             r2_version: 'v2',
             price_basic: licensesState.offszn_basic.enabled ? licensesState.offszn_basic.price : null,
             price_premium: licensesState.offszn_premium.enabled ? licensesState.offszn_premium.price : null,
-            price_stems: licensesState.offszn_stems.enabled ? licensesState.offszn_stems.price : null,
+            price_stems: licensesState.offszn_unlimited.enabled ? licensesState.offszn_unlimited.price : null,
             price_exclusive: licensesState.offszn_exclusive.enabled ? licensesState.offszn_exclusive.price : null,
-            is_free: licensesState.offszn_free_download.enabled,
+            is_free: uploaderState.free_download || false,
             licenses: licensesState, // Save the full state for future reference
             collaborators: uploaderState.collaborators.map(c => ({
                 id: c.id,
