@@ -209,48 +209,29 @@ window.AuthUtils = {
             return pathOrUrl;
         }
 
-        return isR2Url;
-    },
-
-    /**
-     * Identification if a URL belongs to Cloudflare R2 structure.
-     */
-    isR2Url: function (pathOrUrl) {
-        if (!pathOrUrl) return false;
-        return (
-            pathOrUrl.includes('r2.cloudflarestorage.com') ||
-            pathOrUrl.includes('pub-') ||
-            pathOrUrl.startsWith('@') ||
-            (!pathOrUrl.startsWith('http') &&
-                !pathOrUrl.startsWith('data:') &&
-                !pathOrUrl.startsWith('/images') &&
-                !pathOrUrl.startsWith('/assets') &&
-                !pathOrUrl.startsWith('/icon') &&
-                !pathOrUrl.startsWith('/script') &&
-                (pathOrUrl.includes('/') || /\.(jpg|jpeg|png|webp|gif|svg|mp3|wav|zip)$/i.test(pathOrUrl) || pathOrUrl.startsWith('@'))
-            )
-        );
-    },
+        // --- HYBRID LOGIC ---
+        // 1. Identification: Is it R2 or a public Supabase URL?
+        const isR2 = this.isR2Url(pathOrUrl);
 
         // 2. Normalization: Clean accidental double slashes for R2 keys/paths
         // We skip this for full HTTP URLs to avoid 400 errors from sensitive servers (like Supabase storage)
         let processedPath = pathOrUrl;
-        if (!pathOrUrl.startsWith('http')) {
+        if (typeof pathOrUrl === 'string' && !pathOrUrl.startsWith('http')) {
             // Clean @ prefix only for v1 logic or as a general rule before signing
             processedPath = pathOrUrl.startsWith('@') ? pathOrUrl.substring(1) : pathOrUrl;
             processedPath = processedPath.replace(/\/\/+/g, "/");
         }
 
-        if (!isR2Url && processedPath.startsWith('http')) {
+        if (!isR2 && typeof processedPath === 'string' && processedPath.startsWith('http')) {
             return processedPath; // Supabase public URL or already signed
         }
 
         // --- SECOND LAYER DEFENSE ---
-        if (!isR2Url) return processedPath;
+        if (!isR2) return processedPath;
 
         // --- R2 LOGIC ---
         let key = processedPath;
-        if (processedPath.startsWith('http')) {
+        if (typeof processedPath === 'string' && processedPath.startsWith('http')) {
             // Extract key from full R2 URL
             const r2Base = '.r2.cloudflarestorage.com/';
             if (processedPath.includes(r2Base)) {
@@ -260,18 +241,22 @@ window.AuthUtils = {
 
         // 🔥 AUTO-DETECT VERSION FROM URL
         // Prioritize offsznlatbucket (v2) for the new account
-        if (pathOrUrl.includes('offsznlatbucket') || pathOrUrl.includes('42fc23b11a6c329b76b2babc20afcbf7')) {
-            version = 'v2';
-        } else if (pathOrUrl.includes('offszn-storage') || pathOrUrl.includes('41d0f49121d02c88f71fdb4da54a791d')) {
-            // Old account stays in its original version for reading
-            version = 'v1'; 
-        } else if (pathOrUrl.includes('pub-')) {
-            version = 'v1';
+        if (typeof pathOrUrl === 'string') {
+            if (pathOrUrl.includes('offsznlatbucket') || pathOrUrl.includes('42fc23b11a6c329b76b2babc20afcbf7')) {
+                version = 'v2';
+            } else if (pathOrUrl.includes('offszn-storage') || pathOrUrl.includes('41d0f49121d02c88f71fdb4da54a791d')) {
+                // Old account stays in its original version for reading
+                version = 'v1'; 
+            } else if (pathOrUrl.includes('pub-')) {
+                version = 'v1';
+            }
         }
 
         // 🔥 KEY CLEANUP: R2 keys must NOT start with / and must NOT have query params
-        if (key.includes('?')) key = key.split('?')[0];
-        while (key.startsWith('/')) key = key.substring(1);
+        if (typeof key === 'string') {
+            if (key.includes('?')) key = key.split('?')[0];
+            while (key.startsWith('/')) key = key.substring(1);
+        }
 
         if (!key) return pathOrUrl;
 
@@ -305,6 +290,26 @@ window.AuthUtils = {
             console.error('AuthUtils: Error getting authorized URL:', error);
             return pathOrUrl; // Fallback to original
         }
+    },
+
+    /**
+     * Identification if a URL belongs to Cloudflare R2 structure.
+     */
+    isR2Url: function (pathOrUrl) {
+        if (!pathOrUrl || typeof pathOrUrl !== 'string') return false;
+        return (
+            pathOrUrl.includes('r2.cloudflarestorage.com') ||
+            pathOrUrl.includes('pub-') ||
+            pathOrUrl.startsWith('@') ||
+            (!pathOrUrl.startsWith('http') &&
+                !pathOrUrl.startsWith('data:') &&
+                !pathOrUrl.startsWith('/images') &&
+                !pathOrUrl.startsWith('/assets') &&
+                !pathOrUrl.startsWith('/icon') &&
+                !pathOrUrl.startsWith('/script') &&
+                (pathOrUrl.includes('/') || /\.(jpg|jpeg|png|webp|gif|svg|mp3|wav|zip)$/i.test(pathOrUrl) || pathOrUrl.startsWith('@'))
+            )
+        );
     },
 
     /**
