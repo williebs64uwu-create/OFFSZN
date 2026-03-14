@@ -1726,76 +1726,6 @@
 
         // ... (updateStat helper) ...
 
-        // 6. ACTIVITY FEED (Robust)
-        async function loadActivityFeed(userId) {
-            const container = document.getElementById('activityContainer');
-            if (!container) return;
-
-            // Allow filter button to show
-            setTimeout(() => {
-                document.getElementById('filterBtn')?.classList.remove('skeleton');
-                document.getElementById('msgIcon')?.classList.remove('skeleton');
-                document.getElementById('msgLabel')?.classList.remove('skeleton');
-            }, 500);
-
-            try {
-                // Fetch recent products
-                const { data: products } = await supabaseClient.from('products').select('*').eq('producer_id', userId).order('created_at', { ascending: false }).limit(3);
-                // Fetch recent orders
-                const { data: orders } = await supabaseClient.from('orders').select('*').eq('producer_id', userId).order('created_at', { ascending: false }).limit(3);
-                // Fetch conversations
-                const { data: conversations } = await supabaseClient.from('conversations').select('*').or(`participant_1.eq.${userId},participant_2.eq.${userId}`).order('updated_at', { ascending: false }).limit(3);
-
-                // Fetch invitations (PENDING) with visibility check
-                const { data: invitations } = await supabaseClient
-                    .from('collab_invitations')
-                    .select('*, products:product_id(name, product_type, visibility, producer_id)') // Fetch Producer ID to get name if needed
-                    .eq('collaborator_id', userId)
-                    .eq('status', 'pending')
-                    .order('created_at', { ascending: false })
-                    .limit(5);
-
-                let activities = [];
-
-                if (products) products.forEach(p => activities.push({
-                    type: 'product', category: p.product_type, date: new Date(p.created_at), title: p.name || 'Nuevo Producto', desc: 'Lanzamiento', price: p.price_usd, img: p.image_url
-                }));
-                if (orders) orders.forEach(o => activities.push({
-                    type: 'sale', date: new Date(o.created_at), title: 'Nueva Venta', desc: 'Licencia vendida', price: o.amount, img: null
-                }));
-                if (conversations) conversations.forEach(c => {
-                    if (c.last_message) activities.push({
-                        type: 'message', date: new Date(c.updated_at), title: 'Chat Activo', desc: c.last_message, price: null, img: null
-                    });
-                });
-
-                if (invitations) {
-                    // Filter Private/Draft
-                    const visibleInvites = invitations.filter(i => i.products && (i.products.visibility === 'public' || i.products.visibility === 'unlisted'));
-
-                    visibleInvites.forEach(i => {
-                        activities.push({
-                            type: 'collab',
-                            date: new Date(i.created_at),
-                            title: 'Invitación Recibida',
-                            desc: `Te han invitado a colaborar en "${i.products.name}"`,
-                            price: null,
-                            img: null, // Could use product image if I fetched it
-                            badge: 'COLLAB'
-                        });
-                    });
-                }
-
-                // Sort
-                globalActivities = [...activities].sort((a, b) => b.date - a.date).slice(0, 10);
-                renderActivities(globalActivities);
-
-            } catch (e) {
-                // console.error("Activity Feed Error", e);
-                // Even on error, show "No activity" or clear skeletons
-                container.innerHTML = `<div class="empty-main-state"><p>Sin actividad reciente</p></div>`;
-            }
-        }
 
         function updateStat(id, value) {
             const el = document.getElementById(id);
@@ -1945,14 +1875,16 @@
             }, 500);
 
             try {
-                // Fetch All Data needed
-                const [resProducts, resOrders, resReceived, resAccepted] = await Promise.all([
-                    supabaseClient.from('products').select('*').eq('producer_id', userId).eq('status', 'approved').order('created_at', { ascending: false }).limit(4),
-                    supabaseClient.from('orders').select('*').eq('producer_id', userId).order('created_at', { ascending: false }).limit(4),
-                    // Received Invites (I am collaborator)
-                    supabaseClient.from('collab_invitations').select('*').eq('collaborator_id', userId).eq('status', 'pending').order('created_at', { ascending: false }).limit(4),
-                    // Accepted Invites (I am inviter)
-                    supabaseClient.from('collab_invitations').select('*').eq('inviter_id', userId).eq('status', 'accepted').order('updated_at', { ascending: false }).limit(4)
+                // Fetch All Data needed (Refined with Product Join to exclude deleted/private)
+                const [resProducts, resOrders, resReceived, resAccepted, resConversations] = await Promise.all([
+                    supabaseClient.from('products').select('*').eq('producer_id', userId).eq('status', 'approved').order('created_at', { ascending: false }).limit(5),
+                    supabaseClient.from('orders').select('*').eq('producer_id', userId).order('created_at', { ascending: false }).limit(5),
+                    // Received Invites (I am collaborator) - Join products to ensure they exist and are public
+                    supabaseClient.from('collab_invitations').select('*, products:product_id(name, visibility, status)').eq('collaborator_id', userId).eq('status', 'pending').order('created_at', { ascending: false }).limit(5),
+                    // Accepted Invites (I am inviter) - Join products to ensure they exist and are public
+                    supabaseClient.from('collab_invitations').select('*, products:product_id(name, visibility, status)').eq('inviter_id', userId).eq('status', 'accepted').order('updated_at', { ascending: false }).limit(5),
+                    // Conversations
+                    supabaseClient.from('conversations').select('*').or(`participant_1.eq.${userId},participant_2.eq.${userId}`).order('updated_at', { ascending: false }).limit(5)
                 ]);
 
                 let activities = [];
@@ -1984,29 +1916,48 @@
                     link: '/cuenta/analiticas.html'
                 }));
 
-                // 3. Received Invites (Use inviter_id to show WHO sent it)
-                if (resReceived.data) resReceived.data.forEach(c => activities.push({
-                    type: 'collab',
-                    status: 'received',
-                    date: new Date(c.created_at),
-                    title: 'Invitación Recibida',
-                    desc: 'Alguien te invitó a colaborar',
-                    other_user_id: c.inviter_id,
-                    link: '/cuenta/colaboraciones.html?tab=received'
-                }));
+                // 3. Received Invites (Filter out deleted/private products)
+                if (resReceived.data) {
+                    resReceived.data
+                        .filter(c => c.products && c.products.status === 'approved' && (c.products.visibility === 'public' || c.products.visibility === 'unlisted'))
+                        .forEach(c => activities.push({
+                            type: 'collab',
+                            status: 'received',
+                            date: new Date(c.created_at),
+                            title: 'Invitación Recibida',
+                            desc: 'Alguien te invitó a colaborar',
+                            other_user_id: c.inviter_id,
+                            link: '/cuenta/colaboraciones.html?tab=received'
+                        }));
+                }
 
-                // 4. Accepted Invites (Use collaborator_id to show WHO accepted)
-                if (resAccepted.data) resAccepted.data.forEach(c => activities.push({
-                    type: 'collab',
-                    status: 'accepted',
-                    date: new Date(c.updated_at),
-                    title: 'Colaboración Aceptada',
-                    desc: 'Alguien aceptó tu invitación',
-                    other_user_id: c.collaborator_id,
-                    link: '/cuenta/colaboraciones.html?tab=active'
-                }));
+                // 4. Accepted Invites (Filter out deleted/private products)
+                if (resAccepted.data) {
+                    resAccepted.data
+                        .filter(c => c.products && c.products.status === 'approved' && (c.products.visibility === 'public' || c.products.visibility === 'unlisted'))
+                        .forEach(c => activities.push({
+                            type: 'collab',
+                            status: 'accepted',
+                            date: new Date(c.updated_at),
+                            title: 'Colaboración Aceptada',
+                            desc: 'Alguien aceptó tu invitación',
+                            other_user_id: c.collaborator_id,
+                            link: '/cuenta/colaboraciones.html?tab=active'
+                        }));
+                }
 
                 // 5. Conversations
+                if (resConversations.data) resConversations.data.forEach(c => {
+                    if (c.last_message) {
+                        activities.push({
+                            type: 'message',
+                            date: new Date(c.updated_at),
+                            title: 'Chat Activo',
+                            desc: c.last_message,
+                            link: '/cuenta/mensajes.html'
+                        });
+                    }
+                });
 
                 // --- FETCH & RESOLVE NAMES ---
                 const userIds = new Set();

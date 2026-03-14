@@ -209,13 +209,18 @@ window.AuthUtils = {
             return pathOrUrl;
         }
 
-        // --- HYBRID LOGIC ---
-        // 1. Identification: Is it R2 or a public Supabase URL?
-        const isR2Url = (
+        return isR2Url;
+    },
+
+    /**
+     * Identification if a URL belongs to Cloudflare R2 structure.
+     */
+    isR2Url: function (pathOrUrl) {
+        if (!pathOrUrl) return false;
+        return (
             pathOrUrl.includes('r2.cloudflarestorage.com') ||
             pathOrUrl.includes('pub-') ||
-            pathOrUrl.startsWith('@') || // NEW: Support @ prefix
-            // Relative path check: Detect by extension or folder structure
+            pathOrUrl.startsWith('@') ||
             (!pathOrUrl.startsWith('http') &&
                 !pathOrUrl.startsWith('data:') &&
                 !pathOrUrl.startsWith('/images') &&
@@ -225,6 +230,7 @@ window.AuthUtils = {
                 (pathOrUrl.includes('/') || /\.(jpg|jpeg|png|webp|gif|svg|mp3|wav|zip)$/i.test(pathOrUrl) || pathOrUrl.startsWith('@'))
             )
         );
+    },
 
         // 2. Normalization: Clean accidental double slashes for R2 keys/paths
         // We skip this for full HTTP URLs to avoid 400 errors from sensitive servers (like Supabase storage)
