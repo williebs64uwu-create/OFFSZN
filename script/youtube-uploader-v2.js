@@ -252,7 +252,13 @@ const YouTubeUploader = (function () {
             }
 
             console.log('📹 [YT-V2] Requesting auth via proxy...');
+
+            const authTimeout = setTimeout(() => {
+                reject(new Error('La autenticación de Google tardó demasiado o la ventana fue cerrada. Reintenta.'));
+            }, 60000); // 1 minute safety timeout
+
             window._googleRequestAuth((resp) => {
+                clearTimeout(authTimeout);
                 if (resp.error) {
                     console.error('🛑 [YT-V2] Auth Error:', resp);
                     return reject(new Error(resp.error_description || resp.error || 'Autenticación fallida'));
@@ -365,7 +371,8 @@ const YouTubeUploader = (function () {
         init: (config) => { console.log('📹 YouTubeUploader V2 Inited'); },
         renderPreviewUI,
         handleUpload,
-        requestAuth
+        requestAuth,
+        setRenderedVideo: (blob) => { renderedVideoBlob = blob; }
     };
 })();
 

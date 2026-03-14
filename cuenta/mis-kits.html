@@ -1113,11 +1113,11 @@
                         </div>
                     </div>
                 </div>
-                <a href="Upload/Beats.html" id="btnCreateNew"
-                    style="background:#fff; color:#000; padding:10px 20px; border-radius:8px; text-decoration:none; font-family:'Inter'; font-weight:600; font-size:14px; display:flex; align-items:center; gap:8px;">
+                <button id="btnCreateNew" onclick="handleCreateNewClick(event)"
+                    style="background:#fff; color:#000; padding:10px 20px; border:none; border-radius:8px; text-decoration:none; font-family:'Inter'; font-weight:600; font-size:14px; display:flex; align-items:center; gap:8px; cursor:pointer;">
                     <i class="bi bi-plus-lg"></i> <span id="btnCreateText"
                         style="opacity:0; transition:opacity 0.2s;">Crear Beat</span>
-                </a>
+                </button>
 
                 <!-- Anti-Flash Script -->
                 <script>
@@ -1139,7 +1139,10 @@
                             btnText.textContent = active.text;
                             btnText.style.opacity = '1';
                         }
-                        if (btnLink) btnLink.href = active.link;
+                        if (btnLink) {
+                            // Link is now handled via click listener
+                            btnLink.setAttribute('data-href', active.link);
+                        }
 
                         // Also preload tab active state visually if possible
                         // (Optional, but helps with flickering tabs too)
@@ -1914,9 +1917,16 @@
                 let path = pathOrUrl;
                 if (pathOrUrl.startsWith('http')) {
                     const parts = pathOrUrl.split(`/${bucket}/`);
-                    if (parts.length > 1) path = parts[1];
-                    else return;
+                    if (parts.length > 1) {
+                        path = parts[1].split('?')[0]; // Remove query params
+                    } else {
+                        return;
+                    }
                 }
+                
+                // Decode URI component in case of spaces/special chars
+                path = decodeURIComponent(path);
+                
                 console.log(`🗑️ Deleting from Supabase ${bucket}:`, path);
                 await supabaseClient.storage.from(bucket).remove([path]);
             } catch (e) { console.warn(`⚠️ Cleanup failed for ${pathOrUrl} in ${bucket}:`, e); }
@@ -2568,8 +2578,13 @@
             // Create Badge
             const badge = document.createElement('div');
             badge.className = 'limit-badge';
-            const maxLabel = max === Infinity ? '8' : max;
-            badge.innerHTML = `<i class="bi bi-cloud-upload"></i> ${current}/${maxLabel}`;
+            
+            if (max === Infinity) {
+                badge.innerHTML = `<i class="bi bi-cloud-upload"></i> Ilimitado`;
+            } else {
+                badge.innerHTML = `<i class="bi bi-cloud-upload"></i> ${current}/${max}`;
+            }
+            
             badge.style.cssText = `
                 position: absolute;
                 bottom: -24px;
@@ -2886,7 +2901,7 @@
         function renderEmptyState(container, type) {
             let label = "Beats";
             // FIXED: Link to correct capitalized file
-            let uploadLink = "Upload/Beats.html";
+            let uploadLink = "/upload/beats.html";
             let btnText = "Subir primer Beat";
 
             if (type === 'drumkits') {
@@ -2942,7 +2957,7 @@
 
                 let editUrl = '#';
                 // ?? FIXED PATHS
-                if (type === 'beats') editUrl = `/cuenta/Upload/Beats.html?${isDraft ? 'draft' : 'edit'}=${p.id}`;
+                if (type === 'beats') editUrl = `/upload/beats.html?${isDraft ? 'draft' : 'edit'}=${p.id}`;
                 if (type === 'drumkits') editUrl = `/cuenta/Upload/Drum-Kits.html?${isDraft ? 'draft' : 'edit'}=${p.id}`;
                 if (type === 'presets') editUrl = `/cuenta/Upload/Presets.html?${isDraft ? 'draft' : 'edit'}=${p.id}`;
                 if (type === 'loopkits') editUrl = `/cuenta/Upload/Loop-Kits.html?${isDraft ? 'draft' : 'edit'}=${p.id}`;
@@ -3230,33 +3245,46 @@
                 setTimeout(() => toast.remove(), 300);
             }, 3000);
         }
-        // HELPER: Delete file from SUPABASE Storage
-        async function deleteFileFromStorage(pathOrUrl, bucket) {
-            if (!pathOrUrl) return;
-            try {
-                // Ignore R2 URLs here, they are handled separately in confirmBulkDelete
-                if (pathOrUrl.includes('r2.cloudflarestorage.com') || pathOrUrl.includes('pub-')) return;
 
-                let path = pathOrUrl;
-                if (pathOrUrl.startsWith('http')) {
-                    // Try to extract path from URL
-                    const parts = pathOrUrl.split(`/${bucket}/`);
-                    if (parts.length > 1) {
-                        path = parts[1].split('?')[0]; // Remove query params if any
-                    } else {
-                        try {
-                            const urlObj = new URL(pathOrUrl);
-                            const pathParts = urlObj.pathname.split(`/${bucket}/`);
-                            if (pathParts.length > 1) path = pathParts[1];
-                        } catch (e) { }
+        /* ===== UPLOAD STRATEGY MODAL ===== */
+        function handleCreateNewClick(e) {
+            if (e) e.preventDefault();
+            const params = new URLSearchParams(window.location.search);
+            const tab = params.get('tab') || localStorage.getItem('activeKitTab') || 'beats';
+            
+            if (tab === 'beats') {
+                openUploadStrategyModal();
+            } else {
+                const btn = document.getElementById('btnCreateNew');
+                const href = btn?.getAttribute('data-href');
+                if (href) window.location.href = href;
+            }
+        }
+
+        function openUploadStrategyModal() {
+            const modal = document.getElementById('modalUploadStrategy');
+            if (modal) modal.classList.add('active');
+        }
+
+        // Dynamically Check User Plan and Update Modal Button
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Give auth/supabase a bit of time
+            setTimeout(async () => {
+                if (window.AuthUtils && window.AuthUtils.checkFeatureAccess) {
+                    const hasAccess = await window.AuthUtils.checkFeatureAccess('youtube_upload');
+                    const ytBtn = document.getElementById('btnYoutubeUploadStrategy');
+                    if (ytBtn && !hasAccess) {
+                        ytBtn.innerHTML = '<i class="bi bi-star-fill" style="margin-right: 8px;"></i>Mejorar Plan';
+                        ytBtn.style.background = '#FFD700'; // Gold style
+                        ytBtn.style.color = '#000';
+                        ytBtn.onclick = (e) => {
+                            e.stopPropagation();
+                            window.location.href = '/cuenta/planes.html';
+                        };
                     }
                 }
-                // Decode URI component in case of spaces/special chars
-                path = decodeURIComponent(path);
-
-                await supabaseClient.storage.from(bucket).remove([path]);
-            } catch (e) { console.warn('Supabase delete failed for ' + pathOrUrl, e); }
-        }
+            }, 1000);
+        });
     </script>
 
     <!-- ===== MODALS ===== -->
@@ -3393,6 +3421,70 @@
             </button>
         </div>
     </div>
+
+    <!-- Modal Estrategia de Carga -->
+    <div class="modal-overlay" id="modalUploadStrategy" onclick="if(event.target === this) closeModals()">
+        <div class="elite-modal" style="max-width: 900px; padding: 0; overflow: hidden; position: relative;">
+
+            <button class="btn-modal-close" onclick="closeModals()"
+                style="position: absolute; right: 20px; top: 20px; z-index: 10; background: rgba(0,0,0,0.5); border: 1px solid #333; border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 20px; cursor: pointer; transition: 0.2s;"
+                onmouseover="this.style.background='rgba(0,0,0,0.8)'; this.style.borderColor='#fff'"
+                onmouseout="this.style.background='rgba(0,0,0,0.5)'; this.style.borderColor='#333'"><i
+                    class="bi bi-x"></i></button>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr;">
+                <!-- OPTION 1: OFFSZN ONLY -->
+                <div
+                    style="padding: 40px; border-right: 1px solid #222; display: flex; flex-direction: column; align-items: center; gap: 30px;">
+                    <h4
+                        style="color: #fff; font-size: 22px; font-weight: 800; margin: 0; text-align: center; letter-spacing: -0.5px;">
+                        Subir a OFFSZN</h4>
+
+                    <div
+                        style="width: 100%; aspect-ratio: 1/1; border: 1px solid #333; background: #0a0a0a; border-radius: 8px; display: flex; align-items: center; justify-content: center; overflow: hidden; padding: 20px;">
+                        <img src="../images/LOGO-OFFSZN.png" alt="OFFSZN"
+                            style="width: 80%; height: 80%; object-fit: contain; filter: drop-shadow(0 0 20px rgba(139, 92, 246, 0.2)); margin: auto;">
+                    </div>
+
+                    <button
+                        style="width: 100%; padding: 16px; border-radius: 50px; background: #fff; color: #000; border: none; font-size: 16px; font-weight: 700; cursor: pointer; transition: all 0.2s; margin-top: 10px;"
+                        onclick="window.location.href='/upload/beats.html'"
+                        onmouseover="this.style.transform='scale(1.02)'; this.style.boxShadow='0 0 20px rgba(255,255,255,0.2)'"
+                        onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='none'">Comenzar</button>
+                </div>
+
+                <!-- OPTION 2: YOUTUBE + OFFSZN -->
+                <div style="padding: 40px; display: flex; flex-direction: column; align-items: center; gap: 30px;">
+                    <h4
+                        style="color: #fff; font-size: 22px; font-weight: 800; margin: 0; text-align: center; letter-spacing: -0.5px;">
+                        Subir a YouTube y OFFSZN</h4>
+
+                    <div
+                        style="width: 100%; aspect-ratio: 1/1; border: 1px solid #333; background: #0a0a0a; border-radius: 8px; display: flex; align-items: center; justify-content: center; overflow: hidden; padding: 20px;">
+                        <img src="../images/offsznyoutube.png" alt="YouTube + OFFSZN"
+                            style="width: 115%; height: 115%; object-fit: contain; margin: auto;">
+                    </div>
+
+                    <button id="btnYoutubeUploadStrategy"
+                        style="width: 100%; padding: 16px; border-radius: 50px; background: #fff; color: #000; border: none; font-size: 16px; font-weight: 700; cursor: pointer; transition: all 0.2s; margin-top: 10px;"
+                        onclick="window.location.href='/upload/beats-yt.html'"
+                        onmouseover="this.style.transform='scale(1.02)'; this.style.boxShadow='0 0 20px rgba(255,255,255,0.2)'"
+                        onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='none'">Comenzar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .strategy-option:hover {
+            border-color: var(--accent-purple) !important;
+            background: rgba(255,255,255,0.05) !important;
+        }
+        .strategy-option.yt:hover {
+            border-color: #ff0000 !important;
+            background: rgba(255,0,0,0.03) !important;
+        }
+    </style>
 </body>
 
 </html>

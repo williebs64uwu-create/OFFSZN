@@ -240,12 +240,21 @@ async function performSearch() {
             const similarity = getSimilarity(nick, query);
             const isMatch = nick.includes(query) || normNick.includes(normalizeString(query)) || similarity > 0.7;
 
-            if (query !== '') {
+            // Only assign exactProducer if we haven't found a better one yet
+            if (query !== '' && !exactProducer) {
                 const exactSimilarity = getSimilarity(p.nickname, query);
-                if (normNick === normalizeString(query) || exactSimilarity > 0.85) exactProducer = p;
+                if (normNick === normalizeString(query) || exactSimilarity > 0.85) {
+                    exactProducer = p;
+                }
             }
             return isMatch;
         });
+
+        // Ensure the exact producer is NOT included in the matched producers list
+        // so it doesn't render twice (once as exact card, once as standard row).
+        if (exactProducer) {
+            matchedProducers = matchedProducers.filter(p => p.id !== exactProducer.id);
+        }
     }
 
     // 2. FILTER PRODUCTS
@@ -263,6 +272,14 @@ async function performSearch() {
     })
         .filter(p => p._matchScore > 0 && p._matchesCat)
         .sort((a, b) => b._matchScore - a._matchScore); // Sort by relevance descending
+
+    // De-duplicate (Just in case the DB query returned duplicates or overlap)
+    const seenIds = new Set();
+    matchedProducts = matchedProducts.filter(p => {
+        if (seenIds.has(p.id)) return false;
+        seenIds.add(p.id);
+        return true;
+    });
 
     // 3. UI RENDERING
     // Clean up temporary score/cat properties before rendering if desired, though not strictly necessary

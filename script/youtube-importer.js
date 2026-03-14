@@ -51,17 +51,57 @@
     // Proxy function for Auth requests (used by youtube-uploader-v2.js as well)
     window._googleRequestAuth = function (callback) {
         if (!tokenClient) {
-
+            console.error("❌ [GIS] tokenClient no disponible para auth");
+            if (callback) callback({ error: 'token_client_not_ready' });
             return;
         }
+
+        // Variable to control if we have received a response
+        let hasResponded = false;
+
         tokenClient.callback = async (resp) => {
-            if (resp.error !== undefined) {
-                console.error("📹 Importer: Auth Error", resp);
-                throw (resp);
-            }
-            if (callback) callback(resp.access_token);
+            hasResponded = true;
+            if (callback) callback(resp);
         };
-        tokenClient.requestAccessToken({ prompt: 'consent' });
+
+        try {
+            // Initiate the auth prompt
+            tokenClient.requestAccessToken({ prompt: 'consent' });
+
+            // Detection logic for when the user closes the popup
+            // Google Identity Services doesn't natively expose the popup window object
+            // to check window.closed, so we rely on document focus heuristically.
+            let focusCount = 0;
+            const checkPopupClosed = setInterval(() => {
+                if (hasResponded) {
+                    clearInterval(checkPopupClosed);
+                    return;
+                }
+                
+                // If the main document has focus, the popup MIGHT be closed.
+                // But it could just be the user clicking on the background momentarily
+                // while the popup is still open. 
+                if (document.hasFocus()) {
+                    focusCount++;
+                    // Require the document to hold focus for ~3 consecutive seconds 
+                    // before we assume the user definitely closed the auth popup 
+                    // without completing it.
+                    if (focusCount >= 3) {
+                        console.log("⚠️ [GIS] Auth popup cerrado detectado tras varios chequeos");
+                        hasResponded = true;
+                        clearInterval(checkPopupClosed);
+                        if (callback) callback({ error: 'popup_closed_by_user', error_description: 'La ventana de autenticación fue cerrada.' });
+                    }
+                } else {
+                    // Reset count if focus is lost (e.g., popup regains focus)
+                    focusCount = 0;
+                }
+            }, 1000); // Check every second
+            
+        } catch (e) {
+            console.error("❌ [GIS] Error starting auth:", e);
+            if (callback) callback({ error: e.message });
+        }
     };
 
     function maybeEnableButtons() {
@@ -99,9 +139,11 @@
             openImporterModal();
             listUserVideos();
         } else {
-            window._googleRequestAuth((accessToken) => {
-                openImporterModal();
-                listUserVideos();
+            window._googleRequestAuth((resp) => {
+                if (resp.access_token) {
+                    openImporterModal();
+                    listUserVideos();
+                }
             });
         }
     }
@@ -168,7 +210,10 @@
             // Check auth again
             if (!gapi.client.getToken()) {
                 console.warn("📹 Importer: No token found, requesting auth...");
-                window._googleRequestAuth(() => listUserVideos());
+                window._googleRequestAuth((resp) => {
+                    if (resp.access_token) listUserVideos();
+                });
+
                 return;
             }
 
@@ -224,8 +269,17 @@
     // ========================================
 
     async function selectVideo(videoId, snippet) {
-        closeImporterModal();
+        if (!videoId) return;
 
+        // --- DEDUPLICATION LOGIC ---
+        // If the same video is imported twice, skip redundant processing
+        if (window.uploaderState && window.uploaderState.lastImportedYouTubeId === videoId) {
+            console.log('🔄 [YOUTUBE IMPORTER] Video ya importado, saltando procesamiento redundante.');
+            closeImporterModal();
+            return;
+        }
+
+        closeImporterModal();
 
         const { title, description, thumbnails } = snippet;
 
@@ -253,10 +307,10 @@
         }
 
         // 3. UI Inyection
-        populateForm(cleanTitle, description, bpmUsed, keyUsed, tags, thumbnails.maxres?.url || thumbnails.high?.url || thumbnails.medium?.url);
+        populateForm(videoId, cleanTitle, description, bpmUsed, keyUsed, tags, thumbnails.maxres?.url || thumbnails.high?.url || thumbnails.medium?.url);
     }
 
-    async function populateForm(title, description, bpm, key, tags, thumbUrl) {
+    async function populateForm(videoId, title, description, bpm, key, tags, thumbUrl) {
         // IDs from beats.html
         const titleInput = document.getElementById('titleInput');
         const descInput = document.getElementById('descInput');
@@ -311,15 +365,13 @@
         // Thumbnail -> Cover File logic
         if (thumbUrl) {
             try {
+                // Download image as blob and create File object
                 const response = await fetch(thumbUrl);
                 const blob = await response.blob();
-                const file = new File([blob], 'youtube_thumb.jpg', { type: 'image/jpeg' });
+                // Use the videoId in the filename to avoid collisions and track imports
+                const file = new File([blob], `youtube_${videoId}.jpg`, { type: 'image/jpeg' });
                 
-                // Update uploaderState and UI
-                if (window.uploaderState) {
-                    window.uploaderState.cover = file;
-                }
-
+                // Update UI preview
                 const preview = document.getElementById('coverPreview');
                 if (preview) {
                     preview.src = URL.createObjectURL(file);
@@ -330,8 +382,41 @@
                 
                 const cardPreview = document.getElementById('previewCardCover');
                 if (cardPreview) cardPreview.innerHTML = `<img src="${preview.src}" style="width:100%;height:100%;object-fit:cover;">`;
+                
+                // --- DEFERRED UPLOAD LOGIC ---
+                // We no longer upload immediately to R2 to avoid orphaning files.
+                // Instead, we just set uploaderState.cover as a File object.
+                // The main handlePublish() in nuevo.js will handle the actual R2 upload.
+
+                if (!window.uploaderState) {
+                    window.uploaderState = {
+                        files: { kit: null, audio: null },
+                        cover: null
+                    };
+                }
+
+                if (window.uploaderState) {
+                    // Update uploaderState with the new cover File
+                    window.uploaderState.cover = file;
+                    // Store the video ID to prevent redundant imports in the same session
+                    window.uploaderState.lastImportedYouTubeId = videoId;
+
+                    // SYNC with formData for Beats.html logic
+                    if (window.formData) {
+                        window.formData.coverBlob = file; 
+                    }
+
+                    // If we are editing, schedule the old cover for deletion
+                    if (window.uploaderState.editId && window.originalProductData) {
+                         if (window.originalProductData.image_url) {
+                            const oldUrl = window.uploaderState.old_raw_cover || window.originalProductData.image_url;
+                            console.log('🧹 [YOUTUBE IMPORTER] Scheduling previous cover for cleanup:', oldUrl);
+                            window.uploaderState.old_raw_cover = oldUrl; 
+                         }
+                    }
+                }
             } catch (err) {
-                console.error("❌ Error fetching YouTube thumbnail:", err);
+                console.error("❌ Error processing YouTube thumbnail:", err);
             }
         }
 

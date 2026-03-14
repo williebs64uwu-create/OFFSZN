@@ -43,9 +43,26 @@ window.uploaderState = {
     loop: false,
     tags: [],
     collaborators: [],
-    currentUser: null
+    currentUser: null,
+    isYouTubeUpload: true // 🔥 Default TRUE for beats-yt.html
 };
 let uploaderState = window.uploaderState;
+
+// --- Slug Generation ---
+function generatePublicSlug(title) {
+    if (!title) return "";
+    return title
+        .toLowerCase()
+        .trim()
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // Remove accents
+        .replace(/\+/g, '-') // Replace + with -
+        .replace(/_/g, '-') // Replace _ with -
+        .replace(/[^\w\s-]/g, '') // Remove special characters
+        .replace(/\s+/g, '-') // Spaces to hyphens
+        .replace(/-+/g, '-') // Multiple hyphens to single
+        .replace(/^-+|-+$/g, '') // Trim hyphens from ends
+        .substring(0, 60); // Max 60 characters
+}
 
 // --- Licensing Logic ---
 const DEFAULT_LICENSES = {
@@ -1670,6 +1687,7 @@ window.handlePublish = async function () {
 
     const btn = document.getElementById('publishNow');
     const originalText = btn ? btn.innerHTML : 'Publicar Ahora';
+    if(btn) btn.setAttribute('data-original-text', originalText);
 
     // 2. Auth Check
     const { data: { session } } = await window.supabaseClient.auth.getSession();
@@ -1691,28 +1709,123 @@ window.handlePublish = async function () {
         // Reset progress bar
         if (progressBar) progressBar.style.width = '0%';
 
-        // 3. YouTube Pre-Interception (Reuse legacy uploader if active)
-        if (window.isYouTubeUpload && window.YouTubeUploader) {
-            if (btn) {
-                btn.disabled = true;
-                btn.innerHTML = 'Subiendo a YouTube...';
+        // 3. YouTube Pre-Interception (Custom Flow for beats-yt.html)
+        const isEditing = !!uploaderState.editId;
+        
+        if (uploaderState.isYouTubeUpload && !isEditing) {
+            console.log('🎥 [YT] Starting specialized YouTube flow...');
+            
+            try {
+                // 3a. Auth First (Before Overlay)
+                if (!window.YouTubeUploader) {
+                    throw new Error('YouTubeUploader no cargado. Revisa la consola.');
+                }
+                
+                console.log('🎥 [YT] Requesting auth before starting rendering...');
+                const token = await window.YouTubeUploader.requestAuth();
+                // If it resolves, we have a token (or it was already cached)
+                console.log('✅ [YT] Auth obtained, proceeding to render.');
+
+                if (overlay) {
+                    if (overlayTitle) overlayTitle.innerText = 'GENERANDO VIDEO...';
+                    if (overlayText) overlayText.innerText = 'Preparando video en 720p para YouTube';
+                    overlay.style.display = 'flex';
+                    if (progressBar) progressBar.style.width = '10%';
+                }
+
+                // 3b. Prepare Blobs
+                const coverBlob = uploaderState.cover;
+                const audioBlob = uploaderState.mp3_tagged;
+
+                if (!coverBlob || !audioBlob) {
+                    throw new Error('Faltan archivos para generar el video (Portada/MP3)');
+                }
+
+                // 3c. Render Video (Server-side)
+                if (overlayText) overlayText.innerText = 'Renderizando en el servidor (3-5 seg)...';
+                // Use the token for render API too if needed (optional if Supabase handles it, but good for context)
+                const session = await window.supabaseClient.auth.getSession();
+                const supabaseToken = session.data.session?.access_token;
+                
+                const formData = new FormData();
+                formData.append('cover', coverBlob, 'cover.jpg');
+                formData.append('audio', audioBlob, 'audio.mp3');
+
+                const response = await fetch('/api/youtube/render-video', {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${supabaseToken}` },
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const errData = await response.json().catch(() => ({}));
+                    throw new Error(errData.error || `Error de render: ${response.status}`);
+                }
+
+                const videoArrayBuffer = await response.arrayBuffer();
+                const renderedVideoBlob = new Blob([videoArrayBuffer], { type: 'video/mp4' });
+                
+                if (progressBar) progressBar.style.width = '30%';
+
+                // 3d. YouTube Upload
+                const beatTitle = document.getElementById('titleInput').value || 'Sin Título';
+                const publicSlug = generatePublicSlug(beatTitle);
+                const beatKey = document.querySelector('#keyInput')?.value || 'N/A';
+                const beatBpm = document.getElementById('bpmInput')?.value || 'N/A';
+                const userDesc = document.getElementById('descInput').value || '';
+                const tagList = uploaderState.tags.map(t => `#${t.replace(/\s+/g, '')}`).join(' ');
+
+                const ytMetadata = {
+                    title: beatTitle,
+                    description: `🛒 Comprar/Descargar: https://offszn.lat/beat/${publicSlug}\nKey: ${beatKey}\nBPM: ${beatBpm}\n\n${userDesc}\n\n${tagList}`,
+                    tags: uploaderState.tags
+                };
+
+                window.YouTubeUploader.setRenderedVideo(renderedVideoBlob);
+
+                if (overlayText) overlayText.innerText = 'Subiendo a YouTube: 0%';
+                
+                // handleUpload will now use the token we already got (cached in v2)
+                const videoId = await window.YouTubeUploader.handleUpload(ytMetadata);
+                console.log('✅ [YT] Upload Success:', videoId);
+                uploaderState.youtube_video_id = videoId; // Store for final DB save
+                showToast('Video subido a YouTube correctamente 📹', 'success');
+                
+                if (progressBar) progressBar.style.width = '50%';
+            } catch (ytErr) {
+                console.error('❌ [YT] specialized flow fail:', ytErr);
+                window.isPublishing = false; // 🔥 IMPORTANT: Reset state so user can retry
+                
+                // Get error text for checking
+                const errText = (ytErr.message || ytErr.error || '').toLowerCase();
+
+                // Check if it's a cancel
+                const isCancel = errText.includes('access_denied') || 
+                                 errText.includes('denied') || 
+                                 errText.includes('superseded') || 
+                                 errText.includes('timeout') ||
+                                 errText.includes('popup_closed_by_user');
+                
+                if (isCancel) {
+                    console.warn('⚠️ [YT] Auth cancelled or timed out. Stopping flow.');
+                    if (overlay) overlay.style.display = 'none';
+                    if (btn) {
+                        btn.disabled = false;
+                        btn.innerHTML = btn.getAttribute('data-original-text') || 'Publicar Ahora';
+                    }
+                    return; // EXIT handlePublish immediately so user can retry
+                }
+
+                // If it's a real error, we hide overlay and show toast
+                if (overlay) overlay.style.display = 'none';
+                showToast('Error en YouTube: ' + (ytErr.message || 'Error desconocido'), 'error');
+                
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = btn.getAttribute('data-original-text') || 'Publicar Ahora';
+                }
+                return; // EXIT handlePublish
             }
-            if (overlayText) overlayText.innerText = 'Subiendo a YouTube...';
-
-            const beatTitle = document.getElementById('titleInput').value || 'Sin Título';
-            const beatKey = document.querySelector('#keyInput')?.value || 'N/A';
-            const beatBpm = document.getElementById('bpmInput')?.value || 'N/A';
-            const userDesc = document.getElementById('descInput').value || '';
-            const tagList = uploaderState.tags.map(t => `#${t.replace(/\s+/g, '')}`).join(' ');
-
-            const ytMetadata = {
-                title: beatTitle,
-                description: `🛒 Comprar/Descargar: (Pendiente)\nKey: ${beatKey}\nBPM: ${beatBpm}\n\n${userDesc}\n\n${tagList}`,
-                tags: uploaderState.tags
-            };
-
-            await window.YouTubeUploader.handleUpload(ytMetadata);
-            showToast('Video subido a YouTube correctamente 📹', 'success');
         }
 
         if (btn) {
@@ -1823,6 +1936,7 @@ window.handlePublish = async function () {
         const finalData = {
             producer_id: userId,
             name: document.getElementById('titleInput').value,
+            public_slug: generatePublicSlug(document.getElementById('titleInput').value),
             description: document.getElementById('descInput').value || '',
             release_date: document.getElementById('dateInput').value || null,
             visibility: document.getElementById('visibilityInput').value || 'public',
@@ -1850,7 +1964,9 @@ window.handlePublish = async function () {
                 role: c.role,
                 percent: c.percent,
                 is_guest: c.is_guest
-            }))
+            })),
+            youtube_id: uploaderState.youtube_video_id || null,
+            youtube_url: uploaderState.youtube_video_id ? `https://www.youtube.com/watch?v=${uploaderState.youtube_video_id}` : null
         };
 
         // 7. DB Operation (INSERT vs UPDATE)
@@ -2445,7 +2561,7 @@ window.togglePublishDropdown = (e) => {
 window.renderPreview = () => {
     console.log('--- Rendering Preview Step 4 ---');
     const u = uploaderState.currentUser;
-    const userName = u ? (u.full_name || `${u.first_name || ''} ${u.last_name || ''}`.trim() || u.display_name || u.nickname || 'Productor') : 'Productor';
+    const userName = u ? (u.nickname || u.display_name || u.full_name || `${u.first_name || ''} ${u.last_name || ''}`.trim() || 'Productor') : 'Productor';
 
     // Preview Card Elements
     const cardTitle = document.getElementById('previewCardTitle');
@@ -2513,11 +2629,25 @@ window.renderPreview = () => {
         if (collabSection) collabSection.style.display = 'block';
         verifyCollabs.innerHTML = uploaderState.collaborators.map(c => `
             <div class="verify-item">
-                <span>${c.display_name}</span>
-                <strong>${c.profit_share}%</strong>
+                <span>${c.name}</span>
+                <strong>${c.percent}%</strong>
             </div>
         `).join('');
     } else if (collabSection) {
         collabSection.style.display = 'none';
+    }
+
+    // 🔥 YouTube Integration Preview
+    const ytSection = document.getElementById('verifyYoutubeSection');
+    const ytStatus = document.getElementById('verifyYoutubeStatus');
+    if (ytSection && ytStatus) {
+        if (!uploaderState.editId) {
+            ytSection.style.display = 'block';
+            ytStatus.innerHTML = uploaderState.isYouTubeUpload 
+                ? `<span style="color:#8b5cf6;"><i class="bi bi-youtube"></i> Habilitado (720p + 320k)</span>`
+                : `<span style="color:#666;">Deshabilitado</span>`;
+        } else {
+            ytSection.style.display = 'none'; // Skip for edit mode
+        }
     }
 };

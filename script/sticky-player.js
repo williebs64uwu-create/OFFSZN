@@ -417,9 +417,15 @@ window.StickyPlayer = (function () {
             } else {
                 // Regular Product Mode
                 els.secondaryBtn.style.display = 'none';
-                const isTrulyFree = trackData.is_free === true || String(trackData.is_free) === 'true' || Number(trackData.price_basic) === 0;
-                const rawPrice = trackData.price_basic !== undefined && trackData.price_basic !== null ? trackData.price_basic : null;
-                els.priceLabel.innerText = isTrulyFree ? 'FREE' : (window.CurrencyManager && rawPrice !== null ? window.CurrencyManager.format(parseFloat(rawPrice) || 0) : (rawPrice !== null ? `$${rawPrice}` : '—'));
+                // --- PRICING LOGIC FIX ---
+                // For beats, we only show 'FREE' if price_basic is 0 (explicitly set as a free license).
+                // Many beats have is_free=true meaning 'Free Download' (demo) is allowed, but they still have paid licenses.
+                const isBeat = trackData.product_type === 'beat';
+                const rawPrice = trackData.price_basic !== undefined && trackData.price_basic !== null ? parseFloat(trackData.price_basic) : null;
+                
+                const isTrulyFree = isBeat ? (rawPrice === 0) : (trackData.is_free === true || String(trackData.is_free) === 'true' || rawPrice === 0);
+
+                els.priceLabel.innerText = isTrulyFree ? 'FREE' : (window.CurrencyManager && rawPrice !== null ? window.CurrencyManager.format(rawPrice) : (rawPrice !== null ? `$${rawPrice}` : '—'));
                 if (els.buyBtn) {
                     const icon = els.buyBtn.querySelector('i');
                     if (icon) icon.className = 'bi bi-cart-plus';

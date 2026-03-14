@@ -5161,15 +5161,48 @@
                     filesUploaded.stems = true;
                 }
 
-                // 4. Licenses (null-safe)
-                const priceBasic = document.getElementById('priceBasic');
-                const pricePremium = document.getElementById('pricePremium');
-                const priceUnlimited = document.getElementById('priceUnlimited');
-                const priceExclusive = document.getElementById('priceExclusive');
-                if (product.price_basic && priceBasic) priceBasic.value = product.price_basic;
-                if (product.price_premium && pricePremium) pricePremium.value = product.price_premium;
-                if (product.price_unlimited && priceUnlimited) priceUnlimited.value = product.price_unlimited;
-                if (product.price_exclusive && priceExclusive) priceExclusive.value = product.price_exclusive;
+                // 4. Licenses
+                if (typeof licensesState !== 'undefined') {
+                    if (product.price_basic !== null) {
+                        if (licensesState['offszn_basic']) {
+                            licensesState['offszn_basic'].price = product.price_basic;
+                            licensesState['offszn_basic'].enabled = true;
+                        }
+                    } else {
+                        if (licensesState['offszn_basic']) licensesState['offszn_basic'].enabled = false;
+                    }
+                    if (product.price_premium !== null) {
+                        if (licensesState['offszn_premium']) {
+                            licensesState['offszn_premium'].price = product.price_premium;
+                            licensesState['offszn_premium'].enabled = true;
+                        }
+                    } else {
+                        if (licensesState['offszn_premium']) licensesState['offszn_premium'].enabled = false;
+                    }
+                    if (product.price_stems !== null) {
+                        if (licensesState['offszn_unlimited']) {
+                            licensesState['offszn_unlimited'].price = product.price_stems;
+                            licensesState['offszn_unlimited'].enabled = true;
+                        }
+                    } else {
+                        if (licensesState['offszn_unlimited']) licensesState['offszn_unlimited'].enabled = false;
+                    }
+                    if (product.price_exclusive !== null) {
+                        if (licensesState['offszn_exclusive']) {
+                            licensesState['offszn_exclusive'].price = product.price_exclusive;
+                            licensesState['offszn_exclusive'].enabled = true;
+                        }
+                    } else {
+                        if (licensesState['offszn_exclusive']) licensesState['offszn_exclusive'].enabled = false;
+                    }
+                    if (typeof window.renderLicenses === 'function') {
+                        window.renderLicenses();
+                    }
+                }
+                if (typeof window.uploaderState !== 'undefined') {
+                    window.uploaderState.free_download = !!product.is_free;
+                    if (typeof window.renderLicenses === 'function') window.renderLicenses();
+                }
 
                 // 5. Tags & Collabs
                 if (product.tags) {
@@ -8205,142 +8238,10 @@
 
             return cleanName + ext;
         }
-        // ========================================
-        // ?? CLOUDFLARE R2 UPLOAD HELPER
-        // ========================================
-        async function uploadToR2(file, folder = 'uploads') {
-            try {
-                // 1. Obtener URL firmada del backend
-                const session = await supabaseClient.auth.getSession();
-                const token = session.data.session?.access_token;
+        // EXPOSE GLOBALLY (Redirected to AuthUtils if needed, but here we just rely on window versions)
+        // window.uploadToR2 = uploadToR2;
+        // window.getAuthorizedUrl = getAuthorizedUrl;
 
-                if (!token) throw new Error('No hay sesión activa para subir a R2');
-
-                console.log('ðŸš€ [Client] Subiendo a R2. Token presente:', !!token, 'Token length:', token ? token.length : 0);
-
-                const response = await fetch('/api/r2/upload-url', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: JSON.stringify({
-                        fileName: file.name,
-                        fileType: file.type || 'application/octet-stream', // ?? Fallback for unknown types (e.g. .zip on Windows)
-                        folder: folder,
-                        fileSize: file.size
-                    })
-                });
-
-                if (!response.ok) {
-                    const error = await response.json();
-                    throw new Error(error.error || 'Error al obtener URL de R2');
-                }
-
-                const { uploadUrl, key, r2_version, publicUrl } = await response.json();
-
-                console.log(`? [R2 Debug] Uploading ${file.name}`);
-                console.log(`? [R2 Debug] File Type (Browser): "${file.type}"`);
-                console.log(`? [R2 Debug] Headers Sent:`, { 'Content-Type': file.type || 'application/octet-stream' });
-                console.log(`? [R2 Debug] Upload URL (Truncated):`, uploadUrl.substring(0, 50) + '...');
-
-                // 2. Subir directamente a R2
-                const uploadRes = await fetch(uploadUrl, {
-                    method: 'PUT',
-                    body: file,
-                    headers: {
-                        'Content-Type': file.type || 'application/octet-stream' // ðŸ”¥ FIX: Match signed content type
-                    }
-                });
-
-                if (!uploadRes.ok) throw new Error('La subida directa a R2 falló');
-
-                console.log(`? [R2] Archivo subido con éxito: ${key}`);
-                return { key, r2_version, publicUrl }; // Retornamos objeto completo
-            } catch (error) {
-                console.error('Error en uploadToR2:', error);
-                throw error;
-            }
-        }
-        window.uploadToR2 = uploadToR2; // ðŸ”¥ EXPOSE GLOBALLY
-
-        /**
-         * ?? Obtiene una URL autorizada (Firmada) si es un Key de R2, 
-         * o devuelve la URL tal cual si ya es un Link de Supabase.
-         */
-        async function getAuthorizedUrl(pathOrUrl, version = 'v1') {
-            if (!pathOrUrl) return null;
-
-            // Resilience: Reject malformed [object Object] entries early
-            if (typeof pathOrUrl === 'string' && pathOrUrl.includes('[object Object]')) {
-                console.warn('[getAuthorizedUrl] Rejecting malformed path:', pathOrUrl);
-                return null;
-            }
-
-            // ðŸ”¥ FIX: Si es una URL de R2 (cloudflarestorage), necesitamos firmarla sí o sí.
-            // Si es Supabase (http...) y público, lo dejamos pasar.
-            // Si es un KEY (no http), lo firmamos.
-            const isR2Url = pathOrUrl.includes('r2.cloudflarestorage.com') ||
-                pathOrUrl.includes('pub-') ||
-                (pathOrUrl.startsWith('http') === false); // Es un Key
-
-            if (!isR2Url && pathOrUrl.startsWith('http')) return pathOrUrl; // Es Supabase o externo público
-
-            // Si es R2 URL completa, extraemos el KEY
-            let key = pathOrUrl;
-            if (pathOrUrl.startsWith('http')) {
-                // ?? FIX: No usar new URL().pathname porque corta en '#' o '?'
-                // Buscamos la base del bucket de R2
-                const r2Base = '.r2.cloudflarestorage.com/';
-                if (pathOrUrl.includes(r2Base)) {
-                    key = pathOrUrl.split(r2Base)[1];
-                } else {
-                    // Fallback para otros dominios (ej. pub-...)
-                    try {
-                        const urlObj = new URL(pathOrUrl);
-                        key = urlObj.pathname.substring(1);
-                    } catch (e) { }
-                }
-            }
-
-            try {
-                const session = await supabaseClient.auth.getSession();
-                const token = session.data.session?.access_token;
-
-                // 🔥 FIX: Pass version to the server so it uses the correct R2 bucket
-                const response = await fetch('/api/r2/download-url', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: JSON.stringify({ key, version })
-                });
-
-                if (!response.ok) {
-                    // 🔥 FALLBACK: If v1 failed, try v2 and vice versa
-                    const fallbackVersion = version === 'v1' ? 'v2' : 'v1';
-                    console.warn(`[getAuthorizedUrl] ${version} failed for key "${key}", trying ${fallbackVersion}...`);
-                    const fallbackResponse = await fetch('/api/r2/download-url', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${token}`
-                        },
-                        body: JSON.stringify({ key, version: fallbackVersion })
-                    });
-                    if (!fallbackResponse.ok) return null;
-                    const fallbackData = await fallbackResponse.json();
-                    return fallbackData.downloadUrl;
-                }
-
-                const { downloadUrl } = await response.json();
-                return downloadUrl;
-            } catch (error) {
-                console.error('Error getting authorized URL:', error);
-                return null;
-            }
-        }
 
         async function handleUpdateProduct() {
             if (window.isPublishing) return;
@@ -8363,10 +8264,11 @@
                     visibility: document.getElementById('visibilityInput').value,
                     bpm: document.getElementById('bpmInput')?.value || null,
                     key: document.getElementById('keyInput')?.value || null,
-                    price_basic: document.getElementById('price-basic')?.value || null,
-                    price_premium: document.getElementById('price-premium')?.value || null,
-                    price_stems: document.getElementById('price-trackout')?.value || null,
-                    price_exclusive: document.getElementById('price-unlimited')?.value || null,
+                    price_basic: (typeof licensesState !== 'undefined' && licensesState['offszn_basic']?.enabled) ? parseFloat(licensesState['offszn_basic'].price) : null,
+                    price_premium: (typeof licensesState !== 'undefined' && licensesState['offszn_premium']?.enabled) ? parseFloat(licensesState['offszn_premium'].price) : null,
+                    price_stems: (typeof licensesState !== 'undefined' && licensesState['offszn_unlimited']?.enabled) ? parseFloat(licensesState['offszn_unlimited'].price) : null,
+                    price_exclusive: (typeof licensesState !== 'undefined' && licensesState['offszn_exclusive']?.enabled) ? parseFloat(licensesState['offszn_exclusive'].price) : null,
+                    is_free: (typeof window.uploaderState !== 'undefined' && window.uploaderState.free_download) ? true : false,
                     tags: tags,
                     collaborators: collaborators
                 };
@@ -8659,10 +8561,11 @@
                     visibility: document.getElementById('visibilityInput').value || 'public',
                     bpm: document.getElementById('bpmInput')?.value ? parseInt(document.getElementById('bpmInput').value) : null,
                     key: document.getElementById('keyInput')?.value || null,
-                    price_basic: document.getElementById('price-basic')?.value ? parseFloat(document.getElementById('price-basic').value) : null,
-                    price_premium: document.getElementById('price-premium')?.value ? parseFloat(document.getElementById('price-premium').value) : null,
-                    price_stems: document.getElementById('price-trackout')?.value ? parseFloat(document.getElementById('price-trackout').value) : null,
-                    price_exclusive: document.getElementById('price-unlimited')?.value ? parseFloat(document.getElementById('price-unlimited').value) : null,
+                    price_basic: (typeof licensesState !== 'undefined' && licensesState['offszn_basic']?.enabled) ? parseFloat(licensesState['offszn_basic'].price) : null,
+                    price_premium: (typeof licensesState !== 'undefined' && licensesState['offszn_premium']?.enabled) ? parseFloat(licensesState['offszn_premium'].price) : null,
+                    price_stems: (typeof licensesState !== 'undefined' && licensesState['offszn_unlimited']?.enabled) ? parseFloat(licensesState['offszn_unlimited'].price) : null,
+                    price_exclusive: (typeof licensesState !== 'undefined' && licensesState['offszn_exclusive']?.enabled) ? parseFloat(licensesState['offszn_exclusive'].price) : null,
+                    is_free: (typeof window.uploaderState !== 'undefined' && window.uploaderState.free_download) ? true : false,
                     tags: tags,
                     collaborators: collaborators,
                     producer_id: userId,
@@ -8674,11 +8577,18 @@
                 };
 
                 if (formData.coverBlob) {
-                    console.log('📂 [PUBLISH-UPLOAD] Subiendo Cover a R2 (products/covers)...');
-                    const coverFile = new File([formData.coverBlob], 'cover.jpg', { type: 'image/jpeg' });
-                    const uploadResult = await uploadToR2(coverFile, 'products/covers');
-                    updates.image_url = uploadResult.publicUrl;
-                    updates.r2_version = uploadResult.r2_version; // Sync version
+                    // 🔥 FIX: If the blob already has a publicUrl (e.g. from YouTube Import), use it directly
+                    if (formData.coverBlob.publicUrl) {
+                        console.log('✅ [PUBLISH] Using existing R2 Cover URL (already uploaded):', formData.coverBlob.publicUrl);
+                        updates.image_url = formData.coverBlob.publicUrl;
+                        updates.r2_version = formData.coverBlob.r2_version || 'v2';
+                    } else {
+                        console.log('📂 [PUBLISH-UPLOAD] Subiendo Cover a R2 (products/covers)...');
+                        const coverFile = new File([formData.coverBlob], 'cover.jpg', { type: 'image/jpeg' });
+                        const uploadResult = await uploadToR2(coverFile, 'products/covers');
+                        updates.image_url = uploadResult.publicUrl;
+                        updates.r2_version = uploadResult.r2_version; // Sync version
+                    }
                 } else if (window.originalProductData?.image_url) {
                     updates.image_url = window.originalProductData.image_url;
                 }

@@ -252,10 +252,14 @@ window.AuthUtils = {
             }
         }
 
-        // 🔥 AUTO-DETECT VERSION FROM URL IF POSSIBLE
+        // 🔥 AUTO-DETECT VERSION FROM URL
+        // Prioritize offsznlatbucket (v2) for the new account
         if (pathOrUrl.includes('offsznlatbucket') || pathOrUrl.includes('42fc23b11a6c329b76b2babc20afcbf7')) {
             version = 'v2';
-        } else if (pathOrUrl.includes('offszn-storage') || pathOrUrl.includes('41d0f49121d02c88f71fdb4da54a791d') || pathOrUrl.includes('pub-')) {
+        } else if (pathOrUrl.includes('offszn-storage') || pathOrUrl.includes('41d0f49121d02c88f71fdb4da54a791d')) {
+            // Old account stays in its original version for reading
+            version = 'v1'; 
+        } else if (pathOrUrl.includes('pub-')) {
             version = 'v1';
         }
 
@@ -294,6 +298,58 @@ window.AuthUtils = {
         } catch (error) {
             console.error('AuthUtils: Error getting authorized URL:', error);
             return pathOrUrl; // Fallback to original
+        }
+    },
+
+    /**
+     * Uploads a file to Cloudflare R2 via the backend API.
+     * @param {File|Blob} file The file or blob to upload.
+     * @param {string} folder Target folder (e.g., 'products/covers').
+     * @returns {Promise<{key: string, r2_version: string, publicUrl: string|null}>}
+     */
+    uploadToR2: async function (file, folder = 'uploads') {
+        try {
+            const token = this.getAccessToken();
+            if (!token) throw new Error('No hay sesión activa para subir a R2');
+
+            // 1. Get signed Upload URL from backend
+            const response = await fetch(`${this._apiUrl}/r2/upload-url`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    fileName: file.name || 'blob',
+                    fileType: file.type || 'application/octet-stream',
+                    folder: folder,
+                    fileSize: file.size,
+                    version: 'v2' // Always use v2 for new uploads
+                })
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error || 'Error al obtener URL de subida R2');
+            }
+
+            const { uploadUrl, key, r2_version, publicUrl } = await response.json();
+
+            // 2. Perform direct PUT to R2
+            const uploadRes = await fetch(uploadUrl, {
+                method: 'PUT',
+                body: file,
+                headers: {
+                    'Content-Type': file.type || 'application/octet-stream'
+                }
+            });
+
+            if (!uploadRes.ok) throw new Error('La subida directa a R2 falló');
+
+            return { key, r2_version, publicUrl };
+        } catch (error) {
+            console.error('AuthUtils: Error in uploadToR2:', error);
+            throw error;
         }
     },
 
@@ -530,6 +586,7 @@ window.addEventListener('currencyChanged', () => window.CurrencyManager.updateAl
 // Backwards compatibility / Direct global access shortcuts
 window.getAccessToken = window.AuthUtils.getAccessToken.bind(window.AuthUtils);
 window.getAuthorizedUrl = window.AuthUtils.getAuthorizedUrl.bind(window.AuthUtils);
+window.uploadToR2 = window.AuthUtils.uploadToR2.bind(window.AuthUtils);
 window.deleteFromR2 = window.AuthUtils.deleteFromR2.bind(window.AuthUtils);
 
 // Attempt Init immediately
