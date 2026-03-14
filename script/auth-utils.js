@@ -187,7 +187,48 @@ window.AuthUtils = {
         }
     },
 
-    _urlCache: {}, // In-memory cache for signed URLs to speed up repeat loads
+    _urlCache: {}, // In-memory cache
+    _signingQueue: [], // Queue for batching: { key, version, resolve, reject }
+    _batchTimeout: null,
+
+    /**
+     * Tries to load cache from sessionStorage to persist signed URLs during the session.
+     */
+    _loadCache: function() {
+        try {
+            const saved = sessionStorage.getItem('offszn_r2_cache');
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                // Only keep urls signed in the last 12 hours
+                const now = Date.now();
+                for (const [k, v] of Object.entries(parsed)) {
+                    if (v.url && (now - v.timestamp < 12 * 3600 * 1000)) {
+                        this._urlCache[k] = v.url;
+                    }
+                }
+            }
+        } catch (e) {}
+    },
+
+    /**
+     * Saves the current cache to sessionStorage.
+     */
+    _saveCache: function(key, url) {
+        this._urlCache[key] = url;
+        try {
+            const saved = sessionStorage.getItem('offszn_r2_cache');
+            let cache = saved ? JSON.parse(saved) : {};
+            cache[key] = { url, timestamp: Date.now() };
+            
+            // Limit cache size to 200 items to avoid sessionStorage bloat
+            const keys = Object.keys(cache);
+            if (keys.length > 200) {
+               delete cache[keys[0]];
+            }
+            
+            sessionStorage.setItem('offszn_r2_cache', JSON.stringify(cache));
+        } catch (e) {}
+    },
 
     /**
      * Resolves a path or URL to an authorized/signed URL if it's an R2 resource.
@@ -198,6 +239,12 @@ window.AuthUtils = {
      */
     getAuthorizedUrl: async function (pathOrUrl, version = 'v2') {
         if (!pathOrUrl) return null;
+
+        // Ensure cache is loaded (once)
+        if (Object.keys(this._urlCache).length === 0 && !this._cacheLoaded) {
+            this._loadCache();
+            this._cacheLoaded = true;
+        }
 
         // --- CACHE CHECK ---
         if (this._urlCache[pathOrUrl]) {
@@ -264,52 +311,135 @@ window.AuthUtils = {
 
         if (!key || key.startsWith('http')) return pathOrUrl;
 
-        // --- SIGNING VIA API ---
+        // --- BATCHING QUEUE ---
+        return new Promise((resolve, reject) => {
+            this._signingQueue.push({
+                raw: pathOrUrl,
+                key,
+                version: detectedVersion,
+                resolve,
+                reject
+            });
+
+            if (!this._batchTimeout) {
+                this._batchTimeout = setTimeout(() => this._processSigningQueue(), 50);
+            }
+        });
+    },
+
+    /**
+     * Processes all queued signing requests in a single batch call.
+     */
+    _processSigningQueue: async function() {
+        const queue = [...this._signingQueue];
+        this._signingQueue = [];
+        this._batchTimeout = null;
+
+        if (queue.length === 0) return;
+
+        // Handle single request normally for simplicity or if batch fails
+        if (queue.length === 1) {
+            const item = queue[0];
+            this._performSigningCall(item.key, item.version)
+                .then(url => {
+                    this._saveCache(item.raw, url);
+                    item.resolve(url);
+                })
+                .catch(err => item.reject(err));
+            return;
+        }
+
         try {
-            const token = this.getAccessToken(); // Use self
+            const keys = [...new Set(queue.map(i => i.key))];
+            const token = this.getAccessToken();
+
+            const response = await fetch(`${this._apiUrl}/r2/batch-download-urls`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': token ? `Bearer ${token}` : undefined
+                },
+                body: JSON.stringify({
+                    keys,
+                    version: queue[0].version // Use the first one as default
+                })
+            });
+
+            if (!response.ok) throw new Error(`Batch signing failed: ${response.status}`);
+
+            const { results } = await response.json();
+
+            // Resolve all promises in queue
+            queue.forEach(item => {
+                const res = results[item.key];
+                if (res && res.downloadUrl) {
+                    this._saveCache(item.raw, res.downloadUrl);
+                    item.resolve(res.downloadUrl);
+                } else {
+                    // Fallback logic for this specific item
+                    this._handleSigningFailure(item.key, item.raw)
+                        .then(url => item.resolve(url))
+                        .catch(err => item.reject(err));
+                }
+            });
+
+        } catch (error) {
+            console.error('[AuthUtils] Batch signing crash, falling back to individual calls:', error);
+            // Fallback: perform individual calls for everything in this failed batch
+            queue.forEach(item => {
+                this._performSigningCall(item.key, item.version)
+                    .then(url => {
+                        this._saveCache(item.raw, url);
+                        item.resolve(url);
+                    })
+                    .catch(e => item.reject(e));
+            });
+        }
+    },
+
+    /**
+     * Individual signing call logic (Moved from getAuthorizedUrl)
+     */
+    _performSigningCall: async function(key, version) {
+        try {
+            const token = this.getAccessToken();
             const response = await fetch(`${this._apiUrl}/r2/download-url`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': token ? `Bearer ${token}` : undefined
                 },
-                body: JSON.stringify({ key, version: detectedVersion })
+                body: JSON.stringify({ key, version })
             });
 
-            // Success logs removed as requested by user
-            if (window.OFFSZN_DEBUG && !response.ok) {
-                console.warn(`[R2-Signing] Error: ${response.status} for Key: ${key} | Version: ${detectedVersion}`);
-            }
-
-            if (!response.ok) {
-                console.warn(`AuthUtils: Failed to sign R2 key: ${key}`, response.status);
-                // 🔥 FALLBACK: For public assets, construct a direct public URL if signing fails
-                const publicPrefixes = ['products/covers/', 'beats/mp3/', 'avatars/', 'public/', 'banners/', 'drumkits/covers/'];
-                const isPublic = publicPrefixes.some(prefix => key.startsWith(prefix));
-
-                if (isPublic) {
-                    console.warn(`[AuthUtils] Signing failed for public asset, using fallback: ${key}`);
-                    // Ensure we return a full URL to avoid CORB (relative paths may hit frontend router)
-                    const baseUrl = this._apiBase || window.location.origin || 'https://offszn.lat';
-                    return `${baseUrl}/r2-public/${key}`;
-                }
-
-                // If it's a relative path, try to make it absolute to avoid CORB 404s
-                if (!key.startsWith('http')) {
-                    const baseUrl = this._apiBase || 'https://offszn.lat';
-                    return `${baseUrl}/${key}`;
-                }
-
-                return key; 
-            }
+            if (!response.ok) return this._handleSigningFailure(key);
 
             const { downloadUrl } = await response.json();
-            this._urlCache[pathOrUrl] = downloadUrl; // Cache result
             return downloadUrl;
-        } catch (error) {
-            console.error('AuthUtils: Error getting authorized URL:', error);
-            return pathOrUrl; // Fallback to original
+        } catch (e) {
+            return this._handleSigningFailure(key);
         }
+    },
+
+    /**
+     * Centralized failure handling with better fallbacks.
+     */
+    _handleSigningFailure: async function(key, rawOriginal) {
+        console.warn(`AuthUtils: Signing failed for ${key}`);
+
+        const publicPrefixes = ['products/covers/', 'beats/mp3/', 'avatars/', 'public/', 'banners/', 'drumkits/covers/'];
+        const isPublic = publicPrefixes.some(prefix => key.startsWith(prefix));
+
+        if (isPublic) {
+            // Check if it's already a full URL that was passed in
+            if (rawOriginal && rawOriginal.includes('supabase.co')) return rawOriginal;
+
+            const baseUrl = this._apiBase || window.location.origin || 'https://offszn.lat';
+            // Construct a more reliable public fallback or return the key if it's all we have
+            return `${baseUrl}/r2-public/${key}`;
+        }
+
+        return rawOriginal; // Last resort: return original string
     },
 
     /**

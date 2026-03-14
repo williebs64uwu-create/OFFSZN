@@ -169,6 +169,86 @@ router.post('/r2/download-url', async (req, res) => {
     }
 });
 
+// Endpoint para obtener múltiples URLs de descarga firmadas en una sola petición (Batch)
+router.post('/r2/batch-download-urls', async (req, res) => {
+    try {
+        const { keys, expiresIn, version } = req.body;
+
+        if (!keys || !Array.isArray(keys)) {
+            return res.status(400).json({ error: 'Se requiere un array de keys' });
+        }
+
+        const { R2_CURRENT_VERSION } = await import('../../../shared/config/config.js');
+        const finalVersion = version || R2_CURRENT_VERSION || 'v1';
+
+        const publicPrefixes = ['products/covers/', 'beats/mp3/', 'avatars/', 'public/', 'banners/'];
+        const results = {};
+
+        // Para recursos privados, verificar token una sola vez
+        let isAuthenticated = false;
+        const authHeader = req.headers['authorization'];
+        const token = authHeader && authHeader.split(' ')[1];
+
+        // Procesar cada key
+        const batchPromises = keys.map(async (rawKey) => {
+            let key = rawKey;
+            
+            // Sanitización y extracción similar al endpoint individual
+            if (typeof key === 'string' && (key.startsWith('http://') || key.startsWith('https://'))) {
+                try {
+                    if (key.includes('?')) key = key.split('?')[0];
+                    const urlObj = new URL(key);
+                    key = urlObj.pathname;
+                    const bucketNames = [R2_BUCKET_NAME, R2_SECURE_BUCKET_NAME, 'offsznlatbucket', 'offszn-storage'];
+                    for (const b of bucketNames) {
+                        const normalizedPath = key.startsWith('/') ? key : `/${key}`;
+                        if (normalizedPath.startsWith(`/${b}/`)) {
+                            key = normalizedPath.substring(b.length + 2);
+                            break;
+                        }
+                    }
+                } catch (e) {}
+            }
+            
+            if (typeof key === 'string') {
+                if (key.includes('?')) key = key.split('?')[0];
+                while (key.startsWith('/')) key = key.substring(1);
+            }
+
+            const isPublic = publicPrefixes.some(prefix => key.startsWith(prefix));
+            
+            // Si el recurso es privado y no hemos autenticado aún, hacerlo
+            if (!isPublic && !isAuthenticated) {
+                if (!token) {
+                    results[rawKey] = { error: 'Acceso denegado: Recurso privado' };
+                    return;
+                }
+                const { data: { user }, error } = await supabase.auth.getUser(token);
+                if (error || !user) {
+                    results[rawKey] = { error: 'Token inválido' };
+                    return;
+                }
+                isAuthenticated = true; // Cachear resultado para el resto del batch
+            }
+
+            try {
+                const finalExpiresIn = isPublic ? 86400 : (expiresIn || 3600);
+                const downloadUrl = await getPresignedDownloadUrl(key, finalExpiresIn, finalVersion);
+                results[rawKey] = { downloadUrl };
+            } catch (err) {
+                results[rawKey] = { error: 'Error al firmar' };
+            }
+        });
+
+        await Promise.all(batchPromises);
+        res.json({ results });
+
+    } catch (error) {
+        console.error('Error en R2 batch signing:', error);
+        res.status(500).json({ error: 'Error interno en batch signing' });
+    }
+});
+
 router.post('/r2/delete-files', authenticateTokenMiddleware, async (req, res) => {
     try {
         const { keys, version } = req.body;
