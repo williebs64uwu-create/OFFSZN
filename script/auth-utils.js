@@ -247,7 +247,10 @@ window.AuthUtils = {
         }
 
         // --- CACHE CHECK ---
+        if (window.OFFSZN_DEBUG) console.log(`[AuthUtils] getAuthorizedUrl for: ${pathOrUrl}`, { version });
+
         if (this._urlCache[pathOrUrl]) {
+            if (window.OFFSZN_DEBUG) console.log(`[AuthUtils] Cache hit for: ${pathOrUrl}`);
             return this._urlCache[pathOrUrl];
         }
 
@@ -256,10 +259,18 @@ window.AuthUtils = {
         // Also check if it's already a full HTTP URL that is NOT R2 (e.g. Supabase Public)
         const isR2Known = this.isR2Url(pathOrUrl);
         if (!isR2Known && typeof pathOrUrl === 'string' && pathOrUrl.startsWith('http')) {
+            if (window.OFFSZN_DEBUG) console.log(`[AuthUtils] Not R2 or already HTTP, returning: ${pathOrUrl}`);
+            return pathOrUrl;
+        }
+
+        // If it's an R2 URL BUT it already has signing params (X-Amz-Signature), return it
+        if (typeof pathOrUrl === 'string' && pathOrUrl.includes('X-Amz-Signature')) {
+            if (window.OFFSZN_DEBUG) console.log(`[AuthUtils] Already signed URL: ${pathOrUrl}`);
             return pathOrUrl;
         }
 
         if (typeof pathOrUrl === 'string' && pathOrUrl.includes('pub-') && pathOrUrl.includes('.r2.dev')) {
+            if (window.OFFSZN_DEBUG) console.log(`[AuthUtils] Already public R2 Dev URL: ${pathOrUrl}`);
             return pathOrUrl;
         }
 
@@ -307,7 +318,12 @@ window.AuthUtils = {
         // Final version determination: explicit parameter > detected version > current platform default
         const targetVersion = finalVersion || detectedVersion || (window.R2_CURRENT_VERSION || 'v2');
 
-        if (!key || key.startsWith('http')) return pathOrUrl;
+        if (window.OFFSZN_DEBUG) console.log(`[AuthUtils] Queueing sign for key: ${key} (Version: ${targetVersion})`);
+
+        if (!key) {
+            if (window.OFFSZN_DEBUG) console.log(`[AuthUtils] Invalid key, returning original: ${pathOrUrl}`);
+            return pathOrUrl;
+        }
 
         // --- BATCHING QUEUE ---
         return new Promise((resolve, reject) => {
@@ -368,6 +384,8 @@ window.AuthUtils = {
 
                 if (response.ok) {
                     const { results } = await response.json();
+                    if (window.OFFSZN_DEBUG) console.log(`[AuthUtils] Batch response for ${v}:`, results);
+                    
                     versionItems.forEach(item => {
                         const res = results[item.key];
                         if (res && res.downloadUrl) {
@@ -442,9 +460,9 @@ window.AuthUtils = {
             // Check if it's already a full URL that was passed in
             if (rawOriginal && rawOriginal.includes('supabase.co')) return rawOriginal;
 
-            const baseUrl = this._apiBase || window.location.origin || 'https://offszn.lat';
-            // Construct a more reliable public fallback or return the key if it's all we have
-            return `${baseUrl}/r2-public/${key}`;
+            // 🔥 FIX: Use _apiUrl which already includes /api
+            const apiRoot = this._apiUrl || '/api';
+            return `${apiRoot}/r2-public/${key}`;
         }
 
         return rawOriginal; // Last resort: return original string

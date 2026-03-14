@@ -299,6 +299,39 @@ router.post('/r2/delete-files', authenticateTokenMiddleware, async (req, res) =>
     }
 });
 
+// 🔥 FALLBACK PUBLIC ROUTE: Proxy or redirect to public R2 URL for known public prefixes
+router.get(/\/r2-public\/(.*)/, async (req, res) => {
+    try {
+        const key = req.params[0];
+        if (!key) return res.status(400).send('Key missing');
+
+        const publicPrefixes = ['products/covers/', 'beats/mp3/', 'avatars/', 'public/', 'banners/', 'drumkits/covers/'];
+        const isPublicPrefix = publicPrefixes.some(prefix => key.startsWith(prefix));
+
+        if (!isPublicPrefix) {
+            return res.status(403).send('Access Denied: Resource is not public');
+        }
+
+        // Detect version from path hints or default to config
+        let version = 'v2'; // Default to V2 for newer assets
+        if (key.includes('offsznlatbucket') || key.includes('42fc23b11a6c329b76b2babc20afcbf7')) {
+            version = 'v2';
+        } else if (key.includes('offszn-storage') || key.includes('41d0f49121d02c88f71fdb4da54a791d')) {
+            version = 'v1';
+        }
+
+        const publicUrl = getPublicUrl(key, version);
+        
+        // Redirect to the actual public URL (faster than proxying)
+        // Or we could fetch and stream if we want to hide R2 URLs completely
+        res.redirect(301, publicUrl);
+
+    } catch (error) {
+        console.error('Error in R2 public fallback:', error);
+        res.status(500).send('Error accessory public resource');
+    }
+});
+
 router.post('/r2/copy-file', authenticateTokenMiddleware, async (req, res) => {
     try {
         const { sourceKey, destinationKey, version } = req.body;

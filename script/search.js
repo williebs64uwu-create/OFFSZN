@@ -393,10 +393,17 @@ function parseUrlFilters(params) {
 function setupFilterListeners() {
     // Category Checkboxes
     document.querySelectorAll('.category-check').forEach(check => {
+        // Sync initial state
+        if (currentFilters.categories.includes(check.value)) {
+            check.checked = true;
+        }
+
         check.addEventListener('change', (e) => {
             const val = e.target.value;
             if (e.target.checked) {
-                currentFilters.categories.push(val);
+                if (!currentFilters.categories.includes(val)) {
+                    currentFilters.categories.push(val);
+                }
             } else {
                 currentFilters.categories = currentFilters.categories.filter(c => c !== val);
             }
@@ -583,6 +590,11 @@ function setupFilterListeners() {
 
     // Accordion Listeners
     document.querySelectorAll('.key-check').forEach(check => {
+        // Sync initial state
+        if (currentFilters.keys.includes(check.value)) {
+            check.checked = true;
+        }
+
         check.addEventListener('change', (e) => {
             const val = e.target.value;
             if (e.target.checked) {
