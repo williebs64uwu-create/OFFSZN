@@ -105,7 +105,8 @@ router.post('/r2/download-url', async (req, res) => {
         }
 
         // 🔥 Default to v1 if not specified (legacy support)
-        const finalVersion = version || 'v1';
+        const { R2_CURRENT_VERSION } = await import('../../../shared/config/config.js');
+        const finalVersion = version || R2_CURRENT_VERSION || 'v1';
 
         // 🔥 URL EXTRACTION: If the key is a full URL, extract just the path part
         if (typeof key === 'string' && (key.startsWith('http://') || key.startsWith('https://'))) {

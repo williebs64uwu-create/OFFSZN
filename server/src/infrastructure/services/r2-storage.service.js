@@ -33,10 +33,21 @@ const s3ClientV2 = new S3Client({
  * Helper to get the correct client and bucket based on version.
  */
 const getClientAndBucket = (version = R2_CURRENT_VERSION) => {
-    if (version === 'v1') {
-        return { client: s3ClientV1, bucket: R2_BUCKET_NAME };
+    // If V1 is requested but credentials are missing, fallback to V2
+    if (version === 'v1' && (!R2_ACCESS_KEY_ID || !R2_SECRET_ACCESS_KEY || !R2_ENDPOINT)) {
+        console.warn('[R2-Storage] Requested V1 but credentials missing. Falling back to V2.');
+        return { client: s3ClientV2, bucket: R2_BUCKET_NAME_V2 || 'offsznlatbucket' };
     }
-    return { client: s3ClientV2, bucket: R2_BUCKET_NAME_V2 };
+
+    if (version === 'v2' && (!R2_ACCESS_KEY_ID_V2 || !R2_SECRET_ACCESS_KEY_V2 || !R2_ENDPOINT_V2)) {
+         console.warn('[R2-Storage] Requested V2 but credentials missing. Falling back to V1.');
+         return { client: s3ClientV1, bucket: R2_BUCKET_NAME || 'offszn-storage' };
+    }
+
+    if (version === 'v1') {
+        return { client: s3ClientV1, bucket: R2_BUCKET_NAME || 'offszn-storage' };
+    }
+    return { client: s3ClientV2, bucket: R2_BUCKET_NAME_V2 || 'offsznlatbucket' };
 };
 
 /**

@@ -1103,7 +1103,8 @@ window.playProductCover = async function () {
             producer: producerData,
             price_basic: product.price_basic,
             is_free: product.is_free,
-            product_type: product.product_type
+            product_type: product.product_type,
+            r2_version: product.r2_version || 'v1'
         });
 
         // Update cover icon to pause

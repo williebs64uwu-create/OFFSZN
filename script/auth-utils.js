@@ -273,12 +273,12 @@ window.AuthUtils = {
                     'Content-Type': 'application/json',
                     'Authorization': token ? `Bearer ${token}` : undefined
                 },
-                body: JSON.stringify({ key, version })
+                body: JSON.stringify({ key, version: detectedVersion })
             });
 
             // Success logs removed as requested by user
             if (window.OFFSZN_DEBUG && !response.ok) {
-                console.warn(`[R2-Signing] Error: ${response.status} for Key: ${key} | Version: ${version}`);
+                console.warn(`[R2-Signing] Error: ${response.status} for Key: ${key} | Version: ${detectedVersion}`);
             }
 
             if (!response.ok) {
@@ -290,7 +290,7 @@ window.AuthUtils = {
                 if (isPublic) {
                     console.warn(`[AuthUtils] Signing failed for public asset, using fallback: ${key}`);
                     // Ensure we return a full URL to avoid CORB (relative paths may hit frontend router)
-                    const baseUrl = this._apiBase || 'https://offszn.lat';
+                    const baseUrl = this._apiBase || window.location.origin || 'https://offszn.lat';
                     return `${baseUrl}/r2-public/${key}`;
                 }
 
