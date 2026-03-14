@@ -188,7 +188,8 @@ window.renderLicenses = () => {
                             id="price_${id}"
                             name="price_${id}"
                             class="license-price-input" 
-                            value="${license.price}" 
+                            value="${Number(license.price || 0).toFixed(2)}" 
+                            oninput="if(this.value.includes('.') && this.value.split('.')[1].length > 2) this.value = this.value.slice(0, -1)"
                             onchange="window.updateLicensePrice('${id}', this.value)">
                     </div>
                 </div>
@@ -251,9 +252,12 @@ window.toggleLicense = (id) => {
 window.updateLicensePrice = (id, price) => {
     if (licensesState[id]) {
         let p = parseFloat(price);
+        if (isNaN(p)) p = 0;
+        // Strict truncation to 2 decimals (no rounding)
+        p = Math.floor(p * 100) / 100;
         if (p > 1000) p = 1000;
         licensesState[id].price = p;
-        window.renderLicenses(); // Re-render to show correction
+        window.renderLicenses(); 
     }
 };
 
@@ -1856,36 +1860,6 @@ window.handlePublish = async function () {
         // 7. DB Operation (INSERT vs UPDATE)
         let product_id = uploaderState.editId || window.currentEditId;
 
-        // 7.a Cleanup Old R2 Files if replacing them in Edit Mode
-        if (product_id) {
-            const filesToDelete = [];
-
-            // If a new cover was uploaded and it's not "EXISTING", schedule old one for deletion
-            if (uploaderState.cover && uploaderState.cover !== "EXISTING" && uploaderState.old_raw_cover) {
-                filesToDelete.push(uploaderState.old_raw_cover);
-            }
-            if (uploaderState.mp3_tagged && uploaderState.mp3_tagged !== "EXISTING" && uploaderState.old_raw_mp3) {
-                filesToDelete.push(uploaderState.old_raw_mp3);
-            }
-            if (uploaderState.wav_untagged && uploaderState.wav_untagged !== "EXISTING" && uploaderState.old_raw_wav) {
-                filesToDelete.push(uploaderState.old_raw_wav);
-            }
-            if (uploaderState.stems && uploaderState.stems !== "EXISTING" && uploaderState.old_raw_stems) {
-                filesToDelete.push(uploaderState.old_raw_stems);
-            }
-
-            if (filesToDelete.length > 0) {
-                console.log('🧹 [R2 Actions] Sending files to cleanup:', filesToDelete);
-                try {
-                    // AuthUtils.deleteFromR2 is much smarter, it handles the URL extraction
-                    // and version detection (v1 vs v2) internally.
-                    await AuthUtils.deleteFromR2(filesToDelete);
-                } catch (e) {
-                    console.warn("⚠️ Failed to cleanup old R2 files:", e);
-                }
-            }
-        }
-
         // 7.b Perform Database Write
         if (!product_id) {
             console.log('✨ [PUBLISH] INSERTING new product...');
@@ -1896,6 +1870,33 @@ window.handlePublish = async function () {
             console.log('📝 [PUBLISH] UPDATING existing product:', product_id);
             const { error } = await supabaseClient.from('products').update(finalData).eq('id', product_id);
             if (error) throw error;
+        }
+
+        // 7.c Post-Success Cleanup (ONLY after DB update succeeds)
+        if (uploaderState.editId) {
+            const filesToDelete = [];
+            // If new cover, delete old
+            if (uploaderState.cover && uploaderState.cover !== "EXISTING" && uploaderState.old_raw_cover) {
+                filesToDelete.push(uploaderState.old_raw_cover);
+            }
+            // If new mp3, delete old
+            if (uploaderState.mp3_tagged && uploaderState.mp3_tagged !== "EXISTING" && uploaderState.old_raw_mp3) {
+                filesToDelete.push(uploaderState.old_raw_mp3);
+            }
+            // If new wav, delete old
+            if (uploaderState.wav_untagged && uploaderState.wav_untagged !== "EXISTING" && uploaderState.old_raw_wav) {
+                filesToDelete.push(uploaderState.old_raw_wav);
+            }
+            // If new stems or new link, and there was an old raw stem path
+            if ((uploaderState.stems !== "EXISTING" || uploaderState.stemsLink) && uploaderState.old_raw_stems) {
+                filesToDelete.push(uploaderState.old_raw_stems);
+            }
+
+            if (filesToDelete.length > 0) {
+                console.log('🧹 [Cleanup] Queuing R2 cleanup for:', filesToDelete);
+                // Fire and forget but log errors
+                AuthUtils.deleteFromR2(filesToDelete).catch(ce => console.warn("Cleanup error:", ce));
+            }
         }
 
         // 8. Collaborator Invitations Logic
