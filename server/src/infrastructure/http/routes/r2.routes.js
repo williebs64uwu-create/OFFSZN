@@ -108,15 +108,17 @@ router.post('/r2/download-url', async (req, res) => {
         const finalVersion = version || 'v1';
 
         // 🔥 URL EXTRACTION: If the key is a full URL, extract just the path part
-        if (key.startsWith('http://') || key.startsWith('https://')) {
+        if (typeof key === 'string' && (key.startsWith('http://') || key.startsWith('https://'))) {
             try {
+                // Remove signature params if present
+                if (key.includes('?')) key = key.split('?')[0];
+
                 const urlObj = new URL(key);
                 key = urlObj.pathname;
                 
                 // If the bucket name is the first part of the path, remove it
-                const bucketNames = [R2_BUCKET_NAME, R2_SECURE_BUCKET_NAME, 'offsznlatbucket'];
+                const bucketNames = [R2_BUCKET_NAME, R2_SECURE_BUCKET_NAME, 'offsznlatbucket', 'offszn-storage'];
                 for (const b of bucketNames) {
-                    // Handle both /bucket/key and bucket/key styles
                     const normalizedPath = key.startsWith('/') ? key : `/${key}`;
                     if (normalizedPath.startsWith(`/${b}/`)) {
                         key = normalizedPath.substring(b.length + 2);
@@ -128,9 +130,11 @@ router.post('/r2/download-url', async (req, res) => {
             }
         }
 
-        // 🔥 KEY SANITIZATION: Ensure key doesn't start with / and doesn't have query params
-        if (key.includes('?')) key = key.split('?')[0];
-        while (key.startsWith('/')) key = key.substring(1);
+        // 🔥 KEY SANITIZATION
+        if (typeof key === 'string') {
+            if (key.includes('?')) key = key.split('?')[0];
+            while (key.startsWith('/')) key = key.substring(1);
+        }
 
         // Definir prefijos públicos
         const publicPrefixes = ['products/covers/', 'beats/mp3/', 'avatars/', 'public/', 'banners/'];
@@ -154,7 +158,9 @@ router.post('/r2/download-url', async (req, res) => {
             }
         }
 
-        const downloadUrl = await getPresignedDownloadUrl(key, expiresIn || 3600, finalVersion);
+        // 🔥 PUBLIC ASSETS: Increase expiry to 24h to improve caching and reduce CORS overhead
+        const finalExpiresIn = isPublic ? 86400 : (expiresIn || 3600);
+        const downloadUrl = await getPresignedDownloadUrl(key, finalExpiresIn, finalVersion);
         res.json({ downloadUrl });
     } catch (error) {
         console.error('Error al generar R2 download URL:', error);

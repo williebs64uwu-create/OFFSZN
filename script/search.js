@@ -139,6 +139,40 @@ function getMatchScore(product, query, normQuery) {
 
     return 0; // No match
 }
+
+function resolveProductLicenses(product, producer) {
+    const FACTORY_DEFAULTS = {
+        'basic': { name: 'Basic Lease', price: 20, enabled: true },
+        'premium': { name: 'Premium Lease', price: 40, enabled: true },
+        'trackout': { name: 'Trackout Lease', price: 60, enabled: true },
+        'unlimited': { name: 'Unlimited License', price: 80, enabled: true }
+    };
+    const licenseKeys = ['basic', 'premium', 'trackout', 'unlimited'];
+    const pType = (product.product_type || '').toLowerCase();
+    
+    // For non-beats, use price_basic as the single "license"
+    if (pType !== 'beat') {
+        return [{ id: 'basic', name: 'Price', price: parseFloat(product.price_basic) || 0, enabled: true }];
+    }
+
+    const productLicenses = product.licenses || {};
+    const producerSettings = producer?.license_settings || {};
+
+    return licenseKeys.map(key => {
+        const prodLic = productLicenses[key] || {};
+        const userLic = producerSettings[key] || {};
+        const factLic = FACTORY_DEFAULTS[key];
+
+        return {
+            id: key,
+            name: prodLic.name || userLic.name || factLic.name,
+            price: (prodLic.price !== undefined && prodLic.price !== null) ? parseFloat(prodLic.price) :
+                (userLic.price !== undefined && userLic.price !== null) ? parseFloat(userLic.price) : factLic.price,
+            enabled: (prodLic.enabled !== undefined) ? prodLic.enabled :
+                (userLic.enabled !== undefined) ? userLic.enabled : factLic.enabled
+        };
+    }).filter(l => l.enabled);
+}
 // --- End of Utilities ---
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -194,7 +228,7 @@ async function fetchProducers() {
         // Fetch users who are producers
         const { data, error } = await window.supabaseClient
             .from('users')
-            .select('id, nickname, avatar_url, is_verified, is_producer, bio, r2_version')
+            .select('id, nickname, avatar_url, is_verified, is_producer, bio, r2_version, license_settings')
             .eq('is_producer', true); // Removed limit to ensure all producers are available
 
         if (error) throw error;
@@ -219,12 +253,14 @@ async function performSearch() {
     allProducts = fetchedProducts.map(p => {
         const producer = fetchedProducers.find(pr => pr.id === p.producer_id || pr.id === p.user_id);
         const nameFallback = producer?.nickname || p.producer_nickname || 'OFFSZN';
+        const licenses = resolveProductLicenses(p, producer);
         return {
             ...p,
             producer_name: nameFallback,
             producer_nickname: nameFallback, // Simplified
             producer_avatar: producer?.avatar_url,
-            producer_is_verified: (producer?.is_verified || p.producer_is_verified) || false
+            producer_is_verified: (producer?.is_verified || p.producer_is_verified) || false,
+            _resolvedLicenses: licenses // Store for filtering/rendering
         };
     });
     allProducers = fetchedProducers; // Store all fetched producers
@@ -387,6 +423,80 @@ function setupFilterListeners() {
 
         // Initial state sync
         updatePriceDisplay(parseFloat(priceSlider.value));
+
+        // Manual Price Input on Double Click
+        if (priceDisplay) {
+            priceDisplay.style.cursor = 'pointer';
+            priceDisplay.title = 'Doble clic para editar presupuesto';
+            
+            priceDisplay.addEventListener('dblclick', () => {
+                // Determine initial value (avoid "Cualquiera" word)
+                const currentVal = (currentFilters.priceMax === 1000000 || currentFilters.priceMax >= 1000) 
+                    ? "1000.00" 
+                    : currentFilters.priceMax.toFixed(2);
+
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.value = currentVal;
+                
+                // Style input to fit perfectly
+                Object.assign(input.style, {
+                    width: '65px',
+                    background: 'rgba(255,255,255,0.05)',
+                    border: '1px solid rgba(255,255,255,0.2)',
+                    color: '#fff',
+                    borderRadius: '4px',
+                    fontSize: '0.85rem',
+                    padding: '2px 6px',
+                    textAlign: 'right',
+                    outline: 'none',
+                    marginRight: '0px'
+                });
+
+                priceDisplay.innerHTML = '';
+                priceDisplay.appendChild(input);
+                input.focus();
+                input.select();
+
+                let isFinishing = false;
+                const finishEditing = () => {
+                    if (isFinishing) return;
+                    isFinishing = true;
+                    
+                    let val = parseFloat(input.value);
+                    if (isNaN(val) || val < 0) val = 1000;
+                    
+                    // Update state
+                    currentFilters.priceMax = val >= 1000 ? 1000000 : val;
+                    if (priceSlider) priceSlider.value = Math.min(val, 1000);
+                    
+                    // UI Refresh
+                    updatePriceDisplay(val >= 1000 ? 1000 : val);
+                    applyFilters();
+                };
+
+                input.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') input.blur();
+                    if (e.key === 'Escape') {
+                        input.value = currentVal;
+                        input.blur();
+                    }
+                });
+
+                input.addEventListener('input', (e) => {
+                    // Strict validation: max XX.XX
+                    let v = e.target.value.replace(/[^0-9.]/g, '');
+                    const parts = v.split('.');
+                    if (parts.length > 2) v = parts[0] + '.' + parts.slice(1).join('');
+                    if (parts[1] && parts[1].length > 2) v = parts[0] + '.' + parts[1].slice(0, 2);
+                    
+                    // Prevent more than 2 digits after dot if already there
+                    e.target.value = v;
+                });
+
+                input.addEventListener('blur', finishEditing);
+            });
+        }
     }
 
     // Key Initializer
@@ -439,9 +549,6 @@ function setupFilterListeners() {
 }
 
 function applyFilters() {
-    // Show skeletons immediately
-    showResultsSkeletons(10);
-
     // Skip full filter logic if products aren't fetched yet
     if (allProducts.length === 0) return;
 
@@ -491,12 +598,13 @@ function applyFilters() {
             });
         }
 
-        // 4. Price Filter
+        // 4. Price Filter (License Aware)
         if (currentFilters.priceMax !== null) {
             const max = currentFilters.priceMax;
             results = results.filter(p => {
-                const price = parseFloat(p.price_basic) || 0;
-                return price <= max;
+                const licenses = p._resolvedLicenses || [];
+                // Product matches if any enabled license is within budget
+                return licenses.some(l => l.price <= max);
             });
         }
 
@@ -536,7 +644,7 @@ function applyFilters() {
 
         renderResults(filteredResults, matchedProducers, exactProducer);
         renderRecommendations();
-    }, 300); // 300ms delay to allow skeletons to breathe and feel premium
+    }, 50); // 50ms delay for performance without artificial lag
 }
 
 function renderRecommendations() {
@@ -636,10 +744,31 @@ function renderTrackRow(p) {
     const producer = p.producer_name || 'OFFSZN';
     const productUrl = getProductUrl(p);
 
-    // Format price
+    // Format price (License Aware)
     let displayPrice = 'Gratis';
-    if (p.price_basic && parseFloat(p.price_basic) > 0) {
-        displayPrice = window.CurrencyManager ? window.CurrencyManager.formatFromString(p.price_basic) : `$${p.price_basic}`;
+    const licenses = p._resolvedLicenses || [];
+    // 1000 is considered "Cualquiera". So any value >= 1000 returns null (which triggers lowest price)
+    const maxFilter = (currentFilters.priceMax && currentFilters.priceMax < 1000) ? currentFilters.priceMax : null;
+
+    if (licenses.length > 0) {
+        let targetPrice = 0;
+        if (maxFilter) {
+            // Find highest license price within the budget
+            const withinBudget = licenses.filter(l => l.price <= maxFilter);
+            if (withinBudget.length > 0) {
+                targetPrice = Math.max(...withinBudget.map(l => l.price));
+            } else {
+                // Fallback to minimum if none match (shouldn't happen due to applyFilters logic)
+                targetPrice = Math.min(...licenses.map(l => l.price));
+            }
+        } else {
+            // Show minimum price if no filter active (maxFilter is null)
+            targetPrice = Math.min(...licenses.map(l => l.price));
+        }
+
+        if (targetPrice > 0) {
+            displayPrice = window.CurrencyManager ? window.CurrencyManager.format(targetPrice) : `$${targetPrice.toFixed(2)}`;
+        }
     }
 
     return `
@@ -647,7 +776,7 @@ function renderTrackRow(p) {
             <div class="track-left">
                 <div class="thumb-container" onclick="window.location.href='${productUrl}'">
                     <img crossorigin="anonymous" src="${imgUrl}" data-r2-version="${p.r2_version || 'v2'}" class="track-thumb" alt="cover">
-                    <div class="thumb-play-overlay">
+                    <div class="thumb-play-overlay" onclick="window.handleTrackPlay(event, '${p.id}')">
                         <i class="bi bi-play-fill"></i>
                     </div>
                 </div>
@@ -958,10 +1087,10 @@ window.toggleShowMoreKeys = function (btn) {
     const icon = btn.querySelector('i');
 
     if (isExpanded) {
-        btnText.textContent = 'Show Less';
+        btnText.textContent = 'Mostrar menos';
         icon.classList.replace('bi-plus', 'bi-dash');
     } else {
-        btnText.textContent = 'Show 30 more';
+        btnText.textContent = 'Mostrar más';
         icon.classList.replace('bi-dash', 'bi-plus');
     }
     initKeyFilters();

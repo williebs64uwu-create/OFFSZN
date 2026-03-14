@@ -47,12 +47,18 @@ window.AuthUtils = {
         
         // 🔥 DEBUG: Enable logging on local
         if (isLocal) window.OFFSZN_DEBUG = true;
+        
+        let apiBase = window.OFFSZN_CONFIG?.API_BASE_URL;
+        
+        // Auto-detect port 3008 if on localhost and no config
+        if (isLocal && !apiBase) {
+            apiBase = window.location.port === '3008' ? 'http://localhost:3008' : 'http://localhost:3000';
+        } else if (!apiBase) {
+            apiBase = 'https://offszn.lat';
+        }
 
-        const API_URL = window.OFFSZN_CONFIG?.API_BASE_URL
-            ? `${window.OFFSZN_CONFIG.API_BASE_URL}/api`
-            : (isLocal ? 'http://localhost:3000/api' : 'https://offszn.lat/api');
-
-        this._apiUrl = API_URL;
+        this._apiUrl = `${apiBase}/api`;
+        this._apiBase = apiBase; // Keep base for fallbacks
 
         if (window.supabaseClient) return; // Already initialized
         if (typeof window.supabase !== 'undefined' && window.supabase.createClient && window.SUPABASE_URL && window.SUPABASE_ANON_KEY) {
@@ -239,16 +245,27 @@ window.AuthUtils = {
             }
         }
 
-        // 🔥 AUTO-DETECT VERSION FROM URL
-        // Prioritize offsznlatbucket (v2) for the new account
+        // 🔥 AUTO-DETECT VERSION AND PUBLIC PATHS
         if (typeof pathOrUrl === 'string') {
+            // Version detection
             if (pathOrUrl.includes('offsznlatbucket') || pathOrUrl.includes('42fc23b11a6c329b76b2babc20afcbf7')) {
                 version = 'v2';
             } else if (pathOrUrl.includes('offszn-storage') || pathOrUrl.includes('41d0f49121d02c88f71fdb4da54a791d')) {
-                // Old account stays in its original version for reading
                 version = 'v1'; 
             } else if (pathOrUrl.includes('pub-')) {
                 version = 'v1';
+            }
+
+            // 🔥 ZERO LATENCY PUBLIC PATHS
+            // If it's a known public folder, we use the public endpoint if available
+            const publicPrefixes = ['products/covers/', 'beats/mp3/', 'avatars/', 'public/', 'banners/'];
+            const isPublicPath = publicPrefixes.some(p => pathOrUrl.includes(p));
+
+            if (isPublicPath) {
+                // For V2 (new account), if the bucket has a public domain or we use the cloudflarestorage endpoint
+                // we can return it. However, since R2 requires a custom domain for real public access,
+                // we'll still call the signing API unless we HAVE a known public alias.
+                // If you have a custom domain for R2, we should put it here.
             }
         }
 
@@ -279,8 +296,24 @@ window.AuthUtils = {
 
             if (!response.ok) {
                 console.warn(`AuthUtils: Failed to sign R2 key: ${key}`, response.status);
-                // Return original if signing fails as fallback (might be public)
-                return pathOrUrl;
+                // 🔥 FALLBACK: For public assets, construct a direct public URL if signing fails
+                const publicPrefixes = ['products/covers/', 'beats/mp3/', 'avatars/', 'public/', 'banners/', 'drumkits/covers/'];
+                const isPublic = publicPrefixes.some(prefix => key.startsWith(prefix));
+
+                if (isPublic) {
+                    console.warn(`[AuthUtils] Signing failed for public asset, using fallback: ${key}`);
+                    // Ensure we return a full URL to avoid CORB (relative paths may hit frontend router)
+                    const baseUrl = this._apiBase || 'https://offszn.lat';
+                    return `${baseUrl}/r2-public/${key}`;
+                }
+
+                // If it's a relative path, try to make it absolute to avoid CORB 404s
+                if (!key.startsWith('http')) {
+                    const baseUrl = this._apiBase || 'https://offszn.lat';
+                    return `${baseUrl}/${key}`;
+                }
+
+                return key; 
             }
 
             const { downloadUrl } = await response.json();
