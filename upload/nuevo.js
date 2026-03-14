@@ -1797,6 +1797,7 @@ window.handlePublish = async function () {
 
             const res = await uploadToR2(item.file, item.folder, progressHandler);
 
+            if (item.type === 'cover') image_url = res.key;
             if (item.type === 'mp3') {
                 // 🔥 FIX: Save the raw KEY instead of publicUrl. 
                 // This ensures the player always requests a FRESH signed URL at runtime.

@@ -178,6 +178,7 @@ app.use(cookieParser());
 
 // --- 2.3 GLOBAL RATE LIMITING ---
 // Protege toda la aplicación contra ataques de fuerza bruta básicos o Ddos
+app.use('/api', r2Routes);
 app.use('/api', globalLimiter);
 
 // --- RESTO DE RUTAS API (Omitidas para evitar borrado accidental) ---
@@ -208,7 +209,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api', profileRoutes);
 app.use('/api', chatRoutes);
 app.use('/api', paypalRoutes);
-app.use('/api', r2Routes);
+
 app.use('/api', subscriptionRoutes);
 app.use('/api', youtubeRoutes);
 

@@ -19,6 +19,7 @@ let currentFilters = {
     bpmMin: 40,
     bpmMax: 250,
     doubleTempo: false,
+    freeOnly: false,
     keys: []
 };
 let renderTimeout = null; // Debounce for results rendering
@@ -148,6 +149,13 @@ function resolveProductLicenses(product, producer) {
         'unlimited': { name: 'Unlimited License', price: 80, enabled: true }
     };
     const licenseKeys = ['basic', 'premium', 'trackout', 'unlimited'];
+    const colMap = {
+        'basic': 'price_basic',
+        'premium': 'price_premium',
+        'trackout': 'price_stems',
+        'unlimited': 'price_exclusive'
+    };
+    
     const pType = (product.product_type || '').toLowerCase();
     
     // For non-beats, use price_basic as the single "license"
@@ -159,17 +167,61 @@ function resolveProductLicenses(product, producer) {
     const producerSettings = producer?.license_settings || {};
 
     return licenseKeys.map(key => {
-        const prodLic = productLicenses[key] || {};
-        const userLic = producerSettings[key] || {};
+        const offsznKey = `offszn_${key}`;
+        
+        // --- 1. Identify Product JSON Data with Alias Support ---
+        let prodLic = productLicenses[offsznKey] || productLicenses[key] || {};
+        
+        if (key === 'unlimited') {
+            // Unlimited prioritizes 'exclusive' settings
+            const exclusiveData = productLicenses['offszn_exclusive'] || productLicenses['exclusive'];
+            if (exclusiveData && Object.keys(exclusiveData).length > 0) prodLic = exclusiveData;
+        } else if (key === 'trackout') {
+            // Trackout checks for 'stems' synonyms if primary key is missing
+            if (Object.keys(prodLic).length === 0) {
+                prodLic = productLicenses['offszn_stems'] || productLicenses['stems'] || {};
+            }
+        }
+
+        // --- 2. Identify Producer Settings with Alias Support ---
+        let userLic = (producerSettings[offsznKey] || producerSettings[key]) || {};
+        
+        if (key === 'unlimited') {
+            const exclusiveUserData = producerSettings['offszn_exclusive'] || producerSettings['exclusive'];
+            if (exclusiveUserData && Object.keys(exclusiveUserData).length > 0) userLic = exclusiveUserData;
+        } else if (key === 'trackout') {
+            if (Object.keys(userLic).length === 0) {
+                userLic = producerSettings['offszn_stems'] || producerSettings['stems'] || {};
+            }
+        }
+
         const factLic = FACTORY_DEFAULTS[key];
+
+        // --- 3. Resolve Price ---
+        let price = factLic.price;
+        if (prodLic.price !== undefined && prodLic.price !== null) {
+            price = parseFloat(prodLic.price);
+        } else if (product[colMap[key]] !== undefined && product[colMap[key]] !== null && parseFloat(product[colMap[key]]) > 0) {
+            price = parseFloat(product[colMap[key]]);
+        } else if (userLic.price !== undefined && userLic.price !== null) {
+            price = parseFloat(userLic.price);
+        }
+
+        // --- 4. Resolve Enabled ---
+        let enabled = factLic.enabled;
+        if (prodLic.enabled !== undefined) {
+            enabled = prodLic.enabled;
+        } else if (product[colMap[key]] !== undefined && product[colMap[key]] !== null) {
+            enabled = parseFloat(product[colMap[key]]) > 0;
+        } else if (userLic.enabled !== undefined) {
+            enabled = userLic.enabled;
+        }
 
         return {
             id: key,
             name: prodLic.name || userLic.name || factLic.name,
-            price: (prodLic.price !== undefined && prodLic.price !== null) ? parseFloat(prodLic.price) :
-                (userLic.price !== undefined && userLic.price !== null) ? parseFloat(userLic.price) : factLic.price,
-            enabled: (prodLic.enabled !== undefined) ? prodLic.enabled :
-                (userLic.enabled !== undefined) ? userLic.enabled : factLic.enabled
+            price: price,
+            enabled: enabled
         };
     }).filter(l => l.enabled);
 }
@@ -333,6 +385,9 @@ function parseUrlFilters(params) {
         }
     }
     if (params.has('genre')) currentFilters.genres = params.get('genre').split(',');
+    if (params.has('free') && params.get('free') === 'true') {
+        currentFilters.freeOnly = true;
+    }
 }
 
 function setupFilterListeners() {
@@ -423,8 +478,33 @@ function setupFilterListeners() {
 
         // Initial state sync
         updatePriceDisplay(parseFloat(priceSlider.value));
+    }
 
-        // Manual Price Input on Double Click
+    // Gratis Filter Checkbox
+    const freeCheck = document.getElementById('free-filter-check');
+    if (freeCheck) {
+        // Init from state if URL param was set
+        if (currentFilters.freeOnly) {
+            freeCheck.checked = true;
+            if (priceSlider) priceSlider.disabled = true;
+            if (priceDisplay) priceDisplay.textContent = 'Gratis';
+        }
+
+        freeCheck.addEventListener('change', (e) => {
+            currentFilters.freeOnly = e.target.checked;
+            if (priceSlider) {
+                priceSlider.disabled = currentFilters.freeOnly;
+            }
+            if (currentFilters.freeOnly) {
+                if (priceDisplay) priceDisplay.textContent = 'Gratis';
+            } else {
+                if (priceSlider) updatePriceDisplay(parseFloat(priceSlider.value));
+            }
+            applyFilters();
+        });
+    }
+
+    // Manual Price Input on Double Click
         if (priceDisplay) {
             priceDisplay.style.cursor = 'pointer';
             priceDisplay.title = 'Doble clic para editar presupuesto';
@@ -497,7 +577,6 @@ function setupFilterListeners() {
                 input.addEventListener('blur', finishEditing);
             });
         }
-    }
 
     // Key Initializer
     initKeyFilters();
@@ -526,14 +605,20 @@ function setupFilterListeners() {
                 bpmMin: 40,
                 bpmMax: 250,
                 doubleTempo: false,
+                freeOnly: false,
                 keys: []
             };
             // Reset UI
             document.querySelectorAll('.category-check, .key-check').forEach(c => c.checked = false);
+            const freeFilter = document.getElementById('free-filter-check');
+            if (freeFilter) freeFilter.checked = false;
+            if (priceSlider) {
+                priceSlider.value = 1000;
+                priceSlider.disabled = false;
+            }
             if (bpmMinSlider) bpmMinSlider.value = 40;
             if (bpmMaxSlider) bpmMaxSlider.value = 250;
             if (bpmDisplay) bpmDisplay.textContent = '40 - 250';
-            if (priceSlider) priceSlider.value = 1000;
             if (priceDisplay) priceDisplay.textContent = 'Cualquiera';
             if (doubleTempoCheck) doubleTempoCheck.checked = false;
 
@@ -599,11 +684,13 @@ function applyFilters() {
         }
 
         // 4. Price Filter (License Aware)
-        if (currentFilters.priceMax !== null) {
-            const max = currentFilters.priceMax;
+        if (currentFilters.priceMax !== null || currentFilters.freeOnly) {
             results = results.filter(p => {
                 const licenses = p._resolvedLicenses || [];
-                // Product matches if any enabled license is within budget
+                if (currentFilters.freeOnly) {
+                    return licenses.some(l => l.price === 0);
+                }
+                const max = (currentFilters.priceMax !== null) ? currentFilters.priceMax : 1000000;
                 return licenses.some(l => l.price <= max);
             });
         }

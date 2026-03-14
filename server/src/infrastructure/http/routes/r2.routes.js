@@ -108,34 +108,39 @@ router.post('/r2/download-url', async (req, res) => {
         const { R2_CURRENT_VERSION } = await import('../../../shared/config/config.js');
         const finalVersion = version || R2_CURRENT_VERSION || 'v1';
 
-        // 🔥 URL EXTRACTION: If the key is a full URL, extract just the path part
-        if (typeof key === 'string' && (key.startsWith('http://') || key.startsWith('https://'))) {
-            try {
-                // Remove signature params if present
-                if (key.includes('?')) key = key.split('?')[0];
-
-                const urlObj = new URL(key);
-                key = urlObj.pathname;
-                
-                // If the bucket name is the first part of the path, remove it
-                const bucketNames = [R2_BUCKET_NAME, R2_SECURE_BUCKET_NAME, 'offsznlatbucket', 'offszn-storage'];
-                for (const b of bucketNames) {
-                    const normalizedPath = key.startsWith('/') ? key : `/${key}`;
-                    if (normalizedPath.startsWith(`/${b}/`)) {
-                        key = normalizedPath.substring(b.length + 2);
-                        break;
-                    }
-                }
-            } catch (e) {
-                console.warn('[R2 Download] Invalid URL format passed as key:', key);
-            }
-        }
-
-        // 🔥 KEY SANITIZATION
+        // 🔥 KEY SANITIZATION AND VERSION DETECTION
+        let detectedVersion = null;
         if (typeof key === 'string') {
+            // Detectar versión desde el string antes de limpiar
+            if (key.includes('offsznlatbucket') || key.includes('42fc23b11a6c329b76b2babc20afcbf7')) {
+                detectedVersion = 'v2';
+            } else if (key.includes('offszn-storage') || key.includes('41d0f49121d02c88f71fdb4da54a791d')) {
+                detectedVersion = 'v1';
+            }
+
+            if (key.startsWith('http://') || key.startsWith('https://')) {
+                try {
+                    if (key.includes('?')) key = key.split('?')[0];
+                    const urlObj = new URL(key);
+                    key = urlObj.pathname;
+                } catch (e) {}
+            }
+
+            // Eliminar nombre del bucket de la ruta si está presente (incluso si no era una URL completa)
+            const bucketNames = [R2_BUCKET_NAME, R2_SECURE_BUCKET_NAME, 'offsznlatbucket', 'offszn-storage'].filter(b => b && b !== 'secure-products');
+            for (const b of bucketNames) {
+                const normalizedPath = key.startsWith('/') ? key : `/${key}`;
+                if (normalizedPath.startsWith(`/${b}/`)) {
+                    key = normalizedPath.substring(b.length + 2);
+                    break;
+                }
+            }
+            
             if (key.includes('?')) key = key.split('?')[0];
             while (key.startsWith('/')) key = key.substring(1);
         }
+
+        const finalItemVersion = version || detectedVersion || R2_CURRENT_VERSION || 'v2';
 
         // Definir prefijos públicos
         const publicPrefixes = ['products/covers/', 'beats/mp3/', 'avatars/', 'public/', 'banners/'];
@@ -150,8 +155,9 @@ router.post('/r2/download-url', async (req, res) => {
                 return res.status(401).json({ error: 'Acceso denegado: Recurso privado y no hay token' });
             }
 
-            // Verificar token con Supabase
-            const { data: { user }, error } = await supabase.auth.getUser(token);
+            // Verificar token con Supabase de forma segura
+            const { data, error } = await supabase.auth.getUser(token);
+            const user = data?.user;
 
             if (error || !user) {
                 console.warn('R2 Download: Token inválido para recurso privado:', key);
@@ -161,7 +167,8 @@ router.post('/r2/download-url', async (req, res) => {
 
         // 🔥 PUBLIC ASSETS: Increase expiry to 24h to improve caching and reduce CORS overhead
         const finalExpiresIn = isPublic ? 86400 : (expiresIn || 3600);
-        const downloadUrl = await getPresignedDownloadUrl(key, finalExpiresIn, finalVersion);
+        const signVersion = version || finalVersion;
+        const downloadUrl = await getPresignedDownloadUrl(key, finalExpiresIn, signVersion);
         res.json({ downloadUrl });
     } catch (error) {
         console.error('Error al generar R2 download URL:', error);
@@ -170,7 +177,7 @@ router.post('/r2/download-url', async (req, res) => {
 });
 
 // Endpoint para obtener múltiples URLs de descarga firmadas en una sola petición (Batch)
-router.post('/r2/batch-download-urls', async (req, res) => {
+router.post('/r2/bulk-sign', async (req, res) => {
     try {
         const { keys, expiresIn, version } = req.body;
 
@@ -186,20 +193,35 @@ router.post('/r2/batch-download-urls', async (req, res) => {
 
         // Para recursos privados, verificar token una sola vez
         let isAuthenticated = false;
+        let isTokenValid = false;
         const authHeader = req.headers['authorization'];
         const token = authHeader && authHeader.split(' ')[1];
 
         // Procesar cada key
         const batchPromises = keys.map(async (rawKey) => {
-            let key = rawKey;
-            
-            // Sanitización y extracción similar al endpoint individual
-            if (typeof key === 'string' && (key.startsWith('http://') || key.startsWith('https://'))) {
-                try {
-                    if (key.includes('?')) key = key.split('?')[0];
-                    const urlObj = new URL(key);
-                    key = urlObj.pathname;
-                    const bucketNames = [R2_BUCKET_NAME, R2_SECURE_BUCKET_NAME, 'offsznlatbucket', 'offszn-storage'];
+            try {
+                let key = rawKey;
+                let detectedVersion = null;
+                
+                // Sanitización y extracción de key desde URL si es necesario
+                if (typeof key === 'string') {
+                    // Detectar versión desde la URL o el string antes de limpiar
+                    if (key.includes('offsznlatbucket') || key.includes('42fc23b11a6c329b76b2babc20afcbf7')) {
+                        detectedVersion = 'v2';
+                    } else if (key.includes('offszn-storage') || key.includes('41d0f49121d02c88f71fdb4da54a791d')) {
+                        detectedVersion = 'v1';
+                    }
+
+                    if (key.startsWith('http://') || key.startsWith('https://')) {
+                        try {
+                            if (key.includes('?')) key = key.split('?')[0];
+                            const urlObj = new URL(key);
+                            key = urlObj.pathname;
+                        } catch (e) {}
+                    }
+
+                    // Eliminar nombre del bucket de la ruta si está presente (incluso si no era una URL completa)
+                    const bucketNames = [R2_BUCKET_NAME, R2_SECURE_BUCKET_NAME, 'offsznlatbucket', 'offszn-storage'].filter(b => b && b !== 'secure-products');
                     for (const b of bucketNames) {
                         const normalizedPath = key.startsWith('/') ? key : `/${key}`;
                         if (normalizedPath.startsWith(`/${b}/`)) {
@@ -207,35 +229,43 @@ router.post('/r2/batch-download-urls', async (req, res) => {
                             break;
                         }
                     }
-                } catch (e) {}
-            }
-            
-            if (typeof key === 'string') {
-                if (key.includes('?')) key = key.split('?')[0];
-                while (key.startsWith('/')) key = key.substring(1);
-            }
 
-            const isPublic = publicPrefixes.some(prefix => key.startsWith(prefix));
-            
-            // Si el recurso es privado y no hemos autenticado aún, hacerlo
-            if (!isPublic && !isAuthenticated) {
-                if (!token) {
-                    results[rawKey] = { error: 'Acceso denegado: Recurso privado' };
-                    return;
+                    if (key.includes('?')) key = key.split('?')[0];
+                    while (key.startsWith('/')) key = key.substring(1);
                 }
-                const { data: { user }, error } = await supabase.auth.getUser(token);
-                if (error || !user) {
-                    results[rawKey] = { error: 'Token inválido' };
-                    return;
-                }
-                isAuthenticated = true; // Cachear resultado para el resto del batch
-            }
 
-            try {
+                const itemVersion = version || detectedVersion || R2_CURRENT_VERSION || 'v2';
+                const isPublic = publicPrefixes.some(prefix => key.startsWith(prefix));
+                
+                // Si el recurso es privado y no hemos autenticado aún, hacerlo
+                if (!isPublic) {
+                    if (!isAuthenticated) {
+                        if (!token) {
+                            results[rawKey] = { error: 'Acceso denegado: Recurso privado' };
+                            return;
+                        }
+                        const { data, error } = await supabase.auth.getUser(token);
+                        const user = data?.user;
+                        if (error || !user) {
+                            results[rawKey] = { error: 'Token inválido' };
+                            isAuthenticated = true;
+                            isTokenValid = false;
+                            return;
+                        }
+                        isAuthenticated = true; 
+                        isTokenValid = true;
+                    } else if (!isTokenValid) {
+                        results[rawKey] = { error: 'Acceso denegado: Token inválido' };
+                        return;
+                    }
+                }
+
                 const finalExpiresIn = isPublic ? 86400 : (expiresIn || 3600);
-                const downloadUrl = await getPresignedDownloadUrl(key, finalExpiresIn, finalVersion);
+                const downloadUrl = await getPresignedDownloadUrl(key, finalExpiresIn, itemVersion);
                 results[rawKey] = { downloadUrl };
+
             } catch (err) {
+                console.error(`Error firmando key ${rawKey}:`, err);
                 results[rawKey] = { error: 'Error al firmar' };
             }
         });

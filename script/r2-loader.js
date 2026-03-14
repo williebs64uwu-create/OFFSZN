@@ -40,7 +40,7 @@
                 el.style.transition = 'opacity 0.4s ease';
 
                 try {
-                    const r2Version = el.getAttribute('data-r2-version') || 'v2';
+                    const r2Version = el.getAttribute('data-r2-version') || 'v1';
                     const authorizedUrl = await window.getAuthorizedUrl(originalSrc, r2Version);
                     
                     if (authorizedUrl && authorizedUrl !== originalSrc) {

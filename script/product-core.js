@@ -1388,23 +1388,71 @@ async function renderBeatSpecifics(product) {
 
         // 3. Prepare Final Licenses Array (Correct Priority)
         const licenseKeys = ['basic', 'premium', 'trackout', 'unlimited'];
+        const colMap = {
+            'basic': 'price_basic',
+            'premium': 'price_premium',
+            'trackout': 'price_stems',
+            'unlimited': 'price_exclusive'
+        };
+
         const licenses = licenseKeys.map(key => {
-            // Priority: Product Level > Producer Level > Factory Default
-            // 🔥 FIX: Support 'offszn_' prefix (new system) and standard keys (legacy/external)
             const offsznKey = `offszn_${key}`;
-            const prodLic = productLicenses[offsznKey] || productLicenses[key] || {};
-            const userLic = (producerSettings && (producerSettings[offsznKey] || producerSettings[key])) 
+            
+            // --- 1. Identify Product JSON Data with Alias Support ---
+            let prodLic = productLicenses[offsznKey] || productLicenses[key] || {};
+            
+            if (key === 'unlimited') {
+                // Unlimited prioritizes 'exclusive' settings
+                const exclusiveData = productLicenses['offszn_exclusive'] || productLicenses['exclusive'];
+                if (exclusiveData && Object.keys(exclusiveData).length > 0) prodLic = exclusiveData;
+            } else if (key === 'trackout') {
+                // Trackout checks for 'stems' synonyms if primary key is missing
+                if (Object.keys(prodLic).length === 0) {
+                    prodLic = productLicenses['offszn_stems'] || productLicenses['stems'] || {};
+                }
+            }
+
+            // --- 2. Identify Producer Settings with Alias Support ---
+            let userLic = (producerSettings && (producerSettings[offsznKey] || producerSettings[key])) 
                 ? (producerSettings[offsznKey] || producerSettings[key]) 
                 : {};
+            
+            if (key === 'unlimited' && producerSettings) {
+                const exclusiveUserData = producerSettings['offszn_exclusive'] || producerSettings['exclusive'];
+                if (exclusiveUserData && Object.keys(exclusiveUserData).length > 0) userLic = exclusiveUserData;
+            } else if (key === 'trackout' && producerSettings) {
+                if (Object.keys(userLic).length === 0) {
+                    userLic = producerSettings['offszn_stems'] || producerSettings['stems'] || {};
+                }
+            }
+
             const factLic = FACTORY_DEFAULTS[key];
+
+            // --- 3. Resolve Price: Priority logic ---
+            let finalPrice = factLic.price;
+            if (prodLic.price !== undefined && prodLic.price !== null) {
+                finalPrice = parseFloat(prodLic.price);
+            } else if (product[colMap[key]] !== undefined && product[colMap[key]] !== null && parseFloat(product[colMap[key]]) > 0) {
+                finalPrice = parseFloat(product[colMap[key]]);
+            } else if (userLic.price !== undefined && userLic.price !== null) {
+                finalPrice = parseFloat(userLic.price);
+            }
+
+            // --- 4. Resolve Enabled Status ---
+            let isEnabled = factLic.enabled;
+            if (prodLic.enabled !== undefined) {
+                isEnabled = prodLic.enabled;
+            } else if (product[colMap[key]] !== undefined && product[colMap[key]] !== null) {
+                isEnabled = parseFloat(product[colMap[key]]) > 0;
+            } else if (userLic.enabled !== undefined) {
+                isEnabled = userLic.enabled;
+            }
 
             return {
                 id: key,
                 name: prodLic.name || userLic.name || factLic.name,
-                price: (prodLic.price !== undefined && prodLic.price !== null) ? prodLic.price :
-                    (userLic.price !== undefined && userLic.price !== null) ? userLic.price : factLic.price,
-                enabled: (prodLic.enabled !== undefined) ? prodLic.enabled :
-                    (userLic.enabled !== undefined) ? userLic.enabled : factLic.enabled,
+                price: finalPrice,
+                enabled: isEnabled,
                 streams: userLic.streams || factLic.streams,
                 sales: userLic.sales || factLic.sales,
                 radio: userLic.radio || factLic.radio,

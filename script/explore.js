@@ -413,7 +413,7 @@ function createListItemHtml(item, index, type) {
         return `
             <div class="list-item-smart" data-id="${item.id}" data-type="producer" onclick="window.location.href='${link}'">
                 <div class="list-item-index">${index}</div>
-                <img src="${img}" data-r2-version="${item.r2_version || 'v2'}" crossorigin="anonymous" class="list-item-img circle" alt="cover">
+                <img src="${img}" data-r2-version="${item.r2_version || 'v1'}" crossorigin="anonymous" class="list-item-img circle" alt="cover">
                 <div class="list-item-info">
                     <div class="list-item-name">${name}</div>
                     <div class="list-item-sub">${sub}</div>
@@ -432,7 +432,7 @@ function createListItemHtml(item, index, type) {
     return `
         <div class="list-item-smart" data-id="${item.id}" data-type="product">
             <div class="list-item-index">${index}</div>
-            <img src="${img}" data-r2-version="${item.r2_version || 'v2'}" crossorigin="anonymous" class="list-item-img" alt="cover" onclick="event.stopPropagation(); window.handleCoverClick('${item.id}')">
+            <img src="${img}" data-r2-version="${item.r2_version || 'v1'}" crossorigin="anonymous" class="list-item-img" alt="cover" onclick="event.stopPropagation(); window.handleCoverClick('${item.id}')">
             <div class="list-item-info" onclick="event.stopPropagation(); window.handleInfoClick(event, '${item.id}', '${link}')">
                 <div class="list-item-name">${name}</div>
                 <div class="list-item-sub">${sub}</div>
@@ -594,7 +594,7 @@ function renderHeroSlide(product) {
             </div>
 
             <div class="hero-image-container desktop-only" style="opacity: 0; transform: translateX(20px) translateY(-50%);">
-                <img src="${imgUrl}" data-r2-version="${product.r2_version || 'v2'}" crossorigin="anonymous" alt="cover" class="hero-image">
+                <img src="${imgUrl}" data-r2-version="${product.r2_version || 'v1'}" crossorigin="anonymous" alt="cover" class="hero-image">
             </div>
 
             <!-- Mobile Purple Play Button -->

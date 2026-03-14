@@ -237,7 +237,7 @@ window.AuthUtils = {
      * @param {string} version Optional R2 version ('v1' or 'v2')
      * @returns {Promise<string|null>} The authorized URL
      */
-    getAuthorizedUrl: async function (pathOrUrl, version = 'v2') {
+    getAuthorizedUrl: async function (pathOrUrl, version = null) {
         if (!pathOrUrl) return null;
 
         // Ensure cache is loaded (once)
@@ -266,7 +266,8 @@ window.AuthUtils = {
         // --- HYBRID LOGIC ---
         // 1. Identification & Normalization
         let key = pathOrUrl;
-        let detectedVersion = version;
+        let finalVersion = version;
+        let detectedVersion = null;
 
         if (typeof pathOrUrl === 'string') {
             // Clean accidental @ prefix (legacy)
@@ -287,15 +288,9 @@ window.AuthUtils = {
                 }
             }
 
-            // 🔥 STRIP BUCKET NAMES: If the key starts with a known bucket name, strip it.
-            // This happens when the database stores the full R2 path including bucket.
-            const bucketNames = ['offsznlatbucket/', 'offszn-storage/', 'secure-products/'];
-            for (const b of bucketNames) {
-                if (key.startsWith(b)) {
-                    key = key.substring(b.length);
-                    break;
-                }
-            }
+            // 🔥 UPDATED: We NO LONGER strip bucket names here. 
+            // The backend is now capable of detecting the version from the bucket name
+            // and then stripping it before signing. This makes the system more robust.
 
             // Cleanup query params and leading slashes
             if (key.includes('?')) key = key.split('?')[0];
@@ -308,6 +303,9 @@ window.AuthUtils = {
                 detectedVersion = 'v1';
             }
         }
+        
+        // Final version determination: explicit parameter > detected version > current platform default
+        const targetVersion = finalVersion || detectedVersion || (window.R2_CURRENT_VERSION || 'v2');
 
         if (!key || key.startsWith('http')) return pathOrUrl;
 
@@ -316,7 +314,7 @@ window.AuthUtils = {
             this._signingQueue.push({
                 raw: pathOrUrl,
                 key,
-                version: detectedVersion,
+                version: targetVersion,
                 resolve,
                 reject
             });
@@ -350,40 +348,50 @@ window.AuthUtils = {
         }
 
         try {
-            const keys = [...new Set(queue.map(i => i.key))];
             const token = this.getAccessToken();
+            // 🔥 GROUP BY VERSION: Send separate batches for V1 and V2 to avoid signing errors
+        const versions = [...new Set(queue.map(i => i.version || 'v2'))];
+        
+        for (const v of versions) {
+            const versionItems = queue.filter(i => (i.version || 'v2') === v); // 🔥 FIXED: Default to v2 for consistency
+            const keys = [...new Set(versionItems.map(i => i.key))];
+            
+            try {
+                const response = await fetch(`${this._apiUrl}/r2/bulk-sign`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': token ? `Bearer ${token}` : undefined
+                    },
+                    body: JSON.stringify({ keys, version: v })
+                });
 
-            const response = await fetch(`${this._apiUrl}/r2/batch-download-urls`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': token ? `Bearer ${token}` : undefined
-                },
-                body: JSON.stringify({
-                    keys,
-                    version: queue[0].version // Use the first one as default
-                })
-            });
-
-            if (!response.ok) throw new Error(`Batch signing failed: ${response.status}`);
-
-            const { results } = await response.json();
-
-            // Resolve all promises in queue
-            queue.forEach(item => {
-                const res = results[item.key];
-                if (res && res.downloadUrl) {
-                    this._saveCache(item.raw, res.downloadUrl);
-                    item.resolve(res.downloadUrl);
+                if (response.ok) {
+                    const { results } = await response.json();
+                    versionItems.forEach(item => {
+                        const res = results[item.key];
+                        if (res && res.downloadUrl) {
+                            this._saveCache(item.raw, res.downloadUrl);
+                            item.resolve(res.downloadUrl);
+                        } else {
+                            this._handleSigningFailure(item.key, item.raw)
+                                .then(url => item.resolve(url))
+                                .catch(err => item.reject(err));
+                        }
+                    });
                 } else {
-                    // Fallback logic for this specific item
+                    throw new Error(`Batch signing failed for ${v}: ${response.status}`);
+                }
+            } catch (err) {
+                console.error(`[AuthUtils] Error batch signing ${v}:`, err);
+                versionItems.forEach(item => {
                     this._handleSigningFailure(item.key, item.raw)
                         .then(url => item.resolve(url))
                         .catch(err => item.reject(err));
-                }
-            });
-
-        } catch (error) {
+                });
+            }
+        }
+  } catch (error) {
             console.error('[AuthUtils] Batch signing crash, falling back to individual calls:', error);
             // Fallback: perform individual calls for everything in this failed batch
             queue.forEach(item => {
