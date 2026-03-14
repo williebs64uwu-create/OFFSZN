@@ -1042,15 +1042,20 @@ window.StickyPlayer = (function () {
                 'unlimited': { name: 'Unlimited License', price: 80, streams: 'UNLIMITED', sales: 'UNLIMITED', radio: 'ILIMITADO', files: { mp3: true, wav: true, stems: true }, enabled: true }
             };
 
-            return ['basic', 'premium', 'trackout', 'unlimited'].map(key => {
-                const prodLic = productLicenses[key] || {};
-                const userLic = producerSettings[key] || {};
-                const factLic = FACTORY_DEFAULTS[key];
+            const licenseKeys = ['basic', 'premium', 'trackout', 'unlimited', 'exclusive'];
+            return licenseKeys.map(key => {
+                // 🔥 FIX: Support 'offszn_' prefix (new system) and standard keys (legacy/external)
+                const offsznKey = `offszn_${key}`;
+                const prodLic = productLicenses[offsznKey] || productLicenses[key] || {};
+                const userLic = (producerSettings && (producerSettings[offsznKey] || producerSettings[key])) 
+                    ? (producerSettings[offsznKey] || producerSettings[key]) 
+                    : {};
+                const factLic = FACTORY_DEFAULTS[key] || { name: 'License', price: 0, enabled: false };
 
                 return {
                     id: key,
                     name: prodLic.name || userLic.name || factLic.name,
-                    price: (prodLic.price !== undefined) ? prodLic.price : (userLic.price !== undefined) ? userLic.price : factLic.price,
+                    price: (prodLic.price !== undefined && prodLic.price !== null) ? prodLic.price : (userLic.price !== undefined && userLic.price !== null) ? userLic.price : factLic.price,
                     enabled: (prodLic.enabled !== undefined) ? prodLic.enabled : (userLic.enabled !== undefined) ? userLic.enabled : factLic.enabled,
                     streams: userLic.streams || factLic.streams,
                     sales: userLic.sales || factLic.sales,

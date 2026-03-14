@@ -1389,8 +1389,12 @@ async function renderBeatSpecifics(product) {
         const licenseKeys = ['basic', 'premium', 'trackout', 'unlimited'];
         const licenses = licenseKeys.map(key => {
             // Priority: Product Level > Producer Level > Factory Default
-            const prodLic = productLicenses[key] || {};
-            const userLic = (producerSettings && producerSettings[key]) ? producerSettings[key] : {};
+            // 🔥 FIX: Support 'offszn_' prefix (new system) and standard keys (legacy/external)
+            const offsznKey = `offszn_${key}`;
+            const prodLic = productLicenses[offsznKey] || productLicenses[key] || {};
+            const userLic = (producerSettings && (producerSettings[offsznKey] || producerSettings[key])) 
+                ? (producerSettings[offsznKey] || producerSettings[key]) 
+                : {};
             const factLic = FACTORY_DEFAULTS[key];
 
             return {

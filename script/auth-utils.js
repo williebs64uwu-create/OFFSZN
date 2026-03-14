@@ -204,78 +204,65 @@ window.AuthUtils = {
             return this._urlCache[pathOrUrl];
         }
 
-        // 🔥 PREVENT DOUBLE SIGNING: If already contains signature params, return as is
-        if (typeof pathOrUrl === 'string' && pathOrUrl.includes('X-Amz-Signature')) {
+        // 🔥 ZERO LATENCY FIX: If the URL is already a Cloudflare public DEV URL (pub-...), 
+        // do NOT ask the backend to sign it. It's already public.
+        // Also check if it's already a full HTTP URL that is NOT R2 (e.g. Supabase Public)
+        const isR2Known = this.isR2Url(pathOrUrl);
+        if (!isR2Known && typeof pathOrUrl === 'string' && pathOrUrl.startsWith('http')) {
             return pathOrUrl;
         }
 
-        // 🔥 ZERO LATENCY FIX: If the URL is already a Cloudflare public DEV URL (pub-...), 
-        // do NOT ask the backend to sign it. It's already public.
         if (typeof pathOrUrl === 'string' && pathOrUrl.includes('pub-') && pathOrUrl.includes('.r2.dev')) {
             return pathOrUrl;
         }
 
         // --- HYBRID LOGIC ---
-        // 1. Identification: Is it R2 or a public Supabase URL?
-        const isR2 = this.isR2Url(pathOrUrl);
+        // 1. Identification & Normalization
+        let key = pathOrUrl;
+        let detectedVersion = version;
 
-        // 2. Normalization: Clean accidental double slashes for R2 keys/paths
-        // We skip this for full HTTP URLs to avoid 400 errors from sensitive servers (like Supabase storage)
-        let processedPath = pathOrUrl;
-        if (typeof pathOrUrl === 'string' && !pathOrUrl.startsWith('http')) {
-            // Clean @ prefix only for v1 logic or as a general rule before signing
-            processedPath = pathOrUrl.startsWith('@') ? pathOrUrl.substring(1) : pathOrUrl;
-            processedPath = processedPath.replace(/\/\/+/g, "/");
-        }
-
-        if (!isR2 && typeof processedPath === 'string' && processedPath.startsWith('http')) {
-            return processedPath; // Supabase public URL or already signed
-        }
-
-        // --- SECOND LAYER DEFENSE ---
-        if (!isR2) return processedPath;
-
-        // --- R2 LOGIC ---
-        let key = processedPath;
-        if (typeof processedPath === 'string' && processedPath.startsWith('http')) {
-            // Extract key from full R2 URL
-            const r2Base = '.r2.cloudflarestorage.com/';
-            if (processedPath.includes(r2Base)) {
-                key = processedPath.split(r2Base)[1];
-            }
-        }
-
-        // 🔥 AUTO-DETECT VERSION AND PUBLIC PATHS
         if (typeof pathOrUrl === 'string') {
-            // Version detection
-            if (pathOrUrl.includes('offsznlatbucket') || pathOrUrl.includes('42fc23b11a6c329b76b2babc20afcbf7')) {
-                version = 'v2';
-            } else if (pathOrUrl.includes('offszn-storage') || pathOrUrl.includes('41d0f49121d02c88f71fdb4da54a791d')) {
-                version = 'v1'; 
-            } else if (pathOrUrl.includes('pub-')) {
-                version = 'v1';
+            // Clean accidental @ prefix (legacy)
+            if (key.startsWith('@')) key = key.substring(1);
+
+            // Extract key from full R2 URL if it's an absolute URL
+            if (key.startsWith('http')) {
+                const r2Base = '.r2.cloudflarestorage.com/';
+                if (key.includes(r2Base)) {
+                    key = key.split(r2Base)[1];
+                } else {
+                    // Try parsing as generic URL to get pathname
+                    try {
+                        const urlObj = new URL(key);
+                        // If it's something like r2.offszn.lat/bucket/key
+                        key = urlObj.pathname.startsWith('/') ? urlObj.pathname.substring(1) : urlObj.pathname;
+                    } catch (e) { }
+                }
             }
 
-            // 🔥 ZERO LATENCY PUBLIC PATHS
-            // If it's a known public folder, we use the public endpoint if available
-            const publicPrefixes = ['products/covers/', 'beats/mp3/', 'avatars/', 'public/', 'banners/'];
-            const isPublicPath = publicPrefixes.some(p => pathOrUrl.includes(p));
-
-            if (isPublicPath) {
-                // For V2 (new account), if the bucket has a public domain or we use the cloudflarestorage endpoint
-                // we can return it. However, since R2 requires a custom domain for real public access,
-                // we'll still call the signing API unless we HAVE a known public alias.
-                // If you have a custom domain for R2, we should put it here.
+            // 🔥 STRIP BUCKET NAMES: If the key starts with a known bucket name, strip it.
+            // This happens when the database stores the full R2 path including bucket.
+            const bucketNames = ['offsznlatbucket/', 'offszn-storage/', 'secure-products/'];
+            for (const b of bucketNames) {
+                if (key.startsWith(b)) {
+                    key = key.substring(b.length);
+                    break;
+                }
             }
-        }
 
-        // 🔥 KEY CLEANUP: R2 keys must NOT start with / and must NOT have query params
-        if (typeof key === 'string') {
+            // Cleanup query params and leading slashes
             if (key.includes('?')) key = key.split('?')[0];
             while (key.startsWith('/')) key = key.substring(1);
+
+            // AUTO-DETECT VERSION
+            if (pathOrUrl.includes('offsznlatbucket') || pathOrUrl.includes('42fc23b11a6c329b76b2babc20afcbf7')) {
+                detectedVersion = 'v2';
+            } else if (pathOrUrl.includes('offszn-storage') || pathOrUrl.includes('41d0f49121d02c88f71fdb4da54a791d') || pathOrUrl.includes('pub-')) {
+                detectedVersion = 'v1';
+            }
         }
 
-        if (!key) return pathOrUrl;
+        if (!key || key.startsWith('http')) return pathOrUrl;
 
         // --- SIGNING VIA API ---
         try {

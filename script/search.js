@@ -915,9 +915,9 @@ window.handleTrackPlay = (e, id) => {
 
         window.StickyPlayer.play(trackData);
 
-        // Visual toggle (though player usually handles this via events, we can do a quick swap)
-        document.querySelectorAll('.track-play-btn i').forEach(i => i.className = 'bi bi-play-fill');
-        icon.className = 'bi bi-pause-fill';
+        // Visual toggle
+        document.querySelectorAll('.thumb-play-overlay i').forEach(i => i.className = 'bi bi-play-fill');
+        if (icon) icon.className = 'bi bi-pause-fill';
     }
 };
 
