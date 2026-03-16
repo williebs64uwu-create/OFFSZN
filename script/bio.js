@@ -134,7 +134,7 @@ function renderBioHeader(user) {
     }
 
     // Avatar Logic (Support R2 Placeholder or direct URL)
-    const isR2 = user.avatar_url && (user.avatar_url.includes('r2.cloudflarestorage.com') || user.avatar_url.includes('pub-'));
+    const isR2 = window.AuthUtils && window.AuthUtils.isR2Url(user.avatar_url);
     const avatarImg = document.getElementById('bioAvatar');
 
     if (user.avatar_url && !isR2) {
@@ -619,7 +619,7 @@ async function loadRecentProducts(user) {
 
         // Prepare promises for image resolution if needed
         const resolvedProducts = await Promise.all(data.map(async p => {
-            const isR2Image = p.image_url && (p.image_url.includes('r2.cloudflarestorage.com') || p.image_url.includes('pub-'));
+            const isR2Image = window.AuthUtils && window.AuthUtils.isR2Url(p.image_url);
             let finalImageUrl = p.image_url || '/images/portada-default.png';
 
             if (isR2Image && window.getAuthorizedUrl) {
@@ -723,7 +723,7 @@ window.playBioPreview = async function (id, url, btnContent, title, cover, r2_ve
     if (window.StickyPlayer && window.StickyPlayer.play) {
         // Resolve URL (for R2)
         let finalUrl = url;
-        if ((url.includes('r2.cloudflarestorage.com') || url.includes('pub-')) && window.getAuthorizedUrl) {
+        if (window.AuthUtils && window.AuthUtils.isR2Url(url) && window.getAuthorizedUrl) {
             finalUrl = await window.getAuthorizedUrl(url, r2_version);
         }
 

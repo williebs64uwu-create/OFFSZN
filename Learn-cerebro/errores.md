@@ -365,3 +365,31 @@ El ranking mostraba números saltados (ej: 1, 2, 6, 7) porque las cuentas de pru
 
 ### Solución:
 Se sincronizaron las listas de exclusión de IDs en ambos lados. Ahora el backend ignora por completo a los usuarios de prueba al calcular los puestos, asegurando un Top 10 real y continuo de usuarios legítimos.
+
+---
+
+## 11. Portadas R2 Rotas (Error 404 en Covers de Productos)
+**Fecha:** 15 de marzo de 2026
+**Ubicación:** `script/auth-utils.js` / `server/src/infrastructure/http/routes/r2.routes.js` / `script/r2-loader.js`
+
+### Problema:
+Algunos beats (como "Pulsar 200") mostraban portadas rotas en el feed de Explorar, generando errores 404 en la consola. Esto ocurría porque la base de datos guardaba la URL completa de R2 (en lugar de la ruta relativa), y la función encargada de firmarlas (`getAuthorizedUrl`) asimilaba que no necesitaba firma al detectar `http`, evadiendo el proceso y causando denegación de acceso en las cubiertas. Además, en caso de fallar, la ruta pública de fallback en el backend generaba un error interno (`PathError`) por sintaxis incompatible en Express 5.
+
+### Solución:
+1. **Detección Mejorada de URLs R2 (`auth-utils.js`)**: Se actualizó `getAuthorizedUrl` para procesar correctamente las URLs absolutas de R2 y asegurar que sean firmadas si no contienen una firma activa (`X-Amz-Signature`). Además, se corrigió la construcción de la URL de fallback del API en `_handleSigningFailure`.
+2. **Corrección de Ruta Backend (`r2.routes.js`)**: Se solucionó el error fatal en Express 5 (`PathError: Missing parameter name`) reemplazando el patrón `/r2-public/:key*` por una expresión literal nativa `/^\/r2-public\/(.*)/`.
+3. **Supresión de Errores Visuales (`r2-loader.js`)**: Se asignó un `src` temporal con un GIF transparente al identificar elementos con atributo `data-r2-version`, impidiendo que el navegador lance el error inicial de "Not Found" mientras se obtiene asíncronamente la firma.
+
+---
+
+## 12. Vulnerabilidad de Seguridad y Validación de Entorno en Páginas Sensibles
+**Fecha:** 15 de marzo de 2026
+**Ubicación:** `pages/` (`login.html`, `register.html`, `update-password.html`, `verify-email.html`, `purchase-success.html`, `success.html`, `welcome.html`)
+
+### Problema:
+Se identificaron varias páginas HTML sensibles que mantenían codificadas en el código fuente (`hardcoded`) las credenciales `SUPABASE_URL` y `SUPABASE_ANON_KEY`, violando las políticas de seguridad estipuladas. Además, los recursos de CDN externos carecían del atributo `crossorigin="anonymous"`, lo que podría ocasionar bloqueos por políticas COEP. Finalmente, en `success.html`, se detectó una inyección directa de variables de base de datos en el `innerHTML`, exponiendo el sitio a ataques XSS.
+
+### Solución Implementada:
+1. **Remoción de Credenciales Relativas**: Se eliminaron los bloques de scripts con las claves hardcoded en el `<head>` de los 7 archivos HTML, inyectando de forma segura las variables configuradas en el entorno desde el servidor mediante `<script src="/env.js"></script>`.
+2. **Cabeceras Cross-Origin**: Se añadió el atributo `crossorigin="anonymous"` a todas las llamadas externas de scripts, fuentes de Google Fonts, iconos y estilos (como TailwindCSS y CropperJS) para cumplir cabalmente con la política de seguridad estricta y evitar excepciones de CORS/COEP en el navegador.
+3. **Mitigación XSS (DOM Injection)**: En `success.html`, se incluyó la función `escapeHTML()` para el renderizado dinámico del `item.product.name` y los nombres de las licencias antes de su inyección en la vista html, eliminando un posible vector de ataques por inyección.

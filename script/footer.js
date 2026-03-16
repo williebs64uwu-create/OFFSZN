@@ -32,6 +32,33 @@ async function loadFooter() {
         if (!response.ok) throw new Error('Footer load failed');
         const html = await response.text();
         footerContainer.innerHTML = html;
+
+        // Initialize Newsletter Form — native submit to hidden iframe
+        const form = document.getElementById('footer-newsletter-form');
+        if (form && !form.dataset.initialized) {
+            form.dataset.initialized = 'true';
+            
+            form.addEventListener('submit', () => {
+                const btn = form.querySelector('button[type="submit"]');
+                const msg = form.querySelector('.form-message');
+                
+                // Disable button while submitting
+                btn.disabled = true;
+                btn.style.opacity = '0.5';
+                
+                // Show success message after a short delay (form submits to hidden iframe)
+                setTimeout(() => {
+                    msg.textContent = '¡Gracias por suscribirte! 🎉';
+                    msg.style.color = '#34d399';
+                    msg.style.display = 'block';
+                    form.reset();
+                    btn.disabled = false;
+                    btn.style.opacity = '1';
+                    
+                    setTimeout(() => { msg.style.display = 'none'; }, 5000);
+                }, 1000);
+            });
+        }
     } catch (e) {
         console.error("Error loading footer:", e);
     }

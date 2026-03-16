@@ -97,11 +97,13 @@ app.use(helmet({
                 "https://cdn.tailwindcss.com", "https://apis.google.com", "https://accounts.google.com",
                 "https://*.gstatic.com",
                 // PayPal
-                "https://www.paypal.com", "https://www.sandbox.paypal.com"
+                "https://www.paypal.com", "https://www.sandbox.paypal.com",
+                // EmailOctopus
+                "https://eomail5.com", "https://*.eomail5.com"
             ],
             scriptSrcAttr: ["'unsafe-inline'"],
-            styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com", "https://cdn.tailwindcss.com"],
-            fontSrc: ["'self'", "https://fonts.gstatic.com", "https://cdn.jsdelivr.net", "data:", "https://cdnjs.cloudflare.com"],
+            styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com", "https://cdn.tailwindcss.com", "https://eomail5.com", "https://*.eomail5.com", "https://gallery.eo.page"],
+            fontSrc: ["'self'", "https://fonts.gstatic.com", "https://cdn.jsdelivr.net", "data:", "https://cdnjs.cloudflare.com", "https://gallery.eo.page"],
             imgSrc: ["'self'", "data:", "blob:",
                 "https://images.unsplash.com", "https://*.supabase.co",
                 "https://*.r2.dev", "https://*.cloudflarestorage.com", "https://*.r2.cloudflarestorage.com",
@@ -116,6 +118,7 @@ app.use(helmet({
                 "https://*.supabase.co", "wss://*.supabase.co",
                 "https://*.cloudflarestorage.com", "https://*.r2.cloudflarestorage.com", "https://*.r2.dev",
                 "https://api.emailjs.com",
+                "https://eomail5.com", "https://*.eomail5.com",
                 // PayPal
                 "https://api.paypal.com", "https://www.paypal.com", "https://www.sandbox.paypal.com",
                 "https://api-m.paypal.com", "https://api-m.sandbox.paypal.com",
@@ -130,8 +133,11 @@ app.use(helmet({
                 "https://open.spotify.com",
                 // PayPal
                 "https://www.paypal.com", "https://www.sandbox.paypal.com",
-                "https://accounts.google.com", "https://*.googleapis.com", "https://apis.google.com"
+                "https://accounts.google.com", "https://*.googleapis.com", "https://apis.google.com",
+                // EmailOctopus (for hidden iframe form response)
+                "https://eomail5.com", "https://*.eomail5.com"
             ],
+            formAction: ["'self'", "https://eomail5.com", "https://*.eomail5.com"],
             objectSrc: ["'none'"],
             upgradeInsecureRequests: null,
         },

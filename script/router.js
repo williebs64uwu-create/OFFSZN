@@ -33,6 +33,7 @@ const Router = {
         if (url.startsWith('http') && !url.includes(window.location.host)) return false; // External
         if (url.startsWith('#')) return false; // Anchor
         if (element.hasAttribute('download') || element.getAttribute('target') === '_blank') return false;
+        if (url.startsWith('mailto:') || url.startsWith('tel:')) return false;
         if (url.includes('.php') || url.includes('.zip') || url.includes('.png')) return false; // Assets
         return true;
     },

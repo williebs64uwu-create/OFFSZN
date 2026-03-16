@@ -263,11 +263,9 @@ window.AuthUtils = {
             return pathOrUrl;
         }
 
-        // If it's an R2 URL BUT it already has signing params (X-Amz-Signature), return it
-        if (typeof pathOrUrl === 'string' && pathOrUrl.includes('X-Amz-Signature')) {
-            if (window.OFFSZN_DEBUG) console.log(`[AuthUtils] Already signed URL: ${pathOrUrl}`);
-            return pathOrUrl;
-        }
+        // 🔥 REMOVED: Skipping signed URLs. 
+        // We now always attempt to re-sign R2 URLs to ensure they haven't expired in the DB.
+        // The normalization logic below will correctly extract the key and version.
 
         if (typeof pathOrUrl === 'string' && pathOrUrl.includes('pub-') && pathOrUrl.includes('.r2.dev')) {
             if (window.OFFSZN_DEBUG) console.log(`[AuthUtils] Already public R2 Dev URL: ${pathOrUrl}`);
