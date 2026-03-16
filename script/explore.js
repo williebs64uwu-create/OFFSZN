@@ -403,7 +403,13 @@ function renderTwoColLists(category = 'Todo') {
 function createListItemHtml(item, index, type) {
     const name = escapeHTML(item.name || item.nickname || 'Sin nombre');
     const sub = type === 'product' ? escapeHTML(item.producer_nickname || 'OFFSZN Artist') : `${item.products_count || 0} productos`;
-    const img = escapeHTML(item.image_url || item.avatar_url || '/images/portada-default.png');
+    const rawImg = item.image_url || item.avatar_url || '/images/portada-default.png';
+    const isR2 = window.AuthUtils && window.AuthUtils.isR2Url(rawImg);
+    const imgPlaceholder = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
+    
+    // Use data-r2-src if it's R2 to prevent 404 fetch
+    const imgAttr = isR2 ? `src="${imgPlaceholder}" data-r2-src="${escapeHTML(rawImg)}"` : `src="${escapeHTML(rawImg)}"`;
+    
     const isCircle = type === 'producer' ? 'circle' : '';
 
     // SEO Link
@@ -413,7 +419,7 @@ function createListItemHtml(item, index, type) {
         return `
             <div class="list-item-smart" data-id="${item.id}" data-type="producer" onclick="window.location.href='${link}'">
                 <div class="list-item-index">${index}</div>
-                <img src="${img}" data-r2-version="${item.r2_version || 'v1'}" crossorigin="anonymous" class="list-item-img circle" alt="cover">
+                <img ${imgAttr} data-r2-version="${item.r2_version || 'v1'}" crossorigin="anonymous" class="list-item-img circle" alt="cover">
                 <div class="list-item-info">
                     <div class="list-item-name">${name}</div>
                     <div class="list-item-sub">${sub}</div>
@@ -432,7 +438,7 @@ function createListItemHtml(item, index, type) {
     return `
         <div class="list-item-smart" data-id="${item.id}" data-type="product">
             <div class="list-item-index">${index}</div>
-            <img src="${img}" data-r2-version="${item.r2_version || 'v1'}" crossorigin="anonymous" class="list-item-img" alt="cover" onclick="event.stopPropagation(); window.handleCoverClick('${item.id}')">
+            <img ${imgAttr} data-r2-version="${item.r2_version || 'v1'}" crossorigin="anonymous" class="list-item-img" alt="cover" onclick="event.stopPropagation(); window.handleCoverClick('${item.id}')">
             <div class="list-item-info" onclick="event.stopPropagation(); window.handleInfoClick(event, '${item.id}', '${link}')">
                 <div class="list-item-name">${name}</div>
                 <div class="list-item-sub">${sub}</div>
@@ -784,9 +790,15 @@ function createProductCardHtml(product, format = 'standard') {
         const isTrulyFree = pType !== 'beat' && (product.is_free === true || String(product.is_free) === 'true' || Number(product.price_basic) === 0);
         let priceValue = product.price_basic !== undefined && product.price_basic !== null ? product.price_basic : '20';
         const price = isTrulyFree ? 'FREE' : (window.CurrencyManager ? window.CurrencyManager.format(parseFloat(priceValue) || 0) : `$${priceValue}`);
+        
+        const rawImg = product.image_url || '/images/portada-default.png';
+        const isR2 = window.AuthUtils && window.AuthUtils.isR2Url(rawImg);
+        const imgPlaceholder = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
+        const imgAttr = isR2 ? `src="${imgPlaceholder}" data-r2-src="${escapeHTML(rawImg)}"` : `src="${escapeHTML(rawImg)}"`;
+
         return `
             <div class="preset-card-premium" data-product-id="${product.id}">
-                <img src="${img}" data-r2-version="${product.r2_version || 'v2'}" crossorigin="anonymous" alt="${product.name}">
+                <img ${imgAttr} data-r2-version="${product.r2_version || 'v2'}" crossorigin="anonymous" alt="${product.name}">
                 <div class="preset-overlay">
                     <span class="preset-tag">PRESET</span>
                     <h3 class="preset-title">${cleanName(product.name)}</h3>

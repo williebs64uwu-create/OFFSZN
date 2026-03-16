@@ -352,7 +352,8 @@ async function performSearch() {
         // Category Filter
         let matchesCat = true;
         if (category === 'Beats') matchesCat = p.product_type === 'beat';
-        else if (category === 'Drum Kits') matchesCat = p.product_type === 'kit';
+        else if (category === 'Drum Kits') matchesCat = p.product_type === 'drumkit';
+        else if (category === 'Samples') matchesCat = p.product_type === 'loopkit';
         else if (category === 'Presets') matchesCat = p.product_type === 'preset';
         else if (category === 'Plantillas') matchesCat = p.product_type === 'template';
 

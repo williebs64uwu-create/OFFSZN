@@ -38,25 +38,47 @@ async function loadFooter() {
         if (form && !form.dataset.initialized) {
             form.dataset.initialized = 'true';
             
-            form.addEventListener('submit', () => {
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
                 const btn = form.querySelector('button[type="submit"]');
                 const msg = form.querySelector('.form-message');
+                const emailInput = form.querySelector('input[type="email"]');
+                const email = emailInput.value;
                 
-                // Disable button while submitting
+                // Disable button & show loading state
                 btn.disabled = true;
                 btn.style.opacity = '0.5';
+                msg.textContent = 'Enviando...';
+                msg.style.color = '#888';
+                msg.style.display = 'block';
                 
-                // Show success message after a short delay (form submits to hidden iframe)
-                setTimeout(() => {
-                    msg.textContent = '¡Gracias por suscribirte! 🎉';
-                    msg.style.color = '#34d399';
-                    msg.style.display = 'block';
-                    form.reset();
+                try {
+                    const response = await fetch('/api/newsletter/subscribe', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email })
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (response.ok) {
+                        msg.textContent = result.message || '¡Gracias por suscribirte! 🎉';
+                        msg.style.color = '#34d399';
+                        form.reset();
+                    } else {
+                        msg.textContent = result.error || 'Error al suscribirse. Intenta de nuevo.';
+                        msg.style.color = '#ef4444';
+                    }
+                } catch (error) {
+                    console.error('Newsletter fetch error:', error);
+                    msg.textContent = 'Error de conexión. Intenta de nuevo.';
+                    msg.style.color = '#ef4444';
+                } finally {
                     btn.disabled = false;
                     btn.style.opacity = '1';
-                    
-                    setTimeout(() => { msg.style.display = 'none'; }, 5000);
-                }, 1000);
+                    setTimeout(() => { msg.style.display = 'none'; }, 6000);
+                }
             });
         }
     } catch (e) {

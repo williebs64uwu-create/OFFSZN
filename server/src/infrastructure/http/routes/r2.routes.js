@@ -140,7 +140,7 @@ router.post('/r2/download-url', async (req, res) => {
             while (key.startsWith('/')) key = key.substring(1);
         }
 
-        const finalItemVersion = version || detectedVersion || R2_CURRENT_VERSION || 'v2';
+        const itemVersion = detectedVersion || version || R2_CURRENT_VERSION || 'v2';
 
         // Definir prefijos públicos
         const publicPrefixes = ['products/covers/', 'beats/mp3/', 'avatars/', 'public/', 'banners/'];
@@ -167,7 +167,7 @@ router.post('/r2/download-url', async (req, res) => {
 
         // 🔥 PUBLIC ASSETS: Increase expiry to 24h to improve caching and reduce CORS overhead
         const finalExpiresIn = isPublic ? 86400 : (expiresIn || 3600);
-        const signVersion = version || finalVersion;
+        const signVersion = itemVersion;
         const downloadUrl = await getPresignedDownloadUrl(key, finalExpiresIn, signVersion);
         res.json({ downloadUrl });
     } catch (error) {
@@ -234,7 +234,7 @@ router.post('/r2/bulk-sign', async (req, res) => {
                     while (key.startsWith('/')) key = key.substring(1);
                 }
 
-                const itemVersion = version || detectedVersion || R2_CURRENT_VERSION || 'v2';
+                const itemVersion = detectedVersion || version || R2_CURRENT_VERSION || 'v2';
                 const isPublic = publicPrefixes.some(prefix => key.startsWith(prefix));
                 
                 // Si el recurso es privado y no hemos autenticado aún, hacerlo

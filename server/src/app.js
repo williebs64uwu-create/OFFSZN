@@ -163,7 +163,7 @@ app.use((req, res, next) => {
 // --- 2.1 PARSEO DE JSON & COOKIES ---
 import cookieParser from 'cookie-parser'
 import jwt from 'jsonwebtoken'
-import { JWT_SECRET, SUPABASE_URL, SUPABASE_ANON_KEY, EMAILJS_PUBLIC_KEY } from '../src/shared/config/config.js'
+import { JWT_SECRET, SUPABASE_URL, SUPABASE_ANON_KEY, EMAILJS_PUBLIC_KEY, EMAILOCTOPUS_API_KEY, EMAILOCTOPUS_LIST_ID } from '../src/shared/config/config.js'
 
 // --- PUBLIC ENVIRONMENT VARIABLES ---
 app.get('/env.js', (req, res) => {
@@ -204,7 +204,47 @@ app.get('/api/health', (req, res) => {
     res.status(200).send('OK');
 });
 
+// --- 2.4 NEWSLETTER (EMAIL OCTOPUS) ---
+app.post('/api/newsletter/subscribe', async (req, res) => {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ error: 'Se requiere un correo electrónico.' });
+
+    try {
+        const response = await fetch(`https://emailoctopus.com/api/1.1/lists/${EMAILOCTOPUS_LIST_ID}/contacts`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                api_key: EMAILOCTOPUS_API_KEY,
+                email_address: email,
+                status: 'SUBSCRIBED'
+            })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            console.error('EmailOctopus Error:', data);
+            
+            // Handle common errors (e.g. already subscribed)
+            if (data.error && data.error.code === 'MEMBER_EXISTS_WITH_EMAIL_ADDRESS') {
+                return res.status(200).json({ success: true, message: '¡Ya estás suscrito! 🎉' });
+            }
+            
+            return res.status(response.status).json({ 
+                error: 'No pudimos procesar tu suscripción. Intenta de nuevo.' 
+            });
+        }
+
+        res.status(200).json({ success: true, message: '¡Gracias por suscribirte! 🎉' });
+
+    } catch (error) {
+        console.error('Newsletter Backend Error:', error);
+        res.status(500).json({ error: 'Error interno al procesar la suscripción.' });
+    }
+});
+
 app.use('/api', publicRoutes);
+
 app.use('/api', requestRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api', productRoutes);

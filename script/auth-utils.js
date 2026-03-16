@@ -45,8 +45,8 @@ window.AuthUtils = {
     initSupabase: function () {
         const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
         
-        // 🔥 DEBUG: Enable logging on local
-        if (isLocal) window.OFFSZN_DEBUG = true;
+        // 🔥 DEBUG: Disabled by default to keep console clean
+        // if (isLocal) window.OFFSZN_DEBUG = true;
         
         let apiBase = window.OFFSZN_CONFIG?.API_BASE_URL;
         
@@ -247,11 +247,9 @@ window.AuthUtils = {
         }
 
         // --- CACHE CHECK ---
-        if (window.OFFSZN_DEBUG) console.log(`[AuthUtils] getAuthorizedUrl for: ${pathOrUrl}`, { version });
-
-        if (this._urlCache[pathOrUrl]) {
-            if (window.OFFSZN_DEBUG) console.log(`[AuthUtils] Cache hit for: ${pathOrUrl}`);
-            return this._urlCache[pathOrUrl];
+        const cachedUrl = this._urlCache[pathOrUrl];
+        if (cachedUrl) {
+            return cachedUrl;
         }
 
         // 🔥 ZERO LATENCY FIX: If the URL is already a Cloudflare public DEV URL (pub-...), 
@@ -259,7 +257,6 @@ window.AuthUtils = {
         // Also check if it's already a full HTTP URL that is NOT R2 (e.g. Supabase Public)
         const isR2Known = this.isR2Url(pathOrUrl);
         if (!isR2Known && typeof pathOrUrl === 'string' && pathOrUrl.startsWith('http')) {
-            if (window.OFFSZN_DEBUG) console.log(`[AuthUtils] Not R2 or already HTTP, returning: ${pathOrUrl}`);
             return pathOrUrl;
         }
 
@@ -268,7 +265,6 @@ window.AuthUtils = {
         // The normalization logic below will correctly extract the key and version.
 
         if (typeof pathOrUrl === 'string' && pathOrUrl.includes('pub-') && pathOrUrl.includes('.r2.dev')) {
-            if (window.OFFSZN_DEBUG) console.log(`[AuthUtils] Already public R2 Dev URL: ${pathOrUrl}`);
             return pathOrUrl;
         }
 
@@ -319,7 +315,6 @@ window.AuthUtils = {
         if (window.OFFSZN_DEBUG) console.log(`[AuthUtils] Queueing sign for key: ${key} (Version: ${targetVersion})`);
 
         if (!key) {
-            if (window.OFFSZN_DEBUG) console.log(`[AuthUtils] Invalid key, returning original: ${pathOrUrl}`);
             return pathOrUrl;
         }
 
@@ -382,7 +377,6 @@ window.AuthUtils = {
 
                 if (response.ok) {
                     const { results } = await response.json();
-                    if (window.OFFSZN_DEBUG) console.log(`[AuthUtils] Batch response for ${v}:`, results);
                     
                     versionItems.forEach(item => {
                         const res = results[item.key];

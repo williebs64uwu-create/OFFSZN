@@ -51,5 +51,9 @@ export const R2_ACCESS_KEY_ID_V2 = cleanConfigValue(process.env.R2_ACCESS_KEY_ID
 export const R2_SECRET_ACCESS_KEY_V2 = cleanConfigValue(process.env.R2_SECRET_ACCESS_KEY_V2) || '82e3f0be0d50bd786b61ab36cfbc0f1d9dde953e2575672f3d20b62e8571dd6f';
 export const R2_BUCKET_NAME_V2 = cleanConfigValue(process.env.R2_BUCKET_NAME_V2) || 'offsznlatbucket';
 
+// Email Octopus
+export const EMAILOCTOPUS_API_KEY = process.env.EMAILOCTOPUS_API_KEY;
+export const EMAILOCTOPUS_LIST_ID = process.env.EMAILOCTOPUS_LIST_ID;
+
 // Storage Strategy
 export const R2_CURRENT_VERSION = 'v2';

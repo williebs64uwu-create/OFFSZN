@@ -9,10 +9,7 @@
      */
     async function resolveElement(el) {
         if (el.tagName === 'IMG') {
-            const src = el.getAttribute('src');
-            if (window.OFFSZN_DEBUG && src && !src.startsWith('data:')) {
-                console.log(`[R2-Loader] Checking image: ${src.substring(0, 50)}${src.length > 50 ? '...' : ''}`);
-            }
+            const src = el.getAttribute('data-r2-src') || el.getAttribute('src');
             if (!src) return;
 
             // Detect R2 paths (Full URLs or relative keys)
@@ -36,11 +33,11 @@
             // Sign only if it's R2 and NOT already signed (contains AWS signature params)
             if (isR2 && !src.includes('X-Amz-Signature')) {
                 const originalSrc = src;
-                if (window.OFFSZN_DEBUG) console.log(`[R2-Loader] Attempting to sign R2 resource: ${originalSrc}`);
 
-                // 🔥 SILENCE 404: Set src to a transparent pixel immediately to stop the browser 
-                // from trying to load the raw R2 key as a relative path to the local server.
-                el.src = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
+                // 🔥 SILENCE 404: Set src to a transparent pixel if not already set or if it's the raw key
+                if (!el.src || el.src.includes(originalSrc)) {
+                    el.src = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
+                }
 
                 // 🧪 UX Enhancement: Set to empty state to avoid "broken icon" during signing
                 el.style.opacity = el.style.opacity || '0';
@@ -51,7 +48,6 @@
                     const authorizedUrl = await window.getAuthorizedUrl(originalSrc, r2Version);
                     
                     if (authorizedUrl && authorizedUrl !== originalSrc) {
-                        if (window.OFFSZN_DEBUG) console.log(`[R2-Loader] Successfully signed: ${originalSrc} -> ${authorizedUrl.substring(0, 30)}...`);
                         el.onload = () => { 
                             el.style.opacity = '1'; 
                             el.classList.add('r2-loaded');
