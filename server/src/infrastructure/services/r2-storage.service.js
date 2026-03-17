@@ -12,6 +12,8 @@ const s3ClientV1 = new S3Client({
     region: "auto",
     endpoint: R2_ENDPOINT,
     forcePathStyle: true,
+    requestChecksumCalculation: "WHEN_REQUIRED",
+    responseChecksumValidation: "WHEN_REQUIRED",
     credentials: {
         accessKeyId: R2_ACCESS_KEY_ID,
         secretAccessKey: R2_SECRET_ACCESS_KEY,
@@ -23,6 +25,8 @@ const s3ClientV2 = new S3Client({
     region: "auto",
     endpoint: R2_ENDPOINT_V2,
     forcePathStyle: true,
+    requestChecksumCalculation: "WHEN_REQUIRED",
+    responseChecksumValidation: "WHEN_REQUIRED",
     credentials: {
         accessKeyId: R2_ACCESS_KEY_ID_V2,
         secretAccessKey: R2_SECRET_ACCESS_KEY_V2,

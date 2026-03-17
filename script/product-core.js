@@ -367,7 +367,7 @@ function injectDynamicSEO(product) {
     const categoryLabel = pType === 'beat' ? 'Beat' : pType === 'drumkit' ? 'Drum Kit' : pType === 'preset' ? 'Preset' : 'Producto';
     const price = product.price_basic || product.price || 0;
     const currency = 'USD';
-    const coverUrl = product.image_url || 'https://offszn.lat/images/LOGO OFFSZN.webp';
+    const coverUrl = product.image_url || 'https://offszn.lat/images/logo.webp';
     const productUrl = window.location.href;
     const safeProductName = escapeHTML(product.name);
     const safeProducerName = escapeHTML(producerName);
