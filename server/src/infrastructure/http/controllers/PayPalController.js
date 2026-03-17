@@ -106,7 +106,7 @@ export const callbackPayPal = async (req, res) => {
             throw new Error('Failed to fetch user info');
         }
 
-        console.log(`[PayPalOAuth] Verified info for user ${userId}:`, { email: userData.email, payer_id: userData.payer_id });
+        // Info verificada exitosamente para usuario (sin loggear email/payer_id por seguridad)
 
         // 3. Actualizar perfil en Supabase
         const verifiedEmail = userData.email;
@@ -154,7 +154,7 @@ const mapLicenseToKey = (name) => {
 
 export const createPayPalOrder = async (req, res) => {
     try {
-        console.log('[PayPalOrder] Auth Header:', req.headers['authorization'] ? req.headers['authorization'].substring(0, 20) + '...' : 'NONE');
+        // Auth header presente: verificado internamente
         const userId = req.user?.userId;
         let cartItems = [];
 
@@ -500,7 +500,7 @@ export const createPayPalOrder = async (req, res) => {
             });
         }
 
-        console.log(`[PayPalOrder] Setup Complete. Total Units: ${purchaseUnits.length} | Units Detail:`, JSON.stringify(purchaseUnits.map(u => ({ ref: u.reference_id, amt: u.amount.value, payee: u.payee })), null, 2));
+        console.log(`[PayPalOrder] Setup Complete. Total Units: ${purchaseUnits.length}`);
 
         if (purchaseUnits.length === 0) {
             console.error('[PayPalOrder] Empty purchase units array.');
@@ -611,7 +611,7 @@ export const capturePayPalOrder = async (req, res) => {
 
                     if (existingUser) {
                         userId = existingUser.id;
-                        console.log(`[PayPalCapture] Guest matched with existing user: ${payerEmail}`);
+                        console.log(`[PayPalCapture] Guest matched with existing user`);
                     }
                 }
             }
@@ -898,7 +898,7 @@ export const capturePayPalOrder = async (req, res) => {
 
                     if (!userEmail) return;
 
-                    console.log(`[EmailJS] STARTING email flow for ${userEmail}`);
+                    console.log(`[EmailJS] STARTING email flow for order`);
 
                     for (const item of cartItems) {
                         // A. Notify Client (Receipt)
@@ -1073,7 +1073,7 @@ export const linkGuestOrder = async (req, res) => {
         const userId = req.user.userId;
         const userEmail = req.user.email;
 
-        console.log(`[LinkOrder] Request: order=${orderId}, user=${userId}, email=${userEmail}`);
+        console.log(`[LinkOrder] Request: order=${orderId}`);
 
         if (!orderId) {
             return res.status(400).json({ error: 'Falta orderId' });

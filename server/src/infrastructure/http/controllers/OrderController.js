@@ -85,8 +85,7 @@ export const createMercadoPagoPreference = async (req, res) => {
             binary_mode: true
         };
 
-        // 🕵️ DEBUG: Imprimir lo que enviamos a MP
-        console.log("📦 Enviando a MP:", JSON.stringify(preferenceBody, null, 2));
+        // Preference body construido (no loggear por seguridad)
 
         const preference = new Preference(client);
         const result = await preference.create({ body: preferenceBody });
@@ -127,7 +126,7 @@ export const handleMercadoPagoWebhook = async (req, res) => {
 
     if (Object.keys(req.body).length > 0) {
 
-        console.log(`📦 [Webhook Body]:`, JSON.stringify(req.body));
+        console.log(`📦 [Webhook Body]: ${Object.keys(req.body).length} keys`);
 
     }
 
@@ -165,11 +164,7 @@ const processPaymentAudit = async (paymentId) => {
 
     // Verificamos QUÉ token estamos usando en este preciso instante
 
-    const currentToken = process.env.MERCADOPAGO_ACCESS_TOKEN;
-
-    const maskedToken = currentToken ? `${currentToken.substring(0, 10)}...` : 'NULL';
-
-    console.log(`🔑 [AUDIT TOKEN] Usando token: ${maskedToken}`);
+    // Token verificado internamente (sin loggear fragmentos)
 
 
 

@@ -46,10 +46,10 @@ export const R2_TOKEN = cleanConfigValue(process.env.R2_TOKEN);
 
 // CLOUDFLARE R2 V2 (New Account)
 const rawEndpointV2 = process.env.R2_ENDPOINT_V2;
-export const R2_ENDPOINT_V2 = cleanConfigValue(rawEndpointV2) || 'https://42fc23b11a6c329b76b2babc20afcbf7.r2.cloudflarestorage.com';
-export const R2_ACCESS_KEY_ID_V2 = cleanConfigValue(process.env.R2_ACCESS_KEY_ID_V2) || '090fc361ac3433dfeacd5b062dc37e69';
-export const R2_SECRET_ACCESS_KEY_V2 = cleanConfigValue(process.env.R2_SECRET_ACCESS_KEY_V2) || '82e3f0be0d50bd786b61ab36cfbc0f1d9dde953e2575672f3d20b62e8571dd6f';
-export const R2_BUCKET_NAME_V2 = cleanConfigValue(process.env.R2_BUCKET_NAME_V2) || 'offsznlatbucket';
+export const R2_ENDPOINT_V2 = cleanConfigValue(rawEndpointV2);
+export const R2_ACCESS_KEY_ID_V2 = cleanConfigValue(process.env.R2_ACCESS_KEY_ID_V2);
+export const R2_SECRET_ACCESS_KEY_V2 = cleanConfigValue(process.env.R2_SECRET_ACCESS_KEY_V2);
+export const R2_BUCKET_NAME_V2 = cleanConfigValue(process.env.R2_BUCKET_NAME_V2);
 
 // Email Octopus
 export const EMAILOCTOPUS_API_KEY = process.env.EMAILOCTOPUS_API_KEY;

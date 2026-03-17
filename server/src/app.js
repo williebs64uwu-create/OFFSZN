@@ -154,11 +154,7 @@ app.use(helmet({
 // Aplicar CORS a todo
 app.use(cors(corsOptions));
 
-// DEBUG LOGGER
-app.use((req, res, next) => {
-    console.log(`📡 Request: ${req.method} ${req.originalUrl}`);
-    next();
-});
+// DEBUG LOGGER desactivado en producción (ver seguridad.md)\n// app.use((req, res, next) => { console.log(`📡 Request: ${req.method} ${req.originalUrl}`); next(); });
 
 // --- 2.1 PARSEO DE JSON & COOKIES ---
 import cookieParser from 'cookie-parser'

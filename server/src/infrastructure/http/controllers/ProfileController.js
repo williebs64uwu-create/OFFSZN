@@ -37,7 +37,7 @@ export const getUserProfile = async (req, res) => {
                 return res.status(401).json({ error: 'Unauthorized by DB (RLS?)' });
             }
             // Log full error
-            console.log(JSON.stringify(error));
+            console.log(`[ProfileController] Error code: ${error.code}, msg: ${error.message}`);
             throw error;
         }
 

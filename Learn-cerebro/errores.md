@@ -393,3 +393,52 @@ Se identificaron varias páginas HTML sensibles que mantenían codificadas en el
 1. **Remoción de Credenciales Relativas**: Se eliminaron los bloques de scripts con las claves hardcoded en el `<head>` de los 7 archivos HTML, inyectando de forma segura las variables configuradas en el entorno desde el servidor mediante `<script src="/env.js"></script>`.
 2. **Cabeceras Cross-Origin**: Se añadió el atributo `crossorigin="anonymous"` a todas las llamadas externas de scripts, fuentes de Google Fonts, iconos y estilos (como TailwindCSS y CropperJS) para cumplir cabalmente con la política de seguridad estricta y evitar excepciones de CORS/COEP en el navegador.
 3. **Mitigación XSS (DOM Injection)**: En `success.html`, se incluyó la función `escapeHTML()` para el renderizado dinámico del `item.product.name` y los nombres de las licencias antes de su inyección en la vista html, eliminando un posible vector de ataques por inyección.
+
+---
+
+## 13. Errores 403 Forbidden por URLs Firmadas Expiradas en DB
+**Fecha:** 16 de marzo de 2026
+**Ubicación:** Tabla `products` (campos `image_url`, `audio_url`) / `r2-storage.service.js`
+
+### Problema:
+Al guardar productos, se estaban almacenando URLs firmadas completas de R2 (con `X-Amz-Signature`). Estas URLs expiran en 24h, dejando el recurso inaccesible (403 Forbidden) permanentemente en la base de datos.
+
+### Solución:
+1. **Limpieza de DB:** Se ejecutó un script para convertir todas las URLs absolutas de R2 en rutas relativas (ej. `products/covers/.../file.jpg`).
+2. **Firma Dinámica:** El frontend (`AuthUtils.getAuthorizedUrl`) ahora detecta si la URL es de R2 y solicita una firma fresca al backend solo cuando es necesario mostrar el recurso.
+3. **Regla de Oro:** NUNCA guardar tokens de acceso o firmas temporales en Supabase. Guardar solo el "Key" o "Path" del archivo.
+
+---
+
+## 14. Bloqueo CORB (Cross-Origin Read Blocking) en R2
+**Fecha:** 16 de marzo de 2026
+**Ubicación:** `server/src/infrastructure/services/r2-storage.service.js`
+
+### Problema:
+Las imágenes de R2 no cargaban en el navegador, mostrando un error de CORB en la consola. El inspector mostraba que las URLs firmadas incluían el parámetro `x-amz-checksum-mode=ENABLED`, el cual Cloudflare R2 maneja de forma que activa protecciones de seguridad del navegador.
+
+### Solución:
+Desactivar explícitamente el cálculo de checksums en el cliente de S3 de AWS SDK:
+```javascript
+const s3Client = new S3Client({
+    // ...
+    requestChecksumCalculation: "WHEN_REQUIRED",
+    responseChecksumValidation: "WHEN_REQUIRED"
+});
+```
+Esto elimina el header de checksum en la URL firmada y permite la carga transparente del recurso.
+
+---
+
+## 15. Inconsistencia de Versiones (V1 vs V2) en R2 Storage
+**Fecha:** 16 de marzo de 2026
+**Ubicación:** `r2.routes.js` / Tabla `products` (columna `r2_version`)
+
+### Problema:
+Se detectaron 404s persistentes en productos específicos (ej. koimattoru). La causa era que los productos estaban etiquetados como `r2_version: v2` en la base de datos, pero los archivos físicos solo existían en el bucket original (V1). El servidor intentaba firmarlos con la cuenta V2, resultando en "Object Not Found".
+
+### Solución:
+1. **Auditoría Cruzada:** Se creó un script (`fix_versions.js`) que verifica la existencia real del archivo en ambos buckets y corrige la columna `r2_version` en Supabase según corresponda.
+2. **Detección Automática:** En el backend, se implementó lógica para detectar la versión basada en el endpoint o el nombre del bucket contenido en la URL original antes de proceder a la firma.
+
+---

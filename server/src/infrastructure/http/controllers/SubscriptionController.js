@@ -41,10 +41,10 @@ export const createSubscriptionPreference = async (req, res) => {
 
         // Detectar base URL
         let clientURL = req.headers.origin || req.headers.referer;
-        console.log(`[DEBUG MP] detected clientURL: ${clientURL}`);
+        // clientURL detectado internamente
         if (!clientURL || clientURL.includes('localhost') || clientURL.includes('127.0.0.1')) {
             clientURL = "https://offszn.lat"; // FORCE a valid HTTPS URL for testing MP validation
-            console.log(`[DEBUG MP] Overriding to HTTPS URL to prevent MP validation errors: ${clientURL}`);
+            // Override a HTTPS para produccción
         }
         if (clientURL.endsWith('/')) clientURL = clientURL.slice(0, -1);
 
@@ -83,7 +83,7 @@ export const createSubscriptionPreference = async (req, res) => {
         const client = new MercadoPagoConfig({ accessToken: token });
         const preference = new Preference(client);
 
-        console.log("📦 [MP PREF] Body enviado:", JSON.stringify(preferenceBody, null, 2));
+        // Preference body construido (no loggear por seguridad)
 
         // Crear preferencia
         const result = await preference.create({ body: preferenceBody });

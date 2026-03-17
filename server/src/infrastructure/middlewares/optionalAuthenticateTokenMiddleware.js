@@ -9,11 +9,11 @@ export const optionalAuthenticateTokenMiddleware = async (req, res, next) => {
     }
 
     try {
-        console.log('[Auth] Verifying token:', token.substring(0, 10) + '...');
+        // Token verificación (sin loggear fragmentos por seguridad)
         const { data: { user }, error } = await supabase.auth.getUser(token);
 
         if (!error && user) {
-            console.log('[Auth] User verified:', user.email);
+            // Usuario verificado exitosamente
             req.user = {
                 userId: user.id,
                 email: user.email,

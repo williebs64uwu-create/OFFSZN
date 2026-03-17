@@ -255,7 +255,7 @@ export const respondNegotiation = async (req, res) => {
                 subject: subject,
                 html: html,
             });
-            console.log(`[Negotiation] Response email sent to ${buyerEmail} for status: ${status}`);
+            console.log(`[Negotiation] Response email sent for status: ${status}`);
         }
 
         // 5. Insert in-app notification for buyer

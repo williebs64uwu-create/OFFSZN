@@ -23,7 +23,7 @@ export const sendReceiptEmail = async (data) => {
             template_params: templateParams
         };
 
-        console.log(`[EmailJS] Sending email (${payload.template_id}) to: ${templateParams.to_email || templateParams.to_name || 'unknown'}`);
+        console.log(`[EmailJS] Sending email (${payload.template_id})`);
 
         const response = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
             method: 'POST',
