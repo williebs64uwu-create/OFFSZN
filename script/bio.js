@@ -140,8 +140,13 @@ function renderBioHeader(user) {
     if (user.avatar_url && !isR2) {
         avatarImg.src = user.avatar_url;
     } else if (isR2 && window.getAuthorizedUrl) {
+        // Prevent 404 flash with placeholder
+        avatarImg.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=';
+        avatarImg.dataset.r2Src = user.avatar_url;
+        avatarImg.dataset.r2Version = user.r2_version || 'v1';
+
         window.getAuthorizedUrl(user.avatar_url, user.r2_version || 'v1').then(url => {
-            avatarImg.src = url;
+            if (url) avatarImg.src = url;
             avatarImg.parentElement.classList.remove('bg-zinc-900');
         }).catch(() => {
             // fallback
@@ -622,12 +627,23 @@ async function loadRecentProducts(user) {
             const isR2Image = window.AuthUtils && window.AuthUtils.isR2Url(p.image_url);
             let finalImageUrl = p.image_url || '/images/portada-default.png';
 
+            // 🔥 Standard: If R2, prepare placeholder and data-r2-src
+            // Note: We still pre-authorize here for faster rendering if available, 
+            // but the template will use data-r2-src as safety for r2-loader.js
             if (isR2Image && window.getAuthorizedUrl) {
                 try {
-                    finalImageUrl = await window.getAuthorizedUrl(p.image_url, p.r2_version || 'v1');
+                    // Use placeholder initially to avoid 404
+                    finalImageUrl = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=';
+                    // We don't await here to avoid blocking render, r2-loader or the .then() below will update it
+                    window.getAuthorizedUrl(p.image_url, p.r2_version || 'v1').then(signed => {
+                        if (signed) {
+                            const imgEl = document.getElementById(`prod-img-${p.id}`);
+                            if (imgEl) imgEl.src = signed;
+                        }
+                    });
                 } catch (e) { console.error("Error resolving product image", e); }
             }
-            return { ...p, finalImageUrl };
+            return { ...p, finalImageUrl, isR2Image };
         }));
 
         resolvedProducts.forEach(p => {
@@ -655,10 +671,13 @@ async function loadRecentProducts(user) {
                 <div class="relative w-full bg-[#0a0a0a] rounded-xl overflow-hidden border border-zinc-800 flex flex-col md:flex-row shadow-2xl group hover:border-zinc-500 transition-colors duration-300">
                     <!-- Cover -->
                     <div class="w-full md:w-[120px] aspect-square bg-zinc-900 relative flex-shrink-0 p-3 flex items-center justify-center">
-                        <img src="${p.finalImageUrl}" data-r2-version="${p.r2_version || 'v1'}"
-                            class="shadow-2xl rounded-md transform group-hover:scale-105 transition-transform duration-500 w-full h-full object-cover border border-white/5"
-                            style="box-shadow: -5px 5px 15px rgba(0,0,0,0.5);"
-                            crossorigin="anonymous">
+                        <img src="${p.finalImageUrl}" 
+                             id="prod-img-${p.id}"
+                             data-r2-src="${p.isR2Image ? p.image_url : ''}"
+                             data-r2-version="${p.r2_version || 'v1'}"
+                             class="shadow-2xl rounded-md transform group-hover:scale-105 transition-transform duration-500 w-full h-full object-cover border border-white/5"
+                             style="box-shadow: -5px 5px 15px rgba(0,0,0,0.5);"
+                             crossorigin="anonymous">
                         
                         <!-- Mini Play Button Overlay (Optional UI touch) -->
                         <button onclick="playBioPreview('${p.id}', '${p.audio_url || p.mp3_url || ''}', this, '${(p.name || '').replace(/'/g, "\\'").replace(/"/g, "&quot;")}', '${p.finalImageUrl}', '${p.r2_version || 'v1'}')" 

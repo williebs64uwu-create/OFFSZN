@@ -182,11 +182,21 @@ router.post('/r2/download-url', async (req, res) => {
         // 🔥 PUBLIC ASSETS: Increase expiry to 24h to improve caching and reduce CORS overhead
         const finalExpiresIn = isPublic ? 86400 : (expiresIn || 3600);
         const signVersion = itemVersion;
-        const downloadUrl = await getPresignedDownloadUrl(key, finalExpiresIn, signVersion);
-        res.json({ downloadUrl });
+        
+        try {
+            const downloadUrl = await getPresignedDownloadUrl(key, finalExpiresIn, signVersion);
+            if (!downloadUrl) {
+                console.warn(`[R2 Download] Signing returned no URL for ${key} (${signVersion})`);
+                return res.status(404).json({ error: 'Recurso no encontrado o firma fallida' });
+            }
+            res.json({ downloadUrl });
+        } catch (signErr) {
+            console.error(`[R2 Download] CRITICAL signing failure for ${key} (Version: ${signVersion}):`, signErr);
+            throw signErr; // Caught by outer catch
+        }
     } catch (error) {
         console.error('Error al generar R2 download URL:', error);
-        res.status(500).json({ error: 'Error al generar URL de descarga' });
+        res.status(500).json({ error: 'Error al generar URL de descarga', details: error.message });
     }
 });
 
@@ -347,13 +357,36 @@ router.get(/\/r2-public\/(.*)/, async (req, res) => {
 
         const publicUrl = getPublicUrl(key, version);
         
-        // 🔥 CORS FIX: Add headers before redirecting to ensure browser doesn't block the audio/image
-        res.setHeader('Access-Control-Allow-Origin', '*');
-        res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-        res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+        // 🔥 CORS FIX: Proxy instead of redirecting to avoid browser blocking on cross-origin redirects
+        try {
+            const response = await fetch(publicUrl);
+            
+            if (!response.ok) {
+                console.warn(`[R2 Public Fallback] Failed to fetch ${publicUrl}: ${response.status}`);
+                return res.status(response.status).send('Resource not found');
+            }
 
-        // Redirect to the actual public URL (faster than proxying)
-        res.redirect(301, publicUrl);
+            // Copy headers
+            res.setHeader('Content-Type', response.headers.get('Content-Type') || 'application/octet-stream');
+            res.setHeader('Cache-Control', 'public, max-age=86400'); // 24h cache
+            res.setHeader('Access-Control-Allow-Origin', '*');
+
+            // Stream the response
+            const body = response.body;
+            if (body) {
+                const reader = body.getReader();
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    res.write(value);
+                }
+            }
+            res.end();
+            return;
+        } catch (fetchErr) {
+            console.error(`[R2 Public Fallback] Error proxying ${publicUrl}:`, fetchErr);
+            return res.status(500).send('Error proxying resource');
+        }
 
     } catch (error) {
         console.error('Error in R2 public fallback:', error);

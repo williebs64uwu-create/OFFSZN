@@ -13,20 +13,23 @@
             const src = el.getAttribute('data-r2-src') || el.getAttribute('src');
             if (!src) return;
 
-            const isR2 = (
-                src.includes('r2.cloudflarestorage.com') ||
-                src.includes('pub-') ||
-                src.startsWith('@') ||
-                (!src.startsWith('http') &&
-                    !src.startsWith('data:') &&
-                    !src.startsWith('/images') &&
-                    !src.startsWith('/assets') &&
-                    !src.startsWith('/icon') &&
-                    !src.startsWith('/banners') &&
-                    !src.startsWith('/fonts') &&
-                    (src.includes('/') || /\.(jpg|jpeg|png|webp|gif|svg|mp3|wav|zip)$/i.test(src))
-                )
-            );
+            const isR2 = (window.AuthUtils && window.AuthUtils.isR2Url) 
+                ? window.AuthUtils.isR2Url(src)
+                : (
+                    src.includes('r2.cloudflarestorage.com') ||
+                    src.includes('pub-') ||
+                    src.includes('supabase.co') ||
+                    src.startsWith('@') ||
+                    (!src.startsWith('http') &&
+                        !src.startsWith('data:') &&
+                        !src.startsWith('/images') &&
+                        !src.startsWith('/assets') &&
+                        !src.startsWith('/icon') &&
+                        !src.startsWith('/banners') &&
+                        !src.startsWith('/fonts') &&
+                        (src.includes('/') || /\.(jpg|jpeg|png|webp|gif|svg|mp3|wav|zip)$/i.test(src))
+                    )
+                );
 
             if (isR2 && !src.includes('X-Amz-Signature')) {
                 const originalSrc = src;

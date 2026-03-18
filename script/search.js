@@ -843,39 +843,16 @@ function renderTrackRow(p) {
     const type = (p.product_type || 'Beat').toUpperCase();
     const producer = p.producer_name || 'OFFSZN';
     const productUrl = getProductUrl(p);
-
-    // Format price (License Aware)
-    let displayPrice = 'Gratis';
-    const licenses = p._resolvedLicenses || [];
-    // 1000 is considered "Cualquiera". So any value >= 1000 returns null (which triggers lowest price)
-    const maxFilter = (currentFilters.priceMax && currentFilters.priceMax < 1000) ? currentFilters.priceMax : null;
-
-    if (licenses.length > 0) {
-        let targetPrice = 0;
-        if (maxFilter) {
-            // Find highest license price within the budget
-            const withinBudget = licenses.filter(l => l.price <= maxFilter);
-            if (withinBudget.length > 0) {
-                targetPrice = Math.max(...withinBudget.map(l => l.price));
-            } else {
-                // Fallback to minimum if none match (shouldn't happen due to applyFilters logic)
-                targetPrice = Math.min(...licenses.map(l => l.price));
-            }
-        } else {
-            // Show minimum price if no filter active (maxFilter is null)
-            targetPrice = Math.min(...licenses.map(l => l.price));
-        }
-
-        if (targetPrice > 0) {
-            displayPrice = window.CurrencyManager ? window.CurrencyManager.format(targetPrice) : `$${targetPrice.toFixed(2)}`;
-        }
-    }
+    
+    const isR2 = window.AuthUtils && window.AuthUtils.isR2Url(imgUrl);
+    const imgPlaceholder = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
+    const imgAttr = isR2 ? `src="${imgPlaceholder}" data-r2-src="${escapeHTML(imgUrl)}"` : `src="${escapeHTML(imgUrl)}"`;
 
     return `
         <div class="track-row" data-product-id="${p.id}">
             <div class="track-left">
                 <div class="thumb-container" onclick="window.location.href='${productUrl}'">
-                    <img crossorigin="anonymous" src="${imgUrl}" data-r2-version="${p.r2_version || 'v2'}" class="track-thumb" alt="cover">
+                    <img crossorigin="anonymous" ${imgAttr} data-r2-version="${p.r2_version || 'v2'}" class="track-thumb" alt="cover">
                     <div class="thumb-play-overlay" onclick="window.handleTrackPlay(event, '${p.id}')">
                         <i class="bi bi-play-fill"></i>
                     </div>
@@ -926,11 +903,14 @@ function renderExactProducerCard(p) {
     const defaultAvatarUrl = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(p.nickname || 'Producer') + '&background=random';
     const avatar = p.avatar_url || defaultAvatarUrl;
     const profileUrl = `/@${encodeURIComponent(p.nickname || 'producer')}`;
+    const isR2 = window.AuthUtils && window.AuthUtils.isR2Url(avatar);
+    const imgPlaceholder = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
+    const imgAttr = isR2 ? `src="${imgPlaceholder}" data-r2-src="${escapeHTML(avatar)}"` : `src="${escapeHTML(avatar)}"`;
 
     return `
         <div class="exact-match-card" onclick="window.location.href='${profileUrl}'" style="cursor:pointer; background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 24px; display: flex; align-items: center; gap: 20px; transition: all 0.3s ease; margin-bottom: 30px;">
             <div style="position: relative;">
-                <img crossorigin="anonymous" src="${avatar}" data-r2-version="${p.r2_version || 'v2'}" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid #fff;">
+                <img crossorigin="anonymous" ${imgAttr} data-r2-version="${p.r2_version || 'v2'}" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid #fff;">
                 ${p.is_verified ? '<i class="bi bi-patch-check-fill" style="position: absolute; bottom: 0; right: 0; color: #fff; font-size: 1.2rem; background: #000; border-radius: 50%;"></i>' : ''}
             </div>
             <div style="flex: 1;">
@@ -947,10 +927,13 @@ function renderProducerRow(p) {
     const defaultAvatarUrl = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(p.nickname || 'Producer') + '&background=random';
     const avatar = p.avatar_url || defaultAvatarUrl;
     const profileUrl = `/@${encodeURIComponent(p.nickname || 'producer')}`;
+    const isR2 = window.AuthUtils && window.AuthUtils.isR2Url(avatar);
+    const imgPlaceholder = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
+    const imgAttr = isR2 ? `src="${imgPlaceholder}" data-r2-src="${escapeHTML(avatar)}"` : `src="${escapeHTML(avatar)}"`;
 
     return `
         <div class="producer-row" onclick="window.location.href='${profileUrl}'" style="cursor:pointer; display: flex; align-items: center; gap: 16px; padding: 12px; border-radius: 12px; transition: background 0.2s; margin-bottom: 8px;">
-            <img crossorigin="anonymous" src="${avatar}" data-r2-version="${p.r2_version || 'v2'}" style="width: 48px; height: 48px; border-radius: 50%; object-fit: cover; background: #1a1a1a;">
+            <img crossorigin="anonymous" ${imgAttr} data-r2-version="${p.r2_version || 'v2'}" style="width: 48px; height: 48px; border-radius: 50%; object-fit: cover; background: #1a1a1a;">
             <div style="flex: 1;">
                 <div style="color: #fff; font-weight: 600; display: flex; align-items: center; gap: 6px;">
                     ${escapeHTML(p.nickname)}
@@ -1111,10 +1094,15 @@ function renderNoResultsFallback(container) {
 function renderFallbackItem(p) {
     const price = window.CurrencyManager?.formatFromString(p.price_basic) || p.price_basic;
     const productUrl = getProductUrl(p);
+    const imgUrl = p.image_url || '/images/portada-default.png';
+    const isR2 = window.AuthUtils && window.AuthUtils.isR2Url(imgUrl);
+    const imgPlaceholder = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
+    const imgAttr = isR2 ? `src="${imgPlaceholder}" data-r2-src="${escapeHTML(imgUrl)}"` : `src="${escapeHTML(imgUrl)}"`;
+
     return `
         <div class="fallback-card" data-product-id="${p.id}" onclick="window.location.href='${productUrl}'">
             <div class="fallback-card-img">
-                <img crossorigin="anonymous" src="${p.image_url || '/images/portada-default.png'}" data-r2-version="${p.r2_version || 'v2'}">
+                <img crossorigin="anonymous" ${imgAttr} data-r2-version="${p.r2_version || 'v2'}">
                 <div class="fallback-card-overlay"><i class="bi bi-play-fill"></i></div>
             </div>
             <div class="fallback-card-info">

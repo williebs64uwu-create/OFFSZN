@@ -312,36 +312,41 @@ window.AuthUtils = {
         // Final version determination: explicit parameter > detected version > current platform default
         let actualVersion = finalVersion || detectedVersion || (window.R2_CURRENT_VERSION || 'v2');
 
-        // 🔥 HYBRID STORAGE DETECTION & KEY NORMALIZATION
-        // Some products have images in Supabase but audio in R2 (Hybrid Migration state)
+        // 🔥 HYBRID STORAGE DETECTION (R2 v1, R2 v2, Supabase)
+        // This solves the problem where a product has mixed sources (e.g. R2 audio + Supabase images)
         const isUUIDPath = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i.test(key);
-        const isAudioPath = key.startsWith('beats/') || key.startsWith('drumkits/') || /\.(mp3|wav|zip)$/i.test(key);
-        const isImagePath = key.startsWith('products/') || key.startsWith('avatars/') || key.startsWith('covers/') || isUUIDPath || /\.(jpg|jpeg|png|webp|gif|svg)$/i.test(key);
-        
-        // If it's explicitly Supabase URL, it's supabase
-        const isSupabaseUrl = key.includes('supabase.co');
-
-        // Logic Override:
-        // 1. Only force R2 v2 if it's explicitly the OLD R2 path structure (beats/mp3/ or drumkits/)
-        // If it's just an audio file extension but r2_version is supabase, trust the database (likely migrated to Supabase/audio/)
         const isOldR2Prefix = key.startsWith('beats/') || key.startsWith('drumkits/');
-        if (isOldR2Prefix && actualVersion === 'supabase') {
-            actualVersion = 'v2';
+        const isImageFile = /\.(jpg|jpeg|png|webp|gif|svg)$/i.test(key);
+        const isAudioFile = /\.(mp3|wav|ogg|flac|m4a|zip|rar)$/i.test(key);
+
+        // Logic Overrides:
+        // 1. Audio/Archives: R2 is our primary for large files.
+        // Legacy paths (beats/mp3/, drumkits/) usually belong to Version 1 (Old Account)
+        // unless the URL explicitly contains the V2 bucket name.
+        if (isOldR2Prefix) {
+            actualVersion = detectedVersion || (finalVersion !== 'supabase' ? finalVersion : null) || 'v1';
+        } 
+        // Newer UUID-only audio paths default to V2
+        else if (isUUIDPath && isAudioFile) {
+            actualVersion = detectedVersion || (finalVersion !== 'supabase' ? finalVersion : null) || 'v2';
         }
-        
-        // 2. If it's a Supabase URL or a local image path being signed with a 'supabase' version, ensure it stays supabase
-        if (isSupabaseUrl || (isImagePath && actualVersion === 'supabase')) {
+        // 2. Force Supabase for all migrated images/covers (UUID paths or explicit image folders)
+        else if ((isUUIDPath && isImageFile) || key.startsWith('products/') || key.startsWith('avatars/') || key.startsWith('covers/')) {
             actualVersion = 'supabase';
             
-            // Normalize key: If it's a UUID path, prepend 'products/' bucket name for the backend
-            if (isUUIDPath && !key.startsWith('products/')) {
+            // Normalize for Supabase: Ensure we have the bucket prefix
+            if (!key.startsWith('products/') && !key.startsWith('avatars/')) {
+                // If it's a UUID/covers/... or just UUID/... that belongs to products
                 key = `products/${key}`;
             }
         }
-        
-        // 3. Fallback: If it's a UUID path but NOT signed as supabase, it might be R2 v2 (old structure)
-        if (isUUIDPath && actualVersion !== 'supabase') {
-            actualVersion = 'v2';
+        // 3. Fallback to Supabase for generic images if DB says supabase
+        else if (isImageFile && actualVersion === 'supabase') {
+            actualVersion = 'supabase';
+        }
+        // 4. Stay Supabase if it's already a full Supabase URL
+        if (key.includes('supabase.co')) {
+            actualVersion = 'supabase';
         }
 
         if (window.OFFSZN_DEBUG) console.log(`[AuthUtils] Queueing sign for key: ${key} (Version: ${actualVersion})`);

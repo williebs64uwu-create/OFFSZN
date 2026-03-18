@@ -707,7 +707,7 @@ function renderProductPage(product) {
             <div class="product-sidebar">
                 <!-- Cover Art -->
                 <div class="product-cover-art" style="position:relative;">
-                    <img src="${initialImgMain}" data-r2-version="${product.r2_version || 'v1'}" 
+                    <img src="${initialImgMain}" data-r2-src="${product.image_url}" data-r2-version="${product.r2_version || 'v1'}" 
                          id="product-main-art"
                          alt="${escapeHTML(product.name)}"
                          class=""
@@ -2512,10 +2512,16 @@ function renderRelatedGrid(products, container) {
             }
         }).replace(/'/g, "&apos;").replace(/"/g, "&quot;");
 
+        const isR2Related = window.AuthUtils && window.AuthUtils.isR2Url(p.image_url);
+        const placeholder = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=';
+        const initialImgRelated = isR2Related ? placeholder : (p.image_url || '/images/portada-default.png');
+
         // Use EXACTLY the same structure as Profile Trending Cards (Trending / Packs)
         card.innerHTML = `
             <div class="t-card-cover">
-                <img src="${p.image_url || '/images/portada-default.png'}" data-r2-version="${p.r2_version || 'v1'}" 
+                <img src="${initialImgRelated}" 
+                     data-r2-src="${p.image_url}" 
+                     data-r2-version="${p.r2_version || 'v1'}" 
                      id="related-img-${p.id}"
                      alt="${p.name}"
                      onerror="this.src='/images/portada-default.png'"

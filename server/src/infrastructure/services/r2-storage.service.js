@@ -102,11 +102,14 @@ export const getPresignedDownloadUrl = async (key, expiresIn = 3600, version = '
                 .from(bucket)
                 .createSignedUrl(path, expiresIn);
 
-            if (error) throw error;
+            if (error) {
+                console.warn(`[Supabase Storage] Sign URL failed for ${bucket}/${path}:`, error.message);
+                return null; // Return null so the route handler can handle it or use fallback
+            }
             return data.signedUrl;
         } catch (error) {
             console.error(`Error al generar URL de descarga Supabase:`, error);
-            throw error;
+            return null;
         }
     }
 
@@ -122,7 +125,7 @@ export const getPresignedDownloadUrl = async (key, expiresIn = 3600, version = '
         const signedUrl = await getSignedUrl(client, command, { expiresIn });
         return signedUrl;
     } catch (error) {
-        console.error(`Error al generar URL de descarga R2 (${version}):`, error);
+        console.error(`❌ [R2 Service] Error generating download URL for ${key} (${version}):`, error);
         throw error;
     }
 };
