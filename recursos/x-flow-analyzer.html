@@ -8,13 +8,16 @@
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
 
     <!-- SEO & Social Meta Tags -->
-    <meta name="description" content="OFFSZN - El marketplace #1 de productores musicales en Perú.">
-    <meta property="og:title" content="OFFSZN | Master Template">
-    <meta property="og:description" content="Explora, compra y vende recursos musicales de alta calidad.">
-    <meta property="og:image" content="https://offszn.lat/images/logo.webp">
-    <meta property="og:url" content="https://offszn.lat/">
+    <title>X Flow - Analyzer | El Secreto de un Flow Perfecto - OFFSZN</title>
+    <meta name="description" content="Analiza y perfecciona tu flow vocal con X Flow Analyzer. La herramienta definitiva para productores y artistas que buscan la excelencia en sus grabaciones.">
+    
+    <!-- Open Graph / Social -->
+    <meta property="og:title" content="X Flow - Analyzer | El Secreto de un Flow Perfecto">
+    <meta property="og:description" content="Domina tu flow vocal con la herramienta de análisis más avanzada para productores.">
+    <meta property="og:image" content="https://offszn.lat/images/analyzer-hero.webp">
+    <meta property="og:url" content="https://offszn.lat/recursos/x-flow-analyzer">
+    <meta property="og:type" content="product">
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:image" content="https://offszn.lat/images/logo.webp">
 
     <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
@@ -65,7 +68,7 @@
                         </div>
                     </div>
                     <div class="area-2">
-                        <a href="#" class="buy-button-hero" data-es="COMPRAR $15" data-en="BUY $15">COMPRAR $15</a>
+                        <a href="#" class="buy-button-hero btn-buy-analyzer" data-es="COMPRAR $15" data-en="BUY $15">COMPRAR $15</a>
                     </div>
                 </div>
 
@@ -740,6 +743,83 @@
                 font-size: 2rem;
             }
         }
+        /* --- ANALYZER CHECKOUT MODAL --- */
+        .analyzer-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .analyzer-modal.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .analyzer-modal-content {
+            background: #111;
+            width: 90%;
+            max-width: 500px;
+            padding: 40px;
+            border-radius: 24px;
+            border: 1px solid rgba(255,255,255,0.1);
+            position: relative;
+            text-align: center;
+            transform: translateY(20px);
+            transition: all 0.3s ease;
+        }
+
+        .analyzer-modal.active .analyzer-modal-content {
+            transform: translateY(0);
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: none;
+            border: none;
+            color: #666;
+            font-size: 24px;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+
+        .close-modal:hover {
+            color: #fff;
+        }
+
+        .modal-product-img {
+            width: 120px;
+            height: 120px;
+            object-fit: cover;
+            border-radius: 16px;
+            margin: 0 auto 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .modal-price {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--accent);
+            margin: 10px 0 30px;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        #analyzer-paypal-button-container {
+            margin-top: 20px;
+            min-height: 150px;
+        }
     </style>
 
     <script>
@@ -785,6 +865,23 @@
     <!-- ==================== FOOTER ==================== -->
     <div id="footer-placeholder"></div>
 
+    <!-- ANALYZER CHECKOUT MODAL -->
+    <div id="analyzer-checkout-modal" class="analyzer-modal">
+        <div class="analyzer-modal-content">
+            <button class="close-modal">&times;</button>
+            <img src="/images/analyzer-hero.webp" alt="X Flow Analyzer" class="modal-product-img">
+            <h3 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 5px;">X Flow - Analyzer</h3>
+            <p style="color: #888; margin-bottom: 15px;" data-es="Software de Análisis Vocal" data-en="Vocal Analysis Software">Software de Análisis Vocal</p>
+            <div class="modal-price">15$</div>
+            
+            <div id="analyzer-paypal-button-container"></div>
+            
+            <p style="font-size: 0.8rem; color: #555; margin-top: 20px;" data-es="Pago seguro procesado por PayPal. Acceso instantáneo tras la compra." data-en="Secure payment processed by PayPal. Instant access after purchase.">
+                Pago seguro procesado por PayPal. Acceso instantáneo tras la compra.
+            </p>
+        </div>
+    </div>
+
     <!-- SCRIPTS -->
     <script src="/script/id-obfuscator.js?v=1"></script>
     <script src="/script/cart.js?v=21"></script>
@@ -793,6 +890,8 @@
     <script src="/script/footer.js?v=21"></script>
     <script src="/script/navbar.js?v=21" type="module"></script>
     <script src="/script/toast.js?v=21" type="module"></script>
+    <script src="/script/analyzer-checkout.js?v=1"></script>
+    <script src="/env.js"></script>
 
 </body>
 

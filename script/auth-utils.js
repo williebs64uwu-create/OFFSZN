@@ -40,7 +40,7 @@ window.AuthUtils = {
     _userPlanCache: null,
     /**
      * Initialize Supabase Client globally if credentials exist.
-     * Use this ensuring window.SUPABASE_URL is defined before loading this s   cript.
+     * Use this ensuring window.SUPABASE_URL is defined before loading this script.
      */
     initSupabase: function () {
         const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
@@ -770,3 +770,42 @@ window.deleteFromR2 = window.AuthUtils.deleteFromR2.bind(window.AuthUtils);
 
 // Attempt Init immediately
 window.AuthUtils.initSupabase();
+
+// ==================== GLOBAL IMAGE FALLBACK ==================== //
+/**
+ * Catch all image 404s (specifically Cloudinary) and try to load from Supabase Storage instead.
+ */
+window.addEventListener('error', function (e) {
+    if (e.target.tagName !== 'IMG') return;
+    const img = e.target;
+    // Prevent infinite loops if Supabase also fails
+    if (img.dataset.fallbackTried) return;
+
+    const currentSrc = img.src;
+    // Check if it's a Cloudinary URL
+    if (currentSrc && currentSrc.includes('res.cloudinary.com')) {
+        try {
+            // Extract the path after 'upload/' (usually contains version and then the folder/file)
+            // Example: https://res.cloudinary.com/degtrrdqo/image/upload/v12345/products/prod.jpg
+            const parts = currentSrc.split('/upload/');
+            if (parts.length > 1) {
+                let pathAfterUpload = parts[1];
+                // Remove the version segment (v1234567/) if present
+                pathAfterUpload = pathAfterUpload.replace(/^v\d+\//, '');
+                
+                const supabaseUrl = window.SUPABASE_URL || "https://qtjpvztpgfymjhhpoouq.supabase.co";
+                const fallbackUrl = `${supabaseUrl}/storage/v1/object/public/${pathAfterUpload}`;
+                
+                if (window.OFFSZN_DEBUG) console.log(`[AuthUtils] Image 404 caught. Attempting fallback: ${fallbackUrl}`);
+                
+                img.dataset.fallbackTried = "true";
+                img.src = fallbackUrl;
+                
+                // If it's a product cover, we might also want to ensure crossOrigin is 'anonymous' for waveform rendering if needed
+                // but for now just getting the image back is priority.
+            }
+        } catch (err) {
+            console.error("[AuthUtils] Error during image fallback transition:", err);
+        }
+    }
+}, true); // Use capture phase to catch all images before they bubble

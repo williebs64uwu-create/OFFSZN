@@ -1,6 +1,7 @@
 import express from 'express';
 import { createClient } from '@supabase/supabase-js';
 import { v2 as cloudinary } from 'cloudinary';
+import { deleteFromImageKitByPath } from '../../services/imagekit.service.js';
 
 const router = express.Router();
 
@@ -166,31 +167,34 @@ router.delete('/:id', async (req, res) => {
         }
 
         // 2. Delete from Cloudinary (if it's a Cloudinary URL)
-        // 3. Delete from Cloudinary (Improved Logic)
         if (reel && reel.url && reel.url.includes('cloudinary.com')) {
             try {
-                // Regex: Extract Public ID starting from 'reels/' folder
-                // Ignores version (v123) and transformations (so_0, etc)
-                // .../upload/so_0/v123/reels/video.mp4  => reels/video
                 const regex = /\/v\d+\/(reels\/.+)\.[^.]+$/;
                 const match = reel.url.match(regex);
 
                 if (match && match[1]) {
                     const publicId = match[1];
                     console.log(`🗑️ Cloudinary Deleting - PID: ${publicId}`);
-
-                    // Force invalidate to clear CDN cache
-                    const result = await cloudinary.uploader.destroy(publicId, {
+                    await cloudinary.uploader.destroy(publicId, {
                         resource_type: 'video',
                         invalidate: true
                     });
-
-                    console.log('✅ Cloudinary Result:', result);
-                } else {
-                    console.warn(`⚠️ PID Extraction Failed: ${reel.url}`);
                 }
             } catch (cloudErr) {
                 console.error("❌ Cloudinary Error:", cloudErr);
+            }
+        }
+
+        // 3. Delete from ImageKit (if it's an ImageKit URL)
+        if (reel && reel.url && reel.url.includes('ik.imagekit.io')) {
+            try {
+                // Extract path from URL: https://ik.imagekit.io/your_id/reels/filename.mp4 -> /reels/filename.mp4
+                const urlObj = new URL(reel.url);
+                const path = urlObj.pathname;
+                console.log(`🗑️ ImageKit Deleting - Path: ${path}`);
+                await deleteFromImageKitByPath(path);
+            } catch (ikErr) {
+                console.error("❌ ImageKit Delete Error:", ikErr);
             }
         }
 

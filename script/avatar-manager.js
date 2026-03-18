@@ -545,18 +545,18 @@ window.AvatarManager = {
 
             const url = profile.avatar_url;
 
-            // Already on our storage (Supabase bucket OR Cloudinary) — skip
-            if (url.includes('supabase.co') || url.includes('cloudinary.com')) return;
+            // Already on our storage (Supabase bucket, Cloudinary OR ImageKit) — skip
+            if (url.includes('supabase.co') || url.includes('cloudinary.com') || url.includes('ik.imagekit.io')) return;
 
-            // External URL (e.g. Google) — internalize to Cloudinary
+            // External URL (e.g. Google) — internalize to ImageKit
             if (url.startsWith('http') || url.startsWith('https')) {
-                console.log("🛠️ AvatarManager: Internalizing external avatar to Cloudinary...", url);
+                console.log("🛠️ AvatarManager: Internalizing external avatar to ImageKit...", url);
 
                 const response = await fetch(url);
                 const blob = await response.blob();
 
                 if (blob) {
-                    // Convert to base64 and upload via Cloudinary API
+                    // Convert to base64 and upload via ImageKit API (shared endpoint)
                     const base64 = await new Promise((resolve) => {
                         const reader = new FileReader();
                         reader.onload = (e) => resolve(e.target.result);
@@ -578,7 +578,7 @@ window.AvatarManager = {
 
                     const data = await avatarRes.json();
                     if (avatarRes.ok && data.success) {
-                        console.log("✅ AvatarManager: Avatar internalized to Cloudinary successfully.");
+                        console.log("✅ AvatarManager: Avatar internalized to ImageKit successfully.");
                         localStorage.setItem('offszn_cached_avatar', data.url);
                     }
                 }

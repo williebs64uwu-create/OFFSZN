@@ -25,6 +25,7 @@ import r2Routes from './infrastructure/http/routes/r2.routes.js';
 import subscriptionRoutes from './infrastructure/http/routes/subscription.routes.js';
 import requestRoutes from './infrastructure/http/routes/request.routes.js';
 import youtubeRoutes from './infrastructure/http/routes/youtube.routes.js';
+import analyzerRoutes from './infrastructure/http/routes/analyzer.routes.js';
 
 import cloudinaryRoutes from './infrastructure/http/routes/cloudinary.routes.js';
 import { submitNegotiation, respondNegotiation, generatePurchaseToken, validatePurchaseToken, reportIssue } from './infrastructure/http/controllers/NegotiationController.js';
@@ -254,6 +255,7 @@ app.use('/api', paypalRoutes);
 
 app.use('/api', subscriptionRoutes);
 app.use('/api', youtubeRoutes);
+app.use('/api', analyzerRoutes);
 
 // --- 3. CLEAN URLS & STATIC FILES (MIDDLEWARE) ---
 

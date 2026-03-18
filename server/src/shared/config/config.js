@@ -55,5 +55,10 @@ export const R2_BUCKET_NAME_V2 = cleanConfigValue(process.env.R2_BUCKET_NAME_V2)
 export const EMAILOCTOPUS_API_KEY = process.env.EMAILOCTOPUS_API_KEY;
 export const EMAILOCTOPUS_LIST_ID = process.env.EMAILOCTOPUS_LIST_ID;
 
+// IMAGEKIT
+export const IMAGEKIT_PUBLIC_KEY = cleanConfigValue(process.env.IMAGEKIT_PUBLIC_KEY);
+export const IMAGEKIT_PRIVATE_KEY = cleanConfigValue(process.env.IMAGEKIT_PRIVATE_KEY);
+export const IMAGEKIT_URL_ENDPOINT = cleanConfigValue(process.env.IMAGEKIT_URL_ENDPOINT);
+
 // Storage Strategy
 export const R2_CURRENT_VERSION = 'v2';
