@@ -302,7 +302,7 @@ window.AuthUtils = {
             while (key.startsWith('/')) key = key.substring(1);
 
             // AUTO-DETECT VERSION
-            if (pathOrUrl.includes('offsznlatbucket') || pathOrUrl.includes('42fc23b11a6c329b76b2babc20afcbf7')) {
+            if (pathOrUrl.includes('offsznlatbucket') || pathOrUrl.includes('42fc23b11a6c329b76b2babc20afcbf7') || key.startsWith('beats/') || key.startsWith('drumkits/')) {
                 detectedVersion = 'v2';
             } else if (pathOrUrl.includes('offszn-storage') || pathOrUrl.includes('41d0f49121d02c88f71fdb4da54a791d') || pathOrUrl.includes('pub-')) {
                 detectedVersion = 'v1';
@@ -312,22 +312,36 @@ window.AuthUtils = {
         // Final version determination: explicit parameter > detected version > current platform default
         let actualVersion = finalVersion || detectedVersion || (window.R2_CURRENT_VERSION || 'v2');
 
-        // 🔥 SUPABASE STORAGE DETECTION & KEY NORMALIZATION
-        // Only override to 'supabase' if no explicit R2 version (v1/v2) was provided
-        const isExplicitR2 = (finalVersion === 'v1' || finalVersion === 'v2' || detectedVersion === 'v1' || detectedVersion === 'v2');
-        
+        // 🔥 HYBRID STORAGE DETECTION & KEY NORMALIZATION
+        // Some products have images in Supabase but audio in R2 (Hybrid Migration state)
         const isUUIDPath = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i.test(key);
-        const isSupabaseUrl = key.includes('supabase.co');
+        const isAudioPath = key.startsWith('beats/') || key.startsWith('drumkits/') || /\.(mp3|wav|zip)$/i.test(key);
+        const isImagePath = key.startsWith('products/') || key.startsWith('avatars/') || key.startsWith('covers/') || isUUIDPath || /\.(jpg|jpeg|png|webp|gif|svg)$/i.test(key);
         
-        if (!isExplicitR2 || isSupabaseUrl) {
-            if (key.startsWith('products/') || key.startsWith('avatars/') || isSupabaseUrl || isUUIDPath) {
-                actualVersion = 'supabase';
-                
-                // Normalize key: If it's a UUID path, prepend 'products/' bucket name for the backend
-                if (isUUIDPath && !key.startsWith('products/')) {
-                    key = `products/${key}`;
-                }
+        // If it's explicitly Supabase URL, it's supabase
+        const isSupabaseUrl = key.includes('supabase.co');
+
+        // Logic Override:
+        // 1. Only force R2 v2 if it's explicitly the OLD R2 path structure (beats/mp3/ or drumkits/)
+        // If it's just an audio file extension but r2_version is supabase, trust the database (likely migrated to Supabase/audio/)
+        const isOldR2Prefix = key.startsWith('beats/') || key.startsWith('drumkits/');
+        if (isOldR2Prefix && actualVersion === 'supabase') {
+            actualVersion = 'v2';
+        }
+        
+        // 2. If it's a Supabase URL or a local image path being signed with a 'supabase' version, ensure it stays supabase
+        if (isSupabaseUrl || (isImagePath && actualVersion === 'supabase')) {
+            actualVersion = 'supabase';
+            
+            // Normalize key: If it's a UUID path, prepend 'products/' bucket name for the backend
+            if (isUUIDPath && !key.startsWith('products/')) {
+                key = `products/${key}`;
             }
+        }
+        
+        // 3. Fallback: If it's a UUID path but NOT signed as supabase, it might be R2 v2 (old structure)
+        if (isUUIDPath && actualVersion !== 'supabase') {
+            actualVersion = 'v2';
         }
 
         if (window.OFFSZN_DEBUG) console.log(`[AuthUtils] Queueing sign for key: ${key} (Version: ${actualVersion})`);
@@ -500,7 +514,7 @@ window.AuthUtils = {
                 !pathOrUrl.startsWith('/assets') &&
                 !pathOrUrl.startsWith('/icon') &&
                 !pathOrUrl.startsWith('/script') &&
-                (pathOrUrl.includes('/') || /\.(jpg|jpeg|png|webp|gif|svg|mp3|wav|zip)$/i.test(pathOrUrl) || pathOrUrl.startsWith('@'))
+                (pathOrUrl.includes('/') || /\.(jpg|jpeg|png|webp|gif|svg|mp3|wav|zip)$/i.test(pathOrUrl) || pathOrUrl.startsWith('@') || pathOrUrl.startsWith('beats/') || pathOrUrl.startsWith('products/'))
             )
         );
     },
@@ -803,24 +817,44 @@ window.AuthUtils.initSupabase();
 window.signR2Images = async function (container = document) {
     if (!window.AuthUtils || !window.AuthUtils.getAuthorizedUrl) return;
 
-    const images = container.querySelectorAll('img[data-r2-version]');
-    await Promise.all(Array.from(images).map(async img => {
-        const rawSrc = img.getAttribute('src'); // Use original attribute, NOT resolved .src
+    // 1. Handle regular IMG tags
+    const images = container.querySelectorAll('img[data-r2-src], img[data-r2-version]');
+    const imgPromises = Array.from(images).map(async img => {
+        const rawSrc = img.getAttribute('data-r2-src') || img.getAttribute('src');
         const currentSrc = img.src;
 
-        // Only sign if it's a relative path OR an R2 URL that isn't already signed
+        if (!rawSrc) return;
+
+        // Only sign if it's not already signed or is a data-r2-src placeholder
         const needsSigning = (rawSrc && !rawSrc.startsWith('http')) ||
-            (currentSrc.includes('r2.cloudflarestorage.com') && !currentSrc.includes('X-Amz-Signature'));
+            (currentSrc.includes('r2.cloudflarestorage.com') && !currentSrc.includes('X-Amz-Signature')) ||
+            (img.getAttribute('data-r2-src'));
 
         if (needsSigning) {
             const version = img.getAttribute('data-r2-version') || 'v2';
-            const signedUrl = await window.AuthUtils.getAuthorizedUrl(rawSrc || currentSrc, version);
+            const signedUrl = await window.AuthUtils.getAuthorizedUrl(rawSrc, version);
 
             if (signedUrl && signedUrl !== currentSrc) {
                 img.src = signedUrl;
             }
         }
-    }));
+    });
+
+    // 2. Handle background images (elements with data-r2-bg)
+    const bgElements = container.querySelectorAll('[data-r2-bg]');
+    const bgPromises = Array.from(bgElements).map(async el => {
+        const rawPath = el.getAttribute('data-r2-bg');
+        if (!rawPath) return;
+
+        const version = el.getAttribute('data-r2-version') || 'v2';
+        const signedUrl = await window.AuthUtils.getAuthorizedUrl(rawPath, version);
+
+        if (signedUrl) {
+            el.style.backgroundImage = `url('${signedUrl}')`;
+        }
+    });
+
+    await Promise.all([...imgPromises, ...bgPromises]);
 };
 
 // ==================== GLOBAL IMAGE FALLBACK ==================== //

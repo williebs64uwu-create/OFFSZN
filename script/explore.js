@@ -571,13 +571,19 @@ function renderHeroSlide(product) {
         `<div class="hero-dot ${i === currentHeroIndex ? 'active' : ''}" onclick="window.navToHero(${i})"></div>`
     ).join('');
 
-    heroSection.innerHTML = `
-        <div class="explore-hero active" id="hero-card-clickable">
-            <!-- Mobile Background Image & Gradient -->
-            <div class="hero-mobile-bg mobile-only" style="background-image: url('${imgUrl}')"></div>
-            <div class="hero-mobile-gradient mobile-only"></div>
+        const isR2 = window.AuthUtils && window.AuthUtils.isR2Url(product.image_url);
+        const imgPlaceholder = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
+        
+        // Mobile BG: Use data-r2-bg for automatic signing
+        const mobileBgAttr = isR2 ? `data-r2-bg="${imgUrl}"` : `style="background-image: url('${imgUrl}')"`;
 
-            <canvas class="hero-particles-canvas desktop-only"></canvas>
+        heroSection.innerHTML = `
+            <div class="explore-hero active" id="hero-card-clickable">
+                <!-- Mobile Background Image & Gradient -->
+                <div class="hero-mobile-bg mobile-only" ${mobileBgAttr} data-r2-version="${product.r2_version || 'v2'}"></div>
+                <div class="hero-mobile-gradient mobile-only"></div>
+
+                <canvas class="hero-particles-canvas desktop-only"></canvas>
             
             <div class="hero-content" style="opacity: 0; transform: translateY(15px);">
                 <span class="hero-tag desktop-only">Destacado</span>
@@ -600,7 +606,9 @@ function renderHeroSlide(product) {
             </div>
 
             <div class="hero-image-container desktop-only" style="opacity: 0; transform: translateX(20px) translateY(-50%);">
-                <img src="${imgUrl}" data-r2-version="${product.r2_version || 'v1'}" crossorigin="anonymous" alt="cover" class="hero-image">
+                <img ${isR2 ? `src="${imgPlaceholder}" data-r2-src="${imgUrl}"` : `src="${imgUrl}"`} 
+                     data-r2-version="${product.r2_version || 'v2'}" 
+                     crossorigin="anonymous" alt="cover" class="hero-image">
             </div>
 
             <!-- Mobile Purple Play Button -->
@@ -811,10 +819,15 @@ function createProductCardHtml(product, format = 'standard') {
         `;
     }
 
+    const pImg = product.image_url || '/images/portada-default.png';
+    const isR2 = window.AuthUtils && window.AuthUtils.isR2Url(pImg);
+    const imgPlaceholder = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
+    const imgAttr = isR2 ? `src="${imgPlaceholder}" data-r2-src="${escapeHTML(pImg)}"` : `src="${escapeHTML(pImg)}"`;
+
     return `
         <div class="product-card-smart" data-product-id="${product.id}">
             <div class="card-cover-wrapper">
-                <img src="${img}" data-r2-version="${product.r2_version || 'v2'}" crossorigin="anonymous" alt="${product.name}">
+                <img ${imgAttr} data-r2-version="${product.r2_version || 'v2'}" crossorigin="anonymous" alt="${product.name}">
                 <button class="quick-play-btn"><i class="bi bi-play-fill"></i></button>
                 <button class="card-like-btn ${isLiked ? 'liked' : ''}"><i class="bi ${isLiked ? 'bi-heart-fill' : 'bi-heart'}"></i></button>
             </div>

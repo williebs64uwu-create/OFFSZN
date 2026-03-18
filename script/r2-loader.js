@@ -8,17 +8,15 @@
      * Resolves an image element's R2 source.
      */
     async function resolveElement(el) {
+        // 1. Handle IMG tags
         if (el.tagName === 'IMG') {
             const src = el.getAttribute('data-r2-src') || el.getAttribute('src');
             if (!src) return;
 
-            // Detect R2 paths (Full URLs or relative keys)
-            // 🔥 FIX: Ignore data: URIs, local images (/images, /assets), and non-string src
             const isR2 = (
                 src.includes('r2.cloudflarestorage.com') ||
                 src.includes('pub-') ||
-                src.startsWith('@') || // NEW: Support @ prefix
-                // Relative path check: Must NOT start with http, NOT be data:, NOT be local static asset folders
+                src.startsWith('@') ||
                 (!src.startsWith('http') &&
                     !src.startsWith('data:') &&
                     !src.startsWith('/images') &&
@@ -30,16 +28,12 @@
                 )
             );
 
-            // Sign only if it's R2 and NOT already signed (contains AWS signature params)
             if (isR2 && !src.includes('X-Amz-Signature')) {
                 const originalSrc = src;
-
-                // 🔥 SILENCE 404: Set src to a transparent pixel if not already set or if it's the raw key
                 if (!el.src || el.src.includes(originalSrc)) {
                     el.src = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
                 }
 
-                // 🧪 UX Enhancement: Set to empty state to avoid "broken icon" during signing
                 el.style.opacity = el.style.opacity || '0';
                 el.style.transition = 'opacity 0.4s ease';
 
@@ -55,14 +49,25 @@
                         el.src = authorizedUrl;
                         if (el.complete) el.onload();
                     } else {
-                        if (window.OFFSZN_DEBUG) console.log(`[R2-Loader] Signing returned same URL or null for: ${originalSrc}`);
-                        // Fallback: If signing fails, show original (might be public)
                         el.style.opacity = '1';
                     }
                 } catch (e) {
-                    if (window.OFFSZN_DEBUG) console.error(`[R2-Loader] Error signing ${originalSrc}:`, e);
                     el.style.opacity = '1';
                 }
+            }
+        }
+        
+        // 2. Handle data-r2-bg (Background Images)
+        const bgPath = el.getAttribute('data-r2-bg');
+        if (bgPath) {
+            try {
+                const r2Version = el.getAttribute('data-r2-version') || 'v1';
+                const authorizedUrl = await window.getAuthorizedUrl(bgPath, r2Version);
+                if (authorizedUrl) {
+                    el.style.backgroundImage = `url('${authorizedUrl}')`;
+                }
+            } catch (e) {
+                if (window.OFFSZN_DEBUG) console.error(`[R2-Loader] BG Error:`, e);
             }
         }
     }
@@ -73,10 +78,10 @@
         mutations.forEach(mutation => {
             mutation.addedNodes.forEach(node => {
                 if (node.nodeType === 1) { // ELEMENT_NODE
-                    if (node.tagName === 'IMG') {
+                    if (node.tagName === 'IMG' || node.hasAttribute('data-r2-bg')) {
                         resolveElement(node);
                     } else {
-                        node.querySelectorAll('img').forEach(resolveElement);
+                        node.querySelectorAll('img, [data-r2-bg]').forEach(resolveElement);
                     }
                 }
             });
@@ -85,8 +90,8 @@
 
     // --- INITIALIZATION ---
     function init() {
-        // 1. Process existing images
-        document.querySelectorAll('img').forEach(resolveElement);
+        // 1. Process existing images and bg elements
+        document.querySelectorAll('img, [data-r2-bg]').forEach(resolveElement);
 
         // 2. Start observing DOM for new images
         observer.observe(document.body, { childList: true, subtree: true });

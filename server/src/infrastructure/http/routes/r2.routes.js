@@ -347,8 +347,12 @@ router.get(/\/r2-public\/(.*)/, async (req, res) => {
 
         const publicUrl = getPublicUrl(key, version);
         
+        // 🔥 CORS FIX: Add headers before redirecting to ensure browser doesn't block the audio/image
+        res.setHeader('Access-Control-Allow-Origin', '*');
+        res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+        res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
         // Redirect to the actual public URL (faster than proxying)
-        // Or we could fetch and stream if we want to hide R2 URLs completely
         res.redirect(301, publicUrl);
 
     } catch (error) {
