@@ -163,7 +163,7 @@ router.post('/r2/download-url', async (req, res) => {
         }
 
         // Definir prefijos públicos
-        const publicPrefixes = ['products/covers/', 'beats/mp3/', 'avatars/', 'public/', 'banners/'];
+        const publicPrefixes = ['products/covers/', 'beats/mp3/', 'products/beats/mp3/', 'avatars/', 'public/', 'banners/'];
         const isPublic = publicPrefixes.some(prefix => key.startsWith(prefix));
 
         // Si NO es público, requerir autenticación
@@ -222,7 +222,7 @@ router.post('/r2/bulk-sign', async (req, res) => {
         const { R2_CURRENT_VERSION } = await import('../../../shared/config/config.js');
         const finalVersion = version || R2_CURRENT_VERSION || 'v1';
 
-        const publicPrefixes = ['products/covers/', 'beats/mp3/', 'avatars/', 'public/', 'banners/', 'drumkits/covers/'];
+        const publicPrefixes = ['products/covers/', 'beats/mp3/', 'products/beats/mp3/', 'avatars/', 'public/', 'banners/', 'drumkits/covers/'];
         const results = {};
 
         // Para recursos privados, verificar token una sola vez
@@ -242,6 +242,8 @@ router.post('/r2/bulk-sign', async (req, res) => {
                 // Sanitización y extracción de key desde URL si es necesario
                 if (typeof key === 'string') {
                     // Detectar versión desde la URL o el string antes de limpiar
+                    // REMOVED: Greedy UUID detection here. It's better to rely on 'version' from req 
+                    // or detectedVersion from bucket names.
                     if (key.includes('supabase.co') || key.includes('storage/v1/object')) {
                         detectedVersion = 'supabase';
                     } else if (key.includes('offsznlatbucket') || key.includes('42fc23b11a6c329b76b2babc20afcbf7')) {
@@ -358,53 +360,55 @@ router.get(/\/r2-public\/(.*)/, async (req, res) => {
         const key = req.params[0];
         if (!key) return res.status(400).send('Key missing');
 
-        const publicPrefixes = ['products/covers/', 'beats/mp3/', 'avatars/', 'public/', 'banners/', 'drumkits/covers/'];
+        const publicPrefixes = ['products/covers/', 'beats/mp3/', 'products/beats/mp3/', 'avatars/', 'public/', 'banners/', 'drumkits/covers/'];
         const isPublicPrefix = publicPrefixes.some(prefix => key.startsWith(prefix));
 
         if (!isPublicPrefix) {
             return res.status(403).send('Access Denied: Resource is not public');
         }
 
-        // Detect version from path hints or default to config
-        let version = 'v2'; // Default to V2 for newer assets
-        if (key.includes('offsznlatbucket') || key.includes('42fc23b11a6c329b76b2babc20afcbf7')) {
-            version = 'v2';
-        } else if (key.includes('offszn-storage') || key.includes('41d0f49121d02c88f71fdb4da54a791d')) {
-            version = 'v1';
-        }
-
-        const publicUrl = getPublicUrl(key, version);
+        // Smart Version Selection: Try most likely versions first
+        const isUUIDPath = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i.test(key);
+        let versionsToTry = ['v2', 'supabase', 'v1'];
         
-        // 🔥 CORS FIX: Proxy instead of redirecting to avoid browser blocking on cross-origin redirects
-        try {
-            const response = await fetch(publicUrl);
-            
-            if (!response.ok) {
-                console.warn(`[R2 Public Fallback] Failed to fetch ${publicUrl}: ${response.status}`);
-                return res.status(response.status).send('Resource not found');
-            }
-
-            // Copy headers
-            res.setHeader('Content-Type', response.headers.get('Content-Type') || 'application/octet-stream');
-            res.setHeader('Cache-Control', 'public, max-age=86400'); // 24h cache
-            res.setHeader('Access-Control-Allow-Origin', '*');
-
-            // Stream the response
-            const body = response.body;
-            if (body) {
-                const reader = body.getReader();
-                while (true) {
-                    const { done, value } = await reader.read();
-                    if (done) break;
-                    res.write(value);
-                }
-            }
-            res.end();
-            return;
-        } catch (fetchErr) {
-            console.error(`[R2 Public Fallback] Error proxying ${publicUrl}:`, fetchErr);
-            return res.status(500).send('Error proxying resource');
+        if (isUUIDPath) {
+            versionsToTry = ['v2', 'supabase']; // UUIDs are usually V2 or Supabase
+        } else if (key.includes('beats/mp3/') || key.includes('drumkits/')) {
+            versionsToTry = ['v1', 'v2', 'supabase'];
         }
+
+        // Loop through versions until we find it
+        for (const ver of versionsToTry) {
+            const publicUrl = getPublicUrl(key, ver);
+            try {
+                const response = await fetch(publicUrl, { method: 'GET' }); // HEAD would be better but some services block it
+                
+                if (response.ok) {
+                    // Found it! Proxy the content
+                    res.setHeader('Content-Type', response.headers.get('Content-Type') || 'application/octet-stream');
+                    res.setHeader('Cache-Control', 'public, max-age=86400'); // 24h cache
+                    res.setHeader('Access-Control-Allow-Origin', '*');
+                    
+                    const body = response.body;
+                    if (body) {
+                        const reader = body.getReader();
+                        while (true) {
+                            const { done, value } = await reader.read();
+                            if (done) break;
+                            res.write(value);
+                        }
+                    }
+                    res.end();
+                    return;
+                }
+            } catch (err) {
+                console.warn(`[R2 Public Fallback] Try failed for ${ver} on ${key}:`, err.message);
+            }
+        }
+
+        // If we reach here, nothing was found
+        console.warn(`[R2 Public Fallback] Resource not found in any storage: ${key}`);
+        return res.status(404).send('Resource not found');
 
     } catch (error) {
         console.error('Error in R2 public fallback:', error);

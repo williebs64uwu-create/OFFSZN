@@ -324,6 +324,7 @@ window.AuthUtils = {
                            key.includes('supabase.co') || key.startsWith('drumkits/');
         const isImageFile = /\.(jpg|jpeg|png|webp|gif|svg)$/i.test(key);
         const isAudioFile = /\.(mp3|wav|ogg|flac|m4a|zip|rar)$/i.test(key);
+        const isOldR2Prefix = key.startsWith('beats/mp3/') || key.startsWith('drumkits/') || key.startsWith('products/beats/mp3/');
 
         // Logic Overrides:
         // 0. 🔥 EXCLUSION PREMIUM CHECK (Top Priority)
@@ -346,13 +347,14 @@ window.AuthUtils = {
         else if (isUUIDPath && isAudioFile) {
             actualVersion = detectedVersion || (finalVersion !== 'supabase' ? finalVersion : null) || 'v2';
         }
-        // 2. Force Supabase for all migrated images/covers (UUID paths or explicit image folders)
-        // REMOVED greedy products/ override to allow R2 assets to load. 
-        else if ((isUUIDPath && isImageFile) || key.startsWith('avatars/') || key.startsWith('covers/')) {
+        // 2. Fallback to Supabase for specific folders or if explicitly detected
+        // We only force supabase for avatars or if specifically marked as supabase version.
+        // UUID-only paths shouldn't be forced because R2 V2 also uses UUIDs.
+        else if (key.startsWith('avatars/') || detectedVersion === 'supabase') {
             actualVersion = 'supabase';
             
             // Normalize for Supabase: Ensure we have the bucket prefix
-            if (!key.startsWith('avatars/') && !key.startsWith('covers/')) {
+            if (!key.startsWith('avatars/') && !key.startsWith('products/')) {
                 key = `products/${key}`;
             }
         }
@@ -504,7 +506,7 @@ window.AuthUtils = {
     _handleSigningFailure: async function(key, rawOriginal) {
         console.warn(`AuthUtils: Signing failed for ${key}`);
 
-        const publicPrefixes = ['products/covers/', 'beats/mp3/', 'avatars/', 'public/', 'banners/', 'drumkits/covers/'];
+        const publicPrefixes = ['products/covers/', 'beats/mp3/', 'products/beats/mp3/', 'avatars/', 'public/', 'banners/', 'drumkits/covers/'];
         const isPublic = publicPrefixes.some(prefix => key.startsWith(prefix));
 
         if (isPublic) {

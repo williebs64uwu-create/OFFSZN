@@ -89,19 +89,27 @@ export const getPresignedDownloadUrl = async (key, expiresIn = 3600, version = '
             let path = key;
             
             // 🔥 CROSS-STORAGE NORMALIZATION (Exclusion Logic):
-            // Normalize R2 paths to Supabase paths before splitting bucket
-            if (path.startsWith('beats/mp3/')) {
-                const p = path.split('/');
+            // Normalización para Supabase:
+            // Caso 1: Beats antiguos migrados. En Supabase suelen estar en products/[UUID]/mp3_tagged/
+            if (path.startsWith('beats/mp3/') || path.startsWith('products/beats/mp3/')) {
+                const p = path.startsWith('products/') ? path.substring(9).split('/') : path.split('/');
                 if (p.length >= 4) {
-                    // beats/mp3/[UUID]/[filename] -> products/[UUID]/audio/[filename]
-                    path = `products/${p[2]}/audio/${p.slice(3).join('/')}`;
+                    // [products/]beats/mp3/[UUID]/[filename] -> products/[UUID]/mp3_tagged/[filename]
+                    path = `products/${p[2]}/mp3_tagged/${p.slice(3).join('/')}`;
                 }
-            } else if (path.startsWith('products/covers/')) {
+            } 
+            // Caso 2: Covers antiguos migrados
+            else if (path.startsWith('products/covers/')) {
                 const p = path.split('/');
                 if (p.length >= 4) {
-                    // products/covers/[UUID]/[filename] -> products/${p[2]}/covers/[filename]
+                    // products/covers/[UUID]/[filename] -> products/${p[2]}/covers/${p.slice(3).join('/')}
                     path = `products/${p[2]}/covers/${p.slice(3).join('/')}`;
                 }
+            }
+            // Caso 3: Si ya tiene UUID pero dice 'audio', algunos beats están en 'mp3_tagged' en realidad
+            else if (path.includes('/audio/') && !path.includes('mp3_tagged')) {
+                // Si la firma falla con 'audio/', el catch podría intentar re-firmar con 'mp3_tagged/'
+                // por ahora lo dejamos pasar para ver si resuelve los casos conocidos.
             }
 
             // extract bucket from path if present
@@ -119,6 +127,21 @@ export const getPresignedDownloadUrl = async (key, expiresIn = 3600, version = '
                 .createSignedUrl(path, expiresIn);
 
             if (error) {
+                // Intentar fallback si es audio y falló con la ruta normalizada
+                if (bucket === 'products' && path.includes('/audio/')) {
+                    const retryPath = path.replace('/audio/', '/mp3_tagged/');
+                    try {
+                        const { data: retryData } = await supabase.storage.from(bucket).createSignedUrl(retryPath, expiresIn);
+                        if (retryData?.signedUrl) return retryData.signedUrl;
+                    } catch (e) { /* ignore */ }
+                } else if (bucket === 'products' && path.includes('/mp3_tagged/')) {
+                    const retryPath = path.replace('/mp3_tagged/', '/audio/');
+                     try {
+                        const { data: retryData } = await supabase.storage.from(bucket).createSignedUrl(retryPath, expiresIn);
+                        if (retryData?.signedUrl) return retryData.signedUrl;
+                    } catch (e) { /* ignore */ }
+                }
+
                 console.warn(`[Supabase Storage] Sign URL failed for ${bucket}/${path}:`, error.message);
                 return null; // Return null so the route handler can handle it or use fallback
             }
@@ -156,8 +179,24 @@ export const getPublicUrl = (key, version = 'v1') => {
     if (version === 'supabase') {
         let bucket = 'products';
         let path = cleanKey;
-        if (cleanKey.includes('/')) {
-            const parts = cleanKey.split('/');
+        
+        // 🔥 CROSS-STORAGE NORMALIZATION (Exclusion Logic):
+        // Normalización similar
+        if (path.startsWith('beats/mp3/') || path.startsWith('products/beats/mp3/')) {
+            const p = path.startsWith('products/') ? path.substring(9).split('/') : path.split('/');
+            if (p.length >= 4) {
+                // Mapear a mp3_tagged que es lo más común en las migraciones de beats
+                path = `products/${p[2]}/mp3_tagged/${p.slice(3).join('/')}`;
+            }
+        } else if (path.startsWith('products/covers/')) {
+            const p = path.split('/');
+            if (p.length >= 4) {
+                path = `products/${p[2]}/covers/${p.slice(3).join('/')}`;
+            }
+        }
+
+        if (path.includes('/')) {
+            const parts = path.split('/');
             const knownBuckets = ['products', 'avatars', 'secure-products', 'licenses'];
             if (knownBuckets.includes(parts[0])) {
                 bucket = parts[0];
