@@ -232,6 +232,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         // 4. Fetch Related Products (Background)
         fetchRelatedProducts(product);
 
+        // 5. 🔥 R2 Signing Check: Ensure all images (main + related) are signed
+        if (window.signR2Images) {
+            const container = document.getElementById('product-page-container');
+            if (container) window.signR2Images(container);
+        }
+
     } catch (err) {
         // 🛡️ SECURITY: Sanitize error message to prevent XSS if error comes from malicious input
         const safeErrMsg = (err.message || "Error desconocido").replace(/[<>{}\[\]]/g, '');

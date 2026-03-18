@@ -1090,31 +1090,8 @@ async function toggleFollow(producerId, btn) {
     }
 }
 
-/**
- * 🔥 R2 SIGNING UTILITY: Asynchronously signs all R2 images in the target container
- */
-window.signR2Images = async function(container = document) {
-    if (!window.AuthUtils || !window.AuthUtils.getAuthorizedUrl) return;
+// 🔥 R2 SIGNING UTILITY MOVED TO AUTH-UTILS.JS FOR GLOBAL AVAILABILITY
 
-    const images = container.querySelectorAll('img[data-r2-version]');
-    await Promise.all(Array.from(images).map(async img => {
-        const rawSrc = img.getAttribute('src'); // Use original attribute, NOT resolved .src
-        const currentSrc = img.src;
-        
-        // Only sign if it's a relative path OR an R2 URL that isn't already signed
-        const needsSigning = (rawSrc && !rawSrc.startsWith('http')) || 
-                           (currentSrc.includes('r2.cloudflarestorage.com') && !currentSrc.includes('X-Amz-Signature'));
-        
-        if (needsSigning) {
-            const version = img.getAttribute('data-r2-version') || 'v2'; // Default to v2 for Explore
-            const signedUrl = await window.AuthUtils.getAuthorizedUrl(rawSrc || currentSrc, version);
-            
-            if (signedUrl && signedUrl !== currentSrc) {
-                img.src = signedUrl;
-            }
-        }
-    }));
-};
 
 // Make globally available for onclick handlers
 window.toggleFollow = toggleFollow;
