@@ -1,5 +1,6 @@
 import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectsCommand, CopyObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { supabase } from '../database/connection.js';
 
 import { 
     R2_ENDPOINT, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET_NAME,
@@ -76,9 +77,39 @@ export const getPresignedUploadUrl = async (key, contentType, version = R2_CURRE
 };
 
 /**
- * Genera una URL firmada para descargar.
+ * Genera una URL firmada para descargar. 
+ * Soporta R2 (v1, v2) y ahora Supabase Storage ('supabase').
  */
 export const getPresignedDownloadUrl = async (key, expiresIn = 3600, version = 'v1') => {
+    // 🔥 NEW: Support Supabase Storage
+    if (version === 'supabase') {
+        try {
+            // Extract bucket name from key if it's there (e.g. "products/user-id/...")
+            let bucket = 'products';
+            let path = key;
+            
+            if (key.includes('/')) {
+                const parts = key.split('/');
+                // If it starts with a known bucket name
+                const knownBuckets = ['products', 'avatars', 'secure-products', 'licenses'];
+                if (knownBuckets.includes(parts[0])) {
+                    bucket = parts[0];
+                    path = parts.slice(1).join('/');
+                }
+            }
+
+            const { data, error } = await supabase.storage
+                .from(bucket)
+                .createSignedUrl(path, expiresIn);
+
+            if (error) throw error;
+            return data.signedUrl;
+        } catch (error) {
+            console.error(`Error al generar URL de descarga Supabase:`, error);
+            throw error;
+        }
+    }
+
     // 💡 IMPORTANTE: El backend pasará la versión que sacó de la DB
     const { client, bucket } = getClientAndBucket(version);
 
@@ -97,11 +128,26 @@ export const getPresignedDownloadUrl = async (key, expiresIn = 3600, version = '
 };
 
 /**
- * URL pública (Solo para V2 por ahora si está público, o V1 si tiene dominio)
+ * URL pública (Solo para V2 por ahora si está público, o V1 si tiene dominio, o Supabase)
  */
 export const getPublicUrl = (key, version = 'v1') => {
     let cleanKey = key;
     while (cleanKey.startsWith('/')) cleanKey = cleanKey.substring(1);
+
+    if (version === 'supabase') {
+        let bucket = 'products';
+        let path = cleanKey;
+        if (cleanKey.includes('/')) {
+            const parts = cleanKey.split('/');
+            const knownBuckets = ['products', 'avatars', 'secure-products', 'licenses'];
+            if (knownBuckets.includes(parts[0])) {
+                bucket = parts[0];
+                path = parts.slice(1).join('/');
+            }
+        }
+        const { data } = supabase.storage.from(bucket).getPublicUrl(path);
+        return data.publicUrl;
+    }
 
     const { bucket } = getClientAndBucket(version);
     const endpoint = version === 'v1' ? R2_ENDPOINT : R2_ENDPOINT_V2;

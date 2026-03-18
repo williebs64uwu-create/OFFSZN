@@ -221,14 +221,14 @@ app.post('/api/newsletter/subscribe', async (req, res) => {
 
         if (!response.ok) {
             console.error('EmailOctopus Error:', data);
-            
+
             // Handle common errors (e.g. already subscribed)
             if (data.error && data.error.code === 'MEMBER_EXISTS_WITH_EMAIL_ADDRESS') {
                 return res.status(200).json({ success: true, message: '¡Ya estás suscrito! 🎉' });
             }
-            
-            return res.status(response.status).json({ 
-                error: 'No pudimos procesar tu suscripción. Intenta de nuevo.' 
+
+            return res.status(response.status).json({
+                error: 'No pudimos procesar tu suscripción. Intenta de nuevo.'
             });
         }
 

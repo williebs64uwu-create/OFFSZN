@@ -310,9 +310,27 @@ window.AuthUtils = {
         }
         
         // Final version determination: explicit parameter > detected version > current platform default
-        const targetVersion = finalVersion || detectedVersion || (window.R2_CURRENT_VERSION || 'v2');
+        let actualVersion = finalVersion || detectedVersion || (window.R2_CURRENT_VERSION || 'v2');
 
-        if (window.OFFSZN_DEBUG) console.log(`[AuthUtils] Queueing sign for key: ${key} (Version: ${targetVersion})`);
+        // 🔥 SUPABASE STORAGE DETECTION & KEY NORMALIZATION
+        // Only override to 'supabase' if no explicit R2 version (v1/v2) was provided
+        const isExplicitR2 = (finalVersion === 'v1' || finalVersion === 'v2' || detectedVersion === 'v1' || detectedVersion === 'v2');
+        
+        const isUUIDPath = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i.test(key);
+        const isSupabaseUrl = key.includes('supabase.co');
+        
+        if (!isExplicitR2 || isSupabaseUrl) {
+            if (key.startsWith('products/') || key.startsWith('avatars/') || isSupabaseUrl || isUUIDPath) {
+                actualVersion = 'supabase';
+                
+                // Normalize key: If it's a UUID path, prepend 'products/' bucket name for the backend
+                if (isUUIDPath && !key.startsWith('products/')) {
+                    key = `products/${key}`;
+                }
+            }
+        }
+
+        if (window.OFFSZN_DEBUG) console.log(`[AuthUtils] Queueing sign for key: ${key} (Version: ${actualVersion})`);
 
         if (!key) {
             return pathOrUrl;
@@ -323,7 +341,7 @@ window.AuthUtils = {
             this._signingQueue.push({
                 raw: pathOrUrl,
                 key,
-                version: targetVersion,
+                version: actualVersion,
                 resolve,
                 reject
             });
@@ -358,11 +376,11 @@ window.AuthUtils = {
 
         try {
             const token = this.getAccessToken();
-            // 🔥 GROUP BY VERSION: Send separate batches for V1 and V2 to avoid signing errors
+            // 🔥 GROUP BY VERSION: Send separate batches to avoid signing errors
         const versions = [...new Set(queue.map(i => i.version || 'v2'))];
         
         for (const v of versions) {
-            const versionItems = queue.filter(i => (i.version || 'v2') === v); // 🔥 FIXED: Default to v2 for consistency
+            const versionItems = queue.filter(i => (i.version || 'v2') === v); 
             const keys = [...new Set(versionItems.map(i => i.key))];
             
             try {
@@ -461,10 +479,17 @@ window.AuthUtils = {
     },
 
     /**
-     * Identification if a URL belongs to Cloudflare R2 structure.
+     * Identification if a URL belongs to a storage provider structure (R2 or Supabase).
      */
     isR2Url: function (pathOrUrl) {
         if (!pathOrUrl || typeof pathOrUrl !== 'string') return false;
+        
+        // Supabase Detection
+        if (pathOrUrl.includes('supabase.co') || pathOrUrl.startsWith('products/')) return true;
+        
+        // UUID Path detection (for migrated image_url)
+        if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i.test(pathOrUrl)) return true;
+
         return (
             pathOrUrl.includes('r2.cloudflarestorage.com') ||
             pathOrUrl.includes('pub-') ||

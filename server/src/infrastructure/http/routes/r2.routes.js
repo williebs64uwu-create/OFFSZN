@@ -112,7 +112,9 @@ router.post('/r2/download-url', async (req, res) => {
         let detectedVersion = null;
         if (typeof key === 'string') {
             // Detectar versión desde el string antes de limpiar
-            if (key.includes('offsznlatbucket') || key.includes('42fc23b11a6c329b76b2babc20afcbf7')) {
+            if (key.includes('supabase.co') || key.includes('storage/v1/object')) {
+                detectedVersion = 'supabase';
+            } else if (key.includes('offsznlatbucket') || key.includes('42fc23b11a6c329b76b2babc20afcbf7')) {
                 detectedVersion = 'v2';
             } else if (key.includes('offszn-storage') || key.includes('41d0f49121d02c88f71fdb4da54a791d')) {
                 detectedVersion = 'v1';
@@ -123,10 +125,22 @@ router.post('/r2/download-url', async (req, res) => {
                     if (key.includes('?')) key = key.split('?')[0];
                     const urlObj = new URL(key);
                     key = urlObj.pathname;
+
+                    // If it's a Supabase URL, extract the path after /public/ or /sign/
+                    if (urlObj.hostname.includes('supabase.co')) {
+                        const parts = key.split('/');
+                        const objectRootIndex = parts.indexOf('object');
+                        if (objectRootIndex !== -1 && parts.length > objectRootIndex + 2) {
+                            // Format is usually /storage/v1/object/public/bucket/path or /storage/v1/object/sign/bucket/path
+                            // We want bucket/path
+                            key = parts.slice(objectRootIndex + 2).join('/');
+                        }
+                    }
                 } catch (e) {}
             }
 
             // Eliminar nombre del bucket de la ruta si está presente (incluso si no era una URL completa)
+            // Para R2, seguimos limpiando. Para Supabase, el service ya maneja el prefijo del bucket si viene.
             const bucketNames = [R2_BUCKET_NAME, R2_SECURE_BUCKET_NAME, 'offsznlatbucket', 'offszn-storage'].filter(b => b && b !== 'secure-products');
             for (const b of bucketNames) {
                 const normalizedPath = key.startsWith('/') ? key : `/${key}`;
@@ -206,7 +220,9 @@ router.post('/r2/bulk-sign', async (req, res) => {
                 // Sanitización y extracción de key desde URL si es necesario
                 if (typeof key === 'string') {
                     // Detectar versión desde la URL o el string antes de limpiar
-                    if (key.includes('offsznlatbucket') || key.includes('42fc23b11a6c329b76b2babc20afcbf7')) {
+                    if (key.includes('supabase.co') || key.includes('storage/v1/object')) {
+                        detectedVersion = 'supabase';
+                    } else if (key.includes('offsznlatbucket') || key.includes('42fc23b11a6c329b76b2babc20afcbf7')) {
                         detectedVersion = 'v2';
                     } else if (key.includes('offszn-storage') || key.includes('41d0f49121d02c88f71fdb4da54a791d')) {
                         detectedVersion = 'v1';
@@ -217,6 +233,15 @@ router.post('/r2/bulk-sign', async (req, res) => {
                             if (key.includes('?')) key = key.split('?')[0];
                             const urlObj = new URL(key);
                             key = urlObj.pathname;
+
+                            // If it's a Supabase URL, extract the path after /public/ or /sign/
+                            if (urlObj.hostname.includes('supabase.co')) {
+                                const parts = key.split('/');
+                                const objectRootIndex = parts.indexOf('object');
+                                if (objectRootIndex !== -1 && parts.length > objectRootIndex + 2) {
+                                    key = parts.slice(objectRootIndex + 2).join('/');
+                                }
+                            }
                         } catch (e) {}
                     }
 
