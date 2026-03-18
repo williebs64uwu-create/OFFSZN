@@ -1711,7 +1711,7 @@ async function renderTrending(items, user, collabStats = {}) {
     // 1. Pre-authorize ALL images in parallel while skeletons stay visible
     const authPromises = items.map(prod => {
         if (!prod.image_url) return Promise.resolve(null);
-        return window.getAuthorizedUrl(prod.image_url, prod.r2_version || 'v1');
+        return window.getAuthorizedUrl(prod.image_url, prod.r2_version || 'v1', prod.id);
     });
     const authorizedUrls = await Promise.all(authPromises);
 
@@ -1907,7 +1907,7 @@ async function renderProductList(items, user, collabStats = {}) {
     // 1. Pre-authorize ALL images in parallel
     const authPromises = items.map(prod => {
         if (!prod.image_url) return Promise.resolve(null);
-        return window.getAuthorizedUrl(prod.image_url, prod.r2_version || 'v1');
+        return window.getAuthorizedUrl(prod.image_url, prod.r2_version || 'v1', prod.id);
     });
     const authorizedUrls = await Promise.all(authPromises);
 
@@ -2191,7 +2191,7 @@ async function renderProductList(items, user, collabStats = {}) {
         // Initialize WaveSurfer
         if (audioUrl && window.WaveSurfer) {
             try {
-                const finalAudioUrl = await window.getAuthorizedUrl(audioUrl, prod.r2_version || 'v1');
+                const finalAudioUrl = await window.getAuthorizedUrl(audioUrl, prod.r2_version || 'v1', prod.id);
                 const ws = WaveSurfer.create({
                     container: document.getElementById(waveformId),
                     waveColor: '#666',

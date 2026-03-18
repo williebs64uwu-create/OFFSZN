@@ -88,9 +88,25 @@ export const getPresignedDownloadUrl = async (key, expiresIn = 3600, version = '
             let bucket = 'products';
             let path = key;
             
-            if (key.includes('/')) {
-                const parts = key.split('/');
-                // If it starts with a known bucket name
+            // 🔥 CROSS-STORAGE NORMALIZATION (Exclusion Logic):
+            // Normalize R2 paths to Supabase paths before splitting bucket
+            if (path.startsWith('beats/mp3/')) {
+                const p = path.split('/');
+                if (p.length >= 4) {
+                    // beats/mp3/[UUID]/[filename] -> products/[UUID]/audio/[filename]
+                    path = `products/${p[2]}/audio/${p.slice(3).join('/')}`;
+                }
+            } else if (path.startsWith('products/covers/')) {
+                const p = path.split('/');
+                if (p.length >= 4) {
+                    // products/covers/[UUID]/[filename] -> products/${p[2]}/covers/[filename]
+                    path = `products/${p[2]}/covers/${p.slice(3).join('/')}`;
+                }
+            }
+
+            // extract bucket from path if present
+            if (path.includes('/')) {
+                const parts = path.split('/');
                 const knownBuckets = ['products', 'avatars', 'secure-products', 'licenses'];
                 if (knownBuckets.includes(parts[0])) {
                     bucket = parts[0];

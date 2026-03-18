@@ -3,6 +3,7 @@ import { getPresignedUploadUrl, getPresignedDownloadUrl, getPublicUrl, deleteFro
 import { authenticateTokenMiddleware } from '../../middlewares/authenticateTokenMiddleware.js';
 import { R2_BUCKET_NAME, R2_SECURE_BUCKET_NAME } from '../../../shared/config/config.js';
 import { supabase } from '../../database/connection.js';
+const SUPABASE_IDS = [79, 86, 88, 89, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 105, 106, 109, 110, 111, 117, 118, 119, 120, 125, 126, 127, 128, 129, 130, 132, 138, 139, 334, 335, 337, 338, 340, 341, 342, 365, 366, 367, 368, 369, 373, 377, 379, 380, 383, 385, 386];
 
 const router = Router();
 
@@ -98,7 +99,7 @@ router.post('/r2/upload-url', authenticateTokenMiddleware, async (req, res) => {
 // MODIFICADO: Ahora permite acceso público a ciertas rutas (covers, previews) sin token.
 router.post('/r2/download-url', async (req, res) => {
     try {
-        let { key, expiresIn, version } = req.body;
+        let { key, expiresIn, version, productId } = req.body;
 
         if (!key) {
             return res.status(400).json({ error: 'Falta el key del archivo' });
@@ -154,7 +155,12 @@ router.post('/r2/download-url', async (req, res) => {
             while (key.startsWith('/')) key = key.substring(1);
         }
 
-        const itemVersion = detectedVersion || version || R2_CURRENT_VERSION || 'v2';
+        // 🔥 EXCLUSION PREMIUM: Force supabase version if productId is in the list
+        let itemVersion = detectedVersion || version || R2_CURRENT_VERSION || 'v2';
+        
+        if (productId && SUPABASE_IDS.includes(parseInt(productId))) {
+            itemVersion = 'supabase';
+        }
 
         // Definir prefijos públicos
         const publicPrefixes = ['products/covers/', 'beats/mp3/', 'avatars/', 'public/', 'banners/'];
@@ -203,16 +209,20 @@ router.post('/r2/download-url', async (req, res) => {
 // Endpoint para obtener múltiples URLs de descarga firmadas en una sola petición (Batch)
 router.post('/r2/bulk-sign', async (req, res) => {
     try {
-        const { keys, expiresIn, version } = req.body;
+        const { keys, items, expiresIn, version, productId: bodyProductId } = req.body;
 
-        if (!keys || !Array.isArray(keys)) {
-            return res.status(400).json({ error: 'Se requiere un array de keys' });
+        // items = [{ path: '...', productId: '...' }, ...]
+        // keys = ['path1', 'path2', ...] (legacy)
+        const signItems = items || (keys || []).map(k => ({ path: k, productId: bodyProductId }));
+
+        if (signItems.length === 0) {
+            return res.status(400).json({ error: 'Se requiere un array de items o keys' });
         }
 
         const { R2_CURRENT_VERSION } = await import('../../../shared/config/config.js');
         const finalVersion = version || R2_CURRENT_VERSION || 'v1';
 
-        const publicPrefixes = ['products/covers/', 'beats/mp3/', 'avatars/', 'public/', 'banners/'];
+        const publicPrefixes = ['products/covers/', 'beats/mp3/', 'avatars/', 'public/', 'banners/', 'drumkits/covers/'];
         const results = {};
 
         // Para recursos privados, verificar token una sola vez
@@ -221,10 +231,12 @@ router.post('/r2/bulk-sign', async (req, res) => {
         const authHeader = req.headers['authorization'];
         const token = authHeader && authHeader.split(' ')[1];
 
-        // Procesar cada key
-        const batchPromises = keys.map(async (rawKey) => {
+        // Procesar cada item
+        const batchPromises = signItems.map(async (item) => {
+            const rawKey = item.path;
             try {
-                let key = rawKey;
+                let key = item.path;
+                const productId = item.productId || bodyProductId;
                 let detectedVersion = null;
                 
                 // Sanitización y extracción de key desde URL si es necesario
@@ -269,7 +281,13 @@ router.post('/r2/bulk-sign', async (req, res) => {
                     while (key.startsWith('/')) key = key.substring(1);
                 }
 
-                const itemVersion = detectedVersion || version || R2_CURRENT_VERSION || 'v2';
+                // 🔥 EXCLUSION PREMIUM: Force supabase version if productId is in the list
+                let itemVersion = detectedVersion || version || R2_CURRENT_VERSION || 'v2';
+                
+                if (productId && SUPABASE_IDS.includes(parseInt(productId))) {
+                    itemVersion = 'supabase';
+                }
+
                 const isPublic = publicPrefixes.some(prefix => key.startsWith(prefix));
                 
                 // Si el recurso es privado y no hemos autenticado aún, hacerlo

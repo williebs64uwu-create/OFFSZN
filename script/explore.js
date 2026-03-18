@@ -313,7 +313,7 @@ function renderTwoColLists(category = 'Todo') {
                 product.file_url || product.url_file;
 
             if (container && rawAudioUrl && window.WaveSurfer) {
-                const audioUrl = await window.getAuthorizedUrl(rawAudioUrl, product.r2_version || 'v1');
+                const audioUrl = await window.getAuthorizedUrl(rawAudioUrl, product.r2_version || 'v1', product.id);
 
                 const ws = WaveSurfer.create({
                     container: container,
@@ -438,7 +438,7 @@ function createListItemHtml(item, index, type) {
     return `
         <div class="list-item-smart" data-id="${item.id}" data-type="product">
             <div class="list-item-index">${index}</div>
-            <img ${imgAttr} data-r2-version="${item.r2_version || 'v1'}" crossorigin="anonymous" class="list-item-img" alt="cover" onclick="event.stopPropagation(); window.handleCoverClick('${item.id}')">
+            <img crossorigin="anonymous" ${imgAttr} data-r2-version="${item.r2_version || 'v2'}" data-product-id="${item.id}" class="list-item-img" alt="cover" onclick="event.stopPropagation(); window.handleTrackPlay(event, '${item.id}')">
             <div class="list-item-info" onclick="event.stopPropagation(); window.handleInfoClick(event, '${item.id}', '${link}')">
                 <div class="list-item-name">${name}</div>
                 <div class="list-item-sub">${sub}</div>

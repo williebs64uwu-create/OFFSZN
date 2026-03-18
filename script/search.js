@@ -155,9 +155,9 @@ function resolveProductLicenses(product, producer) {
         'trackout': 'price_stems',
         'unlimited': 'price_exclusive'
     };
-    
+
     const pType = (product.product_type || '').toLowerCase();
-    
+
     // For non-beats, use price_basic as the single "license"
     if (pType !== 'beat') {
         return [{ id: 'basic', name: 'Price', price: parseFloat(product.price_basic) || 0, enabled: true }];
@@ -168,10 +168,10 @@ function resolveProductLicenses(product, producer) {
 
     return licenseKeys.map(key => {
         const offsznKey = `offszn_${key}`;
-        
+
         // --- 1. Identify Product JSON Data with Alias Support ---
         let prodLic = productLicenses[offsznKey] || productLicenses[key] || {};
-        
+
         if (key === 'unlimited') {
             // Unlimited prioritizes 'exclusive' settings
             const exclusiveData = productLicenses['offszn_exclusive'] || productLicenses['exclusive'];
@@ -185,7 +185,7 @@ function resolveProductLicenses(product, producer) {
 
         // --- 2. Identify Producer Settings with Alias Support ---
         let userLic = (producerSettings[offsznKey] || producerSettings[key]) || {};
-        
+
         if (key === 'unlimited') {
             const exclusiveUserData = producerSettings['offszn_exclusive'] || producerSettings['exclusive'];
             if (exclusiveUserData && Object.keys(exclusiveUserData).length > 0) userLic = exclusiveUserData;
@@ -513,78 +513,78 @@ function setupFilterListeners() {
     }
 
     // Manual Price Input on Double Click
-        if (priceDisplay) {
-            priceDisplay.style.cursor = 'pointer';
-            priceDisplay.title = 'Doble clic para editar presupuesto';
-            
-            priceDisplay.addEventListener('dblclick', () => {
-                // Determine initial value (avoid "Cualquiera" word)
-                const currentVal = (currentFilters.priceMax === 1000000 || currentFilters.priceMax >= 1000) 
-                    ? "1000.00" 
-                    : currentFilters.priceMax.toFixed(2);
+    if (priceDisplay) {
+        priceDisplay.style.cursor = 'pointer';
+        priceDisplay.title = 'Doble clic para editar presupuesto';
 
-                const input = document.createElement('input');
-                input.type = 'text';
-                input.value = currentVal;
-                
-                // Style input to fit perfectly
-                Object.assign(input.style, {
-                    width: '65px',
-                    background: 'rgba(255,255,255,0.05)',
-                    border: '1px solid rgba(255,255,255,0.2)',
-                    color: '#fff',
-                    borderRadius: '4px',
-                    fontSize: '0.85rem',
-                    padding: '2px 6px',
-                    textAlign: 'right',
-                    outline: 'none',
-                    marginRight: '0px'
-                });
+        priceDisplay.addEventListener('dblclick', () => {
+            // Determine initial value (avoid "Cualquiera" word)
+            const currentVal = (currentFilters.priceMax === 1000000 || currentFilters.priceMax >= 1000)
+                ? "1000.00"
+                : currentFilters.priceMax.toFixed(2);
 
-                priceDisplay.innerHTML = '';
-                priceDisplay.appendChild(input);
-                input.focus();
-                input.select();
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.value = currentVal;
 
-                let isFinishing = false;
-                const finishEditing = () => {
-                    if (isFinishing) return;
-                    isFinishing = true;
-                    
-                    let val = parseFloat(input.value);
-                    if (isNaN(val) || val < 0) val = 1000;
-                    
-                    // Update state
-                    currentFilters.priceMax = val >= 1000 ? 1000000 : val;
-                    if (priceSlider) priceSlider.value = Math.min(val, 1000);
-                    
-                    // UI Refresh
-                    updatePriceDisplay(val >= 1000 ? 1000 : val);
-                    applyFilters();
-                };
-
-                input.addEventListener('keydown', (e) => {
-                    if (e.key === 'Enter') input.blur();
-                    if (e.key === 'Escape') {
-                        input.value = currentVal;
-                        input.blur();
-                    }
-                });
-
-                input.addEventListener('input', (e) => {
-                    // Strict validation: max XX.XX
-                    let v = e.target.value.replace(/[^0-9.]/g, '');
-                    const parts = v.split('.');
-                    if (parts.length > 2) v = parts[0] + '.' + parts.slice(1).join('');
-                    if (parts[1] && parts[1].length > 2) v = parts[0] + '.' + parts[1].slice(0, 2);
-                    
-                    // Prevent more than 2 digits after dot if already there
-                    e.target.value = v;
-                });
-
-                input.addEventListener('blur', finishEditing);
+            // Style input to fit perfectly
+            Object.assign(input.style, {
+                width: '65px',
+                background: 'rgba(255,255,255,0.05)',
+                border: '1px solid rgba(255,255,255,0.2)',
+                color: '#fff',
+                borderRadius: '4px',
+                fontSize: '0.85rem',
+                padding: '2px 6px',
+                textAlign: 'right',
+                outline: 'none',
+                marginRight: '0px'
             });
-        }
+
+            priceDisplay.innerHTML = '';
+            priceDisplay.appendChild(input);
+            input.focus();
+            input.select();
+
+            let isFinishing = false;
+            const finishEditing = () => {
+                if (isFinishing) return;
+                isFinishing = true;
+
+                let val = parseFloat(input.value);
+                if (isNaN(val) || val < 0) val = 1000;
+
+                // Update state
+                currentFilters.priceMax = val >= 1000 ? 1000000 : val;
+                if (priceSlider) priceSlider.value = Math.min(val, 1000);
+
+                // UI Refresh
+                updatePriceDisplay(val >= 1000 ? 1000 : val);
+                applyFilters();
+            };
+
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') input.blur();
+                if (e.key === 'Escape') {
+                    input.value = currentVal;
+                    input.blur();
+                }
+            });
+
+            input.addEventListener('input', (e) => {
+                // Strict validation: max XX.XX
+                let v = e.target.value.replace(/[^0-9.]/g, '');
+                const parts = v.split('.');
+                if (parts.length > 2) v = parts[0] + '.' + parts.slice(1).join('');
+                if (parts[1] && parts[1].length > 2) v = parts[0] + '.' + parts[1].slice(0, 2);
+
+                // Prevent more than 2 digits after dot if already there
+                e.target.value = v;
+            });
+
+            input.addEventListener('blur', finishEditing);
+        });
+    }
 
     // Key Initializer
     initKeyFilters();
@@ -843,7 +843,14 @@ function renderTrackRow(p) {
     const type = (p.product_type || 'Beat').toUpperCase();
     const producer = p.producer_name || 'OFFSZN';
     const productUrl = getProductUrl(p);
-    
+
+    // Resolve display price from licenses or fallback to price_basic
+    const licenses = p._resolvedLicenses || [];
+    const lowestPrice = licenses.length > 0 ? Math.min(...licenses.map(l => l.price)) : (parseFloat(p.price_basic) || 0);
+    const displayPrice = lowestPrice > 0
+        ? (window.CurrencyManager?.format(lowestPrice) || `$${lowestPrice}`)
+        : 'GRATIS';
+
     const isR2 = window.AuthUtils && window.AuthUtils.isR2Url(imgUrl);
     const imgPlaceholder = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
     const imgAttr = isR2 ? `src="${imgPlaceholder}" data-r2-src="${escapeHTML(imgUrl)}"` : `src="${escapeHTML(imgUrl)}"`;
@@ -852,7 +859,7 @@ function renderTrackRow(p) {
         <div class="track-row" data-product-id="${p.id}">
             <div class="track-left">
                 <div class="thumb-container" onclick="window.location.href='${productUrl}'">
-                    <img crossorigin="anonymous" ${imgAttr} data-r2-version="${p.r2_version || 'v2'}" class="track-thumb" alt="cover">
+                    <img crossorigin="anonymous" ${imgAttr} data-r2-version="${p.r2_version || 'v2'}" data-product-id="${p.id}" class="track-thumb" alt="cover">
                     <div class="thumb-play-overlay" onclick="window.handleTrackPlay(event, '${p.id}')">
                         <i class="bi bi-play-fill"></i>
                     </div>
@@ -866,19 +873,19 @@ function renderTrackRow(p) {
                         
                         <div class="track-stats-inline">
                             ${(() => {
-                                const pTypeLower = (p.product_type || '').toLowerCase();
-                                if (pTypeLower === 'loopkit' || pTypeLower === 'drumkit') {
-                                    return `<div class="stat-pill-v2">${p.sounds_count || 0} sonidos</div>`;
-                                } else if (pTypeLower === 'preset') {
-                                    return `<div class="stat-pill-v2">${escapeHTML(p.category || 'Preset')}</div>`;
-                                } else {
-                                    return `
+            const pTypeLower = (p.product_type || '').toLowerCase();
+            if (pTypeLower === 'loopkit' || pTypeLower === 'drumkit') {
+                return `<div class="stat-pill-v2">${p.sounds_count || 0} sonidos</div>`;
+            } else if (pTypeLower === 'preset') {
+                return `<div class="stat-pill-v2">${escapeHTML(p.category || 'Preset')}</div>`;
+            } else {
+                return `
                                         <div class="stat-pill-v2">${p.bpm || '--'}</div>
                                         <span class="meta-separator-v2">|</span>
                                         <div class="stat-pill-v2">${p.key || p.key_scale || '--'}</div>
                                     `;
-                                }
-                            })()}
+            }
+        })()}
                         </div>
                     </div>
                 </div>

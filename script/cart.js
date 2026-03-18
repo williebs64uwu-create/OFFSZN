@@ -424,7 +424,7 @@ const CartManager = {
             this.state.items.forEach(item => {
                 const imgId = `cart-row-img-${item.product.id}`;
                 if (item.product.image_url && window.getAuthorizedUrl) {
-                    window.getAuthorizedUrl(item.product.image_url, item.product.r2_version || 'v1').then(url => {
+                    window.getAuthorizedUrl(item.product.image_url, item.product.r2_version || 'v1', item.product.id).then(url => {
                         const img = document.getElementById(imgId);
                         if (img && url) img.src = url;
                     });

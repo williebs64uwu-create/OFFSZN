@@ -42,7 +42,8 @@
 
                 try {
                     const r2Version = el.getAttribute('data-r2-version') || 'v1';
-                    const authorizedUrl = await window.getAuthorizedUrl(originalSrc, r2Version);
+                    const productId = el.getAttribute('data-product-id');
+                    const authorizedUrl = await window.getAuthorizedUrl(originalSrc, r2Version, productId);
                     
                     if (authorizedUrl && authorizedUrl !== originalSrc) {
                         el.onload = () => { 
@@ -65,7 +66,8 @@
         if (bgPath) {
             try {
                 const r2Version = el.getAttribute('data-r2-version') || 'v1';
-                const authorizedUrl = await window.getAuthorizedUrl(bgPath, r2Version);
+                const productId = el.getAttribute('data-product-id');
+                const authorizedUrl = await window.getAuthorizedUrl(bgPath, r2Version, productId);
                 if (authorizedUrl) {
                     el.style.backgroundImage = `url('${authorizedUrl}')`;
                 }

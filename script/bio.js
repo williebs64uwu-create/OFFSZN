@@ -145,7 +145,7 @@ function renderBioHeader(user) {
         avatarImg.dataset.r2Src = user.avatar_url;
         avatarImg.dataset.r2Version = user.r2_version || 'v1';
 
-        window.getAuthorizedUrl(user.avatar_url, user.r2_version || 'v1').then(url => {
+        window.getAuthorizedUrl(user.avatar_url, user.r2_version || 'v1', user.id).then(url => {
             if (url) avatarImg.src = url;
             avatarImg.parentElement.classList.remove('bg-zinc-900');
         }).catch(() => {
@@ -635,7 +635,7 @@ async function loadRecentProducts(user) {
                     // Use placeholder initially to avoid 404
                     finalImageUrl = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=';
                     // We don't await here to avoid blocking render, r2-loader or the .then() below will update it
-                    window.getAuthorizedUrl(p.image_url, p.r2_version || 'v1').then(signed => {
+                    window.getAuthorizedUrl(p.image_url, p.r2_version || 'v1', p.id).then(signed => {
                         if (signed) {
                             const imgEl = document.getElementById(`prod-img-${p.id}`);
                             if (imgEl) imgEl.src = signed;
@@ -743,7 +743,7 @@ window.playBioPreview = async function (id, url, btnContent, title, cover, r2_ve
         // Resolve URL (for R2)
         let finalUrl = url;
         if (window.AuthUtils && window.AuthUtils.isR2Url(url) && window.getAuthorizedUrl) {
-            finalUrl = await window.getAuthorizedUrl(url, r2_version);
+            finalUrl = await window.getAuthorizedUrl(url, r2_version, productId);
         }
 
         // Resolve Author Name

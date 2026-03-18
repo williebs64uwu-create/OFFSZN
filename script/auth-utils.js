@@ -38,6 +38,11 @@ window.PLAN_LIMITS = {
 
 window.AuthUtils = {
     _userPlanCache: null,
+    
+    // 🔥 EXCLUSION PREMIUM: IDs of products explicitly hosted on Supabase Storage.
+    // These bypass R2 and follow strict Supabase logic regardless of path.
+    SUPABASE_IDS: [79, 86, 88, 89, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 105, 106, 109, 110, 111, 117, 118, 119, 120, 125, 126, 127, 128, 129, 130, 132, 138, 139, 334, 335, 337, 338, 340, 341, 342, 365, 366, 367, 368, 369, 373, 377, 379, 380, 383, 385, 386],
+
     /**
      * Initialize Supabase Client globally if credentials exist.
      * Use this ensuring window.SUPABASE_URL is defined before loading this script.
@@ -234,10 +239,11 @@ window.AuthUtils = {
      * Resolves a path or URL to an authorized/signed URL if it's an R2 resource.
      * Supports Hybrid (Supabase/R2) logic.
      * @param {string} pathOrUrl The path or URL to resolve
-     * @param {string} version Optional R2 version ('v1' or 'v2')
+     * @param {string} version Optional R2 version ('v1', 'v2' or 'supabase')
+     * @param {string|number} productId Optional Product ID for explicit exclusion checks
      * @returns {Promise<string|null>} The authorized URL
      */
-    getAuthorizedUrl: async function (pathOrUrl, version = null) {
+    getAuthorizedUrl: async function (pathOrUrl, version = null, productId = null) {
         if (!pathOrUrl) return null;
 
         // Ensure cache is loaded (once)
@@ -314,16 +320,26 @@ window.AuthUtils = {
 
         // 🔥 HYBRID STORAGE DETECTION (R2 v1, R2 v2, Supabase)
         // This solves the problem where a product has mixed sources (e.g. R2 audio + Supabase images)
-        const isUUIDPath = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i.test(key);
-        const isOldR2Prefix = key.startsWith('beats/') || key.startsWith('drumkits/');
+        const isUUIDPath = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i.test(key) || 
+                           key.includes('supabase.co') || key.startsWith('drumkits/');
         const isImageFile = /\.(jpg|jpeg|png|webp|gif|svg)$/i.test(key);
         const isAudioFile = /\.(mp3|wav|ogg|flac|m4a|zip|rar)$/i.test(key);
 
         // Logic Overrides:
+        // 0. 🔥 EXCLUSION PREMIUM CHECK (Top Priority)
+        if (productId && this.SUPABASE_IDS.includes(parseInt(productId))) {
+            actualVersion = 'supabase';
+            
+            // Normalize for Supabase: Ensure we have the bucket prefix
+            if (!key.startsWith('products/') && !key.startsWith('avatars/') && !key.startsWith('covers/')) {
+                // For migrated supabase products, they usually live in products/UUID/...
+                key = `products/${key}`;
+            }
+        }
         // 1. Audio/Archives: R2 is our primary for large files.
         // Legacy paths (beats/mp3/, drumkits/) usually belong to Version 1 (Old Account)
-        // unless the URL explicitly contains the V2 bucket name.
-        if (isOldR2Prefix) {
+        // unless the URL explicitly contains the V2 bucket name OR it's a Supabase-excluded ID.
+        else if (isOldR2Prefix) {
             actualVersion = detectedVersion || (finalVersion !== 'supabase' ? finalVersion : null) || 'v1';
         } 
         // Newer UUID-only audio paths default to V2
@@ -331,12 +347,12 @@ window.AuthUtils = {
             actualVersion = detectedVersion || (finalVersion !== 'supabase' ? finalVersion : null) || 'v2';
         }
         // 2. Force Supabase for all migrated images/covers (UUID paths or explicit image folders)
-        else if ((isUUIDPath && isImageFile) || key.startsWith('products/') || key.startsWith('avatars/') || key.startsWith('covers/')) {
+        // REMOVED greedy products/ override to allow R2 assets to load. 
+        else if ((isUUIDPath && isImageFile) || key.startsWith('avatars/') || key.startsWith('covers/')) {
             actualVersion = 'supabase';
             
             // Normalize for Supabase: Ensure we have the bucket prefix
-            if (!key.startsWith('products/') && !key.startsWith('avatars/')) {
-                // If it's a UUID/covers/... or just UUID/... that belongs to products
+            if (!key.startsWith('avatars/') && !key.startsWith('covers/')) {
                 key = `products/${key}`;
             }
         }
@@ -361,6 +377,7 @@ window.AuthUtils = {
                 raw: pathOrUrl,
                 key,
                 version: actualVersion,
+                productId,
                 resolve,
                 reject
             });
@@ -384,7 +401,7 @@ window.AuthUtils = {
         // Handle single request normally for simplicity or if batch fails
         if (queue.length === 1) {
             const item = queue[0];
-            this._performSigningCall(item.key, item.version)
+            this._performSigningCall(item.key, item.version, item.productId)
                 .then(url => {
                     this._saveCache(item.raw, url);
                     item.resolve(url);
@@ -400,7 +417,7 @@ window.AuthUtils = {
         
         for (const v of versions) {
             const versionItems = queue.filter(i => (i.version || 'v2') === v); 
-            const keys = [...new Set(versionItems.map(i => i.key))];
+            const items = versionItems.map(i => ({ path: i.key, productId: i.productId }));
             
             try {
                 const response = await fetch(`${this._apiUrl}/r2/bulk-sign`, {
@@ -409,7 +426,12 @@ window.AuthUtils = {
                         'Content-Type': 'application/json',
                         'Authorization': token ? `Bearer ${token}` : undefined
                     },
-                    body: JSON.stringify({ keys, version: v })
+                    body: JSON.stringify({ 
+                        items, 
+                        version: v,
+                        version: v,
+                        productId: versionItems[0].productId // Pass first ID as hint/safety
+                    })
                 });
 
                 if (response.ok) {
@@ -442,7 +464,7 @@ window.AuthUtils = {
             console.error('[AuthUtils] Batch signing crash, falling back to individual calls:', error);
             // Fallback: perform individual calls for everything in this failed batch
             queue.forEach(item => {
-                this._performSigningCall(item.key, item.version)
+                this._performSigningCall(item.key, item.version, item.productId)
                     .then(url => {
                         this._saveCache(item.raw, url);
                         item.resolve(url);
@@ -455,7 +477,7 @@ window.AuthUtils = {
     /**
      * Individual signing call logic (Moved from getAuthorizedUrl)
      */
-    _performSigningCall: async function(key, version) {
+    _performSigningCall: async function(key, version, productId = null) {
         try {
             const token = this.getAccessToken();
             const response = await fetch(`${this._apiUrl}/r2/download-url`, {
@@ -464,7 +486,7 @@ window.AuthUtils = {
                     'Content-Type': 'application/json',
                     'Authorization': token ? `Bearer ${token}` : undefined
                 },
-                body: JSON.stringify({ key, version })
+                body: JSON.stringify({ key, version, productId })
             });
 
             if (!response.ok) return this._handleSigningFailure(key);
