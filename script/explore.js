@@ -221,12 +221,12 @@ function renderExploreFeed() {
         container.appendChild(createShelfRow('Librerías y Kits de Sonido', kits, 'standard'));
     }
 
-    // 6. SHELF: PRESETS (Section 5: New format)
+    // 6. SHELF: PRESETS (Section 5: Social Post format)
     const presets = allProducts
-        .filter(p => p.product_type?.toLowerCase().includes('preset') || p.product_type?.toLowerCase().includes('voces'))
-        .slice(0, EXPLORE_CONFIG.CAROUSEL_LIMIT);
+        .filter(p => (p.product_type?.toLowerCase().includes('preset') || p.product_type?.toLowerCase().includes('voces')) && !usedProductIds.has(p.id))
+        .slice(0, 2); // Limit to 2 as requested
     if (presets.length > 0) {
-        container.appendChild(createShelfRow('Presets de voces', presets, 'premium-preset'));
+        container.appendChild(createShelfRow('Presets de voces', presets, 'social-post'));
     }
 }
 
@@ -747,26 +747,90 @@ function createShelfRow(title, items, format = 'standard') {
         <div class="row-header"><h2 class="row-title">${title}</h2></div>
         <div class="shelf-wrapper">
             <button class="btn-nav prev"><i class="bi bi-chevron-left"></i></button>
-            <div class="shelf-container" id="${rowId}">${items.map(item => createProductCardHtml(item, format)).join('')}</div>
+            <div class="shelf-inner">
+                <div class="shelf-container" id="${rowId}">${items.map(item => createProductCardHtml(item, format)).join('')}</div>
+            </div>
             <button class="btn-nav next"><i class="bi bi-chevron-right"></i></button>
         </div>
     `;
     // Different step scroll based on format
-    const stepSize = format === 'premium-preset' ? 340 : 220;
+    const stepSize = (format === 'premium-preset' || format === 'social-post') ? 340 : 264;
     initShelfNavigation(row, rowId, stepSize);
     setTimeout(() => {
         // Support both standard and premium formats
-        const cards = row.querySelectorAll('.product-card-smart, .preset-card-premium');
+        const cards = row.querySelectorAll('.product-card-smart, .preset-card-premium, .preset-card-social');
         cards.forEach(card => {
             const id = card.dataset.productId;
             const item = items.find(i => String(i.id) === String(id));
 
+            // Social Card Specific Actions
+            if (format === 'social-post') {
+                const priceBtn = card.querySelector('.post-price-btn');
+                if (priceBtn) priceBtn.addEventListener('click', (e) => {
+                     e.stopPropagation();
+                     if (window.Cart) {
+                        window.Cart.addItem(item);
+                     } else {
+                        window.location.href = getProductUrl(item);
+                     }
+                });
+
+                const likeBtnSoc = card.querySelector('.post-like-btn');
+                if (likeBtnSoc) likeBtnSoc.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    toggleLike(id, likeBtnSoc, item.producer_id);
+                    // Update counter locally
+                    const span = likeBtnSoc.querySelector('span');
+                    if (span) {
+                        const count = parseInt(span.innerText) || 0;
+                        const isLiked = likeBtnSoc.classList.contains('liked');
+                        span.innerText = isLiked ? count + 1 : Math.max(0, count - 1);
+                    }
+                });
+
+                const shareBtn = card.querySelector('.post-share-btn');
+                if (shareBtn) shareBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const url = window.location.origin + getProductUrl(item);
+                    if (navigator.share) {
+                        navigator.share({ title: item.name, url: url }).catch(() => {});
+                    } else {
+                        navigator.clipboard.writeText(url).then(() => {
+                            const icon = shareBtn.querySelector('i');
+                            icon.className = 'bi bi-check2';
+                            setTimeout(() => icon.className = 'bi bi-share', 2000);
+                        });
+                    }
+                });
+
+                const repostBtn = card.querySelector('.post-repost-btn');
+                if (repostBtn) repostBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    alert("Función de Repost próximamente 🚀");
+                });
+
+                const commentBtn = card.querySelector('.post-comment-btn');
+                if (commentBtn) commentBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    alert("Comentarios próximamente 💬");
+                });
+            }
+
             // Standard Card Actions
-            const playBtn = card.querySelector('.quick-play-btn');
+            const playBtn = card.querySelector('.quick-play-btn, .post-play-btn');
             const likeBtn = card.querySelector('.card-like-btn');
 
             if (playBtn) playBtn.addEventListener('click', (e) => { e.stopPropagation(); playTrack(item); });
             if (likeBtn) likeBtn.addEventListener('click', (e) => { e.stopPropagation(); toggleLike(id, e.currentTarget, item.producer_id); });
+
+            const producerLink = card.querySelector('.card-producer');
+            if (producerLink) {
+                producerLink.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const nickname = item.producer_nickname || item.nickname;
+                    if (nickname) window.location.href = `/@${nickname}`;
+                });
+            }
 
             card.addEventListener('click', () => window.location.href = getProductUrl(item));
         });
@@ -787,6 +851,8 @@ function createProductCardHtml(product, format = 'standard') {
     const isLiked = window.FavoritesManager ? window.FavoritesManager.isLiked(product.id) : false;
     const img = escapeHTML(product.image_url || '/images/portada-default.png');
     const artist = escapeHTML(product.producer_nickname || 'OFFSZN Artist');
+    const avatar = escapeHTML(product.producer_avatar || '/images/portada-default.png');
+    const handle = escapeHTML(product.producer_handle || product.producer_nickname || 'artista').toLowerCase().replace(/\s+/g, '');
 
     const cleanName = (name) => {
         if (!name) return 'Sin título';
@@ -814,6 +880,62 @@ function createProductCardHtml(product, format = 'standard') {
                         <span class="preset-sub">${artist}</span>
                         <span class="preset-price">${price}</span>
                     </div>
+                </div>
+            </div>
+        `;
+    }
+
+    if (format === 'social-post') {
+        const pType = (product.product_type || '').toLowerCase();
+        const priceValue = product.price_basic || '10';
+        const price = window.CurrencyManager ? window.CurrencyManager.format(parseFloat(priceValue)) : `$${priceValue}`;
+        const rawImg = product.image_url || '/images/portada-default.png';
+        const isR2Cover = window.AuthUtils && window.AuthUtils.isR2Url(rawImg);
+        const imgPlaceholder = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
+        const coverAttr = isR2Cover ? `src="${imgPlaceholder}" data-r2-src="${escapeHTML(rawImg)}"` : `src="${escapeHTML(rawImg)}"`;
+
+        // 🔍 FIND REAL PRODUCER DATA
+        const producer = Array.isArray(allProducers) ? allProducers.find(p => String(p.id) === String(product.producer_id)) : null;
+        const realArtist = producer ? escapeHTML(producer.nickname) : artist;
+        const realAvatar = producer ? escapeHTML(producer.avatar_url || '/images/portada-default.png') : avatar;
+        const realHandle = producer ? escapeHTML(producer.nickname || realArtist).toLowerCase().replace(/\s+/g, '') : handle;
+
+        const isLikedSoc = window.FavoritesManager ? window.FavoritesManager.isLiked(product.id) : false;
+        const likeIcon = isLikedSoc ? 'bi-heart-fill' : 'bi-heart';
+
+        return `
+            <div class="preset-card-social" data-product-id="${product.id}">
+                <div class="post-header">
+                    <img src="${realAvatar}" class="post-avatar" alt="${realArtist}" onerror="this.src='/images/portada-default.png'">
+                    <div class="post-user-info">
+                        <div class="post-user-top">
+                            <span class="post-name">${realArtist}</span>
+                            <span class="post-handle">@${realHandle}</span>
+                            <span class="post-time">• Nueva publicación</span>
+                        </div>
+                    </div>
+                    <i class="bi bi-three-dots post-more"></i>
+                </div>
+                
+                <div class="post-body">
+                    <div class="post-cover-wrapper">
+                        <img ${coverAttr} data-r2-version="${product.r2_version || 'v2'}" crossorigin="anonymous" class="post-cover" alt="${product.name}">
+                        <button class="post-play-btn"><i class="bi bi-play-fill"></i></button>
+                    </div>
+                    <div class="post-content">
+                        <h3 class="post-title">${cleanName(product.name)}</h3>
+                        <div class="post-meta">Vocal Preset • OFFSZN Exclusive</div>
+                        <button class="post-price-btn">
+                            <i class="bi bi-cart-plus"></i> ${price}
+                        </button>
+                    </div>
+                </div>
+
+                <div class="post-actions">
+                    <div class="post-action post-like-btn ${isLikedSoc ? 'liked' : ''}"><i class="bi ${likeIcon}"></i> <span>${product.stats_likes || 0}</span></div>
+                    <div class="post-action post-repost-btn"><i class="bi bi-repeat"></i> <span>0</span></div>
+                    <div class="post-action post-comment-btn"><i class="bi bi-chat"></i> <span>0</span></div>
+                    <div class="post-action post-share-btn"><i class="bi bi-share"></i></div>
                 </div>
             </div>
         `;
@@ -1026,7 +1148,7 @@ function renderLeaderboard(producers) {
 
     return `
         <div class="explore-row leaderboard-section" style="margin-top: 40px; margin-bottom: 60px;">
-            <div class="row-header" style="justify-content: flex-start; margin-bottom: 30px;">
+            <div class="row-header">
                 <h2 class="row-title">Top Productores del Mes</h2>
             </div>
             <div class="shelf-wrapper">

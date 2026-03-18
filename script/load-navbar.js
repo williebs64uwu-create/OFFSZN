@@ -9,8 +9,8 @@
 
 (async () => {
     const placeholder = document.getElementById('navbar-placeholder');
-    const CACHE_KEY = 'offszn_navbar_cache_v6'; // Increment key to force update
-    const NAVBAR_URL = 'components/navbar.html?v=26';
+    const CACHE_KEY = 'offszn_navbar_cache_v7'; // Increment key to force update
+    const NAVBAR_URL = 'components/navbar.html?v=27';
 
     /**
      * 🔥 ZERO-FLASH CACHING LOGIC

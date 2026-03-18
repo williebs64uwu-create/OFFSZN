@@ -442,3 +442,40 @@ Se detectaron 404s persistentes en productos específicos (ej. koimattoru). La c
 2. **Detección Automática:** En el backend, se implementó lógica para detectar la versión basada en el endpoint o el nombre del bucket contenido en la URL original antes de proceder a la firma.
 
 ---
+---
+
+## 16. Inconsistencia de Carpetas en Migración a Supabase (`audio` vs `mp3_tagged`)
+**Fecha:** 18 de marzo de 2026
+**Ubicación:** `r2-storage.service.js` / `AuthUtils.js`
+
+### Problema:
+Los beats migrados desde R2 a Supabase Storage se organizaron en carpetas `mp3_tagged/`, pero el código del servidor y la base de datos a veces apuntaban a `audio/`. Esto causaba errores "Object Not Found" (404) al intentar firmar o acceder al recurso.
+
+### Solución:
+1. **Mapeo Inteligente**: Se actualizó la normalización en el backend para mapear `beats/mp3/` a `mp3_tagged/` automáticamente.
+2. **Ciclo de Reintento**: Se implementó un loop que, si falla la firma en `mp3_tagged/`, intenta automáticamente en `audio/` (y viceversa) antes de devolver un error.
+
+---
+
+## 17. Conflicto de Cuentas R2 (Cuenta 1 vs Cuenta 2) y Smart Fallback Loop
+**Fecha:** 18 de marzo de 2026
+**Ubicación:** `r2.routes.js` (Ruta `/r2-public/`) / `auth-utils.js`
+
+### Problema:
+Con la introducción de una segunda cuenta de R2 (V2), el sistema ya no podía predecir con certeza dónde estaba un archivo basándose solo en su prefijo o ID. Reglas "greedy" forzaban erróneamente activos de R2 V2 hacia Supabase, rompiendo imágenes y audios.
+
+### Solución:
+1. **Smart Fallback Loop**: La ruta pública del backend ahora **itera** sobre todas las fuentes posibles (`v2`, `supabase`, `v1`) hasta que el recurso devuelve un 200 OK. Esto garantiza la carga sin importar en qué cuenta resida el archivo.
+2. **Priorización de DB**: Se eliminaron las reglas forzosas en el frontend, delegando la decisión a la columna `r2_version` de la base de datos y usando el fallback loop como red de seguridad.
+
+---
+
+## 18. Doble Prefijo y URLs Supabase Anidadas
+**Fecha:** 18 de marzo de 2026
+**Ubicación:** `r2-storage.service.js` / `r2.routes.js`
+
+### Problema:
+Se detectaron errores de firma para rutas como `products/storage/v1/object/public/...`. Esto ocurre porque el sistema intenta tratar una URL completa de Supabase como si fuera una "key" relativa, añadiendo de nuevo el nombre del bucket al principio.
+
+### Solución:
+Implementar una limpieza de URL (URL Sanitization) más agresiva en el backend para detectar si el string recibido ya es una URL de Supabase y extraer únicamente la ruta del objeto antes de proceder a la normalización o firma.

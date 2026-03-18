@@ -20,18 +20,47 @@ let currentFilters = {
     bpmMax: 250,
     doubleTempo: false,
     freeOnly: false,
-    keys: []
+    keys: [],
+    sort: 'relevance',
+    isDraggingSlider: false
 };
 let renderTimeout = null; // Debounce for results rendering
+let searchAbortController = null; // For cancelling search requests
+
+function debounce(func, wait) {
+    let timeout;
+    return (...args) => {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(this, args), wait);
+    };
+}
 
 // --- Skeletons ---
-function showResultsSkeletons(count = 15) {
+function showResultsSkeletons(count = 10) {
     const container = document.getElementById('search-results-container');
     if (!container) return;
 
+    // Prevent redundant re-renders of skeletons if they are already showing
+    if (container.classList.contains('is-searching')) return;
+    container.classList.add('is-searching');
+
     let html = '';
     for (let i = 0; i < count; i++) {
-        html += `<div class="skeleton-row skeleton"></div>`;
+        html += `
+            <div class="track-row-skeleton">
+                <div class="thumb-skeleton skeleton"></div>
+                <div class="info-skeleton">
+                    <div class="title-skeleton skeleton"></div>
+                    <div class="meta-skeleton skeleton"></div>
+                </div>
+                <div class="actions-skeleton">
+                    <div class="icon-skeleton skeleton"></div>
+                    <div class="icon-skeleton skeleton"></div>
+                    <div class="icon-skeleton skeleton"></div>
+                    <div class="btn-skeleton skeleton"></div>
+                </div>
+            </div>
+        `;
     }
     container.innerHTML = html;
 }
@@ -93,6 +122,17 @@ function normalizeString(str) {
 
     // Remove all non-alphanumeric characters AND spaces for robust matching
     return normalized.replace(/[^a-z0-9]/g, '');
+}
+
+function normalizeKey(k) {
+    if (!k) return '';
+    return k.toLowerCase()
+        .replace(/\s+/g, '')
+        .replace(/minor/g, 'm')
+        .replace(/min/g, 'm')
+        .replace(/major/g, '')
+        .replace(/maj/g, '')
+        .replace(/#/g, 's'); // Use 's' for sharp internally to avoid char issues
 }
 
 function getSimilarity(s1, s2) {
@@ -250,42 +290,58 @@ async function initSearchPage() {
     await performSearch();
 }
 
-async function fetchProducts() {
+async function fetchProducts(signal) {
     try {
         if (!window.supabaseClient) {
             console.error("Supabase client not initialized");
             return [];
         }
 
-        const { data: products, error } = await window.supabaseClient
+        const query = window.supabaseClient
             .from('products')
             .select('*')
             .neq('status', 'deleted')
             .eq('visibility', 'public');
 
-        if (error) throw error;
+        if (signal) query.abortSignal(signal);
+
+        const { data: products, error } = await query;
+
+        if (error) {
+            if (error.name === 'AbortError') return [];
+            throw error;
+        }
         return products || [];
     } catch (err) {
+        if (err.name === 'AbortError') return [];
         console.error("Error fetching products:", err);
         return [];
     }
 }
 
-async function fetchProducers() {
+async function fetchProducers(signal) {
     try {
         if (!window.supabaseClient) {
             console.error("Supabase client not initialized");
             return [];
         }
         // Fetch users who are producers
-        const { data, error } = await window.supabaseClient
+        const query = window.supabaseClient
             .from('users')
             .select('id, nickname, avatar_url, is_verified, is_producer, bio, r2_version, license_settings')
-            .eq('is_producer', true); // Removed limit to ensure all producers are available
+            .eq('is_producer', true);
 
-        if (error) throw error;
+        if (signal) query.abortSignal(signal);
+
+        const { data, error } = await query;
+
+        if (error) {
+            if (error.name === 'AbortError') return [];
+            throw error;
+        }
         return data || [];
     } catch (err) {
+        if (err.name === 'AbortError') return [];
         console.error("Error fetching producers:", err);
         return [];
     }
@@ -296,84 +352,101 @@ async function performSearch() {
     const query = (urlParams.get('q') || '').toLowerCase().trim();
     const category = urlParams.get('cat') || 'Todo';
 
-    const [fetchedProducts, fetchedProducers] = await Promise.all([
-        fetchProducts(),
-        fetchProducers()
-    ]);
+    // 1. Cancel previous search if still running
+    if (searchAbortController) {
+        searchAbortController.abort();
+    }
+    searchAbortController = new AbortController();
+    const { signal } = searchAbortController;
 
-    // Enrich products with producer data for easier rendering
-    allProducts = fetchedProducts.map(p => {
-        const producer = fetchedProducers.find(pr => pr.id === p.producer_id || pr.id === p.user_id);
-        const nameFallback = producer?.nickname || p.producer_nickname || 'OFFSZN';
-        const licenses = resolveProductLicenses(p, producer);
-        return {
-            ...p,
-            producer_name: nameFallback,
-            producer_nickname: nameFallback, // Simplified
-            producer_avatar: producer?.avatar_url,
-            producer_is_verified: (producer?.is_verified || p.producer_is_verified) || false,
-            _resolvedLicenses: licenses // Store for filtering/rendering
-        };
-    });
-    allProducers = fetchedProducers; // Store all fetched producers
+    try {
+        const [fetchedProducts, fetchedProducers] = await Promise.all([
+            fetchProducts(signal),
+            fetchProducers(signal)
+        ]);
 
-    // 1. FILTER PRODUCERS
-    let matchedProducers = [];
-    let exactProducer = null;
+        if (signal.aborted) return;
 
-    if (query !== '' || category === 'Productores') {
-        matchedProducers = allProducers.filter(p => {
-            const nick = (p.nickname || '').toLowerCase();
-            const normNick = normalizeString(nick);
-            const similarity = getSimilarity(nick, query);
-            const isMatch = nick.includes(query) || normNick.includes(normalizeString(query)) || similarity > 0.7;
+        // Enrich products with producer data for easier rendering
+        allProducts = fetchedProducts.map(p => {
+            const producer = fetchedProducers.find(pr => pr.id === p.producer_id || pr.id === p.user_id);
+            const nameFallback = producer?.nickname || p.producer_nickname || 'OFFSZN';
+            const licenses = resolveProductLicenses(p, producer);
+            return {
+                ...p,
+                producer_name: nameFallback,
+                producer_nickname: nameFallback,
+                producer_avatar: producer?.avatar_url,
+                producer_is_verified: (producer?.is_verified || p.producer_is_verified) || false,
+                _resolvedLicenses: licenses
+            };
+        });
+        allProducers = fetchedProducers;
 
-            // Only assign exactProducer if we haven't found a better one yet
-            if (query !== '' && !exactProducer) {
-                const exactSimilarity = getSimilarity(p.nickname, query);
-                if (normNick === normalizeString(query) || exactSimilarity > 0.85) {
-                    exactProducer = p;
+        // 1. FILTER PRODUCERS
+        let matchedProducers = [];
+        let exactProducer = null;
+
+        if (query !== '' || category === 'Productores') {
+            matchedProducers = allProducers.filter(p => {
+                const nick = (p.nickname || '').toLowerCase();
+                const normNick = normalizeString(nick);
+                const similarity = getSimilarity(nick, query);
+                const isMatch = nick.includes(query) || normNick.includes(normalizeString(query)) || similarity > 0.7;
+
+                if (query !== '' && !exactProducer) {
+                    const exactSimilarity = getSimilarity(p.nickname, query);
+                    if (normNick === normalizeString(query) || exactSimilarity > 0.85) {
+                        exactProducer = p;
+                    }
                 }
+                return isMatch;
+            });
+
+            if (exactProducer) {
+                matchedProducers = matchedProducers.filter(p => p.id !== exactProducer.id);
             }
-            return isMatch;
+        }
+
+        // 2. FILTER PRODUCTS
+        let matchedProducts = allProducts.map(p => {
+            const score = getMatchScore(p, query, normalizeString(query));
+
+            let matchesCat = true;
+            if (category === 'Beats') matchesCat = p.product_type === 'beat';
+            else if (category === 'Drum Kits') matchesCat = p.product_type === 'drumkit';
+            else if (category === 'Samples') matchesCat = p.product_type === 'loopkit';
+            else if (category === 'Presets') matchesCat = p.product_type === 'preset';
+            else if (category === 'Plantillas') matchesCat = p.product_type === 'template';
+
+            return { ...p, _matchScore: score, _matchesCat: matchesCat };
+        })
+            .filter(p => p._matchScore > 0 && p._matchesCat);
+        
+        applySorting(matchedProducts);
+
+        // De-duplicate
+        const seenIds = new Set();
+        matchedProducts = matchedProducts.filter(p => {
+            if (seenIds.has(p.id)) return false;
+            seenIds.add(p.id);
+            return true;
         });
 
-        // Ensure the exact producer is NOT included in the matched producers list
-        // so it doesn't render twice (once as exact card, once as standard row).
-        if (exactProducer) {
-            matchedProducers = matchedProducers.filter(p => p.id !== exactProducer.id);
+        renderResults(matchedProducts, matchedProducers, exactProducer);
+        renderRecommendations();
+
+    } catch (err) {
+        if (err.name === 'AbortError') {
+            console.log("Search request aborted");
+        } else {
+            console.error("Search failed:", err);
+        }
+    } finally {
+        if (searchAbortController && searchAbortController.signal === signal) {
+            searchAbortController = null;
         }
     }
-
-    // 2. FILTER PRODUCTS
-    let matchedProducts = allProducts.map(p => {
-        const score = getMatchScore(p, query, normalizeString(query));
-
-        // Category Filter
-        let matchesCat = true;
-        if (category === 'Beats') matchesCat = p.product_type === 'beat';
-        else if (category === 'Drum Kits') matchesCat = p.product_type === 'drumkit';
-        else if (category === 'Samples') matchesCat = p.product_type === 'loopkit';
-        else if (category === 'Presets') matchesCat = p.product_type === 'preset';
-        else if (category === 'Plantillas') matchesCat = p.product_type === 'template';
-
-        return { ...p, _matchScore: score, _matchesCat: matchesCat };
-    })
-        .filter(p => p._matchScore > 0 && p._matchesCat)
-        .sort((a, b) => b._matchScore - a._matchScore); // Sort by relevance descending
-
-    // De-duplicate (Just in case the DB query returned duplicates or overlap)
-    const seenIds = new Set();
-    matchedProducts = matchedProducts.filter(p => {
-        if (seenIds.has(p.id)) return false;
-        seenIds.add(p.id);
-        return true;
-    });
-
-    // 3. UI RENDERING
-    // Clean up temporary score/cat properties before rendering if desired, though not strictly necessary
-    renderResults(matchedProducts, matchedProducers, exactProducer);
-    renderRecommendations(allProducts);
 }
 
 function parseUrlFilters(params) {
@@ -394,7 +467,6 @@ function parseUrlFilters(params) {
 function setupFilterListeners() {
     // Category Checkboxes
     document.querySelectorAll('.category-check').forEach(check => {
-        // Sync initial state
         if (currentFilters.categories.includes(check.value)) {
             check.checked = true;
         }
@@ -430,14 +502,12 @@ function setupFilterListeners() {
                 max = parseInt(bpmMaxSlider.value);
             }
 
-            // Update track coloring
             if (track) {
                 const percent1 = ((min - 40) / (250 - 40)) * 100;
                 const percent2 = ((max - 40) / (250 - 40)) * 100;
                 track.style.background = `linear-gradient(to right, #1a1a1a ${percent1}%, #fff ${percent1}%, #fff ${percent2}%, #1a1a1a ${percent2}%)`;
             }
 
-            // Sync handles z-index
             if (e && e.target === bpmMinSlider) bpmMinSlider.style.zIndex = "10";
             if (e && e.target === bpmMaxSlider) bpmMaxSlider.style.zIndex = "10";
             if (e && e.target === bpmMinSlider) bpmMaxSlider.style.zIndex = "1";
@@ -446,13 +516,21 @@ function setupFilterListeners() {
             currentFilters.bpmMin = min;
             currentFilters.bpmMax = max;
             if (bpmDisplay) bpmDisplay.textContent = `${min} - ${max}`;
+            
+            // Mark as dragging to lock skeletons and prevent render until stop
+            currentFilters.isDraggingSlider = true;
             applyFilters();
         };
-
+        
+        const stopBpmDrag = () => {
+            currentFilters.isDraggingSlider = false;
+            applyFilters();
+        };
+        
         bpmMinSlider.addEventListener('input', (e) => updateBpm(e));
         bpmMaxSlider.addEventListener('input', (e) => updateBpm(e));
-
-        // Initial track state
+        bpmMinSlider.addEventListener('change', stopBpmDrag);
+        bpmMaxSlider.addEventListener('change', stopBpmDrag);
         updateBpm();
     }
 
@@ -465,33 +543,35 @@ function setupFilterListeners() {
         });
     }
 
-    // Price Slider
+    // Price Slider & Display Logic
     const priceSlider = document.getElementById('price-max-slider');
     const priceDisplay = document.getElementById('price-display');
-    if (priceSlider) {
-        const updatePriceDisplay = (val) => {
-            if (!priceDisplay) return;
-            const formatted = window.CurrencyManager?.format(val) || `$${val}`;
-            // If it's at the maximum (1000), we can show it's any price up to that, 
-            // but the user wants to see the range clearly.
-            priceDisplay.textContent = val >= 1000 ? 'Cualquiera' : formatted;
-        };
 
+    const updatePriceDisplay = (val) => {
+        if (!priceDisplay) return;
+        const formatted = window.CurrencyManager?.format(val) || `$${val}`;
+        priceDisplay.textContent = (val >= 1000) ? 'Cualquiera' : formatted;
+    };
+
+    if (priceSlider) {
         priceSlider.addEventListener('input', (e) => {
             const val = parseFloat(e.target.value);
-            currentFilters.priceMax = val >= 1000 ? 1000000 : val; // Set very high if "Cualquiera"
+            currentFilters.priceMax = val >= 1000 ? 1000000 : val;
             updatePriceDisplay(val);
+            currentFilters.isDraggingSlider = true;
             applyFilters();
         });
-
-        // Initial state sync
+        
+        priceSlider.addEventListener('change', () => {
+            currentFilters.isDraggingSlider = false;
+            applyFilters();
+        });
         updatePriceDisplay(parseFloat(priceSlider.value));
     }
 
     // Gratis Filter Checkbox
     const freeCheck = document.getElementById('free-filter-check');
     if (freeCheck) {
-        // Init from state if URL param was set
         if (currentFilters.freeOnly) {
             freeCheck.checked = true;
             if (priceSlider) priceSlider.disabled = true;
@@ -500,9 +580,7 @@ function setupFilterListeners() {
 
         freeCheck.addEventListener('change', (e) => {
             currentFilters.freeOnly = e.target.checked;
-            if (priceSlider) {
-                priceSlider.disabled = currentFilters.freeOnly;
-            }
+            if (priceSlider) priceSlider.disabled = currentFilters.freeOnly;
             if (currentFilters.freeOnly) {
                 if (priceDisplay) priceDisplay.textContent = 'Gratis';
             } else {
@@ -516,9 +594,7 @@ function setupFilterListeners() {
     if (priceDisplay) {
         priceDisplay.style.cursor = 'pointer';
         priceDisplay.title = 'Doble clic para editar presupuesto';
-
         priceDisplay.addEventListener('dblclick', () => {
-            // Determine initial value (avoid "Cualquiera" word)
             const currentVal = (currentFilters.priceMax === 1000000 || currentFilters.priceMax >= 1000)
                 ? "1000.00"
                 : currentFilters.priceMax.toFixed(2);
@@ -526,19 +602,9 @@ function setupFilterListeners() {
             const input = document.createElement('input');
             input.type = 'text';
             input.value = currentVal;
-
-            // Style input to fit perfectly
             Object.assign(input.style, {
-                width: '65px',
-                background: 'rgba(255,255,255,0.05)',
-                border: '1px solid rgba(255,255,255,0.2)',
-                color: '#fff',
-                borderRadius: '4px',
-                fontSize: '0.85rem',
-                padding: '2px 6px',
-                textAlign: 'right',
-                outline: 'none',
-                marginRight: '0px'
+                width: '65px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.2)',
+                color: '#fff', borderRadius: '4px', fontSize: '0.85rem', padding: '2px 6px', textAlign: 'right', outline: 'none'
             });
 
             priceDisplay.innerHTML = '';
@@ -550,201 +616,157 @@ function setupFilterListeners() {
             const finishEditing = () => {
                 if (isFinishing) return;
                 isFinishing = true;
-
-                let val = parseFloat(input.value);
-                if (isNaN(val) || val < 0) val = 1000;
-
-                // Update state
-                currentFilters.priceMax = val >= 1000 ? 1000000 : val;
+                
+                // Security: Sanitize input value
+                let cleanVal = input.value.replace(/[^\d.]/g, ''); // Remove anything not digit or dot
+                let val = parseFloat(cleanVal);
+                
+                if (isNaN(val) || val < 0) val = 1000000; // Default to 'any' if invalid
+                if (val > 1000000) val = 1000000; // Cap at 1M
+                
+                currentFilters.priceMax = (val >= 1000) ? 1000000 : val;
                 if (priceSlider) priceSlider.value = Math.min(val, 1000);
-
-                // UI Refresh
                 updatePriceDisplay(val >= 1000 ? 1000 : val);
+                
+                // Ensure skeletons show for manual change too
                 applyFilters();
             };
 
             input.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter') input.blur();
-                if (e.key === 'Escape') {
-                    input.value = currentVal;
-                    input.blur();
-                }
+                if (e.key === 'Escape') { input.value = currentVal; input.blur(); }
             });
-
-            input.addEventListener('input', (e) => {
-                // Strict validation: max XX.XX
-                let v = e.target.value.replace(/[^0-9.]/g, '');
-                const parts = v.split('.');
-                if (parts.length > 2) v = parts[0] + '.' + parts.slice(1).join('');
-                if (parts[1] && parts[1].length > 2) v = parts[0] + '.' + parts[1].slice(0, 2);
-
-                // Prevent more than 2 digits after dot if already there
-                e.target.value = v;
-            });
-
             input.addEventListener('blur', finishEditing);
         });
     }
 
-    // Key Initializer
     initKeyFilters();
-
-    // Accordion Listeners
-    document.querySelectorAll('.key-check').forEach(check => {
-        // Sync initial state
-        if (currentFilters.keys.includes(check.value)) {
-            check.checked = true;
-        }
-
-        check.addEventListener('change', (e) => {
-            const val = e.target.value;
-            if (e.target.checked) {
-                if (!currentFilters.keys.includes(val)) currentFilters.keys.push(val);
-            } else {
-                currentFilters.keys = currentFilters.keys.filter(k => k !== val);
-            }
-            applyFilters();
-        });
-    });
 
     // Clear Filters
     const clearBtn = document.getElementById('clear-filters-btn');
     if (clearBtn) {
         clearBtn.addEventListener('click', () => {
-            currentFilters = {
-                categories: [],
-                genres: [],
-                priceMax: 1000,
-                bpmMin: 40,
-                bpmMax: 250,
-                doubleTempo: false,
-                freeOnly: false,
-                keys: []
-            };
-            // Reset UI
+            currentFilters = { categories: [], genres: [], priceMax: 1000, bpmMin: 40, bpmMax: 250, doubleTempo: false, freeOnly: false, keys: [] };
+            currentQuery = ''; // ALSO RESET QUERY
+            const searchBox = document.getElementById('navbarSearchInput');
+            if (searchBox) searchBox.value = '';
+            
             document.querySelectorAll('.category-check, .key-check').forEach(c => c.checked = false);
             const freeFilter = document.getElementById('free-filter-check');
             if (freeFilter) freeFilter.checked = false;
-            if (priceSlider) {
-                priceSlider.value = 1000;
-                priceSlider.disabled = false;
-            }
+            
+            if (priceSlider) { priceSlider.value = 1000; priceSlider.disabled = false; }
             if (bpmMinSlider) bpmMinSlider.value = 40;
             if (bpmMaxSlider) bpmMaxSlider.value = 250;
             if (bpmDisplay) bpmDisplay.textContent = '40 - 250';
             if (priceDisplay) priceDisplay.textContent = 'Cualquiera';
             if (doubleTempoCheck) doubleTempoCheck.checked = false;
-
             applyFilters();
         });
     }
 
-    // Search Input Sync
     const searchInp = document.getElementById('navbarSearchInput');
     if (searchInp) {
         searchInp.value = currentQuery;
+        
+        // Add live sync for the search input on this page
+        searchInp.addEventListener('input', (e) => {
+            currentQuery = e.target.value.trim();
+            applyFilters();
+        });
     }
 }
 
 function applyFilters() {
-    // Skip full filter logic if products aren't fetched yet
     if (allProducts.length === 0) return;
-
-    // Clear previous timeout to debounce rapid changes
+    
+    // Always clear the timeout first
     if (renderTimeout) clearTimeout(renderTimeout);
 
+    const container = document.getElementById('search-results-container');
+    
+    // 1. Show skeletons IMMEDIATELY for instant feedback
+    showResultsSkeletons(8);
+    
+    // 2. If the user is actively dragging a slider, LOCK in skeleton state and don't render yet
+    if (currentFilters.isDraggingSlider) {
+        if (container) container.classList.add('is-searching');
+        return; 
+    }
+
     renderTimeout = setTimeout(() => {
-        // This function now primarily re-filters based on currentFilters state
-        // and then calls renderResults.
+        if (container) {
+            container.classList.remove('is-searching');
+            container.style.opacity = '1';
+        }
+
         let results = [...allProducts];
 
         // 1. Text Search
         if (currentQuery) {
             const q = currentQuery.toLowerCase().trim();
             const normQ = normalizeString(q);
-
-            results = results.map(p => {
-                const score = getMatchScore(p, q, normQ);
-                return { ...p, _matchScore: score };
-            }).filter(p => p._matchScore > 0);
+            results = results.map(p => ({ ...p, _matchScore: getMatchScore(p, q, normQ) }))
+                             .filter(p => p._matchScore > 0);
         } else {
             results = results.map(p => ({ ...p, _matchScore: 100 }));
         }
 
         // 2. Category Filter
-        if (currentFilters.categories.length > 0 &&
-            !currentFilters.categories.includes('Todo') &&
-            !currentFilters.categories.includes('Todas')) {
+        if (currentFilters.categories.length > 0 && !currentFilters.categories.includes('Todo')) {
             results = results.filter(p => currentFilters.categories.includes(p.product_type));
         }
 
-        // 3. BPM Filter (Range + Double Tempo)
+        // 3. BPM Filter
         if (currentFilters.bpmMin !== null || currentFilters.bpmMax !== null) {
             results = results.filter(p => {
                 if (!p.bpm) return true;
                 const b = parseInt(p.bpm);
                 const min = currentFilters.bpmMin || 0;
                 const max = currentFilters.bpmMax || 999;
-
                 const matchNormal = b >= min && b <= max;
                 if (currentFilters.doubleTempo) {
-                    const matchDouble = b >= (min * 2) && b <= (max * 2);
-                    const matchHalf = b >= (min / 2) && b <= (max / 2);
-                    return matchNormal || matchDouble || matchHalf;
+                    return matchNormal || (b >= min * 2 && b <= max * 2) || (b >= min / 2 && b <= max / 2);
                 }
                 return matchNormal;
             });
         }
 
-        // 4. Price Filter (License Aware)
+        // 4. Price Filter
         if (currentFilters.priceMax !== null || currentFilters.freeOnly) {
             results = results.filter(p => {
                 const licenses = p._resolvedLicenses || [];
-                if (currentFilters.freeOnly) {
-                    return licenses.some(l => l.price === 0);
-                }
-                const max = (currentFilters.priceMax !== null) ? currentFilters.priceMax : 1000000;
+                if (currentFilters.freeOnly) return licenses.some(l => l.price === 0);
+                const max = currentFilters.priceMax;
                 return licenses.some(l => l.price <= max);
             });
         }
 
         // 5. Key Filter
         if (currentFilters.keys && currentFilters.keys.length > 0) {
+            const normalizedTargetKeys = currentFilters.keys.map(k => normalizeKey(k));
             results = results.filter(p => {
-                const pk = (p.key || p.key_scale || '').trim();
-                return currentFilters.keys.includes(pk);
+                const pKey = normalizeKey(p.key || p.key_scale || '');
+                return pKey && normalizedTargetKeys.includes(pKey);
             });
         }
 
-        // Sort by Match Score Relevance
-        results.sort((a, b) => b._matchScore - a._matchScore);
-
+        applySorting(results);
         filteredResults = results;
-        // Re-evaluate producers based on the currentQuery for rendering
+
         const query = (currentQuery || '').toLowerCase().trim();
         const normQuery = normalizeString(query);
+        let matchedProducers = allProducers.filter(p => {
+            const nick = (p.nickname || '').toLowerCase();
+            return nick.includes(query) || normalizeString(nick).includes(normQuery) || getSimilarity(nick, query) > 0.7;
+        });
 
-        let matchedProducers = [];
-        let exactProducer = null;
-
-        if (query !== '' || (currentFilters.categories && currentFilters.categories.includes('Productores'))) {
-            matchedProducers = allProducers.filter(p => {
-                const nick = (p.nickname || '').toLowerCase();
-                const normNick = normalizeString(nick);
-                const similarity = getSimilarity(nick, query);
-                const isMatch = nick.includes(query) || normNick.includes(normQuery) || similarity > 0.7;
-
-                if (query !== '') {
-                    const exactSimilarity = getSimilarity(p.nickname, query);
-                    if (normNick === normalizeString(query) || exactSimilarity > 0.85) exactProducer = p;
-                }
-                return isMatch;
-            });
-        }
+        let exactProducer = matchedProducers.find(p => (p.nickname || '').toLowerCase() === query || getSimilarity(p.nickname, query) > 0.85);
+        if (exactProducer) matchedProducers = matchedProducers.filter(p => p.id !== exactProducer.id);
 
         renderResults(filteredResults, matchedProducers, exactProducer);
         renderRecommendations();
-    }, 50); // 50ms delay for performance without artificial lag
+    }, 250);
 }
 
 function renderRecommendations() {
@@ -1225,3 +1247,77 @@ function initKeyFilters() {
         });
     });
 }
+
+/**
+ * Applies sorting to a results array based on currentFilters.sort
+ */
+function applySorting(results) {
+    const sortVal = currentFilters.sort || 'relevance';
+    if (sortVal === 'relevance') {
+        results.sort((a, b) => (b._matchScore || 0) - (a._matchScore || 0));
+    } else if (sortVal === 'newest') {
+        results.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+    } else if (sortVal === 'price_low') {
+        results.sort((a, b) => {
+            const pA = getMinPrice(a);
+            const pB = getMinPrice(b);
+            return pA - pB;
+        });
+    } else if (sortVal === 'price_high') {
+        results.sort((a, b) => {
+            const pA = getMinPrice(a);
+            const pB = getMinPrice(b);
+            return pB - pA;
+        });
+    }
+}
+
+function getMinPrice(product) {
+    const licenses = product._resolvedLicenses || [];
+    if (licenses.length === 0) return 999999;
+    return Math.min(...licenses.map(l => l.price || 0));
+}
+
+// Custom Sort Dropdown Listeners
+document.addEventListener('DOMContentLoaded', () => {
+    const sortTrigger = document.getElementById('sortTrigger');
+    const sortContainer = document.getElementById('customSortContainer');
+    const sortMenu = document.getElementById('sortMenu');
+    const sortLabel = document.getElementById('current-sort-label');
+
+    if (sortTrigger && sortContainer) {
+        sortTrigger.addEventListener('click', (e) => {
+            e.stopPropagation();
+            sortContainer.classList.toggle('active');
+        });
+
+        // Close when clicking outside
+        document.addEventListener('click', () => {
+            sortContainer.classList.remove('active');
+        });
+
+        // Handle Item Selection
+        if (sortMenu) {
+            sortMenu.querySelectorAll('.sort-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    const value = item.getAttribute('data-value');
+                    const label = item.textContent;
+
+                    // Update State
+                    currentFilters.sort = value;
+
+                    // Update UI
+                    sortLabel.textContent = label;
+                    sortMenu.querySelectorAll('.sort-item').forEach(i => i.classList.remove('selected'));
+                    item.classList.add('selected');
+
+                    // Close menu
+                    sortContainer.classList.remove('active');
+
+                    // Apply
+                    applyFilters();
+                });
+            });
+        }
+    }
+});

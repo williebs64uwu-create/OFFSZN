@@ -468,7 +468,7 @@
 
 /* Shelf Row & Shelf Carousel */
 .explore-row {
-    margin-bottom: 0px;
+    margin-bottom: 40px; /* Breathing room between sections */
     padding: 0 1.5rem;
     /* Align with navbar-container */
     position: relative;
@@ -476,7 +476,7 @@
 
 .row-header {
     display: flex;
-    justify-content: center;
+    justify-content: flex-start;
     align-items: center;
     margin-bottom: 30px;
 }
@@ -505,6 +505,15 @@
     position: relative;
     display: flex;
     align-items: center;
+    max-width: 1280px; /* 5 cards (224px with padding) + 4 gaps (40px) = 1280px */
+    margin-left: 60px;
+    /* NO overflow here — buttons need to be visible outside */
+}
+
+.shelf-inner {
+    width: 100%;
+    overflow: hidden; /* Clips the 6th card */
+    position: relative;
 }
 
 /* Navigation Arrows - ALWAYS VISIBLE */
@@ -536,21 +545,19 @@
 }
 
 .btn-nav.prev {
-    left: -24px;
+    left: -60px;
 }
 
 .btn-nav.next {
-    right: -24px;
+    right: -60px;
 }
 
 .shelf-container {
     display: flex;
     justify-content: flex-start;
     overflow-x: auto;
-    gap: 32px;
-    /* Aumentado ligeramente para ocupar más espacio horizontal */
-    padding: 20px 100px 40px 100px;
-    /* Aumentado para centrar más el bloque de 6 */
+    gap: 40px; /* Cleaner spacing */
+    padding: 0; /* Handled by shelf-inner */
     scroll-behavior: smooth;
     scroll-snap-type: x mandatory;
     scrollbar-width: none;
@@ -563,20 +570,29 @@
 
 /* Universal Product Card */
 .product-card-smart {
-    flex: 0 0 200px;
-    /* Slightly larger for 1400px width */
-    width: 200px;
+    flex: 0 0 224px; /* 200px content + 24px padding */
+    width: 224px;
+    box-sizing: border-box;
     display: flex;
     flex-direction: column;
     gap: 14px;
     cursor: pointer;
-    transition: transform 0.3s;
+    transition: background 0.3s ease;
     scroll-snap-align: start;
+    position: relative;
+    z-index: 1;
+    padding: 12px;
+    border-radius: 16px;
+    background: transparent;
+}
+
+.product-card-smart:hover {
+    background: #1a1a1a;
 }
 
 .card-cover-wrapper {
-    width: 200px;
-    height: 200px;
+    width: 100%; /* Fills the card minus padding = 200px */
+    aspect-ratio: 1; /* Square */
     position: relative;
     border-radius: 12px;
     overflow: hidden;
@@ -591,13 +607,7 @@
     transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.product-card-smart:hover {
-    transform: translateY(-8px);
-}
-
-.product-card-smart:hover .card-cover-wrapper img {
-    transform: scale(1.02);
-}
+/* Removed growth effects as per user request */
 
 /* Floating Play Button on Hover */
 .quick-play-btn {
@@ -692,10 +702,16 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    z-index: 10;
+    display: inline-block;
 }
 
-.product-card-smart:hover .card-producer {
-    color: #8B5CF6;
+.card-producer:hover {
+    color: #fff;
+    text-decoration: underline;
 }
 
 /* --- FORMAT 2: Preset Highlight (Different Format) --- */
@@ -1342,30 +1358,15 @@
     width: 100%;
 }
 
-/* Alinear bloque con el título (dejando espacio exacto para que la flecha coincida con la T) */
 .leaderboard-section .shelf-wrapper {
-    /* 1230px es el cálculo exacto de 6 cards (180px) + 5 gaps (30px) */
-    max-width: 1230px;
+    max-width: 1230px; /* Specific for producer cards (180px) */
     margin-left: 56px;
-    /* Empuja todo el bloque 56px a la derecha para dar lugar a la flecha izquierda */
-    position: relative;
-    padding: 0;
 }
 
 .leaderboard-section .shelf-container {
     padding: 20px 0px 40px 0px;
     gap: 30px;
     justify-content: flex-start;
-    box-sizing: border-box;
-}
-
-/* Empujar flechas totalmente fuera de la caja para que no choquen con las cards */
-.leaderboard-section .btn-nav.prev {
-    left: -56px;
-}
-
-.leaderboard-section .btn-nav.next {
-    right: -56px;
 }
 
 /* Container for the new producer cards */
@@ -1446,6 +1447,185 @@
 }
 
 /* Rank borders */
+
+.preset-card-social {
+    background: #000;
+    border-radius: 12px;
+    padding: 20px;
+    width: 580px;
+    flex: 0 0 580px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    margin-right: 40px;
+    cursor: default;
+    transition: background 0.2s;
+}
+
+.preset-card-social:hover {
+    background: #0a0a0a;
+}
+
+.post-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+}
+
+.post-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.post-user-info {
+    flex-grow: 1;
+}
+
+.post-user-top {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.post-name {
+    color: #fff;
+    font-weight: 700;
+    font-size: 1rem;
+}
+
+.post-handle {
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.post-time {
+    color: #444;
+    font-size: 0.85rem;
+}
+
+.post-more {
+    color: #666;
+    cursor: pointer;
+}
+
+.post-body {
+    display: flex;
+    gap: 24px;
+    align-items: center;
+}
+
+.post-cover-wrapper {
+    position: relative;
+    width: 140px;
+    height: 140px;
+    flex-shrink: 0;
+}
+
+.post-cover {
+    width: 100%;
+    height: 100%;
+    border-radius: 12px;
+    object-fit: cover;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.post-play-btn {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 44px;
+    height: 44px;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.post-play-btn:hover {
+    background: #fff;
+    color: #000;
+    transform: translate(-50%, -50%) scale(1.1);
+}
+
+.post-content {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    justify-content: center;
+}
+
+.post-title {
+    color: #fff;
+    font-size: 1.5rem;
+    font-weight: 800;
+    margin: 0;
+    line-height: 1.2;
+}
+
+.post-meta {
+    font-size: 0.9rem;
+    color: #888;
+    margin-bottom: 8px;
+}
+
+.post-price-btn {
+    background: #fff;
+    color: #000;
+    border: none;
+    border-radius: 50px;
+    padding: 8px 24px;
+    font-weight: 800;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: fit-content;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.post-price-btn:hover {
+    background: #e0e0e0;
+    transform: scale(1.05);
+}
+
+.post-actions {
+    display: flex;
+    gap: 32px;
+    margin-top: 4px;
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.post-action {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.post-action:hover {
+    color: #fff;
+}
+
+.post-action i {
+    font-size: 1.1rem;
+}
+
 .producer-avatar-sp.rank-1 {
     border-color: #FFD700;
     box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);

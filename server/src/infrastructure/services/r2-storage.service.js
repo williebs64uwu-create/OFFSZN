@@ -2,10 +2,10 @@ import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectsCommand, Cop
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { supabase } from '../database/connection.js';
 
-import { 
+import {
     R2_ENDPOINT, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET_NAME,
     R2_ENDPOINT_V2, R2_ACCESS_KEY_ID_V2, R2_SECRET_ACCESS_KEY_V2, R2_BUCKET_NAME_V2,
-    R2_CURRENT_VERSION 
+    R2_CURRENT_VERSION
 } from '../../shared/config/config.js';
 
 // V1 Client (Old Account)
@@ -45,8 +45,8 @@ const getClientAndBucket = (version = R2_CURRENT_VERSION) => {
     }
 
     if (version === 'v2' && (!R2_ACCESS_KEY_ID_V2 || !R2_SECRET_ACCESS_KEY_V2 || !R2_ENDPOINT_V2)) {
-         console.warn('[R2-Storage] Requested V2 but credentials missing. Falling back to V1.');
-         return { client: s3ClientV1, bucket: R2_BUCKET_NAME || 'offszn-storage' };
+        console.warn('[R2-Storage] Requested V2 but credentials missing. Falling back to V1.');
+        return { client: s3ClientV1, bucket: R2_BUCKET_NAME || 'offszn-storage' };
     }
 
     if (version === 'v1') {
@@ -60,7 +60,7 @@ const getClientAndBucket = (version = R2_CURRENT_VERSION) => {
  */
 export const getPresignedUploadUrl = async (key, contentType, version = R2_CURRENT_VERSION) => {
     const { client, bucket } = getClientAndBucket(version);
-    
+
     const command = new PutObjectCommand({
         Bucket: bucket,
         Key: key,
@@ -87,7 +87,7 @@ export const getPresignedDownloadUrl = async (key, expiresIn = 3600, version = '
             // Extract bucket name from key if it's there (e.g. "products/user-id/...")
             let bucket = 'products';
             let path = key;
-            
+
             // 🔥 CROSS-STORAGE NORMALIZATION (Exclusion Logic):
             // Normalización para Supabase:
             // Caso 1: Beats antiguos migrados. En Supabase suelen estar en products/[UUID]/mp3_tagged/
@@ -97,7 +97,7 @@ export const getPresignedDownloadUrl = async (key, expiresIn = 3600, version = '
                     // [products/]beats/mp3/[UUID]/[filename] -> products/[UUID]/mp3_tagged/[filename]
                     path = `products/${p[2]}/mp3_tagged/${p.slice(3).join('/')}`;
                 }
-            } 
+            }
             // Caso 2: Covers antiguos migrados
             else if (path.startsWith('products/covers/')) {
                 const p = path.split('/');
@@ -136,7 +136,7 @@ export const getPresignedDownloadUrl = async (key, expiresIn = 3600, version = '
                     } catch (e) { /* ignore */ }
                 } else if (bucket === 'products' && path.includes('/mp3_tagged/')) {
                     const retryPath = path.replace('/mp3_tagged/', '/audio/');
-                     try {
+                    try {
                         const { data: retryData } = await supabase.storage.from(bucket).createSignedUrl(retryPath, expiresIn);
                         if (retryData?.signedUrl) return retryData.signedUrl;
                     } catch (e) { /* ignore */ }
@@ -179,7 +179,7 @@ export const getPublicUrl = (key, version = 'v1') => {
     if (version === 'supabase') {
         let bucket = 'products';
         let path = cleanKey;
-        
+
         // 🔥 CROSS-STORAGE NORMALIZATION (Exclusion Logic):
         // Normalización similar
         if (path.startsWith('beats/mp3/') || path.startsWith('products/beats/mp3/')) {
@@ -251,7 +251,7 @@ export const deleteFromR2 = async (keys, version = 'v1') => {
  */
 export const copyFileInR2 = async (sourceKey, destinationKey, version = 'v1') => {
     const { client, bucket } = getClientAndBucket(version);
-    
+
     try {
         const src = sourceKey.startsWith('/') ? sourceKey.substring(1) : sourceKey;
         const dest = destinationKey.startsWith('/') ? destinationKey.substring(1) : destinationKey;
