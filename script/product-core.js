@@ -1938,7 +1938,9 @@ function renderPresetSpecifics(product) {
     const buyBtn = document.createElement('button');
     buyBtn.className = 'btn-purchase-kit';
 
-    if (product.is_free) {
+    const isTrulyFree = product.is_free && (Number(product.price_basic) === 0 || !product.price_basic);
+
+    if (isTrulyFree) {
         buyBtn.innerHTML = 'DESCARGA GRATIS';
         buyBtn.onclick = () => {
             const downloadUrl = product.kit_url || product.download_url_wav || product.download_url_stems || product.wav_url || product.stems_url || product.audio_url;

@@ -175,14 +175,21 @@ window.renderLicenses = () => {
         }
 
         const isComplete = missingFiles.length === 0;
-        let statusText = isComplete
-            ? `Archivo: Cargado ${requiredDisplay}`
-            : `Archivo: Faltante ${requiredDisplay}`;
+        let statusText = ``;
 
-        if (!isComplete) {
-            if (id === 'offszn_premium') statusText = 'Falta: Wav';
-            else if (id === 'offszn_unlimited' || id === 'offszn_exclusive') statusText = 'Falta: Stems';
-            else if (id === 'offszn_basic') statusText = 'Falta: Mp3';
+        if (isComplete) {
+            statusText = `Archivo: Cargado ${requiredDisplay}`;
+        } else {
+            if (id === 'offszn_basic') {
+                statusText = 'Falta: Mp3';
+            } else if (id === 'offszn_premium') {
+                if (!hasMP3) statusText = 'Falta: Mp3';
+                else if (!hasWAV) statusText = 'Falta: Wav';
+            } else if (id === 'offszn_unlimited' || id === 'offszn_exclusive') {
+                if (!hasMP3) statusText = 'Falta: Mp3';
+                else if (!hasWAV) statusText = 'Falta: Wav';
+                else if (!hasStems) statusText = 'Falta: Stems';
+            }
         }
 
         card.innerHTML = `
@@ -483,9 +490,13 @@ function processFile(file, zone, stateKey, maxSize, successText, extension, pref
     if (previewContainer) previewContainer.innerHTML = '';
     zone.style.borderColor = '';
 
-    if (extension && !file.name.toLowerCase().endsWith(extension)) {
-        notify(`Selecciona un archivo ${extension.toUpperCase()}.`, 'error');
-        return;
+    if (extension) {
+        const extArray = extension.split(/,\s*/);
+        const validExt = extArray.some(ext => file.name.toLowerCase().endsWith(ext));
+        if (!validExt) {
+            notify(`Selecciona un archivo ${extArray.join(' o ').toUpperCase()}.`, 'error');
+            return;
+        }
     }
 
     if (file.size > maxSize) {
@@ -905,7 +916,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     initCoverHandlers();
     setupFileSlot('mp3Tagged', 'mp3_tagged', MAX_SIZES.MP3, 'Cambiar MP3', '.mp3');
     setupFileSlot('wavUntagged', 'wav_untagged', MAX_SIZES.WAV, 'Cambiar WAV', '.wav');
-    setupFileSlot('stems', 'stems', MAX_SIZES.STEMS, 'Cambiar Stems', '.zip');
+    setupFileSlot('stems', 'stems', MAX_SIZES.STEMS, 'Cambiar Stems', '.zip, .rar');
 
     initCharCounters();
     initVisibilityDropdown();

@@ -791,15 +791,19 @@ function createShelfRow(title, items, format = 'standard') {
                 const shareBtn = card.querySelector('.post-share-btn');
                 if (shareBtn) shareBtn.addEventListener('click', (e) => {
                     e.stopPropagation();
-                    const url = window.location.origin + getProductUrl(item);
-                    if (navigator.share) {
-                        navigator.share({ title: item.name, url: url }).catch(() => {});
+                    if (window.openShareModal) {
+                        window.openShareModal(item);
                     } else {
-                        navigator.clipboard.writeText(url).then(() => {
-                            const icon = shareBtn.querySelector('i');
-                            icon.className = 'bi bi-check2';
-                            setTimeout(() => icon.className = 'bi bi-share', 2000);
-                        });
+                        const url = window.location.origin + getProductUrl(item);
+                        if (navigator.share) {
+                            navigator.share({ title: item.name, url: url }).catch(() => {});
+                        } else {
+                            navigator.clipboard.writeText(url).then(() => {
+                                const icon = shareBtn.querySelector('i');
+                                icon.className = 'bi bi-check2';
+                                setTimeout(() => icon.className = 'bi bi-share', 2000);
+                            });
+                        }
                     }
                 });
 
@@ -861,7 +865,7 @@ function createProductCardHtml(product, format = 'standard') {
 
     if (format === 'premium-preset') {
         const pType = (product.product_type || '').toLowerCase();
-        const isTrulyFree = pType !== 'beat' && (product.is_free === true || String(product.is_free) === 'true' || Number(product.price_basic) === 0);
+        const isTrulyFree = pType !== 'beat' && (product.is_free === true || String(product.is_free) === 'true') && (Number(product.price_basic) === 0 || !product.price_basic);
         let priceValue = product.price_basic !== undefined && product.price_basic !== null ? product.price_basic : '20';
         const price = isTrulyFree ? 'FREE' : (window.CurrencyManager ? window.CurrencyManager.format(parseFloat(priceValue) || 0) : `$${priceValue}`);
         
@@ -887,8 +891,9 @@ function createProductCardHtml(product, format = 'standard') {
 
     if (format === 'social-post') {
         const pType = (product.product_type || '').toLowerCase();
+        const isTrulyFree = pType !== 'beat' && (product.is_free === true || String(product.is_free) === 'true') && (Number(product.price_basic) === 0 || !product.price_basic);
         const priceValue = product.price_basic || '10';
-        const price = window.CurrencyManager ? window.CurrencyManager.format(parseFloat(priceValue)) : `$${priceValue}`;
+        const price = isTrulyFree ? 'GRATIS' : (window.CurrencyManager ? window.CurrencyManager.format(parseFloat(priceValue)) : `$${priceValue}`);
         const rawImg = product.image_url || '/images/portada-default.png';
         const isR2Cover = window.AuthUtils && window.AuthUtils.isR2Url(rawImg);
         const imgPlaceholder = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
@@ -899,6 +904,9 @@ function createProductCardHtml(product, format = 'standard') {
         const realArtist = producer ? escapeHTML(producer.nickname) : artist;
         const realAvatar = producer ? escapeHTML(producer.avatar_url || '/images/portada-default.png') : avatar;
         const realHandle = producer ? escapeHTML(producer.nickname || realArtist).toLowerCase().replace(/\s+/g, '') : handle;
+        
+        const isR2Avatar = window.AuthUtils && window.AuthUtils.isR2Url(realAvatar);
+        const realAvatarAttr = isR2Avatar ? `src="${imgPlaceholder}" data-r2-src="${realAvatar}" data-r2-version="v1"` : `src="${realAvatar}"`;
 
         const isLikedSoc = window.FavoritesManager ? window.FavoritesManager.isLiked(product.id) : false;
         const likeIcon = isLikedSoc ? 'bi-heart-fill' : 'bi-heart';
@@ -906,7 +914,7 @@ function createProductCardHtml(product, format = 'standard') {
         return `
             <div class="preset-card-social" data-product-id="${product.id}">
                 <div class="post-header">
-                    <img src="${realAvatar}" class="post-avatar" alt="${realArtist}" onerror="this.src='/images/portada-default.png'">
+                    <img ${realAvatarAttr} crossorigin="anonymous" class="post-avatar" alt="${realArtist}" onerror="this.src='/images/portada-default.png'">
                     <div class="post-user-info">
                         <div class="post-user-top">
                             <span class="post-name">${realArtist}</span>
