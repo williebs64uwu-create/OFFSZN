@@ -26,7 +26,7 @@
         EUR: '€'
     };
 
-    const STORAGE_KEY = 'userCurrency';
+    const STORAGE_KEY = 'OFFSZN_CURRENCY';
 
     const CurrencyManager = {
         /**
@@ -34,7 +34,7 @@
          * @returns {'USD'|'PEN'|'EUR'}
          */
         getCurrency() {
-            return localStorage.getItem(STORAGE_KEY) || 'PEN';
+            return localStorage.getItem(STORAGE_KEY) || 'USD';
         },
 
         /**

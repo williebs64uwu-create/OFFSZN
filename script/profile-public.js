@@ -1524,15 +1524,19 @@ async function loadUserProducts(user) {
 
         // --- PRE-WARM IMAGE CACHE (For Synchronized Reveal) ---
         const urlsToWarm = [];
-        if (user.avatar_url) urlsToWarm.push({url: user.avatar_url, version: user.r2_version || 'v1'});
+        if (user.avatar_url) urlsToWarm.push({url: user.avatar_url, version: user.r2_version || 'v2'});
 
         // Trending
         if (window.trendingProducts) {
-            window.trendingProducts.slice(0, 5).forEach(p => { if (p.image_url) urlsToWarm.push({url: p.image_url, version: p.r2_version || 'v1'}); });
+            window.trendingProducts.slice(0, 5).forEach(p => { 
+                if (p.image_url) urlsToWarm.push({url: p.image_url, version: p.storage_version || p.r2_version || 'v1'}); 
+            });
         }
 
         // Main List (First 15 for instant reveal)
-        productsCache.slice(0, 15).forEach(p => { if (p.image_url) urlsToWarm.push({url: p.image_url, version: p.r2_version || 'v1'}); });
+        productsCache.slice(0, 15).forEach(p => { 
+            if (p.image_url) urlsToWarm.push({url: p.image_url, version: p.storage_version || p.r2_version || 'v1'}); 
+        });
 
         if (urlsToWarm.length > 0 && window.getAuthorizedUrl) {
             await Promise.all(urlsToWarm.map(obj => window.getAuthorizedUrl(obj.url, obj.version).catch(() => null)));
@@ -1982,7 +1986,7 @@ async function renderProductList(items, user, collabStats = {}) {
         img.src = initialImgList;
         if (isR2List) {
             img.dataset.r2Src = prod.image_url;
-            img.dataset.r2Version = prod.r2_version || 'v1';
+            img.dataset.r2Version = prod.storage_version || prod.r2_version || 'v1';
         }
         img.id = `list-img-${prod.id}`;
         img.alt = 'cover';
@@ -2191,7 +2195,7 @@ async function renderProductList(items, user, collabStats = {}) {
         // Initialize WaveSurfer
         if (audioUrl && window.WaveSurfer) {
             try {
-                const finalAudioUrl = await window.getAuthorizedUrl(audioUrl, prod.r2_version || 'v1', prod.id);
+                const finalAudioUrl = await window.getAuthorizedUrl(audioUrl, prod.storage_version || prod.r2_version || 'v1', prod.id);
                 const ws = WaveSurfer.create({
                     container: document.getElementById(waveformId),
                     waveColor: '#666',

@@ -41,7 +41,7 @@
                 el.style.transition = 'opacity 0.4s ease';
 
                 try {
-                    const r2Version = el.getAttribute('data-r2-version') || 'v1';
+                    const r2Version = el.getAttribute('data-r2-version') || (src.includes('supabase.co') ? 'supabase' : 'v1');
                     const productId = el.getAttribute('data-product-id');
                     const authorizedUrl = await window.getAuthorizedUrl(originalSrc, r2Version, productId);
                     
@@ -65,7 +65,7 @@
         const bgPath = el.getAttribute('data-r2-bg');
         if (bgPath) {
             try {
-                const r2Version = el.getAttribute('data-r2-version') || 'v1';
+                const r2Version = el.getAttribute('data-r2-version') || (bgPath.includes('supabase.co') ? 'supabase' : 'v1');
                 const productId = el.getAttribute('data-product-id');
                 const authorizedUrl = await window.getAuthorizedUrl(bgPath, r2Version, productId);
                 if (authorizedUrl) {

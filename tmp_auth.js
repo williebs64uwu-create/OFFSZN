@@ -1,11 +1,11 @@
-/**
+﻿/**
  * OFFSZN Auth Utilities
  * Centralized token management and plan-based feature restrictions.
  */
 
 window.PLAN_LIMITS = {
     free: {
-        name: 'Básico',
+        name: 'B├ísico',
         price: 'Free',
         max_uploads: 30,
         commission: 0.05,
@@ -35,10 +35,13 @@ window.PLAN_LIMITS = {
         badge: 'Gold'
     }
 };
+
 window.AuthUtils = {
     _userPlanCache: null,
-    _apiUrl: null,
-    _apiBase: null,
+    
+    // ­ƒöÑ EXCLUSION PREMIUM: IDs of products explicitly hosted on Supabase Storage.
+    // These bypass R2 and follow strict Supabase logic regardless of path.
+    SUPABASE_IDS: [79, 86, 88, 89, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 105, 106, 109, 110, 111, 117, 118, 119, 120, 125, 126, 127, 128, 129, 130, 132, 138, 139, 334, 335, 337, 338, 340, 341, 342, 365, 366, 367, 368, 369, 373, 377, 379, 380, 383, 385, 386],
 
     /**
      * Initialize Supabase Client globally if credentials exist.
@@ -47,7 +50,7 @@ window.AuthUtils = {
     initSupabase: function () {
         const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
         
-        // 🔥 DEBUG: Disabled by default to keep console clean
+        // ­ƒöÑ DEBUG: Disabled by default to keep console clean
         // if (isLocal) window.OFFSZN_DEBUG = true;
         
         let apiBase = window.OFFSZN_CONFIG?.API_BASE_URL;
@@ -66,7 +69,7 @@ window.AuthUtils = {
         if (typeof window.supabase !== 'undefined' && window.supabase.createClient && window.SUPABASE_URL && window.SUPABASE_ANON_KEY) {
             window.supabaseClient = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
 
-            // 🔄 SYNC: Listen for Auto-Refresh Events to keep token fresh
+            // ­ƒöä SYNC: Listen for Auto-Refresh Events to keep token fresh
             window.supabaseClient.auth.onAuthStateChange((event, session) => {
                 if (session && session.access_token) {
                     window.AuthUtils._cachedToken = session.access_token;
@@ -87,7 +90,7 @@ window.AuthUtils = {
             });
 
         } else {
-            console.warn("⚠️ AuthUtils: Cannot init Supabase (Missing credentials or Lib)");
+            console.warn("ÔÜá´©Å AuthUtils: Cannot init Supabase (Missing credentials or Lib)");
         }
     },
 
@@ -120,7 +123,7 @@ window.AuthUtils = {
                 // If strictly expired, we prefer NOT to return it to avoid 401s.
                 // However, we don't delete it immediately to allow refresh logic to run.
                 if (payload && payload.exp && payload.exp < (Date.now() / 1000)) {
-                    // console.warn("⚠️ AuthUtils: Token found but expired. Waiting for refresh...");
+                    // console.warn("ÔÜá´©Å AuthUtils: Token found but expired. Waiting for refresh...");
                     return false;
                 }
             } catch (e) {
@@ -232,6 +235,14 @@ window.AuthUtils = {
         } catch (e) {}
     },
 
+    /**
+     * Resolves a path or URL to an authorized/signed URL if it's an R2 resource.
+     * Supports Hybrid (Supabase/R2) logic.
+     * @param {string} pathOrUrl The path or URL to resolve
+     * @param {string} version Optional R2 version ('v1', 'v2' or 'supabase')
+     * @param {string|number} productId Optional Product ID for explicit exclusion checks
+     * @returns {Promise<string|null>} The authorized URL
+     */
     getAuthorizedUrl: async function (pathOrUrl, version = null, productId = null) {
         if (!pathOrUrl) return null;
 
@@ -241,34 +252,128 @@ window.AuthUtils = {
             this._cacheLoaded = true;
         }
 
+        // --- CACHE CHECK ---
         const cachedUrl = this._urlCache[pathOrUrl];
-        if (cachedUrl) return cachedUrl;
+        if (cachedUrl) {
+            return cachedUrl;
+        }
 
-        // 🔥 STRATEGY: 100% Explicit Versioning. No guessing bucket names or URL strings.
-        const actualVersion = version || (window.R2_CURRENT_VERSION || 'v1');
+        // ­ƒöÑ ZERO LATENCY FIX: If the URL is already a Cloudflare public DEV URL (pub-...), 
+        // do NOT ask the backend to sign it. It's already public.
+        // Also check if it's already a full HTTP URL that is NOT R2 (e.g. Supabase Public)
+        const isR2Known = this.isR2Url(pathOrUrl);
+        if (!isR2Known && typeof pathOrUrl === 'string' && pathOrUrl.startsWith('http')) {
+            return pathOrUrl;
+        }
 
+        // ­ƒöÑ REMOVED: Skipping signed URLs. 
+        // We now always attempt to re-sign R2 URLs to ensure they haven't expired in the DB.
+        // The normalization logic below will correctly extract the key and version.
+
+        if (typeof pathOrUrl === 'string' && pathOrUrl.includes('pub-') && pathOrUrl.includes('.r2.dev')) {
+            return pathOrUrl;
+        }
+
+        // --- HYBRID LOGIC ---
+        // 1. Identification & Normalization
         let key = pathOrUrl;
-        if (typeof key === 'string') {
+        let finalVersion = version;
+        let detectedVersion = null;
+
+        if (typeof pathOrUrl === 'string') {
+            // Clean accidental @ prefix (legacy)
             if (key.startsWith('@')) key = key.substring(1);
+
+            // Extract key from full R2 URL if it's an absolute URL
             if (key.startsWith('http')) {
-                try {
-                    const urlObj = new URL(key);
-                    key = urlObj.pathname;
-                    if (urlObj.hostname.includes('supabase.co')) {
-                        const parts = key.split('/');
-                        const objIdx = parts.indexOf('object');
-                        if (objIdx !== -1 && parts.length > objIdx + 2) key = parts.slice(objIdx + 2).join('/');
-                    }
-                } catch (e) { }
+                const r2Base = '.r2.cloudflarestorage.com/';
+                if (key.includes(r2Base)) {
+                    key = key.split(r2Base)[1];
+                } else {
+                    // Try parsing as generic URL to get pathname
+                    try {
+                        const urlObj = new URL(key);
+                        // If it's something like r2.offszn.lat/bucket/key
+                        key = urlObj.pathname.startsWith('/') ? urlObj.pathname.substring(1) : urlObj.pathname;
+                    } catch (e) { }
+                }
             }
-            while (key.startsWith('/')) key = key.substring(1);
+
+            // ­ƒöÑ UPDATED: We NO LONGER strip bucket names here. 
+            // The backend is now capable of detecting the version from the bucket name
+            // and then stripping it before signing. This makes the system more robust.
+
+            // Cleanup query params and leading slashes
             if (key.includes('?')) key = key.split('?')[0];
+            while (key.startsWith('/')) key = key.substring(1);
+
+            // AUTO-DETECT VERSION
+            if (pathOrUrl.includes('offsznlatbucket') || pathOrUrl.includes('42fc23b11a6c329b76b2babc20afcbf7') || key.startsWith('beats/') || key.startsWith('drumkits/')) {
+                detectedVersion = 'v2';
+            } else if (pathOrUrl.includes('offszn-storage') || pathOrUrl.includes('41d0f49121d02c88f71fdb4da54a791d') || pathOrUrl.includes('pub-')) {
+                detectedVersion = 'v1';
+            }
+        }
+        
+        // Final version determination: explicit parameter > detected version > current platform default
+        let actualVersion = finalVersion || detectedVersion || (window.R2_CURRENT_VERSION || 'v2');
+
+        // ­ƒöÑ HYBRID STORAGE DETECTION (R2 v1, R2 v2, Supabase)
+        // This solves the problem where a product has mixed sources (e.g. R2 audio + Supabase images)
+        const isUUIDPath = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i.test(key) || 
+                           key.includes('supabase.co') || key.startsWith('drumkits/');
+        const isImageFile = /\.(jpg|jpeg|png|webp|gif|svg)$/i.test(key);
+        const isAudioFile = /\.(mp3|wav|ogg|flac|m4a|zip|rar)$/i.test(key);
+        const isOldR2Prefix = key.startsWith('beats/mp3/') || key.startsWith('drumkits/') || key.startsWith('products/beats/mp3/');
+
+        // Logic Overrides:
+        // 0. ­ƒöÑ EXCLUSION PREMIUM CHECK (Top Priority)
+        if (productId && this.SUPABASE_IDS.includes(parseInt(productId))) {
+            actualVersion = 'supabase';
+            
+            // Normalize for Supabase: Ensure we have the bucket prefix
+            if (!key.startsWith('products/') && !key.startsWith('avatars/') && !key.startsWith('covers/')) {
+                // For migrated supabase products, they usually live in products/UUID/...
+                key = `products/${key}`;
+            }
+        }
+        // 1. Audio/Archives: R2 is our primary for large files.
+        // Legacy paths (beats/mp3/, drumkits/) usually belong to Version 1 (Old Account)
+        // unless the URL explicitly contains the V2 bucket name OR it's a Supabase-excluded ID.
+        else if (isOldR2Prefix) {
+            actualVersion = detectedVersion || (finalVersion !== 'supabase' ? finalVersion : null) || 'v1';
+        } 
+        // Newer UUID-only audio paths default to V2
+        else if (isUUIDPath && isAudioFile) {
+            actualVersion = detectedVersion || (finalVersion !== 'supabase' ? finalVersion : null) || 'v2';
+        }
+        // 2. Fallback to Supabase for specific folders or if explicitly detected
+        // We only force supabase for avatars or if specifically marked as supabase version.
+        // UUID-only paths shouldn't be forced because R2 V2 also uses UUIDs.
+        else if (key.startsWith('avatars/') || detectedVersion === 'supabase') {
+            actualVersion = 'supabase';
+            
+            // Normalize for Supabase: Ensure we have the bucket prefix
+            if (!key.startsWith('avatars/') && !key.startsWith('products/')) {
+                key = `products/${key}`;
+            }
+        }
+        // 3. Fallback to Supabase for generic images if DB says supabase
+        else if (isImageFile && actualVersion === 'supabase') {
+            actualVersion = 'supabase';
+        }
+        // 4. Stay Supabase if it's already a full Supabase URL
+        if (key.includes('supabase.co')) {
+            actualVersion = 'supabase';
         }
 
         if (window.OFFSZN_DEBUG) console.log(`[AuthUtils] Queueing sign for key: ${key} (Version: ${actualVersion})`);
 
-        if (!key) return pathOrUrl;
+        if (!key) {
+            return pathOrUrl;
+        }
 
+        // --- BATCHING QUEUE ---
         return new Promise((resolve, reject) => {
             this._signingQueue.push({
                 raw: pathOrUrl,
@@ -309,7 +414,7 @@ window.AuthUtils = {
 
         try {
             const token = this.getAccessToken();
-            // 🔥 GROUP BY VERSION: Send separate batches to avoid signing errors
+            // ­ƒöÑ GROUP BY VERSION: Send separate batches to avoid signing errors
         const versions = [...new Set(queue.map(i => i.version || 'v2'))];
         
         for (const v of versions) {
@@ -399,19 +504,16 @@ window.AuthUtils = {
      * Centralized failure handling with better fallbacks.
      */
     _handleSigningFailure: async function(key, rawOriginal) {
-        // Recognition of UUID/covers as public even if 'products/' was stripped
-        const isProductAsset = key.includes('/covers/') || key.includes('/previews/') || key.includes('/mp3/');
-        
-        console.warn(`AuthUtils: Signing failed for ${key} (ProductAsset: ${isProductAsset})`);
+        console.warn(`AuthUtils: Signing failed for ${key}`);
 
-        const publicPrefixes = ['products/', 'beats/mp3/', 'avatars/', 'public/', 'banners/', 'drumkits/'];
-        const isPublic = isProductAsset || publicPrefixes.some(prefix => key.startsWith(prefix));
+        const publicPrefixes = ['products/covers/', 'beats/mp3/', 'products/beats/mp3/', 'avatars/', 'public/', 'banners/', 'drumkits/covers/'];
+        const isPublic = publicPrefixes.some(prefix => key.startsWith(prefix));
 
         if (isPublic) {
             // Check if it's already a full URL that was passed in
             if (rawOriginal && rawOriginal.includes('supabase.co')) return rawOriginal;
 
-            // 🔥 FIX: Use _apiUrl which already includes /api
+            // ­ƒöÑ FIX: Use _apiUrl which already includes /api
             const apiRoot = this._apiUrl || '/api';
             return `${apiRoot}/r2-public/${key}`;
         }
@@ -455,7 +557,7 @@ window.AuthUtils = {
     uploadToR2: async function (file, folder = 'uploads') {
         try {
             const token = this.getAccessToken();
-            if (!token) throw new Error('No hay sesión activa para subir a R2');
+            if (!token) throw new Error('No hay sesi├│n activa para subir a R2');
 
             // 1. Get signed Upload URL from backend
             const response = await fetch(`${this._apiUrl}/r2/upload-url`, {
@@ -489,7 +591,7 @@ window.AuthUtils = {
                 }
             });
 
-            if (!uploadRes.ok) throw new Error('La subida directa a R2 falló');
+            if (!uploadRes.ok) throw new Error('La subida directa a R2 fall├│');
 
             return { key, r2_version, publicUrl };
         } catch (error) {
@@ -533,7 +635,7 @@ window.AuthUtils = {
 
                 // Auto-detect version from URL if not explicitly provided
                 if (!detectedVersion) {
-                    if (k.includes('offsznlatbucket') || k.includes('42fc23b1767793610255470d2b453e92')) {
+                    if (k.includes('offsznlatbucket') || k.includes('42fc23b11a6c329b76b2babc20afcbf7')) {
                         detectedVersion = 'v2';
                     } else if (k.includes('offszn-storage') || k.includes('41d0f49121d02c88f71fdb4da54a791d') || k.includes('pub-')) {
                         detectedVersion = 'v1';
@@ -627,7 +729,7 @@ window.AuthUtils = {
                     ytUploadsThisMonth = 0;
                 }
             }
-        } catch (_) { /* Columns may not exist yet — graceful fallback to 0 */ }
+        } catch (_) { /* Columns may not exist yet ÔÇö graceful fallback to 0 */ }
 
         const planData = {
             plan: planKey,
@@ -655,7 +757,7 @@ window.AuthUtils = {
 
         switch (feature) {
             case 'youtube_upload': {
-                // 🔥 Monthly quota check: Free=1, Starter=5, Pro=30
+                // ­ƒöÑ Monthly quota check: Free=1, Starter=5, Pro=30
                 const ytLimit = limits.youtube_uploads_per_month || 0;
                 const ytUsed = planData.usage?.youtube_uploads_this_month || 0;
                 return ytUsed < ytLimit;
@@ -665,31 +767,68 @@ window.AuthUtils = {
             default:
                 return false;
         }
-    },
-
-    /**
-     * 🔥 CURRENCY SYNC: Persists user preference to DB
-     */
-    syncCurrencyPreference: async function (currency) {
-        const token = this.getAccessToken();
-        if (!token) return;
-
-        try {
-            await fetch(`${this._apiUrl}/users/profile`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({ preferredCurrency: currency })
-            });
-            if (window.OFFSZN_DEBUG) console.log(`[AuthUtils] Currency preference synced to DB: ${currency}`);
-        } catch (e) {
-            console.warn("[AuthUtils] Failed to sync currency preference", e);
-        }
     }
 };
 
+// ==================== CURRENCY MANAGER ==================== //
+// Visual-only conversion for reference. Payments are ALWAYS in USD.
+// Supported: USD (base), PEN, EUR
+window.CurrencyManager = {
+    _RATES: { USD: 1, PEN: 3.80, EUR: 0.92 },
+    _SYMBOLS: { USD: '$', PEN: 'S/', EUR: 'Ôé¼' },
+    _STORAGE_KEY: 'userCurrency',
+
+    getCurrency() {
+        return localStorage.getItem(this._STORAGE_KEY) || 'PEN';
+    },
+
+    setCurrency(currency) {
+        if (!this._RATES[currency]) return;
+        localStorage.setItem(this._STORAGE_KEY, currency);
+        window.dispatchEvent(new CustomEvent('currencyChanged', { detail: { currency } }));
+    },
+
+    getRate(currency) { return this._RATES[currency] || 1; },
+    getSymbol(currency) { return this._SYMBOLS[currency] || '$'; },
+
+    /** Convert USD amount to user's selected currency */
+    convert(amountUSD, currency) {
+        const curr = currency || this.getCurrency();
+        return amountUSD * (this._RATES[curr] || 1);
+    },
+
+    /** Format USD amount as display string in user's currency */
+    format(amountUSD, opts = {}) {
+        if (amountUSD === 0 || amountUSD == null) return 'Free';
+        const curr = opts.currency || this.getCurrency();
+        const converted = this.convert(amountUSD, curr);
+        const symbol = this._SYMBOLS[curr] || '$';
+        const decimals = opts.showDecimals !== false ? 2 : 0;
+        return `${symbol}${converted.toFixed(decimals)}`;
+    },
+
+    /** Parse a price string like "$29.00" and re-format in user's currency */
+    formatFromString(priceStr, opts = {}) {
+        if (!priceStr || priceStr === 'Free' || priceStr === 'Gratis') return 'Free';
+        const str = String(priceStr);
+        const num = parseFloat(str.replace(/[^0-9.]/g, ''));
+        if (isNaN(num) || num === 0) return 'Free';
+        return this.format(num, opts);
+    },
+
+    /** Batch-update all [data-price-usd] elements on the page */
+    updateAllPrices() {
+        const curr = this.getCurrency();
+        document.querySelectorAll('[data-price-usd]').forEach(el => {
+            const usd = parseFloat(el.dataset.priceUsd);
+            if (isNaN(usd) || usd === 0) { el.textContent = 'Free'; return; }
+            el.textContent = this.format(usd, { currency: curr });
+        });
+    }
+};
+
+// Auto-update [data-price-usd] elements when currency changes
+window.addEventListener('currencyChanged', () => window.CurrencyManager.updateAllPrices());
 
 // Backwards compatibility / Direct global access shortcuts
 window.getAccessToken = window.AuthUtils.getAccessToken.bind(window.AuthUtils);
@@ -701,7 +840,7 @@ window.deleteFromR2 = window.AuthUtils.deleteFromR2.bind(window.AuthUtils);
 window.AuthUtils.initSupabase();
 
 /**
- * 🔥 R2 SIGNING UTILITY: Asynchronously signs all R2 images in the target container
+ * ­ƒöÑ R2 SIGNING UTILITY: Asynchronously signs all R2 images in the target container
  * This ensures that relative paths or unsigned R2 URLs are replaced with valid signed URLs.
  */
 window.signR2Images = async function (container = document) {

@@ -11,7 +11,7 @@ export const getAllProducts = async (req, res) => {
             // para traer los datos de 'users'.
             .select(`
                 *, 
-                users!products_producer_id_fkey ( nickname, r2_version ) 
+                users!products_producer_id_fkey ( nickname, r2_version, storage_version ) 
             `)
             .eq('status', 'approved')
             .eq('visibility', 'public');
@@ -33,6 +33,10 @@ export const getAllProducts = async (req, res) => {
                 ? product.users.r2_version
                 : 'v1';
 
+            const producerStorageVersion = (product.users && product.users.storage_version)
+                ? product.users.storage_version
+                : 'v1';
+
             const p = { ...product };
             delete p.users;
 
@@ -41,7 +45,8 @@ export const getAllProducts = async (req, res) => {
                 id: String(p.id),
                 producer_id: String(p.producer_id),
                 producer_nickname: producerNickname,
-                producer_r2_version: producerR2Version
+                producer_r2_version: producerR2Version,
+                producer_storage_version: producerStorageVersion
             };
         });
 
@@ -132,6 +137,7 @@ export const createProduct = async (req, res) => {
             download_url_wav: wav_url || null,
             download_url_stems: stems_url || null,
             r2_version: r2_version || 'v1',
+            storage_version: 'supabase', // Default to supabase for new high-quality uploads
 
             is_free: isFree,
             price_basic: licenses?.basic || null,

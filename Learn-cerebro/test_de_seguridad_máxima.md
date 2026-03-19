@@ -102,7 +102,7 @@ Se aplicó Hardening progresivo cumpliendo el **OWASP Top 10** sin romper el flu
 5. **Hardening Frontend Anti-XSS y Secretos (Explorar & Index)**
    - **Carga de variables dinámica:** Se eliminó cualquier "hardcode" de llaves públicas de APIs (`SUPABASE_ANON_KEY`, `EMAILJS_PUBLIC_KEY`) en el HTML principal (`index.html` y `explorar.html`) creando un proxy `/env.js` servido dinámicamente desde el motor de variables de entorno del servidor.
    - **Sanitización estricta del DOM (escapeHTML):** Inserción de funciones de desinfección de entidades HTML en el archivo `explore.js` para neutralizar inyecciones de código (XSS reflejado y persistente) antes de incrustar nombres de productos dinámicos o datos manejados por usuarios (`innerHTML`).  
-
+    
 6. **Hardening de Lógica de Negocio y Rankings (Anti-Pollution)**
     - **Control de Rankings Real-Time:** Se implementó una capa de validación en `producers.js` que audita los UUIDs antes de asignar rangos visuales. Esto previene que cuentas de "Staging" o "Test" (`EXCLUDED_PRODUCERS`) contaminen el TOP 10 público, incluso si hay inyecciones de datos en la BD.
     - **Sanitización de Fallbacks:** El sistema de "Letter Avatar" usa `escapeHTML` antes de procesar iniciales, neutralizando cualquier intento de inyección XSS mediante nicknames de usuario.

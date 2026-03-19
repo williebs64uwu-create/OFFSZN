@@ -99,7 +99,7 @@ export const completeOnboarding = async (req, res) => {
             .from('users')
             .update(updateData)
             .eq('id', userId)
-            .select('id, email, nickname, role, first_name, last_name, created_at, is_admin, socials, is_producer, paypal_email, r2_version');
+            .select('id, email, nickname, role, first_name, last_name, created_at, is_admin, socials, is_producer, paypal_email, r2_version, preferred_currency');
 
         if (updateError) throw updateError;
         if (!updatedUser || updatedUser.length === 0) {
@@ -121,7 +121,7 @@ export const getCurrentUser = async (req, res) => {
 
         const { data: user, error } = await supabase
             .from('users')
-            .select('id, email, nickname, role, first_name, last_name, created_at, is_admin, is_producer, paypal_email, r2_version')
+            .select('id, email, nickname, role, first_name, last_name, created_at, is_admin, is_producer, paypal_email, r2_version, preferred_currency')
             .eq('id', userId)
             .single();
 
@@ -167,7 +167,8 @@ export const updateMyProfile = async (req, res) => {
             nickname,
             bio,
             socials,
-            paypalEmail
+            paypalEmail,
+            preferredCurrency
         } = req.body;
 
         // Construimos el objeto de actualización
@@ -180,6 +181,7 @@ export const updateMyProfile = async (req, res) => {
         if (bio !== undefined) updateData.bio = bio; // Asumiendo que tienes una columna 'bio'
         if (socials !== undefined) updateData.socials = socials; // Asumiendo columna 'socials' (jsonb)
         if (paypalEmail !== undefined) updateData.paypal_email = paypalEmail;
+        if (preferredCurrency !== undefined) updateData.preferred_currency = preferredCurrency;
 
         // Validar que el nickname no esté en uso por OTRO usuario
         if (nickname) {
@@ -227,7 +229,7 @@ export const getUserByNickname = async (req, res) => {
 
         const { data: user, error } = await supabase
             .from('users')
-            .select('id, nickname, first_name, last_name, avatar_url, bio, role, socials, socials_order, is_verified, is_producer, created_at, experience, daws, banner_url, r2_version')
+            .select('id, nickname, first_name, last_name, avatar_url, bio, role, socials, socials_order, is_verified, is_producer, created_at, experience, daws, banner_url, r2_version, storage_version')
             .ilike('nickname', nickname)
             .maybeSingle();
 
@@ -279,7 +281,7 @@ export const getProductsByNickname = async (req, res) => {
                 *,
                 collab_invitations (
                     status,
-                    users!fk_collab_collaborator_public_users ( id, nickname, avatar_url, is_verified, r2_version )
+                    users!fk_collab_collaborator_public_users ( id, nickname, avatar_url, is_verified, r2_version, storage_version )
                 )
             `)
             .eq('producer_id', user.id)
@@ -329,7 +331,7 @@ export const getAllProducers = async (req, res) => {
 
         let query = supabase
             .from('users')
-            .select('id, nickname, first_name, last_name, avatar_url, profile_cover:banner_url, bio, role, is_verified, genres, specialty, r2_version', { count: 'exact' });
+            .select('id, nickname, first_name, last_name, avatar_url, profile_cover:banner_url, bio, role, is_verified, genres, specialty, r2_version, storage_version', { count: 'exact' });
 
         if (!role) {
             query = query.eq('is_producer', true);
@@ -483,7 +485,7 @@ export const getMyListenHistory = async (req, res) => {
         if (producerIds.size > 0) {
             const { data: producers } = await supabase
                 .from('users')
-                .select('id, nickname, avatar_url, is_verified, r2_version')
+                .select('id, nickname, avatar_url, is_verified, r2_version, storage_version')
                 .in('id', Array.from(producerIds));
 
             const producerMap = new Map();

@@ -479,3 +479,68 @@ Se detectaron errores de firma para rutas como `products/storage/v1/object/publi
 
 ### Solución:
 Implementar una limpieza de URL (URL Sanitization) más agresiva en el backend para detectar si el string recibido ya es una URL de Supabase y extraer únicamente la ruta del objeto antes de proceder a la normalización o firma.
+
+---
+
+## 19. Conflicto de Versión en Frontend (Fallback Hardcoded a V2)
+**Fecha:** 19 de marzo de 2026
+**Ubicación:** `script/explore.js` / `script/product-core.js`
+
+### Problema:
+Productos marcados como `storage_version: 'supabase'` en la base de datos no cargaban (404), ya que las plantillas de frontend (`preset-card-premium`, `social-post`) tenían un fallback forzado de `r2_version || 'v2'`. Esto ignoraba la columna de Supabase y forzaba la firma con credenciales de R2 V2.
+
+### Solución:
+Se actualizó la lógica de prioridad en todos los componentes de renderizado para usar:
+`${product.storage_version || product.r2_version || 'v2'}`.
+Esto garantiza que si un recurso está en Supabase, se use ese proveedor antes de intentar cualquier versión de R2.
+
+---
+
+## 20. Bloqueo de Acceso a Invitados (Fallas de Firma en Assets Públicos)
+**Fecha:** 19 de marzo de 2026
+**Ubicación:** `server/src/infrastructure/http/routes/r2.routes.js` / `script/auth-utils.js`
+
+### Problema:
+Usuarios no logueados (invitados) veían imágenes y audios rotos. Las políticas de firma denegaban el acceso porque los prefijos de productos (como `[UUID]/covers/`) no estaban en la lista blanca de "públicos" en el backend ni en el frontend.
+
+### Solución:
+1. **Backend**: Se amplió `publicPrefixes` en `r2.routes.js` para incluir `products/`, permitiendo que el servidor firme estos recursos incluso sin un token de sesión.
+2. **Frontend**: Se mejoró `_handleSigningFailure` en `AuthUtils` para que, si falla la firma privada, intente cargar el recurso a través del proxy público del API (`/r2-public/`), asegurando visibilidad total sin cuenta.
+
+---
+
+## 21. Falta de `storage_version` en Creación de Productos
+**Fecha:** 19 de marzo de 2026
+**Ubicación:** `server/src/infrastructure/http/controllers/ProductController.js`
+
+### Problema:
+Los nuevos productos se guardaban sin la columna `storage_version` definida, lo que causaba que el sistema "adivinara" o fallara al intentar determinar el proveedor de almacenamiento en el futuro.
+
+### Solución:
+Se modificó `createProduct` en el controlador para establecer explícitamente `storage_version: 'supabase'` y `r2_version: 'v1'` (como respaldo legacy) en el momento de la inserción. Esto estandariza todos los nuevos activos bajo el ecosistema de Supabase Storage.
+
+---
+
+## 22. Desajuste de Esquema en Tabla `users` (Falta `storage_version`)
+**Fecha:** 19 de marzo de 2026
+**Ubicación:** Base de Datos (Supabase) / `UserController.js` / `ProductController.js`
+
+### Problema:
+Mientras que los productos tenían la columna `storage_version` para rastrear su ubicación (Supabase, V1, V2), la tabla `users` carecía de esta columna. Al intentar unificar la lógica de firmas en el backend solicitando `storage_version` de los productores, la API fallaba (`column "storage_version" does not exist`).
+
+### Solución:
+1. Se ejecutó una migración SQL para añadir la columna `storage_version` a las tablas `users` y `profiles` con valor por defecto `'v1'`.
+2. Se sincronizaron los valores existentes basados en `r2_version`.
+3. Se actualizaron los controladores para incluir esta columna en todas las consultas de unión y selección de productores.
+
+---
+
+## 23. Handles Genéricos (@usuario) para Productores no Destacados
+**Fecha:** 19 de marzo de 2026
+**Ubicación:** `script/explore.js`
+
+### Problema:
+En la sección de "Presets de voces" (formato `social-post`), los productores que no estaban en la lista de "destacados" (caché local `allProducers`) aparecían con el handle genérico `@usuario`. Esto ocurría porque el sistema solo buscaba el handle en el objeto `producer` (caché) y no tenía un fallback robusto en la data del producto.
+
+### Solución:
+Se mejoró la lógica de generación de handles en `createProductCardHtml`. Ahora, si el objeto `producer` es null, el sistema deriva el handle y el nombre artístico directamente de `product.producer_nickname`, garantizando que la identidad del creador se muestre correctamente incluso para perfiles menos populares.

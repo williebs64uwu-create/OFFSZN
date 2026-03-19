@@ -224,6 +224,36 @@ const CartManager = {
         }
     },
 
+    addItem: async function (productId) {
+        if (!productId) return;
+        try {
+            // If we have the product in allProducts (global cache) use it
+            let product = null;
+            if (window.allProducts) {
+                product = window.allProducts.find(p => String(p.id) === String(productId));
+            }
+
+            if (!product) {
+                // Fetch from DB if not in cache
+                const { data, error } = await window.supabaseClient
+                    .from('products')
+                    .select('*')
+                    .eq('id', productId)
+                    .single();
+                
+                if (error) throw error;
+                product = data;
+            }
+
+            if (product) {
+                await this.addToCart(product);
+            }
+        } catch (err) {
+            console.error("[CartManager] Error adding item:", err);
+            if (window.toast) window.toast.error("Error al agregar al carrito");
+        }
+    },
+
     removeFromCart: async function (productId) {
         // Optimistic UI
         this.state.items = this.state.items.filter(i => String(i.product.id) !== String(productId));
@@ -481,6 +511,17 @@ const CartManager = {
         localStorage.removeItem('offszn_cart');
         this.render();
         this.updateBadge();
+    }
+};
+
+// Global Helpers for HTML attributes
+window.handleAddToCart = (e, id) => {
+    if (e) {
+        e.stopPropagation();
+        e.preventDefault();
+    }
+    if (window.CartManager) {
+        window.CartManager.addItem(id);
     }
 };
 

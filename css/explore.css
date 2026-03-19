@@ -650,21 +650,30 @@
     position: absolute;
     top: 10px;
     right: 10px;
-    background: rgba(0, 0, 0, 0.4);
-    backdrop-filter: blur(5px);
-    border: none;
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    min-width: 36px;
+    height: auto;
+    padding: 6px 4px;
+    border-radius: 20px;
     color: #fff;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
+    gap: 2px;
     font-size: 1rem;
     cursor: pointer;
     opacity: 0;
-    transition: all 0.2s;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     z-index: 5;
+}
+
+.card-like-btn .like-count {
+    font-size: 0.7rem;
+    font-weight: 700;
+    opacity: 0.9;
 }
 
 .product-card-smart:hover .card-like-btn {
@@ -1446,18 +1455,46 @@
     border: 3px solid transparent;
 }
 
+/* Social Post Cards */
+.post-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.post-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    object-fit: cover;
+    background: #111;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.post-user-info {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.post-user-top {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
 /* Rank borders */
 
 .preset-card-social {
-    background: #000;
-    border-radius: 12px;
-    padding: 20px;
-    width: 580px;
-    flex: 0 0 580px;
+    background: #080808;
+    border-radius: 16px;
+    padding: 24px;
+    width: 600px;
+    flex: 0 0 600px;
     display: flex;
     flex-direction: column;
     gap: 16px;
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     margin-right: 40px;
     cursor: default;
     transition: background 0.2s;
@@ -1492,15 +1529,11 @@
     gap: 6px;
 }
 
-.post-name {
+.post-user-handle {
     color: #fff;
     font-weight: 700;
-    font-size: 1rem;
-}
-
-.post-handle {
-    color: #666;
-    font-size: 0.9rem;
+    font-size: 1.1rem;
+    letter-spacing: -0.02em;
 }
 
 .post-time {
@@ -1612,14 +1645,20 @@
 
 .post-action {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: 8px;
+    gap: 2px;
     cursor: pointer;
     transition: color 0.2s;
 }
 
 .post-action:hover {
     color: #fff;
+}
+
+.post-action .like-count {
+    font-size: 0.8rem;
+    font-weight: 600;
 }
 
 .post-action i {

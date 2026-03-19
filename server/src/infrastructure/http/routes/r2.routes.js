@@ -3,8 +3,6 @@ import { getPresignedUploadUrl, getPresignedDownloadUrl, getPublicUrl, deleteFro
 import { authenticateTokenMiddleware } from '../../middlewares/authenticateTokenMiddleware.js';
 import { R2_BUCKET_NAME, R2_SECURE_BUCKET_NAME } from '../../../shared/config/config.js';
 import { supabase } from '../../database/connection.js';
-const SUPABASE_IDS = [79, 86, 88, 89, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 105, 106, 109, 110, 111, 117, 118, 119, 120, 125, 126, 127, 128, 129, 130, 132, 138, 139, 334, 335, 337, 338, 340, 341, 342, 365, 366, 367, 368, 369, 373, 377, 379, 380, 383, 385, 386];
-
 const router = Router();
 
 // 🔥 FILE SIZE LIMITS (server-side enforcement)
@@ -105,65 +103,44 @@ router.post('/r2/download-url', async (req, res) => {
             return res.status(400).json({ error: 'Falta el key del archivo' });
         }
 
-        // 🔥 Default to v1 if not specified (legacy support)
+        // 🔥 STRATEGY: 100% Explicit Versioning.
         const { R2_CURRENT_VERSION } = await import('../../../shared/config/config.js');
         const finalVersion = version || R2_CURRENT_VERSION || 'v1';
 
-        // 🔥 KEY SANITIZATION AND VERSION DETECTION
-        let detectedVersion = null;
-        if (typeof key === 'string') {
-            // Detectar versión desde el string antes de limpiar
-            if (key.includes('supabase.co') || key.includes('storage/v1/object')) {
-                detectedVersion = 'supabase';
-            } else if (key.includes('offsznlatbucket') || key.includes('42fc23b11a6c329b76b2babc20afcbf7')) {
-                detectedVersion = 'v2';
-            } else if (key.includes('offszn-storage') || key.includes('41d0f49121d02c88f71fdb4da54a791d')) {
-                detectedVersion = 'v1';
-            }
+        // Sanitización básica de la key (eliminar host si viene como URL completa)
+        if (typeof key === 'string' && (key.startsWith('http://') || key.startsWith('https://'))) {
+            try {
+                if (key.includes('?')) key = key.split('?')[0];
+                const urlObj = new URL(key);
+                key = urlObj.pathname;
 
-            if (key.startsWith('http://') || key.startsWith('https://')) {
-                try {
-                    if (key.includes('?')) key = key.split('?')[0];
-                    const urlObj = new URL(key);
-                    key = urlObj.pathname;
-
-                    // If it's a Supabase URL, extract the path after /public/ or /sign/
-                    if (urlObj.hostname.includes('supabase.co')) {
-                        const parts = key.split('/');
-                        const objectRootIndex = parts.indexOf('object');
-                        if (objectRootIndex !== -1 && parts.length > objectRootIndex + 2) {
-                            // Format is usually /storage/v1/object/public/bucket/path or /storage/v1/object/sign/bucket/path
-                            // We want bucket/path
-                            key = parts.slice(objectRootIndex + 2).join('/');
-                        }
+                // If it's a Supabase URL, extract the path after /object/[public|sign]/bucket/
+                if (urlObj.hostname.includes('supabase.co')) {
+                    const parts = key.split('/');
+                    const objectIndex = parts.indexOf('object');
+                    if (objectIndex !== -1 && parts.length > objectIndex + 2) {
+                        key = parts.slice(objectIndex + 2).join('/');
                     }
-                } catch (e) {}
-            }
-
-            // Eliminar nombre del bucket de la ruta si está presente (incluso si no era una URL completa)
-            // Para R2, seguimos limpiando. Para Supabase, el service ya maneja el prefijo del bucket si viene.
-            const bucketNames = [R2_BUCKET_NAME, R2_SECURE_BUCKET_NAME, 'offsznlatbucket', 'offszn-storage'].filter(b => b && b !== 'secure-products');
-            for (const b of bucketNames) {
-                const normalizedPath = key.startsWith('/') ? key : `/${key}`;
-                if (normalizedPath.startsWith(`/${b}/`)) {
-                    key = normalizedPath.substring(b.length + 2);
+                }
+            } catch (e) {}
+        }
+        
+        // Limpiar slash inicial y bucket names accidentales
+        if (typeof key === 'string') {
+            const bNames = [R2_BUCKET_NAME, R2_SECURE_BUCKET_NAME, 'offsznlatbucket', 'offszn-storage'];
+            for (const b of bNames) {
+                const norm = key.startsWith('/') ? key : `/${key}`;
+                if (norm.startsWith(`/${b}/`)) {
+                    key = norm.substring(b.length + 2);
                     break;
                 }
             }
-            
             if (key.includes('?')) key = key.split('?')[0];
             while (key.startsWith('/')) key = key.substring(1);
         }
 
-        // 🔥 EXCLUSION PREMIUM: Force supabase version if productId is in the list
-        let itemVersion = detectedVersion || version || R2_CURRENT_VERSION || 'v2';
-        
-        if (productId && SUPABASE_IDS.includes(parseInt(productId))) {
-            itemVersion = 'supabase';
-        }
-
         // Definir prefijos públicos
-        const publicPrefixes = ['products/covers/', 'beats/mp3/', 'products/beats/mp3/', 'avatars/', 'public/', 'banners/'];
+        const publicPrefixes = ['products/', 'beats/mp3/', 'avatars/', 'public/', 'banners/', 'drumkits/'];
         const isPublic = publicPrefixes.some(prefix => key.startsWith(prefix));
 
         // Si NO es público, requerir autenticación
@@ -175,162 +152,103 @@ router.post('/r2/download-url', async (req, res) => {
                 return res.status(401).json({ error: 'Acceso denegado: Recurso privado y no hay token' });
             }
 
-            // Verificar token con Supabase de forma segura
             const { data, error } = await supabase.auth.getUser(token);
-            const user = data?.user;
-
-            if (error || !user) {
-                console.warn('R2 Download: Token inválido para recurso privado:', key);
+            if (error || !data?.user) {
                 return res.status(403).json({ error: 'Acceso denegado: Token inválido' });
             }
         }
 
-        // 🔥 PUBLIC ASSETS: Increase expiry to 24h to improve caching and reduce CORS overhead
         const finalExpiresIn = isPublic ? 86400 : (expiresIn || 3600);
-        const signVersion = itemVersion;
         
         try {
-            const downloadUrl = await getPresignedDownloadUrl(key, finalExpiresIn, signVersion);
+            const downloadUrl = await getPresignedDownloadUrl(key, finalExpiresIn, finalVersion);
             if (!downloadUrl) {
-                console.warn(`[R2 Download] Signing returned no URL for ${key} (${signVersion})`);
-                return res.status(404).json({ error: 'Recurso no encontrado o firma fallida' });
+                return res.status(404).json({ error: 'Recurso no encontrado' });
             }
             res.json({ downloadUrl });
         } catch (signErr) {
-            console.error(`[R2 Download] CRITICAL signing failure for ${key} (Version: ${signVersion}):`, signErr);
-            throw signErr; // Caught by outer catch
+            console.error(`[R2 Download] Signing failure:`, signErr);
+            res.status(500).json({ error: 'Error al firmar recurso' });
         }
     } catch (error) {
         console.error('Error al generar R2 download URL:', error);
-        res.status(500).json({ error: 'Error al generar URL de descarga', details: error.message });
+        res.status(500).json({ error: 'Error interno' });
     }
 });
 
 // Endpoint para obtener múltiples URLs de descarga firmadas en una sola petición (Batch)
 router.post('/r2/bulk-sign', async (req, res) => {
     try {
-        const { keys, items, expiresIn, version, productId: bodyProductId } = req.body;
+        const { items, expiresIn, version } = req.body;
 
-        // items = [{ path: '...', productId: '...' }, ...]
-        // keys = ['path1', 'path2', ...] (legacy)
-        const signItems = items || (keys || []).map(k => ({ path: k, productId: bodyProductId }));
-
-        if (signItems.length === 0) {
-            return res.status(400).json({ error: 'Se requiere un array de items o keys' });
+        if (!items || !Array.isArray(items) || items.length === 0) {
+            return res.status(400).json({ error: 'Se requiere un array de items' });
         }
 
-        const { R2_CURRENT_VERSION } = await import('../../../shared/config/config.js');
-        const finalVersion = version || R2_CURRENT_VERSION || 'v1';
-
-        const publicPrefixes = ['products/covers/', 'beats/mp3/', 'products/beats/mp3/', 'avatars/', 'public/', 'banners/', 'drumkits/covers/'];
+        const publicPrefixes = ['products/', 'beats/mp3/', 'avatars/', 'public/', 'banners/', 'drumkits/'];
         const results = {};
 
-        // Para recursos privados, verificar token una sola vez
-        let isAuthenticated = false;
-        let isTokenValid = false;
+        // Autenticación única para el lote
         const authHeader = req.headers['authorization'];
         const token = authHeader && authHeader.split(' ')[1];
+        let user = null;
 
-        // Procesar cada item
-        const batchPromises = signItems.map(async (item) => {
+        const batchPromises = items.map(async (item) => {
             const rawKey = item.path;
             try {
                 let key = item.path;
-                const productId = item.productId || bodyProductId;
-                let detectedVersion = null;
-                
-                // Sanitización y extracción de key desde URL si es necesario
-                if (typeof key === 'string') {
-                    // Detectar versión desde la URL o el string antes de limpiar
-                    // REMOVED: Greedy UUID detection here. It's better to rely on 'version' from req 
-                    // or detectedVersion from bucket names.
-                    if (key.includes('supabase.co') || key.includes('storage/v1/object')) {
-                        detectedVersion = 'supabase';
-                    } else if (key.includes('offsznlatbucket') || key.includes('42fc23b11a6c329b76b2babc20afcbf7')) {
-                        detectedVersion = 'v2';
-                    } else if (key.includes('offszn-storage') || key.includes('41d0f49121d02c88f71fdb4da54a791d')) {
-                        detectedVersion = 'v1';
-                    }
+                const itemVersion = item.version || version || 'v1';
 
-                    if (key.startsWith('http://') || key.startsWith('https://')) {
-                        try {
-                            if (key.includes('?')) key = key.split('?')[0];
-                            const urlObj = new URL(key);
-                            key = urlObj.pathname;
-
-                            // If it's a Supabase URL, extract the path after /public/ or /sign/
-                            if (urlObj.hostname.includes('supabase.co')) {
-                                const parts = key.split('/');
-                                const objectRootIndex = parts.indexOf('object');
-                                if (objectRootIndex !== -1 && parts.length > objectRootIndex + 2) {
-                                    key = parts.slice(objectRootIndex + 2).join('/');
-                                }
-                            }
-                        } catch (e) {}
-                    }
-
-                    // Eliminar nombre del bucket de la ruta si está presente (incluso si no era una URL completa)
-                    const bucketNames = [R2_BUCKET_NAME, R2_SECURE_BUCKET_NAME, 'offsznlatbucket', 'offszn-storage'].filter(b => b && b !== 'secure-products');
-                    for (const b of bucketNames) {
-                        const normalizedPath = key.startsWith('/') ? key : `/${key}`;
-                        if (normalizedPath.startsWith(`/${b}/`)) {
-                            key = normalizedPath.substring(b.length + 2);
-                            break;
+                // Limpieza de key
+                if (typeof key === 'string' && (key.startsWith('http://') || key.startsWith('https://'))) {
+                    try {
+                        const urlObj = new URL(key);
+                        key = urlObj.pathname;
+                        if (urlObj.hostname.includes('supabase.co')) {
+                            const parts = key.split('/');
+                            const objIdx = parts.indexOf('object');
+                            if (objIdx !== -1 && parts.length > objIdx + 2) key = parts.slice(objIdx + 2).join('/');
                         }
+                    } catch (e) {}
+                }
+                
+                if (typeof key === 'string') {
+                    const bNames = [R2_BUCKET_NAME, R2_SECURE_BUCKET_NAME, 'offsznlatbucket', 'offszn-storage'];
+                    for (const b of bNames) {
+                        const norm = key.startsWith('/') ? key : `/${key}`;
+                        if (norm.startsWith(`/${b}/`)) { key = norm.substring(b.length + 2); break; }
                     }
-
                     if (key.includes('?')) key = key.split('?')[0];
                     while (key.startsWith('/')) key = key.substring(1);
                 }
 
-                // 🔥 EXCLUSION PREMIUM: Force supabase version if productId is in the list
-                let itemVersion = detectedVersion || version || R2_CURRENT_VERSION || 'v2';
-                
-                if (productId && SUPABASE_IDS.includes(parseInt(productId))) {
-                    itemVersion = 'supabase';
-                }
-
                 const isPublic = publicPrefixes.some(prefix => key.startsWith(prefix));
-                
-                // Si el recurso es privado y no hemos autenticado aún, hacerlo
-                if (!isPublic) {
-                    if (!isAuthenticated) {
-                        if (!token) {
-                            results[rawKey] = { error: 'Acceso denegado: Recurso privado' };
-                            return;
-                        }
-                        const { data, error } = await supabase.auth.getUser(token);
-                        const user = data?.user;
-                        if (error || !user) {
-                            results[rawKey] = { error: 'Token inválido' };
-                            isAuthenticated = true;
-                            isTokenValid = false;
-                            return;
-                        }
-                        isAuthenticated = true; 
-                        isTokenValid = true;
-                    } else if (!isTokenValid) {
-                        results[rawKey] = { error: 'Acceso denegado: Token inválido' };
+                if (!isPublic && !user) {
+                    if (!token) {
+                        results[rawKey] = { error: 'Requerido token' };
                         return;
                     }
+                    const { data, error } = await supabase.auth.getUser(token);
+                    if (error || !data?.user) {
+                        results[rawKey] = { error: 'Token inválido' };
+                        return;
+                    }
+                    user = data.user;
                 }
 
-                const finalExpiresIn = isPublic ? 86400 : (expiresIn || 3600);
-                const downloadUrl = await getPresignedDownloadUrl(key, finalExpiresIn, itemVersion);
+                const finalExpires = isPublic ? 86400 : (expiresIn || 3600);
+                const downloadUrl = await getPresignedDownloadUrl(key, finalExpires, itemVersion);
                 results[rawKey] = { downloadUrl };
-
             } catch (err) {
-                console.error(`Error firmando key ${rawKey}:`, err);
-                results[rawKey] = { error: 'Error al firmar' };
+                results[rawKey] = { error: 'Error firmando' };
             }
         });
 
         await Promise.all(batchPromises);
         res.json({ results });
-
     } catch (error) {
         console.error('Error en R2 batch signing:', error);
-        res.status(500).json({ error: 'Error interno en batch signing' });
+        res.status(500).json({ error: 'Error interno' });
     }
 });
 
@@ -360,7 +278,7 @@ router.get(/\/r2-public\/(.*)/, async (req, res) => {
         const key = req.params[0];
         if (!key) return res.status(400).send('Key missing');
 
-        const publicPrefixes = ['products/covers/', 'beats/mp3/', 'products/beats/mp3/', 'avatars/', 'public/', 'banners/', 'drumkits/covers/'];
+        const publicPrefixes = ['products/', 'beats/mp3/', 'avatars/', 'public/', 'banners/', 'drumkits/'];
         const isPublicPrefix = publicPrefixes.some(prefix => key.startsWith(prefix));
 
         if (!isPublicPrefix) {

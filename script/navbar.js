@@ -1118,7 +1118,7 @@ async function updateAuthUI(session) {
             try {
                 // Fetch fundamental details
                 const [{ data: userProfile }, { data: profileExtra }] = await Promise.all([
-                    window.supabaseClient.from('users').select('nickname, avatar_url, reward_balance').eq('id', session.user.id).single(),
+                    window.supabaseClient.from('users').select('nickname, avatar_url, reward_balance, preferred_currency').eq('id', session.user.id).single(),
                     window.supabaseClient.from('profiles').select('plan').eq('id', session.user.id).single()
                 ]);
 
@@ -1144,6 +1144,19 @@ async function updateAuthUI(session) {
 
                     // Repaint with fresh data
                     updateUserVisuals(displayName, displayLetter, avatarUrl, plan, rewardBalance);
+
+                    // --- CURRENCY SYNC (DB -> Local) ---
+                    if (userProfile?.preferred_currency && window.CurrencyManager) {
+                        const currentLocal = window.CurrencyManager.getCurrency();
+                        if (currentLocal !== userProfile.preferred_currency) {
+                            if (window.OFFSZN_DEBUG) console.log(`[Navbar] Syncing currency from DB: ${userProfile.preferred_currency}`);
+                            localStorage.setItem('OFFSZN_CURRENCY', userProfile.preferred_currency);
+                            // Avoid reload loop by checking if we actually changed it
+                            // but usually initial load is fine.
+                            const el = getEl('current-currency');
+                            if (el) el.innerText = userProfile.preferred_currency;
+                        }
+                    }
 
                     // Dynamic Profile Link
                     const dropdownHeader = document.querySelector('.user-dropdown-header');
@@ -1292,7 +1305,12 @@ window.setCurrency = function (curr) {
     if (window.CurrencyManager) {
         window.CurrencyManager.setCurrency(curr);
     } else {
-        localStorage.setItem('userCurrency', curr);
+        localStorage.setItem('OFFSZN_CURRENCY', curr);
+    }
+
+    // Sync to DB if logged in
+    if (window.AuthUtils && window.AuthUtils.syncCurrencyPreference) {
+        window.AuthUtils.syncCurrencyPreference(curr);
     }
 
     // Reload page to refresh all prices — EXCEPT checkout/cart (don't disrupt payment)
@@ -1474,7 +1492,7 @@ window.initNavbarUI = async function () {
     window._navbarInitialized = true;
 
     // Restore Currency
-    const savedCurr = (window.CurrencyManager ? window.CurrencyManager.getCurrency() : localStorage.getItem('userCurrency')) || 'PEN';
+    const savedCurr = (window.CurrencyManager ? window.CurrencyManager.getCurrency() : localStorage.getItem('OFFSZN_CURRENCY')) || 'USD';
     const currEl = getEl('current-currency');
     if (currEl) currEl.innerText = savedCurr;
 

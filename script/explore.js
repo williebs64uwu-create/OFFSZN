@@ -8,7 +8,7 @@ const EXPLORE_CONFIG = {
     FRESH_LIMIT: 5,   // For the list
     PRODUCERS_LIMIT: 5, // For the list
     CAROUSEL_LIMIT: 12,
-    CURATED_TYPES: ['drumkit', 'loopkit', 'preset'],
+    CURATED_TYPES: ['drumkit', 'loopkit'], // Removed 'preset' to keep it isolated for the Presets shelf
     HERO_ROTATE_MS: 10000
 };
 
@@ -87,13 +87,21 @@ async function initExplore() {
 
 function initGlobalListeners() {
     if (window.FavoritesManager) {
-        window.FavoritesManager.subscribe(() => {
-            document.querySelectorAll('.card-like-btn').forEach(btn => {
+        window.FavoritesManager.subscribe((likedSet) => {
+            // Unify syncing logic similar to search.js syncLikes()
+            const allHearts = document.querySelectorAll('.card-like-btn, .post-like-btn');
+            allHearts.forEach(btn => {
                 const id = btn.closest('[data-product-id]')?.dataset.productId;
                 if (id) {
-                    const isLiked = window.FavoritesManager.isLiked(id);
+                    const isLiked = likedSet.has(String(id));
                     btn.classList.toggle('liked', isLiked);
-                    btn.querySelector('i').className = isLiked ? 'bi bi-heart-fill' : 'bi bi-heart';
+                    const icon = btn.querySelector('i');
+                    if (icon) {
+                        icon.className = isLiked ? 'bi bi-heart-fill' : 'bi bi-heart';
+                        if (btn.classList.contains('post-like-btn')) {
+                            icon.style.color = isLiked ? '#ef4444' : '';
+                        }
+                    }
                 }
             });
         });
@@ -141,7 +149,6 @@ async function fetchData() {
         }
 
         const results = await Promise.all(promises);
-
         const productsRes = results[0];
         const producersRes = results[1];
         const leaderboardRes = results[2];
@@ -204,27 +211,40 @@ function renderExploreFeed() {
         container.appendChild(leaderboardContainer);
     }
 
-    // 4. SHELF: RECOMENDADOS (Section 3: For you / General)
-    const recommended = allProducts
-        .filter(p => !usedProductIds.has(p.id))
+    // Define preset criteria for filtering
+    // Define preset criteria for filtering (incluyendo variaciones de la DB)
+    const presetCriteria = (p) => {
+        const type = (p.product_type || '').toLowerCase();
+        const cat = (p.category || '').toLowerCase();
+        return type === 'preset' || type === 'vocalpreset' || type.includes('preset') || 
+               type === 'template' || type === 'plantilla' ||
+               cat === 'plantilla' || cat === 'vocal preset' || cat.includes('preset');
+    };
+
+    // 4. SHELF: RECOMENDADOS (Section 3: For you / General) - Excluding Presets
+    const recs = allProducts
+        .filter(p => !usedProductIds.has(p.id) && !presetCriteria(p))
+        .sort(() => 0.5 - Math.random()) // Randomize for variety
         .slice(0, EXPLORE_CONFIG.CAROUSEL_LIMIT);
-    if (recommended.length > 0) {
-        container.appendChild(createShelfRow('Recomendados para ti', recommended));
-        recommended.forEach(p => usedProductIds.add(p.id));
+    if (recs.length > 0) {
+        container.appendChild(createShelfRow('Recomendados para ti', recs));
+        recs.forEach(p => usedProductIds.add(p.id));
     }
 
-    // 5. SHELF: LIBRERÍAS (Section 4: Kits & Sounds)
+    // 5. SHELF: LIBRERÍAS (Section 4: Kits & Sounds) - Excluding Presets
     const kits = allProducts
-        .filter(p => !usedProductIds.has(p.id) && EXPLORE_CONFIG.CURATED_TYPES.includes(p.product_type?.toLowerCase()))
+        .filter(p => !usedProductIds.has(p.id) && EXPLORE_CONFIG.CURATED_TYPES.includes(p.product_type?.toLowerCase()) && !presetCriteria(p))
         .slice(0, EXPLORE_CONFIG.CAROUSEL_LIMIT);
     if (kits.length > 0) {
+        kits.forEach(p => usedProductIds.add(p.id)); // Mark as used
         container.appendChild(createShelfRow('Librerías y Kits de Sonido', kits, 'standard'));
     }
 
-    // 6. SHELF: PRESETS (Section 5: Social Post format)
+    // 6. SHELF: PRESETS (Section 5: Social Post format) - Dedicated section
     const presets = allProducts
-        .filter(p => (p.product_type?.toLowerCase().includes('preset') || p.product_type?.toLowerCase().includes('voces')) && !usedProductIds.has(p.id))
-        .slice(0, 2); // Limit to 2 as requested
+        .filter(p => !p.public_slug?.startsWith('deleted') && presetCriteria(p))
+        .slice(0, 10); // Show up to 10 presets to fill the shelf better
+
     if (presets.length > 0) {
         container.appendChild(createShelfRow('Presets de voces', presets, 'social-post'));
     }
@@ -313,7 +333,7 @@ function renderTwoColLists(category = 'Todo') {
                 product.file_url || product.url_file;
 
             if (container && rawAudioUrl && window.WaveSurfer) {
-                const audioUrl = await window.getAuthorizedUrl(rawAudioUrl, product.r2_version || 'v1', product.id);
+                const audioUrl = await window.getAuthorizedUrl(rawAudioUrl, product.storage_version || product.r2_version || 'v1', product.id);
 
                 const ws = WaveSurfer.create({
                     container: container,
@@ -419,7 +439,7 @@ function createListItemHtml(item, index, type) {
         return `
             <div class="list-item-smart" data-id="${item.id}" data-type="producer" onclick="window.location.href='${link}'">
                 <div class="list-item-index">${index}</div>
-                <img ${imgAttr} data-r2-version="${item.r2_version || 'v1'}" crossorigin="anonymous" class="list-item-img circle" alt="cover">
+                <img ${imgAttr} data-r2-version="${item.storage_version || item.r2_version || 'v1'}" crossorigin="anonymous" class="list-item-img circle" alt="cover">
                 <div class="list-item-info">
                     <div class="list-item-name">${name}</div>
                     <div class="list-item-sub">${sub}</div>
@@ -438,7 +458,7 @@ function createListItemHtml(item, index, type) {
     return `
         <div class="list-item-smart" data-id="${item.id}" data-type="product">
             <div class="list-item-index">${index}</div>
-            <img crossorigin="anonymous" ${imgAttr} data-r2-version="${item.r2_version || 'v2'}" data-product-id="${item.id}" class="list-item-img" alt="cover" onclick="event.stopPropagation(); window.handleTrackPlay(event, '${item.id}')">
+            <img crossorigin="anonymous" ${imgAttr} data-r2-version="${item.storage_version || item.r2_version || 'v1'}" data-product-id="${item.id}" class="list-item-img" alt="cover" onclick="event.stopPropagation(); window.handleTrackPlay(event, '${item.id}')">
             <div class="list-item-info" onclick="event.stopPropagation(); window.handleInfoClick(event, '${item.id}', '${link}')">
                 <div class="list-item-name">${name}</div>
                 <div class="list-item-sub">${sub}</div>
@@ -580,7 +600,7 @@ function renderHeroSlide(product) {
         heroSection.innerHTML = `
             <div class="explore-hero active" id="hero-card-clickable">
                 <!-- Mobile Background Image & Gradient -->
-                <div class="hero-mobile-bg mobile-only" ${mobileBgAttr} data-r2-version="${product.r2_version || 'v2'}"></div>
+                <div class="hero-mobile-bg mobile-only" ${mobileBgAttr} data-r2-version="${product.storage_version || product.r2_version || 'v1'}"></div>
                 <div class="hero-mobile-gradient mobile-only"></div>
 
                 <canvas class="hero-particles-canvas desktop-only"></canvas>
@@ -607,7 +627,7 @@ function renderHeroSlide(product) {
 
             <div class="hero-image-container desktop-only" style="opacity: 0; transform: translateX(20px) translateY(-50%);">
                 <img ${isR2 ? `src="${imgPlaceholder}" data-r2-src="${imgUrl}"` : `src="${imgUrl}"`} 
-                     data-r2-version="${product.r2_version || 'v2'}" 
+                     data-r2-version="${product.storage_version || product.r2_version || 'v1'}" 
                      crossorigin="anonymous" alt="cover" class="hero-image">
             </div>
 
@@ -778,14 +798,7 @@ function createShelfRow(title, items, format = 'standard') {
                 const likeBtnSoc = card.querySelector('.post-like-btn');
                 if (likeBtnSoc) likeBtnSoc.addEventListener('click', (e) => {
                     e.stopPropagation();
-                    toggleLike(id, likeBtnSoc, item.producer_id);
-                    // Update counter locally
-                    const span = likeBtnSoc.querySelector('span');
-                    if (span) {
-                        const count = parseInt(span.innerText) || 0;
-                        const isLiked = likeBtnSoc.classList.contains('liked');
-                        span.innerText = isLiked ? count + 1 : Math.max(0, count - 1);
-                    }
+                    handleLike(id, likeBtnSoc, item.producer_id);
                 });
 
                 const shareBtn = card.querySelector('.post-share-btn');
@@ -825,7 +838,10 @@ function createShelfRow(title, items, format = 'standard') {
             const likeBtn = card.querySelector('.card-like-btn');
 
             if (playBtn) playBtn.addEventListener('click', (e) => { e.stopPropagation(); playTrack(item); });
-            if (likeBtn) likeBtn.addEventListener('click', (e) => { e.stopPropagation(); toggleLike(id, e.currentTarget, item.producer_id); });
+            if (likeBtn) likeBtn.addEventListener('click', (e) => { 
+                e.stopPropagation(); 
+                handleLike(id, e.currentTarget, item.producer_id); 
+            });
 
             const producerLink = card.querySelector('.card-producer');
             if (producerLink) {
@@ -838,6 +854,11 @@ function createShelfRow(title, items, format = 'standard') {
 
             card.addEventListener('click', () => window.location.href = getProductUrl(item));
         });
+        
+        // Process R2 signatures for avatars created
+        if (typeof window.signR2Images === 'function') {
+            window.signR2Images(row);
+        }
     }, 0);
     return row;
 }
@@ -876,7 +897,7 @@ function createProductCardHtml(product, format = 'standard') {
 
         return `
             <div class="preset-card-premium" data-product-id="${product.id}">
-                <img ${imgAttr} data-r2-version="${product.r2_version || 'v2'}" crossorigin="anonymous" alt="${product.name}">
+                <img ${imgAttr} data-r2-version="${product.storage_version || product.r2_version || 'v2'}" crossorigin="anonymous" alt="${product.name}">
                 <div class="preset-overlay">
                     <span class="preset-tag">PRESET</span>
                     <h3 class="preset-title">${cleanName(product.name)}</h3>
@@ -891,59 +912,71 @@ function createProductCardHtml(product, format = 'standard') {
 
     if (format === 'social-post') {
         const pType = (product.product_type || '').toLowerCase();
+        // A product is only FREE if is_free is true AND price is explicitly 0 or null
         const isTrulyFree = pType !== 'beat' && (product.is_free === true || String(product.is_free) === 'true') && (Number(product.price_basic) === 0 || !product.price_basic);
-        const priceValue = product.price_basic || '10';
+        const priceValue = (product.price_basic && Number(product.price_basic) > 0) ? product.price_basic : '10';
         const price = isTrulyFree ? 'GRATIS' : (window.CurrencyManager ? window.CurrencyManager.format(parseFloat(priceValue)) : `$${priceValue}`);
         const rawImg = product.image_url || '/images/portada-default.png';
         const isR2Cover = window.AuthUtils && window.AuthUtils.isR2Url(rawImg);
         const imgPlaceholder = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
         const coverAttr = isR2Cover ? `src="${imgPlaceholder}" data-r2-src="${escapeHTML(rawImg)}"` : `src="${escapeHTML(rawImg)}"`;
 
+        // 🔍 FALLBACK DATA
+        const artist = product.producer_name || 'Usuario';
+        const avatar = '/images/portada-default.png';
+        const handle = (product.producer_name || 'usuario').toLowerCase().replace(/\s+/g, '');
+
         // 🔍 FIND REAL PRODUCER DATA
         const producer = Array.isArray(allProducers) ? allProducers.find(p => String(p.id) === String(product.producer_id)) : null;
-        const realArtist = producer ? escapeHTML(producer.nickname) : artist;
-        const realAvatar = producer ? escapeHTML(producer.avatar_url || '/images/portada-default.png') : avatar;
-        const realHandle = producer ? escapeHTML(producer.nickname || realArtist).toLowerCase().replace(/\s+/g, '') : handle;
+        const realArtist = producer ? (producer.nickname || producer.name || artist) : (product.producer_nickname || artist);
+        const realAvatar = producer ? (producer.avatar_url || avatar) : avatar;
+        const realHandle = producer ? (producer.handle || producer.nickname || 'artista').toLowerCase().replace(/\s+/g, '') : (product.producer_nickname || 'usuario').toLowerCase().replace(/\s+/g, '');
         
         const isR2Avatar = window.AuthUtils && window.AuthUtils.isR2Url(realAvatar);
-        const realAvatarAttr = isR2Avatar ? `src="${imgPlaceholder}" data-r2-src="${realAvatar}" data-r2-version="v1"` : `src="${realAvatar}"`;
+        const realAvatarAttr = isR2Avatar ? `src="${imgPlaceholder}" data-r2-src="${realAvatar}" data-r2-version="${producer?.storage_version || producer?.r2_version || 'v1'}"` : `src="${realAvatar}"`;
 
-        const isLikedSoc = window.FavoritesManager ? window.FavoritesManager.isLiked(product.id) : false;
-        const likeIcon = isLikedSoc ? 'bi-heart-fill' : 'bi-heart';
-
+        const isLiked = window.FavoritesManager ? window.FavoritesManager.isLiked(product.id) : false;
+        const likeCount = product.likes_count || 0;
+        const priceDisplay = price;
         return `
             <div class="preset-card-social" data-product-id="${product.id}">
-                <div class="post-header">
+                <div class="post-header" onclick="window.location.href='/@' + encodeURIComponent('${realHandle}')">
                     <img ${realAvatarAttr} crossorigin="anonymous" class="post-avatar" alt="${realArtist}" onerror="this.src='/images/portada-default.png'">
                     <div class="post-user-info">
-                        <div class="post-user-top">
-                            <span class="post-name">${realArtist}</span>
-                            <span class="post-handle">@${realHandle}</span>
-                            <span class="post-time">• Nueva publicación</span>
-                        </div>
+                        <span class="post-user-handle">@${escapeHTML(realHandle)}</span>
                     </div>
-                    <i class="bi bi-three-dots post-more"></i>
+                    <div class="post-options">
+                        <i class="bi bi-three-dots"></i>
+                    </div>
                 </div>
-                
                 <div class="post-body">
-                    <div class="post-cover-wrapper">
-                        <img ${coverAttr} data-r2-version="${product.r2_version || 'v2'}" crossorigin="anonymous" class="post-cover" alt="${product.name}">
+                    <div class="post-cover-wrapper" onclick="window.location.href='${getProductUrl(product)}'">
+                        <img ${coverAttr} crossorigin="anonymous" class="post-cover" data-r2-version="${product.storage_version || product.r2_version || 'v2'}" alt="${escapeHTML(product.name)}" onerror="this.src='/images/portada-default.png'">
                         <button class="post-play-btn"><i class="bi bi-play-fill"></i></button>
                     </div>
                     <div class="post-content">
-                        <h3 class="post-title">${cleanName(product.name)}</h3>
-                        <div class="post-meta">Vocal Preset • OFFSZN Exclusive</div>
-                        <button class="post-price-btn">
-                            <i class="bi bi-cart-plus"></i> ${price}
+                        <h3 class="post-title">${escapeHTML(product.name)}</h3>
+                        <button class="post-price-btn" onclick="handleAddToCart(event, '${product.id}')">
+                            <i class="bi bi-cart-plus"></i> ${priceDisplay}
                         </button>
                     </div>
                 </div>
-
                 <div class="post-actions">
-                    <div class="post-action post-like-btn ${isLikedSoc ? 'liked' : ''}"><i class="bi ${likeIcon}"></i> <span>${product.stats_likes || 0}</span></div>
-                    <div class="post-action post-repost-btn"><i class="bi bi-repeat"></i> <span>0</span></div>
-                    <div class="post-action post-comment-btn"><i class="bi bi-chat"></i> <span>0</span></div>
-                    <div class="post-action post-share-btn"><i class="bi bi-share"></i></div>
+                    <div class="post-action post-like-btn" title="Me gusta">
+                        <i class="bi ${isLiked ? 'bi-heart-fill' : 'bi-heart'}" ${isLiked ? 'style="color:#ef4444;"' : ''}></i>
+                        <span class="like-count">${likeCount}</span>
+                    </div>
+                    <div class="post-action post-repost-btn" title="Repostear">
+                        <i class="bi bi-arrow-repeat"></i>
+                        <span>0</span>
+                    </div>
+                    <div class="post-action post-comment-btn" title="Comentar">
+                        <i class="bi bi-chat"></i>
+                        <span>0</span>
+                    </div>
+                    <div class="post-action post-share-btn" title="Compartir">
+                        <i class="bi bi-share"></i>
+                    </div>
                 </div>
             </div>
         `;
@@ -957,9 +990,12 @@ function createProductCardHtml(product, format = 'standard') {
     return `
         <div class="product-card-smart" data-product-id="${product.id}">
             <div class="card-cover-wrapper">
-                <img ${imgAttr} data-r2-version="${product.r2_version || 'v2'}" crossorigin="anonymous" alt="${product.name}">
+                <img ${imgAttr} data-r2-version="${product.storage_version || product.r2_version || 'v2'}" crossorigin="anonymous" alt="${product.name}">
                 <button class="quick-play-btn"><i class="bi bi-play-fill"></i></button>
-                <button class="card-like-btn ${isLiked ? 'liked' : ''}"><i class="bi ${isLiked ? 'bi-heart-fill' : 'bi-heart'}"></i></button>
+                <button class="card-like-btn ${isLiked ? 'liked' : ''}">
+                    <i class="bi ${isLiked ? 'bi-heart-fill' : 'bi-heart'}"></i>
+                    <span class="like-count">${product.likes_count || 0}</span>
+                </button>
             </div>
             <div class="card-info">
                 <div class="card-title">${cleanName(product.name)}</div>
@@ -1085,9 +1121,41 @@ window.playTrackById = function (id) {
 };
 
 // --- Missing Helpers Restored ---
-async function toggleLike(id, btn, ownerId) {
-    if (window.FavoritesManager) await window.FavoritesManager.toggleLike(id, btn, ownerId);
+// --- Missing Helpers Restored ---
+const likeProcessing = new Set();
+async function handleLike(id, btn, ownerId) {
+    if (!id || likeProcessing.has(id)) return;
+    
+    if (window.FavoritesManager) {
+        likeProcessing.add(id);
+        const isLikedBefore = window.FavoritesManager.isLiked(id);
+        
+        // Optimistic UI Update for the counter
+        const span = btn.querySelector('.like-count');
+        if (span) {
+            let currentCount = parseInt(span.textContent) || 0;
+            span.textContent = isLikedBefore ? Math.max(0, currentCount - 1) : currentCount + 1;
+        }
+
+        try {
+            await window.FavoritesManager.toggleLike(id, btn, ownerId);
+        } catch (err) {
+            console.error('[Explore] Like failed:', err);
+            // Revert counter if error (icon is handled by FavoritesManager subscription)
+            if (span) {
+                let currentCount = parseInt(span.textContent) || 0;
+                span.textContent = isLikedBefore ? currentCount + 1 : Math.max(0, currentCount - 1);
+            }
+        } finally {
+            // Processing done, allow next click after a short delay
+            setTimeout(() => likeProcessing.delete(id), 500);
+        }
+    }
 }
+
+// Backward compatibility alias
+window.toggleLike = handleLike;
+window.handleLike = handleLike;
 
 function getCookie(name) {
     const value = `; ${document.cookie}`;
@@ -1127,7 +1195,7 @@ function renderLeaderboard(producers) {
             <div class="producer-avatar-wrapper">
                 <div class="lb-badge-sp">#${p.rank}</div>
                 <div class="producer-avatar-sp ${borderClass}">
-                     <img src="${safeAvatar}" data-r2-version="${p.r2_version || 'v1'}" alt="${safeNickname}">
+                     <img src="${safeAvatar}" data-r2-version="${p.storage_version || p.r2_version || 'v1'}" alt="${safeNickname}">
                 </div>
             </div>
             <div class="producer-info-sp">
@@ -1238,4 +1306,6 @@ async function toggleFollow(producerId, btn) {
 
 // Make globally available for onclick handlers
 window.toggleFollow = toggleFollow;
+window.toggleLike = toggleLike;
+window.handleAddToCart = window.handleAddToCart; // Ensure it might be needed but cart.js exposes it
 

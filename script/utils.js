@@ -10,7 +10,7 @@ function cambiarMonedaGlobal(monedaDestino) {
     }
 
     // Legacy fallback
-    localStorage.setItem('user_currency', monedaDestino);
+    localStorage.setItem('OFFSZN_CURRENCY', monedaDestino);
     const precios = document.querySelectorAll('.product-price, .cart-item-price');
 
     precios.forEach(el => {
@@ -50,7 +50,7 @@ window.copyToClipboard = function (text) {
 
 // Al cargar la página
 document.addEventListener('DOMContentLoaded', () => {
-    const pref = (window.CurrencyManager ? window.CurrencyManager.getCurrency() : localStorage.getItem('user_currency')) || 'PEN';
+    const pref = (window.CurrencyManager ? window.CurrencyManager.getCurrency() : localStorage.getItem('OFFSZN_CURRENCY')) || 'USD';
     const selector = document.getElementById('currencySelector');
     if (selector) selector.value = pref;
 });

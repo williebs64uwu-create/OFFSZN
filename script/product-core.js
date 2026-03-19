@@ -707,7 +707,7 @@ function renderProductPage(product) {
             <div class="product-sidebar">
                 <!-- Cover Art -->
                 <div class="product-cover-art" style="position:relative;">
-                    <img src="${initialImgMain}" data-r2-src="${product.image_url}" data-r2-version="${product.r2_version || 'v1'}" 
+                    <img src="${initialImgMain}" data-r2-src="${product.image_url}" data-r2-version="${product.storage_version || product.r2_version || 'v1'}" 
                          id="product-main-art"
                          alt="${escapeHTML(product.name)}"
                          class=""
@@ -1025,7 +1025,7 @@ function renderProductPage(product) {
     if (product.image_url) {
         const img = document.getElementById('product-main-art');
         if (img) {
-            window.getAuthorizedUrl(product.image_url, product.r2_version || 'v1', product.id).then(url => {
+            window.getAuthorizedUrl(product.image_url, product.storage_version || product.r2_version || 'v1', product.id).then(url => {
                 if (url) {
                     img.onload = () => { img.style.opacity = 1; };
                     img.src = url;
@@ -1078,7 +1078,7 @@ window.playProductCover = async function () {
     let finalAudioUrl = audioUrl;
     if (window.getAuthorizedUrl && !(audioUrl.includes('pub-') && audioUrl.includes('.r2.dev'))) {
         try {
-            finalAudioUrl = await window.getAuthorizedUrl(audioUrl, product.r2_version || 'v1', product.id);
+            finalAudioUrl = await window.getAuthorizedUrl(audioUrl, product.storage_version || product.r2_version || 'v1', product.id);
         } catch (e) {
         }
     }
@@ -1110,7 +1110,7 @@ window.playProductCover = async function () {
             price_basic: product.price_basic,
             is_free: product.is_free,
             product_type: product.product_type,
-            r2_version: product.r2_version || 'v1'
+            r2_version: product.storage_version || product.r2_version || 'v1'
         });
 
         // Update cover icon to pause
@@ -2016,7 +2016,8 @@ function renderGenericSpecifics(product) {
     const buyBtn = document.createElement('button');
     buyBtn.className = 'btn-glass-primary';
 
-    if (product.is_free) {
+    const isTrulyFree = product.is_free && (parseFloat(product.price_basic) || 0) === 0;
+    if (isTrulyFree) {
         buyBtn.innerHTML = 'DESCARGAR GRATIS';
         buyBtn.onclick = () => {
             const downloadUrl = product.download_url || product.audio_url;
@@ -2044,7 +2045,8 @@ function renderKitSpecifics(product) {
     const buyBtn = document.createElement('button');
     buyBtn.className = 'btn-glass-primary'; // LUXURY STYLE (WHITE/BLACK)
 
-    if (product.is_free) {
+    const isTrulyFree = product.is_free && (parseFloat(product.price_basic) || 0) === 0;
+    if (isTrulyFree) {
         // Free Product: Show "DESCARGA GRATIS" ONLY (Clean)
         buyBtn.innerHTML = `DESCARGA GRATIS`;
         buyBtn.onclick = () => {
@@ -2158,8 +2160,8 @@ window.openABModal = async function (beforeUrl, afterUrl, product) {
 
     // 🔥 FIX: Authorize both R2 URLs in parallel
     const [signedBefore, signedAfter] = await Promise.all([
-        window.getAuthorizedUrl(beforeUrl, product.r2_version || 'v1', product.id),
-        window.getAuthorizedUrl(afterUrl, product.r2_version || 'v1', product.id)
+        window.getAuthorizedUrl(beforeUrl, product.storage_version || product.r2_version || 'v1', product.id),
+        window.getAuthorizedUrl(afterUrl, product.storage_version || product.r2_version || 'v1', product.id)
     ]);
 
     const productName = product.name;
@@ -2523,7 +2525,7 @@ function renderRelatedGrid(products, container) {
             <div class="t-card-cover">
                 <img src="${initialImgRelated}" 
                      data-r2-src="${p.image_url}" 
-                     data-r2-version="${p.r2_version || 'v1'}" 
+                     data-r2-version="${p.storage_version || p.r2_version || 'v1'}" 
                      id="related-img-${p.id}"
                      alt="${p.name}"
                      onerror="this.src='/images/portada-default.png'"
@@ -2569,7 +2571,7 @@ function renderRelatedGrid(products, container) {
         // 🔥 FIX: Authorize related image WITHOUT skeleton (removes light line glitch)
         const img = card.querySelector('img');
         if (img && p.image_url) {
-            window.getAuthorizedUrl(p.image_url, p.r2_version || 'v1', p.id)
+            window.getAuthorizedUrl(p.image_url, p.storage_version || p.r2_version || 'v1', p.id)
                 .then(url => {
                     if (url) {
                         img.onload = () => { /* No-op, skeleton removed */ };
