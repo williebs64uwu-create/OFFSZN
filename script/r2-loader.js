@@ -41,7 +41,10 @@
                 el.style.transition = 'opacity 0.4s ease';
 
                 try {
-                    const r2Version = el.getAttribute('data-r2-version') || (src.includes('supabase.co') ? 'supabase' : 'v1');
+                    // Detect relative Supabase path (starts with UUID folder)
+                    const isRelativeSupabase = typeof originalSrc === 'string' && !originalSrc.startsWith('http') && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\//i.test(originalSrc);
+                    
+                    const r2Version = el.getAttribute('data-r2-version') || (originalSrc.includes('supabase.co') || isRelativeSupabase ? 'supabase' : 'v1');
                     const productId = el.getAttribute('data-product-id');
                     const authorizedUrl = await window.getAuthorizedUrl(originalSrc, r2Version, productId);
                     

@@ -863,7 +863,12 @@ function createProducerCard(producer, rank) {
     const escapedNickname = nickname.replace(/'/g, "\\'");
 
     if (hasAvatar) {
-        avatarHtml = `<img src="${producer.avatar_url}" alt="${nickname}" class="card-avatar" onerror="window.handleProducerAvatarError(this, '${escapedNickname}')">`;
+        let avatarUrl = producer.avatar_url;
+        const storageVer = producer.storage_version || producer.r2_version || 'v1';
+        
+        avatarUrl = window.AuthUtils?.getFormattedSupabaseUrl ? window.AuthUtils.getFormattedSupabaseUrl(avatarUrl) : avatarUrl;
+
+        avatarHtml = `<img crossorigin="anonymous" src="${avatarUrl}" alt="${nickname}" class="card-avatar" onerror="window.handleProducerAvatarError(this, '${escapedNickname}')">`;
     } else {
         avatarHtml = getInitialsHtml(nickname);
     }

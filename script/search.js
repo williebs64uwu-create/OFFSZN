@@ -786,15 +786,30 @@ function renderRecommendations() {
         return;
     }
 
-    container.innerHTML = recommendations.map(p => `
-        <div class="recommendation-card" onclick="window.location.href='${getProductUrl(p)}'">
-            <div class="recommendation-card-img-wrapper">
-                <img crossorigin="anonymous" src="${p.image_url || '/images/portada-default.png'}" alt="${escapeHTML(p.name)}">
+    container.innerHTML = recommendations.map(p => {
+        const rawImg = p.image_url || '/images/portada-default.png';
+        const storageVer = p.storage_version || p.r2_version || 'v2';
+        let imgAttr = '';
+        const isActuallyR2 = window.AuthUtils && window.AuthUtils.isR2Url(rawImg) && storageVer !== 'supabase';
+        if (isActuallyR2) {
+            imgAttr = `src="${imgPlaceholder}" data-r2-src="${escapeHTML(rawImg)}"`;
+        } else {
+            // Use getAuthorizedUrl for both Supabase and R2 to guarantee signing if needed
+            // But we already have r2-loader.js watching for data-r2-src
+            // Best approach: always use data-r2-src if it's not a relative path, and let it handle signing
+            imgAttr = `src="${imgPlaceholder}" data-r2-src="${escapeHTML(rawImg)}"`;
+        }
+
+        return `
+            <div class="recommendation-card" onclick="window.location.href='${getProductUrl(p)}'">
+                <div class="recommendation-card-img-wrapper">
+                    <img crossorigin="anonymous" ${imgAttr} data-r2-version="${storageVer}" alt="${escapeHTML(p.name)}">
+                </div>
+                <div class="recommendation-card-title">${escapeHTML(p.name)}</div>
+                <div class="recommendation-card-producer">${escapeHTML(p.producer_name || 'OFFSZN')}</div>
             </div>
-            <div class="recommendation-card-title">${escapeHTML(p.name)}</div>
-            <div class="recommendation-card-producer">${escapeHTML(p.producer_name || 'OFFSZN')}</div>
-        </div>
-    `).join('');
+        `;
+    }).join('');
 
     signAllR2Images(container);
 }
@@ -872,16 +887,18 @@ function renderTrackRow(p) {
     const displayPrice = lowestPrice > 0
         ? (window.CurrencyManager?.format(lowestPrice) || `$${lowestPrice}`)
         : 'GRATIS';
-
-    const isR2 = window.AuthUtils && window.AuthUtils.isR2Url(imgUrl);
+    const storageVer = p.storage_version || p.r2_version || 'v2';
+    const isActuallyR2 = window.AuthUtils && window.AuthUtils.isR2Url(imgUrl) && storageVer !== 'supabase';
     const imgPlaceholder = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
-    const imgAttr = isR2 ? `src="${imgPlaceholder}" data-r2-src="${escapeHTML(imgUrl)}"` : `src="${escapeHTML(imgUrl)}"`;
+    
+    // Always use data-r2-src so r2-loader.js can sign it (works for supabase too if version is correct)
+    const imgAttr = `src="${imgPlaceholder}" data-r2-src="${escapeHTML(imgUrl)}"`;
 
     return `
         <div class="track-row" data-product-id="${p.id}">
             <div class="track-left">
                 <div class="thumb-container" onclick="window.location.href='${productUrl}'">
-                    <img crossorigin="anonymous" ${imgAttr} data-r2-version="${p.r2_version || 'v2'}" data-product-id="${p.id}" class="track-thumb" alt="cover">
+                    <img crossorigin="anonymous" ${imgAttr} data-r2-version="${storageVer}" data-product-id="${p.id}" class="track-thumb" alt="cover">
                     <div class="thumb-play-overlay" onclick="window.handleTrackPlay(event, '${p.id}')">
                         <i class="bi bi-play-fill"></i>
                     </div>
@@ -1124,14 +1141,22 @@ function renderFallbackItem(p) {
     const price = window.CurrencyManager?.formatFromString(p.price_basic) || p.price_basic;
     const productUrl = getProductUrl(p);
     const imgUrl = p.image_url || '/images/portada-default.png';
-    const isR2 = window.AuthUtils && window.AuthUtils.isR2Url(imgUrl);
+    const storageVer = p.storage_version || p.r2_version || 'v2';
+    const isR2 = window.AuthUtils && window.AuthUtils.isR2Url(imgUrl) && storageVer !== 'supabase';
     const imgPlaceholder = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
-    const imgAttr = isR2 ? `src="${imgPlaceholder}" data-r2-src="${escapeHTML(imgUrl)}"` : `src="${escapeHTML(imgUrl)}"`;
+    
+    let imgAttr = '';
+    if (isR2) {
+        imgAttr = `src="${imgPlaceholder}" data-r2-src="${escapeHTML(imgUrl)}"`;
+    } else {
+        const finalSrc = window.AuthUtils?.getFormattedSupabaseUrl ? window.AuthUtils.getFormattedSupabaseUrl(imgUrl) : imgUrl;
+        imgAttr = `src="${escapeHTML(finalSrc)}"`;
+    }
 
     return `
         <div class="fallback-card" data-product-id="${p.id}" onclick="window.location.href='${productUrl}'">
             <div class="fallback-card-img">
-                <img crossorigin="anonymous" ${imgAttr} data-r2-version="${p.r2_version || 'v2'}">
+                <img crossorigin="anonymous" ${imgAttr} data-r2-version="${storageVer}">
                 <div class="fallback-card-overlay"><i class="bi bi-play-fill"></i></div>
             </div>
             <div class="fallback-card-info">

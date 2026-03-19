@@ -46,12 +46,12 @@ window.AuthUtils = {
      */
     initSupabase: function () {
         const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-        
+
         // 🔥 DEBUG: Disabled by default to keep console clean
         // if (isLocal) window.OFFSZN_DEBUG = true;
-        
+
         let apiBase = window.OFFSZN_CONFIG?.API_BASE_URL;
-        
+
         // Auto-detect port 3008 if on localhost and no config
         if (isLocal && !apiBase) {
             apiBase = window.location.port === '3008' ? 'http://localhost:3008' : 'http://localhost:3000';
@@ -196,7 +196,7 @@ window.AuthUtils = {
     /**
      * Tries to load cache from sessionStorage to persist signed URLs during the session.
      */
-    _loadCache: function() {
+    _loadCache: function () {
         try {
             const saved = sessionStorage.getItem('offszn_r2_cache');
             if (saved) {
@@ -209,31 +209,36 @@ window.AuthUtils = {
                     }
                 }
             }
-        } catch (e) {}
+        } catch (e) { }
     },
 
     /**
      * Saves the current cache to sessionStorage.
      */
-    _saveCache: function(key, url) {
+    _saveCache: function (key, url) {
         this._urlCache[key] = url;
         try {
             const saved = sessionStorage.getItem('offszn_r2_cache');
             let cache = saved ? JSON.parse(saved) : {};
             cache[key] = { url, timestamp: Date.now() };
-            
+
             // Limit cache size to 200 items to avoid sessionStorage bloat
             const keys = Object.keys(cache);
             if (keys.length > 200) {
-               delete cache[keys[0]];
+                delete cache[keys[0]];
             }
-            
+
             sessionStorage.setItem('offszn_r2_cache', JSON.stringify(cache));
-        } catch (e) {}
+        } catch (e) { }
     },
 
     getAuthorizedUrl: async function (pathOrUrl, version = null, productId = null) {
         if (!pathOrUrl) return null;
+
+        // 🔥 SUPABASE FAST-PATH: If version is 'supabase' or URL is already Supabase, skip signing
+        if (version === 'supabase' || (typeof pathOrUrl === 'string' && pathOrUrl.includes('supabase.co'))) {
+            return this.getFormattedSupabaseUrl(pathOrUrl);
+        }
 
         // Ensure cache is loaded (once)
         if (Object.keys(this._urlCache).length === 0 && !this._cacheLoaded) {
@@ -286,9 +291,81 @@ window.AuthUtils = {
     },
 
     /**
+     * Sanitizes and formats a Supabase URL to prevent double-prefixing.
+     * Works with both relative paths and already-full URLs.
+     */
+    getFormattedSupabaseUrl: function (pathOrUrl) {
+        if (!pathOrUrl) return null;
+        if (typeof pathOrUrl !== 'string') return pathOrUrl;
+
+        // Skip common protocols or local paths
+        if (pathOrUrl.startsWith('data:') || pathOrUrl.startsWith('blob:') || pathOrUrl.startsWith('/')) return pathOrUrl;
+
+        // If it's an external URL (not Supabase), return as is
+        if (pathOrUrl.startsWith('http') && !pathOrUrl.includes('supabase.co')) return pathOrUrl;
+
+        const sbUrl = (window.SUPABASE_URL || "https://qtjpvztpgfymjhhpoouq.supabase.co").replace(/\/$/, '');
+        let path = pathOrUrl;
+
+        // 1. If it's already a full Supabase URL, extract the path part for re-sanitization
+        if (path.includes('supabase.co')) {
+            const publicIdx = path.indexOf('/public/');
+            if (publicIdx !== -1) {
+                const afterPublic = path.substring(publicIdx + 8);
+                const firstSlash = afterPublic.indexOf('/');
+                if (firstSlash !== -1) {
+                    // Re-process from bucket + path
+                    path = afterPublic;
+                }
+            }
+        }
+
+        // 2. Identify and strip the bucket name from the start of the path
+        let bucket = 'products';
+        // Expanded list to include legacy/misplaced bucket prefixes
+        const buckets = ['avatars', 'banners', 'public', 'licenses', 'products', 'beats', 'audio', 'mp3_tagged', 'wav_tagged'];
+
+        for (const b of buckets) {
+            if (path.startsWith(`${b}/`)) {
+                // Special case: if bucket is 'beats' or 'audio' but that bucket doesn't exist in Supabase storage,
+                // we treat it as a path part within the 'products' bucket.
+                if (b === 'beats' || b === 'audio' || b === 'mp3_tagged') {
+                    bucket = 'products';
+                } else {
+                    bucket = b;
+                    path = path.substring(b.length + 1);
+                }
+                break;
+            }
+        }
+
+        // 3. Robust clean: recursively remove redundant prefixes
+        while (path.startsWith('products/') || path.startsWith('avatars/') || path.startsWith('banners/') || path.startsWith('public/')) {
+            const firstSlash = path.indexOf('/');
+            path = path.substring(firstSlash + 1);
+        }
+
+        // 4. LEGACY PATH REPAIR: Swap "type/UUID" or "type/subtype/UUID" to "UUID/type/subtype"
+        // This is a common structural mismatch in the OFFSZN database.
+        // Matches: covers/UUID, audio/UUID, beats/mp3/UUID, mp3_tagged/UUID etc.
+        const legacyPattern = /^(covers|audio|mp3_tagged|beats|wav_tagged)(\/[^\/]+)?\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})(\/.*)?$/i;
+        const match = path.match(legacyPattern);
+        if (match) {
+            const type = match[1];
+            const subType = match[2] || ''; // e.g. /mp3
+            const uuid = match[3];
+            const rest = match[4] || '';
+            // New structure: UUID/type[/subtype][rest]
+            path = `${uuid}/${type}${subType}${rest}`;
+        }
+
+        return `${sbUrl}/storage/v1/object/public/${bucket}/${path}`;
+    },
+
+    /**
      * Processes all queued signing requests in a single batch call.
      */
-    _processSigningQueue: async function() {
+    _processSigningQueue: async function () {
         const queue = [...this._signingQueue];
         this._signingQueue = [];
         this._batchTimeout = null;
@@ -310,54 +387,54 @@ window.AuthUtils = {
         try {
             const token = this.getAccessToken();
             // 🔥 GROUP BY VERSION: Send separate batches to avoid signing errors
-        const versions = [...new Set(queue.map(i => i.version || 'v2'))];
-        
-        for (const v of versions) {
-            const versionItems = queue.filter(i => (i.version || 'v2') === v); 
-            const items = versionItems.map(i => ({ path: i.key, productId: i.productId }));
-            
-            try {
-                const response = await fetch(`${this._apiUrl}/r2/bulk-sign`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': token ? `Bearer ${token}` : undefined
-                    },
-                    body: JSON.stringify({ 
-                        items, 
-                        version: v,
-                        version: v,
-                        productId: versionItems[0].productId // Pass first ID as hint/safety
-                    })
-                });
+            const versions = [...new Set(queue.map(i => i.version || 'v2'))];
 
-                if (response.ok) {
-                    const { results } = await response.json();
-                    
-                    versionItems.forEach(item => {
-                        const res = results[item.key];
-                        if (res && res.downloadUrl) {
-                            this._saveCache(item.raw, res.downloadUrl);
-                            item.resolve(res.downloadUrl);
-                        } else {
-                            this._handleSigningFailure(item.key, item.raw)
-                                .then(url => item.resolve(url))
-                                .catch(err => item.reject(err));
-                        }
+            for (const v of versions) {
+                const versionItems = queue.filter(i => (i.version || 'v2') === v);
+                const items = versionItems.map(i => ({ path: i.key, productId: i.productId }));
+
+                try {
+                    const response = await fetch(`${this._apiUrl}/r2/bulk-sign`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': token ? `Bearer ${token}` : undefined
+                        },
+                        body: JSON.stringify({
+                            items,
+                            version: v,
+                            version: v,
+                            productId: versionItems[0].productId // Pass first ID as hint/safety
+                        })
                     });
-                } else {
-                    throw new Error(`Batch signing failed for ${v}: ${response.status}`);
+
+                    if (response.ok) {
+                        const { results } = await response.json();
+
+                        versionItems.forEach(item => {
+                            const res = results[item.key];
+                            if (res && res.downloadUrl) {
+                                this._saveCache(item.raw, res.downloadUrl);
+                                item.resolve(res.downloadUrl);
+                            } else {
+                                this._handleSigningFailure(item.key, item.raw)
+                                    .then(url => item.resolve(url))
+                                    .catch(err => item.reject(err));
+                            }
+                        });
+                    } else {
+                        throw new Error(`Batch signing failed for ${v}: ${response.status}`);
+                    }
+                } catch (err) {
+                    console.error(`[AuthUtils] Error batch signing ${v}:`, err);
+                    versionItems.forEach(item => {
+                        this._handleSigningFailure(item.key, item.raw)
+                            .then(url => item.resolve(url))
+                            .catch(err => item.reject(err));
+                    });
                 }
-            } catch (err) {
-                console.error(`[AuthUtils] Error batch signing ${v}:`, err);
-                versionItems.forEach(item => {
-                    this._handleSigningFailure(item.key, item.raw)
-                        .then(url => item.resolve(url))
-                        .catch(err => item.reject(err));
-                });
             }
-        }
-  } catch (error) {
+        } catch (error) {
             console.error('[AuthUtils] Batch signing crash, falling back to individual calls:', error);
             // Fallback: perform individual calls for everything in this failed batch
             queue.forEach(item => {
@@ -374,7 +451,7 @@ window.AuthUtils = {
     /**
      * Individual signing call logic (Moved from getAuthorizedUrl)
      */
-    _performSigningCall: async function(key, version, productId = null) {
+    _performSigningCall: async function (key, version, productId = null) {
         try {
             const token = this.getAccessToken();
             const response = await fetch(`${this._apiUrl}/r2/download-url`, {
@@ -398,10 +475,10 @@ window.AuthUtils = {
     /**
      * Centralized failure handling with better fallbacks.
      */
-    _handleSigningFailure: async function(key, rawOriginal) {
+    _handleSigningFailure: async function (key, rawOriginal) {
         // Recognition of UUID/covers as public even if 'products/' was stripped
         const isProductAsset = key.includes('/covers/') || key.includes('/previews/') || key.includes('/mp3/');
-        
+
         console.warn(`AuthUtils: Signing failed for ${key} (ProductAsset: ${isProductAsset})`);
 
         const publicPrefixes = ['products/', 'beats/mp3/', 'avatars/', 'public/', 'banners/', 'drumkits/'];
@@ -424,12 +501,15 @@ window.AuthUtils = {
      */
     isR2Url: function (pathOrUrl) {
         if (!pathOrUrl || typeof pathOrUrl !== 'string') return false;
-        
-        // Supabase Detection
-        if (pathOrUrl.includes('supabase.co') || pathOrUrl.startsWith('products/')) return true;
-        
+
+        // 🔥 SUPABASE EXCLUSION: If it contains supabase.co, it's NOT an R2 URL that needs signing by our proxy
+        if (pathOrUrl.includes('supabase.co')) return false;
+        if (pathOrUrl.startsWith('products/')) return true;
+
         // UUID Path detection (for migrated image_url)
-        if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i.test(pathOrUrl)) return true;
+        // We ONLY consider it R2 if it starts with 'products/' or other R2 prefixes.
+        // Plain UUID/covers/... paths are now treated as Supabase by default unless r2_version is explicitly set to v1/v2.
+        const isUUIDPath = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i.test(pathOrUrl);
 
         return (
             pathOrUrl.includes('r2.cloudflarestorage.com') ||
@@ -515,7 +595,7 @@ window.AuthUtils = {
 
         keysArray.forEach(k => {
             if (!k || typeof k !== 'string') return;
-            
+
             let key = k;
             let detectedVersion = version;
 
@@ -751,37 +831,58 @@ window.signR2Images = async function (container = document) {
 /**
  * Catch all image 404s (specifically Cloudinary) and try to load from Supabase Storage instead.
  */
+// --- GLOBAL IMAGE ERROR HANDLER (R2 Fallback & Supabase Auto-Fix) ---
 window.addEventListener('error', function (e) {
     if (e.target.tagName !== 'IMG') return;
     const img = e.target;
-    // Prevent infinite loops if Supabase also fails
-    if (img.dataset.fallbackTried) return;
+    if (img.dataset.fallbackTried === "true") return;
 
     const currentSrc = img.src;
-    // Check if it's a Cloudinary URL
-    if (currentSrc && currentSrc.includes('res.cloudinary.com')) {
+
+    // 1. Supabase Auto-Fix (Catch double-prefixing 400 errors)
+    if (currentSrc && currentSrc.includes('supabase.co')) {
+        if (window.AuthUtils && typeof window.AuthUtils.getFormattedSupabaseUrl === 'function') {
+            const sanitized = window.AuthUtils.getFormattedSupabaseUrl(currentSrc);
+            if (sanitized && sanitized !== currentSrc) {
+                if (window.OFFSZN_DEBUG) console.log(`[AuthUtils] Supabase 400/404 detected. Auto-fixing URL: ${sanitized}`);
+                img.dataset.fallbackTried = "true";
+                img.src = sanitized;
+                return;
+            }
+        }
+    }
+
+    // 2. R2 Fallback (Catch signed R2 URLs or public R2 URLs that 404)
+    if (currentSrc && (currentSrc.includes('r2.cloudflarestorage.com') || currentSrc.includes('pub-'))) {
         try {
-            // Extract the path after 'upload/' (usually contains version and then the folder/file)
-            // Example: https://res.cloudinary.com/degtrrdqo/image/upload/v12345/products/prod.jpg
-            const parts = currentSrc.split('/upload/');
-            if (parts.length > 1) {
-                let pathAfterUpload = parts[1];
-                // Remove the version segment (v1234567/) if present
-                pathAfterUpload = pathAfterUpload.replace(/^v\d+\//, '');
-                
-                const supabaseUrl = window.SUPABASE_URL || "https://qtjpvztpgfymjhhpoouq.supabase.co";
-                const fallbackUrl = `${supabaseUrl}/storage/v1/object/public/${pathAfterUpload}`;
-                
-                if (window.OFFSZN_DEBUG) console.log(`[AuthUtils] Image 404 caught. Attempting fallback: ${fallbackUrl}`);
-                
+            let key = img.getAttribute('data-r2-src');
+            if (!key) {
+                const urlObj = new URL(currentSrc);
+                const pathParts = urlObj.pathname.split('/');
+                const filteredParts = pathParts.filter(p => p && p !== 'offszn-storage' && p !== 'offsznlatbucket');
+                key = filteredParts.join('/');
+            }
+
+            if (key) {
+                const fallbackUrl = window.AuthUtils.getFormattedSupabaseUrl(key);
+                if (window.OFFSZN_DEBUG) console.log(`[AuthUtils] R2 404 caught. Attempting Supabase fallback: ${fallbackUrl}`);
                 img.dataset.fallbackTried = "true";
                 img.src = fallbackUrl;
-                
-                // If it's a product cover, we might also want to ensure crossOrigin is 'anonymous' for waveform rendering if needed
-                // but for now just getting the image back is priority.
+                return;
             }
-        } catch (err) {
-            console.error("[AuthUtils] Error during image fallback transition:", err);
-        }
+        } catch (err) { }
+    }
+
+    // 3. Cloudinary Fallback (Legacy)
+    if (currentSrc && currentSrc.includes('res.cloudinary.com')) {
+        try {
+            const parts = currentSrc.split('/upload/');
+            if (parts.length > 1) {
+                let pathAfterUpload = parts[1].replace(/^v\d+\//, '');
+                const fallbackUrl = window.AuthUtils.getFormattedSupabaseUrl(pathAfterUpload);
+                img.dataset.fallbackTried = "true";
+                img.src = fallbackUrl;
+            }
+        } catch (err) { }
     }
 }, true); // Use capture phase to catch all images before they bubble

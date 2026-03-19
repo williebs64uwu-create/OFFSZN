@@ -75,13 +75,43 @@ document.addEventListener('DOMContentLoaded', () => {
             const card = document.createElement('div');
             card.className = 'product-card';
 
-            // --- Imagen (Corregida con la optimización) ---
+            // --- Imagen (Corregida con la optimización para R2/Supabase) ---
+            const rawImg = product.image_url || '/images/portada-default.png';
+            const storageVer = product.storage_version || product.r2_version || 'v1';
+            
+            // Determine if it's R2 vs Supabase
+            const isR2 = (storageVer !== 'supabase') && window.AuthUtils && window.AuthUtils.isR2Url(rawImg);
+            
+            let finalSrc = rawImg;
+            if (!isR2 && !rawImg.startsWith('http') && !rawImg.startsWith('/') && !rawImg.startsWith('data:')) {
+                const sbUrl = window.SUPABASE_URL || "https://qtjpvztpgfymjhhpoouq.supabase.co";
+                finalSrc = `${sbUrl}/storage/v1/object/public/products/${rawImg}`;
+            }
+
+            // Apply Supabase optimization if applicable
+            if (!isR2 && finalSrc.includes('/storage/v1/object/public/')) {
+                finalSrc = finalSrc.replace('/object/public/', '/render/image/public/') + '?width=400&quality=80&resize=contain';
+            }
+
             const imageContainer = document.createElement('div');
             imageContainer.className = 'product-card-image';
             const img = document.createElement('img');
-            if (product.image_url) {
-                const optimizedUrlBase = product.image_url.replace('/object/', '/render/image/');
-                img.src = `${optimizedUrlBase}?width=400&quality=80&resize=contain`;
+            
+            if (isR2) {
+                img.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=';
+                img.dataset.r2Src = rawImg;
+                img.dataset.r2Version = storageVer;
+                
+                // Authorize R2 image
+                if (window.getAuthorizedUrl) {
+                    window.getAuthorizedUrl(rawImg, storageVer, product.id).then(url => {
+                        if (url) img.src = url;
+                    }).catch(() => {
+                        img.src = '/images/portada-default.png';
+                    });
+                }
+            } else {
+                img.src = finalSrc;
             }
             img.alt = product.name;
             imageContainer.append(img);
@@ -311,18 +341,31 @@ document.addEventListener('DOMContentLoaded', () => {
                 const itemEl = document.createElement('div');
                 itemEl.className = 'cart-item';
 
-                let imgUrl = ''; // Placeholder
-                if (product.image_url) {
-                    const optimizedUrlBase = product.image_url.replace('/object/', '/render/image/');
-                    imgUrl = `${optimizedUrlBase}?width=160&quality=75&resize=contain`;
+                const rawImgCart = product.image_url || '/images/portada-default.png';
+                const storageVerCart = product.storage_version || product.r2_version || 'v1';
+                const isR2Cart = (storageVerCart !== 'supabase') && window.AuthUtils && window.AuthUtils.isR2Url(rawImgCart);
+                
+                let finalSrcCart = window.AuthUtils?.getFormattedSupabaseUrl ? window.AuthUtils.getFormattedSupabaseUrl(rawImgCart) : rawImgCart;
+
+                if (!isR2Cart && finalSrcCart.includes('/storage/v1/object/public/')) {
+                    finalSrcCart = finalSrcCart.replace('/object/public/', '/render/image/public/') + '?width=160&quality=75&resize=contain';
                 }
+
+                let imgUrl = finalSrcCart;
+                
+                // If R2, we should ideally authorize it too, but cart items are usually small previews.
+                // For now, let's at least set the placeholder if it's R2 and we don't have a signed URL yet.
+                // (Actually CartManager might handle this better if we used it, but marketplace has its own UI)
+                const cartPlaceholder = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=';
+                if (isR2Cart) imgUrl = cartPlaceholder;
 
                 // Usamos el precio más bajo (basic) como precio del carrito
                 // Esto lo mejoraremos cuando implementemos selección de licencia
                 const price = (product.is_free ? 0 : (product.price_basic || 0)).toFixed(2);
 
+                const imgId = `cart-img-${product.id}`;
                 itemEl.innerHTML = `
-                    <img src="${imgUrl}" alt="${product.name}" class="cart-item-image">
+                    <img src="${imgUrl}" data-r2-src="${isR2Cart ? rawImgCart : ''}" data-r2-version="${storageVerCart}" id="${imgId}" alt="${product.name}" class="cart-item-image">
                     <div class="cart-item-info">
                         <span class="cart-item-title">${product.name}</span>
                         <span class="cart-item-producer">Por ${product.producer_nickname || 'Anónimo'}</span>
@@ -333,6 +376,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     </button>
                 `;
                 cartItemsList.append(itemEl);
+
+                // Authorize cart image if R2
+                if (isR2Cart && window.getAuthorizedUrl) {
+                    window.getAuthorizedUrl(rawImgCart, storageVerCart, product.id).then(url => {
+                        const img = document.getElementById(imgId);
+                        if (img && url) img.src = url;
+                    });
+                }
             });
         }
 

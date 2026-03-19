@@ -874,9 +874,24 @@ function initShelfNavigation(row, containerId, cardStep) {
 
 function createProductCardHtml(product, format = 'standard') {
     const isLiked = window.FavoritesManager ? window.FavoritesManager.isLiked(product.id) : false;
-    const img = escapeHTML(product.image_url || '/images/portada-default.png');
+    const imgPlaceholder = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
+    
+    // Helper for resolve storage version and URL
+    const getImgInfo = (path, storageVer) => {
+        const rawPath = path || '/images/portada-default.png';
+        const ver = storageVer || 'v2';
+        const isR2 = (ver !== 'supabase') && window.AuthUtils && window.AuthUtils.isR2Url(rawPath);
+        
+        const finalSrc = window.AuthUtils?.getFormattedSupabaseUrl ? window.AuthUtils.getFormattedSupabaseUrl(rawPath) : rawPath;
+        
+        return {
+            attr: isR2 ? `src="${imgPlaceholder}" data-r2-src="${escapeHTML(rawPath)}" data-r2-version="${ver}"` : `src="${escapeHTML(finalSrc)}"`,
+            isR2
+        };
+    };
+
+    const productImg = getImgInfo(product.image_url, product.storage_version || product.r2_version);
     const artist = escapeHTML(product.producer_nickname || 'OFFSZN Artist');
-    const avatar = escapeHTML(product.producer_avatar || '/images/portada-default.png');
     const handle = escapeHTML(product.producer_handle || product.producer_nickname || 'artista').toLowerCase().replace(/\s+/g, '');
 
     const cleanName = (name) => {
@@ -890,14 +905,9 @@ function createProductCardHtml(product, format = 'standard') {
         let priceValue = product.price_basic !== undefined && product.price_basic !== null ? product.price_basic : '20';
         const price = isTrulyFree ? 'FREE' : (window.CurrencyManager ? window.CurrencyManager.format(parseFloat(priceValue) || 0) : `$${priceValue}`);
         
-        const rawImg = product.image_url || '/images/portada-default.png';
-        const isR2 = window.AuthUtils && window.AuthUtils.isR2Url(rawImg);
-        const imgPlaceholder = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
-        const imgAttr = isR2 ? `src="${imgPlaceholder}" data-r2-src="${escapeHTML(rawImg)}"` : `src="${escapeHTML(rawImg)}"`;
-
         return `
             <div class="preset-card-premium" data-product-id="${product.id}">
-                <img ${imgAttr} data-r2-version="${product.storage_version || product.r2_version || 'v2'}" crossorigin="anonymous" alt="${product.name}">
+                <img ${productImg.attr} crossorigin="anonymous" alt="${product.name}">
                 <div class="preset-overlay">
                     <span class="preset-tag">PRESET</span>
                     <h3 class="preset-title">${cleanName(product.name)}</h3>
@@ -912,36 +922,24 @@ function createProductCardHtml(product, format = 'standard') {
 
     if (format === 'social-post') {
         const pType = (product.product_type || '').toLowerCase();
-        // A product is only FREE if is_free is true AND price is explicitly 0 or null
         const isTrulyFree = pType !== 'beat' && (product.is_free === true || String(product.is_free) === 'true') && (Number(product.price_basic) === 0 || !product.price_basic);
         const priceValue = (product.price_basic && Number(product.price_basic) > 0) ? product.price_basic : '10';
         const price = isTrulyFree ? 'GRATIS' : (window.CurrencyManager ? window.CurrencyManager.format(parseFloat(priceValue)) : `$${priceValue}`);
-        const rawImg = product.image_url || '/images/portada-default.png';
-        const isR2Cover = window.AuthUtils && window.AuthUtils.isR2Url(rawImg);
-        const imgPlaceholder = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
-        const coverAttr = isR2Cover ? `src="${imgPlaceholder}" data-r2-src="${escapeHTML(rawImg)}"` : `src="${escapeHTML(rawImg)}"`;
 
-        // 🔍 FALLBACK DATA
-        const artist = product.producer_name || 'Usuario';
-        const avatar = '/images/portada-default.png';
-        const handle = (product.producer_name || 'usuario').toLowerCase().replace(/\s+/g, '');
-
-        // 🔍 FIND REAL PRODUCER DATA
+        // FIND REAL PRODUCER DATA
         const producer = Array.isArray(allProducers) ? allProducers.find(p => String(p.id) === String(product.producer_id)) : null;
         const realArtist = producer ? (producer.nickname || producer.name || artist) : (product.producer_nickname || artist);
-        const realAvatar = producer ? (producer.avatar_url || avatar) : avatar;
+        const realAvatarPath = producer ? producer.avatar_url : null;
+        const realAvatar = getImgInfo(realAvatarPath, producer?.storage_version || producer?.r2_version);
         const realHandle = producer ? (producer.handle || producer.nickname || 'artista').toLowerCase().replace(/\s+/g, '') : (product.producer_nickname || 'usuario').toLowerCase().replace(/\s+/g, '');
         
-        const isR2Avatar = window.AuthUtils && window.AuthUtils.isR2Url(realAvatar);
-        const realAvatarAttr = isR2Avatar ? `src="${imgPlaceholder}" data-r2-src="${realAvatar}" data-r2-version="${producer?.storage_version || producer?.r2_version || 'v1'}"` : `src="${realAvatar}"`;
-
         const isLiked = window.FavoritesManager ? window.FavoritesManager.isLiked(product.id) : false;
-        const likeCount = product.likes_count || 0;
         const priceDisplay = price;
+
         return `
             <div class="preset-card-social" data-product-id="${product.id}">
                 <div class="post-header" onclick="window.location.href='/@' + encodeURIComponent('${realHandle}')">
-                    <img ${realAvatarAttr} crossorigin="anonymous" class="post-avatar" alt="${realArtist}" onerror="this.src='/images/portada-default.png'">
+                    <img ${realAvatar.attr} crossorigin="anonymous" class="post-avatar" alt="${realArtist}" onerror="this.src='/images/portada-default.png'">
                     <div class="post-user-info">
                         <span class="post-user-handle">@${escapeHTML(realHandle)}</span>
                     </div>
@@ -951,7 +949,7 @@ function createProductCardHtml(product, format = 'standard') {
                 </div>
                 <div class="post-body">
                     <div class="post-cover-wrapper" onclick="window.location.href='${getProductUrl(product)}'">
-                        <img ${coverAttr} crossorigin="anonymous" class="post-cover" data-r2-version="${product.storage_version || product.r2_version || 'v2'}" alt="${escapeHTML(product.name)}" onerror="this.src='/images/portada-default.png'">
+                        <img ${productImg.attr} crossorigin="anonymous" class="post-cover" alt="${escapeHTML(product.name)}" onerror="this.src='/images/portada-default.png'">
                         <button class="post-play-btn"><i class="bi bi-play-fill"></i></button>
                     </div>
                     <div class="post-content">
@@ -959,40 +957,35 @@ function createProductCardHtml(product, format = 'standard') {
                         <button class="post-price-btn" onclick="handleAddToCart(event, '${product.id}')">
                             <i class="bi bi-cart-plus"></i> ${priceDisplay}
                         </button>
-                    </div>
-                </div>
-                <div class="post-actions">
-                    <div class="post-action post-like-btn" title="Me gusta">
-                        <i class="bi ${isLiked ? 'bi-heart-fill' : 'bi-heart'}" ${isLiked ? 'style="color:#ef4444;"' : ''}></i>
-                        <span class="like-count">${likeCount}</span>
-                    </div>
-                    <div class="post-action post-repost-btn" title="Repostear">
-                        <i class="bi bi-arrow-repeat"></i>
-                        <span>0</span>
-                    </div>
-                    <div class="post-action post-comment-btn" title="Comentar">
-                        <i class="bi bi-chat"></i>
-                        <span>0</span>
-                    </div>
-                    <div class="post-action post-share-btn" title="Compartir">
-                        <i class="bi bi-share"></i>
+                        <div class="post-actions">
+                            <div class="post-action like-btn ${isLiked ? 'liked' : ''}" onclick="toggleLike(event, '${product.id}', this)">
+                                <i class="bi ${isLiked ? 'bi-heart-fill' : 'bi-heart'}"></i>
+                                <span class="like-counter">${product.likes_count || 0}</span>
+                            </div>
+                            <div class="post-action post-repost-btn" title="Repost">
+                                <i class="bi bi-arrow-repeat"></i>
+                                <span>0</span>
+                            </div>
+                            <div class="post-action post-comment-btn" title="Comentar">
+                                <i class="bi bi-chat"></i>
+                                <span>0</span>
+                            </div>
+                            <div class="post-action post-share-btn" title="Compartir">
+                                <i class="bi bi-share"></i>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         `;
     }
 
-    const pImg = product.image_url || '/images/portada-default.png';
-    const isR2 = window.AuthUtils && window.AuthUtils.isR2Url(pImg);
-    const imgPlaceholder = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
-    const imgAttr = isR2 ? `src="${imgPlaceholder}" data-r2-src="${escapeHTML(pImg)}"` : `src="${escapeHTML(pImg)}"`;
-
     return `
         <div class="product-card-smart" data-product-id="${product.id}">
             <div class="card-cover-wrapper">
-                <img ${imgAttr} data-r2-version="${product.storage_version || product.r2_version || 'v2'}" crossorigin="anonymous" alt="${product.name}">
+                <img ${productImg.attr} crossorigin="anonymous" alt="${product.name}">
                 <button class="quick-play-btn"><i class="bi bi-play-fill"></i></button>
-                <button class="card-like-btn ${isLiked ? 'liked' : ''}">
+                <button class="card-like-btn ${isLiked ? 'liked' : ''}" onclick="toggleLike(event, '${product.id}', this)">
                     <i class="bi ${isLiked ? 'bi-heart-fill' : 'bi-heart'}"></i>
                     <span class="like-count">${product.likes_count || 0}</span>
                 </button>

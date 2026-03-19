@@ -537,6 +537,201 @@ Mientras que los productos tenían la columna `storage_version` para rastrear su
 
 ## 23. Handles Genéricos (@usuario) para Productores no Destacados
 **Fecha:** 19 de marzo de 2026
+## 9. Checkboxes Invisibles (Doble-Toggle)
+**Fecha:** 6 de marzo de 2026
+**Ubicación:** `script/producers.js` / `producers.css`
+
+### Problema:
+Los checkboxes de los filtros de roles no mostraban el estado "marcado" (fondo blanco con check) al hacer clic. Esto ocurría por un conflicto de eventos: el navegador marcaba el checkbox automáticamente por estar dentro de un `<label>`, y el script de JS volvía a cambiar el estado manualmente en el evento `click`, haciendo que se cancelaran entre sí.
+
+### Solución:
+1. **JS**: Se eliminó el escuchador de eventos `click` en el contenedor del item y se dejó que el navegador maneje el cambio del checkbox nativamente. Ahora el script solo escucha el evento `change` del input.
+2. **CSS**: Se forzó el uso de `bootstrap-icons` con `!important` y un `font-weight: 900` en el pseudo-elemento `::after` para garantizar que el icono de la palomita sea visible sobre el fondo blanco.
+3. **ID Sync**: Se sincronizaron los valores de los checkboxes con los nombres de los chips para evitar discrepancias al eliminar filtros desde la UI principal.
+
+---
+
+## 10. Gaps en el Top 1-10 (Sincronización de Exclusiones)
+**Fecha:** 6 de marzo de 2026
+**Ubicación:** `LeaderboardController.js` (Backend) / `producers.js` (Frontend)
+
+### Problema:
+El ranking mostraba números saltados (ej: 1, 2, 6, 7) porque las cuentas de prueba estaban siendo filtradas en el frontend pero seguían ocupando puestos en el cálculo del backend.
+
+### Solución:
+Se sincronizaron las listas de exclusión de IDs en ambos lados. Ahora el backend ignora por completo a los usuarios de prueba al calcular los puestos, asegurando un Top 10 real y continuo de usuarios legítimos.
+
+---
+
+## 11. Portadas R2 Rotas (Error 404 en Covers de Productos)
+**Fecha:** 15 de marzo de 2026
+**Ubicación:** `script/auth-utils.js` / `server/src/infrastructure/http/routes/r2.routes.js` / `script/r2-loader.js`
+
+### Problema:
+Algunos beats (como "Pulsar 200") mostraban portadas rotas en el feed de Explorar, generando errores 404 en la consola. Esto ocurría porque la base de datos guardaba la URL completa de R2 (en lugar de la ruta relativa), y la función encargada de firmarlas (`getAuthorizedUrl`) asimilaba que no necesitaba firma al detectar `http`, evadiendo el proceso y causando denegación de acceso en las cubiertas. Además, en caso de fallar, la ruta pública de fallback en el backend generaba un error interno (`PathError`) por sintaxis incompatible en Express 5.
+
+### Solución:
+1. **Detección Mejorada de URLs R2 (`auth-utils.js`)**: Se actualizó `getAuthorizedUrl` para procesar correctamente las URLs absolutas de R2 y asegurar que sean firmadas si no contienen una firma activa (`X-Amz-Signature`). Además, se corrigió la construcción de la URL de fallback del API en `_handleSigningFailure`.
+2. **Corrección de Ruta Backend (`r2.routes.js`)**: Se solucionó el error fatal en Express 5 (`PathError: Missing parameter name`) reemplazando el patrón `/r2-public/:key*` por una expresión literal nativa `/^\/r2-public\/(.*)/`.
+3. **Supresión de Errores Visuales (`r2-loader.js`)**: Se asignó un `src` temporal con un GIF transparente al identificar elementos con atributo `data-r2-version`, impidiendo que el navegador lance el error inicial de "Not Found" mientras se obtiene asíncronamente la firma.
+
+---
+
+## 12. Vulnerabilidad de Seguridad y Validación de Entorno en Páginas Sensibles
+**Fecha:** 15 de marzo de 2026
+**Ubicación:** `pages/` (`login.html`, `register.html`, `update-password.html`, `verify-email.html`, `purchase-success.html`, `success.html`, `welcome.html`)
+
+### Problema:
+Se identificaron varias páginas HTML sensibles que mantenían codificadas en el código fuente (`hardcoded`) las credenciales `SUPABASE_URL` y `SUPABASE_ANON_KEY`, violando las políticas de seguridad estipuladas. Además, los recursos de CDN externos carecían del atributo `crossorigin="anonymous"`, lo que podría ocasionar bloqueos por políticas COEP. Finalmente, en `success.html`, se detectó una inyección directa de variables de base de datos en el `innerHTML`, exponiendo el sitio a ataques XSS.
+
+### Solución Implementada:
+1. **Remoción de Credenciales Relativas**: Se eliminaron los bloques de scripts con las claves hardcoded en el `<head>` de los 7 archivos HTML, inyectando de forma segura las variables configuradas en el entorno desde el servidor mediante `<script src="/env.js"></script>`.
+2. **Cabeceras Cross-Origin**: Se añadió el atributo `crossorigin="anonymous"` a todas las llamadas externas de scripts, fuentes de Google Fonts, iconos y estilos (como TailwindCSS y CropperJS) para cumplir cabalmente con la política de seguridad estricta y evitar excepciones de CORS/COEP en el navegador.
+3. **Mitigación XSS (DOM Injection)**: En `success.html`, se incluyó la función `escapeHTML()` para el renderizado dinámico del `item.product.name` y los nombres de las licencias antes de su inyección en la vista html, eliminando un posible vector de ataques por inyección.
+
+---
+
+## 13. Errores 403 Forbidden por URLs Firmadas Expiradas en DB
+**Fecha:** 16 de marzo de 2026
+**Ubicación:** Tabla `products` (campos `image_url`, `audio_url`) / `r2-storage.service.js`
+
+### Problema:
+Al guardar productos, se estaban almacenando URLs firmadas completas de R2 (con `X-Amz-Signature`). Estas URLs expiran en 24h, dejando el recurso inaccesible (403 Forbidden) permanentemente en la base de datos.
+
+### Solución:
+1. **Limpieza de DB:** Se ejecutó un script para convertir todas las URLs absolutas de R2 en rutas relativas (ej. `products/covers/.../file.jpg`).
+2. **Firma Dinámica:** El frontend (`AuthUtils.getAuthorizedUrl`) ahora detecta si la URL es de R2 y solicita una firma fresca al backend solo cuando es necesario mostrar el recurso.
+3. **Regla de Oro:** NUNCA guardar tokens de acceso o firmas temporales en Supabase. Guardar solo el "Key" o "Path" del archivo.
+
+---
+
+## 14. Bloqueo CORB (Cross-Origin Read Blocking) en R2
+**Fecha:** 16 de marzo de 2026
+**Ubicación:** `server/src/infrastructure/services/r2-storage.service.js`
+
+### Problema:
+Las imágenes de R2 no cargaban en el navegador, mostrando un error de CORB en la consola. El inspector mostraba que las URLs firmadas incluían el parámetro `x-amz-checksum-mode=ENABLED`, el cual Cloudflare R2 maneja de forma que activa protecciones de seguridad del navegador.
+
+### Solución:
+Desactivar explícitamente el cálculo de checksums en el cliente de S3 de AWS SDK:
+```javascript
+const s3Client = new S3Client({
+    // ...
+    requestChecksumCalculation: "WHEN_REQUIRED",
+    responseChecksumValidation: "WHEN_REQUIRED"
+});
+```
+Esto elimina el header de checksum en la URL firmada y permite la carga transparente del recurso.
+
+---
+
+## 15. Inconsistencia de Versiones (V1 vs V2) en R2 Storage
+**Fecha:** 16 de marzo de 2026
+**Ubicación:** `r2.routes.js` / Tabla `products` (columna `r2_version`)
+
+### Problema:
+Se detectaron 404s persistentes en productos específicos (ej. koimattoru). La causa era que los productos estaban etiquetados como `r2_version: v2` en la base de datos, pero los archivos físicos solo existían en el bucket original (V1). El servidor intentaba firmarlos con la cuenta V2, resultando en "Object Not Found".
+
+### Solución:
+1. **Auditoría Cruzada:** Se creó un script (`fix_versions.js`) que verifica la existencia real del archivo en ambos buckets y corrige la columna `r2_version` en Supabase según corresponda.
+2. **Detección Automática:** En el backend, se implementó lógica para detectar la versión basada en el endpoint o el nombre del bucket contenido en la URL original antes de proceder a la firma.
+
+---
+---
+
+## 16. Inconsistencia de Carpetas en Migración a Supabase (`audio` vs `mp3_tagged`)
+**Fecha:** 18 de marzo de 2026
+**Ubicación:** `r2-storage.service.js` / `AuthUtils.js`
+
+### Problema:
+Los beats migrados desde R2 a Supabase Storage se organizaron en carpetas `mp3_tagged/`, pero el código del servidor y la base de datos a veces apuntaban a `audio/`. Esto causaba errores "Object Not Found" (404) al intentar firmar o acceder al recurso.
+
+### Solución:
+1. **Mapeo Inteligente**: Se actualizó la normalización en el backend para mapear `beats/mp3/` a `mp3_tagged/` automáticamente.
+2. **Ciclo de Reintento**: Se implementó un loop que, si falla la firma en `mp3_tagged/`, intenta automáticamente en `audio/` (y viceversa) antes de devolver un error.
+
+---
+
+## 17. Conflicto de Cuentas R2 (Cuenta 1 vs Cuenta 2) y Smart Fallback Loop
+**Fecha:** 18 de marzo de 2026
+**Ubicación:** `r2.routes.js` (Ruta `/r2-public/`) / `auth-utils.js`
+
+### Problema:
+Con la introducción de una segunda cuenta de R2 (V2), el sistema ya no podía predecir con certeza dónde estaba un archivo basándose solo en su prefijo o ID. Reglas "greedy" forzaban erróneamente activos de R2 V2 hacia Supabase, rompiendo imágenes y audios.
+
+### Solución:
+1. **Smart Fallback Loop**: La ruta pública del backend ahora **itera** sobre todas las fuentes posibles (`v2`, `supabase`, `v1`) hasta que el recurso devuelve un 200 OK. Esto garantiza la carga sin importar en qué cuenta resida el archivo.
+2. **Priorización de DB**: Se eliminaron las reglas forzosas en el frontend, delegando la decisión a la columna `r2_version` de la base de datos y usando el fallback loop como red de seguridad.
+
+---
+
+## 18. Doble Prefijo y URLs Supabase Anidadas
+**Fecha:** 18 de marzo de 2026
+**Ubicación:** `r2-storage.service.js` / `r2.routes.js`
+
+### Problema:
+Se detectaron errores de firma para rutas como `products/storage/v1/object/public/...`. Esto ocurre porque el sistema intenta tratar una URL completa de Supabase como si fuera una "key" relativa, añadiendo de nuevo el nombre del bucket al principio.
+
+### Solución:
+Implementar una limpieza de URL (URL Sanitization) más agresiva en el backend para detectar si el string recibido ya es una URL de Supabase y extraer únicamente la ruta del objeto antes de proceder a la normalización o firma.
+
+---
+
+## 19. Conflicto de Versión en Frontend (Fallback Hardcoded a V2)
+**Fecha:** 19 de marzo de 2026
+**Ubicación:** `script/explore.js` / `script/product-core.js`
+
+### Problema:
+Productos marcados como `storage_version: 'supabase'` en la base de datos no cargaban (404), ya que las plantillas de frontend (`preset-card-premium`, `social-post`) tenían un fallback forzado de `r2_version || 'v2'`. Esto ignoraba la columna de Supabase y forzaba la firma con credenciales de R2 V2.
+
+### Solución:
+Se actualizó la lógica de prioridad en todos los componentes de renderizado para usar:
+`${product.storage_version || product.r2_version || 'v2'}`.
+Esto garantiza que si un recurso está en Supabase, se use ese proveedor antes de intentar cualquier versión de R2.
+
+---
+
+## 20. Bloqueo de Acceso a Invitados (Fallas de Firma en Assets Públicos)
+**Fecha:** 19 de marzo de 2026
+**Ubicación:** `server/src/infrastructure/http/routes/r2.routes.js` / `script/auth-utils.js`
+
+### Problema:
+Usuarios no logueados (invitados) veían imágenes y audios rotos. Las políticas de firma denegaban el acceso porque los prefijos de productos (como `[UUID]/covers/`) no estaban en la lista blanca de "públicos" en el backend ni en el frontend.
+
+### Solución:
+1. **Backend**: Se amplió `publicPrefixes` en `r2.routes.js` para incluir `products/`, permitiendo que el servidor firme estos recursos incluso sin un token de sesión.
+2. **Frontend**: Se mejoró `_handleSigningFailure` en `AuthUtils` para que, si falla la firma privada, intente cargar el recurso a través del proxy público del API (`/r2-public/`), asegurando visibilidad total sin cuenta.
+
+---
+
+## 21. Falta de `storage_version` en Creación de Productos
+**Fecha:** 19 de marzo de 2026
+**Ubicación:** `server/src/infrastructure/http/controllers/ProductController.js`
+
+### Problema:
+Los nuevos productos se guardaban sin la columna `storage_version` definida, lo que causaba que el sistema "adivinara" o fallara al intentar determinar el proveedor de almacenamiento en el futuro.
+
+### Solución:
+Se modificó `createProduct` en el controlador para establecer explícitamente `storage_version: 'supabase'` y `r2_version: 'v1'` (como respaldo legacy) en el momento de la inserción. Esto estandariza todos los nuevos activos bajo el ecosistema de Supabase Storage.
+
+---
+
+## 22. Desajuste de Esquema en Tabla `users` (Falta `storage_version`)
+**Fecha:** 19 de marzo de 2026
+**Ubicación:** Base de Datos (Supabase) / `UserController.js` / `ProductController.js`
+
+### Problema:
+Mientras que los productos tenían la columna `storage_version` para rastrear su ubicación (Supabase, V1, V2), la tabla `users` carecía de esta columna. Al intentar unificar la lógica de firmas en el backend solicitando `storage_version` de los productores, la API fallaba (`column "storage_version" does not exist`).
+
+### Solución:
+1. Se ejecutó una migración SQL para añadir la columna `storage_version` a las tablas `users` y `profiles` con valor por defecto `'v1'`.
+2. Se sincronizaron los valores existentes basados en `r2_version`.
+3. Se actualizaron los controladores para incluir esta columna en todas las consultas de unión y selección de productores.
+
+---
+
+## 23. Handles Genéricos (@usuario) para Productores no Destacados
+**Fecha:** 19 de marzo de 2026
 **Ubicación:** `script/explore.js`
 
 ### Problema:
@@ -544,3 +739,47 @@ En la sección de "Presets de voces" (formato `social-post`), los productores qu
 
 ### Solución:
 Se mejoró la lógica de generación de handles en `createProductCardHtml`. Ahora, si el objeto `producer` es null, el sistema deriva el handle y el nombre artístico directamente de `product.producer_nickname`, garantizando que la identidad del creador se muestre correctamente incluso para perfiles menos populares.
+
+---
+
+## 24. Desajuste de Versión en Librerías y Kits (404 en Portadas)
+**Fecha:** 19 de marzo de 2026
+**Ubicación:** Base de Datos (Tabla `products`)
+
+### Problema:
+Se detectó que varios productos (kits de batería, loops, beats y presets) tenían un desajuste entre `storage_version` y `r2_version`. Por ejemplo, productos en el bucket V1 estaban marcados como `v2` en `storage_version`. Esto causaba que el frontend intentara firmar los recursos con credenciales incorrectas, resultando en errores 404 (Not Found) para las portadas y archivos.
+
+### Solución:
+Se ejecutó una limpieza masiva en la tabla `products` para sincronizar `storage_version` con su valor real en `r2_version` para todos los productos que no están en Supabase. Esto garantiza que la lógica de renderizado del frontend siempre use el bucket y proveedor correcto.
+
+## 25. Fallos 404 en Activos de Supabase (Refactorización Centralizada)
+**Fecha:** 19 de marzo de 2026
+**Ubicación:** `auth-utils.js`, `r2-loader.js`, `explore.js`, `product-core.js`, `marketplace.js`, `search.js`, `producers.js`
+
+### Problema:
+Se detectaron errores 404 persistentes al cargar imágenes y audios almacenados en Supabase, especialmente para drumkits, loopkits y productos nuevos. El sistema confundía las rutas relativas de Supabase con claves de R2 e intentaba firmarlas con el backend de R2, lo que resultaba en fallos de autenticación y recursos no encontrados.
+
+### Solución Implementada:
+1. **Detección Centralizada (`auth-utils.js`)**: Se refinó `isR2Url` para excluir explícitamente dominios de Supabase. Se añadió un "fast-path" en `getAuthorizedUrl` que detecta activos de Supabase y los resuelve inmediatamente con el prefijo correcto (`/storage/v1/object/public/products/`), evitando peticiones innecesarias al backend.
+2. **Auto-Detección en DOM (`r2-loader.js`)**: Se mejoró el observador global para identificar automáticamente rutas relativas que comienzan con un UUID (patrón típico de Supabase) y asignarles la versión `supabase` automáticamente.
+3. **Refactorización de Componentes**: Se actualizaron todos los scripts de renderizado (`explore.js`, `product-core.js`, `profile-public.js`, `marketplace.js`, `search.js`, `producers.js`) para:
+   - Priorizar la columna `storage_version` sobre `r2_version`.
+   - Usar el atributo `crossorigin="anonymous"` en todas las etiquetas `<img>`.
+   - Aplicar pre-fijado de URLs de Supabase en el lado del cliente cuando se detectan rutas relativas.
+4. **Unificación de Lógica**: Se creó una estrategia donde el frontend es capaz de "auto-reparar" la URL antes de intentar cargarla, garantizando compatibilidad total entre R2 (V1/V2) y Supabase Storage.
+
+---
+
+## 26. Doble Prefijado en Supabase (400 Bad Request) y Fallback Inteligente R2 (404 Not Found)
+**Fecha:** 19 de marzo de 2026
+**Ubicación:** `auth-utils.js`, `explore.js`, `search.js`, `marketplace.js`, `producers.js`, `product-core.js`
+
+### Problema:
+1. **Doble Prefijo**: Al construir URLs de Supabase, el sistema a veces anidaba el nombre del bucket (ej. `products/products/...`), resultando en errores 400.
+2. **404 en R2**: Assets marcados como R2 en la DB fallaban con 404 si el archivo ya no estaba en el bucket de R2 pero sí en Supabase, sin una forma de recuperarse automáticamente.
+
+### Solución:
+1. **Sanitización de Rutas**: Se implementó una lógica de limpieza en `getAuthorizedUrl` y en todos los renderizadores que elimina prefijos redundantes (`products/`, `avatars/`) antes de concatenar el dominio de Supabase.
+2. **Fallback en Error Global**: Se extendió el `window.addEventListener('error')` en `auth-utils.js` para detectar fallos de carga en dominios de R2. Al ocurrir un 404 de R2, el navegador ahora intenta automáticamente cargar el activo desde el bucket público de Supabase como redundancia ("Self-Healing URLs").
+3. **Resiliencia Multi-Proveedor**: Esto elimina la necesidad de migrar masivamente la base de datos si hay inconsistencias, ya que el frontend se adapta en tiempo real a la ubicación real del archivo.
+

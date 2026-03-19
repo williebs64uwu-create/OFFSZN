@@ -194,9 +194,9 @@ router.post('/r2/bulk-sign', async (req, res) => {
         let user = null;
 
         const batchPromises = items.map(async (item) => {
-            const rawKey = item.path;
+            const rawKey = item.key || item.path;
             try {
-                let key = item.path;
+                let key = rawKey;
                 const itemVersion = item.version || version || 'v1';
 
                 // Limpieza de key

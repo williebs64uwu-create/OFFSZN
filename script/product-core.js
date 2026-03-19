@@ -694,12 +694,21 @@ function renderProductPage(product) {
         }
     }
 
-    // --- 🧪 OPTIMIZATION: Check if it's R2 ---
-    const isR2Main = product.image_url && (product.image_url.includes('r2.cloudflarestorage.com') || product.image_url.includes('pub-') || (!product.image_url.startsWith('http') && product.image_url.includes('/')));
-    const initialImgMain = isR2Main ? 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=' : (product.image_url || '/images/portada-default.png');
-    // REMOVED skeleton animation as it causes a "line" glitch on loading
-    const mainSkeletonClass = '';
+    // --- 🧪 OPTIMIZATION: Check if it's R2 vs Supabase ---
+    const rawImgMain = product.image_url || '/images/portada-default.png';
+    const storageVerMain = product.storage_version || product.r2_version || 'v1';
+    
+    // Explicitly skip R2 signing if storage_version is 'supabase'
+    const isR2Main = (storageVerMain !== 'supabase') && window.AuthUtils && window.AuthUtils.isR2Url(rawImgMain);
+    const imgPlaceholder = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=';
+    
+    let finalSrcMain = rawImgMain;
+    if (!isR2Main && !rawImgMain.startsWith('http') && !rawImgMain.startsWith('/') && !rawImgMain.startsWith('data:')) {
+        const sbUrl = window.SUPABASE_URL || "https://qtjpvztpgfymjhhpoouq.supabase.co";
+        finalSrcMain = `${sbUrl}/storage/v1/object/public/products/${rawImgMain}`;
+    }
 
+    const initialImgMain = isR2Main ? imgPlaceholder : finalSrcMain;
 
     container.innerHTML = `
         <div class="product-split-layout">
@@ -707,7 +716,9 @@ function renderProductPage(product) {
             <div class="product-sidebar">
                 <!-- Cover Art -->
                 <div class="product-cover-art" style="position:relative;">
-                    <img src="${initialImgMain}" data-r2-src="${product.image_url}" data-r2-version="${product.storage_version || product.r2_version || 'v1'}" 
+                    <img src="${initialImgMain}" 
+                         data-r2-src="${escapeHTML(rawImgMain)}" 
+                         data-r2-version="${storageVerMain}" 
                          id="product-main-art"
                          alt="${escapeHTML(product.name)}"
                          class=""
@@ -2124,7 +2135,6 @@ function initStandardPlayer(product) {
             // But we already have 'product' in scope of initStandardPlayer.
             // Wait, onclick stringification is messy for objects.
             // Better: use direct element assignment or cache.
-
             if (window.StickyPlayer) {
                 // If ID matches current, toggle. Else play.
                 // But we need the object to play new. 
@@ -2516,16 +2526,23 @@ function renderRelatedGrid(products, container) {
             }
         }).replace(/'/g, "&apos;").replace(/"/g, "&quot;");
 
-        const isR2Related = window.AuthUtils && window.AuthUtils.isR2Url(p.image_url);
+        const rawImgRelated = p.image_url || '/images/portada-default.png';
+        const storageVerRelated = p.storage_version || p.r2_version || 'v1';
+        
+        // Explicitly skip R2 signing if storage_version is 'supabase'
+        const isR2Related = (storageVerRelated !== 'supabase') && window.AuthUtils && window.AuthUtils.isR2Url(rawImgRelated);
         const placeholder = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=';
-        const initialImgRelated = isR2Related ? placeholder : (p.image_url || '/images/portada-default.png');
+
+        const finalSrcRelated = window.AuthUtils?.getFormattedSupabaseUrl ? window.AuthUtils.getFormattedSupabaseUrl(rawImgRelated) : rawImgRelated;
+
+        const initialImgRelated = isR2Related ? placeholder : finalSrcRelated;
 
         // Use EXACTLY the same structure as Profile Trending Cards (Trending / Packs)
         card.innerHTML = `
             <div class="t-card-cover">
                 <img src="${initialImgRelated}" 
-                     data-r2-src="${p.image_url}" 
-                     data-r2-version="${p.storage_version || p.r2_version || 'v1'}" 
+                     data-r2-src="${escapeHTML(rawImgRelated)}" 
+                     data-r2-version="${storageVerRelated}" 
                      id="related-img-${p.id}"
                      alt="${p.name}"
                      onerror="this.src='/images/portada-default.png'"

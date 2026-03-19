@@ -712,6 +712,7 @@
             // --- CURRENCY STATE ---
             // Load saved currency or default to USD
             const savedCurrency = localStorage.getItem('OFFSZN_CURRENCY') || 'USD';
+            let currentCurrency = savedCurrency;
 
             const rates = {
                 'USD': { symbol: '$', starter: 5, pro: 7, basic: 0, label: 'USD $' },
@@ -722,9 +723,9 @@
 
             // Initialize UI Immediately (No Flash)
             const wrapper = document.querySelector('.currency-toggle-wrapper');
-            wrapper.classList.add('no-transition'); // Disable transition
+            if (wrapper) wrapper.classList.add('no-transition'); // Disable transition
 
-            setCurrency(currentCurrency);
+            setCurrency(savedCurrency);
 
             // Re-enable transition after a small tick
             setTimeout(() => {
@@ -733,7 +734,7 @@
 
             function setCurrency(curr) {
                 currentCurrency = curr;
-                localStorage.setItem('OFFSZN_CURRENCY', curr);
+                // localStorage.setItem('OFFSZN_CURRENCY', curr); // Visual only, as requested
 
                 // UI Toggle
                 document.querySelectorAll('.currency-option').forEach(el => el.classList.remove('active'));

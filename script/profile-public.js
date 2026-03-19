@@ -1715,7 +1715,7 @@ async function renderTrending(items, user, collabStats = {}) {
     // 1. Pre-authorize ALL images in parallel while skeletons stay visible
     const authPromises = items.map(prod => {
         if (!prod.image_url) return Promise.resolve(null);
-        return window.getAuthorizedUrl(prod.image_url, prod.r2_version || 'v1', prod.id);
+        return window.getAuthorizedUrl(prod.image_url, prod.storage_version || prod.r2_version || 'v1', prod.id);
     });
     const authorizedUrls = await Promise.all(authPromises);
 
@@ -1729,8 +1729,17 @@ async function renderTrending(items, user, collabStats = {}) {
         const seoLink = window.createSeoLink ? window.createSeoLink(prod) : '/producto.html?id=' + prod.id;
 
         // Initial image check (avoid broken icon)
-        const isR2Trending = prod.image_url && (prod.image_url.includes('r2.cloudflarestorage.com') || prod.image_url.includes('pub-') || (!prod.image_url.startsWith('http') && prod.image_url.includes('/')));
-        const initialImgTrending = isR2Trending ? 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=' : (prod.image_url || '/images/portada-default.png');
+        const rawImgTrending = prod.image_url || '/images/portada-default.png';
+        const storageVerTrending = prod.storage_version || prod.r2_version || 'v1';
+        
+        // Explicitly skip R2 signing if storage_version is 'supabase'
+        const isR2Trending = (storageVerTrending !== 'supabase') && window.AuthUtils && window.AuthUtils.isR2Url(rawImgTrending);
+        const imgPlaceholder = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=';
+
+        let finalSrcTrending = rawImgTrending;
+            finalSrcTrending = window.AuthUtils?.getFormattedSupabaseUrl ? window.AuthUtils.getFormattedSupabaseUrl(rawImgTrending) : rawImgTrending;
+
+        const initialImgTrending = isR2Trending ? imgPlaceholder : finalSrcTrending;
 
         div.innerHTML = ''; // Ensure clear
 
@@ -1739,6 +1748,8 @@ async function renderTrending(items, user, collabStats = {}) {
 
         const img = document.createElement('img');
         img.src = initialImgTrending;
+        img.dataset.r2Src = rawImgTrending;
+        img.dataset.r2Version = storageVerTrending;
         img.id = `trending-img-${prod.id}`;
         img.alt = prod.name || 'Product';
         img.className = 'skeleton-img-transition';
@@ -1911,7 +1922,7 @@ async function renderProductList(items, user, collabStats = {}) {
     // 1. Pre-authorize ALL images in parallel
     const authPromises = items.map(prod => {
         if (!prod.image_url) return Promise.resolve(null);
-        return window.getAuthorizedUrl(prod.image_url, prod.r2_version || 'v1', prod.id);
+        return window.getAuthorizedUrl(prod.image_url, prod.storage_version || prod.r2_version || 'v1', prod.id);
     });
     const authorizedUrls = await Promise.all(authPromises);
 
@@ -1971,9 +1982,17 @@ async function renderProductList(items, user, collabStats = {}) {
         const waveformId = `waveform-track-${prod.id}-${index}`;
         const audioUrl = prod.mp3_url || prod.audio_url || prod.download_url_mp3 || prod.demo_file || prod.tagged_file || prod.preview_url || prod.cloud_url || (prod.track_data ? prod.track_data.audio_url : '') || '';
 
-        const isR2List = window.AuthUtils && window.AuthUtils.isR2Url(prod.image_url);
-        const placeholder = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=';
-        const initialImgList = isR2List ? placeholder : (prod.image_url || '/images/portada-default.png');
+        const rawImgList = prod.image_url || '/images/portada-default.png';
+        const storageVerList = prod.storage_version || prod.r2_version || 'v1';
+        
+        // Explicitly skip R2 signing if storage_version is 'supabase'
+        const isR2List = (storageVerList !== 'supabase') && window.AuthUtils && window.AuthUtils.isR2Url(rawImgList);
+        const imgPlaceholder = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=';
+
+        let finalSrcList = rawImgList;
+            finalSrcList = window.AuthUtils?.getFormattedSupabaseUrl ? window.AuthUtils.getFormattedSupabaseUrl(rawImgList) : rawImgList;
+
+        const initialImgList = isR2List ? imgPlaceholder : finalSrcList;
 
         row.innerHTML = ''; // Start clean
 
@@ -1984,10 +2003,8 @@ async function renderProductList(items, user, collabStats = {}) {
         coverDiv.onclick = () => window.location.href = seoLink;
         const img = document.createElement('img');
         img.src = initialImgList;
-        if (isR2List) {
-            img.dataset.r2Src = prod.image_url;
-            img.dataset.r2Version = prod.storage_version || prod.r2_version || 'v1';
-        }
+        img.dataset.r2Src = rawImgList;
+        img.dataset.r2Version = storageVerList;
         img.id = `list-img-${prod.id}`;
         img.alt = 'cover';
         img.className = 'skeleton-img-transition';
