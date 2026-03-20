@@ -164,9 +164,6 @@ window.FavoritesManager = (function () {
 
         // Visual Feedback
         if (buttonElement) {
-            buttonElement.style.transform = "scale(1.3)";
-            setTimeout(() => buttonElement.style.transform = "scale(1)", 200);
-
             // Toggle active class
             buttonElement.classList.toggle('active', !isLikedOriginal);
 

@@ -248,6 +248,17 @@ function renderExploreFeed() {
     if (presets.length > 0) {
         container.appendChild(createShelfRow('Presets de voces', presets, 'social-post'));
     }
+
+    // Modern Entrance Animation
+    if (window.gsap) {
+        gsap.from(container.querySelectorAll('.explore-row, .explore-list-outer'), {
+            opacity: 0,
+            duration: 0.8,
+            stagger: 0.15,
+            ease: 'power2.out',
+            delay: 0.2
+        });
+    }
 }
 
 /**
@@ -615,8 +626,7 @@ function renderHeroSlide(product) {
 
                 <canvas class="hero-particles-canvas desktop-only"></canvas>
             
-            <div class="hero-content" style="opacity: 0; transform: translateY(15px);">
-                <span class="hero-tag desktop-only">Destacado</span>
+            <div class="hero-content" style="opacity: 0;">
                 <h1 class="hero-title">${productName}</h1>
                 <p class="hero-subtitle desktop-only">Una creación de <strong>${producer}</strong> • ${type}</p>
                 
@@ -662,12 +672,10 @@ function renderHeroSlide(product) {
 
     gsap.fromTo([content, image],
         {
-            opacity: 0,
-            x: arguments.length > 1 && arguments[1] ? 30 : -30 // Slide from opposite dir
+            opacity: 0
         },
         {
             opacity: 1,
-            x: 0,
             duration: 0.35,
             ease: "power2.out"
         }
@@ -716,10 +724,10 @@ function initHeroParticles() {
         constructor() {
             this.x = Math.random() * width;
             this.y = Math.random() * height;
-            this.size = Math.random() * 0.8 + 0.2; // Tiny dots
-            this.speedX = (Math.random() * 0.15 - 0.075);
-            this.speedY = (Math.random() * 0.15 - 0.075);
-            this.opacity = Math.random() * 0.4 + 0.2;
+            this.size = Math.random() * 1.5 + 0.5; // Slightly larger for glow
+            this.speedX = (Math.random() * 0.08 - 0.04); // Slower
+            this.speedY = (Math.random() * 0.08 - 0.04); // Slower
+            this.opacity = Math.random() * 0.3 + 0.1; // More subtle
         }
         update() {
             this.x += this.speedX;
@@ -730,16 +738,19 @@ function initHeroParticles() {
             if (this.y < 0) this.y = height;
         }
         draw() {
-            ctx.fillStyle = `rgba(255, 255, 255, ${this.opacity})`; // White dots
+            ctx.fillStyle = `rgba(255, 255, 255, ${this.opacity})`;
+            ctx.shadowBlur = 4;
+            ctx.shadowColor = `rgba(255, 255, 255, ${this.opacity * 0.5})`;
             ctx.beginPath();
             ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
             ctx.fill();
+            ctx.shadowBlur = 0; // Reset
         }
     }
 
     const init = () => {
         particles = [];
-        for (let i = 0; i < 50; i++) {
+        for (let i = 0; i < 20; i++) { // Reduced count for minimal look
             particles.push(new Particle());
         }
     };
@@ -980,7 +991,13 @@ function createProductCardHtml(product, format = 'standard') {
         const price = isTrulyFree ? 'GRATIS' : (window.CurrencyManager ? window.CurrencyManager.format(parseFloat(priceValue)) : `$${priceValue}`);
 
         // FIND REAL PRODUCER DATA
-        const producer = Array.isArray(allProducers) ? allProducers.find(p => String(p.id) === String(product.producer_id)) : null;
+        let producer = Array.isArray(allProducers) ? allProducers.find(p => String(p.id) === String(product.producer_id)) : null;
+        
+        // Robust fallback: if not in allProducers, check topProducers
+        if (!producer && window.topProducers) {
+            producer = window.topProducers.find(p => String(p.id) === String(product.producer_id));
+        }
+
         const realArtist = producer ? (producer.nickname || producer.name || artist) : (product.producer_nickname || artist);
         const realAvatarPath = producer ? producer.avatar_url : (product.producer_avatar_url || null);
         const realAvatar = getImgInfo(realAvatarPath, producer?.storage_version || producer?.r2_version || product.producer_storage_version || product.producer_r2_version);
@@ -1183,6 +1200,21 @@ async function handleLike(id, btn, ownerId) {
         if (span) {
             let currentCount = parseInt(span.textContent) || 0;
             span.textContent = isLikedBefore ? Math.max(0, currentCount - 1) : currentCount + 1;
+        }
+
+        // --- NEW: Unlike Animation Trigger ---
+        if (isLikedBefore && targetBtn) {
+            targetBtn.classList.add('unliking');
+            const icon = targetBtn.querySelector('i');
+            if (icon) {
+                icon.className = 'bi bi-heartbreak-fill';
+                icon.style.color = '#ef4444';
+            }
+            
+            setTimeout(() => {
+                targetBtn.classList.remove('unliking');
+                // Icon and color will be updated by window.FavoritesManager subscription
+            }, 600);
         }
 
         try {
