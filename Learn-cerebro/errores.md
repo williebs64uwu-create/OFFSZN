@@ -782,4 +782,57 @@ Se detectaron errores 404 persistentes al cargar imágenes y audios almacenados 
 1. **Sanitización de Rutas**: Se implementó una lógica de limpieza en `getAuthorizedUrl` y en todos los renderizadores que elimina prefijos redundantes (`products/`, `avatars/`) antes de concatenar el dominio de Supabase.
 2. **Fallback en Error Global**: Se extendió el `window.addEventListener('error')` en `auth-utils.js` para detectar fallos de carga en dominios de R2. Al ocurrir un 404 de R2, el navegador ahora intenta automáticamente cargar el activo desde el bucket público de Supabase como redundancia ("Self-Healing URLs").
 3. **Resiliencia Multi-Proveedor**: Esto elimina la necesidad de migrar masivamente la base de datos si hay inconsistencias, ya que el frontend se adapta en tiempo real a la ubicación real del archivo.
+ 
+ ---
+ 
+ ## 27. Fallos 404/403 en Reproducción de Audio R2 (Feed de Solicitudes)
+ **Fecha:** 20 de marzo de 2026
+ **Ubicación:** `script/feed.js`, `server/src/infrastructure/http/routes/r2.routes.js`, `script/auth-utils.js`
+ 
+ ### Problema:
+ Los audios en el feed de "productores" (previews de solicitudes personalizadas) no cargaban, mostrando errores 404 (Not Found) o 403 (Forbidden) con URLs que contenían el bucket incorrecto (`offszn-st`).
+ 
+ ### Causa Raíz:
+ 1. **Default v1**: El script `feed.js` y el endpoint `bulk-sign` del backend usaban `'v1'` por defecto cuando la versión de R2 no estaba explícitamente presente, forzando la firma contra el bucket antiguo.
+ 2. **Prefijos Privados**: La carpeta `temp-previews/` no estaba en la lista de `publicPrefixes` del backend, requiriendo tokens de sesión válidos para recursos que el feed intenta cargar de forma anónima/pública.
+ 3. **Caché Persistente**: `auth-utils.js` guardaba las URLs firmadas en `sessionStorage` usando solo el path como llave, ignorando la versión. Si un usuario ya tenía una firma `'v1'` guardada, el navegador la reusaba infinitamente aunque el código ahora pidiera `'v2'`.
+ 
+ ### Solución:
+ 1. **Estandarización a V2**: Se cambió el valor por defecto de `'v1'` a `'v2'` en `feed.js` (trackData) y en el backend (`bulk-sign` y `download-url`).
+ 2. **Whitelisting**: Se agregó `temp-previews/` a la lista de `publicPrefixes` en `r2.routes.js` para permitir el acceso público a las maquetas de ofertas.
+ 3. **Caché Inteligente (Cache Busting)**: Se modificó `auth-utils.js` para que la llave de la caché incluya la versión (ej. `song.mp3__v=v2`). Esto fuerza al navegador a obtener una firma nueva si la versión cambia, eliminando "fantasmas" de firmas antiguas mal generadas.
+ 
+ ---
+ 
+ ## 28. Truncado de Bucket en Consola de Chrome (`offszn-st`)
+ **Fecha:** 20 de marzo de 2026
+ **Ubicación:** Mensajes de consola / Inspección de red
+ 
+ ### Problema:
+ Se reportaban errores apuntando a un bucket inexistente llamado `offszn-st`.
+ 
+ ### Causa Raíz:
+ No es un error de código, sino de visualización. Chrome trunca los hostnames largos en los mensajes de error de la consola. El bucket real `offszn-storage.r2.cloudflarestorage.com` se recortaba visualmente a `offszn-st...`.
+ 
+ ### Solución:
+ Ignorar el nombre truncado en la consola y verificar la URL real en la pestaña **Network** (Red), donde se confirmó que el sistema estaba intentando usar el bucket V1 (`offszn-storage`) en lugar del V2 (`offsznlatbucket`). La solución fue el re-versionado a V2 descrito en el punto anterior.
+ 
+ ---
+ 
+ ## 29. Avatares faltantes en "Presets de voces" (Explore)
+ **Fecha:** 20 de marzo de 2026
+ **Ubicación:** `server/src/infrastructure/http/controllers/ProductController.js`, `script/explore.js`
+ 
+ ### Problema:
+ Las fotos de perfil de los productores no aparecían en las tarjetas de la sección "Presets de voces", mostrando un círculo vacío o la imagen por defecto incluso si el usuario tenía avatar.
+ 
+ ### Causa Raíz:
+ 1. **Data Incompleta**: El endpoint `/api/products` (usado por el Explore) no estaba haciendo el join con la columna `avatar_url` de la tabla de usuarios. Solo enviaba el nickname.
+ 2. **Caché Limitada**: El frontend (`explore.js`) solo buscaba los avatares en la lista de `allProducers` (Top 20). Si el preset era de un productor fuera del top 20, no encontraba su foto.
+ 
+ ### Solución:
+ 1. **Join Enriquecido**: Se actualizó `ProductController.js` para incluir `avatar_url` en la consulta Supabase de todos los productos aprobados.
+ 2. **Fallback Robusto**: Se modificó `createProductCardHtml` en `explore.js` para que, si el productor no está en el caché habitual, use directamente el `producer_avatar_url` que ahora viene en la data del producto.
+ 3. **Consistencia de Versión**: Se aseguró que la firma de R2 para estos avatares use la versión correcta (`storage_version` o `r2_version`) del productor o del producto como respaldo.
+
 

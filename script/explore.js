@@ -216,9 +216,9 @@ function renderExploreFeed() {
     const presetCriteria = (p) => {
         const type = (p.product_type || '').toLowerCase();
         const cat = (p.category || '').toLowerCase();
-        return type === 'preset' || type === 'vocalpreset' || type.includes('preset') || 
-               type === 'template' || type === 'plantilla' ||
-               cat === 'plantilla' || cat === 'vocal preset' || cat.includes('preset');
+        return type === 'preset' || type === 'vocalpreset' || type.includes('preset') ||
+            type === 'template' || type === 'plantilla' ||
+            cat === 'plantilla' || cat === 'vocal preset' || cat.includes('preset');
     };
 
     // 4. SHELF: RECOMENDADOS (Section 3: For you / General) - Excluding Presets
@@ -231,13 +231,13 @@ function renderExploreFeed() {
         recs.forEach(p => usedProductIds.add(p.id));
     }
 
-    // 5. SHELF: LIBRERÍAS (Section 4: Kits & Sounds) - Excluding Presets
+    // 5. SHELF: KITS (Section 4: Kits & Sounds) - Excluding Presets
     const kits = allProducts
         .filter(p => !usedProductIds.has(p.id) && EXPLORE_CONFIG.CURATED_TYPES.includes(p.product_type?.toLowerCase()) && !presetCriteria(p))
         .slice(0, EXPLORE_CONFIG.CAROUSEL_LIMIT);
     if (kits.length > 0) {
         kits.forEach(p => usedProductIds.add(p.id)); // Mark as used
-        container.appendChild(createShelfRow('Librerías y Kits de Sonido', kits, 'standard'));
+        container.appendChild(createShelfRow('Kits y Librerías', kits, 'standard'));
     }
 
     // 6. SHELF: PRESETS (Section 5: Social Post format) - Dedicated section
@@ -426,10 +426,10 @@ function createListItemHtml(item, index, type) {
     const rawImg = item.image_url || item.avatar_url || '/images/portada-default.png';
     const isR2 = window.AuthUtils && window.AuthUtils.isR2Url(rawImg);
     const imgPlaceholder = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
-    
+
     // Use data-r2-src if it's R2 to prevent 404 fetch
     const imgAttr = isR2 ? `src="${imgPlaceholder}" data-r2-src="${escapeHTML(rawImg)}"` : `src="${escapeHTML(rawImg)}"`;
-    
+
     const isCircle = type === 'producer' ? 'circle' : '';
 
     // SEO Link
@@ -458,14 +458,14 @@ function createListItemHtml(item, index, type) {
     return `
         <div class="list-item-smart" data-id="${item.id}" data-type="product">
             <div class="list-item-index">${index}</div>
-            <img crossorigin="anonymous" ${imgAttr} data-r2-version="${item.storage_version || item.r2_version || 'v1'}" data-product-id="${item.id}" class="list-item-img" alt="cover" onclick="event.stopPropagation(); window.handleTrackPlay(event, '${item.id}')">
+            <img crossorigin="anonymous" ${imgAttr} data-r2-version="${item.storage_version || item.r2_version || 'v1'}" data-product-id="${item.id}" class="list-item-img" alt="cover" onclick="event.stopPropagation(); window.handleInfoClick(event, '${item.id}', '${link}')">
             <div class="list-item-info" onclick="event.stopPropagation(); window.handleInfoClick(event, '${item.id}', '${link}')">
                 <div class="list-item-name">${name}</div>
                 <div class="list-item-sub">${sub}</div>
             </div>
-            <div class="list-item-waveform skeleton-waveform" onclick="event.stopPropagation(); window.handleInfoClick(event, '${item.id}', '${link}')"></div>
+            <div class="list-item-waveform skeleton-waveform"></div>
             <div class="list-item-value">
-                <div class="list-play-btn ${hasAudio ? '' : 'disabled'}" id="btn-play-waveform-${item.id}-${index}" onclick="event.stopPropagation(); ${hasAudio ? `window.playTrackById('${item.id}')` : ''}">
+                <div class="list-play-btn ${hasAudio ? '' : 'disabled'}" id="btn-play-waveform-${item.id}-${index}" onclick="event.stopPropagation(); window.handleTrackPlay(event, '${item.id}')">
                     <i class="bi bi-play-fill"></i>
                 </div>
             </div>
@@ -474,8 +474,18 @@ function createListItemHtml(item, index, type) {
 }
 
 // Global Handlers for List Interactions
+window.handleTrackPlay = function (event, id) {
+    if (event) event.stopPropagation();
+    const item = allProducts.find(p => String(p.id) === String(id));
+    if (item && window.playTrack) {
+        window.playTrack(item);
+    } else if (id && window.playTrackById) {
+        window.playTrackById(String(id));
+    }
+};
+
 window.handleCoverClick = function (id) {
-    window.playTrackById(String(id));
+    window.handleTrackPlay(null, id);
 };
 
 window.handleInfoClick = function (event, id, link) {
@@ -591,13 +601,13 @@ function renderHeroSlide(product) {
         `<div class="hero-dot ${i === currentHeroIndex ? 'active' : ''}" onclick="window.navToHero(${i})"></div>`
     ).join('');
 
-        const isR2 = window.AuthUtils && window.AuthUtils.isR2Url(product.image_url);
-        const imgPlaceholder = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
-        
-        // Mobile BG: Use data-r2-bg for automatic signing
-        const mobileBgAttr = isR2 ? `data-r2-bg="${imgUrl}"` : `style="background-image: url('${imgUrl}')"`;
+    const isR2 = window.AuthUtils && window.AuthUtils.isR2Url(product.image_url);
+    const imgPlaceholder = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
 
-        heroSection.innerHTML = `
+    // Mobile BG: Use data-r2-bg for automatic signing
+    const mobileBgAttr = isR2 ? `data-r2-bg="${imgUrl}"` : `style="background-image: url('${imgUrl}')"`;
+
+    heroSection.innerHTML = `
             <div class="explore-hero active" id="hero-card-clickable">
                 <!-- Mobile Background Image & Gradient -->
                 <div class="hero-mobile-bg mobile-only" ${mobileBgAttr} data-r2-version="${product.storage_version || product.r2_version || 'v1'}"></div>
@@ -764,13 +774,20 @@ function createShelfRow(title, items, format = 'standard') {
     row.className = 'explore-row';
     const rowId = `row-${Math.random().toString(36).substr(2, 9)}`;
     row.innerHTML = `
-        <div class="row-header"><h2 class="row-title">${title}</h2></div>
+        <div class="row-header">
+            <h2 class="row-title">${title}</h2>
+            <div class="row-actions">
+                <span class="view-all" onclick="window.location.href='/search?q=${encodeURIComponent(title)}'">Ver todos</span>
+                <div class="row-nav-arrows mobile-hide">
+                    <button class="btn-nav-mini prev" id="prev-${rowId}"><i class="bi bi-chevron-left"></i></button>
+                    <button class="btn-nav-mini next" id="next-${rowId}"><i class="bi bi-chevron-right"></i></button>
+                </div>
+            </div>
+        </div>
         <div class="shelf-wrapper">
-            <button class="btn-nav prev"><i class="bi bi-chevron-left"></i></button>
             <div class="shelf-inner">
                 <div class="shelf-container" id="${rowId}">${items.map(item => createProductCardHtml(item, format)).join('')}</div>
             </div>
-            <button class="btn-nav next"><i class="bi bi-chevron-right"></i></button>
         </div>
     `;
     // Different step scroll based on format
@@ -787,12 +804,12 @@ function createShelfRow(title, items, format = 'standard') {
             if (format === 'social-post') {
                 const priceBtn = card.querySelector('.post-price-btn');
                 if (priceBtn) priceBtn.addEventListener('click', (e) => {
-                     e.stopPropagation();
-                     if (window.Cart) {
+                    e.stopPropagation();
+                    if (window.Cart) {
                         window.Cart.addItem(item);
-                     } else {
+                    } else {
                         window.location.href = getProductUrl(item);
-                     }
+                    }
                 });
 
                 const likeBtnSoc = card.querySelector('.post-like-btn');
@@ -809,7 +826,7 @@ function createShelfRow(title, items, format = 'standard') {
                     } else {
                         const url = window.location.origin + getProductUrl(item);
                         if (navigator.share) {
-                            navigator.share({ title: item.name, url: url }).catch(() => {});
+                            navigator.share({ title: item.name, url: url }).catch(() => { });
                         } else {
                             navigator.clipboard.writeText(url).then(() => {
                                 const icon = shareBtn.querySelector('i');
@@ -838,9 +855,9 @@ function createShelfRow(title, items, format = 'standard') {
             const likeBtn = card.querySelector('.card-like-btn');
 
             if (playBtn) playBtn.addEventListener('click', (e) => { e.stopPropagation(); playTrack(item); });
-            if (likeBtn) likeBtn.addEventListener('click', (e) => { 
-                e.stopPropagation(); 
-                handleLike(id, e.currentTarget, item.producer_id); 
+            if (likeBtn) likeBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                handleLike(id, e.currentTarget, item.producer_id);
             });
 
             const producerLink = card.querySelector('.card-producer');
@@ -854,7 +871,7 @@ function createShelfRow(title, items, format = 'standard') {
 
             card.addEventListener('click', () => window.location.href = getProductUrl(item));
         });
-        
+
         // Process R2 signatures for avatars created
         if (typeof window.signR2Images === 'function') {
             window.signR2Images(row);
@@ -865,25 +882,61 @@ function createShelfRow(title, items, format = 'standard') {
 
 function initShelfNavigation(row, containerId, cardStep) {
     const container = row.querySelector(`#${containerId}`);
-    const btnPrev = row.querySelector('.btn-nav.prev');
-    const btnNext = row.querySelector('.btn-nav.next');
-    const scrollAmount = cardStep * 5 + 100;
-    btnPrev.addEventListener('click', () => { container.scrollBy({ left: -scrollAmount, behavior: 'smooth' }); });
-    btnNext.addEventListener('click', () => { container.scrollBy({ left: scrollAmount, behavior: 'smooth' }); });
+    const btnPrev = row.querySelector('.btn-nav-mini.prev') || row.querySelector('.btn-nav.prev');
+    const btnNext = row.querySelector('.btn-nav-mini.next') || row.querySelector('.btn-nav.next');
+
+    const scrollAmount = cardStep || 600;
+
+    if (btnPrev && btnNext && container) {
+        const updateArrows = () => {
+            const scrollLeft = container.scrollLeft;
+            const maxScroll = container.scrollWidth - container.clientWidth;
+
+            // Use 'disabled' class instead of hiding
+            if (scrollLeft <= 5) {
+                btnPrev.classList.add('disabled');
+            } else {
+                btnPrev.classList.remove('disabled');
+            }
+
+            if (scrollLeft >= (maxScroll - 5)) {
+                btnNext.classList.add('disabled');
+            } else {
+                btnNext.classList.remove('disabled');
+            }
+        };
+
+        btnPrev.addEventListener('click', () => {
+            const isPresets = container.closest('.explore-row').querySelector('h2').textContent.toLowerCase().includes('presets');
+            const scrollAmount = isPresets ? 1400 : 1332; // Scroll 2 large cards or 6 small cards exactly
+            container.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
+        });
+        btnNext.addEventListener('click', () => {
+            const isPresets = container.closest('.explore-row').querySelector('h2').textContent.toLowerCase().includes('presets');
+            const scrollAmount = isPresets ? 1400 : 1332; // Scroll 2 large cards or 6 small cards exactly
+            container.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+        });
+
+        container.addEventListener('scroll', updateArrows);
+        // Initial check
+        updateArrows();
+        // Check after a short delay for late-rendering content
+        setTimeout(updateArrows, 500);
+    }
 }
 
 function createProductCardHtml(product, format = 'standard') {
     const isLiked = window.FavoritesManager ? window.FavoritesManager.isLiked(product.id) : false;
     const imgPlaceholder = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
-    
+
     // Helper for resolve storage version and URL
     const getImgInfo = (path, storageVer) => {
         const rawPath = path || '/images/portada-default.png';
         const ver = storageVer || 'v2';
         const isR2 = (ver !== 'supabase') && window.AuthUtils && window.AuthUtils.isR2Url(rawPath);
-        
+
         const finalSrc = window.AuthUtils?.getFormattedSupabaseUrl ? window.AuthUtils.getFormattedSupabaseUrl(rawPath) : rawPath;
-        
+
         return {
             attr: isR2 ? `src="${imgPlaceholder}" data-r2-src="${escapeHTML(rawPath)}" data-r2-version="${ver}"` : `src="${escapeHTML(finalSrc)}"`,
             isR2
@@ -904,7 +957,7 @@ function createProductCardHtml(product, format = 'standard') {
         const isTrulyFree = pType !== 'beat' && (product.is_free === true || String(product.is_free) === 'true') && (Number(product.price_basic) === 0 || !product.price_basic);
         let priceValue = product.price_basic !== undefined && product.price_basic !== null ? product.price_basic : '20';
         const price = isTrulyFree ? 'FREE' : (window.CurrencyManager ? window.CurrencyManager.format(parseFloat(priceValue) || 0) : `$${priceValue}`);
-        
+
         return `
             <div class="preset-card-premium" data-product-id="${product.id}">
                 <img ${productImg.attr} crossorigin="anonymous" alt="${product.name}">
@@ -929,10 +982,10 @@ function createProductCardHtml(product, format = 'standard') {
         // FIND REAL PRODUCER DATA
         const producer = Array.isArray(allProducers) ? allProducers.find(p => String(p.id) === String(product.producer_id)) : null;
         const realArtist = producer ? (producer.nickname || producer.name || artist) : (product.producer_nickname || artist);
-        const realAvatarPath = producer ? producer.avatar_url : null;
-        const realAvatar = getImgInfo(realAvatarPath, producer?.storage_version || producer?.r2_version);
+        const realAvatarPath = producer ? producer.avatar_url : (product.producer_avatar_url || null);
+        const realAvatar = getImgInfo(realAvatarPath, producer?.storage_version || producer?.r2_version || product.producer_storage_version || product.producer_r2_version);
         const realHandle = producer ? (producer.handle || producer.nickname || 'artista').toLowerCase().replace(/\s+/g, '') : (product.producer_nickname || 'usuario').toLowerCase().replace(/\s+/g, '');
-        
+
         const isLiked = window.FavoritesManager ? window.FavoritesManager.isLiked(product.id) : false;
         const priceDisplay = price;
 
@@ -1118,13 +1171,15 @@ window.playTrackById = function (id) {
 const likeProcessing = new Set();
 async function handleLike(id, btn, ownerId) {
     if (!id || likeProcessing.has(id)) return;
-    
+
     if (window.FavoritesManager) {
         likeProcessing.add(id);
         const isLikedBefore = window.FavoritesManager.isLiked(id);
-        
-        // Optimistic UI Update for the counter
-        const span = btn.querySelector('.like-count');
+
+        // Robust check for the button element
+        const targetBtn = (btn && typeof btn.querySelector === 'function') ? btn : null;
+        const span = targetBtn ? targetBtn.querySelector('.like-count') : null;
+
         if (span) {
             let currentCount = parseInt(span.textContent) || 0;
             span.textContent = isLikedBefore ? Math.max(0, currentCount - 1) : currentCount + 1;

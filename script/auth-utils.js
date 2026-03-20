@@ -246,11 +246,12 @@ window.AuthUtils = {
             this._cacheLoaded = true;
         }
 
-        const cachedUrl = this._urlCache[pathOrUrl];
-        if (cachedUrl) return cachedUrl;
-
         // 🔥 STRATEGY: 100% Explicit Versioning. No guessing bucket names or URL strings.
-        const actualVersion = version || (window.R2_CURRENT_VERSION || 'v1');
+        const actualVersion = version || (window.R2_CURRENT_VERSION || 'v2');
+        const cacheKey = `${pathOrUrl}__v=${actualVersion}`;
+
+        const cachedUrl = this._urlCache[cacheKey];
+        if (cachedUrl) return cachedUrl;
 
         let key = pathOrUrl;
         if (typeof key === 'string') {
@@ -277,6 +278,7 @@ window.AuthUtils = {
         return new Promise((resolve, reject) => {
             this._signingQueue.push({
                 raw: pathOrUrl,
+                cacheKey: cacheKey,
                 key,
                 version: actualVersion,
                 productId,
@@ -377,7 +379,7 @@ window.AuthUtils = {
             const item = queue[0];
             this._performSigningCall(item.key, item.version, item.productId)
                 .then(url => {
-                    this._saveCache(item.raw, url);
+                    this._saveCache(item.cacheKey || item.raw, url);
                     item.resolve(url);
                 })
                 .catch(err => item.reject(err));
@@ -414,7 +416,7 @@ window.AuthUtils = {
                         versionItems.forEach(item => {
                             const res = results[item.key];
                             if (res && res.downloadUrl) {
-                                this._saveCache(item.raw, res.downloadUrl);
+                                this._saveCache(item.cacheKey || item.raw, res.downloadUrl);
                                 item.resolve(res.downloadUrl);
                             } else {
                                 this._handleSigningFailure(item.key, item.raw)
@@ -440,7 +442,7 @@ window.AuthUtils = {
             queue.forEach(item => {
                 this._performSigningCall(item.key, item.version, item.productId)
                     .then(url => {
-                        this._saveCache(item.raw, url);
+                        this._saveCache(item.cacheKey || item.raw, url);
                         item.resolve(url);
                     })
                     .catch(e => item.reject(e));

@@ -145,7 +145,7 @@ router.post('/r2/download-url', async (req, res) => {
         }
 
         // Definir prefijos públicos
-        const publicPrefixes = ['products/', 'beats/mp3/', 'avatars/', 'public/', 'banners/', 'drumkits/'];
+        const publicPrefixes = ['products/', 'beats/mp3/', 'avatars/', 'public/', 'banners/', 'drumkits/', 'temp-previews/'];
         const isPublic = publicPrefixes.some(prefix => key.startsWith(prefix));
 
         // Si NO es público, requerir autenticación
@@ -190,7 +190,7 @@ router.post('/r2/bulk-sign', async (req, res) => {
             return res.status(400).json({ error: 'Se requiere un array de items' });
         }
 
-        const publicPrefixes = ['products/', 'beats/mp3/', 'avatars/', 'public/', 'banners/', 'drumkits/'];
+        const publicPrefixes = ['products/', 'beats/mp3/', 'avatars/', 'public/', 'banners/', 'drumkits/', 'temp-previews/'];
         const results = {};
 
         // Autenticación única para el lote
@@ -202,7 +202,7 @@ router.post('/r2/bulk-sign', async (req, res) => {
             const rawKey = item.key || item.path;
             try {
                 let key = rawKey;
-                const itemVersion = item.version || version || 'v1';
+                const itemVersion = item.version || version || 'v2';
 
                 // Limpieza de key
                 if (typeof key === 'string' && (key.startsWith('http://') || key.startsWith('https://'))) {

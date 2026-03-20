@@ -74,7 +74,7 @@ export const getPresignedUploadUrl = async (key, contentType, version = R2_CURRE
  * Genera una URL firmada para descargar. 
  * Soporta R2 (v1, v2) y ahora Supabase Storage ('supabase').
  */
-export const getPresignedDownloadUrl = async (key, expiresIn = 3600, version = 'v1') => {
+export const getPresignedDownloadUrl = async (key, expiresIn = 3600, version = R2_CURRENT_VERSION) => {
     // 🔥 STRATEGY: 100% Explicit Versioning. No guessing, no fallbacks.
     
     if (version === 'supabase') {
@@ -173,7 +173,7 @@ export const getPresignedDownloadUrl = async (key, expiresIn = 3600, version = '
 /**
  * URL pública (Solo para V2 por ahora si está público, o V1 si tiene dominio, o Supabase)
  */
-export const getPublicUrl = (key, version = 'v1') => {
+export const getPublicUrl = (key, version = R2_CURRENT_VERSION) => {
     let cleanKey = key;
     while (cleanKey.startsWith('/')) cleanKey = cleanKey.substring(1);
 

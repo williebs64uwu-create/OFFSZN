@@ -40,6 +40,7 @@ let adjustTimeout = null;
 // Wizard State & Global Functions
 let currentStep = 1;
 let maquetaUrl = null;
+let maquetaVersion = null;
 let selectedMaquetaFile = null;
 
 function adjustValue(id, delta) {
@@ -98,11 +99,17 @@ function resetWizard() {
     const progressBar = document.getElementById('maquetaProgressBar');
     const progressContainer = document.getElementById('maquetaUploadProgress');
     const maquetaContainer = document.getElementById('maquetaUploadContainer');
+    const step3 = document.getElementById('solicitarStep3');
 
     currentStep = 1;
-    updateWizardUI();
+    // updateWizardUI(); 
     maquetaUrl = null;
+    maquetaVersion = null;
     selectedMaquetaFile = null;
+
+    if (step1) step1.style.display = 'block';
+    if (step2) step2.style.display = 'none';
+    if (step3) step3.style.display = 'none';
 
     // Reset form fields
     if (solicitarForm) solicitarForm.reset();
@@ -299,6 +306,27 @@ function setupModalListeners() {
     const submitBtn = document.getElementById('btnSubmitSolicitud');
     const charCountDisplay = document.getElementById('charCount');
     const descriptionTextarea = document.getElementById('solicitarDescription');
+
+    // Initialize Custom Dropdowns
+    const noteSelect = document.getElementById('solicitarKeyNote');
+    const scaleSelect = document.getElementById('solicitarKeyScale');
+
+    if (noteSelect) {
+        initCustomDropdown(
+            'solicitarKeyNote',
+            'solicitarKeyNoteTrigger',
+            'solicitarKeyNoteDisplay',
+            'solicitarKeyNoteOptions'
+        );
+    }
+    if (scaleSelect) {
+        initCustomDropdown(
+            'solicitarKeyScale',
+            'solicitarKeyScaleTrigger',
+            'solicitarKeyScaleDisplay',
+            'solicitarKeyScaleOptions'
+        );
+    }
 
     // Wizard Steps & Nav
     const step1 = document.getElementById('solicitarStep1');
@@ -641,7 +669,9 @@ function setupModalListeners() {
                         key: key,
                         referenceLink1,
                         referenceLink2,
-                        previewUrl: maquetaUrl
+                        previewUrl: maquetaUrl,
+                        r2_version: maquetaVersion,
+                        preview_version: maquetaVersion
                     })
                 });
 
@@ -662,13 +692,34 @@ function setupModalListeners() {
                         throw new Error(data.error || 'Error al enviar la solicitud');
                     }
                 } else {
-                    // Success logic
-                    alert('✅ ¡SOLICITUD PUBLICADA! Te estamos redirigiendo al muro de anuncios.');
-                    modal.style.display = 'none';
+                    // Success logic - Show Step 3
+                    const producerName = document.getElementById('solicitarProducerDisplay')?.textContent || 'el productor';
+                    const successNameSpan = document.getElementById('successProducerName');
+                    if (successNameSpan) successNameSpan.textContent = producerName;
+
+                    const step1 = document.getElementById('solicitarStep1');
+                    const step2 = document.getElementById('solicitarStep2');
+                    const step3 = document.getElementById('solicitarStep3');
+
+                    if (step1) step1.style.display = 'none';
+                    if (step2) step2.style.display = 'none';
+                    if (step3) {
+                        step3.style.display = 'block';
+                        // Add Ver Solicitud listener
+                        const btnVerSolicitud = document.getElementById('btnVerSolicitud');
+                        if (btnVerSolicitud) {
+                            btnVerSolicitud.onclick = () => {
+                                window.location.href = '/comunidad/feed';
+                            };
+                        }
+                    }
+
                     solicitarForm.reset();
-                    resetWizard();
+                    // Don't fully reset wizard here to keep Step 3 visible
                     if (charCountDisplay) charCountDisplay.textContent = '0/300';
-                    window.location.href = '/comunidad/feed';
+                    maquetaUrl = null;
+                    maquetaVersion = null;
+                    selectedMaquetaFile = null;
                 }
             } catch (error) {
                 console.error('Error submitting request:', error);
@@ -897,7 +948,15 @@ function createProducerCard(producer, rank) {
     const displayRole = rawRole.toUpperCase();
 
     // Check if viewing own card
-    const currentUserId = localStorage.getItem('userId');
+    let currentUserId = null;
+    const token = window.AuthUtils ? window.AuthUtils.getAccessToken() : null;
+    if (token) {
+        try {
+            currentUserId = JSON.parse(atob(token.split('.')[1])).sub;
+        } catch (e) {}
+    }
+    if (!currentUserId) currentUserId = localStorage.getItem('userId');
+    
     const isOwnCard = currentUserId === producer.id;
 
     const solicitarHtml = isOwnCard
@@ -1010,3 +1069,83 @@ function renderPagination() {
         };
     });
 }
+
+/**
+ * CUSTOM DROPDOWN LOGIC
+ */
+window.toggleCustomDropdown = function (event, optionsId) {
+    if (event) event.stopPropagation();
+    const optionsList = document.getElementById(optionsId);
+    if (!optionsList) return;
+
+    const isVisible = optionsList.style.display === 'block';
+
+    // Close others
+    document.querySelectorAll('.custom-dropdown-options').forEach(el => {
+        el.style.display = 'none';
+        const trigger = el.parentElement.querySelector('.custom-dropdown-trigger');
+        const chevron = trigger ? trigger.querySelector('.select-chevron') : null;
+        if (chevron) chevron.style.transform = 'rotate(0deg)';
+    });
+
+    if (!isVisible) {
+        optionsList.style.display = 'block';
+        const trigger = optionsList.parentElement.querySelector('.custom-dropdown-trigger');
+        const chevron = trigger ? trigger.querySelector('.select-chevron') : null;
+        if (chevron) chevron.style.transform = 'rotate(180deg)';
+    }
+};
+
+function initCustomDropdown(selectId, triggerId, displayId, optionsId) {
+    const select = document.getElementById(selectId);
+    const trigger = document.getElementById(triggerId);
+    const display = document.getElementById(displayId);
+    const optionsList = document.getElementById(optionsId);
+
+    if (!select || !trigger || !display || !optionsList) return;
+
+    // Clear existing
+    optionsList.innerHTML = '';
+
+    // Populate from native select
+    Array.from(select.options).forEach(opt => {
+        const item = document.createElement('div');
+        item.className = 'dropdown-item';
+        if (opt.selected) {
+            item.classList.add('selected');
+            display.textContent = opt.textContent;
+        }
+        item.textContent = opt.textContent;
+        item.dataset.value = opt.value;
+
+        item.onclick = (e) => {
+            e.stopPropagation();
+            // Update native select
+            select.value = opt.value;
+            // Trigger change event if needed
+            select.dispatchEvent(new Event('change'));
+            
+            // Update UI
+            display.textContent = opt.textContent;
+            optionsList.querySelectorAll('.dropdown-item').forEach(i => i.classList.remove('selected'));
+            item.classList.add('selected');
+
+            // Close
+            window.toggleCustomDropdown(null, optionsId);
+        };
+
+        optionsList.appendChild(item);
+    });
+}
+
+// Global click to close dropdowns
+document.addEventListener('click', () => {
+    document.querySelectorAll('.custom-dropdown-options').forEach(el => {
+        if (el.style.display === 'block') {
+            el.style.display = 'none';
+            const trigger = el.parentElement.querySelector('.custom-dropdown-trigger');
+            const chevron = trigger ? trigger.querySelector('.select-chevron') : null;
+            if (chevron) chevron.style.transform = 'rotate(0deg)';
+        }
+    });
+});

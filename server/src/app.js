@@ -108,7 +108,7 @@ app.use(helmet({
             imgSrc: ["'self'", "data:", "blob:",
                 "https://images.unsplash.com", "https://*.supabase.co",
                 "https://*.r2.dev", "https://*.cloudflarestorage.com", "https://*.r2.cloudflarestorage.com",
-                "https://res.cloudinary.com", "https://via.placeholder.com",
+                "https://res.cloudinary.com", "https://ik.imagekit.io", "https://*.imagekit.io", "https://via.placeholder.com",
                 "https://*.ytimg.com", "https://*.ggpht.com", "https://*.googleusercontent.com",
                 "https://ui-avatars.com",
                 // PayPal

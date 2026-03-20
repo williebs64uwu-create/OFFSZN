@@ -11,7 +11,7 @@ export const getAllProducts = async (req, res) => {
             // para traer los datos de 'users'.
             .select(`
                 *, 
-                users!products_producer_id_fkey ( nickname, r2_version, storage_version ) 
+                users!products_producer_id_fkey ( nickname, avatar_url, r2_version, storage_version ) 
             `)
             .eq('status', 'approved')
             .eq('visibility', 'public');
@@ -37,6 +37,10 @@ export const getAllProducts = async (req, res) => {
                 ? product.users.storage_version
                 : 'v1';
 
+            const producerAvatarUrl = (product.users && product.users.avatar_url)
+                ? product.users.avatar_url
+                : null;
+
             const p = { ...product };
             delete p.users;
 
@@ -46,7 +50,8 @@ export const getAllProducts = async (req, res) => {
                 producer_id: String(p.producer_id),
                 producer_nickname: producerNickname,
                 producer_r2_version: producerR2Version,
-                producer_storage_version: producerStorageVersion
+                producer_storage_version: producerStorageVersion,
+                producer_avatar_url: producerAvatarUrl
             };
         });
 

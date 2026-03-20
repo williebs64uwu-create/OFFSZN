@@ -29,7 +29,9 @@ export const createRequest = async (req, res) => {
             key,
             referenceLink1,
             referenceLink2,
-            previewUrl
+            previewUrl,
+            r2_version,
+            storage_version
         } = req.body;
 
         // Strict Validations
@@ -126,7 +128,9 @@ export const createRequest = async (req, res) => {
                 key: key || null,
                 reference_link_1: referenceLink1 || null,
                 reference_link_2: referenceLink2 || null,
-                preview_url: previewUrl || null
+                preview_url: previewUrl || null,
+                r2_version: r2_version || 'v2',
+                storage_version: storage_version || 'v2'
             })
             .select()
             .single();
@@ -281,7 +285,7 @@ export const respondRequest = async (req, res) => {
     try {
         const producerId = req.user.id;
         const requestId = req.params.id;
-        const { previewUrl } = req.body;
+        const { previewUrl, r2_version, storage_version } = req.body;
 
         if (!previewUrl) {
             return res.status(400).json({ error: 'Debes incluir la URL del archivo de audio recortado (30s max).' });
@@ -313,6 +317,8 @@ export const respondRequest = async (req, res) => {
             .update({
                 status: 'responded',
                 preview_url: previewUrl,
+                r2_version: r2_version || 'v2',
+                storage_version: storage_version || 'v2',
                 expires_at: expiresAt.toISOString()
             })
             .eq('id', requestId)

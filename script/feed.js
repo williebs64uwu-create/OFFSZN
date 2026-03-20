@@ -133,7 +133,16 @@ function renderRequests(requests) {
         return;
     }
 
-    requests.forEach(request => {
+    // 🔥 TEMPORARY FILTER: Show only the new target request as per user request
+    const targetText = "Quiero Buscar un sonido parecido a este beat";
+    const filtered = requests.filter(request => {
+        return (request.description && request.description.includes(targetText)) || 
+               (request.buyer_id === window.currentUserId); // Show own as well for testing
+    });
+
+    const displayRequests = filtered.length > 0 ? filtered : requests;
+
+    displayRequests.forEach(request => {
         const card = createRequestCard(request);
         requestsContainer.appendChild(card);
     });
@@ -283,7 +292,8 @@ async function initWaveSurfer(playBtn, containerId, request) {
     // Background load the real waveform
     setTimeout(async () => {
         try {
-            const url = await AuthUtils.getAuthorizedUrl(request.preview_url, request.r2_version || 'v1');
+            const version = request.r2_version || request.preview_version || request.storage_version || 'v2';
+            const url = await AuthUtils.getAuthorizedUrl(request.preview_url, version);
             container.innerHTML = ''; // Clear placeholder
             ws = WaveSurfer.create({
                 container: container,
@@ -323,6 +333,8 @@ async function initWaveSurfer(playBtn, containerId, request) {
                 artist_users: { id: request.buyer_id, nickname: request.buyer?.nickname },
                 image_url: request.buyer?.avatar_url,
                 preview_url: request.preview_url,
+                r2_version: request.r2_version || request.preview_version || request.storage_version || 'v2',
+                preview_version: request.r2_version || request.preview_version || request.storage_version || 'v2',
                 is_custom_request: true,
                 request_data: request
             };

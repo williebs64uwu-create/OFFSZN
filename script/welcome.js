@@ -97,15 +97,26 @@ document.addEventListener('DOMContentLoaded', () => {
   let nicknameCheckPromise = null;
 
   function checkNicknameAvailability() {
+    // 1. Limpiar el temporizador ANTES que nada para evitar carreras al borrar rápido
+    clearTimeout(checkNicknameTimeout);
+    
+    if (validationController) {
+      validationController.abort(); // Abort pending requests if typing fast
+    }
+
     let nickname = nicknameInput.value;
 
-    // 1. AUTO-SANITIZE: Strict compliance (no spaces, lowercase, safe chars only)
+    // 2. AUTO-SANITIZE: Strict compliance (no spaces, lowercase, safe chars only)
     const sanitized = nickname.toLowerCase().replace(/[^a-z0-9._-]/g, '');
 
-    // Correction Logic: Update input if it contained invalid chars
+    // Correction Logic: Update input if it contained invalid chars, preserve cursor roughly
     if (sanitized !== nickname) {
+      const start = nicknameInput.selectionStart;
       nicknameInput.value = sanitized;
       nickname = sanitized;
+      if (start !== null && start > 0) {
+        nicknameInput.setSelectionRange(start - 1, start - 1);
+      }
     }
 
     // UPDATE COUNTER
@@ -129,25 +140,28 @@ document.addEventListener('DOMContentLoaded', () => {
       suggestionsContainer.style.display = 'none';
     }
 
-    // 2. Local Validation (Instant)
+    // 3. Local Validation (Instant)
     const guidanceText = 'Solo se permiten letras (a-z), números, puntos (.) y guiones bajos (_).';
 
     if (nickname.length === 0) {
       nicknameStatus.textContent = guidanceText; // Show rule when empty
       nicknameStatus.className = 'nickname-status';
       nicknameStatus.style.color = '#71717a'; // Neutral gray hint
+      validateCurrentStep();
       return;
     }
 
     if (nickname.length < 3) {
       nicknameStatus.textContent = 'Mínimo 3 caracteres.';
       nicknameStatus.className = 'nickname-status checking';
+      validateCurrentStep();
       return;
     }
 
     if (nickname.length > 30) {
       nicknameStatus.textContent = 'Máximo 30 caracteres.';
       nicknameStatus.className = 'nickname-status taken';
+      validateCurrentStep();
       return;
     }
 
@@ -155,14 +169,16 @@ document.addEventListener('DOMContentLoaded', () => {
     if (RESERVED_USERNAMES.includes(nickname) || RESERVED_USERNAMES.some(r => nickname.startsWith(r + '.'))) {
       nicknameStatus.textContent = 'Este nombre de usuario no está permitido.';
       nicknameStatus.className = 'nickname-status taken';
+      validateCurrentStep();
       return;
     }
 
-    // 3. Debounced Server Check
+    // 4. Debounced Server Check
     nicknameStatus.textContent = 'Comprobando disponibilidad...';
     nicknameStatus.className = 'nickname-status checking';
 
-    clearTimeout(checkNicknameTimeout);
+    validateCurrentStep(); // Disable next button while waiting
+
     checkNicknameTimeout = setTimeout(() => {
       performNicknameCheck(nickname, true);
     }, 600);

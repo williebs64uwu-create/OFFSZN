@@ -399,9 +399,14 @@
     .list-item-smart .list-item-waveform,
     .list-item-smart .list-item-index,
     .list-item-smart.skeleton-item .skeleton-list-idx,
-    .list-item-smart.skeleton-item .skeleton-list-wave,
-    .list-item-smart .list-play-btn {
+    .list-item-smart.skeleton-item .skeleton-list-wave {
         display: none !important;
+    }
+
+    .list-item-smart .list-play-btn {
+        display: flex !important;
+        /* Mantenemos el play pero simple */
+        order: 2;
     }
 
     .list-item-smart {
@@ -431,16 +436,34 @@
     }
 
     .list-play-btn {
-        background: transparent;
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        color: #fff;
-        box-shadow: none;
-        width: 32px;
-        height: 32px;
+        background: transparent !important;
+        border: 1px solid rgba(255, 255, 255, 0.4) !important;
+        /* Lighter border */
+        color: rgba(255, 255, 255, 0.7) !important;
+        /* Dimmed icon */
+        box-shadow: none !important;
+        width: 28px !important;
+        /* Smaller size */
+        height: 28px !important;
+        /* Smaller size */
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+        border-radius: 50% !important;
+        flex-shrink: 0 !important;
+        margin-right: 8px;
+    }
+
+    .list-play-btn i {
+        font-size: 0.75rem !important;
+        /* Smaller icon */
+        margin-left: 1px;
     }
 
     .list-play-btn:active {
-        background: rgba(255, 255, 255, 0.1);
+        background: rgba(255, 255, 255, 0.1) !important;
+        border-color: #fff !important;
+        color: #fff !important;
     }
 
     /* Ver Más Button */
@@ -468,17 +491,35 @@
 
 /* Shelf Row & Shelf Carousel */
 .explore-row {
-    margin-bottom: 40px; /* Breathing room between sections */
+    margin-bottom: 40px;
+    /* Breathing room between sections */
     padding: 0 1.5rem;
     /* Align with navbar-container */
     position: relative;
+    overflow: visible;
+}
+
+/* Extra padding for leaderboard to give room for arrows */
+.explore-row.leaderboard-section {
+    padding-left: 0rem;
+    /* Same as other rows - aligned left */
+    padding-right: 1.5rem;
+    /* Match other rows */
 }
 
 .row-header {
     display: flex;
-    justify-content: flex-start;
+    justify-content: space-between;
+    /* Change to space-between for Ver Todos */
+    align-items: flex-end;
+    /* Align title and link at bottom */
+    margin-bottom: 25px;
+}
+
+.row-actions {
+    display: flex;
     align-items: center;
-    margin-bottom: 30px;
+    gap: 15px;
 }
 
 .row-title {
@@ -490,33 +531,52 @@
 }
 
 .view-all {
-    color: #8B5CF6;
+    color: #888;
     font-size: 0.85rem;
-    font-weight: 700;
+    font-weight: 600;
     text-decoration: none;
-    transition: opacity 0.2s;
+    cursor: pointer;
+    transition: color 0.2s;
 }
 
 .view-all:hover {
-    opacity: 0.8;
+    color: #fff;
 }
 
 .shelf-wrapper {
     position: relative;
     display: flex;
     align-items: center;
-    max-width: 1280px; /* 5 cards (224px with padding) + 4 gaps (40px) = 1280px */
-    margin-left: 60px;
-    /* NO overflow here — buttons need to be visible outside */
+    max-width: 1400px;
+    margin: 0;
+    overflow: visible;
+    /* Allow arrows to render outside */
 }
 
 .shelf-inner {
     width: 100%;
-    overflow: hidden; /* Clips the 6th card */
+    overflow: visible; /* Prevent hover clipping */
     position: relative;
+    padding: 20px 0; /* Increased padding for hover room */
+    margin: -20px 0; /* Offset the extra padding */
 }
 
-/* Navigation Arrows - ALWAYS VISIBLE */
+/* Subtlest gradient on the right to indicate more content */
+.shelf-inner::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: -1px;
+    bottom: 0;
+    width: 60px; /* Narrower for sublte hint */
+    background: linear-gradient(to right, transparent, rgba(0,0,0,0.8));
+    pointer-events: none;
+    z-index: 2;
+    mask-image: linear-gradient(to right, transparent, black);
+    opacity: 0.4; /* More subtle */
+}
+
+/* Navigation Arrows - GLOBAL/LEGACY (Restoring for Producers etc) */
 .btn-nav {
     position: absolute;
     width: 48px;
@@ -533,7 +593,6 @@
     z-index: 30;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     opacity: 1;
-    /* ALWAYS VISIBLE */
     box-shadow: 0 8px 16px rgba(0, 0, 0, 0.6);
 }
 
@@ -541,26 +600,68 @@
     background: #8B5CF6;
     border-color: #8B5CF6;
     transform: scale(1.15);
-    box-shadow: 0 0 20px rgba(139, 92, 246, 0.4);
 }
 
 .btn-nav.prev {
-    left: -60px;
+    left: -16px;
+    /* Just outside the first card, aligned with row edge */
 }
 
 .btn-nav.next {
     right: -60px;
+    /* Outside the container at the right edge */
+}
+
+.btn-nav.disabled, .btn-nav-mini.disabled {
+    opacity: 0.3;
+    pointer-events: auto; /* Enable hover so cursor:not-allowed shows */
+    cursor: not-allowed;
+    filter: grayscale(1);
+}
+
+/* Mini Navigation Arrows in row header (NEW) */
+.btn-nav-mini {
+    background: #111;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    color: #fff;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    transition: all 0.2s;
+}
+
+.btn-nav-mini:hover {
+    background: #222;
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.row-nav-arrows {
+    display: flex;
+    gap: 8px;
+}
+
+@media (max-width: 768px) {
+    .mobile-hide {
+        display: none !important;
+    }
 }
 
 .shelf-container {
     display: flex;
     justify-content: flex-start;
     overflow-x: auto;
-    gap: 40px; /* Cleaner spacing */
-    padding: 0; /* Handled by shelf-inner */
+    gap: 32px;
+    /* Increased for more breathing room */
+    padding: 0;
+    /* Handled by shelf-inner */
     scroll-behavior: smooth;
-    scroll-snap-type: x mandatory;
     scrollbar-width: none;
+    scroll-snap-type: x mandatory; /* Force alignment on scroll/arrows */
     width: 100%;
 }
 
@@ -570,29 +671,41 @@
 
 /* Universal Product Card */
 .product-card-smart {
-    flex: 0 0 224px; /* 200px content + 24px padding */
-    width: 224px;
+    flex: 0 0 190px; /* Adjusted to fit exactly 6 with 32px gaps */
+    width: 190px;
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: 12px;
     cursor: pointer;
-    transition: background 0.3s ease;
-    scroll-snap-align: start;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    scroll-snap-align: start; /* Align card to start of viewport */
+    scroll-snap-stop: always;
     position: relative;
     z-index: 1;
-    padding: 12px;
-    border-radius: 16px;
+    padding: 12px; /* Spotify-style card padding */
+    border-radius: 12px;
     background: transparent;
 }
 
+@media (max-width: 768px) {
+    .product-card-smart {
+        flex: 0 0 150px;
+        /* Even smaller for mobile horizontal scroll */
+        width: 150px;
+    }
+}
+
 .product-card-smart:hover {
-    background: #1a1a1a;
+    background: #181818; /* Spotify dark grey hover */
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
 }
 
 .card-cover-wrapper {
-    width: 100%; /* Fills the card minus padding = 200px */
-    aspect-ratio: 1; /* Square */
+    width: 100%;
+    /* Fills the card minus padding = 200px */
+    aspect-ratio: 1;
+    /* Square */
     position: relative;
     border-radius: 12px;
     overflow: hidden;
@@ -643,7 +756,7 @@
 .quick-play-btn:hover {
     background: #fff;
     color: #000;
-    transform: scale(1.1);
+    transform: scale(1.06);
 }
 
 .card-like-btn {
@@ -693,21 +806,22 @@
 
 .card-title {
     color: #fff;
-    font-size: 1rem;
+    font-size: 0.95rem; /* Slightly smaller for 6-card grid */
     font-weight: 700;
-    line-height: 1.3;
+    line-height: 1.4;
     display: -webkit-box;
-    -webkit-line-clamp: 2;
-    line-clamp: 2;
+    -webkit-line-clamp: 1; /* Limit to 1 line for cleaner look in dense grid */
+    line-clamp: 1;
     -webkit-box-orient: vertical;
     overflow: hidden;
     text-overflow: ellipsis;
+    margin-top: 4px;
 }
 
 .card-producer {
-    color: #777;
-    font-size: 0.85rem;
-    font-weight: 600;
+    color: #b3b3b3; /* Spotify-style secondary text */
+    font-size: 0.8rem;
+    font-weight: 500;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -726,14 +840,16 @@
 /* --- FORMAT 2: Preset Highlight (Different Format) --- */
 /* This format uses a wider rectangle with glassmorphic overlay for a more "software/standalone" kit feel */
 .preset-card-premium {
-    flex: 0 0 320px;
-    width: 320px;
+    flex: 0 0 684px; /* Fits exactly 2 cards in 1400px with 32px gap */
+    width: 684px;
     height: 180px;
     position: relative;
     border-radius: 20px;
     overflow: hidden;
     cursor: pointer;
     transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+    scroll-snap-align: start; /* Crucial for 2-card alignment */
+    scroll-snap-stop: always;
     border: 1px solid rgba(255, 255, 255, 0.05);
     background: #111;
 }
@@ -1368,8 +1484,17 @@
 }
 
 .leaderboard-section .shelf-wrapper {
-    max-width: 1230px; /* Specific for producer cards (180px) */
-    margin-left: 56px;
+    max-width: 100%; /* Full width so right arrow goes to far right edge */
+    margin-left: 0;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+/* Leaderboard arrows as flex items, NOT absolute */
+.leaderboard-section .btn-nav {
+    position: static; /* Override absolute */
+    flex-shrink: 0;
 }
 
 .leaderboard-section .shelf-container {

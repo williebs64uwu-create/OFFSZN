@@ -445,7 +445,7 @@ window.StickyPlayer = (function () {
         if (audioUrl.includes('pub-') && audioUrl.includes('.r2.dev')) {
             finalAudioUrl = audioUrl; // Synchronous, keeping gesture alive
         } else {
-            finalAudioUrl = await window.getAuthorizedUrl(audioUrl, trackData.storage_version || trackData.r2_version || 'v1', trackData.id);
+            finalAudioUrl = await window.getAuthorizedUrl(audioUrl, trackData.storage_version || trackData.r2_version || 'v2', trackData.id);
         }
 
         // --- RACE CONDITION CHECK ---
@@ -588,29 +588,6 @@ window.StickyPlayer = (function () {
             if (loadingTrackId !== thisTrackId) return;
             console.warn(`[StickyPlayer] Audio load failed for ${trackData.name}:`, err);
             
-            // If it was an R2 URL, try falling back to Supabase once
-            if (finalAudioUrl.includes('r2.cloudflarestorage.com') && !trackData._audioFallbackTried) {
-                trackData._audioFallbackTried = true;
-                try {
-                    const urlObj = new URL(finalAudioUrl);
-                    const pathParts = urlObj.pathname.split('/');
-                    if (pathParts.length > 2) {
-                        const key = pathParts.slice(2).join('/');
-                        const fallbackUrl = window.AuthUtils?.getFormattedSupabaseUrl ? 
-                                          window.AuthUtils.getFormattedSupabaseUrl(key) : null;
-                        
-                        if (fallbackUrl && fallbackUrl !== finalAudioUrl) {
-                            console.log(`[StickyPlayer] Attempting Supabase fallback for audio: ${fallbackUrl}`);
-                            finalAudioUrl = fallbackUrl;
-                            ws.load(fallbackUrl);
-                            return; // Wait for next ready/error
-                        }
-                    }
-                } catch (e) {
-                    console.error("[StickyPlayer] Error constructing fallback URL", e);
-                }
-            }
-
             // If we're here, all attempts failed
             if (window.showToast) window.showToast('Error al cargar el audio. El archivo podría no estar disponible.', 'error');
             resetAllListButtons();
