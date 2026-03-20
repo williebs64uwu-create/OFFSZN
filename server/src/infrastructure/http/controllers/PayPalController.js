@@ -2,7 +2,7 @@ import paypal from '@paypal/checkout-server-sdk';
 import paypalClient from '../paypalClient.js';
 import { supabase } from '../../database/connection.js';
 import { PLATFORM_PAYPAL_EMAIL, PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET, PAYPAL_ENVIRONMENT } from '../../../shared/config/config.js';
-import { sendReceiptEmail } from '../../../shared/utils/email.js';
+import { sendOffsznEmail } from '../../../shared/utils/mailer.js';
 import { v4 as uuidv4 } from 'uuid';
 
 // --- PayPal OAuth Config ---
@@ -902,25 +902,43 @@ export const capturePayPalOrder = async (req, res) => {
 
                     for (const item of cartItems) {
                         // A. Notify Client (Receipt)
-                        await sendReceiptEmail({
-                            to_email: userEmail,
-                            downloader_name: userNickname,
-                            product_name: item.product.name,
-                            activity_type: 'compra confirmada'
+                        const buyerHtml = `
+                            <div style="font-family: 'Segoe UI', sans-serif; padding: 30px; background: #0a0a0a; border-radius: 12px; color: #fff; max-width: 600px;">
+                                <h2 style="color: #10B981; margin-bottom:20px;">¡Gracias por tu compra!</h2>
+                                <p style="color:#ccc; line-height:1.6;">Hola <b>${userNickname}</b>, procesamos correctamente el pago por <b style="color:#fff;">${item.product.name}</b>.</p>
+                                <p style="color:#888; line-height:1.5;">Puedes encontrar y descargar todos tus archivos desde la sección "Mis Transacciones" en tu cuenta.</p>
+                                <a href="https://offszn.lat/cuenta/transacciones" style="display:inline-block; background:#10B981; color:#fff; padding:14px 30px; border-radius:10px; text-decoration:none; font-weight:700; margin-top:15px;">VER MIS DESCARGAS</a>
+                                <hr style="border:0; border-top:1px solid #222; margin:25px 0;">
+                                <p style="font-size:0.75rem; color:#555;">Este es un recibo automático de OFFSZN.</p>
+                            </div>
+                        `;
+                        await sendOffsznEmail({
+                            to: userEmail,
+                            subject: `✅ Confirmación de Compra - ${item.product.name}`,
+                            html: buyerHtml,
+                            fromName: 'OFFSZN'
                         });
 
                         // B. Notify Producer (Sale Notification)
                         const { data: prodData } = await supabase.from('users').select('email, nickname').eq('id', item.product.producer_id).single();
                         if (prodData?.email) {
-                            await sendReceiptEmail({
-                                service_id: 'service_w50l62y',
-                                template_id: 'template_bgp3zb5', // Producer template
-                                to_email: prodData.email,
-                                to_name: prodData.nickname || 'Productor',
-                                product_name: item.product.name,
-                                downloader_name: userNickname,
-                                activity_type: 'Venta Confirmada',
-                                amount: `$${item.variant_price}`
+                            const prodHtml = `
+                                <div style="font-family: 'Segoe UI', sans-serif; padding: 30px; background: #0a0a0a; border-radius: 12px; color: #fff; max-width: 600px;">
+                                    <h2 style="color: #8B5CF6; margin-bottom:20px;">¡Nueva Venta Realizada! 💰</h2>
+                                    <p style="color:#ccc; line-height:1.6;">Hola <b>${prodData.nickname || 'Productor'}</b>, el usuario <b>${userNickname}</b> acaba de comprar tu producto <b style="color:#fff;">${item.product.name}</b>.</p>
+                                    <div style="background:#111; border:1px solid #333; border-radius:10px; padding:20px; margin:20px 0;">
+                                        <p style="color:#888; margin:0;"><b style="color:#fff;">Monto de la Variante:</b> $${item.variant_price} USD</p>
+                                    </div>
+                                    <a href="https://offszn.lat/cuenta/ventas" style="display:inline-block; background:#8B5CF6; color:#fff; padding:14px 30px; border-radius:10px; text-decoration:none; font-weight:700; margin-top:15px;">VER MIS VENTAS</a>
+                                    <hr style="border:0; border-top:1px solid #222; margin:25px 0;">
+                                    <p style="font-size:0.75rem; color:#555;">¡Sigue así! OFFSZN.</p>
+                                </div>
+                            `;
+                            await sendOffsznEmail({
+                                to: prodData.email,
+                                subject: `💸 ¡Venta Confirmada! Alguien compró ${item.product.name}`,
+                                html: prodHtml,
+                                fromName: 'OFFSZN Notificaciones'
                             });
                         }
                     }

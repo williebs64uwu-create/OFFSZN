@@ -121,7 +121,7 @@ function resetWizard() {
 
     // Reset upload UI
     if (fileNameSpan) {
-        fileNameSpan.innerHTML = 'Haz click o arrastra tu idea<br><small style="color: #444;">MP3, 50 segundos máximo (máx. 30MB)</small>';
+        fileNameSpan.innerHTML = 'Haz click o arrastra tu idea<br><span style="font-size: 0.85rem; color: #666; font-weight: 500;">MP3, 50 segundos máximo (máx. 10MB)</span>';
         fileNameSpan.style.color = '#666';
     }
     const maquetaError = document.getElementById('maquetaGeneralError');
@@ -475,9 +475,9 @@ function setupModalListeners() {
             return;
         }
 
-        const MAX_SIZE = 30 * 1024 * 1024; // 30MB 
+        const MAX_SIZE = 10 * 1024 * 1024; // 10MB 
         if (file.size > MAX_SIZE) {
-            showMaquetaUIError('El archivo es demasiado grande (máximo 30MB).');
+            showMaquetaUIError('El archivo es demasiado grande (máximo 10MB).');
             if (fileInput) fileInput.value = '';
             return;
         }
@@ -538,7 +538,8 @@ function setupModalListeners() {
                     fileName: file.name,
                     fileType: file.type || 'audio/mpeg',
                     folder: 'temp-previews',
-                    fileSize: file.size
+                    fileSize: file.size,
+                    version: 'v2'
                 })
             });
 
@@ -782,6 +783,17 @@ function renderProducers(producers) {
         });
     }
 
+    // NEW: Avoid duplicates on subsequent pages
+    // If we are on page > 1, filter out any Top 10 producers 
+    // because they were already shown/injected on Page 1.
+    if ((currentFilters.sort === 'trending' || currentFilters.sort === 'popular') &&
+        currentFilters.page > 1 &&
+        !currentFilters.search &&
+        !currentFilters.role) {
+        
+        filteredProducers = filteredProducers.filter(p => !topProducersList.some(top => top.id === p.id));
+    }
+
     // Recientes Rule: Chronological order (Handled by backend optimized query)
     // We removed the .filter(p => p.avatar_url || p.profile_cover) to allow all newest users to show up.
 
@@ -884,6 +896,18 @@ function createProducerCard(producer, rank) {
     // Fallbacks to standard formatting
     const displayRole = rawRole.toUpperCase();
 
+    // Check if viewing own card
+    const currentUserId = localStorage.getItem('userId');
+    const isOwnCard = currentUserId === producer.id;
+
+    const solicitarHtml = isOwnCard
+        ? `<button class="btn-card-action btn-solicitar" disabled style="opacity:0.3; cursor:not-allowed;">solicitar</button>`
+        : `<button class="btn-card-action btn-solicitar">solicitar</button>`;
+
+    const enviarHtml = isOwnCard
+        ? `<button class="btn-card-action btn-enviar" disabled style="opacity:0.3; cursor:not-allowed;">enviar</button>`
+        : `<button class="btn-card-action btn-enviar" onclick="window.location.href='/@${nickname}'">enviar</button>`;
+
     col.innerHTML = `
         <div class="card-avatar-container">
             <div class="card-avatar-wrapper" onclick="window.location.href='/@${nickname}'">
@@ -898,13 +922,14 @@ function createProducerCard(producer, rank) {
             </div>
         </div>
         <div class="card-actions-grid">
-            <button class="btn-card-action btn-solicitar">solicitar</button>
-            <button class="btn-card-action btn-enviar" onclick="window.location.href='/@${nickname}'">enviar</button>
+            ${solicitarHtml}
+            ${enviarHtml}
         </div>
     `;
 
     const solicitarBtn = col.querySelector('.btn-solicitar');
-    solicitarBtn.addEventListener('click', () => {
+    if (solicitarBtn && !isOwnCard) {
+        solicitarBtn.addEventListener('click', () => {
         const token = AuthUtils.getAccessToken();
         if (!token) {
             window.location.href = '/pages/login.html?redirect=/comunidad/productores';
@@ -924,6 +949,7 @@ function createProducerCard(producer, rank) {
             modal.style.display = 'flex';
         }
     });
+    }
 
     return col;
 }

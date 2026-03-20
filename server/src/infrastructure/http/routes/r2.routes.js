@@ -23,10 +23,15 @@ router.post('/r2/upload-url', authenticateTokenMiddleware, async (req, res) => {
         }
 
         // 🔥 Server-side file size validation (Granular)
-        if (fileSize) {
+        if (fileSize || folder === 'temp-previews') {
             let maxAllowed = 50 * 1024 * 1024; // Default 50MB
 
-            if (fileType.startsWith('image/')) {
+            if (folder === 'temp-previews') {
+                maxAllowed = 10 * 1024 * 1024; // 10MB for previews
+                if (fileType !== 'audio/mpeg' && !(fileName && fileName.toLowerCase().endsWith('.mp3'))) {
+                    return res.status(400).json({ error: 'Solo se permiten archivos MP3 para los previews.' });
+                }
+            } else if (fileType.startsWith('image/')) {
                 maxAllowed = 20 * 1024 * 1024; // 20MB
             } else if (fileType === 'audio/wav' || fileName.toLowerCase().endsWith('.wav')) {
                 maxAllowed = 60 * 1024 * 1024; // 60MB for WAV
@@ -37,7 +42,7 @@ router.post('/r2/upload-url', authenticateTokenMiddleware, async (req, res) => {
 
             const maxMB = Math.round(maxAllowed / (1024 * 1024));
 
-            if (fileSize > maxAllowed) {
+            if (fileSize && fileSize > maxAllowed) {
                 return res.status(413).json({
                     error: `El archivo excede el límite de ${maxMB}MB`
                 });

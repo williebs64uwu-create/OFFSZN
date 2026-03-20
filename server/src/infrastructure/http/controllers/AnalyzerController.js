@@ -2,7 +2,7 @@ import paypal from '@paypal/checkout-server-sdk';
 import paypalClient from '../paypalClient.js';
 import { supabase } from '../../database/connection.js';
 import { v4 as uuidv4 } from 'uuid';
-import { sendReceiptEmail } from '../../../shared/utils/email.js';
+import { sendOffsznEmail } from '../../../shared/utils/mailer.js';
 
 /**
  * Creates a PayPal order for the X Flow - Analyzer with a hardcoded $10/$5 split.
@@ -95,21 +95,41 @@ export const captureAnalyzerOrder = async (req, res) => {
             (async () => {
                 try {
                     // Notify Buyer
-                    await sendReceiptEmail({
-                        to_email: payerEmail,
-                        downloader_name: (response.result.payer?.name?.given_name) || 'Comprador',
-                        product_name: 'X Flow - Analyzer',
-                        activity_type: 'compra confirmada'
+                    const userNickname = (response.result.payer?.name?.given_name) || 'Comprador';
+                    const buyerHtml = `
+                        <div style="font-family: 'Segoe UI', sans-serif; padding: 30px; background: #0a0a0a; border-radius: 12px; color: #fff; max-width: 600px;">
+                            <h2 style="color: #10B981; margin-bottom:20px;">¡Gracias por tu compra!</h2>
+                            <p style="color:#ccc; line-height:1.6;">Hola <b>${userNickname}</b>, procesamos correctamente el pago por <b style="color:#fff;">X Flow - Analyzer</b>.</p>
+                            <p style="color:#888; line-height:1.5;">Puedes encontrar y descargar todos tus archivos desde la sección "Mis Transacciones" en tu cuenta.</p>
+                            <a href="https://offszn.lat/cuenta/transacciones" style="display:inline-block; background:#10B981; color:#fff; padding:14px 30px; border-radius:10px; text-decoration:none; font-weight:700; margin-top:15px;">VER MIS DESCARGAS</a>
+                            <hr style="border:0; border-top:1px solid #222; margin:25px 0;">
+                            <p style="font-size:0.75rem; color:#555;">Este es un recibo automático de OFFSZN.</p>
+                        </div>
+                    `;
+                    await sendOffsznEmail({
+                        to: payerEmail,
+                        subject: `✅ Confirmación de Compra - X Flow Analyzer`,
+                        html: buyerHtml,
+                        fromName: 'OFFSZN'
                     });
 
                     // Notify Crocker
-                    await sendReceiptEmail({
-                        to_email: 'pagos.crockertheproducer@gmail.com',
-                        to_name: 'Crocker',
-                        product_name: 'X Flow - Analyzer',
-                        downloader_name: (response.result.payer?.name?.given_name) || 'Comprador',
-                        activity_type: 'Venta Confirmada',
-                        amount: '$10.00'
+                    const crockerHtml = `
+                        <div style="font-family: 'Segoe UI', sans-serif; padding: 30px; background: #0a0a0a; border-radius: 12px; color: #fff; max-width: 600px;">
+                            <h2 style="color: #8B5CF6; margin-bottom:20px;">¡Nueva Venta Realizada! 💰</h2>
+                            <p style="color:#ccc; line-height:1.6;">Hola <b>Crocker</b>, el usuario <b>${userNickname}</b> ha comprado tu producto <b style="color:#fff;">X Flow - Analyzer</b>.</p>
+                            <div style="background:#111; border:1px solid #333; border-radius:10px; padding:20px; margin:20px 0;">
+                                <p style="color:#888; margin:0;"><b style="color:#fff;">Tu parte:</b> $10.00 USD</p>
+                            </div>
+                            <hr style="border:0; border-top:1px solid #222; margin:25px 0;">
+                            <p style="font-size:0.75rem; color:#555;">¡Sigue así! OFFSZN.</p>
+                        </div>
+                    `;
+                    await sendOffsznEmail({
+                        to: 'pagos.crockertheproducer@gmail.com',
+                        subject: `💸 ¡Venta Confirmada! Alguien compró X Flow - Analyzer`,
+                        html: crockerHtml,
+                        fromName: 'OFFSZN Notificaciones'
                     });
 
                 } catch (emailErr) {

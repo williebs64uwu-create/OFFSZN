@@ -98,6 +98,16 @@ async function initFeed() {
         window.allRequests = requests || [];
         renderRequests(requests);
 
+        // Auto-open modal if reqId is linked
+        const urlParams = new URLSearchParams(window.location.search);
+        const autoReqId = urlParams.get('reqId');
+        if (autoReqId) {
+            const reqMatch = window.allRequests.find(r => String(r.id) === String(autoReqId));
+            if (reqMatch) {
+                // Ensure auth/utils exists immediately
+                setTimeout(() => showRequestDetails(reqMatch), 300);
+            }
+        }
     } catch (error) {
         console.error('Feed error:', error);
         requestsContainer.innerHTML = `

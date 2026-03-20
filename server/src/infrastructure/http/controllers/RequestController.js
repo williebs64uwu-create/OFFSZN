@@ -1,5 +1,5 @@
 import { supabase } from '../../database/connection.js';
-import { sendReceiptEmail } from '../../../shared/utils/email.js';
+import { sendOffsznEmail } from '../../../shared/utils/mailer.js';
 import { v4 as uuidv4 } from 'uuid';
 import { R2_ENDPOINT } from '../../../shared/config/config.js';
 
@@ -159,39 +159,25 @@ export const createRequest = async (req, res) => {
 
         // NOTIFICACIÓN EMAIL
         if (producerEmailUser && producerEmailUser.email) {
-            try {
-                // Si 'new_custom_request' no existe en el dashboard, fallará con 400.
-                // Podríamos usar una variable de entorno para mapear estos IDs.
-                await sendReceiptEmail({
-                    to_email: producerEmailUser.email,
-                    // Intentamos usar un ID específico, o el genérico configurado
-                    template_id: process.env.EMAILJS_TEMPLATE_NEW_REQUEST || 'new_custom_request',
-                    producerName: producerProfile?.display_name || producerProfile?.username || 'Productor',
-                    buyerName: buyerName,
-                    description: description,
-                    budget: budget ? `$${budget}` : 'A convenir',
-                    ctaLink: `https://offszn.lat/cuenta/solicitudes`
-                });
-            } catch (emailErr) {
-                console.warn("Could not send email for custom request:", emailErr.message);
-
-                // Segundo intento con el template ID principal si el anterior falló por ID no encontrado
-                if (emailErr.message.includes('400') || emailErr.message.includes('not found')) {
-                    try {
-                        await sendReceiptEmail({
-                            to_email: producerEmailUser.email,
-                            // Aquí NO pasamos template_id para que use el EMAILJS_TEMPLATE_ID por defecto
-                            producerName: producerProfile?.display_name || producerProfile?.username || 'Productor',
-                            buyerName: buyerName,
-                            description: description,
-                            budget: budget ? `$${budget}` : 'A convenir',
-                            ctaLink: `https://offszn.lat/cuenta/solicitudes`
-                        });
-                    } catch (retryErr) {
-                        console.error("Retry email failed:", retryErr.message);
-                    }
-                }
-            }
+            const html = `
+                <div style="font-family: 'Segoe UI', sans-serif; padding: 30px; background: #0a0a0a; border-radius: 12px; color: #fff; max-width: 600px;">
+                    <h2 style="color: #8B5CF6; margin-bottom:20px;">¡Nueva Solicitud de Beat!</h2>
+                    <p style="color:#ccc; line-height:1.6;">Hola <b>${producerProfile?.display_name || producerProfile?.username || 'Productor'}</b>, el usuario <b>${buyerName}</b> te ha enviado una solicitud de Custom Beat.</p>
+                    <div style="background:#111; border:1px solid #222; border-radius:10px; padding:20px; margin:20px 0;">
+                        <p style="color:#888; margin:0 0 8px;"><b style="color:#fff;">Descripción:</b> ${description}</p>
+                        <p style="color:#888; margin:0;"><b style="color:#fff;">Presupuesto:</b> ${budget ? `$${budget}` : 'A convenir'}</p>
+                    </div>
+                    <a href="https://offszn.lat/comunidad/feed.html?reqId=${newRequest.id}" style="display:inline-block; background:#8B5CF6; color:#fff; padding:14px 30px; border-radius:10px; text-decoration:none; font-weight:700; margin-top:15px;">VER SOLICITUD</a>
+                    <hr style="border:0; border-top:1px solid #222; margin:25px 0;">
+                    <p style="font-size:0.75rem; color:#555;">Este es un mensaje automático de OFFSZN.</p>
+                </div>
+            `;
+            await sendOffsznEmail({
+                to: producerEmailUser.email,
+                subject: `🔥 Nueva Solicitud de Custom Beat de ${buyerName}`,
+                html,
+                fromName: 'OFFSZN Notifications'
+            });
         }
 
         return res.status(201).json({ message: 'Solicitud enviada correctamente.', request: newRequest });
@@ -358,16 +344,23 @@ export const respondRequest = async (req, res) => {
         });
 
         if (buyerEmailUser && buyerEmailUser.email) {
-            try {
-                await sendReceiptEmail({
-                    to_email: buyerEmailUser.email,
-                    template_id: 'request_responded', // Replace with actual template if needed
-                    producerName: producerProfile?.display_name || producerProfile?.username || 'El productor',
-                    ctaLink: `https://offszn.lat/cuenta/solicitudes/${requestId}`
-                });
-            } catch (emailErr) {
-                console.warn("Could not notify buyer via email:", emailErr.message);
-            }
+            const prodName = producerProfile?.display_name || producerProfile?.username || 'El productor';
+            const html = `
+                <div style="font-family: 'Segoe UI', sans-serif; padding: 30px; background: #0a0a0a; border-radius: 12px; color: #fff; max-width: 600px;">
+                    <h2 style="color: #8B5CF6; margin-bottom:20px;">¡Respuesta a tu Solicitud!</h2>
+                    <p style="color:#ccc; line-height:1.6;">El productor <b>${prodName}</b> ha respondido a tu solicitud aportando una maqueta de muestra.</p>
+                    <p style="color:#888; line-height:1.5;">Tienes 24 horas para revisarla y decidir si quieres comprar la pista.</p>
+                    <a href="https://offszn.lat/cuenta/solicitudes.html" style="display:inline-block; background:#8B5CF6; color:#fff; padding:14px 30px; border-radius:10px; text-decoration:none; font-weight:700; margin-top:15px;">ESCUCHAR PREVIEW</a>
+                    <hr style="border:0; border-top:1px solid #222; margin:25px 0;">
+                    <p style="font-size:0.75rem; color:#555;">Este es un mensaje automático de OFFSZN.</p>
+                </div>
+            `;
+            await sendOffsznEmail({
+                to: buyerEmailUser.email,
+                subject: `✨ ${prodName} ha respondido a tu Solicitud`,
+                html,
+                fromName: 'OFFSZN'
+            });
         }
 
         res.status(200).json({ message: 'Respuesta enviada. Expira en 24 horas.', request: updatedRequest });

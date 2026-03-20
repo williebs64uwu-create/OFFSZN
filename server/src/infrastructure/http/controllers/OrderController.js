@@ -388,7 +388,7 @@ export const createFreeOrder = async (req, res) => {
         // 1. Verificar que el producto sea gratis
         const { data: product, error: fetchError } = await supabase
             .from('products')
-            .select('id, name, is_free, price_basic, downloads_count')
+            .select('id, name, is_free, price_basic, downloads_count, producer_id')
             .eq('id', productId)
             .single();
 
@@ -428,6 +428,56 @@ export const createFreeOrder = async (req, res) => {
 
         // 4. Incrementar contador de descargas
         await supabase.rpc('increment_product_downloads', { row_id: product.id });
+
+        // 5. Send Email for Free Download (Async)
+        try {
+            const { data: userData } = await supabase.from('users').select('email, nickname').eq('id', userId).single();
+            if (userData?.email) {
+                const userNickname = userData.nickname || 'Usuario';
+                const freeHtml = `
+                    <div style="font-family: 'Segoe UI', sans-serif; padding: 30px; background: #0a0a0a; border-radius: 12px; color: #fff; max-width: 600px;">
+                        <h2 style="color: #3B82F6; margin-bottom:20px;">¡Descarga Gratuita Confirmada!</h2>
+                        <p style="color:#ccc; line-height:1.6;">Hola <b>${userNickname}</b>, has añadido exitosamente <b style="color:#fff;">${product.name}</b> a tu cuenta de OFFSZN.</p>
+                        <p style="color:#888; line-height:1.5;">Puedes encontrar y descargar todos tus archivos desde la sección "Mis Transacciones" en tu perfil.</p>
+                        <a href="https://offszn.lat/cuenta/transacciones" style="display:inline-block; background:#3B82F6; color:#fff; padding:14px 30px; border-radius:10px; text-decoration:none; font-weight:700; margin-top:15px;">Ir a Mis Descargas</a>
+                        <hr style="border:0; border-top:1px solid #222; margin:25px 0;">
+                        <p style="font-size:0.75rem; color:#555;">Este es un recibo automático de OFFSZN.</p>
+                    </div>
+                `;
+                const { sendOffsznEmail } = await import('../../../shared/utils/mailer.js');
+                await sendOffsznEmail({
+                    to: userData.email,
+                    subject: `🎁 Descarga Lista - ${product.name}`,
+                    html: freeHtml,
+                    fromName: 'OFFSZN'
+                });
+
+                // Notify Producer about the free download
+                if (product.producer_id) {
+                    const { data: prodData } = await supabase.from('users').select('email, nickname').eq('id', product.producer_id).single();
+                    if (prodData?.email) {
+                        const prodNickname = prodData.nickname || 'Productor';
+                        const prodHtml = `
+                            <div style="font-family: 'Segoe UI', sans-serif; padding: 30px; background: #0a0a0a; border-radius: 12px; color: #fff; max-width: 600px;">
+                                <h2 style="color: #3B82F6; margin-bottom:20px;">¡Nueva Descarga de tu Producto! 📥</h2>
+                                <p style="color:#ccc; line-height:1.6;">Hola <b>${prodNickname}</b>, te informamos que el usuario <b>${userNickname}</b> (${userData.email}) ha realizado una descarga gratuita de tu producto <b style="color:#fff;">${product.name}</b>.</p>
+                                <p style="color:#888; line-height:1.5;">Esta es una notificación automática para mantenerte al tanto de la actividad y alcance de tu perfil en OFFSZN.</p>
+                                <hr style="border:0; border-top:1px solid #222; margin:25px 0;">
+                                <p style="font-size:0.75rem; color:#555;">Sigue así. Equipo OFFSZN</p>
+                            </div>
+                        `;
+                        await sendOffsznEmail({
+                            to: prodData.email,
+                            subject: `📥 Nueva descarga gratuita de ${product.name}`,
+                            html: prodHtml,
+                            fromName: 'OFFSZN Activity'
+                        });
+                    }
+                }
+            }
+        } catch (emailErr) {
+            console.error("[Email] Error sending free download receipt:", emailErr);
+        }
 
         res.status(201).json({
             message: 'Descarga registrada en tu dashboard correctamente',
