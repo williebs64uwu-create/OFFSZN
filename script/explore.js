@@ -249,7 +249,7 @@ function renderExploreFeed() {
         container.appendChild(createShelfRow('Presets de voces', presets, 'social-post'));
     }
 
-    // Modern Entrance Animation
+    /* GSAP Entrance Animation Removed as per user request (instante loading preferred)
     if (window.gsap) {
         gsap.from(container.querySelectorAll('.explore-row, .explore-list-outer'), {
             opacity: 0,
@@ -259,6 +259,7 @@ function renderExploreFeed() {
             delay: 0.2
         });
     }
+    */
 }
 
 /**
@@ -518,55 +519,99 @@ let heroParticles = null;
 function startHeroSlider() {
     if (!heroProducts || heroProducts.length === 0) return;
 
-    renderHeroSlide(heroProducts[currentHeroIndex]);
-    initHeroParticles();
+    const heroContainer = document.getElementById('explore-hero-container');
+    if (!heroContainer) return;
+
+    // Render all slides into a track
+    heroContainer.innerHTML = `
+        <div class="hero-track" id="hero-track">
+            ${heroProducts.map((p, i) => renderHeroSlideHtml(p, i)).join('')}
+        </div>
+        <div class="hero-indicators">
+            ${heroProducts.map((_, i) => `<div class="hero-dot ${i === currentHeroIndex ? 'active' : ''}" onclick="window.navToHero(${i})"></div>`).join('')}
+        </div>
+    `;
+
+    // Sign all images in the track
+    if (window.signR2Images) window.signR2Images(heroContainer);
+
+    // Initialise Particles for all desktop slides
+    const canvases = heroContainer.querySelectorAll('.hero-particles-canvas');
+    canvases.forEach(canvas => initHeroParticles(canvas));
+
+    const track = document.getElementById('hero-track');
+    if (!track) return;
+
+    // Final entry animation for the initial slide
+    const initialSlide = track.children[currentHeroIndex];
+    if (initialSlide) {
+        const content = initialSlide.querySelector('.hero-content');
+        const image = initialSlide.querySelector('.hero-image-container');
+        gsap.fromTo([content, image], { opacity: 0 }, { opacity: 1, duration: 0.5, ease: "power2.out" });
+    }
 
     if (heroTimer) clearInterval(heroTimer);
     heroTimer = setInterval(() => moveToNextHero(), EXPLORE_CONFIG.HERO_ROTATE_MS);
 
     // Initialise Touch Swipe Logic
-    const heroSection = document.getElementById('explore-hero-container');
-    if (heroSection && !heroSection.dataset.swipeBound) {
-        let touchStartX = 0;
-        let currentX = 0;
-        let isDragging = false;
+    let touchStartX = 0;
+    let currentTranslate = 0;
+    let prevTranslate = 0;
+    let isDragging = false;
+    let startTimestamp = 0;
 
-        heroSection.addEventListener('touchstart', e => {
-            touchStartX = e.changedTouches[0].screenX;
-            isDragging = true;
-            heroSection.style.transition = 'none'; // Disable transition while dragging
-        }, { passive: true });
+    const getTranslateX = () => {
+        return -currentHeroIndex * heroContainer.offsetWidth;
+    };
 
-        heroSection.addEventListener('touchmove', e => {
-            if (!isDragging) return;
-            currentX = e.changedTouches[0].screenX;
-            const diffX = currentX - touchStartX;
+    const setSliderPosition = (x) => {
+        track.style.transform = `translateX(${x}px)`;
+    };
 
-            // Only allow horizontal drag, 1:1 ratio for native feel
-            if (Math.abs(diffX) > 10) {
-                heroSection.style.transform = `translateX(${diffX}px)`;
-            }
-        }, { passive: true });
+    track.addEventListener('touchstart', e => {
+        touchStartX = e.touches[0].clientX;
+        isDragging = true;
+        startTimestamp = Date.now();
+        prevTranslate = getTranslateX();
+        track.style.transition = 'none';
+        if (heroTimer) clearInterval(heroTimer);
+    }, { passive: true });
 
-        heroSection.addEventListener('touchend', e => {
-            isDragging = false;
-            heroSection.style.transition = 'transform 0.3s ease-out'; // Re-enable smooth snap back
-            const touchEndX = e.changedTouches[0].screenX;
-            const diffX = touchEndX - touchStartX;
+    track.addEventListener('touchmove', e => {
+        if (!isDragging) return;
+        const currentX = e.touches[0].clientX;
+        const diffX = currentX - touchStartX;
+        currentTranslate = prevTranslate + diffX;
+        setSliderPosition(currentTranslate);
+    }, { passive: true });
 
-            if (diffX < -50) {
-                // Swipe Left -> Next
-                window.navToHero((currentHeroIndex + 1) % heroProducts.length);
-            } else if (diffX > 50) {
-                // Swipe Right -> Prev
-                window.navToHero((currentHeroIndex - 1 + heroProducts.length) % heroProducts.length);
-            }
-            // Snap back to center
-            heroSection.style.transform = `translateX(0px)`;
+    track.addEventListener('touchend', e => {
+        if (!isDragging) return;
+        isDragging = false;
+        
+        const touchEndX = e.changedTouches[0].clientX;
+        const diffX = touchEndX - touchStartX;
+        const movedBy = diffX;
+        const duration = Date.now() - startTimestamp;
 
-        }, { passive: true });
-        heroSection.dataset.swipeBound = 'true';
-    }
+        // Velocity or distance threshold
+        const velocity = Math.abs(movedBy) / duration;
+        const threshold = heroContainer.offsetWidth / 3;
+
+        if (movedBy < -threshold || (movedBy < -50 && velocity > 0.5)) {
+            // Next
+            currentHeroIndex = Math.min(currentHeroIndex + 1, heroProducts.length - 1);
+        } else if (movedBy > threshold || (movedBy > 50 && velocity > 0.5)) {
+            // Prev
+            currentHeroIndex = Math.max(currentHeroIndex - 0, currentHeroIndex - 1);
+        }
+
+        performHeroTransition(currentHeroIndex);
+        
+        // Restart timer
+        if (heroTimer) clearInterval(heroTimer);
+        heroTimer = setInterval(() => moveToNextHero(), EXPLORE_CONFIG.HERO_ROTATE_MS);
+    }, { passive: true });
 }
 
 function moveToNextHero() {
@@ -575,139 +620,113 @@ function moveToNextHero() {
 }
 
 function performHeroTransition(index) {
-    const heroEl = document.querySelector('.explore-hero');
-    if (!heroEl) return;
+    const track = document.getElementById('hero-track');
+    const heroContainer = document.getElementById('explore-hero-container');
+    if (!track || !heroContainer) return;
 
-    const content = heroEl.querySelector('.hero-content');
-    const image = heroEl.querySelector('.hero-image-container');
-
-    // Smooth Slide out
-    const isNext = (index > currentHeroIndex) || (index === 0 && currentHeroIndex === heroProducts.length - 1);
-    const slideDir = isNext ? -30 : 30;
-
-    const tl = gsap.timeline({
+    const slideWidth = heroContainer.getBoundingClientRect().width;
+    const offset = -index * slideWidth;
+    
+    gsap.to(track, {
+        x: offset,
+        duration: 0.6,
+        ease: "power3.out",
         onComplete: () => {
-            renderHeroSlide(heroProducts[index], isNext);
+            currentHeroIndex = index;
+            updateHeroIndicators();
         }
-    });
-
-    tl.to([content, image], {
-        opacity: 0,
-        x: slideDir, // Slide slightly left/right on exit
-        duration: 0.25,
-        ease: "power2.inOut"
     });
 }
 
-function renderHeroSlide(product) {
-    const heroSection = document.getElementById('explore-hero-container');
-    if (!heroSection) return;
+// Add global resize listener to keep track aligned
+window.addEventListener('resize', () => {
+    if (isExplorePage()) {
+        const track = document.getElementById('hero-track');
+        const heroContainer = document.getElementById('explore-hero-container');
+        if (track && heroContainer) {
+            const slideWidth = heroContainer.getBoundingClientRect().width;
+            track.style.transition = 'none';
+            track.style.transform = `translateX(${-currentHeroIndex * slideWidth}px)`;
+        }
+    }
+});
 
+function updateHeroIndicators() {
+    const dots = document.querySelectorAll('.hero-dot');
+    dots.forEach((dot, i) => {
+        dot.classList.toggle('active', i === currentHeroIndex);
+    });
+}
+
+function renderHeroSlideHtml(product, index) {
     const imgUrl = escapeHTML(product.image_url || '/images/portada-default.png');
     const producer = escapeHTML(product.producer_nickname || 'Artista');
     const type = escapeHTML((product.product_type || 'Beat').toUpperCase());
     const productName = escapeHTML(product.name || 'Sin título');
 
-    const dotsHtml = heroProducts.map((_, i) =>
-        `<div class="hero-dot ${i === currentHeroIndex ? 'active' : ''}" onclick="window.navToHero(${i})"></div>`
-    ).join('');
-
     const isR2 = window.AuthUtils && window.AuthUtils.isR2Url(product.image_url);
     const imgPlaceholder = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
 
-    // Mobile BG: Use data-r2-bg for automatic signing
     const mobileBgAttr = isR2 ? `data-r2-bg="${imgUrl}"` : `style="background-image: url('${imgUrl}')"`;
 
-    heroSection.innerHTML = `
-            <div class="explore-hero active" id="hero-card-clickable">
+    return `
+            <div class="explore-hero" onclick="handleHeroClick(${index})">
                 <!-- Mobile Background Image & Gradient -->
                 <div class="hero-mobile-bg mobile-only" ${mobileBgAttr} data-r2-version="${product.storage_version || product.r2_version || 'v1'}"></div>
                 <div class="hero-mobile-gradient mobile-only"></div>
 
                 <canvas class="hero-particles-canvas desktop-only"></canvas>
             
-            <div class="hero-content" style="opacity: 0;">
-                <h1 class="hero-title">${productName}</h1>
-                <p class="hero-subtitle desktop-only">Una creación de <strong>${producer}</strong> • ${type}</p>
-                
-                <!-- Mobile info row -->
-                <div class="hero-mobile-info mobile-only">
-                    <span class="hero-mobile-artist">${producer}</span>
-                    <span class="hero-mobile-dot">&bull;</span>
-                    <span class="hero-mobile-type">${type}</span>
+                <div class="hero-content">
+                    <h1 class="hero-title">${productName}</h1>
+                    <p class="hero-subtitle desktop-only">Una creación de <strong>${producer}</strong> • ${type}</p>
+                    
+                    <div class="hero-mobile-info mobile-only">
+                        <span class="hero-mobile-artist">${producer}</span>
+                        <span class="hero-mobile-dot">&bull;</span>
+                        <span class="hero-mobile-type">${type}</span>
+                    </div>
+
+                    <div class="hero-actions desktop-only">
+                        <button class="btn-hero-play" data-hero-index="${index}" onclick="event.stopPropagation(); window.handleHeroPlay(this)">
+                            <i class="bi bi-play-fill"></i> Escuchar Ahora
+                        </button>
+                        <button class="btn-hero-outline" onclick="event.stopPropagation(); window.location.href='${getProductUrl(product)}'">Ver Detalles</button>
+                    </div>
                 </div>
 
-                <div class="hero-actions desktop-only">
-                    <button class="btn-hero-play" id="hero-play-btn">
-                        <i class="bi bi-play-fill"></i> Escuchar Ahora
-                    </button>
-                    <button class="btn-hero-outline" id="hero-details-btn">Ver Detalles</button>
+                <div class="hero-image-container desktop-only">
+                    <img ${isR2 ? `src="${imgPlaceholder}" data-r2-src="${imgUrl}"` : `src="${imgUrl}"`} 
+                         data-r2-version="${product.storage_version || product.r2_version || 'v1'}" 
+                         crossorigin="anonymous" alt="cover" class="hero-image">
                 </div>
-            </div>
 
-            <div class="hero-image-container desktop-only" style="opacity: 0; transform: translateX(20px) translateY(-50%);">
-                <img ${isR2 ? `src="${imgPlaceholder}" data-r2-src="${imgUrl}"` : `src="${imgUrl}"`} 
-                     data-r2-version="${product.storage_version || product.r2_version || 'v1'}" 
-                     crossorigin="anonymous" alt="cover" class="hero-image">
+                <!-- Mobile Purple Play Button -->
+                <button class="hero-mobile-play-btn mobile-only" data-hero-index="${index}" onclick="event.stopPropagation(); window.handleHeroPlay(this)">
+                    <i class="bi bi-play-fill" style="margin-left: 3px;"></i>
+                </button>
             </div>
-
-            <!-- Mobile Purple Play Button -->
-            <button class="hero-mobile-play-btn mobile-only" id="hero-mobile-play">
-                <i class="bi bi-play-fill" style="margin-left: 3px;"></i>
-            </button>
-
-            <div class="hero-indicators">
-                ${dotsHtml}
-            </div>
-        </div>
     `;
+}
 
-    // 🔥 FIX: Sign Hero Images after render
-    if (window.signR2Images) window.signR2Images(heroSection);
+window.handleHeroPlay = function(btn) {
+    const idx = btn.dataset.heroIndex;
+    const product = heroProducts[parseInt(idx)];
+    if (product && window.playTrack) {
+        window.playTrack(product);
+    }
+};
 
-    // Premium GSAP Entrance - Synchronized and Fast
-    const heroEl = heroSection.querySelector('.explore-hero');
-    const content = heroEl.querySelector('.hero-content');
-    const image = heroEl.querySelector('.hero-image-container');
-
-    gsap.fromTo([content, image],
-        {
-            opacity: 0
-        },
-        {
-            opacity: 1,
-            duration: 0.35,
-            ease: "power2.out"
-        }
-    );
-
-    // Restart Particles for the new canvas
-    initHeroParticles();
-
-    // Event Listeners (Restored)
-    const playBtn = heroSection.querySelector('#hero-play-btn');
-    const detailsBtn = heroSection.querySelector('#hero-details-btn');
-    const mobilePlayBtn = heroSection.querySelector('#hero-mobile-play');
-    const heroCard = heroSection.querySelector('#hero-card-clickable');
-
-    const doPlay = () => window.playTrack ? window.playTrack(product) : null;
-
-    if (playBtn) playBtn.onclick = (e) => { e.stopPropagation(); doPlay(); };
-    if (mobilePlayBtn) mobilePlayBtn.onclick = (e) => { e.stopPropagation(); doPlay(); };
-    if (detailsBtn) detailsBtn.onclick = (e) => { e.stopPropagation(); window.location.href = getProductUrl ? getProductUrl(product) : '#'; };
-
-    // Clicking the mobile card opens details
-    if (heroCard) {
-        heroCard.onclick = () => {
-            if (window.innerWidth <= 768) {
-                window.location.href = getProductUrl ? getProductUrl(product) : '#';
-            }
-        };
+function handleHeroClick(index) {
+    if (window.innerWidth <= 768) {
+        window.location.href = getProductUrl(heroProducts[index]);
     }
 }
 
-function initHeroParticles() {
-    const canvas = document.querySelector('.hero-particles-canvas');
+// renderHeroSlide and duplicate functions removed in favor of renderHeroSlideHtml and track layout.
+
+function initHeroParticles(canvas) {
+    if (!canvas) canvas = document.querySelector('.hero-particles-canvas');
     if (!canvas) return;
 
     const ctx = canvas.getContext('2d');
@@ -715,6 +734,7 @@ function initHeroParticles() {
     let width, height;
 
     const resize = () => {
+        if (!canvas.parentElement) return;
         width = canvas.width = canvas.parentElement.offsetWidth;
         height = canvas.height = canvas.parentElement.offsetHeight;
     };
@@ -992,7 +1012,7 @@ function createProductCardHtml(product, format = 'standard') {
 
         // FIND REAL PRODUCER DATA
         let producer = Array.isArray(allProducers) ? allProducers.find(p => String(p.id) === String(product.producer_id)) : null;
-        
+
         // Robust fallback: if not in allProducers, check topProducers
         if (!producer && window.topProducers) {
             producer = window.topProducers.find(p => String(p.id) === String(product.producer_id));
@@ -1210,7 +1230,7 @@ async function handleLike(id, btn, ownerId) {
                 icon.className = 'bi bi-heartbreak-fill';
                 icon.style.color = '#ef4444';
             }
-            
+
             setTimeout(() => {
                 targetBtn.classList.remove('unliking');
                 // Icon and color will be updated by window.FavoritesManager subscription
@@ -1303,7 +1323,7 @@ function renderLeaderboard(producers) {
     }, 150);
 
     return `
-        <div class="explore-row leaderboard-section" style="margin-top: 40px; margin-bottom: 60px;">
+        <div class="explore-row leaderboard-section" style="margin-top: -20px; margin-bottom: 32px;">
             <div class="row-header">
                 <h2 class="row-title">Top Productores del Mes</h2>
             </div>
