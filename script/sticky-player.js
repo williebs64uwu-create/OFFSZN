@@ -31,6 +31,27 @@ window.StickyPlayer = (function () {
     const STORAGE_KEY_STATE = 'sticky_player_state';
     const STORAGE_KEY_PLAYLIST = 'sticky_player_playlist';
 
+    function isPresetProduct(p) {
+        if (!p) return false;
+        const type = (p.product_type || '').toLowerCase();
+        const cat = (p.category || '').toLowerCase();
+        return type === 'preset' || type === 'vocalpreset' || type.includes('preset') ||
+            type === 'template' || type === 'plantilla' ||
+            cat === 'plantilla' || cat === 'vocal preset' || cat.includes('preset');
+    }
+
+    function getProductAudio(product) {
+        if (!product) return null;
+
+        if (isPresetProduct(product) && product.audio_after_url) {
+            return product.audio_after_url;
+        }
+
+        return product.mp3_url || product.audio_url || product.download_url_mp3 ||
+            product.preview_url || product.demo_file || product.tagged_file ||
+            product.file_url || product.url_file || '';
+    }
+
     function init() {
         if (document.getElementById('sticky-player-bar')) return;
 
@@ -388,9 +409,7 @@ window.StickyPlayer = (function () {
             if (els.cover.parentElement) els.cover.parentElement.classList.remove('skeleton');
         }
 
-        const audioUrl = trackData.mp3_url || trackData.audio_url || trackData.download_url_mp3 ||
-            trackData.preview_url || trackData.demo_file || trackData.tagged_file ||
-            trackData.file_url || trackData.url_file || '';
+        const audioUrl = getProductAudio(trackData);
 
         // Update Price Label & Buttons (BeatStars Style)
         if (els.priceLabel) {
@@ -1093,9 +1112,7 @@ window.StickyPlayer = (function () {
         const nextTrack = playlist[nextIndex];
         if (!nextTrack) return;
 
-        const audioUrl = nextTrack.mp3_url || nextTrack.audio_url || nextTrack.download_url_mp3 ||
-            nextTrack.preview_url || nextTrack.demo_file || nextTrack.tagged_file ||
-            nextTrack.file_url || nextTrack.url_file || '';
+        const audioUrl = getProductAudio(nextTrack);
 
         if (!audioUrl) return;
 

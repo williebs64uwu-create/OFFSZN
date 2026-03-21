@@ -70,12 +70,17 @@ window.AuthUtils = {
             window.supabaseClient.auth.onAuthStateChange((event, session) => {
                 if (session && session.access_token) {
                     window.AuthUtils._cachedToken = session.access_token;
-                    // Optional: Update manual storage if used
-                    if (localStorage.getItem('authToken')) {
-                        localStorage.setItem('authToken', session.access_token);
-                    }
+                    
+                    // Always ensure localStorage has the token for strict client guards
+                    localStorage.setItem('authToken', session.access_token);
+                    
+                    // Always ensure cookie has the token for server API calls
+                    const maxAge = 60 * 60 * 24 * 7; // 1 week
+                    document.cookie = `sb-access-token=${session.access_token}; path=/; max-age=${maxAge}; SameSite=Strict; Secure`;
                 } else if (event === 'SIGNED_OUT') {
                     window.AuthUtils._cachedToken = null;
+                    localStorage.removeItem('authToken');
+                    document.cookie = `sb-access-token=; path=/; max-age=0; SameSite=Strict; Secure`;
                 }
             });
 

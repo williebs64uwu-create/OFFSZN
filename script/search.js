@@ -27,6 +27,27 @@ let currentFilters = {
 let renderTimeout = null; // Debounce for results rendering
 let searchAbortController = null; // For cancelling search requests
 
+function isPresetProduct(p) {
+    if (!p) return false;
+    const type = (p.product_type || '').toLowerCase();
+    const cat = (p.category || '').toLowerCase();
+    return type === 'preset' || type === 'vocalpreset' || type.includes('preset') ||
+        type === 'template' || type === 'plantilla' ||
+        cat === 'plantilla' || cat === 'vocal preset' || cat.includes('preset');
+}
+
+function getProductAudio(product) {
+    if (!product) return null;
+
+    if (isPresetProduct(product) && product.audio_after_url) {
+        return product.audio_after_url;
+    }
+
+    return product.mp3_url || product.download_url_mp3 || product.preview_url ||
+        product.audio_url || product.tagged_file || product.demo_file ||
+        product.file_url || product.url_file || '';
+}
+
 function debounce(func, wait) {
     let timeout;
     return (...args) => {
@@ -1002,9 +1023,7 @@ window.handleTrackPlay = (e, id) => {
     if (!product) return;
 
     // Format for StickyPlayer
-    const audioUrl = product.mp3_url || product.download_url_mp3 || product.preview_url ||
-        product.audio_url || product.tagged_file || product.demo_file ||
-        product.file_url || product.url_file;
+    const audioUrl = getProductAudio(product);
 
     // Fix for naming: prioritize nickname
     const pName = product.producer_name || product.producer_nickname || 'OFFSZN';
@@ -1024,9 +1043,7 @@ window.handleTrackPlay = (e, id) => {
         // Update playlist context if available
         if (window.StickyPlayer.updatePlaylist && filteredResults.length > 0) {
             const formattedPlaylist = filteredResults.map(p => {
-                const aUrl = p.mp3_url || p.download_url_mp3 || p.preview_url ||
-                    p.audio_url || p.tagged_file || p.demo_file ||
-                    p.file_url || p.url_file;
+                const aUrl = getProductAudio(p);
                 const pNick = p.producer_name || p.producer_nickname || 'OFFSZN';
                 return {
                     ...p,

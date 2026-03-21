@@ -321,7 +321,7 @@
     }
 
     #explore-hero-container {
-        margin: 0 1.5rem 30px 1rem;
+        margin: 0 1.5rem 30px 1.5rem;
         overflow: hidden !important; /* Force hidden for carousel track */
         border-radius: 0;
         background: transparent;
@@ -948,6 +948,12 @@
         flex: 0 0 150px;
         /* Even smaller for mobile horizontal scroll */
         width: 150px;
+        padding: 12px; /* Reduced padding on mobile */
+    }
+
+    .quick-play-btn, .card-like-btn {
+        opacity: 1 !important;
+        transform: translateY(0) !important;
     }
 }
 
@@ -1429,9 +1435,9 @@
     }
 
     .shelf-container {
-        padding: 10px 1.5rem 30px 1.5rem !important;
+        padding: 10px 1.5rem 30px calc(1.5rem - 12px) !important;
         gap: 16px !important;
-        scroll-padding-left: 1.5rem;
+        scroll-padding-left: calc(1.5rem - 12px);
         /* Ensure snap alignment matches padding */
     }
 
@@ -2451,6 +2457,65 @@
         padding-top: 0 !important;
     }
 
+    /* Missing Mobile Hero Styles */
+    .hero-mobile-bg {
+        position: absolute;
+        inset: 0;
+        background-size: cover;
+        background-position: center;
+        z-index: 1;
+        opacity: 0.85;
+    }
+
+    .hero-mobile-gradient {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(to top, #000 0%, rgba(0,0,0,0.4) 50%, transparent 100%);
+        z-index: 2;
+    }
+
+    .hero-mobile-info {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.85rem;
+        color: rgba(255, 255, 255, 0.7);
+        margin-top: 2px;
+        z-index: 5;
+    }
+
+    .hero-mobile-artist {
+        font-weight: 600;
+        color: #fff;
+    }
+
+    .hero-mobile-dot {
+        opacity: 0.5;
+    }
+
+    .hero-mobile-play-btn {
+        position: absolute;
+        bottom: 16px;
+        right: 16px;
+        width: 48px;
+        height: 48px;
+        background: #7c3aed;
+        border: none;
+        border-radius: 50%;
+        color: #fff;
+        display: flex !important; /* Force visible */
+        align-items: center;
+        justify-content: center;
+        font-size: 1.6rem;
+        z-index: 15;
+        box-shadow: 0 4px 20px rgba(124, 58, 237, 0.5);
+        cursor: pointer;
+    }
+
+    .hero-mobile-play-btn:active {
+        transform: scale(0.92);
+        background: #6d28d9;
+    }
 }
 
 /* ========================================================================= */
@@ -2679,6 +2744,85 @@
     }
 
     .view-all {
+        display: none !important;
+    }
+
+    /* Voice Presets Mobile Refinement */
+    .leaderboard-section {
+        margin-bottom: 20px !important;
+    }
+
+    .explore-row {
+        margin-bottom: 32px;
+    }
+
+    .preset-card-social {
+        width: calc(100vw - 3rem);
+        flex: 0 0 calc(100vw - 3rem);
+        margin-right: 12px;
+        padding: 20px;
+        border-radius: 16px;
+        gap: 12px;
+        scroll-snap-align: center;
+    }
+
+    .preset-card-social .post-header {
+        gap: 8px;
+    }
+
+    .preset-card-social .post-avatar {
+        width: 36px;
+        height: 36px;
+    }
+
+    .preset-card-social .post-user-handle {
+        font-size: 1rem;
+    }
+
+    .preset-card-social .post-body {
+        gap: 16px;
+    }
+
+    .preset-card-social .post-cover-wrapper {
+        width: 100px;
+        height: 100px;
+    }
+
+    .preset-card-social .post-title {
+        font-size: 1.25rem;
+        line-height: 1.2;
+    }
+
+    .preset-card-social .post-actions,
+    .preset-card-social .post-options {
+        display: none !important;
+    }
+
+    .explore-row:has(.preset-card-social) .shelf-container {
+        scroll-snap-type: x mandatory;
+        padding-bottom: 20px !important;
+    }
+
+    /* Skeleton Matches */
+    .skeleton-social-card {
+        width: calc(100vw - 3rem) !important;
+        flex: 0 0 calc(100vw - 3rem) !important;
+        margin-right: 12px !important;
+        padding: 20px !important;
+        border-radius: 16px !important;
+        scroll-snap-align: center;
+    }
+
+    .skeleton-social-body {
+        gap: 16px !important;
+    }
+
+    .skeleton-social-cover {
+        width: 100px !important;
+        height: 100px !important;
+    }
+
+    .skeleton-social-actions {
         display: none !important;
     }
 }

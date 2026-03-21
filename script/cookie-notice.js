@@ -103,7 +103,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             <p class="cookie-text">
                 Utilizamos cookies para personalizar tu experiencia y analizar nuestro tráfico. Al continuar navegando, aceptas nuestra 
-                <a href="/legal/politica-de-privacidad.html" class="cookie-link">Política de Cookies</a>.
+                <a href="/legal/politica-de-cookies.html" class="cookie-link">Política de Cookies</a>.
             </p>
 
             <div class="cookie-actions">

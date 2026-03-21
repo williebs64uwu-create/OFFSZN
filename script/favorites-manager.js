@@ -14,7 +14,6 @@ window.FavoritesManager = (function () {
     // 1. Initialize (with Promise Singleton Pattern)
     let initPromise = null;
 
-    // 🛡️ SECURITY: XSS Sanitizer for dynamic innerHTML injection
     function escapeHTML(str) {
         if (!str) return '';
         return String(str).replace(/[&<>'"]/g, tag => ({
@@ -24,6 +23,27 @@ window.FavoritesManager = (function () {
             "'": '&#39;',
             '"': '&quot;'
         }[tag] || tag));
+    }
+
+    function isPresetProduct(p) {
+        if (!p) return false;
+        const type = (p.product_type || p.type || '').toLowerCase();
+        const cat = (p.category || '').toLowerCase();
+        return type === 'preset' || type === 'vocalpreset' || type.includes('preset') ||
+            type === 'template' || type === 'plantilla' ||
+            cat === 'plantilla' || cat === 'vocal preset' || cat.includes('preset');
+    }
+
+    function getProductAudio(product) {
+        if (!product) return null;
+
+        if (isPresetProduct(product) && product.audio_after_url) {
+            return product.audio_after_url;
+        }
+
+        return product.mp3_url || product.audio_url || product.download_url_mp3 ||
+            product.demo_file || product.tagged_file || product.preview_url ||
+            product.cloud_url || (product.track_data ? product.track_data.audio_url : '') || '';
     }
 
     function init() {
@@ -401,7 +421,7 @@ window.FavoritesManager = (function () {
         const pType = (prod.product_type || 'beat').toUpperCase();
         const waveformId = `fav-waveform-track-${prod.id}-${index}`;
         const prodUser = prod.artist_users || { nickname: 'Unknown', id: prod.user_id };
-        const audioUrl = prod.mp3_url || prod.audio_url || prod.download_url_mp3 || prod.demo_file || prod.tagged_file || prod.preview_url || '';
+        const audioUrl = getProductAudio(prod);
         const seoUrl = window.createSeoLink ? window.createSeoLink(prod) : '#';
 
         // --- ARTIST HTML ---

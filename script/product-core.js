@@ -1058,6 +1058,27 @@ function renderProductPage(product) {
  * COVER PLAY BUTTON — Wires the overlay play button to StickyPlayer.
  * Resolves R2 audio URLs and toggles play/pause state.
  */
+function isPresetProduct(p) {
+    if (!p) return false;
+    const type = (p.product_type || '').toLowerCase();
+    const cat = (p.category || '').toLowerCase();
+    return type === 'preset' || type === 'vocalpreset' || type.includes('preset') ||
+        type === 'template' || type === 'plantilla' ||
+        cat === 'plantilla' || cat === 'vocal preset' || cat.includes('preset');
+}
+
+function getProductAudio(product) {
+    if (!product) return null;
+
+    if (isPresetProduct(product) && product.audio_after_url) {
+        return product.audio_after_url;
+    }
+
+    return product.mp3_url || product.audio_url || product.download_url_mp3 ||
+        product.preview_url || product.demo_file || product.tagged_file ||
+        product.file_url || product.url_file;
+}
+
 window.playProductCover = async function () {
     const product = window.currentProductData;
     if (!product) return;
@@ -1076,9 +1097,7 @@ window.playProductCover = async function () {
     }
 
     // Build audio URL
-    let audioUrl = product.mp3_url || product.audio_url || product.download_url_mp3 ||
-        product.preview_url || product.demo_file || product.tagged_file ||
-        product.file_url || product.url_file || '';
+    let audioUrl = getProductAudio(product);
 
     if (!audioUrl) {
         alert("Este producto no tiene vista previa de audio.");

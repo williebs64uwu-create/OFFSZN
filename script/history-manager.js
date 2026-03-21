@@ -136,6 +136,27 @@ window.HistoryManager = (function () {
         });
     }
 
+    function isPresetProduct(p) {
+        if (!p) return false;
+        const type = (p.product_type || p.type || '').toLowerCase();
+        const cat = (p.category || '').toLowerCase();
+        return type === 'preset' || type === 'vocalpreset' || type.includes('preset') ||
+            type === 'template' || type === 'plantilla' ||
+            cat === 'plantilla' || cat === 'vocal preset' || cat.includes('preset');
+    }
+
+    function getProductAudio(product) {
+        if (!product) return null;
+
+        if (isPresetProduct(product) && product.audio_after_url) {
+            return product.audio_after_url;
+        }
+
+        return product.mp3_url || product.audio_url || product.download_url_mp3 ||
+            product.demo_file || product.tagged_file || product.preview_url ||
+            product.cloud_url || (product.track_data ? product.track_data.audio_url : '') || '';
+    }
+
     // --- FAVORITES SYNC ---
     function syncLikeButtons() {
         if (!window.FavoritesManager) return;
@@ -363,7 +384,7 @@ window.HistoryManager = (function () {
         const item = historyItems.find(i => String(i.product_id) === String(pid));
         if (!item) return;
 
-        const audioUrl = item.mp3_url || item.download_url_mp3 || item.preview_url || item.audio_url || item.tagged_file || item.demo_file;
+        const audioUrl = getProductAudio(item);
         if (!audioUrl) return;
 
         const wsRow = WaveSurfer.create({
@@ -455,7 +476,7 @@ window.HistoryManager = (function () {
                 name: hi.name,
                 image_url: hi.image_url,
                 product_type: hi.product_type,
-                audio_url: hi.mp3_url || hi.download_url_mp3 || hi.preview_url || hi.audio_url || hi.tagged_file || hi.demo_file || hi.file_url || hi.url_file,
+                audio_url: getProductAudio(hi),
                 price_basic: hi.price_basic,
                 is_free: hi.is_free,
                 public_slug: hi.public_slug,
@@ -478,7 +499,7 @@ window.HistoryManager = (function () {
             price_basic: item.price_basic,
             is_free: item.is_free,
             public_slug: item.public_slug,
-            audio_url: item.mp3_url || item.download_url_mp3 || item.preview_url || item.audio_url || item.tagged_file || item.demo_file || item.file_url || item.url_file,
+            audio_url: getProductAudio(item),
             artist_users: {
                 nickname: item.producer_nickname || 'OFFSZN Artist',
                 id: item.producer_id,

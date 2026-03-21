@@ -4,6 +4,27 @@ window.ExpandedPlayer = (function () {
     let currentTrack = null;
     let checkInterval = null;
 
+    function isPresetProduct(p) {
+        if (!p) return false;
+        const type = (p.product_type || p.type || '').toLowerCase();
+        const cat = (p.category || '').toLowerCase();
+        return type === 'preset' || type === 'vocalpreset' || type.includes('preset') ||
+            type === 'template' || type === 'plantilla' ||
+            cat === 'plantilla' || cat === 'vocal preset' || cat.includes('preset');
+    }
+
+    function getProductAudio(product) {
+        if (!product) return null;
+
+        if (isPresetProduct(product) && product.audio_after_url) {
+            return product.audio_after_url;
+        }
+
+        return product.mp3_url || product.audio_url || product.download_url_mp3 ||
+            product.demo_file || product.tagged_file || product.preview_url ||
+            product.cloud_url || (product.track_data ? product.track_data.audio_url : '') || '';
+    }
+
     async function init() {
         if (document.getElementById('expanded-player-modal')) return;
         const res = await fetch('/components/expanded-player.html');
@@ -161,9 +182,7 @@ window.ExpandedPlayer = (function () {
         const wfContainer = document.getElementById('ep-waveform');
         wfContainer.innerHTML = '';
 
-        const audioUrl = track.mp3_url || track.audio_url || track.download_url_mp3 ||
-            track.preview_url || track.demo_file || track.tagged_file ||
-            track.file_url || track.url_file || '';
+        const audioUrl = getProductAudio(track);
 
         if (!audioUrl) return;
 

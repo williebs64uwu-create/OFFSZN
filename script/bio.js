@@ -11,6 +11,27 @@ function escapeHTML(str) {
     return div.innerHTML;
 }
 
+function isPresetProduct(p) {
+    if (!p) return false;
+    const type = (p.product_type || p.type || '').toLowerCase();
+    const cat = (p.category || '').toLowerCase();
+    return type === 'preset' || type === 'vocalpreset' || type.includes('preset') ||
+        type === 'template' || type === 'plantilla' ||
+        cat === 'plantilla' || cat === 'vocal preset' || cat.includes('preset');
+}
+
+function getProductAudio(product) {
+    if (!product) return null;
+
+    if (isPresetProduct(product) && product.audio_after_url) {
+        return product.audio_after_url;
+    }
+
+    return product.mp3_url || product.audio_url || product.download_url_mp3 ||
+        product.demo_file || product.tagged_file || product.preview_url ||
+        product.cloud_url || (product.track_data ? product.track_data.audio_url : '') || '';
+}
+
 function initBioLink() {
     // 1. Get Username from URL
     const path = window.location.pathname;
@@ -680,7 +701,7 @@ async function loadRecentProducts(user) {
                              crossorigin="anonymous">
                         
                         <!-- Mini Play Button Overlay (Optional UI touch) -->
-                        <button onclick="playBioPreview('${p.id}', '${p.audio_url || p.mp3_url || ''}', this, '${(p.name || '').replace(/'/g, "\\'").replace(/"/g, "&quot;")}', '${p.finalImageUrl}', '${p.r2_version || 'v1'}')" 
+                        <button onclick="playBioPreview('${p.id}', '${getProductAudio(p)}', this, '${(p.name || '').replace(/'/g, "\\'").replace(/"/g, "&quot;")}', '${p.finalImageUrl}', '${p.r2_version || 'v1'}')" 
                                 class="absolute flex items-center justify-center w-10 h-10 bg-black/60 rounded-full text-white backdrop-blur-sm hover:scale-110 hover:bg-white hover:text-black transition-all border border-white/20">
                             <i class="bi bi-play-fill text-xl ml-1"></i>
                         </button>

@@ -1428,6 +1428,27 @@ window.addEventListener('follow-state-changed', (e) => {
 
 
 
+function isPresetProduct(p) {
+    if (!p) return false;
+    const type = (p.product_type || '').toLowerCase();
+    const cat = (p.category || '').toLowerCase();
+    return type === 'preset' || type === 'vocalpreset' || type.includes('preset') ||
+        type === 'template' || type === 'plantilla' ||
+        cat === 'plantilla' || cat === 'vocal preset' || cat.includes('preset');
+}
+
+function getProductAudio(product) {
+    if (!product) return null;
+
+    if (isPresetProduct(product) && product.audio_after_url) {
+        return product.audio_after_url;
+    }
+
+    return product.mp3_url || product.audio_url || product.download_url_mp3 ||
+        product.demo_file || product.tagged_file || product.preview_url ||
+        product.cloud_url || (product.track_data ? product.track_data.audio_url : '') || '';
+}
+
 // State
 let productsCache = [];
 let currentFilter = 'all';
@@ -1766,7 +1787,8 @@ async function renderTrending(items, user, collabStats = {}) {
         playBtn.onclick = (e) => {
             e.preventDefault(); e.stopPropagation();
             if (window.StickyPlayer) {
-                const trackData = { ...prod, artist_users: user };
+                const audioUrl = getProductAudio(prod);
+                const trackData = { ...prod, audio_url: audioUrl, artist_users: user };
                 window.StickyPlayer.play(trackData);
             }
         };
@@ -1980,7 +2002,7 @@ async function renderProductList(items, user, collabStats = {}) {
         const seoLink = window.createSeoLink ? window.createSeoLink(prod) : `/producto.html?id=${prod.id}`;
 
         const waveformId = `waveform-track-${prod.id}-${index}`;
-        const audioUrl = prod.mp3_url || prod.audio_url || prod.download_url_mp3 || prod.demo_file || prod.tagged_file || prod.preview_url || prod.cloud_url || (prod.track_data ? prod.track_data.audio_url : '') || '';
+        const audioUrl = getProductAudio(prod);
 
         const rawImgList = prod.image_url || '/images/portada-default.png';
         const storageVerList = prod.storage_version || prod.r2_version || 'v1';
@@ -2245,7 +2267,8 @@ async function renderProductList(items, user, collabStats = {}) {
                     playBtn.onclick = (e) => {
                         e.stopPropagation();
                         if (window.StickyPlayer) {
-                            const trackData = { ...prod, artist_users: user };
+                            const audioUrl = getProductAudio(prod);
+                            const trackData = { ...prod, audio_url: audioUrl, artist_users: user };
                             if (window.StickyPlayer.getCurrentTrackId() === prod.id) {
                                 window.StickyPlayer.togglePlay();
                             } else {
