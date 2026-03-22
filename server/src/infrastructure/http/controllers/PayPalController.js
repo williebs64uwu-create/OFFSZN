@@ -206,7 +206,7 @@ export const createPayPalOrder = async (req, res) => {
         // 2. Fetch Producer details for PayPal Emails AND LICENSE SETTINGS
         const producerIds = [...new Set(cartItems.map(item => item.product.producer_id))];
         const [{ data: producers, error: producerError }, { data: profiles, error: profileError }] = await Promise.all([
-            supabase.from('users').select('id, payment_methods, license_settings, nickname').in('id', producerIds),
+            supabase.from('users').select('id, paypal_email, license_settings, nickname, payment_methods').in('id', producerIds),
             supabase.from('profiles').select('id, plan').in('id', producerIds)
         ]);
 
@@ -216,9 +216,12 @@ export const createPayPalOrder = async (req, res) => {
         const producerMap = new Map();
         producers?.forEach(u => {
             const profile = profiles?.find(p => p.id === u.id);
+            // Use paypal_email column primarily, fallback to payment_methods.paypal
+            const finalPaypalEmail = u.paypal_email || u.payment_methods?.paypal;
+            
             producerMap.set(u.id, {
                 id: u.id,
-                email: u.payment_methods?.paypal,
+                email: finalPaypalEmail,
                 settings: u.license_settings,
                 nickname: u.nickname,
                 plan: profile?.plan || 'free'

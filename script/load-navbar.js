@@ -89,6 +89,7 @@
         // Dynamically load dependencies
         loadDependency(pathPrefix + 'script/share-modal.js?v=23', 'js', 'share-modal-script');
         loadDependency(pathPrefix + 'css/share-modal.css?v=23', 'css', 'share-modal-css');
+        loadDependency(pathPrefix + 'script/onboarding-widget.js?v=2', 'js', 'onboarding-widget-script');
 
     } catch (error) {
         console.error('Error loading navbar component:', error);

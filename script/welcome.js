@@ -6,7 +6,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const chipData = {
     // Reordered roles as requested: "Otro" moved for better layout
     roles: ["Productor Musical", "Artista / Cantante", "Compositor / Songwriter", "Ingeniero de Mezcla/Master", "Músico / Instrumentista", "Otro Rol Musical", "Fan / Consumidor"],
-    genres: ["Hip-Hop", "Trap", "R&B", "Pop", "EDM", "House", "Techno", "Dubstep", "Drum & Bass", "Lo-Fi", "Reggaeton", "Latin", "Rock", "Metal", "Jazz", "Soul", "Funk", "Ambient", "Orchestral", "Synthwave", "Indie", "Afrobeats"],
     daws: ["FL Studio", "Ableton Live", "Logic Pro", "Pro Tools", "Studio One", "Cubase", "Reason", "GarageBand", "Reaper", "Bitwig", "Otro"],
     interests: ["Plugins VST", "Hardware", "Tutoriales", "Colaboraciones", "Feedback", "Samples", "Presets", "Masterclass"],
     experience: ["Principiante (0-1 año)", "Intermedio (1-3 años)", "Avanzado (3+ años)"],
@@ -22,7 +21,6 @@ document.addEventListener('DOMContentLoaded', () => {
     firstName: '',
     lastName: '',
     role: '',
-    genres: [],
     daws: [],
     interests: [],
     experience: [],
@@ -373,22 +371,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         chip.classList.add('selected');
       }
-      // Logic for multi selection with limit (Genres max 5)
-      else if (category === 'genres') {
-        const idx = userData[category].indexOf(text);
-        if (idx === -1) {
-          if (userData[category].length >= 5) {
-            showStepError('genresError', 'Máximo 5 géneros');
-            return;
-          }
-          userData[category].push(text);
-          chip.classList.add('selected');
-        } else {
-          userData[category].splice(idx, 1);
-          chip.classList.remove('selected');
-        }
-      }
-      // Standard multi selection
+      // Logic for multi selection
       else {
         const idx = userData[category].indexOf(text);
         if (idx === -1) {
@@ -896,7 +879,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // INICIALIZACIÓN
   // ============================================
   renderChips(chipData.roles, 'roleChips', 'role');
-  renderChips(chipData.genres, 'genres', 'genres');
   renderChips(chipData.daws, 'daws', 'daws');
 
   renderChips(chipData.interests, 'interests', 'interests');

@@ -15,6 +15,13 @@ document.addEventListener('DOMContentLoaded', () => {
   // ============================================
   const urlParams = new URLSearchParams(window.location.search);
   const redirectParam = urlParams.get('redirect');
+  const referralParam = urlParams.get('ref');
+
+  // Guardar código de referido si existe
+  if (referralParam) {
+    console.log('🎁 Referral code detected:', referralParam);
+    localStorage.setItem('offszn_referral_code', referralParam);
+  }
 
   const registerForm = document.getElementById('register-form');
   const loginForm = document.getElementById('login-form');

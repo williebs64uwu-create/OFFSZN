@@ -7,14 +7,14 @@
 const CheckoutManager = {
   // Utility for sanitization
   escapeHTML: function (str) {
-      if (!str) return '';
-      return String(str).replace(/[&<>'"]/g, tag => ({
-          '&': '&amp;',
-          '<': '&lt;',
-          '>': '&gt;',
-          "'": '&#39;',
-          '"': '&quot;'
-      }[tag] || tag));
+    if (!str) return '';
+    return String(str).replace(/[&<>'"]/g, tag => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      "'": '&#39;',
+      '"': '&quot;'
+    }[tag] || tag));
   },
 
   // CONFIGURATION
@@ -77,6 +77,31 @@ const CheckoutManager = {
     if (this.appliedCoupon) {
       this.updateCouponUI(true);
     }
+
+    // Listen for cart updates (e.g., item removed via sidebar or checkout summary)
+    window.addEventListener('cart-updated', async () => {
+      // Skip if in negotiate mode
+      if (this.negotiateData) return;
+      
+      const itemsCount = window.CartManager?.state?.items?.length || 0;
+      
+      // Producer plans/blocking require re-evaluating the current cart
+      await this.loadProducerPlans();
+      this.renderOrderSummary();
+      
+      if (itemsCount === 0) {
+        const container = document.getElementById('paypal-button-container');
+        if (container) container.style.display = 'none';
+        return;
+      }
+      
+      if (this.blockedItems && this.blockedItems.length > 0) {
+        this.updatePayPalButtonsVisibility();
+      } else {
+        this.updatePayPalButtonsVisibility();
+        this.initPayPal();
+      }
+    });
   },
 
   // --- NEGOTIATE CHECKOUT MODE ---
@@ -140,8 +165,9 @@ const CheckoutManager = {
 
       <div class="checkout-items-list" style="margin-bottom: 24px;">
         <div class="checkout-item" style="padding:16px 0; display:flex; gap:16px; align-items:center; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 24px;">
-          <div class="checkout-item-img">
-            <img id="${imgId}" src="/images/portada-default.png" data-r2-version="${d.r2_version || 'v1'}" crossorigin="anonymous" style="width:64px; height:64px; border-radius:6px; object-fit:cover; border:1px solid rgba(255,255,255,0.08);">
+          <div class="checkout-item-img" style="position:relative; width:64px; height:64px; flex-shrink:0;">
+            <img id="${imgId}" src="/images/portada-default.png" data-r2-version="${d.storage_version || d.r2_version || 'v1'}" crossorigin="anonymous" 
+                 style="width:100%; height:100%; border-radius:10px; object-fit:cover; border:1px solid rgba(255,255,255,0.1); background:#111;">
           </div>
           <div class="checkout-item-details" style="flex:1;">
             <div style="font-size:1rem; font-weight:600; color:#eee; margin-bottom:6px; font-family: 'Plus Jakarta Sans', sans-serif;">"${this.escapeHTML(d.productName)}"</div>
@@ -178,7 +204,8 @@ const CheckoutManager = {
 
     // Authorized URL for image
     if (window.getAuthorizedUrl && d.productImage) {
-      window.getAuthorizedUrl(d.productImage, d.r2_version || 'v1').then(url => {
+      const storageVer = d.storage_version || d.r2_version || 'v1';
+      window.getAuthorizedUrl(d.productImage, storageVer).then(url => {
         const imgEl = document.getElementById(imgId);
         if (imgEl && url) {
           imgEl.src = url;
@@ -420,10 +447,10 @@ const CheckoutManager = {
     const producerIds = [...new Set(items.map(item => item.product.producer_id))];
 
     try {
-      // Fetch payment_methods from users table
+      // Fetch payment_methods and paypal_email from users table
       const { data, error } = await window.supabaseClient
         .from('users')
-        .select('id, payment_methods')
+        .select('id, payment_methods, paypal_email')
         .in('id', producerIds);
 
       if (error) throw error;
@@ -439,11 +466,12 @@ const CheckoutManager = {
       this.producerData = {};
       data.forEach(u => {
         const profile = profiles.find(p => p.id === u.id);
+        const finalPaypal = u.paypal_email || u.payment_methods?.paypal || null;
         this.producerData[u.id] = {
           plan: profile?.plan || 'free',
           username: profile?.username || null,
-          hasPayPal: !!(u.payment_methods?.paypal && u.payment_methods.paypal.includes('@')),
-          paypalEmail: u.payment_methods?.paypal || null
+          hasPayPal: !!(finalPaypal && finalPaypal.includes('@')),
+          paypalEmail: finalPaypal
         };
         // Backwards compatibility for calculateTotals
         this.producerPlans[u.id] = profile?.plan || 'free';
@@ -624,7 +652,7 @@ const CheckoutManager = {
     const { items, subtotal, discountAmount, serviceFee, total } = this.calculateTotals();
 
     if (items.length === 0) {
-      container.innerHTML = `<div class="empty-cart-msg" style="text-align: center; padding: 40px; color: #666;">Tu carrito está vacío. <a href="/explorar.html" style="color: #fff; text-decoration:underline;">Ir a explorar</a></div>`;
+      container.innerHTML = `<div class="empty-cart-msg" style="text-align: center; padding: 40px; color: #666;">Tu carrito está vacío. <a href="/explorar.html" style="color: #fff; text-decoration:underline;"> <br> Ir a explorar</a></div>`;
       return;
     }
 
@@ -653,18 +681,18 @@ const CheckoutManager = {
               priceHTML = `
                     <div style="font-size:1.05rem; font-weight:700; color:#fff; font-family: 'Plus Jakarta Sans', sans-serif;">$${item.price.toFixed(2)}</div>
                     <div style="font-size:0.8rem; color:#666; text-decoration:line-through;">$${parseFloat(basicPrice).toFixed(2)}</div>
-                    <div style="font-size:0.75rem; color:#444;">+ $${item.commission.toFixed(2)}</div>
+                    <div style="font-size:0.75rem; color:#888;">+ $${item.commission.toFixed(2)}</div>
                   `;
             } else {
               priceHTML = `
                     <div style="font-size:1.05rem; font-weight:700; color:#fff; font-family: 'Plus Jakarta Sans', sans-serif;">$${item.price.toFixed(2)}</div>
-                    <div style="font-size:0.75rem; color:#444;">+ $${item.commission.toFixed(2)}</div>
+                    <div style="font-size:0.75rem; color:#888;">+ $${item.commission.toFixed(2)}</div>
                 `;
             }
           } else {
             priceHTML = `
                 <div style="font-size:1.05rem; font-weight:700; color:#fff; font-family: 'Plus Jakarta Sans', sans-serif;">$${item.price.toFixed(2)}</div>
-                <div style="font-size:0.75rem; color:#444;">+ $${item.commission.toFixed(2)}</div>
+                <div style="font-size:0.75rem; color:#888;">+ $${item.commission.toFixed(2)}</div>
               `;
           }
         }
@@ -675,11 +703,11 @@ const CheckoutManager = {
         const safeLicName = this.escapeHTML(item.license_name || item.product.product_type);
 
         html += `
-            <div class="checkout-item ${isBlocked ? 'blocked' : ''}" style="padding:16px 0; display:flex; gap:16px; align-items:center; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 20px;">
-              <div class="checkout-item-img" style="position:relative; width:56px; height:56px; flex-shrink:0;">
-                <img id="${imgId}" src="${fallbackImg}" data-r2-version="${item.product.r2_version || 'v1'}" crossorigin="anonymous"
+            <div class="checkout-item ${isBlocked ? 'blocked' : ''}" style="padding:20px 0; display:flex; gap:16px; align-items:center; border-bottom: 1px solid rgba(255,255,255,0.05);">
+              <div class="checkout-item-img" style="position:relative; width:64px; height:64px; flex-shrink:0;">
+                <img id="${imgId}" src="${fallbackImg}" data-r2-version="${item.product.storage_version || item.product.r2_version || 'v1'}" crossorigin="anonymous"
                      onerror="this.src='${fallbackImg}'; this.onerror=null;"
-                     style="width:100%; height:100%; border-radius:6px; object-fit:cover; border:1px solid rgba(255,255,255,0.08); background:#111;">
+                     style="width:100%; height:100%; border-radius:10px; object-fit:cover; border:1px solid rgba(255,255,255,0.1); background:#111;">
               </div>
               <div class="checkout-item-details" style="flex:1; min-width:0;">
                 <div class="checkout-item-name truncate" style="font-size:0.95rem; font-weight:600; color:#eee; margin-bottom:4px; font-family: 'Plus Jakarta Sans', sans-serif;">"${safeName}"</div>
@@ -703,7 +731,8 @@ const CheckoutManager = {
 
         // Load authorized image URL
         if (window.getAuthorizedUrl && item.product.image_url) {
-          window.getAuthorizedUrl(item.product.image_url, item.product.r2_version || 'v1').then(url => {
+          const storageVer = item.product.storage_version || item.product.r2_version || 'v1';
+          window.getAuthorizedUrl(item.product.image_url, storageVer).then(url => {
             const imgEl = document.getElementById(imgId);
             if (imgEl && url) imgEl.src = url;
           });
@@ -714,15 +743,15 @@ const CheckoutManager = {
 
     html += `
         <div class="checkout-totals" style="padding-top:12px;">
-          <div class="total-row" style="display:flex; justify-content:space-between; color:#555; font-size:0.9rem; margin-bottom:10px;">
+          <div class="total-row" style="display:flex; justify-content:space-between; color:#888; font-size:0.9rem; margin-bottom:12px;">
             <span>Subtotal</span>
-            <span style="color: #888;">$${subtotal.toFixed(2)}</span>
+            <span style="color: #ccc;">$${subtotal.toFixed(2)}</span>
           </div>
       `;
 
     if (discountAmount > 0) {
       html += `
-          <div class="total-row" style="display:flex; justify-content:space-between; color:#fff; font-size:0.9rem; margin-bottom:10px; font-weight:500;">
+          <div class="total-row" style="display:flex; justify-content:space-between; color:#4ade80; font-size:0.9rem; margin-bottom:12px; font-weight:500;">
             <span>Ahorro aplicado</span>
             <span>-$${discountAmount.toFixed(2)}</span>
           </div>
@@ -730,13 +759,13 @@ const CheckoutManager = {
     }
 
     html += `
-          <div class="total-row" style="display:flex; justify-content:space-between; color:#555; font-size:0.9rem; margin-bottom:20px;">
+          <div class="total-row" style="display:flex; justify-content:space-between; color:#888; font-size:0.9rem; margin-bottom:24px;">
             <span>Tarifa de servicio</span>
-            <span style="color: #888;">$${serviceFee.toFixed(2)}</span>
+            <span style="color: #ccc;">$${serviceFee.toFixed(2)}</span>
           </div>
-          <div class="total-row grand-total" style="display:flex; justify-content:space-between; align-items: center; color:#fff; padding-top:20px; border-top:1px solid rgba(255,255,255,0.05); font-family:'Plus Jakarta Sans', sans-serif;">
-            <span style="font-size: 1rem; font-weight: 600; text-transform:uppercase; letter-spacing:1px; color:#666;">Total</span>
-            <span style="font-size: 1.5rem; font-weight: 800;">$${total.toFixed(2)}</span>
+          <div class="total-row grand-total" style="display:flex; justify-content:space-between; align-items: center; color:#fff; padding-top:20px; border-top:1px solid rgba(255,255,255,0.1); font-family:'Plus Jakarta Sans', sans-serif;">
+            <span style="font-size: 1rem; font-weight: 600; text-transform:uppercase; letter-spacing:1px; color:#888;">Total</span>
+            <span style="font-size: 1.6rem; font-weight: 800;">$${total.toFixed(2)}</span>
           </div>
         </div>
       `;
@@ -746,22 +775,8 @@ const CheckoutManager = {
 
   removeFromCheckout: function (productId) {
     if (window.CartManager) {
+      // The actual removal logic. The UI will re-render via 'cart-updated' event listener
       CartManager.removeFromCart(productId);
-      // Wait a bit for the removal to propagate and re-check blocked status
-      setTimeout(() => {
-        this.checkBlockedStatus();
-        this.renderOrderSummary();
-        // If all blocked items were removed, PayPal buttons should reappear
-        const stillBlocked = CartManager.state.items.some(item => {
-          const pData = this.producerData?.[item.product.producer_id];
-          return pData && !pData.hasPayPal;
-        });
-        if (!stillBlocked) {
-          this.blockedItems = [];
-          this.updatePayPalButtonsVisibility();
-          this.initPayPal();
-        }
-      }, 100);
     }
   },
 

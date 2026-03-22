@@ -130,7 +130,7 @@ const CartManager = {
                 // AUTH: Load from DB
                 const { data, error } = await supabaseClient
                     .from('cart_items')
-                    .select('quantity, license_name, variant_price, product:products(id, name, price_basic, image_url, product_type, producer_id, status)')
+                    .select('quantity, license_name, variant_price, product:products(id, name, price_basic, image_url, product_type, producer_id, status, storage_version, r2_version)')
                     .eq('user_id', this.state.user.id);
 
                 if (error) {
@@ -420,7 +420,7 @@ const CartManager = {
                 return `
                 <div class="cart-item-row" style="display:flex; flex-direction:column; gap:12px; margin-bottom:16px; padding-bottom:16px; border-bottom:1px solid rgba(255,255,255,0.05);">
                     <div style="display:flex; gap:14px; align-items: center;">
-                        <img id="${imgId}" src="/images/portada-default.png" data-r2-version="${item.product.r2_version || 'v1'}" crossorigin="anonymous" style="width:56px; height:56px; object-fit:cover; border-radius:10px; border:1px solid rgba(255,255,255,0.05);">
+                        <img id="${imgId}" src="/images/portada-default.png" data-r2-version="${item.product.storage_version || item.product.r2_version || 'v1'}" crossorigin="anonymous" style="width:56px; height:56px; object-fit:cover; border-radius:10px; border:1px solid rgba(255,255,255,0.05);">
                         <div style="flex:1; display:flex; flex-direction:column; min-width: 0;">
                             <h4 style="margin:0; font-size:0.85rem; font-weight:700; color:#fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-transform: uppercase; letter-spacing: 0.3px;">${safeName}</h4>
                             <span style="font-size:0.75rem; color:#666; margin-top: 2px;">${licName}</span>
@@ -454,7 +454,8 @@ const CartManager = {
             this.state.items.forEach(item => {
                 const imgId = `cart-row-img-${item.product.id}`;
                 if (item.product.image_url && window.getAuthorizedUrl) {
-                    window.getAuthorizedUrl(item.product.image_url, item.product.r2_version || 'v1', item.product.id).then(url => {
+                    const storageVer = item.product.storage_version || item.product.r2_version || 'v1';
+                    window.getAuthorizedUrl(item.product.image_url, storageVer, item.product.id).then(url => {
                         const img = document.getElementById(imgId);
                         if (img && url) img.src = url;
                     });
@@ -466,6 +467,9 @@ const CartManager = {
                 this.ui.checkoutBtn.style.pointerEvents = 'auto';
             }
         }
+
+        // Notify other components (like Checkout) that cart has updated
+        window.dispatchEvent(new CustomEvent('cart-updated', { detail: this.state.items }));
     },
 
     updateBadge: function () {

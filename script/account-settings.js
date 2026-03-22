@@ -148,6 +148,27 @@ function renderUserData() {
         if (yt) yt.value = socials.youtube || '';
         const sp = document.getElementById('spotify');
         if (sp) sp.value = socials.spotify || '';
+
+        const pp = document.getElementById('paypalEmail');
+        if (pp) pp.value = data.paypal_email || '';
+    }
+
+    // POPULATE REFERRAL CODE
+    const refCode = document.getElementById('refCodeDisplay');
+    if (refCode) {
+        refCode.textContent = data.referral_code || 'Generando...';
+        
+        const btnCopy = document.getElementById('btnCopyRef');
+        if (btnCopy && data.referral_code) {
+            btnCopy.onclick = () => {
+                const refLink = `${window.location.origin}/pages/register.html?ref=${data.referral_code}`;
+                navigator.clipboard.writeText(refLink).then(() => {
+                    showToast("¡Link de referido copiado!", "success");
+                    btnCopy.textContent = "¡Copiado!";
+                    setTimeout(() => btnCopy.textContent = "Copiar Link", 2000);
+                });
+            };
+        }
     }
 
     const offered_services = data.socials?.offered_services || {};
@@ -161,6 +182,34 @@ function renderUserData() {
 
     if (data.daws && data.daws.length > 0) {
         setSelectValue('mostUsedDaw', data.daws[0]);
+    }
+
+    const genresContainer = document.getElementById('genres');
+    if (genresContainer) {
+        window.selectedGenres = data.genres || [];
+        genresContainer.innerHTML = '';
+        const allGenres = ["Hip-Hop", "Trap", "R&B", "Pop", "EDM", "House", "Techno", "Dubstep", "Drum & Bass", "Lo-Fi", "Reggaeton", "Latin", "Rock", "Metal", "Jazz", "Soul", "Funk", "Ambient", "Orchestral", "Synthwave", "Indie", "Afrobeats"];
+        
+        allGenres.forEach(genre => {
+            const chip = document.createElement('div');
+            chip.className = `chip ${window.selectedGenres.includes(genre) ? 'selected' : ''}`;
+            chip.textContent = genre;
+            
+            chip.addEventListener('click', () => {
+                if (chip.classList.contains('selected')) {
+                    chip.classList.remove('selected');
+                    window.selectedGenres = window.selectedGenres.filter(g => g !== genre);
+                } else {
+                    if (window.selectedGenres.length >= 5) {
+                        showToast("Puedes seleccionar un máximo de 5 géneros", "error");
+                        return;
+                    }
+                    chip.classList.add('selected');
+                    window.selectedGenres.push(genre);
+                }
+            });
+            genresContainer.appendChild(chip);
+        });
     }
 }
 
@@ -254,6 +303,12 @@ function setupFormListeners() {
     const socialsForm = document.getElementById('socialsForm');
     if (socialsForm) {
         socialsForm.addEventListener('submit', (e) => saveProfileChanges(e, 'socials'));
+    }
+
+    // 4. Payments Form
+    const paymentsForm = document.getElementById('paymentsForm');
+    if (paymentsForm) {
+        paymentsForm.addEventListener('submit', (e) => saveProfileChanges(e, 'payments'));
     }
 
     // 4. Password Form
@@ -455,7 +510,7 @@ async function saveProfileChanges(e, type) {
             };
             mergedSocials.spotify_content = document.getElementById('spotifyWork')?.value.trim() || null;
 
-            // Aligned to Schema: daws (text[]), experience (text[]), socials (jsonb)
+            // Aligned to Schema: daws (text[]), experience (text[]), socials (jsonb), genres (text[])
             updates = {
                 role,
                 bio: document.getElementById('bio') ? document.getElementById('bio').value.trim() : currentProfileData.bio,
@@ -477,6 +532,16 @@ async function saveProfileChanges(e, type) {
             mergedSocials.spotify = document.getElementById('spotify').value.trim();
 
             updates = { socials: mergedSocials };
+        }
+
+        // === 4. PAYMENTS FORM ===
+        if (type === 'payments') {
+            const paypal_email = document.getElementById('paypalEmail').value.trim();
+            // Validate basic email format if provided
+            if (paypal_email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(paypal_email)) {
+                throw new Error("Por favor ingresa un correo de PayPal válido.");
+            }
+            updates = { paypal_email };
         }
 
         // EXECUTE UPDATE

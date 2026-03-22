@@ -96,7 +96,7 @@ app.use(helmet({
             scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "blob:",
                 "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com", "https://unpkg.com",
                 "https://cdn.tailwindcss.com", "https://apis.google.com", "https://accounts.google.com",
-                "https://*.gstatic.com",
+                "https://*.gstatic.com", "https://*.googleapis.com", "https://*.google.com", "https://*.googleusercontent.com",
                 // PayPal
                 "https://www.paypal.com", "https://www.sandbox.paypal.com",
                 // EmailOctopus
@@ -127,7 +127,7 @@ app.use(helmet({
                 "https://offszn-oc7c.onrender.com", "https://*.onrender.com",
                 "http://localhost:*",
                 "https://*.googleapis.com", "https://accounts.google.com", "https://apis.google.com",
-                "https://*.ytimg.com", "https://*.ggpht.com"
+                "https://*.ytimg.com", "https://*.ggpht.com", "https://*.googleusercontent.com"
             ],
             frameSrc: ["'self'",
                 "https://www.youtube.com", "https://www.youtube-nocookie.com",

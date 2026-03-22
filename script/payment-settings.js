@@ -23,20 +23,13 @@ const PaymentSettings = {
     },
 
     init: async function () {
-        // 0. Handle OAuth Redirect Params
-        this.handleUrlParams();
-
         // 1. Inject Skeletons IMMEDIATELY
         this.injectSidebarSkeletons();
         this.injectSalesSkeletons();
         this.injectButtonSkeleton();
         this.injectEmailSkeleton();
-        // this.injectPayPalStatusSkeleton();
-
-        // console.log("Payment Settings Initialized with OAuth Flow");
 
         if (!window.supabaseClient) {
-            // console.warn("PaymentSettings: Supabase client not found.");
             return;
         }
 
@@ -48,7 +41,7 @@ const PaymentSettings = {
 
         this.userId = session.user.id;
 
-        // 2. Start Minimum Wait Timer (1.5s)
+        // 2. Start Minimum Wait Timer (1.5s) for smooth skeleton transition
         const timerPromise = new Promise(resolve => setTimeout(resolve, 1500));
 
         // 3. Start Data Fetching
@@ -70,21 +63,6 @@ const PaymentSettings = {
         this.setupListeners();
     },
 
-    handleUrlParams: function () {
-        const params = new URLSearchParams(window.location.search);
-        const paypalStatus = params.get('paypal');
-
-        if (paypalStatus === 'success') {
-            if (window.showToast) window.showToast("¡PayPal conectado y verificado correctamente!", "success");
-            // Clean URL
-            window.history.replaceState({}, document.title, window.location.pathname);
-        } else if (paypalStatus === 'error') {
-            const msg = params.get('msg') || 'Error desconocido';
-            if (window.showToast) window.showToast("Error al conectar PayPal: " + msg, "error");
-            window.history.replaceState({}, document.title, window.location.pathname);
-        }
-    },
-
     getSession: async function () {
         const { data: { session } } = await window.supabaseClient.auth.getSession();
         return session;
@@ -102,7 +80,7 @@ const PaymentSettings = {
             if (error) throw error;
             this.data.sidebar = data;
         } catch (err) {
-            // console.error("Error fetching sidebar data:", err);
+            console.error("Error fetching sidebar data:", err);
         }
     },
 
@@ -110,14 +88,28 @@ const PaymentSettings = {
         try {
             const { data: user, error } = await window.supabaseClient
                 .from('users')
-                .select('payment_methods, paypal_verified')
+                .select('paypal_email, paypal_verified, payment_methods')
                 .eq('id', this.userId)
                 .single();
             if (error) throw error;
-            this.data.status = user?.payment_methods?.paypal;
+            
+            let paypalEmail = user?.paypal_email;
+            const legacyPaypal = user?.payment_methods?.paypal;
+
+            // Silent Migration: if paypal_email is empty but legacy data exists, sync it
+            if (!paypalEmail && legacyPaypal) {
+                paypalEmail = legacyPaypal;
+                // No need to await here to not block the UI, but we'll do it for consistency
+                await window.supabaseClient
+                    .from('users')
+                    .update({ paypal_email: legacyPaypal })
+                    .eq('id', this.userId);
+            }
+
+            this.data.status = paypalEmail;
             this.data.isVerified = user?.paypal_verified || false;
         } catch (err) {
-            // console.error("Error fetching payment status:", err);
+            console.error("Error fetching payment status:", err);
         }
     },
 
@@ -137,11 +129,11 @@ const PaymentSettings = {
 
             if (error) throw error;
 
-            // Filter
+            // Filter to ensure only items belonging to this producer
             this.data.sales = data.filter(item => item.product && item.product.producer_id === this.userId);
         } catch (err) {
-            // console.error("Error fetching sales history:", err);
-            this.data.sales = null; // Mark as error
+            console.error("Error fetching sales history:", err);
+            this.data.sales = null; 
         }
     },
 
@@ -165,13 +157,10 @@ const PaymentSettings = {
         if (avatar) avatar.classList.remove('skeleton-base', 'skeleton-avatar');
     },
 
-    // --- RENDERING ACTIONS ---
-
     injectSalesSkeletons: function () {
         const container = document.getElementById('sales-history-container');
         if (!container) return;
 
-        // Matches .transaction-item .tx-grid structure exactly
         container.innerHTML = '';
         for (let i = 0; i < 5; i++) {
             const row = document.createElement('div');
@@ -228,7 +217,6 @@ const PaymentSettings = {
     injectButtonSkeleton: function () {
         const btn = document.getElementById('btn-connect-paypal');
         if (btn) {
-            // console.log("Applying skeleton to PayPal button");
             btn.classList.add('btn-loading-skeleton');
         }
     },
@@ -248,26 +236,10 @@ const PaymentSettings = {
         }
     },
 
-    injectPayPalStatusSkeleton: function () {
-        const label = document.getElementById('paypal-status-label');
-        const dot = document.getElementById('paypal-status-dot');
-        if (label) {
-            label.innerHTML = '';
-            const skeleton = document.createElement('div');
-            skeleton.className = "skeleton-base";
-            skeleton.style.width = "70px";
-            skeleton.style.height = "14px";
-            skeleton.style.borderRadius = "4px";
-            skeleton.style.display = "inline-block";
-            label.appendChild(skeleton);
-        }
-        if (dot) {
-            dot.style.backgroundColor = "rgba(255,255,255,0.05)";
-        }
-    },
+    // --- RENDERING ACTIONS ---
 
     renderSidebar: function () {
-        if (!this.data.sidebar) return; // Or handle error state
+        if (!this.data.sidebar) return;
 
         const data = this.data.sidebar;
         const nameEl = document.getElementById('sidebarName');
@@ -297,7 +269,6 @@ const PaymentSettings = {
     },
 
     renderStatus: function () {
-        // data.status is the paypal email or undefined
         const paypalEmail = this.data.status;
         this.updateUI(paypalEmail);
     },
@@ -401,7 +372,7 @@ const PaymentSettings = {
             const logBtn = document.createElement('button');
             logBtn.className = 'btn-security-log';
             logBtn.title = "Ver Bitácora de Seguridad";
-            logBtn.innerHTML = '<i class="bi bi-shield-lock"></i>'; // Static icon is okay
+            logBtn.innerHTML = '<i class="bi bi-shield-lock"></i>';
             logBtn.onclick = () => this.viewSecurityLogs(sale.order?.id);
             actionDiv.appendChild(logBtn);
 
@@ -420,34 +391,24 @@ const PaymentSettings = {
         const dot = document.getElementById('paypal-status-dot');
         const emailDisplay = document.getElementById('paypal-display-email');
         const btn = document.getElementById('btn-connect-paypal');
-        const isVerified = this.data.isVerified;
 
         if (!label || !dot) return;
 
-        // Remove Skeleton States
         if (btn) btn.classList.remove('btn-loading-skeleton');
         if (dot) dot.style.backgroundColor = "";
 
         if (paypalEmail && this.isValidEmail(paypalEmail)) {
-            label.innerHTML = '';
-            if (isVerified) {
-                const icon = document.createElement('i');
-                icon.className = 'bi bi-patch-check-fill';
-                label.appendChild(icon);
-                label.appendChild(document.createTextNode(' Verificado'));
-            } else {
-                label.textContent = 'Conectado';
-            }
+            label.textContent = "Configurado";
             label.style.color = "#10b981";
             dot.className = "status-dot online";
             if (emailDisplay) emailDisplay.textContent = paypalEmail;
-            if (btn) btn.textContent = isVerified ? "Cambiar Cuenta PayPal" : "Verificar PayPal";
+            if (btn) btn.textContent = "Cambiar Cuenta PayPal";
         } else {
             label.textContent = "No configurado";
             label.style.color = "#ef4444";
             dot.className = "status-dot offline";
             if (emailDisplay) emailDisplay.textContent = "Desconectado";
-            if (btn) btn.textContent = "Conectar PayPal";
+            if (btn) btn.textContent = "Configurar PayPal";
         }
     },
 
@@ -459,54 +420,57 @@ const PaymentSettings = {
     setupListeners: function () {
         const btn = document.getElementById('btn-connect-paypal');
         if (btn) {
-            btn.onclick = () => this.startOAuthFlow();
+            btn.onclick = () => this.openPayPalModal();
         }
     },
 
-    startOAuthFlow: async function () {
+    // --- MODAL ACTIONS ---
+
+    openPayPalModal: function () {
+        const modal = document.getElementById('modal-paypal-email');
+        const input = document.getElementById('paypal-input-email');
+        if (modal) {
+            modal.classList.add('active');
+            if (input) input.value = this.data.status || "";
+        }
+    },
+
+    closePayPalModal: function () {
+        const modal = document.getElementById('modal-paypal-email');
+        if (modal) modal.classList.remove('active');
+    },
+
+    savePayPalEmail: async function () {
+        const email = document.getElementById('paypal-input-email').value.trim().toLowerCase();
+        const btn = document.getElementById('btn-save-paypal-email');
+
+        if (email && !this.isValidEmail(email)) {
+            if (window.showToast) window.showToast("Por favor ingresa un correo válido.", "error");
+            return;
+        }
+
         try {
-            // 1. Obtener el token de la sesión actual de Supabase
-            const { data: { session }, error: sessionError } = await window.supabaseClient.auth.getSession();
+            btn.disabled = true;
+            btn.textContent = "Guardando...";
 
-            if (sessionError || !session) {
-                console.error('❌ No se pudo obtener la sesión:', sessionError);
-                if (window.showToast) window.showToast('Sesión expirada. Por favor, inicia sesión de nuevo.', 'error');
-                return;
-            }
+            const { error } = await window.supabaseClient
+                .from('users')
+                .update({ paypal_email: email })
+                .eq('id', this.userId);
 
-            const token = session.access_token;
+            if (error) throw error;
 
-            // 2. Llamar al backend para obtener la URL de PayPal con el header de Auth
-            const response = await fetch('/api/auth/paypal/connect', {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Accept': 'application/json'
-                }
-            });
+            this.data.status = email;
+            this.renderStatus();
+            this.closePayPalModal();
 
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error || 'Error al iniciar conexión');
-            }
-
-            const data = await response.json();
-
-            // 3. Si tenemos la URL, redirigimos
-            if (data.url) {
-                // console.log('🚀 Redirigiendo a PayPal...');
-                window.location.href = data.url;
-            } else {
-                throw new Error('No se recibió la URL de redirección');
-            }
-
+            if (window.showToast) window.showToast("Cuenta PayPal actualizada correctamente.", "success");
         } catch (err) {
-            console.error('❌ Error en startOAuthFlow:', err);
-            if (window.showToast) {
-                window.showToast(err.message || 'Error al conectar con PayPal', 'error');
-            } else {
-                alert('Error al conectar con PayPal: ' + err.message);
-            }
+            console.error("Error saving paypal email:", err);
+            if (window.showToast) window.showToast("Error al guardar los cambios.", "error");
+        } finally {
+            btn.disabled = false;
+            btn.textContent = "Guardar Cambios";
         }
     },
 
@@ -525,13 +489,7 @@ const PaymentSettings = {
         const content = document.getElementById('security-logs-content');
         if (!content) return;
 
-        content.innerHTML = '';
-        const loading = document.createElement('div');
-        loading.style.textAlign = 'center';
-        loading.style.color = '#666';
-        loading.style.padding = '20px';
-        loading.textContent = 'Consultando base de datos...';
-        content.appendChild(loading);
+        content.innerHTML = '<div style="text-align:center; padding:20px; color:#666;">Cargando...</div>';
 
         try {
             const { data, error } = await window.supabaseClient
@@ -540,67 +498,10 @@ const PaymentSettings = {
                 .eq('order_id', orderId)
                 .order('created_at', { ascending: false });
 
-            if (error) {
-                if (error.code === 'PGRST116' || error.message.includes('not found')) {
-                    content.innerHTML = '';
-                    const div = document.createElement('div');
-                    div.style.textAlign = "center";
-                    div.style.padding = "30px";
-                    div.style.border = "1px dashed rgba(255,255,255,0.1)";
-                    div.style.borderRadius = "12px";
-
-                    const i = document.createElement('i');
-                    i.className = "bi bi-info-circle";
-                    i.style.fontSize = "2rem";
-                    i.style.color = "#555";
-                    i.style.display = "block";
-                    i.style.marginBottom = "12px";
-
-                    const p1 = document.createElement('p');
-                    p1.style.color = "#999";
-                    p1.style.fontSize = "0.9rem";
-                    p1.style.margin = "0";
-                    p1.textContent = "No hay descargas registradas para este pedido aún.";
-
-                    const p2 = document.createElement('p');
-                    p2.style.color = "#666";
-                    p2.style.fontSize = "0.8rem";
-                    p2.style.marginTop = "8px";
-                    p2.textContent = "Las descargas se registran automáticamente al iniciar la descarga del archivo.";
-
-                    div.appendChild(i);
-                    div.appendChild(p1);
-                    div.appendChild(p2);
-                    content.appendChild(div);
-                    return;
-                }
-                throw error;
-            }
+            if (error) throw error;
 
             if (!data || data.length === 0) {
-                content.innerHTML = '';
-                const div = document.createElement('div');
-                div.style.textAlign = "center";
-                div.style.padding = "30px";
-                div.style.border = "1px dashed rgba(255,255,255,0.1)";
-                div.style.borderRadius = "12px";
-
-                const i = document.createElement('i');
-                i.className = "bi bi-info-circle";
-                i.style.fontSize = "2rem";
-                i.style.color = "#555";
-                i.style.display = "block";
-                i.style.marginBottom = "12px";
-
-                const p = document.createElement('p');
-                p.style.color = "#999";
-                p.style.fontSize = "0.9rem";
-                p.style.margin = "0";
-                p.textContent = "No se han detectado intentos de descarga.";
-
-                div.appendChild(i);
-                div.appendChild(p);
-                content.appendChild(div);
+                content.innerHTML = '<div style="text-align:center; padding:30px; border:1px dashed rgba(255,255,255,0.1); border-radius:12px; color:#666;">No hay registros para este pedido.</div>';
                 return;
             }
 
@@ -608,64 +509,21 @@ const PaymentSettings = {
             data.forEach(log => {
                 const item = document.createElement('div');
                 item.className = 'security-log-item';
-
-                const top = document.createElement('div');
-                top.style.display = 'flex';
-                top.style.justifyContent = 'space-between';
-                top.style.marginBottom = '4px';
-
-                const date = document.createElement('span');
-                date.className = 'log-date';
-                date.textContent = new Date(log.created_at).toLocaleString();
-
-                const ip = document.createElement('span');
-                ip.className = 'log-ip';
-                ip.textContent = log.ip_address || 'IP Desconocida';
-
-                top.appendChild(date);
-                top.appendChild(ip);
-
-                const ua = document.createElement('div');
-                ua.style.color = '#666';
-                ua.style.fontSize = '0.7rem';
-                ua.style.whiteSpace = 'nowrap';
-                ua.style.overflow = 'hidden';
-                ua.style.textOverflow = 'ellipsis';
-                ua.textContent = log.user_agent || 'N/A';
-                ua.title = log.user_agent || 'N/A';
-
-                item.appendChild(top);
-                item.appendChild(ua);
+                item.innerHTML = `
+                    <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+                        <span class="log-date">${new Date(log.created_at).toLocaleString()}</span>
+                        <span class="log-ip">${log.ip_address || 'IP Oculta'}</span>
+                    </div>
+                    <div style="color:#666; font-size:0.7rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${log.user_agent || 'N/A'}</div>
+                `;
                 content.appendChild(item);
             });
 
         } catch (err) {
-            content.innerHTML = '';
-            const div = document.createElement('div');
-            div.style.textAlign = "center";
-            div.style.padding = "20px";
-
-            const i = document.createElement('i');
-            i.className = 'bi bi-shield-slash';
-            i.style.color = '#444';
-            i.style.fontSize = '1.5rem';
-
-            const p = document.createElement('p');
-            p.style.color = '#888';
-            p.style.fontSize = '0.85rem';
-            p.style.marginTop = '10px';
-            p.textContent = 'El monitoreo de seguridad está activado pero no se encontraron registros previos para esta transacción.';
-
-            div.appendChild(i);
-            div.appendChild(p);
-            content.appendChild(div);
+            content.innerHTML = '<div style="text-align:center; padding:20px; color:#ef4444;">Error al cargar bitácora.</div>';
         }
     }
 };
 
-// Make it global
 window.PaymentSettings = PaymentSettings;
-window.paymentsettings = PaymentSettings;
-
-// Auto-init
 document.addEventListener('DOMContentLoaded', () => PaymentSettings.init());
