@@ -38,7 +38,7 @@ async function initOnboardingWidget() {
         .select('*')
         .eq('id', userId)
         .single();
-    
+
     if (error) {
         console.error('❌ Onboarding widget: Error fetching profile:', error);
         return;
@@ -55,7 +55,7 @@ async function initOnboardingWidget() {
                 .select('id')
                 .eq('referral_code', pendingRef)
                 .single();
-            
+
             if (referrer && referrer.id !== userId) {
                 // Link current user to referrer
                 const { error: insertError } = await window.supabaseClient
@@ -65,7 +65,7 @@ async function initOnboardingWidget() {
                         referred_user_id: userId,
                         status: 'pending'
                     }]);
-                
+
                 if (!insertError) {
                     localStorage.removeItem('offszn_referral_code');
                 } else if (insertError.code === '23505') {
@@ -94,41 +94,41 @@ async function initOnboardingWidget() {
 
     // 6. Calculate Completion
     const tasks = [
-        { 
-            id: 'avatar', 
-            title: 'Añadir foto de perfil', 
-            completed: !!(profile.avatar_url && !profile.avatar_url.includes('googleusercontent.com') && !profile.avatar_url.includes('ui-avatars.com')), 
-            link: '/perfilpro.html', 
-            weight: 20 
+        {
+            id: 'avatar',
+            title: 'Añadir foto de perfil',
+            completed: !!(profile.avatar_url && !profile.avatar_url.includes('googleusercontent.com') && !profile.avatar_url.includes('ui-avatars.com')),
+            link: '/perfilpro.html',
+            weight: 20
         },
-        { 
-            id: 'paypal', 
-            title: 'Configurar Paypal para pagos', 
-            completed: !!profile.paypal_email, 
-            link: '/transacciones.html', 
-            weight: 20 
+        {
+            id: 'paypal',
+            title: 'Configurar Paypal para pagos',
+            completed: !!profile.paypal_email,
+            link: '/transacciones.html',
+            weight: 20
         },
-        { 
-            id: 'firstBeat', 
-            title: 'Sube tu primer beat o kit', 
-            completed: (productCount > 0), 
-            link: '/cuenta/subir-kit.html', 
-            weight: 20 
+        {
+            id: 'firstBeat',
+            title: 'Sube tu primer beat o kit',
+            completed: (productCount > 0),
+            link: '/cuenta/subir-kit.html',
+            weight: 20
         },
-        { 
-            id: 'referral', 
-            title: 'Invita a tus amigos', 
+        {
+            id: 'referral',
+            title: 'Invita a tus amigos y consigue recompensas',
             completed: (referralCount >= 30),
             modal: 'referral',
-            link: '#', 
-            weight: 20 
+            link: '#',
+            weight: 20
         },
-        { 
-            id: 'proPlan', 
-            title: 'Consigue más ventas con plan pro', 
-            completed: (profile.plan_id === 'pro'), 
-            link: '/cuenta/planes.html', 
-            weight: 20 
+        {
+            id: 'proPlan',
+            title: 'Consigue más ventas con plan pro',
+            completed: (profile.plan_id === 'pro'),
+            link: '/cuenta/planes.html',
+            weight: 20
         }
     ];
 
@@ -276,6 +276,38 @@ function renderWidget(tasks, progress, profile, stats) {
                 font-size: 0.85rem; font-weight: 600;
             }
             
+            /* Featured Task Highlighting */
+            .onb-task.featured {
+                background: rgba(253, 224, 71, 0.05);
+                border: 1px solid rgba(253, 224, 71, 0.2);
+                box-shadow: 0 0 20px rgba(253, 224, 71, 0.05);
+            }
+            .onb-task.featured:hover {
+                background: rgba(253, 224, 71, 0.08);
+                border-color: rgba(253, 224, 71, 0.3);
+            }
+            .onb-task.featured:not(.completed) .onb-check {
+                border-color: #fde047;
+                box-shadow: 0 0 10px rgba(253, 224, 71, 0.2);
+                animation: pulseCheck 2s infinite;
+            }
+            @keyframes pulseCheck {
+                0% { transform: scale(1); }
+                50% { transform: scale(1.1); box-shadow: 0 0 15px rgba(253, 224, 71, 0.4); }
+                100% { transform: scale(1); }
+            }
+            .onb-task-badge {
+                background: #fde047;
+                color: #000;
+                font-size: 0.6rem;
+                font-weight: 800;
+                padding: 2px 6px;
+                border-radius: 4px;
+                margin-left: 8px;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+            }
+            
             /* Referral Modal Styles */
             .ref-header {
                 text-align: center; margin-bottom: 20px;
@@ -309,6 +341,71 @@ function renderWidget(tasks, progress, profile, stats) {
             }
             .ref-rule-icon { color: #fde047; font-size: 0.9rem; margin-top: 2px;}
             .ref-rule-text { font-size: 0.75rem; color: #d4d4d8; line-height: 1.4; }
+
+            /* Tabs */
+            .ref-tabs {
+                display: flex;
+                gap: 8px;
+                margin-bottom: 20px;
+                padding-bottom: 12px;
+                border-bottom: 1px solid rgba(255,255,255,0.05);
+            }
+            .ref-tab-btn {
+                background: rgba(255,255,255,0.03);
+                border: 1px solid rgba(255,255,255,0.05);
+                color: #a1a1aa;
+                padding: 6px 14px;
+                border-radius: 8px;
+                font-size: 0.75rem;
+                font-weight: 600;
+                cursor: pointer;
+                transition: all 0.2s;
+            }
+            .ref-tab-btn:hover {
+                background: rgba(255,255,255,0.06);
+                color: #fff;
+            }
+            .ref-tab-btn.active {
+                background: #fff;
+                color: #000;
+                border-color: #fff;
+            }
+            .ref-tab-content {
+                display: none;
+                animation: fadeIn 0.3s ease;
+            }
+            .ref-tab-content.active {
+                display: block;
+            }
+            @keyframes fadeIn {
+                from { opacity: 0; transform: translateY(4px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+
+            /* Benefits List */
+            .ref-benefit-item {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                margin-bottom: 12px;
+            }
+            .ref-benefit-icon {
+                width: 18px;
+                height: 18px;
+                background: #fde047;
+                color: #000;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 0.7rem;
+                font-weight: 800;
+            }
+            .ref-benefit-text {
+                font-size: 0.85rem;
+                font-weight: 600;
+                color: #fde047;
+            }
 
             /* Back Button */
             .onb-back {
@@ -352,9 +449,12 @@ function updateWidgetContent(tasks, progress, profile, stats, wasActive) {
                 
                 <div style="display:flex; flex-direction:column; gap:8px; margin-top: 20px;">
                     ${tasks.map(t => `
-                        <div class="onb-task ${t.completed ? 'completed' : ''}" data-task="${t.id}" data-link="${t.link}" data-modal="${t.modal || ''}">
+                        <div class="onb-task ${t.completed ? 'completed' : ''} ${t.id === 'referral' ? 'featured' : ''}" data-task="${t.id}" data-link="${t.link}" data-modal="${t.modal || ''}">
                             <div class="onb-check"><i class="bi bi-check-lg" style="margin-top:1px;"></i></div>
-                            <span class="onb-task-title">${t.completed ? '<s>'+t.title+'</s>' : t.title}</span>
+                            <span class="onb-task-title">
+                                ${t.completed ? '<s>' + t.title + '</s>' : t.title}
+                                ${t.id === 'referral' && !t.completed ? '<span class="onb-task-badge">Pro</span>' : ''}
+                            </span>
                         </div>
                     `).join('')}
                 </div>
@@ -379,31 +479,63 @@ function updateWidgetContent(tasks, progress, profile, stats, wasActive) {
                         if (count >= 1) return '¡Vas bien!';
                         return 'Referidos verificados';
                     })()}</p>
+
                     ${stats.referralCount >= 30 ? `
-                        <div style="margin-top: 10px; padding: 10px; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 8px;">
-                            <p style="font-size: 0.75rem; color: #10b981; margin: 0; font-weight: 600;">
-                                <i class="bi bi-info-circle" style="margin-right: 4px;"></i>
+                        <div style="margin-top: 15px; padding: 12px; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 12px;">
+                            <p style="font-size: 0.8rem; color: #10b981; margin: 0; font-weight: 600; line-height: 1.4;">
+                                <i class="bi bi-check-circle-fill" style="margin-right: 6px;"></i>
                                 Se mandó un correo al equipo de soporte. Pronto se activará tu cuenta Pro.
                             </p>
                         </div>
-                    ` : ''}
+                    ` : `
+                        <div class="ref-progress-bar">
+                            <div class="ref-progress-fill" style="width: ${refProgress}%"></div>
+                        </div>
+                    `}
                 </div>
 
-                <div class="ref-progress-bar">
-                    <div class="ref-progress-fill" style="width: ${refProgress}%"></div>
-                </div>
+                ${stats.referralCount < 30 ? `
+                    <div class="ref-tabs" id="refTabs">
+                        <button class="ref-tab-btn active" data-tab="reglas">Reglas</button>
+                        <button class="ref-tab-btn" data-tab="beneficios">Beneficios</button>
+                    </div>
 
-                <div class="ref-rule-item">
-                    <i class="bi bi-stars ref-rule-icon"></i>
-                    <p class="ref-rule-text"><b>Invita amigos:</b> Comparte tu link y obtén 1 mes de Plan PRO tras 30 referidos exitosos.</p>
-                </div>
-                
-                <div class="ref-rule-item">
-                    <i class="bi bi-shield-check ref-rule-icon"></i>
-                    <p class="ref-rule-text"><b>Regla:</b> El invitado debe registrarse, verificar correo y subir su primer beat para valer.</p>
-                </div>
+                    <div id="tabReglas" class="ref-tab-content active">
+                        <div class="ref-rule-item">
+                            <i class="bi bi-stars ref-rule-icon"></i>
+                            <p class="ref-rule-text"><b>Invita amigos:</b> Comparte tu link y obtén 1 mes de Plan PRO tras 30 referidos exitosos.</p>
+                        </div>
+                        <div class="ref-rule-item">
+                            <i class="bi bi-shield-check ref-rule-icon"></i>
+                            <p class="ref-rule-text"><b>Regla:</b> El invitado debe registrarse, verificar correo y subir su primer beat para valer.</p>
+                        </div>
+                    </div>
 
-                <div class="ref-link-box">
+                    <div id="tabBeneficios" class="ref-tab-content">
+                        <div class="ref-benefit-item">
+                            <div class="ref-benefit-icon"><i class="bi bi-check-lg"></i></div>
+                            <span class="ref-benefit-text">Subidas ilimitadas de productos</span>
+                        </div>
+                        <div class="ref-benefit-item">
+                            <div class="ref-benefit-icon"><i class="bi bi-check-lg"></i></div>
+                            <span class="ref-benefit-text">0% Comisión por Venta</span>
+                        </div>
+                        <div class="ref-benefit-item">
+                            <div class="ref-benefit-icon"><i class="bi bi-check-lg"></i></div>
+                            <span class="ref-benefit-text">30 YouTube + OFFSZN / mes</span>
+                        </div>
+                        <div class="ref-benefit-item">
+                            <div class="ref-benefit-icon"><i class="bi bi-check-lg"></i></div>
+                            <span class="ref-benefit-text">Promoción en Feed</span>
+                        </div>
+                        <div class="ref-benefit-item">
+                            <div class="ref-benefit-icon"><i class="bi bi-check-lg"></i></div>
+                            <span class="ref-benefit-text">Solicitudes Ilimitadas</span>
+                        </div>
+                    </div>
+                ` : ''}
+
+                <div class="ref-link-box" style="margin-top: ${stats.referralCount >= 30 ? '10px' : '20px'}">
                     <input type="text" class="ref-link-input" value="${window.location.origin}/pages/register.html?ref=${profile.referral_code || ''}" id="refLinkInput">
                     <button class="ref-copy-btn" id="refCopyBtn">Copiar</button>
                 </div>
@@ -458,6 +590,24 @@ function setupWidgetListeners(container) {
     refBackBtn.addEventListener('click', () => {
         checklistView.style.display = 'block';
         referralView.style.display = 'none';
+    });
+
+    // Tab Logic
+    const tabBtns = document.querySelectorAll('.ref-tab-btn');
+    tabBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const tabId = btn.dataset.tab;
+            
+            // Toggle active btn
+            tabBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            // Toggle active content
+            const contents = document.querySelectorAll('.ref-tab-content');
+            contents.forEach(c => c.classList.remove('active'));
+            const targetContent = document.getElementById('tab' + tabId.charAt(0).toUpperCase() + tabId.slice(1));
+            if (targetContent) targetContent.classList.add('active');
+        });
     });
 
     refCopyBtn.addEventListener('click', () => {

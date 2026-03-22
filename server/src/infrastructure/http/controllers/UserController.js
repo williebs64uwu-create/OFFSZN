@@ -74,7 +74,7 @@ export const completeOnboarding = async (req, res) => {
         }
 
         // 2. Prepare Update Data
-        const updateData = { 
+        const updateData = {
             nickname: nickname,
             ip_address: userIp // Log the IP
         };
@@ -97,7 +97,7 @@ export const completeOnboarding = async (req, res) => {
         // 3. Handle Referral Logic (If code provided)
         if (referralCode) {
             console.log(`[Referral] User ${userId} used code ${referralCode}`);
-            
+
             // Validate Referral Code
             const { data: referrer, error: referrerError } = await supabase
                 .from('users')
@@ -109,22 +109,33 @@ export const completeOnboarding = async (req, res) => {
                 // Security Checks
                 const sameUser = referrer.id === userId;
                 const sameIp = referrer.ip_address === userIp;
-                
+
                 // Robust VPN/Proxy Check (Headers)
-                const isSuspicious = 
-                    req.headers['via'] || 
-                    req.headers['forwarded'] || 
+                const isSuspicious =
+                    req.headers['via'] ||
+                    req.headers['forwarded'] ||
                     req.headers['x-real-ip'] ||
                     req.headers['proxy-client-ip'] ||
                     req.headers['wl-proxy-client-ip'] ||
                     (req.headers['x-forwarded-for'] && req.headers['x-forwarded-for'].split(',').length > 1);
 
-                if (sameUser) {
-                    console.warn(`[Referral] Blocked: Self-referral attempt by ${userId}`);
-                } else if (sameIp) {
-                    console.warn(`[Referral] Blocked: Same IP referral (${userIp}) between ${referrer.id} and ${userId}`);
-                } else if (isSuspicious) {
-                    console.warn(`[Referral] Blocked: Suspicious headers detected (VPN/Proxy) for user ${userId}`);
+                if (sameUser || sameIp || isSuspicious) {
+                    let reason = '';
+                    if (sameUser) reason = 'Self-referral';
+                    else if (sameIp) reason = 'Same IP';
+                    else if (isSuspicious) reason = 'VPN/Proxy detected';
+
+                    console.warn(`[Referral] Blocked: ${reason} attempt by ${userId} for referrer ${referrer.id}`);
+
+                    // Log failed attempt
+                    await supabase.from('referrals').insert([{
+                        referrer_id: referrer.id,
+                        referred_user_id: userId,
+                        status: 'rejected',
+                        failure_reason: reason
+                    }]).catch(err => {
+                        if (err.code !== '23505') console.error('[Referral] Error logging failure:', err);
+                    });
                 } else {
                     // Create Referral Record
                     const { error: refError } = await supabase
@@ -150,7 +161,7 @@ export const completeOnboarding = async (req, res) => {
                             // Logic for 30 referrals threshold
                             if (count === 30) {
                                 console.log(`[Referral] Threshold: Referrer ${referrer.email} reached 30 referrals! Sending emails...`);
-                                
+
                                 const emailHtml = `
                                     <div style="font-family: sans-serif; padding: 20px; background: #000; color: #fff; border-radius: 10px;">
                                         <h2 style="color: #fff; text-align: center;">🚀 ¡Meta de Referidos Alcanzada!</h2>
@@ -167,7 +178,7 @@ export const completeOnboarding = async (req, res) => {
                                 ]).catch(err => console.error('[Referral] Email error:', err));
                             }
                         }
-                    } else if (refError.code !== '23505') { 
+                    } else if (refError.code !== '23505') {
                         console.error('[Referral] Error creating record:', refError);
                     }
                 }
@@ -185,8 +196,8 @@ export const completeOnboarding = async (req, res) => {
 
         if (updateError) throw updateError;
 
-        res.status(200).json({ 
-            message: 'Perfil completado exitosamente.', 
+        res.status(200).json({
+            message: 'Perfil completado exitosamente.',
             user: updatedUser[0],
             referralApplied: true // Always true even if ignored for security to avoid leaking info
         });

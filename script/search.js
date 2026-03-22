@@ -7,7 +7,7 @@ const SEARCH_CONFIG = {
     RESULTS_PER_PAGE: 20
 };
 
-// State
+// --- State ---
 let allProducts = [];
 let allProducers = [];
 let filteredResults = [];
@@ -27,6 +27,9 @@ let currentFilters = {
 let renderTimeout = null; // Debounce for results rendering
 let searchAbortController = null; // For cancelling search requests
 
+const imgPlaceholder = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
+
+// --- Skeletons ---
 function isPresetProduct(p) {
     if (!p) return false;
     const type = (p.product_type || '').toLowerCase();
@@ -34,6 +37,51 @@ function isPresetProduct(p) {
     return type === 'preset' || type === 'vocalpreset' || type.includes('preset') ||
         type === 'template' || type === 'plantilla' ||
         cat === 'plantilla' || cat === 'vocal preset' || cat.includes('preset');
+}
+
+/**
+ * Checks if a product matches any of the given category slugs or labels.
+ * Handles synonyms and special logic (like presets).
+ */
+function isProductInCategory(p, categories) {
+    if (!categories || categories.length === 0) return true;
+    
+    // Support both single string and array
+    const catArray = Array.isArray(categories) ? categories : [categories];
+    if (catArray.includes('Todo') || catArray.includes('Todas') || catArray.includes('all')) return true;
+
+    return catArray.some(cat => {
+        if (!cat) return true;
+        const target = cat.toLowerCase().trim();
+        const pType = (p.product_type || '').toLowerCase();
+        const pCat = (p.category || '').toLowerCase();
+
+        // Specific mapping for "Beats"
+        if (target === 'beat' || target === 'beats') return pType === 'beat';
+        
+        // Specific mapping for "Drum Kits"
+        if (target === 'drumkit' || target === 'drum kits' || target === 'kit' || target === 'kits') {
+            return pType === 'drumkit' || pType === 'kit' || pCat.includes('drum');
+        }
+        
+        // Specific mapping for "Samples" / "Loop Kits"
+        if (target === 'loopkit' || target === 'samples' || target === 'samplepack' || target === 'loop kits' || target === 'sample pack') {
+            return pType === 'loopkit' || pType === 'samplepack' || pCat.includes('sample') || pCat.includes('loop');
+        }
+        
+        // Specific mapping for "Presets"
+        if (target === 'preset' || target === 'presets') {
+            return isPresetProduct(p);
+        }
+        
+        // Specific mapping for "Plantillas" / "Templates"
+        if (target === 'template' || target === 'plantillas' || target === 'templates' || target === 'plantilla') {
+            return pType === 'template' || pType === 'plantilla' || pCat.includes('template') || pCat.includes('plantilla');
+        }
+        
+        // Literal match
+        return pType === target || pCat.includes(target);
+    });
 }
 
 function getProductAudio(product) {
@@ -433,12 +481,8 @@ async function performSearch() {
         let matchedProducts = allProducts.map(p => {
             const score = getMatchScore(p, query, normalizeString(query));
 
-            let matchesCat = true;
-            if (category === 'Beats') matchesCat = p.product_type === 'beat';
-            else if (category === 'Drum Kits') matchesCat = p.product_type === 'drumkit';
-            else if (category === 'Samples') matchesCat = p.product_type === 'loopkit';
-            else if (category === 'Presets') matchesCat = p.product_type === 'preset';
-            else if (category === 'Plantillas') matchesCat = p.product_type === 'template';
+            // Use the unified category matcher: check URL param directly or current filters
+            let matchesCat = isProductInCategory(p, currentFilters.categories.length > 0 ? currentFilters.categories : category);
 
             return { ...p, _matchScore: score, _matchesCat: matchesCat };
         })
@@ -735,7 +779,7 @@ function applyFilters() {
 
         // 2. Category Filter
         if (currentFilters.categories.length > 0 && !currentFilters.categories.includes('Todo')) {
-            results = results.filter(p => currentFilters.categories.includes(p.product_type));
+            results = results.filter(p => isProductInCategory(p, currentFilters.categories));
         }
 
         // 3. BPM Filter

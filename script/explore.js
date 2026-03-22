@@ -600,7 +600,7 @@ function startHeroSlider() {
     track.addEventListener('touchend', e => {
         if (!isDragging) return;
         isDragging = false;
-        
+
         const touchEndX = e.changedTouches[0].clientX;
         const diffX = touchEndX - touchStartX;
         const movedBy = diffX;
@@ -619,7 +619,7 @@ function startHeroSlider() {
         }
 
         performHeroTransition(currentHeroIndex);
-        
+
         // Restart timer
         if (heroTimer) clearInterval(heroTimer);
         heroTimer = setInterval(() => moveToNextHero(), EXPLORE_CONFIG.HERO_ROTATE_MS);
@@ -638,7 +638,7 @@ function performHeroTransition(index) {
 
     const slideWidth = heroContainer.getBoundingClientRect().width;
     const offset = -index * slideWidth;
-    
+
     gsap.to(track, {
         x: offset,
         duration: 0.6,
@@ -721,7 +721,7 @@ function renderHeroSlideHtml(product, index) {
     `;
 }
 
-window.handleHeroPlay = function(btn) {
+window.handleHeroPlay = function (btn) {
     const idx = btn.dataset.heroIndex;
     const product = heroProducts[parseInt(idx)];
     if (product && window.playTrack) {
@@ -816,11 +816,20 @@ function createShelfRow(title, items, format = 'standard') {
     const row = document.createElement('div');
     row.className = 'explore-row';
     const rowId = `row-${Math.random().toString(36).substr(2, 9)}`;
+    let viewAllUrl = `/search.html?q=${encodeURIComponent(title)}`;
+    if (title.toLowerCase().includes('recomendados')) {
+        viewAllUrl = '/search.html';
+    } else if (title.toLowerCase().includes('kits y librerías')) {
+        viewAllUrl = '/search.html?cat=drumkit,loopkit,preset';
+    } else if (title.toLowerCase().includes('presets')) {
+        viewAllUrl = '/search.html?cat=preset';
+    }
+
     row.innerHTML = `
         <div class="row-header">
             <h2 class="row-title">${title}</h2>
             <div class="row-actions">
-                <span class="view-all" onclick="window.location.href='/search?q=${encodeURIComponent(title)}'">Ver todos</span>
+                <span class="view-all" onclick="window.location.href='${viewAllUrl}'">Ver todos</span>
                 <div class="row-nav-arrows mobile-hide">
                     <button class="btn-nav-mini prev" id="prev-${rowId}"><i class="bi bi-chevron-left"></i></button>
                     <button class="btn-nav-mini next" id="next-${rowId}"><i class="bi bi-chevron-right"></i></button>
