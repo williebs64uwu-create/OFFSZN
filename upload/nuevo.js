@@ -1940,6 +1940,11 @@ window.handlePublish = async function () {
         isDirty = false;
         showToast('¡Beat publicado con éxito!', 'success');
 
+        // Trigger onboarding widget refresh
+        if (typeof window.refreshOnboardingWidget === 'function') {
+            window.refreshOnboardingWidget();
+        }
+
         setTimeout(() => {
             window.location.href = '/cuenta/mis-kits.html';
         }, 1500);

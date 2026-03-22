@@ -569,6 +569,12 @@ async function saveProfileChanges(e, type) {
 
         // REDIRECT OR RELOAD
         const nickname = currentProfileData.nickname || currentUser.user_metadata?.nickname;
+
+        // Refresh Onboarding Widget in real-time
+        if (window.refreshOnboardingWidget) {
+            window.refreshOnboardingWidget();
+        }
+
         if (type === 'profile' && nickname) {
             showToast("Perfil actualizado. Redirigiendo...", 'success');
             setTimeout(() => {

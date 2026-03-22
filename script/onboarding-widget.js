@@ -3,7 +3,14 @@
  * Shows a floating checklist for users who haven't completed their profile 100%.
  */
 
-(async function initOnboardingWidget() {
+async function initOnboardingWidget() {
+    // 0. Mobile hide
+    if (window.innerWidth < 768) {
+        const existing = document.getElementById('offszn-onb-widget');
+        if (existing) existing.remove();
+        return;
+    }
+
     // 1. Wait for Supabase to be initialized
     const maxRetries = 50;
     let retries = 0;
@@ -36,11 +43,7 @@
         console.error('❌ Onboarding widget: Error fetching profile:', error);
         return;
     }
-    if (!profile) {
-        console.warn('⚠️ Onboarding widget: Profile not found for user:', userId);
-        return;
-    }
-    console.log('✅ Onboarding widget: Profile loaded', profile.nickname);
+    if (!profile) return;
 
     // 4. Handle Pending Referral Tracking
     const pendingRef = localStorage.getItem('offszn_referral_code');
@@ -64,7 +67,6 @@
                     }]);
                 
                 if (!insertError) {
-                    console.log('✅ Referral successfully linked!');
                     localStorage.removeItem('offszn_referral_code');
                 } else if (insertError.code === '23505') {
                     // Already referred by someone else or already exists
@@ -74,7 +76,7 @@
                 // Self-referral or invalid code
                 localStorage.removeItem('offszn_referral_code');
             }
-        } catch (e) { console.error('Error linking referral:', e); }
+        } catch (e) { /* silent */ }
     }
 
     // 5. Fetch Products Count (For Upload Task)
@@ -91,40 +93,32 @@
         .eq('status', 'verified');
 
     // 6. Calculate Completion
-    function checkSocials(soc) {
-        if(!soc) return false;
-        try {
-            const parsed = typeof soc === 'string' ? JSON.parse(soc) : soc;
-            return Object.keys(parsed).some(k => parsed[k] && parsed[k].trim() !== '');
-        } catch(e) { return false; }
-    }
-
     const tasks = [
         { 
             id: 'avatar', 
             title: 'Añadir foto de perfil', 
             completed: !!(profile.avatar_url && !profile.avatar_url.includes('googleusercontent.com') && !profile.avatar_url.includes('ui-avatars.com')), 
-            link: '/perfilpro', // Redirigir a editar perfil
+            link: '/perfilpro.html', 
             weight: 20 
         },
         { 
             id: 'paypal', 
             title: 'Configurar Paypal para pagos', 
             completed: !!profile.paypal_email, 
-            link: '/perfilpro', 
+            link: '/transacciones.html', 
             weight: 20 
         },
         { 
             id: 'firstBeat', 
             title: 'Sube tu primer beat o kit', 
             completed: (productCount > 0), 
-            link: '/studio/upload', 
+            link: '/cuenta/subir-kit.html', 
             weight: 20 
         },
         { 
             id: 'referral', 
             title: 'Invita a tus amigos', 
-            completed: (referralCount >= 30), // Completion means reached the goal? User says "no se va hasta que se termine"
+            completed: (referralCount >= 30),
             modal: 'referral',
             link: '#', 
             weight: 20 
@@ -133,27 +127,43 @@
             id: 'proPlan', 
             title: 'Consigue más ventas con plan pro', 
             completed: (profile.plan_id === 'pro'), 
-            link: '/planes', 
+            link: '/cuenta/planes.html', 
             weight: 20 
         }
     ];
 
     const completedWeight = tasks.filter(t => t.completed).reduce((sum, t) => sum + t.weight, 0);
 
-    // Filter out completed tasks from the display list if desired? No, let's keep them with a checkmark.
-    // However, if ALL are complete, maybe we show nothing or a "Level Up" state.
     if (completedWeight >= 100) {
-        // Option: Show nothing, OR show a smaller "Refer & Earn" persistent badge?
-        // For now, let's just return.
+        const existing = document.getElementById('offszn-onb-widget');
+        if (existing) existing.remove();
         return;
     }
 
     // 7. Render Widget
     renderWidget(tasks, completedWeight, profile, { productCount, referralCount });
-})();
+}
+
+// Expose globally
+window.refreshOnboardingWidget = initOnboardingWidget;
+
+// Initial Call
+initOnboardingWidget();
+
+// Window Resize Handling
+window.addEventListener('resize', () => {
+    initOnboardingWidget();
+});
 
 function renderWidget(tasks, progress, profile, stats) {
-    if (document.getElementById('offszn-onb-widget')) return; // Already exists
+    let container = document.getElementById('offszn-onb-widget');
+    const wasActive = document.getElementById('onbModal')?.classList.contains('active');
+
+    // If already exists, just update content to avoid flickering/re-injecting CSS
+    if (container) {
+        updateWidgetContent(tasks, progress, profile, stats, wasActive);
+        return;
+    }
 
     // Inject CSS
     if (!document.getElementById('offszn-onboarding-css')) {
@@ -194,7 +204,7 @@ function renderWidget(tasks, progress, profile, stats) {
                 width: 22px;
                 height: 22px;
                 border-radius: 50%;
-                background: conic-gradient(#000 ${progress}%, #e5e5e5 ${progress}% 100%);
+                background: conic-gradient(#000 var(--progress, 0%), #e5e5e5 var(--progress, 0%) 100%);
                 display:flex;
                 align-items:center;
                 justify-content:center;
@@ -307,26 +317,29 @@ function renderWidget(tasks, progress, profile, stats) {
             .onb-back:hover { color: #fff; }
 
             @media (max-width: 768px) {
-                .onb-widget-container {
-                    bottom: calc(24px + 90px + env(safe-area-inset-bottom));
-                }
-                .onb-modal { width: calc(100vw - 48px); max-width: 340px; }
+                .onb-widget-container { display: none !important; }
             }
         `;
         document.head.appendChild(style);
     }
 
-    const container = document.createElement('div');
+    container = document.createElement('div');
     container.id = 'offszn-onb-widget';
     container.className = 'onb-widget-container';
-    
+    document.body.appendChild(container);
+
+    updateWidgetContent(tasks, progress, profile, stats, false);
+}
+
+function updateWidgetContent(tasks, progress, profile, stats, wasActive) {
+    const container = document.getElementById('offszn-onb-widget');
+    if (!container) return;
+
     const hasSeen = localStorage.getItem('offszn_onb_modal_seen') === '1';
-    
-    // Referral Progress %
     const refProgress = Math.min((stats.referralCount / 30) * 100, 100);
 
     container.innerHTML = `
-        <div class="onb-modal ${!hasSeen ? 'active' : ''}" id="onbModal">
+        <div class="onb-modal ${wasActive || !hasSeen ? 'active' : ''}" id="onbModal">
             <!-- Main Content (Checklist) -->
             <div id="onbChecklist">
                 <div class="onb-header">
@@ -378,15 +391,17 @@ function renderWidget(tasks, progress, profile, stats) {
         </div>
         
         <div class="onb-toggle-btn" id="onbToggleBtn">
-            <div class="onb-progress-circle">
+            <div class="onb-progress-circle" style="--progress: ${progress}%">
                 <div class="onb-progress-inner"></div>
             </div>
             <span>Completar perfil</span>
         </div>
     `;
 
-    document.body.appendChild(container);
+    setupWidgetListeners(container);
+}
 
+function setupWidgetListeners(container) {
     const toggleBtn = document.getElementById('onbToggleBtn');
     const modal = document.getElementById('onbModal');
     const closeBtn = document.getElementById('onbCloseBtn');
@@ -396,8 +411,6 @@ function renderWidget(tasks, progress, profile, stats) {
     const refBackBtn = document.getElementById('refBackBtn');
     const refCopyBtn = document.getElementById('refCopyBtn');
     const refLinkInput = document.getElementById('refLinkInput');
-
-    if (!hasSeen) localStorage.setItem('offszn_onb_modal_seen', '1');
 
     toggleBtn.addEventListener('click', () => {
         modal.classList.toggle('active');
@@ -409,13 +422,10 @@ function renderWidget(tasks, progress, profile, stats) {
         modal.classList.remove('active');
     });
 
-    // Task Actions
     tasksEls.forEach(el => {
-        el.addEventListener('click', (e) => {
-            const taskId = el.dataset.task;
+        el.addEventListener('click', () => {
             const modalType = el.dataset.modal;
             const link = el.dataset.link;
-
             if (modalType === 'referral') {
                 checklistView.style.display = 'none';
                 referralView.style.display = 'block';
@@ -425,7 +435,6 @@ function renderWidget(tasks, progress, profile, stats) {
         });
     });
 
-    // Referral Logic
     refBackBtn.addEventListener('click', () => {
         checklistView.style.display = 'block';
         referralView.style.display = 'none';
@@ -441,7 +450,6 @@ function renderWidget(tasks, progress, profile, stats) {
         }, 2000);
     });
 
-    // Close when clicking outside
     document.addEventListener('click', (e) => {
         if (!container.contains(e.target) && modal.classList.contains('active')) {
             modal.classList.remove('active');

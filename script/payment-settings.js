@@ -464,6 +464,11 @@ const PaymentSettings = {
             this.renderStatus();
             this.closePayPalModal();
 
+            // Refresh Onboarding Widget in real-time
+            if (window.refreshOnboardingWidget) {
+                window.refreshOnboardingWidget();
+            }
+
             if (window.showToast) window.showToast("Cuenta PayPal actualizada correctamente.", "success");
         } catch (err) {
             console.error("Error saving paypal email:", err);
