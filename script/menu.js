@@ -91,7 +91,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if(event) event.preventDefault();
         localStorage.removeItem('authToken');
         alert('¡Has cerrado sesión!');
-        window.location.replace('/index.html'); 
+        window.location.replace('/explorar.html'); 
     }
 
     const dropdownLogoutLink = document.querySelector('.user-dropdown-menu .logout');

@@ -61,7 +61,7 @@ function handleLogout(e) {
         overlay.classList.add('fading-out'); 
         
         setTimeout(() => {
-            window.location.href = '/index.html';
+            window.location.href = '/explorar.html';
         }, 500); 
     }, 3000);
 }
@@ -69,7 +69,7 @@ function handleLogout(e) {
 function performLogout() {
     localStorage.removeItem('authToken');
     localStorage.removeItem('offszn_user_cache');
-    window.location.href = '/index.html';
+    window.location.href = '/explorar.html';
 }
 
 // Asignar a todos los botones de logout

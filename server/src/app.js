@@ -404,7 +404,11 @@ app.get(['/@:username', '/:username'], (req, res, next) => {
     const reserved = [
         'api', 'auth', 'dashboard', 'login', 'register', 'admin',
         'css', 'script', 'images', 'favicon.ico', '404', 'robots.txt',
-        'pages', 'welcome', 'home', 'index', 'health', 'status'
+        'pages', 'welcome', 'home', 'index', 'health', 'status',
+        'explorar', 'productores', 'feeds', 'reels', 'carrito', 'checkout',
+        'transacciones', 'ajustes', 'subir-kit', 'mis-compras', 'notificaciones',
+        'preferencias', 'favoritos', 'historial', 'mensajes', 'perfilpro',
+        'siguiendo', 'search', 'comunidad', 'cursos', 'legal', 'recursos', 'planes', 'cuenta'
     ];
     if (reserved.includes(username)) return next();
 

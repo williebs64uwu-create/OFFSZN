@@ -1,4 +1,5 @@
 import { supabase } from '../../database/connection.js';
+import { sendOffsznEmail } from '../../../shared/utils/mailer.js';
 
 export const getMyPurchasedProducts = async (req, res) => {
     try {
@@ -37,26 +38,29 @@ export const getMyPurchasedProducts = async (req, res) => {
 export const completeOnboarding = async (req, res) => {
     try {
         const userId = req.user.userId;
+        const userIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+
         const {
             nickname,
             role,
             firstName,
             lastName,
             socials,
-            // New fields from onboarding
             genres,
             daws,
             experience,
             goals,
             interests,
             source,
-            paypalEmail
+            paypalEmail,
+            referralCode // Added referral code
         } = req.body;
 
         if (!nickname) {
             return res.status(400).json({ error: 'El nickname es obligatorio.' });
         }
 
+        // 1. Check Nickname Availability
         const { data: existingUser, error: checkError } = await supabase
             .from('users')
             .select('id')
@@ -69,16 +73,15 @@ export const completeOnboarding = async (req, res) => {
             return res.status(409).json({ error: 'Ese nickname ya está en uso. Elige otro.' });
         }
 
-        const updateData = { nickname: nickname };
+        // 2. Prepare Update Data
+        const updateData = { 
+            nickname: nickname,
+            ip_address: userIp // Log the IP
+        };
         if (role) updateData.role = role;
         if (firstName) updateData.first_name = firstName;
         if (lastName) updateData.last_name = lastName;
-        if (socials && typeof socials === 'object' && Object.keys(socials).length > 0) {
-            updateData.socials = socials;
-        }
-
-        // Save new onboarding fields
-        // Assumes columns exist in 'users' table or Supabase allows flexible schema if configured
+        if (socials && typeof socials === 'object') updateData.socials = socials;
         if (genres) updateData.genres = genres;
         if (daws) updateData.daws = daws;
         if (experience) updateData.experience = experience;
@@ -86,28 +89,107 @@ export const completeOnboarding = async (req, res) => {
         if (interests) updateData.interests = interests;
         if (source) updateData.source = source;
         if (paypalEmail) updateData.paypal_email = paypalEmail;
+        updateData.onboarding_completed = true;
 
-        const producerRoles = ['Productor', 'Artista', 'Compositor', 'Ingeniero', 'Musico'];
+        const producerRoles = ['Productor Musical', 'Artista / Cantante', 'Compositor / Songwriter', 'Ingeniero de Mezcla/Master', 'Músico / Instrumentista', 'Otro Rol Musical'];
+        updateData.is_producer = role ? producerRoles.includes(role) : false;
 
-        if (role && producerRoles.includes(role)) {
-            updateData.is_producer = true;
-        } else {
-            updateData.is_producer = false;
+        // 3. Handle Referral Logic (If code provided)
+        if (referralCode) {
+            console.log(`[Referral] User ${userId} used code ${referralCode}`);
+            
+            // Validate Referral Code
+            const { data: referrer, error: referrerError } = await supabase
+                .from('users')
+                .select('id, email, ip_address')
+                .eq('referral_code', referralCode)
+                .single();
+
+            if (!referrerError && referrer) {
+                // Security Checks
+                const sameUser = referrer.id === userId;
+                const sameIp = referrer.ip_address === userIp;
+                
+                // Robust VPN/Proxy Check (Headers)
+                const isSuspicious = 
+                    req.headers['via'] || 
+                    req.headers['forwarded'] || 
+                    req.headers['x-real-ip'] ||
+                    req.headers['proxy-client-ip'] ||
+                    req.headers['wl-proxy-client-ip'] ||
+                    (req.headers['x-forwarded-for'] && req.headers['x-forwarded-for'].split(',').length > 1);
+
+                if (sameUser) {
+                    console.warn(`[Referral] Blocked: Self-referral attempt by ${userId}`);
+                } else if (sameIp) {
+                    console.warn(`[Referral] Blocked: Same IP referral (${userIp}) between ${referrer.id} and ${userId}`);
+                } else if (isSuspicious) {
+                    console.warn(`[Referral] Blocked: Suspicious headers detected (VPN/Proxy) for user ${userId}`);
+                } else {
+                    // Create Referral Record
+                    const { error: refError } = await supabase
+                        .from('referrals')
+                        .insert([{
+                            referrer_id: referrer.id,
+                            referred_user_id: userId,
+                            status: 'verified',
+                            verified_at: new Date().toISOString()
+                        }]);
+
+                    if (!refError) {
+                        console.log(`[Referral] Success: User ${userId} referred by ${referrer.id}`);
+
+                        // Check 30 Referrals Trigger
+                        const { count, error: countError } = await supabase
+                            .from('referrals')
+                            .select('*', { count: 'exact', head: true })
+                            .eq('referrer_id', referrer.id)
+                            .eq('status', 'verified');
+
+                        if (!countError && count >= 30) {
+                            // Logic for 30 referrals threshold
+                            if (count === 30) {
+                                console.log(`[Referral] Threshold: Referrer ${referrer.email} reached 30 referrals! Sending emails...`);
+                                
+                                const emailHtml = `
+                                    <div style="font-family: sans-serif; padding: 20px; background: #000; color: #fff; border-radius: 10px;">
+                                        <h2 style="color: #fff; text-align: center;">🚀 ¡Meta de Referidos Alcanzada!</h2>
+                                        <p>El usuario <strong>${referrer.email}</strong> ha alcanzado los <strong>30 referidos verificados</strong>.</p>
+                                        <p>Por favor, verifica su cuenta y activa el plan Pro manualmente tras revisar la legitimidad de los referidos.</p>
+                                        <hr style="border: 0; border-top: 1px solid #333; margin: 20px 0;">
+                                        <p style="font-size: 12px; color: #aaa; text-align: center;">Sistema de Referidos Automático - OFFSZN Studio</p>
+                                    </div>
+                                `;
+
+                                await Promise.all([
+                                    sendOffsznEmail({ to: 'offszn.studio@gmail.com', subject: 'Meta 30 Referidos - OFFSZN', html: emailHtml }),
+                                    sendOffsznEmail({ to: 'williebeatsyt@gmail.com', subject: 'Meta 30 Referidos - OFFSZN', html: emailHtml })
+                                ]).catch(err => console.error('[Referral] Email error:', err));
+                            }
+                        }
+                    } else if (refError.code !== '23505') { 
+                        console.error('[Referral] Error creating record:', refError);
+                    }
+                }
+            } else {
+                console.warn(`[Referral] Invalid code used: ${referralCode}`);
+            }
         }
 
+        // 4. Update User Profile
         const { data: updatedUser, error: updateError } = await supabase
             .from('users')
             .update(updateData)
             .eq('id', userId)
-            .select('id, email, nickname, role, first_name, last_name, created_at, is_admin, socials, is_producer, paypal_email, r2_version, preferred_currency');
+            .select('*');
 
         if (updateError) throw updateError;
-        if (!updatedUser || updatedUser.length === 0) {
-            return res.status(404).json({ error: 'Usuario no encontrado para actualizar.' });
-        }
 
-
-        res.status(200).json({ message: 'Perfil completado exitosamente.', user: updatedUser[0] });
+        res.status(200).json({ 
+            message: 'Perfil completado exitosamente.', 
+            user: updatedUser[0],
+            referralApplied: true // Always true even if ignored for security to avoid leaking info
+        });
 
     } catch (err) {
         console.error("Error en completeOnboarding:", err.message);

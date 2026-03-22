@@ -722,7 +722,6 @@ function renderProductPage(product) {
                          id="product-main-art"
                          alt="${escapeHTML(product.name)}"
                          class=""
-                         crossorigin="anonymous"
                          onerror="this.src='/images/portada-default.png'">
                      <!-- Play Button Overlay -->
                      <div class="product-cover-play-btn" onclick="window.playProductCover()">
@@ -3049,8 +3048,8 @@ window.processCouponClaim = async function () {
         // Step 4: Trigger Supabase Auth Sign Up (to send verification email)
         const tempPassword = 'OFFSZN-' + Math.random().toString(36).substring(2, 10).toUpperCase() + '!';
         const redirectUrl = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
-            ? window.location.origin + '/index.html'
-            : 'https://offszn.lat/index.html';
+            ? window.location.origin + '/explorar.html'
+            : 'https://offszn.lat/explorar.html';
 
 
         const { data: authData, error: authError } = await window.supabaseClient.auth.signUp({
@@ -3271,8 +3270,8 @@ window.submitNegotiation = async function () {
         if (checkData.available) {
             const tempPassword = 'OFFSZN-' + Math.random().toString(36).substring(2, 10).toUpperCase() + '!';
             const redirectUrl = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
-                ? window.location.origin + '/index.html'
-                : 'https://offszn.lat/index.html';
+                ? window.location.origin + '/explorar.html'
+                : 'https://offszn.lat/explorar.html';
 
             const { error: authError } = await window.supabaseClient.auth.signUp({
                 email: email,

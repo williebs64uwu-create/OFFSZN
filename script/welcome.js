@@ -26,7 +26,8 @@ document.addEventListener('DOMContentLoaded', () => {
     experience: [],
     goals: [],
     source: [],
-    socials: {}
+    socials: {},
+    referralCode: '' // Added referralCode
   };
 
   let currentStep = 1;
@@ -49,11 +50,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const skipBtn = document.getElementById('skipTop');
   const successModal = document.getElementById('successModal');
   const goToDashboardBtn = document.getElementById('goToDashboard');
+  const referralInput = document.getElementById('referralCode');
+  const referralStatus = document.getElementById('referralStatus');
 
   // INIT AVATAR
   setupAvatarUpload();
   setupCharacterCounters();
-  // ... (skipped some lines)
+  setupReferralCode();
 
   // ============================================
   // VALIDACIÓN DE NICKNAME (STRICT & SECURE)
@@ -232,6 +235,64 @@ document.addEventListener('DOMContentLoaded', () => {
     validateCurrentStep();
   }
 
+  // ============================================
+  // REFERRAL CODE HANDLING
+  // ============================================
+  function setupReferralCode() {
+    if (!referralInput) return;
+
+    // 1. Sync from Local Storage
+    const savedCode = localStorage.getItem('offszn_referral_code');
+    if (savedCode) {
+      referralInput.value = savedCode;
+      checkReferralCode(savedCode);
+    }
+
+    // 2. Listener for manual input
+    referralInput.addEventListener('input', (e) => {
+      const val = e.target.value.trim().toUpperCase();
+      referralInput.value = val;
+      checkReferralCode(val);
+    });
+  }
+
+  let referralCheckTimeout;
+  async function checkReferralCode(code) {
+    clearTimeout(referralCheckTimeout);
+    if (!referralStatus) return;
+
+    if (!code) {
+      referralStatus.style.display = 'none';
+      return;
+    }
+
+    referralStatus.style.display = 'block';
+    referralStatus.textContent = 'Verificando código...';
+    referralStatus.style.color = '#71717a';
+
+    referralCheckTimeout = setTimeout(async () => {
+      try {
+        const { data, error } = await supabaseClient
+          .from('users')
+          .select('nickname')
+          .eq('referral_code', code)
+          .maybeSingle();
+
+        if (error) throw error;
+
+        if (data) {
+          referralStatus.textContent = `✅ Código válido (Invitado por ${data.nickname})`;
+          referralStatus.style.color = '#22c55e';
+        } else {
+          referralStatus.textContent = '❌ Código no válido, intenta con otro';
+          referralStatus.style.color = '#ef4444';
+        }
+      } catch (err) {
+        console.error('Error verifying referral code:', err);
+        referralStatus.style.display = 'none';
+      }
+    }, 500);
+  }
 
   // ============================================
   // CUSTOM DROPDOWN LOGIC
@@ -619,6 +680,7 @@ document.addEventListener('DOMContentLoaded', () => {
       userData.firstName = normalizeSpaces(firstNameInput.value);
       userData.lastName = normalizeSpaces(lastNameInput.value);
       userData.role = roleSelect.value;
+      userData.referralCode = referralInput?.value.trim() || '';
     }
 
     // Paso 5 es Redes, guardar antes de enviar
@@ -739,10 +801,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       }
 
-      const updateData = {
+      const updatePayload = {
         nickname: finalNick,
-        first_name: userData.firstName,
-        last_name: userData.lastName,
+        firstName: userData.firstName,
+        lastName: userData.lastName,
         role: userData.role,
         genres: userData.genres,
         daws: userData.daws,
@@ -751,19 +813,27 @@ document.addEventListener('DOMContentLoaded', () => {
         interests: userData.interests,
         source: userData.source,
         socials: userData.socials,
-        is_producer: isProducer,
-        onboarding_completed: true,
-        updated_at: new Date()
+        referralCode: userData.referralCode,
+        avatarUrl: avatarUrl
       };
-      if (avatarUrl) updateData.avatar_url = avatarUrl;
 
-      // 2. Direct DB Update
-      const { error } = await supabaseClient
-        .from('users')
-        .update(updateData)
-        .eq('id', user.id);
+      // 2. Call Server-Side Onboarding API
+      const response = await fetch(`${API_URL}/me/onboarding`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(updatePayload)
+      });
 
-      if (error) throw error;
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Error al completar el perfil.');
+      }
+
+      console.log('Onboarding completado vía API');
 
       // 3. CREATE DEFAULT PROFILE (Matches Reels dependency)
       // Done silently to ensure subsequent platform features work (like Reels)
@@ -774,7 +844,7 @@ document.addEventListener('DOMContentLoaded', () => {
           plan: 'free'
         }]).select(); // Use maybeSingle or ignore if already exists? Insert is better for new users.
 
-      console.log('Onboarding completado (DB Direct + Profile)');
+      console.log('Profile record created');
 
       // 4. --- NEW: Send Payment Welcome Notification ---
       if (isProducer) {

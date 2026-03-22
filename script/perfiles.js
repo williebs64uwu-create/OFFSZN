@@ -380,7 +380,7 @@ function mostrarError(mensaje) {
             <div class="empty-icon" style="font-size: 4rem; color: #ef4444; margin-bottom: 1.5rem;"><i class="bi bi-exclamation-triangle"></i></div>
             <h3 class="empty-title" style="font-size: 1.5rem; font-weight: 800; color: #fff; font-family: 'Montserrat', sans-serif; margin-bottom: 0.75rem;">${mensaje}</h3>
             <p class="empty-description" style="font-size: 1rem; color: #666; max-width: 400px; margin: 0 auto; line-height: 1.6;">
-                <a href="/index.html" style="color: var(--purple-light);">Volver al inicio</a>
+                <a href="/explorar.html" style="color: var(--purple-light);">Volver al inicio</a>
             </p>
         </div>
         `;

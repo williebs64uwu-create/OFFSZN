@@ -41,7 +41,7 @@
     function redirectToLogin() {
         // Clear cookie to be safe
         document.cookie = "sb-access-token=; path=/; max-age=0; SameSite=Strict; Secure";
-        window.location.href = '/index.html';
+        window.location.href = '/explorar.html';
     }
 
     // Run immediately

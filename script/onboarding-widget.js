@@ -366,7 +366,27 @@ function updateWidgetContent(tasks, progress, profile, stats, wasActive) {
                 <div class="ref-header">
                     <div class="ref-badge">MEMBRESIA PRO GRATIS</div>
                     <div class="ref-points">${stats.referralCount}<span>/ 30</span></div>
-                    <p class="onb-subtitle">Referidos verificados</p>
+                    <p class="onb-subtitle">${(() => {
+                        const count = stats.referralCount;
+                        if (count >= 30) return '¡Meta alcanzada! 🎉';
+                        if (count === 29) return '¡Solo 1 más!';
+                        if (count === 28) return '¡Solo 2 más!';
+                        if (count === 27) return '¡Solo 3 más!';
+                        if (count === 26) return '¡Solo 4 más!';
+                        if (count === 25) return '¡Solo 5 más!';
+                        if (count >= 20) return '¡Ya casi!';
+                        if (count >= 10) return '¡Estás cerca!';
+                        if (count >= 1) return '¡Vas bien!';
+                        return 'Referidos verificados';
+                    })()}</p>
+                    ${stats.referralCount >= 30 ? `
+                        <div style="margin-top: 10px; padding: 10px; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 8px;">
+                            <p style="font-size: 0.75rem; color: #10b981; margin: 0; font-weight: 600;">
+                                <i class="bi bi-info-circle" style="margin-right: 4px;"></i>
+                                Se mandó un correo al equipo de soporte. Pronto se activará tu cuenta Pro.
+                            </p>
+                        </div>
+                    ` : ''}
                 </div>
 
                 <div class="ref-progress-bar">

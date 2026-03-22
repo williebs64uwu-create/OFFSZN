@@ -45,7 +45,7 @@ window.PurchasesManager = (function () {
         if (sessionError || !session) {
             // console.warn("No active session found. Redirecting to login...");
             // Redirect with a query param to come back after login
-            const currentPath = window.location.pathname.split('/').pop() || 'index.html';
+            const currentPath = window.location.pathname.split('/').pop() || '/explorar.html';
             window.location.href = `/pages/login.html?redirect=${currentPath}`;
             return;
         }

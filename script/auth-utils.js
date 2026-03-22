@@ -311,6 +311,22 @@ window.AuthUtils = {
         // If it's an external URL (not Supabase), return as is
         if (pathOrUrl.startsWith('http') && !pathOrUrl.includes('supabase.co')) return pathOrUrl;
 
+        // Safety check: if it starts with 'http' but is actually a Supabase path mistakenly prefixed
+        if (pathOrUrl.startsWith('http') && pathOrUrl.includes('supabase.co')) {
+            try {
+                const urlObj = new URL(pathOrUrl);
+                const parts = urlObj.pathname.split('/');
+                const publicIdx = parts.indexOf('public');
+                if (publicIdx !== -1 && parts.length > publicIdx + 2) {
+                    const bucket = parts[publicIdx + 1];
+                    const path = parts.slice(publicIdx + 2).join('/');
+                    return `${bucket}/${path}`;
+                }
+            } catch (e) {
+                console.error("Error parsing Supabase URL:", e);
+            }
+        }
+
         const sbUrl = (window.SUPABASE_URL || "https://qtjpvztpgfymjhhpoouq.supabase.co").replace(/\/$/, '');
         let path = pathOrUrl;
 
