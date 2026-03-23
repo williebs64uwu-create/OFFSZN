@@ -38,34 +38,71 @@ window.openDownloadGateModal = function (url, producerName, productId) {
         if (isFree) {
             // Guest is allowed to download free items!
             backdrop.innerHTML = `
-                <div class="share-modal-content" style="background: rgba(10, 10, 10, 0.8) !important; backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 28px; padding: 35px; width: 380px;">
-                    <button onclick="closeDownloadGateModal()" style="position: absolute; top: 15px; right: 15px; background: rgba(255,255,255,0.05); border: none; color: #fff; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s;"><i class="bi bi-x" style="font-size: 1.4rem;"></i></button>
+                <div class="share-modal-content" style="background: rgba(10, 10, 10, 0.8) !important; backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 32px; padding: 40px; width: 400px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);">
+                    <button onclick="closeDownloadGateModal()" style="position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.05); border: none; color: #fff; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'"><i class="bi bi-x" style="font-size: 1.5rem;"></i></button>
                     
                     <div style="text-align: center; margin-bottom: 25px;">
-                        <div style="width: 60px; height: 60px; background: rgba(139, 92, 246, 0.1); color: #8b5cf6; border-radius: 18px; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px; font-size: 1.8rem;">
+                        <div style="width: 70px; height: 70px; background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(139, 92, 246, 0.05)); color: #a78bfa; border-radius: 22px; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; font-size: 2rem; border: 1px solid rgba(139, 92, 246, 0.2);">
                             <i class="bi bi-cloud-download"></i>
                         </div>
-                        <h3 style="color:#fff; margin:0 0 8px; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.4rem; font-weight: 700; letter-spacing: -0.5px;">Descarga para invitados</h3>
-                        <p style="color:#888; font-size:0.9rem; line-height:1.5; margin: 0; font-weight: 400;">
-                            Crea una cuenta luego para guardar este item permanentemente en tu librería.
+                        <h3 style="color:#fff; margin:0 0 10px; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.5rem; font-weight: 700; letter-spacing: -0.5px;">Descarga para invitados</h3>
+                        <p style="color:#a1a1aa; font-size:0.95rem; line-height:1.6; margin: 0; font-weight: 400;">
+                            Ingresa tu correo oficial para recibir el enlace y guardar tus kits.
                         </p>
                     </div>
 
+                    <div style="margin-bottom: 25px;">
+                        <div style="position: relative;">
+                            <input type="email" id="gate-guest-email" placeholder="tu@email.com" style="width: 100%; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; padding: 16px 16px 16px 45px; color: #fff; font-size: 0.95rem; outline: none; transition: all 0.2s; box-sizing: border-box;">
+                            <i class="bi bi-envelope" style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: #666; font-size: 1.1rem;"></i>
+                        </div>
+                        <div id="gate-email-error" style="color: #ef4444; font-size: 0.75rem; margin-top: 8px; display: none; padding-left: 5px;">Por favor ingresa un correo real (ej: Gmail, iCloud)</div>
+                    </div>
+
                     <div style="display: flex; flex-direction: column; gap: 12px;">
-                        <button id="btn-gate-action" class="btn-glass-primary" style="width:100% !important; border-radius:14px; padding:16px; font-weight: 700; font-size: 0.95rem; background: #fff !important; color: #000 !important; border: none !important; display: flex; align-items: center; justify-content: center; gap: 10px; transition: all 0.2s;">
-                            <i class="bi bi-download" style="font-size: 1.1rem;"></i> DESCARGAR AHORA
-                        </button>
-                        
-                        <button id="btn-gate-login" style="width:100%; height: 50px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; color: #aaa; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.06)'; this.style.color='#fff';" onmouseout="this.style.background='rgba(255,255,255,0.03)'; this.style.color='#aaa';">
-                            <i class="bi bi-person-plus-fill" style="margin-right: 6px; color: #8b5cf6;"></i> Registrarse y guardar
+                        <button id="btn-gate-action" disabled style="width:100%; border-radius:16px; padding:18px; font-weight: 700; font-size: 1rem; background: #fff; color: #000; border: none; display: flex; align-items: center; justify-content: center; gap: 12px; transition: all 0.2s; cursor: not-allowed; opacity: 0.5;">
+                            <i class="bi bi-download"></i> DESCARGAR AHORA
                         </button>
                     </div>
                 </div>
             `;
 
+            const emailInput = document.getElementById('gate-guest-email');
             const actionBtn = document.getElementById('btn-gate-action');
+            const errorText = document.getElementById('gate-email-error');
+
+            const validateEmail = (email) => {
+                const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!re.test(email)) return false;
+                
+                // Real provider check (requested: gmail, icloud, etc)
+                const realProviders = ['gmail.com', 'icloud.com', 'outlook.com', 'hotmail.com', 'yahoo.com', 'live.com', 'me.com', 'msn.com', 'protonmail.com'];
+                const domain = email.split('@')[1]?.toLowerCase();
+                return realProviders.includes(domain) || domain.includes('.edu') || domain.includes('.org');
+            };
+
+            emailInput.oninput = (e) => {
+                const isValid = validateEmail(e.target.value);
+                if (isValid) {
+                    actionBtn.disabled = false;
+                    actionBtn.style.opacity = '1';
+                    actionBtn.style.cursor = 'pointer';
+                    emailInput.style.borderColor = 'rgba(139, 92, 246, 0.5)';
+                    errorText.style.display = 'none';
+                } else {
+                    actionBtn.disabled = true;
+                    actionBtn.style.opacity = '0.5';
+                    actionBtn.style.cursor = 'not-allowed';
+                    emailInput.style.borderColor = 'rgba(255,255,255,0.1)';
+                    if (e.target.value.length > 5) errorText.style.display = 'block';
+                }
+            };
+
             if (actionBtn) {
-                actionBtn.onclick = () => completeGate(url, productId);
+                actionBtn.onclick = () => {
+                    const emailValue = emailInput.value;
+                    completeGate(url, productId, emailValue);
+                };
             }
         } else {
             // Paid item or restricted (shouldn't really hit here if it's a "download gate" for free items)
@@ -170,7 +207,7 @@ window.openDownloadGateModal = function (url, producerName, productId) {
     setTimeout(() => backdrop.classList.add('active'), 10);
 }
 
-window.completeGate = async function (url, productId) {
+window.completeGate = async function (url, productId, guestEmail = null) {
     const btn = document.getElementById('btn-gate-action');
     const originalHTML = btn.innerHTML;
     btn.disabled = true;
@@ -182,8 +219,17 @@ window.completeGate = async function (url, productId) {
         if (Array.isArray(producerObj)) producerObj = producerObj[0]; // Robustness fix
 
         const producerId = producerObj?.id;
-        const producerEmail = producerObj?.email;
         const currentUserId = window.currentUserId;
+
+        // 0. GUEST EMAIL TRACKING (New)
+        if (!currentUserId && guestEmail) {
+            console.log("[Gate] Recording guest email download...");
+            fetch('/api/orders/free-guest', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ productId: productId, guestEmail: guestEmail })
+            }).catch(err => console.error("[Gate] Guest sync error:", err));
+        }
 
         // 1. Follow Logic (Only if logged in and not owner and not already following)
         if (currentUserId && producerId && currentUserId !== producerId) {

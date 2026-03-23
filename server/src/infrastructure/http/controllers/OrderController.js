@@ -490,3 +490,83 @@ export const createFreeOrder = async (req, res) => {
         res.status(500).json({ error: 'Error al registrar la descarga gratuita' });
     }
 };
+
+export const handleFreeGuestDownload = async (req, res) => {
+    try {
+        const { productId, guestEmail } = req.body;
+
+        if (!productId || !guestEmail) {
+            return res.status(400).json({ error: 'Faltan datos (ID producto o email)' });
+        }
+
+        // 1. Validar que el producto sea gratis
+        const { data: product, error: fetchError } = await supabase
+            .from('products')
+            .select('id, name, is_free, price_basic, downloads_count, producer_id')
+            .eq('id', productId)
+            .single();
+
+        if (fetchError || !product) {
+            return res.status(404).json({ error: 'Producto no encontrado' });
+        }
+
+        if (product.is_free !== true && parseFloat(product.price_basic) > 0) {
+            return res.status(403).json({ error: 'Este producto no es gratuito' });
+        }
+
+        // 2. Incrementar contador de descargas
+        await supabase.rpc('increment_product_downloads', { row_id: product.id });
+
+        // 3. Buscar si el usuario ya existe para personalizar el correo
+        const { data: existingUser } = await supabase
+            .from('users')
+            .select('nickname, id')
+            .eq('email', guestEmail)
+            .single();
+
+        const { sendOffsznEmail } = await import('../../../shared/utils/mailer.js');
+
+        if (existingUser) {
+            // USUARIO EXISTENTE
+            const welcomeBackHtml = `
+                <div style="font-family: 'Segoe UI', sans-serif; padding: 40px; background: #0a0a0a; color: #fff; max-width: 600px; border: 1px solid #222; border-radius: 16px;">
+                    <h2 style="color: #8b5cf6; margin-bottom: 20px;">¡Hola de nuevo, ${existingUser.nickname}! 👋</h2>
+                    <p style="color: #ccc; font-size: 1.1rem; line-height: 1.6;">Hemos visto que has descargado <b style="color:#fff;">${product.name}</b> como invitado.</p>
+                    <p style="color: #888; margin-bottom: 25px;">Parece que ya tienes una cuenta en OFFSZN. Para que tus próximas descargas se guarden automáticamente en tu librería personal, recuerda iniciar sesión la próxima vez.</p>
+                    <div style="text-align: center;">
+                        <a href="https://offszn.lat/pages/login.html" style="display: inline-block; background: #fff; color: #000; padding: 14px 35px; border-radius: 12px; text-decoration: none; font-weight: 700; font-size: 1rem;">Inicia Sesión Ahora</a>
+                    </div>
+                </div>
+            `;
+            await sendOffsznEmail({
+                to: guestEmail,
+                subject: `✨ ¡Hola ${existingUser.nickname}! No olvides tu librería`,
+                html: welcomeBackHtml,
+                fromName: 'OFFSZN'
+            });
+        } else {
+            // USUARIO NUEVO
+            const registerHtml = `
+                <div style="font-family: 'Segoe UI', sans-serif; padding: 40px; background: #0a0a0a; color: #fff; max-width: 600px; border: 1px solid #222; border-radius: 16px;">
+                    <h2 style="color: #8b5cf6; margin-bottom: 20px;">¡Gracias por tu descarga! 📥</h2>
+                    <p style="color: #ccc; font-size: 1.1rem; line-height: 1.6;">Acabas de obtener <b style="color:#fff;">${product.name}</b>.</p>
+                    <p style="color: #888; margin-bottom: 25px;">¿Sabías que si creas una cuenta puedes guardar todos tus kits y presets en un solo lugar permanentemente? Es gratis y solo toma 30 segundos.</p>
+                    <div style="text-align: center;">
+                        <a href="https://offszn.lat/pages/register.html" style="display: inline-block; background: #8b5cf6; color: #fff; padding: 14px 35px; border-radius: 12px; text-decoration: none; font-weight: 700; font-size: 1rem;">Crear Cuenta Gratis</a>
+                    </div>
+                </div>
+            `;
+            await sendOffsznEmail({
+                to: guestEmail,
+                subject: `📥 Tu descarga de ${product.name} está lista`,
+                html: registerHtml,
+                fromName: 'OFFSZN'
+            });
+        }
+
+        res.status(200).json({ message: 'OK' });
+    } catch (err) {
+        console.error("Error in guest download:", err);
+        res.status(500).json({ error: 'Internal Error' });
+    }
+};

@@ -5,7 +5,8 @@ import {
     handleMercadoPagoWebhook,
     checkPaymentStatus,
     forceCheckPayment,
-    createFreeOrder
+    createFreeOrder,
+    handleFreeGuestDownload
 } from '../controllers/OrderController.js';
 
 const router = Router();
@@ -22,6 +23,11 @@ router.post(
     '/orders/free',
     authenticateTokenMiddleware,
     createFreeOrder
+);
+
+router.post(
+    '/orders/free-guest',
+    handleFreeGuestDownload
 );
 
 // --- NUEVA RUTA DE POLLING ---

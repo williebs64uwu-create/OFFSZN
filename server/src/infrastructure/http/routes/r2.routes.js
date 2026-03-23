@@ -331,6 +331,8 @@ router.get(/\/r2-public\/(.*)/, async (req, res) => {
                 if (response.ok) {
                     // Found it! Proxy the content
                     res.setHeader('Content-Type', response.headers.get('Content-Type') || 'application/octet-stream');
+                    const contentLength = response.headers.get('Content-Length');
+                    if (contentLength) res.setHeader('Content-Length', contentLength);
                     res.setHeader('Cache-Control', 'public, max-age=86400'); // 24h cache
                     res.setHeader('Access-Control-Allow-Origin', '*');
                     

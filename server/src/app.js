@@ -379,7 +379,17 @@ app.get([
             
             // Image Logic
             let image = product.image_url || 'https://offszn.lat/images/LOGO%20OFFSZN.webp';
-            if (!image.startsWith('http')) {
+            if (image.startsWith('http')) {
+                // If it's a private R2 URL (common in v2 uploads), extract its key and use the proxy
+                if (image.includes('r2.cloudflarestorage.com')) {
+                    try {
+                        const urlObj = new URL(image);
+                        image = `https://offszn.lat/api/r2-public${urlObj.pathname}`;
+                    } catch (e) {
+                        console.warn("Error parsing R2 URL for OG Tags:", e.message);
+                    }
+                }
+            } else {
                 if (product.storage_version === 'supabase') {
                     const sbUrl = SUPABASE_URL || "https://qtjpvztpgfymjhhpoouq.supabase.co";
                     image = `${sbUrl}/storage/v1/object/public/products/${image}`;
@@ -396,6 +406,10 @@ app.get([
     <meta property="og:title" content="${title}">
     <meta property="og:description" content="${description}">
     <meta property="og:image" content="${image}">
+    <meta property="og:image:secure_url" content="${image}">
+    <meta property="og:image:width" content="1000">
+    <meta property="og:image:height" content="1000">
+    <meta property="og:image:type" content="image/jpeg">
     <meta property="og:url" content="${url}">
     <meta property="og:type" content="product">
     <meta property="og:site_name" content="OFFSZN">
@@ -463,9 +477,15 @@ app.get([
             const title = `${user.nickname} | ${user.role || 'Productor'} - OFFSZN`;
             const description = user.bio || `Escucha los últimos beats y recursos de ${user.nickname} en OFFSZN.`;
             let image = user.avatar_url || 'https://offszn.lat/images/LOGO%20OFFSZN.webp';
-            if (image && !image.startsWith('http')) {
+            if (image && image.startsWith('http') && image.includes('r2.cloudflarestorage.com')) {
+                try {
+                    const urlObj = new URL(image);
+                    image = `https://offszn.lat/api/r2-public${urlObj.pathname}`;
+                } catch (e) {}
+            } else if (image && !image.startsWith('http')) {
                 image = `https://offszn.lat/api/r2-public/${image}`;
             }
+
 
             const url = `https://offszn.lat/b/${user.nickname}`;
 
@@ -474,6 +494,10 @@ app.get([
     <meta property="og:title" content="${title}">
     <meta property="og:description" content="${description}">
     <meta property="og:image" content="${image}">
+    <meta property="og:image:secure_url" content="${image}">
+    <meta property="og:image:width" content="1000">
+    <meta property="og:image:height" content="1000">
+    <meta property="og:image:type" content="image/jpeg">
     <meta property="og:url" content="${url}">
     <meta property="og:type" content="profile">
     <meta name="twitter:card" content="summary_large_image">
@@ -542,9 +566,15 @@ app.get(['/@:username', '/:username'], async (req, res, next) => {
                 ? user.bio.substring(0, 160) + '...'
                 : `Escucha los últimos beats y recursos de ${user.nickname} en OFFSZN.lat`;
             let image = user.avatar_url || 'https://offszn.lat/images/LOGO%20OFFSZN.webp';
-            if (image && !image.startsWith('http')) {
+            if (image && image.startsWith('http') && image.includes('r2.cloudflarestorage.com')) {
+                try {
+                    const urlObj = new URL(image);
+                    image = `https://offszn.lat/api/r2-public${urlObj.pathname}`;
+                } catch (e) {}
+            } else if (image && !image.startsWith('http')) {
                 image = `https://offszn.lat/api/r2-public/${image}`;
             }
+
 
             const url = `https://offszn.lat/@${user.nickname}`;
 
@@ -553,6 +583,10 @@ app.get(['/@:username', '/:username'], async (req, res, next) => {
     <meta property="og:title" content="${title}">
     <meta property="og:description" content="${description}">
     <meta property="og:image" content="${image}">
+    <meta property="og:image:secure_url" content="${image}">
+    <meta property="og:image:width" content="1000">
+    <meta property="og:image:height" content="1000">
+    <meta property="og:image:type" content="image/jpeg">
     <meta property="og:url" content="${url}">
     <meta property="og:type" content="profile">
     <meta property="og:site_name" content="OFFSZN">
