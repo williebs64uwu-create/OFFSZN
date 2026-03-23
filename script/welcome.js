@@ -35,6 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let checkNicknameTimeout;
   let avatarFile = null;
   let cropper = null;
+  let referralCheckTimeout;
 
   const API_URL = `${window.OFFSZN_CONFIG?.API_BASE_URL || 'https://offszn.lat'}/api`;
   const token = localStorage.getItem('authToken');
@@ -234,8 +235,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     validateCurrentStep();
   }
-
-  let referralCheckTimeout;
 
   // ============================================
   // REFERRAL CODE HANDLING
