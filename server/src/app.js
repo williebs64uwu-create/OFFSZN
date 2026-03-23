@@ -309,31 +309,106 @@ const serverPublicPath = path.join(__dirname, '../public'); // New server public
 app.use(express.static(publicPath));
 app.use(express.static(serverPublicPath));
 
-// C. Serve Static Files from Root
 app.use(express.static(rootPath));
 
-// --- 3.4 PRODUCT SHORTCUT ROUTES (SEO Friendly) ---
-// Serve producto.html for /beat/slug, /kit/slug, etc.
+// --- 3.3.5 SERVER-SIDE ID OBFUSCATOR (Sync with script/id-obfuscator.js) ---
+const OBF_CHARS = 'qL8zF1Gk7XwNjR4yvB5tM6dncb9sPp2hQr3JmKW0ZTDVagHflSx_';
+const OBF_BASE = OBF_CHARS.length;
+const OBF_SALT = 74;
+const OBF_MULT = 321;
+
+function serverDecodeId(str) {
+    if (!str) return null;
+    if (str === '4LB') return 118; // Legacy skip
+    let n = 0;
+    for (let i = 0; i < str.length; i++) {
+        const char = str[i];
+        const index = OBF_CHARS.indexOf(char);
+        if (index === -1) return null;
+        n = n * OBF_BASE + index;
+    }
+    if ((n - OBF_SALT) % OBF_MULT !== 0) return null;
+    return Math.floor((n - OBF_SALT) / OBF_MULT);
+}
+
+// --- 3.4 PRODUCT SHORTCUT ROUTES (SEO Friendly with Dynamic OG Tags) ---
 app.get([
-    '/beat/:slug',
-    '/kit/:slug',
-    '/drumkit/:slug',
-    '/loopkit/:slug',
-    '/preset/:slug',
-    '/plantilla/:slug',
-    '/sample/:slug',
-    '/instrumento/:slug',
-    '/plugin/:slug',
-    '/voces/:slug',
-    '/p/:code' // 🔥 Short Link Route
-], (req, res, next) => {
+    '/beat/:slug', '/kit/:slug', '/drumkit/:slug', '/loopkit/:slug',
+    '/preset/:slug', '/plantilla/:slug', '/sample/:slug',
+    '/instrumento/:slug', '/plugin/:slug', '/voces/:slug',
+    '/p/:code'
+], async (req, res, next) => {
     const { slug, code } = req.params;
-    // Serve Producto
-    const productPage = path.join(rootPath, 'producto.html');
-    if (fs.existsSync(productPage)) {
-        res.sendFile(productPage);
-    } else {
-        next();
+    const productPagePath = path.join(rootPath, 'producto.html');
+    if (!fs.existsSync(productPagePath)) return next();
+
+    try {
+        const { supabase: db } = await import('./infrastructure/database/connection.js');
+        let productId = null;
+        let productSlug = slug;
+
+        // 1. Resolve ID or Slug
+        if (code) {
+            productId = serverDecodeId(code);
+        } else if (slug) {
+            const parts = slug.split('-');
+            const potentialCode = parts.pop();
+            productId = serverDecodeId(potentialCode);
+            if (!productId) productSlug = slug; // Fallback to manual slug
+        }
+
+        // 2. Fetch Product Data
+        let query = db.from('products').select('*, users!products_producer_id_fkey(nickname, avatar_url)').neq('status', 'deleted');
+        if (productId) {
+            query = query.eq('id', productId);
+        } else {
+            query = query.eq('public_slug', productSlug);
+        }
+
+        const { data: product } = await query.maybeSingle();
+
+        let html = fs.readFileSync(productPagePath, 'utf8');
+
+        if (product) {
+            const producerName = product.users?.nickname || 'Productor';
+            const title = `${product.name} - ${producerName} | OFFSZN`;
+            const price = product.is_free ? 'GRATIS' : `$${product.price_basic || '0.00'}`;
+            const description = product.description 
+                ? product.description.substring(0, 160) + '...'
+                : `Descarga "${product.name}" por ${producerName}. ${price} en OFFSZN.lat`;
+            
+            // Image Logic
+            let image = product.image_url || 'https://offszn.lat/images/LOGO%20OFFSZN.webp';
+            if (product.storage_version === 'supabase' && !image.startsWith('http')) {
+                const sbUrl = SUPABASE_URL || "https://qtjpvztpgfymjhhpoouq.supabase.co";
+                image = `${sbUrl}/storage/v1/object/public/products/${image}`;
+            }
+
+            const url = `https://offszn.lat${req.originalUrl}`;
+
+            const ogTags = `
+    <!-- Dynamic Product OG Tags -->
+    <meta property="og:title" content="${title}">
+    <meta property="og:description" content="${description}">
+    <meta property="og:image" content="${image}">
+    <meta property="og:url" content="${url}">
+    <meta property="og:type" content="product">
+    <meta property="og:site_name" content="OFFSZN">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="${title}">
+    <meta name="twitter:description" content="${description}">
+    <meta name="twitter:image" content="${image}">
+            `;
+
+            html = html.replace('<head>', `<head>\n${ogTags}`);
+            html = html.replace(/<title>.*?<\/title>/, `<title>${title}</title>`);
+        }
+
+        res.send(html);
+
+    } catch (err) {
+        console.error("Error serving dynamic product page:", err);
+        res.sendFile(productPagePath);
     }
 });
 
@@ -397,7 +472,7 @@ app.get([
 
 // --- 3.6 PROFILE SHORTCUT ROUTE (/:username) ---
 // Supports both /@username and /username
-app.get(['/@:username', '/:username'], (req, res, next) => {
+app.get(['/@:username', '/:username'], async (req, res, next) => {
     const { username } = req.params;
 
     // 1. Reserved Words / Known Routes Exclusion
@@ -412,25 +487,59 @@ app.get(['/@:username', '/:username'], (req, res, next) => {
     ];
     if (reserved.includes(username)) return next();
 
-    // 2. Ignore file extensions (e.g. style.css)
-    // FIX: Allow dots if it's an explicit profile route (/@...)
+    // 2. Ignore file extensions
     const isExplicitProfile = req.path.startsWith('/@');
+    if (username.includes('.') && !isExplicitProfile) return next();
 
-    // Only skip if dot exists AND it's NOT an explicit /@ route
-    if (username.includes('.') && !isExplicitProfile) {
-        return next();
-    }
-
-    // 3. Ignore if mapped to a real folder/file that static middleware missed
+    // 3. Ignore real files
     const localPath = path.join(rootPath, username);
     if (fs.existsSync(localPath)) return next();
 
-    // Serve Profile
-    const profilePage = path.join(rootPath, 'perfil-publico.html');
-    if (fs.existsSync(profilePage)) {
-        res.sendFile(profilePage);
-    } else {
-        next();
+    // Serve Profile Template with OG Tags injected
+    const profilePagePath = path.join(rootPath, 'perfil-publico.html');
+    if (!fs.existsSync(profilePagePath)) return next();
+
+    try {
+        const { supabase: db } = await import('./infrastructure/database/connection.js');
+        const { data: user } = await db
+            .from('users')
+            .select('nickname, role, avatar_url, bio')
+            .eq('nickname', username)
+            .single();
+
+        let html = fs.readFileSync(profilePagePath, 'utf8');
+
+        if (user) {
+            const title = `${user.nickname} | ${user.role || 'Productor'} - OFFSZN`;
+            const description = user.bio 
+                ? user.bio.substring(0, 160) + '...'
+                : `Escucha los últimos beats y recursos de ${user.nickname} en OFFSZN.lat`;
+            const image = user.avatar_url || 'https://offszn.lat/images/LOGO%20OFFSZN.webp';
+            const url = `https://offszn.lat/@${user.nickname}`;
+
+            const ogTags = `
+    <!-- Dynamic Profile OG Tags -->
+    <meta property="og:title" content="${title}">
+    <meta property="og:description" content="${description}">
+    <meta property="og:image" content="${image}">
+    <meta property="og:url" content="${url}">
+    <meta property="og:type" content="profile">
+    <meta property="og:site_name" content="OFFSZN">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="${title}">
+    <meta name="twitter:description" content="${description}">
+    <meta name="twitter:image" content="${image}">
+            `;
+
+            html = html.replace('<head>', `<head>\n${ogTags}`);
+            html = html.replace(/<title>.*?<\/title>/, `<title>${title}</title>`);
+        }
+
+        res.send(html);
+
+    } catch (err) {
+        console.error("Error serving Profile:", err);
+        res.sendFile(profilePagePath);
     }
 });
 
