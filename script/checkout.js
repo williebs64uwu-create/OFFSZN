@@ -166,7 +166,7 @@ const CheckoutManager = {
       <div class="checkout-items-list" style="margin-bottom: 24px;">
         <div class="checkout-item" style="padding:16px 0; display:flex; gap:16px; align-items:center; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 24px;">
           <div class="checkout-item-img" style="position:relative; width:64px; height:64px; flex-shrink:0;">
-            <img id="${imgId}" src="/images/portada-default.png" data-r2-version="${d.storage_version || d.r2_version || 'v1'}" crossorigin="anonymous" 
+            <img id="${imgId}" src="/images/portada-default.png" data-r2-version="${d.storage_version || d.r2_version || 'v1'}" 
                  style="width:100%; height:100%; border-radius:10px; object-fit:cover; border:1px solid rgba(255,255,255,0.1); background:#111;">
           </div>
           <div class="checkout-item-details" style="flex:1;">
@@ -705,7 +705,7 @@ const CheckoutManager = {
         html += `
             <div class="checkout-item ${isBlocked ? 'blocked' : ''}" style="padding:20px 0; display:flex; gap:16px; align-items:center; border-bottom: 1px solid rgba(255,255,255,0.05);">
               <div class="checkout-item-img" style="position:relative; width:64px; height:64px; flex-shrink:0;">
-                <img id="${imgId}" src="${fallbackImg}" data-r2-version="${item.product.storage_version || item.product.r2_version || 'v1'}" crossorigin="anonymous"
+                <img id="${imgId}" src="${fallbackImg}" data-r2-version="${item.product.storage_version || item.product.r2_version || 'v1'}"
                      onerror="this.src='${fallbackImg}'; this.onerror=null;"
                      style="width:100%; height:100%; border-radius:10px; object-fit:cover; border:1px solid rgba(255,255,255,0.1); background:#111;">
               </div>

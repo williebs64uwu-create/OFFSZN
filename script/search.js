@@ -1636,7 +1636,7 @@ function renderFallbackItem(p) {
     return `
         <div class="fallback-card" data-product-id="${p.id}" onclick="window.location.href='${productUrl}'">
             <div class="fallback-card-img">
-                <img crossorigin="anonymous" ${imgAttr} data-r2-version="${storageVer}">
+                <img ${imgAttr} data-r2-version="${storageVer}">
                 <div class="fallback-card-overlay"><i class="bi bi-play-fill"></i></div>
             </div>
             <div class="fallback-card-info">

@@ -698,7 +698,7 @@ async function loadRecentProducts(user) {
                              data-r2-version="${p.r2_version || 'v1'}"
                              class="shadow-2xl rounded-md transform group-hover:scale-105 transition-transform duration-500 w-full h-full object-cover border border-white/5"
                              style="box-shadow: -5px 5px 15px rgba(0,0,0,0.5);"
-                             crossorigin="anonymous">
+                             alt="Avatar">
                         
                         <!-- Mini Play Button Overlay (Optional UI touch) -->
                         <button onclick="playBioPreview('${p.id}', '${getProductAudio(p)}', this, '${(p.name || '').replace(/'/g, "\\'").replace(/"/g, "&quot;")}', '${p.finalImageUrl}', '${p.r2_version || 'v1'}')" 

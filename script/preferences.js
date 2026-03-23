@@ -95,7 +95,7 @@ async function loadSidebarAvatar() {
         if (sidebarAvatar) {
             if (profile.avatar_url) {
                 const safeUrl = escapeHTML(profile.avatar_url);
-                sidebarAvatar.innerHTML = `<img crossorigin="anonymous" src="${safeUrl}" alt="Avatar" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`;
+                sidebarAvatar.innerHTML = `<img src="${safeUrl}" alt="Avatar" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`;
             } else {
                 sidebarAvatar.textContent = (profile.nickname || 'U').charAt(0).toUpperCase();
             }

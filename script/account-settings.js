@@ -89,7 +89,8 @@ function renderUserData() {
             const img = document.createElement('img');
             img.src = data.avatar_url;
             img.alt = "Avatar";
-            img.crossOrigin = "anonymous";
+            // crossorigin removed to prevent CORS issues with signed R2/Supabase URLs
+            // img.crossOrigin = "anonymous";
             sidebarAvatar.appendChild(img);
             sidebarAvatar.classList.add('has-image');
         } else {
@@ -125,7 +126,7 @@ function renderUserData() {
             const img = document.createElement('img');
             img.src = data.avatar_url;
             img.alt = "Avatar";
-            img.crossOrigin = "anonymous";
+            // img.crossOrigin = "anonymous";
             formAvatar.appendChild(img);
         } else {
             formAvatar.textContent = (data.nickname || data.email || 'U').charAt(0).toUpperCase();

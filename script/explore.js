@@ -1020,7 +1020,7 @@ function createProductCardHtml(product, format = 'standard') {
 
         return `
             <div class="preset-card-premium" data-product-id="${product.id}">
-                <img ${productImg.attr} crossorigin="anonymous" alt="${product.name}">
+                <img ${productImg.attr} alt="${product.name}">
                 <div class="preset-overlay">
                     <span class="preset-tag">PRESET</span>
                     <h3 class="preset-title">${cleanName(product.name)}</h3>
@@ -1058,7 +1058,7 @@ function createProductCardHtml(product, format = 'standard') {
         return `
             <div class="preset-card-social" data-product-id="${product.id}">
                 <div class="post-header" onclick="window.location.href='/@' + encodeURIComponent('${realHandle}')">
-                    <img ${realAvatar.attr} crossorigin="anonymous" class="post-avatar" alt="${realArtist}" onerror="this.src='/images/portada-default.png'">
+                    <img ${realAvatar.attr} class="post-avatar" alt="${realArtist}" onerror="this.src='/images/portada-default.png'">
                     <div class="post-user-info">
                         <span class="post-user-handle">@${escapeHTML(realHandle)}</span>
                     </div>
@@ -1068,7 +1068,7 @@ function createProductCardHtml(product, format = 'standard') {
                 </div>
                 <div class="post-body">
                     <div class="post-cover-wrapper" onclick="window.location.href='${getProductUrl(product)}'">
-                        <img ${productImg.attr} crossorigin="anonymous" class="post-cover" alt="${escapeHTML(product.name)}" onerror="this.src='/images/portada-default.png'">
+                        <img ${productImg.attr} class="post-cover" alt="${escapeHTML(product.name)}" onerror="this.src='/images/portada-default.png'">
                         <button class="post-play-btn"><i class="bi bi-play-fill"></i></button>
                     </div>
                     <div class="post-content">
@@ -1102,7 +1102,7 @@ function createProductCardHtml(product, format = 'standard') {
     return `
         <div class="product-card-smart" data-product-id="${product.id}">
             <div class="card-cover-wrapper">
-                <img ${productImg.attr} crossorigin="anonymous" alt="${product.name}">
+                <img ${productImg.attr} alt="${product.name}">
                 <button class="quick-play-btn"><i class="bi bi-play-fill"></i></button>
                 <button class="card-like-btn ${isLiked ? 'liked' : ''}" onclick="toggleLike(event, '${product.id}', this)">
                     <i class="bi ${isLiked ? 'bi-heart-fill' : 'bi-heart'}"></i>

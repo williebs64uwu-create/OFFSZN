@@ -498,7 +498,7 @@ window.FavoritesManager = (function () {
 
         card.innerHTML = `
             <div class="fav-card-cover" onclick="window.location.href='${seoUrl}'">
-                <img src="${escapeHTML(imgUrl)}" id="fav-img-${prod.id}" onerror="this.src='/images/portada-default.png'" alt="${escapeHTML(prod.name)}" crossorigin="anonymous">
+                <img src="${escapeHTML(imgUrl)}" id="fav-img-${prod.id}" onerror="this.src='/images/portada-default.png'" alt="${escapeHTML(prod.name)}">
                 <div class="fav-badge-floating">${escapeHTML(pType)}</div>
                 <div class="fav-card-overlay">
                     <button class="fav-play-btn" id="btn-play-${waveformId}">

@@ -243,7 +243,7 @@ window.HistoryManager = (function () {
             if (isSoftDeleted) {
                 row.innerHTML = `
                     <div class="list-cover" style="opacity: 0.3; filter: grayscale(1);">
-                        <img src="/images/portada-default.png" alt="No disponible" crossorigin="anonymous">
+                        <img src="/images/portada-default.png" alt="No disponible">
                     </div>
                     
                     <div class="list-col-main" style="opacity: 0.5;">
@@ -303,7 +303,7 @@ window.HistoryManager = (function () {
 
                 row.innerHTML = `
                     <div class="list-cover" onclick="window.HistoryManager.playItem('${String(item.product_id)}')">
-                        <img src="${imgUrl}" alt="${title}" crossorigin="anonymous" onerror="this.src='/images/portada-default.png'">
+                        <img src="${imgUrl}" alt="${title}" onerror="this.src='/images/portada-default.png'">
                         <div class="cover-play-overlay" id="btn-play-waveform-overlay-${item.product_id}"><i class="bi bi-play-fill"></i></div>
                     </div>
                     

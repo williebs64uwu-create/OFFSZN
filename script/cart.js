@@ -420,7 +420,7 @@ const CartManager = {
                 return `
                 <div class="cart-item-row" style="display:flex; flex-direction:column; gap:12px; margin-bottom:16px; padding-bottom:16px; border-bottom:1px solid rgba(255,255,255,0.05);">
                     <div style="display:flex; gap:14px; align-items: center;">
-                        <img id="${imgId}" src="/images/portada-default.png" data-r2-version="${item.product.storage_version || item.product.r2_version || 'v1'}" crossorigin="anonymous" style="width:56px; height:56px; object-fit:cover; border-radius:10px; border:1px solid rgba(255,255,255,0.05);">
+                        <img id="${imgId}" src="/images/portada-default.png" data-r2-version="${item.product.storage_version || item.product.r2_version || 'v1'}" style="width:56px; height:56px; object-fit:cover; border-radius:10px; border:1px solid rgba(255,255,255,0.05);">
                         <div style="flex:1; display:flex; flex-direction:column; min-width: 0;">
                             <h4 style="margin:0; font-size:0.85rem; font-weight:700; color:#fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-transform: uppercase; letter-spacing: 0.3px;">${safeName}</h4>
                             <span style="font-size:0.75rem; color:#666; margin-top: 2px;">${licName}</span>

@@ -81,7 +81,7 @@
             </div>
         `;
 
-        if (window.getAuthorizedUrl && coverImgSrc.startsWith('http')) {
+        if (window.getAuthorizedUrl) {
             window.getAuthorizedUrl(coverImgSrc, product.r2_version || 'v1').then(url => {
                 const imgEl = document.getElementById('share-modal-cover');
                 if (imgEl && url) imgEl.src = url;

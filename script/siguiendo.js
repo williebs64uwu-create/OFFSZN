@@ -247,7 +247,7 @@ function createProducerCard(user) {
     const nicknameForError = nicknameEscaped.replace(/'/g, "\\'");
 
     const avatarContent = avatarUrl
-        ? `<img src="${avatarUrl}" alt="${nicknameEscaped}" crossorigin="anonymous" onerror="if(window.AvatarManager) window.AvatarManager.handleError(this, '${nicknameForError}')" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`
+        ? `<img src="${avatarUrl}" alt="${nicknameEscaped}" onerror="if(window.AvatarManager) window.AvatarManager.handleError(this, '${nicknameForError}')" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`
         : `<div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; background: #222; border: 1px solid #333; border-radius:50%; font-size:2.5rem; font-weight:700; color:#fff;">${initial}</div>`;
 
     // Get follower count

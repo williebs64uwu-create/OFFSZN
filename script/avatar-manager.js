@@ -52,7 +52,7 @@ window.AvatarManager = {
                     
                     <div class="avatar-modal-body">
                         <div class="avatar-crop-container">
-                            <img id="avatarCropImg" crossorigin="anonymous" src="" alt="Cropper">
+                            <img id="avatarCropImg" src="" alt="Cropper">
                         </div>
                     </div>
 
