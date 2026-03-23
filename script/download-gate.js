@@ -274,10 +274,11 @@ window.completeGate = async function (url, productId) {
                             if (token) headers['Authorization'] = `Bearer ${token}`;
 
                             const versionToUse = window.currentProductData?.storage_version || window.currentProductData?.r2_version || 'v1';
+                            const currentProductId = window.currentProductData?.id || productId;
                             const res = await fetch('/api/r2/download-url', {
                                 method: 'POST',
                                 headers: headers,
-                                body: JSON.stringify({ key: url, version: versionToUse })
+                                body: JSON.stringify({ key: url, version: versionToUse, productId: currentProductId })
                             });
 
                             if (res.ok) {

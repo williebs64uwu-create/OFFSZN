@@ -146,22 +146,42 @@ router.post('/r2/download-url', async (req, res) => {
             while (key.startsWith('/')) key = key.substring(1);
         }
 
-        // Definir prefijos públicos
-        const publicPrefixes = ['products/', 'beats/mp3/', 'avatars/', 'public/', 'banners/', 'drumkits/', 'temp-previews/'];
+        // Definir prefijos públicos (archivos que los invitados pueden ver/oír)
+        const publicPrefixes = ['products/', 'beats/mp3/', 'avatars/', 'public/', 'banners/', 'drumkits/', 'temp-previews/', 'covers/', 'audio/'];
         const isPublic = publicPrefixes.some(prefix => key.startsWith(prefix));
 
-        // Si NO es público, requerir autenticación
+        // Si NO es público, verificar si es un producto gratuito o requerir autenticación
         if (!isPublic) {
             const authHeader = req.headers['authorization'];
             const token = authHeader && authHeader.split(' ')[1];
 
-            if (!token) {
-                return res.status(401).json({ error: 'Acceso denegado: Recurso privado y no hay token' });
+            // 🔥 GUEST FREE DOWNLOAD: If productId is provided, check if product is free
+            let guestFreeAccess = false;
+            if (!token && productId) {
+                try {
+                    const { data: prod } = await supabase
+                        .from('products')
+                        .select('is_free, price_basic')
+                        .eq('id', productId)
+                        .maybeSingle();
+                    if (prod && prod.is_free && (!prod.price_basic || Number(prod.price_basic) === 0)) {
+                        guestFreeAccess = true;
+                        console.log(`[R2 Download] Guest free download approved for product ${productId}`);
+                    }
+                } catch (e) {
+                    console.warn('[R2 Download] Free check failed:', e.message);
+                }
             }
 
-            const { data, error } = await supabase.auth.getUser(token);
-            if (error || !data?.user) {
-                return res.status(403).json({ error: 'Acceso denegado: Token inválido' });
+            if (!guestFreeAccess) {
+                if (!token) {
+                    return res.status(401).json({ error: 'Acceso denegado: Recurso privado y no hay token' });
+                }
+
+                const { data, error } = await supabase.auth.getUser(token);
+                if (error || !data?.user) {
+                    return res.status(403).json({ error: 'Acceso denegado: Token inválido' });
+                }
             }
         }
 
@@ -285,7 +305,7 @@ router.get(/\/r2-public\/(.*)/, async (req, res) => {
         const key = req.params[0];
         if (!key) return res.status(400).send('Key missing');
 
-        const publicPrefixes = ['products/', 'beats/mp3/', 'avatars/', 'public/', 'banners/', 'drumkits/'];
+        const publicPrefixes = ['products/', 'beats/mp3/', 'avatars/', 'public/', 'banners/', 'drumkits/', 'covers/', 'audio/'];
         const isPublicPrefix = publicPrefixes.some(prefix => key.startsWith(prefix));
 
         if (!isPublicPrefix) {

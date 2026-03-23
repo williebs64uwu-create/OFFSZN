@@ -1520,6 +1520,16 @@ window.initNavbarUI = async function () {
         }
     });
 
+    // 🛡️ AUTH PROTECTION: Intercept clicks on sensitive links for Guests
+    document.addEventListener('click', function (e) {
+        const protectedLink = e.target.closest('.auth-protected');
+        if (protectedLink && !window.currentUserId) {
+            e.preventDefault();
+            console.log("🚦 Protected link clicked as Guest. Redirecting to Register...");
+            window.location.href = '/pages/register.html';
+        }
+    });
+
     // Logout Button Listener
     const logoutBtn = getEl('navbar-logout-btn');
     if (logoutBtn) logoutBtn.addEventListener('click', window.handleLogout);

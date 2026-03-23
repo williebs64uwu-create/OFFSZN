@@ -1008,7 +1008,7 @@ function renderProductPage(product) {
             product.tags.forEach(tag => {
                 const a = document.createElement('a');
                 a.className = 'tag-pill';
-                a.href = `explorar.html?tag=${tag}`;
+                a.href = `/search.html?tag=${encodeURIComponent(tag)}`;
                 a.textContent = `#${tag}`;
                 tagBox.appendChild(a);
             });
@@ -2016,14 +2016,13 @@ function renderPresetSpecifics(product) {
 
             const hasFiles = urlBefore && urlBefore !== 'null' && urlAfter && urlAfter !== 'null';
 
-            abLink.onclick = () => {
-                if (hasFiles) {
+            // Only show the button if both A/B audio files actually exist
+            if (hasFiles) {
+                abLink.onclick = () => {
                     openABModal(urlBefore, urlAfter, product);
-                } else {
-                    alert("Esta plantilla no tiene configurados los audios ANTES y DESPUÉS.");
-                }
-            };
-            header.appendChild(abLink);
+                };
+                header.appendChild(abLink);
+            }
 
         }
 
@@ -2493,8 +2492,8 @@ async function fetchRelatedProducts(currentProduct) {
             }
         }
 
-        // STAGE 4: ANY Product as absolute fallback
-        if (allRelated.length < 3) {
+        // STAGE 4: ANY Product as absolute fallback (Ensure at least 5 items)
+        if (allRelated.length < 5) {
             const excludeIds = allRelated.map(p => p.id);
             excludeIds.push(currentProduct.id);
 
@@ -2507,7 +2506,6 @@ async function fetchRelatedProducts(currentProduct) {
 
             if (stage4 && stage4.length > 0) {
                 allRelated = [...allRelated, ...stage4];
-                // console.log("[Related] Stage 4 found:", stage4.length);
             }
         }
 

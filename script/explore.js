@@ -221,11 +221,18 @@ function renderExploreFeed() {
             cat === 'plantilla' || cat === 'vocal preset' || cat.includes('preset');
     };
 
-    // 4. SHELF: RECOMENDADOS (Section 3: For you / General) - Excluding Presets
-    const recs = allProducts
+    // 4. SHELF: RECOMENDADOS (Section 3: For you / General)
+    let recs = allProducts
         .filter(p => !usedProductIds.has(p.id) && !presetCriteria(p))
-        .sort(() => 0.5 - Math.random()) // Randomize for variety
-        .slice(0, EXPLORE_CONFIG.CAROUSEL_LIMIT);
+        .sort(() => 0.5 - Math.random());
+    // Fallback: if not enough non-preset products, include presets to fill
+    if (recs.length < 5) {
+        const extraPresets = allProducts
+            .filter(p => !usedProductIds.has(p.id) && presetCriteria(p) && !p.public_slug?.startsWith('deleted'))
+            .sort(() => 0.5 - Math.random());
+        recs = [...recs, ...extraPresets];
+    }
+    recs = recs.slice(0, EXPLORE_CONFIG.CAROUSEL_LIMIT);
     if (recs.length > 0) {
         container.appendChild(createShelfRow('Recomendados para ti', recs));
         recs.forEach(p => usedProductIds.add(p.id));
@@ -298,11 +305,10 @@ function renderTwoColLists(category = 'Todo') {
         });
     const trends = allTrends.slice(0, limitTrends);
 
-    // B. Super Fresh 
+    // B. Super Fresh (Showing newest first, regardless of trending status)
     let limitFresh = 5;
     const allFresh = [...filtered]
-        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
-        .filter(p => !allTrends.slice(0, 15).find(t => t.id === p.id));
+        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
     const fresh = allFresh.slice(0, limitFresh);
 
     grid.innerHTML = `
@@ -449,7 +455,7 @@ function createListItemHtml(item, index, type) {
         return `
             <div class="list-item-smart" data-id="${item.id}" data-type="producer" onclick="window.location.href='${link}'">
                 <div class="list-item-index">${index}</div>
-                <img ${imgAttr} data-r2-version="${item.storage_version || item.r2_version || 'v1'}" crossorigin="anonymous" class="list-item-img circle" alt="cover">
+                <img ${imgAttr} data-r2-version="${item.storage_version || item.r2_version || 'v1'}" class="list-item-img circle" alt="cover">
                 <div class="list-item-info">
                     <div class="list-item-name">${name}</div>
                     <div class="list-item-sub">${sub}</div>
@@ -468,7 +474,7 @@ function createListItemHtml(item, index, type) {
     return `
         <div class="list-item-smart" data-id="${item.id}" data-type="product">
             <div class="list-item-index">${index}</div>
-            <img crossorigin="anonymous" ${imgAttr} data-r2-version="${item.storage_version || item.r2_version || 'v1'}" data-product-id="${item.id}" class="list-item-img" alt="cover" onclick="event.stopPropagation(); window.handleInfoClick(event, '${item.id}', '${link}')">
+            <img ${imgAttr} data-r2-version="${item.storage_version || item.r2_version || 'v1'}" data-product-id="${item.id}" class="list-item-img" alt="cover" onclick="event.stopPropagation(); window.handleInfoClick(event, '${item.id}', '${link}')">
             <div class="list-item-info" onclick="event.stopPropagation(); window.handleInfoClick(event, '${item.id}', '${link}')">
                 <div class="list-item-name">${name}</div>
                 <div class="list-item-sub">${sub}</div>
@@ -710,7 +716,7 @@ function renderHeroSlideHtml(product, index) {
                 <div class="hero-image-container desktop-only">
                     <img ${isR2 ? `src="${imgPlaceholder}" data-r2-src="${imgUrl}"` : `src="${imgUrl}"`} 
                          data-r2-version="${product.storage_version || product.r2_version || 'v1'}" 
-                         crossorigin="anonymous" alt="cover" class="hero-image">
+                         alt="cover" class="hero-image">
                 </div>
 
                 <!-- Mobile Purple Play Button -->

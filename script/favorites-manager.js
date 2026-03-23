@@ -158,7 +158,7 @@ window.FavoritesManager = (function () {
                     "Crea una cuenta para guardar este beat en tu colección y acceder a él desde cualquier dispositivo."
                 );
             } else {
-                window.location.href = '/pages/login.html';
+                window.location.href = '/pages/register.html';
             }
             return;
         }

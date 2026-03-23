@@ -940,7 +940,7 @@ function createProducerCard(producer, rank) {
         if (isBrokenProductUrl) {
            avatarHtml = getInitialsHtml(nickname);
         } else {
-           avatarHtml = `<img crossorigin="anonymous" src="${avatarUrl}" alt="${nickname}" class="card-avatar" onerror="window.handleProducerAvatarError(this, '${escapedNickname}')">`;
+           avatarHtml = `<img src="${avatarUrl}" alt="${nickname}" class="card-avatar" onerror="window.handleProducerAvatarError(this, '${escapedNickname}')">`;
         }
     } else {
         avatarHtml = getInitialsHtml(nickname);

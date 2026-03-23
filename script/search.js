@@ -158,19 +158,32 @@ function showResultsSkeletons() {
     container.innerHTML = html;
 }
 
-function showRecommendationSkeletons(count = 4) {
+function showRecommendationSkeletons(count = 6) {
     const container = document.getElementById('recommendations-container');
     if (!container) return;
 
+    const isMobile = window.innerWidth <= 768;
     let html = '';
+
     for (let i = 0; i < count; i++) {
-        html += `
-            <div class="skeleton-card">
-                <div class="skeleton-card-img skeleton"></div>
-                <div class="skeleton-text medium skeleton"></div>
-                <div class="skeleton-text short skeleton"></div>
-            </div>
-        `;
+        if (isMobile) {
+            html += `
+                <div class="skeleton-card-smart">
+                    <div class="skeleton-img-smart skeleton-pulse"></div>
+                    <div class="skeleton-text-smart title skeleton-pulse"></div>
+                    <div class="skeleton-text-smart sub skeleton-pulse"></div>
+                </div>
+            `;
+        } else {
+            // Standard grid skeleton for desktop
+            html += `
+                <div class="skeleton-card">
+                    <div class="skeleton-card-img skeleton-pulse"></div>
+                    <div class="skeleton-text medium skeleton-pulse"></div>
+                    <div class="skeleton-text short skeleton-pulse"></div>
+                </div>
+            `;
+        }
     }
     container.innerHTML = html;
 }
@@ -770,16 +783,16 @@ function setupFilterListeners() {
 /**
  * Mobile Filter Modal Logic
  */
-window.openMobileFilters = function() {
+window.openMobileFilters = function () {
     const modal = document.getElementById('offszn-mobile-filters');
     if (modal) {
         modal.classList.add('modal-active');
         document.body.classList.add('modal-open');
-        syncFilterUI(); 
+        syncFilterUI();
     }
 };
 
-window.closeMobileFilters = function() {
+window.closeMobileFilters = function () {
     const modal = document.getElementById('offszn-mobile-filters');
     if (modal) {
         modal.classList.remove('modal-active');
@@ -820,7 +833,7 @@ function initMobileFilters() {
             } else {
                 currentFilters.categories = currentFilters.categories.filter(c => c !== val);
             }
-            syncFilterUI('modal'); 
+            syncFilterUI('modal');
             applyFilters();
         });
     });
@@ -897,7 +910,7 @@ function syncFilterUI(source = 'all') {
         const freeS = document.getElementById('free-filter-check');
         if (freeS) freeS.checked = currentFilters.freeOnly;
         const bpmDisp = document.getElementById('bpm-range-display');
-        if(bpmDisp) bpmDisp.textContent = `${currentFilters.bpmMin} - ${currentFilters.bpmMax}`;
+        if (bpmDisp) bpmDisp.textContent = `${currentFilters.bpmMin} - ${currentFilters.bpmMax}`;
     }
     if (source !== 'modal') {
         const mSort = document.querySelector(`input[name="m-sort"][value="${currentFilters.sortBy}"]`);
@@ -936,7 +949,7 @@ function syncFilterUI(source = 'all') {
     }
 }
 
-window.clearMobileFilters = function() {
+window.clearMobileFilters = function () {
     currentFilters.categories = [];
     currentFilters.genres = [];
     currentFilters.bpmMin = 40;
@@ -964,10 +977,11 @@ function applyFilters() {
     if (renderTimeout) clearTimeout(renderTimeout);
 
     renderTimeout = setTimeout(() => {
-        if (container) {
-            container.classList.remove('is-searching');
-            container.style.opacity = '1';
-        }
+        try {
+            if (container) {
+                container.classList.remove('is-searching');
+                container.style.opacity = '1';
+            }
 
         let results = [...allProducts];
 
@@ -1061,6 +1075,11 @@ function applyFilters() {
 
         renderResults(filteredResults, matchedProducers, exactProducer);
         renderRecommendations();
+        } catch (err) {
+            console.error("Filter error:", err);
+            // Ensure skeletons are removed on error
+            renderResults([], [], null);
+        }
     }, 250);
 }
 
@@ -1068,45 +1087,125 @@ function renderRecommendations() {
     const container = document.getElementById('recommendations-container');
     if (!container) return;
 
-    // Logic: Pick 4 random products NOT in the filtered results
+    const isMobile = window.innerWidth <= 768;
+    const count = isMobile ? 8 : 4; // More for horizontal scroll on mobile
+
+    // Logic: Pick random products NOT in the filtered results
     const filteredIds = new Set(filteredResults.map(p => p.id));
     const pool = allProducts.filter(p => !filteredIds.has(p.id));
 
-    // Shuffle and pick 4
+    // Shuffle and pick
     const shuffled = pool.sort(() => 0.5 - Math.random());
-    const recommendations = shuffled.slice(0, 4);
+    const recommendations = shuffled.slice(0, count);
 
     if (recommendations.length === 0) {
-        container.closest('.recommendation-section').style.display = 'none';
+        const section = container.closest('.recommendation-section');
+        if (section) section.style.display = 'none';
         return;
     }
 
     container.innerHTML = recommendations.map(p => {
         const rawImg = p.image_url || '/images/portada-default.png';
         const storageVer = p.storage_version || p.r2_version || 'v2';
-        let imgAttr = '';
-        const isActuallyR2 = window.AuthUtils && window.AuthUtils.isR2Url(rawImg) && storageVer !== 'supabase';
-        if (isActuallyR2) {
-            imgAttr = `src="${imgPlaceholder}" data-r2-src="${escapeHTML(rawImg)}"`;
-        } else {
-            // Use getAuthorizedUrl for both Supabase and R2 to guarantee signing if needed
-            // But we already have r2-loader.js watching for data-r2-src
-            // Best approach: always use data-r2-src if it's not a relative path, and let it handle signing
-            imgAttr = `src="${imgPlaceholder}" data-r2-src="${escapeHTML(rawImg)}"`;
-        }
+        const productUrl = getProductUrl(p);
+        const name = p.name || 'Sin título';
+        const producer = p.producer_name || 'OFFSZN';
 
-        return `
-            <div class="recommendation-card" onclick="window.location.href='${getProductUrl(p)}'">
-                <div class="recommendation-card-img-wrapper">
-                    <img crossorigin="anonymous" ${imgAttr} data-r2-version="${storageVer}" alt="${escapeHTML(p.name)}">
+        // Use R2 signing system
+        const imgAttr = `src="${imgPlaceholder}" data-r2-src="${escapeHTML(rawImg)}" data-r2-version="${storageVer}"`;
+
+        if (isMobile) {
+            // PREMIUM SMART CARD FOR MOBILE (Matches Explore Page)
+            const isLiked = window.FavoritesManager?.isLiked(p.id);
+
+            return `
+                <div class="product-card-smart" data-product-url="${productUrl}" data-product-id="${p.id}">
+                    <div class="card-cover-wrapper">
+                        <img ${imgAttr} alt="${escapeHTML(name)}">
+                        <button class="quick-play-btn" data-play-id="${p.id}">
+                            <i class="bi bi-play-fill"></i>
+                        </button>
+                        <div class="card-like-btn ${isLiked ? 'liked' : ''}" data-like-id="${p.id}">
+                            <i class="bi ${isLiked ? 'bi-heart-fill' : 'bi-heart'}"></i>
+                        </div>
+                    </div>
+                    <div class="card-info">
+                        <div class="card-title">${escapeHTML(name)}</div>
+                        <div class="card-producer">${escapeHTML(producer)}</div>
+                    </div>
                 </div>
-                <div class="recommendation-card-title">${escapeHTML(p.name)}</div>
-                <div class="recommendation-card-producer">${escapeHTML(p.producer_name || 'OFFSZN')}</div>
-            </div>
-        `;
+            `;
+        } else {
+            // Standard Card for Desktop
+            return `
+                <div class="recommendation-card" onclick="window.location.href='${productUrl}'">
+                    <div class="recommendation-card-img-wrapper">
+                        <img ${imgAttr} alt="${escapeHTML(name)}">
+                    </div>
+                    <div class="recommendation-card-title">${escapeHTML(name)}</div>
+                    <div class="recommendation-card-producer">${escapeHTML(producer)}</div>
+                </div>
+            `;
+        }
     }).join('');
 
     signAllR2Images(container);
+
+    // Attach delegated event listeners for mobile cards (animation-first UX)
+    if (isMobile) {
+        container.querySelectorAll('.product-card-smart').forEach(card => {
+            const productUrl = card.dataset.productUrl;
+            const productId = card.dataset.productId;
+
+            // Card click → navigate
+            card.addEventListener('click', (e) => {
+                // Only navigate if clicked on the card itself, not on buttons
+                if (!e.target.closest('.quick-play-btn') && !e.target.closest('.card-like-btn')) {
+                    window.location.href = productUrl;
+                }
+            });
+
+            // Play button
+            const playBtn = card.querySelector('.quick-play-btn');
+            if (playBtn) {
+                playBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    window.handleTrackPlay(e, productId);
+                });
+            }
+
+            // Like button — ANIMATION FIRST, then logic
+            const likeBtn = card.querySelector('.card-like-btn');
+            if (likeBtn) {
+                likeBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+
+                    const icon = likeBtn.querySelector('i');
+                    const wasLiked = likeBtn.classList.contains('liked');
+
+                    // 1. INSTANT VISUAL FEEDBACK (animation-first)
+                    if (wasLiked) {
+                        likeBtn.classList.remove('liked');
+                        icon.classList.remove('bi-heart-fill');
+                        icon.classList.add('bi-heart');
+                        icon.style.color = '';
+                    } else {
+                        likeBtn.classList.add('liked');
+                        icon.classList.remove('bi-heart');
+                        icon.classList.add('bi-heart-fill');
+                        icon.style.color = '#ef4444';
+                        // Mini scale animation
+                        likeBtn.style.transform = 'scale(1.25)';
+                        setTimeout(() => { likeBtn.style.transform = ''; }, 200);
+                    }
+
+                    // 2. THEN fire the API logic (pass icon for potential correction/sync)
+                    window.FavoritesManager?.toggleLike(productId, icon);
+                });
+            }
+        });
+    }
 }
 
 function renderResults(products, producers, exactProducer) {
@@ -1193,7 +1292,7 @@ function renderTrackRowMobile(p) {
         <div class="offszn-m-track-v2" data-product-id="${p.id}" onclick="window.location.href='/product.html?id=${p.id}'">
             <div class="m-v2-main-row">
                 <div class="m-v2-thumb" onclick="event.stopPropagation(); window.handleTrackPlay(event, '${p.id}')">
-                    <img crossorigin="anonymous" ${imgAttr} data-r2-version="${storageVer}" data-product-id="${p.id}" alt="${escapeHTML(title)}">
+                    <img ${imgAttr} data-r2-version="${storageVer}" data-product-id="${p.id}" alt="${escapeHTML(title)}">
                     <div class="m-v2-play-overlay">
                         <i class="bi ${isPlaying ? 'bi-pause-fill' : 'bi-play-fill'}"></i>
                     </div>
@@ -1238,6 +1337,7 @@ function renderTrackRow(p) {
         ? (window.CurrencyManager?.format(lowestPrice) || `$${lowestPrice}`)
         : 'GRATIS';
     const storageVer = p.storage_version || p.r2_version || 'v2';
+    const isLiked = window.FavoritesManager?.isLiked(p.id) || false;
     const isActuallyR2 = window.AuthUtils && window.AuthUtils.isR2Url(imgUrl) && storageVer !== 'supabase';
     const imgPlaceholder = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
 
@@ -1248,7 +1348,7 @@ function renderTrackRow(p) {
         <div class="track-row" data-product-id="${p.id}">
             <div class="track-left">
                 <div class="thumb-container" onclick="window.location.href='${productUrl}'">
-                    <img crossorigin="anonymous" ${imgAttr} data-r2-version="${storageVer}" data-product-id="${p.id}" class="track-thumb" alt="cover">
+                    <img ${imgAttr} data-r2-version="${storageVer}" data-product-id="${p.id}" class="track-thumb" alt="cover">
                     <div class="thumb-play-overlay" onclick="window.handleTrackPlay(event, '${p.id}')">
                         <i class="bi bi-play-fill"></i>
                     </div>
@@ -1283,7 +1383,7 @@ function renderTrackRow(p) {
             <div class="track-actions-right">
                 <div class="track-actions">
                     <i class="bi bi-stars action-icon" onclick="event.stopPropagation();" title="Generar"></i>
-                    <i class="bi bi-heart action-icon" onclick="event.stopPropagation(); window.FavoritesManager?.toggleLike('${p.id}', this, ${JSON.stringify(p).replace(/"/g, '&quot;')})" title="Like"></i>
+                    <i class="bi ${isLiked ? 'bi-heart-fill liked' : 'bi-heart'} action-icon" onclick="event.stopPropagation(); window.FavoritesManager?.toggleLike('${p.id}', this, ${JSON.stringify(p).replace(/"/g, '&quot;')})" title="Like"></i>
                     <i class="bi bi-download action-icon" onclick="event.stopPropagation(); window.location.href='${productUrl}'" title="Download"></i>
                     <i class="bi bi-share action-icon" onclick="event.stopPropagation(); window.openShareModal?.(${JSON.stringify(p).replace(/"/g, '&quot;')})" title="Share"></i>
                 </div>
@@ -1333,7 +1433,7 @@ function renderExactProducerCard(p) {
     return `
         <div class="exact-match-card" onclick="window.location.href='${profileUrl}'" style="cursor:pointer; background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 24px; display: flex; align-items: center; gap: 20px; transition: all 0.3s ease; margin-bottom: 30px;">
             <div style="position: relative;">
-                <img crossorigin="anonymous" ${imgAttr} data-r2-version="${p.r2_version || 'v2'}" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid #fff;">
+                <img ${imgAttr} data-r2-version="${p.r2_version || 'v2'}" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid #fff;">
                 ${p.is_verified ? '<i class="bi bi-patch-check-fill" style="position: absolute; bottom: 0; right: 0; color: #fff; font-size: 1.2rem; background: #000; border-radius: 50%;"></i>' : ''}
             </div>
             <div style="flex: 1;">
@@ -1353,7 +1453,7 @@ function renderProducerRow(p) {
 
     return `
         <div class="producer-row" onclick="window.location.href='${profileUrl}'" style="cursor:pointer; display: flex; align-items: center; gap: 16px; padding: 12px; border-radius: 12px; transition: background 0.2s; margin-bottom: 8px;">
-            <img crossorigin="anonymous" src="${avatar}" style="width: 48px; height: 48px; border-radius: 50%; object-fit: cover; background: #1a1a1a;">
+            <img src="${avatar}" style="width: 48px; height: 48px; border-radius: 50%; object-fit: cover; background: #1a1a1a;">
             <div style="flex: 1;">
                 <div style="color: #fff; font-weight: 600; display: flex; align-items: center; gap: 6px;">
                     ${escapeHTML(producer)}
@@ -1370,7 +1470,7 @@ function renderProducerRow(p) {
 // Interactivity Handlers
 window.handleTrackPlay = (e, id) => {
     if (e) e.stopPropagation();
-    
+
     // Check if we have a direct reference or need to find it
     const product = allProducts.find(p => String(p.id) === String(id));
     if (!product) {
