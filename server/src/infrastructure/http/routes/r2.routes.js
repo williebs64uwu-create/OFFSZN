@@ -306,19 +306,21 @@ router.get(/\/r2-public\/(.*)/, async (req, res) => {
         if (!key) return res.status(400).send('Key missing');
 
         const publicPrefixes = ['products/', 'beats/mp3/', 'avatars/', 'public/', 'banners/', 'drumkits/', 'covers/', 'audio/'];
-        const isPublicPrefix = publicPrefixes.some(prefix => key.startsWith(prefix));
+        const isUUIDPath = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i.test(key);
+        const isPublicPrefix = publicPrefixes.some(prefix => key.startsWith(prefix)) || isUUIDPath;
 
         if (!isPublicPrefix) {
+            console.warn(`[R2 Public Proxy] Blocked unauthorized key: ${key}`);
             return res.status(403).send('Access Denied: Resource is not public');
         }
 
         // Smart Version Selection: Try most likely versions first
-        const isUUIDPath = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i.test(key);
         let versionsToTry = ['v2', 'supabase', 'v1'];
         
         if (isUUIDPath) {
             versionsToTry = ['v2', 'supabase']; // UUIDs are usually V2 or Supabase
-        } else if (key.includes('beats/mp3/') || key.includes('drumkits/')) {
+        }
+ else if (key.includes('beats/mp3/') || key.includes('drumkits/')) {
             versionsToTry = ['v1', 'v2', 'supabase'];
         }
 

@@ -374,29 +374,24 @@ app.get([
             const title = `${product.name} - ${producerName} | OFFSZN`;
             const price = product.is_free ? 'GRATIS' : `$${product.price_basic || '0.00'}`;
             const description = product.description 
-                ? product.description.substring(0, 160) + '...'
+                ? product.description.substring(0, 300) + '...'
                 : `Descarga "${product.name}" por ${producerName}. ${price} en OFFSZN.lat`;
             
             // Image Logic
             let image = product.image_url || 'https://offszn.lat/images/LOGO%20OFFSZN.webp';
             if (image.startsWith('http')) {
-                // If it's a private R2 URL (common in v2 uploads), extract its key and use the proxy
+                // If it's a private R2 URL, redirect to proxy
                 if (image.includes('r2.cloudflarestorage.com')) {
                     try {
                         const urlObj = new URL(image);
-                        image = `https://offszn.lat/api/r2-public${urlObj.pathname}`;
-                    } catch (e) {
-                        console.warn("Error parsing R2 URL for OG Tags:", e.message);
-                    }
+                        const key = urlObj.pathname.startsWith('/') ? urlObj.pathname.substring(1) : urlObj.pathname;
+                        image = `https://offszn.lat/api/r2-public/${key}`;
+                    } catch (e) {}
                 }
+                // Otherwise leave it as is (External, Supabase Public, etc.)
             } else {
-                if (product.storage_version === 'supabase') {
-                    const sbUrl = SUPABASE_URL || "https://qtjpvztpgfymjhhpoouq.supabase.co";
-                    image = `${sbUrl}/storage/v1/object/public/products/${image}`;
-                } else {
-                    // Fallback to proxy route for R2/v1/v2 to ensure social crawlers see the image
-                    image = `https://offszn.lat/api/r2-public/${image}`;
-                }
+                // Relative path, use proxy
+                image = `https://offszn.lat/api/r2-public/${image}`;
             }
 
             const url = `https://offszn.lat${req.originalUrl}`;
@@ -407,8 +402,8 @@ app.get([
     <meta property="og:description" content="${description}">
     <meta property="og:image" content="${image}">
     <meta property="og:image:secure_url" content="${image}">
-    <meta property="og:image:width" content="1000">
-    <meta property="og:image:height" content="1000">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
     <meta property="og:image:type" content="image/jpeg">
     <meta property="og:url" content="${url}">
     <meta property="og:type" content="product">
@@ -477,14 +472,20 @@ app.get([
             const title = `${user.nickname} | ${user.role || 'Productor'} - OFFSZN`;
             const description = user.bio || `Escucha los últimos beats y recursos de ${user.nickname} en OFFSZN.`;
             let image = user.avatar_url || 'https://offszn.lat/images/LOGO%20OFFSZN.webp';
-            if (image && image.startsWith('http') && image.includes('r2.cloudflarestorage.com')) {
-                try {
-                    const urlObj = new URL(image);
-                    image = `https://offszn.lat/api/r2-public${urlObj.pathname}`;
-                } catch (e) {}
+            if (image && image.startsWith('http')) {
+                // If it's a private R2 URL, redirect to proxy
+                if (image.includes('r2.cloudflarestorage.com')) {
+                    try {
+                        const urlObj = new URL(image);
+                        const key = urlObj.pathname.startsWith('/') ? urlObj.pathname.substring(1) : urlObj.pathname;
+                        image = `https://offszn.lat/api/r2-public/${key}`;
+                    } catch (e) {}
+                }
             } else if (image && !image.startsWith('http')) {
+                // Relative path, use proxy
                 image = `https://offszn.lat/api/r2-public/${image}`;
             }
+
 
 
             const url = `https://offszn.lat/b/${user.nickname}`;
@@ -495,8 +496,8 @@ app.get([
     <meta property="og:description" content="${description}">
     <meta property="og:image" content="${image}">
     <meta property="og:image:secure_url" content="${image}">
-    <meta property="og:image:width" content="1000">
-    <meta property="og:image:height" content="1000">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
     <meta property="og:image:type" content="image/jpeg">
     <meta property="og:url" content="${url}">
     <meta property="og:type" content="profile">
@@ -566,12 +567,17 @@ app.get(['/@:username', '/:username'], async (req, res, next) => {
                 ? user.bio.substring(0, 160) + '...'
                 : `Escucha los últimos beats y recursos de ${user.nickname} en OFFSZN.lat`;
             let image = user.avatar_url || 'https://offszn.lat/images/LOGO%20OFFSZN.webp';
-            if (image && image.startsWith('http') && image.includes('r2.cloudflarestorage.com')) {
-                try {
-                    const urlObj = new URL(image);
-                    image = `https://offszn.lat/api/r2-public${urlObj.pathname}`;
-                } catch (e) {}
+            if (image && image.startsWith('http')) {
+                // If it's a private R2 URL, redirect to proxy
+                if (image.includes('r2.cloudflarestorage.com')) {
+                    try {
+                        const urlObj = new URL(image);
+                        const key = urlObj.pathname.startsWith('/') ? urlObj.pathname.substring(1) : urlObj.pathname;
+                        image = `https://offszn.lat/api/r2-public/${key}`;
+                    } catch (e) {}
+                }
             } else if (image && !image.startsWith('http')) {
+                // Relative path, use proxy
                 image = `https://offszn.lat/api/r2-public/${image}`;
             }
 
@@ -584,8 +590,8 @@ app.get(['/@:username', '/:username'], async (req, res, next) => {
     <meta property="og:description" content="${description}">
     <meta property="og:image" content="${image}">
     <meta property="og:image:secure_url" content="${image}">
-    <meta property="og:image:width" content="1000">
-    <meta property="og:image:height" content="1000">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
     <meta property="og:image:type" content="image/jpeg">
     <meta property="og:url" content="${url}">
     <meta property="og:type" content="profile">
