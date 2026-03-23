@@ -400,7 +400,25 @@ app.get([
     <meta name="twitter:image" content="${image}">
             `;
 
-            html = html.replace('<head>', `<head>\n${ogTags}`);
+            const productSchema = {
+                "@context": "https://schema.org",
+                "@type": "Product",
+                "name": product.name,
+                "image": image,
+                "description": product.description || description,
+                "sku": product.id,
+                "brand": { "@type": "Brand", "name": "OFFSZN" },
+                "offers": {
+                    "@type": "Offer",
+                    "url": url,
+                    "priceCurrency": "USD",
+                    "price": product.price_basic || 0,
+                    "availability": "https://schema.org/InStock"
+                }
+            };
+            const schemaTag = `<script type="application/ld+json">${JSON.stringify(productSchema)}</script>`;
+
+            html = html.replace('<head>', `<head>\n${ogTags}\n    ${schemaTag}`);
             html = html.replace(/<title>.*?<\/title>/, `<title>${title}</title>`);
         }
 
@@ -531,7 +549,18 @@ app.get(['/@:username', '/:username'], async (req, res, next) => {
     <meta name="twitter:image" content="${image}">
             `;
 
-            html = html.replace('<head>', `<head>\n${ogTags}`);
+            const personSchema = {
+                "@context": "https://schema.org",
+                "@type": "Person",
+                "name": user.nickname,
+                "url": url,
+                "image": image,
+                "description": user.bio || description,
+                "jobTitle": user.role || "Productor Musical"
+            };
+            const schemaTag = `<script type="application/ld+json">${JSON.stringify(personSchema)}</script>`;
+
+            html = html.replace('<head>', `<head>\n${ogTags}\n    ${schemaTag}`);
             html = html.replace(/<title>.*?<\/title>/, `<title>${title}</title>`);
         }
 
