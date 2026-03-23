@@ -688,7 +688,7 @@ function renderHeroSlideHtml(product, index) {
     const mobileBgAttr = isR2 ? `data-r2-bg="${imgUrl}"` : `style="background-image: url('${imgUrl}')"`;
 
     return `
-            <div class="explore-hero" onclick="handleHeroClick(${index})">
+            <div class="explore-hero" onclick="window.handleHeroClick(${index})">
                 <!-- Mobile Background Image & Gradient -->
                 <div class="hero-mobile-bg mobile-only" ${mobileBgAttr} data-r2-version="${product.storage_version || product.r2_version || 'v1'}"></div>
                 <div class="hero-mobile-gradient mobile-only"></div>
@@ -719,9 +719,9 @@ function renderHeroSlideHtml(product, index) {
                          alt="cover" class="hero-image">
                 </div>
 
-                <!-- Mobile Purple Play Button -->
+                <!-- Mobile White Play Button -->
                 <button class="hero-mobile-play-btn mobile-only" data-hero-index="${index}" onclick="event.stopPropagation(); window.handleHeroPlay(this)">
-                    <i class="bi bi-play-fill" style="margin-left: 3px;"></i>
+                    <i class="bi bi-play-fill" style="margin-left: 3px; color: #000;"></i>
                 </button>
             </div>
     `;
@@ -740,6 +740,14 @@ function handleHeroClick(index) {
         window.location.href = getProductUrl(heroProducts[index]);
     }
 }
+window.handleHeroClick = handleHeroClick;
+
+window.navToHero = function(index) {
+    currentHeroIndex = index;
+    performHeroTransition(index);
+    if (heroTimer) clearInterval(heroTimer);
+    heroTimer = setInterval(() => moveToNextHero(), EXPLORE_CONFIG.HERO_ROTATE_MS);
+};
 
 // renderHeroSlide and duplicate functions removed in favor of renderHeroSlideHtml and track layout.
 

@@ -478,7 +478,7 @@ window.StickyPlayer = (function () {
             // First time setup
             // Append audio to DOM for higher Priority
             globalAudioEl = document.createElement('audio');
-            globalAudioEl.crossOrigin = "anonymous";
+            // crossOrigin removed to prevent CORB with R2 signed URLs
             globalAudioEl.style.display = "none";
             document.body.appendChild(globalAudioEl);
 
@@ -1127,7 +1127,7 @@ window.StickyPlayer = (function () {
                 link.id = linkId;
                 link.rel = 'preload';
                 link.as = 'fetch';
-                link.crossOrigin = 'anonymous';
+                // crossOrigin removed to prevent CORB with R2 signed URLs
                 document.head.appendChild(link);
             }
             link.href = audioUrl;
