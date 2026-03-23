@@ -331,6 +331,52 @@ function serverDecodeId(str) {
     return Math.floor((n - OBF_SALT) / OBF_MULT);
 }
 
+// --- 3.3.5 OG IMAGE PROXY (Lightweight redirect for social media bots) ---
+app.get('/api/og-image/:productId', async (req, res) => {
+    try {
+        const { supabase: db } = await import('./infrastructure/database/connection.js');
+        const { getPresignedDownloadUrl } = await import('./infrastructure/services/r2-storage.service.js');
+        
+        const productId = parseInt(req.params.productId, 10);
+        if (isNaN(productId)) return res.status(400).send('Invalid product ID');
+
+        const { data: product } = await db.from('products').select('image_url, storage_version').eq('id', productId).maybeSingle();
+        if (!product?.image_url) return res.redirect('https://offszn.lat/images/LOGO%20OFFSZN.webp');
+
+        let imageUrl = product.image_url;
+        const version = product.storage_version || 'v2';
+        
+        if (imageUrl.startsWith('http')) {
+            if (imageUrl.includes('r2.cloudflarestorage.com')) {
+                // Private R2 URL — extract key and sign it
+                try {
+                    const urlObj = new URL(imageUrl);
+                    const key = urlObj.pathname.startsWith('/') ? urlObj.pathname.substring(1) : urlObj.pathname;
+                    const signedUrl = await getPresignedDownloadUrl(key, 600, version);
+                    if (signedUrl) return res.redirect(signedUrl);
+                } catch (e) {}
+            }
+            // Already a public URL (ImageKit, etc.)
+            return res.redirect(imageUrl);
+        }
+        
+        // Relative path
+        if (version === 'supabase') {
+            return res.redirect(`https://qtjpvztpgfymjhhpoouq.supabase.co/storage/v1/object/public/products/${imageUrl}`);
+        }
+        
+        // R2 v1/v2 — sign it
+        const signedUrl = await getPresignedDownloadUrl(imageUrl, 600, version);
+        if (signedUrl) return res.redirect(signedUrl);
+        
+        // Last fallback — try Supabase public
+        return res.redirect(`https://qtjpvztpgfymjhhpoouq.supabase.co/storage/v1/object/public/products/${imageUrl}`);
+    } catch (err) {
+        console.error('[OG Image Proxy] Error:', err.message);
+        return res.redirect('https://offszn.lat/images/LOGO%20OFFSZN.webp');
+    }
+});
+
 // --- 3.4 PRODUCT SHORTCUT ROUTES (SEO Friendly with Dynamic OG Tags) ---
 app.get([
     '/beat/:slug', '/kit/:slug', '/drumkit/:slug', '/loopkit/:slug',
@@ -377,21 +423,36 @@ app.get([
                 ? product.description.substring(0, 300) + '...'
                 : `Descarga "${product.name}" por ${producerName}. ${price} en OFFSZN.lat`;
             
-            // Image Logic
+            // Image Logic - Use DIRECT public URLs for maximum social media compatibility
+            // The Supabase 'products' bucket is PUBLIC, so all covers stored there are directly accessible.
+            // For R2 stored products, covers are also mirrored to Supabase OR we can use the proxy.
+            const SUPABASE_PUBLIC_STORAGE = 'https://qtjpvztpgfymjhhpoouq.supabase.co/storage/v1/object/public/products';
             let image = product.image_url || 'https://offszn.lat/images/LOGO%20OFFSZN.webp';
+            const version = product.storage_version || 'v2';
+            
             if (image.startsWith('http')) {
-                // If it's a private R2 URL, redirect to proxy
+                // Full URL — if it's a private R2 URL, extract key and try Supabase public
+                // Note: v2 thumbnails are usually in R2, so route to r2-public if version is v2.
                 if (image.includes('r2.cloudflarestorage.com')) {
                     try {
                         const urlObj = new URL(image);
-                        const key = urlObj.pathname.startsWith('/') ? urlObj.pathname.substring(1) : urlObj.pathname;
-                        image = `https://offszn.lat/api/r2-public/${key}`;
-                    } catch (e) {}
+                        let key = urlObj.pathname.startsWith('/') ? urlObj.pathname.substring(1) : urlObj.pathname;
+                        if (version === 'v2') {
+                            image = `https://offszn.lat/api/r2-public/${key}`;
+                        } else {
+                            image = `${SUPABASE_PUBLIC_STORAGE}/${key}`;
+                        }
+                    } catch (e) {
+                        image = `https://offszn.lat/api/r2-public/${image}`;
+                    }
                 }
-                // Otherwise leave it as is (External, Supabase Public, etc.)
             } else {
-                // Relative path, use proxy
-                image = `https://offszn.lat/api/r2-public/${image}`;
+                // Relative path
+                if (version === 'v2') {
+                    image = `https://offszn.lat/api/r2-public/${image}`;
+                } else {
+                    image = `${SUPABASE_PUBLIC_STORAGE}/${image}`;
+                }
             }
 
             const url = `https://offszn.lat${req.originalUrl}`;
