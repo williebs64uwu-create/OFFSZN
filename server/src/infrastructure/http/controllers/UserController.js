@@ -128,14 +128,15 @@ export const completeOnboarding = async (req, res) => {
                     console.warn(`[Referral] Blocked: ${reason} attempt by ${userId} for referrer ${referrer.id}`);
 
                     // Log failed attempt
-                    await supabase.from('referrals').insert([{
+                    const { error: insertError } = await supabase.from('referrals').insert([{
                         referrer_id: referrer.id,
                         referred_user_id: userId,
                         status: 'rejected',
                         failure_reason: reason
-                    }]).catch(err => {
-                        if (err.code !== '23505') console.error('[Referral] Error logging failure:', err);
-                    });
+                    }]);
+                    if (insertError) {
+                        if (insertError.code !== '23505') console.error('[Referral] Error logging failure:', insertError);
+                    }
                 } else {
                     // Create Referral Record
                     const { error: refError } = await supabase

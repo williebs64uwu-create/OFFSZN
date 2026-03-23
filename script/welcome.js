@@ -235,6 +235,8 @@ document.addEventListener('DOMContentLoaded', () => {
     validateCurrentStep();
   }
 
+  let referralCheckTimeout;
+
   // ============================================
   // REFERRAL CODE HANDLING
   // ============================================
@@ -255,8 +257,6 @@ document.addEventListener('DOMContentLoaded', () => {
       checkReferralCode(val);
     });
   }
-
-  let referralCheckTimeout;
   async function checkReferralCode(code) {
     clearTimeout(referralCheckTimeout);
     if (!referralStatus) return;

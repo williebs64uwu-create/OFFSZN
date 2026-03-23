@@ -318,7 +318,7 @@ router.get(/\/r2-public\/(.*)/, async (req, res) => {
         let versionsToTry = ['v2', 'supabase', 'v1'];
         
         if (isUUIDPath) {
-            versionsToTry = ['v2', 'supabase']; // UUIDs are usually V2 or Supabase
+            versionsToTry = ['v2', 'supabase', 'v1']; // UUIDs are usually V2 or Supabase
         }
  else if (key.includes('beats/mp3/') || key.includes('drumkits/')) {
             versionsToTry = ['v1', 'v2', 'supabase'];
@@ -326,9 +326,13 @@ router.get(/\/r2-public\/(.*)/, async (req, res) => {
 
         // Loop through versions until we find it
         for (const ver of versionsToTry) {
-            const publicUrl = getPublicUrl(key, ver);
+            // Obtenemos una URL PRE-FIRMADA para cualquier versión, saltando bloqueos de bucket privado
+            const targetUrl = await getPresignedDownloadUrl(key, 300, ver);
+
+            if (!targetUrl) continue;
+
             try {
-                const response = await fetch(publicUrl, { method: 'GET' }); // HEAD would be better but some services block it
+                const response = await fetch(targetUrl, { method: 'GET' }); // HEAD would be better but some services block it
                 
                 if (response.ok) {
                     // Found it! Proxy the content
