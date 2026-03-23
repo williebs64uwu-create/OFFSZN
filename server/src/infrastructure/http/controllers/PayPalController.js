@@ -933,7 +933,7 @@ export const capturePayPalOrder = async (req, res) => {
                                     <div style="background:#111; border:1px solid #333; border-radius:10px; padding:20px; margin:20px 0;">
                                         <p style="color:#888; margin:0;"><b style="color:#fff;">Monto de la Variante:</b> $${item.variant_price} USD</p>
                                     </div>
-                                    <a href="https://offszn.lat/cuenta/ventas" style="display:inline-block; background:#8B5CF6; color:#fff; padding:14px 30px; border-radius:10px; text-decoration:none; font-weight:700; margin-top:15px;">VER MIS VENTAS</a>
+                                    <a href="https://offszn.lat/cuenta/dashboard" style="display:inline-block; background:#8B5CF6; color:#fff; padding:14px 30px; border-radius:10px; text-decoration:none; font-weight:700; margin-top:10px;">GESTIONAR MI DASHBOARD</a>
                                     <hr style="border:0; border-top:1px solid #222; margin:25px 0;">
                                     <p style="font-size:0.75rem; color:#555;">¡Sigue así! OFFSZN.</p>
                                 </div>

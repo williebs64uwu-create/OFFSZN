@@ -2817,10 +2817,10 @@
                         (!coverPath.startsWith('http') && coverPath.startsWith('products/'));
 
                     if (isR2Key) {
-                        item.signed_cover_url = await window.getAuthorizedUrl(coverPath, item.r2_version || 'v1');
+                        item.signed_cover_url = await window.getAuthorizedUrl(coverPath, item.storage_version || item.r2_version || 'v1', item.id);
                     } else if (coverPath.startsWith('http')) {
                         if (coverPath.includes('r2.cloudflarestorage.com') || !coverPath.includes('supabase.co')) {
-                            item.signed_cover_url = await window.getAuthorizedUrl(coverPath, item.r2_version || 'v1');
+                            item.signed_cover_url = await window.getAuthorizedUrl(coverPath, item.storage_version || item.r2_version || 'v1', item.id);
                         } else {
                             item.signed_cover_url = coverPath; // Public Supabase URL
                         }

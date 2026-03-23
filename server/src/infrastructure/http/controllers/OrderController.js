@@ -462,6 +462,7 @@ export const createFreeOrder = async (req, res) => {
                                 <h2 style="color: #3B82F6; margin-bottom:20px;">¡Nueva Descarga de tu Producto! 📥</h2>
                                 <p style="color:#ccc; line-height:1.6;">Hola <b>${prodNickname}</b>, te informamos que el usuario <b>${userNickname}</b> (${userData.email}) ha realizado una descarga gratuita de tu producto <b style="color:#fff;">${product.name}</b>.</p>
                                 <p style="color:#888; line-height:1.5;">Esta es una notificación automática para mantenerte al tanto de la actividad y alcance de tu perfil en OFFSZN.</p>
+                                <a href="https://offszn.lat/cuenta/dashboard" style="display:inline-block; background:#3B82F6; color:#fff; padding:12px 25px; border-radius:8px; text-decoration:none; font-weight:700; margin-top:10px;">GESTIONAR MI DASHBOARD</a>
                                 <hr style="border:0; border-top:1px solid #222; margin:25px 0;">
                                 <p style="font-size:0.75rem; color:#555;">Sigue así. Equipo OFFSZN</p>
                             </div>

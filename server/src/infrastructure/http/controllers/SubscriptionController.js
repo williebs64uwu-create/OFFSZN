@@ -143,7 +143,7 @@ export const processSubscriptionPayment = async (req, res) => {
             payment_method_id: formData.payment_method_id,
             issuer_id: formData.issuer_id,
             payer: {
-                email: formData.payer?.email || 'admin@offszn.com', // Safe fallback if MP doesn't provide email
+                email: formData.payer?.email || 'no-reply@offszn.lat', // Safe fallback if MP doesn't provide email
                 ...(formData.payer?.identification && { identification: formData.payer.identification })
             },
             external_reference: externalRef

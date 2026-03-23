@@ -379,9 +379,14 @@ app.get([
             
             // Image Logic
             let image = product.image_url || 'https://offszn.lat/images/LOGO%20OFFSZN.webp';
-            if (product.storage_version === 'supabase' && !image.startsWith('http')) {
-                const sbUrl = SUPABASE_URL || "https://qtjpvztpgfymjhhpoouq.supabase.co";
-                image = `${sbUrl}/storage/v1/object/public/products/${image}`;
+            if (!image.startsWith('http')) {
+                if (product.storage_version === 'supabase') {
+                    const sbUrl = SUPABASE_URL || "https://qtjpvztpgfymjhhpoouq.supabase.co";
+                    image = `${sbUrl}/storage/v1/object/public/products/${image}`;
+                } else {
+                    // Fallback to proxy route for R2/v1/v2 to ensure social crawlers see the image
+                    image = `https://offszn.lat/api/r2-public/${image}`;
+                }
             }
 
             const url = `https://offszn.lat${req.originalUrl}`;
@@ -457,7 +462,11 @@ app.get([
         if (user) {
             const title = `${user.nickname} | ${user.role || 'Productor'} - OFFSZN`;
             const description = user.bio || `Escucha los últimos beats y recursos de ${user.nickname} en OFFSZN.`;
-            const image = user.avatar_url || 'https://offszn.lat/images/LOGO%20OFFSZN.webp';
+            let image = user.avatar_url || 'https://offszn.lat/images/LOGO%20OFFSZN.webp';
+            if (image && !image.startsWith('http')) {
+                image = `https://offszn.lat/api/r2-public/${image}`;
+            }
+
             const url = `https://offszn.lat/b/${user.nickname}`;
 
             const ogTags = `
@@ -532,7 +541,11 @@ app.get(['/@:username', '/:username'], async (req, res, next) => {
             const description = user.bio 
                 ? user.bio.substring(0, 160) + '...'
                 : `Escucha los últimos beats y recursos de ${user.nickname} en OFFSZN.lat`;
-            const image = user.avatar_url || 'https://offszn.lat/images/LOGO%20OFFSZN.webp';
+            let image = user.avatar_url || 'https://offszn.lat/images/LOGO%20OFFSZN.webp';
+            if (image && !image.startsWith('http')) {
+                image = `https://offszn.lat/api/r2-public/${image}`;
+            }
+
             const url = `https://offszn.lat/@${user.nickname}`;
 
             const ogTags = `

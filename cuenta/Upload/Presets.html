@@ -7357,51 +7357,26 @@
             }
         }
 
-        async function getAuthorizedUrl(pathOrUrl) {
+        async function getAuthorizedUrl(pathOrUrl, version = null, productId = null) {
             if (!pathOrUrl) return null;
-
-            // ?? FIX: Si es una URL de R2 (cloudflarestorage), necesitamos firmarla sí o sí.
-            const isR2Url = pathOrUrl.includes('r2.cloudflarestorage.com') ||
-                pathOrUrl.includes('pub-') ||
-                (pathOrUrl.startsWith('http') === false); // Es un Key
-
-            if (!isR2Url && pathOrUrl.startsWith('http')) return pathOrUrl; // Es Supabase o externo público
-
-            // Si es R2 URL completa, extraemos el KEY
-            let key = pathOrUrl;
-            if (pathOrUrl.startsWith('http')) {
-                // ?? FIX: No usar new URL().pathname porque corta en '#' o '?'
-                const r2Base = '.r2.cloudflarestorage.com/';
-                if (pathOrUrl.includes(r2Base)) {
-                    key = pathOrUrl.split(r2Base)[1];
-                } else {
-                    try {
-                        const urlObj = new URL(pathOrUrl);
-                        key = urlObj.pathname.substring(1);
-                    } catch (e) { }
-                }
+            if (window.AuthUtils && window.AuthUtils.getAuthorizedUrl) {
+                return await window.AuthUtils.getAuthorizedUrl(pathOrUrl, version, productId);
             }
-
+            
+            // Minimal Fallback (Legacy)
+            if (pathOrUrl.startsWith('http') && !pathOrUrl.includes('r2.cloudflarestorage.com')) return pathOrUrl;
             try {
                 const session = await supabaseClient.auth.getSession();
                 const token = session.data.session?.access_token;
-
                 const response = await fetch('/api/r2/download-url', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: JSON.stringify({ key })
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ key: pathOrUrl.split('.com/')[1] || pathOrUrl, version, productId })
                 });
-
                 if (!response.ok) return null;
                 const { downloadUrl } = await response.json();
                 return downloadUrl;
-            } catch (error) {
-                console.error('Error getting authorized URL:', error);
-                return null;
-            }
+            } catch (e) { return null; }
         }
         async function handlePublish() {
             // ?? NO COOLDOWN - User requested removal
@@ -8172,7 +8147,7 @@
                 // 5. Cargar archivos (cover, kit, audio)
                 if (product.image_url) {
                     try {
-                        const signedUrl = await getAuthorizedUrl(product.image_url); // ?? FIX: Sign first
+                        const signedUrl = await getAuthorizedUrl(product.image_url, product.storage_version || product.r2_version || 'v1', product.id); // ?? FIX: Sign first
                         if (signedUrl) {
                             const response = await fetch(signedUrl);
                             const blob = await response.blob();

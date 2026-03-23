@@ -981,7 +981,7 @@
                 // 1. Fetch proposals I RECEIVED (as producer)
                 const { data: received, error: err1 } = await window.supabaseClient
                     .from('propuestas_offszn')
-                    .select('*, products(id, name, image_url, price_basic, public_slug, r2_version)')
+                    .select('*, products(id, name, image_url, price_basic, public_slug, r2_version, storage_version)')
                     .eq('producer_id', currentUserId)
                     .order('created_at', { ascending: false });
 
@@ -992,7 +992,7 @@
                 if (currentUserEmail) {
                     const { data: sent, error: err2 } = await window.supabaseClient
                         .from('propuestas_offszn')
-                        .select('*, products(id, name, image_url, price_basic, public_slug, r2_version)')
+                        .select('*, products(id, name, image_url, price_basic, public_slug, r2_version, storage_version)')
                         .eq('email_offszn', currentUserEmail)
                         .order('created_at', { ascending: false });
 
@@ -1099,7 +1099,7 @@
 
                 // ?? AUTHORIZE R2 IMAGE
                 if (img && window.AuthUtils) {
-                    img = await window.AuthUtils.getAuthorizedUrl(img, product.r2_version || 'v1');
+                    img = await window.AuthUtils.getAuthorizedUrl(img, product.storage_version || product.r2_version || 'v1', product.id);
                 }
 
                 const statusClass = `status-${p.status_offszn}`;

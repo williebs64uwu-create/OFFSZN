@@ -225,38 +225,9 @@ window.completeGate = async function (url, productId) {
                 .catch(err => console.error("[Gate] Dashboard sync error:", err));
         }
 
-        // 3. EmailJS Notification (Consolidated/Hybrid) - Only if logged in or we have info
-        if (typeof emailjs !== 'undefined' && producerId && currentUserId && currentUserId !== producerId) {
-            // A. Notify Producer (Template Producer)
-            const producerParams = {
-                activity_type: 'Descarga Gratuita',
-                to_name: producerObj?.nickname || 'Productor',
-                to_email: producerEmail || '',
-                product_name: product?.name || 'Sonido',
-                downloader_name: window.currentUserNickname || window.currentUserData?.nickname || 'Un invitado',
-                amount: 'Gratis'
-            };
-
-            emailjs.send('service_w50l62y', 'template_bgp3zb5', producerParams, 'If_WAVcuXiGSPp2SB')
-                .then(() => console.log("[Gate] Producer notification sent."))
-                .catch(err => console.error("[Gate] Producer Email error:", err));
-
-            // B. Notify Client (Template Client Receipt - Only if user has email)
-            const clientEmail = window.currentUserData?.email;
-            if (clientEmail) {
-                const clientParams = {
-                    downloader_name: window.currentUserNickname || window.currentUserData?.nickname || 'Usuario',
-                    to_email: clientEmail,
-                    product_name: product?.name || 'Sonido',
-                    activity_type: 'descarga gratuita',
-                    download_url: url
-                };
-                // Assuming template_client_receipt exists
-                emailjs.send('service_w50l62y', 'template_client_receipt', clientParams, 'If_WAVcuXiGSPp2SB')
-                    .then(() => console.log("[Gate] Client confirmation sent."))
-                    .catch(err => console.warn("[Gate] Client Email skipped/failed (Template might not exist yet)."));
-            }
-        }
+        // 3. Email notifications are now handled exclusively by the backend (/api/orders/free)
+        // to ensure they come from no-reply@offszn.lat and use the correct offszn.lat domain.
+        console.log("[Gate] Backend handling email notifications...");
 
         // 4. Download Trigger (Direct)
         setTimeout(async () => {

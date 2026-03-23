@@ -1911,6 +1911,8 @@
                         desc: 'Nuevo Lanzamiento',
                         price: p.price_usd,
                         img: p.image_url,
+                        storage_version: p.storage_version,
+                        id: p.id,
                         r2_version: p.r2_version, // CAPTURE R2 VERSION
                         link: `/cuenta/mis-kits.html?tab=${tabName}`
                     });
@@ -2032,7 +2034,7 @@
                 if (item.type === 'product') {
                     const typeLabel = typeMap[item.category] || 'Producto';
                     // ?? AUTHORIZE R2 IMAGE WITH VERSION
-                    const authorizedImg = item.img ? await AuthUtils.getAuthorizedUrl(item.img, item.r2_version || 'v1') : 'https://via.placeholder.com/80';
+                    const authorizedImg = item.img ? await AuthUtils.getAuthorizedUrl(item.img, item.storage_version || item.r2_version || 'v1', item.id) : 'https://via.placeholder.com/80';
                     thumb = `<img src="${authorizedImg}" data-r2-version="${item.r2_version || 'v1'}" crossorigin="anonymous" class="activity-thumb" alt="" style="width:48px; height:48px; border-radius:6px; object-fit:cover;">`;
                     typeBadge = `<span class="activity-type-badge" style="font-size:10px; padding:2px 6px; border-radius:4px; background:#222; color:#aaa; margin-left:auto;">${typeLabel}</span>`;
                 } else if (item.type === 'sale') {
