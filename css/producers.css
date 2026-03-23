@@ -127,7 +127,7 @@
 
 /* PRODUCERS GRID */
 .pro-grid-section {
-    padding: 20px 24px 80px;
+    padding: 0px 24px 80px;
     max-width: 1400px;
     margin: 0 auto;
     width: 100%;
@@ -244,8 +244,9 @@
 .card-actions-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 8px;
-    margin-top: 12px;
+    gap: 10px;
+    margin-top: 15px;
+    padding: 0 10px;
 }
 
 .btn-card-action {
@@ -268,18 +269,43 @@
     border-color: rgba(255, 255, 255, 0.4);
 }
 
-.btn-solicitar,
-.btn-enviar {
-    background: transparent;
-    color: #888;
-    border-color: rgba(255, 255, 255, 0.1);
+.btn-solicitar {
+    background: #fff !important;
+    color: #000 !important;
+    border: none !important;
+    padding: 10px 8px;
+    border-radius: 8px;
+    font-size: 0.72rem;
+    font-weight: 800;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
-.btn-solicitar:hover,
+.btn-solicitar:hover {
+    background: #e0e0e0 !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255,255,255,0.1);
+}
+
+.btn-enviar {
+    background: #1a1a1a !important;
+    color: #fff !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    padding: 10px 8px;
+    border-radius: 8px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
 .btn-enviar:hover {
-    background: rgba(255, 255, 255, 0.1);
-    color: #fff;
-    border-color: rgba(255, 255, 255, 0.5);
+    background: #252525 !important;
+    border-color: rgba(255, 255, 255, 0.3) !important;
 }
 
 /* SIDE FILTERS LAYOUT */
@@ -296,10 +322,16 @@
     gap: 10px;
     justify-content: flex-start;
     flex-wrap: nowrap;
-    padding: 4px 10px;
+    padding: 10px 16px;
     overflow-x: auto;
     scrollbar-width: none;
     -ms-overflow-style: none;
+    width: 100%;
+    max-width: 100vw;
+    box-sizing: border-box;
+    -webkit-overflow-scrolling: touch;
+    mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
+    -webkit-mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
 }
 
 @media (min-width: 1024px) {
@@ -579,13 +611,120 @@
 }
 
 @media (max-width: 768px) {
+    .pro-hero {
+        padding: 10px 16px 5px;
+    }
+
+    .producers-page {
+        padding-top: 20px;
+    }
+
     .pro-hero h1 {
-        font-size: 3rem;
+        font-size: 2.2rem;
+        letter-spacing: -1px;
+    }
+
+    .toolbar-content-centered {
+        gap: 20px;
+        align-items: stretch;
+        width: 100%;
+        max-width: 100%;
+    }
+
+    .pro-toolbar {
+        padding: 20px 16px 10px;
+        margin-bottom: 20px;
+    }
+
+    #producers-search-container {
+        display: none !important;
+    }
+
+    #producers-search-container input {
+        font-size: 0.95rem;
+        padding: 8px 30px 8px 0;
+    }
+
+    #producers-search-container .search-icon {
+        font-size: 1rem;
+    }
+
+    .pro-category-filters {
+        overflow-x: auto;
+        white-space: nowrap;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+        max-width: 100%;
+    }
+
+    .pro-category-filters::-webkit-scrollbar {
+        display: none;
+    }
+
+    .category-tag {
+        padding: 6px 14px;
+        font-size: 0.8rem;
+        white-space: nowrap;
+    }
+
+    .checklist-item {
+        padding: 4px 12px;
+        font-size: 0.75rem;
+        gap: 6px;
+        white-space: nowrap;
+    }
+
+    .checkbox-custom {
+        width: 14px;
+        height: 14px;
+        flex-shrink: 0;
+    }
+
+    .checklist-item input:checked+.checkbox-custom::after {
+        font-size: 12px;
     }
 
     .pro-grid {
         grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
         gap: 16px;
+    }
+
+    .card-name-centered {
+        font-size: 0.95rem;
+    }
+
+    .card-meta-centered {
+        font-size: 0.75rem;
+    }
+
+    .btn-card-action {
+        padding: 8px 6px;
+        font-size: 0.65rem;
+    }
+
+    .card-avatar-container {
+        padding: 16px 10px 12px;
+        min-height: 200px;
+    }
+
+    .card-avatar-wrapper {
+        width: 100px;
+        height: 100px;
+    }
+
+    .avatar-placeholder {
+        font-size: 2.2rem;
+    }
+
+    .pro-pagination {
+        margin-top: 40px;
+        gap: 6px;
+    }
+
+    .page-btn {
+        width: 32px;
+        height: 32px;
+        font-size: 0.75rem;
     }
 
     .side-filter-panel {
@@ -607,9 +746,18 @@
         display: flex;
     }
 
-    .filter-section {
-        width: 80%;
-        max-width: 300px;
+    .offszn-modal-content {
+        width: 100% !important;
+        height: 100% !important;
+        max-width: 100% !important;
+        max-height: 100% !important;
+        border-radius: 0 !important;
+        border: none !important;
+        margin: 0 !important;
+    }
+
+    .modal-step {
+        padding: 24px !important;
     }
 }
 

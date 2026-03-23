@@ -130,10 +130,12 @@ router.post('/r2/download-url', async (req, res) => {
             } catch (e) {}
         }
         
-        // Limpiar slash inicial y bucket names accidentales
+        // Limpiar slash inicial y bucket names accidentales (Solo nombres de bucket reales)
         if (typeof key === 'string') {
-            const bNames = [R2_BUCKET_NAME, R2_SECURE_BUCKET_NAME, 'offsznlatbucket', 'offszn-storage'];
-            for (const b of bNames) {
+            // Solo quitar el nombre del bucket si viene al inicio (como en una URL de Supabase o R2 path)
+            // No quitar folder prefixes como 'secure-products' o 'products' que son parte del key en R2.
+            const realBucketNames = ['offsznlatbucket', 'offszn-storage']; 
+            for (const b of realBucketNames) {
                 const norm = key.startsWith('/') ? key : `/${key}`;
                 if (norm.startsWith(`/${b}/`)) {
                     key = norm.substring(b.length + 2);
@@ -218,8 +220,8 @@ router.post('/r2/bulk-sign', async (req, res) => {
                 }
                 
                 if (typeof key === 'string') {
-                    const bNames = [R2_BUCKET_NAME, R2_SECURE_BUCKET_NAME, 'offsznlatbucket', 'offszn-storage'];
-                    for (const b of bNames) {
+                    const realBucketNames = ['offsznlatbucket', 'offszn-storage'];
+                    for (const b of realBucketNames) {
                         const norm = key.startsWith('/') ? key : `/${key}`;
                         if (norm.startsWith(`/${b}/`)) { key = norm.substring(b.length + 2); break; }
                     }

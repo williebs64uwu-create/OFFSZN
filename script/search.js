@@ -45,7 +45,7 @@ function isPresetProduct(p) {
  */
 function isProductInCategory(p, categories) {
     if (!categories || categories.length === 0) return true;
-    
+
     // Support both single string and array
     const catArray = Array.isArray(categories) ? categories : [categories];
     if (catArray.includes('Todo') || catArray.includes('Todas') || catArray.includes('all')) return true;
@@ -58,27 +58,27 @@ function isProductInCategory(p, categories) {
 
         // Specific mapping for "Beats"
         if (target === 'beat' || target === 'beats') return pType === 'beat';
-        
+
         // Specific mapping for "Drum Kits"
         if (target === 'drumkit' || target === 'drum kits' || target === 'kit' || target === 'kits') {
             return pType === 'drumkit' || pType === 'kit' || pCat.includes('drum');
         }
-        
+
         // Specific mapping for "Samples" / "Loop Kits"
         if (target === 'loopkit' || target === 'samples' || target === 'samplepack' || target === 'loop kits' || target === 'sample pack') {
             return pType === 'loopkit' || pType === 'samplepack' || pCat.includes('sample') || pCat.includes('loop');
         }
-        
+
         // Specific mapping for "Presets"
         if (target === 'preset' || target === 'presets') {
             return isPresetProduct(p);
         }
-        
+
         // Specific mapping for "Plantillas" / "Templates"
         if (target === 'template' || target === 'plantillas' || target === 'templates' || target === 'plantilla') {
             return pType === 'template' || pType === 'plantilla' || pCat.includes('template') || pCat.includes('plantilla');
         }
-        
+
         // Literal match
         return pType === target || pCat.includes(target);
     });
@@ -105,31 +105,52 @@ function debounce(func, wait) {
 }
 
 // --- Skeletons ---
-function showResultsSkeletons(count = 10) {
+function showResultsSkeletons() {
     const container = document.getElementById('search-results-container');
     if (!container) return;
 
-    // Prevent redundant re-renders of skeletons if they are already showing
-    if (container.classList.contains('is-searching')) return;
-    container.classList.add('is-searching');
-
     let html = '';
-    for (let i = 0; i < count; i++) {
-        html += `
-            <div class="track-row-skeleton">
-                <div class="thumb-skeleton skeleton"></div>
-                <div class="info-skeleton">
-                    <div class="title-skeleton skeleton"></div>
-                    <div class="meta-skeleton skeleton"></div>
+    const isMobile = window.innerWidth <= 768;
+
+    if (isMobile) {
+        // Use the EXACT same classes and structure as real content
+        for (let i = 0; i < 6; i++) {
+            html += `
+                <div class="offszn-m-track-v2 skeleton-active">
+                    <div class="m-v2-main-row">
+                        <div class="m-v2-thumb skeleton-pulse"></div>
+                        <div class="m-v2-info">
+                            <div class="skeleton-pulse" style="height: 14px; width: 70%; background: rgba(255,255,255,0.05); border-radius: 4px; margin-bottom: 8px;"></div>
+                            <div class="skeleton-pulse" style="height: 10px; width: 40%; background: rgba(255,255,255,0.03); border-radius: 4px;"></div>
+                        </div>
+                        <div class="m-v2-play-container">
+                             <div class="skeleton-pulse" style="width: 44px; height: 44px; border-radius: 50%; opacity: 0.1;"></div>
+                        </div>
+                        <div class="m-v2-actions">
+                             <div class="skeleton-pulse" style="width: 32px; height: 32px; border-radius: 50%; opacity: 0.05;"></div>
+                             <div class="skeleton-pulse" style="width: 32px; height: 32px; border-radius: 50%; opacity: 0.05;"></div>
+                        </div>
+                    </div>
                 </div>
-                <div class="actions-skeleton">
-                    <div class="icon-skeleton skeleton"></div>
-                    <div class="icon-skeleton skeleton"></div>
-                    <div class="icon-skeleton skeleton"></div>
-                    <div class="btn-skeleton skeleton"></div>
+            `;
+        }
+    } else {
+        // Desktop skeletons (Untouched per user request)
+        for (let i = 0; i < 6; i++) {
+            html += `
+                <div class="track-row-skeleton">
+                    <div class="thumb-skeleton skeleton-pulse"></div>
+                    <div class="info-skeleton">
+                        <div class="title-skeleton skeleton-pulse"></div>
+                        <div class="meta-skeleton skeleton-pulse"></div>
+                    </div>
+                    <div class="actions-skeleton-group">
+                        <div class="action-btn-skeleton skeleton-pulse"></div>
+                        <div class="price-btn-skeleton skeleton-pulse"></div>
+                    </div>
                 </div>
-            </div>
-        `;
+            `;
+        }
     }
     container.innerHTML = html;
 }
@@ -487,7 +508,7 @@ async function performSearch() {
             return { ...p, _matchScore: score, _matchesCat: matchesCat };
         })
             .filter(p => p._matchScore > 0 && p._matchesCat);
-        
+
         applySorting(matchedProducts);
 
         // De-duplicate
@@ -581,17 +602,17 @@ function setupFilterListeners() {
             currentFilters.bpmMin = min;
             currentFilters.bpmMax = max;
             if (bpmDisplay) bpmDisplay.textContent = `${min} - ${max}`;
-            
+
             // Mark as dragging to lock skeletons and prevent render until stop
             currentFilters.isDraggingSlider = true;
             applyFilters();
         };
-        
+
         const stopBpmDrag = () => {
             currentFilters.isDraggingSlider = false;
             applyFilters();
         };
-        
+
         bpmMinSlider.addEventListener('input', (e) => updateBpm(e));
         bpmMaxSlider.addEventListener('input', (e) => updateBpm(e));
         bpmMinSlider.addEventListener('change', stopBpmDrag);
@@ -626,7 +647,7 @@ function setupFilterListeners() {
             currentFilters.isDraggingSlider = true;
             applyFilters();
         });
-        
+
         priceSlider.addEventListener('change', () => {
             currentFilters.isDraggingSlider = false;
             applyFilters();
@@ -681,18 +702,18 @@ function setupFilterListeners() {
             const finishEditing = () => {
                 if (isFinishing) return;
                 isFinishing = true;
-                
+
                 // Security: Sanitize input value
                 let cleanVal = input.value.replace(/[^\d.]/g, ''); // Remove anything not digit or dot
                 let val = parseFloat(cleanVal);
-                
+
                 if (isNaN(val) || val < 0) val = 1000000; // Default to 'any' if invalid
                 if (val > 1000000) val = 1000000; // Cap at 1M
-                
+
                 currentFilters.priceMax = (val >= 1000) ? 1000000 : val;
                 if (priceSlider) priceSlider.value = Math.min(val, 1000);
                 updatePriceDisplay(val >= 1000 ? 1000 : val);
-                
+
                 // Ensure skeletons show for manual change too
                 applyFilters();
             };
@@ -715,11 +736,11 @@ function setupFilterListeners() {
             currentQuery = ''; // ALSO RESET QUERY
             const searchBox = document.getElementById('navbarSearchInput');
             if (searchBox) searchBox.value = '';
-            
+
             document.querySelectorAll('.category-check, .key-check').forEach(c => c.checked = false);
             const freeFilter = document.getElementById('free-filter-check');
             if (freeFilter) freeFilter.checked = false;
-            
+
             if (priceSlider) { priceSlider.value = 1000; priceSlider.disabled = false; }
             if (bpmMinSlider) bpmMinSlider.value = 40;
             if (bpmMaxSlider) bpmMaxSlider.value = 250;
@@ -733,7 +754,7 @@ function setupFilterListeners() {
     const searchInp = document.getElementById('navbarSearchInput');
     if (searchInp) {
         searchInp.value = currentQuery;
-        
+
         // Add live sync for the search input on this page
         searchInp.addEventListener('input', (e) => {
             currentQuery = e.target.value.trim();
@@ -744,19 +765,19 @@ function setupFilterListeners() {
 
 function applyFilters() {
     if (allProducts.length === 0) return;
-    
+
     // Always clear the timeout first
     if (renderTimeout) clearTimeout(renderTimeout);
 
     const container = document.getElementById('search-results-container');
-    
+
     // 1. Show skeletons IMMEDIATELY for instant feedback
     showResultsSkeletons(8);
-    
+
     // 2. If the user is actively dragging a slider, LOCK in skeleton state and don't render yet
     if (currentFilters.isDraggingSlider) {
         if (container) container.classList.add('is-searching');
-        return; 
+        return;
     }
 
     renderTimeout = setTimeout(() => {
@@ -772,7 +793,7 @@ function applyFilters() {
             const q = currentQuery.toLowerCase().trim();
             const normQ = normalizeString(q);
             results = results.map(p => ({ ...p, _matchScore: getMatchScore(p, q, normQ) }))
-                             .filter(p => p._matchScore > 0);
+                .filter(p => p._matchScore > 0);
         } else {
             results = results.map(p => ({ ...p, _matchScore: 100 }));
         }
@@ -882,9 +903,11 @@ function renderRecommendations() {
 function renderResults(products, producers, exactProducer) {
     const container = document.getElementById('search-results-container');
     const countEl = document.getElementById('results-count-val');
+    const isMobile = window.innerWidth <= 768;
+
     if (!container) return;
 
-    const totalCount = products.length + producers.length;
+    const totalCount = products.length + producers.length + (exactProducer ? 1 : 0);
     if (countEl) countEl.innerText = totalCount;
 
     if (totalCount === 0 && currentQuery) {
@@ -901,12 +924,11 @@ function renderResults(products, producers, exactProducer) {
 
     // B. PRODUCTS (Tracks)
     if (products.length > 0) {
-        // "Productos" title removed per user request
-        html += products.map(p => renderTrackRow(p)).join('');
+        html += products.map(p => isMobile ? renderTrackRowMobile(p) : renderTrackRow(p)).join('');
     }
 
-    // C. REMAINING PRODUCERS (if not exact or if more than 1)
-    const otherProducers = producers.filter(p => p.id !== exactProducer?.id);
+    // C. REMAINING PRODUCERS
+    const otherProducers = producers ? producers.filter(p => !exactProducer || p.id !== exactProducer.id) : [];
     if (otherProducers.length > 0) {
         html += `<div class="search-section-title">Productores</div>`;
         html += otherProducers.map(p => renderProducerRow(p)).join('');
@@ -919,18 +941,10 @@ function renderResults(products, producers, exactProducer) {
 
     container.innerHTML = html;
 
-    // Update Like buttons from FavoritesManager
-    if (window.FavoritesManager) {
-        container.querySelectorAll('.action-icon.bi-heart').forEach(icon => {
-            const id = icon.closest('[data-product-id]')?.dataset.productId;
-            if (id && window.FavoritesManager.isLiked(id)) {
-                icon.classList.add('liked', 'bi-heart-fill');
-                icon.classList.remove('bi-heart');
-            }
-        });
+    // Trigger r2-loader if exists
+    if (window.R2Loader && typeof window.R2Loader.init === 'function') {
+        window.R2Loader.init();
     }
-
-    // r2-loader.js MutationObserver will auto-sign R2 images in src
 }
 
 // signAllR2Images is now handled globally by r2-loader.js MutationObserver
@@ -940,7 +954,83 @@ async function signAllR2Images(parent) {
     return;
 }
 
+//** Modular Mobile Renderer (V2) - Strictly uses classes from HTML head style block */
+function renderTrackRowMobile(p) {
+    const imgUrl = p.image_url || '/images/portada-default.png';
+    const type = (p.product_type || 'Beat').toUpperCase();
+    const producer = p.producer_name || 'OFFSZN';
+    const productUrl = getProductUrl(p);
+
+    // Resolve display price from licenses or fallback to price_basic
+    const licenses = p._resolvedLicenses || [];
+    const lowestPrice = licenses.length > 0 ? Math.min(...licenses.map(l => l.price)) : (parseFloat(p.price_basic) || 0);
+    const displayPrice = lowestPrice > 0
+        ? (window.CurrencyManager?.format(lowestPrice) || `$${lowestPrice}`)
+        : 'GRATIS';
+    const storageVer = p.storage_version || p.r2_version || 'v2';
+    const imgPlaceholder = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
+
+    // Always use data-r2-src so r2-loader.js can sign it (works for supabase too if version is correct)
+    const imgAttr = `src="${imgPlaceholder}" data-r2-src="${escapeHTML(imgUrl)}"`;
+
+    const isFree = lowestPrice === 0;
+    const priceDisplay = isFree 
+        ? `<i class="bi bi-download"></i>` 
+        : displayPrice;
+
+    const isLiked = window.FavoritesManager?.isLiked(p.id) || false;
+    const playHandler = `window.handleTrackPlay(event, '${p.id}')`;
+    const trackJson = JSON.stringify(p).replace(/"/g, '&quot;');
+    const likeHandler = `window.FavoritesManager?.toggleLike('${p.id}', this, ${trackJson})`;
+
+    return `
+        <div class="offszn-m-track-v2" data-product-id="${p.id}">
+            <div class="m-v2-main-row">
+                <!-- Thumbnail with Play Overlay -->
+                <div class="m-v2-thumb" onclick="${playHandler}">
+                    <img crossorigin="anonymous" ${imgAttr} data-r2-version="${storageVer}" data-product-id="${p.id}" alt="${escapeHTML(p.name)}">
+                    <div class="m-v2-play-overlay" style="pointer-events: none;">
+                        <i class="bi bi-play-fill" style="pointer-events: none;"></i>
+                    </div>
+                </div>
+
+                <!-- Info Column: Title, Producer, Meta Tags -->
+                <div class="m-v2-info" onclick="window.location.href='${productUrl}'">
+                    <span class="m-v2-title">${escapeHTML(p.name)}</span>
+                    <span class="m-v2-producer">${escapeHTML(producer)}</span>
+                    <div class="m-v2-meta-row">
+                        <span class="m-v2-tag">${type}</span>
+                        ${p.bpm ? `<span class="m-v2-tag">${p.bpm} BPM</span>` : ''}
+                        ${p.key_name ? `<span class="m-v2-tag">${p.key_name}</span>` : ''}
+                        ${(p.product_type === 'loopkit' || p.product_type === 'drumkit') ? `<span class="m-v2-tag">${p.sounds_count || 0} sonidos</span>` : ''}
+                    </div>
+                </div>
+
+                <!-- Actions Group: Heart + Price/Download + More -->
+                <div class="m-v2-actions">
+                    <button class="m-v2-action-heart" onclick="event.stopPropagation(); ${likeHandler}">
+                        <i class="bi bi-heart${isLiked ? '-fill liked' : ''}"></i>
+                    </button>
+                    
+                    <div class="m-v2-price-btn" onclick="event.stopPropagation(); window.location.href='${productUrl}'">
+                        ${priceDisplay}
+                    </div>
+
+                    <button class="m-v2-action-more" onclick="event.stopPropagation(); window.handleShare(event, '${p.id}')">
+                        <i class="bi bi-three-dots-vertical"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
 function renderTrackRow(p) {
+    // Detect mobile and use a completely separate renderer with unique class names
+    if (window.innerWidth <= 768) {
+        return renderTrackRowMobile(p);
+    }
+
     const imgUrl = p.image_url || '/images/portada-default.png';
     const type = (p.product_type || 'Beat').toUpperCase();
     const producer = p.producer_name || 'OFFSZN';
@@ -955,7 +1045,7 @@ function renderTrackRow(p) {
     const storageVer = p.storage_version || p.r2_version || 'v2';
     const isActuallyR2 = window.AuthUtils && window.AuthUtils.isR2Url(imgUrl) && storageVer !== 'supabase';
     const imgPlaceholder = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
-    
+
     // Always use data-r2-src so r2-loader.js can sign it (works for supabase too if version is correct)
     const imgAttr = `src="${imgPlaceholder}" data-r2-src="${escapeHTML(imgUrl)}"`;
 
@@ -999,7 +1089,7 @@ function renderTrackRow(p) {
                 <div class="track-actions">
                     <i class="bi bi-stars action-icon" onclick="event.stopPropagation();" title="Generar"></i>
                     <i class="bi bi-heart action-icon" onclick="event.stopPropagation(); window.FavoritesManager?.toggleLike('${p.id}', this, ${JSON.stringify(p).replace(/"/g, '&quot;')})" title="Like"></i>
-                    <i class="bi bi-download action-icon" onclick="event.stopPropagation(); window.openDownloadModal?.('${p.id}')" title="Download"></i>
+                    <i class="bi bi-download action-icon" onclick="event.stopPropagation(); window.location.href='${productUrl}'" title="Download"></i>
                     <i class="bi bi-share action-icon" onclick="event.stopPropagation(); window.openShareModal?.(${JSON.stringify(p).replace(/"/g, '&quot;')})" title="Share"></i>
                 </div>
                 <button class="track-price-btn" onclick="event.stopPropagation(); window.location.href='${productUrl}'">
@@ -1010,10 +1100,37 @@ function renderTrackRow(p) {
     `;
 }
 
+
 function renderExactProducerCard(p) {
-    const defaultAvatarUrl = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(p.nickname || 'Producer') + '&background=random';
+    const isMobile = window.innerWidth <= 768;
+    const imgUrl = p.avatar_url || '/images/default-avatar.png';
+    const producer = p.nickname || p.name || 'Productor';
+    const profileUrl = `/@${encodeURIComponent(producer)}`;
+
+    if (isMobile) {
+        injectModularSearchStyles();
+        return `
+            <div class="offszn-m-track-v2" data-product-id="${p.id}">
+                <div class="m-v2-main-row" style="grid-template-columns: 52px 1fr 105px;">
+                    <div class="m-v2-thumb" onclick="window.location.href='${profileUrl}'">
+                        <img src="${imgUrl}" alt="avatar">
+                    </div>
+                    <div class="m-v2-info" onclick="window.location.href='${profileUrl}'">
+                        <div class="m-v2-title">${escapeHTML(producer)}</div>
+                        <div class="m-v2-producer">Ver Perfil Oficial</div>
+                    </div>
+                    <div class="m-v2-actions">
+                        <div class="m-v2-action-circle" style="width: 100%; border-radius: 8px; background: #fff; color: #000; font-weight: 700; font-size: 0.8rem; padding: 0 12px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer;" onclick="window.location.href='${profileUrl}'">
+                            VER PERFIL
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    const defaultAvatarUrl = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(producer) + '&background=random';
     const avatar = p.avatar_url || defaultAvatarUrl;
-    const profileUrl = `/@${encodeURIComponent(p.nickname || 'producer')}`;
     const isR2 = window.AuthUtils && window.AuthUtils.isR2Url(avatar);
     const imgPlaceholder = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
     const imgAttr = isR2 ? `src="${imgPlaceholder}" data-r2-src="${escapeHTML(avatar)}"` : `src="${escapeHTML(avatar)}"`;
@@ -1026,7 +1143,7 @@ function renderExactProducerCard(p) {
             </div>
             <div style="flex: 1;">
                 <div style="font-size: 0.7rem; color: #fff; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 4px; opacity: 0.5;">Productor Destacado</div>
-                <div style="font-size: 1.5rem; color: #fff; font-weight: 800; margin-bottom: 4px;">${escapeHTML(p.nickname)}</div>
+                <div style="font-size: 1.5rem; color: #fff; font-weight: 800; margin-bottom: 4px;">${escapeHTML(producer)}</div>
                 <div style="font-size: 0.9rem; color: #888; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.4;">${escapeHTML(p.bio || 'Sin biografía disponible.')}</div>
             </div>
             <div class="view-profile-btn" style="padding: 10px 20px; background: #fff; color: #000; border-radius: 8px; font-weight: 700; font-size: 0.85rem;">Ver Perfil</div>
@@ -1035,19 +1152,16 @@ function renderExactProducerCard(p) {
 }
 
 function renderProducerRow(p) {
-    const defaultAvatarUrl = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(p.nickname || 'Producer') + '&background=random';
-    const avatar = p.avatar_url || defaultAvatarUrl;
-    const profileUrl = `/@${encodeURIComponent(p.nickname || 'producer')}`;
-    const isR2 = window.AuthUtils && window.AuthUtils.isR2Url(avatar);
-    const imgPlaceholder = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
-    const imgAttr = isR2 ? `src="${imgPlaceholder}" data-r2-src="${escapeHTML(avatar)}"` : `src="${escapeHTML(avatar)}"`;
+    const producer = p.nickname || p.name || 'Productor';
+    const profileUrl = `/@${encodeURIComponent(producer)}`;
+    const avatar = p.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(producer)}`;
 
     return `
         <div class="producer-row" onclick="window.location.href='${profileUrl}'" style="cursor:pointer; display: flex; align-items: center; gap: 16px; padding: 12px; border-radius: 12px; transition: background 0.2s; margin-bottom: 8px;">
-            <img crossorigin="anonymous" ${imgAttr} data-r2-version="${p.r2_version || 'v2'}" style="width: 48px; height: 48px; border-radius: 50%; object-fit: cover; background: #1a1a1a;">
+            <img crossorigin="anonymous" src="${avatar}" style="width: 48px; height: 48px; border-radius: 50%; object-fit: cover; background: #1a1a1a;">
             <div style="flex: 1;">
                 <div style="color: #fff; font-weight: 600; display: flex; align-items: center; gap: 6px;">
-                    ${escapeHTML(p.nickname)}
+                    ${escapeHTML(producer)}
                     ${p.is_verified ? '<i class="bi bi-patch-check-fill" style="color: #fff; font-size: 0.9rem;"></i>' : ''}
                 </div>
                 <div style="color: #666; font-size: 0.8rem; text-transform: uppercase;">Productor</div>
@@ -1057,14 +1171,18 @@ function renderProducerRow(p) {
     `;
 }
 
+
 // Interactivity Handlers
 window.handleTrackPlay = (e, id) => {
     e.stopPropagation();
     const btn = e.currentTarget;
     const icon = btn.querySelector('i');
 
-    const product = allProducts.find(p => p.id === id);
-    if (!product) return;
+    const product = allProducts.find(p => String(p.id) === String(id));
+    if (!product) {
+        console.error('[OFFSZN] Track not found in allProducts pool:', id);
+        return;
+    }
 
     // Format for StickyPlayer
     const audioUrl = getProductAudio(product);
@@ -1205,7 +1323,7 @@ function renderFallbackItem(p) {
     const storageVer = p.storage_version || p.r2_version || 'v2';
     const isR2 = window.AuthUtils && window.AuthUtils.isR2Url(imgUrl) && storageVer !== 'supabase';
     const imgPlaceholder = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
-    
+
     let imgAttr = '';
     if (isR2) {
         imgAttr = `src="${imgPlaceholder}" data-r2-src="${escapeHTML(imgUrl)}"`;
@@ -1242,7 +1360,7 @@ function syncLikes() {
         const productId = row.getAttribute('data-product-id');
         if (!productId) return;
 
-        const isLiked = window.FavoritesManager?.isLiked?.(productId);
+        const isLiked = window.FavoritesManager?.isLiked?.(String(productId));
         const heart = row.querySelector('.bi-heart, .bi-heart-fill');
         if (heart) {
             heart.className = isLiked ? 'bi bi-heart-fill liked action-icon' : 'bi bi-heart action-icon';

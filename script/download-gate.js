@@ -273,10 +273,11 @@ window.completeGate = async function (url, productId) {
                             const headers = { 'Content-Type': 'application/json' };
                             if (token) headers['Authorization'] = `Bearer ${token}`;
 
+                            const versionToUse = window.currentProductData?.storage_version || window.currentProductData?.r2_version || 'v1';
                             const res = await fetch('/api/r2/download-url', {
                                 method: 'POST',
                                 headers: headers,
-                                body: JSON.stringify({ key: url })
+                                body: JSON.stringify({ key: url, version: versionToUse })
                             });
 
                             if (res.ok) {
@@ -294,28 +295,23 @@ window.completeGate = async function (url, productId) {
                     }
                 } // <-- Added closing brace for the outer if block
 
-                console.log("[Gate] Starting forced direct download via Fetch/Blob...");
-                const response = await fetch(finalUrl);
-                const blob = await response.blob();
-                const blobUrl = window.URL.createObjectURL(blob);
-
+                console.log("[Gate] Starting direct download via link click...");
                 const a = document.createElement('a');
-                a.href = blobUrl;
+                a.href = finalUrl;
+                // We use standard download behavior. Cross-origin relies on Content-Disposition header.
                 const fileName = url.split('/').pop().split('?')[0] || 'descarga-offszn.mp3';
                 a.download = fileName;
-                a.style.display = 'none';
                 document.body.appendChild(a);
                 a.click();
-
+                
                 setTimeout(() => {
                     document.body.removeChild(a);
-                    window.URL.revokeObjectURL(blobUrl);
                 }, 200);
 
             } catch (downloadErr) {
-                console.warn("[Gate] Blob download failed, falling back to simple trigger", downloadErr);
+                console.warn("[Gate] Direct link click failed, falling back to simple trigger", downloadErr);
                 const a = document.createElement('a');
-                a.href = url;
+                a.href = typeof finalUrl !== 'undefined' ? finalUrl : url;
                 a.target = '_blank';
                 a.download = '';
                 document.body.appendChild(a);

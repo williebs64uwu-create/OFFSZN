@@ -17,6 +17,7 @@
     padding: 0 20px;
     gap: 30px;
     min-height: 80vh;
+    overflow-x: hidden;
 }
 
 /* --- Sidebar Redesign --- */
@@ -936,32 +937,6 @@
     color: #a78bfa;
 }
 
-/* --- Mobile Logic --- */
-@media (max-width: 992px) {
-    .search-sidebar {
-        display: none;
-    }
-
-    .track-row {
-        flex-wrap: wrap;
-        padding: 15px;
-        gap: 10px;
-    }
-
-    .track-waveform {
-        display: none;
-    }
-
-    .track-info {
-        flex: 1;
-        width: auto;
-    }
-
-    .track-badges {
-        display: none;
-    }
-}
-
 #search-clear-btn {
     position: absolute;
     right: 48px;
@@ -1239,4 +1214,247 @@
 .premium-select {
     appearance: none;
     -webkit-appearance: none;
+}
+
+/* =====================================================================
+   MOBILE RESPONSIVE — Search Page
+   Target: Compact rows with thumb + title + producer/type/bpm only.
+   No action icons, no price btn, no sort dropdown.
+   ===================================================================== */
+@media (max-width: 768px) {
+
+    /* --- Layout --- */
+    .search-main-container {
+        margin: 12px auto;
+        padding: 0 12px;
+        gap: 0;
+    }
+
+    .search-sidebar {
+        display: none;
+    }
+
+    /* --- Results Header --- */
+    .results-header {
+        margin-bottom: 16px;
+        padding-bottom: 8px;
+    }
+
+    .results-count {
+        font-size: 1.1rem;
+        font-weight: 800;
+    }
+
+    .results-sort {
+        display: none;
+    }
+
+    /* --- Track Row --- */
+    .track-row {
+        padding: 12px 4px;
+        gap: 14px;
+        flex-wrap: nowrap;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        overflow: hidden;
+        max-width: 100%;
+    }
+
+    .track-row:first-child {
+        padding-top: 8px;
+    }
+
+    .track-left {
+        gap: 14px;
+        flex: 1;
+        min-width: 0;
+        overflow: hidden;
+        max-width: calc(100% - 70px); /* viewport minus thumbnail */
+    }
+
+    /* Thumbnail */
+    .thumb-container {
+        width: 56px;
+        height: 56px;
+        border-radius: 10px;
+        flex-shrink: 0;
+    }
+
+    .thumb-play-overlay {
+        opacity: 0;
+    }
+
+    /* Info block */
+    .track-info {
+        gap: 3px;
+        min-width: 0;
+        overflow: hidden;
+        max-width: 100%;
+    }
+
+    .track-title {
+        font-size: 0.92rem;
+        font-weight: 700;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 100%;
+        display: block;
+    }
+
+    .track-meta {
+        font-size: 0.78rem;
+        gap: 8px;
+        flex-wrap: nowrap;
+        overflow: hidden;
+        white-space: nowrap;
+    }
+
+    .track-stats-inline {
+        margin-left: 0;
+        gap: 6px;
+        flex-shrink: 0;
+    }
+
+    .stat-pill-v2 {
+        font-size: 0.68rem;
+        padding: 2px 6px;
+    }
+
+    .meta-separator-v2 {
+        margin: 0 2px;
+    }
+
+    /* === MOBILE ACTIONS === */
+    .track-actions-right {
+        display: flex !important;
+        flex-direction: row;
+        align-items: center;
+        gap: 12px;
+        min-width: auto;
+    }
+
+    .track-actions {
+        display: flex;
+        gap: 12px;
+    }
+
+    .track-actions i.bi-stars {
+        display: none !important; /* hide generate icon to save space */
+    }
+
+    .track-price-btn {
+        display: none !important; /* hide price button */
+    }
+
+    /* Waveform */
+    .track-waveform {
+        display: none;
+    }
+
+    /* Badges */
+    .track-badges {
+        display: none;
+    }
+
+    /* --- Exact Match Producer Card --- */
+    .exact-match-card {
+        padding: 16px !important;
+        gap: 14px !important;
+        border-radius: 12px !important;
+        margin-bottom: 20px !important;
+    }
+
+    .exact-match-card img {
+        width: 60px !important;
+        height: 60px !important;
+    }
+
+    .exact-match-card .view-profile-btn {
+        display: none;
+    }
+
+    /* --- Producer Row --- */
+    .producer-row {
+        padding: 10px 4px !important;
+        gap: 12px !important;
+    }
+
+    .producer-row img {
+        width: 42px !important;
+        height: 42px !important;
+    }
+
+    /* --- Fallback / No Results --- */
+    .no-results-premium {
+        padding: 40px 16px;
+        border-radius: 16px;
+    }
+
+    .fallback-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+
+    .fallback-card {
+        padding: 8px;
+        border-radius: 12px;
+    }
+
+    /* --- Recommendations --- */
+    .recommendation-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+    }
+
+    .recommendation-section h3 {
+        font-size: 1rem !important;
+        margin-bottom: 16px !important;
+    }
+
+    /* --- Skeletons --- */
+    .actions-skeleton {
+        display: none;
+    }
+
+    .track-row-skeleton {
+        gap: 14px;
+        padding: 12px 4px;
+    }
+
+    .title-skeleton {
+        width: 160px;
+    }
+
+    .meta-skeleton {
+        width: 120px;
+    }
+}
+
+/* Tablet breakpoint — hide sidebar but keep price/actions */
+@media (min-width: 769px) and (max-width: 992px) {
+    .search-sidebar {
+        display: none;
+    }
+
+    .track-waveform {
+        display: none;
+    }
+
+    .track-info {
+        flex: 1;
+        width: auto;
+    }
+
+    .track-badges {
+        display: none;
+    }
+
+    .track-actions-right {
+        min-width: auto;
+        gap: 16px;
+    }
+
+    .track-actions {
+        gap: 16px;
+    }
 }

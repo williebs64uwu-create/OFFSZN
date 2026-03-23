@@ -931,7 +931,14 @@ function createProducerCard(producer, rank) {
         
         avatarUrl = window.AuthUtils?.getFormattedSupabaseUrl ? window.AuthUtils.getFormattedSupabaseUrl(avatarUrl) : avatarUrl;
 
-        avatarHtml = `<img crossorigin="anonymous" src="${avatarUrl}" alt="${nickname}" class="card-avatar" onerror="window.handleProducerAvatarError(this, '${escapedNickname}')">`;
+        // "Quítalos" logic: If URL is clearly broken or pointing to product bucket for a producer, skip it to avoid console errors
+        const isBrokenProductUrl = avatarUrl.includes('/products/') || avatarUrl.includes('/product-images/');
+        
+        if (isBrokenProductUrl) {
+           avatarHtml = getInitialsHtml(nickname);
+        } else {
+           avatarHtml = `<img crossorigin="anonymous" src="${avatarUrl}" alt="${nickname}" class="card-avatar" onerror="window.handleProducerAvatarError(this, '${escapedNickname}')">`;
+        }
     } else {
         avatarHtml = getInitialsHtml(nickname);
     }

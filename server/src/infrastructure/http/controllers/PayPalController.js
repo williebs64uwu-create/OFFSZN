@@ -4,6 +4,7 @@ import { supabase } from '../../database/connection.js';
 import { PLATFORM_PAYPAL_EMAIL, PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET, PAYPAL_ENVIRONMENT } from '../../../shared/config/config.js';
 import { sendOffsznEmail } from '../../../shared/utils/mailer.js';
 import { v4 as uuidv4 } from 'uuid';
+import { getPresignedDownloadUrl } from '../../services/r2-storage.service.js';
 
 // --- PayPal OAuth Config ---
 const PAYPAL_OAUTH_URL = PAYPAL_ENVIRONMENT === 'live'
@@ -988,7 +989,7 @@ export const getSecureDownloadUrl = async (req, res) => {
                 order_id, 
                 product_id,
                 orders!inner(user_id, status),
-                products!inner(mp3_url, wav_url, stems_url, kit_url)
+                products!inner(mp3_url, wav_url, stems_url, kit_url, storage_version, r2_version)
             `)
             .eq('order_id', orderId)
             .eq('product_id', productId)
@@ -1052,31 +1053,60 @@ export const getSecureDownloadUrl = async (req, res) => {
             bucket = 'secure-products';
         }
 
-        // Final cleanup of bucket prefixes
+        const rawCleanPath = cleanPath; // Backup before stripping
+
+        // Final cleanup of bucket prefixes for Supabase logic
         if (cleanPath.startsWith('secure-products/')) {
             cleanPath = cleanPath.replace('secure-products/', '');
         } else if (cleanPath.startsWith('products/')) {
             cleanPath = cleanPath.replace('products/', '');
         }
 
-        console.log(`[SecureDownload] Final cleanPath: ${cleanPath} in bucket: ${bucket}`);
+        const storageType = item.products.storage_version || item.products.r2_version || 'v1';
+        const isR2 = storageType.startsWith('v') || storageType === 'r2';
 
-        console.log(`[SecureDownload] Signing for buyer: bucket=${bucket}, path=${cleanPath}`);
+        if (isR2) {
+            // Restore the full key, R2 uses the full path as key
+            let finalKey = rawCleanPath;
+            
+            // If the rawCleanPath doesn't have the prefix yet but it belongs in secure-products, we prepend it for R2, BUT 
+            // the DB usually stores the full "secure-products/..." in R2.
+            // If the user appended raw paths, let's make sure it's valid:
+            if (!finalKey.startsWith('secure-products/') && bucket === 'secure-products') {
+                 finalKey = `secure-products/${cleanPath}`;
+            } else if (!finalKey.startsWith('products/') && bucket === 'products') {
+                 finalKey = `products/${cleanPath}`;
+            }
 
-        // 5. Generar URL firmada usando el Master Key (Service Role) configurado en el backend
-        const { data, error: signError } = await supabase
-            .storage
-            .from(bucket)
-            .createSignedUrl(cleanPath, 3600, {
-                download: true
-            });
+            console.log(`[SecureDownload] Signing with R2: key=${finalKey}, version=${storageType}`);
 
-        if (signError) {
-            console.error('[SecureDownload] Supabase Signing Error:', signError);
-            return res.status(500).json({ error: 'Error al generar enlace seguro' });
+            try {
+                const downloadUrl = await getPresignedDownloadUrl(finalKey, 3600, storageType);
+                return res.status(200).json({ signedUrl: downloadUrl });
+            } catch (r2Error) {
+                console.error('[SecureDownload] R2 Signing Error:', r2Error);
+                return res.status(500).json({ error: 'Error al generar enlace seguro (R2)' });
+            }
+        } else {
+            console.log(`[SecureDownload] Final cleanPath: ${cleanPath} in bucket: ${bucket}`);
+
+            console.log(`[SecureDownload] Signing for buyer: bucket=${bucket}, path=${cleanPath}`);
+
+            // 5. Generar URL firmada usando el Master Key (Service Role) configurado en el backend
+            const { data, error: signError } = await supabase
+                .storage
+                .from(bucket)
+                .createSignedUrl(cleanPath, 3600, {
+                    download: true
+                });
+
+            if (signError) {
+                console.error('[SecureDownload] Supabase Signing Error:', signError);
+                return res.status(500).json({ error: 'Error al generar enlace seguro' });
+            }
+
+            res.status(200).json({ signedUrl: data.signedUrl });
         }
-
-        res.status(200).json({ signedUrl: data.signedUrl });
 
     } catch (err) {
         console.error('[SecureDownload] Internal Error:', err);
