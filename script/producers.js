@@ -888,8 +888,7 @@ function renderProducers(producers) {
         return 0;
     });
 
-    grid.innerHTML = '';
-
+    const fragment = document.createDocumentFragment();
     sortedProducers.forEach((producer, index) => {
         // Calculate rank calculation again strictly for visual badge 
         const topInfo = topProducersList.find(t => t.id === producer.id);
@@ -902,16 +901,20 @@ function renderProducers(producers) {
         const showRank = rank !== null;
 
         const card = createProducerCard(producer, showRank ? rank : null);
-        grid.appendChild(card);
+        fragment.appendChild(card);
 
+        // Staggered animation but faster
         gsap.from(card, {
             opacity: 0,
-            y: 20,
-            duration: 0.5,
-            delay: index * 0.03,
+            y: 15,
+            duration: 0.4,
+            delay: Math.min(index * 0.02, 0.4), // Cap the delay to avoid long waiting times
             ease: "power2.out"
         });
     });
+
+    grid.innerHTML = '';
+    grid.appendChild(fragment);
 }
 
 function createProducerCard(producer, rank) {
@@ -1156,3 +1159,5 @@ document.addEventListener('click', () => {
         }
     });
 });
+
+

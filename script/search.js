@@ -21,7 +21,10 @@ let currentFilters = {
     doubleTempo: false,
     freeOnly: false,
     keys: [],
-    sort: 'relevance',
+    sortBy: 'trending',
+    fileTypes: [],
+    scale: 'minor',
+    licenses: [],
     isDraggingSlider: false
 };
 let renderTimeout = null; // Debounce for results rendering
@@ -771,7 +774,7 @@ window.openMobileFilters = function() {
     const modal = document.getElementById('offszn-mobile-filters');
     if (modal) {
         modal.classList.add('modal-active');
-        document.body.style.overflow = 'hidden';
+        document.body.classList.add('modal-open');
         syncFilterUI(); 
     }
 };
@@ -780,12 +783,35 @@ window.closeMobileFilters = function() {
     const modal = document.getElementById('offszn-mobile-filters');
     if (modal) {
         modal.classList.remove('modal-active');
-        document.body.style.overflow = '';
+        document.body.classList.remove('modal-open');
     }
 };
 
 function initMobileFilters() {
-    // 1. Category
+    // 1. Sort
+    document.querySelectorAll('input[name="m-sort"]').forEach(radio => {
+        radio.addEventListener('change', (e) => {
+            currentFilters.sortBy = e.target.value;
+            syncFilterUI('modal');
+            applyFilters();
+        });
+    });
+
+    // 2. File Type
+    document.querySelectorAll('.m-file-check').forEach(check => {
+        check.addEventListener('change', (e) => {
+            const val = e.target.value;
+            if (e.target.checked) {
+                if (!currentFilters.fileTypes.includes(val)) currentFilters.fileTypes.push(val);
+            } else {
+                currentFilters.fileTypes = currentFilters.fileTypes.filter(f => f !== val);
+            }
+            syncFilterUI('modal');
+            applyFilters();
+        });
+    });
+
+    // 3. Category
     document.querySelectorAll('.m-cat-check').forEach(check => {
         check.addEventListener('change', (e) => {
             const val = e.target.value;
@@ -799,42 +825,64 @@ function initMobileFilters() {
         });
     });
 
-    // 2. BPM
-    const bpmMinInput = document.getElementById('m-bpm-min');
-    const bpmMaxInput = document.getElementById('m-bpm-max');
-    if (bpmMinInput && bpmMaxInput) {
-        const handleBpm = () => {
-            currentFilters.bpmMin = parseInt(bpmMinInput.value) || 40;
-            currentFilters.bpmMax = parseInt(bpmMaxInput.value) || 250;
-            const bpmDisp = document.getElementById('m-bpm-display');
-            if (bpmDisp) bpmDisp.textContent = `${currentFilters.bpmMin} - ${currentFilters.bpmMax}`;
-            syncFilterUI('modal');
-            applyFilters();
-        };
-        bpmMinInput.addEventListener('change', handleBpm);
-        bpmMaxInput.addEventListener('change', handleBpm);
-    }
-
-    // 3. Free Check
-    const freeCheck = document.getElementById('m-free-check');
-    if (freeCheck) {
-        freeCheck.addEventListener('change', (e) => {
-            currentFilters.freeOnly = e.target.checked;
+    // 4. BPM Slider
+    const bpmSlider = document.getElementById('m-bpm-slider');
+    if (bpmSlider) {
+        bpmSlider.addEventListener('input', (e) => {
+            const val = parseInt(e.target.value);
+            currentFilters.bpmMin = 40;
+            currentFilters.bpmMax = val;
+            const dispMax = document.getElementById('m-bpm-val-max');
+            if (dispMax) dispMax.textContent = val;
+        });
+        bpmSlider.addEventListener('change', () => {
             syncFilterUI('modal');
             applyFilters();
         });
     }
 
-    // 4. Key Select
-    const keySelect = document.getElementById('m-key-select');
-    if (keySelect) {
-        keySelect.addEventListener('change', (e) => {
+    const bpmDouble = document.getElementById('m-bpm-double');
+    if (bpmDouble) {
+        bpmDouble.addEventListener('change', (e) => {
+            currentFilters.doubleTempo = e.target.checked;
+            applyFilters();
+        });
+    }
+
+    // 5. Scale
+    document.querySelectorAll('input[name="m-scale"]').forEach(radio => {
+        radio.addEventListener('change', (e) => {
+            currentFilters.scale = e.target.value;
+            syncFilterUI('modal');
+            applyFilters();
+        });
+    });
+
+    // 6. Key Grid
+    document.querySelectorAll('.m-key-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const key = btn.textContent.trim();
+            document.querySelectorAll('.m-key-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            currentFilters.keys = [key];
+            syncFilterUI('modal');
+            applyFilters();
+        });
+    });
+
+    // 7. Licenses
+    document.querySelectorAll('.m-lic-check').forEach(check => {
+        check.addEventListener('change', (e) => {
             const val = e.target.value;
-            currentFilters.keys = val ? [val] : [];
+            if (e.target.checked) {
+                if (!currentFilters.licenses.includes(val)) currentFilters.licenses.push(val);
+            } else {
+                currentFilters.licenses = currentFilters.licenses.filter(l => l !== val);
+            }
             syncFilterUI('modal');
             applyFilters();
         });
-    }
+    });
 }
 
 function syncFilterUI(source = 'all') {
@@ -852,19 +900,39 @@ function syncFilterUI(source = 'all') {
         if(bpmDisp) bpmDisp.textContent = `${currentFilters.bpmMin} - ${currentFilters.bpmMax}`;
     }
     if (source !== 'modal') {
+        const mSort = document.querySelector(`input[name="m-sort"][value="${currentFilters.sortBy}"]`);
+        if (mSort) mSort.checked = true;
+
+        document.querySelectorAll('.m-file-check').forEach(c => {
+            c.checked = currentFilters.fileTypes.includes(c.value);
+        });
+
         document.querySelectorAll('.m-cat-check').forEach(c => {
             c.checked = currentFilters.categories.includes(c.value);
         });
-        const mMin = document.getElementById('m-bpm-min');
-        const mMax = document.getElementById('m-bpm-max');
-        if (mMin) mMin.value = currentFilters.bpmMin;
-        if (mMax) mMax.value = currentFilters.bpmMax;
-        const mFree = document.getElementById('m-free-check');
-        if (mFree) mFree.checked = currentFilters.freeOnly;
-        const mKeySelect = document.getElementById('m-key-select');
-        if (mKeySelect) mKeySelect.value = currentFilters.keys[0] || '';
-        const mBpmDisp = document.getElementById('m-bpm-display');
-        if(mBpmDisp) mBpmDisp.textContent = `${currentFilters.bpmMin} - ${currentFilters.bpmMax}`;
+
+        const mBpmSlider = document.getElementById('m-bpm-slider');
+        if (mBpmSlider) mBpmSlider.value = currentFilters.bpmMax;
+        const mBpmDispMax = document.getElementById('m-bpm-val-max');
+        if (mBpmDispMax) mBpmDispMax.textContent = currentFilters.bpmMax;
+
+        const mScale = document.querySelector(`input[name="m-scale"][value="${currentFilters.scale}"]`);
+        if (mScale) mScale.checked = true;
+
+        // Key Grid Sync
+        document.querySelectorAll('.m-key-btn').forEach(btn => {
+            const key = btn.textContent.trim();
+            if (currentFilters.keys.includes(key)) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
+
+        const mLicChecks = document.querySelectorAll('.m-lic-check');
+        mLicChecks.forEach(c => {
+            c.checked = currentFilters.licenses.includes(c.value);
+        });
     }
 }
 
@@ -892,11 +960,8 @@ function applyFilters() {
     // 1. Show skeletons IMMEDIATELY for instant feedback
     showResultsSkeletons(8);
 
-    // 2. If the user is actively dragging a slider, LOCK in skeleton state and don't render yet
-    if (currentFilters.isDraggingSlider) {
-        if (container) container.classList.add('is-searching');
-        return;
-    }
+    // 2. Clear previous timeout to avoid multiple renders
+    if (renderTimeout) clearTimeout(renderTimeout);
 
     renderTimeout = setTimeout(() => {
         if (container) {
@@ -952,6 +1017,32 @@ function applyFilters() {
             results = results.filter(p => {
                 const pKey = normalizeKey(p.key || p.key_scale || '');
                 return pKey && normalizedTargetKeys.includes(pKey);
+            });
+        }
+
+        // 6. File Type Filter
+        if (currentFilters.fileTypes && currentFilters.fileTypes.length > 0) {
+            results = results.filter(p => {
+                const tagsStr = (p.tags || '').toLowerCase();
+                return currentFilters.fileTypes.some(t => tagsStr.includes(t.toLowerCase()));
+            });
+        }
+
+        // 7. Scale Filter (Major/Minor)
+        if (currentFilters.scale) {
+            results = results.filter(p => {
+                const pScale = (p.key_scale || p.key_name || '').toLowerCase();
+                if (currentFilters.scale === 'minor') return pScale.includes('minor') || pScale.includes('menor');
+                if (currentFilters.scale === 'major') return pScale.includes('major') || pScale.includes('mayor');
+                return true;
+            });
+        }
+
+        // 8. License Filter
+        if (currentFilters.licenses && currentFilters.licenses.length > 0) {
+            results = results.filter(p => {
+                const lNames = (p._resolvedLicenses || []).map(l => (l.name || '').toLowerCase());
+                return currentFilters.licenses.some(targetL => lNames.some(name => name.includes(targetL.toLowerCase())));
             });
         }
 
@@ -1075,8 +1166,9 @@ async function signAllR2Images(parent) {
 //** Modular Mobile Renderer (V2) - Strictly uses classes from HTML head style block */
 function renderTrackRowMobile(p) {
     const imgUrl = p.image_url || '/images/portada-default.png';
+    const title = p.name || 'Untitled';
     const type = (p.product_type || 'Beat').toUpperCase();
-    const producer = p.producer_name || 'OFFSZN';
+    const producerNick = p.producer_nickname || p.producer_name || 'OFFSZN';
     const productUrl = getProductUrl(p);
 
     const licenses = p._resolvedLicenses || [];
@@ -1089,47 +1181,39 @@ function renderTrackRowMobile(p) {
     const imgAttr = `src="${imgPlaceholder}" data-r2-src="${escapeHTML(imgUrl)}"`;
 
     const isLiked = window.FavoritesManager?.isLiked(p.id) || false;
+    const isPlaying = window.StickyPlayer?.currentTrack?.id === p.id && !window.StickyPlayer?.paused;
     const likeHandler = `window.handleLike(event, '${p.id}', this)`;
 
+    const tags = [];
+    if (p.bpm) tags.push(`${p.bpm} BPM`);
+    tags.push(type);
+    if (p.key_name || p.key) tags.push(p.key_name || p.key);
+
     return `
-        <div class="offszn-m-track-v2" data-product-id="${p.id}">
-            <div class="m-v2-main-row" onclick="window.handleTrackPlay(event, '${p.id}')">
-                <div class="m-v2-thumb">
-                    <img crossorigin="anonymous" ${imgAttr} data-r2-version="${storageVer}" alt="${escapeHTML(p.name)}">
+        <div class="offszn-m-track-v2" data-product-id="${p.id}" onclick="window.location.href='/product.html?id=${p.id}'">
+            <div class="m-v2-main-row">
+                <div class="m-v2-thumb" onclick="event.stopPropagation(); window.handleTrackPlay(event, '${p.id}')">
+                    <img crossorigin="anonymous" ${imgAttr} data-r2-version="${storageVer}" data-product-id="${p.id}" alt="${escapeHTML(title)}">
                     <div class="m-v2-play-overlay">
-                        <i class="bi bi-play-fill"></i>
+                        <i class="bi ${isPlaying ? 'bi-pause-fill' : 'bi-play-fill'}"></i>
                     </div>
                 </div>
-
                 <div class="m-v2-info">
-                    <div class="m-v2-title">${escapeHTML(p.name)}</div>
-                    <div class="m-v2-producer">${escapeHTML(producer)}</div>
-                    <div class="m-v2-meta-row" style="display:flex; gap:6px; margin-top:4px; opacity:0.6; font-size:10px; font-weight:800; text-transform:uppercase;">
-                        <span>${type}</span>
-                        ${p.bpm ? `<span>• ${p.bpm} BPM</span>` : ''}
-                        ${p.key_name ? `<span>• ${p.key_name}</span>` : ''}
+                    <span class="m-v2-title">${escapeHTML(title)}</span>
+                    <span class="m-v2-producer" onclick="event.stopPropagation(); window.location.href='/@${encodeURIComponent(p.producer_nickname || 'producer')}'">${escapeHTML(producerNick)}</span>
+                    <div class="m-v2-meta-row">
+                        ${tags.map(t => `<span class="m-v2-tag">${escapeHTML(t)}</span>`).join('')}
                     </div>
                 </div>
-
-                <div class="m-v2-play-container">
-                    <button class="m-v2-play-btn">
-                        <i class="bi bi-play-fill"></i>
+                <div class="m-v2-actions">
+                    <button class="m-v2-action-heart" 
+                            onclick="event.stopPropagation(); window.handleLike(event, '${p.id}', this)">
+                        <i class="bi ${isLiked ? 'bi-heart-fill liked' : 'bi-heart'}"></i>
                     </button>
-                </div>
-
-                <div class="m-v2-actions" onclick="event.stopPropagation()">
-                    <button class="m-v2-action-heart" onclick="${likeHandler}">
-                        <i class="bi bi-heart${isLiked ? '-fill liked' : ''}"></i>
-                    </button>
-                    ${lowestPrice === 0 ? `
-                        <button class="m-v2-price-btn free" onclick="window.location.href='${productUrl}'">
-                            <i class="bi bi-download"></i>
-                        </button>
-                    ` : `
-                        <div class="m-v2-price-btn" onclick="window.location.href='${productUrl}'">
-                            ${displayPrice}
-                        </div>
-                    `}
+                    <div class="m-v2-price-btn ${displayPrice === 'GRATIS' ? 'free' : ''}" 
+                         onclick="event.stopPropagation(); window.location.href='/product.html?id=${p.id}'">
+                        ${displayPrice === 'GRATIS' ? '<i class="bi bi-download"></i>' : escapeHTML(displayPrice)}
+                    </div>
                 </div>
             </div>
         </div>
@@ -1285,10 +1369,9 @@ function renderProducerRow(p) {
 
 // Interactivity Handlers
 window.handleTrackPlay = (e, id) => {
-    e.stopPropagation();
-    const btn = e.currentTarget;
-    const icon = btn.querySelector('i');
-
+    if (e) e.stopPropagation();
+    
+    // Check if we have a direct reference or need to find it
     const product = allProducts.find(p => String(p.id) === String(id));
     if (!product) {
         console.error('[OFFSZN] Track not found in allProducts pool:', id);
@@ -1297,8 +1380,6 @@ window.handleTrackPlay = (e, id) => {
 
     // Format for StickyPlayer
     const audioUrl = getProductAudio(product);
-
-    // Fix for naming: prioritize nickname
     const pName = product.producer_name || product.producer_nickname || 'OFFSZN';
 
     const trackData = {
@@ -1313,7 +1394,6 @@ window.handleTrackPlay = (e, id) => {
     };
 
     if (window.StickyPlayer && typeof window.StickyPlayer.play === 'function') {
-        // Update playlist context if available
         if (window.StickyPlayer.updatePlaylist && filteredResults.length > 0) {
             const formattedPlaylist = filteredResults.map(p => {
                 const aUrl = getProductAudio(p);
@@ -1334,9 +1414,18 @@ window.handleTrackPlay = (e, id) => {
 
         window.StickyPlayer.play(trackData);
 
-        // Visual toggle
-        document.querySelectorAll('.thumb-play-overlay i').forEach(i => i.className = 'bi bi-play-fill');
-        if (icon) icon.className = 'bi bi-pause-fill';
+        // Visual toggle for all V2 overlays
+        document.querySelectorAll('.m-v2-play-overlay i').forEach(i => {
+            i.className = 'bi bi-play-fill';
+        });
+
+        // Toggle current one if playing
+        const row = document.querySelector(`.offszn-m-track-v2[data-product-id="${id}"]`);
+        if (row) {
+            const icon = row.querySelector('.m-v2-play-overlay i');
+            const isNowPlaying = window.StickyPlayer?.currentTrack?.id === id && !window.StickyPlayer?.paused;
+            if (icon) icon.className = isNowPlaying ? 'bi bi-pause-fill' : 'bi bi-play-fill';
+        }
     }
 };
 
@@ -1475,7 +1564,12 @@ function syncLikes() {
         const isLiked = window.FavoritesManager?.isLiked?.(String(productId));
         const heart = row.querySelector('.bi-heart, .bi-heart-fill');
         if (heart) {
-            heart.className = isLiked ? 'bi bi-heart-fill liked action-icon' : 'bi bi-heart action-icon';
+            // Check if it's the premium mobile layout
+            if (row.classList.contains('offszn-m-track-v2')) {
+                heart.className = isLiked ? 'bi bi-heart-fill liked' : 'bi bi-heart';
+            } else {
+                heart.className = isLiked ? 'bi bi-heart-fill liked action-icon' : 'bi bi-heart action-icon';
+            }
         }
     });
 }

@@ -44,14 +44,28 @@
     <script src="/script/auth-utils.js?v=11"></script>
     <script src="/script/id-obfuscator.js"></script>
     <style>
+        /* Global (Desktop) Hidden Elements */
+        #mobile-filter-trigger, .m-only, .offszn-mobile-filters-modal {
+            display: none !important;
+        }
+
         /* Modern Mobile Results (V2) - Strict Implementation */
         @media (max-width: 768px) {
+            #mobile-filter-trigger, .m-only {
+                display: flex !important;
+            }
             /* Aggressive Universal Reset for Mobile Search */
             html, body {
                 width: 100% !important;
                 overflow-x: hidden !important;
                 margin: 0 !important;
                 padding: 0 !important;
+            }
+
+            /* Prevent background scroll when modal is open */
+            body.modal-open {
+                overflow: hidden !important;
+                height: 100vh !important;
             }
 
             .search-main-container {
@@ -121,9 +135,9 @@
 
             .offszn-m-track-v2 {
                 background: #000 !important;
-                padding: 16px 0 !important;
+                padding: 16px !important; /* Added horizontal padding */
                 border: none !important;
-                border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.03) !important; /* Softer line */
                 display: flex !important;
                 flex-direction: column !important;
                 width: 100% !important;
@@ -133,9 +147,9 @@
 
             .m-v2-main-row {
                 display: grid !important;
-                grid-template-columns: 52px 1fr 135px !important;
+                grid-template-columns: 56px 1fr auto !important; /* Changed to auto for flexibility */
                 grid-template-areas: "thumb info actions" !important;
-                gap: 12px !important;
+                gap: 16px !important;
                 align-items: center !important;
                 width: 100% !important;
             }
@@ -162,15 +176,25 @@
                 left: 0 !important;
                 width: 100% !important;
                 height: 100% !important;
-                background: rgba(0,0,0,0.3) !important;
+                background: rgba(0,0,0,0.2) !important; /* Lighter overlay */
                 display: flex !important;
                 align-items: center !important;
                 justify-content: center !important;
+                z-index: 2 !important;
             }
 
             .m-v2-play-overlay i {
-                color: #fff !important;
-                font-size: 1.4rem !important;
+                width: 30px !important;
+                height: 30px !important;
+                background: rgba(255, 255, 255, 0.9) !important; /* Solid light circle */
+                color: #000 !important; /* Dark icon for contrast */
+                border-radius: 50% !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                font-size: 1.1rem !important;
+                padding-left: 2px !important; /* Offset for visual centering of play triangle */
+                box-shadow: 0 4px 12px rgba(0,0,0,0.3) !important;
             }
 
             .m-v2-info {
@@ -199,19 +223,18 @@
 
             .m-v2-meta-row {
                 display: flex !important;
-                gap: 6px !important;
+                gap: 4px !important;
                 margin-top: 6px !important;
-                flex-wrap: nowrap !important;
-                overflow-x: auto !important;
+                flex-wrap: wrap !important;
             }
 
             .m-v2-tag {
                 background: rgba(255, 255, 255, 0.05) !important;
                 border: 1px solid rgba(255, 255, 255, 0.08) !important;
                 color: #bbb !important;
-                font-size: 0.62rem !important;
+                font-size: 0.6rem !important;
                 font-weight: 800 !important;
-                padding: 1px 7px !important;
+                padding: 1px 6px !important;
                 border-radius: 4px !important;
                 white-space: nowrap !important;
                 text-transform: uppercase !important;
@@ -228,11 +251,11 @@
             }
 
             .m-v2-action-heart {
-                width: 38px !important;
-                height: 38px !important;
-                background: rgba(255, 255, 255, 0.1) !important;
-                backdrop-filter: blur(5px) !important;
-                border: 1px solid rgba(255, 255, 255, 0.08) !important;
+                width: 36px !important;
+                height: 36px !important;
+                background: rgba(255, 255, 255, 0.08) !important;
+                backdrop-filter: blur(8px) !important; /* More blur */
+                border: 1px solid rgba(255, 255, 255, 0.1) !important;
                 border-radius: 50% !important;
                 display: flex !important;
                 align-items: center !important;
@@ -274,13 +297,14 @@
                 top: 0 !important;
                 left: 0 !important;
                 width: 100% !important;
-                height: 100% !important;
+                height: 100vh !important; /* Forced screen height */
                 background: #000 !important;
-                z-index: 9999 !important;
+                z-index: 100000 !important; /* Above everything including StickyPlayer */
                 display: none;
                 flex-direction: column !important;
                 overflow-y: auto !important;
-                padding: 20px !important;
+                -webkit-overflow-scrolling: touch !important;
+                padding-bottom: 120px !important; /* Extra space for footer */
             }
 
             .modal-active {
@@ -289,86 +313,275 @@
             }
 
             .m-filter-header {
+                padding: 30px 24px 20px !important;
                 display: flex !important;
                 justify-content: space-between !important;
                 align-items: center !important;
-                margin-bottom: 30px !important;
+                position: sticky !important;
+                top: 0 !important;
+                background: #000 !important;
+                z-index: 10 !important;
             }
 
             .m-filter-header h2 {
-                font-size: 1.2rem !important;
-                font-weight: 800 !important;
                 color: #fff !important;
+                font-size: 24px !important;
+                font-weight: 900 !important;
                 margin: 0 !important;
+                letter-spacing: -0.5px !important;
+                text-transform: uppercase !important;
             }
 
             .m-filter-close {
+                width: 44px !important;
+                height: 44px !important;
                 background: rgba(255,255,255,0.05) !important;
                 border: none !important;
-                width: 32px !important;
-                height: 32px !important;
                 border-radius: 50% !important;
                 color: #fff !important;
                 display: flex !important;
                 align-items: center !important;
                 justify-content: center !important;
+                font-size: 20px !important;
+            }
+
+            .m-filter-body {
+                flex: 1 !important;
+                padding: 10px 24px 100px !important;
             }
 
             .m-filter-section {
-                margin-bottom: 30px !important;
-                border-bottom: 1px solid rgba(255,255,255,0.05) !important;
-                padding-bottom: 20px !important;
+                margin-bottom: 35px !important;
             }
 
             .m-filter-section-title {
-                display: flex !important;
-                align-items: center !important;
-                gap: 8px !important;
-                font-size: 0.85rem !important;
+                color: #fff !important;
+                font-size: 16px !important;
                 font-weight: 800 !important;
-                color: #fff !important;
-                margin-bottom: 20px !important;
-                text-transform: uppercase !important;
-                letter-spacing: 1px !important;
+                margin-bottom: 18px !important;
+                text-transform: none !important;
             }
 
-            .m-filter-options-grid {
-                display: grid !important;
-                grid-template-columns: 1fr 1fr !important;
-                gap: 12px !important;
-            }
-
-            .m-filter-label {
+            /* Custom Radio/Checkbox Style */
+            .m-filter-option {
                 display: flex !important;
                 align-items: center !important;
-                gap: 10px !important;
-                color: #999 !important;
-                font-size: 0.9rem !important;
+                gap: 12px !important;
+                color: #aaa !important;
+                font-size: 14px !important;
+                font-weight: 500 !important;
+                margin-bottom: 16px !important;
+                cursor: pointer !important;
             }
 
-            .m-filter-label input[type="checkbox"] {
-                width: 18px !important;
-                height: 18px !important;
-                accent-color: #fff !important;
-            }
-
-            .m-filter-footer {
-                margin-top: auto !important;
-                padding: 20px 0 !important;
-            }
-
-            .btn-clear-filters {
-                width: 100% !important;
-                background: none !important;
-                border: 1px solid rgba(255,255,255,0.2) !important;
+            .m-filter-option.selected {
                 color: #fff !important;
-                padding: 14px !important;
-                border-radius: 12px !important;
-                font-weight: 700 !important;
-                font-size: 0.9rem !important;
-                text-transform: uppercase !important;
-                letter-spacing: 1px !important;
             }
+
+            .m-filter-option input {
+                display: none !important;
+            }
+
+            .m-filter-circle, .m-filter-square {
+                width: 24px !important;
+                height: 24px !important;
+                border: 2px solid #333 !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                transition: all 0.2s !important;
+            }
+
+            .m-filter-circle { border-radius: 50% !important; }
+            .m-filter-square { border-radius: 4px !important; }
+
+            .m-filter-option input:checked + .m-filter-circle,
+            .m-filter-option input:checked + .m-filter-square {
+                background: #fff !important;
+                border-color: #fff !important;
+            }
+
+            .m-filter-option input:checked + .m-filter-circle::after,
+            .m-filter-option input:checked + .m-filter-square::after {
+                content: "" !important;
+                display: block !important;
+                width: 10px !important;
+                height: 5px !important;
+                border-left: 2px solid #000 !important;
+                border-bottom: 2px solid #000 !important;
+                transform: rotate(-45deg) !important;
+                margin-top: -2px !important;
+            }
+
+            /* Key Grid */
+            .m-key-grid {
+                display: grid !important;
+                grid-template-columns: repeat(5, 1fr) !important;
+                gap: 8px !important;
+            }
+
+            .m-key-btn {
+                background: rgba(255,255,255,0.05) !important;
+                border: 1px solid rgba(255,255,255,0.1) !important;
+                border-radius: 12px !important;
+                color: #fff !important;
+                height: 52px !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                font-weight: 800 !important;
+                font-size: 14px !important;
+                cursor: pointer !important;
+            }
+
+            .m-key-btn.active {
+                background: #fff !important;
+                border-color: #fff !important;
+                color: #000 !important;
+                box-shadow: 0 0 15px rgba(255,255,255,0.3) !important;
+            }
+
+            /* Premium BPM Slider */
+            .m-bpm-range-slider {
+                -webkit-appearance: none !important;
+                appearance: none !important;
+                width: 100% !important;
+                height: 6px !important;
+                background: rgba(255,255,255,0.1) !important;
+                border-radius: 10px !important;
+                outline: none !important;
+                margin: 20px 0 !important;
+            }
+
+            .m-bpm-range-slider::-webkit-slider-thumb {
+                -webkit-appearance: none !important;
+                appearance: none !important;
+                width: 24px !important;
+                height: 24px !important;
+                background: #fff !important;
+                border-radius: 50% !important;
+                cursor: pointer !important;
+                box-shadow: 0 0 10px rgba(255,255,255,0.5) !important;
+                border: 2px solid #000 !important;
+                transition: transform 0.2s !important;
+            }
+
+            .m-bpm-range-slider::-webkit-slider-thumb:active {
+                transform: scale(1.2) !important;
+            }
+
+            /* BPM Range */
+            .m-bpm-val {
+                font-size: 32px !important;
+                font-weight: 900 !important;
+                color: #fff !important;
+            }
+
+            .m-bpm-range-slider {
+                appearance: none !important;
+                -webkit-appearance: none !important;
+                width: 100% !important;
+                height: 4px !important;
+                background: rgba(255,255,255,0.1) !important;
+                border-radius: 2px !important;
+                margin: 25px 0 !important;
+            }
+
+            .m-bpm-range-slider::-webkit-slider-thumb {
+                appearance: none !important;
+                -webkit-appearance: none !important;
+                width: 24px !important;
+                height: 24px !important;
+                background: #fff !important;
+                border-radius: 50% !important;
+                border: 4px solid #111 !important;
+                cursor: pointer !important;
+            }
+
+            /* Footer */
+            .m-filter-footer-fixed {
+                position: fixed !important;
+                bottom: 0 !important;
+                left: 0 !important;
+                width: 100% !important;
+                padding: 20px 24px 35px !important;
+                background: linear-gradient(to top, #000 80%, transparent) !important;
+                display: flex !important;
+                gap: 12px !important;
+                z-index: 20 !important;
+            }
+
+            .m-btn-cancel {
+                flex: 1 !important;
+                background: rgba(255,255,255,0.05) !important;
+                border: none !important;
+                color: #fff !important;
+                padding: 16px !important;
+                border-radius: 50px !important;
+                font-weight: 800 !important;
+                font-size: 15px !important;
+                text-transform: uppercase !important;
+            }
+
+            .m-btn-apply {
+                flex: 1.5 !important;
+                background: #fff !important;
+                border: none !important;
+                color: #000 !important;
+                padding: 16px !important;
+                border-radius: 50px !important;
+                font-weight: 800 !important;
+                font-size: 15px !important;
+                text-transform: uppercase !important;
+            }
+
+            /* Responsive Play Button Fix */
+            .m-v2-play-container {
+                display: none !important; /* Hide the raw container if it exists */
+            }
+
+            .m-v2-main-row {
+                position: relative !important;
+            }
+
+            /* Better Play Indicator in Thumb */
+            .m-v2-play-overlay {
+                position: absolute !important;
+                top: 50% !important;
+                left: 50% !important;
+                transform: translate(-50%, -50%) !important;
+                width: 32px !important;
+                height: 32px !important;
+                background: rgba(255,255,255,0.9) !important;
+                border-radius: 50% !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                opacity: 0.9 !important;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.3) !important;
+            }
+
+            .m-v2-play-overlay i {
+                color: #000 !important;
+                font-size: 1.2rem !important;
+                margin-left: 2px !important;
+            }
+
+            /* Fix the 'ugly' play button if it appears elsewhere */
+            .m-v2-action-play {
+                width: 38px !important;
+                height: 38px !important;
+                background: #fff !important;
+                border: none !important;
+                border-radius: 50% !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                cursor: pointer !important;
+                box-shadow: 0 4px 10px rgba(0,0,0,0.2) !important;
+            }
+            .m-v2-action-play i { color: #000 !important; font-size: 1.2rem !important; }
+
 
             .m-v2-price-btn i {
                 font-size: 0.9rem !important;
@@ -601,75 +814,183 @@
         </div>
     </div>
 
-    <!-- Mobile Filter Modal -->
+    <!-- Mobile Filter Modal (Redesigned) -->
     <div id="offszn-mobile-filters" class="offszn-mobile-filters-modal">
         <div class="m-filter-header">
             <h2>FILTROS</h2>
             <button class="m-filter-close" onclick="window.closeMobileFilters()">
-                <i class="bi bi-x-lg"></i>
+                <i class="bi bi-x"></i>
             </button>
         </div>
 
         <div class="m-filter-body">
+            <!-- Ordenar por -->
+            <div class="m-filter-section">
+                <div class="m-filter-section-title">Ordenar por</div>
+                <div class="m-filter-options-vertical">
+                    <label class="m-filter-option">
+                        <input type="radio" name="m-sort" value="trending" checked>
+                        <span class="m-filter-circle"></span>
+                        <span>Tendencia</span>
+                    </label>
+                    <label class="m-filter-option">
+                        <input type="radio" name="m-sort" value="popular">
+                        <span class="m-filter-circle"></span>
+                        <span>Popular</span>
+                    </label>
+                    <label class="m-filter-option">
+                        <input type="radio" name="m-sort" value="latest">
+                        <span class="m-filter-circle"></span>
+                        <span>Reciente</span>
+                    </label>
+                    <label class="m-filter-option">
+                        <input type="radio" name="m-sort" value="random">
+                        <span class="m-filter-circle"></span>
+                        <span>Aleatorio</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Tipo de archivo -->
+            <div class="m-filter-section">
+                <div class="m-filter-section-title">Tipo de archivo</div>
+                <div class="m-filter-options-vertical">
+                    <label class="m-filter-option">
+                        <input type="checkbox" class="m-file-check" value="wav" checked>
+                        <span class="m-filter-square"></span>
+                        <span>Samples (.WAV)</span>
+                    </label>
+                    <label class="m-filter-option">
+                        <input type="checkbox" class="m-file-check" value="stems">
+                        <span class="m-filter-square"></span>
+                        <span>Stems (.ZIP)</span>
+                    </label>
+                </div>
+            </div>
+
             <!-- Categoria -->
             <div class="m-filter-section">
-                <div class="m-filter-section-title"><i class="bi bi-grid"></i> CATEGORÍA</div>
-                <div class="m-filter-options-grid">
-                    <label class="m-filter-label"><input type="checkbox" class="m-cat-check" value="beat"> Beats</label>
-                    <label class="m-filter-label"><input type="checkbox" class="m-cat-check" value="drumkit"> Drum Kits</label>
-                    <label class="m-filter-label"><input type="checkbox" class="m-cat-check" value="loopkit"> Loop Kits</label>
-                    <label class="m-filter-label"><input type="checkbox" class="m-cat-check" value="preset"> Presets</label>
-                    <label class="m-filter-label"><input type="checkbox" class="m-cat-check" value="template"> Plantillas</label>
+                <div class="m-filter-section-title">Categoría</div>
+                <div class="m-filter-options-vertical">
+                    <label class="m-filter-option">
+                        <input type="checkbox" class="m-cat-check" value="beat">
+                        <span class="m-filter-square"></span>
+                        <span>BEAT</span>
+                    </label>
+                    <label class="m-filter-option">
+                        <input type="checkbox" class="m-cat-check" value="loopkit" checked>
+                        <span class="m-filter-square"></span>
+                        <span>LOOPKIT</span>
+                    </label>
+                    <label class="m-filter-option">
+                        <input type="checkbox" class="m-cat-check" value="preset">
+                        <span class="m-filter-square"></span>
+                        <span>PRESET</span>
+                    </label>
+                    <label class="m-filter-option">
+                        <input type="checkbox" class="m-cat-check" value="drumkit">
+                        <span class="m-filter-square"></span>
+                        <span>DRUMKIT</span>
+                    </label>
                 </div>
             </div>
 
-            <!-- Tempo -->
+            <!-- Tempo (BPM) -->
             <div class="m-filter-section">
-                <div class="m-filter-header-flex" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                    <div class="m-filter-section-title" style="margin:0;"><i class="bi bi-speedometer2"></i> TEMPO</div>
-                    <span id="m-bpm-display" style="color:#fff; font-size:0.85rem; font-weight:800;">40 - 250</span>
+                <div class="m-filter-section-title">Tempo (BPM)</div>
+                <div class="m-bpm-display-row" style="margin-bottom:10px;">
+                    <span class="m-bpm-val" id="m-bpm-val-min">40</span>
+                    <span style="color:#666; font-size:24px; font-weight:900;">-</span>
+                    <span class="m-bpm-val" id="m-bpm-val-max">138</span>
                 </div>
-                <!-- Simple BPM input on mobile for better UX -->
-                <div style="display:flex; gap:10px; align-items:center;">
-                    <input type="number" id="m-bpm-min" value="40" class="m-filter-input" style="background:#111; border:1px solid #333; color:#fff; padding:8px; border-radius:8px; width:60px; text-align:center;">
-                    <span style="color:#333;">-</span>
-                    <input type="number" id="m-bpm-max" value="250" class="m-filter-input" style="background:#111; border:1px solid #333; color:#fff; padding:8px; border-radius:8px; width:60px; text-align:center;">
-                </div>
-            </div>
-
-            <!-- Precio -->
-            <div class="m-filter-section">
-                <div class="m-filter-header-flex" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                    <div class="m-filter-section-title" style="margin:0;"><i class="bi bi-tag"></i> PRECIO</div>
-                </div>
-                <label class="m-filter-label" style="margin-bottom:15px;">
-                    <input type="checkbox" id="m-free-check"> <span style="color:#00a8ff; font-weight:800;">Gratis</span>
+                <input type="range" id="m-bpm-slider" class="m-bpm-range-slider" min="40" max="250" value="138">
+                <label class="m-filter-option">
+                    <input type="checkbox" id="m-bpm-double">
+                    <span class="m-filter-square"></span>
+                    <span>Incluir tempo doble</span>
                 </label>
             </div>
-            
-            <!-- Key (Tonalidad) -->
+
+            <!-- Escala -->
             <div class="m-filter-section">
-                <div class="m-filter-section-title"><i class="bi bi-music-note"></i> KEY</div>
-                <select id="m-key-select" style="width:100%; height:44px; background:#111; border:1px solid #333; color:#fff; border-radius:8px; padding:0 12px;">
-                    <option value="">Cualquier Key</option>
-                    <option value="c">C</option>
-                    <option value="cs">C#</option>
-                    <option value="d">D</option>
-                    <option value="ds">D#</option>
-                    <option value="e">E</option>
-                    <option value="f">F</option>
-                    <option value="fs">F#</option>
-                    <option value="g">G</option>
-                    <option value="gs">G#</option>
-                    <option value="a">A</option>
-                    <option value="as">A#</option>
-                    <option value="b">B</option>
-                </select>
+                <div class="m-filter-section-title">Escala</div>
+                <div style="display:flex; gap:20px;">
+                    <label class="m-filter-option">
+                        <input type="radio" name="m-scale" value="major">
+                        <span class="m-filter-circle"></span>
+                        <span>Mayor</span>
+                    </label>
+                    <label class="m-filter-option">
+                        <input type="radio" name="m-scale" value="minor" checked>
+                        <span class="m-filter-circle"></span>
+                        <span>Menor</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Nota Clave -->
+            <div class="m-filter-section">
+                <div class="m-filter-section-title">Nota Clave</div>
+                <div class="m-key-grid">
+                    <button class="m-key-btn">C</button>
+                    <button class="m-key-btn">C#</button>
+                    <button class="m-key-btn">Db</button>
+                    <button class="m-key-btn">D</button>
+                    <button class="m-key-btn">D#</button>
+                    <button class="m-key-btn">Eb</button>
+                    <button class="m-key-btn">E</button>
+                    <button class="m-key-btn">F</button>
+                    <button class="m-key-btn">F#</button>
+                    <button class="m-key-btn">Gb</button>
+                    <button class="m-key-btn">G</button>
+                    <button class="m-key-btn active">Ab</button>
+                    <button class="m-key-btn">A</button>
+                    <button class="m-key-btn">Bb</button>
+                    <button class="m-key-btn">B</button>
+                </div>
+                <label class="m-filter-option" style="margin-top:15px;">
+                    <input type="checkbox" id="m-key-relative">
+                    <span class="m-filter-square"></span>
+                    <span>Incluir escala relativa</span>
+                </label>
+            </div>
+
+            <!-- Licencia -->
+            <div class="m-filter-section">
+                <div class="m-filter-section-title">Licencia</div>
+                <div class="m-filter-options-vertical">
+                    <label class="m-filter-option">
+                        <input type="checkbox" class="m-lic-check" value="basic">
+                        <span class="m-filter-square"></span>
+                        <span>Básica</span>
+                    </label>
+                    <label class="m-filter-option">
+                        <input type="checkbox" class="m-lic-check" value="premium">
+                        <span class="m-filter-square"></span>
+                        <span>Premium</span>
+                    </label>
+                    <label class="m-filter-option">
+                        <input type="checkbox" class="m-lic-check" value="trackout">
+                        <span class="m-filter-square"></span>
+                        <span>Trackout</span>
+                    </label>
+                    <label class="m-filter-option">
+                        <input type="checkbox" class="m-lic-check" value="exclusive">
+                        <span class="m-filter-square"></span>
+                        <span>Exclusiva</span>
+                    </label>
+                    <label class="m-filter-option">
+                        <input type="checkbox" class="m-lic-check" value="free">
+                        <span class="m-filter-square"></span>
+                        <span>Gratis</span>
+                    </label>
+                </div>
             </div>
         </div>
 
-        <div class="m-filter-footer">
-            <button class="btn-clear-filters" onclick="window.clearMobileFilters()">LIMPIAR FILTROS</button>
+        <div class="m-filter-footer-fixed">
+            <button class="m-btn-cancel" onclick="window.closeMobileFilters()">CANCELAR</button>
+            <button class="m-btn-apply" onclick="window.closeMobileFilters()">APLICAR</button>
         </div>
     </div>
 

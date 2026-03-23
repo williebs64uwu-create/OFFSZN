@@ -829,7 +829,9 @@ function createShelfRow(title, items, format = 'standard') {
         <div class="row-header">
             <h2 class="row-title">${title}</h2>
             <div class="row-actions">
-                <span class="view-all" onclick="window.location.href='${viewAllUrl}'">Ver todos</span>
+                <div class="view-all" onclick="window.location.href='${viewAllUrl}'">
+                    Ver todos <i class="bi bi-arrow-right"></i>
+                </div>
                 <div class="row-nav-arrows mobile-hide">
                     <button class="btn-nav-mini prev" id="prev-${rowId}"><i class="bi bi-chevron-left"></i></button>
                     <button class="btn-nav-mini next" id="next-${rowId}"><i class="bi bi-chevron-right"></i></button>
