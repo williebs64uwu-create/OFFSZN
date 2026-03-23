@@ -132,7 +132,7 @@ function renderEverything() {
                 const img = document.createElement('img');
                 img.src = user.avatar_url;
                 img.alt = "Avatar";
-                img.crossOrigin = "anonymous";
+                // img.crossOrigin = "anonymous";
                 img.style.cssText = "width:100%; height:100%; border-radius:50%; object-fit:cover;";
                 sidebarAvatar.appendChild(img);
             } else {

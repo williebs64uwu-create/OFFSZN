@@ -158,7 +158,7 @@ async function renderHeader(user) {
 
         avatarContainer.innerHTML = '';
         const avatarImg = document.createElement('img');
-        avatarImg.crossOrigin = 'anonymous';
+        // avatarImg.crossOrigin = 'anonymous';
         avatarImg.src = currentSrc;
         if (isR2) {
             avatarImg.dataset.r2Src = user.avatar_url;
