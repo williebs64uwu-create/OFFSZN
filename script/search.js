@@ -761,7 +761,125 @@ function setupFilterListeners() {
             applyFilters();
         });
     }
+    initMobileFilters();
 }
+
+/**
+ * Mobile Filter Modal Logic
+ */
+window.openMobileFilters = function() {
+    const modal = document.getElementById('offszn-mobile-filters');
+    if (modal) {
+        modal.classList.add('modal-active');
+        document.body.style.overflow = 'hidden';
+        syncFilterUI(); 
+    }
+};
+
+window.closeMobileFilters = function() {
+    const modal = document.getElementById('offszn-mobile-filters');
+    if (modal) {
+        modal.classList.remove('modal-active');
+        document.body.style.overflow = '';
+    }
+};
+
+function initMobileFilters() {
+    // 1. Category
+    document.querySelectorAll('.m-cat-check').forEach(check => {
+        check.addEventListener('change', (e) => {
+            const val = e.target.value;
+            if (e.target.checked) {
+                if (!currentFilters.categories.includes(val)) currentFilters.categories.push(val);
+            } else {
+                currentFilters.categories = currentFilters.categories.filter(c => c !== val);
+            }
+            syncFilterUI('modal'); 
+            applyFilters();
+        });
+    });
+
+    // 2. BPM
+    const bpmMinInput = document.getElementById('m-bpm-min');
+    const bpmMaxInput = document.getElementById('m-bpm-max');
+    if (bpmMinInput && bpmMaxInput) {
+        const handleBpm = () => {
+            currentFilters.bpmMin = parseInt(bpmMinInput.value) || 40;
+            currentFilters.bpmMax = parseInt(bpmMaxInput.value) || 250;
+            const bpmDisp = document.getElementById('m-bpm-display');
+            if (bpmDisp) bpmDisp.textContent = `${currentFilters.bpmMin} - ${currentFilters.bpmMax}`;
+            syncFilterUI('modal');
+            applyFilters();
+        };
+        bpmMinInput.addEventListener('change', handleBpm);
+        bpmMaxInput.addEventListener('change', handleBpm);
+    }
+
+    // 3. Free Check
+    const freeCheck = document.getElementById('m-free-check');
+    if (freeCheck) {
+        freeCheck.addEventListener('change', (e) => {
+            currentFilters.freeOnly = e.target.checked;
+            syncFilterUI('modal');
+            applyFilters();
+        });
+    }
+
+    // 4. Key Select
+    const keySelect = document.getElementById('m-key-select');
+    if (keySelect) {
+        keySelect.addEventListener('change', (e) => {
+            const val = e.target.value;
+            currentFilters.keys = val ? [val] : [];
+            syncFilterUI('modal');
+            applyFilters();
+        });
+    }
+}
+
+function syncFilterUI(source = 'all') {
+    if (source !== 'sidebar') {
+        document.querySelectorAll('.category-check').forEach(c => {
+            c.checked = currentFilters.categories.includes(c.value);
+        });
+        const minS = document.getElementById('bpm-min-slider');
+        const maxS = document.getElementById('bpm-max-slider');
+        if (minS) minS.value = currentFilters.bpmMin;
+        if (maxS) maxS.value = currentFilters.bpmMax;
+        const freeS = document.getElementById('free-filter-check');
+        if (freeS) freeS.checked = currentFilters.freeOnly;
+        const bpmDisp = document.getElementById('bpm-range-display');
+        if(bpmDisp) bpmDisp.textContent = `${currentFilters.bpmMin} - ${currentFilters.bpmMax}`;
+    }
+    if (source !== 'modal') {
+        document.querySelectorAll('.m-cat-check').forEach(c => {
+            c.checked = currentFilters.categories.includes(c.value);
+        });
+        const mMin = document.getElementById('m-bpm-min');
+        const mMax = document.getElementById('m-bpm-max');
+        if (mMin) mMin.value = currentFilters.bpmMin;
+        if (mMax) mMax.value = currentFilters.bpmMax;
+        const mFree = document.getElementById('m-free-check');
+        if (mFree) mFree.checked = currentFilters.freeOnly;
+        const mKeySelect = document.getElementById('m-key-select');
+        if (mKeySelect) mKeySelect.value = currentFilters.keys[0] || '';
+        const mBpmDisp = document.getElementById('m-bpm-display');
+        if(mBpmDisp) mBpmDisp.textContent = `${currentFilters.bpmMin} - ${currentFilters.bpmMax}`;
+    }
+}
+
+window.clearMobileFilters = function() {
+    currentFilters.categories = [];
+    currentFilters.genres = [];
+    currentFilters.bpmMin = 40;
+    currentFilters.bpmMax = 250;
+    currentFilters.freeOnly = false;
+    currentFilters.keys = [];
+    currentFilters.priceMax = 1000;
+    syncFilterUI();
+    applyFilters();
+    window.closeMobileFilters();
+};
 
 function applyFilters() {
     if (allProducts.length === 0) return;
@@ -961,7 +1079,6 @@ function renderTrackRowMobile(p) {
     const producer = p.producer_name || 'OFFSZN';
     const productUrl = getProductUrl(p);
 
-    // Resolve display price from licenses or fallback to price_basic
     const licenses = p._resolvedLicenses || [];
     const lowestPrice = licenses.length > 0 ? Math.min(...licenses.map(l => l.price)) : (parseFloat(p.price_basic) || 0);
     const displayPrice = lowestPrice > 0
@@ -969,56 +1086,50 @@ function renderTrackRowMobile(p) {
         : 'GRATIS';
     const storageVer = p.storage_version || p.r2_version || 'v2';
     const imgPlaceholder = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
-
-    // Always use data-r2-src so r2-loader.js can sign it (works for supabase too if version is correct)
     const imgAttr = `src="${imgPlaceholder}" data-r2-src="${escapeHTML(imgUrl)}"`;
 
-    const isFree = lowestPrice === 0;
-    const priceDisplay = isFree 
-        ? `<i class="bi bi-download"></i>` 
-        : displayPrice;
-
     const isLiked = window.FavoritesManager?.isLiked(p.id) || false;
-    const playHandler = `window.handleTrackPlay(event, '${p.id}')`;
-    const trackJson = JSON.stringify(p).replace(/"/g, '&quot;');
-    const likeHandler = `window.FavoritesManager?.toggleLike('${p.id}', this, ${trackJson})`;
+    const likeHandler = `window.handleLike(event, '${p.id}', this)`;
 
     return `
         <div class="offszn-m-track-v2" data-product-id="${p.id}">
-            <div class="m-v2-main-row">
-                <!-- Thumbnail with Play Overlay -->
-                <div class="m-v2-thumb" onclick="${playHandler}">
-                    <img crossorigin="anonymous" ${imgAttr} data-r2-version="${storageVer}" data-product-id="${p.id}" alt="${escapeHTML(p.name)}">
-                    <div class="m-v2-play-overlay" style="pointer-events: none;">
-                        <i class="bi bi-play-fill" style="pointer-events: none;"></i>
+            <div class="m-v2-main-row" onclick="window.handleTrackPlay(event, '${p.id}')">
+                <div class="m-v2-thumb">
+                    <img crossorigin="anonymous" ${imgAttr} data-r2-version="${storageVer}" alt="${escapeHTML(p.name)}">
+                    <div class="m-v2-play-overlay">
+                        <i class="bi bi-play-fill"></i>
                     </div>
                 </div>
 
-                <!-- Info Column: Title, Producer, Meta Tags -->
-                <div class="m-v2-info" onclick="window.location.href='${productUrl}'">
-                    <span class="m-v2-title">${escapeHTML(p.name)}</span>
-                    <span class="m-v2-producer">${escapeHTML(producer)}</span>
-                    <div class="m-v2-meta-row">
-                        <span class="m-v2-tag">${type}</span>
-                        ${p.bpm ? `<span class="m-v2-tag">${p.bpm} BPM</span>` : ''}
-                        ${p.key_name ? `<span class="m-v2-tag">${p.key_name}</span>` : ''}
-                        ${(p.product_type === 'loopkit' || p.product_type === 'drumkit') ? `<span class="m-v2-tag">${p.sounds_count || 0} sonidos</span>` : ''}
+                <div class="m-v2-info">
+                    <div class="m-v2-title">${escapeHTML(p.name)}</div>
+                    <div class="m-v2-producer">${escapeHTML(producer)}</div>
+                    <div class="m-v2-meta-row" style="display:flex; gap:6px; margin-top:4px; opacity:0.6; font-size:10px; font-weight:800; text-transform:uppercase;">
+                        <span>${type}</span>
+                        ${p.bpm ? `<span>• ${p.bpm} BPM</span>` : ''}
+                        ${p.key_name ? `<span>• ${p.key_name}</span>` : ''}
                     </div>
                 </div>
 
-                <!-- Actions Group: Heart + Price/Download + More -->
-                <div class="m-v2-actions">
-                    <button class="m-v2-action-heart" onclick="event.stopPropagation(); ${likeHandler}">
+                <div class="m-v2-play-container">
+                    <button class="m-v2-play-btn">
+                        <i class="bi bi-play-fill"></i>
+                    </button>
+                </div>
+
+                <div class="m-v2-actions" onclick="event.stopPropagation()">
+                    <button class="m-v2-action-heart" onclick="${likeHandler}">
                         <i class="bi bi-heart${isLiked ? '-fill liked' : ''}"></i>
                     </button>
-                    
-                    <div class="m-v2-price-btn" onclick="event.stopPropagation(); window.location.href='${productUrl}'">
-                        ${priceDisplay}
-                    </div>
-
-                    <button class="m-v2-action-more" onclick="event.stopPropagation(); window.handleShare(event, '${p.id}')">
-                        <i class="bi bi-three-dots-vertical"></i>
-                    </button>
+                    ${lowestPrice === 0 ? `
+                        <button class="m-v2-price-btn free" onclick="window.location.href='${productUrl}'">
+                            <i class="bi bi-download"></i>
+                        </button>
+                    ` : `
+                        <div class="m-v2-price-btn" onclick="window.location.href='${productUrl}'">
+                            ${displayPrice}
+                        </div>
+                    `}
                 </div>
             </div>
         </div>
@@ -1238,7 +1349,8 @@ window.handleAddToCart = (e, id) => {
 
 window.handleLike = (e, id, el) => {
     e.stopPropagation();
-    const icon = el || e.currentTarget;
+    // el is the button, we need the icon inside it
+    const icon = el.querySelector('i') || el;
     if (window.FavoritesManager && typeof window.FavoritesManager.toggleLike === 'function') {
         window.FavoritesManager.toggleLike(id, icon);
     }
@@ -1355,7 +1467,7 @@ if (window.FavoritesManager) {
 }
 
 function syncLikes() {
-    const rows = document.querySelectorAll('.track-row, .fallback-card');
+    const rows = document.querySelectorAll('.track-row, .fallback-card, .offszn-m-track-v2');
     rows.forEach(row => {
         const productId = row.getAttribute('data-product-id');
         if (!productId) return;

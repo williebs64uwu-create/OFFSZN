@@ -96,6 +96,27 @@
                 width: 100% !important;
                 margin-top: 20px !important;
                 margin-bottom: 10px !important;
+                display: flex !important;
+                justify-content: space-between !important;
+                align-items: center !important;
+            }
+
+            #mobile-filter-trigger {
+                display: flex !important;
+                align-items: center !important;
+                gap: 8px !important;
+                background: rgba(255, 255, 255, 0.08) !important;
+                border: 1px solid rgba(255, 255, 255, 0.1) !important;
+                padding: 8px 16px !important;
+                border-radius: 20px !important;
+                color: #fff !important;
+                font-size: 0.85rem !important;
+                font-weight: 600 !important;
+                backdrop-filter: blur(10px) !important;
+            }
+
+            #mobile-filter-trigger i {
+                font-size: 1rem !important;
             }
 
             .offszn-m-track-v2 {
@@ -202,13 +223,13 @@
                 display: flex !important;
                 align-items: center !important;
                 justify-content: flex-end !important;
-                gap: 8px !important;
+                gap: 12px !important;
                 padding-right: 4px !important;
             }
 
-            .m-v2-action-heart, .m-v2-action-more {
-                width: 34px !important;
-                height: 34px !important;
+            .m-v2-action-heart {
+                width: 38px !important;
+                height: 38px !important;
                 background: rgba(255, 255, 255, 0.1) !important;
                 backdrop-filter: blur(5px) !important;
                 border: 1px solid rgba(255, 255, 255, 0.08) !important;
@@ -221,8 +242,8 @@
                 flex-shrink: 0 !important;
             }
 
-            .m-v2-action-heart i, .m-v2-action-more i {
-                font-size: 1rem !important;
+            .m-v2-action-heart i {
+                font-size: 1.15rem !important;
                 color: #fff !important;
             }
 
@@ -233,18 +254,120 @@
             .m-v2-price-btn {
                 background: #fff !important;
                 color: #000 !important;
-                font-size: 0.7rem !important;
+                font-size: 0.75rem !important;
                 font-weight: 800 !important;
-                padding: 4px 10px !important;
+                padding: 4px 12px !important;
                 border-radius: 8px !important;
                 white-space: nowrap !important;
                 line-height: normal !important;
-                min-width: 48px !important;
+                min-width: 52px !important;
                 text-align: center !important;
                 display: flex !important;
                 align-items: center !important;
                 justify-content: center !important;
-                height: 28px !important;
+                height: 30px !important;
+            }
+
+            /* --- Mobile Filter Modal --- */
+            .offszn-mobile-filters-modal {
+                position: fixed !important;
+                top: 0 !important;
+                left: 0 !important;
+                width: 100% !important;
+                height: 100% !important;
+                background: #000 !important;
+                z-index: 9999 !important;
+                display: none;
+                flex-direction: column !important;
+                overflow-y: auto !important;
+                padding: 20px !important;
+            }
+
+            .modal-active {
+                display: flex !important;
+                overflow: hidden !important; /* Lock body scroll */
+            }
+
+            .m-filter-header {
+                display: flex !important;
+                justify-content: space-between !important;
+                align-items: center !important;
+                margin-bottom: 30px !important;
+            }
+
+            .m-filter-header h2 {
+                font-size: 1.2rem !important;
+                font-weight: 800 !important;
+                color: #fff !important;
+                margin: 0 !important;
+            }
+
+            .m-filter-close {
+                background: rgba(255,255,255,0.05) !important;
+                border: none !important;
+                width: 32px !important;
+                height: 32px !important;
+                border-radius: 50% !important;
+                color: #fff !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+            }
+
+            .m-filter-section {
+                margin-bottom: 30px !important;
+                border-bottom: 1px solid rgba(255,255,255,0.05) !important;
+                padding-bottom: 20px !important;
+            }
+
+            .m-filter-section-title {
+                display: flex !important;
+                align-items: center !important;
+                gap: 8px !important;
+                font-size: 0.85rem !important;
+                font-weight: 800 !important;
+                color: #fff !important;
+                margin-bottom: 20px !important;
+                text-transform: uppercase !important;
+                letter-spacing: 1px !important;
+            }
+
+            .m-filter-options-grid {
+                display: grid !important;
+                grid-template-columns: 1fr 1fr !important;
+                gap: 12px !important;
+            }
+
+            .m-filter-label {
+                display: flex !important;
+                align-items: center !important;
+                gap: 10px !important;
+                color: #999 !important;
+                font-size: 0.9rem !important;
+            }
+
+            .m-filter-label input[type="checkbox"] {
+                width: 18px !important;
+                height: 18px !important;
+                accent-color: #fff !important;
+            }
+
+            .m-filter-footer {
+                margin-top: auto !important;
+                padding: 20px 0 !important;
+            }
+
+            .btn-clear-filters {
+                width: 100% !important;
+                background: none !important;
+                border: 1px solid rgba(255,255,255,0.2) !important;
+                color: #fff !important;
+                padding: 14px !important;
+                border-radius: 12px !important;
+                font-weight: 700 !important;
+                font-size: 0.9rem !important;
+                text-transform: uppercase !important;
+                letter-spacing: 1px !important;
             }
 
             .m-v2-price-btn i {
@@ -385,9 +508,13 @@
         <!-- Results Area -->
         <section class="search-results-wrapper">
             <div class="results-header">
-                <div class="results-count">
-                    <span id="results-count-val">0</span> Resultados
-                </div>
+            <span id="results-count-text">
+                <span id="results-count-val">0</span> Resultados
+            </span>
+            <button id="mobile-filter-trigger" class="m-only" onclick="window.openMobileFilters()">
+                <i class="bi bi-sliders"></i> Filtrar
+            </button>
+        </div>
                 <div class="results-sort">
                     <div class="custom-sort-container" id="customSortContainer">
                         <button class="sort-trigger" id="sortTrigger">
@@ -474,6 +601,78 @@
         </div>
     </div>
 
+    <!-- Mobile Filter Modal -->
+    <div id="offszn-mobile-filters" class="offszn-mobile-filters-modal">
+        <div class="m-filter-header">
+            <h2>FILTROS</h2>
+            <button class="m-filter-close" onclick="window.closeMobileFilters()">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+
+        <div class="m-filter-body">
+            <!-- Categoria -->
+            <div class="m-filter-section">
+                <div class="m-filter-section-title"><i class="bi bi-grid"></i> CATEGORÍA</div>
+                <div class="m-filter-options-grid">
+                    <label class="m-filter-label"><input type="checkbox" class="m-cat-check" value="beat"> Beats</label>
+                    <label class="m-filter-label"><input type="checkbox" class="m-cat-check" value="drumkit"> Drum Kits</label>
+                    <label class="m-filter-label"><input type="checkbox" class="m-cat-check" value="loopkit"> Loop Kits</label>
+                    <label class="m-filter-label"><input type="checkbox" class="m-cat-check" value="preset"> Presets</label>
+                    <label class="m-filter-label"><input type="checkbox" class="m-cat-check" value="template"> Plantillas</label>
+                </div>
+            </div>
+
+            <!-- Tempo -->
+            <div class="m-filter-section">
+                <div class="m-filter-header-flex" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                    <div class="m-filter-section-title" style="margin:0;"><i class="bi bi-speedometer2"></i> TEMPO</div>
+                    <span id="m-bpm-display" style="color:#fff; font-size:0.85rem; font-weight:800;">40 - 250</span>
+                </div>
+                <!-- Simple BPM input on mobile for better UX -->
+                <div style="display:flex; gap:10px; align-items:center;">
+                    <input type="number" id="m-bpm-min" value="40" class="m-filter-input" style="background:#111; border:1px solid #333; color:#fff; padding:8px; border-radius:8px; width:60px; text-align:center;">
+                    <span style="color:#333;">-</span>
+                    <input type="number" id="m-bpm-max" value="250" class="m-filter-input" style="background:#111; border:1px solid #333; color:#fff; padding:8px; border-radius:8px; width:60px; text-align:center;">
+                </div>
+            </div>
+
+            <!-- Precio -->
+            <div class="m-filter-section">
+                <div class="m-filter-header-flex" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                    <div class="m-filter-section-title" style="margin:0;"><i class="bi bi-tag"></i> PRECIO</div>
+                </div>
+                <label class="m-filter-label" style="margin-bottom:15px;">
+                    <input type="checkbox" id="m-free-check"> <span style="color:#00a8ff; font-weight:800;">Gratis</span>
+                </label>
+            </div>
+            
+            <!-- Key (Tonalidad) -->
+            <div class="m-filter-section">
+                <div class="m-filter-section-title"><i class="bi bi-music-note"></i> KEY</div>
+                <select id="m-key-select" style="width:100%; height:44px; background:#111; border:1px solid #333; color:#fff; border-radius:8px; padding:0 12px;">
+                    <option value="">Cualquier Key</option>
+                    <option value="c">C</option>
+                    <option value="cs">C#</option>
+                    <option value="d">D</option>
+                    <option value="ds">D#</option>
+                    <option value="e">E</option>
+                    <option value="f">F</option>
+                    <option value="fs">F#</option>
+                    <option value="g">G</option>
+                    <option value="gs">G#</option>
+                    <option value="a">A</option>
+                    <option value="as">A#</option>
+                    <option value="b">B</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="m-filter-footer">
+            <button class="btn-clear-filters" onclick="window.clearMobileFilters()">LIMPIAR FILTROS</button>
+        </div>
+    </div>
+
     <!-- Audio Library needed for Sticky Player -->
     <script src="https://unpkg.com/wavesurfer.js@7"></script>
 
@@ -485,7 +684,7 @@
     <script src="/script/favorites-manager.js"></script>
     <script src="/script/r2-loader.js"></script>
 
-    <script src="/script/search.js?v=530" type="module"></script>
+    <script src="/script/search.js?v=540" type="module"></script>
 
     <!-- ==================== FOOTER ==================== -->
     <!-- Este div es el placeholder donde se inyectará el componente de footer (Desktop/Mobile) -->
