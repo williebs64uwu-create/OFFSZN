@@ -522,7 +522,7 @@ export const handleFreeGuestDownload = async (req, res) => {
             return res.status(400).json({ error: 'Faltan datos (ID producto o email)' });
         }
 
-        // 1. Validar que el producto sea gratis
+        // 1. Obtener datos del producto
         const { data: product, error: fetchError } = await supabase
             .from('products')
             .select('id, name, is_free, price_basic, downloads_count, producer_id')
@@ -533,126 +533,136 @@ export const handleFreeGuestDownload = async (req, res) => {
             return res.status(404).json({ error: 'Producto no encontrado' });
         }
 
+        // 2. Validar que sea gratuito
         if (product.is_free !== true && parseFloat(product.price_basic) > 0) {
             return res.status(403).json({ error: 'Este producto no es gratuito' });
         }
 
-        // 2. Incrementar contador de descargas
-        await supabase.rpc('increment_product_downloads', { row_id: product.id });
+        // 3. PERSISTENCIA EN BASE DE DATOS (Manejada con errores aislados)
+        
+        // A. Incrementar contador
+        try {
+            await supabase.rpc('increment_product_downloads', { row_id: product.id });
+        } catch (e) {
+            console.warn("[GuestDownload] RPC increment failed:", e.message);
+        }
 
-        // 2.5 CREAR ORDEN Y LOG (Para que aparezca en Transacciones/Dashboard)
+        // B. Crear Orden y Item para que aparezca en el Dashboard del productor
         let orderId = null;
         try {
             const { data: newOrder, error: orderErr } = await supabase
                 .from('orders')
-                .insert({
-                    user_id: null,
+                .insert([{
                     guest_email: guestEmail,
-                    transaction_id: `GUEST-${Date.now()}`,
                     status: 'completed',
-                    total_price: 0
-                })
-                .select()
+                    total_amount: 0,
+                    currency: 'USD',
+                    payment_method: 'free_guest',
+                    transaction_id: `GUEST-${Date.now()}`
+                }])
+                .select('id')
                 .single();
 
             if (!orderErr && newOrder) {
                 orderId = newOrder.id;
-                await supabase.from('order_items').insert({
+                await supabase.from('order_items').insert([{
                     order_id: orderId,
                     product_id: productId,
-                    quantity: 1,
-                    price_at_purchase: 0
-                });
+                    price: 0,
+                    quantity: 1
+                }]);
 
-                // Registrar en bitácora
-                await supabase.from('download_logs').insert({
+                // C. Log de auditoría
+                await supabase.from('download_logs').insert([{
                     order_id: orderId,
                     product_id: productId,
-                    ip_address: req.ip || req.headers['x-forwarded-for'],
-                    user_agent: req.headers['user-agent']
-                });
+                    ip_address: req.ip || req.headers['x-forwarded-for'] || '0.0.0.0',
+                    user_agent: req.headers['user-agent'] || 'Guest',
+                    metadata: { type: 'guest_download' }
+                }]);
             }
         } catch (dbErr) {
-            console.error("Error persisting guest order:", dbErr);
+            console.error("[GuestDownload] DB Persistence Error:", dbErr.message);
         }
 
-        // 3. Buscar si el usuario ya existe para personalizar el correo
-        const { data: existingUser } = await supabase
-            .from('users')
-            .select('nickname, id')
-            .eq('email', guestEmail)
-            .single();
+        // 4. NOTIFICACIONES POR CORREO
+        try {
+            const { data: existingUser } = await supabase
+                .from('users')
+                .select('nickname, id')
+                .eq('email', guestEmail)
+                .single();
 
-        const { sendOffsznEmail } = await import('../../../shared/utils/mailer.js');
+            const mailerModule = await import('../../../shared/utils/mailer.js');
+            const sendEmail = mailerModule?.sendOffsznEmail;
 
-        if (existingUser) {
-            // USUARIO EXISTENTE
-            const welcomeBackHtml = `
-                <div style="font-family: 'Segoe UI', sans-serif; padding: 40px; background: #0a0a0a; color: #fff; max-width: 600px; border: 1px solid #222; border-radius: 16px;">
-                    <h2 style="color: #8b5cf6; margin-bottom: 20px;">¡Hola de nuevo, ${existingUser.nickname}! 👋</h2>
-                    <p style="color: #ccc; font-size: 1.1rem; line-height: 1.6;">Hemos visto que has descargado <b style="color:#fff;">${product.name}</b> como invitado.</p>
-                    <p style="color: #888; margin-bottom: 25px;">Parece que ya tienes una cuenta en OFFSZN. Para que tus próximas descargas se guarden automáticamente en tu librería personal, recuerda iniciar sesión la próxima vez.</p>
-                    <div style="text-align: center;">
-                        <a href="https://offszn.lat/pages/login.html" style="display: inline-block; background: #fff; color: #000; padding: 14px 35px; border-radius: 12px; text-decoration: none; font-weight: 700; font-size: 1rem;">Inicia Sesión Ahora</a>
-                    </div>
-                </div>
-            `;
-            await sendOffsznEmail({
-                to: guestEmail,
-                subject: `✨ ¡Hola ${existingUser.nickname}! No olvides tu librería`,
-                html: welcomeBackHtml,
-                fromName: 'OFFSZN'
-            });
-        } else {
-            // USUARIO NUEVO
-            const registerHtml = `
-                <div style="font-family: 'Segoe UI', sans-serif; padding: 40px; background: #0a0a0a; color: #fff; max-width: 600px; border: 1px solid #222; border-radius: 16px;">
-                    <h2 style="color: #8b5cf6; margin-bottom: 20px;">¡Gracias por tu descarga! 📥</h2>
-                    <p style="color: #ccc; font-size: 1.1rem; line-height: 1.6;">Acabas de obtener <b style="color:#fff;">${product.name}</b>.</p>
-                    <p style="color: #888; margin-bottom: 25px;">¿Sabías que si creas una cuenta puedes guardar todos tus kits y presets en un solo lugar permanentemente? Es gratis y solo toma 30 segundos.</p>
-                    <div style="text-align: center;">
-                        <a href="https://offszn.lat/pages/register.html" style="display: inline-block; background: #8b5cf6; color: #fff; padding: 14px 35px; border-radius: 12px; text-decoration: none; font-weight: 700; font-size: 1rem;">Crear Cuenta Gratis</a>
-                    </div>
-                </div>
-            `;
-            await sendOffsznEmail({
-                to: guestEmail,
-                subject: `📥 Tu descarga de ${product.name} está lista`,
-                html: registerHtml,
-                fromName: 'OFFSZN'
-            });
-        }
-
-        // NOTIFICAR AL PRODUCTOR (NUEVO PARA GUESTS)
-        if (product.producer_id) {
-            try {
-                const { data: prodData } = await supabase.from('users').select('email, nickname').eq('id', product.producer_id).single();
-                if (prodData?.email) {
-                    const prodNickname = prodData.nickname || 'Productor';
-                    const prodHtml = `
-                        <div style="font-family: 'Segoe UI', sans-serif; padding: 30px; background: #0a0a0a; border-radius: 12px; color: #fff; max-width: 600px;">
-                            <h2 style="color: #3B82F6; margin-bottom:20px;">¡Nueva Descarga de tu Producto! 📥</h2>
-                            <p style="color:#ccc; line-height:1.6;">Hola <b>${prodNickname}</b>, un usuario invitado (<b>${guestEmail}</b>) ha realizado una descarga gratuita de tu producto <b style="color:#fff;">${product.name}</b>.</p>
-                            <p style="color:#888; line-height:1.5;">Esta es una notificación automática de OFFSZN.</p>
-                            <a href="https://offszn.lat/cuenta/transacciones" style="display:inline-block; background:#3B82F6; color:#fff; padding:12px 25px; border-radius:8px; text-decoration:none; font-weight:700; margin-top:10px;">VER MIS TRANSACCIONES</a>
-                        </div>
-                    `;
-                    await sendOffsznEmail({
-                        to: prodData.email,
-                        subject: `📥 Nueva descarga gratuita (Invitado) - ${product.name}`,
-                        html: prodHtml,
-                        fromName: 'OFFSZN Activity'
-                    });
+            if (sendEmail) {
+                // 4a. Correo al Invitado
+                try {
+                    let html, subject;
+                    if (existingUser) {
+                        subject = `✨ ¡Hola ${existingUser.nickname}! No olvides tu librería`;
+                        html = `
+                            <div style="font-family: 'Segoe UI', sans-serif; padding: 40px; background: #0a0a0a; color: #fff; max-width: 600px; border: 1px solid #222; border-radius: 16px;">
+                                <h2 style="color: #8b5cf6; margin-bottom: 20px;">¡Hola de nuevo, ${existingUser.nickname}! 👋</h2>
+                                <p style="color: #ccc; font-size: 1.1rem; line-height: 1.6;">Hemos visto que has descargado <b style="color:#fff;">${product.name}</b> como invitado.</p>
+                                <p style="color: #888; margin-bottom: 25px;">Parece que ya tienes una cuenta en OFFSZN. Para que tus próximas descargas se guarden automáticamente en tu librería personal, recuerda iniciar sesión la próxima vez.</p>
+                                <div style="text-align: center;">
+                                    <a href="https://offszn.lat/pages/login.html" style="display: inline-block; background: #fff; color: #000; padding: 14px 35px; border-radius: 12px; text-decoration: none; font-weight: 700; font-size: 1rem;">Inicia Sesión Ahora</a>
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        subject = `📥 Tu descarga de ${product.name} está lista`;
+                        html = `
+                            <div style="font-family: 'Segoe UI', sans-serif; padding: 40px; background: #0a0a0a; color: #fff; max-width: 600px; border: 1px solid #222; border-radius: 16px;">
+                                <h2 style="color: #8b5cf6; margin-bottom: 20px;">¡Gracias por tu descarga! 📥</h2>
+                                <p style="color: #ccc; font-size: 1.1rem; line-height: 1.6;">Acabas de obtener <b style="color:#fff;">${product.name}</b>.</p>
+                                <p style="color: #888; margin-bottom: 25px;">¿Sabías que si creas una cuenta puedes guardar todos tus kits y presets en un solo lugar permanentemente? Es gratis y solo toma 30 segundos.</p>
+                                <div style="text-align: center;">
+                                    <a href="https://offszn.lat/pages/register.html" style="display: inline-block; background: #8b5cf6; color: #fff; padding: 14px 35px; border-radius: 12px; text-decoration: none; font-weight: 700; font-size: 1rem;">Crear Cuenta Gratis</a>
+                                </div>
+                            </div>
+                        `;
+                    }
+                    await sendEmail({ to: guestEmail, subject, html, fromName: 'OFFSZN' });
+                } catch (e) {
+                    console.error("[GuestEmail] Error sending to guest:", e.message);
                 }
-            } catch (e) {
-                console.error("[ProducerEmail] Error notifying producer:", e);
+
+                // 4b. Correo al Productor
+                if (product.producer_id) {
+                    try {
+                        const { data: prodData } = await supabase.from('users').select('email, nickname').eq('id', product.producer_id).single();
+                        if (prodData?.email) {
+                            const prodNickname = prodData.nickname || 'Productor';
+                            const prodHtml = `
+                                <div style="font-family: 'Segoe UI', sans-serif; padding: 30px; background: #0a0a0a; border-radius: 12px; color: #fff; max-width: 600px;">
+                                    <h2 style="color: #3B82F6; margin-bottom:20px;">¡Nueva Descarga de tu Producto! 📥</h2>
+                                    <p style="color:#ccc; line-height:1.6;">Hola <b>${prodNickname}</b>, un usuario invitado (<b>${guestEmail}</b>) ha realizado una descarga gratuita de tu producto <b style="color:#fff;">${product.name}</b>.</p>
+                                    <p style="color:#888; line-height:1.5;">Esta es una notificación automática de OFFSZN.</p>
+                                    <a href="https://offszn.lat/cuenta/transacciones" style="display:inline-block; background:#3B82F6; color:#fff; padding:12px 25px; border-radius:8px; text-decoration:none; font-weight:700; margin-top:10px;">VER MIS TRANSACCIONES</a>
+                                </div>
+                            `;
+                            await sendEmail({
+                                to: prodData.email,
+                                subject: `📥 Nueva descarga gratuita (Invitado) - ${product.name}`,
+                                html: prodHtml,
+                                fromName: 'OFFSZN Activity'
+                            });
+                        }
+                    } catch (e) {
+                        console.error("[ProducerEmail] Error sending to producer:", e.message);
+                    }
+                }
             }
+        } catch (emailFlowErr) {
+            console.error("[GuestDownload] Global Email Flow Error:", emailFlowErr.message);
         }
 
         res.status(200).json({ message: 'OK' });
     } catch (err) {
-        console.error("Error in guest download:", err);
-        res.status(500).json({ error: 'Internal Error' });
+        console.error("[GuestDownload] Critical Error:", err);
+        res.status(500).json({ error: 'Internal Error', details: err.message });
     }
-};
-
+};
