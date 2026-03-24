@@ -492,7 +492,7 @@ export const createFreeOrder = async (req, res) => {
                         `;
                         await sendOffsznEmail({
                             to: prodData.email,
-                            subject: `📥 Nueva descarga gratuita de ${product.name}`,
+                            subject: `🚀 ¡Nueva descarga gratuita de ${product.name}! 📈`,
                             html: prodHtml,
                             fromName: 'OFFSZN No-Reply'
                         });
@@ -601,26 +601,26 @@ export const handleFreeGuestDownload = async (req, res) => {
                 try {
                     let html, subject;
                     if (existingUser) {
-                        subject = `✨ ¡Hola ${existingUser.nickname}! No olvides tu librería`;
+                        subject = `✨ ¡Hola de nuevo, ${existingUser.nickname}! No olvides tu preset 🎹`;
                         html = `
-                            <div style="font-family: 'Segoe UI', sans-serif; padding: 40px; background: #0a0a0a; color: #fff; max-width: 600px; border: 1px solid #222; border-radius: 16px;">
+                            <div style="font-family: 'Segoe UI', sans-serif; padding: 40px; background: #0a0a0a; color: #fff; max-width: 600px; border: 1px solid #222; border-radius: 20px;">
                                 <h2 style="color: #8b5cf6; margin-bottom: 20px;">¡Hola de nuevo, ${existingUser.nickname}! 👋</h2>
-                                <p style="color: #ccc; font-size: 1.1rem; line-height: 1.6;">Hemos visto que has descargado <b style="color:#fff;">${product.name}</b> como invitado.</p>
-                                <p style="color: #888; margin-bottom: 25px;">Parece que ya tienes una cuenta en OFFSZN. Para que tus próximas descargas se guarden automáticamente en tu librería personal, recuerda iniciar sesión la próxima vez.</p>
+                                <p style="color: #ccc; font-size: 1.1rem; line-height: 1.6;">Vimos que descargaste <b style="color:#fff;">${product.name}</b> como invitado.</p>
+                                <p style="color: #888; margin-bottom: 25px;">Ya tienes una cuenta en OFFSZN. Para que tus próximos kits y presets se guarden automáticamente, recuerda iniciar sesión. 🚀</p>
                                 <div style="text-align: center;">
-                                    <a href="https://offszn.lat/pages/login.html" style="display: inline-block; background: #fff; color: #000; padding: 14px 35px; border-radius: 12px; text-decoration: none; font-weight: 700; font-size: 1rem;">Inicia Sesión Ahora</a>
+                                    <a href="https://offszn.lat/pages/login" style="display: inline-block; background: #fff; color: #000; padding: 14px 35px; border-radius: 12px; text-decoration: none; font-weight: 700; font-size: 1rem;">Inicia Sesión Ahora</a>
                                 </div>
                             </div>
                         `;
                     } else {
-                        subject = `📥 Tu descarga de ${product.name} está lista`;
+                        subject = `📥 ¡Tu descarga de ${product.name} está lista! ✨`;
                         html = `
-                            <div style="font-family: 'Segoe UI', sans-serif; padding: 40px; background: #0a0a0a; color: #fff; max-width: 600px; border: 1px solid #222; border-radius: 16px;">
+                            <div style="font-family: 'Segoe UI', sans-serif; padding: 40px; background: #0a0a0a; color: #fff; max-width: 600px; border: 1px solid #222; border-radius: 20px;">
                                 <h2 style="color: #8b5cf6; margin-bottom: 20px;">¡Gracias por tu descarga! 📥</h2>
                                 <p style="color: #ccc; font-size: 1.1rem; line-height: 1.6;">Acabas de obtener <b style="color:#fff;">${product.name}</b>.</p>
-                                <p style="color: #888; margin-bottom: 25px;">¿Sabías que si creas una cuenta puedes guardar todos tus kits y presets en un solo lugar permanentemente? Es gratis y solo toma 30 segundos.</p>
+                                <p style="color: #888; margin-bottom: 25px;">¿Sabías que si creas una cuenta puedes guardar todos tus kits y presets en un solo lugar permanentemente? 🎹 Es gratis y solo toma 30 segundos.</p>
                                 <div style="text-align: center;">
-                                    <a href="https://offszn.lat/pages/register.html" style="display: inline-block; background: #8b5cf6; color: #fff; padding: 14px 35px; border-radius: 12px; text-decoration: none; font-weight: 700; font-size: 1rem;">Crear Cuenta Gratis</a>
+                                    <a href="https://offszn.lat/pages/register" style="display: inline-block; background: #8b5cf6; color: #fff; padding: 14px 35px; border-radius: 12px; text-decoration: none; font-weight: 700; font-size: 1rem;">Crear Cuenta Gratis 🚀</a>
                                 </div>
                             </div>
                         `;
@@ -641,14 +641,14 @@ export const handleFreeGuestDownload = async (req, res) => {
                                     <h2 style="color: #3B82F6; margin-bottom:20px;">¡Nueva Descarga de tu Producto! 📥</h2>
                                     <p style="color:#ccc; line-height:1.6;">Hola <b>${prodNickname}</b>, un usuario invitado (<b>${guestEmail}</b>) ha realizado una descarga gratuita de tu producto <b style="color:#fff;">${product.name}</b>.</p>
                                     <p style="color:#888; line-height:1.5;">Esta es una notificación automática de OFFSZN.</p>
-                                    <a href="https://offszn.lat/cuenta/transacciones" style="display:inline-block; background:#3B82F6; color:#fff; padding:12px 25px; border-radius:8px; text-decoration:none; font-weight:700; margin-top:10px;">VER MIS TRANSACCIONES</a>
+                                    <a href="https://offszn.lat/cuenta/transacciones" style="display:inline-block; background:#3B82F6; color:#fff; padding:12px 25px; border-radius:8px; text-decoration:none; font-weight:700; margin-top:10px;">VER MIS TRANSACCIONES 📈</a>
                                 </div>
                             `;
                             await sendEmail({
                                 to: prodData.email,
-                                subject: `📥 Nueva descarga gratuita (Invitado) - ${product.name}`,
+                                subject: `🚀 ¡Nueva descarga gratuita! (Invitado) - ${product.name} 📥`,
                                 html: prodHtml,
-                                fromName: 'OFFSZN Activity - No-Reply'
+                                fromName: 'OFFSZN No-Reply'
                             });
                         }
                     } catch (e) {
