@@ -327,10 +327,10 @@ const PaymentSettings = {
                 month: 'short',
                 year: 'numeric'
             });
-            const customerName = sale.order?.buyer?.nickname || "Usuario Anónimo";
-            const customerEmail = sale.order?.buyer?.email || "N/A";
+            const customerName = sale.order?.buyer?.nickname || (sale.order?.guest_email ? "Invitado" : "Usuario Anónimo");
+            const customerEmail = sale.order?.buyer?.email || sale.order?.guest_email || "N/A";
             const statusStr = sale.order?.status || 'completed';
-            const amountStr = parseFloat(sale.price_at_purchase).toFixed(2);
+            const amountStr = parseFloat(sale.price_at_purchase || 0).toFixed(2);
 
             const row = document.createElement('div');
             row.className = 'transaction-item tx-grid';

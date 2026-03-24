@@ -309,7 +309,17 @@ async function saveOrderToDB(paymentData) {
 
         await supabase.from('order_items').insert(orderItems);
 
-        // 3. Increment sales_count for each product
+        // 3. Crear logs de descarga iniciales
+        const downloadLogs = orderItems.map(item => ({
+            order_id: order.id,
+            product_id: item.product_id,
+            user_id: userId,
+            ip_address: 'mercadopago_webhook',
+            user_agent: 'MercadoPago/Webhook'
+        }));
+        await supabase.from('download_logs').insert(downloadLogs);
+
+        // 4. Increment sales_count for each product
         for (const item of orderItems) {
             try {
                 const { data: prod } = await supabase
@@ -426,6 +436,19 @@ export const createFreeOrder = async (req, res) => {
 
         if (itemError) throw itemError;
 
+        // 3.5 Registrar en bitácora de seguridad
+        try {
+            await supabase.from('download_logs').insert({
+                order_id: order.id,
+                product_id: product.id,
+                user_id: userId,
+                ip_address: req.ip || req.headers['x-forwarded-for'],
+                user_agent: req.headers['user-agent']
+            });
+        } catch (logErr) {
+            console.error("[Log] Error creating download log:", logErr);
+        }
+
         // 4. Incrementar contador de descargas
         await supabase.rpc('increment_product_downloads', { row_id: product.id });
 
@@ -517,6 +540,42 @@ export const handleFreeGuestDownload = async (req, res) => {
         // 2. Incrementar contador de descargas
         await supabase.rpc('increment_product_downloads', { row_id: product.id });
 
+        // 2.5 CREAR ORDEN Y LOG (Para que aparezca en Transacciones/Dashboard)
+        let orderId = null;
+        try {
+            const { data: newOrder, error: orderErr } = await supabase
+                .from('orders')
+                .insert({
+                    user_id: null,
+                    guest_email: guestEmail,
+                    transaction_id: `GUEST-${Date.now()}`,
+                    status: 'completed',
+                    total_price: 0
+                })
+                .select()
+                .single();
+
+            if (!orderErr && newOrder) {
+                orderId = newOrder.id;
+                await supabase.from('order_items').insert({
+                    order_id: orderId,
+                    product_id: productId,
+                    quantity: 1,
+                    price_at_purchase: 0
+                });
+
+                // Registrar en bitácora
+                await supabase.from('download_logs').insert({
+                    order_id: orderId,
+                    product_id: productId,
+                    ip_address: req.ip || req.headers['x-forwarded-for'],
+                    user_agent: req.headers['user-agent']
+                });
+            }
+        } catch (dbErr) {
+            console.error("Error persisting guest order:", dbErr);
+        }
+
         // 3. Buscar si el usuario ya existe para personalizar el correo
         const { data: existingUser } = await supabase
             .from('users')
@@ -564,9 +623,36 @@ export const handleFreeGuestDownload = async (req, res) => {
             });
         }
 
+        // NOTIFICAR AL PRODUCTOR (NUEVO PARA GUESTS)
+        if (product.producer_id) {
+            try {
+                const { data: prodData } = await supabase.from('users').select('email, nickname').eq('id', product.producer_id).single();
+                if (prodData?.email) {
+                    const prodNickname = prodData.nickname || 'Productor';
+                    const prodHtml = `
+                        <div style="font-family: 'Segoe UI', sans-serif; padding: 30px; background: #0a0a0a; border-radius: 12px; color: #fff; max-width: 600px;">
+                            <h2 style="color: #3B82F6; margin-bottom:20px;">¡Nueva Descarga de tu Producto! 📥</h2>
+                            <p style="color:#ccc; line-height:1.6;">Hola <b>${prodNickname}</b>, un usuario invitado (<b>${guestEmail}</b>) ha realizado una descarga gratuita de tu producto <b style="color:#fff;">${product.name}</b>.</p>
+                            <p style="color:#888; line-height:1.5;">Esta es una notificación automática de OFFSZN.</p>
+                            <a href="https://offszn.lat/cuenta/transacciones" style="display:inline-block; background:#3B82F6; color:#fff; padding:12px 25px; border-radius:8px; text-decoration:none; font-weight:700; margin-top:10px;">VER MIS TRANSACCIONES</a>
+                        </div>
+                    `;
+                    await sendOffsznEmail({
+                        to: prodData.email,
+                        subject: `📥 Nueva descarga gratuita (Invitado) - ${product.name}`,
+                        html: prodHtml,
+                        fromName: 'OFFSZN Activity'
+                    });
+                }
+            } catch (e) {
+                console.error("[ProducerEmail] Error notifying producer:", e);
+            }
+        }
+
         res.status(200).json({ message: 'OK' });
     } catch (err) {
         console.error("Error in guest download:", err);
         res.status(500).json({ error: 'Internal Error' });
     }
 };
+

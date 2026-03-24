@@ -31,9 +31,9 @@ export const sendOffsznEmail = async ({ to, subject, html, fromName = 'OFFSZN' }
         const mailer = getTransporter();
         if (!mailer) throw new Error('Transporter not configured');
 
-        // Always send from the configured alias
+        // Always send from the configured account to ensure deliverability (especially for Gmail)
         const mailOptions = {
-            from: `"${fromName}" <no-reply@offszn.lat>`,
+            from: `"${fromName}" <${EMAIL_USER}>`,
             to,
             subject,
             html
