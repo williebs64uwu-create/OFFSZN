@@ -10,6 +10,7 @@
         window.supabaseClient = null;
     </script>
     <script src="/script/auth-utils.js?v=11"></script>
+    <script src="/script/r2-loader.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OFFSZN | Command Center</title>
@@ -2033,9 +2034,8 @@
 
                 if (item.type === 'product') {
                     const typeLabel = typeMap[item.category] || 'Producto';
-                    // ?? AUTHORIZE R2 IMAGE WITH VERSION
-                    const authorizedImg = item.img ? await AuthUtils.getAuthorizedUrl(item.img, item.storage_version || item.r2_version || 'v1', item.id) : 'https://via.placeholder.com/80';
-                    thumb = `<img src="${authorizedImg}" data-r2-version="${item.r2_version || 'v1'}" crossorigin="anonymous" class="activity-thumb" alt="" style="width:48px; height:48px; border-radius:6px; object-fit:cover;">`;
+                    const imgUrl = item.img || '/images/portada-default.png';
+                    thumb = `<img src="${imgUrl}" data-r2-version="${item.storage_version || item.r2_version || 'v1'}" data-product-id="${item.id}" class="activity-thumb" alt="" style="width:48px; height:48px; border-radius:6px; object-fit:cover;">`;
                     typeBadge = `<span class="activity-type-badge" style="font-size:10px; padding:2px 6px; border-radius:4px; background:#222; color:#aaa; margin-left:auto;">${typeLabel}</span>`;
                 } else if (item.type === 'sale') {
                     thumb = `<div style="width:48px; height:48px; border-radius:6px; display:flex; align-items:center; justify-content:center; background:rgba(16, 185, 129, 0.2); color:#10B981;"><i class="bi bi-currency-dollar"></i></div>`;

@@ -10,6 +10,7 @@
         window.supabaseClient = null;
     </script>
     <script src="/script/auth-utils.js?v=11"></script>
+    <script src="/script/r2-loader.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OFFSZN | Command Center</title>
@@ -2794,50 +2795,7 @@
                 // Combine FIRST to ensure we modify the objects that get rendered
                 let allItems = [...drafts.map(d => ({ ...d, isDraft: true, status: 'draft' })), ...products];
 
-                // 3. PROCESS ALL ITEMS FOR COVERS (Sign URLs if needed)
-                await Promise.all(allItems.map(async item => {
-                    // 🔥 FIX: Check files_data.cover for drafts first
-                    // Ensure files_data is parsed if it's a string (Supabase quirk)
-                    if (item.files_data && typeof item.files_data === 'string') {
-                        try { item.files_data = JSON.parse(item.files_data); } catch (e) { console.warn('Failed to parse files_data', e); }
-                    }
-
-                    let coverPath = item.image_url || item.cover_url;
-                    if (item.files_data && item.files_data.cover) {
-                        coverPath = item.files_data.cover;
-                        // console.log("Found draft cover:", coverPath); 
-                    }
-
-                    if (!coverPath) return;
-
-                    // Normalize URL (Sign if R2/Private)
-                    const isR2Key = coverPath.includes('loopkit-drafts/') ||
-                        coverPath.includes('drumkit-drafts/') ||
-                        coverPath.includes('preset-drafts/') ||
-                        (!coverPath.startsWith('http') && coverPath.startsWith('products/'));
-
-                    if (isR2Key) {
-                        item.signed_cover_url = await window.getAuthorizedUrl(coverPath, item.storage_version || item.r2_version || 'v1', item.id);
-                    } else if (coverPath.startsWith('http')) {
-                        if (coverPath.includes('r2.cloudflarestorage.com') || !coverPath.includes('supabase.co')) {
-                            item.signed_cover_url = await window.getAuthorizedUrl(coverPath, item.storage_version || item.r2_version || 'v1', item.id);
-                        } else {
-                            item.signed_cover_url = coverPath; // Public Supabase URL
-                        }
-                    } else {
-                        // Legacy Path (Bucket ID)
-                        let bucket = 'beat-covers';
-                        if (item.isDraft) bucket = 'beat-drafts';
-
-                        // Type specific buckets
-                        if (dbType === 'drumkit') bucket = item.isDraft ? 'drumkit-drafts' : 'drumkit-covers';
-                        if (dbType === 'loopkit') bucket = item.isDraft ? 'loopkit-drafts' : 'loopkit-covers';
-                        if (dbType === 'preset') bucket = item.isDraft ? 'preset-drafts' : 'preset-covers';
-
-                        const { data } = await supabaseClient.storage.from(bucket).createSignedUrl(coverPath, 3600);
-                        if (data?.signedUrl) item.signed_cover_url = data.signedUrl;
-                    }
-                }));
+                // Manual signing loop removed; handled by r2-loader.js
 
                 // FILTER SOFT-DELETED ITEMS
                 allItems = allItems.filter(item => {
@@ -2854,11 +2812,11 @@
                 const itemsToPreload = allItems.slice(0, 12);
                 const imagePromises = itemsToPreload.map(item => {
                     return new Promise((resolve) => {
-                        const src = item.signed_cover_url || item.image_url || item.cover_url || '/images/portada-default.png';
+                        const src = item.image_url || item.cover_url || (item.files_data && item.files_data.cover) || '/images/portada-default.png';
                         if (!src) return resolve();
 
                         const img = new Image();
-                        img.crossOrigin = "anonymous"; // Prevents CORB on preloads
+                        img.src = src;
                         img.src = src;
                         img.onload = resolve;
                         img.onerror = resolve;
@@ -2948,8 +2906,7 @@
                     }
                 }
 
-                const rawImg = p.signed_cover_url || p.image_url || p.cover_url || null;
-                const img = (rawImg && rawImg.length > 5) ? rawImg : '/images/portada-default.png';
+                const img = p.image_url || p.cover_url || (p.files_data && p.files_data.cover) || '/images/portada-default.png';
                 const priceVal = p.price_basic || p.price_usd || p.price || '0.00';
 
                 const dateObj = new Date(p.created_at || p.updated_at || Date.now());
@@ -2980,7 +2937,8 @@
                 card.innerHTML = `
                 <div style="width:100%; aspect-ratio:1/1; position:relative; background:#111;">
                     <img src="${img}"
-                        crossorigin="anonymous"
+                        data-r2-version="${p.storage_version || p.r2_version || 'v1'}"
+                        data-product-id="${p.id}"
                         onload="this.style.opacity='1'"
                         onerror="this.src='/images/portada-default.png'; this.style.opacity='1';"
                         style="width:100%; height:100%; object-fit:cover; opacity:0; transition:opacity 0.4s ease;">
