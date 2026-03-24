@@ -210,32 +210,37 @@ window.openDownloadGateModal = function (url, producerName, productId) {
 window.completeGate = async function (url, productId, guestEmail = null) {
     const btn = document.getElementById('btn-gate-action');
     const originalHTML = btn.innerHTML;
+    
+    // 1. Prevenir múltiples clics
+    if (btn.disabled) return;
     btn.disabled = true;
     btn.innerHTML = '<div class="spinner" style="width:20px; height:20px; border-width:2px; margin:0 auto;"></div>';
 
     try {
         const product = window.currentProductData;
         let producerObj = product?.producer;
-        if (Array.isArray(producerObj)) producerObj = producerObj[0]; // Robustness fix
+        if (Array.isArray(producerObj)) producerObj = producerObj[0];
 
         const producerId = producerObj?.id;
         const currentUserId = window.currentUserId;
 
-        // 0. GUEST EMAIL TRACKING (New)
+        // 2. Registro de Invitado (AWAIT para asegurar concurrencia)
         if (!currentUserId && guestEmail) {
             console.log("[Gate] Recording guest email download...");
-            fetch('/api/orders/free-guest', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ productId: productId, guestEmail: guestEmail })
-            }).catch(err => console.error("[Gate] Guest sync error:", err));
+            try {
+                await fetch('/api/orders/free-guest', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ productId: productId, guestEmail: guestEmail })
+                });
+            } catch (err) {
+                console.warn("[Gate] Guest sync failed (non-blocking):", err);
+            }
         }
 
-        // 1. Follow Logic (Only if logged in and not owner and not already following)
+        // 3. Lógica de Follow (Solo si está logueado)
         if (currentUserId && producerId && currentUserId !== producerId) {
-            // Check if already following via window.currentUserFollowing set (if available)
             const isFollowing = window.currentUserFollowing && window.currentUserFollowing.has(producerId);
-
             if (!isFollowing) {
                 console.log("[Gate] Auto-following producer...");
                 const response = await fetch(`/api/users/${producerId}/follow`, {
@@ -245,106 +250,75 @@ window.completeGate = async function (url, productId, guestEmail = null) {
                         'Authorization': `Bearer ${localStorage.getItem('authToken')}`
                     }
                 });
-
-                if (response.ok) {
-                    if (window.currentUserFollowing) window.currentUserFollowing.add(producerId);
-                    console.log("[Gate] Follow successful.");
-                } else {
-                    console.warn("[Gate] Follow failed, but proceeding to download.");
-                }
+                if (response.ok && window.currentUserFollowing) window.currentUserFollowing.add(producerId);
             }
-        } else {
-            console.log("[Gate] Guest, Owner or local check passed, skipping follow.");
         }
 
-        // 2. Dashboard Persistence ($0 Order) - Only if logged in
+        // 4. Record en Dashboard ($0 Order) - Solo si está logueado
         if (currentUserId && productId && productId !== 'undefined') {
             console.log("[Gate] Recording free download in dashboard...");
-            fetch('/api/orders/free', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-                },
-                body: JSON.stringify({ productId: productId })
-            }).then(r => r.json()).then(data => console.log("[Gate] Dashboard sync:", data))
-                .catch(err => console.error("[Gate] Dashboard sync error:", err));
+            try {
+                await fetch('/api/orders/free', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+                    },
+                    body: JSON.stringify({ productId: productId })
+                });
+            } catch (e) {
+                console.warn("[Gate] Dashboard sync failed:", e);
+            }
         }
 
-        // 3. Email notifications are now handled exclusively by the backend (/api/orders/free)
-        // to ensure they come from no-reply@offszn.lat and use the correct offszn.lat domain.
-        console.log("[Gate] Backend handling email notifications...");
+        // 5. Resolución de URL de descarga (R2)
+        let finalUrl = url;
+        if (url && !url.startsWith('blob:') && !url.startsWith('data:')) {
+            if (!url.startsWith('http') || url.includes('cloudflarestorage.com') || url.includes('r2.dev')) {
+                console.log("[Gate] Resolving R2 URL...", url);
+                try {
+                    const token = localStorage.getItem('authToken');
+                    const headers = { 'Content-Type': 'application/json' };
+                    if (token) headers['Authorization'] = `Bearer ${token}`;
 
-        // 4. Download Trigger (Direct)
-        setTimeout(async () => {
-            try {
+                    const versionToUse = window.currentProductData?.storage_version || window.currentProductData?.r2_version || 'v2';
+                    const res = await fetch('/api/r2/download-url', {
+                        method: 'POST',
+                        headers: headers,
+                        body: JSON.stringify({ key: url, version: versionToUse, productId: productId })
+                    });
 
-                // R2 Key Resolution (If url doesn't start with blob or data)
-                let finalUrl = url;
-                if (url && !url.startsWith('blob:') && !url.startsWith('data:')) {
-                    // Si es una URL de R2 directa (cloudflarestorage), o si es un path relativo
-                    if (!url.startsWith('http') || url.includes('cloudflarestorage.com') || url.includes('r2.dev')) {
-                        console.log("[Gate] Detected R2/Storage Key or R2 URL. Resolving...", url);
-                        try {
-                            const token = localStorage.getItem('authToken'); // Need auth for R2 signing
-                            const headers = { 'Content-Type': 'application/json' };
-                            if (token) headers['Authorization'] = `Bearer ${token}`;
-
-                            const versionToUse = window.currentProductData?.storage_version || window.currentProductData?.r2_version || 'v1';
-                            const currentProductId = window.currentProductData?.id || productId;
-                            const res = await fetch('/api/r2/download-url', {
-                                method: 'POST',
-                                headers: headers,
-                                body: JSON.stringify({ key: url, version: versionToUse, productId: currentProductId })
-                            });
-
-                            if (res.ok) {
-                                const data = await res.json();
-                                if (data.downloadUrl) {
-                                    finalUrl = data.downloadUrl;
-                                    console.log("[Gate] Resolved URL:", finalUrl);
-                                }
-                            } else {
-                                console.warn("[Gate] Failed to resolve R2 key. Status:", res.status);
-                            }
-                        } catch (r2Err) {
-                            console.error("[Gate] R2 Resolution Error:", r2Err);
-                        }
+                    if (res.ok) {
+                        const data = await res.json();
+                        if (data.downloadUrl) finalUrl = data.downloadUrl;
                     }
-                } // <-- Added closing brace for the outer if block
-
-                console.log("[Gate] Starting direct download via link click...");
-                const a = document.createElement('a');
-                a.href = finalUrl;
-                // We use standard download behavior. Cross-origin relies on Content-Disposition header.
-                const fileName = url.split('/').pop().split('?')[0] || 'descarga-offszn.mp3';
-                a.download = fileName;
-                document.body.appendChild(a);
-                a.click();
-                
-                setTimeout(() => {
-                    document.body.removeChild(a);
-                }, 200);
-
-            } catch (downloadErr) {
-                console.warn("[Gate] Direct link click failed, falling back to simple trigger", downloadErr);
-                const a = document.createElement('a');
-                a.href = typeof finalUrl !== 'undefined' ? finalUrl : url;
-                a.target = '_blank';
-                a.download = '';
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
+                } catch (r2Err) {
+                    console.error("[Gate] R2 Resolution Error:", r2Err);
+                }
             }
+        }
 
-            window.closeDownloadGateModal();
-            btn.innerHTML = originalHTML;
-            btn.disabled = false;
-        }, 800);
+        // 6. Activar descarga
+        console.log("[Gate] Triggering download...");
+        const a = document.createElement('a');
+        a.href = finalUrl;
+        a.download = url.split('/').pop().split('?')[0] || 'descarga-offszn';
+        a.target = '_blank';
+        document.body.appendChild(a);
+        a.click();
+        
+        setTimeout(() => document.body.removeChild(a), 200);
 
     } catch (e) {
         console.error("[Gate] Critical error:", e);
-        window.open(url, '_blank'); // Fail open for the user
-        window.closeDownloadGateModal();
+        // Fallback: intentar abrir en nueva pestaña
+        window.open(url, '_blank');
+    } finally {
+        // SIEMPRE cerrar el modal y restaurar el botón
+        setTimeout(() => {
+            window.closeDownloadGateModal();
+            btn.innerHTML = originalHTML;
+            btn.disabled = false;
+        }, 500);
     }
 }

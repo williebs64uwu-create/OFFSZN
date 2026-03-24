@@ -251,6 +251,7 @@ app.use('/api', requestRoutes);
 app.use('/api', analyzerRoutes);
 app.use('/api', profileRoutes);
 app.use('/api', subscriptionRoutes);
+app.use('/api', r2Routes);
 
 // B. PROTECTED ROUTERS (Use global router.use(authenticateTokenMiddleware) internally)
 // These MUST come after public/hybrid ones if mounted on the same prefix (/api)

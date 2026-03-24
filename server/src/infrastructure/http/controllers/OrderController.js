@@ -494,7 +494,7 @@ export const createFreeOrder = async (req, res) => {
                             to: prodData.email,
                             subject: `📥 Nueva descarga gratuita de ${product.name}`,
                             html: prodHtml,
-                            fromName: 'OFFSZN Activity'
+                            fromName: 'OFFSZN No-Reply'
                         });
                     }
                 }
@@ -625,7 +625,7 @@ export const handleFreeGuestDownload = async (req, res) => {
                             </div>
                         `;
                     }
-                    await sendEmail({ to: guestEmail, subject, html, fromName: 'OFFSZN' });
+                    await sendEmail({ to: guestEmail, subject, html, fromName: 'OFFSZN No-Reply' });
                 } catch (e) {
                     console.error("[GuestEmail] Error sending to guest:", e.message);
                 }
@@ -648,7 +648,7 @@ export const handleFreeGuestDownload = async (req, res) => {
                                 to: prodData.email,
                                 subject: `📥 Nueva descarga gratuita (Invitado) - ${product.name}`,
                                 html: prodHtml,
-                                fromName: 'OFFSZN Activity'
+                                fromName: 'OFFSZN Activity - No-Reply'
                             });
                         }
                     } catch (e) {

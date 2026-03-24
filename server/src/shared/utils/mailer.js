@@ -31,16 +31,19 @@ export const sendOffsznEmail = async ({ to, subject, html, fromName = 'OFFSZN' }
         const mailer = getTransporter();
         if (!mailer) throw new Error('Transporter not configured');
 
-        // Always send from the configured account to ensure deliverability (especially for Gmail)
+        // We attempt to send from the official no-reply address.
+        // If the SMTP provider (like Gmail) is strict, it may rewrite the FROM address to the 
+        // authenticated account, but we'll also include it as Reply-To to guide users.
         const mailOptions = {
-            from: `"${fromName}" <${EMAIL_USER}>`,
+            from: `"${fromName}" <no-reply@offszn.lat>`,
+            replyTo: 'no-reply@offszn.lat',
             to,
             subject,
             html
         };
 
         const info = await mailer.sendMail(mailOptions);
-        console.log(`[Mailer] Success: Email sent to ${to} (${info.messageId})`);
+        console.log(`[Mailer] Success: Email sent to ${to} (${info.messageId}) from no-reply@offszn.lat`);
         return { success: true, messageId: info.messageId };
     } catch (err) {
         console.error('[Mailer] Failed to send email:', err);
