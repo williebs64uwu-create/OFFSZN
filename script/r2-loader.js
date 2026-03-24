@@ -41,8 +41,10 @@
                 el.style.transition = 'opacity 0.4s ease';
 
                 try {
-                    // Detect relative Supabase path (starts with UUID folder)
-                    const isRelativeSupabase = typeof originalSrc === 'string' && !originalSrc.startsWith('http') && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\//i.test(originalSrc);
+                    // Detect relative Supabase path (starts with UUID folder OR is a legacy root file without slashes like 1774225861578_cover.jpg)
+                    const isUUIDFolder = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\//i.test(originalSrc);
+                    const isLegacyRoot = !originalSrc.includes('/') && /\.(jpg|jpeg|png|webp|gif|svg|mp3|wav|zip)$/i.test(originalSrc);
+                    const isRelativeSupabase = typeof originalSrc === 'string' && !originalSrc.startsWith('http') && (isUUIDFolder || isLegacyRoot);
                     
                     const r2Version = el.getAttribute('data-r2-version') || (originalSrc.includes('supabase.co') || isRelativeSupabase ? 'supabase' : 'v1');
                     const productId = el.getAttribute('data-product-id');
@@ -68,7 +70,11 @@
         const bgPath = el.getAttribute('data-r2-bg');
         if (bgPath) {
             try {
-                const r2Version = el.getAttribute('data-r2-version') || (bgPath.includes('supabase.co') ? 'supabase' : 'v1');
+                const isUUIDFolder = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\//i.test(bgPath);
+                const isLegacyRoot = !bgPath.includes('/') && /\.(jpg|jpeg|png|webp|gif|svg|mp3|wav|zip)$/i.test(bgPath);
+                const isRelativeSupabase = typeof bgPath === 'string' && !bgPath.startsWith('http') && (isUUIDFolder || isLegacyRoot);
+
+                const r2Version = el.getAttribute('data-r2-version') || (bgPath.includes('supabase.co') || isRelativeSupabase ? 'supabase' : 'v1');
                 const productId = el.getAttribute('data-product-id');
                 const authorizedUrl = await window.getAuthorizedUrl(bgPath, r2Version, productId);
                 if (authorizedUrl) {

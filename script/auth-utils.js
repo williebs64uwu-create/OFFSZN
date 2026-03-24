@@ -500,7 +500,9 @@ window.AuthUtils = {
      */
     _handleSigningFailure: async function (key, rawOriginal) {
         // Recognition of UUID/covers as public even if 'products/' was stripped
-        const isProductAsset = key.includes('/covers/') || key.includes('/previews/') || key.includes('/mp3/');
+        const isProductAsset = key.includes('/covers/') || key.includes('/previews/') || key.includes('/mp3/') || 
+            // Also recognize legacy Cloudinary/Timestamped root files e.g., 1774225861578_cover_edit.jpg
+            (!key.includes('/') && /\.(jpg|jpeg|png|webp|gif|mp3|wav)$/i.test(key));
 
         console.warn(`AuthUtils: Signing failed for ${key} (ProductAsset: ${isProductAsset})`);
 
@@ -510,6 +512,12 @@ window.AuthUtils = {
         if (isPublic) {
             // Check if it's already a full URL that was passed in
             if (rawOriginal && rawOriginal.includes('supabase.co')) return rawOriginal;
+
+            // If it's a legacy root file without prefix, it was in Supabase `products/` originally
+            if (!key.includes('/') && /\.(jpg|jpeg|png|webp|gif)$/i.test(key)) {
+                const sbUrl = this.SUPABASE_URL || "https://qtjpvztpgfymjhhpoouq.supabase.co";
+                return `${sbUrl}/storage/v1/object/public/products/${key}`;
+            }
 
             // 🔥 FIX: Use _apiUrl which already includes /api
             const apiRoot = this._apiUrl || '/api';
