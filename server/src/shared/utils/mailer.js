@@ -18,7 +18,11 @@ function getTransporter() {
         auth: {
             user: EMAIL_USER,
             pass: EMAIL_PASS
-        }
+        },
+        // Add timeouts to prevent hangs if SMTP server is slow
+        connectionTimeout: 10000, // 10s
+        greetingTimeout: 10000,
+        socketTimeout: 15000
     });
     return transporter;
 }

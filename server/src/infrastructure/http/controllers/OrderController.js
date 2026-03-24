@@ -468,12 +468,12 @@ export const createFreeOrder = async (req, res) => {
                     </div>
                 `;
                 const { sendOffsznEmail } = await import('../../../shared/utils/mailer.js');
-                await sendOffsznEmail({
+                sendOffsznEmail({
                     to: userData.email,
                     subject: `🎁 Descarga Lista - ${product.name}`,
                     html: freeHtml,
                     fromName: 'OFFSZN'
-                });
+                }).catch(e => console.error("[Email] Background receipt failed:", e));
 
                 // Notify Producer about the free download
                 if (product.producer_id) {
@@ -490,12 +490,12 @@ export const createFreeOrder = async (req, res) => {
                                 <p style="font-size:0.75rem; color:#555;">Sigue así. Equipo OFFSZN</p>
                             </div>
                         `;
-                        await sendOffsznEmail({
+                        sendOffsznEmail({
                             to: prodData.email,
                             subject: `🚀 ¡Nueva descarga gratuita de ${product.name}! 📈`,
                             html: prodHtml,
                             fromName: 'OFFSZN No-Reply'
-                        });
+                        }).catch(e => console.error("[Email] Background producer notification failed:", e));
                     }
                 }
             }
@@ -625,7 +625,7 @@ export const handleFreeGuestDownload = async (req, res) => {
                             </div>
                         `;
                     }
-                    await sendEmail({ to: guestEmail, subject, html, fromName: 'OFFSZN No-Reply' });
+                    sendEmail({ to: guestEmail, subject, html, fromName: 'OFFSZN No-Reply' }).catch(e => console.error("[GuestEmail] Background error:", e.message));
                 } catch (e) {
                     console.error("[GuestEmail] Error sending to guest:", e.message);
                 }
@@ -644,12 +644,12 @@ export const handleFreeGuestDownload = async (req, res) => {
                                     <a href="https://offszn.lat/cuenta/transacciones" style="display:inline-block; background:#3B82F6; color:#fff; padding:12px 25px; border-radius:8px; text-decoration:none; font-weight:700; margin-top:10px;">VER MIS TRANSACCIONES 📈</a>
                                 </div>
                             `;
-                            await sendEmail({
+                            sendEmail({
                                 to: prodData.email,
                                 subject: `🚀 ¡Nueva descarga gratuita! (Invitado) - ${product.name} 📥`,
                                 html: prodHtml,
                                 fromName: 'OFFSZN No-Reply'
-                            });
+                            }).catch(e => console.error("[ProducerEmail] Background error:", e.message));
                         }
                     } catch (e) {
                         console.error("[ProducerEmail] Error sending to producer:", e.message);

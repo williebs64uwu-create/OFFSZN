@@ -132,12 +132,12 @@ export const registerUser = async (req, res) => {
                     <p style="font-size: 0.8rem; color: #555; text-align: center;">¿Necesitas ayuda? Escríbenos a <a href="mailto:soporte@offszn.lat" style="color: #8b5cf6; text-decoration: none;">soporte@offszn.lat</a></p>
                 </div>
             `;
-            await sendOffsznEmail({
+            sendOffsznEmail({
                 to: newUser.email,
                 subject: '🌊 Bienvenido a la familia OFFSZN',
                 html: welcomeHtml,
                 fromName: 'OFFSZN'
-            });
+            }).catch(mailErr => console.error("[Email] Welcome failed:", mailErr));
         } catch (mailErr) {
             console.error("[Email] Welcome failed:", mailErr);
         }
@@ -221,12 +221,12 @@ export const loginUser = async (req, res) => {
                     </div>
                 </div>
             `;
-            await sendOffsznEmail({
+            sendOffsznEmail({
                 to: user.email,
                 subject: '🛡️ Seguridad: Nuevo inicio de sesión detectado',
                 html: loginHtml,
                 fromName: 'OFFSZN Security'
-            });
+            }).catch(mailErr => console.error("[Email] Login alert failed:", mailErr));
         } catch (mailErr) {
             console.error("[Email] Login alert failed:", mailErr);
         }
