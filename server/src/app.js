@@ -240,22 +240,30 @@ app.post('/api/newsletter/subscribe', async (req, res) => {
     }
 });
 
+// --- 2.5 API ROUTING (MOUNTED ORDER MATTERS) ---
+// Groups routers by their authentication strategy to avoid intercepting public paths.
+
+// A. PUBLIC & HYBRID ROUTERS (Handle their own auth internally or are fully public)
 app.use('/api', publicRoutes);
-
-app.use('/api', requestRoutes);
-app.use('/api/auth', authRoutes);
 app.use('/api', productRoutes);
-app.use('/api', cartRoutes);
 app.use('/api', orderRoutes);
-app.use('/api', userRoutes);
-app.use('/api/admin', adminRoutes);
-app.use('/api', profileRoutes);
-app.use('/api', chatRoutes);
-app.use('/api', paypalRoutes);
-
-app.use('/api', subscriptionRoutes);
-app.use('/api', youtubeRoutes);
+app.use('/api', requestRoutes);
 app.use('/api', analyzerRoutes);
+app.use('/api', profileRoutes);
+app.use('/api', subscriptionRoutes);
+
+// B. PROTECTED ROUTERS (Use global router.use(authenticateTokenMiddleware) internally)
+// These MUST come after public/hybrid ones if mounted on the same prefix (/api)
+app.use('/api', cartRoutes);
+app.use('/api', userRoutes);
+app.use('/api', chatRoutes);
+
+// C. SPECIFIC PREFIX ROUTERS
+app.use('/api/auth', authRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/reels', reelsRoutes);
+app.use('/api', paypalRoutes);
+app.use('/api', youtubeRoutes);
 
 // --- 3. CLEAN URLS & STATIC FILES (MIDDLEWARE) ---
 
