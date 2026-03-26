@@ -139,14 +139,18 @@ window.showArtistCard = async function (event, element) {
     let initialData;
     try {
         initialData = JSON.parse(dataStr);
-    } catch (e) { return; }
+    } catch (e) {
+        // If it's not JSON, it's either an ID or a nickname.
+        // We'll treat it as a nickname since that's what window.HC_Cache.get expects first.
+        initialData = { nickname: dataStr };
+    }
 
     setupHoverCard();
     const card = document.getElementById('artist-hover-card');
 
     // RESOLVE DATA (Move up)
     let fullData = initialData;
-    let cached = window.HC_Cache.get(initialData.nickname);
+    let cached = window.HC_Cache.get(initialData.id || initialData.nickname);
 
     if (cached && !(cached instanceof Promise)) {
         fullData = { ...initialData, ...cached };
@@ -249,7 +253,8 @@ window.showArtistCard = async function (event, element) {
             if (!hasRealStats) {
                 let fetchProm = cached instanceof Promise ? cached : null;
                 if (!fetchProm) {
-                    fetchProm = fetch(`/api/users/${initialData.nickname}`)
+                    const identifier = initialData.id || initialData.nickname;
+                    fetchProm = fetch(`/api/users/${identifier}`)
                         .then(r => r.ok ? r.json() : null)
                         .then(data => {
                             if (!data) return null;

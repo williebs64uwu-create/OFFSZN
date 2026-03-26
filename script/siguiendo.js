@@ -255,11 +255,13 @@ function createProducerCard(user) {
     const roleEscaped = escapeHTML(user.role || 'Productor');
 
     card.innerHTML = `
-        <div style="width: 80px; height: 80px; border-radius: 50%; overflow: hidden; border: 2px solid rgba(255, 255, 255, 0.1); flex-shrink: 0; margin-bottom: 8px;">
+        <div style="width: 80px; height: 80px; border-radius: 50%; overflow: hidden; border: 2px solid rgba(255, 255, 255, 0.1); flex-shrink: 0; margin-bottom: 8px;" 
+             data-artist="${user.id}" onmouseenter="showArtistCard(event, this)" onmouseleave="hideArtistCard(event, this)">
             ${avatarContent}
         </div>
         <div style="display: flex; flex-direction: column; gap: 2px; width: 100%; flex: 1; min-height: 0; overflow: hidden;">
-            <div style="font-size: 0.9rem; font-weight: 600; color: #fff; display: flex; align-items: center; justify-content: center; gap: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+            <div style="font-size: 0.9rem; font-weight: 600; color: #fff; display: flex; align-items: center; justify-content: center; gap: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"
+                 data-artist="${user.id}" onmouseenter="showArtistCard(event, this)" onmouseleave="hideArtistCard(event, this)">
                 ${nicknameEscaped}
                 ${user.is_verified ? '<i class="bi bi-patch-check-fill" style="color: #fff; font-size: 0.8rem;"></i>' : ''}
             </div>

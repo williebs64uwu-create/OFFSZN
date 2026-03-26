@@ -289,7 +289,11 @@
                     } else if (n.type === 'payment_method_missing') {
                         const buyerName = n.data?.buyer_username || 'Un comprador';
                         const prodName = n.data?.product_name || 'un producto';
-                        const buyerHtml = `<strong class="artist-hover-trigger" data-username="${buyerName}" style="cursor:pointer;">${buyerName}</strong>`;
+                        const buyerHtml = `<strong class="artist-hover-trigger" 
+                                                   data-artist="${buyerName}" 
+                                                   onmouseenter="window.showArtistCard(event, this)" 
+                                                   onmouseleave="window.hideArtistCard(event, this)"
+                                                   style="cursor:pointer;">${buyerName}</strong>`;
                         finalMessage = `${buyerHtml} intentó comprar <strong>"${prodName}"</strong> y no pudo. Añade tus métodos de pago dando clic aquí.`;
                     }
 
@@ -329,7 +333,11 @@
                     const catLabel = cat === 'beat' ? 'Beat' : (cat.charAt(0).toUpperCase() + cat.slice(1));
                     const inviteId = `invite-${invite.id}`;
                     const percent = invite.royalty_percent ? `(${invite.royalty_percent}%)` : '';
-                    const nameHtml = `<strong class="artist-hover-trigger" data-username="${name}" style="cursor:pointer;">${name}</strong>`;
+                    const nameHtml = `<strong class="artist-hover-trigger" 
+                                              data-artist="${name}" 
+                                              onmouseenter="window.showArtistCard(event, this)" 
+                                              onmouseleave="window.hideArtistCard(event, this)"
+                                              style="cursor:pointer;">${name}</strong>`;
 
                     return {
                         id: inviteId,
@@ -346,7 +354,11 @@
                 // B. Accepted Invites
                 const acceptedNotifs = acceptedList.map(invite => {
                     const name = invite.collaborator?.nickname || invite.collaborator?.first_name || 'Un usuario';
-                    const nameHtml = `<strong class="artist-hover-trigger" data-username="${name}" style="cursor:pointer;">${name}</strong>`;
+                    const nameHtml = `<strong class="artist-hover-trigger" 
+                                              data-artist="${name}" 
+                                              onmouseenter="window.showArtistCard(event, this)" 
+                                              onmouseleave="window.hideArtistCard(event, this)"
+                                              style="cursor:pointer;">${name}</strong>`;
 
                     const notifId = `accepted-${invite.id}`;
                     return {

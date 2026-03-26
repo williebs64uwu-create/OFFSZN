@@ -321,11 +321,20 @@ export const getUserByNickname = async (req, res) => {
         const { nickname } = req.params;
         console.log(`🔎 UserController: Buscando '${nickname}'`);
 
-        const { data: user, error } = await supabase
+        // Check if identifier is a UUID (UUIDv4 pattern)
+        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(nickname);
+
+        let query = supabase
             .from('users')
-            .select('id, nickname, first_name, last_name, avatar_url, bio, role, socials, socials_order, is_verified, is_producer, created_at, experience, daws, banner_url, r2_version, storage_version, template')
-            .ilike('nickname', nickname)
-            .maybeSingle();
+            .select('id, nickname, first_name, last_name, avatar_url, bio, role, socials, socials_order, is_verified, is_producer, created_at, experience, daws, banner_url, r2_version, storage_version, template');
+
+        if (isUuid) {
+            query = query.eq('id', nickname);
+        } else {
+            query = query.ilike('nickname', nickname);
+        }
+
+        const { data: user, error } = await query.maybeSingle();
 
         if (error) {
             console.error("❌ UserController DB Error:", error);

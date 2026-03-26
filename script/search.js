@@ -1131,7 +1131,7 @@ function renderRecommendations() {
                     </div>
                     <div class="card-info">
                         <div class="card-title">${escapeHTML(name)}</div>
-                        <div class="card-producer">${escapeHTML(producer)}</div>
+                        <div class="card-producer" data-artist="${p.producer_id}" onmouseenter="showArtistCard(event, this)" onmouseleave="hideArtistCard(event, this)">${escapeHTML(producer)}</div>
                     </div>
                 </div>
             `;
@@ -1143,7 +1143,7 @@ function renderRecommendations() {
                         <img ${imgAttr} alt="${escapeHTML(name)}">
                     </div>
                     <div class="recommendation-card-title">${escapeHTML(name)}</div>
-                    <div class="recommendation-card-producer">${escapeHTML(producer)}</div>
+                    <div class="recommendation-card-producer" data-artist="${p.producer_id}" onmouseenter="showArtistCard(event, this)" onmouseleave="hideArtistCard(event, this)">${escapeHTML(producer)}</div>
                 </div>
             `;
         }
@@ -1292,14 +1292,14 @@ function renderTrackRowMobile(p) {
         <div class="offszn-m-track-v2" data-product-id="${p.id}" onclick="window.location.href='/product.html?id=${p.id}'">
             <div class="m-v2-main-row">
                 <div class="m-v2-thumb" onclick="event.stopPropagation(); window.handleTrackPlay(event, '${p.id}')">
-                    <img ${imgAttr} data-r2-version="${storageVer}" data-product-id="${p.id}" alt="${escapeHTML(title)}">
+                    <img ${imgAttr} data-r2-version="${storageVer}" data-product-id="${p.id}" data-artist="${p.producer_id}" onmouseenter="showArtistCard(event, this)" onmouseleave="hideArtistCard(event, this)" alt="${escapeHTML(title)}">
                     <div class="m-v2-play-overlay">
                         <i class="bi ${isPlaying ? 'bi-pause-fill' : 'bi-play-fill'}"></i>
                     </div>
                 </div>
                 <div class="m-v2-info">
                     <span class="m-v2-title">${escapeHTML(title)}</span>
-                    <span class="m-v2-producer" onclick="event.stopPropagation(); window.location.href='/@${encodeURIComponent(p.producer_nickname || 'producer')}'">${escapeHTML(producerNick)}</span>
+                    <span class="m-v2-producer" data-artist="${p.producer_id}" onmouseenter="showArtistCard(event, this)" onmouseleave="hideArtistCard(event, this)" onclick="event.stopPropagation(); window.location.href='/@${encodeURIComponent(p.producer_nickname || 'producer')}'">${escapeHTML(producerNick)}</span>
                     <div class="m-v2-meta-row">
                         ${tags.map(t => `<span class="m-v2-tag">${escapeHTML(t)}</span>`).join('')}
                     </div>
@@ -1348,7 +1348,7 @@ function renderTrackRow(p) {
         <div class="track-row" data-product-id="${p.id}">
             <div class="track-left">
                 <div class="thumb-container" onclick="window.location.href='${productUrl}'">
-                    <img ${imgAttr} data-r2-version="${storageVer}" data-product-id="${p.id}" class="track-thumb" alt="cover">
+                    <img ${imgAttr} data-r2-version="${storageVer}" data-product-id="${p.id}" data-artist="${p.producer_id}" onmouseenter="showArtistCard(event, this)" onmouseleave="hideArtistCard(event, this)" class="track-thumb" alt="cover">
                     <div class="thumb-play-overlay" onclick="window.handleTrackPlay(event, '${p.id}')">
                         <i class="bi bi-play-fill"></i>
                     </div>
@@ -1356,7 +1356,7 @@ function renderTrackRow(p) {
                 <div class="track-info">
                     <div class="track-title" onclick="window.location.href='${productUrl}'">${escapeHTML(p.name)}</div>
                     <div class="track-meta">
-                        <span class="producer-name" onclick="event.stopPropagation(); window.location.href='/@${encodeURIComponent(p.producer_nickname || 'producer')}'">${escapeHTML(producer)}</span>
+                        <span class="producer-name" data-artist="${p.producer_id}" onmouseenter="showArtistCard(event, this)" onmouseleave="hideArtistCard(event, this)" onclick="event.stopPropagation(); window.location.href='/@${encodeURIComponent(p.producer_nickname || 'producer')}'">${escapeHTML(producer)}</span>
                         <span class="meta-separator">•</span>
                         <span class="product-type">${escapeHTML(type)}</span>
                         
@@ -1408,10 +1408,10 @@ function renderExactProducerCard(p) {
             <div class="offszn-m-track-v2" data-product-id="${p.id}">
                 <div class="m-v2-main-row" style="grid-template-columns: 52px 1fr 105px;">
                     <div class="m-v2-thumb" onclick="window.location.href='${profileUrl}'">
-                        <img src="${imgUrl}" alt="avatar">
+                        <img src="${imgUrl}" data-artist="${p.id}" onmouseenter="showArtistCard(event, this)" onmouseleave="hideArtistCard(event, this)" alt="avatar">
                     </div>
                     <div class="m-v2-info" onclick="window.location.href='${profileUrl}'">
-                        <div class="m-v2-title">${escapeHTML(producer)}</div>
+                        <div class="m-v2-title" data-artist="${p.id}" onmouseenter="showArtistCard(event, this)" onmouseleave="hideArtistCard(event, this)">${escapeHTML(producer)}</div>
                         <div class="m-v2-producer">Ver Perfil Oficial</div>
                     </div>
                     <div class="m-v2-actions">
@@ -1433,12 +1433,12 @@ function renderExactProducerCard(p) {
     return `
         <div class="exact-match-card" onclick="window.location.href='${profileUrl}'" style="cursor:pointer; background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 24px; display: flex; align-items: center; gap: 20px; transition: all 0.3s ease; margin-bottom: 30px;">
             <div style="position: relative;">
-                <img ${imgAttr} data-r2-version="${p.r2_version || 'v2'}" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid #fff;">
+                <img ${imgAttr} data-r2-version="${p.r2_version || 'v2'}" data-artist="${p.id}" onmouseenter="showArtistCard(event, this)" onmouseleave="hideArtistCard(event, this)" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid #fff;">
                 ${p.is_verified ? '<i class="bi bi-patch-check-fill" style="position: absolute; bottom: 0; right: 0; color: #fff; font-size: 1.2rem; background: #000; border-radius: 50%;"></i>' : ''}
             </div>
             <div style="flex: 1;">
                 <div style="font-size: 0.7rem; color: #fff; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 4px; opacity: 0.5;">Productor Destacado</div>
-                <div style="font-size: 1.5rem; color: #fff; font-weight: 800; margin-bottom: 4px;">${escapeHTML(producer)}</div>
+                <div style="font-size: 1.5rem; color: #fff; font-weight: 800; margin-bottom: 4px;" data-artist="${p.id}" onmouseenter="showArtistCard(event, this)" onmouseleave="hideArtistCard(event, this)">${escapeHTML(producer)}</div>
                 <div style="font-size: 0.9rem; color: #888; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.4;">${escapeHTML(p.bio || 'Sin biografía disponible.')}</div>
             </div>
             <div class="view-profile-btn" style="padding: 10px 20px; background: #fff; color: #000; border-radius: 8px; font-weight: 700; font-size: 0.85rem;">Ver Perfil</div>
@@ -1453,9 +1453,9 @@ function renderProducerRow(p) {
 
     return `
         <div class="producer-row" onclick="window.location.href='${profileUrl}'" style="cursor:pointer; display: flex; align-items: center; gap: 16px; padding: 12px; border-radius: 12px; transition: background 0.2s; margin-bottom: 8px;">
-            <img src="${avatar}" style="width: 48px; height: 48px; border-radius: 50%; object-fit: cover; background: #1a1a1a;">
+            <img src="${avatar}" data-artist="${p.id}" onmouseenter="showArtistCard(event, this)" onmouseleave="hideArtistCard(event, this)" style="width: 48px; height: 48px; border-radius: 50%; object-fit: cover; background: #1a1a1a;">
             <div style="flex: 1;">
-                <div style="color: #fff; font-weight: 600; display: flex; align-items: center; gap: 6px;">
+                <div style="color: #fff; font-weight: 600; display: flex; align-items: center; gap: 6px;" data-artist="${p.id}" onmouseenter="showArtistCard(event, this)" onmouseleave="hideArtistCard(event, this)">
                     ${escapeHTML(producer)}
                     ${p.is_verified ? '<i class="bi bi-patch-check-fill" style="color: #fff; font-size: 0.9rem;"></i>' : ''}
                 </div>

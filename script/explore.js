@@ -476,9 +476,9 @@ function createListItemHtml(item, index, type) {
         return `
             <div class="list-item-smart" data-id="${item.id}" data-type="producer" onclick="window.location.href='${link}'">
                 <div class="list-item-index">${index}</div>
-                <img ${imgAttr} data-r2-version="${storageVer}" class="list-item-img circle" alt="cover">
+                <img ${imgAttr} data-r2-version="${storageVer}" data-artist="${item.id}" onmouseenter="showArtistCard(event, this)" onmouseleave="hideArtistCard(event, this)" class="list-item-img circle" alt="cover">
                 <div class="list-item-info">
-                    <div class="list-item-name">${name}</div>
+                    <div class="list-item-name" data-artist="${item.id}" onmouseenter="showArtistCard(event, this)" onmouseleave="hideArtistCard(event, this)">${name}</div>
                     <div class="list-item-sub">${sub}</div>
                 </div>
                 <div class="list-item-value">
@@ -498,7 +498,7 @@ function createListItemHtml(item, index, type) {
             <img ${imgAttr} data-r2-version="${storageVer}" data-product-id="${item.id}" class="list-item-img" alt="cover" onclick="event.stopPropagation(); window.handleInfoClick(event, '${item.id}', '${link}')">
             <div class="list-item-info" onclick="event.stopPropagation(); window.handleInfoClick(event, '${item.id}', '${link}')">
                 <div class="list-item-name">${name}</div>
-                <div class="list-item-sub">${sub}</div>
+                <div class="list-item-sub" data-artist="${item.producer_id}" onmouseenter="showArtistCard(event, this)" onmouseleave="hideArtistCard(event, this)">${sub}</div>
             </div>
             <div class="list-item-waveform skeleton-waveform"></div>
             <div class="list-item-value">
@@ -730,10 +730,10 @@ function renderHeroSlideHtml(product, index) {
             
                 <div class="hero-content">
                     <h1 class="hero-title">${productName}</h1>
-                    <p class="hero-subtitle desktop-only">Una creación de <strong>${producer}</strong> • ${type}</p>
+                    <p class="hero-subtitle desktop-only">Una creación de <strong data-artist="${product.producer_id}" onmouseenter="showArtistCard(event, this)" onmouseleave="hideArtistCard(event, this)">${producer}</strong> • ${type}</p>
                     
                     <div class="hero-mobile-info mobile-only">
-                        <span class="hero-mobile-artist">${producer}</span>
+                        <span class="hero-mobile-artist" data-artist="${product.producer_id}" onmouseenter="showArtistCard(event, this)" onmouseleave="hideArtistCard(event, this)">${producer}</span>
                         <span class="hero-mobile-dot">&bull;</span>
                         <span class="hero-mobile-type">${type}</span>
                     </div>
@@ -748,7 +748,7 @@ function renderHeroSlideHtml(product, index) {
 
                 <div class="hero-image-container desktop-only">
                     <img ${isR2 ? `src="${imgPlaceholder}" data-r2-src="${imgUrl}"` : `src="${escapeHTML(initialSrc)}"`} 
-                         data-r2-version="${storageVer}" 
+                         data-r2-version="${storageVer}" data-artist="${product.producer_id}" onmouseenter="showArtistCard(event, this)" onmouseleave="hideArtistCard(event, this)"
                          alt="cover" class="hero-image">
                 </div>
 
@@ -1107,9 +1107,9 @@ function createProductCardHtml(product, format = 'standard') {
         return `
             <div class="preset-card-social" data-product-id="${product.id}">
                 <div class="post-header" onclick="window.location.href='/@' + encodeURIComponent('${realHandle}')">
-                    <img ${realAvatar.attr} class="post-avatar" alt="${realArtist}" onerror="this.src='/images/portada-default.png'">
+                    <img ${realAvatar.attr} class="post-avatar" alt="${realArtist}" data-artist="${product.producer_id}" onmouseenter="showArtistCard(event, this)" onmouseleave="hideArtistCard(event, this)" onerror="this.src='/images/portada-default.png'">
                     <div class="post-user-info">
-                        <span class="post-user-handle">@${escapeHTML(realHandle)}</span>
+                        <span class="post-user-handle" data-artist="${product.producer_id}" onmouseenter="showArtistCard(event, this)" onmouseleave="hideArtistCard(event, this)">@${escapeHTML(realHandle)}</span>
                     </div>
                     <div class="post-options">
                         <i class="bi bi-three-dots"></i>
@@ -1160,7 +1160,7 @@ function createProductCardHtml(product, format = 'standard') {
             </div>
             <div class="card-info">
                 <div class="card-title">${cleanName(product.name)}</div>
-                <div class="card-producer">${artist}</div>
+                <div class="card-producer" data-artist="${product.producer_id}" onmouseenter="showArtistCard(event, this)" onmouseleave="hideArtistCard(event, this)">${artist}</div>
             </div>
         </div>
     `;
@@ -1372,11 +1372,11 @@ function renderLeaderboard(producers) {
             <div class="producer-avatar-wrapper">
                 <div class="lb-badge-sp">#${p.rank}</div>
                 <div class="producer-avatar-sp ${borderClass}">
-                     <img src="${safeAvatar}" data-r2-version="${p.storage_version || p.r2_version || 'v1'}" alt="${safeNickname}">
+                     <img src="${safeAvatar}" data-r2-version="${p.storage_version || p.r2_version || 'v1'}" data-artist="${p.id}" onmouseenter="showArtistCard(event, this)" onmouseleave="hideArtistCard(event, this)" alt="${safeNickname}">
                 </div>
             </div>
             <div class="producer-info-sp">
-                <div class="producer-name-sp">
+                <div class="producer-name-sp" data-artist="${p.id}" onmouseenter="showArtistCard(event, this)" onmouseleave="hideArtistCard(event, this)">
                     ${safeNickname}
                 </div>
                 <div class="producer-score-sp">${(p.score || 0).toLocaleString()} pts</div>

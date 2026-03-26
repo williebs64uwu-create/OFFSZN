@@ -303,13 +303,19 @@ window.HistoryManager = (function () {
 
                 row.innerHTML = `
                     <div class="list-cover" onclick="window.HistoryManager.playItem('${String(item.product_id)}')">
-                        <img src="${imgUrl}" alt="${title}" onerror="this.src='/images/portada-default.png'">
+                        <img src="${imgUrl}" alt="${title}" onerror="this.src='/images/portada-default.png'"
+                             data-artist="${item.producer_id}" onmouseenter="showArtistCard(event, this)" onmouseleave="hideArtistCard(event, this)">
                         <div class="cover-play-overlay" id="btn-play-waveform-overlay-${item.product_id}"><i class="bi bi-play-fill"></i></div>
                     </div>
                     
                     <div class="list-col-main" onclick="window.location.href='${seoLink}'" style="cursor:pointer">
                         <div class="list-track-title">${title}</div>
-                        <div class="list-author-sub">${producer}</div>
+                        <div class="list-author-sub" 
+                         data-artist="${item.producer_id}"
+                         onmouseenter="showArtistCard(event, this)"
+                         onmouseleave="hideArtistCard(event, this)">
+                        ${producer}
+                    </div>
                     </div>
 
                     <div class="list-col-play-btn">

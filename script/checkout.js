@@ -285,7 +285,8 @@ const CheckoutManager = {
                     <div class="product-card-smart-wrapper" style="display: flex; flex-direction: column; gap: 8px;">
                         <div class="product-card-smart" data-product-id="${p.id}" onclick="window.location.href='/producto.html?id=${p.id}'" style="margin: 0; min-width: 176px; max-width: 176px;">
                             <div class="card-cover-wrapper">
-                                <img id="rec-img-${p.id}" src="${img}" alt="${this.escapeHTML(p.name)}">
+                                <img id="rec-img-${p.id}" src="${img}" alt="${this.escapeHTML(p.name)}"
+                                     data-artist="${p.producer_id}" onmouseenter="showArtistCard(event, this)" onmouseleave="hideArtistCard(event, this)">
                                 <button class="quick-play-btn" onclick="event.stopPropagation(); window.playCheckoutTrack('${p.id}')"><i class="bi bi-play-fill"></i></button>
                                 <button class="card-like-btn" onclick="event.stopPropagation(); window.handleLike(event, '${p.id}', this)">
                                     <i class="bi bi-heart"></i>
@@ -293,7 +294,12 @@ const CheckoutManager = {
                             </div>
                             <div class="card-info">
                                 <div class="card-title">${this.escapeHTML(p.name)}</div>
-                                <div class="card-producer">${artist}</div>
+                                <div class="card-producer"
+                                     data-artist="${p.producer_id}"
+                                     onmouseenter="showArtistCard(event, this)"
+                                     onmouseleave="hideArtistCard(event, this)">
+                                    ${artist}
+                                </div>
                             </div>
                         </div>
                         <button onclick="if(window.CartManager) window.CartManager.addItem('${p.id}')" style="margin-top: 4px; background: #fff; color: #000; border: 1px solid #fff; padding: 8px 0; border-radius: 8px; font-weight: 700; font-size: 0.75rem; cursor: pointer; transition: all 0.2s; text-align: center; display: flex; align-items: center; justify-content: center; gap: 6px; width: 176px;" onmouseover="this.style.background='#f0f0f0'; this.style.borderColor='#f0f0f0';" onmouseout="this.style.background='#fff'; this.style.borderColor='#fff';">
@@ -1047,6 +1053,7 @@ const CheckoutManager = {
               <div class="checkout-item-img" style="position:relative; width:64px; height:64px; flex-shrink:0;">
                 <img id="${imgId}" src="${fallbackImg}" data-r2-version="${item.product.storage_version || item.product.r2_version || 'v1'}"
                      onerror="this.src='${fallbackImg}'; this.onerror=null;"
+                     data-artist="${item.product.producer_id}" onmouseenter="showArtistCard(event, this)" onmouseleave="hideArtistCard(event, this)"
                      style="width:100%; height:100%; border-radius:10px; object-fit:cover; border:1px solid rgba(255,255,255,0.1); background:#111;">
               </div>
               <div class="checkout-item-details" style="flex:1; min-width:0;">
@@ -1056,6 +1063,9 @@ const CheckoutManager = {
                   <span style="color: #333;">•</span>
                   <a href="${item.producerUsername ? '/' + item.producerUsername : '#'}" 
                      style="color: #888; text-decoration: underline; font-weight: 500;"
+                     data-artist="${item.product.producer_id}"
+                     onmouseenter="showArtistCard(event, this)"
+                     onmouseleave="hideArtistCard(event, this)"
                      target="_blank">
                     ${this.escapeHTML(item.producerName)}
                   </a>
