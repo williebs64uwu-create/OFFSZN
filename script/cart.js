@@ -22,7 +22,9 @@ const CartManager = {
         isOpen: false,
         user: null,
         producerVerification: {}, // Caches { hasPayPal, paypalEmail, plan, nickname }
-        _lastProducerHash: null
+        _lastProducerHash: null,
+        isVerifying: false,
+        paymentEligibility: { paypal: true, yape: false, preferred: 'paypal' }
     },
 
     injectCartUIIfNeeded: function () {
@@ -125,34 +127,50 @@ const CartManager = {
     // --- CORE LOGIC ---
 
     loadCart: async function () {
-        this.state.items = [];
-
+        // --- 🚀 FIX FLICKER: Don't clear state.items immediately ---
+        let items = [];
+        
         try {
             if (this.state.user) {
                 // AUTH: Load from DB
                 const { data, error } = await supabaseClient
                     .from('cart_items')
-                    .select('quantity, license_name, variant_price, product:products(id, name, price_basic, image_url, product_type, producer_id, status, storage_version, r2_version)')
+                    .select('quantity, license_name, variant_price, product:products(id, name, price_basic, image_url, product_type, producer_id, status, storage_version, r2_version, producer:producer_id(*))')
                     .eq('user_id', this.state.user.id);
 
-                if (error) {
-                    console.error("Error loading cart db:", error);
-                    // Fallback to local if DB fails? No, risky. Just empty.
-                } else if (data) {
-                    // Normalize data structure
-                    this.state.items = data.map(row => ({
-                        product: row.product,
-                        quantity: row.quantity,
-                        license_name: row.license_name,
-                        variant_price: row.variant_price
-                    })).filter(i => i.product && i.product.status !== 'deleted'); // Filter out deleted
-                }
-
+                    if (!error && data) {
+                        items = data.map(row => {
+                            const item = {
+                                product: row.product,
+                                quantity: row.quantity,
+                                license_name: row.license_name,
+                                variant_price: row.variant_price
+                            };
+                            if (row.product && row.product.producer) item.product.producer = row.product.producer;
+                            return item;
+                        }).filter(i => i.product && i.product.status !== 'deleted');
+                    }
             } else {
                 // GUEST: Load from LocalStorage
                 const local = localStorage.getItem('offszn_cart');
                 if (local) {
-                    this.state.items = JSON.parse(local);
+                    items = JSON.parse(local);
+                }
+            }
+            
+            // Set final state items
+            this.state.items = items;
+            
+            // RESTORE verification if it exists (for fast checkout load)
+            const savedVerification = sessionStorage.getItem('offszn_producer_verification');
+            const savedEligibility = sessionStorage.getItem('offszn_payment_eligibility');
+            const savedHash = sessionStorage.getItem('offszn_producer_hash');
+            
+            if (savedVerification && savedHash) {
+                this.state.producerVerification = JSON.parse(savedVerification);
+                this.state._lastProducerHash = savedHash;
+                if (savedEligibility) {
+                    this.state.paymentEligibility = JSON.parse(savedEligibility);
                 }
             }
         } catch (err) {
@@ -167,16 +185,20 @@ const CartManager = {
         // Block if NOT free and producer has no payment methods
         const isFree = product.is_free || false;
         if (!isFree) {
-            let producer = product.producer;
+            let producer = product.producer || (product.producer_id ? { id: product.producer_id } : null);
             if (Array.isArray(producer)) producer = producer[0];
             
             if (producer) {
-                const has_paypal = producer.paypal_email || (producer.payment_methods && producer.payment_methods.paypal?.enabled);
-                const has_yape = producer.yape_phone && producer.is_verified;
+                // Check for PayPal (email or explicitly set in methods)
+                const has_paypal = producer.paypal_email || (producer.payment_methods && (producer.payment_methods.paypal?.enabled || producer.payment_methods.paypal));
+                // Check for Yape (verified phone + profile verification)
+                const has_yape = !!(producer.yape_phone && producer.is_verified);
 
                 if (!has_paypal && !has_yape) {
                     if (window.openBlockedPaymentModal) {
                         window.openBlockedPaymentModal(producer);
+                    } else {
+                        console.warn("[Cart] No methods and modal missing.");
                     }
                     return;
                 }
@@ -259,7 +281,7 @@ const CartManager = {
                 // Fetch from DB if not in cache
                 const { data, error } = await window.supabaseClient
                     .from('products')
-                    .select('*')
+                    .select('*, producer:producer_id(*)')
                     .eq('id', productId)
                     .single();
                 
@@ -337,10 +359,13 @@ const CartManager = {
         const producerIds = [...new Set(this.state.items.map(item => item.product.producer_id))].sort();
         const currentHash = producerIds.join(',');
 
+        if (this.state.isVerifying) return; // Already in progress
         if (this.state._lastProducerHash === currentHash && Object.keys(this.state.producerVerification).length > 0) {
             return; // Already verified this exact set of producers
         }
 
+        this.state.isVerifying = true;
+        
         try {
             // Fetch Users (payment methods, email, nickname, YAPE)
             const { data: usersData, error: usersError } = await window.supabaseClient
@@ -399,10 +424,17 @@ const CartManager = {
 
             this.state.producerVerification = verification;
             this.state._lastProducerHash = currentHash;
+
+            // PERSIST for checkout page speed
+            sessionStorage.setItem('offszn_producer_verification', JSON.stringify(verification));
+            sessionStorage.setItem('offszn_payment_eligibility', JSON.stringify(this.state.paymentEligibility));
+            sessionStorage.setItem('offszn_producer_hash', currentHash);
         } catch (err) {
             console.error("[CartManager] Error verifying producers:", err);
             // Default fallback
             this.state.paymentEligibility = { paypal: true, yape: false, preferred: 'paypal' };
+        } finally {
+            this.state.isVerifying = false;
         }
     },
 

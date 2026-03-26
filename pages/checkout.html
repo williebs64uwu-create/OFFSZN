@@ -31,6 +31,57 @@
 
     <script src="/script/auth-utils.js?v=11"></script>
     <script src="/script/notifications.js"></script>
+    <style>
+        /* Shimmer Animation - Localized & Premium */
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+        .skeleton-shimmer {
+            background: #111;
+            background-image: linear-gradient(
+                90deg, 
+                rgba(255, 255, 255, 0) 0%, 
+                rgba(255, 255, 255, 0.05) 50%, 
+                rgba(255, 255, 255, 0) 100%
+            );
+            background-size: 200% 100%;
+            display: inline-block;
+            position: relative;
+            animation: shimmer 2s infinite linear;
+            overflow: hidden;
+        }
+
+        /* Enforce clipping on containers */
+        #paypal-skeleton, #yape-skeleton, .checkout-items-list {
+            overflow: hidden;
+            border-radius: 8px;
+        }
+
+        /* Premium Skeleton Styles */
+        .skeleton-btn {
+            height: 48px;
+            width: 100%;
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+        
+        #paypal-skeleton .skeleton-btn:first-child {
+            background-image: linear-gradient(
+                90deg, 
+                rgba(255, 196, 57, 0) 0%, 
+                rgba(255, 196, 57, 0.1) 50%, 
+                rgba(255, 196, 57, 0) 100%
+            );
+        }
+
+        #yape-skeleton .skeleton-row {
+            height: 12px;
+            width: 100%;
+            border-radius: 4px;
+            margin-bottom: 12px;
+        }
+    </style>
 </head>
 
 <body>
@@ -122,7 +173,7 @@
                     <div class="payment-methods-container" style="margin-top: 24px;">
                         
                         <!-- PAYPAL METHOD (Default Active) -->
-                        <div class="payment-method-item active" id="method-paypal" style="margin-bottom: 12px; border: 1px solid rgba(139, 92, 246, 0.3); border-radius: 12px; overflow: hidden; background: rgba(139, 92, 246, 0.03);">
+                        <div class="payment-method-item active" id="method-paypal" style="margin-bottom: 12px; border: 1px solid rgba(139, 92, 246, 0.3); border-radius: 12px; overflow: hidden; background: rgba(139, 92, 246, 0.03); transition: all 0.2s;">
                             <label style="display: flex; align-items: center; gap: 12px; cursor: pointer; padding: 18px; width: 100%; margin: 0;">
                                 <input type="radio" name="payment-selection" value="paypal" checked onchange="CheckoutManager.togglePaymentMethod('paypal')" style="width: 18px; height: 18px; accent-color: #8b5cf6;">
                                 <div style="flex: 1;">
@@ -135,9 +186,12 @@
                                     <i class="fab fa-cc-mastercard" style="font-size: 20px; color: #fff;"></i>
                                 </div>
                             </label>
-                            
-                            <div id="paypal-content" style="padding: 0 18px 18px 18px;">
-                                <div id="paypal-button-container"></div>
+                            <div id="paypal-content" style="padding: 0 18px 18px 18px; display: block; width: 100%; overflow: hidden;">
+                                <div id="paypal-skeleton" style="display: flex; flex-direction: column; gap: 12px; margin-top: 10px;">
+                                    <div class="skeleton-btn skeleton-shimmer"></div>
+                                    <div class="skeleton-btn skeleton-shimmer"></div>
+                                </div>
+                                <div id="paypal-button-container" style="display: none; width: 100%; min-height: 100px;"></div>
                             </div>
                         </div>
 
@@ -152,21 +206,35 @@
                                 <div style="background: #111; padding: 4px 8px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1);">
                                     <span style="color: #6a1ea5; font-weight: 800; font-size: 0.7rem;">YAPE</span>
                                 </div>
-                            </label>
-
-                            <div id="yape-content" style="display: none; padding: 18px; border-top: 1px solid rgba(255, 255, 255, 0.05); background: rgba(0,0,0,0.2);">
-                                <!-- YAPE Total Display -->
-                                <div style="background: rgba(106, 30, 165, 0.1); border: 1px solid rgba(106, 30, 165, 0.2); border-radius: 10px; padding: 15px; margin-bottom: 20px; text-align: center;">
-                                    <div style="font-size: 0.75rem; color: #aaa; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px;">Total a pagar en Soles</div>
-                                    <div id="yape-total-value" style="font-size: 1.8rem; font-weight: 800; color: #fff; font-family: 'Plus Jakarta Sans', sans-serif;">S/ 0.00</div>
+                            </label>                            <div id="yape-content" style="display: none; padding: 18px; border-top: 1px solid rgba(255, 255, 255, 0.05); background: rgba(0,0,0,0.2);">
+                                <!-- YAPE Skeleton (Premium Shimmer) -->
+                                <div id="yape-skeleton" style="display: none; flex-direction: column; gap: 15px;">
+                                    <div class="skeleton-shimmer" style="height: 80px; width: 100%; border-radius: 12px;"></div>
+                                    <div style="display: flex; justify-content: center; margin: 10px 0;">
+                                        <div class="skeleton-shimmer" style="width: 160px; height: 160px; border-radius: 20px;"></div>
+                                    </div>
+                                    <div style="display: flex; flex-direction: column; gap: 10px;">
+                                        <div class="skeleton-shimmer" style="height: 12px; width: 90%; border-radius: 4px;"></div>
+                                        <div class="skeleton-shimmer" style="height: 12px; width: 70%; border-radius: 4px;"></div>
+                                        <div class="skeleton-shimmer" style="height: 12px; width: 80%; border-radius: 4px;"></div>
+                                    </div>
+                                    <div class="skeleton-shimmer" style="height: 54px; width: 100%; border-radius: 100px; margin-top: 10px;"></div>
                                 </div>
 
-                                <!-- QR Area -->
-                                <div style="text-align: center; margin-bottom: 25px;">
-                                    <div style="display: inline-block; padding: 12px; background: #fff; border-radius: 16px; box-shadow: 0 8px 32px rgba(0,0,0,0.4);">
-                                        <img src="/images/yape.jpg" alt="Yape QR" style="width: 160px; height: 160px; object-fit: contain; display: block;">
+                                <div id="yape-actual-content">
+                                    <!-- YAPE Total Display -->
+                                    <div style="background: rgba(106, 30, 165, 0.1); border: 1px solid rgba(106, 30, 165, 0.2); border-radius: 10px; padding: 15px; margin-bottom: 20px; text-align: center;">
+                                        <div style="font-size: 0.75rem; color: #aaa; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px;">Total a pagar en Soles</div>
+                                        <div id="yape-total-value" style="font-size: 1.8rem; font-weight: 800; color: #fff; font-family: 'Plus Jakarta Sans', sans-serif;">S/ 0.00</div>
                                     </div>
-                                    <div style="margin-top: 12px; font-size: 0.85rem; color: #8b5cf6; font-weight: 700;">@OFFSZN_STUDIO</div>
+
+                                    <!-- QR Area -->
+                                    <div style="text-align: center; margin-bottom: 25px;">
+                                        <div style="display: inline-block; padding: 12px; background: #fff; border-radius: 16px; box-shadow: 0 8px 32px rgba(0,0,0,0.4);">
+                                            <img src="/images/yape.jpg" alt="Yape QR" style="width: 160px; height: 160px; object-fit: contain; display: block;">
+                                        </div>
+                                        <div style="margin-top: 12px; font-size: 0.85rem; color: #8b5cf6; font-weight: 700;">@OFFSZN_STUDIO</div>
+                                    </div>
                                 </div>
 
                                 <!-- Steps -->
@@ -218,10 +286,25 @@
 
                     <div id="checkout-order-summary">
                         <!-- Injected by script/checkout.js -->
-                        <div style="text-align: center; padding: 40px; color: #555;">
-                            <i class="bi bi-arrow-repeat"
-                                style="font-size: 2rem; display: block; margin-bottom: 10px; animation: spin 1s linear infinite;"></i>
-                            Cargando tu pedido...
+                        <div style="padding: 24px; display: flex; flex-direction: column; gap: 20px;">
+                            <div style="display: flex; flex-direction: column; gap: 12px;">
+                                <div class="skeleton-shimmer" style="height: 64px; width: 100%; border-radius: 12px;"></div>
+                                <div class="skeleton-shimmer" style="height: 64px; width: 100%; border-radius: 12px;"></div>
+                            </div>
+                            <div style="padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.05); display: flex; flex-direction: column; gap: 12px;">
+                                <div style="display: flex; justify-content: space-between;">
+                                    <div class="skeleton-shimmer" style="height: 12px; width: 60px; border-radius: 4px;"></div>
+                                    <div class="skeleton-shimmer" style="height: 12px; width: 40px; border-radius: 4px;"></div>
+                                </div>
+                                <div style="display: flex; justify-content: space-between;">
+                                    <div class="skeleton-shimmer" style="height: 12px; width: 80px; border-radius: 4px;"></div>
+                                    <div class="skeleton-shimmer" style="height: 12px; width: 40px; border-radius: 4px;"></div>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; margin-top: 10px;">
+                                    <div class="skeleton-shimmer" style="height: 24px; width: 70px; border-radius: 4px;"></div>
+                                    <div class="skeleton-shimmer" style="height: 24px; width: 90px; border-radius: 4px;"></div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>

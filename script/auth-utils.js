@@ -194,6 +194,19 @@ window.AuthUtils = {
         }
     },
 
+    /**
+     * Retrieves the current logged-in user's essential information.
+     * Checks multiple sources for robustness (cached values, global variables).
+     * @returns {Object|null} {id, nickname} or null if not logged in.
+     */
+    getCurrentUser: function () {
+        const id = window.currentUserId || null;
+        const nickname = window.currentUserNickname || localStorage.getItem('offszn_cached_nickname') || null;
+
+        if (!id) return null;
+        return { id, nickname };
+    },
+
     _urlCache: {}, // In-memory cache
     _signingQueue: [], // Queue for batching: { key, version, resolve, reject }
     _batchTimeout: null,

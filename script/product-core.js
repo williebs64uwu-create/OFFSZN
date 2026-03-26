@@ -1393,31 +1393,44 @@ window.contactProducerForExclusivity = function () {
 window.openBlockedPaymentModal = function (producer) {
     if (!producer) return;
 
-    // --- TRIGGER PRODUCER NOTIFICATION ---
-    const product = window.currentProductData;
-    const currentUser = window.AuthUtils ? window.AuthUtils.getCurrentUser() : null;
-    
-    // Safety check: Don't notify if the producer is viewing their own blocked state 
-    // (though they shouldn't even see the add button if ineligible, this is a good safeguard)
+    const productData = window.currentProductData;
+
+    // 🚨 REGISTRO DE NOTIFICACIÓN PARA EL PRODUCTOR
+    // Intentamos obtener quién es el comprador (si está logueado) para una mejor notificación
+    const currentUser = window.AuthUtils && typeof window.AuthUtils.getCurrentUser === 'function' 
+        ? window.AuthUtils.getCurrentUser() 
+        : null;
+
     if (currentUser && currentUser.id !== producer.id) {
-        const buyerUsername = currentUser.nickname || currentUser.user_metadata?.nickname || 'Un comprador';
-        const prodName = product?.name || 'un producto';
-        
-        window.supabaseClient.from('notifications').insert({
-            user_id: producer.id, // The producer who needs to fix settings
-            type: 'payment_method_missing',
-            title: '¡Venta Bloqueada!',
-            actor_id: currentUser.id, // The buyer who tried to buy
-            link: '/transacciones.html',
-            data: { 
-                product_id: product?.id, 
-                product_name: prodName, 
-                buyer_username: buyerUsername 
-            }
-        }).then(({ error }) => {
-            if (error) console.warn("[Notifications] Error triggering producer alert:", error);
-            else console.log("[Notifications] Producer alerted about blocked purchase attempt.");
-        });
+        const buyerUsername = currentUser.nickname || 'Un comprador';
+
+        console.log(`[BlockedModal] Registrando notificación para ${producer.nickname} (ID: ${producer.id}) sobre intento de compra de ${buyerUsername}`);
+
+        if (window.supabaseClient) {
+            window.supabaseClient.from('notifications').insert({
+                user_id: producer.id,
+                type: 'payment_method_missing',
+                title: 'Método de pago no configurado',
+                message: `${buyerUsername} intentó comprar tu producto "${productData?.name || 'un producto'}", pero no tienes métodos de pago configurados (PayPal/Yape).`,
+                link: '/cuenta/configuracion',
+                is_read: false
+            }).then(({ error }) => {
+                if (error) console.error("[BlockedModal] Error enviando notificación:", error);
+                else console.log("[BlockedModal] Notificación enviada con éxito.");
+            });
+        }
+    } else if (!currentUser) {
+        // Notificación anónima si no está logueado
+        if (window.supabaseClient) {
+            window.supabaseClient.from('notifications').insert({
+                user_id: producer.id,
+                type: 'payment_method_missing',
+                title: 'Intento de compra fallido (Invitado)',
+                message: `Un visitante intentó comprar "${productData?.name || 'un producto'}", pero necesitas configurar PayPal o Yape para recibir pagos.`,
+                link: '/cuenta/configuracion',
+                is_read: false
+            });
+        }
     }
 
 
@@ -1434,9 +1447,9 @@ window.openBlockedPaymentModal = function (producer) {
     const email = producer.email || '';
     
     // Build context for message
-    const category = (product?.product_type || 'producto').toLowerCase();
+    const category = (productData?.product_type || 'producto').toLowerCase();
     const productLink = window.location.href;
-    const message = `Hola @${nickname}, intenté comprar tu ${category} "${product?.name || 'este producto'}" (${productLink}) pero no logré completar el pago. ¿Cómo podemos coordinar?`;
+    const message = `Hola @${nickname}, intenté comprar tu ${category} "${productData?.name || 'este producto'}" (${productLink}) pero no logré completar el pago. ¿Cómo podemos coordinar?`;
     const contactUrl = `/mensajes.html?user=${encodeURIComponent(nickname)}&msg=${encodeURIComponent(message)}`;
 
     backdrop.innerHTML = `

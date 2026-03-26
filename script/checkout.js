@@ -77,21 +77,48 @@ const CheckoutManager = {
 
     // Wait for CartManager to be ready (it loads async)
     await this.waitForCart();
-
-    // Show container immediately with default state
-    const container = document.getElementById('checkout-container');
-    if (container) container.style.opacity = '1';
-
+    
     // IMPORTANT: Show empty state ASAP if cart is empty
     const initialItemsCount = window.CartManager?.state?.items?.length || 0;
     this.updateEmptyState(initialItemsCount);
     
-    // SYNC Verification check
-    this.checkBlockedStatus();
+    // RENDER IMMEDIATELY (if we have cached data, it will show content; else skeleton)
     this.renderOrderSummary();
+
+    // Mark init as complete ASAP — so cart-updated listener can start handling background refreshes
+    this._initComplete = true;
+
+    // Run verification in the background to unblock the rest of the page
+    if (window.CartManager && typeof window.CartManager.verifyCart === 'function') {
+        const verifyBg = async () => {
+            try {
+                await window.CartManager.verifyCart();
+                // After background verification finishes, re-sync everything
+                this.checkBlockedStatus();
+                this.renderOrderSummary();
+                this.updatePayPalButtonsVisibility();
+                
+                // If PayPal is now eligible, init it if not already done
+                const eligibility = window.CartManager?.state?.paymentEligibility;
+                if (eligibility?.paypal && initialItemsCount > 0) {
+                    this.initPayPal();
+                }
+            } catch (e) {
+                console.warn("[Checkout] Background verification failed:", e);
+                // Even on failure, ensure we try to show what we can
+                this.renderOrderSummary();
+                this.updatePayPalButtonsVisibility();
+            }
+        };
+        verifyBg(); 
+    }
+
+    // SYNC Check for initial cached/state data
+    this.checkBlockedStatus();
     this.updateCouponUI(this.appliedCoupon ? true : false);
 
-    if (!this.blockedItems || this.blockedItems.length === 0) {
+    const eligibility = window.CartManager?.state?.paymentEligibility;
+    if (eligibility?.paypal) {
       if (initialItemsCount > 0) this.initPayPal();
     }
     this.updatePayPalButtonsVisibility();
@@ -735,31 +762,14 @@ const CheckoutManager = {
 
 
   checkBlockedStatus: function () {
-    const items = CartManager.state.items;
-    this.blockedItems = [];
+    const eligibility = window.CartManager?.state?.paymentEligibility;
+    if (!eligibility) return;
 
-    items.forEach(item => {
-      const producerId = item.product.producer_id;
-      const pData = window.CartManager?.state?.producerVerification?.[producerId];
+    // Use centralized eligibility: blocked only if NO common method exists
+    const isBlocked = !eligibility.paypal && !eligibility.yape;
 
-      // Block if: producer data not found at all, OR has no PayPal
-      const isBlocked = !pData || pData.hasPayPal === false;
-
-      if (isBlocked) {
-        // Avoid duplicates for the same producer
-        if (!this.blockedItems.find(b => b.producerId === producerId)) {
-          this.blockedItems.push({
-            productId: item.product.id,
-            productName: item.product.name,
-            producerId: producerId,
-            username: pData?.username || null
-          });
-        }
-      }
-    });
-
-    if (this.blockedItems.length > 0) {
-      console.warn("[CheckoutManager] Order blocked due to missing producer PayPal:", this.blockedItems);
+    if (isBlocked) {
+      console.warn("[CheckoutManager] Order blocked: No common payment method found for these producers.");
       this.renderOrderSummary();
       this.updatePayPalButtonsVisibility();
     }
@@ -770,11 +780,62 @@ const CheckoutManager = {
     const warning = document.getElementById('checkout-blocked-warning');
     const paypalSection = document.getElementById('method-paypal');
     const yapeSection = document.getElementById('method-yape');
+    const paypalSkeleton = document.getElementById('paypal-skeleton');
+    const yapeSkeleton = document.getElementById('yape-skeleton');
+    const yapeActual = document.getElementById('yape-actual-content');
+    const eligibility = window.CartManager?.state?.paymentEligibility;
+    const isVerifying = window.CartManager?.state?.isVerifying;
 
-    if (!container) return;
+    if (!container || !eligibility) return;
 
-    // 1. Check for Blocked Status (PayPal missing for some)
-    if (this.blockedItems && this.blockedItems.length > 0) {
+    // 0. Si estamos verificando, mostramos skeletons y BLOQUEAMOS clicks
+    if (isVerifying) {
+        if (paypalSkeleton) paypalSkeleton.style.display = 'flex';
+        if (container) container.style.display = 'none';
+        
+        // Bloquear interacción en ambos métodos
+        if (paypalSection) {
+            paypalSection.style.pointerEvents = 'none';
+            paypalSection.style.opacity = '0.9';
+        }
+
+        // Mostrar skeleton de Yape también durante la verificación global
+        if (yapeSkeleton) {
+            yapeSkeleton.style.display = 'flex';
+            const yapeContent = document.getElementById('yape-content');
+            if (yapeContent) yapeContent.style.display = 'block';
+            if (yapeActual) yapeActual.style.display = 'none';
+            if (yapeSection) {
+                yapeSection.style.pointerEvents = 'none';
+                yapeSection.style.opacity = '0.9';
+            }
+        }
+        return; 
+    }
+    
+    // Si ya no estamos verificando, ocultamos los skeletons y RESTAURAMOS clicks
+    if (!isVerifying) {
+        if (paypalSkeleton && this._paypalRendered) paypalSkeleton.style.display = 'none';
+        if (yapeSkeleton) yapeSkeleton.style.display = 'none';
+        if (yapeActual && yapeSection && yapeSection.classList.contains('active')) {
+            yapeActual.style.display = 'block';
+        }
+        // Desbloquear clics
+        if (paypalSection) paypalSection.style.pointerEvents = 'auto';
+        if (yapeSection) yapeSection.style.pointerEvents = 'auto';
+        if (paypalSection) paypalSection.style.opacity = '1';
+        if (yapeSection) yapeSection.style.opacity = '1';
+    }
+
+    // 1. Visibilidad de Métodos según Elegibilidad (Golden Condition)
+    // Solo mostramos un método si TODOS los productores en el carrito lo tienen.
+    if (paypalSection) paypalSection.style.display = eligibility.paypal ? 'block' : 'none';
+    if (yapeSection) yapeSection.style.display = eligibility.yape ? 'block' : 'none';
+
+    // 2. Manejo de Bloqueo (Si no hay método común para todo el carrito)
+    const isBlocked = !eligibility.paypal && !eligibility.yape;
+
+    if (isBlocked) {
       container.style.display = 'none';
       if (paypalSection) paypalSection.style.display = 'none';
       if (yapeSection) yapeSection.style.display = 'none';
@@ -786,42 +847,25 @@ const CheckoutManager = {
         newWarning.innerHTML = `
           <div style="margin-bottom:8px; display: flex; align-items: center; justify-content: center; gap: 10px;">
             <i class="bi bi-exclamation-circle" style="font-size:1rem; color:#888;"></i>
-            <span style="font-weight:700; font-size:0.8rem; text-transform:uppercase; letter-spacing:1px; color: #888;">Sujeto a Verificación</span>
+            <span style="font-weight:700; font-size:0.8rem; text-transform:uppercase; letter-spacing:1px; color: #888;">Compra no habilitada</span>
           </div>
           <p style="font-size:0.75rem; line-height:1.4; margin-bottom:12px; color: #666;">
-            El productor no tiene configurado PayPal.<br>
-            Comunícate para habilitar la compra:
+            Los productos seleccionados no comparten un método de pago común.<br>
+            Coordina con los productores haciendo clic arriba.
           </p>
-          <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; color: #666; font-size: 0.75rem;">
-             Haz clic en el nombre subrayado arriba para coordinar
-          </div>
         `;
         container.parentNode.insertBefore(newWarning, container);
       }
-      return;
-    }
-
-    // 2. Clear warning if not blocked
-    if (warning) warning.remove();
-
-    // 3. Update Method Visibility based on CartManager pre-verification
-    const eligibility = window.CartManager?.state?.paymentEligibility || { paypal: true, yape: false, preferred: 'paypal' };
-    
-    if (paypalSection) paypalSection.style.display = eligibility.paypal ? 'block' : 'none';
-    if (yapeSection) yapeSection.style.display = eligibility.yape ? 'block' : 'none';
-
-    // 4. Auto-toggle preferred method
-    if (!this._initialMethodSelected) {
-      this.togglePaymentMethod(eligibility.preferred);
-      this._initialMethodSelected = true;
-    }
-
-    // 5. PayPal Button specific visibility
-    const items = window.CartManager?.state?.items || [];
-    if (items.length > 0 && eligibility.paypal) {
-      container.style.display = 'block';
     } else {
-      container.style.display = 'none';
+      // No bloqueado: Limpiar advertencia si existe
+      if (warning) warning.remove();
+
+      // 3. Auto-selección del método preferido (Solo si no se ha seleccionado uno manualmente)
+      if (!this._initialMethodSelected) {
+        const preferred = eligibility.preferred || (eligibility.paypal ? 'paypal' : 'yape');
+        this.togglePaymentMethod(preferred);
+        this._initialMethodSelected = true;
+      }
     }
   },
 
@@ -917,25 +961,24 @@ const CheckoutManager = {
   // --- UI: SKELETONS ---
   getSummarySkeleton: function () {
     return `
-      <div class="summary-skeleton">
-        <div class="skeleton-summary-item">
-          <div class="skeleton-summary-img skeleton-shimmer"></div>
-          <div class="skeleton-summary-details">
-            <div class="skeleton-line skeleton-shimmer" style="width: 70%; height: 14px;"></div>
-            <div class="skeleton-line skeleton-shimmer" style="width: 40%; height: 10px;"></div>
-          </div>
+      <div style="padding: 24px; display: flex; flex-direction: column; gap: 20px; overflow: hidden;">
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+          <div class="skeleton-shimmer" style="height: 64px; width: 100%; border-radius: 12px;"></div>
+          <div class="skeleton-shimmer" style="height: 64px; width: 100%; border-radius: 12px;"></div>
         </div>
-        <div class="skeleton-summary-item">
-          <div class="skeleton-summary-img skeleton-shimmer"></div>
-          <div class="skeleton-summary-details">
-            <div class="skeleton-line skeleton-shimmer" style="width: 60%; height: 14px;"></div>
-            <div class="skeleton-line skeleton-shimmer" style="width: 30%; height: 10px;"></div>
+        <div style="padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.05); display: flex; flex-direction: column; gap: 12px;">
+          <div style="display: flex; justify-content: space-between;">
+            <div class="skeleton-shimmer" style="height: 12px; width: 60px; border-radius: 6px;"></div>
+            <div class="skeleton-shimmer" style="height: 12px; width: 40px; border-radius: 6px;"></div>
           </div>
-        </div>
-        <div style="margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 20px;">
-           <div class="skeleton-line skeleton-shimmer" style="width: 100%; height: 12px; margin-bottom: 12px;"></div>
-           <div class="skeleton-line skeleton-shimmer" style="width: 100%; height: 12px; margin-bottom: 12px;"></div>
-           <div class="skeleton-total-line skeleton-shimmer"></div>
+          <div style="display: flex; justify-content: space-between;">
+            <div class="skeleton-shimmer" style="height: 12px; width: 80px; border-radius: 6px;"></div>
+            <div class="skeleton-shimmer" style="height: 12px; width: 40px; border-radius: 6px;"></div>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-top: 10px;">
+            <div class="skeleton-shimmer" style="height: 28px; width: 80px; border-radius: 8px;"></div>
+            <div class="skeleton-shimmer" style="height: 28px; width: 100px; border-radius: 8px;"></div>
+          </div>
         </div>
       </div>
     `;
@@ -1147,8 +1190,19 @@ const CheckoutManager = {
         delete window.paypal;
         this._paypalRendered = false;
         const container = document.getElementById('paypal-button-container');
-        if (container) container.innerHTML = '';
+        const skeleton = document.getElementById('paypal-skeleton');
+        if (container) {
+            container.innerHTML = '';
+            container.style.display = 'none';
+        }
+        if (skeleton) skeleton.style.display = 'flex';
       }
+    } else {
+      // First load: Show skeleton
+      const skeleton = document.getElementById('paypal-skeleton');
+      const container = document.getElementById('paypal-button-container');
+      if (skeleton) skeleton.style.display = 'flex';
+      if (container) container.style.display = 'none';
     }
 
     // Lock: SDK is now loading
@@ -1192,6 +1246,8 @@ const CheckoutManager = {
     // Once buttons are rendered, NEVER re-render.
     if (this._paypalRendered) {
       const container = document.getElementById('paypal-button-container');
+      const skeleton = document.getElementById('paypal-skeleton');
+      if (skeleton) skeleton.style.display = 'none';
       if (container) container.style.display = 'block';
       return;
     }
@@ -1269,15 +1325,42 @@ const CheckoutManager = {
         });
       },
 
+      onCancel: function (data) {
+        console.log("Pago cancelado por el usuario.");
+        self.showProcessingState(false);
+      },
+
       onError: function (err) {
         console.error("PayPal Error:", err);
-        if (err.message && err.message.includes('MISSING_PRODUCER_PAYPAL')) return;
+        const errMsg = (err?.message || String(err)).toLowerCase();
+        
+        // Ignore "User closed" errors silently
+        const ignoreTerms = [
+            'missing_producer_paypal', 
+            'detected popup close', 
+            'window closed', 
+            'popup_closed_by_user',
+            'closed the popup',
+            'popup closed',
+            'user cancelled',
+            'cancelado por el usuario'
+        ];
+        if (ignoreTerms.some(term => errMsg.includes(term))) {
+            console.log("[PayPal] Popup closed or handled error ignored.");
+            this.showProcessingState(false);
+            return;
+        }
+
         alert("Ocurrió un error al procesar la solicitud con PayPal. Intenta nuevamente.");
       }
     });
 
     this._paypalButtonsInstance.render('#paypal-button-container').then(() => {
       this._renderInProgress = false;
+      const skeleton = document.getElementById('paypal-skeleton');
+      const container = document.getElementById('paypal-button-container');
+      if (skeleton) skeleton.style.display = 'none';
+      if (container) container.style.display = 'block';
     }).catch(err => {
       console.error("[CheckoutManager] Render error:", err);
       this._renderInProgress = false;
@@ -1367,8 +1450,22 @@ const CheckoutManager = {
       const radio = document.querySelector('input[name="payment-selection"][value="yape"]');
       if (radio) radio.checked = true;
 
-      // Update Yape total display
-      this.updateYapeTotalPEN();
+      // Show Yape skeleton for a split second for "premium" feel and to wait for conversion
+      const yapeSkeleton = document.getElementById('yape-skeleton');
+      const yapeActual = document.getElementById('yape-actual-content');
+      
+      if (yapeSkeleton && yapeActual) {
+          yapeActual.style.display = 'none';
+          yapeSkeleton.style.display = 'flex';
+          
+          setTimeout(() => {
+              this.updateYapeTotalPEN();
+              yapeSkeleton.style.display = 'none';
+              yapeActual.style.display = 'block';
+          }, 400); // 400ms shimmer
+      } else {
+          this.updateYapeTotalPEN();
+      }
     }
   },
 
