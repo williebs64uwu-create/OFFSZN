@@ -39,7 +39,7 @@ export const sendOffsznEmail = async ({ to, subject, html, fromName = 'OFFSZN' }
         // If the SMTP provider (like Gmail) is strict, it may rewrite the FROM address to the 
         // authenticated account, but we'll also include it as Reply-To to guide users.
         const mailOptions = {
-            from: `"${fromName}" <no-reply@offszn.lat>`,
+            from: `"${fromName}" <${EMAIL_USER}>`,
             replyTo: 'no-reply@offszn.lat',
             to,
             subject,

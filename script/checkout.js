@@ -239,25 +239,41 @@ const CheckoutManager = {
       validData = validData.filter(p => !p.public_slug?.startsWith('deleted'));
 
       if (validData.length > 0) {
-        const shuffled = validData.sort(() => 0.5 - Math.random());
-        const selected = shuffled.slice(0, 7);
-
-        // Fetch producer profiles manually from users table
-        const producerIds = [...new Set(selected.map(p => p.producer_id))];
+        // Fetch producer profiles manually from users table with payment info
+        const producerIds = [...new Set(validData.map(p => p.producer_id))];
         let profilesDict = {};
+        let eligibleProducers = new Set();
+        
         if (producerIds.length > 0) {
           const { data: profilesData } = await window.supabaseClient
             .from('users')
-            .select('id, nickname')
+            .select('id, nickname, paypal_email, payment_methods, yape_phone, is_verified')
             .in('id', producerIds);
 
           if (profilesData) {
             profilesData.forEach(pf => {
               const nameToUse = pf.nickname || 'Productor';
               profilesDict[pf.id] = nameToUse;
+              
+              // Check eligibility (PayPal exists or Yape is setup)
+              const hasPayPal = pf.paypal_email || pf.payment_methods?.paypal?.enabled || pf.payment_methods?.paypal;
+              const hasYape = pf.yape_phone && pf.is_verified;
+              
+              if (hasPayPal || hasYape) {
+                eligibleProducers.add(pf.id);
+              }
             });
           }
         }
+
+        // Filter validData for eligible producers ONLY
+        const filteredData = validData.filter(p => eligibleProducers.has(p.producer_id));
+        
+        // If we have none eligible, we show any as fallback (though ideally we should have many)
+        const finalPool = filteredData.length > 0 ? filteredData : validData;
+
+        const shuffled = finalPool.sort(() => 0.5 - Math.random());
+        const selected = shuffled.slice(0, 7);
 
         let html = `
                 <div class="explore-row" style="margin-top: 10px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 20px; width: 100%;">

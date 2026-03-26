@@ -971,11 +971,14 @@ const PaymentSettings = {
                 const item = document.createElement('div');
                 item.className = 'security-log-item';
                 item.innerHTML = `
-                    <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
-                        <span class="log-date">${new Date(log.created_at).toLocaleString()}</span>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                        <span class="log-date">${new Date(log.created_at).toLocaleString('es-ES', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' })}</span>
                         <span class="log-ip">${log.ip_address || 'IP Oculta'}</span>
                     </div>
-                    <div style="color:#666; font-size:0.7rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${log.user_agent || 'N/A'}</div>
+                    <div class="log-ua">
+                        <i class="bi bi-cpu"></i>
+                        <span>${log.user_agent || 'Dispositivo Desconocido'}</span>
+                    </div>
                 `;
                 content.appendChild(item);
             });

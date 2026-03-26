@@ -1,4 +1,5 @@
 import { sendOffsznEmail } from '../../../shared/utils/mailer.js';
+import { supabase } from '../../database/connection.js';
 
 // Truncate product name for notifications (max 30 chars)
 function truncateName(name, max = 30) {

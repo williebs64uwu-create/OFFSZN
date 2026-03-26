@@ -1,5 +1,6 @@
 import { supabase } from '../../database/connection.js';
 import { MercadoPagoConfig, Preference } from 'mercadopago';
+import { sendOffsznEmail } from '../../../shared/utils/mailer.js';
 // Validar cliente al inicio
 const token = process.env.MERCADOPAGO_ACCESS_TOKEN;
 if (!token) console.error("🔥 [CRITICAL] NO TOKEN FOUND IN CONTROLLER INIT");
@@ -311,8 +312,7 @@ export const createFreeOrder = async (req, res) => {
                         <a href="https://offszn.lat/cuenta/transacciones" style="display:inline-block; background:#3B82F6; color:#fff; padding:14px 30px; border-radius:10px; text-decoration:none; font-weight:700; margin-top:15px;">Ir a Mis Descargas</a>
                     </div>
                 `;
-                const { sendOffsznEmail } = await import('../../../shared/utils/mailer.js');
-                sendOffsznEmail({ to: userData.email, subject: `🎁 Descarga Lista - ${product.name}`, html: freeHtml, fromName: 'OFFSZN' })
+                await sendOffsznEmail({ to: userData.email, subject: `🎁 Descarga Lista - ${product.name}`, html: freeHtml, fromName: 'OFFSZN' })
                     .catch(e => console.error("[Email] Background receipt failed:", e));
 
                 if (product.producer_id) {
@@ -377,8 +377,11 @@ export const handleFreeGuestDownload = async (req, res) => {
         // EMAILS (BACKGROUND)
         (async () => {
             try {
-                const { data: existingUser } = await supabase.from('users').select('nickname').eq('email', guestEmail).single();
-                const { sendOffsznEmail } = await import('../../../shared/utils/mailer.js');
+                console.log(`[GuestDownload] Starting background tasks for: ${guestEmail}`);
+                const { data: existingUser } = await supabase.from('users')
+                    .select('nickname')
+                    .eq('email', guestEmail)
+                    .maybeSingle();
                 if (sendOffsznEmail) {
                     const subject = existingUser ? `✨ ¡Hola de nuevo, ${existingUser.nickname}! No olvides tu preset 🎹` : `📥 ¡Tu descarga de ${product.name} está lista! ✨`;
                     const html = `<div>Gracias por descargar ${product.name}. <a href="https://offszn.lat">OFFSZN</a></div>`; // Simplified for brevity

@@ -1,4 +1,5 @@
 import { supabase } from '../../database/connection.js';
+import { sendOffsznEmail } from '../../../shared/utils/mailer.js';
 import { hashPassword, comparePassword } from '../../services/hashing/bcryptService.js';
 import { generateToken } from '../../auth/jwt/jwtUtil.js';
 import { v4 as uuidv4 } from 'uuid';
@@ -109,7 +110,6 @@ export const registerUser = async (req, res) => {
 
         // 📧 WELCOME EMAIL (Background)
         try {
-            const { sendOffsznEmail } = await import('../../../shared/utils/mailer.js');
             const welcomeHtml = `
                 <div style="font-family: 'Segoe UI', sans-serif; padding: 40px; background: #0a0a0a; color: #fff; max-width: 600px; border: 1px solid #222; border-radius: 20px;">
                     <div style="text-align: center; margin-bottom: 30px;">
@@ -201,7 +201,6 @@ export const loginUser = async (req, res) => {
 
         // 🛡️ LOGIN SECURITY ALERT (Background)
         try {
-            const { sendOffsznEmail } = await import('../../../shared/utils/mailer.js');
             const ip = req.ip || req.headers['x-forwarded-for'] || 'IP Desconocida';
             const userAgent = req.headers['user-agent'] || 'Dispositivo Desconocido';
             const date = new Date().toLocaleString('es-ES', { timeZone: 'America/Lima' });
