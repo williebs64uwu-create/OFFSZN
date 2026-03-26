@@ -214,12 +214,14 @@
 
                 // Fetch Products (New)
                 let productsMap = {};
-                if (productIds.size > 0) {
-                    const { data: products } = await sbClient
+                const productIdsArray = Array.from(productIds).filter(id => id != null && id !== '');
+                if (productIdsArray.length > 0) {
+                    const { data: products, error: pErr } = await sbClient
                         .from('products')
                         .select('id, name, product_type, public_slug')
-                        .in('id', Array.from(productIds));
+                        .in('id', productIdsArray);
                     if (products) products.forEach(p => productsMap[p.id] = p);
+                    if (pErr) console.warn("[Notifications] Product Fetch Error:", pErr);
                 }
 
                 // Process Standard Notifications with Rich HTML
@@ -284,6 +286,11 @@
                         }
 
 
+                    } else if (n.type === 'payment_method_missing') {
+                        const buyerName = n.data?.buyer_username || 'Un comprador';
+                        const prodName = n.data?.product_name || 'un producto';
+                        const buyerHtml = `<strong class="artist-hover-trigger" data-username="${buyerName}" style="cursor:pointer;">${buyerName}</strong>`;
+                        finalMessage = `${buyerHtml} intentó comprar <strong>"${prodName}"</strong> y no pudo. Añade tus métodos de pago dando clic aquí.`;
                     }
 
 
@@ -503,6 +510,7 @@
                 case 'negotiate_accepted': return 'fa-sack-dollar';
                 case 'negotiate_rejected': return 'fa-circle-xmark';
                 case 'negotiate_counter': return 'fa-scale-balanced';
+                case 'payment_method_missing': return 'fa-wallet';
                 default: return 'fa-bell';
             }
         },
@@ -636,6 +644,8 @@
                 finalUrl = extraId ? `/comunidad/feed.html?reqId=${extraId}` : '/comunidad/feed.html';
             } else if (type?.startsWith('negotiate_') || type === 'negotiate_offer') {
                 finalUrl = '/cuenta/negociar';
+            } else if (type === 'payment_method_missing') {
+                finalUrl = '/transacciones.html';
             }
         }
 

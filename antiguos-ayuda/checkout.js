@@ -17,15 +17,6 @@ const CheckoutManager = {
     }[tag] || tag));
   },
 
-  formatPhone: function (phone) {
-    if (!phone) return '';
-    const digits = phone.replace(/\D/g, '');
-    if (digits.length === 11) { // 51 + 9 digits
-      return `+51 ${digits.substring(2, 5)} ${digits.substring(5, 8)} ${digits.substring(8, 11)}`;
-    }
-    return phone;
-  },
-
   // CONFIGURATION
   currency: 'USD',
 
@@ -35,16 +26,9 @@ const CheckoutManager = {
   appliedCoupon: null,
   couponData: null,
   negotiateData: null, // For negotiation-based checkout
-  _lastCartHash: null, // Track cart changes to avoid redundant updates
+  producerPlans: {}, // New: cache for producer plans
 
   init: async function () {
-    // Prevent re-initialization (e.g., on tab switch or back-forward cache)
-    if (this._initialized) {
-      console.log("[CheckoutManager] Already initialized, skipping.");
-      return;
-    }
-    this._initialized = true;
-
     // Define API_URL based on environment
     const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
     this.API_URL = window.OFFSZN_CONFIG?.API_BASE_URL
@@ -78,317 +62,46 @@ const CheckoutManager = {
     // Wait for CartManager to be ready (it loads async)
     await this.waitForCart();
 
-    // Show container immediately with default state
-    const container = document.getElementById('checkout-container');
-    if (container) container.style.opacity = '1';
+    // Load producer plans AND payment status for correct commission display + blocking
+    await this.loadProducerPlans();
 
-    // IMPORTANT: Show empty state ASAP if cart is empty
-    const initialItemsCount = window.CartManager?.state?.items?.length || 0;
-    this.updateEmptyState(initialItemsCount);
-    
-    // SYNC Verification check
-    this.checkBlockedStatus();
     this.renderOrderSummary();
-    this.updateCouponUI(this.appliedCoupon ? true : false);
 
-    if (!this.blockedItems || this.blockedItems.length === 0) {
-      if (initialItemsCount > 0) this.initPayPal();
-    }
-    this.updatePayPalButtonsVisibility();
-
-    // Mark init as complete — only NOW will cart-updated listener do anything    
-    this._initComplete = true;
-
-    // Prevent stacking event listeners
-    if (!this._cartListenerBound) {
-      this._cartListenerBound = true;
-      window.addEventListener('cart-updated', () => {
-        if (this.negotiateData) return;
-        if (!this._initComplete) return; // Ignore events fired during init
-        if (this._cartUpdateRunning) return; // Debounce
-        this._cartUpdateRunning = true;
-
-        try {
-          const items = window.CartManager?.state?.items || [];
-          const count = items.length;
-
-          // Verify if items actually changed to avoid redundant re-verifications
-          const currentCartHash = items.map(i => `${i.product.id}-${i.license_name}`).join('|');
-          if (this._lastCartHash === currentCartHash) {
-            this._cartUpdateRunning = false;
-            return;
-          }
-          this._lastCartHash = currentCartHash;
-
-          this.updateEmptyState(count);
-          
-          if (count === 0) {
-            this.blockedItems = []; // Clear blocked items on empty cart
-            this.renderOrderSummary();
-            this.updatePayPalButtonsVisibility();
-            return;
-          }
-
-          // Everything is now synchronous because CartManager handles verification
-          this.checkBlockedStatus();
-          this.renderOrderSummary();
-
-          if (!this.blockedItems || this.blockedItems.length === 0) {
-            this.initPayPal();
-          }
-          this.updatePayPalButtonsVisibility();
-        } finally {
-          this._cartUpdateRunning = false;
-        }
-      });
-    }
-  },
-
-  updateEmptyState: function (itemsCount) {
-    const grid = document.getElementById('checkout-container');
-    const emptyState = document.getElementById('empty-cart-state');
-
-    if (itemsCount === 0) {
-      if (grid) grid.style.display = 'none';
-      if (emptyState) emptyState.style.display = 'block';
-      this.loadRecommendations();
+    // Check if order is blocked BEFORE rendering PayPal buttons
+    if (this.blockedItems && this.blockedItems.length > 0) {
+      this.updatePayPalButtonsVisibility();
     } else {
-      if (grid) grid.style.display = 'grid';
-      if (emptyState) emptyState.style.display = 'none';
+      this.initPayPal();
+    }
 
-      // Show summary skeleton while details load
-      const summaryContainer = document.getElementById('checkout-order-summary');
-      if (summaryContainer && !this._summaryRendered) {
-        summaryContainer.innerHTML = this.getSummarySkeleton();
+    if (this.appliedCoupon) {
+      this.updateCouponUI(true);
+    }
+
+    // Listen for cart updates (e.g., item removed via sidebar or checkout summary)
+    window.addEventListener('cart-updated', async () => {
+      // Skip if in negotiate mode
+      if (this.negotiateData) return;
+      
+      const itemsCount = window.CartManager?.state?.items?.length || 0;
+      
+      // Producer plans/blocking require re-evaluating the current cart
+      await this.loadProducerPlans();
+      this.renderOrderSummary();
+      
+      if (itemsCount === 0) {
+        const container = document.getElementById('paypal-button-container');
+        if (container) container.style.display = 'none';
+        return;
       }
-    }
-  },
-
-  loadRecommendations: async function () {
-    const container = document.getElementById('checkout-recommendations');
-    if (!container) return;
-
-    container.style.display = 'block';
-
-    if (window._checkoutRecommendationsLoaded) return;
-
-    // Show skeletons immediately
-    let skeletonHTML = `
-        <div class="explore-row" style="margin-top: 10px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 20px; width: 100%;">
-            <div class="row-header" style="margin-bottom: 20px; padding: 0 5%;">
-                <div class="skeleton-text-title skeleton-shimmer" style="width: 180px; height: 1.25rem;"></div>
-            </div>
-            <div class="shelf-wrapper" style="padding: 0 5%;">
-                <div class="shelf-inner">
-                    <div class="shelf-container" style="gap: 24px;">
-    `;
-    for (let i = 0; i < 7; i++) {
-      skeletonHTML += `
-            <div class="skeleton-card">
-                <div class="skeleton-cover skeleton-shimmer"></div>
-                <div class="skeleton-text-title skeleton-shimmer"></div>
-                <div class="skeleton-text-sub skeleton-shimmer"></div>
-                <div class="skeleton-btn skeleton-shimmer"></div>
-            </div>
-        `;
-    }
-    skeletonHTML += `</div></div></div></div>`;
-    container.innerHTML = skeletonHTML;
-
-    window._checkoutRecommendationsLoaded = true;
-
-    try {
-      const { data, error } = await window.supabaseClient
-        .from('products')
-        .select('id, name, producer_id, price_basic, image_url, r2_version, storage_version, status, public_slug, audio_url, download_url_mp3')
-        .eq('product_type', 'beat')
-        .eq('status', 'approved')
-        .gt('price_basic', 0)
-        .limit(40);
-
-      if (error) throw error;
-
-      let validData = data || [];
-      validData = validData.filter(p => !p.public_slug?.startsWith('deleted'));
-
-      if (validData.length > 0) {
-        const shuffled = validData.sort(() => 0.5 - Math.random());
-        const selected = shuffled.slice(0, 7);
-
-        // Fetch producer profiles manually from users table
-        const producerIds = [...new Set(selected.map(p => p.producer_id))];
-        let profilesDict = {};
-        if (producerIds.length > 0) {
-          const { data: profilesData } = await window.supabaseClient
-            .from('users')
-            .select('id, nickname')
-            .in('id', producerIds);
-
-          if (profilesData) {
-            profilesData.forEach(pf => {
-              const nameToUse = pf.nickname || 'Productor';
-              profilesDict[pf.id] = nameToUse;
-            });
-          }
-        }
-
-        let html = `
-                <div class="explore-row" style="margin-top: 10px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 20px; width: 100%;">
-                    <div class="row-header" style="margin-bottom: 20px; padding: 0 5%;">
-                        <h2 class="row-title" style="font-size: 1.25rem;">Recomendados para ti</h2>
-                        <div class="row-actions">
-                            <div class="view-all" onclick="window.location.href='/search.html'">
-                                Ver todos <i class="bi bi-arrow-right"></i>
-                            </div>
-                            <div class="row-nav-arrows mobile-hide">
-                                <button class="btn-nav-mini prev disabled" onclick="document.getElementById('checkout-recs-container').scrollBy({left:-600,behavior:'smooth'})"><i class="bi bi-chevron-left"></i></button>
-                                <button class="btn-nav-mini next" onclick="document.getElementById('checkout-recs-container').scrollBy({left:600,behavior:'smooth'})"><i class="bi bi-chevron-right"></i></button>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="shelf-wrapper" style="padding: 0 5%;">
-                        <div class="shelf-inner">
-                            <div class="shelf-container" id="checkout-recs-container">
-            `;
-
-        for (const p of selected) {
-          const img = '/images/portada-default.png'; // Default while loading
-          const artist = this.escapeHTML(profilesDict[p.producer_id] || 'Productor');
-          html += `
-                    <div class="product-card-smart-wrapper" style="display: flex; flex-direction: column; gap: 8px;">
-                        <div class="product-card-smart" data-product-id="${p.id}" onclick="window.location.href='/producto.html?id=${p.id}'" style="margin: 0; min-width: 176px; max-width: 176px;">
-                            <div class="card-cover-wrapper">
-                                <img id="rec-img-${p.id}" src="${img}" alt="${this.escapeHTML(p.name)}">
-                                <button class="quick-play-btn" onclick="event.stopPropagation(); window.playCheckoutTrack('${p.id}')"><i class="bi bi-play-fill"></i></button>
-                                <button class="card-like-btn" onclick="event.stopPropagation(); window.handleLike(event, '${p.id}', this)">
-                                    <i class="bi bi-heart"></i>
-                                </button>
-                            </div>
-                            <div class="card-info">
-                                <div class="card-title">${this.escapeHTML(p.name)}</div>
-                                <div class="card-producer">${artist}</div>
-                            </div>
-                        </div>
-                        <button onclick="if(window.CartManager) window.CartManager.addItem('${p.id}')" style="margin-top: 4px; background: #fff; color: #000; border: 1px solid #fff; padding: 8px 0; border-radius: 8px; font-weight: 700; font-size: 0.75rem; cursor: pointer; transition: all 0.2s; text-align: center; display: flex; align-items: center; justify-content: center; gap: 6px; width: 176px;" onmouseover="this.style.background='#f0f0f0'; this.style.borderColor='#f0f0f0';" onmouseout="this.style.background='#fff'; this.style.borderColor='#fff';">
-                            <i class="bi bi-cart-plus"></i> Agregar • $${p.price_basic}
-                        </button>
-                    </div>
-                `;
-        }
-        html += `</div></div></div></div>`;
-        container.innerHTML = html;
-
-        // Load authorized images asynchronously
-        selected.forEach(async p => {
-          if (p.image_url && window.getAuthorizedUrl) {
-            try {
-              const authUrl = await window.getAuthorizedUrl(p.image_url, p.storage_version, p.r2_version);
-              const imgEl = document.getElementById(`rec-img-${p.id}`);
-              if (imgEl) imgEl.src = authUrl;
-            } catch (e) {
-              console.error("Error loading rec image:", e);
-            }
-          }
-        });
-
-        // Attach play and like logic to window for checkout page specifically
-        window._checkoutRecsProducts = selected;
-        window._checkoutRecsProfiles = profilesDict;
-
-        if (!window.playCheckoutTrack) {
-          window.playCheckoutTrack = function (id) {
-            const product = window._checkoutRecsProducts.find(x => x.id === id);
-            if (!product) return;
-
-            // Attach resolved nickname for the players
-            product.producer_nickname = (window._checkoutRecsProfiles || {})[product.producer_id] || 'Productor';
-
-            // Unified Playback via StickyPlayer + ExpandedPlayer
-            if (window.StickyPlayer) {
-              window.StickyPlayer.play(product);
-            } else if (window.playTrack) {
-              window.playTrack(product);
-            }
-
-            if (window.ExpandedPlayer) {
-              window.ExpandedPlayer.open(product);
-            }
-          };
-        }
-
-        if (!window.handleLike) {
-          window.handleLike = function (e, id, btn) {
-            if (e) e.stopPropagation();
-            if (!window.AuthUtils || !window.AuthUtils.isLoggedIn()) {
-              window.location.href = '/pages/login.html';
-              return;
-            }
-            if (window.FavoritesManager) {
-              const icon = btn.querySelector('i');
-              const isLiked = window.FavoritesManager.isLiked(id);
-              if (isLiked) {
-                window.FavoritesManager.removeFavorite(id);
-                if (icon) { icon.className = 'bi bi-heart'; icon.style.color = ''; }
-              } else {
-                window.FavoritesManager.addFavorite(id);
-                if (icon) { icon.className = 'bi bi-heart-fill heart-beat'; icon.style.color = '#ef4444'; }
-              }
-            }
-          };
-        }
-
-        // Initial render of favorite states
-        if (window.FavoritesManager) {
-          setTimeout(() => {
-            selected.forEach(p => {
-              const btn = container.querySelector(`.product-card-smart[data-product-id="${p.id}"] .card-like-btn i`);
-              if (btn && window.FavoritesManager.isLiked(p.id)) {
-                btn.className = 'bi bi-heart-fill heart-beat';
-                btn.style.color = '#ef4444';
-              }
-            });
-          }, 500);
-        }
-
-        const cShelf = document.getElementById('checkout-recs-container');
-        const cPrev = container.querySelector('.prev');
-        const cNext = container.querySelector('.next');
-        if (cShelf && cPrev && cNext) {
-          cShelf.addEventListener('scroll', () => {
-            if (cShelf.scrollLeft <= 0) cPrev.classList.add('disabled');
-            else cPrev.classList.remove('disabled');
-            if (cShelf.scrollLeft + cShelf.clientWidth >= cShelf.scrollWidth - 5) cNext.classList.add('disabled');
-            else cNext.classList.remove('disabled');
-          });
-        }
-
-        selected.forEach(p => {
-          const imgEl = document.getElementById(`rec-img-${p.id}`);
-          const rawImg = p.image_url;
-          if (!rawImg) return;
-
-          const isR2 = window.AuthUtils && window.AuthUtils.isR2Url(rawImg);
-          if (isR2 && window.getAuthorizedUrl) {
-            window.getAuthorizedUrl(rawImg, p.storage_version || p.r2_version || 'v1').then(url => {
-              if (url && imgEl) imgEl.src = url;
-            });
-          } else if (!rawImg.startsWith('http') && !rawImg.startsWith('/')) {
-            // Normal Supabase V1 image
-            const res = window.supabaseClient.storage.from('products').getPublicUrl(rawImg);
-            if (res && res.data && res.data.publicUrl && imgEl) {
-              imgEl.src = res.data.publicUrl;
-            }
-          } else if (imgEl) {
-            imgEl.src = rawImg;
-          }
-        });
+      
+      if (this.blockedItems && this.blockedItems.length > 0) {
+        this.updatePayPalButtonsVisibility();
       } else {
-        container.innerHTML = '';
+        this.updatePayPalButtonsVisibility();
+        this.initPayPal();
       }
-    } catch (err) {
-      console.error("Error loading recommendations", err);
-      container.innerHTML = '';
-    }
+    });
   },
 
   // --- NEGOTIATE CHECKOUT MODE ---
@@ -661,8 +374,7 @@ const CheckoutManager = {
         : (parseFloat(item.product.price_basic) || 0);
 
       const producerId = item.product.producer_id;
-      const verification = window.CartManager?.state?.producerVerification?.[producerId];
-      const plan = verification?.plan || 'free';
+      const plan = this.producerPlans[producerId] || 'free';
 
       let commission = 0;
       if (price > 0) {
@@ -676,9 +388,6 @@ const CheckoutManager = {
         }
       }
 
-      const producerName = verification?.nickname || 'Productor';
-      const producerUsername = verification?.username || null;
-
       subtotal += price;
       serviceFee += commission;
 
@@ -686,9 +395,7 @@ const CheckoutManager = {
         ...item,
         price: price,
         commission: commission,
-        lineTotal: price + commission,
-        producerName,
-        producerUsername
+        lineTotal: price + commission
       };
     });
 
@@ -733,26 +440,65 @@ const CheckoutManager = {
     };
   },
 
+  loadProducerPlans: async function () {
+    const items = CartManager.state.items;
+    if (!items || items.length === 0) return;
+
+    const producerIds = [...new Set(items.map(item => item.product.producer_id))];
+
+    try {
+      // Fetch payment_methods and paypal_email from users table
+      const { data, error } = await window.supabaseClient
+        .from('users')
+        .select('id, payment_methods, paypal_email')
+        .in('id', producerIds);
+
+      if (error) throw error;
+
+      // Fetch plan + username from profiles for commission display + bio links
+      const { data: profiles, error: pError } = await window.supabaseClient
+        .from('profiles')
+        .select('id, plan, username')
+        .in('id', producerIds);
+
+      if (pError) throw pError;
+
+      this.producerData = {};
+      data.forEach(u => {
+        const profile = profiles.find(p => p.id === u.id);
+        const finalPaypal = u.paypal_email || u.payment_methods?.paypal || null;
+        this.producerData[u.id] = {
+          plan: profile?.plan || 'free',
+          username: profile?.username || null,
+          hasPayPal: !!(finalPaypal && finalPaypal.includes('@')),
+          paypalEmail: finalPaypal
+        };
+        // Backwards compatibility for calculateTotals
+        this.producerPlans[u.id] = profile?.plan || 'free';
+      });
+
+      console.log("[CheckoutManager] Producer data loaded:", this.producerData);
+
+      this.checkBlockedStatus();
+    } catch (err) {
+      console.warn("Failed to load producer data for checkout", err);
+    }
+  },
 
   checkBlockedStatus: function () {
     const items = CartManager.state.items;
     this.blockedItems = [];
 
     items.forEach(item => {
-      const producerId = item.product.producer_id;
-      const pData = window.CartManager?.state?.producerVerification?.[producerId];
-
-      // Block if: producer data not found at all, OR has no PayPal
-      const isBlocked = !pData || pData.hasPayPal === false;
-
-      if (isBlocked) {
+      const pData = this.producerData?.[item.product.producer_id];
+      if (pData && !pData.hasPayPal) {
         // Avoid duplicates for the same producer
-        if (!this.blockedItems.find(b => b.producerId === producerId)) {
+        if (!this.blockedItems.find(b => b.producerId === item.product.producer_id)) {
           this.blockedItems.push({
             productId: item.product.id,
             productName: item.product.name,
-            producerId: producerId,
-            username: pData?.username || null
+            producerId: item.product.producer_id,
+            username: pData.username
           });
         }
       }
@@ -768,16 +514,18 @@ const CheckoutManager = {
   updatePayPalButtonsVisibility: function () {
     const container = document.getElementById('paypal-button-container');
     const warning = document.getElementById('checkout-blocked-warning');
-    const paypalSection = document.getElementById('method-paypal');
-    const yapeSection = document.getElementById('method-yape');
 
     if (!container) return;
 
-    // 1. Check for Blocked Status (PayPal missing for some)
     if (this.blockedItems && this.blockedItems.length > 0) {
       container.style.display = 'none';
-      if (paypalSection) paypalSection.style.display = 'none';
-      if (yapeSection) yapeSection.style.display = 'none';
+
+      // Build producer links
+      const producerLinks = this.blockedItems.map(b => {
+        const displayName = b.username || 'Productor';
+        const link = b.username ? `/${b.username}` : `/producto.html?id=${b.productId}`;
+        return `<a href="${link}" target="_blank" style="color:#fff; text-decoration:underline; font-weight:600; font-size:0.85rem;">${displayName}</a>`;
+      }).join(', ');
 
       if (!warning) {
         const newWarning = document.createElement('div');
@@ -788,40 +536,22 @@ const CheckoutManager = {
             <i class="bi bi-exclamation-circle" style="font-size:1rem; color:#888;"></i>
             <span style="font-weight:700; font-size:0.8rem; text-transform:uppercase; letter-spacing:1px; color: #888;">Sujeto a Verificación</span>
           </div>
-          <p style="font-size:0.75rem; line-height:1.4; margin-bottom:12px; color: #666;">
+          <p style="font-size:0.75rem; line-height:1.4; margin-bottom:8px; color: #666;">
             El productor no tiene configurado PayPal.<br>
-            Comunícate para habilitar la compra:
+            Contacta para habilitar la compra:
           </p>
-          <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; color: #666; font-size: 0.75rem;">
-             Haz clic en el nombre subrayado arriba para coordinar
+          <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 8px;">
+            ${producerLinks}
           </div>
         `;
         container.parentNode.insertBefore(newWarning, container);
+      } else {
+        const linksDiv = warning.querySelector('div:last-child');
+        if (linksDiv) linksDiv.innerHTML = producerLinks;
       }
-      return;
-    }
-
-    // 2. Clear warning if not blocked
-    if (warning) warning.remove();
-
-    // 3. Update Method Visibility based on CartManager pre-verification
-    const eligibility = window.CartManager?.state?.paymentEligibility || { paypal: true, yape: false, preferred: 'paypal' };
-    
-    if (paypalSection) paypalSection.style.display = eligibility.paypal ? 'block' : 'none';
-    if (yapeSection) yapeSection.style.display = eligibility.yape ? 'block' : 'none';
-
-    // 4. Auto-toggle preferred method
-    if (!this._initialMethodSelected) {
-      this.togglePaymentMethod(eligibility.preferred);
-      this._initialMethodSelected = true;
-    }
-
-    // 5. PayPal Button specific visibility
-    const items = window.CartManager?.state?.items || [];
-    if (items.length > 0 && eligibility.paypal) {
-      container.style.display = 'block';
     } else {
-      container.style.display = 'none';
+      container.style.display = 'block';
+      if (warning) warning.remove();
     }
   },
 
@@ -914,51 +644,15 @@ const CheckoutManager = {
     }
   },
 
-  // --- UI: SKELETONS ---
-  getSummarySkeleton: function () {
-    return `
-      <div class="summary-skeleton">
-        <div class="skeleton-summary-item">
-          <div class="skeleton-summary-img skeleton-shimmer"></div>
-          <div class="skeleton-summary-details">
-            <div class="skeleton-line skeleton-shimmer" style="width: 70%; height: 14px;"></div>
-            <div class="skeleton-line skeleton-shimmer" style="width: 40%; height: 10px;"></div>
-          </div>
-        </div>
-        <div class="skeleton-summary-item">
-          <div class="skeleton-summary-img skeleton-shimmer"></div>
-          <div class="skeleton-summary-details">
-            <div class="skeleton-line skeleton-shimmer" style="width: 60%; height: 14px;"></div>
-            <div class="skeleton-line skeleton-shimmer" style="width: 30%; height: 10px;"></div>
-          </div>
-        </div>
-        <div style="margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 20px;">
-           <div class="skeleton-line skeleton-shimmer" style="width: 100%; height: 12px; margin-bottom: 12px;"></div>
-           <div class="skeleton-line skeleton-shimmer" style="width: 100%; height: 12px; margin-bottom: 12px;"></div>
-           <div class="skeleton-total-line skeleton-shimmer"></div>
-        </div>
-      </div>
-    `;
-  },
-
   // --- UI: RENDER SUMMARY ---
   renderOrderSummary: function () {
-    this._summaryRendered = true;
     const container = document.getElementById('checkout-order-summary');
     if (!container) return;
 
     const { items, subtotal, discountAmount, serviceFee, total } = this.calculateTotals();
 
     if (items.length === 0) {
-      container.innerHTML = `
-        <div style="text-align: center; padding: 40px 20px 20px; color: #888; font-family: 'Plus Jakarta Sans', sans-serif;">
-          <i class="bi bi-cart2" style="font-size: 2.5rem; display: block; margin-bottom: 15px; opacity: 0.5;"></i>
-          <p style="margin-bottom: 24px; font-size: 0.95rem; font-weight: 500;">Tu carrito está vacío.</p>
-          <a href="/explorar.html" style="display: inline-flex; align-items: center; justify-content: center; gap: 8px; background: #fff; color: #000; text-decoration: none; font-weight: 700; padding: 12px 24px; border-radius: 100px; font-size: 0.85rem; transition: transform 0.2s;">
-            Ir a explorar <i class="bi bi-arrow-right" style="font-size: 1.1rem; margin-top: 1px;"></i>
-          </a>
-        </div>
-      `;
+      container.innerHTML = `<div class="empty-cart-msg" style="text-align: center; padding: 40px; color: #666;">Tu carrito está vacío. <a href="/explorar.html" style="color: #fff; text-decoration:underline;"> <br> Ir a explorar</a></div>`;
       return;
     }
 
@@ -969,29 +663,38 @@ const CheckoutManager = {
       items.forEach(item => {
         const isBlocked = this.blockedItems?.some(b => String(b.productId) === String(item.product.id));
         let priceHTML = '';
-        const price = parseFloat(item.variant_price) > 0
-          ? parseFloat(item.variant_price)
-          : (parseFloat(item.product.price_basic) || 0);
 
-        if (item.product.product_type === 'beat') {
-          const basicPrice = item.product.price_basic || 0;
-          if (price < basicPrice) {
-            priceHTML = `
-                  <div style="font-size:1.05rem; font-weight:700; color:#fff; font-family: 'Plus Jakarta Sans', sans-serif;">$${price.toFixed(2)}</div>
-                  <div style="font-size:0.8rem; color:#666; text-decoration:line-through;">$${parseFloat(basicPrice).toFixed(2)}</div>
-                  <div style="font-size:0.75rem; color:#888;">+ $${item.commission.toFixed(2)}</div>
+        const pData = this.producerData?.[item.product.producer_id];
+        const contactLink = pData?.username ? `/${pData.username}` : `/producto.html?id=${item.product.id}`;
+
+        if (isBlocked) {
+          priceHTML = `
+                <a href="${contactLink}" target="_blank" 
+                        style="display:inline-block; background: transparent; border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 4px 10px; border-radius: 6px; font-size: 0.7rem; cursor: pointer; font-weight: 600; text-decoration:none; text-transform:uppercase; letter-spacing:0.5px;">
+                    Contactar
+                </a>
+            `;
+        } else {
+          if (item.product.product_type === 'beat') {
+            const basicPrice = item.product.price_basic || 0;
+            if (item.price < basicPrice) {
+              priceHTML = `
+                    <div style="font-size:1.05rem; font-weight:700; color:#fff; font-family: 'Plus Jakarta Sans', sans-serif;">$${item.price.toFixed(2)}</div>
+                    <div style="font-size:0.8rem; color:#666; text-decoration:line-through;">$${parseFloat(basicPrice).toFixed(2)}</div>
+                    <div style="font-size:0.75rem; color:#888;">+ $${item.commission.toFixed(2)}</div>
+                  `;
+            } else {
+              priceHTML = `
+                    <div style="font-size:1.05rem; font-weight:700; color:#fff; font-family: 'Plus Jakarta Sans', sans-serif;">$${item.price.toFixed(2)}</div>
+                    <div style="font-size:0.75rem; color:#888;">+ $${item.commission.toFixed(2)}</div>
                 `;
+            }
           } else {
             priceHTML = `
-                  <div style="font-size:1.05rem; font-weight:700; color:#fff; font-family: 'Plus Jakarta Sans', sans-serif;">$${price.toFixed(2)}</div>
-                  <div style="font-size:0.75rem; color:#888;">+ $${item.commission.toFixed(2)}</div>
+                <div style="font-size:1.05rem; font-weight:700; color:#fff; font-family: 'Plus Jakarta Sans', sans-serif;">$${item.price.toFixed(2)}</div>
+                <div style="font-size:0.75rem; color:#888;">+ $${item.commission.toFixed(2)}</div>
               `;
           }
-        } else {
-          priceHTML = `
-              <div style="font-size:1.05rem; font-weight:700; color:#fff; font-family: 'Plus Jakarta Sans', sans-serif;">$${price.toFixed(2)}</div>
-              <div style="font-size:0.75rem; color:#888;">+ $${item.commission.toFixed(2)}</div>
-            `;
         }
 
         const fallbackImg = '/images/portada-default.png';
@@ -1007,19 +710,11 @@ const CheckoutManager = {
                      style="width:100%; height:100%; border-radius:10px; object-fit:cover; border:1px solid rgba(255,255,255,0.1); background:#111;">
               </div>
               <div class="checkout-item-details" style="flex:1; min-width:0;">
-                <div class="checkout-item-name truncate" style="font-size:0.95rem; font-weight:600; color:#eee; margin-bottom:2px; font-family: 'Plus Jakarta Sans', sans-serif;">"${safeName}"</div>
-                <div style="display: flex; align-items: center; gap: 8px; font-size: 0.7rem;">
-                  <span style="color:#555; text-transform:uppercase; letter-spacing:0.5px; font-weight: 500;">${safeLicName}</span>
-                  <span style="color: #333;">•</span>
-                  <a href="${item.producerUsername ? '/' + item.producerUsername : '#'}" 
-                     style="color: #888; text-decoration: underline; font-weight: 500;"
-                     target="_blank">
-                    ${this.escapeHTML(item.producerName)}
-                  </a>
-                </div>
+                <div class="checkout-item-name truncate" style="font-size:0.95rem; font-weight:600; color:#eee; margin-bottom:4px; font-family: 'Plus Jakarta Sans', sans-serif;">"${safeName}"</div>
+                <div style="font-size:0.7rem; color:#555; text-transform:uppercase; letter-spacing:0.5px; font-weight: 500;">${safeLicName}</div>
                 ${isBlocked ? `
-                    <div class="blocked-warning" style="color: #EF4444; font-size: 0.65rem; margin-top: 6px; font-weight: 600;">
-                        <i class="bi bi-exclamation-circle-fill"></i> Falta PayPal
+                    <div class="blocked-warning" style="color: #666; font-size: 0.65rem; margin-top: 6px; font-weight: 500;">
+                        <i class="bi bi-exclamation-circle-fill"></i> Productor sin PayPal configurado.
                     </div>
                 ` : ''}
               </div>
@@ -1070,25 +765,10 @@ const CheckoutManager = {
           </div>
           <div class="total-row grand-total" style="display:flex; justify-content:space-between; align-items: center; color:#fff; padding-top:20px; border-top:1px solid rgba(255,255,255,0.1); font-family:'Plus Jakarta Sans', sans-serif;">
             <span style="font-size: 1rem; font-weight: 600; text-transform:uppercase; letter-spacing:1px; color:#888;">Total</span>
-            <span style="font-size: 1.6rem; font-weight: 800;">
-                ${window.CurrencyManager ? window.CurrencyManager.format(total) : `$${total.toFixed(2)}`}
-            </span>
+            <span style="font-size: 1.6rem; font-weight: 800;">$${total.toFixed(2)}</span>
           </div>
         </div>
       `;
-
-    // Add currency switcher backlink if in PEN
-    const currency = localStorage.getItem('OFFSZN_CURRENCY') || 'USD';
-    if (currency === 'PEN') {
-      html += `
-        <div style="margin-top:20px; text-align:center;">
-          <a href="javascript:void(0)" onclick="localStorage.setItem('OFFSZN_CURRENCY', 'USD'); window.location.reload();" 
-             style="font-size:0.75rem; color:#888; text-decoration:underline;">
-            Cambiar a USD (PayPal)
-          </a>
-        </div>
-      `;
-    }
 
     container.innerHTML = html;
   },
@@ -1102,12 +782,6 @@ const CheckoutManager = {
 
   // --- PAYPAL INTEGRATION ---
   initPayPal: function () {
-    // MUTEX: prevent concurrent SDK loading
-    if (this._paypalLoading) {
-      console.log("[CheckoutManager] PayPal SDK already loading, skipping.");
-      return;
-    }
-
     const merchantIds = new Set();
 
     // Only include platform merchant ID if there is a service fee
@@ -1118,13 +792,13 @@ const CheckoutManager = {
 
     // Add all producer emails from the cart
     CartManager.state.items.forEach(item => {
-      const pData = window.CartManager?.state?.producerVerification?.[item.product.producer_id];
+      const pData = this.producerData?.[item.product.producer_id];
       if (pData && pData.hasPayPal && pData.paypalEmail) {
         merchantIds.add(pData.paypalEmail);
       }
     });
 
-    const merchantIdArr = Array.from(merchantIds).sort(); // SORT to ensure stable string
+    const merchantIdArr = Array.from(merchantIds);
     const merchantIdString = merchantIdArr.join(',');
     const clientId = 'ATPgFaKnGSf4hJZEN_lkw82QVO2sNc6O9d6QX7GcWBny9tqchRoXpZ89UxkUtD1U2ZWsbv9uAkwruu2B';
 
@@ -1132,27 +806,16 @@ const CheckoutManager = {
     const existingScript = document.getElementById('paypal-sdk-script');
     if (existingScript) {
       if (existingScript.getAttribute('data-merchant-id-string') === merchantIdString && window.paypal) {
-        // SDK already loaded with same merchants — only re-render if buttons are gone
-        if (!this._paypalRendered) {
-          this.renderPayPalButtons();
-        } else {
-          // Buttons already live, just make container visible
-          const container = document.getElementById('paypal-button-container');
-          if (container) container.style.display = 'block';
-        }
+        this.renderPayPalButtons();
         return;
       } else {
-        // Merchant config changed — must reload SDK
+        // Remove old script and window.paypal object if the configuration changed
         existingScript.remove();
         delete window.paypal;
-        this._paypalRendered = false;
         const container = document.getElementById('paypal-button-container');
         if (container) container.innerHTML = '';
       }
     }
-
-    // Lock: SDK is now loading
-    this._paypalLoading = true;
 
     const script = document.createElement('script');
     script.id = 'paypal-sdk-script';
@@ -1167,52 +830,32 @@ const CheckoutManager = {
       // Fallback
       script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&currency=USD`;
     }
-    script.setAttribute('data-merchant-id-string', merchantIdString);
+    script.setAttribute('data-merchant-id-string', merchantIdString); // Provide an exact flag to track change since data-merchant-id may not exist
 
     script.onload = () => {
-      this._paypalLoading = false;
       this.renderPayPalButtons();
     };
-    script.onerror = () => {
-      this._paypalLoading = false;
-      console.error("Failed to load PayPal SDK");
-    };
+    script.onerror = () => console.error("Failed to load PayPal SDK");
     document.head.appendChild(script);
   },
 
   renderPayPalButtons: function () {
-    if (!window.paypal || !window.paypal.Buttons) {
-      console.warn("[CheckoutManager] PayPal Buttons not available yet.");
-      return;
-    }
-
-    // Mutex: Prevent concurrent rendering
-    if (this._renderInProgress) return;
-
-    // Once buttons are rendered, NEVER re-render.
-    if (this._paypalRendered) {
-      const container = document.getElementById('paypal-button-container');
-      if (container) container.style.display = 'block';
-      return;
-    }
+    if (!window.paypal) return;
 
     const container = document.getElementById('paypal-button-container');
-    if (!container) return;
-
-    this._renderInProgress = true;
-    container.innerHTML = '';
-    this._paypalRendered = true;
+    if (container) container.innerHTML = '';
 
     const self = this;
 
-    // STORE the instance to prevent internal SDK conflicts
-    this._paypalButtonsInstance = window.paypal.Buttons({
+    window.paypal.Buttons({
       style: {
         layout: 'vertical',
         color: 'gold',
         shape: 'rect',
         label: 'pay'
       },
+      // Optionally configure funding sources if we want to restrict
+      // fundingSource: window.paypal.FUNDING.PAYPAL,
 
       createOrder: function (data, actions) {
         const body = { couponCode: self.appliedCoupon };
@@ -1221,7 +864,7 @@ const CheckoutManager = {
         }
 
         return window.supabaseClient.auth.getSession().then(({ data: { session } }) => {
-          return fetch(`${self.API_URL}/orders/paypal/create`, {
+          return fetch(`${self.API_URL}/orders/paypal/create`, { // Fixed template literal spacing
             method: 'post',
             headers: {
               'Content-Type': 'application/json',
@@ -1271,18 +914,13 @@ const CheckoutManager = {
 
       onError: function (err) {
         console.error("PayPal Error:", err);
-        if (err.message && err.message.includes('MISSING_PRODUCER_PAYPAL')) return;
-        alert("Ocurrió un error al procesar la solicitud con PayPal. Intenta nuevamente.");
+        if (err.message && err.message.includes('Some producers have no payment method')) {
+          alert("Alerta: Uno o más productores en tu carrito aún no han configurado su cuenta bancaria/PayPal. \n\nRevisa el resumen de tu pedido, contacta al productor o elimina el beat de tu carrito para poder continuar.");
+        } else {
+          alert("Ocurrió un error al procesar la solicitud con PayPal. Intenta nuevamente.");
+        }
       }
-    });
-
-    this._paypalButtonsInstance.render('#paypal-button-container').then(() => {
-      this._renderInProgress = false;
-    }).catch(err => {
-      console.error("[CheckoutManager] Render error:", err);
-      this._renderInProgress = false;
-      this._paypalRendered = false; // Allow retry
-    });
+    }).render('#paypal-button-container');
   },
 
   showProcessingState: function (isLoading) {
@@ -1323,135 +961,6 @@ const CheckoutManager = {
     localStorage.removeItem('offszn_welcome_claimed');
 
     window.location.href = `/pages/success.html${orderId ? '?order_id=' + orderId : ''}`;
-  },
-
-  // --- PAYMENT METHOD TOGGLING ---
-  togglePaymentMethod: function (method) {
-    const paypalItem = document.getElementById('method-paypal');
-    const yapeItem = document.getElementById('method-yape');
-    const paypalContent = document.getElementById('paypal-content');
-    const yapeContent = document.getElementById('yape-content');
-
-    if (method === 'paypal') {
-      if (paypalItem) {
-        paypalItem.classList.add('active');
-        paypalItem.style.border = '1px solid rgba(139, 92, 246, 0.3)';
-        paypalItem.style.background = 'rgba(139, 92, 246, 0.03)';
-      }
-      if (yapeItem) {
-        yapeItem.classList.remove('active');
-        yapeItem.style.border = '1px solid rgba(255, 255, 255, 0.08)';
-        yapeItem.style.background = 'rgba(255, 255, 255, 0.02)';
-      }
-      if (paypalContent) paypalContent.style.display = 'block';
-      if (yapeContent) yapeContent.style.display = 'none';
-
-      // Update radio button
-      const radio = document.querySelector('input[name="payment-selection"][value="paypal"]');
-      if (radio) radio.checked = true;
-    } else if (method === 'yape') {
-      if (yapeItem) {
-        yapeItem.classList.add('active');
-        yapeItem.style.border = '1px solid rgba(106, 30, 165, 0.4)';
-        yapeItem.style.background = 'rgba(106, 30, 165, 0.05)';
-      }
-      if (paypalItem) {
-        paypalItem.classList.remove('active');
-        paypalItem.style.border = '1px solid rgba(255, 255, 255, 0.08)';
-        paypalItem.style.background = 'rgba(255, 255, 255, 0.02)';
-      }
-      if (yapeContent) yapeContent.style.display = 'block';
-      if (paypalContent) paypalContent.style.display = 'none';
-
-      // Update radio button
-      const radio = document.querySelector('input[name="payment-selection"][value="yape"]');
-      if (radio) radio.checked = true;
-
-      // Update Yape total display
-      this.updateYapeTotalPEN();
-    }
-  },
-
-
-
-  updateYapeTotalPEN: function () {
-    const valEl = document.getElementById('yape-total-value');
-    if (!valEl) return;
-
-    const { total } = this.calculateTotals();
-    const totalPEN = window.CurrencyManager ? window.CurrencyManager.convert(total, 'PEN') : total * 3.80;
-    valEl.textContent = `S/ ${totalPEN.toFixed(2)}`;
-  },
-
-  processYapeOrder: async function () {
-    const termsCheck = document.getElementById('yape-terms-check');
-    if (!termsCheck || !termsCheck.checked) {
-      alert("Por favor, confirma que has realizado el pago para continuar.");
-      return;
-    }
-
-    this.showProcessingState(true);
-
-    try {
-      const { items, total } = this.calculateTotals();
-      const totalPEN = window.CurrencyManager ? window.CurrencyManager.convert(total, 'PEN') : total * 3.80;
-
-      const body = {
-        couponCode: this.appliedCoupon,
-        paymentMethod: 'yape',
-        currency: 'PEN',
-        isManualYape: true,
-        skipSellerNotifications: true // Temporary for testing PEN orders
-      };
-
-      if (!CartManager.state.user) {
-        body.cartItems = CartManager.state.items;
-      }
-
-      const { data: { session } } = await window.supabaseClient.auth.getSession();
-
-      const response = await fetch(`${this.API_URL}/orders/paypal/create`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': session ? `Bearer ${session.access_token}` : ''
-        },
-        body: JSON.stringify(body)
-      });
-
-      const orderData = await response.json();
-      if (orderData.error) throw new Error(orderData.error);
-
-      // Success: Clear cart and redirect to WhatsApp
-      const orderId = orderData.id;
-      const orderNumber = orderId.substring(0, 8).toUpperCase();
-      const whatsappPhone = "51965715974"; // The owner's number
-
-      const message = encodeURIComponent(
-        `¡Hola OFFSZN! 👋 He realizado mi pago por Yape.\n\n` +
-        `🧾 *Orden:* #${orderNumber}\n` +
-        `💰 *Monto:* S/ ${totalPEN.toFixed(2)}\n\n` +
-        `Confirmo que he realizado el pago y adjunto el comprobante. Quedo atento a la activación de mi pedido. ¡Gracias!`
-      );
-
-      const whatsappUrl = `https://wa.me/${whatsappPhone}?text=${message}`;
-
-      // Clear data
-      if (window.CartManager) CartManager.clearCart();
-      this.discount = 0;
-      this.appliedCoupon = null;
-      localStorage.removeItem('offszn_applied_coupon');
-
-      // Open WhatsApp and redirect
-      window.open(whatsappUrl, '_blank');
-      window.location.href = `/pages/success.html?order_id=${orderId}&method=yape`;
-
-    } catch (err) {
-      console.error("Yape error:", err);
-      alert("Error al procesar el pedido: " + err.message);
-    } finally {
-      this.showProcessingState(false);
-    }
   },
 };
 

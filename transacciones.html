@@ -298,10 +298,145 @@
                 display: none;
             }
         }
+
+        /* Yape Inline Config Styles */
+        .yape-input-box {
+            width: 60px;
+            height: 46px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 10px;
+            text-align: center;
+            color: #fff;
+            font-size: 1.15rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+        .yape-input-box:focus {
+            border-color: #00e5ff;
+            background: rgba(0, 229, 255, 0.05);
+            box-shadow: 0 0 0 3px rgba(0, 229, 255, 0.15);
+        }
+        .yape-input-box::placeholder {
+            color: rgba(255,255,255,0.15);
+            font-weight: 500;
+        }
+
+        /* Animated Checkbox (Global — NOT for Yape) */
+        .checkbox-visual {
+            position: relative;
+        }
+        input[type="checkbox"]:checked ~ .checkbox-visual {
+            background: #8b5cf6 !important;
+            border-color: #8b5cf6 !important;
+        }
+        input[type="checkbox"]:checked ~ .checkbox-visual i.bi-check {
+            opacity: 1 !important;
+            transform: scale(1) !important;
+        }
+        input[type="checkbox"]:focus-visible ~ .checkbox-visual {
+            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.3);
+        }
+
+        /* Yape Checkbox Override — B&W only */
+        .yape-card #yape-terms-checkbox:checked + #yape-checkbox-visual {
+            background: #fff !important;
+            border-color: #fff !important;
+            box-shadow: none !important;
+        }
+        .yape-card #yape-terms-checkbox:checked + #yape-checkbox-visual i {
+            display: block !important;
+            color: #000 !important;
+        }
+        #yape-checkbox-visual {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+        }
+        #yape-checkbox-visual i {
+            display: none !important;
+            font-size: 0.85rem !important;
+        }
+
+        /* === OTP Verification Modal === */
+        .otp-input-container {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin: 28px 0 24px;
+        }
+        .otp-box {
+            width: 48px !important;
+            height: 56px !important;
+            background: rgba(255,255,255,0.05) !important;
+            border: 2px solid rgba(255,255,255,0.12) !important;
+            border-radius: 14px !important;
+            text-align: center !important;
+            color: #fff !important;
+            font-size: 1.5rem !important;
+            font-weight: 800 !important;
+            outline: none !important;
+            transition: all 0.2s !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            caret-color: #fff;
+        }
+        .otp-box:focus {
+            border-color: #fff !important;
+            background: rgba(255,255,255,0.08) !important;
+            box-shadow: 0 0 0 3px rgba(255,255,255,0.08) !important;
+        }
+        .otp-box.filled {
+            border-color: rgba(255,255,255,0.3) !important;
+        }
+        .otp-box.error {
+            border-color: #ef4444 !important;
+            animation: otp-shake 0.4s ease;
+        }
+        @keyframes otp-shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-4px); }
+            40%, 80% { transform: translateX(4px); }
+        }
+        .resend-timer {
+            margin-top: 20px;
+            font-size: 0.85rem;
+            color: #71717a;
+        }
+        .resend-link {
+            color: #fff;
+            font-weight: 700;
+            cursor: pointer;
+            text-decoration: underline;
+            transition: opacity 0.2s;
+        }
+        .resend-link.disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+        .btn-verify-otp {
+            width: 100%;
+            height: 50px;
+            border-radius: 14px;
+            background: #fff !important;
+            color: #000 !important;
+            border: none !important;
+            font-weight: 700 !important;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-verify-otp:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .btn-verify-otp:not(:disabled):hover {
+            opacity: 0.9;
+        }
     </style>
-
-
-
 </head>
 
 <body>
@@ -413,9 +548,82 @@
                             Asegúrate de que tu correo de PayPal esté verificado para evitar retrasos en tus cobros.
                         </p>
                     </div>
+
+                    <!-- Yape Setup Card -->
+                    <div id="yape-setup-container" class="payment-setup-card yape-card"
+                        style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: 16px; padding: 24px; margin-top: 24px;">
+                        <div
+                            style="display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 20px;">
+                            <div style="display: flex; align-items: flex-start; gap: 16px;">
+                                <div
+                                    style="width: 52px; height: 52px; background: transparent; border-radius: 14px; display: flex; align-items: center; justify-content: center; overflow: hidden; align-self: center;">
+                                    <img src="/images/para-yape.png" alt="Yape" style="width: 100%; height: 100%; object-fit: contain;">
+                                </div>
+                                <div style="margin-top: 2px;">
+                                    <h4 style="margin: 0; font-size: 1rem; font-weight: 700;">Yape <span style="font-size: 0.75rem; color: #a1a1aa; font-weight: 500;">(Perú)</span></h4>
+                                    <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px;">
+                                        <div id="yape-status-dot" class="status-dot offline"
+                                            style="width: 8px; height: 8px; border-radius: 50%;"></div>
+                                        <span id="yape-status-label"
+                                            style="font-size: 0.85rem; font-weight: 600; min-width: 120px; white-space: nowrap;">
+                                            <div class="skeleton-base skeleton-text" style="height: 12px; margin: 0;">
+                                            </div>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div style="flex: 1; min-width: 250px;">
+                                <!-- Read-only display -->
+                                <div id="yape-display-area" style="display: block;">
+                                    <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 4px;">Número Vinculado:</div>
+                                    <div id="yape-display-phone" style="font-size: 0.95rem; font-weight: 600; color: #fff; letter-spacing: 1px;">
+                                        <div class="skeleton-base skeleton-text medium" style="height: 14px; margin-top: 4px;"></div>
+                                    </div>
+                                </div>
+
+                                <!-- Edit mode (Inline config) -->
+                                <div id="yape-config-area" style="display: none; flex-direction: column; gap: 16px;">
+                                    <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+                                    <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; height: 46px; display: flex; align-items: center; padding: 0 16px; color: rgba(255,255,255,0.4); font-weight: 700; font-size: 1rem; cursor: not-allowed; user-select: none;">
+                                            +51
+                                        </div>
+                                        <div style="display: flex; gap: 8px; flex: 1; align-items: center;">
+                                            <input type="text" id="yape-p1" class="yape-input-box" maxlength="3" placeholder="000" pattern="\d*">
+                                            <span style="color: rgba(255,255,255,0.3); font-weight: bold;">-</span>
+                                            <input type="text" id="yape-p2" class="yape-input-box" maxlength="3" placeholder="000" pattern="\d*">
+                                            <span style="color: rgba(255,255,255,0.3); font-weight: bold;">-</span>
+                                            <input type="text" id="yape-p3" class="yape-input-box" maxlength="3" placeholder="000" pattern="\d*">
+                                        </div>
+                                    </div>
+
+                                    <label class="custom-checkbox" style="display: flex; align-items: center; gap: 12px; cursor: pointer; user-select: none; margin-top: 8px;">
+                                        <div style="position: relative; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                            <input type="checkbox" id="yape-terms-checkbox" style="opacity: 0; position: absolute; cursor: pointer; width: 22px; height: 22px; z-index: 2; margin: 0; padding: 0;">
+                                            <div id="yape-checkbox-visual" style="width: 22px; height: 22px; position: relative; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.05); border: 2px solid rgba(255,255,255,0.2); border-radius: 6px; transition: all 0.2s;">
+                                                <i class="bi bi-check-lg" style="margin: 0; padding: 0; line-height: 1;"></i>
+                                            </div>
+                                        </div>
+                                        <span style="font-size: 0.85rem; color: #a1a1aa; line-height: 1;">Acepto los <a href="/legal/terminos-de-servicio.html" target="_blank" class="terms-link">términos y condiciones</a> de cobros por Yape.</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div style="display: flex; flex-direction: column; gap: 10px;">
+                                <button id="btn-toggle-yape" class="btn-yape-white btn-primary-sm" style="min-width: 160px; transition: all 0.2s;">
+                                    Configurar Yape
+                                </button>
+                                <button id="btn-save-yape" class="btn-yape-white" disabled style="display: none; min-width: 160px; padding: 12px 24px; border-radius: 100px; border: none; color: #000; font-weight: 700; cursor: pointer; transition: all 0.2s;">
+                                    Guardar número
+                                </button>
+                                <button id="btn-cancel-yape" style="display: none; min-width: 160px; padding: 10px 24px; border-radius: 100px; background: transparent; border: 1px solid rgba(255,255,255,0.1); color: #fff; font-weight: 600; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">
+                                    Cancelar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
-                <!-- Transaction History -->
                 <div class="settings-group">
                     <h2 class="settings-group-title"><i class="bi bi-clock-history"></i> Historial de Ventas</h2>
 
@@ -469,6 +677,49 @@
             <div class="modal-footer" style="padding: 30px 0 0 0; display: flex; justify-content: center; gap: 12px;">
                 <button class="btn-secondary" onclick="PaymentSettings.closePayPalModal()" style="padding: 12px 24px; border-radius: 100px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff; font-weight: 600; cursor: pointer;">Cancelar</button>
                 <button class="btn-primary" id="btn-save-paypal-email" onclick="PaymentSettings.savePayPalEmail()" style="padding: 12px 32px; border-radius: 100px; background: #8b5cf6; border: none; color: #fff; font-weight: 700; cursor: pointer; box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);">Guardar Cambios</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Elite Yape Verification Modal -->
+    <div id="modal-yape-verify" class="modal-overlay" style="backdrop-filter: blur(16px); background: rgba(0,0,0,0.85);">
+        <div class="elite-modal" style="width: 100%; max-width: 420px; padding: 40px 32px; border-radius: 28px; text-align: center; position: relative; border: 1px solid rgba(255,255,255,0.08);">
+            <button id="btn-close-verify" style="position: absolute; top: 20px; right: 20px; background: transparent; border: none; color: #a1a1aa; cursor: pointer; font-size: 1.2rem; transition: color 0.2s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#a1a1aa'">
+                <i class="bi bi-x-lg"></i>
+            </button>
+
+            <div style="width: 72px; height: 72px; background: #1a1a2e; border-radius: 22px; margin: 0 auto 24px; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.06);">
+                <img src="/images/para-yape.png" alt="Yape" style="width: 48px; height: 48px; object-fit: contain;">
+            </div>
+
+            <h3 style="margin: 0; font-size: 1.4rem; font-weight: 800; color: #fff;">Verifica tu número</h3>
+            <p style="margin: 12px 0 0; font-size: 0.9rem; color: #71717a; line-height: 1.6;">
+                Enviamos un código de 6 dígitos a<br>
+                <b id="verify-phone-display" style="color: #fff; letter-spacing: 0.5px;">+51 000 000 000</b>
+            </p>
+
+            <div class="otp-input-container">
+                <input type="text" class="otp-box" maxlength="1" inputmode="numeric" autocomplete="one-time-code">
+                <input type="text" class="otp-box" maxlength="1" inputmode="numeric">
+                <input type="text" class="otp-box" maxlength="1" inputmode="numeric">
+                <input type="text" class="otp-box" maxlength="1" inputmode="numeric">
+                <input type="text" class="otp-box" maxlength="1" inputmode="numeric">
+                <input type="text" class="otp-box" maxlength="1" inputmode="numeric">
+            </div>
+
+            <div id="otp-error-msg" style="display: none; color: #ef4444; font-size: 0.85rem; margin-bottom: 12px; font-weight: 600;"></div>
+
+            <button id="btn-confirm-otp" class="btn-verify-otp" disabled>
+                Verificar
+            </button>
+
+            <div class="resend-timer" style="margin-top: 24px;">
+                ¿No recibiste el código?<br>
+                <div style="margin-top: 8px;">
+                    <span id="resend-label">Puedes reenviar en </span>
+                    <span id="resend-countdown" style="font-weight: 700; color: #fff;">60s</span>
+                    <a id="btn-resend-otp" class="resend-link disabled" style="display: none;">Reenviar SMS</a>
+                </div>
             </div>
         </div>
     </div>

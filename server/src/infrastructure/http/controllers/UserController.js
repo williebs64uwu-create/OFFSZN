@@ -323,7 +323,7 @@ export const getUserByNickname = async (req, res) => {
 
         const { data: user, error } = await supabase
             .from('users')
-            .select('id, nickname, first_name, last_name, avatar_url, bio, role, socials, socials_order, is_verified, is_producer, created_at, experience, daws, banner_url, r2_version, storage_version')
+            .select('id, nickname, first_name, last_name, avatar_url, bio, role, socials, socials_order, is_verified, is_producer, created_at, experience, daws, banner_url, r2_version, storage_version, template')
             .ilike('nickname', nickname)
             .maybeSingle();
 
@@ -338,15 +338,17 @@ export const getUserByNickname = async (req, res) => {
         }
 
         // Fetch counts manually to ensure accuracy
-        const [followersRes, productsRes] = await Promise.all([
+        const [followersRes, productsRes, playsRes] = await Promise.all([
             supabase.from('followers').select('*', { count: 'exact', head: true }).eq('user_id', user.id),
-            supabase.from('products').select('*', { count: 'exact', head: true }).eq('producer_id', user.id).eq('status', 'approved').eq('visibility', 'public')
+            supabase.from('products').select('*', { count: 'exact', head: true }).eq('producer_id', user.id).eq('status', 'approved').eq('visibility', 'public'),
+            supabase.from('products').select('plays_count').eq('producer_id', user.id).eq('status', 'approved').eq('visibility', 'public')
         ]);
 
         user.followers_count = followersRes.count || 0;
         user.products_count = productsRes.count || 0;
+        user.total_plays = (playsRes.data || []).reduce((acc, curr) => acc + (curr.plays_count || 0), 0);
 
-        console.log(`✅ UserController: Found '${user.nickname}' (ID: ${user.id}) | Followers: ${user.followers_count} | Products: ${user.products_count}`);
+        console.log(`✅ UserController: Found '${user.nickname}' (ID: ${user.id}) | Followers: ${user.followers_count} | Products: ${user.products_count} | Plays: ${user.total_plays}`);
         res.status(200).json(user);
 
     } catch (err) {

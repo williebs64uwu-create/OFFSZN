@@ -18,6 +18,7 @@ const PaymentSettings = {
     data: {
         sidebar: null,
         status: null,
+        yapePhone: null,
         isVerified: false,
         sales: []
     },
@@ -58,9 +59,14 @@ const PaymentSettings = {
         this.removeSidebarSkeletons();
         this.renderSidebar();
         this.renderStatus();
+        this.renderYapeStatus();
         this.renderSalesHistory();
 
         this.setupListeners();
+        this.setupYapeListeners();
+
+        // Check if there's a pending verification from a page reload
+        this.checkPendingVerification();
     },
 
     getSession: async function () {
@@ -88,7 +94,7 @@ const PaymentSettings = {
         try {
             const { data: user, error } = await window.supabaseClient
                 .from('users')
-                .select('paypal_email, paypal_verified, payment_methods')
+                .select('paypal_email, paypal_verified, payment_methods, yape_phone, preferred_currency')
                 .eq('id', this.userId)
                 .single();
             if (error) throw error;
@@ -108,6 +114,8 @@ const PaymentSettings = {
 
             this.data.status = paypalEmail;
             this.data.isVerified = user?.paypal_verified || false;
+            this.data.yapePhone = user?.yape_phone || null;
+            this.data.preferredCurrency = user?.preferred_currency || 'USD';
         } catch (err) {
             console.error("Error fetching payment status:", err);
         }
@@ -216,9 +224,9 @@ const PaymentSettings = {
 
     injectButtonSkeleton: function () {
         const btn = document.getElementById('btn-connect-paypal');
-        if (btn) {
-            btn.classList.add('btn-loading-skeleton');
-        }
+        const yapeBtn = document.getElementById('btn-toggle-yape');
+        if (btn) btn.classList.add('btn-loading-skeleton');
+        if (yapeBtn) yapeBtn.classList.add('btn-loading-skeleton');
     },
 
     injectEmailSkeleton: function () {
@@ -233,6 +241,19 @@ const PaymentSettings = {
             skeleton.style.display = "inline-block";
             skeleton.style.verticalAlign = "middle";
             emailEl.appendChild(skeleton);
+        }
+
+        const yapeEl = document.getElementById('yape-display-phone');
+        if (yapeEl) {
+            yapeEl.innerHTML = '';
+            const skelYape = document.createElement('div');
+            skelYape.className = 'skeleton-base';
+            skelYape.style.width = "140px";
+            skelYape.style.height = "16px";
+            skelYape.style.borderRadius = "4px";
+            skelYape.style.display = "inline-block";
+            skelYape.style.verticalAlign = "middle";
+            yapeEl.appendChild(skelYape);
         }
     },
 
@@ -415,6 +436,441 @@ const PaymentSettings = {
     isValidEmail: function (email) {
         const re = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
         return re.test(String(email).toLowerCase());
+    },
+
+    renderYapeStatus: function () {
+        const container = document.getElementById('yape-setup-container');
+        if (!container) return;
+
+        // Temporarily disabled currency guard for testing
+        // if (this.data.preferredCurrency !== 'PEN') {
+        //     container.style.display = 'none';
+        //     return;
+        // }
+
+        container.style.display = 'block';
+
+        const yapePhone = this.data.yapePhone;
+        const label = document.getElementById('yape-status-label');
+        const dot = document.getElementById('yape-status-dot');
+        const displayPhone = document.getElementById('yape-display-phone');
+        const btnToggle = document.getElementById('btn-toggle-yape');
+
+        if (!label || !dot) return;
+
+        if (btnToggle) btnToggle.classList.remove('btn-loading-skeleton');
+
+        // Format for display: +51 999 888 777
+        if (yapePhone && yapePhone.length === 12) {
+            const formatted = `+51 ${yapePhone.substring(3, 6)} ${yapePhone.substring(6, 9)} ${yapePhone.substring(9, 12)}`;
+            label.textContent = "Configurado";
+            label.style.color = "#10b981";
+            dot.className = "status-dot online";
+            if (displayPhone) displayPhone.textContent = formatted;
+            if (btnToggle) btnToggle.textContent = "Cambiar Cuenta Yape";
+        } else {
+            label.textContent = "No configurado";
+            label.style.color = "#ef4444";
+            dot.className = "status-dot offline";
+            if (displayPhone) displayPhone.textContent = "Desconectado";
+            if (btnToggle) btnToggle.textContent = "Configurar Yape";
+        }
+    },
+
+    setupYapeListeners: function () {
+        const btnToggle = document.getElementById('btn-toggle-yape');
+        const btnSave = document.getElementById('btn-save-yape');
+        const btnCancel = document.getElementById('btn-cancel-yape');
+
+        if (btnToggle) btnToggle.onclick = () => this.toggleYapeEdit(true);
+        if (btnCancel) btnCancel.onclick = () => this.toggleYapeEdit(false);
+        if (btnSave) btnSave.onclick = () => this.saveYapePhone();
+
+        // Checkbox interaction
+        const terms = document.getElementById('yape-terms-checkbox');
+        const visual = document.getElementById('yape-checkbox-visual');
+        if (terms && btnSave && visual) {
+            terms.onchange = () => {
+                const isChecked = terms.checked;
+                btnSave.disabled = !isChecked;
+                
+                // Force B&W styles via JS to override any global purple CSS
+                visual.style.background = isChecked ? '#fff' : 'rgba(255,255,255,0.05)';
+                visual.style.borderColor = isChecked ? '#fff' : 'rgba(255,255,255,0.2)';
+                const icon = visual.querySelector('i');
+                if (icon) {
+                    icon.style.display = isChecked ? 'block' : 'none';
+                    icon.style.color = '#000';
+                }
+            };
+        }
+
+        // Auto-focus next input logic for blocks
+        const p1 = document.getElementById('yape-p1');
+        const p2 = document.getElementById('yape-p2');
+        const p3 = document.getElementById('yape-p3');
+
+        if (p1 && p2 && p3) {
+            [p1, p2, p3].forEach((input, index, array) => {
+                input.oninput = (e) => {
+                    // Only digits
+                    input.value = input.value.replace(/\D/g, '');
+                    if (input.value.length === 3 && index < 2) {
+                        array[index + 1].focus();
+                    }
+                };
+                
+                input.onkeydown = (e) => {
+                    if (e.key === "Backspace" && input.value.length === 0 && index > 0) {
+                        array[index - 1].focus();
+                    }
+                };
+            });
+        }
+    },
+
+    toggleYapeEdit: function (isEditing) {
+        const displayArea = document.getElementById('yape-display-area');
+        const configArea = document.getElementById('yape-config-area');
+        const btnToggle = document.getElementById('btn-toggle-yape');
+        const btnSave = document.getElementById('btn-save-yape');
+        const btnCancel = document.getElementById('btn-cancel-yape');
+
+        if (isEditing) {
+            displayArea.style.display = 'none';
+            configArea.style.display = 'flex';
+            btnToggle.style.display = 'none';
+            btnSave.style.display = 'block';
+            btnCancel.style.display = 'block';
+
+            // Reset inputs if already configured
+            const phone = this.data.yapePhone;
+            if (phone && phone.length === 12) {
+                document.getElementById('yape-p1').value = phone.substring(3, 6);
+                document.getElementById('yape-p2').value = phone.substring(6, 9);
+                document.getElementById('yape-p3').value = phone.substring(9, 12);
+            }
+        } else {
+            displayArea.style.display = 'block';
+            configArea.style.display = 'none';
+            btnToggle.style.display = 'block';
+            btnSave.style.display = 'none';
+            btnCancel.style.display = 'none';
+            
+            // Reset terms checkbox
+            const terms = document.getElementById('yape-terms-checkbox');
+            const visual = document.getElementById('yape-checkbox-visual');
+            if (terms) {
+                terms.checked = false;
+                if (btnSave) btnSave.disabled = true;
+                if (visual) {
+                    visual.style.background = 'rgba(255,255,255,0.05)';
+                    visual.style.borderColor = 'rgba(255,255,255,0.2)';
+                    const icon = visual.querySelector('i');
+                    if (icon) icon.style.display = 'none';
+                }
+            }
+        }
+    },
+
+    saveYapePhone: async function () {
+        const p1 = document.getElementById('yape-p1').value.trim();
+        const p2 = document.getElementById('yape-p2').value.trim();
+        const p3 = document.getElementById('yape-p3').value.trim();
+        const terms = document.getElementById('yape-terms-checkbox').checked;
+        const btnSave = document.getElementById('btn-save-yape');
+
+        if (!terms) {
+            if (window.showToast) window.showToast("Debes aceptar los términos y condiciones.", "error");
+            return;
+        }
+
+        const fullNumber = p1 + p2 + p3;
+        if (fullNumber.length !== 9) {
+            if (window.showToast) window.showToast("El número de Yape debe tener 9 dígitos.", "error");
+            return;
+        }
+
+        const finalPhone = "+51" + fullNumber;
+
+        // Save pending verification state and open the modal
+        this._pendingYapePhone = finalPhone;
+        localStorage.setItem('yape_pending_phone', finalPhone);
+        localStorage.setItem('yape_pending_time', Date.now().toString());
+
+        this.openVerifyModal(finalPhone);
+    },
+
+    // --- YAPE VERIFICATION MODAL ---
+
+    _resendInterval: null,
+    _pendingYapePhone: null,
+
+    checkPendingVerification: function () {
+        const pendingPhone = localStorage.getItem('yape_pending_phone');
+        const pendingTime = localStorage.getItem('yape_pending_time');
+        if (!pendingPhone || !pendingTime) return;
+
+        // Expire after 10 minutes
+        const elapsed = Date.now() - parseInt(pendingTime, 10);
+        if (elapsed > 10 * 60 * 1000) {
+            localStorage.removeItem('yape_pending_phone');
+            localStorage.removeItem('yape_pending_time');
+            return;
+        }
+
+        this._pendingYapePhone = pendingPhone;
+        this.openVerifyModal(pendingPhone);
+    },
+
+    openVerifyModal: async function (phone) {
+        const modal = document.getElementById('modal-yape-verify');
+        const phoneDisplay = document.getElementById('verify-phone-display');
+        if (!modal) return;
+
+        // Format phone for display: +51 993 525 005
+        const digits = phone.replace('+51', '');
+        const formatted = `+51 ${digits.substring(0, 3)} ${digits.substring(3, 6)} ${digits.substring(6, 9)}`;
+        if (phoneDisplay) phoneDisplay.textContent = formatted;
+
+        // Reset OTP inputs
+        const boxes = modal.querySelectorAll('.otp-box');
+        boxes.forEach(b => { 
+            b.value = ''; 
+            b.classList.remove('error', 'filled');
+            b.disabled = false;
+        });
+
+        // Reset error
+        const errMsg = document.getElementById('otp-error-msg');
+        if (errMsg) { errMsg.style.display = 'none'; errMsg.textContent = ''; }
+
+        // Disable verify button
+        const btnConfirm = document.getElementById('btn-confirm-otp');
+        if (btnConfirm) {
+            btnConfirm.disabled = true;
+            btnConfirm.textContent = 'Verificar';
+        }
+
+        // Show modal early
+        modal.classList.add('active');
+        this.setupOtpInputs();
+        
+        // Focus first box
+        setTimeout(() => { if (boxes[0]) boxes[0].focus(); }, 200);
+
+        try {
+            // Trigger Edge Function to send SMS
+            const { data: { session } } = await window.supabaseClient.auth.getSession();
+            const response = await fetch(`${window.SUPABASE_URL}/functions/v1/verify-yape-phone`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${session.access_token}`
+                },
+                body: JSON.stringify({ phone, action: 'send' })
+            });
+
+            if (!response.ok) {
+                const errData = await response.json();
+                let errMsg = errData.error || 'Error al enviar SMS';
+                if (errData.details) {
+                    console.error("Twilio Error Details:", errData.details);
+                    // If it's a Twilio specific error, show it
+                    if (errData.details.message) errMsg += `: ${errData.details.message}`;
+                }
+                throw new Error(errMsg);
+            }
+
+            this.startResendTimer();
+            if (window.showToast) window.showToast("Código de verificación enviado.", "success");
+        } catch (err) {
+            console.error("SMS Error:", err);
+            if (window.showToast) window.showToast(err.message, "error");
+            this.closeVerifyModal();
+        }
+    },
+
+    closeVerifyModal: function () {
+        const modal = document.getElementById('modal-yape-verify');
+        if (modal) modal.classList.remove('active');
+        if (this._resendInterval) {
+            clearInterval(this._resendInterval);
+            this._resendInterval = null;
+        }
+        localStorage.removeItem('yape_pending_phone');
+        localStorage.removeItem('yape_pending_time');
+    },
+
+    setupOtpInputs: function () {
+        const modal = document.getElementById('modal-yape-verify');
+        if (!modal) return;
+
+        const boxes = Array.from(modal.querySelectorAll('.otp-box'));
+        const btnConfirm = document.getElementById('btn-confirm-otp');
+        const btnClose = document.getElementById('btn-close-verify');
+        const btnResend = document.getElementById('btn-resend-otp');
+
+        // Close button
+        if (btnClose) btnClose.onclick = () => this.closeVerifyModal();
+
+        // Confirm button
+        if (btnConfirm) btnConfirm.onclick = () => this.confirmOtp();
+
+        // Resend button
+        if (btnResend) btnResend.onclick = () => this.resendCode();
+
+        const checkAllFilled = () => {
+            const allFilled = boxes.every(b => b.value.length === 1);
+            if (btnConfirm) btnConfirm.disabled = !allFilled;
+        };
+
+        boxes.forEach((box, i) => {
+            box.oninput = (e) => {
+                box.value = box.value.replace(/\D/g, '');
+                if (box.value.length === 1) {
+                    box.classList.add('filled');
+                    if (i < boxes.length - 1) boxes[i + 1].focus();
+                } else {
+                    box.classList.remove('filled');
+                }
+                checkAllFilled();
+            };
+
+            box.onkeydown = (e) => {
+                if (e.key === 'Backspace' && box.value.length === 0 && i > 0) {
+                    boxes[i - 1].focus();
+                    boxes[i - 1].value = '';
+                    boxes[i - 1].classList.remove('filled');
+                    checkAllFilled();
+                }
+            };
+
+            // Handle paste
+            box.onpaste = (e) => {
+                e.preventDefault();
+                const pasted = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '').substring(0, 6);
+                pasted.split('').forEach((char, j) => {
+                    if (boxes[j]) {
+                        boxes[j].value = char;
+                        boxes[j].classList.add('filled');
+                    }
+                });
+                const focusIdx = Math.min(pasted.length, boxes.length - 1);
+                boxes[focusIdx].focus();
+                checkAllFilled();
+            };
+        });
+    },
+
+    startResendTimer: function () {
+        const countdown = document.getElementById('resend-countdown');
+        const label = document.getElementById('resend-label');
+        const btnResend = document.getElementById('btn-resend-otp');
+
+        if (this._resendInterval) clearInterval(this._resendInterval);
+
+        let seconds = 60;
+        if (countdown) { countdown.textContent = `${seconds}s`; countdown.style.display = ''; }
+        if (label) { label.textContent = 'Puedes reenviar en '; label.style.display = ''; }
+        if (btnResend) { btnResend.style.display = 'none'; btnResend.classList.add('disabled'); }
+
+        this._resendInterval = setInterval(() => {
+            seconds--;
+            if (countdown) countdown.textContent = `${seconds}s`;
+
+            if (seconds <= 0) {
+                clearInterval(this._resendInterval);
+                this._resendInterval = null;
+                if (countdown) countdown.style.display = 'none';
+                if (label) label.style.display = 'none';
+                if (btnResend) {
+                    btnResend.style.display = 'inline';
+                    btnResend.classList.remove('disabled');
+                }
+            }
+        }, 1000);
+    },
+
+    resendCode: async function () {
+        const btnResend = document.getElementById('btn-resend-otp');
+        if (!btnResend || btnResend.classList.contains('disabled')) return;
+
+        try {
+            const { data: { session } } = await window.supabaseClient.auth.getSession();
+            const response = await fetch(`${window.SUPABASE_URL}/functions/v1/verify-yape-phone`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${session.access_token}`
+                },
+                body: JSON.stringify({ phone: this._pendingYapePhone, action: 'send' })
+            });
+
+            if (!response.ok) throw new Error("Error al reenviar SMS");
+
+            if (window.showToast) window.showToast("Código reenviado.", "success");
+            this.startResendTimer();
+        } catch (err) {
+            if (window.showToast) window.showToast(err.message, "error");
+        }
+    },
+
+    confirmOtp: async function () {
+        const modal = document.getElementById('modal-yape-verify');
+        const boxes = Array.from(modal.querySelectorAll('.otp-box'));
+        const code = boxes.map(b => b.value).join('');
+        const btnConfirm = document.getElementById('btn-confirm-otp');
+        const errMsg = document.getElementById('otp-error-msg');
+
+        if (code.length !== 6) return;
+
+        btnConfirm.disabled = true;
+        btnConfirm.textContent = 'Verificando...';
+        boxes.forEach(b => b.disabled = true);
+
+        try {
+            const { data: { session } } = await window.supabaseClient.auth.getSession();
+            const response = await fetch(`${window.SUPABASE_URL}/functions/v1/verify-yape-phone`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${session.access_token}`
+                },
+                body: JSON.stringify({ 
+                    phone: this._pendingYapePhone, 
+                    code, 
+                    action: 'check' 
+                })
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(result.error || 'Código incorrecto');
+            }
+
+            // Success!
+            this.data.yapePhone = this._pendingYapePhone;
+            this.renderYapeStatus();
+            this.toggleYapeEdit(false);
+            this.closeVerifyModal();
+
+            if (window.showToast) window.showToast("Número de Yape verificado exitosamente.", "success");
+        } catch (err) {
+            console.error('Verification error:', err);
+            boxes.forEach(b => {
+                b.disabled = false;
+                b.classList.add('error');
+            });
+            if (errMsg) {
+                errMsg.textContent = err.message || 'Error al verificar. Intenta de nuevo.';
+                errMsg.style.display = 'block';
+            }
+            setTimeout(() => boxes.forEach(b => b.classList.remove('error')), 600);
+            btnConfirm.disabled = false;
+            btnConfirm.textContent = 'Verificar';
+        }
     },
 
     setupListeners: function () {

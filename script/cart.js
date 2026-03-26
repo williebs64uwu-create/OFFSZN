@@ -20,7 +20,9 @@ const CartManager = {
     state: {
         items: [], // [{ product: {id, name, price, image_url...}, quantity: 1 }]
         isOpen: false,
-        user: null
+        user: null,
+        producerVerification: {}, // Caches { hasPayPal, paypalEmail, plan, nickname }
+        _lastProducerHash: null
     },
 
     injectCartUIIfNeeded: function () {
@@ -161,6 +163,26 @@ const CartManager = {
     },
 
     addToCart: async function (product) {
+        // --- DEFENSIVE ELIGIBILITY CHECK ---
+        // Block if NOT free and producer has no payment methods
+        const isFree = product.is_free || false;
+        if (!isFree) {
+            let producer = product.producer;
+            if (Array.isArray(producer)) producer = producer[0];
+            
+            if (producer) {
+                const has_paypal = producer.paypal_email || (producer.payment_methods && producer.payment_methods.paypal?.enabled);
+                const has_yape = producer.yape_phone && producer.is_verified;
+
+                if (!has_paypal && !has_yape) {
+                    if (window.openBlockedPaymentModal) {
+                        window.openBlockedPaymentModal(producer);
+                    }
+                    return;
+                }
+            }
+        }
+
         // Optimistic UI Update: Find index if exists
         const existingIndex = this.state.items.findIndex(i => String(i.product.id) === String(product.id));
 
@@ -305,8 +327,89 @@ const CartManager = {
 
     // --- UI RENDERING ---
 
+    verifyCart: async function () {
+        if (!this.state.items || this.state.items.length === 0) {
+            this.state.producerVerification = {};
+            this.state._lastProducerHash = null;
+            return;
+        }
+
+        const producerIds = [...new Set(this.state.items.map(item => item.product.producer_id))].sort();
+        const currentHash = producerIds.join(',');
+
+        if (this.state._lastProducerHash === currentHash && Object.keys(this.state.producerVerification).length > 0) {
+            return; // Already verified this exact set of producers
+        }
+
+        try {
+            // Fetch Users (payment methods, email, nickname, YAPE)
+            const { data: usersData, error: usersError } = await window.supabaseClient
+                .from('users')
+                .select('id, payment_methods, paypal_email, nickname, yape_phone, is_verified')
+                .in('id', producerIds);
+
+            if (usersError) throw usersError;
+
+            // Fetch Profiles (plan, username)
+            const { data: profilesData, error: profilesError } = await window.supabaseClient
+                .from('profiles')
+                .select('user_id, plan, username')
+                .in('user_id', producerIds);
+
+            if (profilesError) throw profilesError;
+
+            // Fetch Phone Verifications (only if YAPE is potentially available)
+            const { data: phoneVerData, error: pvError } = await window.supabaseClient
+                .from('phone_verifications')
+                .select('user_id, verified')
+                .in('user_id', producerIds)
+                .eq('verified', true);
+
+            const verification = {};
+            producerIds.forEach(pId => {
+                const user = usersData?.find(u => String(u.id) === String(pId)) || {};
+                const profile = profilesData?.find(p => String(p.user_id) === String(pId)) || {};
+                const isVerified = phoneVerData?.some(pv => String(pv.user_id) === String(pId));
+                
+                let hasPayPal = false;
+                if (user.paypal_email || (user.payment_methods && user.payment_methods.paypal)) {
+                    hasPayPal = true;
+                }
+
+                verification[pId] = {
+                    hasPayPal: hasPayPal,
+                    paypalEmail: user.paypal_email || user.payment_methods?.paypal || null,
+                    plan: profile.plan || 'free',
+                    nickname: user.nickname || profile.username || 'Productor',
+                    username: profile.username || user.nickname || null,
+                    hasYape: !!(user.yape_phone && user.is_verified && isVerified)
+                };
+            });
+
+            // Calculate overall eligibility
+            const allProducers = Object.values(verification);
+            const allHaveYape = allProducers.length > 0 && allProducers.every(p => p.hasYape);
+            const allHavePayPal = allProducers.length > 0 && allProducers.every(p => p.hasPayPal);
+
+            this.state.paymentEligibility = {
+                paypal: allHavePayPal,
+                yape: allHaveYape,
+                preferred: allHaveYape ? 'yape' : 'paypal'
+            };
+
+            this.state.producerVerification = verification;
+            this.state._lastProducerHash = currentHash;
+        } catch (err) {
+            console.error("[CartManager] Error verifying producers:", err);
+            // Default fallback
+            this.state.paymentEligibility = { paypal: true, yape: false, preferred: 'paypal' };
+        }
+    },
+
     render: async function () {
         if (!this.ui.container) return; // Cart UI not present
+
+        await this.verifyCart(); // 🛡️ ALWAYS VERIFY PRODUCERS BEFORE RENDERING/DISPATCHING
 
         this.updateBadge();
 

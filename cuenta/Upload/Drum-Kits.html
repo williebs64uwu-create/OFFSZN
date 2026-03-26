@@ -17,6 +17,58 @@
     <script src="https://unpkg.com/wavesurfer.js@7"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
+
+        /* ===== SIDEBAR PROFILE CARD ===== */
+        .sidebar-profile-card { display: flex; flex-direction: column; align-items: center; width: 100%; padding: 20px 0 20px 0; border-bottom: 1px solid #1a1a1a; margin-bottom: 8px; }
+        .sidebar-avatar-wrapper { width: 100px; height: 100px; border-radius: 50%; overflow: hidden; border: 2px solid #333; margin-bottom: 8px; background: #000; position: relative; }
+        .sidebar-avatar { width: 100%; height: 100%; object-fit: cover; }
+        .sidebar-username { color: #fff; font-size: 15px; font-weight: 600; font-family: 'Inter', sans-serif; margin-bottom: 8px; text-align: center; max-width: 90%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .sidebar-profile-btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 18px; border-radius: 100px; border: 1px solid #333; background: transparent; color: #aaa; font-size: 12px; font-weight: 500; font-family: 'Inter', sans-serif; text-decoration: none; transition: all 0.2s ease; cursor: pointer; }
+        .sidebar-profile-btn:hover { border-color: #fff; color: #fff; background: rgba(255,255,255,0.05); }
+        .sidebar-profile-btn i { font-size: 11px; }
+
+        @keyframes sidebarPulse {
+            0% { background-color: rgba(255,255,255,0.03); }
+            50% { background-color: rgba(255,255,255,0.08); }
+            100% { background-color: rgba(255,255,255,0.03); }
+        }
+        .sidebar-profile-card .skeleton, .sidebar-profile-card .skeleton-text {
+            animation: sidebarPulse 2s infinite ease-in-out;
+            background: rgba(255,255,255,0.05);
+        }
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        /* ===== SIDEBAR STYLES (B&W PREMIUM) ===== */
+        .sidebar-stub { width: 220px; background: #000; border-right: 1px solid #1a1a1a; height: 100vh; position: fixed; left: 0; top: 0; z-index: 100; display: flex; flex-direction: column; align-items: flex-start; padding-top: 30px; padding-left: 15px; padding-right: 15px; gap: 6px; }
+        .sidebar-icon-btn { width: 100%; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: flex-start; padding-left: 12px; gap: 14px; color: #888; font-size: 14px; font-weight: 500; transition: all 0.2s ease; text-decoration: none; position: relative; background: transparent; border: none; cursor: pointer; }
+        .sidebar-icon-btn i { font-size: 20px; width: 24px; text-align: center; display: inline-block; color: #666; transition: 0.2s; }
+        .sidebar-icon-btn:hover { color: #fff; background: rgba(255, 255, 255, 0.08); }
+        .sidebar-icon-btn.active { color: #000 !important; background: #fff !important; font-weight: 700; box-shadow: 0 4px 20px rgba(255, 255, 255, 0.15); }
+        .sidebar-icon-btn.active i { color: #000 !important; }
+        .sidebar-icon-btn[data-title]:hover::after, .sidebar-icon-btn[title]:hover::after { display: none; }
+
+        /* ===== SIDEBAR STYLES (B&W PREMIUM) ===== */
+        
+        
+        
+        
+        
+        
+        .sidebar-icon-btn[data-title]:hover::after, .sidebar-icon-btn[title]:hover::after { display: none; }
+
         /* ========================================
     BOTÓN DE DESCARGA EN PREVIEW CARD
     ======================================== */
@@ -1511,7 +1563,7 @@
             display: flex;
             flex-wrap: wrap;
             gap: 6px;
-            margin-bottom: 12px;
+            margin-bottom: 8px;
             min-height: 24px;
         }
 
@@ -1570,7 +1622,7 @@
             gap: 12px;
             padding: 10px 12px;
             /* ?? Padding interno */
-            margin-bottom: 12px;
+            margin-bottom: 8px;
             /* ?? Espaciado compacto */
             background: rgba(255, 255, 255, 0.02);
             /* ?? Fondo recuperado */
@@ -1666,7 +1718,7 @@
         .exit-modal-title {
             font-size: 24px;
             font-weight: 700;
-            margin-bottom: 12px;
+            margin-bottom: 8px;
             display: flex;
             align-items: center;
             gap: 12px;
@@ -2556,7 +2608,7 @@
         .help-modal-title {
             font-size: 22px;
             font-weight: 700;
-            margin-bottom: 12px;
+            margin-bottom: 8px;
             color: #fff;
         }
 
@@ -3009,9 +3061,12 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.48.1"></script>
         <script src="/script/auth-utils.js?v=11"></script>
         <div class="header-left">
-            <a href="/explorar.html" target="_blank">
-                <img src="/images/LOGO%20OFFSZN.webp" alt="OFFSZN" class="header-logo">
+            
+            <span id="sidebarUsername" class="sidebar-username">...</span>
+            <a id="sidebarProfileLink" href="/explorar.html" class="sidebar-profile-btn">
+                Ir a mi perfil <i class="bi bi-arrow-right"></i>
             </a>
+        </div>
             <div class="header-title">Subir Drumkit</div>
         </div>
         <div class="header-right">
@@ -3360,7 +3415,7 @@
                 <button type="button" class="remove-file" onclick="closeCropModal()">?</button>
             </div>
             <div class="modal-body">
-                <p style="color: #888; font-size: 13px; margin-bottom: 12px; text-align: center;">
+                <p style="color: #888; font-size: 13px; margin-bottom: 8px; text-align: center;">
                     Arrastra la imagen para mover - Rueda del mouse para zoom
                 </p>
                 <div class="crop-container" id="cropContainer">
@@ -8012,7 +8067,7 @@
 
                 <div id="uniqueLinkContainer"
                     style="background: rgba(255,255,255,0.03); padding: 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.08); margin-bottom: 24px;">
-                    <p style="color: #aaa; font-size: 13px; margin-bottom: 12px;">Link a tu producto:</p>
+                    <p style="color: #aaa; font-size: 13px; margin-bottom: 8px;">Link a tu producto:</p>
                     <div style="display: flex; gap: 8px; align-items: center;">
                         <input type="text" id="uniqueLinkInput" readonly
                             style="flex: 1; background: #1a1a1a; border: 1px solid #2a2a2a; padding: 12px; border-radius: 8px; color: #fff; font-size: 14px; font-family: monospace;">
@@ -8412,6 +8467,90 @@
         });
 
 
+    </script>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <!-- Sidebar Profile Loader -->
+    <script>
+    (async function loadSidebarProfile() {
+        try {
+            const sb = window.supabaseClient || (window.supabase?.createClient ? window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY) : null);
+            if (!sb) { console.warn('Sidebar: Supabase client not found'); return; }
+            
+            const { data: { user } } = await sb.auth.getUser();
+            if (!user) return;
+
+            const { data: profile, error } = await sb.from('users')
+                .select('nickname, avatar_url, storage_version, id')
+                .eq('id', user.id)
+                .single();
+
+            if (error) { 
+                const { data: profileAlt } = await sb.from('profiles').select('username, avatar_url, storage_version, id').eq('user_id', user.id).single();
+                if (profileAlt) updateSidebarUI(profileAlt.username, profileAlt.avatar_url, profileAlt.storage_version, profileAlt.id);
+                return; 
+            }
+
+            if (profile) updateSidebarUI(profile.nickname, profile.avatar_url, profile.storage_version, profile.id);
+
+            async function updateSidebarUI(name, avatar, version, uid) {
+                const avatarEl = document.getElementById('sidebarAvatar');
+                const avatarSkel = document.getElementById('sidebarAvatarSkeleton');
+                const nameEl = document.getElementById('sidebarUsername');
+                const btnSkel = document.getElementById('sidebarBtnSkeleton');
+                const linkEl = document.getElementById('sidebarProfileLink');
+
+                if (nameEl && name) {
+                    nameEl.textContent = name;
+                    nameEl.classList.remove('skeleton-text');
+                    nameEl.style.background = 'none';
+                    nameEl.style.width = 'auto';
+                    nameEl.style.height = 'auto';
+                }
+
+                if (linkEl && name) {
+                    linkEl.href = '/' + name;
+                    linkEl.style.display = 'inline-flex';
+                    if (btnSkel) btnSkel.style.display = 'none';
+                }
+
+                if (avatarEl && avatar) {
+                    try {
+                        let finalSrc = avatar;
+                        if (typeof avatar === 'string' && avatar.startsWith('http') && !avatar.includes('supabase.co')) {
+                            finalSrc = avatar;
+                        } else if (window.AuthUtils && window.AuthUtils.getAuthorizedUrl) {
+                            finalSrc = await window.AuthUtils.getAuthorizedUrl(avatar, version, uid);
+                        }
+                        
+                        avatarEl.src = finalSrc;
+                        avatarEl.onload = () => {
+                            avatarEl.style.display = 'block';
+                            if (avatarSkel) {
+                                avatarSkel.classList.remove('skeleton');
+                                avatarSkel.style.background = 'transparent';
+                            }
+                        };
+                    } catch(e) { 
+                        avatarEl.src = avatar; 
+                        avatarEl.style.display = 'block';
+                        if (avatarSkel) avatarSkel.classList.remove('skeleton');
+                    }
+                }
+            }
+        } catch(e) { console.warn('Sidebar profile load error:', e); }
+    })();
     </script>
 </body>
 

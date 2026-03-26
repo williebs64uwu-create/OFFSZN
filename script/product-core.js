@@ -1385,6 +1385,117 @@ window.contactProducerForExclusivity = function () {
 
 
 
+
+/**
+ * BLOCKED PAYMENT MODAL
+ * Triggered when a producer has no valid payment methods (PayPal/Yape) configured.
+ */
+window.openBlockedPaymentModal = function (producer) {
+    if (!producer) return;
+
+    // --- TRIGGER PRODUCER NOTIFICATION ---
+    const product = window.currentProductData;
+    const currentUser = window.AuthUtils ? window.AuthUtils.getCurrentUser() : null;
+    
+    // Safety check: Don't notify if the producer is viewing their own blocked state 
+    // (though they shouldn't even see the add button if ineligible, this is a good safeguard)
+    if (currentUser && currentUser.id !== producer.id) {
+        const buyerUsername = currentUser.nickname || currentUser.user_metadata?.nickname || 'Un comprador';
+        const prodName = product?.name || 'un producto';
+        
+        window.supabaseClient.from('notifications').insert({
+            user_id: producer.id, // The producer who needs to fix settings
+            type: 'payment_method_missing',
+            title: '¡Venta Bloqueada!',
+            actor_id: currentUser.id, // The buyer who tried to buy
+            link: '/transacciones.html',
+            data: { 
+                product_id: product?.id, 
+                product_name: prodName, 
+                buyer_username: buyerUsername 
+            }
+        }).then(({ error }) => {
+            if (error) console.warn("[Notifications] Error triggering producer alert:", error);
+            else console.log("[Notifications] Producer alerted about blocked purchase attempt.");
+        });
+    }
+
+
+    let backdrop = document.getElementById('blocked-payment-modal-backdrop');
+    if (!backdrop) {
+        backdrop = document.createElement('div');
+        backdrop.id = 'blocked-payment-modal-backdrop';
+        backdrop.className = 'share-modal-backdrop';
+        backdrop.onclick = (e) => { if (e.target === backdrop) window.closeBlockedPaymentModal(); };
+        document.body.appendChild(backdrop);
+    }
+
+    const nickname = producer.nickname || 'este productor';
+    const email = producer.email || '';
+    
+    // Build context for message
+    const category = (product?.product_type || 'producto').toLowerCase();
+    const productLink = window.location.href;
+    const message = `Hola @${nickname}, intenté comprar tu ${category} "${product?.name || 'este producto'}" (${productLink}) pero no logré completar el pago. ¿Cómo podemos coordinar?`;
+    const contactUrl = `/mensajes.html?user=${encodeURIComponent(nickname)}&msg=${encodeURIComponent(message)}`;
+
+    backdrop.innerHTML = `
+        <div class="share-modal-content" style="max-width: 440px; width: 95%; padding: 45px 30px; border-radius: 28px; background: #0a0a0a; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 50px 100px rgba(0,0,0,0.9);">
+            <div class="modal-pull-bar"></div>
+            <button class="share-modal-close-btn" onclick="window.closeBlockedPaymentModal()" style="top: 25px; right: 25px;">&times;</button>
+
+            <div style="text-align:center;">
+                <div style="width: 60px; height: 60px; background: rgba(255, 255, 255, 0.03); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 25px; border: 1px solid rgba(255, 255, 255, 0.08);">
+                    <i class="bi bi-info-circle" style="color: #fff; font-size: 1.8rem; opacity: 0.8;"></i>
+                </div>
+
+                <h2 style="color: #fff; font-size: 1.4rem; font-weight: 800; margin-bottom: 12px; letter-spacing: -0.5px;">No se pudo añadir este ${category}</h2>
+                
+                <p style="color:#888; font-size:0.95rem; margin-bottom:30px; line-height:1.6; font-weight:500;">
+                    <a href="/@${nickname}" style="color:#fff; text-decoration:none; font-weight:800;">@${nickname}</a> aún no ha configurado sus métodos de pago. Por favor, contáctalo directamente para completar tu compra.
+                </p>
+
+                <div style="display: flex; flex-direction: column; gap: 15px;">
+                    <button onclick="window.location.href='${contactUrl}'" class="btn-purchase-kit" style="width:100%; height: 56px !important; font-size: 1rem; font-weight:800; border-radius: 12px; background: #fff; color: #000; border: none; text-transform: uppercase;">
+                        CONTACTAR AL PRODUCTOR
+                    </button>
+
+                    ${email ? `
+                        <div style="margin-top: 10px; padding: 20px; background: rgba(255,255,255,0.03); border-radius: 16px; border: 1px solid rgba(255,255,255,0.05); text-align: center;">
+                            <div style="color: #555; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 8px; font-weight: 800;">Email de contacto</div>
+                            <div style="color: #fff; font-size: 0.95rem; font-weight: 600; display: flex; justify-content: center; align-items: center; gap: 10px;">
+                                ${email}
+                                <i class="bi bi-clipboard" style="cursor: pointer; opacity: 0.4; font-size: 0.8rem;" onclick="window.copyToClipboard('${email}', this)"></i>
+                            </div>
+                        </div>
+                    ` : ''}
+                </div>
+            </div>
+        </div>
+    `;
+
+    backdrop.style.display = 'flex';
+    setTimeout(() => {
+        backdrop.classList.add('active');
+        const contentBox = backdrop.querySelector('.share-modal-content');
+        if (contentBox && typeof initBottomSheetDrag === 'function') {
+            initBottomSheetDrag(contentBox, window.closeBlockedPaymentModal);
+        }
+    }, 10);
+};
+
+window.closeBlockedPaymentModal = function () {
+    const backdrop = document.getElementById('blocked-payment-modal-backdrop');
+    if (backdrop) {
+        backdrop.classList.add('closing');
+        backdrop.classList.remove('active');
+        setTimeout(() => {
+            backdrop.style.display = 'none';
+            backdrop.classList.remove('closing');
+        }, 350);
+    }
+};
+
 // Download Gate functions moved to script/download-gate.js
 
 
@@ -2656,6 +2767,30 @@ window.addToCart = (id, license) => {
     if (!product) {
         alert("Error: Datos del producto no cargados.");
         return;
+    }
+
+    // --- PAYMENT ELIGIBILITY CHECK ---
+    // Only block if NOT free. Free products are exempt.
+    const isFree = product.is_free || false;
+    if (!isFree) {
+        let producer = product.producer;
+        if (Array.isArray(producer)) producer = producer[0];
+
+        if (producer) {
+            // Check for PayPal (email or explicitly set in methods)
+            const has_paypal = producer.paypal_email || (producer.payment_methods && producer.payment_methods.paypal?.enabled);
+            // Check for Yape (verified phone)
+            const has_yape = producer.yape_phone && producer.is_verified;
+
+            if (!has_paypal && !has_yape) {
+                if (window.openBlockedPaymentModal) {
+                    window.openBlockedPaymentModal(producer);
+                } else {
+                    alert("Este productor no tiene configurados métodos de pago.");
+                }
+                return;
+            }
+        }
     }
 
     // 2. Determine Price, License Name, and Details

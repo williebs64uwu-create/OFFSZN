@@ -155,7 +155,14 @@ async function fetchData() {
         const followingData = token ? results[3] : [];
 
         // Process Content
-        if (productsRes.ok) allProducts = await productsRes.json();
+        if (productsRes.ok) {
+            allProducts = await productsRes.json();
+            // 🔥 FILTER DELETED: Ensure they don't show up in Explore
+            allProducts = allProducts.filter(p => 
+                p.status !== 'deleted' && 
+                !(p.public_slug && p.public_slug.startsWith('deleted'))
+            );
+        }
         if (producersRes.ok) allProducers = await producersRes.json();
         if (leaderboardRes.ok) window.topProducers = await leaderboardRes.json();
 
@@ -440,11 +447,25 @@ function createListItemHtml(item, index, type) {
     const name = escapeHTML(item.name || item.nickname || 'Sin nombre');
     const sub = type === 'product' ? escapeHTML(item.producer_nickname || 'OFFSZN Artist') : `${item.products_count || 0} productos`;
     const rawImg = item.image_url || item.avatar_url || '/images/portada-default.png';
-    const isR2 = window.AuthUtils && window.AuthUtils.isR2Url(rawImg);
+    
+    // 🔥 R2 Signing Optimization (Match product-core.js)
+    const storageVer = item.storage_version || item.r2_version || 'v1';
+    const isR2 = (storageVer !== 'supabase') && window.AuthUtils && window.AuthUtils.isR2Url(rawImg);
     const imgPlaceholder = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
+    
+    let initialSrc = rawImg;
+    if (!isR2 && !rawImg.startsWith('http')) {
+        const sbUrl = window.SUPABASE_URL || "https://qtjpvztpgfymjhhpoouq.supabase.co";
+        // Check if it's already a full URL
+        if (!rawImg.includes('supabase.co')) {
+            initialSrc = `${sbUrl}/storage/v1/object/public/products/${rawImg}`;
+        }
+    } else if (isR2) {
+        initialSrc = imgPlaceholder;
+    }
 
-    // Use data-r2-src if it's R2 to prevent 404 fetch
-    const imgAttr = isR2 ? `src="${imgPlaceholder}" data-r2-src="${escapeHTML(rawImg)}"` : `src="${escapeHTML(rawImg)}"`;
+    // Prepare attributes
+    const imgAttr = isR2 ? `src="${imgPlaceholder}" data-r2-src="${escapeHTML(rawImg)}"` : `src="${escapeHTML(initialSrc)}"`;
 
     const isCircle = type === 'producer' ? 'circle' : '';
 
@@ -455,7 +476,7 @@ function createListItemHtml(item, index, type) {
         return `
             <div class="list-item-smart" data-id="${item.id}" data-type="producer" onclick="window.location.href='${link}'">
                 <div class="list-item-index">${index}</div>
-                <img ${imgAttr} data-r2-version="${item.storage_version || item.r2_version || 'v1'}" class="list-item-img circle" alt="cover">
+                <img ${imgAttr} data-r2-version="${storageVer}" class="list-item-img circle" alt="cover">
                 <div class="list-item-info">
                     <div class="list-item-name">${name}</div>
                     <div class="list-item-sub">${sub}</div>
@@ -474,7 +495,7 @@ function createListItemHtml(item, index, type) {
     return `
         <div class="list-item-smart" data-id="${item.id}" data-type="product">
             <div class="list-item-index">${index}</div>
-            <img ${imgAttr} data-r2-version="${item.storage_version || item.r2_version || 'v1'}" data-product-id="${item.id}" class="list-item-img" alt="cover" onclick="event.stopPropagation(); window.handleInfoClick(event, '${item.id}', '${link}')">
+            <img ${imgAttr} data-r2-version="${storageVer}" data-product-id="${item.id}" class="list-item-img" alt="cover" onclick="event.stopPropagation(); window.handleInfoClick(event, '${item.id}', '${link}')">
             <div class="list-item-info" onclick="event.stopPropagation(); window.handleInfoClick(event, '${item.id}', '${link}')">
                 <div class="list-item-name">${name}</div>
                 <div class="list-item-sub">${sub}</div>
@@ -677,20 +698,32 @@ function updateHeroIndicators() {
 }
 
 function renderHeroSlideHtml(product, index) {
-    const imgUrl = escapeHTML(product.image_url || '/images/portada-default.png');
+    const rawImg = product.image_url || '/images/portada-default.png';
+    const imgUrl = escapeHTML(rawImg);
     const producer = escapeHTML(product.producer_nickname || 'Artista');
     const type = escapeHTML((product.product_type || 'Beat').toUpperCase());
     const productName = escapeHTML(product.name || 'Sin título');
 
-    const isR2 = window.AuthUtils && window.AuthUtils.isR2Url(product.image_url);
+    const storageVer = product.storage_version || product.r2_version || 'v1';
+    const isR2 = (storageVer !== 'supabase') && window.AuthUtils && window.AuthUtils.isR2Url(rawImg);
     const imgPlaceholder = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
 
-    const mobileBgAttr = isR2 ? `data-r2-bg="${imgUrl}"` : `style="background-image: url('${imgUrl}')"`;
+    let initialSrc = rawImg;
+    if (!isR2 && !rawImg.startsWith('http')) {
+        const sbUrl = window.SUPABASE_URL || "https://qtjpvztpgfymjhhpoouq.supabase.co";
+        if (!rawImg.includes('supabase.co')) {
+            initialSrc = `${sbUrl}/storage/v1/object/public/products/${rawImg}`;
+        }
+    } else if (isR2) {
+        initialSrc = imgPlaceholder;
+    }
+
+    const mobileBgAttr = isR2 ? `data-r2-bg="${imgUrl}"` : `style="background-image: url('${escapeHTML(initialSrc)}')"`;
 
     return `
             <div class="explore-hero" onclick="window.handleHeroClick(${index})">
                 <!-- Mobile Background Image & Gradient -->
-                <div class="hero-mobile-bg mobile-only" ${mobileBgAttr} data-r2-version="${product.storage_version || product.r2_version || 'v1'}"></div>
+                <div class="hero-mobile-bg mobile-only" ${mobileBgAttr} data-r2-version="${storageVer}"></div>
                 <div class="hero-mobile-gradient mobile-only"></div>
 
                 <canvas class="hero-particles-canvas desktop-only"></canvas>
@@ -714,8 +747,8 @@ function renderHeroSlideHtml(product, index) {
                 </div>
 
                 <div class="hero-image-container desktop-only">
-                    <img ${isR2 ? `src="${imgPlaceholder}" data-r2-src="${imgUrl}"` : `src="${imgUrl}"`} 
-                         data-r2-version="${product.storage_version || product.r2_version || 'v1'}" 
+                    <img ${isR2 ? `src="${imgPlaceholder}" data-r2-src="${imgUrl}"` : `src="${escapeHTML(initialSrc)}"`} 
+                         data-r2-version="${storageVer}" 
                          alt="cover" class="hero-image">
                 </div>
 
@@ -1000,10 +1033,18 @@ function createProductCardHtml(product, format = 'standard') {
     // Helper for resolve storage version and URL
     const getImgInfo = (path, storageVer) => {
         const rawPath = path || '/images/portada-default.png';
-        const ver = storageVer || 'v2';
+        const ver = storageVer || 'v1';
         const isR2 = (ver !== 'supabase') && window.AuthUtils && window.AuthUtils.isR2Url(rawPath);
 
-        const finalSrc = window.AuthUtils?.getFormattedSupabaseUrl ? window.AuthUtils.getFormattedSupabaseUrl(rawPath) : rawPath;
+        let finalSrc = rawPath;
+        if (!isR2 && !rawPath.startsWith('http')) {
+            const sbUrl = window.SUPABASE_URL || "https://qtjpvztpgfymjhhpoouq.supabase.co";
+            if (!rawPath.includes('supabase.co')) {
+                finalSrc = `${sbUrl}/storage/v1/object/public/products/${rawPath}`;
+            }
+        } else if (isR2) {
+            finalSrc = imgPlaceholder;
+        }
 
         return {
             attr: isR2 ? `src="${imgPlaceholder}" data-r2-src="${escapeHTML(rawPath)}" data-r2-version="${ver}"` : `src="${escapeHTML(finalSrc)}"`,

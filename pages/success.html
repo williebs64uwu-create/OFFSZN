@@ -291,7 +291,7 @@
             <div class="order-meta">
                 <div class="order-number" id="order-id-display">Pedido #-------</div>
                 <div class="order-badges">
-                    <span class="badge-paid"><i class="bi bi-check-circle-fill"></i> Pagado</span>
+                    <span id="order-status-badge" class="badge-paid"><i class="bi bi-check-circle-fill"></i> Pagado</span>
                     <span id="order-date">-- ---, --:--</span>
                 </div>
             </div>
@@ -331,7 +331,7 @@
                                     style="position: absolute; left: -21px; top: 0; width: 10px; height: 10px; background: #22c55e; border-radius: 50%;">
                                 </div>
                                 <div style="font-weight: 700; font-size: 0.85rem;">Pedido completado</div>
-                                <div style="font-size: 0.75rem; color: #888;">Pago recibido vía PayPal</div>
+                                <div id="payment-method-desc" style="font-size: 0.75rem; color: #888;">Pago recibido vía PayPal</div>
                             </div>
                             <div style="position: relative;">
                                 <div
@@ -369,7 +369,36 @@
                 renderDefaultOrderState();
             }
 
+            // Handle Yape specific UI
+            if (params.get('method') === 'yape' || (window.currentOrderData && window.currentOrderData.status === 'pending_yape')) {
+                handleYapeUI();
+            }
+
             renderPortal(session);
+        }
+
+        function handleYapeUI() {
+            const badge = document.getElementById('order-status-badge');
+            const desc = document.getElementById('payment-method-desc');
+            const portalTitle = document.getElementById('portal-title');
+            const portalDesc = document.getElementById('portal-desc');
+
+            if (badge) {
+                badge.innerHTML = '<i class="bi bi-clock-history"></i> Pendiente de Verificación';
+                badge.style.color = '#f59e0b'; // Amber
+            }
+            if (desc) {
+                desc.textContent = 'Pago enviado vía Yape (Sujeto a verificación)';
+            }
+            if (portalTitle) portalTitle.textContent = '¡Pedido en Proceso!';
+            if (portalDesc) {
+                portalDesc.innerHTML = `
+                    Estamos validando tu pago por Yape. Una vez confirmado, 
+                    tus archivos estarán disponibles para descargar aquí y en tu correo.<br><br>
+                    <span style="color:#f59e0b; font-weight:600;">¿No has enviado el comprobante?</span><br>
+                    Envía una captura al WhatsApp de soporte para agilizar el proceso.
+                `;
+            }
         }
 
         function renderPortal(session) {

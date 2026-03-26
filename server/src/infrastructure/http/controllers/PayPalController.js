@@ -189,11 +189,14 @@ export const createPayPalOrder = async (req, res) => {
         } else if (userId) {
             const { data, error: cartError } = await supabase
                 .from('cart_items')
-                .select('product:products(id, name, price_basic, producer_id, image_url, mp3_url, wav_url, stems_url, kit_url), license_name, variant_price')
+                .select('product:products(id, name, price_basic, producer_id, image_url, mp3_url, wav_url, stems_url, kit_url, status), license_name, variant_price')
                 .eq('user_id', userId);
 
             if (cartError) throw cartError;
-            cartItems = data || [];
+            
+            // Filter out deleted products (matching frontend cart.js behavior)
+            cartItems = (data || []).filter(item => item.product && item.product.status !== 'deleted');
+            console.log(`[PayPalOrder] Auth user cart: ${data?.length || 0} raw items → ${cartItems.length} after filtering deleted`);
         } else {
             // GUEST FLOW: Expect items in body
             cartItems = req.body.cartItems || [];
@@ -220,14 +223,16 @@ export const createPayPalOrder = async (req, res) => {
             // Use paypal_email column primarily, fallback to payment_methods.paypal
             const finalPaypalEmail = u.paypal_email || u.payment_methods?.paypal;
             
-            producerMap.set(u.id, {
-                id: u.id,
-                email: finalPaypalEmail,
-                settings: u.license_settings,
-                nickname: u.nickname,
-                plan: profile?.plan || 'free'
-            });
-        });
+      producerMap.set(u.id, {
+        id: u.id,
+        email: finalPaypalEmail,
+        settings: u.license_settings,
+        nickname: u.nickname,
+        plan: profile?.plan || 'free'
+      });
+    });
+
+    console.log('[PayPalOrder] Producer Map entries:', Array.from(producerMap.entries()).map(([id, p]) => ({ id, email: p.email, nickname: p.nickname })));
 
         // --- NEW: Identify Producers without PayPal ---
         const missingPaymentProducers = [];
@@ -533,8 +538,14 @@ export const createPayPalOrder = async (req, res) => {
         res.status(200).json({ id: response.result.id });
 
     } catch (err) {
-        console.error("PayPal Create Error:", err);
-        res.status(500).json({ error: err.message });
+        console.error("[PayPal Create Error] Message:", err.message);
+        if (err.statusCode) {
+            console.error("[PayPal Create Error] Status:", err.statusCode, "Details:", JSON.stringify(err.result || err.details || {}, null, 2));
+        }
+        const userMsg = err.statusCode === 422 
+            ? 'Error de PayPal: El correo del productor no está vinculado a una cuenta PayPal válida. Contacta al productor.'
+            : (err.message || 'Error interno al crear la orden.');
+        res.status(err.statusCode || 500).json({ error: userMsg });
     }
 };
 

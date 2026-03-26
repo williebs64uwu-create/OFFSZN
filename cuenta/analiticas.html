@@ -23,6 +23,58 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <style>
+
+        /* ===== SIDEBAR PROFILE CARD ===== */
+        .sidebar-profile-card { display: flex; flex-direction: column; align-items: center; width: 100%; padding: 20px 0 20px 0; border-bottom: 1px solid #1a1a1a; margin-bottom: 12px; }
+        .sidebar-avatar-wrapper { width: 85px; height: 85px; border-radius: 50%; overflow: hidden; border: 2px solid #333; margin-bottom: 12px; background: #000; position: relative; }
+        .sidebar-avatar { width: 100%; height: 100%; object-fit: cover; }
+        .sidebar-username { color: #fff; font-size: 15px; font-weight: 600; font-family: 'Inter', sans-serif; margin-bottom: 12px; text-align: center; max-width: 90%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .sidebar-profile-btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 18px; border-radius: 100px; border: 1px solid #333; background: transparent; color: #aaa; font-size: 12px; font-weight: 500; font-family: 'Inter', sans-serif; text-decoration: none; transition: all 0.2s ease; cursor: pointer; }
+        .sidebar-profile-btn:hover { border-color: #fff; color: #fff; background: rgba(255,255,255,0.05); }
+        .sidebar-profile-btn i { font-size: 11px; }
+
+        @keyframes sidebarPulse {
+            0% { background-color: rgba(255,255,255,0.03); }
+            50% { background-color: rgba(255,255,255,0.08); }
+            100% { background-color: rgba(255,255,255,0.03); }
+        }
+        .sidebar-profile-card .skeleton, .sidebar-profile-card .skeleton-text {
+            animation: sidebarPulse 2s infinite ease-in-out;
+            background: rgba(255,255,255,0.05);
+        }
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        /* ===== SIDEBAR STYLES (B&W PREMIUM) ===== */
+        .sidebar-stub { width: 220px; background: #000; border-right: 1px solid #1a1a1a; height: 100vh; position: fixed; left: 0; top: 0; z-index: 100; display: flex; flex-direction: column; align-items: flex-start; padding-top: 30px; padding-left: 15px; padding-right: 15px; gap: 6px; }
+        .sidebar-icon-btn { width: 100%; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: flex-start; padding-left: 12px; gap: 14px; color: #888; font-size: 14px; font-weight: 500; transition: all 0.2s ease; text-decoration: none; position: relative; background: transparent; border: none; cursor: pointer; }
+        .sidebar-icon-btn i { font-size: 20px; width: 24px; text-align: center; display: inline-block; color: #666; transition: 0.2s; }
+        .sidebar-icon-btn:hover { color: #fff; background: rgba(255, 255, 255, 0.08); }
+        .sidebar-icon-btn.active { color: #000 !important; background: #fff !important; font-weight: 700; box-shadow: 0 4px 20px rgba(255, 255, 255, 0.15); }
+        .sidebar-icon-btn.active i { color: #000 !important; }
+        .sidebar-icon-btn[data-title]:hover::after, .sidebar-icon-btn[title]:hover::after { display: none; }
+
+        /* ===== SIDEBAR STYLES (B&W PREMIUM) ===== */
+        
+        
+        
+        
+        
+        
+        .sidebar-icon-btn[data-title]:hover::after, .sidebar-icon-btn[title]:hover::after { display: none; }
+
     :root {
       --bg-dark: #000000;
       --card-bg: #0F0F0F;
@@ -58,84 +110,35 @@
       /* ?? PREVENTS LAYOUT SHIFT */
     }
 
-    /* ===== SIDEBAR STUB ===== */
-    .sidebar-stub {
-      width: 80px;
-      /* Mini */
-      background: #000;
-      border-right: 1px solid var(--border-color);
-      height: 100vh;
-      position: fixed;
-      left: 0;
-      top: 0;
-      z-index: 100;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding-top: 20px;
-      gap: 10px;
-    }
+    
+        /* ===== SIDEBAR STUB (For layout consistency) ===== */
+        
 
-    /* RADIAL GLOW BACKGROUND */
-    .radial-glow {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      background: radial-gradient(circle at 50% 50%, rgba(139, 92, 246, 0.04), transparent 70%);
-      /* Reduced opacity */
-      z-index: -1;
-      pointer-events: none;
-    }
+        /* RADIAL GLOW BACKGROUND */
+        .radial-glow {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: radial-gradient(circle at 50% 50%, rgba(139, 92, 246, 0.08), transparent 70%);
+            z-index: -1;
+            pointer-events: none;
+        }
 
-    .sidebar-icon-btn {
-      width: 40px;
-      height: 40px;
-      border-radius: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #666;
-      font-size: 20px;
-      transition: 0.2s;
-      text-decoration: none;
-    }
+        
+        
+        
 
-    .sidebar-icon-btn:hover {
-      color: #fff;
-      background: rgba(255, 255, 255, 0.05);
-    }
+        
 
-    .sidebar-icon-btn.active {
-      color: #fff;
-      background: var(--accent-purple);
-      box-shadow: 0 0 10px var(--accent-glow);
-    }
+        
 
-    /* ===== SIDEBAR TOOLTIPS ===== */
-    .sidebar-icon-btn {
-      position: relative;
-    }
+        /* ===== SIDEBAR TOOLTIPS ===== */
+        
 
-    .sidebar-icon-btn[data-title]:hover::after {
-      content: attr(data-title);
-      position: fixed;
-      left: 75px;
-      background: #111;
-      border: 1px solid #333;
-      color: #fff;
-      padding: 6px 12px;
-      border-radius: 6px;
-      font-size: 12px;
-      white-space: nowrap;
-      z-index: 1000;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-      pointer-events: none;
-      opacity: 0;
-      animation: fadeInTooltip 0.2s forwards;
-      font-weight: 500;
-    }
+        /* Hiding tooltips when expanded */
+        
 
     @keyframes fadeInTooltip {
       from {
@@ -152,9 +155,9 @@
     /* ===== MAIN CONTENT ===== */
     .main-content-elite {
       flex: 1;
-      margin-left: 80px;
+      margin-left: 220px;
       padding: 40px;
-      width: calc(100% - 80px);
+      width: calc(100% - 220px);
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -427,7 +430,7 @@
       left: 0;
       width: 100%;
       height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.05), transparent);
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.03), transparent);
       animation: loading 1.5s infinite;
     }
 
@@ -598,7 +601,7 @@
     }
 
     .feature-item i {
-      color: var(--accent-purple);
+      color: #fff;
       font-size: 14px;
     }
 
@@ -640,44 +643,49 @@
   <div class="radial-glow"></div>
 
   <!-- SIDEBAR (Standard) -->
-  <div class="sidebar-stub" style="justify-content:flex-start; gap:15px;">
-    <!-- Brand/Home -->
-    <a href="/explorar.html" class="sidebar-logo-btn"
-      style="margin-bottom:10px; display:flex; align-items:center; justify-content:center; width:44px; height:44px;">
-      <img src="../images/LOGO-OFFSZN.png" style="width:38px; mix-blend-mode: screen;">
-    </a>
+  <div class="sidebar-stub">
+        
+        <!-- Profile Card -->
+        <div class="sidebar-profile-card" id="sidebarProfileCard">
+            <div class="sidebar-avatar-wrapper skeleton" id="sidebarAvatarSkeleton" style="width: 85px; height: 85px; border-radius: 50%; margin-bottom: 12px; background: #1a1a1a;">
+                <img id="sidebarAvatar" src="" alt="Avatar" class="sidebar-avatar" style="display:none; width: 100%; height: 100%; object-fit: cover;">
+            </div>
+            <span id="sidebarUsername" class="sidebar-username skeleton-text" style="width: 100px; height: 18px; display: inline-block; border-radius: 4px; margin-bottom: 12px;"></span>
+            <div id="sidebarBtnSkeleton" class="skeleton" style="width: 110px; height: 30px; border-radius: 100px; background: #1a1a1a;"></div>
+            <a id="sidebarProfileLink" href="/explorar.html" class="sidebar-profile-btn" style="display:none;">
+                Ir a mi perfil <i class="bi bi-arrow-right"></i>
+            </a>
+        </div>
 
-    <!-- 1. GESTIÓN -->
-    <div style="width:40px; border-bottom:1px solid #222; margin:5px 0;"></div>
-    <a href="dashboard.html" class="sidebar-icon-btn" data-title="Dashboard"><i class="bi bi-grid-fill"></i></a>
-    <a href="mis-kits.html" class="sidebar-icon-btn" data-title="Mis Beats/Kits"><i class="bi bi-disc-fill"></i></a>
-    <a href="subir-kit.html" class="sidebar-icon-btn" data-title="Subir"><i class="bi bi-cloud-arrow-up-fill"></i></a>
+        <!-- 1. GESTIÓN -->
+    
+    <a href="dashboard.html" class="sidebar-icon-btn" data-title="Dashboard"><i class="bi bi-grid-fill"></i> <span>Dashboard</span></a>
+    <a href="mis-kits.html" class="sidebar-icon-btn" data-title="Mis Beats/Kits"><i class="bi bi-disc-fill"></i> <span>Mis Beats/Kits</span></a>
+    <a href="subir-kit.html" class="sidebar-icon-btn" data-title="Subir"><i class="bi bi-cloud-arrow-up-fill"></i> <span>Subir</span></a>
 
     <!-- 2. NEGOCIO -->
-    <div style="width:40px; border-bottom:1px solid #222; margin:5px 0;"></div>
+    
     <a href="admin-licencias.html" class="sidebar-icon-btn" data-title="Licencias"><i
-        class="bi bi-file-earmark-music-fill"></i></a>
-    <a href="negociar.html" class="sidebar-icon-btn" data-title="Negociar"><i class="bi bi-chat-left-dots-fill"></i></a>
+        class="bi bi-file-earmark-music-fill"></i> <span>Licencias</span></a>
+    <a href="negociar.html" class="sidebar-icon-btn" data-title="Negociar"><i class="bi bi-chat-left-dots-fill"></i> <span>Negociar</span></a>
     <a href="cupones.html" class="sidebar-icon-btn" data-title="Cupones"><i
-        class="bi bi-ticket-perforated-fill"></i></a>
+        class="bi bi-ticket-perforated-fill"></i> <span>Cupones</span></a>
     <a href="colaboraciones.html" class="sidebar-icon-btn" data-title="Colaboraciones"><i
-        class="bi bi-people-fill"></i></a>
+        class="bi bi-people-fill"></i> <span>Colaboraciones</span></a>
 
     <!-- 3. ACADEMIA -->
-    <div style="width:40px; border-bottom:1px solid #222; margin:5px 0;"></div>
+    
     <a href="/cuenta/cursos.html" class="sidebar-icon-btn" data-title="Cursos"><i
-        class="bi bi-mortarboard-fill"></i></a>
+        class="bi bi-mortarboard-fill"></i> <span>Cursos</span></a>
     <a href="/cuenta/analiticas.html" class="sidebar-icon-btn active" data-title="Estadísticas"><i
-        class="bi bi-bar-chart-fill"></i></a>
+        class="bi bi-bar-chart-fill"></i> <span>Estadísticas</span></a>
 
     <!-- 4. SOCIAL -->
-    <div style="width:40px; border-bottom:1px solid #222; margin:5px 0;"></div>
-    <a href="reels.html" class="sidebar-icon-btn" data-title="Reels"><i class="bi bi-camera-reels-fill"></i></a>
+    
+    <a href="reels.html" class="sidebar-icon-btn" data-title="Reels"><i class="bi bi-camera-reels-fill"></i> <span>Reels</span></a>
 
     <!-- UPGRADE BUTTON (ROCKET) -->
-    <a href="planes.html" class="sidebar-icon-btn" data-title="Mejorar Plan" style="color:#FFD700; margin-top: 10px;">
-      <i class="bi bi-rocket-takeoff-fill"></i>
-    </a>
+    <a href="planes.html" class="sidebar-icon-btn" data-title="Mejorar Plan" style="color:#fff; margin-top: 10px;"><i style="color: #fff;" class="bi bi-rocket-takeoff-fill"></i> <span style="color: #fff;">Mejorar Plan</span></a>
   </div>
 
   <!-- MAIN CONTENT -->
@@ -700,38 +708,38 @@
 
     <!-- Top Metrics Bento Row -->
     <div class="bento-row">
-      <!-- Total Views -->
+      <!-- Total Plays (Reproducciones) -->
       <div class="elite-card">
-        <i class="bi bi-eye-fill metric-icon" style="color:#3B82F6;"></i>
-        <span class="metric-label">Vistas Totales</span>
+        <i class="bi bi-play-fill metric-icon" style="color:#fff; opacity: 0.8;"></i>
+        <span class="metric-label">Reproducciones</span>
         <div id="totalViewsValue" class="metric-value">0</div>
-        <div style="font-size:12px; color:#555;">Reproducciones de audio</div>
+        <div style="font-size:12px; color:#555;">Plays reales detectados</div>
       </div>
 
       <!-- Free Downloads -->
       <div class="elite-card">
-        <i class="bi bi-cloud-arrow-down-fill metric-icon" style="color:#10B981;"></i>
+        <i class="bi bi-download metric-icon" style="color:#fff; opacity: 0.8;"></i>
         <span class="metric-label">Descargas Gratuitas</span>
         <div id="freeDownloadsValue" class="metric-value">0</div>
-        <div style="font-size:12px; color:#555;">Apoyos de la comunidad</div>
+        <div style="font-size:12px; color:#555;">Conversiones sin costo</div>
       </div>
 
-      <!-- Reels Views -->
+      <!-- Page Views -->
       <div class="elite-card">
-        <i class="bi bi-play-circle-fill metric-icon" style="color:#EF4444;"></i>
-        <span class="metric-label">Vistas en Reels</span>
+        <i class="bi bi-eye-fill metric-icon" style="color:#fff; opacity: 0.8;"></i>
+        <span class="metric-label">Visitas Perfil</span>
         <div id="reelsViewsValue" class="metric-value">0</div>
-        <div style="font-size:12px; color:#555;">Impacto en videos cortos</div>
+        <div style="font-size:12px; color:#555;">Tráfico externo único</div>
       </div>
 
       <!-- Conversion Rate -->
       <div class="elite-card" id="conversionCard"
-        style="background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), transparent);">
-        <i class="bi bi-lightning-charge-fill metric-icon" style="color:#8B5CF6;"></i>
-        <span class="metric-label">Tasa de Conversión</span>
+        style="background: #111; border-color: #333;">
+        <i class="bi bi-lightning-charge-fill metric-icon" style="color:var(--accent-purple); opacity: 0.9;"></i>
+        <span class="metric-label">Eficiencia</span>
         <div id="conversionContent">
           <div class="metric-value" id="conversionValue">0%</div>
-          <div style="font-size:12px; color:#555;">Visitas que terminan en venta</div>
+          <div style="font-size:12px; color:#555;">Ventas vs Visitas</div>
         </div>
       </div>
     </div>
@@ -745,10 +753,10 @@
           <span class="card-title">Tráfico vs. Ventas</span>
           <div style="display:flex; gap:16px;">
             <div style="display:flex; align-items:center; gap:6px; font-size:12px; color:#888;">
-              <span style="width:8px; height:8px; border-radius:50%; background:#8B5CF6;"></span> Visitas
+              <span style="width:8px; height:8px; border-radius:50%; background:#fff;"></span> Visitas
             </div>
             <div style="display:flex; align-items:center; gap:6px; font-size:12px; color:#888;">
-              <span style="width:8px; height:8px; border-radius:50%; background:#10B981;"></span> Ventas ($)
+              <span style="width:8px; height:8px; border-radius:50%; background:var(--accent-purple);"></span> Ventas ($)
             </div>
           </div>
         </div>
@@ -845,122 +853,99 @@
       // else 'all', remain null
 
       try {
-        // --- A) PAGE VIEWS (Traffic) ---
+        // --- 0) FETCH USER'S PRODUCTS FIRST (Needed for filtering logs) ---
+        const { data: userProducts, error: prodErr } = await window.supabaseClient
+          .from('products')
+          .select('id, name, cover_url, image_url, storage_version')
+          .eq('producer_id', userId)
+          .eq('status', 'approved');
+
+        const productIds = userProducts?.map(p => p.id) || [];
+
+        // --- A) PAGE VIEWS (Traffic to Profile/Products) ---
+        // Simplified: traffic to producer's products and profile
         let viewsQuery = window.supabaseClient
           .from('page_views')
           .select('viewed_at')
           .eq('user_id', userId);
 
-        if (startDate) {
-          viewsQuery = viewsQuery.gte('viewed_at', startDate.toISOString());
+        if (startDate) viewsQuery = viewsQuery.gte('viewed_at', startDate.toISOString());
+        const { data: rawViews } = await viewsQuery;
+
+        // --- B) REAL PLAYS (listening_history) ---
+        let rawPlays = [];
+        if (productIds.length > 0) {
+          let playsQuery = window.supabaseClient
+            .from('listening_history')
+            .select('played_at')
+            .in('product_id', productIds);
+
+          if (startDate) playsQuery = playsQuery.gte('played_at', startDate.toISOString());
+          const { data } = await playsQuery;
+          rawPlays = data || [];
         }
-        const { data: rawViews, error: viewsError } = await viewsQuery;
-        if (viewsError) throw viewsError;
 
-        // --- A2) PRODUCT PLAYS (Aggregate) ---
-        // Since we don't have a stamped log for every play (only the counter), 
-        // we'll fetch the lifetime totals from the products table.
-        const { data: rawProductStats, error: prodStatsError } = await window.supabaseClient
-          .from('products')
-          .select('views_count, plays_count')
-          .eq('producer_id', userId)
-          .eq('status', 'approved');
-
-        const totalLifetimePlays = rawProductStats?.reduce((acc, p) => acc + (p.plays_count || 0), 0) || 0;
-        const totalLifetimeViews = rawProductStats?.reduce((acc, p) => acc + (p.views_count || 0), 0) || 0;
-
-        // --- B) ORDERS (Revenue & Free) ---
+        // --- C) ORDERS (Revenue & Free) ---
         let ordersQuery = window.supabaseClient
           .from('orders')
           .select('id, amount, total_price, created_at')
           .eq('producer_id', userId);
 
-        if (startDate) {
-          ordersQuery = ordersQuery.gte('created_at', startDate.toISOString());
-        }
-        const { data: rawOrders, error: ordersError } = await ordersQuery;
-        if (ordersError) throw ordersError;
+        if (startDate) ordersQuery = ordersQuery.gte('created_at', startDate.toISOString());
+        const { data: rawOrders } = await ordersQuery;
 
-        // --- B2) REELS VIEWS (Lifetime Aggregate) ---
-        const { data: rawReels, error: reelsError } = await window.supabaseClient
-          .from('reels')
-          .select('views_count')
-          .eq('user_id', userId);
-
-        const totalReelsViews = rawReels?.reduce((acc, r) => acc + (r.views_count || 0), 0) || 0;
-
-        // --- C) TOP PRODUCTS ---
-        //    We need to relate orders to products. 'order_items' connects them. 
-        //    To calculate popular products in *this specific period*, filtering logic is needed.
-        //    Option 1: Fetch all order_items for these specific order IDs.
-
+        // --- D) TOP PRODUCTS ---
         let topProductsData = [];
         if (rawOrders && rawOrders.length > 0) {
           const orderIds = rawOrders.map(o => o.id);
-
-          const { data: rawOrderItems, error: itemsError } = await window.supabaseClient
+          const { data: rawOrderItems } = await window.supabaseClient
             .from('order_items')
             .select('product_id, price')
             .in('order_id', orderIds);
 
-          if (!itemsError && rawOrderItems) {
-            // Aggregate by product_id
-            const productStats = {}; // { prodId: { count, revenue } }
-
+          if (rawOrderItems) {
+            const productStats = {}; 
             rawOrderItems.forEach(item => {
               if (!productStats[item.product_id]) productStats[item.product_id] = { count: 0, revenue: 0 };
               productStats[item.product_id].count++;
               productStats[item.product_id].revenue += (item.price || 0);
             });
 
-            // Get top 5 IDs
             const sortedIds = Object.keys(productStats)
-              .sort((a, b) => productStats[b].revenue - productStats[a].revenue) // Sort by revenue or count? User said "Mas vendidos" (sold), user also said "ganancias". Revenue is usually better key metric for sorting top.
+              .sort((a, b) => productStats[b].revenue - productStats[a].revenue)
               .slice(0, 5);
 
-            // Fetch Product Details (Name, Image)
-            if (sortedIds.length > 0) {
-              const { data: productDetails } = await window.supabaseClient
-                .from('products')
-                .select('id, name, cover_url, image_url') // Fetch both possible columns
-                .in('id', sortedIds);
-
-              // Merge details
-              topProductsData = sortedIds.map(id => {
-                const details = productDetails?.find(p => p.id == id); // Loose equality
-                const stats = productStats[id];
-                return {
-                  name: details?.name || 'Producto Eliminado',
-                  sales: stats.count,
-                  revenue: stats.revenue,
-                  img: details?.cover_url || details?.image_url // Fallback handled in render
-                };
-              });
-            }
+            topProductsData = sortedIds.map(id => {
+              const details = userProducts?.find(p => p.id == id);
+              const stats = productStats[id];
+              return {
+                id: details?.id,
+                name: details?.name || 'Producto Eliminado',
+                sales: stats.count,
+                revenue: stats.revenue,
+                img: details?.cover_url || details?.image_url,
+                storage_version: details?.storage_version
+              };
+            });
           }
         }
 
-        // --- D) PROCESS DATA FOR CHART ---
+        // --- PROCESS DATA ---
         const chartData = processChartData(rawViews || [], rawOrders || [], startDate, period);
-        const totalOrders = rawOrders ? rawOrders.length : 0;
         const freeDownloads = rawOrders ? rawOrders.filter(o => (o.amount || o.total_price || 0) <= 0).length : 0;
+        const totalPlaysCount = rawPlays ? rawPlays.length : 0;
+        const totalVisitsCount = rawViews ? rawViews.length : 0;
+        const totalOrdersCount = rawOrders ? rawOrders.length : 0;
 
-        // ?? FIX: If period is 'all', we use the robust counters from products table.
-        // If it's 7d/30d, we use the timestamped page_views (which started logging recently).
-        const visitorMetric = (period === 'all') ? totalLifetimeViews : (rawViews?.length || 0);
-
-        // --- 4. RENDER UI ---
+        // --- RENDER UI ---
         hideSkeletons();
-        // Metric 1: totalLifetimePlays (Reproducciones de audio)
-        // Conversion: Uses visitorMetric (derived from products or page_views) vs totalOrders
-        renderBentoStats(totalLifetimePlays, freeDownloads, totalReelsViews, visitorMetric, totalOrders);
-        renderChart(chartData.labels, chartData.views, chartData.sales);
+        renderBentoStats(totalPlaysCount, freeDownloads, totalVisitsCount, totalVisitsCount, totalOrdersCount);
+        renderChart(chartData.labels, chartData.views, chartData.sales, period);
         renderTopProducts(topProductsData);
 
       } catch (err) {
-        // console.error("Analytics Error:", err);
-        // Fallback / Empty State could be shown here
-        hideSkeletons(); // Ensure UI unblocks
+        console.warn("Analytics Error:", err);
+        hideSkeletons(); 
       }
     }
 
@@ -1098,24 +1083,27 @@
       `;
     }
 
-    function renderChart(labels, viewsData, salesData) {
+    function renderChart(labels, viewsData, salesData, period) {
       const ctx = document.getElementById('revenueChart').getContext('2d');
       if (revenueChartInstance) revenueChartInstance.destroy();
 
       // Nice formatting for labels
       const formattedLabels = labels.map(l => {
-        const parts = l.split('-'); // YYYY-MM-DD
-        return `${parts[2]}/${parts[1]}`; // DD/MM
+        const date = new Date(l + 'T00:00:00'); // Ensure local date
+        if (period === '7d') {
+          return date.toLocaleDateString('es-ES', { weekday: 'long' }).replace(/^\w/, (c) => c.toUpperCase());
+        }
+        return `${date.getDate()}/${date.getMonth() + 1}`;
       });
 
       // Gradients
-      const gradientPurple = ctx.createLinearGradient(0, 0, 0, 400);
-      gradientPurple.addColorStop(0, 'rgba(139, 92, 246, 0.5)');
-      gradientPurple.addColorStop(1, 'rgba(139, 92, 246, 0.0)');
-
       const gradientGreen = ctx.createLinearGradient(0, 0, 0, 400);
-      gradientGreen.addColorStop(0, 'rgba(16, 185, 129, 0.5)');
-      gradientGreen.addColorStop(1, 'rgba(16, 185, 129, 0.0)');
+      gradientGreen.addColorStop(0, 'rgba(255, 255, 255, 0.1)'); // B&W theme
+      gradientGreen.addColorStop(1, 'rgba(255, 255, 255, 0.0)');
+
+      const gradientPurple = ctx.createLinearGradient(0, 0, 0, 400);
+      gradientPurple.addColorStop(0, 'rgba(139, 92, 246, 0.4)');
+      gradientPurple.addColorStop(1, 'rgba(139, 92, 246, 0.0)');
 
       revenueChartInstance = new Chart(ctx, {
         type: 'line',
@@ -1125,25 +1113,27 @@
             {
               label: 'Visitas',
               data: viewsData,
-              borderColor: '#8B5CF6',
-              backgroundColor: gradientPurple,
+              borderColor: '#ffffff', // B&W
+              backgroundColor: gradientGreen,
               borderWidth: 2,
               tension: 0.4,
               fill: true,
-              pointRadius: viewsData.some(v => v > 0) ? 3 : 0, // Only show points if there is data
-              pointHoverRadius: 6,
+              pointRadius: 6,
+              pointBackgroundColor: '#fff',
+              pointHoverRadius: 9,
               yAxisID: 'y'
             },
             {
               label: 'Ventas ($)',
               data: salesData,
-              borderColor: '#10B981',
-              backgroundColor: gradientGreen,
+              borderColor: '#8B5CF6',
+              backgroundColor: gradientPurple,
               borderWidth: 2,
               tension: 0.4,
               fill: true,
-              pointRadius: salesData.some(s => s > 0) ? 3 : 0,
-              pointHoverRadius: 6,
+              pointRadius: 6,
+              pointBackgroundColor: '#8B5CF6',
+              pointHoverRadius: 9,
               yAxisID: 'y1'
             }
           ]
@@ -1202,11 +1192,11 @@
               type: 'linear',
               display: true,
               position: 'right',
-              min: 0, // FORCE 0 BASE
-              suggestedMax: 100, // Reasonable default for money
+              min: 0,
+              suggestedMax: 100,
               grid: { display: false },
               ticks: {
-                color: '#10B981',
+                color: '#8B5CF6',
                 callback: (val) => '$' + val,
                 maxTicksLimit: 6
               }
@@ -1216,16 +1206,25 @@
       });
     }
 
-    function renderTopProducts(products) {
+    async function renderTopProducts(products) {
       if (!products || products.length === 0) {
         document.getElementById('topProductsList').innerHTML = `<p style="text-align:center; color:#666; padding:20px;">Sin datos de ventas en este periodo.</p>`;
         return;
       }
 
-      const html = products.map((prod, index) => `
+      // Pre-sign URLs
+      const signedProducts = await Promise.all(products.map(async p => {
+        let finalImg = '../images/PORTADA%20DEFAULT.png';
+        if (p.img) {
+          finalImg = await window.AuthUtils.getAuthorizedUrl(p.img, p.storage_version, p.id);
+        }
+        return { ...p, finalImg };
+      }));
+
+      const html = signedProducts.map((prod, index) => `
                 <div class="product-row">
                     <div class="rank-badge rank-${index + 1}">${index + 1}</div>
-                    <img src="${prod.img || '../images/PORTADA%20DEFAULT.png'}" class="product-thumb" alt="Cover" onerror="this.src='../images/PORTADA%20DEFAULT.png'">
+                    <img src="${prod.finalImg}" class="product-thumb" alt="Cover">
                     <div class="product-info">
                         <div class="product-name" title="${prod.name}">${prod.name}</div>
                         <div class="product-sales">${prod.sales} ventas</div>
@@ -1239,6 +1238,90 @@
 
 
   </script>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <!-- Sidebar Profile Loader -->
+    <script>
+    (async function loadSidebarProfile() {
+        try {
+            const sb = window.supabaseClient || (window.supabase?.createClient ? window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY) : null);
+            if (!sb) { console.warn('Sidebar: Supabase client not found'); return; }
+            
+            const { data: { user } } = await sb.auth.getUser();
+            if (!user) return;
+
+            const { data: profile, error } = await sb.from('users')
+                .select('nickname, avatar_url, storage_version, id')
+                .eq('id', user.id)
+                .single();
+
+            if (error) { 
+                const { data: profileAlt } = await sb.from('profiles').select('username, avatar_url, storage_version, id').eq('user_id', user.id).single();
+                if (profileAlt) updateSidebarUI(profileAlt.username, profileAlt.avatar_url, profileAlt.storage_version, profileAlt.id);
+                return; 
+            }
+
+            if (profile) updateSidebarUI(profile.nickname, profile.avatar_url, profile.storage_version, profile.id);
+
+            async function updateSidebarUI(name, avatar, version, uid) {
+                const avatarEl = document.getElementById('sidebarAvatar');
+                const avatarSkel = document.getElementById('sidebarAvatarSkeleton');
+                const nameEl = document.getElementById('sidebarUsername');
+                const btnSkel = document.getElementById('sidebarBtnSkeleton');
+                const linkEl = document.getElementById('sidebarProfileLink');
+
+                if (nameEl && name) {
+                    nameEl.textContent = name;
+                    nameEl.classList.remove('skeleton-text');
+                    nameEl.style.background = 'none';
+                    nameEl.style.width = 'auto';
+                    nameEl.style.height = 'auto';
+                }
+
+                if (linkEl && name) {
+                    linkEl.href = '/' + name;
+                    linkEl.style.display = 'inline-flex';
+                    if (btnSkel) btnSkel.style.display = 'none';
+                }
+
+                if (avatarEl && avatar) {
+                    try {
+                        let finalSrc = avatar;
+                        if (typeof avatar === 'string' && avatar.startsWith('http') && !avatar.includes('supabase.co')) {
+                            finalSrc = avatar;
+                        } else if (window.AuthUtils && window.AuthUtils.getAuthorizedUrl) {
+                            finalSrc = await window.AuthUtils.getAuthorizedUrl(avatar, version, uid);
+                        }
+                        
+                        avatarEl.src = finalSrc;
+                        avatarEl.onload = () => {
+                            avatarEl.style.display = 'block';
+                            if (avatarSkel) {
+                                avatarSkel.classList.remove('skeleton');
+                                avatarSkel.style.background = 'transparent';
+                            }
+                        };
+                    } catch(e) { 
+                        avatarEl.src = avatar; 
+                        avatarEl.style.display = 'block';
+                        if (avatarSkel) avatarSkel.classList.remove('skeleton');
+                    }
+                }
+            }
+        } catch(e) { console.warn('Sidebar profile load error:', e); }
+    })();
+    </script>
 </body>
 
 </html>

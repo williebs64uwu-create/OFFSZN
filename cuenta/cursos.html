@@ -24,6 +24,58 @@
     <script src="../script/auth-guard.js"></script>
 
     <style>
+
+        /* ===== SIDEBAR PROFILE CARD ===== */
+        .sidebar-profile-card { display: flex; flex-direction: column; align-items: center; width: 100%; padding: 20px 0 20px 0; border-bottom: 1px solid #1a1a1a; margin-bottom: 8px; }
+        .sidebar-avatar-wrapper { width: 100px; height: 100px; border-radius: 50%; overflow: hidden; border: 2px solid #333; margin-bottom: 8px; background: #000; position: relative; }
+        .sidebar-avatar { width: 100%; height: 100%; object-fit: cover; }
+        .sidebar-username { color: #fff; font-size: 15px; font-weight: 600; font-family: 'Inter', sans-serif; margin-bottom: 8px; text-align: center; max-width: 90%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .sidebar-profile-btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 18px; border-radius: 100px; border: 1px solid #333; background: transparent; color: #aaa; font-size: 12px; font-weight: 500; font-family: 'Inter', sans-serif; text-decoration: none; transition: all 0.2s ease; cursor: pointer; }
+        .sidebar-profile-btn:hover { border-color: #fff; color: #fff; background: rgba(255,255,255,0.05); }
+        .sidebar-profile-btn i { font-size: 11px; }
+
+        @keyframes sidebarPulse {
+            0% { background-color: rgba(255,255,255,0.03); }
+            50% { background-color: rgba(255,255,255,0.08); }
+            100% { background-color: rgba(255,255,255,0.03); }
+        }
+        .sidebar-profile-card .skeleton, .sidebar-profile-card .skeleton-text {
+            animation: sidebarPulse 2s infinite ease-in-out;
+            background: rgba(255,255,255,0.05);
+        }
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        /* ===== SIDEBAR STYLES (B&W PREMIUM) ===== */
+        .sidebar-stub { width: 220px; background: #000; border-right: 1px solid #1a1a1a; height: 100vh; position: fixed; left: 0; top: 0; z-index: 100; display: flex; flex-direction: column; align-items: flex-start; padding-top: 30px; padding-left: 15px; padding-right: 15px; gap: 6px; }
+        .sidebar-icon-btn { width: 100%; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: flex-start; padding-left: 12px; gap: 14px; color: #888; font-size: 14px; font-weight: 500; transition: all 0.2s ease; text-decoration: none; position: relative; background: transparent; border: none; cursor: pointer; }
+        .sidebar-icon-btn i { font-size: 20px; width: 24px; text-align: center; display: inline-block; color: #666; transition: 0.2s; }
+        .sidebar-icon-btn:hover { color: #fff; background: rgba(255, 255, 255, 0.08); }
+        .sidebar-icon-btn.active { color: #000 !important; background: #fff !important; font-weight: 700; box-shadow: 0 4px 20px rgba(255, 255, 255, 0.15); }
+        .sidebar-icon-btn.active i { color: #000 !important; }
+        .sidebar-icon-btn[data-title]:hover::after, .sidebar-icon-btn[title]:hover::after { display: none; }
+
+        /* ===== SIDEBAR STYLES (B&W PREMIUM) ===== */
+        
+        
+        
+        
+        
+        
+        .sidebar-icon-btn[data-title]:hover::after, .sidebar-icon-btn[title]:hover::after { display: none; }
+
         :root {
             /* Black background as requested */
             --bg-dark: #000000;
@@ -55,25 +107,11 @@
             display: flex;
         }
 
+        
         /* ===== SIDEBAR STUB (For layout consistency) ===== */
-        .sidebar-stub {
-            width: 80px;
-            /* Mini */
-            background: #000;
-            border-right: 1px solid var(--border-color);
-            height: 100vh;
-            position: fixed;
-            left: 0;
-            top: 0;
-            z-index: 100;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding-top: 20px;
-            gap: 10px;
-        }
+        
 
-        /* RADIAL GLOW BACKGROUND - Kept subtle, but can be removed if strictly flat black needed. Keeping for consistency with Dashboard. */
+        /* RADIAL GLOW BACKGROUND */
         .radial-glow {
             position: fixed;
             top: 0;
@@ -85,54 +123,19 @@
             pointer-events: none;
         }
 
-        .sidebar-icon-btn {
-            width: 40px;
-            height: 40px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #666;
-            font-size: 20px;
-            transition: 0.2s;
-            text-decoration: none;
-        }
+        
+        
+        
 
-        .sidebar-icon-btn:hover {
-            color: #fff;
-            background: rgba(255, 255, 255, 0.05);
-        }
+        
 
-        .sidebar-icon-btn.active {
-            color: #fff;
-            background: var(--accent-purple);
-            box-shadow: 0 0 10px var(--accent-glow);
-        }
+        
 
         /* ===== SIDEBAR TOOLTIPS ===== */
-        .sidebar-icon-btn {
-            position: relative;
-        }
+        
 
-        .sidebar-icon-btn[data-title]:hover::after {
-            content: attr(data-title);
-            position: fixed;
-            left: 75px;
-            /* Sidebar width + gap */
-            background: #111;
-            border: 1px solid #333;
-            color: #fff;
-            padding: 6px 12px;
-            border-radius: 6px;
-            font-size: 12px;
-            white-space: nowrap;
-            z-index: 1000;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-            pointer-events: none;
-            opacity: 0;
-            animation: fadeInTooltip 0.2s forwards;
-            font-weight: 500;
-        }
+        /* Hiding tooltips when expanded */
+        
 
         @keyframes fadeInTooltip {
             from {
@@ -149,9 +152,9 @@
         /* ===== MAIN CONTENT ===== */
         .main-content-elite {
             flex: 1;
-            margin-left: 80px;
+            margin-left: 220px;
             padding: 40px;
-            width: calc(100% - 80px);
+            width: calc(100% - 220px);
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -276,7 +279,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 12px;
+            margin-bottom: 8px;
         }
 
         .plan-name {
@@ -362,47 +365,52 @@
     <div class="radial-glow"></div>
 
     <!-- SIDEBAR (Standard) -->
-    <div class="sidebar-stub" style="justify-content:flex-start; gap:15px;">
-        <!-- Brand/Home -->
-        <a href="/explorar.html" class="sidebar-logo-btn"
-            style="margin-bottom:10px; display:flex; align-items:center; justify-content:center; width:44px; height:44px;">
-            <img src="../images/LOGO-OFFSZN.png" style="width:38px; mix-blend-mode: screen;">
-        </a>
+    <div class="sidebar-stub">
+        
+        <!-- Profile Card -->
+        <div class="sidebar-profile-card" id="sidebarProfileCard">
+            <div class="sidebar-avatar-wrapper skeleton" id="sidebarAvatarSkeleton" style="width: 100px; height: 100px; border-radius: 50%; margin-bottom: 8px; background: #1a1a1a;">
+                <img id="sidebarAvatar" src="" alt="Avatar" class="sidebar-avatar" style="display:none; width: 100%; height: 100%; object-fit: cover;">
+            </div>
+            <span id="sidebarUsername" class="sidebar-username skeleton-text" style="width: 100px; height: 18px; display: inline-block; border-radius: 4px; margin-bottom: 8px;"></span>
+            <div id="sidebarBtnSkeleton" class="skeleton" style="width: 110px; height: 30px; border-radius: 100px; background: #1a1a1a;"></div>
+            <a id="sidebarProfileLink" href="/explorar.html" class="sidebar-profile-btn" style="display:none;">
+                Ir a mi perfil <i class="bi bi-arrow-right"></i>
+            </a>
+        </div>
 
         <!-- 1. GESTI�N -->
-        <div style="width:40px; border-bottom:1px solid #222; margin:5px 0;"></div>
-        <a href="dashboard.html" class="sidebar-icon-btn" data-title="Dashboard"><i class="bi bi-grid-fill"></i></a>
-        <a href="mis-kits.html" class="sidebar-icon-btn" data-title="Mis Beats/Kits"><i class="bi bi-disc-fill"></i></a>
+        
+        <a href="dashboard.html" class="sidebar-icon-btn" data-title="Dashboard"><i class="bi bi-grid-fill"></i> <span>Dashboard</span></a>
+        <a href="mis-kits.html" class="sidebar-icon-btn" data-title="Mis Beats/Kits"><i class="bi bi-disc-fill"></i> <span>Mis Beats/Kits</span></a>
         <a href="subir-kit.html" class="sidebar-icon-btn" data-title="Subir"><i
-                class="bi bi-cloud-arrow-up-fill"></i></a>
+                class="bi bi-cloud-arrow-up-fill"></i> <span>Subir</span></a>
 
         <!-- 2. NEGOCIO -->
-        <div style="width:40px; border-bottom:1px solid #222; margin:5px 0;"></div>
+        
         <a href="admin-licencias.html" class="sidebar-icon-btn" data-title="Licencias"><i
-                class="bi bi-file-earmark-music-fill"></i></a>
+                class="bi bi-file-earmark-music-fill"></i> <span>Licencias</span></a>
         <a href="negociar.html" class="sidebar-icon-btn" data-title="Negociar"><i
-                class="bi bi-chat-left-dots-fill"></i></a>
+                class="bi bi-chat-left-dots-fill"></i> <span>Negociar</span></a>
         <a href="cupones.html" class="sidebar-icon-btn" data-title="Cupones"><i
-                class="bi bi-ticket-perforated-fill"></i></a>
+                class="bi bi-ticket-perforated-fill"></i> <span>Cupones</span></a>
         <a href="colaboraciones.html" class="sidebar-icon-btn" data-title="Colaboraciones"><i
-                class="bi bi-people-fill"></i></a>
+                class="bi bi-people-fill"></i> <span>Colaboraciones</span></a>
 
         <!-- 3. ACADEMIA -->
-        <div style="width:40px; border-bottom:1px solid #222; margin:5px 0;"></div>
+        
         <a href="/cuenta/cursos.html" class="sidebar-icon-btn active" data-title="Cursos"><i
-                class="bi bi-mortarboard-fill"></i></a>
+                class="bi bi-mortarboard-fill"></i> <span>Cursos</span></a>
         <a href="/cuenta/analiticas.html" class="sidebar-icon-btn" data-title="Estadísticas"><i
-                class="bi bi-bar-chart-fill"></i></a>
+                class="bi bi-bar-chart-fill"></i> <span>Estadísticas</span></a>
 
         <!-- 4. SOCIAL -->
-        <div style="width:40px; border-bottom:1px solid #222; margin:5px 0;"></div>
-        <a href="reels.html" class="sidebar-icon-btn" data-title="Reels"><i class="bi bi-camera-reels-fill"></i></a>
+        
+        <a href="reels.html" class="sidebar-icon-btn" data-title="Reels"><i class="bi bi-camera-reels-fill"></i> <span>Reels</span></a>
 
         <!-- UPGRADE BUTTON (ROCKET) -->
         <a href="planes.html" class="sidebar-icon-btn" data-title="Mejorar Plan"
-            style="color:#FFD700; margin-top: 10px;">
-            <i class="bi bi-rocket-takeoff-fill"></i>
-        </a>
+            style="color:#fff; margin-top: 10px;"><i style="color: #fff;" class="bi bi-rocket-takeoff-fill"></i> <span style="color: #fff;">Mejorar Plan</span></a>
     </div>
 
     <!-- MAIN CONTENT -->
@@ -470,6 +478,90 @@
     </main>
 
 
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <!-- Sidebar Profile Loader -->
+    <script>
+    (async function loadSidebarProfile() {
+        try {
+            const sb = window.supabaseClient || (window.supabase?.createClient ? window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY) : null);
+            if (!sb) { console.warn('Sidebar: Supabase client not found'); return; }
+            
+            const { data: { user } } = await sb.auth.getUser();
+            if (!user) return;
+
+            const { data: profile, error } = await sb.from('users')
+                .select('nickname, avatar_url, storage_version, id')
+                .eq('id', user.id)
+                .single();
+
+            if (error) { 
+                const { data: profileAlt } = await sb.from('profiles').select('username, avatar_url, storage_version, id').eq('user_id', user.id).single();
+                if (profileAlt) updateSidebarUI(profileAlt.username, profileAlt.avatar_url, profileAlt.storage_version, profileAlt.id);
+                return; 
+            }
+
+            if (profile) updateSidebarUI(profile.nickname, profile.avatar_url, profile.storage_version, profile.id);
+
+            async function updateSidebarUI(name, avatar, version, uid) {
+                const avatarEl = document.getElementById('sidebarAvatar');
+                const avatarSkel = document.getElementById('sidebarAvatarSkeleton');
+                const nameEl = document.getElementById('sidebarUsername');
+                const btnSkel = document.getElementById('sidebarBtnSkeleton');
+                const linkEl = document.getElementById('sidebarProfileLink');
+
+                if (nameEl && name) {
+                    nameEl.textContent = name;
+                    nameEl.classList.remove('skeleton-text');
+                    nameEl.style.background = 'none';
+                    nameEl.style.width = 'auto';
+                    nameEl.style.height = 'auto';
+                }
+
+                if (linkEl && name) {
+                    linkEl.href = '/' + name;
+                    linkEl.style.display = 'inline-flex';
+                    if (btnSkel) btnSkel.style.display = 'none';
+                }
+
+                if (avatarEl && avatar) {
+                    try {
+                        let finalSrc = avatar;
+                        if (typeof avatar === 'string' && avatar.startsWith('http') && !avatar.includes('supabase.co')) {
+                            finalSrc = avatar;
+                        } else if (window.AuthUtils && window.AuthUtils.getAuthorizedUrl) {
+                            finalSrc = await window.AuthUtils.getAuthorizedUrl(avatar, version, uid);
+                        }
+                        
+                        avatarEl.src = finalSrc;
+                        avatarEl.onload = () => {
+                            avatarEl.style.display = 'block';
+                            if (avatarSkel) {
+                                avatarSkel.classList.remove('skeleton');
+                                avatarSkel.style.background = 'transparent';
+                            }
+                        };
+                    } catch(e) { 
+                        avatarEl.src = avatar; 
+                        avatarEl.style.display = 'block';
+                        if (avatarSkel) avatarSkel.classList.remove('skeleton');
+                    }
+                }
+            }
+        } catch(e) { console.warn('Sidebar profile load error:', e); }
+    })();
+    </script>
 </body>
 
 </html>

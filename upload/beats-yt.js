@@ -1921,10 +1921,11 @@ window.handlePublish = async function () {
 
             const res = await uploadToR2(item.file, item.folder, progressHandler);
 
-            if (item.type === 'cover') image_url = res.publicUrl;
+            if (item.type === 'cover') image_url = res.key;
             if (item.type === 'mp3') {
-                // 🔥 FIX: Use publicUrl from backend or construct v2 URL, NEVER hardcode old v1 account
-                audio_url = res.publicUrl;
+                // 🔥 FIX: Save the raw KEY instead of publicUrl.
+                // This ensures the player always requests a FRESH signed URL at runtime via r2-loader.js / search.js logic.
+                audio_url = res.key;
                 mp3_url = audio_url;
             }
             if (item.type === 'wav') wav_url = res.key;

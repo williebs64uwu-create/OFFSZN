@@ -549,7 +549,9 @@ window.AuthUtils = {
             (!pathOrUrl.startsWith('http') &&
                 !pathOrUrl.startsWith('data:') &&
                 !pathOrUrl.startsWith('/images') &&
+                !pathOrUrl.startsWith('../images') &&
                 !pathOrUrl.startsWith('/assets') &&
+                !pathOrUrl.startsWith('../assets') &&
                 !pathOrUrl.startsWith('/icon') &&
                 !pathOrUrl.startsWith('/script') &&
                 (pathOrUrl.includes('/') || /\.(jpg|jpeg|png|webp|gif|svg|mp3|wav|zip)$/i.test(pathOrUrl) || pathOrUrl.startsWith('@') || pathOrUrl.startsWith('beats/') || pathOrUrl.startsWith('products/'))

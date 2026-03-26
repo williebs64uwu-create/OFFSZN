@@ -115,11 +115,42 @@ async function loadUserProfile(username) {
         }
 
         const user = await response.json();
+        console.log("DEBUG: Perfil cargado:", user.nickname, "Template:", user.template);
         window.currentUserProfile = user; // Store for tab rendering
 
         // Wait for auth/following data to be ready before rendering header
         if (window.profileInitPromise) {
             await window.profileInitPromise;
+        }
+
+        // 2. Apply Template Class
+        const profileRoot = document.getElementById('profile-root');
+        if (profileRoot && user.template) {
+            // Remove previous template classes if any
+            profileRoot.classList.forEach(cls => {
+                if (cls.startsWith('template-')) profileRoot.classList.remove(cls);
+            });
+            profileRoot.classList.add(`template-${user.template}`);
+
+            // Special case for Old School: reposition tabs to the main content area
+            if (user.template === 'produccion_template_old_school') {
+                const tabs = document.getElementById('profileTabs');
+                const profileBody = document.querySelector('.profile-body');
+                const proToolbar = document.querySelector('.pro-toolbar-container');
+                if (tabs && profileBody) {
+                    if (proToolbar) {
+                        proToolbar.insertAdjacentElement('beforebegin', tabs);
+                    } else {
+                        profileBody.prepend(tabs);
+                    }
+                }
+
+                // Add grid-view class to the products list container
+                const productList = document.getElementById('profileProductsList');
+                if (productList) {
+                    productList.classList.add('grid-view');
+                }
+            }
         }
 
         // 3. Render Header Data (IMMEDIATE)
@@ -139,9 +170,15 @@ async function loadUserProfile(username) {
     }
 }
 
-async function renderHeader(user) {
+async function renderHeader(user, categoryCounts = null) {
     // 0. Hold reveal until signal
     if (window.profileRevealSignal) await window.profileRevealSignal;
+
+    // --- TEMPLATE BRANCHING ---
+    if (user.template === 'produccion_template_old_school') {
+        renderOldSchoolSidebar(user, categoryCounts);
+        return;
+    }
 
     // 1. Avatar Setup
     // We render the container immediately with either the public URL (Supabase) or a transparent placeholder (R2).
@@ -317,7 +354,7 @@ async function renderHeader(user) {
 
     // Renamed local variable to avoid conflict with global or lower scope
     const headerFollowBtn = document.getElementById('btnFollow');
-    if (headerFollowBtn) headerFollowBtn.style.display = 'inline-block'; // Reveal
+    if (headerFollowBtn) headerFollowBtn.style.display = isMe ? 'none' : 'inline-block'; // Hide if Me
 
     const headerShareBtn = document.getElementById('btnShareProfileGlobal');
     if (headerShareBtn) headerShareBtn.style.display = 'inline-flex'; // Reveal
@@ -1490,6 +1527,25 @@ async function loadUserProducts(user) {
         const products = await response.json();
         productsCache = products || [];
 
+        // --- CALCULATE PRODUCT CATEGORY COUNTS ---
+        const categoryCounts = {
+            beat: 0,
+            preset: 0,
+            loopkit: 0,
+            drumkit: 0,
+            soundkit: 0
+        };
+        productsCache.forEach(p => {
+            const type = (p.product_type || '').toLowerCase();
+            if (categoryCounts[type] !== undefined) {
+                categoryCounts[type]++;
+            } else if (type === 'beat') {
+                categoryCounts.beat++;
+            }
+            // Add other mappings if necessary, e.g. 'sample pack' -> 'loopkit'
+        });
+        window.profileCategoryCounts = categoryCounts;
+
         // --- PRE-FETCH COLLABORATOR STATS ---
         const collabStats = {};
         const uniqueCollabs = new Set();
@@ -1564,7 +1620,7 @@ async function loadUserProducts(user) {
         }
 
         // 1. Start all preparation in parallel
-        const headerPromise = renderHeader(user);
+        const headerPromise = renderHeader(user, categoryCounts);
         const trendPromise = updateTrendingView(user, collabStats);
         const listPromise = renderProductList(productsCache, user, collabStats);
 
@@ -2677,4 +2733,304 @@ function updateMetaTag(attr, value, content) {
         document.head.appendChild(el);
     }
     el.content = content;
+}
+
+// ============================================================================
+// REDESIGN: Old School Sidebar
+// ============================================================================
+async function renderOldSchoolSidebar(user, categoryCounts = null) {
+    const header = document.querySelector('.profile-header');
+    if (!header) return;
+
+    const isMe = window.currentUserId && (user.id === window.currentUserId);
+    
+    // 1. Setup Header Content Container
+    const content = header.querySelector('.profile-header-content');
+    if (!content) return;
+    content.innerHTML = ''; // Fresh start for Old School
+
+    // --- AVATAR ---
+    const avatarContainer = document.createElement('div');
+    avatarContainer.className = 'profile-avatar-container';
+    const avatarImgDiv = document.createElement('div');
+    avatarImgDiv.id = 'profileAvatar';
+    avatarImgDiv.className = 'profile-avatar-img';
+    
+    if (user.avatar_url) {
+        const img = document.createElement('img');
+        const isR2 = window.AuthUtils && window.AuthUtils.isR2Url(user.avatar_url);
+        img.src = isR2 ? 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=' : (window.AuthUtils?.getFormattedSupabaseUrl ? window.AuthUtils.getFormattedSupabaseUrl(user.avatar_url) : user.avatar_url);
+        img.className = 'skeleton-img-transition';
+        img.id = 'profileAvatarImg';
+        avatarImgDiv.appendChild(img);
+        
+        if (isR2) {
+            window.getAuthorizedUrl(user.avatar_url, user.r2_version || 'v1').then(url => {
+                img.onload = () => img.style.opacity = 1;
+                img.src = url;
+            });
+        } else {
+            img.style.opacity = 1;
+        }
+    } else {
+        const initial = (user.nickname || "U").charAt(0).toUpperCase();
+        const span = document.createElement('span');
+        span.textContent = initial;
+        avatarImgDiv.appendChild(span);
+    }
+    avatarContainer.appendChild(avatarImgDiv);
+    
+    if (isMe) {
+        const changeBtn = document.createElement('button');
+        changeBtn.id = 'ownerChangeAvatar';
+        changeBtn.className = 'owner-avatar-btn';
+        changeBtn.innerHTML = '<i class="bi bi-plus-lg"></i>';
+        changeBtn.onclick = () => window.AvatarManager && window.AvatarManager.open(document.querySelector('#profileAvatar img')?.src);
+        avatarContainer.appendChild(changeBtn);
+    }
+    content.appendChild(avatarContainer);
+
+    // --- NAME & ROLE ---
+    const details = document.createElement('div');
+    details.className = 'profile-details';
+    
+    const nameRow = document.createElement('div');
+    nameRow.className = 'profile-top-row';
+    const h1 = document.createElement('h1');
+    h1.id = 'profileName';
+    h1.textContent = user.nickname || "User";
+    nameRow.appendChild(h1);
+    
+    if (user.is_verified || user.is_producer) {
+        const badge = document.createElement('div');
+        badge.id = 'profileVerified';
+        badge.className = 'verified-badge';
+        badge.innerHTML = '<i class="bi bi-patch-check-fill"></i>';
+        nameRow.appendChild(badge);
+    }
+    details.appendChild(nameRow);
+
+    const roleDiv = document.createElement('div');
+    roleDiv.id = 'profileRole';
+    roleDiv.className = 'profile-role-sub';
+    roleDiv.textContent = user.role || 'Productor';
+    details.appendChild(roleDiv);
+    
+    // Check if location exists before appending
+    if (user.location) {
+        const locDiv = document.createElement('div');
+        locDiv.id = 'profileLocation';
+        locDiv.className = 'profile-location-sub';
+        locDiv.textContent = user.location;
+        details.appendChild(locDiv);
+    }
+    
+    content.appendChild(details);
+
+    // --- ACTIONS ---
+    const actions = document.createElement('div');
+    actions.className = 'profile-actions';
+    
+    if (isMe) {
+        const persBtn = document.createElement('button');
+        persBtn.id = 'btnPersonalize';
+        persBtn.className = 'btn-personalize-compact';
+        persBtn.textContent = 'Personalizar';
+        persBtn.onclick = () => window.PersonalizeManager && window.PersonalizeManager.open();
+        actions.appendChild(persBtn);
+
+        const setBtn = document.createElement('button');
+        setBtn.id = 'btnAccountSettings';
+        setBtn.className = 'btn-secondary-compact';
+        setBtn.textContent = 'Ajustes';
+        setBtn.onclick = () => window.location.href = '/cuenta/ajustes.html';
+        actions.appendChild(setBtn);
+    } else {
+        const followBtn = document.createElement('button');
+        followBtn.id = 'btnFollow';
+        followBtn.className = 'btn-follow-compact';
+        followBtn.setAttribute('data-target-id', user.id);
+        followBtn.innerHTML = '<i class="bi bi-plus-lg"></i> Seguir';
+        actions.appendChild(followBtn);
+
+        const msgBtn = document.createElement('button');
+        msgBtn.id = 'btnMessage';
+        msgBtn.className = 'btn-secondary-compact';
+        msgBtn.innerHTML = '<i class="bi bi-chat-dots-fill"></i> Mensaje';
+        msgBtn.onclick = () => window.location.href = `/mensajes.html?user=${user.nickname}`;
+        actions.appendChild(msgBtn);
+    }
+    content.appendChild(actions);
+
+    // --- STATS ---
+    const statsSection = document.createElement('div');
+    statsSection.className = 'sidebar-section';
+    statsSection.innerHTML = '<h3 class="sidebar-label">Estadísticas</h3>';
+    
+    const statsList = document.createElement('div');
+    statsList.className = 'sidebar-stats-list';
+    
+    const createStatRow = (label, value) => {
+        const row = document.createElement('div');
+        row.className = 'sidebar-stat-row';
+        
+        const labelSpan = document.createElement('span');
+        labelSpan.textContent = label;
+        
+        const valB = document.createElement('b');
+        valB.textContent = value;
+        
+        row.appendChild(labelSpan);
+        row.appendChild(valB);
+        return row;
+    };
+    
+    // Format numbers like 2200 -> 2.2k
+    const formatNumber = (num) => {
+        if (num >= 1000) return (num / 1000).toFixed(1) + 'k';
+        return num;
+    };
+    
+    statsList.appendChild(createStatRow('Seguidores', formatNumber(user.followers_count || 0)));
+    statsList.appendChild(createStatRow('Reproducciones', formatNumber(user.total_plays || 0)));
+    statsList.appendChild(createStatRow('Productos', formatNumber(user.products_count || 0)));
+    statsSection.appendChild(statsList);
+    content.appendChild(statsSection);
+
+    // --- PRODUCTS CHIPS ---
+    if (categoryCounts) {
+        const prodSection = document.createElement('div');
+        prodSection.className = 'sidebar-section sidebar-products-section';
+        prodSection.innerHTML = '<h3 class="sidebar-label">Productos</h3>';
+        
+        const chipsDiv = document.createElement('div');
+        chipsDiv.className = 'sidebar-chips';
+        
+        const types = [
+            { id: 'beat', label: 'Beats' },
+            { id: 'preset', label: 'Presets' },
+            { id: 'loopkit', label: 'Loopkits' },
+            { id: 'drumkit', label: 'Drumkits' },
+            { id: 'soundkit', label: 'Soundkits' }
+        ];
+        
+        types.forEach(t => {
+            const count = categoryCounts[t.id] || 0;
+            if (count > 0) {
+                const chip = document.createElement('div');
+                chip.className = 'sidebar-chip';
+                chip.innerHTML = `<span>${count}</span> ${t.label}`;
+                chipsDiv.appendChild(chip);
+            }
+        });
+        
+        if (chipsDiv.children.length > 0) {
+            prodSection.appendChild(chipsDiv);
+            content.appendChild(prodSection);
+        }
+    }
+
+    // --- ABOUT ME ---
+    const bioSection = document.createElement('div');
+    bioSection.className = 'sidebar-section sidebar-bio-section';
+    bioSection.innerHTML = '<h3 class="sidebar-label">Acerca de mi</h3>';
+    
+    const bioText = document.createElement('div');
+    bioText.id = 'profileBioSidebar';
+    bioText.className = 'sidebar-bio';
+    
+    const rawBio = user.bio || '';
+    const limit = 50;
+    
+    if (rawBio) {
+        const renderBio = (isShort) => {
+            bioText.innerHTML = '';
+            
+            let text = rawBio;
+            if (isShort && rawBio.length > limit) {
+                // Find nearest space to cut cleanly
+                const spaceIndex = rawBio.lastIndexOf(' ', limit);
+                const cutIndex = spaceIndex > 0 ? spaceIndex : limit;
+                text = rawBio.substring(0, cutIndex) + '...';
+            }
+            
+            bioText.textContent = text;
+            
+            if (rawBio.length > limit) {
+                const toggle = document.createElement('span');
+                toggle.className = 'bio-toggle-link';
+                toggle.textContent = isShort ? 'Ver más' : 'Ver menos';
+                toggle.onclick = () => renderBio(!isShort);
+                bioText.appendChild(document.createElement('br'));
+                bioText.appendChild(toggle);
+            }
+        };
+        
+        renderBio(true);
+        bioSection.appendChild(bioText);
+        content.appendChild(bioSection);
+    }
+
+    // --- FIND ME ON (Socials) ---
+    if (user.socials) {
+        try {
+            const socials = typeof user.socials === 'string' ? JSON.parse(user.socials) : user.socials;
+            const iconMap = {
+                instagram: { icon: 'bi-instagram', label: 'Instagram' },
+                youtube: { icon: 'bi-youtube', label: 'YouTube' },
+                tiktok: { icon: 'bi-tiktok', label: 'TikTok' },
+                spotify: { icon: 'bi-spotify', label: 'Spotify' },
+                twitter: { icon: 'bi-twitter-x', label: 'Twitter' },
+                facebook: { icon: 'bi-facebook', label: 'Facebook' },
+                discord: { icon: 'bi-discord', label: 'Discord' },
+                website: { icon: 'bi-globe', label: 'Website' }
+            };
+            
+            const keys = Object.keys(socials).filter(k => {
+                 const val = socials[k];
+                 return val && val.trim() !== '' && iconMap[k.toLowerCase()];
+            });
+            
+            if (keys.length > 0) {
+                const socialSection = document.createElement('div');
+                socialSection.className = 'sidebar-section sidebar-socials-section';
+                socialSection.innerHTML = '<h3 class="sidebar-label">Redes</h3>';
+                
+                const socialList = document.createElement('div');
+                socialList.className = 'sidebar-social-list';
+                
+                keys.forEach(key => {
+                    const k = key.toLowerCase();
+                    const val = socials[key];
+                    
+                    const row = document.createElement('a');
+                    row.className = 'sidebar-social-row';
+                    row.target = '_blank';
+                    
+                    let href = val;
+                    if (!val.startsWith('http')) {
+                        if (k === 'instagram') href = `https://instagram.com/${val}`;
+                        else if (k === 'youtube') href = `https://youtube.com/@${val}`;
+                        else if (k === 'tiktok') href = `https://tiktok.com/@${val}`;
+                        else if (k === 'twitter') href = `https://twitter.com/${val}`;
+                    }
+                    row.href = href;
+                    
+                    const icon = document.createElement('i');
+                    icon.className = `bi ${iconMap[k].icon}`;
+                    row.appendChild(icon);
+                    
+                    const label = document.createElement('span');
+                    label.textContent = iconMap[k].label;
+                    row.appendChild(label);
+                    
+                    socialList.appendChild(row);
+                });
+                socialSection.appendChild(socialList);
+                content.appendChild(socialSection);
+            }
+        } catch(e) {
+            console.error("Error parsing socials for sidebar:", e);
+        }
+    }
 }

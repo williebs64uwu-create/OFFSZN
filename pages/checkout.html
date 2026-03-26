@@ -11,6 +11,9 @@
     <link rel="stylesheet" href="/css/auth-ui.css">
     <link rel="stylesheet" href="/css/global-overlays.css">
     <link rel="stylesheet" href="/css/navbar.css">
+    <link rel="stylesheet" href="/css/explore.css">
+    <link rel="stylesheet" href="/css/sticky-player.css">
+    <link rel="stylesheet" href="/css/expanded-player.css">
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -93,15 +96,14 @@
     </div>
 
     <!-- ==================== MAIN CHECKOUT CONTENT ==================== -->
-    <main class="checkout-container"
-        style="padding: 100px 20px 60px; max-width: 1200px; margin: 0 auto; min-height: 80vh; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+    <main class="checkout-main"
+        style="padding: 20px 20px 0; max-width: 1200px; margin: 0 auto; min-height: auto; display: flex; flex-direction: column; align-items: center;">
         <h1
-            style="color: #fff; font-size: 2rem; margin-bottom: 40px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 20px; text-align: center; width: 100%; max-width: 1000px;">
+            style="color: #fff; font-size: 1.8rem; margin: 0 0 16px 0; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 12px; text-align: center; width: 100%; max-width: 1000px; font-weight: 700;">
             Finalizar Compra
         </h1>
-
-        <div class="checkout-grid"
-            style="display: grid; grid-template-columns: 1fr 380px; gap: 40px; width: 100%; max-width: 1000px;">
+        <!-- Checkout Content -->
+        <div id="checkout-container" class="checkout-grid" style="display: grid; grid-template-columns: 1fr 380px; gap: 32px; width: 100%; max-width: 1000px; opacity: 1; transition: opacity 0.3s ease;">
 
             <!-- LEFT COLUMN: PAYMENT (Was Right) -->
             <div class="checkout-left">
@@ -111,26 +113,96 @@
                         style="color: #fff; font-size: 1.15rem; margin-bottom: 24px; font-weight: 600; font-family: 'Plus Jakarta Sans', sans-serif;">
                         Detalles de Pago</h3>
 
-                    <!-- Safe Payment Badges -->
                     <div style="display: flex; gap: 10px; margin-bottom: 24px; opacity: 0.8;">
                         <i class="fab fa-cc-paypal" style="font-size: 26px; color: #fff;"></i>
                         <i class="fab fa-cc-visa" style="font-size: 26px; color: #fff;"></i>
                         <i class="fab fa-cc-mastercard" style="font-size: 26px; color: #fff;"></i>
                     </div>
+                    <!-- Payment Method Selector -->
+                    <div class="payment-methods-container" style="margin-top: 24px;">
+                        
+                        <!-- PAYPAL METHOD (Default Active) -->
+                        <div class="payment-method-item active" id="method-paypal" style="margin-bottom: 12px; border: 1px solid rgba(139, 92, 246, 0.3); border-radius: 12px; overflow: hidden; background: rgba(139, 92, 246, 0.03);">
+                            <label style="display: flex; align-items: center; gap: 12px; cursor: pointer; padding: 18px; width: 100%; margin: 0;">
+                                <input type="radio" name="payment-selection" value="paypal" checked onchange="CheckoutManager.togglePaymentMethod('paypal')" style="width: 18px; height: 18px; accent-color: #8b5cf6;">
+                                <div style="flex: 1;">
+                                    <div style="font-weight: 700; color: #fff; font-size: 0.95rem;">PayPal / Tarjetas</div>
+                                    <div style="font-size: 0.75rem; color: #888;">Crédito, Débito y Saldo PayPal</div>
+                                </div>
+                                <div style="display: flex; gap: 8px; opacity: 0.8;">
+                                    <i class="fab fa-cc-paypal" style="font-size: 20px; color: #fff;"></i>
+                                    <i class="fab fa-cc-visa" style="font-size: 20px; color: #fff;"></i>
+                                    <i class="fab fa-cc-mastercard" style="font-size: 20px; color: #fff;"></i>
+                                </div>
+                            </label>
+                            
+                            <div id="paypal-content" style="padding: 0 18px 18px 18px;">
+                                <div id="paypal-button-container"></div>
+                            </div>
+                        </div>
 
-                    <div
-                        style="margin-bottom: 24px; padding: 16px; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; color: #ccc; font-size: 0.85rem; display: flex; align-items: center;">
-                        <i class="bi bi-lock-fill" style="margin-right: 10px; color: #999; font-size: 1.1rem;"></i>
-                        Pagos procesados de forma segura y encriptada.
+                        <!-- YAPE METHOD (Collapsible) -->
+                        <div class="payment-method-item" id="method-yape" style="margin-bottom: 12px; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; overflow: hidden; background: rgba(255, 255, 255, 0.02); transition: all 0.2s;">
+                            <label style="display: flex; align-items: center; gap: 12px; cursor: pointer; padding: 18px; width: 100%; margin: 0;">
+                                <input type="radio" name="payment-selection" value="yape" onchange="CheckoutManager.togglePaymentMethod('yape')" style="width: 18px; height: 18px; accent-color: #8b5cf6;">
+                                <div style="flex: 1;">
+                                    <div style="font-weight: 700; color: #fff; font-size: 0.95rem;">Yape / Transferencia Directa</div>
+                                    <div style="font-size: 0.75rem; color: #888;">Pago rápido con total en Soles (PEN)</div>
+                                </div>
+                                <div style="background: #111; padding: 4px 8px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1);">
+                                    <span style="color: #6a1ea5; font-weight: 800; font-size: 0.7rem;">YAPE</span>
+                                </div>
+                            </label>
+
+                            <div id="yape-content" style="display: none; padding: 18px; border-top: 1px solid rgba(255, 255, 255, 0.05); background: rgba(0,0,0,0.2);">
+                                <!-- YAPE Total Display -->
+                                <div style="background: rgba(106, 30, 165, 0.1); border: 1px solid rgba(106, 30, 165, 0.2); border-radius: 10px; padding: 15px; margin-bottom: 20px; text-align: center;">
+                                    <div style="font-size: 0.75rem; color: #aaa; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px;">Total a pagar en Soles</div>
+                                    <div id="yape-total-value" style="font-size: 1.8rem; font-weight: 800; color: #fff; font-family: 'Plus Jakarta Sans', sans-serif;">S/ 0.00</div>
+                                </div>
+
+                                <!-- QR Area -->
+                                <div style="text-align: center; margin-bottom: 25px;">
+                                    <div style="display: inline-block; padding: 12px; background: #fff; border-radius: 16px; box-shadow: 0 8px 32px rgba(0,0,0,0.4);">
+                                        <img src="/images/yape.jpg" alt="Yape QR" style="width: 160px; height: 160px; object-fit: contain; display: block;">
+                                    </div>
+                                    <div style="margin-top: 12px; font-size: 0.85rem; color: #8b5cf6; font-weight: 700;">@OFFSZN_STUDIO</div>
+                                </div>
+
+                                <!-- Steps -->
+                                <div class="yape-steps" style="margin-bottom: 25px;">
+                                    <div style="display: flex; align-items: flex-start; gap: 12px; margin-bottom: 12px;">
+                                        <div style="flex-shrink: 0; width: 22px; height: 22px; background: #6a1ea5; color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800;">1</div>
+                                        <div style="font-size: 0.8rem; color: #ccc; line-height: 1.4;">Escanea el código QR desde tu app Yape.</div>
+                                    </div>
+                                    <div style="display: flex; align-items: flex-start; gap: 12px;">
+                                        <div style="flex-shrink: 0; width: 22px; height: 22px; background: #6a1ea5; color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800;">2</div>
+                                        <div style="font-size: 0.8rem; color: #ccc; line-height: 1.4;">Confirma tu pago enviando el comprobante por WhatsApp.</div>
+                                    </div>
+                                </div>
+
+                                <!-- Terms Checkbox (Revised wording) -->
+                                <div style="margin-bottom: 25px; padding: 15px; background: rgba(255,255,255,0.02); border-radius: 10px; border: 1px solid rgba(255,255,255,0.05);">
+                                    <label style="display: flex; gap: 12px; cursor: pointer; align-items: center; margin: 0;">
+                                        <input type="checkbox" id="yape-terms-check" style="width: 18px; height: 18px; accent-color: #8b5cf6;">
+                                        <span style="font-size: 0.8rem; color: #999; font-weight: 500;">
+                                            Confirmo que he realizado el pago y acepto los términos de procesamiento.
+                                        </span>
+                                    </label>
+                                </div>
+
+                                <button id="confirm-yape-btn" onclick="CheckoutManager.processYapeOrder()" 
+                                    style="width: 100%; padding: 16px; background: #25D366; color: #fff; border: none; border-radius: 100px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 12px rgba(37, 211, 102, 0.2);">
+                                    <i class="bi bi-whatsapp" style="font-size: 1.2rem;"></i>
+                                    CONFIRMAR Y NOTIFICAR
+                                </button>
+                            </div>
+                        </div>
                     </div>
 
-                    <!-- PayPal Button Container -->
-                    <div id="paypal-button-container"></div>
-
-                    <div style="margin-top: 20px; text-align: center; font-size: 0.75rem; color: #888;">
-                        Al completar la compra, aceptas nuestros <a href="#"
-                            style="color: #bbb; text-decoration: underline;">Términos de
-                            Servicio</a> y Política de Privacidad.
+                    <div style="margin-top: 32px; text-align: center; font-size: 0.75rem; color: #666; font-weight: 500;">
+                        Procesamos tus datos de forma confidencial. <br>
+                        Al comprar, aceptas nuestros <a href="#" style="color: #888; text-decoration: underline;">Términos de Servicio</a>.
                     </div>
                 </div>
             </div>
@@ -156,6 +228,192 @@
             </div>
         </div>
     </main>
+
+    <!-- Empty Cart State -->
+    <div id="empty-cart-state" style="display: none;">
+        <div class="empty-state-container">
+            <div class="empty-state-card">
+                <div class="empty-icon-wrapper">
+                    <i class="bi bi-cart-x"></i>
+                </div>
+                <h2>Tu carrito está vacío</h2>
+                <p>Parece que aún no has añadido ningún beat o kit a tu carrito. ¡Explora nuestra tienda y encuentra tu próximo hit!</p>
+                <div class="empty-actions">
+                    <a href="/explorar.html" class="btn-primary">
+                        <i class="bi bi-search"></i> Explorar Tienda
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Sección de Recomendados (se llena dinámicamente) -->
+        <div id="checkout-recommendations" style="width: 100%; max-width: 1400px; margin: 0 auto 80px auto;"></div>
+    </div>
+
+    <style>
+        .empty-state-container {
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 0 20px;
+            text-align: center;
+        }
+
+        .empty-state-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 20px;
+            padding: 40px;
+            backdrop-filter: blur(10px);
+        }
+
+        .empty-icon-wrapper {
+            width: 80px;
+            height: 80px;
+            background: rgba(139, 92, 246, 0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px;
+        }
+
+        .empty-icon-wrapper i {
+            font-size: 2.5rem;
+            color: #8b5cf6;
+        }
+
+        .empty-state-card h2 {
+            font-size: 1.8rem;
+            margin-bottom: 12px;
+            color: #fff;
+        }
+
+        .empty-state-card p {
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 32px;
+            line-height: 1.6;
+        }
+
+        .empty-actions .btn-primary {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 28px;
+            background: #fff;
+            color: #000;
+            text-decoration: none;
+            border-radius: 12px;
+            font-weight: 700;
+            transition: all 0.3s ease;
+        }
+
+        .empty-actions .btn-primary:hover {
+            background: #f0f0f0;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(255, 255, 255, 0.1);
+        }
+        /* Skeletons */
+        .skeleton-card {
+            min-width: 176px;
+            max-width: 176px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .skeleton-cover {
+            width: 176px;
+            height: 176px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .skeleton-text-title {
+            width: 80%;
+            height: 14px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 4px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .skeleton-text-sub {
+            width: 50%;
+            height: 10px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 4px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .skeleton-btn {
+            width: 100%;
+            height: 36px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 8px;
+            margin-top: 4px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .skeleton-shimmer::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.05), transparent);
+            animation: skeleton-shimmer 2s infinite linear;
+        }
+
+        /* Order Summary Skeleton */
+        .summary-skeleton {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .skeleton-summary-item {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .skeleton-summary-img {
+            width: 48px;
+            height: 48px;
+            background: rgba(255,255,255,0.03);
+            border-radius: 8px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .skeleton-summary-details {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .skeleton-line {
+            background: rgba(255,255,255,0.03);
+            border-radius: 4px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .skeleton-total-line {
+            height: 24px;
+            width: 100%;
+            background: rgba(255,255,255,0.03);
+            border-radius: 6px;
+            margin-top: 12px;
+            position: relative;
+            overflow: hidden;
+        }
+    </style>
 
     <!-- PROCESSING OVERLAY -->
     <div id="checkout-processing-overlay"
@@ -303,11 +561,20 @@
         }
     </style>
 
+    </main>
+
+    <!-- Footer Placeholder -->
+    <div id="footer-placeholder"></div>
+
     <!-- CORE SCRIPTS -->
     <script src="/script/config.js"></script>
+    <script src="/script/favorites-manager.js"></script>
+    <script src="/script/sticky-player.js"></script>
+    <script src="/script/expanded-player.js"></script>
     <script src="/script/cart.js"></script>
     <!-- PAYPAL SDK (Live) with restored card inline form - Loaded dynamically in checkout.js -->
     <script src="/script/checkout.js"></script>
+    <script src="/script/footer.js?v=11"></script>
 
     <script src="/script/notifications.js"></script>
     <script src="/script/navbar.js?v=20" type="module"></script>

@@ -19,6 +19,7 @@ export const getUserProfile = async (req, res) => {
                 socials, 
                 is_verified, 
                 is_producer, 
+                template,
                 created_at,
                 followers:followers!followers_user_id_fkey(count),
                 following:followers!followers_follower_id_fkey(count),
