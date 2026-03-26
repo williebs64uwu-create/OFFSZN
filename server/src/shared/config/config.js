@@ -22,11 +22,17 @@ export const EMAILJS_TEMPLATE_ID = process.env.EMAILJS_TEMPLATE_ID;
 export const EMAILJS_PUBLIC_KEY = process.env.EMAILJS_PUBLIC_KEY;
 export const EMAILJS_PRIVATE_KEY = process.env.EMAILJS_PRIVATE_KEY;
 
-// SMTP / NODEMAILER
-export const SMTP_HOST = process.env.SMTP_HOST || 'smtp.gmail.com';
-export const SMTP_PORT = process.env.SMTP_PORT || 465;
-export const EMAIL_USER = process.env.EMAIL_USER;
-export const EMAIL_PASS = process.env.EMAIL_PASS; // App Password goes here
+// SMTP - BREVO (No-Reply)
+export const BREVO_USER = process.env.BREVO_USER;
+export const BREVO_PASS = process.env.BREVO_PASS;
+export const BREVO_HOST = process.env.BREVO_HOST || 'smtp-relay.brevo.com';
+export const BREVO_PORT = process.env.BREVO_PORT || 587;
+
+// SMTP - GMAIL (Personal)
+export const GMAIL_USER = process.env.GMAIL_USER;
+export const GMAIL_PASS = process.env.GMAIL_PASS;
+export const GMAIL_HOST = process.env.GMAIL_HOST || 'smtp.gmail.com';
+export const GMAIL_PORT = process.env.GMAIL_PORT || 465;
 
 export const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
 

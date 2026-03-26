@@ -1,56 +1,91 @@
 import nodemailer from 'nodemailer';
-import { EMAIL_USER, EMAIL_PASS, SMTP_HOST, SMTP_PORT } from '../config/config.js';
-
-let transporter = null;
-
-function getTransporter() {
-    if (transporter) return transporter;
-    
-    if (!EMAIL_USER || !EMAIL_PASS) {
-        console.warn('[Mailer] Missing EMAIL_USER or EMAIL_PASS environment variables.');
-        return null;
-    }
-    
-    transporter = nodemailer.createTransport({
-        host: SMTP_HOST || 'smtp.gmail.com',
-        port: SMTP_PORT || 587,
-        secure: SMTP_PORT == 465,
-        auth: {
-            user: EMAIL_USER,
-            pass: EMAIL_PASS
-        },
-        // Add timeouts to prevent hangs if SMTP server is slow
-        connectionTimeout: 10000, // 10s
-        greetingTimeout: 10000,
-        socketTimeout: 15000
-    });
-    return transporter;
-}
+import { 
+    BREVO_USER, BREVO_PASS, BREVO_HOST, BREVO_PORT,
+    GMAIL_USER, GMAIL_PASS, GMAIL_HOST, GMAIL_PORT
+} from '../config/config.js';
 
 /**
- * Sends an email using Nodemailer with the generic "no-reply" alias.
+ * TRANSPORTERS SETUP
  */
-export const sendOffsznEmail = async ({ to, subject, html, fromName = 'OFFSZN' }) => {
-    try {
-        const mailer = getTransporter();
-        if (!mailer) throw new Error('Transporter not configured');
 
-        // We attempt to send from the official no-reply address.
-        // If the SMTP provider (like Gmail) is strict, it may rewrite the FROM address to the 
-        // authenticated account, but we'll also include it as Reply-To to guide users.
+// 1. Brevo Transporter (For no-reply@offszn.lat - Transactional)
+const noReplyTransporter = nodemailer.createTransport({
+    host: BREVO_HOST,
+    port: Number(BREVO_PORT),
+    secure: Number(BREVO_PORT) === 465,
+    auth: {
+        user: BREVO_USER,
+        pass: BREVO_PASS
+    }
+});
+
+// 2. Gmail Transporter (For offszn.studio@gmail.com - Personal/Interactive)
+const personalTransporter = nodemailer.createTransport({
+    host: GMAIL_HOST,
+    port: Number(GMAIL_PORT),
+    secure: Number(GMAIL_PORT) === 465,
+    auth: {
+        user: GMAIL_USER,
+        pass: GMAIL_PASS
+    }
+});
+
+/**
+ * Generic email sender with hybrid routing
+ * 
+ * @param {Object} options 
+ * @param {string} options.to - Recipient
+ * @param {string} options.subject - Email Subject
+ * @param {string} options.html - Email Content
+ * @param {string} [options.fromName] - Custom Display Name
+ * @param {string} [options.type] - 'transactional' (Brevo) or 'personal' (Gmail)
+ */
+export const sendOffsznEmail = async ({ to, subject, html, fromName = 'OFFSZN', type = 'transactional' }) => {
+    try {
+        console.log(`[Mailer] Preparing to send ${type} email to ${to}...`);
+
+        let transporter;
+        let fromAddress;
+        let finalFromName = fromName;
+
+        if (type === 'personal') {
+            // Route through Gmail (offszn.studio@gmail.com)
+            transporter = personalTransporter;
+            fromAddress = GMAIL_USER;
+            if (!fromName || fromName === 'OFFSZN') finalFromName = 'OFFSZN Studio';
+        } else {
+            // Default: Route through Brevo (no-reply@offszn.lat)
+            transporter = noReplyTransporter;
+            fromAddress = 'no-reply@offszn.lat';
+            if (!fromName || fromName === 'OFFSZN') finalFromName = 'OFFSZN No-Reply';
+        }
+
         const mailOptions = {
-            from: `"${fromName}" <${EMAIL_USER}>`,
-            replyTo: 'no-reply@offszn.lat',
+            from: `"${finalFromName}" <${fromAddress}>`,
             to,
             subject,
             html
         };
 
-        const info = await mailer.sendMail(mailOptions);
-        console.log(`[Mailer] Success: Email sent to ${to} (${info.messageId}) from no-reply@offszn.lat`);
-        return { success: true, messageId: info.messageId };
-    } catch (err) {
-        console.error('[Mailer] Failed to send email:', err);
-        return { success: false, error: err.message };
+        const info = await transporter.sendMail(mailOptions);
+        console.log(`[Mailer] Success (${type}): ${info.messageId}`);
+        return info;
+    } catch (error) {
+        console.error(`[Mailer] Error sending ${type} email:`, error.message);
+        // Fallback attempt: if Brevo fails, try Gmail as emergency backup
+        if (type === 'transactional' && GMAIL_USER && GMAIL_PASS) {
+            console.warn(`[Mailer] Attempting emergency fallback to Gmail...`);
+            try {
+                return await personalTransporter.sendMail({
+                    from: `"OFFSZN Emergency" <${GMAIL_USER}>`,
+                    to,
+                    subject: `[RETRY] ${subject}`,
+                    html
+                });
+            } catch (fallbackError) {
+                console.error(`[Mailer] Emergency fallback failed:`, fallbackError.message);
+            }
+        }
+        throw error;
     }
 };

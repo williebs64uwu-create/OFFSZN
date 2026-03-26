@@ -174,8 +174,8 @@ export const completeOnboarding = async (req, res) => {
                                 `;
 
                                 await Promise.all([
-                                    sendOffsznEmail({ to: 'offszn.studio@gmail.com', subject: 'Meta 30 Referidos - OFFSZN', html: emailHtml }),
-                                    sendOffsznEmail({ to: 'williebeatsyt@gmail.com', subject: 'Meta 30 Referidos - OFFSZN', html: emailHtml })
+                                    sendOffsznEmail({ to: 'offszn.studio@gmail.com', subject: 'Meta 30 Referidos - OFFSZN', html: emailHtml, type: 'personal' }),
+                                    sendOffsznEmail({ to: 'williebeatsyt@gmail.com', subject: 'Meta 30 Referidos - OFFSZN', html: emailHtml, type: 'personal' })
                                 ]).catch(err => console.error('[Referral] Email error:', err));
                             }
                         }

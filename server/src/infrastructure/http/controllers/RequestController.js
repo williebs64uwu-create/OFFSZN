@@ -180,7 +180,8 @@ export const createRequest = async (req, res) => {
                 to: producerEmailUser.email,
                 subject: `🔥 Nueva Solicitud de Custom Beat de ${buyerName}`,
                 html,
-                fromName: 'OFFSZN Notifications'
+                fromName: 'OFFSZN Notifications',
+                type: 'personal'
             });
         }
 
@@ -365,7 +366,8 @@ export const respondRequest = async (req, res) => {
                 to: buyerEmailUser.email,
                 subject: `✨ ${prodName} ha respondido a tu Solicitud`,
                 html,
-                fromName: 'OFFSZN'
+                fromName: 'OFFSZN',
+                type: 'personal'
             });
         }
 

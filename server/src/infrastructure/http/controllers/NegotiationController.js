@@ -80,13 +80,15 @@ export const submitNegotiation = async (req, res) => {
                 to: producerEmail || process.env.EMAIL_USER,
                 subject: `🔥 Nueva oferta recibida: ${productName}`,
                 html: producerHtml,
-                fromName: 'OFFSZN Notifications'
+                fromName: 'OFFSZN Notifications',
+                type: 'personal'
             }),
             sendOffsznEmail({
                 to: email,
                 subject: `Tu propuesta para "${productName}" ha sido enviada`,
                 html: buyerHtml,
-                fromName: 'OFFSZN'
+                fromName: 'OFFSZN',
+                type: 'personal'
             })
         ]);
 
@@ -231,7 +233,8 @@ export const respondNegotiation = async (req, res) => {
                 to: buyerEmail,
                 subject: subject,
                 html: html,
-                fromName: 'OFFSZN'
+                fromName: 'OFFSZN',
+                type: 'personal'
             });
             console.log(`[Negotiation] Response email sent for status: ${status}`);
         }
@@ -479,13 +482,15 @@ export const reportIssue = async (req, res) => {
                 to: process.env.EMAIL_USER || 'offszn.studio@gmail.com',
                 subject: `⚠️ Reporte de Negociación — ${producerName}`,
                 html: adminHtml,
-                fromName: 'OFFSZN Reports'
+                fromName: 'OFFSZN Reports',
+                type: 'personal'
             }),
             sendOffsznEmail({
                 to: producerEmail || process.env.EMAIL_USER || 'offszn.studio@gmail.com',
                 subject: `Hemos recibido tu reporte — "${productName}"`,
                 html: producerHtml,
-                fromName: 'OFFSZN Soporte'
+                fromName: 'OFFSZN Soporte',
+                type: 'personal'
             })
         ]);
 
