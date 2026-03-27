@@ -287,27 +287,20 @@ async function renderHeader(user, categoryCounts = null) {
                 // Extract URL (everything after the first colon)
                 const url = val.substring(val.indexOf(':') + 1);
                 header.style.background = `url("${url}") center/cover no-repeat`;
+            } else if (val.startsWith('http')) {
+                // Legacy HTTP/HTTPS URL
+                header.style.background = `url("${val}") center/cover no-repeat`;
             } else if (val.includes(':')) {
                 // Solid or Gradient
                 const [type, color] = val.split(':');
                 if (type === 'solid') {
                     header.style.background = color;
                 } else if (type === 'gradient') {
-                    // For gradients, the value might contain commas, so we take everything after 'gradient:'
-                    // But simpler: just assume 'color' is the rest if split limit logic applied, 
-                    // but split(':') splits ALL colons. 
-                    // Let's use substring for robustness.
                     const gradientVal = val.substring(val.indexOf(':') + 1);
                     header.style.background = gradientVal;
                 } else {
-                    // Fallback for simple hex or other? 
-                    // If it was just 'color', handled above? No, split logic is naive.
-                    // If unknown type, try using as color?
                     header.style.background = color;
                 }
-            } else if (val.startsWith('http')) {
-                // Legacy URL
-                header.style.background = `url("${val}") center/cover no-repeat`;
             }
         }
     }
@@ -446,7 +439,7 @@ async function renderHeader(user, categoryCounts = null) {
     // Ensure accurate counts are displayed if elements exist
     const pCountEl = document.getElementById('profileProductsCount');
     if (pCountEl) {
-        // 🔥 FIX: Ensure structure is preserved and text is visible
+        // ðŸ”¥ FIX: Ensure structure is preserved and text is visible
         const count = user.products_count !== undefined ? user.products_count : 0;
         pCountEl.innerHTML = '';
         pCountEl.appendChild(document.createTextNode(`${count} `));
@@ -491,8 +484,8 @@ async function renderHeader(user, categoryCounts = null) {
             if (!token) {
                 if (window.showGuestModal) {
                     window.showGuestModal(
-                        "¡Sigue a este productor!",
-                        "Crea una cuenta para seguir a tus artistas favoritos, recibir notificaciones de nuevos lanzamientos y más."
+                        "Â¡Sigue a este productor!",
+                        "Crea una cuenta para seguir a tus artistas favoritos, recibir notificaciones de nuevos lanzamientos y mÃ¡s."
                     );
                 } else {
                     window.location.href = '/pages/login.html';
@@ -531,7 +524,7 @@ async function renderHeader(user, categoryCounts = null) {
                     }
                 } else if (res.status === 400) {
                     const data = await res.json();
-                    showToast(data.error || "No puedes realizar esta acción");
+                    showToast(data.error || "No puedes realizar esta acciÃ³n");
                 }
             } catch (e) { console.error(e); }
             finally { followBtn.disabled = false; }
@@ -619,19 +612,19 @@ function renderAboutTab(container) {
     aboutGrid.style.gap = '24px';
     aboutGrid.style.marginTop = '20px';
 
-    // Biografía Card
+    // BiografÃ­a Card
     const bioCard = document.createElement('div');
     bioCard.className = 'about-card';
     bioCard.style.cssText = 'background: #111; padding: 24px; border-radius: 12px; border: 1px solid #222;';
 
     const bioTitle = document.createElement('h4');
     bioTitle.style.cssText = 'color: #8b5cf6; margin-bottom: 12px; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px;';
-    bioTitle.textContent = 'Biografía';
+    bioTitle.textContent = 'BiografÃ­a';
     bioCard.appendChild(bioTitle);
 
     const bioText = document.createElement('p');
     bioText.style.cssText = 'color: #ccc; line-height: 1.6; font-size: 0.95rem; white-space: pre-wrap;';
-    bioText.textContent = user.bio || "Sin biografía disponible.";
+    bioText.textContent = user.bio || "Sin biografÃ­a disponible.";
     bioCard.appendChild(bioText);
 
     aboutGrid.appendChild(bioCard);
@@ -823,7 +816,7 @@ window.ProfilePersonalizer = {
         // Fetch Plan Status
         this.checkPlan();
 
-        // 🔥 Sync Mockup Data
+        // ðŸ”¥ Sync Mockup Data
         if (window.currentUserProfile) {
             this.syncMockupData(window.currentUserProfile);
         }
@@ -836,7 +829,7 @@ window.ProfilePersonalizer = {
         const verifiedEl = document.getElementById('previewVerified');
 
         if (nameEl) nameEl.innerText = user.nickname || "User";
-        if (roleEl) roleEl.innerText = user.role || "Productor • Artista";
+        if (roleEl) roleEl.innerText = user.role || "Productor â€¢ Artista";
         if (verifiedEl) verifiedEl.style.display = (user.is_verified || user.is_producer) ? 'inline-block' : 'none';
 
         // 2. Stats
@@ -940,7 +933,7 @@ window.ProfilePersonalizer = {
                 if (content) {
                     content.style.width = '1000px'; // Wide for panoramic
                     content.style.transition = 'width 0.4s cubic-bezier(0.4, 0, 0.2, 1)';
-                    // 🔥 Trigger layout recalculation
+                    // ðŸ”¥ Trigger layout recalculation
                     setTimeout(() => window.dispatchEvent(new Event('resize')), 100);
                 }
             }
@@ -949,7 +942,7 @@ window.ProfilePersonalizer = {
             if (mainView) mainView.style.display = 'none';
             document.getElementById('sideBySideContainer').style.display = 'flex';
 
-            // 🔥 Unified Preview Sync
+            // ðŸ”¥ Unified Preview Sync
             if (window.currentUserProfile) {
                 this.syncMockupData(window.currentUserProfile);
             }
@@ -1031,7 +1024,7 @@ window.ProfilePersonalizer = {
         if (!file) return;
 
         if (file.size > 30 * 1024 * 1024) {
-            if (window.showToast) window.showToast("El archivo es muy pesado (máx 30MB).", "error");
+            if (window.showToast) window.showToast("El archivo es muy pesado (mÃ¡x 30MB).", "error");
             return;
         }
 
@@ -1069,13 +1062,13 @@ window.ProfilePersonalizer = {
         if (modalContainer) {
             modalContainer.style.width = '1000px'; // Standardized wide width
             modalContainer.style.transition = 'width 0.4s cubic-bezier(0.4, 0, 0.2, 1)';
-            // 🔥 Force recalculation to avoid clipping reported by user
+            // ðŸ”¥ Force recalculation to avoid clipping reported by user
             setTimeout(() => window.dispatchEvent(new Event('resize')), 100);
         }
 
         const sideContainer = document.getElementById('sideBySideContainer');
         if (sideContainer) {
-            // 🔥 LOCK HEIGHT: Use a fixed height during crop to prevent "jumping"
+            // ðŸ”¥ LOCK HEIGHT: Use a fixed height during crop to prevent "jumping"
             sideContainer.style.height = '600px';
             sideContainer.style.overflow = 'hidden';
         }
@@ -1110,7 +1103,7 @@ window.ProfilePersonalizer = {
                 checkOrientation: true,
                 zoomOnWheel: true,
                 ready: function () {
-                    // 🔥 FORCE RECTANGULAR CROP
+                    // ðŸ”¥ FORCE RECTANGULAR CROP
                     const viewBox = document.querySelector('#bannerCropView .cropper-view-box');
                     const face = document.querySelector('#bannerCropView .cropper-face');
                     if (viewBox) viewBox.style.borderRadius = '0';
@@ -1147,11 +1140,11 @@ window.ProfilePersonalizer = {
             }
         }
 
-        // 🔥 LOCK UI: Disable cancel and close buttons
+        // ðŸ”¥ LOCK UI: Disable cancel and close buttons
         if (cancelBtn) cancelBtn.disabled = true;
         if (closeBtn) closeBtn.style.visibility = 'hidden';
 
-        // 🔥 LOCK CROPPER: Disable interaction while uploading
+        // ðŸ”¥ LOCK CROPPER: Disable interaction while uploading
         if (this.cropper) {
             this.cropper.disable();
         }
@@ -1165,7 +1158,7 @@ window.ProfilePersonalizer = {
 
         } catch (e) {
             console.error(e);
-            // 🔥 UNLOCK UI: If error, allow user to try again or cancel
+            // ðŸ”¥ UNLOCK UI: If error, allow user to try again or cancel
             if (confirmBtn) {
                 confirmBtn.disabled = false;
                 confirmBtn.innerHTML = 'Confirmar';
@@ -1173,7 +1166,7 @@ window.ProfilePersonalizer = {
             if (cancelBtn) cancelBtn.disabled = false;
             if (closeBtn) closeBtn.style.visibility = 'visible';
 
-            // 🔥 RE-ENABLE CROPPER
+            // ðŸ”¥ RE-ENABLE CROPPER
             if (this.cropper) {
                 this.cropper.enable();
             }
@@ -1192,7 +1185,7 @@ window.ProfilePersonalizer = {
         document.getElementById('bannerPickerControls').style.display = 'flex';
         document.getElementById('bannerCustomInput').value = '';
 
-        // 🔥 Restore Modal UI
+        // ðŸ”¥ Restore Modal UI
         const picker = document.getElementById('bannerPicker');
         const preview = document.getElementById('panoramicPreview');
         const sideContainer = document.getElementById('sideBySideContainer');
@@ -1230,9 +1223,9 @@ window.ProfilePersonalizer = {
         const isCustomGif = this.customFile?.type === 'image/gif';
         const isPresetGif = bannerVal?.startsWith('gif:');
 
-        // 🔥 Gating: Only GIFs are Pro. Static images/colors/gradients are Free.
+        // ðŸ”¥ Gating: Only GIFs are Pro. Static images/colors/gradients are Free.
         if ((isCustomGif || isPresetGif) && !this.isPro) {
-            if (window.showToast) window.showToast("Esta función es exclusiva para usuarios PRO.", "info");
+            if (window.showToast) window.showToast("Esta funciÃ³n es exclusiva para usuarios PRO.", "info");
             setTimeout(() => window.location.href = '/cuenta/planes.html', 1500);
             return;
         }
@@ -1244,12 +1237,12 @@ window.ProfilePersonalizer = {
 
             let finalBannerUrl = bannerVal;
 
-            // 🔥 Handle Custom Upload via Cloudinary (Optimized: Send Cropped Base64)
+            // ðŸ”¥ Handle Custom Upload via Cloudinary (Optimized: Send Cropped Base64)
             if (this.customFile) {
                 let uploadPayload = null;
                 let isGif = this.customFile.type === 'image/gif';
 
-                // 🔥 UPLOAD VIA FORMDATA (MULTIPART)
+                // ðŸ”¥ UPLOAD VIA FORMDATA (MULTIPART)
                 // This is much more stable than Base64/JSON for large images.
                 const formData = new FormData();
 
@@ -1275,10 +1268,10 @@ window.ProfilePersonalizer = {
                 const { data: { session }, error: sessionError } = await window.supabaseClient.auth.getSession();
 
                 if (sessionError || !session) {
-                    throw new Error("Tu sesión ha expirado. Por favor recarga la página.");
+                    throw new Error("Tu sesiÃ³n ha expirado. Por favor recarga la pÃ¡gina.");
                 }
 
-                const res = await fetch('/api/cloudinary/banner', {
+                const res = await fetch('/api/imagekit/banner', {
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${session.access_token}`
@@ -1312,9 +1305,9 @@ window.ProfilePersonalizer = {
 
             if (error) throw error;
 
-            if (window.showToast) window.showToast("Personalización guardada.", "success");
+            if (window.showToast) window.showToast("PersonalizaciÃ³n guardada.", "success");
 
-            // 🔥 OPTIMISTIC UI UPDATE: Update the actual profile banner immediately so it feels instant
+            // ðŸ”¥ OPTIMISTIC UI UPDATE: Update the actual profile banner immediately so it feels instant
             const header = document.querySelector('.profile-header');
             if (header && finalBannerUrl) {
                 if (finalBannerUrl.startsWith('url:')) {
@@ -1702,7 +1695,7 @@ function setupBioCollapse() {
             const toggle = document.createElement('span');
             toggle.id = 'bioToggle';
             toggle.style.cssText = 'color:var(--p-accent); cursor:pointer; font-weight:600; margin-top:4px; display:inline-block;';
-            toggle.textContent = isShort ? 'Ver más' : 'Ver menos';
+            toggle.textContent = isShort ? 'Ver mÃ¡s' : 'Ver menos';
             bioText.appendChild(toggle);
         }
     };
@@ -1946,7 +1939,7 @@ async function renderTrending(items, user, collabStats = {}) {
 
         const dot = document.createElement('span');
         dot.style.fontSize = '0.4rem';
-        dot.textContent = ' ● ';
+        dot.textContent = ' â— ';
         metaRow.appendChild(dot);
 
         const bpmSpan = document.createElement('span');
@@ -1954,6 +1947,35 @@ async function renderTrending(items, user, collabStats = {}) {
         metaRow.appendChild(bpmSpan);
 
         infoDiv.appendChild(metaRow);
+
+        // --- NEW: Inject Buy & Download actions for trending cards ---
+        const tActions = document.createElement('div');
+        tActions.className = 't-card-actions';
+
+        const priceBtn = document.createElement('button');
+        priceBtn.className = 'btn-t-price';
+        const pType = (prod.product_type || '').toLowerCase();
+        const isTrulyFree = pType !== 'beat' && (prod.is_free === true || String(prod.is_free) === 'true' || Number(prod.price_basic) === 0);
+        let priceValue = prod.price_basic !== undefined && prod.price_basic !== null ? prod.price_basic : '20';
+        const priceTxt = isTrulyFree ? 'FREE' : (window.CurrencyManager ? window.CurrencyManager.format(parseFloat(priceValue) || 0) : '$' + parseFloat(priceValue).toFixed(2));
+        priceBtn.innerHTML = '<i class="bi bi-bag" style="margin-right:6px;"></i>' + priceTxt;
+        priceBtn.onclick = (e) => { e.stopPropagation(); window.location.href = seoLink; };
+        tActions.appendChild(priceBtn);
+
+        const hasAudioList = !!(prod.mp3_url || prod.audio_url || prod.download_url_mp3 || prod.download_url_wav || prod.download_url_zip);
+        const freeDLAvaliable = window.AuthUtils && window.AuthUtils.canFreeDownload ? window.AuthUtils.canFreeDownload(prod) : false;
+        
+        // Show download if free or has direct download links available to user
+        if (prod.free_download_type !== 'none' || freeDLAvaliable || isTrulyFree) {
+            const dlBtn = document.createElement('button');
+            dlBtn.className = 'btn-t-download';
+            dlBtn.innerHTML = '<i class="bi bi-download"></i>';
+            dlBtn.onclick = (e) => { e.stopPropagation(); window.location.href = seoLink; };
+            tActions.appendChild(dlBtn);
+        }
+        
+        infoDiv.appendChild(tActions);
+
         div.appendChild(infoDiv);
 
         // Authorize trending image if authUrl exists
@@ -2030,7 +2052,7 @@ async function renderProductList(items, user, collabStats = {}) {
             emptyDiv.appendChild(h3);
 
             const p = document.createElement('p');
-            p.textContent = 'Comparte tus beats, kits o sonidos con el mundo. Solo tú puedes ver esto.';
+            p.textContent = 'Comparte tus beats, kits o sonidos con el mundo. Solo tÃº puedes ver esto.';
             emptyDiv.appendChild(p);
 
             const btn = document.createElement('button');
@@ -2612,8 +2634,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (!token) {
                     if (window.showGuestModal) {
                         window.showGuestModal(
-                            "¡Guarda tus favoritos!",
-                            "Inicia sesión para guardar estos sonidos en tu colección personal."
+                            "Â¡Guarda tus favoritos!",
+                            "Inicia sesiÃ³n para guardar estos sonidos en tu colecciÃ³n personal."
                         );
                     } else {
                         window.location.href = '/pages/login.html';
@@ -2835,15 +2857,21 @@ async function renderOldSchoolSidebar(user, categoryCounts = null) {
         const persBtn = document.createElement('button');
         persBtn.id = 'btnPersonalize';
         persBtn.className = 'btn-personalize-compact';
-        persBtn.textContent = 'Personalizar';
-        persBtn.onclick = () => window.PersonalizeManager && window.PersonalizeManager.open();
+        persBtn.innerHTML = '<i class="bi bi-pencil-fill" style="margin-right:6px;"></i> Personalizar';
+        persBtn.onclick = () => {
+            if (window.ProfilePersonalizer) {
+                window.ProfilePersonalizer.open();
+            } else {
+                console.warn('ProfilePersonalizer not found on window');
+            }
+        };
         actions.appendChild(persBtn);
 
         const setBtn = document.createElement('button');
         setBtn.id = 'btnAccountSettings';
         setBtn.className = 'btn-secondary-compact';
-        setBtn.textContent = 'Ajustes';
-        setBtn.onclick = () => window.location.href = '/cuenta/ajustes.html';
+        setBtn.innerHTML = '<i class="bi bi-gear-fill" style="margin-right:6px;"></i> Ajustes';
+        setBtn.onclick = () => window.location.href = '/account-settings';
         actions.appendChild(setBtn);
     } else {
         const followBtn = document.createElement('button');
@@ -2988,7 +3016,7 @@ async function renderOldSchoolSidebar(user, categoryCounts = null) {
             
             const keys = Object.keys(socials).filter(k => {
                  const val = socials[k];
-                 return val && val.trim() !== '' && iconMap[k.toLowerCase()];
+                 return val && String(val).trim() !== '' && iconMap[k.toLowerCase()];
             });
             
             if (keys.length > 0) {

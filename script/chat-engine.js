@@ -1055,7 +1055,7 @@ async function _grpCreateChat() {
                 const croppedBase64 = await _cropGroupAvatar();
                 const token = window.AuthUtils ? window.AuthUtils.getAccessToken() : null;
 
-                const res = await fetch('/api/cloudinary/avatar', {
+                const res = await fetch('/api/imagekit/avatar', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

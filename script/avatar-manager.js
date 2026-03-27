@@ -400,7 +400,7 @@ window.AvatarManager = {
                 crop: crop
             };
 
-            const response = await fetch('/api/cloudinary/avatar', {
+            const response = await fetch('/api/imagekit/avatar', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -563,7 +563,7 @@ window.AvatarManager = {
                         reader.readAsDataURL(blob);
                     });
 
-                    const avatarRes = await fetch('/api/cloudinary/avatar', {
+                    const avatarRes = await fetch('/api/imagekit/avatar', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',

@@ -30,7 +30,7 @@ const supabase = createClient(
 const MAX_AVATAR_SIZE = 30 * 1024 * 1024;
 
 // ============================================
-// POST /api/cloudinary/avatar — Upload avatar to ImageKit
+// POST /api/imagekit/avatar — Upload avatar to ImageKit
 // ============================================
 router.post('/avatar', authenticateTokenMiddleware, async (req, res) => {
     try {
@@ -116,7 +116,7 @@ router.post('/avatar', authenticateTokenMiddleware, async (req, res) => {
 });
 
 // ============================================
-// POST /api/cloudinary/banner — Upload banner to ImageKit
+// POST /api/imagekit/banner — Upload banner to ImageKit
 // ============================================
 router.post('/banner', authenticateTokenMiddleware, upload.single('imageFile'), async (req, res) => {
     try {

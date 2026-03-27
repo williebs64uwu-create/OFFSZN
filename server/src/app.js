@@ -27,7 +27,7 @@ import requestRoutes from './infrastructure/http/routes/request.routes.js';
 import youtubeRoutes from './infrastructure/http/routes/youtube.routes.js';
 import analyzerRoutes from './infrastructure/http/routes/analyzer.routes.js';
 
-import cloudinaryRoutes from './infrastructure/http/routes/cloudinary.routes.js';
+import imagekitRoutes from './infrastructure/http/routes/imagekit.routes.js';
 import { submitNegotiation, respondNegotiation, generatePurchaseToken, validatePurchaseToken, reportIssue } from './infrastructure/http/controllers/NegotiationController.js';
 import { authenticateTokenMiddleware } from './infrastructure/middlewares/authenticateTokenMiddleware.js';
 import { globalLimiter } from './infrastructure/middlewares/rateLimiter.middleware.js';
@@ -109,6 +109,7 @@ app.use(helmet({
                 "https://images.unsplash.com", "https://*.supabase.co",
                 "https://*.r2.dev", "https://*.cloudflarestorage.com", "https://*.r2.cloudflarestorage.com",
                 "https://res.cloudinary.com", "https://ik.imagekit.io", "https://*.imagekit.io", "https://via.placeholder.com",
+                "https://grainy-gradients.vercel.app",
                 "https://*.ytimg.com", "https://*.ggpht.com", "https://*.googleusercontent.com",
                 "https://ui-avatars.com",
                 // PayPal
@@ -173,8 +174,8 @@ app.get('/env.js', (req, res) => {
     `);
 });
 
-// --- 2.2 CLOUDINARY ROUTES (before global JSON parser — needs 30MB limit) ---
-app.use('/api/cloudinary', express.json({ limit: '30mb' }), cloudinaryRoutes);
+// --- 2.2 IMAGEKIT ROUTES (before global JSON parser — needs 30MB limit) ---
+app.use('/api/imagekit', express.json({ limit: '30mb' }), imagekitRoutes);
 
 app.use(express.json());
 app.use(cookieParser());
