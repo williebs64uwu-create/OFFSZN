@@ -48,29 +48,57 @@ export const submitNegotiation = async (req, res) => {
 
         // A. Email to Producer
         const producerHtml = `
-            <div style="font-family: 'Segoe UI', sans-serif; padding: 30px; background: #0a0a0a; border-radius: 12px; color: #fff; max-width: 600px;">
-                <h2 style="color: #8B5CF6; margin-bottom:20px;">¡Hola ${producerName}!</h2>
-                <p style="color:#ccc; line-height:1.6;">Has recibido una nueva propuesta de negociación por tu producto <b style="color:#fff;">${productName}</b>.</p>
-                <div style="background:#111; border:1px solid #222; border-radius:10px; padding:20px; margin:20px 0;">
-                    <p style="color:#888; margin:0 0 8px;"><b style="color:#fff;">Oferta:</b> $${amount} USD</p>
-                    <p style="color:#888; margin:0;"><b style="color:#fff;">Email del interesado:</b> ${email}</p>
+            <div style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; padding: 40px 20px; background: #050505; color: #ffffff;">
+                <div style="max-width: 600px; margin: 0 auto; background: #0a0a0a; border: 1px solid #1a1a1a; border-radius: 16px; overflow: hidden;">
+                    <div style="padding: 30px; text-align: center; border-bottom: 1px solid #1a1a1a;">
+                        <img src="https://offszn.lat/images/logo.webp" alt="OFFSZN" style="height: 40px;">
+                    </div>
+                    <div style="padding: 40px 30px; text-align: center;">
+                        <h2 style="color: #ffffff; margin-bottom: 20px; font-size: 24px;">¡Hola ${producerName}! 🔥</h2>
+                        <p style="color: #bbbbbb; line-height: 1.6; font-size: 16px;">Has recibido una nueva propuesta de negociación por tu producto <strong>${productName}</strong>.</p>
+                        
+                        <div style="background: #111111; border: 1px solid #222222; border-radius: 12px; padding: 25px; margin: 30px 0; text-align: left;">
+                            <p style="color: #888888; margin: 0 0 10px; font-size: 14px;">OFERTA RECIBIDA</p>
+                            <p style="color: #ffffff; margin: 0 0 15px; font-size: 24px; font-weight: 700;">$${amount} USD</p>
+                            <p style="color: #888888; margin: 0; font-size: 14px;"><strong>Interesado:</strong> ${email}</p>
+                        </div>
+
+                        <p style="color: #888888; font-size: 15px; margin-bottom: 30px;">Puedes aceptar, rechazar o contra-ofertar desde tu panel.</p>
+                        
+                        <a href="https://offszn.lat/cuenta/negociar" style="display: inline-block; background: #ffffff; color: #000000; padding: 14px 30px; border-radius: 10px; text-decoration: none; font-weight: 700; font-size: 15px;">VER PROPUESTA</a>
+                    </div>
+                    <div style="padding: 30px; text-align: center; background: #080808; border-top: 1px solid #1a1a1a; color: #555555; font-size: 12px;">
+                        <p>© 2025 OFFSZN. Este es un mensaje de negociación activa.</p>
+                    </div>
                 </div>
-                <p style="color:#888; line-height:1.5;">Puedes aceptar, rechazar o enviar una contra-oferta desde tu panel de negociaciones.</p>
-                <a href="https://offszn.lat/cuenta/negociar" style="display:inline-block; background:#8B5CF6; color:#fff; padding:14px 30px; border-radius:10px; text-decoration:none; font-weight:700; margin-top:15px;">VER PROPUESTAS</a>
-                <hr style="border:0; border-top:1px solid #222; margin:25px 0;">
-                <p style="font-size:0.75rem; color:#555;">Este es un mensaje automático de OFFSZN. ¿Tienes algún problema? Responde a este correo.</p>
             </div>
         `;
 
         // B. Email to Buyer
         const buyerHtml = `
-            <div style="font-family: 'Segoe UI', sans-serif; padding: 30px; background: #0a0a0a; border-radius: 12px; color: #fff; max-width: 600px;">
-                <h2 style="color: #8B5CF6;">¡Propuesta enviada!</h2>
-                <p style="color:#ccc; line-height:1.6;">Hemos enviado tu oferta de <b style="color:#fff;">$${amount} USD</b> por <b style="color:#fff;">${productName}</b> a ${producerName}.</p>
-                <p style="color:#888; line-height:1.5;">El productor revisará tu propuesta y recibirás un correo con la respuesta. Puedes ver el estado de tus propuestas en tu panel de negociaciones.</p>
-                <a href="https://offszn.lat/cuenta/negociar" style="display:inline-block; background:#8B5CF6; color:#fff; padding:14px 30px; border-radius:10px; text-decoration:none; font-weight:700; margin-top:15px;">VER MIS PROPUESTAS</a>
-                <hr style="border:0; border-top:1px solid #222; margin:25px 0;">
-                <p style="font-size:0.75rem; color:#555;">¿Tienes algún problema? Escríbenos respondiendo a este correo.</p>
+            <div style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; padding: 40px 20px; background: #050505; color: #ffffff;">
+                <div style="max-width: 600px; margin: 0 auto; background: #0a0a0a; border: 1px solid #1a1a1a; border-radius: 16px; overflow: hidden;">
+                    <div style="padding: 30px; text-align: center; border-bottom: 1px solid #1a1a1a;">
+                        <img src="https://offszn.lat/images/logo.webp" alt="OFFSZN" style="height: 40px;">
+                    </div>
+                    <div style="padding: 40px 30px; text-align: center;">
+                        <h2 style="color: #ffffff; margin-bottom: 20px; font-size: 24px;">¡Propuesta enviada! 🚀</h2>
+                        <p style="color: #bbbbbb; line-height: 1.6; font-size: 16px;">Hemos enviado tu oferta de <strong>$${amount} USD</strong> por <strong>${productName}</strong> a ${producerName}.</p>
+                        
+                        <div style="background: #111111; border: 1px solid #222222; border-radius: 12px; padding: 25px; margin: 30px 0; text-align: left;">
+                            <p style="color: #888888; margin: 0 0 10px; font-size: 14px;">DETALLES DE LA OFERTA</p>
+                            <p style="color: #ffffff; margin: 0 0 5px; font-size: 18px;"><strong>Producto:</strong> ${productName}</p>
+                            <p style="color: #ffffff; margin: 0 0 5px; font-size: 18px;"><strong>Monto:</strong> $${amount} USD</p>
+                        </div>
+
+                        <p style="color: #888888; font-size: 15px; margin-bottom: 30px;">Recibirás un correo en cuanto el productor responda a tu oferta.</p>
+                        
+                        <a href="https://offszn.lat/cuenta/negociar" style="display: inline-block; border: 1px solid #ffffff; color: #ffffff; padding: 14px 30px; border-radius: 10px; text-decoration: none; font-weight: 700; font-size: 15px;">GESTIONAR PROPUESTAS</a>
+                    </div>
+                    <div style="padding: 30px; text-align: center; background: #080808; border-top: 1px solid #1a1a1a; color: #555555; font-size: 12px;">
+                        <p>© 2025 OFFSZN. Marketplace #1 de Productores Latinos.</p>
+                    </div>
+                </div>
             </div>
         `;
 

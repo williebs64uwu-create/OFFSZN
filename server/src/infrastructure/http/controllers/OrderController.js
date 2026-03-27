@@ -305,12 +305,49 @@ export const createFreeOrder = async (req, res) => {
             if (userData?.email) {
                 const userNickname = userData.nickname || 'Usuario';
                 const freeHtml = `
-                    <div style="font-family: 'Segoe UI', sans-serif; padding: 30px; background: #0a0a0a; border-radius: 12px; color: #fff; max-width: 600px;">
-                        <h2 style="color: #3B82F6; margin-bottom:20px;">¡Descarga Gratuita Confirmada!</h2>
-                        <p style="color:#ccc; line-height:1.6;">Hola <b>${userNickname}</b>, has añadido exitosamente <b style="color:#fff;">${product.name}</b> a tu cuenta de OFFSZN.</p>
-                        <p style="color:#888; line-height:1.5;">Puedes encontrar y descargar todos tus archivos desde la sección "Mis Transacciones" en tu perfil.</p>
-                        <a href="https://offszn.lat/cuenta/transacciones" style="display:inline-block; background:#3B82F6; color:#fff; padding:14px 30px; border-radius:10px; text-decoration:none; font-weight:700; margin-top:15px;">Ir a Mis Descargas</a>
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <style>
+                        body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #000000; color: #ffffff; margin: 0; padding: 0; }
+                        .wrapper { width: 100%; table-layout: fixed; background-color: #000000; padding: 60px 0; }
+                        .container { max-width: 500px; margin: 0 auto; background-color: #000000; padding: 0 20px; }
+                        .header { padding-bottom: 40px; text-align: left; }
+                        .content { text-align: left; }
+                        .footer { padding-top: 60px; text-align: left; color: #555555; font-size: 12px; border-top: 1px solid #111; margin-top: 60px; }
+                        .logo { height: 32px; filter: brightness(0) invert(1); }
+                        h1 { font-size: 28px; font-weight: 700; color: #ffffff; margin: 0 0 20px 0; letter-spacing: -0.5px; }
+                        p { font-size: 16px; color: #888888; line-height: 1.6; margin-bottom: 30px; }
+                        .product-tag { display: inline-block; background: #111; color: #fff; padding: 6px 14px; border-radius: 6px; font-size: 14px; margin-bottom: 20px; border: 1px solid #222; }
+                        .button { background-color: #ffffff; color: #000000; padding: 16px 32px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 15px; display: inline-block; margin-bottom: 40px; }
+                        a { color: #ffffff; text-decoration: none; }
+                    </style>
+                </head>
+                <body>
+                    <div class="wrapper">
+                        <div class="container">
+                            <div class="header">
+                                <img src="https://offszn.lat/images/logo.webp" alt="OFFSZN" class="logo">
+                            </div>
+                            <div class="content">
+                                <div class="product-tag">🎹 ${product.name}</div>
+                                <h1>Hola, ${userNickname}</h1>
+                                <p>Tu nuevo recurso ha sido añadido con éxito a tu colección de <strong>OFFSZN</strong>.</p>
+                                
+                                <a href="https://offszn.lat/cuenta/transacciones" class="button">Ver mis descargas</a>
+
+                                <p style="font-size: 14px; color: #444444; margin-top: 20px;">
+                                    Recuerda que puedes acceder a tus archivos en cualquier momento desde tu panel de usuario.
+                                </p>
+                            </div>
+                            <div class="footer">
+                                <p>© 2026 OFFSZN. The Premium Producer Marketplace.<br>
+                                <a href="https://instagram.com/offszn.lat">Instagram</a> • <a href="https://tiktok.com/@offszn.lat">TikTok</a> • <a href="https://offszn.lat">Web</a></p>
+                            </div>
+                        </div>
                     </div>
+                </body>
+                </html>
                 `;
                 await sendOffsznEmail({ to: userData.email, subject: `🎁 Descarga Lista - ${product.name}`, html: freeHtml, fromName: 'OFFSZN' })
                     .catch(e => console.error("[Email] Background receipt failed:", e));
@@ -382,9 +419,64 @@ export const handleFreeGuestDownload = async (req, res) => {
                     .select('nickname')
                     .eq('email', guestEmail)
                     .maybeSingle();
+                // Enviar correo de "Descarga Lista" (Transactional - Brevo API)
                 if (sendOffsznEmail) {
                     const subject = existingUser ? `✨ ¡Hola de nuevo, ${existingUser.nickname}! No olvides tu preset 🎹` : `📥 ¡Tu descarga de ${product.name} está lista! ✨`;
-                    const html = `<div>Gracias por descargar ${product.name}. <a href="https://offszn.lat">OFFSZN</a></div>`; // Simplified for brevity
+                    
+                    const html = `
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <style>
+                            body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #000000; color: #ffffff; margin: 0; padding: 0; }
+                            .wrapper { width: 100%; table-layout: fixed; background-color: #000000; padding: 60px 0; }
+                            .container { max-width: 500px; margin: 0 auto; background-color: #000000; padding: 0 20px; }
+                            .header { padding-bottom: 40px; text-align: left; }
+                            .content { text-align: left; }
+                            .footer { padding-top: 60px; text-align: left; color: #555555; font-size: 12px; border-top: 1px solid #111; margin-top: 60px; }
+                            .logo { height: 32px; filter: brightness(0) invert(1); }
+                            h1 { font-size: 28px; font-weight: 700; color: #ffffff; margin: 0 0 20px 0; letter-spacing: -0.5px; }
+                            p { font-size: 16px; color: #888888; line-height: 1.6; margin-bottom: 30px; }
+                            .product-tag { display: inline-block; background: #111; color: #fff; padding: 6px 14px; border-radius: 6px; font-size: 14px; margin-bottom: 20px; border: 1px solid #222; }
+                            .button { background-color: #ffffff; color: #000000; padding: 16px 32px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 15px; display: inline-block; margin-bottom: 40px; }
+                            .benefits-title { font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: #ffffff; margin-bottom: 20px; }
+                            .benefits-list { list-style: none; padding: 0; margin: 0 0 40px 0; }
+                            .benefit-item { display: flex; align-items: center; font-size: 15px; color: #888888; margin-bottom: 12px; }
+                            .benefit-icon { color: #ffffff; margin-right: 12px; font-weight: bold; }
+                            a { color: #ffffff; text-decoration: none; }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="wrapper">
+                            <div class="container">
+                                <div class="header">
+                                    <img src="https://offszn.lat/images/logo.webp" alt="OFFSZN" class="logo">
+                                </div>
+                                <div class="content">
+                                    <div class="product-tag">🎹 ${product.name}</div>
+                                    <h1>Tu producto está listo para descargar</h1>
+                                    <p>Gracias por confiar en <strong>OFFSZN</strong>. Hemos procesado tu descarga correctamente.</p>
+                                    
+                                    <a href="https://offszn.lat/register" class="button">Crear mi cuenta en OFFSZN</a>
+
+                                    <div class="benefits-title">Al tener una cuenta podrás:</div>
+                                    <div class="benefits-list">
+                                        <div class="benefit-item"><span class="benefit-icon">✓</span> Guardar tus descargas para siempre</div>
+                                        <div class="benefit-item"><span class="benefit-icon">✓</span> Conectar con productores y artistas</div>
+                                        <div class="benefit-item"><span class="benefit-icon">✓</span> Vender tus productos y personalizar tu perfil</div>
+                                        <div class="benefit-item"><span class="benefit-icon">✓</span> Y mucho más...</div>
+                                    </div>
+                                </div>
+                                <div class="footer">
+                                    <p>© 2026 OFFSZN. The Premium Producer Marketplace.<br>
+                                    <a href="https://instagram.com/offszn.lat">Instagram</a> • <a href="https://tiktok.com/@offszn.lat">TikTok</a> • <a href="https://offszn.lat">Web</a></p>
+                                </div>
+                            </div>
+                        </div>
+                    </body>
+                    </html>
+                    `;
+
                     await sendOffsznEmail({ to: guestEmail, subject, html, fromName: 'OFFSZN No-Reply' });
                 }
             } catch (e) { console.error("[GuestDownload] Email Flow Error:", e.message); }
