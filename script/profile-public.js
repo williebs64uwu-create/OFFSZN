@@ -2052,7 +2052,7 @@ async function renderProductList(items, user, collabStats = {}) {
             emptyDiv.appendChild(h3);
 
             const p = document.createElement('p');
-            p.textContent = 'Comparte tus beats, kits o sonidos con el mundo. Solo tú puedes ver esto.';
+            p.textContent = 'Comparte tus beats, kits o sonidos con el mundo. Solo tú    puedes ver esto.';
             emptyDiv.appendChild(p);
 
             const btn = document.createElement('button');
