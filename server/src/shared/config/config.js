@@ -25,8 +25,9 @@ export const EMAILJS_PRIVATE_KEY = process.env.EMAILJS_PRIVATE_KEY;
 // SMTP - BREVO (No-Reply)
 export const BREVO_USER = process.env.BREVO_USER;
 export const BREVO_PASS = process.env.BREVO_PASS;
+export const BREVO_API_KEY = process.env.BREVO_API_KEY;
 export const BREVO_HOST = process.env.BREVO_HOST || 'smtp-relay.brevo.com';
-export const BREVO_PORT = process.env.BREVO_PORT || 587;
+export const BREVO_PORT = process.env.BREVO_PORT || 2525;
 
 // SMTP - GMAIL (Personal)
 export const GMAIL_USER = process.env.GMAIL_USER;
