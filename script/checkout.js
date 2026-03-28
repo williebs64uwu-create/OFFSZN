@@ -85,6 +85,26 @@ const CheckoutManager = {
     // RENDER IMMEDIATELY (if we have cached data, it will show content; else skeleton)
     this.renderOrderSummary();
 
+    // 1. GUEST EMAIL SETUP (NEW)
+    const user = window.CartManager?.state?.user;
+    const contactSection = document.getElementById('section-contact');
+    const guestEmailInput = document.getElementById('guest-email');
+    
+    if (!user) {
+      if (contactSection) contactSection.style.display = 'block';
+      if (guestEmailInput) {
+        guestEmailInput.addEventListener('input', (e) => {
+          this.guestEmail = e.target.value.trim();
+          this.validateGuestEmail();
+        });
+      }
+      this.updatePaymentAccess(false); // Initially locked for guests
+    } else {
+      if (contactSection) contactSection.style.display = 'none';
+      this.guestEmail = user.email;
+      this.updatePaymentAccess(true); // Always unlocked for logged-in users
+    }
+
     // Mark init as complete ASAP — so cart-updated listener can start handling background refreshes
     this._initComplete = true;
 
@@ -187,6 +207,42 @@ const CheckoutManager = {
       const summaryContainer = document.getElementById('checkout-order-summary');
       if (summaryContainer && !this._summaryRendered) {
         summaryContainer.innerHTML = this.getSummarySkeleton();
+      }
+    }
+  },
+
+  // --- GUEST VALIDATION (NEW) ---
+  validateGuestEmail: function() {
+    const email = this.guestEmail || '';
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const isValid = re.test(email);
+    const input = document.getElementById('guest-email');
+    
+    if (email.length > 0) {
+      if (isValid) {
+        input?.classList.remove('invalid');
+        this.updatePaymentAccess(true);
+      } else {
+        input?.classList.add('invalid');
+        this.updatePaymentAccess(false);
+      }
+    } else {
+      input?.classList.remove('invalid');
+      this.updatePaymentAccess(false);
+    }
+    return isValid;
+  },
+
+  updatePaymentAccess: function(isAllowed) {
+    const overlay = document.getElementById('payment-blocking-overlay');
+    const methodsContainer = document.getElementById('checkout-payment-methods');
+    
+    if (overlay) overlay.style.display = isAllowed ? 'none' : 'flex';
+    if (methodsContainer) {
+      if (isAllowed) {
+        methodsContainer.classList.remove('disabled-payment');
+      } else {
+        methodsContainer.classList.add('disabled-payment');
       }
     }
   },
@@ -1297,7 +1353,10 @@ const CheckoutManager = {
       },
 
       createOrder: function (data, actions) {
-        const body = { couponCode: self.appliedCoupon };
+        const body = { 
+          couponCode: self.appliedCoupon,
+          guestEmail: self.guestEmail // PASS GUEST EMAIL
+        };
         if (!CartManager.state.user) {
           body.cartItems = CartManager.state.items;
         }
@@ -1325,7 +1384,11 @@ const CheckoutManager = {
       onApprove: function (data, actions) {
         self.showProcessingState(true);
 
-        const body = { orderID: data.orderID, couponCode: self.appliedCoupon };
+        const body = { 
+          orderID: data.orderID, 
+          couponCode: self.appliedCoupon,
+          guestEmail: self.guestEmail // PASS GUEST EMAIL
+        };
         if (!CartManager.state.user) {
           body.cartItems = CartManager.state.items;
         }
@@ -1444,13 +1507,13 @@ const CheckoutManager = {
     if (method === 'paypal') {
       if (paypalItem) {
         paypalItem.classList.add('active');
-        paypalItem.style.border = '1px solid rgba(139, 92, 246, 0.3)';
-        paypalItem.style.background = 'rgba(139, 92, 246, 0.03)';
+        paypalItem.style.borderColor = 'var(--primary-bw)';
+        paypalItem.style.background = 'rgba(255, 255, 255, 0.05)';
       }
       if (yapeItem) {
         yapeItem.classList.remove('active');
-        yapeItem.style.border = '1px solid rgba(255, 255, 255, 0.08)';
-        yapeItem.style.background = 'rgba(255, 255, 255, 0.02)';
+        yapeItem.style.borderColor = 'var(--glass-border)';
+        yapeItem.style.background = 'var(--glass-bg)';
       }
       if (paypalContent) paypalContent.style.display = 'block';
       if (yapeContent) yapeContent.style.display = 'none';
@@ -1461,13 +1524,13 @@ const CheckoutManager = {
     } else if (method === 'yape') {
       if (yapeItem) {
         yapeItem.classList.add('active');
-        yapeItem.style.border = '1px solid rgba(106, 30, 165, 0.4)';
+        yapeItem.style.borderColor = '#6a1ea5'; // Keep Yape accent for brand recognition
         yapeItem.style.background = 'rgba(106, 30, 165, 0.05)';
       }
       if (paypalItem) {
         paypalItem.classList.remove('active');
-        paypalItem.style.border = '1px solid rgba(255, 255, 255, 0.08)';
-        paypalItem.style.background = 'rgba(255, 255, 255, 0.02)';
+        paypalItem.style.borderColor = 'var(--glass-border)';
+        paypalItem.style.background = 'var(--glass-bg)';
       }
       if (yapeContent) yapeContent.style.display = 'block';
       if (paypalContent) paypalContent.style.display = 'none';
@@ -1476,19 +1539,18 @@ const CheckoutManager = {
       const radio = document.querySelector('input[name="payment-selection"][value="yape"]');
       if (radio) radio.checked = true;
 
-      // Show Yape skeleton for a split second for "premium" feel and to wait for conversion
+      // Shimmer effect
       const yapeSkeleton = document.getElementById('yape-skeleton');
       const yapeActual = document.getElementById('yape-actual-content');
       
       if (yapeSkeleton && yapeActual) {
           yapeActual.style.display = 'none';
           yapeSkeleton.style.display = 'flex';
-          
           setTimeout(() => {
               this.updateYapeTotalPEN();
               yapeSkeleton.style.display = 'none';
               yapeActual.style.display = 'block';
-          }, 400); // 400ms shimmer
+          }, 400);
       } else {
           this.updateYapeTotalPEN();
       }
@@ -1507,12 +1569,6 @@ const CheckoutManager = {
   },
 
   processYapeOrder: async function () {
-    const termsCheck = document.getElementById('yape-terms-check');
-    if (!termsCheck || !termsCheck.checked) {
-      alert("Por favor, confirma que has realizado el pago para continuar.");
-      return;
-    }
-
     this.showProcessingState(true);
 
     try {
@@ -1521,6 +1577,7 @@ const CheckoutManager = {
 
       const body = {
         couponCode: this.appliedCoupon,
+        guestEmail: this.guestEmail, // PASS GUEST EMAIL
         paymentMethod: 'yape',
         currency: 'PEN',
         isManualYape: true,

@@ -273,7 +273,19 @@ async function renderHeader(user, categoryCounts = null) {
         verifyBadge.appendChild(tooltip);
     }
 
-    document.getElementById('profileRole').innerText = user.role || '';
+    const roleEl = document.getElementById('profileRole');
+    if (roleEl) {
+        const roleText = user.role || '';
+        roleEl.innerText = roleText;
+        const lowerRole = roleText.toLowerCase();
+        // Palabras clave que indican que el rol debe ir sin fondo (IngenierÃ­a/Mixing/Mastering)
+        const keywords = ['ingeniero', 'mezcla', 'master', 'mix', 'engineer', 'ingenieria'];
+        if (keywords.some(k => lowerRole.includes(k))) {
+            roleEl.classList.add('no-bg');
+        } else {
+            roleEl.classList.remove('no-bg');
+        }
+    }
     document.getElementById('profileBio').innerText = user.bio || '';
 
     // Apply Banner Style (Aligned to Schema: using banner_url for style string)
@@ -1468,15 +1480,31 @@ function isPresetProduct(p) {
 }
 
 function getProductAudio(product) {
-    if (!product) return null;
+    if (!product) return '';
 
+    // Prioritize "After" audio for presets if available
     if (isPresetProduct(product) && product.audio_after_url) {
         return product.audio_after_url;
     }
 
-    return product.mp3_url || product.audio_url || product.download_url_mp3 ||
-        product.demo_file || product.tagged_file || product.preview_url ||
-        product.cloud_url || (product.track_data ? product.track_data.audio_url : '') || '';
+    // Fallback to "Before" audio for presets specifically
+    if (isPresetProduct(product) && product.audio_before_url) {
+        return product.audio_before_url;
+    }
+
+    // Comprehensive fallback chain
+    return product.mp3_url ||
+        product.audio_url ||
+        product.download_url_mp3 ||
+        product.preview_url ||
+        product.demo_file ||
+        product.tagged_file ||
+        product.file_url ||
+        product.url_file ||
+        product.cloud_url ||
+        product.audio_before_url ||
+        (product.track_data ? product.track_data.audio_url : '') ||
+        '';
 }
 
 // State
@@ -1728,7 +1756,7 @@ function setupTrendingControls(user, collabStats) {
     const totalItems = (window.trendingProducts || productsCache).length;
 
     // Visibility Check
-    if (totalItems <= 5) {
+    if (totalItems <= 6) {
         prevBtn.style.opacity = '0.3';
         prevBtn.style.cursor = 'default';
         nextBtn.style.opacity = '0.3';
@@ -1745,7 +1773,7 @@ function setupTrendingControls(user, collabStats) {
 
     // Next Logic
     nextBtn.onclick = () => {
-        const pageSize = 5;
+        const pageSize = 6;
         const maxPages = Math.ceil(totalItems / pageSize);
         trendingPage = (trendingPage + 1) % maxPages; // Cycle: 0 -> 1 -> 0
         updateTrendingView(user, collabStats);
@@ -1753,7 +1781,7 @@ function setupTrendingControls(user, collabStats) {
 
     // Prev Logic
     prevBtn.onclick = () => {
-        const pageSize = 5;
+        const pageSize = 6;
         const maxPages = Math.ceil(totalItems / pageSize);
         trendingPage = (trendingPage - 1 + maxPages) % maxPages; // Cycle: 0 -> 1 -> 0
         updateTrendingView(user, collabStats);
@@ -1761,8 +1789,8 @@ function setupTrendingControls(user, collabStats) {
 }
 
 function updateTrendingView(user, collabStats) {
-    const pageSize = 5;
-    const start = trendingPage * pageSize; // 0, 5, 10
+    const pageSize = 6;
+    const start = trendingPage * pageSize; // 0, 6, 12
 
     // USAR LISTA ORDENADA POR ALGORITMO
     const source = window.trendingProducts || productsCache;
@@ -1792,9 +1820,9 @@ async function renderTrending(items, user, collabStats = {}) {
     // 2. Prepare all cards in memory
     const fragment = document.createDocumentFragment();
 
-    items.forEach((prod, idx) => {
-        const div = document.createElement('div');
-        div.className = 'trending-card';
+        items.forEach((prod, idx) => {
+            const div = document.createElement('div');
+            div.className = 'ots-smart-card';
         const plays = prod.plays_count || 0;
         const seoLink = window.createSeoLink ? window.createSeoLink(prod) : '/producto.html?id=' + prod.id;
 
@@ -1814,7 +1842,7 @@ async function renderTrending(items, user, collabStats = {}) {
         div.innerHTML = ''; // Ensure clear
 
         const coverDiv = document.createElement('div');
-        coverDiv.className = 't-card-cover';
+        coverDiv.className = 'ots-card-cover';
 
         const img = document.createElement('img');
         img.src = initialImgTrending;
@@ -1826,8 +1854,13 @@ async function renderTrending(items, user, collabStats = {}) {
         img.onclick = () => window.location.href = seoLink;
         coverDiv.appendChild(img);
 
+        const overlay = document.createElement('div');
+        overlay.className = 'ots-card-overlay';
+        overlay.onclick = () => window.location.href = seoLink;
+        coverDiv.appendChild(overlay);
+
         const playBtn = document.createElement('button');
-        playBtn.className = 't-play-btn';
+        playBtn.className = 'ots-play-btn';
         playBtn.title = 'Reproducir';
         const playIcon = document.createElement('i');
         playIcon.className = 'bi bi-play-fill';
@@ -1843,8 +1876,26 @@ async function renderTrending(items, user, collabStats = {}) {
         };
         coverDiv.appendChild(playBtn);
 
+        // Add Heart Button to Cover
+        const isLiked = window.FavoritesManager ? window.FavoritesManager.isLiked(prod.id) : false;
+        const heartBtn = document.createElement('button');
+        heartBtn.className = 'ots-heart-btn';
+        if (isLiked) heartBtn.classList.add('active');
+        heartBtn.innerHTML = `<i class="bi ${isLiked ? 'bi-heart-fill' : 'bi-heart'}"></i>`;
+        heartBtn.onclick = (e) => {
+            e.preventDefault(); e.stopPropagation();
+            if (window.FavoritesManager) {
+                window.FavoritesManager.toggleLike(prod.id, heartBtn);
+                const icon = heartBtn.querySelector('i');
+                const currentlyLiked = icon.classList.contains('bi-heart-fill');
+                icon.className = currentlyLiked ? 'bi bi-heart' : 'bi bi-heart-fill';
+                heartBtn.classList.toggle('active');
+            }
+        };
+        coverDiv.appendChild(heartBtn);
+
         const badgeDiv = document.createElement('div');
-        badgeDiv.className = 't-overlay-badge';
+        badgeDiv.className = 'ots-overlay-badge';
         badgeDiv.title = 'Reproducciones Reales';
         badgeDiv.onclick = () => window.location.href = seoLink;
         const musicIcon = document.createElement('i');
@@ -1856,7 +1907,7 @@ async function renderTrending(items, user, collabStats = {}) {
         div.appendChild(coverDiv);
 
         const infoDiv = document.createElement('div');
-        infoDiv.className = 't-card-info';
+        infoDiv.className = 'ots-card-info';
 
         const h4 = document.createElement('h4');
         h4.title = prod.name || '';
@@ -1946,32 +1997,45 @@ async function renderTrending(items, user, collabStats = {}) {
         bpmSpan.textContent = prod.bpm ? prod.bpm + ' BPM' : 'New';
         metaRow.appendChild(bpmSpan);
 
-        infoDiv.appendChild(metaRow);
+        // infoDiv.appendChild(metaRow); // Removed as per user request
+        
 
         // --- NEW: Inject Buy & Download actions for trending cards ---
         const tActions = document.createElement('div');
-        tActions.className = 't-card-actions';
+        tActions.className = 'ots-card-actions';
 
         const priceBtn = document.createElement('button');
-        priceBtn.className = 'btn-t-price';
+        priceBtn.className = 'ots-btn-price';
         const pType = (prod.product_type || '').toLowerCase();
         const isTrulyFree = pType !== 'beat' && (prod.is_free === true || String(prod.is_free) === 'true' || Number(prod.price_basic) === 0);
+        
         let priceValue = prod.price_basic !== undefined && prod.price_basic !== null ? prod.price_basic : '20';
         const priceTxt = isTrulyFree ? 'FREE' : (window.CurrencyManager ? window.CurrencyManager.format(parseFloat(priceValue) || 0) : '$' + parseFloat(priceValue).toFixed(2));
+        
         priceBtn.innerHTML = '<i class="bi bi-bag" style="margin-right:6px;"></i>' + priceTxt;
         priceBtn.onclick = (e) => { e.stopPropagation(); window.location.href = seoLink; };
-        tActions.appendChild(priceBtn);
 
-        const hasAudioList = !!(prod.mp3_url || prod.audio_url || prod.download_url_mp3 || prod.download_url_wav || prod.download_url_zip);
-        const freeDLAvaliable = window.AuthUtils && window.AuthUtils.canFreeDownload ? window.AuthUtils.canFreeDownload(prod) : false;
+        const freeDLAvaliable = (prod.free_download_type && prod.free_download_type !== 'none') || (window.AuthUtils && window.AuthUtils.canFreeDownload && window.AuthUtils.canFreeDownload(prod));
 
-        // Show download if free or has direct download links available to user
-        if (prod.free_download_type !== 'none' || freeDLAvaliable || isTrulyFree) {
-            const dlBtn = document.createElement('button');
-            dlBtn.className = 'btn-t-download';
-            dlBtn.innerHTML = '<i class="bi bi-download"></i>';
-            dlBtn.onclick = (e) => { e.stopPropagation(); window.location.href = seoLink; };
-            tActions.appendChild(dlBtn);
+        if (isTrulyFree) {
+            tActions.appendChild(priceBtn);
+        } else {
+            tActions.appendChild(priceBtn);
+            if (freeDLAvaliable) {
+                const dlBtn = document.createElement('button');
+                dlBtn.className = 'ots-btn-download';
+                dlBtn.innerHTML = '<i class="bi bi-download"></i>';
+                dlBtn.onclick = (e) => { 
+                    e.stopPropagation(); 
+                    if (window.openDownloadGateModal) {
+                        const dlUrl = prod.free_download_url || getProductAudio(prod) || '';
+                        window.openDownloadGateModal(dlUrl, user.nickname, prod.id);
+                    } else {
+                        window.location.href = seoLink; 
+                    }
+                };
+                tActions.appendChild(dlBtn);
+            }
         }
 
         infoDiv.appendChild(tActions);

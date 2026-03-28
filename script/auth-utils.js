@@ -289,9 +289,19 @@ window.AuthUtils = {
             if (key.includes('?')) key = key.split('?')[0];
         }
 
-        if (window.OFFSZN_DEBUG) console.log(`[AuthUtils] Queueing sign for key: ${key} (Version: ${actualVersion})`);
-
         if (!key) return pathOrUrl;
+        
+        // 🔥 FAST-PATH for Public Folders: Avatars, Banners, and anything in 'public/' doesn't need signing
+        // This eliminates 401 errors when logged out and improves loading performance.
+        const isPublicPath = key.startsWith('avatars/') || key.startsWith('banners/') || key.includes('/public/');
+        if (isPublicPath) {
+            const apiRoot = this._apiUrl || '/api';
+            const publicUrl = `${apiRoot}/r2-public/${key}`;
+            this._saveCache(cacheKey, publicUrl);
+            return publicUrl;
+        }
+
+        if (window.OFFSZN_DEBUG) console.log(`[AuthUtils] Queueing sign for key: ${key} (Version: ${actualVersion})`);
 
         return new Promise((resolve, reject) => {
             this._signingQueue.push({

@@ -21,15 +21,31 @@ function isPresetProduct(p) {
 }
 
 function getProductAudio(product) {
-    if (!product) return null;
+    if (!product) return '';
 
+    // Prioritize "After" audio for presets if available
     if (isPresetProduct(product) && product.audio_after_url) {
         return product.audio_after_url;
     }
 
-    return product.mp3_url || product.audio_url || product.download_url_mp3 ||
-        product.demo_file || product.tagged_file || product.preview_url ||
-        product.cloud_url || (product.track_data ? product.track_data.audio_url : '') || '';
+    // Fallback to "Before" audio for presets specifically
+    if (isPresetProduct(product) && product.audio_before_url) {
+        return product.audio_before_url;
+    }
+
+    // Comprehensive fallback chain
+    return product.mp3_url ||
+        product.audio_url ||
+        product.download_url_mp3 ||
+        product.preview_url ||
+        product.demo_file ||
+        product.tagged_file ||
+        product.file_url ||
+        product.url_file ||
+        product.cloud_url ||
+        product.audio_before_url ||
+        (product.track_data ? product.track_data.audio_url : '') ||
+        '';
 }
 
 function initBioLink() {

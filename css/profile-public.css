@@ -408,6 +408,19 @@ input:checked+.slider:before {
     .list-meta-cell {
         display: none;
     }
+
+    .profile-top-row {
+        padding: 4px 10px;
+    }
+
+    .profile-details h1 {
+        font-size: 1.3rem;
+        letter-spacing: -0.5px;
+    }
+
+    .profile-meta {
+        gap: 4px;
+    }
 }
 
 .profile-details {
@@ -484,40 +497,65 @@ input:checked+.slider:before {
 .profile-top-row {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 8px;
+    background: #000;
+    padding: 4px 10px; /* Reduced from 6px 14px to be less intrusive */
+    border-radius: 8px;
+    width: fit-content;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
 }
 
 .profile-details h1 {
-    font-size: 3rem;
-    /* Perfectly balanced between small and large */
-    font-weight: 900;
+    font-size: 1.8rem; /* Increased as requested */
+    font-weight: 800;
     margin: 0;
     line-height: 1;
     font-family: 'Plus Jakarta Sans', sans-serif;
     color: #fff;
-    letter-spacing: -1.2px;
-    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    letter-spacing: -0.8px;
 }
 
 .verified-badge {
     color: #3b82f6;
-    /* Blue tick */
-    font-size: 1.5rem;
+    font-size: 1.1rem; /* Reduced from 1.3rem */
+    display: flex;
 }
 
 .profile-meta {
     display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 3px; /* Reduced gap from 4px to stack tighter */
+    margin-top: 5px; /* Slightly reduced */
+}
+
+.profile-role, .profile-location {
+    background: #000;
+    padding: 3px 8px; /* Reduced from 4px 10px */
+    border-radius: 6px;
+    display: flex;
     align-items: center;
-    gap: 8px;
-    color: var(--p-subtext);
-    font-size: 0.85rem;
-    /* Reduced from 0.95rem */
-    font-weight: 500;
-    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+    gap: 6px;
+    color: #fff;
+    font-size: 0.65rem; /* Reduced from 0.7rem as requested */
+    font-weight: 700;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+.profile-role.no-bg {
+    background: transparent !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    color: #777;
+    font-weight: 600;
+}
+
+.profile-role i, .profile-location i {
+    display: none; /* Hide icons to match Moli's cleaner look */
 }
 
 .dot-separator {
-    font-size: 0.5rem;
+    display: none; /* Removed dot to use individual boxes */
 }
 
 .profile-bio {
@@ -536,8 +574,7 @@ input:checked+.slider:before {
 .profile-middle-row {
     display: flex;
     align-items: center;
-    gap: 40px;
-    /* More separation between stats and socials */
+    gap: 20px; /* Reduced from 40px for a more unified header */
     margin-top: 8px;
 }
 
@@ -556,19 +593,29 @@ input:checked+.slider:before {
 
 .social-links {
     display: flex;
-    gap: 16px;
-    padding-left: 20px;
+    gap: 8px; /* Tighter gap for blocks */
+    padding-left: 16px;
     border-left: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .social-link {
-    color: var(--p-subtext);
-    font-size: 1.1rem;
-    transition: color 0.15s;
+    background: #000;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    color: #ccc;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
 }
 
 .social-link:hover {
     color: #fff;
+    transform: translateY(-2px);
+    background: #111;
 }
 
 /* NEW: PROFILE TABS */
@@ -699,20 +746,7 @@ input:checked+.slider:before {
     border-color: #fff;
 }
 
-.social-links {
-    display: flex;
-    gap: 12px;
-}
-
-.social-link {
-    color: var(--p-subtext);
-    font-size: 1.25rem;
-    transition: color 0.2s;
-}
-
-.social-link:hover {
-    color: #fff;
-}
+/* Styles consolidated above */
 
 
 
@@ -931,11 +965,9 @@ input:checked+.slider:before {
 
 .trending-grid {
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    /* Force 5 columns */
+    grid-template-columns: repeat(6, 1fr); /* 6 columns for smaller, cleaner cards */
     align-items: start;
-    /* Align all items to top */
-    gap: 20px;
+    gap: 16px; /* Slightly tighter gap */
     justify-content: start;
 }
 
@@ -1115,15 +1147,19 @@ input:checked+.slider:before {
 /* Trending Grid Responsive */
 @media (max-width: 1400px) {
     .trending-grid {
+        grid-template-columns: repeat(5, 1fr);
+    }
+}
+
+@media (max-width: 1200px) {
+    .trending-grid {
         grid-template-columns: repeat(4, 1fr);
-        /* 4 columns on tablets */
     }
 }
 
 @media (max-width: 1000px) {
     .trending-grid {
         grid-template-columns: repeat(3, 1fr);
-        /* 3 columns on small tablets */
     }
 }
 
@@ -1154,9 +1190,10 @@ input:checked+.slider:before {
     }
 
     .trending-card,
-    .skeleton-card {
-        width: 145px !important;
-        /* Smaller size as requested */
+    .skeleton-card,
+    .ots-smart-card {
+        width: calc(50% - 14px) !important;
+        flex: 0 0 calc(50% - 14px) !important;
         flex-shrink: 0 !important;
         scroll-snap-align: start !important;
         gap: 8px !important;
@@ -2245,7 +2282,7 @@ input:checked+.slider:before {
     }
 
     .profile-details h1 {
-        font-size: 1.5rem;
+        font-size: 1.4rem; /* Reduced from 1.5rem for consistency */
     }
 
     .profile-bio {
@@ -2937,6 +2974,207 @@ input:checked+.slider:before {
     font-size: 1.1rem;
     cursor: pointer;
     text-transform: uppercase;
+}
+
+/* === NEW: OTS-SMART-CARD SYSTEM (V2.2 - More Compact) === */
+.ots-smart-card {
+    background: rgba(255, 255, 255, 0.03); /* El "relleno" o fondo del card */
+    padding: 10px;
+    border-radius: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px; /* Consistent gap between cover and info */
+    transition: background 0.2s ease;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    height: 100%; /* Stretch to grid height */
+    flex-shrink: 0; /* Important: prevent squashing on mobile row */
+}
+
+.ots-smart-card:hover {
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.ots-card-cover {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1/1;
+    border-radius: 8px;
+    overflow: hidden;
+    cursor: pointer;
+    background: #000;
+}
+
+.ots-card-cover img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover !important; /* Force cover to maximize fill */
+    /* NO SCALE ON HOVER */
+}
+
+.ots-card-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: 5;
+}
+
+.ots-card-cover:hover .ots-card-overlay {
+    opacity: 1;
+}
+
+.ots-play-btn {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%); /* Posición centrada fija */
+    width: 48px; /* Slightly smaller from 52px */
+    height: 48px;
+    background: #fff;
+    border-radius: 50%;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: 10;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+}
+
+.ots-play-btn i {
+    color: #000 !important;
+    font-size: 1.8rem;
+    margin-left: 4px;
+}
+
+.ots-heart-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 36px;
+    height: 36px;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: 10;
+}
+
+.ots-heart-btn i {
+    color: #fff;
+    font-size: 1rem;
+}
+
+.ots-heart-btn.active i {
+    color: #ff4d4d;
+}
+
+.ots-smart-card:hover .ots-play-btn,
+.ots-smart-card:hover .ots-heart-btn {
+    opacity: 1;
+}
+
+.ots-card-info {
+    display: flex;
+    flex-direction: column;
+    flex: 1; /* Expand to fill space */
+    gap: 6px;
+}
+
+.ots-card-info h4 {
+    margin: 0;
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: #fff;
+    cursor: pointer;
+    
+    /* Force 2 lines for symmetry */
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    height: 2.4rem; /* Fixed height for 2 lines */
+    line-height: 1.2rem;
+}
+
+.ots-card-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: auto; /* Push to bottom of card info */
+    padding-top: 4px;
+}
+
+.ots-btn-price {
+    flex: 1;
+    background: #fff;
+    color: #000;
+    border: none;
+    border-radius: 8px;
+    height: 36px;
+    font-size: 0.8rem;
+    font-weight: 750;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: filter 0.2s;
+}
+
+.ots-btn-price:hover {
+    filter: brightness(0.9);
+}
+
+.ots-btn-download {
+    width: 36px;
+    height: 36px;
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.ots-btn-download:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.ots-overlay-badge {
+    position: absolute;
+    bottom: 8px;
+    left: 8px;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: #fff;
+    z-index: 6;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.t-play-btn:hover {
+    transform: scale(1.06) !important;
+    background: #fff;
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.5);
 }
 
 /* MOBILE ROW FIX: Ensure actions are visible */
