@@ -200,13 +200,13 @@ const CheckoutManager = {
       if (emptyState) emptyState.style.display = 'block';
       this.loadRecommendations();
     } else {
-      if (grid) grid.style.display = 'grid';
+      if (grid) grid.style.display = 'block';
       if (emptyState) emptyState.style.display = 'none';
 
       // Show summary skeleton while details load
-      const summaryContainer = document.getElementById('checkout-order-summary');
-      if (summaryContainer && !this._summaryRendered) {
-        summaryContainer.innerHTML = this.getSummarySkeleton();
+      const summaryItems = document.getElementById('checkout-order-summary-items');
+      if (summaryItems && !this._summaryRendered) {
+        summaryItems.innerHTML = `<div class="skeleton-shimmer" style="height: 60px; border-radius: 12px; margin-bottom: 12px;"></div>`;
       }
     }
   },
@@ -248,7 +248,7 @@ const CheckoutManager = {
   },
 
   loadRecommendations: async function () {
-    const container = document.getElementById('checkout-recommendations');
+    const container = document.getElementById('checkout-recommendations-grid');
     if (!container) return;
 
     container.style.display = 'block';
@@ -257,13 +257,10 @@ const CheckoutManager = {
 
     // Show skeletons immediately
     let skeletonHTML = `
-        <div class="explore-row" style="margin-top: 10px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 20px; width: 100%;">
-            <div class="row-header" style="margin-bottom: 20px; padding: 0 5%;">
-                <div class="skeleton-text-title skeleton-shimmer" style="width: 180px; height: 1.25rem;"></div>
-            </div>
-            <div class="shelf-wrapper" style="padding: 0 5%;">
+        <div class="explore-row" style="margin-top: 0; padding-top: 0; width: 100%;">
+            <div class="shelf-wrapper" style="padding: 0;">
                 <div class="shelf-inner">
-                    <div class="shelf-container" style="gap: 24px;">
+                    <div class="shelf-container" style="gap: 16px;">
     `;
     for (let i = 0; i < 7; i++) {
       skeletonHTML += `
@@ -332,20 +329,8 @@ const CheckoutManager = {
         const selected = shuffled.slice(0, 7);
 
         let html = `
-                <div class="explore-row" style="margin-top: 10px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 20px; width: 100%;">
-                    <div class="row-header" style="margin-bottom: 20px; padding: 0 5%;">
-                        <h2 class="row-title" style="font-size: 1.25rem;">Recomendados para ti</h2>
-                        <div class="row-actions">
-                            <div class="view-all" onclick="window.location.href='/search.html'">
-                                Ver todos <i class="bi bi-arrow-right"></i>
-                            </div>
-                            <div class="row-nav-arrows mobile-hide">
-                                <button class="btn-nav-mini prev disabled" onclick="document.getElementById('checkout-recs-container').scrollBy({left:-600,behavior:'smooth'})"><i class="bi bi-chevron-left"></i></button>
-                                <button class="btn-nav-mini next" onclick="document.getElementById('checkout-recs-container').scrollBy({left:600,behavior:'smooth'})"><i class="bi bi-chevron-right"></i></button>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="shelf-wrapper" style="padding: 0 5%;">
+                <div class="explore-row" style="margin-top: 10px; width: 100%;">
+                    <div class="shelf-wrapper" style="padding: 0;">
                         <div class="shelf-inner">
                             <div class="shelf-container" id="checkout-recs-container">
             `;
@@ -861,13 +846,17 @@ const CheckoutManager = {
     const paypalSkeleton = document.getElementById('paypal-skeleton');
     const yapeSkeleton = document.getElementById('yape-skeleton');
     const yapeActual = document.getElementById('yape-actual-content');
+    
+    const paypalHeaderContent = document.getElementById('paypal-header-content');
+    const paypalHeaderSkeleton = document.getElementById('paypal-header-skeleton');
+    const yapeHeaderContent = document.getElementById('yape-header-content');
+    const yapeHeaderSkeleton = document.getElementById('yape-header-skeleton');
+    
     const eligibility = window.CartManager?.state?.paymentEligibility;
     const isVerifying = window.CartManager?.state?.isVerifying;
 
-    if (!container || !eligibility) return;
-
-    // 0. Si estamos verificando, mostramos skeletons y BLOQUEAMOS clicks
-    if (isVerifying) {
+    // 0. Si estamos verificando o no tenemos elegibilidad aún, mostramos skeletons globales y BLOQUEAMOS clicks
+    if (isVerifying || !eligibility) {
         if (paypalSkeleton) paypalSkeleton.style.display = 'flex';
         if (container) container.style.display = 'none';
         
@@ -875,34 +864,58 @@ const CheckoutManager = {
         if (paypalSection) {
             paypalSection.style.pointerEvents = 'none';
             paypalSection.style.opacity = '0.9';
+            if (paypalHeaderContent) paypalHeaderContent.style.display = 'none';
+            if (paypalHeaderSkeleton) paypalHeaderSkeleton.style.display = 'flex';
         }
 
-        // Mostrar skeleton de Yape también durante la verificación global
-        if (yapeSkeleton) {
+        if (yapeSection) {
+            yapeSection.style.pointerEvents = 'none';
+            yapeSection.style.opacity = '0.9';
+            if (yapeHeaderContent) yapeHeaderContent.style.display = 'none';
+            if (yapeHeaderSkeleton) yapeHeaderSkeleton.style.display = 'flex';
+        }
+
+        // Mostrar skeleton de Yape BODY SOLO si es el método activo (o por defecto)
+        if (yapeSkeleton && (yapeSection && yapeSection.classList.contains('active'))) {
             yapeSkeleton.style.display = 'flex';
             const yapeContent = document.getElementById('yape-content');
             if (yapeContent) yapeContent.style.display = 'block';
             if (yapeActual) yapeActual.style.display = 'none';
-            if (yapeSection) {
-                yapeSection.style.pointerEvents = 'none';
-                yapeSection.style.opacity = '0.9';
-            }
         }
         return; 
     }
     
-    // Si ya no estamos verificando, ocultamos los skeletons y RESTAURAMOS clicks
-    if (!isVerifying) {
-        if (paypalSkeleton && this._paypalRendered) paypalSkeleton.style.display = 'none';
-        if (yapeSkeleton) yapeSkeleton.style.display = 'none';
-        if (yapeActual && yapeSection && yapeSection.classList.contains('active')) {
+    // Si ya no estamos verificando y TENEMOS elegibilidad, ocultamos los skeletons globales y RESTAURAMOS clicks
+    if (paypalSkeleton && (this._paypalRendered || this._paypalError)) {
+        paypalSkeleton.style.display = 'none';
+    }
+    
+    // RESTAURAR CABECERAS
+    if (paypalHeaderContent) paypalHeaderContent.style.display = 'flex';
+    if (paypalHeaderSkeleton) paypalHeaderSkeleton.style.display = 'none';
+    if (yapeHeaderContent) yapeHeaderContent.style.display = 'flex';
+    if (yapeHeaderSkeleton) yapeHeaderSkeleton.style.display = 'none';
+
+    // Hide Yape body skeleton ONLY if not currently in manual toggle
+    if (yapeSkeleton && !this._manualToggleInProgress) {
+        yapeSkeleton.style.display = 'none';
+    }
+
+    if (yapeActual && yapeSection && yapeSection.classList.contains('active')) {
+        // Show content if not in manual toggle
+        if (!this._manualToggleInProgress) {
             yapeActual.style.display = 'block';
         }
-        // Desbloquear clics
-        if (paypalSection) paypalSection.style.pointerEvents = 'auto';
-        if (yapeSection) yapeSection.style.pointerEvents = 'auto';
-        if (paypalSection) paypalSection.style.opacity = '1';
-        if (yapeSection) yapeSection.style.opacity = '1';
+    }
+
+    // Desbloquear clics
+    if (paypalSection) {
+        paypalSection.style.pointerEvents = 'auto';
+        paypalSection.style.opacity = '1';
+    }
+    if (yapeSection) {
+        yapeSection.style.pointerEvents = 'auto';
+        yapeSection.style.opacity = '1';
     }
 
     // 1. Visibilidad de Métodos según Elegibilidad (Golden Condition)
@@ -1020,7 +1033,7 @@ const CheckoutManager = {
       msg.innerHTML = `
               <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
                   <span><i class="bi bi-patch-check-fill"></i> ¡Cupón <b>${this.appliedCoupon}</b> aplicado! (${label})</span>
-                  <button onclick="CheckoutManager.removeCoupon()" style="background:none; border:none; color:#ef4444; font-size:0.75rem; cursor:pointer; text-decoration:underline; font-weight:600;">QUITAR</button>
+                  <button onclick="CheckoutManager.removeCoupon()" style="background:none; border:none; color:#ef4444; font-size:0.7rem; cursor:pointer; text-decoration:underline; font-weight:600;">QUITAR</button>
               </div>
           `;
       msg.style.color = '#10b981';
@@ -1028,6 +1041,9 @@ const CheckoutManager = {
       input.value = this.appliedCoupon;
       input.disabled = true;
       btn.style.display = 'none';
+      
+      // Ensure coupon box is visible if coupon is active
+      document.getElementById('coupon-box')?.classList.add('active');
     } else {
       msg.style.display = 'none';
       input.value = '';
@@ -1065,157 +1081,181 @@ const CheckoutManager = {
   // --- UI: RENDER SUMMARY ---
   renderOrderSummary: function () {
     this._summaryRendered = true;
-    const container = document.getElementById('checkout-order-summary');
-    if (!container) return;
+    const itemsContainer = document.getElementById('checkout-order-summary-items');
+    const totalsContainer = document.getElementById('checkout-order-summary-totals');
+    const headerTotalEl = document.getElementById('summary-header-total');
+    
+    if (!itemsContainer || !totalsContainer) return;
 
     const { items, subtotal, discountAmount, serviceFee, total } = this.calculateTotals();
 
+    // Update Header Total
+    if (headerTotalEl) headerTotalEl.textContent = `USD $${total.toFixed(2)}`;
+
+    // Toggle from Skeleton to Content
+    const summarySkeleton = document.getElementById('summary-skeleton');
+    const summaryMainContent = document.getElementById('summary-content-main');
+    
+    if (summarySkeleton) summarySkeleton.style.display = 'none';
+    if (summaryMainContent) {
+        summaryMainContent.style.display = 'flex';
+        summaryMainContent.style.opacity = '1';
+    }
+
     if (items.length === 0) {
-      container.innerHTML = `
-        <div style="text-align: center; padding: 40px 20px 20px; color: #888; font-family: 'Plus Jakarta Sans', sans-serif;">
-          <i class="bi bi-cart2" style="font-size: 2.5rem; display: block; margin-bottom: 15px; opacity: 0.5;"></i>
-          <p style="margin-bottom: 24px; font-size: 0.95rem; font-weight: 500;">Tu carrito está vacío.</p>
-          <a href="/explorar.html" style="display: inline-flex; align-items: center; justify-content: center; gap: 8px; background: #fff; color: #000; text-decoration: none; font-weight: 700; padding: 12px 24px; border-radius: 100px; font-size: 0.85rem; transition: transform 0.2s;">
-            Ir a explorar <i class="bi bi-arrow-right" style="font-size: 1.1rem; margin-top: 1px;"></i>
-          </a>
+      itemsContainer.innerHTML = `
+        <div style="text-align: center; padding: 20px; color: #888;">
+          <p style="font-size: 0.85rem;">Tu carrito está vacío.</p>
         </div>
       `;
+      totalsContainer.innerHTML = '';
       return;
     }
 
-    let html = '';
+    // Render Items Simplified
+    let itemsHTML = '';
+    items.forEach(item => {
+      const fallbackImg = '/images/portada-default.png';
+      const safeName = this.escapeHTML(item.product.name);
+      const safeLicName = this.escapeHTML(item.license_name || item.product.product_type);
+      const imgId = `summary-img-${item.product.id}`;
 
-    if (items.length > 0) {
-      html += `<div class="checkout-items-list" style="margin-bottom: 24px;">`;
-      items.forEach(item => {
-        const isBlocked = this.blockedItems?.some(b => String(b.productId) === String(item.product.id));
-        let priceHTML = '';
-        const price = parseFloat(item.variant_price) > 0
-          ? parseFloat(item.variant_price)
-          : (parseFloat(item.product.price_basic) || 0);
-
-        if (item.product.product_type === 'beat') {
-          const basicPrice = item.product.price_basic || 0;
-          if (price < basicPrice) {
-            priceHTML = `
-                  <div style="font-size:1.05rem; font-weight:700; color:#fff; font-family: 'Plus Jakarta Sans', sans-serif;">$${price.toFixed(2)}</div>
-                  <div style="font-size:0.8rem; color:#666; text-decoration:line-through;">$${parseFloat(basicPrice).toFixed(2)}</div>
-                  <div style="font-size:0.75rem; color:#888;">+ $${item.commission.toFixed(2)}</div>
-                `;
-          } else {
-            priceHTML = `
-                  <div style="font-size:1.05rem; font-weight:700; color:#fff; font-family: 'Plus Jakarta Sans', sans-serif;">$${price.toFixed(2)}</div>
-                  <div style="font-size:0.75rem; color:#888;">+ $${item.commission.toFixed(2)}</div>
-              `;
-          }
-        } else {
-          priceHTML = `
-              <div style="font-size:1.05rem; font-weight:700; color:#fff; font-family: 'Plus Jakarta Sans', sans-serif;">$${price.toFixed(2)}</div>
-              <div style="font-size:0.75rem; color:#888;">+ $${item.commission.toFixed(2)}</div>
-            `;
-        }
-
-        const fallbackImg = '/images/portada-default.png';
-        const imgId = `checkout-img-${item.product.id}`;
-        const safeName = this.escapeHTML(item.product.name);
-        const safeLicName = this.escapeHTML(item.license_name || item.product.product_type);
-
-        html += `
-            <div class="checkout-item ${isBlocked ? 'blocked' : ''}" style="padding:20px 0; display:flex; gap:16px; align-items:center; border-bottom: 1px solid rgba(255,255,255,0.05);">
-              <div class="checkout-item-img" style="position:relative; width:64px; height:64px; flex-shrink:0;">
-                <img id="${imgId}" src="${fallbackImg}" data-r2-version="${item.product.storage_version || item.product.r2_version || 'v1'}"
-                     onerror="this.src='${fallbackImg}'; this.onerror=null;"
-                     data-artist="${item.product.producer_id}" onmouseenter="showArtistCard(event, this)" onmouseleave="hideArtistCard(event, this)"
-                     style="width:100%; height:100%; border-radius:10px; object-fit:cover; border:1px solid rgba(255,255,255,0.1); background:#111;">
-              </div>
-              <div class="checkout-item-details" style="flex:1; min-width:0;">
-                <div class="checkout-item-name truncate" style="font-size:0.95rem; font-weight:600; color:#eee; margin-bottom:2px; font-family: 'Plus Jakarta Sans', sans-serif;">"${safeName}"</div>
-                <div style="display: flex; align-items: center; gap: 8px; font-size: 0.7rem;">
-                  <span style="color:#555; text-transform:uppercase; letter-spacing:0.5px; font-weight: 500;">${safeLicName}</span>
-                  <span style="color: #333;">•</span>
-                  <a href="${item.producerUsername ? '/' + item.producerUsername : '#'}" 
-                     style="color: #888; text-decoration: underline; font-weight: 500;"
-                     data-artist="${item.product.producer_id}"
-                     onmouseenter="showArtistCard(event, this)"
-                     onmouseleave="hideArtistCard(event, this)"
-                     target="_blank">
-                    ${this.escapeHTML(item.producerName)}
-                  </a>
-                </div>
-                ${isBlocked ? `
-                    <div class="blocked-warning" style="color: #EF4444; font-size: 0.65rem; margin-top: 6px; font-weight: 600;">
-                        <i class="bi bi-exclamation-circle-fill"></i> Falta PayPal
-                    </div>
-                ` : ''}
-              </div>
-              <div class="checkout-item-price" style="text-align:right; display:flex; align-items:center; gap:12px;">
-                <div style="display:flex; flex-direction:column; align-items:flex-end;">
-                  ${priceHTML}
-                </div>
-                <button onclick="CheckoutManager.removeFromCheckout('${item.product.id}')" class="remove-item-btn" title="Eliminar del carrito">
-                   <i class="bi bi-x"></i>
-                </button>
-              </div>
-            </div>
-          `;
-
-        // Load authorized image URL
-        if (window.getAuthorizedUrl && item.product.image_url) {
-          const storageVer = item.product.storage_version || item.product.r2_version || 'v1';
-          window.getAuthorizedUrl(item.product.image_url, storageVer).then(url => {
-            const imgEl = document.getElementById(imgId);
-            if (imgEl && url) imgEl.src = url;
-          });
-        }
-      });
-      html += `</div>`;
-    }
-
-    html += `
-        <div class="checkout-totals" style="padding-top:12px;">
-          <div class="total-row" style="display:flex; justify-content:space-between; color:#888; font-size:0.9rem; margin-bottom:12px;">
-            <span>Subtotal</span>
-            <span style="color: #ccc;">$${subtotal.toFixed(2)}</span>
+      itemsHTML += `
+        <div class="checkout-item-simple">
+          <img id="${imgId}" src="${fallbackImg}" data-r2-version="${item.product.storage_version || item.product.r2_version || 'v1'}"
+               onerror="this.src='${fallbackImg}'; this.onerror=null;">
+          <div class="checkout-item-info">
+            <div class="checkout-item-name truncate">"${safeName}"</div>
+            <div class="checkout-item-license">${safeLicName}</div>
           </div>
+          <div class="checkout-item-remove" onclick="CheckoutManager.removeFromCheckout('${item.product.id}')">
+            <i class="bi bi-x"></i>
+          </div>
+        </div>
       `;
+      
+      // Lazy load image if applicable (Sync with Cart Drawer logic)
+      const coverPath = item.product.cover_path || item.product.image_url;
+      const storageVer = item.product.storage_version || item.product.r2_version || 'v1';
+      
+      if (coverPath && window.getAuthorizedUrl) {
+          window.getAuthorizedUrl(coverPath, storageVer, item.product.id).then(url => {
+              const el = document.getElementById(imgId);
+              if (el && url) el.src = url;
+          });
+      }
+    });
+    itemsContainer.innerHTML = itemsHTML;
+
+    // Render Totals Simplified
+    let totalsHTML = `
+      <div class="detail-row">
+        <span>Subtotal</span>
+        <span>$${subtotal.toFixed(2)}</span>
+      </div>
+      <div class="detail-row">
+        <span>Tarifa de servicio</span>
+        <span>$${serviceFee.toFixed(2)}</span>
+      </div>
+    `;
 
     if (discountAmount > 0) {
-      html += `
-          <div class="total-row" style="display:flex; justify-content:space-between; color:#4ade80; font-size:0.9rem; margin-bottom:12px; font-weight:500;">
-            <span>Ahorro aplicado</span>
-            <span>-$${discountAmount.toFixed(2)}</span>
-          </div>
-        `;
-    }
-
-    html += `
-          <div class="total-row" style="display:flex; justify-content:space-between; color:#888; font-size:0.9rem; margin-bottom:24px;">
-            <span>Tarifa de servicio</span>
-            <span style="color: #ccc;">$${serviceFee.toFixed(2)}</span>
-          </div>
-          <div class="total-row grand-total" style="display:flex; justify-content:space-between; align-items: center; color:#fff; padding-top:20px; border-top:1px solid rgba(255,255,255,0.1); font-family:'Plus Jakarta Sans', sans-serif;">
-            <span style="font-size: 1rem; font-weight: 600; text-transform:uppercase; letter-spacing:1px; color:#888;">Total</span>
-            <span style="font-size: 1.6rem; font-weight: 800;">
-                ${window.CurrencyManager ? window.CurrencyManager.format(total) : `$${total.toFixed(2)}`}
-            </span>
-          </div>
-        </div>
-      `;
-
-    // Add currency switcher backlink if in PEN
-    const currency = localStorage.getItem('OFFSZN_CURRENCY') || 'USD';
-    if (currency === 'PEN') {
-      html += `
-        <div style="margin-top:20px; text-align:center;">
-          <a href="javascript:void(0)" onclick="localStorage.setItem('OFFSZN_CURRENCY', 'USD'); window.location.reload();" 
-             style="font-size:0.75rem; color:#888; text-decoration:underline;">
-            Cambiar a USD (PayPal)
-          </a>
+      totalsHTML += `
+        <div class="detail-row" style="color: #10b981;">
+          <span>Descuento</span>
+          <span>-$${discountAmount.toFixed(2)}</span>
         </div>
       `;
     }
 
-    container.innerHTML = html;
+    totalsHTML += `
+      <div class="detail-row total">
+        <span>TOTAL</span>
+        <span>$${total.toFixed(2)}</span>
+      </div>
+    `;
+    totalsContainer.innerHTML = totalsHTML;
+
+    // Sync Bottom Payhip Row
+    this.renderBottomSummaryRow(items, total);
+  },
+
+  renderBottomSummaryRow: function(items, total) {
+    const container = document.getElementById('bottom-summary-row');
+    if (!container || items.length === 0) {
+        if (container) container.innerHTML = '';
+        return;
+    }
+
+    // Hide Bottom Skeleton if exists
+    const bottomSkeleton = document.getElementById('bottom-summary-skeleton');
+    if (bottomSkeleton) bottomSkeleton.style.display = 'none';
+
+    const itemCount = items.length;
+    const firstItem = items[0];
+    const fallbackImg = '/images/portada-default.png';
+    const countText = items.length === 1 ? '1 artículo' : `${items.length} artículos`;
+    const imgId = `bottom-summary-thumb`;
+
+    // Only render the display row if it doesn't exist (Ignoring the skeleton)
+    let toggleRow = container.querySelector('.bottom-total-row:not(#bottom-summary-skeleton)');
+    if (!toggleRow) {
+        toggleRow = document.createElement('div');
+        toggleRow.className = 'bottom-total-row';
+        container.appendChild(toggleRow);
+    }
+    
+    // Explicitly ensure it's visible if we reuse it
+    toggleRow.style.display = 'flex';
+
+    toggleRow.innerHTML = `
+        <div class="bottom-total-left">
+            <img id="${imgId}" src="${fallbackImg}" class="bottom-total-thumb"
+                 onerror="this.src='${fallbackImg}'; this.onerror=null;">
+            <div class="bottom-total-info">
+                <div class="bottom-total-label">Total</div>
+                <div class="bottom-total-count">${countText}</div>
+            </div>
+        </div>
+        <div class="bottom-total-right">
+            USD $${total.toFixed(2)}
+        </div>
+    `;
+
+    // Lazy load bottom thumb using R2 Auth logic (same as Cart)
+    const coverPath = firstItem.product.cover_path || firstItem.product.image_url;
+    const storageVer = firstItem.product.storage_version || firstItem.product.r2_version || 'v1';
+    
+    if (coverPath && window.getAuthorizedUrl) {
+        window.getAuthorizedUrl(coverPath, storageVer, firstItem.product.id).then(url => {
+            const el = document.getElementById(imgId);
+            if (el && url) el.src = url;
+        });
+    }
+  },
+
+  toggleSummary: function () {
+    const accordion = document.getElementById('summary-accordion');
+    const content = document.getElementById('summary-content');
+    const text = document.getElementById('summary-toggle-text');
+    
+    if (!accordion || !content) return;
+    
+    const isActive = accordion.classList.toggle('active');
+    content.classList.toggle('active');
+    
+    if (text) {
+        text.textContent = isActive ? 'Ocultar mi carrito' : 'Mostrar mi carrito';
+    }
+  },
+
+  toggleCoupon: function () {
+    const box = document.getElementById('coupon-box');
+    if (box) {
+        const isHidden = box.style.display === 'none' || !box.style.display;
+        box.style.display = isHidden ? 'block' : 'none';
+        box.classList.toggle('active');
+    }
   },
 
   removeFromCheckout: function (productId) {
@@ -1539,18 +1579,23 @@ const CheckoutManager = {
       const radio = document.querySelector('input[name="payment-selection"][value="yape"]');
       if (radio) radio.checked = true;
 
-      // Shimmer effect
+      // Shimmer effect (Only if not already visible)
       const yapeSkeleton = document.getElementById('yape-skeleton');
       const yapeActual = document.getElementById('yape-actual-content');
+      const yapeWrapper = document.getElementById('yape-content');
       
       if (yapeSkeleton && yapeActual) {
+          this._manualToggleInProgress = true;
+          yapeWrapper.style.display = 'block'; 
           yapeActual.style.display = 'none';
           yapeSkeleton.style.display = 'flex';
+          
           setTimeout(() => {
               this.updateYapeTotalPEN();
-              yapeSkeleton.style.display = 'none';
-              yapeActual.style.display = 'block';
-          }, 400);
+              if (yapeSkeleton) yapeSkeleton.style.display = 'none';
+              if (yapeActual) yapeActual.style.display = 'block';
+              this._manualToggleInProgress = false;
+          }, 800);
       } else {
           this.updateYapeTotalPEN();
       }

@@ -4961,6 +4961,201 @@
                 // await saveDraftAuto(); // 🔥 DISABLED AUTO-SAVE
 
             } catch (error) {
+                        waveformAfter.style.display = targetTab === 'after' ? 'block' : 'none'; // Force style
+                    }
+                });
+            });
+        }
+
+        function initFileHandlers() {
+            setupFileUpload('coverDropZone', 'coverInput', 'cover');
+            setupFileUpload('fileDropZone', 'fileInput', 'kit');
+            setupFileUpload('audioDropZone', 'audioInput', 'audio');
+            setupFileUpload('audioDropZoneAfter', 'audioInputAfter', 'audio_after');
+        }
+        function setupFileUpload(dropZoneId, inputId, type) {
+            const dropZone = document.getElementById(dropZoneId);
+            const input = document.getElementById(inputId);
+
+            dropZone.addEventListener('click', () => input.click());
+            dropZone.addEventListener('dragover', e => {
+                e.preventDefault();
+                dropZone.classList.add('dragover');
+            });
+            dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+            dropZone.addEventListener('drop', e => {
+                e.preventDefault();
+                dropZone.classList.remove('dragover');
+                handleFile(e.dataTransfer.files[0], type, dropZone);
+            });
+            input.addEventListener('change', e => {
+                handleFile(e.target.files[0], type, dropZone);
+                setTimeout(() => e.target.value = '', 100);
+            });
+        }
+        // Helper to get audio duration
+        function getAudioDuration(file) {
+            return new Promise((resolve) => {
+                const audio = new Audio(URL.createObjectURL(file));
+                audio.onloadedmetadata = () => {
+                    resolve(audio.duration);
+                };
+                audio.onerror = () => resolve(0); // Fail safe
+            });
+        }
+
+        async function handleFile(file, type, dropZone) {
+            if (!file) {
+                console.warn('?? No se recibiíarchivo');
+                return;
+            }
+
+            // ?? Prevenir uploads duplicados
+            if (uploadsInProgress[type]) {
+                console.warn(`?? Ya hay un upload de ${type} en progreso`);
+                return; // ? NO mostrar toast, solo prevenir silenciosamente
+            }
+
+            uploadsInProgress[type] = true;
+            dropZone.classList.add('uploading');
+
+            try {
+                // ?? Limpiar errores previos usando helper
+                if (typeof clearInlineError === 'function') {
+                    clearInlineError(dropZone.id);
+                }
+
+                // ?? FORCE REMOVE any local error message safely
+                const parent = dropZone.closest('.form-group') || dropZone.parentNode;
+                const errorMsg = parent.querySelector('.error-message');
+                if (errorMsg) errorMsg.style.display = 'none';
+
+                if (type === 'kit' && !file.name.match(/\.(rar|zip)$/i)) {
+                    showInlineError(dropZone.id, 'Solo archivos .rar o .zip');
+                    dropZone.classList.remove('uploading');
+                    delete uploadsInProgress[type];
+                    return;
+                }
+
+                if ((type === 'audio' || type === 'audio_after') && !file.name.match(/\.(mp3|wav)$/i)) {
+                    showInlineError(dropZone.id, 'Solo archivos .mp3 o .wav');
+                    dropZone.classList.remove('uploading');
+                    delete uploadsInProgress[type];
+                    return;
+                }
+
+
+
+                if (type === 'cover' && !file.type.startsWith('image/')) {
+                    showInlineError(dropZone.id, 'Solo imágenes válidas');
+                    dropZone.classList.remove('uploading');
+                    delete uploadsInProgress[type];
+                    return;
+                }
+
+                // Límites de tamaño
+                const MAX_SIZES = {
+                    cover: 10 * 1024 * 1024,
+                    kit: 50 * 1024 * 1024,
+                    audio: 50 * 1024 * 1024,
+                    audio_after: 50 * 1024 * 1024
+                };
+
+                if (file.size > MAX_SIZES[type]) {
+                    const sizeMB = (MAX_SIZES[type] / (1024 * 1024)).toFixed(0);
+                    showInlineError(dropZone.id, `El archivo excede el límite de ${sizeMB}MB`);
+                    dropZone.classList.remove('uploading');
+                    delete uploadsInProgress[type];
+                    return;
+                }
+
+                // ?? Cover: Abrir modal de recorte
+                if (type === 'cover') {
+                    openCropModal(file);
+                    return;
+                }
+
+                // ?? CRíTICO: Borrar archivo anterior SOLO si ya fue subido a Supabase
+                if (currentDraftId && filesUploaded[type]) {
+                    try {
+                        let columnName = 'preset_url';
+                        if (type === 'audio') columnName = 'audio_before_url';
+                        if (type === 'audio_after') columnName = 'audio_after_url';
+
+                        const { data: draft } = await supabaseClient
+                            .from('preset_drafts')
+                            .select(columnName)
+                            .eq('id', currentDraftId)
+                            .single();
+
+                        const oldUrl = draft?.[columnName];
+
+                    } catch (e) {
+                        // Silent error handling
+                    }
+                }
+
+                // Guardar archivo en memoria
+                formData.files[type] = file;
+                filesUploaded[type] = false; // ? Marcar como NO subido aín
+
+                isDirty = true;
+
+                // Procesar según tipo
+                if (type === 'audio' || type === 'audio_after') {
+                    const ws = type === 'audio' ? wavesurferBefore : wavesurferAfter;
+                    ws.load(URL.createObjectURL(file));
+
+                    // Mostrar el contenedor principal y el específico
+                    const container = document.getElementById('waveformContainer');
+                    const before = document.getElementById('waveformBefore');
+                    const after = document.getElementById('waveformAfter');
+
+                    if (container) container.style.display = 'block';
+                    document.getElementById('playerPlaceholder').style.display = 'none';
+                    document.getElementById('playPauseBtn').disabled = false;
+
+                    // Ajustar visibilidad según el tab actual
+                    if (type === 'audio' && currentAudioTab === 'before') {
+                        before.classList.remove('hidden');
+                        after.classList.add('hidden');
+                    } else if (type === 'audio_after' && currentAudioTab === 'after') {
+                        before.classList.add('hidden');
+                        after.classList.remove('hidden');
+                    }
+
+                    // Asegurar botón de Play al cargar nuevo audio
+                    const playPauseBtn = document.getElementById('playPauseBtn');
+                    if (playPauseBtn) {
+                        const playIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>`;
+                        playPauseBtn.innerHTML = playIcon;
+                        isPlaying = false;
+                    }
+                }
+
+                // Mostrar preview
+                let containerId = 'filePreviewContainer';
+                if (type === 'audio') containerId = 'audioPreviewContainer';
+                if (type === 'audio_after') containerId = 'audioPreviewContainerAfter';
+
+                const container = document.getElementById(containerId);
+
+                if (container) {
+                    container.innerHTML = `
+                    <div class="file-preview">
+                    <div class="file-info">
+                        <div class="file-name">${file.name}</div>
+                        <div class="file-size">${(file.size / (1024 * 1024)).toFixed(2)} MB</div>
+                    </div>
+                    <button type="button" class="remove-file" onclick="removeFile('${type}')" title="Eliminar archivo">?</button>
+                    </div>
+                    `;
+                }
+
+                // Guardar draft automíticamente (esto subiríel archivo)
+// await saveDraftAuto(); // 🔥 DISABLED AUTO-SAVE
+
+            } catch (error) {
                 showToast(`Error: ${error.message} `, 'error');
             } finally {
                 // ?? Liberar upload despuís de 2 segundos
@@ -6817,6 +7012,7 @@
                             if (response.ok) {
                                 const blob = await response.blob();
                                 formData.coverBlob = blob;
+                                formData.coverUrl = data.cover_url; // ?? Sync R2 key
 
                                 const preview = document.getElementById('coverPreview');
                                 const dropZone = document.getElementById('coverDropZone');
@@ -6831,10 +7027,6 @@
                         }
                     } catch (e) {
                         console.warn('?? Error con cover:', e.message);
-                        /* await supabaseClient
-                            .from('preset_drafts')
-                            .update({ cover_url: null })
-                            .eq('id', currentDraftId); */
                     }
                 }
 
@@ -6847,39 +7039,14 @@
                             const response = await fetch(finalUrl);
                             if (response.ok) {
                                 const blob = await response.blob();
-
-                                // ?? EXTRAER NOMBRE LIMPIO
-                                let displayName = 'preset.zip'; // Default
-                                if (data.preset_url.includes('/')) {
-                                    displayName = data.preset_url.split('/').pop();
-                                    displayName = displayName.replace(/^\d+_[a-f0-9-]+_/, '');
-                                }
-
-                                formData.files.kit = new File([blob], displayName, { type: blob.type });
-                                formData.files.preset = formData.files.kit; // Alias for compatibility
-
-                                const container = document.getElementById('filePreviewContainer');
-                                if (container) {
-                                    container.innerHTML = `
-                    <div class="file-preview">
-                        <div class="file-info">
-                            <div class="file-name">${displayName}</div>
-                            <div class="file-size">${(blob.size / (1024 * 1024)).toFixed(2)} MB</div>
-                        </div>
-                        <button type="button" class="remove-file" onclick="removeFile('kit')">?</button>
-                    </div>
-                `;
-                                    filesUploaded.kit = true;
-                                    console.log('? Preset restaurado');
-                                }
+                                formData.files.kit = new File([blob], 'preset_kit' + (blob.type === 'application/zip' ? '.zip' : '.rar'), { type: blob.type });
+                                formData.kit_key = data.preset_url; // ?? Sync R2 key
+                                filesUploaded.kit = true;
+                                updateKitUI(formData.files.kit.name);
                             }
                         }
                     } catch (e) {
                         console.warn('?? Error con preset:', e.message);
-                        /* await supabaseClient
-                            .from('preset_drafts')
-                            .update({ preset_url: null })
-                            .eq('id', currentDraftId); */
                     }
                 }
 
@@ -6901,6 +7068,7 @@
                                 }
 
                                 formData.files.audio = new File([blob], displayName, { type: blob.type });
+                                formData.audioUrl = data.audio_before_url; // ?? Sync R2 key
 
                                 // Cargar en WaveSurfer Before
                                 if (wavesurferBefore) {
@@ -6938,10 +7106,6 @@
                         }
                     } catch (e) {
                         console.warn('?? Error con audio:', e.message);
-                        /* await supabaseClient
-                            .from('preset_drafts')
-                            .update({ audio_before_url: null })
-                            .eq('id', currentDraftId); */
                     }
                 }
 
@@ -6962,6 +7126,7 @@
                                 }
 
                                 formData.files.audio_after = new File([blob], displayName, { type: blob.type });
+                                formData.audioAfterUrl = data.audio_after_url; // ?? Sync R2 key
 
                                 const container = document.getElementById('audioPreviewContainerAfter');
                                 if (container) {
@@ -6998,7 +7163,6 @@
                         }
                     } catch (e) {
                         console.warn('?? Error con audio_after:', e.message);
-                        // Optional: clean up DB if needed, but safe to ignore for now
                     }
                 }
                 // ?? ESPERAR A QUE EL DOM ESTíLISTO
@@ -7237,6 +7401,7 @@
                     try {
                         const key = await uploadToR2(new File([formData.coverBlob], 'cover.jpg', { type: 'image/jpeg' }), 'products/covers');
                         draftData.cover_url = key;
+                        formData.coverUrl = key; // ?? Sync for publish
                         filesUploaded.cover = true;
                     } catch (coverError) {
                         console.error('? Error subiendo cover:', coverError);
@@ -7255,6 +7420,7 @@
                     try {
                         const key = await uploadToR2(formData.files.kit, 'secure-products');
                         draftData.preset_url = key;
+                        formData.kit_key = key; // ?? Sync for publish
                         filesUploaded.kit = true;
                     } catch (kitError) {
                         console.error('? Error subiendo kit:', kitError);
@@ -7273,6 +7439,7 @@
                     try {
                         const key = await uploadToR2(formData.files.audio, 'products/audio');
                         draftData.audio_before_url = key;
+                        formData.audioUrl = key; // ?? Sync for publish
                         filesUploaded.audio = true;
                     } catch (audioError) {
                         console.error('? Error subiendo audio:', audioError);
@@ -7291,6 +7458,7 @@
                     try {
                         const key = await uploadToR2(formData.files.audio_after, 'products/audio');
                         draftData.audio_after_url = key;
+                        formData.audioAfterUrl = key; // ?? Sync for publish
                         filesUploaded.audio_after = true;
                     } catch (audioError) {
                         console.error('? Error subiendo audio after:', audioError);
@@ -7501,9 +7669,12 @@
                 // 1. Subir cover a R2
                 let image_url = null;
                 if (formData.coverBlob && !filesUploaded.cover) {
-                    const key = await uploadToR2(new File([formData.coverBlob], 'cover.jpg', { type: 'image/jpeg' }), 'products/covers');
-                    image_url = `https://offszn-storage.41d0f49121d02c88f71fdb4da54a791d.r2.cloudflarestorage.com/${key}`;
-                } else if (filesUploaded.cover && formData.coverUrl) {
+                    const fileToUpload = formData.coverBlob instanceof File 
+                        ? formData.coverBlob 
+                        : new File([formData.coverBlob], 'cover.jpg', { type: 'image/jpeg' });
+                    const key = await uploadToR2(fileToUpload, 'products/covers');
+                    image_url = key;
+                } else if (formData.coverUrl) {
                     image_url = formData.coverUrl;
                 }
 
@@ -7522,20 +7693,23 @@
                 if (formData.files.audio && !filesUploaded.audio) {
                     console.log(`🚀 [UPLOAD] Subiendo audio a R2`);
                     const key = await uploadToR2(formData.files.audio, 'products/audio');
-                    audio_url = `https://offszn-storage.41d0f49121d02c88f71fdb4da54a791d.r2.cloudflarestorage.com/${key}`;
-                } else if (filesUploaded.audio && formData.audioUrl) {
+                    audio_url = key;
+                } else if (formData.audioUrl) {
                     audio_url = formData.audioUrl;
                 }
 
-                // 3.1. Subir audio AFTER (si aplica) a R2
+                // 3.1. Subir audio AFTER (Global) a R2
                 let audio_after_url = null;
-                if ((selectedCategory === 'Preset_de_voces' || selectedCategory === 'Plantilla') && formData.files.audio_after && !filesUploaded.audio_after) {
+                if (formData.files.audio_after && !filesUploaded.audio_after) {
                     console.log(`🚀 [UPLOAD] Subiendo audio after a R2`);
                     const key = await uploadToR2(formData.files.audio_after, 'products/audio');
-                    audio_after_url = `https://offszn-storage.41d0f49121d02c88f71fdb4da54a791d.r2.cloudflarestorage.com/${key}`;
-                } else if (filesUploaded.audio_after && formData.audioAfterUrl) {
+                    audio_after_url = key;
+                } else if (formData.audioAfterUrl) {
                     audio_after_url = formData.audioAfterUrl;
                 }
+
+                // ?? FALLBACK: Si no hay audio 'after', usar el 'before'
+                audio_after_url = audio_after_url || audio_url;
 
                 // 4. Calcular precio final
                 const basePrice = parseFloat(document.getElementById('priceInput').value) || 0;
@@ -7563,7 +7737,7 @@
                         description: document.getElementById('descInput').value || null,
                         release_date: document.getElementById('dateInput').value || new Date().toISOString(),
                         visibility: document.getElementById('visibilityInput').value,
-                        tags: tags.length > 0 ? tags : null,
+                        tags: (tags && tags.length > 0) ? tags : null,
                         sounds_count: parseInt(document.getElementById('soundsInput').value) || null,
                         price_basic: finalPrice,
                         is_free: isFree,
@@ -7571,14 +7745,17 @@
                         discount_type: 'fixed',
                         collaborators: pendingCollaborators.length > 0 ? pendingCollaborators : null,
                         image_url,
-                        kit_url, // URL final en products (usamos kit_url para compatibilidad)
+                        kit_url, 
                         audio_url,
-                        audio_after_url, // ?? NUEVO: Soporte para track comparativo en products
+                        audio_before_url: audio_url,
+                        audio_after_url,
                         product_type: 'preset',
                         category: selectedCategory,
                         status: 'approved',
                         downloads: 0,
-                        views: 0
+                        views: 0,
+                        storage_version: 'v2', // Account 2
+                        r2_version: 'v2'       // Account 2
                     })
                     .select()
                     .single();
@@ -8783,6 +8960,16 @@
         document.addEventListener('DOMContentLoaded', () => {
             setupValidationListeners();
             initAll();
+            // ?? AUDIO AFTER ZONE: Always visible for all Presets
+            const afterZone = document.getElementById('audioAfterZone');
+            const toggleAfter = document.getElementById('toggleAfterAudio');
+
+            if (afterZone) {
+                afterZone.style.display = 'block';
+            }
+            if (toggleAfter) {
+                toggleAfter.checked = true; // Default to showing it
+            }
         });
         // ========================================
         // SISTEMA DE AYUDA

@@ -148,57 +148,74 @@
     </div>
     <!-- ==================== MAIN CHECKOUT CONTENT ==================== -->
     <main class="checkout-main-premium">
-        <!-- HEADER -->
-        <div style="text-align: center; margin-bottom: 40px;">
-            <h1 style="font-size: 2.2rem; font-weight: 800; letter-spacing: -0.03em; color: #fff; margin-bottom: 12px; font-family: 'Plus Jakarta Sans', sans-serif;">Finalizar Pago</h1>
-            <p style="font-size: 0.95rem; color: #666; font-weight: 500;">Completa los detalles para recibir tu pedido.</p>
+        <div id="checkout-container">
+            <!-- 1. SUMMARY ACCORDION (TOP) -->
+        <div class="summary-accordion" id="summary-accordion" style="margin-bottom: 12px;">
+            <div class="summary-toggle" onclick="CheckoutManager.toggleSummary()" style="height: 52px;">
+                <!-- State: LOADING (Skeleton) -->
+                <div id="summary-skeleton" style="display: flex; align-items: center; justify-content: space-between; width: 100%; height: 100%;">
+                    <div class="skeleton-shimmer" style="width: 140px; height: 1.1rem; border-radius: 4px; opacity: 0.6;"></div>
+                    <div class="skeleton-shimmer" style="width: 80px; height: 1.1rem; border-radius: 4px; opacity: 0.6;"></div>
+                </div>
+
+                <!-- State: READY -->
+                <div id="summary-content-main" style="display: none; align-items: center; justify-content: space-between; width: 100%;">
+                    <div class="summary-toggle-left">
+                        <i class="bi bi-chevron-down"></i>
+                        <span id="summary-toggle-text">Mostrar mi carrito</span>
+                    </div>
+                    <div class="summary-header-total" id="summary-header-total" style="font-weight: 700; color: #fff;">USD $0.00</div>
+                </div>
+            </div>
+            <div class="summary-content" id="summary-content">
+                <div class="summary-inner">
+                    <div id="checkout-order-summary-items"></div>
+                    <div id="checkout-order-summary-totals" style="margin-top: 20px;"></div>
+                </div>
+            </div>
         </div>
 
-        <!-- 1. INFORMACIÓN DE CONTACTO -->
-        <section class="checkout-section" id="section-contact" style="display: none;">
-            <div class="section-title">
-                <i class="bi bi-person-badge"></i> 1. INFORMACIÓN DE CONTACTO
-            </div>
-            <div class="contact-input-group">
-                <input type="email" id="guest-email" class="contact-input" placeholder="tu@email.com" autocomplete="email">
-                <div id="email-validation-msg" class="input-hint">El recibo y los archivos se enviarán a esta dirección.</div>
-            </div>
+        <!-- 2. INFORMACIÓN DE CONTACTO (Guest only) -->
+
+        <!-- 2. INFORMACIÓN DE CONTACTO (Guest only) -->
         </section>
 
-        <!-- 2. RESUMEN DEL PEDIDO -->
-        <section class="checkout-section">
-            <div class="section-title">
-                <i class="bi bi-cart3"></i> 2. RESUMEN DEL PEDIDO
+        <!-- 3. DETALLES ADICIONALES & CUPÓN -->
+        <div class="coupon-area" style="margin-top: 10px;">
+            <div class="coupon-toggle-link" onclick="CheckoutManager.toggleCoupon()">
+                <i class="bi bi-tag"></i> Añadir cupón
             </div>
-            <div id="checkout-order-summary">
-                <!-- Injected by script/checkout.js -->
-                <div style="padding: 24px; display: flex; flex-direction: column; gap: 20px;">
-                    <div class="skeleton-shimmer" style="height: 60px; width: 100%; border-radius: 12px;"></div>
-                    <div class="skeleton-shimmer" style="height: 60px; width: 100%; border-radius: 12px;"></div>
+            <div class="coupon-box" id="coupon-box" style="display: none; margin-bottom: 24px;">
+                <div style="display: flex; gap: 8px;">
+                    <input type="text" id="coupon-input" class="contact-input" placeholder="Código" style="padding: 10px 14px; font-size: 0.8rem;">
+                    <button id="apply-coupon-btn" class="btn-checkout-global" onclick="CheckoutManager.applyCoupon()" style="width: auto; padding: 0 20px; margin: 0; font-size: 0.75rem; height: 40px; border-radius: 10px;">APLICAR</button>
                 </div>
+                <div id="coupon-status-msg" style="margin-top: 8px; font-size: 0.75rem; display: none;"></div>
             </div>
-            
-            <!-- COUPON SECTION INTEGRATED -->
-            <div class="coupon-section" id="coupon-section" style="margin-top: 24px; padding-top: 24px; border-top: 1px solid rgba(255,255,255,0.05);">
-                <div style="display: flex; gap: 10px;">
-                    <input type="text" id="coupon-input" class="contact-input" placeholder="Código de cupón" style="flex: 1; padding: 12px 16px; font-size: 0.85rem;">
-                    <button id="apply-coupon-btn" class="btn-checkout-global" onclick="CheckoutManager.applyCoupon()" style="width: auto; padding: 0 24px; margin: 0; font-size: 0.8rem; height: 48px; border-radius: 12px;">APLICAR</button>
-                </div>
-                <div id="coupon-status-msg" style="margin-top: 10px; font-size: 0.8rem; display: none;"></div>
-            </div>
-        </section>
+        </div>
 
-        <!-- 3. MÉTODOS DE PAGO -->
-        <section class="checkout-section" id="section-payment">
-            <div class="section-title">
-                <i class="bi bi-credit-card"></i> 3. MÉTODO DE PAGO
+        <!-- 4. BOTTOM SUMMARY ROW (STAY AS TOTAL DISPLAY) -->
+        <div id="bottom-summary-row" class="bottom-summary-container">
+            <!-- Cohesive Card Skeleton while loading -->
+            <div id="bottom-summary-skeleton" class="bottom-total-row skeleton-container" style="display: flex; cursor: default; pointer-events: none;">
+                <div class="bottom-total-left">
+                    <div class="skeleton-shimmer" style="width: 48px; height: 48px; border-radius: 8px;"></div>
+                    <div style="display: flex; flex-direction: column; gap: 6px;">
+                        <div class="skeleton-shimmer" style="width: 60px; height: 1.1rem; border-radius: 4px;"></div>
+                        <div class="skeleton-shimmer" style="width: 40px; height: 0.75rem; border-radius: 4px; opacity: 0.4;"></div>
+                    </div>
+                </div>
+                <div class="skeleton-shimmer" style="width: 100px; height: 1.3rem; border-radius: 4px;"></div>
             </div>
-            
+        </div>
+
+        <!-- 5. MÉTODOS DE PAGO -->
+        <section class="checkout-section-payment" id="section-payment" style="position: relative;">
             <!-- Payment Blocking Overlay for Guests -->
             <div id="payment-blocking-overlay" class="locked-overlay" style="display: none;">
                 <div style="text-align: center; color: #fff; padding: 20px;">
-                    <i class="bi bi-envelope-exclamation" style="font-size: 1.5rem; display: block; margin-bottom: 10px;"></i>
-                    <p style="font-size: 0.85rem; font-weight: 600;">Ingresa tu correo para habilitar el pago</p>
+                    <i class="bi bi-envelope-exclamation" style="font-size: 1.2rem; display: block; margin-bottom: 8px;"></i>
+                    <p style="font-size: 0.8rem; font-weight: 600;">Ingresa tu correo para pagar</p>
                 </div>
             </div>
 
@@ -206,15 +223,26 @@
                 <!-- PayPal -->
                 <div class="payment-option active" id="method-paypal" onclick="CheckoutManager.togglePaymentMethod('paypal')">
                     <div class="payment-option-header">
-                        <input type="radio" name="payment-selection" value="paypal" checked class="payment-radio">
-                        <div class="payment-info">
-                            <div class="payment-name">PayPal / Tarjetas</div>
-                            <div class="payment-desc">Finaliza con PayPal o tarjeta de débito/crédito</div>
+                        <!-- State: READY -->
+                        <div id="paypal-header-content" style="display: none; align-items: center; width: 100%; gap: 12px;">
+                            <input type="radio" name="payment-selection" value="paypal" checked class="payment-radio">
+                            <div class="payment-info">
+                                <div class="payment-name">PayPal / Tarjetas</div>
+                                <div class="payment-desc">Finaliza con PayPal o tarjeta de débito/crédito</div>
+                            </div>
+                            <div class="payment-badges" style="display: flex; align-items: center; gap: 8px; margin-left: auto;">
+                                <i class="fab fa-cc-paypal" style="font-size: 24px;"></i>
+                                <i class="fab fa-cc-visa" style="font-size: 24px;"></i>
+                                <i class="fab fa-cc-mastercard" style="font-size: 24px;"></i>
+                            </div>
                         </div>
-                        <div class="payment-badges" style="display: flex; align-items: center; gap: 8px;">
-                            <i class="fab fa-cc-paypal" style="font-size: 24px;"></i>
-                            <i class="fab fa-cc-visa" style="font-size: 24px;"></i>
-                            <i class="fab fa-cc-mastercard" style="font-size: 24px;"></i>
+                        <!-- State: LOADING (Skeleton) -->
+                        <div id="paypal-header-skeleton" style="display: flex; align-items: center; width: 100%; gap: 12px;">
+                            <div class="skeleton-shimmer" style="width: 20px; height: 20px; border-radius: 50%;"></div>
+                            <div style="display: flex; flex-direction: column; gap: 6px; flex: 1;">
+                                <div class="skeleton-shimmer" style="width: 70%; height: 1rem; border-radius: 4px;"></div>
+                                <div class="skeleton-shimmer" style="width: 40%; height: 0.7rem; border-radius: 4px; opacity: 0.5;"></div>
+                            </div>
                         </div>
                     </div>
                     <div id="paypal-content" style="padding: 0 18px 18px; display: block;">
@@ -228,17 +256,36 @@
                 <!-- Yape / Plin -->
                 <div class="payment-option" id="method-yape" onclick="CheckoutManager.togglePaymentMethod('yape')">
                     <div class="payment-option-header">
-                        <input type="radio" name="payment-selection" value="yape" class="payment-radio">
-                        <div class="payment-info">
-                            <div class="payment-name">Yape / Plin / Transferencia Directa</div>
-                            <div class="payment-desc">Pago rápido para Perú (Soles)</div>
+                        <!-- State: READY -->
+                        <div id="yape-header-content" style="display: none; align-items: center; width: 100%; gap: 12px;">
+                            <input type="radio" name="payment-selection" value="yape" class="payment-radio">
+                            <div class="payment-info">
+                                <div class="payment-name">Yape / Plin / Transferencia Directa</div>
+                                <div class="payment-desc">Pago rápido para Perú (Soles)</div>
+                            </div>
+                            <div style="background: #111; padding: 4px 8px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); margin-left: auto;">
+                                <span style="color: #6a1ea5; font-weight: 800; font-size: 0.7rem;">YAPE</span>
+                            </div>
                         </div>
-                        <div style="background: #111; padding: 4px 8px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1);">
-                            <span style="color: #6a1ea5; font-weight: 800; font-size: 0.7rem;">YAPE</span>
+                        <!-- State: LOADING (Skeleton) -->
+                        <div id="yape-header-skeleton" style="display: flex; align-items: center; width: 100%; gap: 12px;">
+                            <div class="skeleton-shimmer" style="width: 20px; height: 20px; border-radius: 50%;"></div>
+                            <div style="display: flex; flex-direction: column; gap: 6px; flex: 1;">
+                                <div class="skeleton-shimmer" style="width: 70%; height: 1rem; border-radius: 4px;"></div>
+                                <div class="skeleton-shimmer" style="width: 40%; height: 0.7rem; border-radius: 4px; opacity: 0.5;"></div>
+                            </div>
                         </div>
                     </div>
-                    <div id="yape-content" style="display: none; padding: 18px; border-top: 1px solid rgba(255,255,255,0.05);">
-                        <div id="yape-actual-content">
+                    <div id="yape-content-wrapper" style="overflow: hidden;">
+                        <!-- Yape Skeleton -->
+                        <div id="yape-skeleton" style="display: none; padding: 20px; flex-direction: column; gap: 12px; border-top: 1px solid rgba(255,255,255,0.05); pointer-events: none;">
+                            <div class="skeleton-shimmer" style="height: 44px; border-radius: 10px;"></div>
+                            <div class="skeleton-shimmer" style="height: 160px; border-radius: 10px; margin: 5px 0;"></div>
+                            <div class="skeleton-shimmer" style="height: 48px; border-radius: 100px;"></div>
+                        </div>
+                        <!-- Yape Content -->
+                        <div id="yape-content" style="display: none; padding: 18px; border-top: 1px solid rgba(255,255,255,0.05);">
+                            <div id="yape-actual-content" style="display: none;">
                             <div style="background: rgba(106, 30, 165, 0.05); border: 1px solid rgba(106, 30, 165, 0.1); border-radius: 12px; padding: 15px; margin-bottom: 20px; text-align: center;">
                                 <div style="font-size: 0.75rem; color: #888; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px;">Pagas en total (Soles)</div>
                                 <div id="yape-total-value" style="font-size: 1.6rem; font-weight: 800; color: #fff;">S/ 0.00</div>
@@ -257,34 +304,33 @@
                         </div>
                     </div>
                 </div>
-            </div>
-
-            <div style="margin-top: 32px; text-align: center; font-size: 0.7rem; color: #444; line-height: 1.4;">
-                Tus datos están seguros. Procesamos la información siguiendo nuestra <a href="#" style="color: #666; text-decoration: underline;">Política de Privacidad</a>.
-            </div>
-        </section>
-    </main>
-
-    <!-- Empty Cart State -->
-    <div id="empty-cart-state" style="display: none;">
-        <div class="empty-state-container">
-            <div class="empty-state-card">
-                <div class="empty-icon-wrapper">
-                    <i class="bi bi-cart-x"></i>
                 </div>
-                <h2>Tu carrito está vacío</h2>
-                <p>Parece que aún no has añadido ningún beat o kit a tu carrito. ¡Explora nuestra tienda y encuentra tu próximo hit!</p>
-                <div class="empty-actions">
-                    <a href="/explorar.html" class="btn-primary">
-                        <i class="bi bi-search"></i> Explorar Tienda
-                    </a>
+            </section>
+        </div> <!-- END #checkout-container -->
+
+        <!-- ==================== EMPTY CART STATE ==================== -->
+        <div id="empty-cart-state" style="display: none; padding: 40px 20px; text-align: center; max-width: 650px; margin: 0 auto; width: 100%;">
+            <div class="empty-state-card" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); padding: 40px; border-radius: 24px; margin-bottom: 40px;">
+                <div class="empty-icon-wrapper" style="width: 80px; height: 80px; background: rgba(139, 92, 246, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 24px;">
+                    <i class="bi bi-cart-x" style="font-size: 2.5rem; color: #8b5cf6;"></i>
+                </div>
+                <h2 style="font-size: 1.5rem; font-weight: 800; margin-bottom: 8px; color: #fff;">Tu carrito está vacío</h2>
+                <p style="color: #888; margin-bottom: 30px; font-size: 0.85rem;">Aún no tienes beats o kits en tu carrito.</p>
+                <a href="/index.html" class="btn-checkout-global" style="display: inline-flex; align-items: center; gap: 10px; padding: 14px 30px; border-radius: 12px; text-decoration: none; width: auto; font-size: 0.9rem; margin: 0 auto;">
+                    <i class="bi bi-search"></i> Explorar Tienda
+                </a>
+            </div>
+
+            <!-- Recommendations Section -->
+            <div id="empty-cart-recommendations" style="text-align: left;">
+                <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 20px; color: #fff;">Recomendados para ti</h3>
+                <div id="checkout-recommendations-grid" class="explore-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 16px;">
+                    <!-- Skeletons & Items injected by JS -->
                 </div>
             </div>
         </div>
-        
-        <!-- Sección de Recomendados (se llena dinámicamente) -->
-        <div id="checkout-recommendations" style="width: 100%; max-width: 1400px; margin: 0 auto 80px auto;"></div>
-    </div>
+    </main>
+
 
     <style>
         .empty-state-container {

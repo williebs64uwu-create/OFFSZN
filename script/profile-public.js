@@ -1482,17 +1482,16 @@ function isPresetProduct(p) {
 function getProductAudio(product) {
     if (!product) return '';
 
-    // Prioritize "After" audio for presets if available
-    if (isPresetProduct(product) && product.audio_after_url) {
-        return product.audio_after_url;
+    const isPreset = isPresetProduct(product);
+
+    // For presets, we try after -> before -> generic
+    if (isPreset) {
+        if (product.audio_after_url) return product.audio_after_url;
+        if (product.audio_before_url) return product.audio_before_url;
+        if (product.audio_url) return product.audio_url;
     }
 
-    // Fallback to "Before" audio for presets specifically
-    if (isPresetProduct(product) && product.audio_before_url) {
-        return product.audio_before_url;
-    }
-
-    // Comprehensive fallback chain
+    // Comprehensive fallback chain for all products
     return product.mp3_url ||
         product.audio_url ||
         product.download_url_mp3 ||
@@ -1503,6 +1502,7 @@ function getProductAudio(product) {
         product.url_file ||
         product.cloud_url ||
         product.audio_before_url ||
+        product.audio_after_url ||
         (product.track_data ? product.track_data.audio_url : '') ||
         '';
 }
