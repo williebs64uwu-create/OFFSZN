@@ -4958,201 +4958,6 @@
                 }
 
                 // Guardar draft automíticamente (esto subiríel archivo)
-                // await saveDraftAuto(); // 🔥 DISABLED AUTO-SAVE
-
-            } catch (error) {
-                        waveformAfter.style.display = targetTab === 'after' ? 'block' : 'none'; // Force style
-                    }
-                });
-            });
-        }
-
-        function initFileHandlers() {
-            setupFileUpload('coverDropZone', 'coverInput', 'cover');
-            setupFileUpload('fileDropZone', 'fileInput', 'kit');
-            setupFileUpload('audioDropZone', 'audioInput', 'audio');
-            setupFileUpload('audioDropZoneAfter', 'audioInputAfter', 'audio_after');
-        }
-        function setupFileUpload(dropZoneId, inputId, type) {
-            const dropZone = document.getElementById(dropZoneId);
-            const input = document.getElementById(inputId);
-
-            dropZone.addEventListener('click', () => input.click());
-            dropZone.addEventListener('dragover', e => {
-                e.preventDefault();
-                dropZone.classList.add('dragover');
-            });
-            dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
-            dropZone.addEventListener('drop', e => {
-                e.preventDefault();
-                dropZone.classList.remove('dragover');
-                handleFile(e.dataTransfer.files[0], type, dropZone);
-            });
-            input.addEventListener('change', e => {
-                handleFile(e.target.files[0], type, dropZone);
-                setTimeout(() => e.target.value = '', 100);
-            });
-        }
-        // Helper to get audio duration
-        function getAudioDuration(file) {
-            return new Promise((resolve) => {
-                const audio = new Audio(URL.createObjectURL(file));
-                audio.onloadedmetadata = () => {
-                    resolve(audio.duration);
-                };
-                audio.onerror = () => resolve(0); // Fail safe
-            });
-        }
-
-        async function handleFile(file, type, dropZone) {
-            if (!file) {
-                console.warn('?? No se recibiíarchivo');
-                return;
-            }
-
-            // ?? Prevenir uploads duplicados
-            if (uploadsInProgress[type]) {
-                console.warn(`?? Ya hay un upload de ${type} en progreso`);
-                return; // ? NO mostrar toast, solo prevenir silenciosamente
-            }
-
-            uploadsInProgress[type] = true;
-            dropZone.classList.add('uploading');
-
-            try {
-                // ?? Limpiar errores previos usando helper
-                if (typeof clearInlineError === 'function') {
-                    clearInlineError(dropZone.id);
-                }
-
-                // ?? FORCE REMOVE any local error message safely
-                const parent = dropZone.closest('.form-group') || dropZone.parentNode;
-                const errorMsg = parent.querySelector('.error-message');
-                if (errorMsg) errorMsg.style.display = 'none';
-
-                if (type === 'kit' && !file.name.match(/\.(rar|zip)$/i)) {
-                    showInlineError(dropZone.id, 'Solo archivos .rar o .zip');
-                    dropZone.classList.remove('uploading');
-                    delete uploadsInProgress[type];
-                    return;
-                }
-
-                if ((type === 'audio' || type === 'audio_after') && !file.name.match(/\.(mp3|wav)$/i)) {
-                    showInlineError(dropZone.id, 'Solo archivos .mp3 o .wav');
-                    dropZone.classList.remove('uploading');
-                    delete uploadsInProgress[type];
-                    return;
-                }
-
-
-
-                if (type === 'cover' && !file.type.startsWith('image/')) {
-                    showInlineError(dropZone.id, 'Solo imágenes válidas');
-                    dropZone.classList.remove('uploading');
-                    delete uploadsInProgress[type];
-                    return;
-                }
-
-                // Límites de tamaño
-                const MAX_SIZES = {
-                    cover: 10 * 1024 * 1024,
-                    kit: 50 * 1024 * 1024,
-                    audio: 50 * 1024 * 1024,
-                    audio_after: 50 * 1024 * 1024
-                };
-
-                if (file.size > MAX_SIZES[type]) {
-                    const sizeMB = (MAX_SIZES[type] / (1024 * 1024)).toFixed(0);
-                    showInlineError(dropZone.id, `El archivo excede el límite de ${sizeMB}MB`);
-                    dropZone.classList.remove('uploading');
-                    delete uploadsInProgress[type];
-                    return;
-                }
-
-                // ?? Cover: Abrir modal de recorte
-                if (type === 'cover') {
-                    openCropModal(file);
-                    return;
-                }
-
-                // ?? CRíTICO: Borrar archivo anterior SOLO si ya fue subido a Supabase
-                if (currentDraftId && filesUploaded[type]) {
-                    try {
-                        let columnName = 'preset_url';
-                        if (type === 'audio') columnName = 'audio_before_url';
-                        if (type === 'audio_after') columnName = 'audio_after_url';
-
-                        const { data: draft } = await supabaseClient
-                            .from('preset_drafts')
-                            .select(columnName)
-                            .eq('id', currentDraftId)
-                            .single();
-
-                        const oldUrl = draft?.[columnName];
-
-                    } catch (e) {
-                        // Silent error handling
-                    }
-                }
-
-                // Guardar archivo en memoria
-                formData.files[type] = file;
-                filesUploaded[type] = false; // ? Marcar como NO subido aín
-
-                isDirty = true;
-
-                // Procesar según tipo
-                if (type === 'audio' || type === 'audio_after') {
-                    const ws = type === 'audio' ? wavesurferBefore : wavesurferAfter;
-                    ws.load(URL.createObjectURL(file));
-
-                    // Mostrar el contenedor principal y el específico
-                    const container = document.getElementById('waveformContainer');
-                    const before = document.getElementById('waveformBefore');
-                    const after = document.getElementById('waveformAfter');
-
-                    if (container) container.style.display = 'block';
-                    document.getElementById('playerPlaceholder').style.display = 'none';
-                    document.getElementById('playPauseBtn').disabled = false;
-
-                    // Ajustar visibilidad según el tab actual
-                    if (type === 'audio' && currentAudioTab === 'before') {
-                        before.classList.remove('hidden');
-                        after.classList.add('hidden');
-                    } else if (type === 'audio_after' && currentAudioTab === 'after') {
-                        before.classList.add('hidden');
-                        after.classList.remove('hidden');
-                    }
-
-                    // Asegurar botón de Play al cargar nuevo audio
-                    const playPauseBtn = document.getElementById('playPauseBtn');
-                    if (playPauseBtn) {
-                        const playIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>`;
-                        playPauseBtn.innerHTML = playIcon;
-                        isPlaying = false;
-                    }
-                }
-
-                // Mostrar preview
-                let containerId = 'filePreviewContainer';
-                if (type === 'audio') containerId = 'audioPreviewContainer';
-                if (type === 'audio_after') containerId = 'audioPreviewContainerAfter';
-
-                const container = document.getElementById(containerId);
-
-                if (container) {
-                    container.innerHTML = `
-                    <div class="file-preview">
-                    <div class="file-info">
-                        <div class="file-name">${file.name}</div>
-                        <div class="file-size">${(file.size / (1024 * 1024)).toFixed(2)} MB</div>
-                    </div>
-                    <button type="button" class="remove-file" onclick="removeFile('${type}')" title="Eliminar archivo">?</button>
-                    </div>
-                    `;
-                }
-
-                // Guardar draft automíticamente (esto subiríel archivo)
 // await saveDraftAuto(); // 🔥 DISABLED AUTO-SAVE
 
             } catch (error) {
@@ -8656,9 +8461,9 @@
             }
 
             // Validation of uploads logic for Edit Mode:
-            // filesUploaded.kit/audio MUST be true (either restored or new)
-            if (!filesUploaded.kit || !filesUploaded.audio) {
-                showToast('Faltan archivos por subir (Kit o Audio)', 'error');
+            // Either the kit was already uploaded (filesUploaded.kit) or a new one is selected (formData.files.kit)
+            if (!filesUploaded.kit && !formData.files.kit) {
+                showToast('Falta archivo del Preset', 'error');
                 window.isPublishing = false;
                 activeBtn.disabled = false;
                 activeBtn.innerHTML = originalText;
@@ -8693,7 +8498,7 @@
                 };
 
                 // 1. Upload NEW Cover if exists
-                if (formData.coverBlob) {
+                if (formData.coverBlob && !filesUploaded.cover) {
                     // ?? CLEANUP OLD COVER
                     if (window.originalProductData && window.originalProductData.image_url) {
                         console.log('?? [CLEANUP] Eliminando portada anterior...');
