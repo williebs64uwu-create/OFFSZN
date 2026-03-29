@@ -361,7 +361,7 @@ export const incrementViewCount = async (req, res) => {
             .from('page_views')
             .insert({
                 user_id: product.producer_id,
-                product_id: productId,
+                path: `/producto/${productId}`,
                 viewed_at: new Date().toISOString()
             });
 

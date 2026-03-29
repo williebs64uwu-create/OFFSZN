@@ -6455,7 +6455,7 @@
                 */
 
                 // 3. Cover Image
-                if (!formData.coverBlob) {
+                if (!formData.coverBlob && !filesUploaded.cover) {
                     showInlineError('coverDropZone', 'Debes subir una portada (1080x1080px)');
                     errors.push('Falta la imagen de portada');
                     isValid = false;
@@ -8453,6 +8453,7 @@
 
             // Validations
             if (!validateStep(1) || !validateStep(2) || !validateStep(3)) {
+                if (overlay) overlay.style.display = 'none';
                 showToast('Completa todos los campos correctamente', 'error');
                 window.isPublishing = false;
                 activeBtn.disabled = false;
@@ -8463,6 +8464,7 @@
             // Validation of uploads logic for Edit Mode:
             // Either the kit was already uploaded (filesUploaded.kit) or a new one is selected (formData.files.kit)
             if (!filesUploaded.kit && !formData.files.kit) {
+                if (overlay) overlay.style.display = 'none';
                 showToast('Falta archivo del Preset', 'error');
                 window.isPublishing = false;
                 activeBtn.disabled = false;
@@ -8650,6 +8652,7 @@
 
             } catch (error) {
                 console.error('Error updating:', error);
+                if (overlay) overlay.style.display = 'none';
                 showToast('Error al actualizar: ' + error.message, 'error');
                 if (activeBtn) {
                     activeBtn.disabled = false;

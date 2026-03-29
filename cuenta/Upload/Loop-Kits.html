@@ -6151,7 +6151,8 @@
                 // ========================================
                 if (data.cover_url) {
                     try {
-                        const finalUrl = await getAuthorizedUrl(data.cover_url, data.storage_version || 'v1', data.id);
+                        // ?? Usa R2 Version o Storage Version
+                        const finalUrl = await getAuthorizedUrl(data.cover_url, data.storage_version || data.r2_version || 'v1', data.id);
                         if (finalUrl) {
                             const response = await fetch(finalUrl);
                             if (response.ok) {
@@ -6182,7 +6183,8 @@
                 // ========================================
                 if (data.kit_url) {
                     try {
-                        const finalUrl = await getAuthorizedUrl(data.kit_url, data.storage_version || 'v1', data.id);
+                        // ?? Use r2_version
+                        const finalUrl = await getAuthorizedUrl(data.kit_url, data.storage_version || data.r2_version || 'v1', data.id);
 
                         if (finalUrl) {
                             const response = await fetch(finalUrl);
@@ -6222,7 +6224,8 @@
                 // ========================================
                 if (data.audio_url) {
                     try {
-                        const finalUrl = await getAuthorizedUrl(data.audio_url, data.storage_version || 'v1', data.id); // ?? FIX: Use getAuthorizedUrl instead of Supabase Storage
+                        // ?? FIX: Use getAuthorizedUrl instead of Supabase Storage with r2_version support
+                        const finalUrl = await getAuthorizedUrl(data.audio_url, data.storage_version || data.r2_version || 'v1', data.id);
 
                         if (finalUrl) {
                             const response = await fetch(finalUrl);
@@ -6944,9 +6947,11 @@
                         discount_amount: null,
                         discount_type: 'fixed',
                         collaborators: collaborators.length > 0 ? collaborators : null,
+                        r2_version: 'v2',
                         image_url,
                         kit_url,
                         audio_url,
+                        r2_version: 'v2',
                         product_type: 'loopkit',
                         status: 'approved',
                         downloads: 0,
