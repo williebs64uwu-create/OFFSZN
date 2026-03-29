@@ -2453,6 +2453,90 @@
             }
         } catch(e) { console.warn('Sidebar profile load error:', e); }
     })();
+
+    // --- SUBSCRIPTION MANAGEMENT ---
+    async function loadSubscriptionInfo(userId) {
+        if(!window.supabaseClient) return;
+        try {
+            const { data: sub, error } = await window.supabaseClient
+                .from('subscriptions')
+                .select('*')
+                .eq('user_id', userId)
+                .single();
+
+            if (error || !sub) {
+                console.log("No subscription info found for UI.");
+                return;
+            }
+
+            // Show card
+            const card = document.getElementById('subscription-status-card');
+            if(card) {
+                card.style.display = 'block';
+                // Trigger CSS transitions
+                setTimeout(() => card.style.opacity = '1', 10);
+            }
+
+            // Set Data
+            const statusEl = document.getElementById('subStatus');
+            const planEl = document.getElementById('subPlanName');
+            const renewalEl = document.getElementById('subRenewal');
+            const daysEl = document.getElementById('daysRemaining');
+            const progressEl = document.getElementById('subProgressBar');
+
+            const isTrial = sub.status === 'trialing';
+            const isActive = sub.status === 'active' || isTrial;
+
+            if (statusEl) {
+                statusEl.textContent = isActive ? 'Activo' : 'Inactivo';
+                statusEl.style.background = isActive ? 'rgba(0, 234, 119, 0.1)' : 'rgba(239, 68, 68, 0.1)';
+                statusEl.style.color = isActive ? '#00ea77' : '#ef4444';
+                statusEl.style.borderColor = isActive ? 'rgba(0, 234, 119, 0.2)' : 'rgba(239, 68, 68, 0.2)';
+            }
+
+            if (planEl) planEl.textContent = sub.plan_type || 'Starter';
+
+            if (sub.current_period_end) {
+                const endDate = new Date(sub.current_period_end);
+                if (renewalEl) {
+                    renewalEl.textContent = endDate.toLocaleDateString('es-ES', { 
+                        day: 'numeric', 
+                        month: 'short', 
+                        year: 'numeric' 
+                    });
+                }
+
+                // Calculate days remaining
+                const now = new Date();
+                const diffTime = endDate - now;
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                
+                if (daysEl) daysEl.textContent = Math.max(0, diffDays);
+
+                // Progress Bar (Assuming 30 day cycle for visualization)
+                if (progressEl) {
+                    const percentage = Math.min(100, Math.max(0, (diffDays / 30) * 100));
+                    progressEl.style.width = percentage + '%';
+                    if (diffDays < 5) progressEl.style.background = '#ef4444';
+                }
+            }
+        } catch (err) {
+            console.error("Error loading subscription:", err);
+        }
+    }
+
+    function openCancelSupport(e) {
+        if(e) e.preventDefault();
+        // Redirect to help center with pre-filled cancel intent
+        window.location.href = '/legal/ayuda-y-contacto.html?intent=cancel_sub';
+    }
+
+    // Initialize logic within loadProfile or similar
+    const originalLoadProfile = window.loadProfile;
+    window.loadProfile = async function(userId) {
+        if(typeof originalLoadProfile === 'function') await originalLoadProfile(userId);
+        loadSubscriptionInfo(userId);
+    };
     </script>
 </body>
 

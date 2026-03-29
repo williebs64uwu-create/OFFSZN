@@ -1880,16 +1880,15 @@ async function renderTrending(items, user, collabStats = {}) {
         const isLiked = window.FavoritesManager ? window.FavoritesManager.isLiked(prod.id) : false;
         const heartBtn = document.createElement('button');
         heartBtn.className = 'ots-heart-btn';
+        heartBtn.dataset.id = prod.id;
         if (isLiked) heartBtn.classList.add('active');
         heartBtn.innerHTML = `<i class="bi ${isLiked ? 'bi-heart-fill' : 'bi-heart'}"></i>`;
         heartBtn.onclick = (e) => {
             e.preventDefault(); e.stopPropagation();
             if (window.FavoritesManager) {
+                // FavoritesManager already applies the optimistic visual update 
+                // instantly to the button element passed to it.
                 window.FavoritesManager.toggleLike(prod.id, heartBtn);
-                const icon = heartBtn.querySelector('i');
-                const currentlyLiked = icon.classList.contains('bi-heart-fill');
-                icon.className = currentlyLiked ? 'bi bi-heart' : 'bi bi-heart-fill';
-                heartBtn.classList.toggle('active');
             }
         };
         coverDiv.appendChild(heartBtn);
@@ -2737,6 +2736,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // 2. Favorites Subscription (Sync UI state)
     if (window.FavoritesManager) {
         window.FavoritesManager.subscribe((likedIds) => {
+            // Update List View Rows
             document.querySelectorAll('.list-row[data-id]').forEach(row => {
                 const prodId = row.dataset.id;
                 const isLiked = likedIds.has(String(prodId));
@@ -2747,6 +2747,24 @@ document.addEventListener('DOMContentLoaded', () => {
                     icon.className = isLiked ? 'bi bi-heart-fill' : 'bi bi-heart';
                     btn.appendChild(icon);
                     btn.style.color = isLiked ? '#ef4444' : '';
+                }
+            });
+
+            // Update Grid View Cards (Optimistic Sync)
+            document.querySelectorAll('.ots-heart-btn[data-id]').forEach(btn => {
+                const prodId = btn.dataset.id;
+                const isLiked = likedIds.has(String(prodId));
+                
+                // Set active class
+                btn.classList.toggle('active', isLiked);
+                
+                // Set icon
+                btn.innerHTML = `<i class="bi ${isLiked ? 'bi-heart-fill' : 'bi-heart'}"></i>`;
+                
+                // If the element expects inline style for red:
+                const icon = btn.querySelector('i');
+                if (icon) {
+                    icon.style.color = isLiked ? '#ef4444' : '';
                 }
             });
         });

@@ -67,23 +67,27 @@ export const toggleProductLike = async (req, res) => {
         const userId = req.user.userId;
         const productId = req.params.id;
 
-        // Check if already liked
-        const { data: existing, error: checkError } = await supabase
+        // Check if already liked (limit 1 to prevent multiple rows error)
+        const { data: existingLikes, error: checkError } = await supabase
             .from('likes')
             .select('id')
             .eq('user_id', userId)
             .eq('target_id', productId)
             .eq('target_type', 'product')
-            .maybeSingle();
+            .limit(1);
 
         if (checkError) throw checkError;
+
+        const existing = existingLikes && existingLikes.length > 0 ? existingLikes[0] : null;
 
         if (existing) {
             // UNLIKE
             const { error: deleteError } = await supabase
                 .from('likes')
                 .delete()
-                .eq('id', existing.id);
+                .eq('user_id', userId)
+                .eq('target_id', productId)
+                .eq('target_type', 'product');
 
             if (deleteError) throw deleteError;
             return res.status(200).json({ liked: false });
@@ -97,7 +101,13 @@ export const toggleProductLike = async (req, res) => {
                     target_type: 'product'
                 });
 
-            if (insertError) throw insertError;
+            if (insertError) {
+                // Return 200 anyway if it's a unique constraint violation (already liked)
+                if (insertError.code === '23505') {
+                     return res.status(200).json({ liked: true });
+                }
+                throw insertError;
+            }
 
             // --- SERVER-SIDE NOTIFICATION ---
             try {

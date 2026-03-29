@@ -52,7 +52,7 @@ export const sendOffsznEmail = async ({ to, subject, html, fromName = 'OFFSZN', 
         if (type === 'personal') {
             transporter = personalTransporter;
             fromAddress = GMAIL_USER;
-            if (!fromName || fromName === 'OFFSZN') finalFromName = 'OFFSZN Studio';
+            if (!fromName || fromName === 'OFFSZN') finalFromName = 'OFFSZN';
 
             const info = await transporter.sendMail({
                 from: `"${finalFromName}" <${fromAddress}>`,
