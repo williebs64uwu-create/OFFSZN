@@ -671,13 +671,24 @@ const PaymentSettings = {
                 body: JSON.stringify({ phone, action: 'send' })
             });
 
+            const result = await response.json();
+
+            // 🔥 BYPASS LOGIC: Si el backend detectó Trial de Twilio, ya guardó el número
+            if (result.bypassed) {
+                console.log("Bypass mode detected:", result.message);
+                this.data.yapePhone = phone;
+                this.renderYapeStatus();
+                this.toggleYapeEdit(false);
+                this.closeVerifyModal();
+                if (window.showToast) window.showToast("Número guardado exitosamente.", "success");
+                return;
+            }
+
             if (!response.ok) {
-                const errData = await response.json();
-                let errMsg = errData.error || 'Error al enviar SMS';
-                if (errData.details) {
-                    console.error("Twilio Error Details:", errData.details);
-                    // If it's a Twilio specific error, show it
-                    if (errData.details.message) errMsg += `: ${errData.details.message}`;
+                let errMsg = result.error || 'Error al enviar SMS';
+                if (result.details) {
+                    console.error("Twilio Error Details:", result.details);
+                    if (result.details.message) errMsg += `: ${result.details.message}`;
                 }
                 throw new Error(errMsg);
             }
