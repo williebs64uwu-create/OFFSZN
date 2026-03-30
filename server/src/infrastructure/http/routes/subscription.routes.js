@@ -1,6 +1,18 @@
 import { Router } from 'express';
 import { authenticateTokenMiddleware } from '../../middlewares/authenticateTokenMiddleware.js';
-import { processSubscriptionPayment, handleSubscriptionWebhook, createSubscriptionPreference, getPublicKey, createPayPalSubscriptionOrder, capturePayPalSubscriptionOrder, subscribePayPalSubscription } from '../controllers/SubscriptionController.js';
+import { 
+    processSubscriptionPayment, 
+    handleSubscriptionWebhook, 
+    createSubscriptionPreference, 
+    getPublicKey, 
+    createPayPalSubscriptionOrder, 
+    capturePayPalSubscriptionOrder, 
+    subscribePayPalSubscription,
+    cancelSubscription,
+    reactivateSubscription,
+    getSubscriptionStatus,
+    checkRefundEligibility
+} from '../controllers/SubscriptionController.js';
 
 const router = Router();
 
@@ -23,6 +35,31 @@ router.post(
 
 // Route to handle Mercado Pago Webhooks for subscriptions
 router.post('/subscriptions/mercadopago-webhook', handleSubscriptionWebhook);
+
+// --- Subscription Lifecycle & Status ---
+router.get(
+    '/subscriptions/status',
+    authenticateTokenMiddleware,
+    getSubscriptionStatus
+);
+
+router.post(
+    '/subscriptions/cancel',
+    authenticateTokenMiddleware,
+    cancelSubscription
+);
+
+router.post(
+    '/subscriptions/reactivate',
+    authenticateTokenMiddleware,
+    reactivateSubscription
+);
+
+router.get(
+    '/subscriptions/refund-check',
+    authenticateTokenMiddleware,
+    checkRefundEligibility
+);
 
 // --- PayPal Subscription Routes ---
 router.post(

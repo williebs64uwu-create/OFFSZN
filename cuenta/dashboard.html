@@ -598,9 +598,17 @@
             overflow: hidden;
             transition: all 0.3s ease;
         }
+        .sub-card-premium.canceled {
+            background: linear-gradient(145deg, rgba(15, 10, 10, 0.95), rgba(5, 0, 0, 0.95));
+            border-color: rgba(239, 68, 68, 0.2);
+            box-shadow: 0 0 20px rgba(239, 68, 68, 0.05);
+        }
         .sub-card-premium:hover {
             border-color: rgba(255, 215, 0, 0.3);
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+        .sub-card-premium.canceled:hover {
+            border-color: rgba(239, 68, 68, 0.4);
         }
         .sub-card-premium::before {
             content: '';
@@ -612,22 +620,33 @@
             background: radial-gradient(circle, rgba(255, 215, 0, 0.05) 0%, transparent 70%);
             pointer-events: none;
         }
+        .sub-card-premium.canceled::before {
+            background: radial-gradient(circle, rgba(239, 68, 68, 0.05) 0%, transparent 70%);
+        }
         .sub-badge {
             display: inline-flex;
             align-items: center;
             padding: 4px 10px;
             border-radius: 100px;
             font-size: 11px;
-            font-weight: 700;
+            font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.5px;
             margin-bottom: 12px;
-            border: 1px solid transparent;
+        }
+        .sub-badge.status-active {
+            background: rgba(34, 197, 94, 0.1);
+            color: #22c55e;
+            border: 1px solid rgba(34, 197, 94, 0.2);
+        }
+        .sub-badge.status-canceled {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.2);
         }
         .sub-plan-title {
-            font-family: var(--font-display);
-            font-size: 20px;
-            font-weight: 800;
+            font-size: 18px;
+            font-weight: 700;
             color: #fff;
             margin-bottom: 4px;
             display: flex;
@@ -636,49 +655,62 @@
         }
         .sub-plan-title i {
             color: #FFD700;
-            font-size: 16px;
         }
         .sub-expiry {
-            font-size: 13px;
+            font-size: 12px;
             color: #888;
-            margin-bottom: 20px;
+            margin-bottom: 16px;
         }
         .sub-progress-container {
-            height: 6px;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 10px;
-            margin-bottom: 8px;
-            overflow: hidden;
+            margin-bottom: 16px;
+        }
+        .sub-progress-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            color: #aaa;
+            margin-bottom: 6px;
         }
         .sub-progress-bar {
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        .sub-progress-fill {
             height: 100%;
             background: linear-gradient(90deg, #FFD700, #FFA500);
-            border-radius: 10px;
+            border-radius: 3px;
             width: 0%;
             transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        .sub-days-left {
-            font-size: 12px;
-            color: #666;
-            display: flex;
-            justify-content: space-between;
+        .sub-card-premium.canceled .sub-progress-fill {
+            background: linear-gradient(90deg, #ef4444, #991b1b);
         }
         .sub-actions {
-            margin-top: 20px;
-            padding-top: 15px;
-            border-top: 1px solid rgba(255, 255, 255, 0.05);
             display: flex;
-            justify-content: space-between;
-            align-items: center;
+            gap: 12px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            padding-top: 16px;
+            margin-top: 8px;
         }
-        .btn-cancel-sub {
+        .sub-link {
             font-size: 12px;
-            color: #555;
+            color: #aaa;
             text-decoration: none;
             transition: color 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 4px;
         }
-        .btn-cancel-sub:hover {
+        .sub-link:hover {
+            color: #fff;
+        }
+        .sub-link.danger:hover {
             color: #ef4444;
+        }
+        .sub-link.primary:hover {
+            color: #FFD700;
         }
 
         /* Filter Dropdown */
@@ -1324,9 +1356,8 @@
 
         <!-- 1. GESTIÓN -->
         
-        <a href="dashboard.html" class="sidebar-icon-btn active" data-title="Dashboard"><i
-                class="bi bi-grid-fill"></i> <span>Dashboard</span></a>
-        <a href="mis-kits.html" class="sidebar-icon-btn" data-title="Mis Beats/Kits"><i class="bi bi-disc-fill"></i> <span>Mis Beats/Kits</span></a>
+        <a href="/cuenta/" class="sidebar-icon-btn active" data-title="Dashboard"><i class="bi bi-house-door-fill"></i> <span>Dashboard</span></a>
+        <a href="/cuenta/mis-kits" class="sidebar-icon-btn" data-title="Catálogo"><i class="bi bi-folder-fill"></i> <span>Catálogo</span></a>
         <a href="subir-kit.html" class="sidebar-icon-btn" data-title="Subir"><i
                 class="bi bi-cloud-arrow-up-fill"></i> <span>Subir</span></a>
 
@@ -1526,26 +1557,32 @@
             <!-- Management Sidebar -->
             <aside class="management-sidebar">
 
-                <!-- Subscription Status Card (Dynamic) -->
-                <div id="subscription-status-card" class="sub-card-premium" style="display: none; opacity: 0; transition: opacity 0.5s ease;">
-                    <div id="subStatus" class="sub-badge">Cargando...</div>
+                <!-- SUBSCRIPTION STATUS CARD (SIDECAR) -->
+                <div id="subscription-status-card" class="sub-card-premium" style="display: none;">
+                    <div id="sub-badge" class="sub-badge">---</div>
                     <div class="sub-plan-title">
-                        <i class="bi bi-patch-check-fill"></i>
-                        <span id="subPlanName">Plan</span>
+                        <i class="bi bi-star-fill"></i>
+                        <span id="sub-plan-name">---</span>
                     </div>
-                    <div class="sub-expiry">Vence el <span id="subRenewal">...</span></div>
+                    <div id="sub-expiry-date" class="sub-expiry">---</div>
                     
                     <div class="sub-progress-container">
-                        <div id="subProgressBar" class="sub-progress-bar"></div>
-                    </div>
-                    <div class="sub-days-left">
-                        <span>Progreso del ciclo</span>
-                        <span><strong id="daysRemaining">0</strong> días restantes</span>
+                        <div class="sub-progress-label">
+                            <span id="sub-progress-text">Progreso del periodo</span>
+                            <span id="sub-progress-pct">0%</span>
+                        </div>
+                        <div class="sub-progress-bar">
+                            <div id="sub-progress-fill" class="sub-progress-fill" style="width: 0%;"></div>
+                        </div>
                     </div>
 
                     <div class="sub-actions">
-                        <a href="/cuenta/planes.html" style="font-size:12px; color:var(--accent-purple); text-decoration:none; font-weight:600;">Mejorar Plan</a>
-                        <a href="#" onclick="openCancelSupport(event)" class="btn-cancel-sub">Cancelar</a>
+                        <a href="javascript:void(0)" id="sub-main-action" class="sub-link" onclick="handleSubscriptionAction()">
+                            <i class="bi bi-x-circle"></i> <span>Cancelar</span>
+                        </a>
+                        <a href="javascript:void(0)" id="sub-refund-link" class="sub-link danger" style="display: none; margin-left: auto;" onclick="requestRefund()">
+                            <i class="bi bi-arrow-counterclockwise"></i> <span>Reembolso</span>
+                        </a>
                     </div>
                 </div>
 
@@ -2547,116 +2584,146 @@
         } catch(e) { console.warn('Sidebar profile load error:', e); }
     })();
 
-    // --- SUBSCRIPTION MANAGEMENT ---
-    async function loadSubscriptionInfo(userId) {
-        if(!window.supabaseClient) return;
+    // --- SUBSCRIPTION MANAGEMENT (LIFECYCLE) ---
+    async function loadSubscriptionInfo() {
+        const tokenStr = localStorage.getItem('sb-qtjpvztpgfymjhhpoouq-auth-token');
+        if (!tokenStr) return;
+
         try {
-            // Standardize select to avoid 406 errors and handle specifically required fields
-            const { data: sub, error } = await window.supabaseClient
-                .from('subscriptions')
-                .select('plan_id, status, current_period_end, provider')
-                .eq('user_id', userId)
-                .eq('status', 'active')
-                .order('created_at', { ascending: false })
-                .limit(1)
-                .maybeSingle();
+            const token = JSON.parse(tokenStr).access_token;
+            // 1. Fetch Status from our Hardened Backend
+            const response = await fetch('/api/subscriptions/status', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const sub = await response.json();
 
-            if (error || !sub) {
-                // Check if user has a plan in profiles as a second source
-                const planData = await window.AuthUtils.getUserPlanData();
-                if (!planData || planData.plan === 'free') {
-                    console.log("No active subscription info found for UI.");
-                    return;
-                }
-                
-                // If profiles has a plan, we can show a basic card or just return
-                // For now, only show the card if there's an explicit subscription record
-                if (planData.plan === 'free') return;
+            if (!sub || sub.status === 'none' || sub.status === 'expired') {
+                 document.getElementById('subscription-status-card').style.display = 'none';
+                 return;
             }
 
-            // Show card
+            // Show card & setup UI
             const card = document.getElementById('subscription-status-card');
-            if(card) {
-                card.style.display = 'block';
-                // Trigger CSS transitions
-                setTimeout(() => card.style.opacity = '1', 10);
-            }
-
-            // Set Data
-            const statusEl = document.getElementById('subStatus');
-            const planEl = document.getElementById('subPlanName');
-            const renewalEl = document.getElementById('subRenewal');
-            const daysEl = document.getElementById('daysRemaining');
-            const progressEl = document.getElementById('subProgressBar');
-
-            const isTrial = sub?.status === 'trialing';
-            const isActive = sub?.status === 'active' || isTrial;
-
-            if (statusEl) {
-                statusEl.textContent = isActive ? 'Activo' : 'Inactivo';
-                statusEl.style.background = isActive ? 'rgba(0, 234, 119, 0.1)' : 'rgba(239, 68, 68, 0.1)';
-                statusEl.style.color = isActive ? '#00ea77' : '#ef4444';
-                statusEl.style.borderColor = isActive ? 'rgba(0, 234, 119, 0.2)' : 'rgba(239, 68, 68, 0.2)';
-            }
-
-            if (planEl) {
-                let displayPlan = 'Starter';
-                if (sub && sub.plan_id) {
-                    const pid = sub.plan_id.toLowerCase();
-                    if (pid.includes('pro')) displayPlan = 'Pro';
-                    else if (pid.includes('starter')) displayPlan = 'Starter';
-                } else {
-                    // Fallback to AuthUtils data
-                    const planData = await window.AuthUtils.getUserPlanData();
-                    displayPlan = planData.plan.charAt(0).toUpperCase() + planData.plan.slice(1);
-                }
-                planEl.textContent = displayPlan;
-            }
-
-            if (sub && sub.current_period_end) {
-                const endDate = new Date(sub.current_period_end);
-                if (renewalEl) {
-                    renewalEl.textContent = endDate.toLocaleDateString('es-ES', { 
-                        day: 'numeric', 
-                        month: 'short', 
-                        year: 'numeric' 
-                    });
-                }
-
-                // Calculate days remaining
-                const now = new Date();
-                const diffTime = endDate - now;
-                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                
-                if (daysEl) daysEl.textContent = Math.max(0, diffDays);
-
-                // Progress Bar (Assuming 30 day cycle for visualization)
-                if (progressEl) {
-                    const percentage = Math.min(100, Math.max(0, (diffDays / 30) * 100));
-                    progressEl.style.width = percentage + '%';
-                    if (diffDays < 5) progressEl.style.background = '#ef4444';
-                }
+            const badge = document.getElementById('sub-badge');
+            const planName = document.getElementById('sub-plan-name');
+            const expiryDate = document.getElementById('sub-expiry-date');
+            const progressFill = document.getElementById('sub-progress-fill');
+            const progressPct = document.getElementById('sub-progress-pct');
+            const mainAction = document.getElementById('sub-main-action');
+            
+            card.style.display = 'block';
+            
+            // Set Plan Name
+            const isPro = sub.plan_id.includes('pro');
+            planName.textContent = isPro ? 'PRO Plan' : 'Starter Plan';
+            
+            // Set Status & Theme
+            const progText = document.getElementById('sub-progress-text');
+            if (sub.status === 'canceled') {
+                card.classList.add('canceled');
+                badge.className = 'sub-badge status-canceled';
+                badge.textContent = 'Cancelada';
+                if (progText) progText.textContent = 'Beneficios finalizan pronto';
+                mainAction.innerHTML = '<i class="bi bi-arrow-repeat"></i> <span>Reactivar</span>';
+                mainAction.className = 'sub-link primary';
+                mainAction.onclick = handleSubscriptionReactivate;
             } else {
-                 if (renewalEl) renewalEl.textContent = 'Mensual';
-                 if (daysEl) daysEl.textContent = '--';
+                card.classList.remove('canceled');
+                badge.className = 'sub-badge status-active';
+                badge.textContent = 'Activa';
+                if (progText) progText.textContent = 'Progreso del periodo';
+                mainAction.innerHTML = '<i class="bi bi-x-circle"></i> <span>Cancelar</span>';
+                mainAction.className = 'sub-link danger';
+                mainAction.onclick = handleSubscriptionCancel;
             }
-        } catch (err) {
-            console.error("Error loading subscription:", err);
+
+            // Calculate Expiry & Progress
+            const expiry = new Date(sub.expiry);
+            const created = sub.created_at ? new Date(sub.created_at) : new Date(Date.now() - 30*24*60*60*1000);
+            const now = new Date();
+            
+            const totalTime = Math.max(1, expiry.getTime() - created.getTime());
+            const elapsed = now.getTime() - created.getTime();
+            const progress = Math.min(100, Math.max(0, (elapsed / totalTime) * 100));
+            const daysLeft = Math.ceil((expiry.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+
+            expiryDate.textContent = `Expira el ${expiry.toLocaleDateString('es-ES', { day: 'numeric', month: 'long' })}`;
+            if (progressFill) progressFill.style.width = `${progress}%`;
+            if (progressPct) progressPct.textContent = `${Math.round(progress)}%`;
+
+            // Check Refund Eligibility (Strict Rule)
+            try {
+                const refundResp = await fetch('/api/subscriptions/refund-check', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const refundStatus = await refundResp.json();
+                if (refundStatus.eligible) {
+                    document.getElementById('sub-refund-link').style.display = 'inline-flex';
+                } else {
+                    document.getElementById('sub-refund-link').style.display = 'none';
+                }
+            } catch(e) { /* ignore refund check errors */ }
+
+        } catch (e) {
+            console.error('Error loading sub info:', e);
         }
     }
 
-    function openCancelSupport(e) {
-        if(e) e.preventDefault();
-        // Redirect to help center with pre-filled cancel intent
-        window.location.href = '/legal/ayuda-y-contacto.html?intent=cancel_sub';
+    async function handleSubscriptionCancel() {
+        const confirmed = confirm('¿Estás seguro de que deseas cancelar tu suscripción? Seguirás teniendo acceso a tus beneficios hasta el final de tu periodo de facturación actual.');
+        if (!confirmed) return;
+
+        const tokenStr = localStorage.getItem('sb-qtjpvztpgfymjhhpoouq-auth-token');
+        if(!tokenStr) return;
+        
+        try {
+            const token = JSON.parse(tokenStr).access_token;
+            const resp = await fetch('/api/subscriptions/cancel', {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const data = await resp.json();
+            if (resp.ok) {
+                alert(data.message);
+                loadSubscriptionInfo(); // Refresh UI
+            } else {
+                alert(data.error || 'Error al cancelar.');
+            }
+        } catch(e) { alert('Fallo de conexión.'); }
     }
 
-    // Initialize logic within loadProfile or similar
-    const originalLoadProfile = window.loadProfile;
-    window.loadProfile = async function(userId) {
-        if(typeof originalLoadProfile === 'function') await originalLoadProfile(userId);
-        loadSubscriptionInfo(userId);
-    };
+    async function handleSubscriptionReactivate() {
+        const confirmed = confirm('¿Deseas reactivar tu suscripción? Se restaurará el acceso completo y la renovación automática.');
+        if (!confirmed) return;
+
+        const tokenStr = localStorage.getItem('sb-qtjpvztpgfymjhhpoouq-auth-token');
+        if(!tokenStr) return;
+        
+        try {
+            const token = JSON.parse(tokenStr).access_token;
+            const resp = await fetch('/api/subscriptions/reactivate', {
+                method: 'POST',
+                headers: { 
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+            const data = await resp.json();
+            if (resp.ok) {
+                alert(data.message);
+                loadSubscriptionInfo(); // Refresh UI
+            } else {
+                alert(data.error || 'Error al reactivar.');
+            }
+        } catch(e) { alert('Fallo de conexión.'); }
+    }
+
+    function requestRefund() {
+        window.location.href = '/centro-de-ayuda/soporte/?intent=refund';
+    }
+
+    // Refresh data periodically or on load
+    setTimeout(loadSubscriptionInfo, 1000);
     </script>
 </body>
 

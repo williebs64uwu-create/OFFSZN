@@ -627,56 +627,85 @@
         // === PLAN STATUS CHECK ===
         async function checkPlanStatus() {
             try {
-                if (!window.supabaseClient) {
-                    console.error('❌ [Planes] Supabase client not initialized.');
-                    return;
-                }
-                console.log('🔍 [Planes] Checking session...');
-                var result = await window.supabaseClient.auth.getSession();
-                var session = result.data.session;
-                if (!session) return;
+                const tokenStr = localStorage.getItem('sb-qtjpvztpgfymjhhpoouq-auth-token');
+                if (!tokenStr) return;
+                const token = JSON.parse(tokenStr).access_token;
 
-                var profileResult = await window.supabaseClient
-                    .from('profiles')
-                    .select('plan')
-                    .eq('id', session.user.id)
-                    .single();
+                // Fetch high-level subscription status
+                const response = await fetch('/api/subscriptions/status', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const sub = await response.json();
 
-                if (profileResult.data) {
-                    var currentPlan = profileResult.data.plan || 'free';
-                    updatePlanButtons(currentPlan);
+                if (sub && sub.status !== 'none' && sub.status !== 'expired') {
+                    updatePlanButtons(sub.plan_id.replace('plan_', ''), sub.status);
                 }
             } catch (err) {
                 console.error('Error checking plan status:', err);
             }
         }
 
-        function updatePlanButtons(activePlan) {
-            var plans = ['free', 'starter', 'pro'];
+        function updatePlanButtons(activePlan, status) {
+            const plans = ['free', 'starter', 'pro'];
             plans.forEach(function(p) {
-                var btn = document.getElementById('btn-plan-' + p);
+                const btn = document.getElementById('btn-plan-' + p);
                 if (!btn) return;
 
-                if (p === activePlan) {
-                    btn.innerText = 'Tu Plan Actual';
-                    btn.disabled = true;
-                    btn.style.opacity = '0.6';
-                    btn.style.cursor = 'default';
-                    btn.style.background = '#222';
-                    btn.style.color = '#888';
-                    btn.style.border = '1px solid #333';
-                    btn.removeAttribute('onclick');
+                if (activePlan.includes(p)) {
+                    if (status === 'canceled') {
+                        // Special Case: Canceled but active benefits
+                        btn.innerText = 'Reactivar';
+                        btn.disabled = false;
+                        btn.style.opacity = '1';
+                        btn.style.cursor = 'pointer';
+                        btn.style.background = '#fff';
+                        btn.style.color = '#000';
+                        btn.onclick = () => handleSubscriptionReactivate();
+                    } else {
+                        // Truly active
+                        btn.innerText = 'Tu Plan Actual';
+                        btn.disabled = true;
+                        btn.style.opacity = '0.6';
+                        btn.style.cursor = 'default';
+                        btn.style.background = '#222';
+                        btn.style.color = '#888';
+                        btn.style.border = '1px solid #333';
+                        btn.removeAttribute('onclick');
+                    }
                 }
             });
         }
 
+        async function handleSubscriptionReactivate() {
+            const confirmed = confirm('¿Deseas reactivar tu suscripción? Se restaurará el acceso completo y la renovación automática.');
+            if (!confirmed) return;
+
+            const tokenStr = localStorage.getItem('sb-qtjpvztpgfymjhhpoouq-auth-token');
+            if(!tokenStr) return;
+            
+            try {
+                const token = JSON.parse(tokenStr).access_token;
+                const resp = await fetch('/api/subscriptions/reactivate', {
+                    method: 'POST',
+                    headers: { 
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                const data = await resp.json();
+                if (resp.ok) {
+                    alert(data.message);
+                    checkPlanStatus(); // Refresh
+                } else {
+                    alert(data.error || 'Error al reactivar.');
+                }
+            } catch(e) { alert('Fallo de conexión.'); }
+        }
+
         // === INIT ===
-        // Set currency toggle to saved state
         setCurrency(currentCurrency);
 
-        // Check plan status after DOM is ready
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('🚀 [Planes] Initializing...');
             checkPlanStatus();
         });
     </script>

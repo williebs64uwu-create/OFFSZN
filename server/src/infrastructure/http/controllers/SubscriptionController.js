@@ -371,18 +371,42 @@ export const capturePayPalSubscriptionOrder = async (req, res) => {
 
         console.log(`✅ [PayPal Sub] Payment verified: $${capturedAmount.value} USD for ${plan} (${interval}). Upgrading user ${userId}...`);
 
-        // 3. Upgrade user plan
+        // 3. HARDENING: Calculate Duration Stacking / Lifecycle
+        const { data: recentSubs, error: recentError } = await supabase
+            .from('subscriptions')
+            .select('*')
+            .eq('user_id', userId)
+            .in('status', ['active', 'canceled'])
+            .order('current_period_end', { ascending: false })
+            .limit(1);
+
+        if (recentError) {
+            console.error(`[PayPal Sub] Error searching recent sub for user ${userId}:`, recentError);
+        }
+
+        const recentSub = recentSubs && recentSubs.length > 0 ? recentSubs[0] : null;
+
+        let startDate = Date.now();
+        if (recentSub && new Date(recentSub.current_period_end) > new Date()) {
+            console.log(`[PayPal Sub] Existing sub found. Stacking time from: ${recentSub.current_period_end}`);
+            startDate = new Date(recentSub.current_period_end).getTime();
+        } else {
+            console.log(`[PayPal Sub] No valid recent sub found to stack. Starting from now.`);
+        }
+
+        const newPeriodEnd = new Date(startDate + planData.durationDays * 24 * 60 * 60 * 1000).toISOString();
+
+        // 4. Upgrade user plan / Insert record
         const { error: insertError } = await supabase.from('subscriptions').insert({
             user_id: userId,
             plan_id: `${plan}_${interval}`,
             status: 'active',
             provider: 'paypal',
             provider_subscription_id: orderID,
-            current_period_end: new Date(Date.now() + planData.durationDays * 24 * 60 * 60 * 1000).toISOString()
+            current_period_end: newPeriodEnd
         });
 
         if (insertError) {
-            // If we hit a unique constraint here, it means another process just finished it
             if (insertError.code === '23505') {
                  console.log(`[PayPal Sub] Race condition: Order ${orderID} handled by parallel request.`);
                  return res.status(200).json({ status: 'approved', plan: plan });
@@ -390,25 +414,211 @@ export const capturePayPalSubscriptionOrder = async (req, res) => {
             throw insertError;
         }
 
+        // 5. Update Profile (Immediate Tier Upgrade)
+        // Even if stacking time, the user TIER becomes the new plan immediately
         await supabase.from('profiles').update({ plan: plan }).eq('id', userId);
 
-        // 4. Give credits
+        // 6. Give credits
         const creditsToGive = planData.credits;
         const { data: profile } = await supabase.from('profiles').select('reward_balance').eq('id', userId).single();
         const currentBalance = profile?.reward_balance || 0;
         await supabase.from('profiles').update({ reward_balance: currentBalance + creditsToGive }).eq('id', userId);
 
-        console.log(`✅ [PayPal Sub] Plan upgraded to ${plan} (${interval}), ${creditsToGive} credits given.`);
+        console.log(`✅ [PayPal Sub] Plan upgraded to ${plan} (${interval}), ${creditsToGive} credits given. New Expiry: ${newPeriodEnd}`);
 
         res.status(200).json({
             status: 'approved',
             plan: plan,
-            credits: creditsToGive
+            credits: creditsToGive,
+            expiry: newPeriodEnd
         });
 
     } catch (err) {
         console.error('❌ [PayPal Sub] General Exception during Capture:', err.message);
-        res.status(500).json({ error: 'Error capturing PayPal subscription payment.', details: err.message });
+        res.status(500).json({ error: 'Error processing subscription capture.' });
+    }
+};
+
+/**
+ * CANCEL SUBSCRIPTION (Lifecycle)
+ * Updates the user's latest active subscription status to 'canceled'.
+ * The user keeps benefits until the period end.
+ */
+export const cancelSubscription = async (req, res) => {
+    try {
+        const userId = req.user.userId;
+
+        // Get latest active sub
+        const { data: activeSubs, error: fetchError } = await supabase
+            .from('subscriptions')
+            .select('*')
+            .eq('user_id', userId)
+            .eq('status', 'active')
+            .order('current_period_end', { ascending: false })
+            .limit(1);
+
+        const activeSub = activeSubs && activeSubs.length > 0 ? activeSubs[0] : null;
+
+        if (fetchError || !activeSub) {
+            return res.status(404).json({ error: 'No se encontró una suscripción activa para cancelar.' });
+        }
+
+        // Set status to canceled
+        const { error: updateError } = await supabase
+            .from('subscriptions')
+            .update({ status: 'canceled' })
+            .eq('id', activeSub.id);
+
+        if (updateError) throw updateError;
+
+        console.log(`❌ [Subscription] User ${userId} canceled sub ${activeSub.id}. Benefits active until ${activeSub.current_period_end}`);
+
+        res.status(200).json({
+            message: 'Suscripción cancelada con éxito. Sigues teniendo beneficios hasta el fin del periodo actual.',
+            expiry: activeSub.current_period_end
+        });
+
+    } catch (err) {
+        console.error('[Subscription] Cancel Error:', err);
+        res.status(500).json({ error: 'Fallo al cancelar la suscripción.' });
+    }
+};
+
+/**
+ * REACTIVATE SUBSCRIPTION (Lifecycle)
+ * Resumes a canceled subscription if it hasn't expired yet.
+ */
+export const reactivateSubscription = async (req, res) => {
+    try {
+        const userId = req.user.userId;
+
+        // Get the latest canceled subscription that hasn't expired
+        const { data: subs, error: fetchError } = await supabase
+            .from('subscriptions')
+            .select('*')
+            .eq('user_id', userId)
+            .eq('status', 'canceled')
+            .gte('current_period_end', new Date().toISOString())
+            .order('current_period_end', { ascending: false })
+            .limit(1);
+
+        const sub = subs && subs.length > 0 ? subs[0] : null;
+
+        if (fetchError || !sub) {
+            return res.status(404).json({ error: 'No se encontró una suscripción cancelada para reactivar.' });
+        }
+
+        // Set status back to active
+        const { error: updateError } = await supabase
+            .from('subscriptions')
+            .update({ status: 'active' })
+            .eq('id', sub.id);
+
+        if (updateError) throw updateError;
+
+        console.log(`✅ [Subscription] User ${userId} reactivated sub ${sub.id}. Benefits continue until ${sub.current_period_end}`);
+
+        res.status(200).json({
+            message: 'Suscripción reactivada con éxito.',
+            expiry: sub.current_period_end
+        });
+
+    } catch (err) {
+        console.error('[Subscription] Reactivate Error:', err);
+        res.status(500).json({ error: 'Fallo al reactivar la suscripción.' });
+    }
+};
+
+/**
+ * GET SUBSCRIPTION STATUS (Dashboard API)
+ * Returns the current high-level status for UI cards.
+ */
+export const getSubscriptionStatus = async (req, res) => {
+    try {
+        const userId = req.user.userId;
+
+        const { data: subs, error } = await supabase
+            .from('subscriptions')
+            .select('*')
+            .eq('user_id', userId)
+            .in('status', ['active', 'canceled'])
+            .order('current_period_end', { ascending: false })
+            .limit(1);
+
+        if (error) throw error;
+
+        const sub = subs && subs.length > 0 ? subs[0] : null;
+
+        if (error) throw error;
+
+        if (!sub) {
+            return res.status(200).json({ status: 'none' });
+        }
+
+        // Check if expired
+        if (new Date(sub.current_period_end) < new Date()) {
+            return res.status(200).json({ status: 'expired', plan_id: sub.plan_id });
+        }
+
+        res.status(200).json({
+            status: sub.status,
+            plan_id: sub.plan_id,
+            expiry: sub.current_period_end,
+            provider: sub.provider,
+            created_at: sub.created_at
+        });
+
+    } catch (err) {
+        res.status(500).json({ error: 'Error al obtener estado de suscripción.' });
+    }
+};
+
+/**
+ * CHECK REFUND ELIGIBILITY
+ * Strictly checks: 
+ * 1. Time < 48h
+ * 2. Credits used == 0
+ */
+export const checkRefundEligibility = async (req, res) => {
+    try {
+        const userId = req.user.userId;
+
+        // Get latest subscription
+        const { data: sub } = await supabase
+            .from('subscriptions')
+            .select('*')
+            .eq('user_id', userId)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+        if (!sub) return res.status(200).json({ eligible: false, reason: 'No se encontró suscripción reciente.' });
+
+        // 1. Time check (48h)
+        const diffMs = Date.now() - new Date(sub.created_at).getTime();
+        const diffHours = diffMs / (1000 * 60 * 60);
+        
+        if (diffHours > 48) {
+            return res.status(200).json({ eligible: false, reason: 'Superado el límite de 48 horas.' });
+        }
+
+        // 2. Credits check
+        // We find how many credits the last plan gave
+        const planParts = sub.plan_id.split('_');
+        const planType = planParts[0]; 
+        const planInterval = planParts[1] || 'monthly';
+        const expectedCredits = PAYPAL_PLAN_PRICES[planType]?.[planInterval]?.credits || 0;
+
+        const { data: profile } = await supabase.from('profiles').select('reward_balance').eq('id', userId).single();
+        
+        if (!profile || profile.reward_balance < expectedCredits) {
+            return res.status(200).json({ eligible: false, reason: 'Has utilizado créditos del plan.' });
+        }
+
+        res.status(200).json({ eligible: true });
+
+    } catch (err) {
+        res.status(500).json({ error: 'Error checking refund eligibility.' });
     }
 };
 
@@ -425,6 +635,24 @@ export const subscribePayPalSubscription = async (req, res) => {
 
         const planData = PAYPAL_PLAN_PRICES[plan][interval];
 
+        // CHECK FOR STACKING (Lifecycle)
+        const { data: existingSubs, error: existingError } = await supabase
+            .from('subscriptions')
+            .select('*')
+            .eq('user_id', userId)
+            .in('status', ['active', 'canceled'])
+            .order('current_period_end', { ascending: false })
+            .limit(1);
+
+        const existingSub = existingSubs && existingSubs.length > 0 ? existingSubs[0] : null;
+
+        let startDate = Date.now();
+        if (existingSub && new Date(existingSub.current_period_end) > new Date()) {
+            startDate = new Date(existingSub.current_period_end).getTime();
+        }
+
+        const newPeriodEnd = new Date(startDate + planData.durationDays * 24 * 60 * 60 * 1000).toISOString();
+
         // Upgrade user plan
         await supabase.from('subscriptions').insert({
             user_id: userId,
@@ -432,7 +660,7 @@ export const subscribePayPalSubscription = async (req, res) => {
             status: 'active',
             provider: 'paypal',
             provider_subscription_id: subscriptionID,
-            current_period_end: new Date(Date.now() + planData.durationDays * 24 * 60 * 60 * 1000).toISOString()
+            current_period_end: newPeriodEnd
         });
 
         await supabase.from('profiles').update({ plan: plan }).eq('id', userId);

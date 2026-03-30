@@ -191,8 +191,8 @@ const CartManager = {
             if (producer) {
                 // Check for PayPal (email or explicitly set in methods)
                 const has_paypal = producer.paypal_email || (producer.payment_methods && (producer.payment_methods.paypal?.enabled || producer.payment_methods.paypal));
-                // Check for Yape (verified phone + profile verification)
-                const has_yape = !!(producer.yape_phone && producer.is_verified);
+                // Check for Yape (presence of yape_phone is now enough)
+                const has_yape = !!(producer.yape_phone);
 
                 if (!has_paypal && !has_yape) {
                     if (window.openBlockedPaymentModal) {
@@ -383,18 +383,12 @@ const CartManager = {
 
             if (profilesError) throw profilesError;
 
-            // Fetch Phone Verifications (only if YAPE is potentially available)
-            const { data: phoneVerData, error: pvError } = await window.supabaseClient
-                .from('phone_verifications')
-                .select('user_id, verified')
-                .in('user_id', producerIds)
-                .eq('verified', true);
+
 
             const verification = {};
             producerIds.forEach(pId => {
                 const user = usersData?.find(u => String(u.id) === String(pId)) || {};
                 const profile = profilesData?.find(p => String(p.user_id) === String(pId)) || {};
-                const isVerified = phoneVerData?.some(pv => String(pv.user_id) === String(pId));
                 
                 let hasPayPal = false;
                 if (user.paypal_email || (user.payment_methods && user.payment_methods.paypal)) {
@@ -407,7 +401,7 @@ const CartManager = {
                     plan: profile.plan || 'free',
                     nickname: user.nickname || profile.username || 'Productor',
                     username: profile.username || user.nickname || null,
-                    hasYape: !!(user.yape_phone && user.is_verified && isVerified)
+                    hasYape: !!(user.yape_phone)
                 };
             });
 

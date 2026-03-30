@@ -64,9 +64,6 @@ const PaymentSettings = {
 
         this.setupListeners();
         this.setupYapeListeners();
-
-        // Check if there's a pending verification from a page reload
-        this.checkPendingVerification();
     },
 
     getSession: async function () {
@@ -593,294 +590,32 @@ const PaymentSettings = {
 
         const finalPhone = "+51" + fullNumber;
 
-        // Save pending verification state and open the modal
-        this._pendingYapePhone = finalPhone;
-        localStorage.setItem('yape_pending_phone', finalPhone);
-        localStorage.setItem('yape_pending_time', Date.now().toString());
-
-        this.openVerifyModal(finalPhone);
-    },
-
-    // --- YAPE VERIFICATION MODAL ---
-
-    _resendInterval: null,
-    _pendingYapePhone: null,
-
-    checkPendingVerification: function () {
-        const pendingPhone = localStorage.getItem('yape_pending_phone');
-        const pendingTime = localStorage.getItem('yape_pending_time');
-        if (!pendingPhone || !pendingTime) return;
-
-        // Expire after 10 minutes
-        const elapsed = Date.now() - parseInt(pendingTime, 10);
-        if (elapsed > 10 * 60 * 1000) {
-            localStorage.removeItem('yape_pending_phone');
-            localStorage.removeItem('yape_pending_time');
-            return;
-        }
-
-        this._pendingYapePhone = pendingPhone;
-        this.openVerifyModal(pendingPhone);
-    },
-
-    openVerifyModal: async function (phone) {
-        const modal = document.getElementById('modal-yape-verify');
-        const phoneDisplay = document.getElementById('verify-phone-display');
-        if (!modal) return;
-
-        // Format phone for display: +51 993 525 005
-        const digits = phone.replace('+51', '');
-        const formatted = `+51 ${digits.substring(0, 3)} ${digits.substring(3, 6)} ${digits.substring(6, 9)}`;
-        if (phoneDisplay) phoneDisplay.textContent = formatted;
-
-        // Reset OTP inputs
-        const boxes = modal.querySelectorAll('.otp-box');
-        boxes.forEach(b => { 
-            b.value = ''; 
-            b.classList.remove('error', 'filled');
-            b.disabled = false;
-        });
-
-        // Reset error
-        const errMsg = document.getElementById('otp-error-msg');
-        if (errMsg) { errMsg.style.display = 'none'; errMsg.textContent = ''; }
-
-        // Disable verify button
-        const btnConfirm = document.getElementById('btn-confirm-otp');
-        if (btnConfirm) {
-            btnConfirm.disabled = true;
-            btnConfirm.textContent = 'Verificar';
-        }
-
-        // Show modal early
-        modal.classList.add('active');
-        this.setupOtpInputs();
-        
-        // Focus first box
-        setTimeout(() => { if (boxes[0]) boxes[0].focus(); }, 200);
-
         try {
-            // Trigger Edge Function to send SMS
-            const { data: { session } } = await window.supabaseClient.auth.getSession();
-            const response = await fetch(`${window.SUPABASE_URL}/functions/v1/verify-yape-phone`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${session.access_token}`
-                },
-                body: JSON.stringify({ phone, action: 'send' })
-            });
-
-            const result = await response.json();
-
-            // 🔥 BYPASS LOGIC: Si el backend detectó Trial de Twilio, ya guardó el número
-            if (result.bypassed) {
-                console.log("Bypass mode detected:", result.message);
-                this.data.yapePhone = phone;
-                this.renderYapeStatus();
-                this.toggleYapeEdit(false);
-                this.closeVerifyModal();
-                if (window.showToast) window.showToast("Número guardado exitosamente.", "success");
-                return;
+            if (btnSave) {
+                btnSave.disabled = true;
+                btnSave.textContent = "Guardando...";
             }
 
-            if (!response.ok) {
-                let errMsg = result.error || 'Error al enviar SMS';
-                if (result.details) {
-                    console.error("Twilio Error Details:", result.details);
-                    if (result.details.message) errMsg += `: ${result.details.message}`;
-                }
-                throw new Error(errMsg);
-            }
+            const { error } = await window.supabaseClient
+                .from('users')
+                .update({ yape_phone: finalPhone })
+                .eq('id', this.userId);
 
-            this.startResendTimer();
-            if (window.showToast) window.showToast("Código de verificación enviado.", "success");
-        } catch (err) {
-            console.error("SMS Error:", err);
-            if (window.showToast) window.showToast(err.message, "error");
-            this.closeVerifyModal();
-        }
-    },
+            if (error) throw error;
 
-    closeVerifyModal: function () {
-        const modal = document.getElementById('modal-yape-verify');
-        if (modal) modal.classList.remove('active');
-        if (this._resendInterval) {
-            clearInterval(this._resendInterval);
-            this._resendInterval = null;
-        }
-        localStorage.removeItem('yape_pending_phone');
-        localStorage.removeItem('yape_pending_time');
-    },
-
-    setupOtpInputs: function () {
-        const modal = document.getElementById('modal-yape-verify');
-        if (!modal) return;
-
-        const boxes = Array.from(modal.querySelectorAll('.otp-box'));
-        const btnConfirm = document.getElementById('btn-confirm-otp');
-        const btnClose = document.getElementById('btn-close-verify');
-        const btnResend = document.getElementById('btn-resend-otp');
-
-        // Close button
-        if (btnClose) btnClose.onclick = () => this.closeVerifyModal();
-
-        // Confirm button
-        if (btnConfirm) btnConfirm.onclick = () => this.confirmOtp();
-
-        // Resend button
-        if (btnResend) btnResend.onclick = () => this.resendCode();
-
-        const checkAllFilled = () => {
-            const allFilled = boxes.every(b => b.value.length === 1);
-            if (btnConfirm) btnConfirm.disabled = !allFilled;
-        };
-
-        boxes.forEach((box, i) => {
-            box.oninput = (e) => {
-                box.value = box.value.replace(/\D/g, '');
-                if (box.value.length === 1) {
-                    box.classList.add('filled');
-                    if (i < boxes.length - 1) boxes[i + 1].focus();
-                } else {
-                    box.classList.remove('filled');
-                }
-                checkAllFilled();
-            };
-
-            box.onkeydown = (e) => {
-                if (e.key === 'Backspace' && box.value.length === 0 && i > 0) {
-                    boxes[i - 1].focus();
-                    boxes[i - 1].value = '';
-                    boxes[i - 1].classList.remove('filled');
-                    checkAllFilled();
-                }
-            };
-
-            // Handle paste
-            box.onpaste = (e) => {
-                e.preventDefault();
-                const pasted = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '').substring(0, 6);
-                pasted.split('').forEach((char, j) => {
-                    if (boxes[j]) {
-                        boxes[j].value = char;
-                        boxes[j].classList.add('filled');
-                    }
-                });
-                const focusIdx = Math.min(pasted.length, boxes.length - 1);
-                boxes[focusIdx].focus();
-                checkAllFilled();
-            };
-        });
-    },
-
-    startResendTimer: function () {
-        const countdown = document.getElementById('resend-countdown');
-        const label = document.getElementById('resend-label');
-        const btnResend = document.getElementById('btn-resend-otp');
-
-        if (this._resendInterval) clearInterval(this._resendInterval);
-
-        let seconds = 60;
-        if (countdown) { countdown.textContent = `${seconds}s`; countdown.style.display = ''; }
-        if (label) { label.textContent = 'Puedes reenviar en '; label.style.display = ''; }
-        if (btnResend) { btnResend.style.display = 'none'; btnResend.classList.add('disabled'); }
-
-        this._resendInterval = setInterval(() => {
-            seconds--;
-            if (countdown) countdown.textContent = `${seconds}s`;
-
-            if (seconds <= 0) {
-                clearInterval(this._resendInterval);
-                this._resendInterval = null;
-                if (countdown) countdown.style.display = 'none';
-                if (label) label.style.display = 'none';
-                if (btnResend) {
-                    btnResend.style.display = 'inline';
-                    btnResend.classList.remove('disabled');
-                }
-            }
-        }, 1000);
-    },
-
-    resendCode: async function () {
-        const btnResend = document.getElementById('btn-resend-otp');
-        if (!btnResend || btnResend.classList.contains('disabled')) return;
-
-        try {
-            const { data: { session } } = await window.supabaseClient.auth.getSession();
-            const response = await fetch(`${window.SUPABASE_URL}/functions/v1/verify-yape-phone`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${session.access_token}`
-                },
-                body: JSON.stringify({ phone: this._pendingYapePhone, action: 'send' })
-            });
-
-            if (!response.ok) throw new Error("Error al reenviar SMS");
-
-            if (window.showToast) window.showToast("Código reenviado.", "success");
-            this.startResendTimer();
-        } catch (err) {
-            if (window.showToast) window.showToast(err.message, "error");
-        }
-    },
-
-    confirmOtp: async function () {
-        const modal = document.getElementById('modal-yape-verify');
-        const boxes = Array.from(modal.querySelectorAll('.otp-box'));
-        const code = boxes.map(b => b.value).join('');
-        const btnConfirm = document.getElementById('btn-confirm-otp');
-        const errMsg = document.getElementById('otp-error-msg');
-
-        if (code.length !== 6) return;
-
-        btnConfirm.disabled = true;
-        btnConfirm.textContent = 'Verificando...';
-        boxes.forEach(b => b.disabled = true);
-
-        try {
-            const { data: { session } } = await window.supabaseClient.auth.getSession();
-            const response = await fetch(`${window.SUPABASE_URL}/functions/v1/verify-yape-phone`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${session.access_token}`
-                },
-                body: JSON.stringify({ 
-                    phone: this._pendingYapePhone, 
-                    code, 
-                    action: 'check' 
-                })
-            });
-
-            const result = await response.json();
-
-            if (!response.ok) {
-                throw new Error(result.error || 'Código incorrecto');
-            }
-
-            // Success!
-            this.data.yapePhone = this._pendingYapePhone;
+            this.data.yapePhone = finalPhone;
             this.renderYapeStatus();
             this.toggleYapeEdit(false);
-            this.closeVerifyModal();
-
-            if (window.showToast) window.showToast("Número de Yape verificado exitosamente.", "success");
+            
+            if (window.showToast) window.showToast("Número de Yape guardado exitosamente.", "success");
         } catch (err) {
-            console.error('Verification error:', err);
-            boxes.forEach(b => {
-                b.disabled = false;
-                b.classList.add('error');
-            });
-            if (errMsg) {
-                errMsg.textContent = err.message || 'Error al verificar. Intenta de nuevo.';
-                errMsg.style.display = 'block';
+            console.error("Error saving Yape phone:", err);
+            if (window.showToast) window.showToast("Error al guardar el número.", "error");
+        } finally {
+            if (btnSave) {
+                btnSave.disabled = false;
+                btnSave.textContent = "Guardar Cambios";
             }
-            setTimeout(() => boxes.forEach(b => b.classList.remove('error')), 600);
-            btnConfirm.disabled = false;
-            btnConfirm.textContent = 'Verificar';
         }
     },
 

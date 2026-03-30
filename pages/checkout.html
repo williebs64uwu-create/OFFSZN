@@ -146,7 +146,29 @@
             </div>
         </div>
     </div>
-    <!-- ==================== MAIN CHECKOUT CONTENT ==================== -->
+    <!-- ==================== EMPTY CART STATE (WIDE) ==================== -->
+    <div id="empty-cart-state" style="display: none; padding: 40px 20px; text-align: center; max-width: 1400px; margin: 20px auto; width: 100%;">
+        <div class="empty-state-card" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); padding: 40px; border-radius: 24px; margin-bottom: 40px; max-width: 600px; margin-left: auto; margin-right: auto;">
+            <div class="empty-icon-wrapper" style="width: 80px; height: 80px; background: rgba(139, 92, 246, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 24px;">
+                <i class="bi bi-cart-x" style="font-size: 2.5rem; color: #8b5cf6;"></i>
+            </div>
+            <h2 style="font-size: 1.5rem; font-weight: 800; margin-bottom: 8px; color: #fff;">Tu carrito está vacío</h2>
+            <p style="color: #888; margin-bottom: 30px; font-size: 0.85rem;">Aún no tienes beats o kits en tu carrito.</p>
+            <a href="/index.html" class="btn-checkout-global" style="display: inline-flex; align-items: center; gap: 10px; padding: 14px 30px; border-radius: 12px; text-decoration: none; width: auto; font-size: 0.9rem; margin: 0 auto;">
+                <i class="bi bi-search"></i> Explorar Tienda
+            </a>
+        </div>
+
+        <!-- Recommendations Section -->
+        <div id="empty-cart-recommendations" style="text-align: left; margin-top: 60px;">
+            <h3 style="font-size: 1.25rem; font-weight: 800; margin-bottom: 24px; color: #fff; letter-spacing: -0.5px;">Recomendados para ti</h3>
+            <div id="checkout-recommendations-grid" style="display: block; width: 100%;">
+                <!-- Skeletons & Items injected by JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== MAIN CHECKOUT CONTENT ==================== -->
     <main class="checkout-main-premium">
         <div id="checkout-container">
             <!-- 1. SUMMARY ACCORDION (TOP) -->
@@ -176,9 +198,6 @@
         </div>
 
         <!-- 2. INFORMACIÓN DE CONTACTO (Guest only) -->
-
-        <!-- 2. INFORMACIÓN DE CONTACTO (Guest only) -->
-        </section>
 
         <!-- 3. DETALLES ADICIONALES & CUPÓN -->
         <div class="coupon-area" style="margin-top: 10px;">
@@ -210,14 +229,7 @@
         </div>
 
         <!-- 5. MÉTODOS DE PAGO -->
-        <section class="checkout-section-payment" id="section-payment" style="position: relative;">
-            <!-- Payment Blocking Overlay for Guests -->
-            <div id="payment-blocking-overlay" class="locked-overlay" style="display: none;">
-                <div style="text-align: center; color: #fff; padding: 20px;">
-                    <i class="bi bi-envelope-exclamation" style="font-size: 1.2rem; display: block; margin-bottom: 8px;"></i>
-                    <p style="font-size: 0.8rem; font-weight: 600;">Ingresa tu correo para pagar</p>
-                </div>
-            </div>
+            <!-- Terms & Conditions Disclaimer removed as checkbox, moved to payment button areas -->
 
             <div class="payment-methods-container" id="checkout-payment-methods">
                 <!-- PayPal -->
@@ -245,11 +257,10 @@
                             </div>
                         </div>
                     </div>
-                    <div id="paypal-content" style="padding: 0 18px 18px; display: block;">
-                        <div id="paypal-skeleton" style="display: flex; flex-direction: column; gap: 10px;">
-                            <div class="skeleton-shimmer" style="height: 48px; border-radius: 8px;"></div>
-                        </div>
                         <div id="paypal-button-container" style="display: none; min-height: 50px;"></div>
+                        <p style="font-size: 0.75rem; color: #888; text-align: center; margin-top: 12px; line-height: 1.4;">
+                            Al completar tu compra, aceptas nuestros <a href="/legal/terminos-de-servicio.html" target="_blank" style="color: #fff; text-decoration: underline;">Términos y Condiciones</a>.
+                        </p>
                     </div>
                 </div>
 
@@ -263,8 +274,8 @@
                                 <div class="payment-name">Yape / Plin / Transferencia Directa</div>
                                 <div class="payment-desc">Pago rápido para Perú (Soles)</div>
                             </div>
-                            <div style="background: #111; padding: 4px 8px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); margin-left: auto;">
-                                <span style="color: #6a1ea5; font-weight: 800; font-size: 0.7rem;">YAPE</span>
+                             <div style="margin-left: auto; display: flex; align-items: center;">
+                                <img src="/images/para-yape.png" alt="Yape" style="height: 22px; width: auto; object-fit: contain;">
                             </div>
                         </div>
                         <!-- State: LOADING (Skeleton) -->
@@ -290,53 +301,36 @@
                                 <div style="font-size: 0.75rem; color: #888; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px;">Pagas en total (Soles)</div>
                                 <div id="yape-total-value" style="font-size: 1.6rem; font-weight: 800; color: #fff;">S/ 0.00</div>
                             </div>
-                            <div style="text-align: center; margin-bottom: 20px;">
-                                <img src="/images/yape.jpg" alt="Yape QR" style="width: 140px; height: 140px; object-fit: contain; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
-                                <div style="margin-top: 8px; font-size: 0.85rem; color: #6a1ea5; font-weight: 700;">@OFFSZN_STUDIO</div>
+                             <div style="text-align: center; margin-bottom: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                                <img src="/images/yape.jpg" alt="Yape QR" style="width: 160px; height: 160px; object-fit: contain; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); background: #fff; padding: 8px;">
                             </div>
-                            <div style="font-size: 0.8rem; color: #888; line-height: 1.5; margin-bottom: 20px; padding: 0 10px;">
+                            <div style="font-size: 0.8rem; color: #888; line-height: 1.5; margin-bottom: 20px; padding: 0 10px; text-align: center;">
                                 1. Escanea el código QR.<br>
-                                2. Confirma el pago adjuntando el voucher al coordinar.
+                                2. Confirma el pago adjuntando el voucher al enviar.
                             </div>
-                            <button id="confirm-yape-btn" onclick="CheckoutManager.processYapeOrder()" style="width: 100%; padding: 16px; background: #25D366; color: #fff; border: none; border-radius: 100px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px;">
-                                <i class="bi bi-whatsapp"></i> COORDINAR PAGO
+                            <button id="confirm-yape-btn" onclick="CheckoutManager.processYapeOrder()" style="width: 100%; padding: 16px; background: #25D366; color: #fff; border: none; border-radius: 100px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; transition: all 0.2s;">
+                                <i class="bi bi-whatsapp"></i> CONFIRMAR PAGO
                             </button>
+                            <p style="font-size: 0.7rem; color: #888; text-align: center; margin-top: 15px; line-height: 1.4; opacity: 0.8;">
+                                Al confirmar el pago, declaras haber leído y aceptado nuestros <a href="/legal/terminos-de-servicio.html" target="_blank" style="color: #fff; text-decoration: underline;">Términos y Condiciones</a>.
+                            </p>
                         </div>
                     </div>
                 </div>
                 </div>
-            </section>
+            </div> <!-- END .payment-methods-container -->
         </div> <!-- END #checkout-container -->
 
-        <!-- ==================== EMPTY CART STATE ==================== -->
-        <div id="empty-cart-state" style="display: none; padding: 40px 20px; text-align: center; max-width: 650px; margin: 0 auto; width: 100%;">
-            <div class="empty-state-card" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); padding: 40px; border-radius: 24px; margin-bottom: 40px;">
-                <div class="empty-icon-wrapper" style="width: 80px; height: 80px; background: rgba(139, 92, 246, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 24px;">
-                    <i class="bi bi-cart-x" style="font-size: 2.5rem; color: #8b5cf6;"></i>
-                </div>
-                <h2 style="font-size: 1.5rem; font-weight: 800; margin-bottom: 8px; color: #fff;">Tu carrito está vacío</h2>
-                <p style="color: #888; margin-bottom: 30px; font-size: 0.85rem;">Aún no tienes beats o kits en tu carrito.</p>
-                <a href="/index.html" class="btn-checkout-global" style="display: inline-flex; align-items: center; gap: 10px; padding: 14px 30px; border-radius: 12px; text-decoration: none; width: auto; font-size: 0.9rem; margin: 0 auto;">
-                    <i class="bi bi-search"></i> Explorar Tienda
-                </a>
-            </div>
-
-            <!-- Recommendations Section -->
-            <div id="empty-cart-recommendations" style="text-align: left;">
-                <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 20px; color: #fff;">Recomendados para ti</h3>
-                <div id="checkout-recommendations-grid" class="explore-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 16px;">
-                    <!-- Skeletons & Items injected by JS -->
-                </div>
-            </div>
-        </div>
+        </div> <!-- END #checkout-container -->
     </main>
 
 
     <style>
         .empty-state-container {
-            max-width: 600px;
-            margin: 20px auto;
-            padding: 0 20px;
+            width: 100%;
+            max-width: 1400px;
+            margin: 40px auto;
+            padding: 0 1.5rem;
             text-align: center;
         }
 

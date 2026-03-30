@@ -142,6 +142,7 @@ const CheckoutManager = {
       if (initialItemsCount > 0) this.initPayPal();
     }
     this.updatePayPalButtonsVisibility();
+    this.togglePaymentMethod('paypal'); // Ensure PayPal is default
 
     // Mark init as complete — only NOW will cart-updated listener do anything    
     this._initComplete = true;
@@ -199,6 +200,9 @@ const CheckoutManager = {
       if (grid) grid.style.display = 'none';
       if (emptyState) emptyState.style.display = 'block';
       this.loadRecommendations();
+      
+      // Auto-scroll to top when cart empties to ensure the empty state is visible
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     } else {
       if (grid) grid.style.display = 'block';
       if (emptyState) emptyState.style.display = 'none';
@@ -310,7 +314,7 @@ const CheckoutManager = {
               
               // Check eligibility (PayPal exists or Yape is setup)
               const hasPayPal = pf.paypal_email || pf.payment_methods?.paypal?.enabled || pf.payment_methods?.paypal;
-              const hasYape = pf.yape_phone && pf.is_verified;
+              const hasYape = pf.yape_phone;
               
               if (hasPayPal || hasYape) {
                 eligibleProducers.add(pf.id);
@@ -329,10 +333,7 @@ const CheckoutManager = {
         const selected = shuffled.slice(0, 7);
 
         let html = `
-                <div class="explore-row" style="margin-top: 10px; width: 100%;">
-                    <div class="shelf-wrapper" style="padding: 0;">
-                        <div class="shelf-inner">
-                            <div class="shelf-container" id="checkout-recs-container">
+                <div id="checkout-recs-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 24px; width: 100%;">
             `;
 
         for (const p of selected) {
@@ -340,18 +341,19 @@ const CheckoutManager = {
           const artist = this.escapeHTML(profilesDict[p.producer_id] || 'Productor');
           html += `
                     <div class="product-card-smart-wrapper" style="display: flex; flex-direction: column; gap: 8px;">
-                        <div class="product-card-smart" data-product-id="${p.id}" onclick="window.location.href='/producto.html?id=${p.id}'" style="margin: 0; min-width: 176px; max-width: 176px;">
+                        <div class="product-card-smart" data-product-id="${p.id}" onclick="window.location.href='/producto.html?id=${p.id}'" style="margin: 0; width: 100%; min-width: 180px;">
                             <div class="card-cover-wrapper">
                                 <img id="rec-img-${p.id}" src="${img}" alt="${this.escapeHTML(p.name)}"
                                      data-artist="${p.producer_id}" onmouseenter="showArtistCard(event, this)" onmouseleave="hideArtistCard(event, this)">
                                 <button class="quick-play-btn" onclick="event.stopPropagation(); window.playCheckoutTrack('${p.id}')"><i class="bi bi-play-fill"></i></button>
                                 <button class="card-like-btn" onclick="event.stopPropagation(); window.handleLike(event, '${p.id}', this)">
-                                    <i class="bi bi-heart"></i>
+                                     <i class="bi bi-heart"></i>
                                 </button>
                             </div>
                             <div class="card-info">
-                                <div class="card-title">${this.escapeHTML(p.name)}</div>
+                                <div class="card-title" style="font-size: 0.85rem;">${this.escapeHTML(p.name)}</div>
                                 <div class="card-producer"
+                                     style="font-size: 0.75rem;"
                                      data-artist="${p.producer_id}"
                                      onmouseenter="showArtistCard(event, this)"
                                      onmouseleave="hideArtistCard(event, this)">
@@ -359,13 +361,13 @@ const CheckoutManager = {
                                 </div>
                             </div>
                         </div>
-                        <button onclick="if(window.CartManager) window.CartManager.addItem('${p.id}')" style="margin-top: 4px; background: #fff; color: #000; border: 1px solid #fff; padding: 8px 0; border-radius: 8px; font-weight: 700; font-size: 0.75rem; cursor: pointer; transition: all 0.2s; text-align: center; display: flex; align-items: center; justify-content: center; gap: 6px; width: 176px;" onmouseover="this.style.background='#f0f0f0'; this.style.borderColor='#f0f0f0';" onmouseout="this.style.background='#fff'; this.style.borderColor='#fff';">
+                        <button onclick="if(window.CartManager) window.CartManager.addItem('${p.id}')" style="margin-top: 4px; background: #fff; color: #000; border: 1px solid #fff; padding: 10px 0; border-radius: 8px; font-weight: 700; font-size: 0.75rem; cursor: pointer; transition: all 0.2s; text-align: center; display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%;" onmouseover="this.style.background='#f0f0f0'; this.style.borderColor='#f0f0f0';" onmouseout="this.style.background='#fff'; this.style.borderColor='#fff';">
                             <i class="bi bi-cart-plus"></i> Agregar • $${p.price_basic}
                         </button>
                     </div>
                 `;
         }
-        html += `</div></div></div></div>`;
+        html += `</div>`;
         container.innerHTML = html;
 
         // Load authorized images asynchronously
@@ -652,6 +654,13 @@ const CheckoutManager = {
       },
 
       createOrder: function (data, actions) {
+        // --- T&C CHECK ---
+        const termsChecked = document.getElementById('terms-checkbox')?.checked;
+        if (!termsChecked) {
+          alert("Por favor, acepta los Términos y Condiciones para continuar.");
+          return;
+        }
+
         const body = {
           negotiateToken: self.negotiateData.token,
           isNegotiation: true
@@ -1393,6 +1402,7 @@ const CheckoutManager = {
       },
 
       createOrder: function (data, actions) {
+        // Disclaimer handled by text under buttons now
         const body = { 
           couponCode: self.appliedCoupon,
           guestEmail: self.guestEmail // PASS GUEST EMAIL
@@ -1614,6 +1624,7 @@ const CheckoutManager = {
   },
 
   processYapeOrder: async function () {
+    // Disclaimer handled by text under buttons now
     this.showProcessingState(true);
 
     try {
