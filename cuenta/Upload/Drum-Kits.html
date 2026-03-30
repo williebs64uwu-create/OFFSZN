@@ -3,9 +3,18 @@
 
 <head>
     <!-- Supabase Config & Auth Utils -->
-        <script src="/env.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.48.1"></script>
+    <script src="/env.js"></script>
     <script src="/script/auth-utils.js?v=11"></script>
+    <script src="/script/auth-guard.js"></script>
+    
+    <script>
+        // Proactive limit enforcement for free users (FAST)
+        if (window.AuthGuard && window.AuthGuard.protectUploadEntry) {
+            window.AuthGuard.protectUploadEntry();
+        }
+    </script>
+
     <meta charset="UTF-8">
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -15,7 +24,6 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/wavesurfer.js@7"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
 
         /* ===== SIDEBAR PROFILE CARD ===== */
@@ -3051,12 +3059,6 @@
 </head>
 
 <body>
-    <!-- Loading Overlay Removed (Legacy) -->
-
-    <div class="toast-container" id="toastContainer"></div>
-
-    <header class="main-header">
-        <!-- Supabase Config & Auth Utils -->
             <script src="/env.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.48.1"></script>
         <script src="/script/auth-utils.js?v=11"></script>

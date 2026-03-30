@@ -3,9 +3,16 @@
 
 <head>
     <!-- Supabase Config & Auth Utils -->
-        <script src="/env.js"></script>
+    <script src="/env.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.48.1"></script>
     <script src="/script/auth-utils.js?v=11"></script>
+    <script src="/script/auth-guard.js"></script>
+    <script>
+        // Proactive limit enforcement for free users (Instant Check)
+        if (window.AuthGuard && window.AuthGuard.protectUploadEntry) {
+            window.AuthGuard.protectUploadEntry();
+        }
+    </script>
     <meta charset="UTF-8">
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -3018,9 +3025,6 @@
 </head>
 
 <body>
-    <!-- Loading Overlay Removed (Legacy) -->
-
-    <div class="toast-container" id="toastContainer"></div>
 
     <header class="main-header">
         <!-- Supabase Config & Auth Utils -->

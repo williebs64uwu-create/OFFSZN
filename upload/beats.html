@@ -6,6 +6,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="/env.js"></script>
     <script src="/script/auth-utils.js?v=11"></script>
+    <script src="/script/auth-guard.js"></script>
     <meta charset="UTF-8">
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -18,6 +19,13 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
     <link rel="stylesheet" href="nuevo.css">
+    <script>
+        // Proactive limit enforcement for free users (Instant Check)
+        if (window.AuthGuard && window.AuthGuard.protectUploadEntry) {
+            window.AuthGuard.protectUploadEntry();
+        }
+    </script>
+</head>
 
 <body>
     <!-- Loading Overlay Removed (Legacy) -->
@@ -712,6 +720,30 @@
         </button>
 
 
+    </div>
+
+    <!-- Premium Limit Reached Modal -->
+    <div id="modalLimitReached" class="modal-overlay">
+        <div class="elite-modal" style="max-width:400px; text-align:center;">
+            <div
+                style="width:60px; height:60px; background:rgba(255, 215, 0, 0.1); border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 20px auto; border:1px solid rgba(255, 215, 0, 0.2);">
+                <i class="bi bi-star-fill" style="font-size:24px; color:#FFD700;"></i>
+            </div>
+            <h3 style="color:#fff; margin-bottom: 8px; font-weight: 800; letter-spacing: -0.5px;">¡Límite Alcanzado!</h3>
+            <p style="color:#aaa; font-size:14px; line-height:1.6; margin-bottom:24px;">
+                Has alcanzado el límite de <strong>30 productos</strong> de tu plan actual.
+                <br><br>
+                Actualiza a <strong>STARTER</strong> o <strong>PRO</strong> para subir contenido ilimitado y potenciar tus ventas.
+            </p>
+            <a href="/cuenta/planes.html" class="elite-btn"
+                style="text-decoration:none; background:#fff; color:#000;">
+                <i class="bi bi-lightning-charge-fill"></i> MEJORAR MI PLAN
+            </a>
+            <button onclick="document.getElementById('modalLimitReached').classList.remove('active')" class="elite-btn"
+                style="background:transparent; border:1px solid #333; color:#888; margin-top: 8px;">
+                Luego lo haré
+            </button>
+        </div>
     </div>
 
     <!-- Google Identity Services -->

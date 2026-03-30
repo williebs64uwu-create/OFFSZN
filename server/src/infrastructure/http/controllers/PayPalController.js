@@ -495,7 +495,7 @@ export const createPayPalOrder = async (req, res) => {
         // 2. Create unit for platform commission
         if (serviceFee > 0) {
             const platformPayee = (!PLATFORM_PAYPAL_EMAIL || !PLATFORM_PAYPAL_EMAIL.includes('@'))
-                ? { merchant_id: PLATFORM_PAYPAL_EMAIL || 'BK7AFKN36JSWW' }
+                ? { merchant_id: PLATFORM_PAYPAL_EMAIL || 'MXV5F6X8JXG4S' }
                 : { email_address: PLATFORM_PAYPAL_EMAIL };
 
             purchaseUnits.push({

@@ -16,7 +16,7 @@ window.PLAN_LIMITS = {
     },
     starter: {
         name: 'Starter',
-        price: '$9/mo',
+        price: '$5/mo',
         max_uploads: 60,
         commission: 0.03,
         youtube_uploads_per_month: 5,
@@ -26,7 +26,7 @@ window.PLAN_LIMITS = {
     },
     pro: {
         name: 'PRO',
-        price: '$19/mo',
+        price: '$7/mo',
         max_uploads: Infinity,
         commission: 0.0,
         youtube_uploads_per_month: 30,
@@ -737,23 +737,53 @@ window.AuthUtils = {
         const { data: { session } } = await window.supabaseClient.auth.getSession();
         if (!session) return null;
 
-        const { data, error } = await window.supabaseClient
+        const userId = session.user.id;
+        let planKey = 'free';
+
+        // 1. Try to fetch from profiles (primary source)
+        // Check both 'id' and 'user_id' fields for robustness
+        const { data: profiles, error: profileError } = await window.supabaseClient
             .from('profiles')
             .select('plan')
-            .eq('id', session.user.id)
-            .maybeSingle();
+            .or(`id.eq.${userId},user_id.eq.${userId}`)
+            .limit(1);
 
-        if (error || !data) return null;
+        const profileData = profiles?.[0];
 
-        const planKey = data.plan || 'free';
+        if (profileData && profileData.plan) {
+            planKey = profileData.plan.toLowerCase();
+        }
 
-        // Try to fetch YouTube quota columns (may not exist if SQL migration not run yet)
+        // 2. If plan is still free, FALLBACK to subscriptions table
+        // This handles cases where profiles aren't synced but the sub is active
+        if (planKey === 'free') {
+            try {
+                const { data: subData } = await window.supabaseClient
+                    .from('subscriptions')
+                    .select('plan_id, status')
+                    .eq('user_id', userId)
+                    .eq('status', 'active')
+                    .order('created_at', { ascending: false })
+                    .limit(1)
+                    .maybeSingle();
+
+                if (subData) {
+                    const subPlanId = subData.plan_id.toLowerCase();
+                    if (subPlanId.includes('pro')) planKey = 'pro';
+                    else if (subPlanId.includes('starter')) planKey = 'starter';
+                }
+            } catch (e) {
+                console.warn("⚠️ AuthUtils: Fallback subscription check failed", e);
+            }
+        }
+
+        // 3. Try to fetch YouTube quota columns (may not exist if SQL migration not run yet)
         let ytUploadsThisMonth = 0;
         try {
             const { data: quotaData } = await window.supabaseClient
                 .from('profiles')
                 .select('youtube_uploads_this_month, youtube_quota_reset_date')
-                .eq('id', session.user.id)
+                .or(`id.eq.${userId},user_id.eq.${userId}`)
                 .maybeSingle();
 
             if (quotaData) {
@@ -800,6 +830,88 @@ window.AuthUtils = {
                 return limits.max_uploads === Infinity;
             default:
                 return false;
+        }
+    },
+
+    /**
+     * 🔥 GLOBAL LIMIT CHECK: Counts all products (Beats, Drumkits, Loops, Presets) and returns limit status.
+     * @returns {Promise<{isLimited: boolean, count: number, limit: number, plan: string}>}
+     */
+    getUploadLimitStatus: async function () {
+        // 1. Try SessionStorage Cache (FAST)
+        const cached = sessionStorage.getItem('offszn_upload_limit_status');
+        if (cached) {
+            try {
+                const parsed = JSON.parse(cached);
+                // Return cache immediately but refresh in background
+                this._refreshLimitStatusBackground();
+                return parsed;
+            } catch(e) {}
+        }
+
+        return await this._refreshLimitStatusBackground();
+    },
+
+    /**
+     * Performs the actual DB check and updates the cache.
+     * @private
+     */
+    _refreshLimitStatusBackground: async function() {
+        try {
+            // Parallelize Plan Data and Product Count (FASTER)
+            const [planData, count] = await Promise.all([
+                this.getUserPlanData(),
+                this.countUserProducts()
+            ]);
+
+            if (!planData) return { isLimited: true, count: 0, limit: 0, plan: 'unknown' };
+
+            const limit = planData.limits.max_uploads || 30;
+            const status = {
+                isLimited: limit !== Infinity && count >= limit,
+                count: count,
+                limit: limit,
+                plan: planData.plan,
+                timestamp: Date.now()
+            };
+
+            // Update Cache
+            sessionStorage.setItem('offszn_upload_limit_status', JSON.stringify(status));
+            return status;
+        } catch (e) {
+            console.error("[AuthUtils] Status refresh failed:", e);
+            return { isLimited: false, count: 0, limit: 30, plan: 'error' };
+        }
+    },
+
+    /**
+     * Counts all products associated with the current user.
+     * @returns {Promise<number>}
+     */
+    countUserProducts: async function () {
+        if (!window.supabaseClient) return 0;
+        
+        let userId;
+        const localUser = this.getCurrentUser();
+        if (localUser && localUser.id) {
+            userId = localUser.id;
+        } else {
+            const { data: { session }, error: sessionError } = await window.supabaseClient.auth.getSession();
+            if (sessionError || !session) return 0;
+            userId = session.user.id;
+        }
+
+        try {
+            const { count, error } = await window.supabaseClient
+                .from('products')
+                .select('*', { count: 'exact', head: true })
+                .eq('producer_id', userId);
+
+            if (error) throw error;
+            return count || 0;
+        } catch (e) {
+            console.error("[AuthUtils] Failed to count products:", e);
+            return 0;
         }
     },
 

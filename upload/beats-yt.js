@@ -1990,9 +1990,26 @@ window.handlePublish = async function () {
 
         // 7.b Perform Database Write
         if (!product_id) {
-            console.log('✨ [PUBLISH] INSERTING new product...');
-            const { data, error } = await supabaseClient.from('products').insert([finalData]).select('id').single();
-            if (error) throw error;
+            console.log('✨ [PUBLISH] INSERTING new product via API...');
+            
+            const response = await fetch(`${AuthUtils._apiUrl}/products`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...AuthUtils.getAuthHeaderObj()
+                },
+                body: JSON.stringify(finalData)
+            });
+
+            if (!response.ok) {
+                const errData = await response.json().catch(() => ({}));
+                if (response.status === 403) {
+                    throw { status: 403, message: errData.error || 'Límite alcanzado' };
+                }
+                throw new Error(errData.error || `Error ${response.status} al guardar el producto`);
+            }
+
+            const data = await response.json();
             product_id = data.id;
         } else {
             console.log('📝 [PUBLISH] UPDATING existing product:', product_id);
@@ -2066,8 +2083,21 @@ window.handlePublish = async function () {
 
     } catch (err) {
         console.error('❌ [PUBLISH] Error:', err);
-        showToast('Error al publicar: ' + err.message, 'error');
-        if (overlay) overlay.style.display = 'none';
+
+        if (err.status === 403) {
+            // Subscription limit reached
+            if (overlay) overlay.style.display = 'none';
+            const limitModal = document.getElementById('modalLimitReached');
+            if (limitModal) {
+                limitModal.classList.add('active');
+            } else {
+                showToast(err.message || 'Límite alcanzado', 'error');
+            }
+        } else {
+            showToast('Error al publicar: ' + (err.message || 'Error desconocido'), 'error');
+            if (overlay) overlay.style.display = 'none';
+        }
+
         window.isPublishing = false;
         if (btn) {
             btn.disabled = false;

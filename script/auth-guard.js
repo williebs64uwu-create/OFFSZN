@@ -4,6 +4,10 @@
 
 (function () {
     // 1. Initialize Supabase (Centralized Config)
+    if (window.AuthUtils && window.AuthUtils.initSupabase) {
+        window.AuthUtils.initSupabase();
+    }
+    
     // Use the global client initialized by auth-utils.js
     const supabaseClient = window.supabaseClient;
 
@@ -46,6 +50,88 @@
 
     // Run immediately
     checkAuth();
+
+    // 3. Proactive Upload Protection
+    window.AuthGuard = {
+        /**
+         * Protects entry points that are for creating new uploads.
+         * If the URL contains `?edit=` or `?draft=`, we bypass this check so the user can edit existing products.
+         */
+        protectUploadEntry: async function () {
+            const searchParams = new URLSearchParams(window.location.search);
+            if (searchParams.has('edit') || searchParams.has('draft')) {
+                // User is editing an existing product. Let them pass.
+                return;
+            }
+
+            // 1. FAST CACHE CHECK (Synchronous protection)
+            const cached = sessionStorage.getItem('offszn_upload_limit_status');
+            if (cached) {
+                try {
+                    const status = JSON.parse(cached);
+                    if (status.isLimited) {
+                        console.warn("⛔ Auth Guard: Cached upload limit reached. Redirecting...");
+                        window.location.href = '/cuenta/subir-kit.html?limit=reached';
+                        return;
+                    }
+                } catch(e) {}
+            }
+
+            if (!window.AuthUtils) return;
+            
+            try {
+                // 2. LIVE CHECK (Async)
+                const status = await window.AuthUtils.getUploadLimitStatus();
+                if (status.isLimited) {
+                    console.warn("⛔ Auth Guard: Upload limit reached. Redirecting...");
+                    window.location.href = '/cuenta/subir-kit.html?limit=reached';
+                }
+            } catch (e) {
+                console.error("Auth Guard Limit Check Error:", e);
+            }
+        },
+
+        /**
+         * Safely navigates to an upload URL or blocks with a modal if at limit.
+         */
+        safeNavigate: async function (url) {
+            // Bypass limit check if trying to edit/draft
+            if (url && (url.includes('?edit=') || url.includes('&edit=') || url.includes('?draft=') || url.includes('&draft='))) {
+                window.location.href = url;
+                return;
+            }
+
+            // 1. Check Cache
+            const cached = sessionStorage.getItem('offszn_upload_limit_status');
+            if (cached) {
+                const status = JSON.parse(cached);
+                if (status.isLimited) {
+                    if (typeof window.showLimitReachedModal === 'function') {
+                        window.showLimitReachedModal();
+                    } else {
+                        window.location.href = '/cuenta/subir-kit.html?limit=reached';
+                    }
+                    return;
+                }
+            }
+
+            // 2. Async Re-Verify (just in case)
+            if (window.AuthUtils && window.AuthUtils.getUploadLimitStatus) {
+                const status = await window.AuthUtils.getUploadLimitStatus();
+                if (status.isLimited) {
+                    if (typeof window.showLimitReachedModal === 'function') {
+                        window.showLimitReachedModal();
+                    } else {
+                        window.location.href = '/cuenta/subir-kit.html?limit=reached';
+                    }
+                    return;
+                }
+            }
+
+            // 3. Proceed
+            window.location.href = url;
+        }
+    };
 
     // Listen for auth changes (e.g. sign out)
     supabaseClient.auth.onAuthStateChange((event, session) => {

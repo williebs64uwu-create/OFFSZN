@@ -241,25 +241,31 @@ const processSubscriptionAudit = async (paymentId) => {
 // ==========================================
 
 const PAYPAL_PLAN_PRICES = {
-    starter: { amount: '5.00', title: 'OFFSZN Starter Plan (1 Month)' },
-    pro: { amount: '7.00', title: 'OFFSZN PRO Plan (1 Month)' }
+    starter: { 
+        monthly: { amount: '5.00', title: 'OFFSZN Starter Plan (1 Month)', durationDays: 30, credits: 60 },
+        annual: { amount: '20.00', title: 'OFFSZN Starter Plan (1 Year)', durationDays: 365, credits: 720 }
+    },
+    pro: { 
+        monthly: { amount: '7.00', title: 'OFFSZN PRO Plan (1 Month)', durationDays: 30, credits: 100 },
+        annual: { amount: '30.00', title: 'OFFSZN PRO Plan (1 Year)', durationDays: 365, credits: 1200 }
+    }
 };
 
 export const createPayPalSubscriptionOrder = async (req, res) => {
     try {
         const userId = req.user.userId;
-        const { plan } = req.body;
+        const { plan, interval = 'monthly' } = req.body;
 
-        if (!plan || !PAYPAL_PLAN_PRICES[plan]) {
-            return res.status(400).json({ error: 'Plan inválido. Debe ser starter o pro.' });
+        if (!plan || !PAYPAL_PLAN_PRICES[plan] || !PAYPAL_PLAN_PRICES[plan][interval]) {
+            return res.status(400).json({ error: 'Plan o intervalo inválido.' });
         }
 
-        const planData = PAYPAL_PLAN_PRICES[plan];
+        const planData = PAYPAL_PLAN_PRICES[plan][interval];
 
         // Payee = platform email from .env (NEVER from frontend)
         const platformPayee = PLATFORM_PAYPAL_EMAIL && PLATFORM_PAYPAL_EMAIL.includes('@')
             ? { email_address: PLATFORM_PAYPAL_EMAIL }
-            : { merchant_id: 'BK7AFKN36JSWW' }; // fallback merchant ID
+            : { merchant_id: 'MXV5F6X8JXG4S' }; // fallback merchant ID
 
         const request = new paypal.orders.OrdersCreateRequest();
         request.prefer('return=representation');
@@ -295,17 +301,56 @@ export const createPayPalSubscriptionOrder = async (req, res) => {
 export const capturePayPalSubscriptionOrder = async (req, res) => {
     try {
         const userId = req.user.userId;
-        const { orderID, plan } = req.body;
+        const { orderID, plan, interval = 'monthly' } = req.body;
 
         if (!orderID) return res.status(400).json({ error: 'orderID es requerido.' });
-        if (!plan || !PAYPAL_PLAN_PRICES[plan]) return res.status(400).json({ error: 'Plan inválido.' });
+        if (!plan || !PAYPAL_PLAN_PRICES[plan] || !PAYPAL_PLAN_PRICES[plan][interval]) return res.status(400).json({ error: 'Plan o intervalo inválido.' });
+
+        // 0. IDEMPOTENCY CHECK: Check if this order was already processed
+        // This prevents duplicate records if the frontend retries or if PayPal's transient 500 happened AFTER success.
+        const { data: existingSub, error: checkError } = await supabase
+            .from('subscriptions')
+            .select('id, plan_id')
+            .eq('provider_subscription_id', orderID)
+            .maybeSingle();
+
+        if (checkError) {
+            console.error('[PayPal Sub] Error checking idempotency:', checkError);
+        }
+
+        if (existingSub) {
+            console.log(`[PayPal Sub] Order ${orderID} already processed. Returning success to client.`);
+            return res.status(200).json({
+                status: 'approved',
+                plan: plan,
+                message: 'Subscription already active'
+            });
+        }
 
         // 1. Capture the payment
         const captureReq = new paypal.orders.OrdersCaptureRequest(orderID);
         captureReq.requestBody({});
 
-        const response = await paypalClient.client().execute(captureReq);
-        console.log(`[PayPal Sub] Capture response: ${response.result.status} for order ${orderID}`);
+        let response;
+        try {
+            response = await paypalClient.client().execute(captureReq);
+            console.log(`[PayPal Sub] Capture response: ${response.result.status} for order ${orderID}`);
+        } catch (captureErr) {
+            // Detailed Logging for 500/Internal Server Errors from PayPal
+            console.error('❌ [PayPal Sub] PayPal API Capture Error:');
+            if (captureErr.message) {
+                try {
+                    const parsedError = JSON.parse(captureErr.message);
+                    console.error('Full PayPal Error:', JSON.stringify(parsedError, null, 2));
+                } catch (e) {
+                    console.error('Error Message:', captureErr.message);
+                }
+            }
+            if (captureErr.statusCode) console.error('Status Code:', captureErr.statusCode);
+            
+            // Re-throw to be caught by the outer catch block
+            throw captureErr;
+        }
 
         if (response.result.status !== 'COMPLETED') {
             return res.status(400).json({
@@ -316,35 +361,44 @@ export const capturePayPalSubscriptionOrder = async (req, res) => {
 
         // 2. Verify the captured amount matches the plan price (ANTI-TAMPER)
         const capturedAmount = response.result.purchase_units?.[0]?.payments?.captures?.[0]?.amount;
-        const expectedAmount = PAYPAL_PLAN_PRICES[plan].amount;
+        const planData = PAYPAL_PLAN_PRICES[plan][interval];
+        const expectedAmount = planData.amount;
 
         if (!capturedAmount || capturedAmount.value !== expectedAmount || capturedAmount.currency_code !== 'USD') {
             console.error(`[PayPal Sub] AMOUNT MISMATCH! Expected $${expectedAmount} USD, got $${capturedAmount?.value} ${capturedAmount?.currency_code}`);
             return res.status(400).json({ error: 'Error de verificación de monto.' });
         }
 
-        console.log(`✅ [PayPal Sub] Payment verified: $${capturedAmount.value} USD for ${plan}. Upgrading user ${userId}...`);
+        console.log(`✅ [PayPal Sub] Payment verified: $${capturedAmount.value} USD for ${plan} (${interval}). Upgrading user ${userId}...`);
 
-        // 3. Upgrade user plan (same logic as MP)
-        await supabase.from('subscriptions').insert({
+        // 3. Upgrade user plan
+        const { error: insertError } = await supabase.from('subscriptions').insert({
             user_id: userId,
-            plan_id: plan + '_monthly',
+            plan_id: `${plan}_${interval}`,
             status: 'active',
             provider: 'paypal',
             provider_subscription_id: orderID,
-            current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+            current_period_end: new Date(Date.now() + planData.durationDays * 24 * 60 * 60 * 1000).toISOString()
         });
+
+        if (insertError) {
+            // If we hit a unique constraint here, it means another process just finished it
+            if (insertError.code === '23505') {
+                 console.log(`[PayPal Sub] Race condition: Order ${orderID} handled by parallel request.`);
+                 return res.status(200).json({ status: 'approved', plan: plan });
+            }
+            throw insertError;
+        }
 
         await supabase.from('profiles').update({ plan: plan }).eq('id', userId);
 
         // 4. Give credits
-        const creditsMap = { starter: 60, pro: 100 };
-        const creditsToGive = creditsMap[plan];
+        const creditsToGive = planData.credits;
         const { data: profile } = await supabase.from('profiles').select('reward_balance').eq('id', userId).single();
         const currentBalance = profile?.reward_balance || 0;
         await supabase.from('profiles').update({ reward_balance: currentBalance + creditsToGive }).eq('id', userId);
 
-        console.log(`✅ [PayPal Sub] Plan upgraded to ${plan}, ${creditsToGive} credits given.`);
+        console.log(`✅ [PayPal Sub] Plan upgraded to ${plan} (${interval}), ${creditsToGive} credits given.`);
 
         res.status(200).json({
             status: 'approved',
@@ -353,7 +407,52 @@ export const capturePayPalSubscriptionOrder = async (req, res) => {
         });
 
     } catch (err) {
-        console.error('❌ [PayPal Sub] Capture Error:', err);
+        console.error('❌ [PayPal Sub] General Exception during Capture:', err.message);
         res.status(500).json({ error: 'Error capturing PayPal subscription payment.', details: err.message });
+    }
+};
+
+export const subscribePayPalSubscription = async (req, res) => {
+    try {
+        const userId = req.user.userId;
+        const { subscriptionID, plan, interval } = req.body;
+
+        if (!subscriptionID) return res.status(400).json({ error: 'subscriptionID es requerido.' });
+        if (!plan || !PAYPAL_PLAN_PRICES[plan] || !PAYPAL_PLAN_PRICES[plan][interval]) return res.status(400).json({ error: 'Plan o intervalo inválido.' });
+        if (interval !== 'annual') return res.status(400).json({ error: 'Solo se soporta billing anual via suscripciones.' });
+
+        console.log(`✅ [PayPal Sub] Subscription Created: ${subscriptionID} for ${plan}. Upgrading user ${userId}...`);
+
+        const planData = PAYPAL_PLAN_PRICES[plan][interval];
+
+        // Upgrade user plan
+        await supabase.from('subscriptions').insert({
+            user_id: userId,
+            plan_id: `${plan}_${interval}`,
+            status: 'active',
+            provider: 'paypal',
+            provider_subscription_id: subscriptionID,
+            current_period_end: new Date(Date.now() + planData.durationDays * 24 * 60 * 60 * 1000).toISOString()
+        });
+
+        await supabase.from('profiles').update({ plan: plan }).eq('id', userId);
+
+        // Give credits
+        const creditsToGive = planData.credits;
+        const { data: profile } = await supabase.from('profiles').select('reward_balance').eq('id', userId).single();
+        const currentBalance = profile?.reward_balance || 0;
+        await supabase.from('profiles').update({ reward_balance: currentBalance + creditsToGive }).eq('id', userId);
+
+        console.log(`✅ [PayPal Sub] Plan upgraded to ${plan} (${interval}), ${creditsToGive} credits given.`);
+
+        res.status(200).json({
+            status: 'approved',
+            plan: plan,
+            credits: creditsToGive
+        });
+
+    } catch (err) {
+        console.error('❌ [PayPal Sub] Subscribe Error:', err);
+        res.status(500).json({ error: 'Error procesando suscripción PayPal.', details: err.message });
     }
 };

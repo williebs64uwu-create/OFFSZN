@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { authenticateTokenMiddleware } from '../../middlewares/authenticateTokenMiddleware.js';
-import { processSubscriptionPayment, handleSubscriptionWebhook, createSubscriptionPreference, getPublicKey, createPayPalSubscriptionOrder, capturePayPalSubscriptionOrder } from '../controllers/SubscriptionController.js';
+import { processSubscriptionPayment, handleSubscriptionWebhook, createSubscriptionPreference, getPublicKey, createPayPalSubscriptionOrder, capturePayPalSubscriptionOrder, subscribePayPalSubscription } from '../controllers/SubscriptionController.js';
 
 const router = Router();
 
@@ -35,6 +35,12 @@ router.post(
     '/subscriptions/paypal/capture',
     authenticateTokenMiddleware,
     capturePayPalSubscriptionOrder
+);
+
+router.post(
+    '/subscriptions/paypal/subscribe',
+    authenticateTokenMiddleware,
+    subscribePayPalSubscription
 );
 
 export default router;

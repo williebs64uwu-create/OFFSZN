@@ -585,10 +585,90 @@
             transform: translateY(0);
         }
     }
+    /* Limit Banner */
+    .limit-banner {
+        width: 100%;
+        max-width: 800px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 30px;
+        display: none;
+        align-items: center;
+        gap: 20px;
+        backdrop-filter: blur(10px);
+        animation: fadeInUp 0.5s ease-out;
+    }
+
+    .limit-banner.active {
+        display: flex;
+    }
+
+    .limit-banner-icon {
+        width: 50px;
+        height: 50px;
+        background: #fff;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        color: #000;
+        flex-shrink: 0;
+        box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+    }
+
+    .limit-banner-content {
+        flex: 1;
+    }
+
+    .limit-banner-title {
+        font-weight: 700;
+        font-size: 16px;
+        margin-bottom: 4px;
+        color: #fff;
+    }
+
+    .limit-banner-text {
+        font-size: 14px;
+        color: #aaa;
+    }
+
+    .limit-banner-btn {
+        background: #fff;
+        color: #000;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 100px;
+        font-weight: 700;
+        font-size: 13px;
+        cursor: pointer;
+        transition: all 0.2s;
+        white-space: nowrap;
+    }
+
+    .limit-banner-btn:hover {
+        transform: scale(1.05);
+        box-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
+    }
 </style>
 </head>
 
-<body>
+<body onload="checkUploadLimitQuery();">
+    <script>
+        function checkUploadLimitQuery() {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('limit') === 'reached') {
+                if (typeof showLimitReachedModal === 'function') {
+                    showLimitReachedModal();
+                } else {
+                    // Fallback if function not defined yet
+                    setTimeout(showLimitReachedModal, 500);
+                }
+            }
+        }
+    </script>
 
     <!-- SIDEBAR (Identical to mis-kits.html) -->
     <div class="sidebar-stub">
@@ -605,7 +685,7 @@
             </a>
         </div>
 
-        <!-- 1. GESTIÓN -->
+        <!-- 1. GESTIÃ“N -->
         
         <a href="/cuenta/dashboard.html" class="sidebar-icon-btn" data-title="Dashboard"><i
                 class="bi bi-grid-fill"></i> <span>Dashboard</span></a>
@@ -629,8 +709,8 @@
         
         <a href="/cuenta/cursos.html" class="sidebar-icon-btn" data-title="Cursos"><i
                 class="bi bi-mortarboard-fill"></i> <span>Cursos</span></a>
-        <a href="/cuenta/analiticas.html" class="sidebar-icon-btn" data-title="Estadísticas"><i
-                class="bi bi-bar-chart-fill"></i> <span>Estadísticas</span></a>
+        <a href="/cuenta/analiticas.html" class="sidebar-icon-btn" data-title="EstadÃ­sticas"><i
+                class="bi bi-bar-chart-fill"></i> <span>EstadÃ­sticas</span></a>
 
         <!-- 4. SOCIAL -->
         
@@ -639,12 +719,23 @@
 
         <!-- UPGRADE BUTTON (Standardized) -->
         <a href="/cuenta/planes.html" class="sidebar-icon-btn" title="Mejorar Plan" style="color:#fff; margin-top: 10px;">
-            <i style="color: #fff;" class="bi bi-rocket-takeoff-fill"></i> <span style="color: #fff;">Mejorar Plan</span>
+            <i style="color: #fff;" class="bi bi-star-fill"></i> <span style="color: #fff;">Mejorar Plan</span>
         </a>
     </div>
 
     <!-- MAIN CONTENT -->
     <main class="main-content">
+        <!-- Limit Reached Banner -->
+        <div id="limitBanner" class="limit-banner">
+            <div class="limit-banner-icon">
+                <i class="bi bi-star-fill"></i>
+            </div>
+            <div class="limit-banner-content">
+                <div class="limit-banner-title">Límite de 30 productos alcanzado</div>
+                <div class="limit-banner-text">Consigue <b>subidas ilimitadas</b> al precio del Plan Pro. Solo <b>$2.50/mes</b> con nuestra oferta anual.</div>
+            </div>
+            <button class="limit-banner-btn" onclick="window.location.href='/cuenta/planes.html'">Mejorar Ahora</button>
+        </div>
 
         <div class="header entry-anim" style="animation-delay: 0.1s;">
             <h1>¿Qué quieres subir hoy?</h1>
@@ -664,26 +755,26 @@
             </a>
 
             <!-- DRUM KITS -->
-            <a href="/cuenta/Upload/Drum-Kits.html" class="option-card drumkits entry-anim"
+            <a href="#" onclick="event.preventDefault(); window.AuthGuard ? window.AuthGuard.safeNavigate('/cuenta/Upload/Drum-Kits.html') : window.location.href='/cuenta/Upload/Drum-Kits.html';" class="option-card drumkits entry-anim"
                 style="animation-delay: 0.3s;">
                 <div class="icon-square"><i class="bi bi-boombox-fill"></i></div>
                 <h3>Drum Kit</h3>
-                <p>Comparte tus mejores sonidos, one-shots y loops de batería.</p>
+                <p>Comparte tus mejores sonidos, one-shots y loops de baterÃ­a.</p>
             </a>
 
             <!-- PRESETS -->
-            <a href="/cuenta/Upload/Presets.html" class="option-card presets entry-anim" style="animation-delay: 0.4s;">
+            <a href="#" onclick="event.preventDefault(); window.AuthGuard ? window.AuthGuard.safeNavigate('/cuenta/Upload/Presets.html') : window.location.href='/cuenta/Upload/Presets.html';" class="option-card presets entry-anim" style="animation-delay: 0.4s;">
                 <div class="icon-square"><i class="bi bi-sliders"></i></div>
                 <h3>Preset Banks</h3>
                 <p>Vende bancos de sonidos para VSTs como Serum, Analog Lab, etc.</p>
             </a>
 
             <!-- LOOP KITS -->
-            <a href="/cuenta/Upload/Loop-Kits.html" class="option-card loopkits entry-anim"
+            <a href="#" onclick="event.preventDefault(); window.AuthGuard ? window.AuthGuard.safeNavigate('/cuenta/Upload/Loop-Kits.html') : window.location.href='/cuenta/Upload/Loop-Kits.html';" class="option-card loopkits entry-anim"
                 style="animation-delay: 0.5s;">
                 <div class="icon-square"><i class="bi bi-infinity"></i></div>
                 <h3>Loop Kit</h3>
-                <p>Sube tus mejores melodías y loops de alta calidad.</p>
+                <p>Sube tus mejores melodÃ­as y loops de alta calidad.</p>
             </a>
 
         </div>
@@ -695,11 +786,11 @@
     <div class="modal-overlay" id="modalCoupon">
         <div class="elite-modal">
             <div class="modal-header">
-                <h3><i class="bi bi-ticket-perforated" style="color:var(--accent-purple);"></i> Crear Cupón</h3>
+                <h3><i class="bi bi-ticket-perforated" style="color:var(--accent-purple);"></i> Crear CupÃ³n</h3>
                 <button class="btn-close-modal" onclick="closeModals()"><i class="bi bi-x-lg"></i></button>
             </div>
             <div class="modal-body">
-                <input type="text" id="couponCode" placeholder="Código (ej. VERANO2025)"
+                <input type="text" id="couponCode" placeholder="CÃ³digo (ej. VERANO2025)"
                     style="text-transform:uppercase;">
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
                     <input type="number" id="couponAmount" placeholder="Monto (ej. 20)">
@@ -711,53 +802,27 @@
             </div>
             <div class="modal-footer">
                 <button class="elite-btn-ghost" onclick="closeModals()">Cancelar</button>
-                <button class="elite-btn" onclick="saveCoupon()">Crear Cupón</button>
+                <button class="elite-btn" onclick="saveCoupon()">Crear CupÃ³n</button>
             </div>
         </div>
     </div>
 
     <!-- PRICING MODAL -->
     <div class="modal-overlay" id="modalPricing" onclick="if(event.target === this) closeModals()">
-        <div class="elite-modal">
+        <div class="elite-modal" style="max-width: 450px;">
             <div class="modal-header-custom">
-                <h3><i class="bi bi-rocket-takeoff-fill" style="color:#fff;"></i> Mejorar Plan</h3>
+                <h3><i class="bi bi-star-fill" style="color:#fff;"></i> ¡Límite Alcanzado!</h3>
                 <button class="btn-modal-close" onclick="closeModals()"><i class="bi bi-x"></i></button>
             </div>
 
-            <p style="color:#888; font-size:14px; margin-bottom:20px;">Elige el plan perfecto para potenciar tu carrera
-                musical.</p>
+            <p style="color:#888; font-size:15px; margin-bottom:24px; line-height: 1.5;">
+                <span style="color:#fff; font-weight:600;">Alcanzaste el límite de 30 productos subidos.</span><br>
+                Mejora tu plan hoy mismo para tener subidas ilimitadas, conservar el 100% de tus ventas y potenciar tu carrera musical al siguiente nivel.
+            </p>
 
-            <div class="plans-container">
-                <!-- Basic -->
-                <div class="plan-card" onclick="selectPlan('basic')" id="plan-basic">
-                    <div class="plan-top">
-                        <div class="plan-name">Basic <small>Para empezar</small></div>
-                        <div class="plan-price">$9<span>/mo</span></div>
-                    </div>
-                    <div class="plan-features">
-                        <div class="feature-item"><i class="bi bi-check-circle-fill"></i> 5 Subidas Mensuales</div>
-                        <div class="feature-item"><i class="bi bi-check-circle-fill"></i> Analytics Básicas</div>
-                        <div class="feature-item"><i class="bi bi-check-circle-fill"></i> Soporte 24/7</div>
-                    </div>
-                </div>
-
-                <!-- Pro -->
-                <div class="plan-card selected" onclick="selectPlan('pro')" id="plan-pro">
-                    <div class="plan-top">
-                        <div class="plan-name">Pro <small>Para profesionales</small></div>
-                        <div class="plan-price">$19<span>/mo</span></div>
-                    </div>
-                    <div class="plan-features">
-                        <div class="feature-item"><i class="bi bi-check-circle-fill"></i> Subidas Ilimitadas</div>
-                        <div class="feature-item"><i class="bi bi-check-circle-fill"></i> Analytics Avanzadas</div>
-                        <div class="feature-item"><i class="bi bi-check-circle-fill"></i> 0% Comisión</div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="modal-footer">
-                <button class="btn-cancel" onclick="closeModals()">Cancelar</button>
-                <button class="btn-confirm" onclick="confirmPlan()">Actualizar Plan</button>
+            <div class="modal-footer" style="display: flex; gap: 12px; margin-top: 10px;">
+                <button class="btn-cancel" onclick="closeModals()" style="flex: 1; padding: 12px; border-radius: 8px; background: #1a1a1a; color: #aaa; border: 1px solid #333; cursor: pointer;">Cancelar</button>
+                <button class="btn-confirm" onclick="window.location.href='/cuenta/planes.html'" style="flex: 1; padding: 12px; border-radius: 8px; background: #fff; color: #000; font-weight: 600; border: none; cursor: pointer;">Ver Planes</button>
             </div>
         </div>
     </div>
@@ -788,7 +853,7 @@
 
                     <button
                         style="width: 100%; padding: 16px; border-radius: 50px; background: #fff; color: #000; border: none; font-size: 16px; font-weight: 700; cursor: pointer; transition: all 0.2s; margin-top: 10px;"
-                        onclick="window.location.href='/upload/beats.html'"
+                        onclick="if(window.AuthGuard) window.AuthGuard.safeNavigate('/upload/beats.html'); else window.location.href='/upload/beats.html';"
                         onmouseover="this.style.transform='scale(1.02)'; this.style.boxShadow='0 0 20px rgba(255,255,255,0.2)'"
                         onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='none'">Comenzar</button>
                 </div>
@@ -807,7 +872,7 @@
 
                     <button id="btnYoutubeUploadStrategy"
                         style="width: 100%; padding: 16px; border-radius: 50px; background: #fff; color: #000; border: none; font-size: 16px; font-weight: 700; cursor: pointer; transition: all 0.2s; margin-top: 10px;"
-                        onclick="window.location.href='/upload/beats-yt.html'"
+                        onclick="if(window.AuthGuard) window.AuthGuard.safeNavigate('/upload/beats-yt.html'); else window.location.href='/upload/beats-yt.html';"
                         onmouseover="this.style.transform='scale(1.02)'; this.style.boxShadow='0 0 20px rgba(255,255,255,0.2)'"
                         onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='none'">Comenzar</button>
                 </div>
@@ -819,14 +884,55 @@
 
         // (Supabase init logic as valid placeholder)
 
-        // Dynamically Check User Plan and Update Modal Button (Hardened)
+                // Dynamically Check User Plan and Update Modal Button (Hardened)
         document.addEventListener('DOMContentLoaded', async () => {
             if (window.AuthUtils && window.AuthUtils.initSupabase) window.AuthUtils.initSupabase();
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const isForcedLimit = urlParams.get('limit') === 'reached';
 
             // Wait for auth to be ready
             if (window.checkAuth) await window.checkAuth();
 
-            if (window.AuthUtils && window.AuthUtils.checkFeatureAccess) {
+            if (window.AuthUtils && window.AuthUtils.getUploadLimitStatus) {
+                const status = await window.AuthUtils.getUploadLimitStatus();
+                
+                if (status.isLimited || isForcedLimit) {
+                    const banner = document.getElementById('limitBanner');
+                    if (banner) banner.classList.add('active');
+
+                    // Hardcode persuasiveness
+                    const bannerTitle = banner.querySelector('.limit-banner-title');
+                    const bannerText = banner.querySelector('.limit-banner-text');
+                    
+                    if (status.isLimited) {
+                        bannerTitle.innerHTML = `Límite de ${status.limit} productos alcanzado`;
+                        bannerText.innerHTML = `Tienes <b>${status.count}</b> productos. Mejora tu plan por solo <b>$7/mes</b> para tener subidas ilimitadas y 0% de comisión.`;
+                    }
+
+                    // Disable cards and point them to upgrade
+                    const cards = document.querySelectorAll('.option-card');
+                    cards.forEach(card => {
+                        const btn = card.querySelector('button');
+                        if (btn) {
+                            btn.onclick = (e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                window.showLimitReachedModal ? window.showLimitReachedModal() : window.openPricingModal();
+                            };
+                            btn.style.background = '#444';
+                            btn.style.color = '#888';
+                        }
+                        
+                        card.onclick = (e) => {
+                            e.preventDefault();
+                            if (window.showLimitReachedModal) {
+                                window.showLimitReachedModal();
+                            }
+                        };
+                    });
+                }
+
                 const hasAccess = await window.AuthUtils.checkFeatureAccess('youtube_upload');
                 const ytBtn = document.getElementById('btnYoutubeUploadStrategy');
 
@@ -834,7 +940,10 @@
                     ytBtn.innerHTML = '<i class="bi bi-star-fill" style="margin-right: 8px;"></i>Mejorar Plan';
                     ytBtn.style.background = '#FFD700'; // Gold style
                     ytBtn.style.color = '#000';
-                    ytBtn.onclick = () => window.location.href = '/cuenta/planes.html';
+                    ytBtn.onclick = (e) => {
+                        e.stopPropagation();
+                        window.location.href = '/cuenta/planes.html';
+                    };
                 }
             }
         });
@@ -847,20 +956,32 @@
         window.saveCoupon = () => {
             // Mock Save
             const code = document.getElementById('couponCode').value;
-            if (!code) return window.showToast("Ingresa un código", "error");
-            window.showToast("Cupón creado (Demo)", "success");
+            if (!code) return window.showToast("Ingresa un cÃ³digo", "error");
+            window.showToast("CupÃ³n creado (Demo)", "success");
             window.closeModals();
         };
 
         window.selectPlan = (plan) => {
             document.querySelectorAll('.plan-card').forEach(c => c.classList.remove('selected'));
-            if (document.getElementById('plan-' + plan)) document.getElementById('plan-' + plan).classList.add('selected');
+            const selected = document.getElementById('plan-' + plan);
+            if (selected) {
+                selected.classList.add('selected');
+                window.selectedPlanId = plan;
+            }
         }
 
         window.confirmPlan = () => {
             window.closeModals();
-            alert("Redirecting to checkout...");
+            // Redirect to planes or checkout
+            window.location.href = '/cuenta/planes.html' + (window.selectedPlanId ? '?plan=' + window.selectedPlanId : '');
         }
+
+        window.showLimitReachedModal = function() {
+            const modal = document.getElementById('modalPricing');
+            if (modal) {
+                modal.classList.add('active');
+            }
+        };
 
         window.showToast = (msg, type = 'success') => {
             let container = document.getElementById('toastContainer');
@@ -877,6 +998,14 @@
             container.appendChild(toast);
             setTimeout(() => toast.remove(), 3000);
         }
+
+        // Auto-show modal if redirected with limit reached
+        window.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('limit') === 'reached') {
+                if (window.showLimitReachedModal) window.showLimitReachedModal();
+            }
+        });
     </script>
 
 

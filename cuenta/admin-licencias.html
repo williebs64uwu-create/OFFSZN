@@ -69,21 +69,18 @@
         .sidebar-icon-btn[data-title]:hover::after, .sidebar-icon-btn[title]:hover::after { display: none; }
 
         :root {
-            --accent-purple: #8B5CF6;
-            /* MATCHES DASHBOARD */
-            --accent-glow: rgba(139, 92, 246, 0.5);
-            /* MATCHES DASHBOARD */
-            --purple-dark: #560bad;
+            --accent-purple: #ffffff;
+            --accent-glow: transparent;
+            --purple-dark: #111111;
             --bg-black: #000000;
-            --bg-card: #0f0f0f;
+            --bg-card: #0A0A0A;
             --text-primary: #ffffff;
             --text-secondary: #888;
             --border: rgba(255, 255, 255, 0.1);
             --border-subtle: rgba(255, 255, 255, 0.05);
-            /* Elite Requirement */
-            --gold-gradient: linear-gradient(90deg, #FFD700, #FFA500);
-            --green-success: #0cbc87;
-            --red-error: #ef4444;
+            --gold-gradient: linear-gradient(90deg, #ffffff, #888888);
+            --green-success: #ffffff;
+            --red-error: #555555;
         }
 
         /* SKELETON ANIMATION & STYLES */
@@ -143,7 +140,7 @@
             left: 0;
             width: 100vw;
             height: 100vh;
-            background: radial-gradient(circle at 50% 50%, rgba(139, 92, 246, 0.08), transparent 70%);
+            background: radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.03), transparent 70%);
             z-index: -1;
             pointer-events: none;
         }
@@ -771,127 +768,169 @@
             opacity: 1;
         }
 
-        .custom-modal {
-            background: #111;
-            border: 1px solid #333;
-            border-radius: 20px;
-            padding: 2rem;
-            width: 100%;
-            max-width: 400px;
-            text-align: center;
-            transform: scale(0.95);
-            transition: transform 0.2s;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
-        }
+    .elite-modal {
+      background: #000;
+      border: 1px solid #222;
+      border-radius: 24px;
+      width: 90%;
+      max-width: 400px;
+      padding: 40px 30px;
+      text-align: center;
+      position: relative;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+    }
 
-        .custom-modal-overlay.show .custom-modal {
-            transform: scale(1);
-        }
+    .modal-icon-wrapper {
+      width: 60px;
+      height: 60px;
+      background: #111;
+      border: 1px solid #222;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 24px;
+      color: #fff;
+      font-size: 24px;
+    }
 
-        .custom-modal h3 {
-            margin: 0 0 1rem;
-            font-size: 1.25rem;
-            color: #fff;
-        }
+    .elite-modal h3 {
+      font-size: 22px;
+      font-weight: 800;
+      color: #fff;
+      margin-bottom: 12px;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
 
-        .custom-modal p {
-            color: #888;
-            margin-bottom: 2rem;
-            font-size: 0.95rem;
-            line-height: 1.5;
-        }
+    .elite-modal p {
+      color: #888;
+      font-size: 14px;
+      line-height: 1.6;
+      margin-bottom: 30px;
+    }
 
-        .modal-actions {
-            display: flex;
-            gap: 1rem;
-        }
+    .btn-upgrade-modal {
+      display: block;
+      width: 100%;
+      padding: 16px;
+      background: #fff;
+      color: #000;
+      border-radius: 12px;
+      font-weight: 800;
+      text-decoration: none;
+      font-size: 15px;
+      transition: all 0.2s;
+      border: none;
+      cursor: pointer;
+    }
 
-        .btn-modal-cancel {
-            flex: 1;
-            padding: 12px;
-            background: transparent;
-            border: 1px solid #333;
-            color: #fff;
-            border-radius: 50px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.2s;
-        }
+    .btn-upgrade-modal:hover {
+      background: #e0e0e0;
+      transform: translateY(-2px);
+    }
 
-        .btn-modal-cancel:hover {
-            border-color: #555;
-            background: rgba(255, 255, 255, 0.05);
-        }
+    .btn-close-modal-link {
+      margin-top: 15px;
+      background: transparent;
+      border: none;
+      color: #555;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.2s;
+    }
 
-        .btn-modal-confirm {
-            flex: 1;
-            padding: 12px;
-            background: var(--text-primary);
-            color: #000;
-            border: none;
-            border-radius: 50px;
-            cursor: pointer;
-            font-weight: 700;
-            transition: opacity 0.2s;
-        }
+    .btn-close-modal-link:hover {
+      color: #fff;
+    }
 
-        .btn-modal-confirm:hover {
-            opacity: 0.9;
-        }
+    /* ===== TOAST NOTIFICATIONS ===== */
+    .toast-container {
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        z-index: 9999;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        pointer-events: none;
+    }
 
-        @media (max-width: 900px) {
-            .workspace-grid {
-                grid-template-columns: 1fr;
-            }
-        }
+    .elite-toast {
+        background: #111;
+        border: 1px solid #333;
+        color: #fff;
+        padding: 12px 16px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 250px;
+        transform: translateY(20px);
+        opacity: 0;
+        animation: toastSlideUp 0.3s forwards ease-out;
+        pointer-events: auto;
+    }
 
-        /* ===== TOAST NOTIFICATIONS ===== */
-        .toast-container {
-            position: fixed;
-            bottom: 24px;
-            right: 24px;
-            z-index: 9999;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            pointer-events: none;
-        }
+    .elite-toast.success i {
+        color: #10B981;
+    }
 
-        .elite-toast {
-            background: #111;
-            border: 1px solid #333;
-            color: #fff;
-            padding: 12px 16px;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            min-width: 250px;
-            transform: translateY(20px);
-            opacity: 0;
-            animation: toastSlideUp 0.3s forwards ease-out;
-            pointer-events: auto;
-        }
+    .elite-toast.error i {
+        color: #EF4444;
+    }
 
-        .elite-toast.success i {
-            color: #10B981;
+    @keyframes toastSlideUp {
+        to {
+            transform: translateY(0);
+            opacity: 1;
         }
+    }
+    .btn-modal-cancel:hover {
+        border-color: #555;
+        background: rgba(255, 255, 255, 0.05);
+    }
 
-        .elite-toast.error i {
-            color: #EF4444;
-        }
+    .btn-modal-confirm {
+        flex: 1;
+        padding: 12px;
+        background: var(--text-primary);
+        color: #000;
+        border: none;
+        border-radius: 50px;
+        cursor: pointer;
+        font-weight: 700;
+        transition: opacity 0.2s;
+    }
 
-        @keyframes toastSlideUp {
-            to {
-                transform: translateY(0);
-                opacity: 1;
-            }
+    .btn-modal-confirm:hover {
+        opacity: 0.9;
+    }
+
+    @media (max-width: 900px) {
+        .workspace-grid {
+            grid-template-columns: 1fr;
         }
-    </style>
+    }
+  </style>
 </head>
 
 <body>
+  <!-- Simplified Modal Structure -->
+  <div class="custom-modal-overlay" id="pricingModal">
+    <div class="elite-modal">
+        <div class="modal-icon-wrapper">
+            <i class="bi bi-star-fill"></i>
+        </div>
+        <h3>Límite alcanzado</h3>
+        <p>Has llegado al límite de 30 productos. Pásate al plan PRO para tener subidas ilimitadas y 0% de comisión.</p>
+        <button class="btn-upgrade-modal" onclick="window.location.href='planes.html'">Mejorar Plan</button>
+        <button class="btn-close-modal-link" onclick="closePricingModal()">Quizás más tarde</button>
+    </div>
+  </div>
+
+  <!-- BACKGROUND -->
     <!-- BACKGROUND -->
     <div class="radial-glow"></div>
 
@@ -941,7 +980,7 @@
 
         <!-- UPGRADE BUTTON (ROCKET) -->
         <a href="planes.html" class="sidebar-icon-btn" data-title="Mejorar Plan"
-            style="color:#fff; margin-top: 10px;"><i style="color: #fff;" class="bi bi-rocket-takeoff-fill"></i> <span style="color: #fff;">Mejorar Plan</span></a>
+            style="color:#fff; margin-top: 10px;"><i style="color: #fff;" class="bi bi-star-fill"></i> <span style="color: #fff;">Mejorar Plan</span></a>
     </div>
 
     <!-- MAIN CONTENT -->
