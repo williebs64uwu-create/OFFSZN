@@ -693,14 +693,14 @@ function setupFilterListeners() {
         if (currentFilters.freeOnly) {
             freeCheck.checked = true;
             if (priceSlider) priceSlider.disabled = true;
-            if (priceDisplay) priceDisplay.textContent = 'Gratis';
+            if (priceDisplay) priceDisplay.textContent = 'Plugins VST';
         }
 
         freeCheck.addEventListener('change', (e) => {
             currentFilters.freeOnly = e.target.checked;
             if (priceSlider) priceSlider.disabled = currentFilters.freeOnly;
             if (currentFilters.freeOnly) {
-                if (priceDisplay) priceDisplay.textContent = 'Gratis';
+                if (priceDisplay) priceDisplay.textContent = 'Plugins VST';
             } else {
                 if (priceSlider) updatePriceDisplay(parseFloat(priceSlider.value));
             }
@@ -1290,7 +1290,7 @@ function renderTrackRowMobile(p) {
     const lowestPrice = licenses.length > 0 ? Math.min(...licenses.map(l => l.price)) : (parseFloat(p.price_basic) || 0);
     const displayPrice = lowestPrice > 0
         ? (window.CurrencyManager?.format(lowestPrice) || `$${lowestPrice}`)
-        : 'GRATIS';
+        : 'PLUGINS VST';
     const storageVer = p.storage_version || p.r2_version || 'v2';
     const imgPlaceholder = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
     const imgAttr = `src="${imgPlaceholder}" data-r2-src="${escapeHTML(imgUrl)}"`;
@@ -1325,9 +1325,9 @@ function renderTrackRowMobile(p) {
                             onclick="event.stopPropagation(); window.handleLike(event, '${p.id}', this)">
                         <i class="bi ${isLiked ? 'bi-heart-fill liked' : 'bi-heart'}"></i>
                     </button>
-                    <div class="m-v2-price-btn ${displayPrice === 'GRATIS' ? 'free' : ''}" 
+                    <div class="m-v2-price-btn ${displayPrice === 'PLUGINS VST' ? 'free' : ''}" 
                          onclick="event.stopPropagation(); window.location.href='/product.html?id=${p.id}'">
-                        ${displayPrice === 'GRATIS' ? '<i class="bi bi-download"></i>' : escapeHTML(displayPrice)}
+                        ${displayPrice === 'PLUGINS VST' ? '<i class="bi bi-download"></i>' : escapeHTML(displayPrice)}
                     </div>
                 </div>
             </div>
@@ -1351,7 +1351,7 @@ function renderTrackRow(p) {
     const lowestPrice = licenses.length > 0 ? Math.min(...licenses.map(l => l.price)) : (parseFloat(p.price_basic) || 0);
     const displayPrice = lowestPrice > 0
         ? (window.CurrencyManager?.format(lowestPrice) || `$${lowestPrice}`)
-        : 'GRATIS';
+        : 'PLUGINS VST';
     const storageVer = p.storage_version || p.r2_version || 'v2';
     const isLiked = window.FavoritesManager?.isLiked(p.id) || false;
     const isActuallyR2 = window.AuthUtils && window.AuthUtils.isR2Url(imgUrl) && storageVer !== 'supabase';

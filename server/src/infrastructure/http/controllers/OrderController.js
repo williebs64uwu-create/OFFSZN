@@ -382,15 +382,25 @@ export const handleFreeGuestDownload = async (req, res) => {
         const { productId, guestEmail } = req.body;
         if (!productId || !guestEmail) return res.status(400).json({ error: 'Faltan datos' });
 
-        const { data: product, error: fetchError } = await supabase.from('products').select('*').eq('id', productId).single();
-        if (fetchError || !product) return res.status(404).json({ error: 'Producto no encontrado' });
+        // A. Product info with fallback for Analyzer
+        let product;
+        const isAnalyzer = productId === 'x-flow-analyzer';
 
-        if (product.is_free !== true) return res.status(403).json({ error: 'No es gratuito' });
+        if (isAnalyzer) {
+            product = { id: 'x-flow-analyzer', name: 'X Flow - Analyzer', is_free: true, producer_id: 'offszn-official' };
+        } else {
+            const { data, error: fetchError } = await supabase.from('products').select('*').eq('id', productId).single();
+            if (fetchError || !data) return res.status(404).json({ error: 'Producto no encontrado' });
+            if (data.is_free !== true) return res.status(403).json({ error: 'No es gratuito' });
+            product = data;
+        }
 
-        // A. Incrementar contador y B. Persistencia
+        // B. Incrementar contador y Persistencia
         let orderId = null;
         try {
-            await supabase.rpc('increment_product_downloads', { row_id: product.id });
+            if (!isAnalyzer) {
+                await supabase.rpc('increment_product_downloads', { row_id: product.id });
+            }
             const { data: newOrder } = await supabase.from('orders').insert([{
                 guest_email: guestEmail,
                 status: 'completed',
@@ -419,10 +429,16 @@ export const handleFreeGuestDownload = async (req, res) => {
                     .select('nickname')
                     .eq('email', guestEmail)
                     .maybeSingle();
-                // Enviar correo de "Descarga Lista" (Transactional - Brevo API)
-                if (sendOffsznEmail) {
-                    const subject = existingUser ? `✨ ¡Hola de nuevo, ${existingUser.nickname}! No olvides tu preset 🎹` : `📥 ¡Tu descarga de ${product.name} está lista! ✨`;
+                    let subject;
+                    if (isAnalyzer) {
+                        subject = `Procesamos tu descarga de X Flow - Analyzer`;
+                    } else {
+                        subject = existingUser ? `✨ ¡Hola de nuevo, ${existingUser.nickname}! Tu descarga está lista 🎹` : `📥 ¡Tu descarga de ${product.name} está lista! ✨`;
+                    }
                     
+                    const productTypeLabel = isAnalyzer ? '🛠️ Software' : `🎹 ${product.name}`;
+                    const productActionLabel = isAnalyzer ? 'Descarga Procesada Correctamente' : 'Tu producto está listo para descargar';
+
                     const html = `
                     <!DOCTYPE html>
                     <html>
@@ -453,8 +469,8 @@ export const handleFreeGuestDownload = async (req, res) => {
                                     <img src="https://offszn.lat/images/logo.webp" alt="OFFSZN" class="logo">
                                 </div>
                                 <div class="content">
-                                    <div class="product-tag">🎹 ${product.name}</div>
-                                    <h1>Tu producto está listo para descargar</h1>
+                                    <div class="product-tag">${productTypeLabel}</div>
+                                    <h1>${productActionLabel}</h1>
                                     <p>Gracias por confiar en <strong>OFFSZN</strong>. Hemos procesado tu descarga correctamente.</p>
                                     
                                     <a href="https://offszn.lat/register" class="button">Crear mi cuenta en OFFSZN</a>
@@ -477,8 +493,7 @@ export const handleFreeGuestDownload = async (req, res) => {
                     </html>
                     `;
 
-                    await sendOffsznEmail({ to: guestEmail, subject, html, fromName: 'OFFSZN No-Reply' });
-                }
+                    await sendOffsznEmail({ to: guestEmail, subject, html, fromName: 'OFFSZN' });
             } catch (e) { console.error("[GuestDownload] Email Flow Error:", e.message); }
         })();
 

@@ -1081,7 +1081,7 @@ function createProductCardHtml(product, format = 'standard') {
         const pType = (product.product_type || '').toLowerCase();
         const isTrulyFree = pType !== 'beat' && (product.is_free === true || String(product.is_free) === 'true') && (Number(product.price_basic) === 0 || !product.price_basic);
         let priceValue = product.price_basic !== undefined && product.price_basic !== null ? product.price_basic : '20';
-        const price = isTrulyFree ? 'FREE' : (window.CurrencyManager ? window.CurrencyManager.format(parseFloat(priceValue) || 0) : `$${priceValue}`);
+        const price = isTrulyFree ? 'PLUGINS VST' : (window.CurrencyManager ? window.CurrencyManager.format(parseFloat(priceValue) || 0) : `$${priceValue}`);
 
         return `
             <div class="preset-card-premium" data-product-id="${product.id}">
@@ -1102,7 +1102,7 @@ function createProductCardHtml(product, format = 'standard') {
         const pType = (product.product_type || '').toLowerCase();
         const isTrulyFree = pType !== 'beat' && (product.is_free === true || String(product.is_free) === 'true') && (Number(product.price_basic) === 0 || !product.price_basic);
         const priceValue = (product.price_basic && Number(product.price_basic) > 0) ? product.price_basic : '10';
-        const price = isTrulyFree ? 'GRATIS' : (window.CurrencyManager ? window.CurrencyManager.format(parseFloat(priceValue)) : `$${priceValue}`);
+        const price = isTrulyFree ? 'PLUGINS VST' : (window.CurrencyManager ? window.CurrencyManager.format(parseFloat(priceValue)) : `$${priceValue}`);
 
         // FIND REAL PRODUCER DATA
         let producer = Array.isArray(allProducers) ? allProducers.find(p => String(p.id) === String(product.producer_id)) : null;

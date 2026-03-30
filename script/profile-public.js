@@ -234,9 +234,13 @@ async function renderHeader(user, categoryCounts = null) {
     document.getElementById('profileName').innerText = user.nickname || "User";
 
     // Role / Verified
-    if (user.is_verified || user.is_producer) {
+    if (user.is_verified || user.is_producer || user.plan) {
         const verifyBadge = document.getElementById('profileVerified');
         verifyBadge.style.display = 'inline-block';
+        
+        // Remove previous plan classes for clean state
+        verifyBadge.classList.remove('starter', 'pro');
+        if (user.plan) verifyBadge.classList.add(user.plan);
 
         // Tooltip logic
         verifyBadge.classList.add('verified-container');
@@ -254,20 +258,42 @@ async function renderHeader(user, categoryCounts = null) {
         const ttIcon = document.createElement('i');
         ttIcon.className = 'bi bi-patch-check-fill';
         ttHeader.appendChild(ttIcon);
-        ttHeader.appendChild(document.createTextNode(' VERIFICADO OFFSZN'));
+        
+        let planTitle = ' VERIFICADO OFFSZN';
+        if (user.plan === 'pro') planTitle = ' OFFSZN PRO';
+        else if (user.plan === 'starter') planTitle = ' OFFSZN STARTER';
+        
+        const planLink = document.createElement('a');
+        planLink.href = '/cuenta/planes';
+        planLink.textContent = planTitle;
+        ttHeader.appendChild(planLink);
         tooltip.appendChild(ttHeader);
 
         const ttBody = document.createElement('div');
         ttBody.className = 'v-tooltip-body';
-        ttBody.appendChild(document.createTextNode('Plan Premium OFFSZN'));
-        ttBody.appendChild(document.createElement('br'));
-        ttBody.appendChild(document.createTextNode('Productor Verificado'));
-        ttBody.appendChild(document.createElement('br'));
-        const ttCert = document.createElement('span');
-        ttCert.style.color = '#888';
-        ttCert.style.fontSize = '0.7rem';
-        ttCert.textContent = 'Certificado Oficial';
-        ttBody.appendChild(ttCert);
+        
+        let planDesc = 'Plan Premium OFFSZN';
+        if (user.plan === 'pro') planDesc = 'Usuario Pro';
+        else if (user.plan === 'starter') planDesc = 'Usuario Starter';
+        
+        ttBody.appendChild(document.createTextNode(planDesc));
+
+        // Add plan start date if available
+        if (user.plan_start_date) {
+            const date = new Date(user.plan_start_date);
+            const options = { year: 'numeric', month: 'long' };
+            const dateStr = date.toLocaleDateString('es-ES', options);
+            
+            ttBody.appendChild(document.createElement('br'));
+            const dateEl = document.createElement('span');
+            dateEl.style.color = user.plan === 'pro' ? '#fbbf24' : '#94a3b8';
+            dateEl.style.fontSize = '0.75rem';
+            dateEl.style.marginTop = '4px';
+            dateEl.style.display = 'inline-block';
+            dateEl.textContent = `Desde ${dateStr}`;
+            ttBody.appendChild(dateEl);
+        }
+        
         tooltip.appendChild(ttBody);
 
         verifyBadge.appendChild(tooltip);
@@ -2905,10 +2931,11 @@ async function renderOldSchoolSidebar(user, categoryCounts = null) {
     h1.textContent = user.nickname || "User";
     nameRow.appendChild(h1);
 
-    if (user.is_verified || user.is_producer) {
+    if (user.is_verified || user.is_producer || user.plan) {
         const badge = document.createElement('div');
         badge.id = 'profileVerified';
         badge.className = 'verified-badge';
+        if (user.plan) badge.classList.add(user.plan);
         badge.innerHTML = '<i class="bi bi-patch-check-fill"></i>';
         nameRow.appendChild(badge);
     }

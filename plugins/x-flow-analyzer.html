@@ -24,8 +24,11 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="/css/auth-ui.css">
     <link rel="stylesheet" href="/css/global-overlays.css">
+    <link rel="stylesheet" href="/css/download-gate.css">
+    <link rel="stylesheet" href="/css/share-modal.css">
     <link rel="stylesheet" href="/css/navbar.css">
     <link rel="stylesheet" href="/css/avatar-manager.css">
+    <link rel="stylesheet" href="/css/skeleton.css">
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -67,8 +70,9 @@
                             <a href="?lang=en" class="lang-link" id="hero-en">EN</a>
                         </div>
                     </div>
-                    <div class="area-2">
-                        <a href="#" class="buy-button-hero btn-buy-analyzer" data-es="COMPRAR $15" data-en="BUY $15">COMPRAR $15</a>
+                    <div class="area-2" style="display: flex; flex-direction: column; gap: 12px; align-items: flex-end;">
+                        <a href="#" class="btn-free-download" data-es="DESCARGAR GRATIS" data-en="FREE DOWNLOAD">DESCARGAR GRATIS</a>
+                        <a href="#" class="buy-button-hero btn-buy-analyzer secondary" data-es="COMPRAR $15" data-en="BUY $15">COMPRAR $15</a>
                     </div>
                 </div>
 
@@ -314,8 +318,10 @@
                 <h2 data-es="Fluye con confianza. Masteriza con precisión. <br> X Flow."
                     data-en="Flow with confidence. Master with precision. <br> X Flow.">Fluye con confianza. Masteriza
                     con precisión. X Flow.</h2>
-                <div style="margin-top: 40px;">
-                    <a href="#" class="buy-button-hero" data-es="Conseguirlo 15$"
+                <div style="margin-top: 40px; display: flex; flex-direction: column; align-items: center; gap: 16px;">
+                    <a href="#" class="btn-free-download primary-large" data-es="Descargar Gratis"
+                        data-en="Download For Free">Descargar Gratis</a>
+                    <a href="#" class="buy-button-hero btn-buy-analyzer secondary" data-es="Conseguirlo 15$"
                         data-en="Get it now for $15">Conseguirlo 15$</a>
                 </div>
             </div>
@@ -379,17 +385,98 @@
         .buy-button-hero {
             background: #fff;
             color: #000;
-            padding: 10px 24px;
+            padding: 12px 28px;
             border-radius: 100px;
             text-decoration: none;
             font-weight: 700;
-            font-size: 0.9rem;
-            transition: transform 0.2s, background 0.2s;
+            font-size: 0.95rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #fff;
         }
 
         .buy-button-hero:hover {
-            transform: scale(1.05);
+            transform: translateY(-2px);
             background: #eee;
+            box-shadow: 0 10px 20px rgba(255, 255, 255, 0.1);
+        }
+
+        .buy-button-hero.secondary {
+            background: transparent;
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            font-weight: 500;
+            opacity: 0.7;
+        }
+
+        .buy-button-hero.secondary:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.4);
+            opacity: 1;
+        }
+
+        .btn-free-download {
+            background: var(--accent);
+            color: #fff;
+            padding: 12px 28px;
+            border-radius: 100px;
+            text-decoration: none;
+            font-weight: 800;
+            font-size: 0.95rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 15px rgba(255, 0, 76, 0.3);
+            border: 1px solid var(--accent);
+        }
+
+        .btn-free-download:hover {
+            transform: translateY(-2px) scale(1.02);
+            background: #ff1a5e;
+            box-shadow: 0 8px 25px rgba(255, 0, 76, 0.5);
+        }
+
+        .btn-free-download.primary-large {
+            padding: 16px 48px;
+            font-size: 1.2rem;
+            letter-spacing: -0.5px;
+        }
+
+        /* PREMIUM MODAL REFINEMENT */
+        .analyzer-modal {
+            backdrop-filter: blur(10px);
+            background: rgba(0, 0, 0, 0.8);
+        }
+
+        .analyzer-modal-content {
+            background: #0a0a0a;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            padding: 40px;
+            border-radius: 24px;
+            max-width: 450px !important;
+        }
+
+        .modal-product-img {
+            border-radius: 16px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-price {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--accent);
+            margin: 10px 0 25px 0;
+            letter-spacing: -1px;
+        }
+
+        .skeleton-container .skeleton {
+            background-color: #1a1a1a;
+            opacity: 0.6;
         }
 
         .hero-section {
@@ -874,10 +961,16 @@
             <p style="color: #888; margin-bottom: 15px;" data-es="Software de Análisis Vocal" data-en="Vocal Analysis Software">Software de Análisis Vocal</p>
             <div class="modal-price">15$</div>
             
-            <div id="analyzer-paypal-button-container"></div>
+            <div id="analyzer-paypal-button-container">
+                <!-- Skeletons will be injected here via JS -->
+                 <div class="skeleton-container" style="display: flex; flex-direction: column; gap: 12px; margin-top: 20px;">
+                    <div class="skeleton" style="width: 100%; height: 48px; border-radius: 4px;"></div>
+                    <div class="skeleton" style="width: 100%; height: 48px; border-radius: 4px;"></div>
+                 </div>
+            </div>
             
-            <p style="font-size: 0.8rem; color: #555; margin-top: 20px;" data-es="Pago seguro procesado por PayPal. Acceso instantáneo tras la compra." data-en="Secure payment processed by PayPal. Instant access after purchase.">
-                Pago seguro procesado por PayPal. Acceso instantáneo tras la compra.
+            <p style="font-size: 0.75rem; color: #666; margin-top: 25px; line-height: 1.5;" data-es="Pago seguro procesado por PayPal. Acceso instantáneo tras la compra. Software compatible con Windows y macOS." data-en="Secure payment processed by PayPal. Instant access after purchase. Software compatible with Windows & macOS.">
+                Pago seguro procesado por PayPal. Acceso instantáneo tras la compra. Software compatible con Windows y macOS.
             </p>
         </div>
     </div>
@@ -888,8 +981,10 @@
     <script src="/script/notifications.js?v=21"></script>
     <script src="/script/avatar-manager.js?v=21"></script>
     <script src="/script/footer.js?v=21"></script>
+    <script src="/script/auth-utils.js?v=21"></script>
     <script src="/script/navbar.js?v=21" type="module"></script>
     <script src="/script/toast.js?v=21" type="module"></script>
+    <script src="/script/download-gate.js?v=21"></script>
     <script src="/script/analyzer-checkout.js?v=1"></script>
     <script src="/env.js"></script>
 

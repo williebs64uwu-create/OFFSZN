@@ -16,6 +16,8 @@ export const getUserProfile = async (req, res) => {
                 avatar_url, 
                 bio, 
                 role, 
+                plan,
+                plan_start_date,
                 socials, 
                 is_verified, 
                 is_producer, 

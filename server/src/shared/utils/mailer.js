@@ -108,7 +108,7 @@ export const sendOffsznEmail = async ({ to, subject, html, fromName = 'OFFSZN', 
             console.warn(`[Mailer] Attempting emergency fallback to Gmail SMTP...`);
             try {
                 return await personalTransporter.sendMail({
-                    from: `"OFFSZN Emergency" <${GMAIL_USER}>`,
+                    from: `"OFFSZN" <${GMAIL_USER}>`,
                     to,
                     subject: `[RETRY] ${subject}`,
                     html

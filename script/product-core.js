@@ -389,7 +389,7 @@ function injectDynamicSEO(product) {
         document.head.appendChild(metaDesc);
     }
     const descText = product.is_free
-        ? `Descarga gratis "${product.name}" por ${producerName}. ${categoryLabel} disponible en OFFSZN.lat`
+        ? `Descarga Plugins VST "${product.name}" por ${producerName}. ${categoryLabel} disponible en OFFSZN.lat`
         : `Escucha y compra "${product.name}" por ${producerName}. ${categoryLabel} a $${price}. Licencia disponible en OFFSZN.lat`;
     metaDesc.content = descText;
 
@@ -1675,7 +1675,7 @@ async function renderBeatSpecifics(product) {
 
                 enabledLicenses.forEach(lic => {
                     const price = parseFloat(lic.price) || 0;
-                    const priceStr = price > 0 ? (window.CurrencyManager ? window.CurrencyManager.format(price) : `$${price.toFixed(2)}`) : 'Gratis';
+                    const priceStr = price > 0 ? (window.CurrencyManager ? window.CurrencyManager.format(price) : `$${price.toFixed(2)}`) : 'PLUGINS VST';
 
                     const card = document.createElement('div');
                     card.className = `license-card-v2 ${isMobile ? 'mobile-lic-card' : 'desktop-lic-card'} ${lic.id === selectedId ? 'selected' : ''}`;
@@ -1741,7 +1741,7 @@ async function renderBeatSpecifics(product) {
                     freeBtn.style.margin = '10px auto 0';
                     freeBtn.style.fontSize = '0.9rem';
                     freeBtn.style.color = '#ccc';
-                    freeBtn.innerHTML = '<i class="bi bi-download"></i> DESCARGA GRATIS MP3 CON TAG';
+                    freeBtn.innerHTML = '<i class="bi bi-download"></i> DESCARGA PLUGINS VST MP3 CON TAG';
                     freeBtn.onclick = () => {
                         if (window.openDownloadGateModal) window.openDownloadGateModal(product.audio_url, product.producer?.nickname, product.id);
                         else window.open(product.audio_url, '_blank');
@@ -1810,7 +1810,7 @@ window.openLicenseModal = function (lic, product) {
     }
 
     const price = lic.price || 0;
-    const priceStr = price > 0 ? `$${parseFloat(price).toFixed(2)}` : 'Gratis';
+    const priceStr = price > 0 ? `$${parseFloat(price).toFixed(2)}` : 'PLUGINS VST';
 
     backdrop.innerHTML = `
         <div class="share-modal-content lic-modal" id="modal-lic-container">
@@ -2025,7 +2025,7 @@ window.openLicenseComparisonModal = function (licenses) {
 
                     <!-- Price Row -->
                     <div class="compare-cell feature-col">Precio</div>
-                    ${enabledLicenses.map(l => `<div class="compare-cell price">${parseFloat(l.price) > 0 ? '$' + parseFloat(l.price).toFixed(2) : 'Gratis'}</div>`).join('')}
+                    ${enabledLicenses.map(l => `<div class="compare-cell price">${parseFloat(l.price) > 0 ? '$' + parseFloat(l.price).toFixed(2) : 'PLUGINS VST'}</div>`).join('')}
 
                     <!-- MP3 -->
                     <div class="compare-cell feature-col">MP3</div>
@@ -2110,7 +2110,7 @@ function renderPresetSpecifics(product) {
     const isTrulyFree = product.is_free && (Number(product.price_basic) === 0 || !product.price_basic);
 
     if (isTrulyFree) {
-        buyBtn.innerHTML = 'DESCARGA GRATIS';
+        buyBtn.innerHTML = 'DESCARGA PLUGINS VST';
         buyBtn.onclick = () => {
             const downloadUrl = product.kit_url || product.download_url_wav || product.download_url_stems || product.wav_url || product.stems_url || product.audio_url;
             if (window.openDownloadGateModal) {
@@ -2186,7 +2186,7 @@ function renderGenericSpecifics(product) {
 
     const isTrulyFree = product.is_free && (parseFloat(product.price_basic) || 0) === 0;
     if (isTrulyFree) {
-        buyBtn.innerHTML = 'DESCARGAR GRATIS';
+        buyBtn.innerHTML = 'DESCARGAR PLUGINS VST';
         buyBtn.onclick = () => {
             const downloadUrl = product.download_url || product.audio_url;
             window.open(downloadUrl, '_blank');
@@ -2216,7 +2216,7 @@ function renderKitSpecifics(product) {
     const isTrulyFree = product.is_free && (parseFloat(product.price_basic) || 0) === 0;
     if (isTrulyFree) {
         // Free Product: Show "DESCARGA GRATIS" ONLY (Clean)
-        buyBtn.innerHTML = `DESCARGA GRATIS`;
+        buyBtn.innerHTML = `DESCARGA PLUGINS VST`;
         buyBtn.onclick = () => {
             const downloadUrl = product.kit_url || product.download_url_wav || product.download_url_stems || product.wav_url || product.stems_url || product.audio_url;
             if (window.openDownloadGateModal) {
@@ -2241,7 +2241,7 @@ function renderKitSpecifics(product) {
         const freeBtn = document.createElement('button');
         freeBtn.className = 'btn-minimal-link';
         freeBtn.style.margin = '10px auto';
-        freeBtn.innerHTML = `<i class="bi bi-arrow-down-circle"></i> Descargar Demo / Gratis`;
+        freeBtn.innerHTML = `<i class="bi bi-arrow-down-circle"></i> Descargar Demo / Plugins VST`;
         freeBtn.onclick = () => window.open(product.audio_url, '_blank');
         buyBox.appendChild(freeBtn);
     }

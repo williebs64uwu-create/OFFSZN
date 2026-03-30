@@ -150,3 +150,110 @@ export const captureAnalyzerOrder = async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 };
+
+/**
+ * Records a free download for an authenticated user in the analyzer_sales table.
+ */
+export const createFreeAnalyzerOrder = async (req, res) => {
+    try {
+        const userId = req.user?.userId;
+        if (!userId) return res.status(401).json({ error: 'Usuario no autenticado' });
+
+        const userEmail = req.user?.email || 'usuario@offszn.lat';
+
+        // 1. Record Sale in Dedicated Table (Registration ONLY, no payment)
+        const timestamp = Date.now();
+        const { data, error: saleError } = await supabase
+            .from('analyzer_sales')
+            .insert([{
+                paypal_order_id: `FREE-ANALYZER-${timestamp}-${userId.substring(0, 5)}`,
+                user_id: userId,
+                buyer_email: userEmail,
+                amount: 0,
+                status: 'completed'
+            }])
+            .select()
+            .single();
+
+        if (saleError) {
+            console.error("[FreeAnalyzer] Error recording free sale:", saleError);
+            return res.status(500).json({ error: 'Error al registrar descarga gratuita' });
+        }
+
+        // 2. Notify (Async) - Premium version for free download
+        (async () => {
+            try {
+                // Fetch user data for personalization
+                const { data: userData } = await supabase
+                    .from('users')
+                    .select('nickname')
+                    .eq('id', userId)
+                    .single();
+
+                const userNickname = userData?.nickname || 'Usuario';
+
+                const freeHtml = `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <style>
+                        body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #000000; color: #ffffff; margin: 0; padding: 0; }
+                        .wrapper { width: 100%; table-layout: fixed; background-color: #000000; padding: 60px 0; }
+                        .container { max-width: 500px; margin: 0 auto; background-color: #000000; padding: 0 20px; }
+                        .header { padding-bottom: 40px; text-align: left; }
+                        .content { text-align: left; }
+                        .footer { padding-top: 60px; text-align: left; color: #555555; font-size: 12px; border-top: 1px solid #111; margin-top: 60px; }
+                        .logo { height: 32px; filter: brightness(0) invert(1); }
+                        h1 { font-size: 28px; font-weight: 700; color: #ffffff; margin: 0 0 20px 0; letter-spacing: -0.5px; }
+                        p { font-size: 16px; color: #888888; line-height: 1.6; margin-bottom: 30px; }
+                        .product-tag { display: inline-block; background: #111; color: #fff; padding: 6px 14px; border-radius: 6px; font-size: 14px; margin-bottom: 20px; border: 1px solid #222; }
+                        .button { background-color: #ffffff; color: #000000; padding: 16px 32px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 15px; display: inline-block; margin-bottom: 40px; }
+                        a { color: #ffffff; text-decoration: none; }
+                    </style>
+                </head>
+                <body>
+                    <div class="wrapper">
+                        <div class="container">
+                            <div class="header">
+                                <img src="https://offszn.lat/images/logo.webp" alt="OFFSZN" class="logo">
+                            </div>
+                            <div class="content">
+                                <div class="product-tag">🛠️ Software</div>
+                                <h1>Descarga Procesada Correctamente</h1>
+                                <p>Hola, ${userNickname}. Hemos procesado tu descarga de <strong>X Flow - Analyzer</strong> correctamente.</p>
+                                <p>Ahora puedes encontrar este software siempre disponible en tu panel de usuario.</p>
+                                
+                                <a href="https://offszn.lat/mis-compras" class="button">Ver en mi panel</a>
+
+                                <p style="font-size: 14px; color: #444444; margin-top: 20px;">
+                                    Recuerda que puedes acceder a tus archivos en cualquier momento desde tu panel de usuario.
+                                </p>
+                            </div>
+                            <div class="footer">
+                                <p>© 2026 OFFSZN. The Premium Producer Marketplace.<br>
+                                <a href="https://instagram.com/offszn.lat">Instagram</a> • <a href="https://tiktok.com/@offszn.lat">TikTok</a> • <a href="https://offszn.lat">Web</a></p>
+                            </div>
+                        </div>
+                    </div>
+                </body>
+                </html>
+                `;
+
+                await sendOffsznEmail({
+                    to: userEmail,
+                    subject: `Procesamos tu descarga de X Flow - Analyzer`,
+                    html: freeHtml,
+                    fromName: 'OFFSZN'
+                });
+            } catch (e) {
+                console.error("[FreeAnalyzerHub] Email error:", e);
+            }
+        })();
+
+        res.status(200).json({ success: true, message: 'Descarga registrada correctamente' });
+
+    } catch (err) {
+        console.error("[FreeAnalyzer] Error:", err);
+        res.status(500).json({ error: err.message });
+    }
+};

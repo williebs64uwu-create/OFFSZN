@@ -9,6 +9,7 @@ class AnalyzerCheckout {
         this.closeBtn = this.modal?.querySelector('.close-modal');
         this.paypalContainer = document.getElementById('analyzer-paypal-button-container');
         this.buyButtons = document.querySelectorAll('.btn-buy-analyzer, .btn-buy-nav');
+        this.freeDownloadButtons = document.querySelectorAll('.btn-free-download');
         
         this.init();
     }
@@ -21,6 +22,14 @@ class AnalyzerCheckout {
             btn.addEventListener('click', (e) => {
                 e.preventDefault();
                 this.openModal();
+            });
+        });
+
+        // Handle Free Download
+        this.freeDownloadButtons.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.handleFreeDownload();
             });
         });
 
@@ -48,6 +57,92 @@ class AnalyzerCheckout {
     closeModal() {
         this.modal.classList.remove('active');
         document.body.style.overflow = '';
+    }
+
+    async handleFreeDownload() {
+        try {
+            console.log('[Analyzer] Initiating free download flow...');
+            
+            if (typeof AuthUtils === 'undefined') {
+                console.error('[Analyzer] AuthUtils not found');
+                return;
+            }
+
+            // 1. Check Session
+            const user = await AuthUtils.getCurrentUser();
+
+            if (!user) {
+                console.log('[Analyzer] Guest detected, opening Download Gate...');
+                
+                // Prepare dummy product data for download-gate.js
+                window.currentProductData = {
+                    id: 'x-flow-analyzer',
+                    name: 'X Flow - Analyzer',
+                    is_free: true,
+                    producer_id: 'offszn-official',
+                    producer: { nickname: 'OFFSZN', is_verified: true }
+                };
+
+                if (typeof openDownloadGateModal !== 'undefined') {
+                    // For guest downloads, we just proceed with the email collection tool.
+                    // No redirection per user request.
+                    openDownloadGateModal(
+                        'plugins/X - FLOW - ANALIZER Win_Installer.rar', 
+                        'OFFSZN', 
+                        'x-flow-analyzer'
+                    );
+                } else {
+                    alert('El sistema de descargas no está listo. Por favor refresca la página.');
+                }
+                return;
+            }
+
+            // 2. Logged-in Flow: First, record the download in the backend
+            console.log('[Analyzer] Recording free download for user:', user.id);
+            try {
+                const token = (await AuthUtils.getSession())?.access_token;
+                const regResponse = await fetch('/api/analyzer/free-order', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}` 
+                    }
+                });
+                
+                if (!regResponse.ok) {
+                    console.error('[Analyzer] Backend registration failed');
+                    // We proceed anyway to not block the user, but log the error
+                }
+            } catch (regErr) {
+                console.error('[Analyzer] Backend registration error:', regErr);
+            }
+
+            // 3. Get signed URL from R2 (v2 bucket)
+            const signedUrl = await AuthUtils.getAuthorizedUrl('plugins/X - FLOW - ANALIZER Win_Installer.rar', 'v2');
+            
+            if (!signedUrl) {
+                console.error('[Analyzer] Failed to get signed URL');
+                alert('Hubo un error al generar el enlace de descarga. Intenta de nuevo.');
+                return;
+            }
+
+            // 4. Trigger Download
+            const link = document.createElement('a');
+            link.href = signedUrl;
+            link.download = 'X - FLOW - ANALIZER Win_Installer.rar';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            // 5. Redirect to mis-compras.html after a slight delay
+            setTimeout(() => {
+                window.location.href = '/mis-compras.html';
+            }, 1500);
+
+        } catch (err) {
+            console.error('[Analyzer] Free Download Error:', err);
+            alert('Error al procesar la descarga.');
+        }
     }
 
     checkPayPalSDK() {
@@ -121,7 +216,11 @@ class AnalyzerCheckout {
                 shape: 'rect',
                 label: 'pay'
             }
-        }).render('#analyzer-paypal-button-container');
+        }).render('#analyzer-paypal-button-container').then(() => {
+            // Hide skeletons once buttons are rendered
+            const skeletons = this.paypalContainer.querySelector('.skeleton-container');
+            if (skeletons) skeletons.style.display = 'none';
+        });
 
         this.paypalInitialized = true;
     }

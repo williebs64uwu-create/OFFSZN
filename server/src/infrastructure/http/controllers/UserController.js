@@ -215,7 +215,7 @@ export const getCurrentUser = async (req, res) => {
 
         const { data: user, error } = await supabase
             .from('users')
-            .select('id, email, nickname, role, first_name, last_name, created_at, is_admin, is_producer, paypal_email, r2_version, preferred_currency')
+            .select('id, email, nickname, role, first_name, last_name, created_at, is_admin, is_producer, paypal_email, r2_version, preferred_currency, plan, plan_start_date')
             .eq('id', userId)
             .single();
 
@@ -326,7 +326,7 @@ export const getUserByNickname = async (req, res) => {
 
         let query = supabase
             .from('users')
-            .select('id, nickname, first_name, last_name, avatar_url, bio, role, socials, socials_order, is_verified, is_producer, created_at, experience, daws, banner_url, r2_version, storage_version, template');
+            .select('id, nickname, first_name, last_name, avatar_url, bio, role, socials, socials_order, is_verified, is_producer, created_at, experience, daws, banner_url, r2_version, storage_version, template, plan, plan_start_date');
 
         if (isUuid) {
             query = query.eq('id', nickname);
