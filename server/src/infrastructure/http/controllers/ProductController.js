@@ -67,30 +67,39 @@ export const createProduct = async (req, res) => {
     try {
         const userId = req.user.userId;
         const {
-            title,
+            // Support both old formatted vars and new direct DB column names
+            name, title,
             description,
             key,
             bpm,
             tags,
             genres,
             moods,
-            isFree,
+            is_free, isFree,
             licenses,
-            artwork_url,
-            mp3_url,
+            price_basic, price_premium, price_stems, price_exclusive,
+            image_url, artwork_url,
+            mp3_url, audio_url,
             wav_url,
             stems_url,
             product_type,
-            r2_version
+            r2_version,
+            release_date,
+            visibility,
+            status
         } = req.body;
-        //const productFile = req.file;
 
-        if (!title || !genres || !artwork_url) {
-            return res.status(400).json({ error: 'Faltan datos clave (título, género o portada).' });
+        const finalTitle = name || title;
+        const finalArtwork = image_url || artwork_url;
+        const finalIsFree = is_free !== undefined ? is_free : (isFree || false);
+        const finalMp3Url = mp3_url || audio_url;
+
+        if (!finalTitle || !finalArtwork) {
+            return res.status(400).json({ error: 'Faltan datos clave (título o portada).' });
         }
         // Si no es gratis, DEBE tener un MP3
-        if (isFree === false && !mp3_url) {
-            return res.status(400).json({ error: 'Un producto de pago debe tener un archivo MP3.' });
+        if (finalIsFree === false && !finalMp3Url) {
+            return res.status(400).json({ error: 'Un producto de pago debe tener un archivo MP3 o Audio.' });
         }
 
         // 🔥 PLAN-BASED UPLOAD LIMIT ENFORCEMENT
@@ -127,28 +136,31 @@ export const createProduct = async (req, res) => {
 
         const productData = {
             producer_id: userId,
-            name: title,
+            name: finalTitle,
             description: description || null,
-            image_url: artwork_url,
+            image_url: finalArtwork,
             product_type: product_type || 'beat',
-            status: 'approved',
+            status: status || 'approved',
             bpm: bpm ? parseInt(bpm) : null,
             key: key || null,
             tags: tags || null,
             genres: genres || null,
             moods: moods || null,
 
-            download_url_mp3: mp3_url,
+            download_url_mp3: finalMp3Url,
             download_url_wav: wav_url || null,
             download_url_stems: stems_url || null,
             r2_version: r2_version || 'v1',
             storage_version: 'supabase', // Default to supabase for new high-quality uploads
 
-            is_free: isFree,
-            price_basic: licenses?.basic || null,
-            price_premium: licenses?.premium || null,
-            price_stems: licenses?.stems || null,
-            price_exclusive: licenses?.exclusive || null
+            is_free: finalIsFree,
+            price_basic: price_basic !== undefined ? price_basic : (licenses?.basic || null),
+            price_premium: price_premium !== undefined ? price_premium : (licenses?.premium || null),
+            price_stems: price_stems !== undefined ? price_stems : (licenses?.stems || null),
+            price_exclusive: price_exclusive !== undefined ? price_exclusive : (licenses?.exclusive || null),
+            
+            release_date: release_date || null,
+            visibility: visibility || 'public'
         };
 
         const { data: newProduct, error: insertError } = await supabase
