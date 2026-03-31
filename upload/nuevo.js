@@ -1853,6 +1853,7 @@ window.handlePublish = async function () {
             stems_url,
             // stems_link: uploaderState.stemsLink || null, // stems_link is not in the schema, we'll rely on license_settings jsonb for this if needed
             r2_version: 'v2',
+            storage_version: 'v2',
             price_basic: licensesState.offszn_basic.enabled ? licensesState.offszn_basic.price : null,
             price_premium: licensesState.offszn_premium.enabled ? licensesState.offszn_premium.price : null,
             price_stems: licensesState.offszn_unlimited.enabled ? licensesState.offszn_unlimited.price : null,

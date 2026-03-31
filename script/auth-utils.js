@@ -414,6 +414,9 @@ window.AuthUtils = {
             path = path.substring(firstSlash + 1);
         }
 
+        // Collapse double slashes and strip leading ones
+        path = path.replace(/\/\/+/g, '/').replace(/^\/+/, '');
+
         // 4. LEGACY PATH REPAIR: Swap "type/UUID" or "type/subtype/UUID" to "UUID/type/subtype"
         // This is a common structural mismatch in the OFFSZN database.
         // Matches: covers/UUID, audio/UUID, beats/mp3/UUID, mp3_tagged/UUID etc.

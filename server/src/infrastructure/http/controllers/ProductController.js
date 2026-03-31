@@ -84,6 +84,7 @@ export const createProduct = async (req, res) => {
             stems_url,
             product_type,
             r2_version,
+            storage_version,
             release_date,
             visibility,
             status
@@ -150,8 +151,8 @@ export const createProduct = async (req, res) => {
             download_url_mp3: finalMp3Url,
             download_url_wav: wav_url || null,
             download_url_stems: stems_url || null,
-            r2_version: r2_version || 'v1',
-            storage_version: 'supabase', // Default to supabase for new high-quality uploads
+            r2_version: r2_version || 'v2', // 🔥 Use v2 by default since March 2026
+            storage_version: storage_version || 'v2', // 🔥 Use v2 by default since March 2026
 
             is_free: finalIsFree,
             price_basic: price_basic !== undefined ? price_basic : (licenses?.basic || null),
