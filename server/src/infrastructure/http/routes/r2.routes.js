@@ -10,7 +10,9 @@ const router = Router();
 const MAX_FILE_SIZE = 1000 * 1024 * 1024; // 1GB (Increased for Stems/WAVs)
 const MAX_IMAGE_SIZE = 20 * 1024 * 1024; // 20MB for images
 
-router.get('/r2/test-hello', (req, res) => res.send('Hello World'));
+router.get('/r2/test-hello', (req, res) => {
+    res.send('Hello World');
+});
 
 // Endpoint para obtener una URL de subida firmada
 router.post('/r2/upload-url', authenticateTokenMiddleware, async (req, res) => {
@@ -302,65 +304,75 @@ router.post('/r2/delete-files', authenticateTokenMiddleware, async (req, res) =>
 // 🔥 FALLBACK PUBLIC ROUTE: Proxy or redirect to public R2 URL for known public prefixes
 router.get(/\/r2-public\/(.*)/, async (req, res) => {
     try {
-        const key = req.params[0];
+        let key = req.params[0];
         if (!key) return res.status(400).send('Key missing');
+
+        // 🔥 FIX: Strip any trailing query parameters to avoid signing a key that contains ?X-Amz-Signature...
+        if (key.includes('?')) {
+            key = key.split('?')[0];
+        }
 
         const publicPrefixes = ['products/', 'beats/mp3/', 'avatars/', 'public/', 'banners/', 'drumkits/', 'covers/', 'audio/'];
         const isUUIDPath = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i.test(key);
-        const isPublicPrefix = publicPrefixes.some(prefix => key.startsWith(prefix)) || isUUIDPath;
+        // Match legacy root files starting with timestamps, e.g. 1771706193704_cover.jpg
+        const isLegacyRoot = /^[0-9]+_.*\.(jpg|jpeg|png|webp|gif|svg|mp3|wav)$/i.test(key);
+        
+        const isPublicPrefix = publicPrefixes.some(prefix => key.startsWith(prefix)) || isUUIDPath || isLegacyRoot;
 
         if (!isPublicPrefix) {
-            console.warn(`[R2 Public Proxy] Blocked unauthorized key: ${key}`);
             return res.status(403).send('Access Denied: Resource is not public');
+        }
+
+        // --- DATABASE DISCOVERY STEP (For Filename-only fallbacks) ---
+        let targetKeys = [key];
+        if (!key.includes('/') && isLegacyRoot) {
+            try {
+                const { data: product } = await supabase
+                    .from('products')
+                    .select('image_url')
+                    .ilike('image_url', `%${key}`)
+                    .limit(1)
+                    .maybeSingle();
+
+                if (product?.image_url) {
+                    targetKeys = [product.image_url, key]; // Try the real path first, then filename-only
+                }
+            } catch (err) {
+                // Silently continue if database search fails
+            }
         }
 
         // Smart Version Selection: Try most likely versions first
         let versionsToTry = ['v2', 'supabase', 'v1'];
-        
         if (isUUIDPath) {
-            versionsToTry = ['v2', 'supabase', 'v1']; // UUIDs are usually V2 or Supabase
-        }
- else if (key.includes('beats/mp3/') || key.includes('drumkits/')) {
+            versionsToTry = ['v2', 'supabase', 'v1']; 
+        } else if (key.includes('beats/mp3/') || key.includes('drumkits/')) {
             versionsToTry = ['v1', 'v2', 'supabase'];
         }
 
-        // Loop through versions until we find it
-        for (const ver of versionsToTry) {
-            // Obtenemos una URL PRE-FIRMADA para cualquier versión, saltando bloqueos de bucket privado
-            const targetUrl = await getPresignedDownloadUrl(key, 300, ver);
+        // --- DISCOVERY LOOP ---
+        for (const tKey of targetKeys) {
+            for (const ver of versionsToTry) {
+                const targetUrl = await getPresignedDownloadUrl(tKey, 300, ver);
+                if (!targetUrl) continue;
 
-            if (!targetUrl) continue;
-
-            try {
-                const response = await fetch(targetUrl, { method: 'GET' }); // HEAD would be better but some services block it
-                
-                if (response.ok) {
-                    // Found it! Proxy the content
-                    res.setHeader('Content-Type', response.headers.get('Content-Type') || 'application/octet-stream');
-                    const contentLength = response.headers.get('Content-Length');
-                    if (contentLength) res.setHeader('Content-Length', contentLength);
-                    res.setHeader('Cache-Control', 'public, max-age=86400'); // 24h cache
-                    res.setHeader('Access-Control-Allow-Origin', '*');
+                try {
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 3500); 
+                    const response = await fetch(targetUrl, { method: 'GET', signal: controller.signal });
+                    clearTimeout(timeoutId);
                     
-                    const body = response.body;
-                    if (body) {
-                        const reader = body.getReader();
-                        while (true) {
-                            const { done, value } = await reader.read();
-                            if (done) break;
-                            res.write(value);
-                        }
+                    if (response.ok) {
+                        try { controller.abort(); } catch (e) {}
+                        return res.redirect(302, targetUrl);
+                    } else {
+                        try { controller.abort(); } catch (e) {}
                     }
-                    res.end();
-                    return;
-                }
-            } catch (err) {
-                console.warn(`[R2 Public Fallback] Try failed for ${ver} on ${key}:`, err.message);
+                } catch (err) { }
             }
         }
 
         // If we reach here, nothing was found
-        console.warn(`[R2 Public Fallback] Resource not found in any storage: ${key}`);
         return res.status(404).send('Resource not found');
 
     } catch (error) {

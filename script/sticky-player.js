@@ -409,7 +409,7 @@ window.StickyPlayer = (function () {
         }
 
         if (rawImg) {
-            window.getAuthorizedUrl(rawImg, trackData.r2_version || 'v1', trackData.id).then(url => {
+            window.getAuthorizedUrl(rawImg, trackData.r2_version || 'v2', trackData.id).then(url => {
                 if (url) {
                     els.cover.onload = () => {
                         if (els.cover.parentElement) els.cover.parentElement.classList.remove('skeleton');

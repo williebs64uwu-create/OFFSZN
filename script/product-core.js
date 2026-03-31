@@ -696,7 +696,7 @@ function renderProductPage(product) {
 
     // --- 🧪 OPTIMIZATION: Check if it's R2 vs Supabase ---
     const rawImgMain = product.image_url || '/images/portada-default.png';
-    const storageVerMain = product.storage_version || product.r2_version || 'v1';
+    const storageVerMain = product.storage_version || product.r2_version || 'v2';
     
     // Explicitly skip R2 signing if storage_version is 'supabase'
     const isR2Main = (storageVerMain !== 'supabase') && window.AuthUtils && window.AuthUtils.isR2Url(rawImgMain);
@@ -1035,7 +1035,7 @@ function renderProductPage(product) {
     if (product.image_url) {
         const img = document.getElementById('product-main-art');
         if (img) {
-            window.getAuthorizedUrl(product.image_url, product.storage_version || product.r2_version || 'v1', product.id).then(url => {
+            window.getAuthorizedUrl(product.image_url, product.storage_version || product.r2_version || 'v2', product.id).then(url => {
                 if (url) {
                     img.onload = () => { img.style.opacity = 1; };
                     img.src = url;
@@ -1123,7 +1123,7 @@ window.playProductCover = async function () {
     let finalAudioUrl = audioUrl;
     if (window.getAuthorizedUrl && !(audioUrl.includes('pub-') && audioUrl.includes('.r2.dev'))) {
         try {
-            finalAudioUrl = await window.getAuthorizedUrl(audioUrl, product.storage_version || product.r2_version || 'v1', product.id);
+            finalAudioUrl = await window.getAuthorizedUrl(audioUrl, product.storage_version || product.r2_version || 'v2', product.id);
         } catch (e) {
         }
     }
@@ -1155,7 +1155,7 @@ window.playProductCover = async function () {
             price_basic: product.price_basic,
             is_free: product.is_free,
             product_type: product.product_type,
-            r2_version: product.storage_version || product.r2_version || 'v1'
+            r2_version: product.storage_version || product.r2_version || 'v2'
         });
 
         // Update cover icon to pause
@@ -2327,8 +2327,8 @@ window.openABModal = async function (beforeUrl, afterUrl, product) {
 
     // 🔥 FIX: Authorize both R2 URLs in parallel
     const [signedBefore, signedAfter] = await Promise.all([
-        window.getAuthorizedUrl(beforeUrl, product.storage_version || product.r2_version || 'v1', product.id),
-        window.getAuthorizedUrl(afterUrl, product.storage_version || product.r2_version || 'v1', product.id)
+        window.getAuthorizedUrl(beforeUrl, product.storage_version || product.r2_version || 'v2', product.id),
+        window.getAuthorizedUrl(afterUrl, product.storage_version || product.r2_version || 'v2', product.id)
     ]);
 
     const productName = product.name;
@@ -2683,7 +2683,7 @@ function renderRelatedGrid(products, container) {
         }).replace(/'/g, "&apos;").replace(/"/g, "&quot;");
 
         const rawImgRelated = p.image_url || '/images/portada-default.png';
-        const storageVerRelated = p.storage_version || p.r2_version || 'v1';
+        const storageVerRelated = p.storage_version || p.r2_version || 'v2';
         
         // Explicitly skip R2 signing if storage_version is 'supabase'
         const isR2Related = (storageVerRelated !== 'supabase') && window.AuthUtils && window.AuthUtils.isR2Url(rawImgRelated);
@@ -2744,7 +2744,7 @@ function renderRelatedGrid(products, container) {
         // 🔥 FIX: Authorize related image WITHOUT skeleton (removes light line glitch)
         const img = card.querySelector('img');
         if (img && p.image_url) {
-            window.getAuthorizedUrl(p.image_url, p.storage_version || p.r2_version || 'v1', p.id)
+            window.getAuthorizedUrl(p.image_url, p.storage_version || p.r2_version || 'v2', p.id)
                 .then(url => {
                     if (url) {
                         img.onload = () => { /* No-op, skeleton removed */ };

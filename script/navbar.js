@@ -521,7 +521,7 @@ async function performSearch(query, category, autoRedirectExact = false) {
                     producer: producer ? producer.nickname : 'OFFSZN',
                     price: p.price_basic ? `$${p.price_basic}` : 'Free',
                     img: p.image_url,
-                    r2_version: p.r2_version || 'v1',
+                    r2_version: p.r2_version || 'v2',
                     isFallback: p.isFallback || false
                 };
             })];
@@ -535,7 +535,7 @@ async function performSearch(query, category, autoRedirectExact = false) {
                 title: u.nickname || 'OFFSZN',
                 stats: 'Producer',
                 img: u.avatar_url,
-                r2_version: u.r2_version || 'v1',
+                r2_version: u.r2_version || 'v2',
                 id: u.id
             }));
             realResults = [...realResults, ...userItems];
@@ -545,7 +545,7 @@ async function performSearch(query, category, autoRedirectExact = false) {
                 title: matchedUsers[0].nickname || 'OFFSZN',
                 stats: 'Producer',
                 img: matchedUsers[0].avatar_url,
-                r2_version: matchedUsers[0].r2_version || 'v1',
+                r2_version: matchedUsers[0].r2_version || 'v2',
                 id: matchedUsers[0].id
             };
             realResults.pop();
@@ -655,7 +655,7 @@ function renderActualResults(results) {
             <div class="search-result-item ${isSelected ? 'selected' : ''}" 
                  onclick="handleResultClick('${targetUrl}', '${itemData}')">
                 <div class="result-img">
-                     <img data-r2-version="${item.r2_version || 'v1'}"
+                     <img data-r2-version="${item.r2_version || 'v2'}"
                           data-r2-src="${item.img || (isUser ? 'https://ui-avatars.com/api/?name=' + encodeURIComponent(item.title || 'User') + '&background=random' : '/images/portada-default.png')}" 
                          src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" 
                          alt="thumb" style="width:100%; height:100%; border-radius:${isUser ? '50%' : '6px'}; object-fit:cover;">

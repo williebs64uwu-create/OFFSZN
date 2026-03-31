@@ -97,6 +97,9 @@ export const getPresignedDownloadUrl = async (key, expiresIn = 3600, version = R
             };
 
             let normalizedPath = cleanPath(path);
+            if (normalizedPath.includes('?')) {
+                normalizedPath = normalizedPath.split('?')[0];
+            }
             
             // Detect other buckets (avatars, banners, etc.)
             const knownBuckets = ['avatars', 'banners', 'public', 'licenses'];
@@ -105,8 +108,6 @@ export const getPresignedDownloadUrl = async (key, expiresIn = 3600, version = R
                 bucketName = firstPart;
                 normalizedPath = normalizedPath.split('/').slice(1).join('/');
             }
-
-            console.log(`[Supabase Storage] Requesting URL: bucket=${bucketName}, path=${normalizedPath}`);
 
             // 🔥 FIX: Supabase returns 400 Bad Request for signed URLs on public buckets.
             const publicBuckets = ['avatars', 'banners', 'public'];
@@ -135,13 +136,11 @@ export const getPresignedDownloadUrl = async (key, expiresIn = 3600, version = R
 
                     for (const alt of alternatives) {
                         if (alt === normalizedPath) continue;
-                        console.log(`[Supabase Storage] Retrying alternative: ${alt}`);
                         const retry = await supabase.storage.from(bucketName).createSignedUrl(alt, expiresIn);
                         if (retry.data?.signedUrl) return retry.data.signedUrl;
                     }
                 }
                 
-                if (error) console.warn(`[Supabase Storage] Final Sign URL failure for ${bucketName}/${normalizedPath}:`, error.message);
                 return null;
             }
 

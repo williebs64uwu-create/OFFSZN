@@ -356,7 +356,7 @@ function renderTwoColLists(category = 'Todo') {
             const rawAudioUrl = getProductAudio(product);
 
             if (container && rawAudioUrl && window.WaveSurfer) {
-                const audioUrl = await window.getAuthorizedUrl(rawAudioUrl, product.storage_version || product.r2_version || 'v1', product.id);
+                const audioUrl = await window.getAuthorizedUrl(rawAudioUrl, product.storage_version || product.r2_version || 'v2', product.id);
 
                 const ws = WaveSurfer.create({
                     container: container,
@@ -449,7 +449,7 @@ function createListItemHtml(item, index, type) {
     const rawImg = item.image_url || item.avatar_url || '/images/portada-default.png';
     
     // 🔥 R2 Signing Optimization (Match product-core.js)
-    const storageVer = item.storage_version || item.r2_version || 'v1';
+    const storageVer = item.storage_version || item.r2_version || 'v2';
     const isR2 = (storageVer !== 'supabase') && window.AuthUtils && window.AuthUtils.isR2Url(rawImg);
     const imgPlaceholder = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
     
@@ -720,7 +720,7 @@ function renderHeroSlideHtml(product, index) {
     const type = escapeHTML((product.product_type || 'Beat').toUpperCase());
     const productName = escapeHTML(product.name || 'Sin título');
 
-    const storageVer = product.storage_version || product.r2_version || 'v1';
+    const storageVer = product.storage_version || product.r2_version || 'v2';
     const isR2 = (storageVer !== 'supabase') && window.AuthUtils && window.AuthUtils.isR2Url(rawImg);
     const imgPlaceholder = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
 
@@ -1049,7 +1049,7 @@ function createProductCardHtml(product, format = 'standard') {
     // Helper for resolve storage version and URL
     const getImgInfo = (path, storageVer) => {
         const rawPath = path || '/images/portada-default.png';
-        const ver = storageVer || 'v1';
+        const ver = storageVer || 'v2';
         const isR2 = (ver !== 'supabase') && window.AuthUtils && window.AuthUtils.isR2Url(rawPath);
 
         let finalSrc = rawPath;
@@ -1388,7 +1388,7 @@ function renderLeaderboard(producers) {
             <div class="producer-avatar-wrapper">
                 <div class="lb-badge-sp">#${p.rank}</div>
                 <div class="producer-avatar-sp ${borderClass}">
-                     <img src="${safeAvatar}" data-r2-version="${p.storage_version || p.r2_version || 'v1'}" data-artist="${p.id}" onmouseenter="showArtistCard(event, this)" onmouseleave="hideArtistCard(event, this)" alt="${safeNickname}">
+                     <img src="${safeAvatar}" data-r2-version="${p.storage_version || p.r2_version || 'v2'}" data-artist="${p.id}" onmouseenter="showArtistCard(event, this)" onmouseleave="hideArtistCard(event, this)" alt="${safeNickname}">
                 </div>
             </div>
             <div class="producer-info-sp">

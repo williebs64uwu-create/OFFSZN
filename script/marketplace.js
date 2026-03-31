@@ -77,7 +77,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // --- Imagen (Corregida con la optimización para R2/Supabase) ---
             const rawImg = product.image_url || '/images/portada-default.png';
-            const storageVer = product.storage_version || product.r2_version || 'v1';
+            const storageVer = product.storage_version || product.r2_version || 'v2';
             
             // Determine if it's R2 vs Supabase
             const isR2 = (storageVer !== 'supabase') && window.AuthUtils && window.AuthUtils.isR2Url(rawImg);
@@ -342,7 +342,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 itemEl.className = 'cart-item';
 
                 const rawImgCart = product.image_url || '/images/portada-default.png';
-                const storageVerCart = product.storage_version || product.r2_version || 'v1';
+                const storageVerCart = product.storage_version || product.r2_version || 'v2';
                 const isR2Cart = (storageVerCart !== 'supabase') && window.AuthUtils && window.AuthUtils.isR2Url(rawImgCart);
                 
                 let finalSrcCart = window.AuthUtils?.getFormattedSupabaseUrl ? window.AuthUtils.getFormattedSupabaseUrl(rawImgCart) : rawImgCart;

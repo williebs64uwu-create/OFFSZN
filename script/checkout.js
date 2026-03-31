@@ -461,7 +461,7 @@ const CheckoutManager = {
 
           const isR2 = window.AuthUtils && window.AuthUtils.isR2Url(rawImg);
           if (isR2 && window.getAuthorizedUrl) {
-            window.getAuthorizedUrl(rawImg, p.storage_version || p.r2_version || 'v1').then(url => {
+            window.getAuthorizedUrl(rawImg, p.storage_version || p.r2_version || 'v2').then(url => {
               if (url && imgEl) imgEl.src = url;
             });
           } else if (!rawImg.startsWith('http') && !rawImg.startsWith('/')) {
@@ -545,7 +545,7 @@ const CheckoutManager = {
       <div class="checkout-items-list" style="margin-bottom: 24px;">
         <div class="checkout-item" style="padding:16px 0; display:flex; gap:16px; align-items:center; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 24px;">
           <div class="checkout-item-img" style="position:relative; width:64px; height:64px; flex-shrink:0;">
-            <img id="${imgId}" src="/images/portada-default.png" data-r2-version="${d.storage_version || d.r2_version || 'v1'}" 
+            <img id="${imgId}" src="/images/portada-default.png" data-r2-version="${d.storage_version || d.r2_version || 'v2'}" 
                  style="width:100%; height:100%; border-radius:10px; object-fit:cover; border:1px solid rgba(255,255,255,0.1); background:#111;">
           </div>
           <div class="checkout-item-details" style="flex:1;">
@@ -583,7 +583,7 @@ const CheckoutManager = {
 
     // Authorized URL for image
     if (window.getAuthorizedUrl && d.productImage) {
-      const storageVer = d.storage_version || d.r2_version || 'v1';
+      const storageVer = d.storage_version || d.r2_version || 'v2';
       window.getAuthorizedUrl(d.productImage, storageVer).then(url => {
         const imgEl = document.getElementById(imgId);
         if (imgEl && url) {
@@ -1131,7 +1131,7 @@ const CheckoutManager = {
 
       itemsHTML += `
         <div class="checkout-item-simple">
-          <img id="${imgId}" src="${fallbackImg}" data-r2-version="${item.product.storage_version || item.product.r2_version || 'v1'}"
+          <img id="${imgId}" src="${fallbackImg}" data-r2-version="${item.product.storage_version || item.product.r2_version || 'v2'}"
                onerror="this.src='${fallbackImg}'; this.onerror=null;">
           <div class="checkout-item-info">
             <div class="checkout-item-name truncate">"${safeName}"</div>
@@ -1145,7 +1145,7 @@ const CheckoutManager = {
       
       // Lazy load image if applicable (Sync with Cart Drawer logic)
       const coverPath = item.product.cover_path || item.product.image_url;
-      const storageVer = item.product.storage_version || item.product.r2_version || 'v1';
+      const storageVer = item.product.storage_version || item.product.r2_version || 'v2';
       
       if (coverPath && window.getAuthorizedUrl) {
           window.getAuthorizedUrl(coverPath, storageVer, item.product.id).then(url => {

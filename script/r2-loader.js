@@ -16,7 +16,7 @@
             const isR2 = (window.AuthUtils && window.AuthUtils.isR2Url) 
                 ? window.AuthUtils.isR2Url(src)
                 : (
-                    (src.includes('r2.offszn.lat') || src.includes('pub-')) && 
+                    (src.includes('r2.offszn.lat') || src.includes('pub-') || src.includes('offsznlatbucket')) && 
                     !src.includes('supabase.co') &&
                     !src.startsWith('http') // Only treat local/relative as R2 if it's NOT Supabase
                 );
@@ -31,12 +31,15 @@
                 el.style.transition = 'opacity 0.4s ease';
 
                 try {
+                    if (el.dataset.r2Processing) return;
+                    el.dataset.r2Processing = 'true';
+
                     // Detect relative Supabase path (starts with UUID folder OR is a legacy root file without slashes like 1774225861578_cover.jpg)
                     const isUUIDFolder = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\//i.test(originalSrc);
                     const isLegacyRoot = !originalSrc.includes('/') && /\.(jpg|jpeg|png|webp|gif|svg|mp3|wav|zip)$/i.test(originalSrc);
                     const isRelativeSupabase = typeof originalSrc === 'string' && !originalSrc.startsWith('http') && (isUUIDFolder || isLegacyRoot);
                     
-                    const r2Version = el.getAttribute('data-r2-version') || (originalSrc.includes('supabase.co') || isRelativeSupabase ? 'supabase' : 'v1');
+                    const r2Version = el.getAttribute('data-r2-version') || (originalSrc.includes('supabase.co') || isRelativeSupabase ? 'supabase' : 'v2');
                     const productId = el.getAttribute('data-product-id');
                     const authorizedUrl = await window.getAuthorizedUrl(originalSrc, r2Version, productId);
                     
@@ -45,13 +48,27 @@
                             el.style.opacity = '1'; 
                             el.classList.add('r2-loaded');
                         };
+                        el.onerror = () => {
+                            if (!el.dataset.r2FallbackAttempted) {
+                                el.dataset.r2FallbackAttempted = 'true';
+                                const apiRoot = (window.AuthUtils && window.AuthUtils._apiUrl) || '/api';
+                                el.src = `${apiRoot}/r2-public/${originalSrc.startsWith('/') ? originalSrc.substring(1) : originalSrc}`;
+                            } else {
+                                el.style.opacity = '1';
+                            }
+                        };
                         el.src = authorizedUrl;
-                        if (el.complete) el.onload();
+                        if (el.complete) {
+                            if (el.naturalWidth === 0 && el.naturalHeight === 0) el.onerror();
+                            else el.onload();
+                        }
                     } else {
                         el.style.opacity = '1';
                     }
                 } catch (e) {
                     el.style.opacity = '1';
+                } finally {
+                    delete el.dataset.r2Processing;
                 }
             }
         }
@@ -60,18 +77,37 @@
         const bgPath = el.getAttribute('data-r2-bg');
         if (bgPath) {
             try {
+                if (el.dataset.r2Processing) return;
+                el.dataset.r2Processing = 'true';
+
                 const isUUIDFolder = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\//i.test(bgPath);
                 const isLegacyRoot = !bgPath.includes('/') && /\.(jpg|jpeg|png|webp|gif|svg|mp3|wav|zip)$/i.test(bgPath);
                 const isRelativeSupabase = typeof bgPath === 'string' && !bgPath.startsWith('http') && (isUUIDFolder || isLegacyRoot);
 
-                const r2Version = el.getAttribute('data-r2-version') || (bgPath.includes('supabase.co') || isRelativeSupabase ? 'supabase' : 'v1');
+                const r2Version = el.getAttribute('data-r2-version') || (bgPath.includes('supabase.co') || isRelativeSupabase ? 'supabase' : 'v2');
                 const productId = el.getAttribute('data-product-id');
                 const authorizedUrl = await window.getAuthorizedUrl(bgPath, r2Version, productId);
                 if (authorizedUrl) {
-                    el.style.backgroundImage = `url('${authorizedUrl}')`;
+                    const tempImg = new Image();
+                    tempImg.onload = () => {
+                        el.style.backgroundImage = `url('${authorizedUrl}')`;
+                        el.classList.add('r2-loaded');
+                    };
+                    tempImg.onerror = () => {
+                        if (!el.dataset.r2FallbackAttempted) {
+                            el.dataset.r2FallbackAttempted = 'true';
+                            const apiRoot = (window.AuthUtils && window.AuthUtils._apiUrl) || '/api';
+                            const cleanPath = bgPath.startsWith('/') ? bgPath.substring(1) : bgPath;
+                            el.style.backgroundImage = `url('${apiRoot}/r2-public/${cleanPath}')`;
+                            el.classList.add('r2-loaded');
+                        }
+                    };
+                    tempImg.src = authorizedUrl;
                 }
             } catch (e) {
                 if (window.OFFSZN_DEBUG) console.error(`[R2-Loader] BG Error:`, e);
+            } finally {
+                delete el.dataset.r2Processing;
             }
         }
     }

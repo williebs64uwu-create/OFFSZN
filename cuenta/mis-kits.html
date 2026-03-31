@@ -1187,8 +1187,10 @@
 
         <!-- 1. GESTI?N -->
 
-        <a href="/cuenta/" class="sidebar-icon-btn" data-title="Dashboard"><i class="bi bi-house-door-fill"></i> <span>Dashboard</span></a>
-        <a href="/cuenta/mis-kits" class="sidebar-icon-btn active" data-title="Catálogo"><i class="bi bi-folder2-open"></i> <span>Catálogo</span></a>
+        <a href="/cuenta/" class="sidebar-icon-btn" data-title="Dashboard"><i class="bi bi-house-door-fill"></i>
+            <span>Dashboard</span></a>
+        <a href="/cuenta/mis-kits" class="sidebar-icon-btn active" data-title="Catálogo"><i
+                class="bi bi-folder2-open"></i> <span>Catálogo</span></a>
         <a href="/cuenta/subir-kit.html" class="sidebar-icon-btn" title="Subir"><i
                 class="bi bi-cloud-arrow-up-fill"></i> <span>Subir</span></a>
 
@@ -1215,7 +1217,8 @@
         <a href="/cuenta/reels.html" class="sidebar-icon-btn" title="Reels"><i class="bi bi-camera-reels-fill"></i>
             <span>Reels</span></a>
         <!-- UPGRADE BUTTON (Standardized) -->
-        <a href="/cuenta/planes.html" class="sidebar-icon-btn" title="Mejorar Plan" style="color:#fff; margin-top: 10px;">
+        <a href="/cuenta/planes.html" class="sidebar-icon-btn" title="Mejorar Plan"
+            style="color:#fff; margin-top: 10px;">
             <i style="color: #fff;" class="bi bi-star-fill"></i> <span style="color: #fff;">Mejorar Plan</span>
         </a>
     </div>
@@ -1574,18 +1577,23 @@
                 <h3 style="display: flex; align-items: center; gap: 10px; margin: 0; font-size: 20px;">
                     <i class="bi bi-star-fill" style="color:#fff;"></i> ¡Límite Alcanzado!
                 </h3>
-                <button class="btn-close-modal" onclick="closeModals()" style="background:none; border:none; color:#fff; font-size:24px; cursor:pointer;"><i class="bi bi-x"></i></button>
+                <button class="btn-close-modal" onclick="closeModals()"
+                    style="background:none; border:none; color:#fff; font-size:24px; cursor:pointer;"><i
+                        class="bi bi-x"></i></button>
             </div>
             <div class="modal-body">
                 <p style="color:#aaa; margin-bottom:24px; font-size:15px; line-height:1.6;">
                     <span style="color:#fff; font-weight:600;">Alcanzaste el límite de 30 productos subidos.</span><br>
-                    Mejora tu plan hoy mismo para tener subidas ilimitadas, conservar el 100% de tus ventas y llevar tu carrera musical al siguiente nivel.
+                    Mejora tu plan hoy mismo para tener subidas ilimitadas, conservar el 100% de tus ventas y llevar tu
+                    carrera musical al siguiente nivel.
                 </p>
             </div>
             <div class="modal-footer" style="display: flex; gap: 12px; border-top: 1px solid #222; padding-top: 20px;">
-                <button class="btn-modal-cancel" onclick="closeModals()" style="flex: 1; padding: 12px; border-radius: 8px; background: #1a1a1a; color: #fff; border: 1px solid #333; cursor: pointer; font-weight: 500;">Cancelar</button>
+                <button class="btn-modal-cancel" onclick="closeModals()"
+                    style="flex: 1; padding: 12px; border-radius: 8px; background: #1a1a1a; color: #fff; border: 1px solid #333; cursor: pointer; font-weight: 500;">Cancelar</button>
                 <button class="btn-modal-save" onclick="window.location.href='/cuenta/planes.html'"
-                    style="flex: 1; padding: 12px; border-radius: 8px; background: #fff; color: #000; border: none; cursor: pointer; font-weight: 600;">Ver Planes</button>
+                    style="flex: 1; padding: 12px; border-radius: 8px; background: #fff; color: #000; border: none; cursor: pointer; font-weight: 600;">Ver
+                    Planes</button>
             </div>
         </div>
     </div>
@@ -2919,11 +2927,25 @@
                         const src = item.image_url || item.cover_url || (item.files_data && item.files_data.cover) || '/images/portada-default.png';
                         if (!src) return resolve();
 
-                        const img = new Image();
-                        img.src = src;
-                        img.src = src;
-                        img.onload = resolve;
-                        img.onerror = resolve;
+                        if (window.getAuthorizedUrl && !src.startsWith('http') && src !== '/images/portada-default.png') {
+                            const version = item.storage_version || item.r2_version || 'v1';
+                            window.getAuthorizedUrl(src, version, item.id).then(url => {
+                                const img = new Image();
+                                img.onload = resolve;
+                                img.onerror = resolve;
+                                img.src = url || src;
+                            }).catch(() => {
+                                const img = new Image();
+                                img.onload = resolve;
+                                img.onerror = resolve;
+                                img.src = src;
+                            });
+                        } else {
+                            const img = new Image();
+                            img.onload = resolve;
+                            img.onerror = resolve;
+                            img.src = src;
+                        }
                     });
                 });
 
@@ -3039,10 +3061,10 @@
 
                 card.innerHTML = `
                 <div style="width:100%; aspect-ratio:1/1; position:relative; background:#111;">
-                    <img src="${img}"
+                    <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
+                        data-r2-src="${img}"
                         data-r2-version="${p.storage_version || p.r2_version || 'v1'}"
                         data-product-id="${p.id}"
-                        onload="this.style.opacity='1'"
                         onerror="this.src='/images/portada-default.png'; this.style.opacity='1';"
                         style="width:100%; height:100%; object-fit:cover; opacity:0; transition:opacity 0.4s ease;">
                         ${badgeHTML}
@@ -3336,13 +3358,13 @@
                     return;
                 }
             }
-            
+
             const modal = document.getElementById('modalUploadStrategy');
             if (modal) modal.classList.add('active');
         }
 
         // Global function for the limit modal (used by safeNavigate)
-        window.showLimitReachedModal = function() {
+        window.showLimitReachedModal = function () {
             const modal = document.getElementById('modalLimitReached');
             if (modal) modal.classList.add('active');
             const strategyModal = document.getElementById('modalUploadStrategy');
@@ -3492,7 +3514,8 @@
             <p style="color:#aaa; font-size:14px; line-height:1.5; margin-bottom:24px;">
                 Tu plan <strong>Básico</strong> permite hasta <strong>30 productos</strong> (incluyendo borradores).
                 <br><br>
-                Actualiza a <strong>PRO</strong> por solo <strong>$7/mes</strong> para subir contenido ilimitado y desbloquear 0% de comisión.
+                Actualiza a <strong>PRO</strong> por solo <strong>$7/mes</strong> para subir contenido ilimitado y
+                desbloquear 0% de comisión.
             </p>
             <a href="/cuenta/planes.html" class="elite-btn"
                 style="text-decoration:none; display:block; margin-bottom: 8px; background:#FFD700; color:#000;">

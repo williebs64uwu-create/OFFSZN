@@ -199,7 +199,7 @@ async function renderHeader(user, categoryCounts = null) {
         avatarImg.src = currentSrc;
         if (isR2) {
             avatarImg.dataset.r2Src = user.avatar_url;
-            avatarImg.dataset.r2Version = user.r2_version || 'v1';
+            avatarImg.dataset.r2Version = user.r2_version || 'v2';
         }
         avatarImg.id = 'profileAvatarImg';
         avatarImg.alt = user.nickname || 'Avatar';
@@ -212,7 +212,7 @@ async function renderHeader(user, categoryCounts = null) {
 
         // Background Auth for R2
         if (isR2) {
-            window.getAuthorizedUrl(user.avatar_url, user.r2_version || 'v1').then(url => {
+            window.getAuthorizedUrl(user.avatar_url, user.r2_version || 'v2').then(url => {
                 const img = document.getElementById('profileAvatarImg');
                 if (img) {
                     img.onload = () => { img.style.opacity = 1; };
@@ -1653,13 +1653,13 @@ async function loadUserProducts(user) {
         // Trending
         if (window.trendingProducts) {
             window.trendingProducts.slice(0, 5).forEach(p => {
-                if (p.image_url) urlsToWarm.push({ url: p.image_url, version: p.storage_version || p.r2_version || 'v1' });
+                if (p.image_url) urlsToWarm.push({ url: p.image_url, version: p.storage_version || p.r2_version || 'v2' });
             });
         }
 
         // Main List (First 15 for instant reveal)
         productsCache.slice(0, 15).forEach(p => {
-            if (p.image_url) urlsToWarm.push({ url: p.image_url, version: p.storage_version || p.r2_version || 'v1' });
+            if (p.image_url) urlsToWarm.push({ url: p.image_url, version: p.storage_version || p.r2_version || 'v2' });
         });
 
         if (urlsToWarm.length > 0 && window.getAuthorizedUrl) {
@@ -1839,7 +1839,7 @@ async function renderTrending(items, user, collabStats = {}) {
     // 1. Pre-authorize ALL images in parallel while skeletons stay visible
     const authPromises = items.map(prod => {
         if (!prod.image_url) return Promise.resolve(null);
-        return window.getAuthorizedUrl(prod.image_url, prod.storage_version || prod.r2_version || 'v1', prod.id);
+        return window.getAuthorizedUrl(prod.image_url, prod.storage_version || prod.r2_version || 'v2', prod.id);
     });
     const authorizedUrls = await Promise.all(authPromises);
 
@@ -1854,7 +1854,7 @@ async function renderTrending(items, user, collabStats = {}) {
 
         // Initial image check (avoid broken icon)
         const rawImgTrending = prod.image_url || '/images/portada-default.png';
-        const storageVerTrending = prod.storage_version || prod.r2_version || 'v1';
+        const storageVerTrending = prod.storage_version || prod.r2_version || 'v2';
 
         // Explicitly skip R2 signing if storage_version is 'supabase'
         const isR2Trending = (storageVerTrending !== 'supabase') && window.AuthUtils && window.AuthUtils.isR2Url(rawImgTrending);
@@ -2111,7 +2111,7 @@ async function renderProductList(items, user, collabStats = {}) {
     // 1. Pre-authorize ALL images in parallel
     const authPromises = items.map(prod => {
         if (!prod.image_url) return Promise.resolve(null);
-        return window.getAuthorizedUrl(prod.image_url, prod.storage_version || prod.r2_version || 'v1', prod.id);
+        return window.getAuthorizedUrl(prod.image_url, prod.storage_version || prod.r2_version || 'v2', prod.id);
     });
     const authorizedUrls = await Promise.all(authPromises);
 
@@ -2172,7 +2172,7 @@ async function renderProductList(items, user, collabStats = {}) {
         const audioUrl = getProductAudio(prod);
 
         const rawImgList = prod.image_url || '/images/portada-default.png';
-        const storageVerList = prod.storage_version || prod.r2_version || 'v1';
+        const storageVerList = prod.storage_version || prod.r2_version || 'v2';
 
         // Explicitly skip R2 signing if storage_version is 'supabase'
         const isR2List = (storageVerList !== 'supabase') && window.AuthUtils && window.AuthUtils.isR2Url(rawImgList);
@@ -2401,7 +2401,7 @@ async function renderProductList(items, user, collabStats = {}) {
         // Initialize WaveSurfer
         if (audioUrl && window.WaveSurfer) {
             try {
-                const finalAudioUrl = await window.getAuthorizedUrl(audioUrl, prod.storage_version || prod.r2_version || 'v1', prod.id);
+                const finalAudioUrl = await window.getAuthorizedUrl(audioUrl, prod.storage_version || prod.r2_version || 'v2', prod.id);
                 const ws = WaveSurfer.create({
                     container: document.getElementById(waveformId),
                     waveColor: '#666',
@@ -2895,7 +2895,7 @@ async function renderOldSchoolSidebar(user, categoryCounts = null) {
         avatarImgDiv.appendChild(img);
 
         if (isR2) {
-            window.getAuthorizedUrl(user.avatar_url, user.r2_version || 'v1').then(url => {
+            window.getAuthorizedUrl(user.avatar_url, user.r2_version || 'v2').then(url => {
                 img.onload = () => img.style.opacity = 1;
                 img.src = url;
             });

@@ -1,838 +1,805 @@
-# Errores Comunes de Desarrollo en OFFSZN
+1771807928801_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260331%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260331T000118Z&X-Amz-Expires=86400&X-Amz-Signature=9b1bcff52b29b94a9275892dbae2ac5f6c2b7ebe624eb4922b599d337566423e&X-Amz-SignedHeaders=host&x-id=GetObject
 
-## 9. Bloqueo de Pasarelas de Pago (PayPal CSP)
+1771706193704_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233746Z&X-Amz-Expires=86400&X-Amz-Signature=1280d073526192b28d9418f0b0853c00279d25164a13add0f520a6e0e7d74f83&X-Amz-SignedHeaders=host&x-id=GetObject
 
-**Descripción del error:**
-El SDK de PayPal no carga o los botones no aparecen en la página de checkout, lanzando errores de `Content Security Policy (CSP)` en la consola.
+1773095332198_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233805Z&X-Amz-Expires=86400&X-Amz-Signature=1eede041ee0b9d77f7a98135167dc88bac26c354250f273607c33a69eaaf2848&X-Amz-SignedHeaders=host&x-id=GetObject
 
-**Cuándo ocurre:**
-Sucede cuando Helmet.js está configurado por defecto y no permite conexiones externas a los dominios de PayPal.
+1771787329337_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233753Z&X-Amz-Expires=86400&X-Amz-Signature=144332fd4cd7e7aa94ddd267c1af785f07ac0c73313d43b1987f5ad151048243&X-Amz-SignedHeaders=host&x-id=GetObject
 
-**Solución:**
-Actualizar las directivas de Helmet en `app.js` permitiendo explícitamente los dominios de PayPal en:
-- `scriptSrc`: `paypal.com`, `sandbox.paypal.com`
-- `imgSrc`: `paypalobjects.com`, `*.paypal.com`
-- `connectSrc`: `api.paypal.com`, `api-m.paypal.com`
-- `frameSrc`: `paypal.com`
+1771308839462_cover_edit.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233753Z&X-Amz-Expires=86400&X-Amz-Signature=c32c34b6b8af4216f7bd8bb045669e8070f57b2af49806c947c04484597cbdee&X-Amz-SignedHeaders=host&x-id=GetObject
 
-## 10. Interferencia de COOP/COEP con Popups (Google/PayPal Auth)
+1771200893320_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233744Z&X-Amz-Expires=86400&X-Amz-Signature=c1c3232b7c2b66d8267c81d9571375b25dbf52d780be04b4cd4906ff082fc641&X-Amz-SignedHeaders=host&x-id=GetObject
 
-**Descripción del error:**
-Los popups de autenticación (como los de Google o PayPal) se abren pero no pueden devolver el token a la ventana principal, o la ventana se queda en blanco.
+1771445935851_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233753Z&X-Amz-Expires=86400&X-Amz-Signature=20da1cc475ad6d181ce71d46d064a48cdfc0d9d845d18fe84c08b3434fd278b9&X-Amz-SignedHeaders=host&x-id=GetObject
 
-**Cuándo ocurre:**
-Al habilitar políticas estrictas para FFmpeg.wasm (`Cross-Origin-Embedder-Policy: require-corp`), estas bloquean la comunicación entre ventanas de distinto origen.
+1771803299995_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233753Z&X-Amz-Expires=86400&X-Amz-Signature=29596e041c041dc7ab0bcb70ac7aae92846ca224921ca3aa626f06c46db0c70f&X-Amz-SignedHeaders=host&x-id=GetObject
 
-**Solución:**
-- Establecer `crossOriginEmbedderPolicy: false` en la configuración global de Helmet.
-- Desactivar `crossOriginOpenerPolicy: false` globalmente para permitir que los popups se comuniquen con el `window.opener`.
+1771368464689_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233753Z&X-Amz-Expires=86400&X-Amz-Signature=5a3a8ed28f63fddc9cd9a1a08b5b92b291bba477d31825994f6e71251a078f2b&X-Amz-SignedHeaders=host&x-id=GetObject
 
-## 11. Errores 404 en Activos Estáticos (Logos de Yape/Plin en Producción)
+1771706193704_cover.jpg
 
-**Descripción del error:**
-Imágenes que cargan localmente (como `/images/yape.png`) devuelven 404 al desplegar en producción (Render/Vercel).
+1771200893320_cover.jpg
 
-**Cuándo ocurre:**
-Debido a la estructura de carpetas `root/public` vs `server/public` y cómo el servidor Express sirve los archivos estáticos.
+1772024001466_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233757Z&X-Amz-Expires=86400&X-Amz-Signature=92a1189bdaa73629e504e1ec1bf4c3f7a36d1e7393a5de2ff9fc3822e124a42d&X-Amz-SignedHeaders=host&x-id=GetObject
 
-**Solución:**
-Unificar el middleware de archivos estáticos en `app.js` para buscar en ambas rutas y priorizar la carpeta de servidor para activos críticos:
-```javascript
-app.use(express.static(path.join(__dirname, '../../public')));
-app.use(express.static(path.join(__dirname, '../public')));
-```
+1771445935851_cover.jpg
 
-## 12. Credenciales Supabase Expuestas en Páginas Huérfanas (404.html)
+1771802747635_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233744Z&X-Amz-Expires=86400&X-Amz-Signature=658344a82f8e163f6885ed313b5097e4a981f74dbf4ade53cb1002dccccfd244&X-Amz-SignedHeaders=host&x-id=GetObject
 
-**Descripción del error:**
-Los logs de seguridad detectan la estructura de credenciales clave `window.SUPABASE_ANON_KEY` codificada estáticamente en archivos en la raíz del proyecto.
+1771803299995_cover.jpg
 
-**Cuándo ocurre:**
-Ocurre frecuentemente en plantillas simples o páginas aisladas (como `404.html` o `index.html` original) donde en lugar de cargar el manejador global del entorno se pegaron directamente las APIs.
+1770768758750_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233744Z&X-Amz-Expires=86400&X-Amz-Signature=e8304384cf56fb716f40fa64cc735c478154c52dd093e2f42f24eeea6c33eab2&X-Amz-SignedHeaders=host&x-id=GetObject
 
-**Solución:**
-Eliminar íntegramente las variables estáticas y referenciar el handler encargado desde la raíz:
-```html
-<script src="/env.js"></script>
-```
+1773095332198_cover.jpg
 
-## 13. Exposición de Credenciales en Funcionalidades "Beta" (Studio/Reels)
+1771224321585_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233744Z&X-Amz-Expires=86400&X-Amz-Signature=5b7898d98cee456e73d451ccdbb1af6d8123be8d1bbe40d07291cad06ed658a3&X-Amz-SignedHeaders=host&x-id=GetObject
 
-**Descripción del error:**
-Al desarrollar módulos nuevos o bajo etiquetas "BETA" (`studio/reels.html`), se tiende a replicar el error de configuración estática de Supabase, ignorando la arquitectura global de `/env.js`.
+1771473500041_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233744Z&X-Amz-Expires=86400&X-Amz-Signature=ad103e2d1b3d2da451b0b834a44a0273e723281a8a46237b1c6c7ec844c84a9b&X-Amz-SignedHeaders=host&x-id=GetObject
 
-**Cuándo ocurre:**
-Ocurre en archivos que se crean como prototipos rápidos y luego se integran al flujo principal sin pasar por un auditoría de secretos.
+1771308839462_cover_edit.jpg
 
-**Solución:**
-Estandarizar la cabecera de todos los archivos `.html` nuevos para que incluyan la carga de entorno dinámica:
-```html
-<script src="/env.js"></script>
-```
+1771787329337_cover.jpg
 
+1771355923516_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233744Z&X-Amz-Expires=86400&X-Amz-Signature=3a03ef1800fd903ce118557148e9c34c430531db94f678cee972ad94c9ea2473&X-Amz-SignedHeaders=host&x-id=GetObject
 
-## 8. Scripts Globales Faltantes en SPA/Páginas Independientes (Search/Favorites)
+1771139106664_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233744Z&X-Amz-Expires=86400&X-Amz-Signature=8e36045da35f23bae2d6f7837b64fe4c4a48d12c172ea9219d884b980f4e5248&X-Amz-SignedHeaders=host&x-id=GetObject
 
-**Descripción del error:**
-Botones de interactividad (Like, Compartir, Reproducir) no funcionan o lanzan `ReferenceError` porque los managers globales no están cargados.
+1771129716874_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233744Z&X-Amz-Expires=86400&X-Amz-Signature=61626856f50045137f32b7f0881f7d8956b5a3ace768bc23c71518bb1ac265bb&X-Amz-SignedHeaders=host&x-id=GetObject
 
-**Cuándo ocurre:**
-Al crear nuevas páginas o componentes (como `search.html`) y olvidar importar scripts de soporte como `favorites-manager.js` o `share-modal.js`.
+1771543532487_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233753Z&X-Amz-Expires=86400&X-Amz-Signature=ac17350c83b39b532a57e062ccd1ae1c602d24a8f757969a3b225811c0f82db6&X-Amz-SignedHeaders=host&x-id=GetObject
 
-**Solución:**
-Asegurarse de incluir los scripts necesarios en el pie del `<body>` antes del script específico de la página:
-```html
-<script src="/script/favorites-manager.js"></script>
-<script src="/script/share-modal.js"></script>
-<script src="/script/search.js" type="module"></script>
-```
+1770780728844_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233744Z&X-Amz-Expires=86400&X-Amz-Signature=75b098eeec668c2cccb1b764685901aa3c94059ea77b55e2fdc4fca69d5c3252&X-Amz-SignedHeaders=host&x-id=GetObject
 
-**Mejora de UX (Mar 10, 2026):**
-Se reemplazaron los badges de formato ("WAV/STEMS") por información técnica relevante (**BPM** y **KEY**) en formato de cuadrados (`.info-square-v2`) para cumplir con estándares de la industria musical.
+1771976765116_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233744Z&X-Amz-Expires=86400&X-Amz-Signature=84395ab42672aaa5a40b22b36dc39106792e23c11e9487dc8fbd3d8f6df8937a&X-Amz-SignedHeaders=host&x-id=GetObject
 
+1772172136149_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233753Z&X-Amz-Expires=86400&X-Amz-Signature=63432feb25fd985c5b8ac7f6f62b8b3dd279659a040a608a077a50cd80646c06&X-Amz-SignedHeaders=host&x-id=GetObject
 
-## 1. ERR_BLOCKED_BY_RESPONSE.NotSameOriginAfterDefaultedToSameOriginByCoep
+1771368464689_cover.jpg
 
-**Descripción del error:**
-El navegador bloquea la carga de un recurso (usualmente imágenes de Cloudinary o Cloudflare R2) en la consola con el mensaje:
-`net::ERR_BLOCKED_BY_RESPONSE.NotSameOriginAfterDefaultedToSameOriginByCoep 200 (OK)`.
+1771802747635_cover.jpg
 
-**Cuándo ocurre:**
-Este error sucede cuando el documento principal tiene habilitada la cabecera `Cross-Origin-Embedder-Policy: require-corp` (necesaria para FFmpeg.wasm) y la página intenta cargar una imagen de otro dominio (cross-origin) mediante una etiqueta `<img>` tradicional **sin especificar que la petición admite CORS**.
+1772024001466_cover.jpg
 
-Aun cuando el servidor remoto (Cloudinary) responda con un 200 OK, el navegador enforcerá la política COEP y ocultará el recurso.
+1771803072890_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233753Z&X-Amz-Expires=86400&X-Amz-Signature=a23535c9619536686342d97cc04b4743f9daa5ea5fc97a8c3839329906d7a5f8&X-Amz-SignedHeaders=host&x-id=GetObject
 
-**Solución:**
-Encontrar las etiquetas `<img>` generadas (ya sea en HTML o dinámicamente en JavaScript) que consumen esos dominios y agregarles el atributo `crossorigin="anonymous"`.
+1771088940334_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233744Z&X-Amz-Expires=86400&X-Amz-Signature=34a78ccad5c96278341928cd74a91dfbfa659282c43bf206641b857155bd7b9a&X-Amz-SignedHeaders=host&x-id=GetObject
 
-*Ejemplo en `profile-public.js` o `avatar-manager.js`:*
-```javascript
-// Incorrecto (fallará por COEP)
-avatarContainer.innerHTML = `<img src="${user.avatar_url}" />`;
+1771224321585_cover.jpg
 
-// Correcto
-avatarContainer.innerHTML = `<img crossorigin="anonymous" src="${user.avatar_url}" />`;
-```
+1771824687271_cover_edit.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233744Z&X-Amz-Expires=86400&X-Amz-Signature=ebcc4004719987d012c053237e76cc2f74d74309b29e170894668091e56c6fd8&X-Amz-SignedHeaders=host&x-id=GetObject
 
-Asegurarse también de que el proveedor externo (R2 / Cloudinary) tenga configurada una política CORS que devuelva `Access-Control-Allow-Origin: *`.
+1771543532487_cover.jpg
 
-## 2. Bloqueo de Acciones Duplicadas (Double Click / Rapid Save)
-**Descripción:** Clics rápidos disparan múltiples peticiones.
-**Solución:** Usar un flag `isSaving` para bloquear botones y retornos de función durante procesos activos.
+1770768758750_cover.jpg
 
-## 3. Solapamiento de Elementos (Floating Layouts)
-**Descripción:** Contadores `absolute` chocan con scrollbars de textareas.
-**Solución:** Usar `position: static` o margen inferior para separar el contador del área de interacción del scroll.
+1772987677785_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233744Z&X-Amz-Expires=86400&X-Amz-Signature=6ff7e80d24b4a6bc5b6965ed310cb230f10095503f99b932d53f7b215fa535a5&X-Amz-SignedHeaders=host&x-id=GetObject
 
+1771473500041_cover.jpg
 
+1770779127454_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233753Z&X-Amz-Expires=86400&X-Amz-Signature=894aa4d32fee82a89f4323aa4b47185c1e88940e2bf4751af97f4f3841e294ed&X-Amz-SignedHeaders=host&x-id=GetObject
 
-## 4. Fallo de Integridad de Subrecursos (SRI) y Race Conditions
+1771767001861_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233757Z&X-Amz-Expires=86400&X-Amz-Signature=fcc425108e638e11f855b9df40b3f5dc6dd2e7d8ab9b5dddb5f2ebd513ca7330&X-Amz-SignedHeaders=host&x-id=GetObject
 
-**Descripción:**
-El navegador bloquea la carga de librerías externas o estas no se inicializan correctamente a pesar de cargar el script.
+1771370343858_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233744Z&X-Amz-Expires=86400&X-Amz-Signature=00b66498fec55a46bb10baee5407bfc77f0e18f4c49253c8e691b5103034f45e&X-Amz-SignedHeaders=host&x-id=GetObject
 
-**Cuándo ocurre:**
-1. **Hash Mismatch**: Al usar alias como `@2`, el CDN actualiza la versión y el hash deja de coincidir.
-2. **Race Condition**: `AuthUtils.initSupabase()` se dispara antes de que la librería de Supabase o las variables de entorno (`env.js`) estén listas en el DOM.
+1771139106664_cover.jpg
 
-**Solución Final:**
-1. **Fijar la versión exacta** (ej. `@supabase/supabase-js@2.48.1`) para garantizar que el hash sea estático.
-2. **Usar el hash exacto de la consola**: El navegador indica el hash "recibido" vs el "esperado". Copiar el recibido.
-3. **Escuchador de Carga**: Usar `window.addEventListener('load', ...)` para inicializar librerías después de que todo el entorno esté listo.
+1771286465213_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233744Z&X-Amz-Expires=86400&X-Amz-Signature=b22e084ef7a535e0397fa06b7c571302d91a1e4cf4013a7b44f0a552bb80dddd&X-Amz-SignedHeaders=host&x-id=GetObject
 
-*Ejemplo de implementación robusta en `gian.html`:*
-```html
-<script src="https://.../supabase-js@2.48.1" integrity="sha384-HASE_EXACTO" crossorigin="anonymous"></script>
-<script>
-    window.addEventListener('load', () => {
-        if (window.AuthUtils) window.AuthUtils.initSupabase();
-    });
-</script>
-```
+1771129716874_cover.jpg
 
-## 5. Bloqueo de CSP (Tailwind & CDNs)
+1771355923516_cover.jpg
 
-**Descripción:**
-El navegador bloquea la carga de librerías externas o fuentes dinámicas debido a una política de seguridad de contenido (CSP) estricta.
+1771290415087_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233744Z&X-Amz-Expires=86400&X-Amz-Signature=3b3dfdee4af7c61485f8704a9d588069b0d52b27d011515acf4b1d478d236c10&X-Amz-SignedHeaders=host&x-id=GetObject
 
-**Cuándo ocurre:**
-Al agregar nuevas librerías (como `cdn.tailwindcss.com`) que no están explícitamente autorizadas en el header de seguridad del servidor.
+1771803072890_cover.jpg
 
-**Solución:**
-Actualizar las directivas de `helmet` en `app.js` para incluir el dominio permitido en `scriptSrc`.
+1771088940334_cover.jpg
 
-## 6. XSS en Contenido Dinámico (DOM Injection)
+1771105235144_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233744Z&X-Amz-Expires=86400&X-Amz-Signature=2eb84c0b77be0d903b47c1e61e0cb3da206d37350ebe14f7bdcf29b367a29992&X-Amz-SignedHeaders=host&x-id=GetObject
 
-**Descripción:**
-Posibilidad de inyección de código malicioso si se usan datos proporcionados por usuarios para construir HTML sin escapar.
+1770780728844_cover.jpg
 
-**Cuándo ocurre:**
-Al usar `innerHTML` o `insertAdjacentHTML` con variables que pueden contener etiquetas `<script>`.
+1771824687271_cover_edit.jpg
 
-**Solución:**
-Implementar una función `escapeHTML(str)` y aplicarla a todos los datos dinámicos antes de su inserción en el DOM.
-## 7. Race Condition en Configuración de Tailwind CSS
+1772231350420_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233744Z&X-Amz-Expires=86400&X-Amz-Signature=88dbb7ab97421c3e56b8c4286526b5bde0be1bb2da168d9031ebd5dd0cc41a24&X-Amz-SignedHeaders=host&x-id=GetObject
 
-**Descripción del error:**
-Error `tailwind is not defined` al intentar configurar `tailwind.config` en un script inline.
+1771712988725_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233744Z&X-Amz-Expires=86400&X-Amz-Signature=3dfc330da9053ffa94399de1ee6895dd903e0e13005125656492ee137db86a7b&X-Amz-SignedHeaders=host&x-id=GetObject
 
-**Cuándo ocurre:**
-Sucede si el script de configuración inline se ejecuta antes de que el script principal de `cdn.tailwindcss.com` haya terminado de cargar y definir el objeto global `tailwind`.
+1772672996697_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233744Z&X-Amz-Expires=86400&X-Amz-Signature=e546047e9359d51402df7e6642848f3d741b3dd5925f9a0df1231a711d5badc7&X-Amz-SignedHeaders=host&x-id=GetObject
 
-**Solución:**
-Implementar una función de inicialización con guarda y reintento (`setTimeout`) para asegurar que el objeto `tailwind` exista antes de usarlo.
+1771976765116_cover.jpg
 
-```javascript
-function initTailwind() {
-    if (typeof tailwind !== 'undefined') {
-        tailwind.config = { ... };
-    } else {
-        setTimeout(initTailwind, 200);
-    }
-}
-initTailwind();
-```
+1772987677785_cover.jpg
 
-## 8. Inconsistencia de SRI en CDNs dinámicos
+1772172136149_cover.jpg
 
-**Descripción:**
-Bloqueo de scripts por fallo en integridad (SRI) tras actualizaciones automáticas del CDN (ej. use de `@2` o `@latest`).
+1773028557290_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T235018Z&X-Amz-Expires=86400&X-Amz-Signature=c80568c1265d182f73e4fd1cfd59708727bdd2d59ea7ae9304c00be4c9cfafaa&X-Amz-SignedHeaders=host&x-id=GetObject
 
-**Solución:**
-Fijar siempre la versión semántica completa (ej. `@2.48.1`) y generar el hash SRI correspondiente a esa versión específica. No usar etiquetas de versión mayor (`@2`) con SRI.
+1772734442997_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233744Z&X-Amz-Expires=86400&X-Amz-Signature=d4f1114cbda2b45a6a220f06255dad63f1e62bc27c18d4c44d6756b482b7cca0&X-Amz-SignedHeaders=host&x-id=GetObject
 
-## 9. Placeholders de Imagen de Perfil (Avatar Fallback)
+1772753496742_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233923Z&X-Amz-Expires=86400&X-Amz-Signature=47a577a991d5ee07a31e049179aa683e1880e5aad1ad822f2430a24db1f08fc5&X-Amz-SignedHeaders=host&x-id=GetObject
 
-**Descripción:**
-Evitar imágenes rotas o vacías cuando un usuario no tiene `avatar_url` o la carga falla.
+1771540645449_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233744Z&X-Amz-Expires=86400&X-Amz-Signature=b34a0729b477707edca9a943fa80fd538266e6b8bded7785695d9a5e8faf6053&X-Amz-SignedHeaders=host&x-id=GetObject
 
-**Solución Implementada:**
-1. **Detección**: Si `avatar_url` es null, mostrar un `div` con la **inicial** del nickname.
-2. **XSS en Iniciales**: El nickname DEBE ser escapado antes de extraer la inicial, para evitar inyección si un usuario usa algo como `<script>` de nombre.
-3. **Escapado en Atributos**: Al usar `onerror="handleError(..., 'nickname')"`, las comillas simples del nickname deben ser escapadas (`.replace(/'/g, "\\'")`) para no romper el atributo de JavaScript.
+1773199882174_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233744Z&X-Amz-Expires=86400&X-Amz-Signature=009856ebd2b013b318c9e33fce708fdcd42b2c83176d6f2b0aa76675c351deba&X-Amz-SignedHeaders=host&x-id=GetObject
 
-*Ejemplo en `siguiendo.js`:*
-```javascript
-const nicknameEscaped = escapeHTML(user.nickname);
-const initial = nicknameEscaped.charAt(0).toUpperCase();
+1770762024771_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233744Z&X-Amz-Expires=86400&X-Amz-Signature=469c14def7a27fdcebce6d7626f4f5a5e1b9315145d14801f96dc0d7d122b852&X-Amz-SignedHeaders=host&x-id=GetObject
 
-const avatarContent = avatarUrl
-    ? `<img src="${avatarUrl}" onerror="handleError(this, '${nicknameEscaped.replace(/'/g, "\\'")}')">`
-    : `<div class="placeholder">${initial}</div>`;
-```
+1772926900026_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233744Z&X-Amz-Expires=86400&X-Amz-Signature=ae6ff161b566e79d46e65c063a4357940a40ad81e821f2422c341098f1d3101b&X-Amz-SignedHeaders=host&x-id=GetObject
 
-# Registro de Errores y Soluciones - OFFSZN
+1771417397703_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233744Z&X-Amz-Expires=86400&X-Amz-Signature=8473017d555e04ba5b46384a5128136d6a79c6da08198155336ca52ee2c7fd93&X-Amz-SignedHeaders=host&x-id=GetObject
 
-Este documento registra los errores técnicos identificados durante el desarrollo y cómo han sido solucionados.
+1770779127454_cover.jpg
 
----
+1772065553463_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233744Z&X-Amz-Expires=86400&X-Amz-Signature=2d0254ee0a9fce83e4ff6a5f935690efb249a029191e0c2efa97b16bbb9dde23&X-Amz-SignedHeaders=host&x-id=GetObject
 
-## 1. Error 500 en API de Productores (Producers API)
-**Fecha:** 6 de marzo de 2026
-**Ubicación:** `server/src/infrastructure/http/controllers/UserController.js` - `getAllProducers`
+1772953026799_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233744Z&X-Amz-Expires=86400&X-Amz-Signature=4835866ce6495ff9948f0c4a0bc4a565b6dded6864e94b5b07be2c8e892eebb6&X-Amz-SignedHeaders=host&x-id=GetObject
 
-### Problema:
-Al intentar cargar la grilla de productores en `comunidad/productores.html`, el servidor respondía con un error **500 Internal Server Error**.
+1772081499260_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233744Z&X-Amz-Expires=86400&X-Amz-Signature=682a8f038793cca8617bb767fb6dfb1780d5d0b4ae29420a34a7fd7b918ef78b&X-Amz-SignedHeaders=host&x-id=GetObject
 
-### Causa Raíz:
-El código del backend intentaba seleccionar una columna inexistente llamada `profile_cover` en la tabla `users` de Supabase. La columna correcta en la base de datos es `banner_url`.
+1771767001861_cover.jpg
 
-### Solución:
-1. Se actualizó la consulta en `UserController.js` para usar `banner_url`.
-2. Se aplicó un alias (`profile_cover:banner_url`) en la consulta de Supabase para mantener la compatibilidad con el frontend sin necesidad de modificar los scripts del cliente.
-3. Se aseguró que los parámetros `limit` y `page` sean tratados siempre como enteros (`parseInt`) para evitar cálculos de rango erróneos.
+1771352059639_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233744Z&X-Amz-Expires=86400&X-Amz-Signature=3d929398624907909056799ffeef098c6253b4742106633b7df0d2c94ea1b434&X-Amz-SignedHeaders=host&x-id=GetObject
 
----
+1771370343858_cover.jpg
 
-## 2. SyntaxError y Visuales Rotos en Cards (Avatar Fallback)
-**Fecha:** 6 de marzo de 2026
-**Ubicación:** `script/producers.js` / `comunidad/productores.html`
+1771527948382_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233744Z&X-Amz-Expires=86400&X-Amz-Signature=13886845182bb355a393f451ae0aefb346770e1ea4a34c96dbaf15cdf909ff46&X-Amz-SignedHeaders=host&x-id=GetObject
 
-### Problema:
-Se reportaron SyntaxErrors en la consola y cards que se veían mal (con iniciales superpuestas o HTML roto). Esto ocurría porque el atributo `onerror` inyectaba HTML de forma insegura, rompiendo la estructura de las comillas.
+1771286465213_cover.jpg
 
-### Solución:
-1. Se creó una función global `window.handleProducerAvatarError` que maneja el error de forma limpia sin inyectar HTML directamente en el atributo `onerror`.
-2. Se reemplaza solo el elemento `<img>` por el placeholder, manteniendo la integridad del contenedor y la estrella de ranking.
-3. Se escapan los caracteres especiales en los nicknames para evitar rupturas de strings en JS.
+1771290415087_cover.jpg
 
----
+1771622557518_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233923Z&X-Amz-Expires=86400&X-Amz-Signature=eaedb1faa11f95115685a1be2cf2ccba7559725ec5765b3886eb74fd9e1e6100&X-Amz-SignedHeaders=host&x-id=GetObject
 
-## 3. Bloqueo de Imágenes por CSP (via.placeholder.com)
-**Fecha:** 6 de marzo de 2026
-**Ubicación:** `server/src/app.js` (Helmet config)
+1771886528431_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233753Z&X-Amz-Expires=86400&X-Amz-Signature=aea0f7513e8f4ebe2bdb0e442ddaffc482246c462a3559f3d94601d4deb10da2&X-Amz-SignedHeaders=host&x-id=GetObject
 
-### Problema:
-Las imágenes de prueba o fallbacks que apuntaban a `via.placeholder.com` eran bloqueadas por el navegador debido a la política de Content Security Policy (CSP).
+1772943132497_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233923Z&X-Amz-Expires=86400&X-Amz-Signature=14908a993e21e130e36471d4834fd91db82662f74a3007581dbccbfd4a7d57c9&X-Amz-SignedHeaders=host&x-id=GetObject
 
-### Solución:
-Se añadió `https://via.placeholder.com` a la lista blanca de `imgSrc` en la configuración de Helmet del servidor. Esto permite cargar estas imágenes de forma segura mientras se migran a recursos definitivos.
+1771803093189_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233753Z&X-Amz-Expires=86400&X-Amz-Signature=3b3fe629ec730e84e87f76642d82cb157303d5b1e17dcb21a4d78cf97a8298cf&X-Amz-SignedHeaders=host&x-id=GetObject
 
----
+1772065553463_cover.jpg
 
-## 4. Corrección de Ranking "TOP 1-10" y Exclusiones
-**Fecha:** 6 de marzo de 2026
-**Ubicación:** `script/producers.js` / `/api/leaderboard`
+1771105235144_cover.jpg
 
-### Problema:
-Se requería que el ranking fuera real (basado en el leaderboard mensual) y que las cuentas de prueba (`user2pr25`, `testeo2`, etc.) nunca aparecieran en el top y siempre estuvieran al final de la lista. Además, el ranking solo debe ser visible en las pestañas de "Trending" y "Popular".
+1772081499260_cover.jpg
 
-### Solución:
-1. **Ranking Real:** Se integra el fetch a `/api/leaderboard` para obtener el Top 10 oficial basado en puntos.
-2. **Exclusión Estricta:** Se creó una lista de UUIDs (`EXCLUDED_PRODUCERS`) en el frontend que:
-   - Bloquea cualquier asignación de rango (estrella TOP) aunque tengan puntos.
-   - Los empuja al final de la lista mediante un `sort` personalizado antes de renderizar.
-3. **Visibilidad por Filtro:** Se condicionó la visibilidad del badge "TOP X" para que solo aparezca si el filtro activo es "Trending" o "Popular". En "Recientes" o "A-Z" se oculta para evitar inconsistencias visuales.
-4. **Traducción:** Se cambió el título principal a "Encontrar Creadores" y los placeholders a español.
+1771349319234_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233753Z&X-Amz-Expires=86400&X-Amz-Signature=e99f0f473a0bdafeb6de8a76751fd74fae6e48b5aec16afcd4e36fa792874447&X-Amz-SignedHeaders=host&x-id=GetObject
 
----
+1772672996697_cover.jpg
 
-## 5. Prioridad de Imagen y Robustez de Avatares
-**Fecha:** 6 de marzo de 2026
-**Ubicación:** `UserController.js` / `productores.html` / `script/producers.js`
+1771417397703_cover.jpg
 
-### Problema:
-Vulnerabilidad visual cuando fallan servicios externos de placeholders (como `via.placeholder.com`) y necesidad de priorizar usuarios con foto.
+1771186718567_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T234138Z&X-Amz-Expires=86400&X-Amz-Signature=2ba04bfb5782271afdd49a544d90b8c2d3f41b6deb7dac421e97e3d11817f266&X-Amz-SignedHeaders=host&x-id=GetObject
 
-### Solución:
-1. **Filtro de Imagen:** El backend (`UserController.js`) y el frontend (`producers.js`) ahora priorizan a los usuarios que tienen `avatar_url` o `profile_cover` definido.
-2. **Fallback Seguro:** El manejador `window.handleProducerAvatarError` ahora reemplaza fallos de imagen directamente con un `div` de iniciales generado localmente, eliminando la dependencia de servicios externos que puedan causar errores de resolución (como el visto en consola).
-3. **Seguridad:** Se aplicó un incremento de versión (`?v=17`) al script en el HTML para forzar la limpieza de caché tras estos cambios críticos.
+1772404792709_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233753Z&X-Amz-Expires=86400&X-Amz-Signature=39ec2321a99b9f2028cae612e5a068a437bbb2749f0c571a2aa8a2bfa74d0206&X-Amz-SignedHeaders=host&x-id=GetObject
 
----
+1772593602416_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T234138Z&X-Amz-Expires=86400&X-Amz-Signature=74b7f6f96545106d4e9a8c285741869732125ba7f077daf36bf198b40cece1f7&X-Amz-SignedHeaders=host&x-id=GetObject
 
-## 6. Refinamiento Estético: Black & White total
-**Fecha:** 6 de marzo de 2026
-**Ubicación:** `producers.css` / `productores.html`
+1773028557290_cover.jpg
 
-### Problema:
-Uso de color morado (`#8b5cf6`) en las pestañas activas de productores, lo cual rompía la estética "Black & White" de la marca. Icono de filtros no intuitivo (deslizadores vs embudo).
+1772734442997_cover.jpg
 
-### Solución:
-1. **Paleta B&W:** Se cambió el fondo de `.category-tag.active` de morado a blanco (`#fff`) con texto negro (`#000`).
-2. **Icono Funnel:** Se reemplazó el icono `bi-sliders` por `bi-funnel` (embudo) para representar mejor el filtrado por roles.
-3. **Estructura:** Se movió el botón de filtros avanzados fuera del contenedor de pestañas para diferenciarlo visualmente y se envolvió en un `filter-row-wrapper` para mantener la alineación.
-4. **Dropdown:** Se ajustó la opción seleccionada del dropdown para usar blanco sólido en lugar de tintes morados.
+1771700382931_cover_edit.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233744Z&X-Amz-Expires=86400&X-Amz-Signature=4919c593007bfc47ee8b4a0ba526bcc121ae1118668de0f145ed46f7a47d56b0&X-Amz-SignedHeaders=host&x-id=GetObject
 
----
+1772231350420_cover.jpg
 
-## 7. Cards de Productores "Angostas" (Flex Shrink)
-**Fecha:** 6 de marzo de 2026
-**Ubicación:** `producers.css` / `.pro-grid`
+1772943132497_cover.jpg
 
-### Problema:
-Al introducir un contenedor flex (`.pro-grid-layout-container`) para el sidebar, el grid (`.pro-grid`) se encogía a su tamaño mínimo de contenido, haciendo que las cards se vieran muy angostas y amontonadas en el centro.
+1773199882174_cover.jpg
 
-### Solución:
-Se forzó `width: 100%` en `.pro-grid` y `.pro-grid-section` para que ocupen todo el espacio disponible del contenedor centrado (hasta 1400px), restaurando el ancho original de las cards y permitiendo que se expandan correctamente.
+1771540645449_cover.jpg
 
----
+1771712988725_cover.jpg
 
-## 8. Lógica Final de Rankings y Exclusiones
-**Fecha:** 6 de marzo de 2026
-**Ubicación:** `producers.js` / `UserController.js`
+1770762024771_cover.jpg
 
-### Problema:
-Necesidad de sincronizar rankings dinámicos con exclusiones de seguridad para cuentas de prueba que no deben "ensuciar" el top público.
+1771622557518_cover.jpg
 
-### Solución:
-1. **Exclusión Estricta:** Las cuentas en `EXCLUDED_PRODUCERS` (ej. `user2pr25`) nunca reciben el badge de ranking, incluso si tienen puntos altos en la DB. Se empujan al final mediante un `sort` que prioriza: 1) Tener foto, 2) No ser excluido.
-2. **Contextualización Visual:** Se implementó una lógica en `renderProducers` para que la estrella de "TOP" solo aparezca si la pestaña activa es "Todos" o "Popular". En "Recientes", el ranking se oculta para no confundir al usuario con el orden cronológico.
-3. **Seguridad (Photo Rule):** En la pestaña "Recientes", se filtran cuentas sin fotos de perfil/portada para mantener un estándar visual premium.
+1771731504093_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233744Z&X-Amz-Expires=86400&X-Amz-Signature=4fc9b67c2d5c168f362ad04c97f81c0e6a75a435bfa4c191c6c34b67c5c25d6b&X-Amz-SignedHeaders=host&x-id=GetObject
 
----
+1773279716381_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233753Z&X-Amz-Expires=86400&X-Amz-Signature=72f4728f18c68eeffe94684abd99500de3bdb0dd0e6c8539919c79ce47b7fe34&X-Amz-SignedHeaders=host&x-id=GetObject
 
-## 9. Checkboxes Invisibles (Doble-Toggle)
-**Fecha:** 6 de marzo de 2026
-**Ubicación:** `script/producers.js` / `producers.css`
+1772926900026_cover.jpg
 
-### Problema:
-Los checkboxes de los filtros de roles no mostraban el estado "marcado" (fondo blanco con check) al hacer clic. Esto ocurría por un conflicto de eventos: el navegador marcaba el checkbox automáticamente por estar dentro de un `<label>`, y el script de JS volvía a cambiar el estado manualmente en el evento `click`, haciendo que se cancelaran entre sí.
+1771628151960_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T234138Z&X-Amz-Expires=86400&X-Amz-Signature=7a6019579eec1b2cecbf5c000cdf80157d36a45553c9c1908b9c7c4c7aab0427&X-Amz-SignedHeaders=host&x-id=GetObject
 
-### Solución:
-1. **JS**: Se eliminó el escuchador de eventos `click` en el contenedor del item y se dejó que el navegador maneje el cambio del checkbox nativamente. Ahora el script solo escucha el evento `change` del input.
-2. **CSS**: Se forzó el uso de `bootstrap-icons` con `!important` y un `font-weight: 900` en el pseudo-elemento `::after` para garantizar que el icono de la palomita sea visible sobre el fondo blanco.
-3. **ID Sync**: Se sincronizaron los valores de los checkboxes con los nombres de los chips para evitar discrepancias al eliminar filtros desde la UI principal.
+1771803093189_cover.jpg
 
----
+1773275002747_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233753Z&X-Amz-Expires=86400&X-Amz-Signature=1a0fb365eea37454ea7d21ac896839678b21adb93c42eee9c717a534333dd9dd&X-Amz-SignedHeaders=host&x-id=GetObject
 
-## 10. Gaps en el Top 1-10 (Sincronización de Exclusiones)
-**Fecha:** 6 de marzo de 2026
-**Ubicación:** `LeaderboardController.js` (Backend) / `producers.js` (Frontend)
+1771210519507_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T234138Z&X-Amz-Expires=86400&X-Amz-Signature=cb58d64a00c95ccb4647d399580fd79f460765cb06b10232c8487ef9e5ee7a0d&X-Amz-SignedHeaders=host&x-id=GetObject
 
-### Problema:
-El ranking mostraba números saltados (ej: 1, 2, 6, 7) porque las cuentas de prueba estaban siendo filtradas en el frontend pero seguían ocupando puestos en el cálculo del backend.
+1771352059639_cover.jpg
 
-### Solución:
-Se sincronizaron las listas de exclusión de IDs en ambos lados. Ahora el backend ignora por completo a los usuarios de prueba al calcular los puestos, asegurando un Top 10 real y continuo de usuarios legítimos.
+1771687536635_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233744Z&X-Amz-Expires=86400&X-Amz-Signature=b5ef7c8b27fbe6e5864f001b6f65b6cc704e61b5b6d5549ba399f80068420da6&X-Amz-SignedHeaders=host&x-id=GetObject
 
----
+1772593602416_cover.jpg
 
-## 11. Portadas R2 Rotas (Error 404 en Covers de Productos)
-**Fecha:** 15 de marzo de 2026
-**Ubicación:** `script/auth-utils.js` / `server/src/infrastructure/http/routes/r2.routes.js` / `script/r2-loader.js`
+1772953026799_cover.jpg
 
-### Problema:
-Algunos beats (como "Pulsar 200") mostraban portadas rotas en el feed de Explorar, generando errores 404 en la consola. Esto ocurría porque la base de datos guardaba la URL completa de R2 (en lugar de la ruta relativa), y la función encargada de firmarlas (`getAuthorizedUrl`) asimilaba que no necesitaba firma al detectar `http`, evadiendo el proceso y causando denegación de acceso en las cubiertas. Además, en caso de fallar, la ruta pública de fallback en el backend generaba un error interno (`PathError`) por sintaxis incompatible en Express 5.
+1771527948382_cover.jpg
 
-### Solución:
-1. **Detección Mejorada de URLs R2 (`auth-utils.js`)**: Se actualizó `getAuthorizedUrl` para procesar correctamente las URLs absolutas de R2 y asegurar que sean firmadas si no contienen una firma activa (`X-Amz-Signature`). Además, se corrigió la construcción de la URL de fallback del API en `_handleSigningFailure`.
-2. **Corrección de Ruta Backend (`r2.routes.js`)**: Se solucionó el error fatal en Express 5 (`PathError: Missing parameter name`) reemplazando el patrón `/r2-public/:key*` por una expresión literal nativa `/^\/r2-public\/(.*)/`.
-3. **Supresión de Errores Visuales (`r2-loader.js`)**: Se asignó un `src` temporal con un GIF transparente al identificar elementos con atributo `data-r2-version`, impidiendo que el navegador lance el error inicial de "Not Found" mientras se obtiene asíncronamente la firma.
+1771182661845_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T234138Z&X-Amz-Expires=86400&X-Amz-Signature=383ae60c9efb26c07098db44ea51bde7d661b70e85f293db5a36b16e6099b029&X-Amz-SignedHeaders=host&x-id=GetObject
 
----
+1772674833518_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233753Z&X-Amz-Expires=86400&X-Amz-Signature=9192ab5dcdd16a4e8abf9110f55c8213424bcfe63d51ee3baf46d51ba544fd38&X-Amz-SignedHeaders=host&x-id=GetObject
 
-## 12. Vulnerabilidad de Seguridad y Validación de Entorno en Páginas Sensibles
-**Fecha:** 15 de marzo de 2026
-**Ubicación:** `pages/` (`login.html`, `register.html`, `update-password.html`, `verify-email.html`, `purchase-success.html`, `success.html`, `welcome.html`)
+1772672421504_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233744Z&X-Amz-Expires=86400&X-Amz-Signature=750d4fb5a22774393ccafab91544f8b7723f46db96383e0af370e844d5782660&X-Amz-SignedHeaders=host&x-id=GetObject
 
-### Problema:
-Se identificaron varias páginas HTML sensibles que mantenían codificadas en el código fuente (`hardcoded`) las credenciales `SUPABASE_URL` y `SUPABASE_ANON_KEY`, violando las políticas de seguridad estipuladas. Además, los recursos de CDN externos carecían del atributo `crossorigin="anonymous"`, lo que podría ocasionar bloqueos por políticas COEP. Finalmente, en `success.html`, se detectó una inyección directa de variables de base de datos en el `innerHTML`, exponiendo el sitio a ataques XSS.
+1772158905709_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T234138Z&X-Amz-Expires=86400&X-Amz-Signature=feee3abd1793287ae78bc3290faa7cde6b763bc0309c5d7e573251e560321c18&X-Amz-SignedHeaders=host&x-id=GetObject
 
-### Solución Implementada:
-1. **Remoción de Credenciales Relativas**: Se eliminaron los bloques de scripts con las claves hardcoded en el `<head>` de los 7 archivos HTML, inyectando de forma segura las variables configuradas en el entorno desde el servidor mediante `<script src="/env.js"></script>`.
-2. **Cabeceras Cross-Origin**: Se añadió el atributo `crossorigin="anonymous"` a todas las llamadas externas de scripts, fuentes de Google Fonts, iconos y estilos (como TailwindCSS y CropperJS) para cumplir cabalmente con la política de seguridad estricta y evitar excepciones de CORS/COEP en el navegador.
-3. **Mitigación XSS (DOM Injection)**: En `success.html`, se incluyó la función `escapeHTML()` para el renderizado dinámico del `item.product.name` y los nombres de las licencias antes de su inyección en la vista html, eliminando un posible vector de ataques por inyección.
+1772151156694_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233753Z&X-Amz-Expires=86400&X-Amz-Signature=a5cde88b1fc11ded23473dff9d65aeca21f8c5289aa2f054a601d3dbbbe3946d&X-Amz-SignedHeaders=host&x-id=GetObject
 
----
+1771801583580_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233753Z&X-Amz-Expires=86400&X-Amz-Signature=69efab9c8b257ebfd5672ca775e0dcdc421d938eb307f9bc0911b9abe876aadf&X-Amz-SignedHeaders=host&x-id=GetObject
 
-## 13. Errores 403 Forbidden por URLs Firmadas Expiradas en DB
-**Fecha:** 16 de marzo de 2026
-**Ubicación:** Tabla `products` (campos `image_url`, `audio_url`) / `r2-storage.service.js`
+1771628151960_cover.jpg
 
-### Problema:
-Al guardar productos, se estaban almacenando URLs firmadas completas de R2 (con `X-Amz-Signature`). Estas URLs expiran en 24h, dejando el recurso inaccesible (403 Forbidden) permanentemente en la base de datos.
+1771271712645_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233744Z&X-Amz-Expires=86400&X-Amz-Signature=6dae8801859e21cbc10196b5fa163e19a990a4c554e1f524be289a51a3c922a5&X-Amz-SignedHeaders=host&x-id=GetObject
 
-### Solución:
-1. **Limpieza de DB:** Se ejecutó un script para convertir todas las URLs absolutas de R2 en rutas relativas (ej. `products/covers/.../file.jpg`).
-2. **Firma Dinámica:** El frontend (`AuthUtils.getAuthorizedUrl`) ahora detecta si la URL es de R2 y solicita una firma fresca al backend solo cuando es necesario mostrar el recurso.
-3. **Regla de Oro:** NUNCA guardar tokens de acceso o firmas temporales en Supabase. Guardar solo el "Key" o "Path" del archivo.
+1771886528431_cover.jpg
 
----
+1771104263789_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233753Z&X-Amz-Expires=86400&X-Amz-Signature=9609e20644165abfebdc117e1221146188c99e0cac98e715c6bc977de9ab55d9&X-Amz-SignedHeaders=host&x-id=GetObject
 
-## 14. Bloqueo CORB (Cross-Origin Read Blocking) en R2
-**Fecha:** 16 de marzo de 2026
-**Ubicación:** `server/src/infrastructure/services/r2-storage.service.js`
+1771349319234_cover.jpg
 
-### Problema:
-Las imágenes de R2 no cargaban en el navegador, mostrando un error de CORB en la consola. El inspector mostraba que las URLs firmadas incluían el parámetro `x-amz-checksum-mode=ENABLED`, el cual Cloudflare R2 maneja de forma que activa protecciones de seguridad del navegador.
+1771354688151_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233744Z&X-Amz-Expires=86400&X-Amz-Signature=d7d631b8155441af8302a600523cda46111ac21c3e3e0faa52c0dd4009526056&X-Amz-SignedHeaders=host&x-id=GetObject
 
-### Solución:
-Desactivar explícitamente el cálculo de checksums en el cliente de S3 de AWS SDK:
-```javascript
-const s3Client = new S3Client({
-    // ...
-    requestChecksumCalculation: "WHEN_REQUIRED",
-    responseChecksumValidation: "WHEN_REQUIRED"
-});
-```
-Esto elimina el header de checksum en la URL firmada y permite la carga transparente del recurso.
+1771618523066_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233753Z&X-Amz-Expires=86400&X-Amz-Signature=1cd32fb54b4dfb71029f205c19867eeb6c77cc1f749447e1c479fe4ff604a087&X-Amz-SignedHeaders=host&x-id=GetObject
 
----
+1772150970623_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233753Z&X-Amz-Expires=86400&X-Amz-Signature=8e2e67eb7abe5aad73ce7bfd64ec0f20d0ade467af2cf71f98e7bcecc11ba909&X-Amz-SignedHeaders=host&x-id=GetObject
 
-## 15. Inconsistencia de Versiones (V1 vs V2) en R2 Storage
-**Fecha:** 16 de marzo de 2026
-**Ubicación:** `r2.routes.js` / Tabla `products` (columna `r2_version`)
+1771186718567_cover.jpg
 
-### Problema:
-Se detectaron 404s persistentes en productos específicos (ej. koimattoru). La causa era que los productos estaban etiquetados como `r2_version: v2` en la base de datos, pero los archivos físicos solo existían en el bucket original (V1). El servidor intentaba firmarlos con la cuenta V2, resultando en "Object Not Found".
+1771187092055_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233753Z&X-Amz-Expires=86400&X-Amz-Signature=bbce1d12bd4bd80c59aa34e17e9da759fd72dc74b6e65ff941c2accc386396f2&X-Amz-SignedHeaders=host&x-id=GetObject
 
-### Solución:
-1. **Auditoría Cruzada:** Se creó un script (`fix_versions.js`) que verifica la existencia real del archivo en ambos buckets y corrige la columna `r2_version` en Supabase según corresponda.
-2. **Detección Automática:** En el backend, se implementó lógica para detectar la versión basada en el endpoint o el nombre del bucket contenido en la URL original antes de proceder a la firma.
+1771355421849_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233753Z&X-Amz-Expires=86400&X-Amz-Signature=7df7f6448262c43f322144e6607645f1f86b20c0d04b804de5119d10d59d041f&X-Amz-SignedHeaders=host&x-id=GetObject
 
----
----
+1772674546932_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233744Z&X-Amz-Expires=86400&X-Amz-Signature=23301c7d459d3f2de7cd2f9e957eb22252e4a670e7d9b98503c7faf1b7cc563f&X-Amz-SignedHeaders=host&x-id=GetObject
 
-## 16. Inconsistencia de Carpetas en Migración a Supabase (`audio` vs `mp3_tagged`)
-**Fecha:** 18 de marzo de 2026
-**Ubicación:** `r2-storage.service.js` / `AuthUtils.js`
+1770924516430_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233753Z&X-Amz-Expires=86400&X-Amz-Signature=9f44d62fa76216e82668f660dff58868215684b5c9f3adafe6057ab3b61d0f83&X-Amz-SignedHeaders=host&x-id=GetObject
 
-### Problema:
-Los beats migrados desde R2 a Supabase Storage se organizaron en carpetas `mp3_tagged/`, pero el código del servidor y la base de datos a veces apuntaban a `audio/`. Esto causaba errores "Object Not Found" (404) al intentar firmar o acceder al recurso.
+1772404792709_cover.jpg
 
-### Solución:
-1. **Mapeo Inteligente**: Se actualizó la normalización en el backend para mapear `beats/mp3/` a `mp3_tagged/` automáticamente.
-2. **Ciclo de Reintento**: Se implementó un loop que, si falla la firma en `mp3_tagged/`, intenta automáticamente en `audio/` (y viceversa) antes de devolver un error.
+1771700382931_cover_edit.jpg
 
----
+1771721235696_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233744Z&X-Amz-Expires=86400&X-Amz-Signature=94fabfafe83c5e60c7a7f7bab83630134f90032556c3b19546b4fffea9a2eb07&X-Amz-SignedHeaders=host&x-id=GetObject
 
-## 17. Conflicto de Cuentas R2 (Cuenta 1 vs Cuenta 2) y Smart Fallback Loop
-**Fecha:** 18 de marzo de 2026
-**Ubicación:** `r2.routes.js` (Ruta `/r2-public/`) / `auth-utils.js`
+1772753496742_cover.jpg
 
-### Problema:
-Con la introducción de una segunda cuenta de R2 (V2), el sistema ya no podía predecir con certeza dónde estaba un archivo basándose solo en su prefijo o ID. Reglas "greedy" forzaban erróneamente activos de R2 V2 hacia Supabase, rompiendo imágenes y audios.
+1771252294794_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233744Z&X-Amz-Expires=86400&X-Amz-Signature=53bb01ab0d4ee61dba7622f4d13cff25dfb386ebff245df97ff5290297394669&X-Amz-SignedHeaders=host&x-id=GetObject
 
-### Solución:
-1. **Smart Fallback Loop**: La ruta pública del backend ahora **itera** sobre todas las fuentes posibles (`v2`, `supabase`, `v1`) hasta que el recurso devuelve un 200 OK. Esto garantiza la carga sin importar en qué cuenta resida el archivo.
-2. **Priorización de DB**: Se eliminaron las reglas forzosas en el frontend, delegando la decisión a la columna `r2_version` de la base de datos y usando el fallback loop como red de seguridad.
+1771731504093_cover.jpg
 
----
+1772672421504_cover.jpg
 
-## 18. Doble Prefijo y URLs Supabase Anidadas
-**Fecha:** 18 de marzo de 2026
-**Ubicación:** `r2-storage.service.js` / `r2.routes.js`
+1773275002747_cover.jpg
 
-### Problema:
-Se detectaron errores de firma para rutas como `products/storage/v1/object/public/...`. Esto ocurre porque el sistema intenta tratar una URL completa de Supabase como si fuera una "key" relativa, añadiendo de nuevo el nombre del bucket al principio.
+1771478782332_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233744Z&X-Amz-Expires=86400&X-Amz-Signature=691f2a0a187746010e114b580b72c1dcd7fbb28cba8ccbea3ceb6328f395e15f&X-Amz-SignedHeaders=host&x-id=GetObject
 
-### Solución:
-Implementar una limpieza de URL (URL Sanitization) más agresiva en el backend para detectar si el string recibido ya es una URL de Supabase y extraer únicamente la ruta del objeto antes de proceder a la normalización o firma.
+1771731719628_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233923Z&X-Amz-Expires=86400&X-Amz-Signature=be097daa0ea47e4e91c2534e8801f5733c6fe5ba336876fe790b7349cbed82b4&X-Amz-SignedHeaders=host&x-id=GetObject
 
----
+1773279716381_cover.jpg
 
-## 19. Conflicto de Versión en Frontend (Fallback Hardcoded a V2)
-**Fecha:** 19 de marzo de 2026
-**Ubicación:** `script/explore.js` / `script/product-core.js`
+1772393573075_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233744Z&X-Amz-Expires=86400&X-Amz-Signature=ef75f13b7422205561a614789cced2aecbef4e69b4ec0f34be08083801f496a8&X-Amz-SignedHeaders=host&x-id=GetObject
 
-### Problema:
-Productos marcados como `storage_version: 'supabase'` en la base de datos no cargaban (404), ya que las plantillas de frontend (`preset-card-premium`, `social-post`) tenían un fallback forzado de `r2_version || 'v2'`. Esto ignoraba la columna de Supabase y forzaba la firma con credenciales de R2 V2.
+1771968101006_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233744Z&X-Amz-Expires=86400&X-Amz-Signature=dd283ac75236c503c462e28b69b4845dd861474cf97237916fc8f55b183fe08e&X-Amz-SignedHeaders=host&x-id=GetObject
 
-### Solución:
-Se actualizó la lógica de prioridad en todos los componentes de renderizado para usar:
-`${product.storage_version || product.r2_version || 'v2'}`.
-Esto garantiza que si un recurso está en Supabase, se use ese proveedor antes de intentar cualquier versión de R2.
+1771271712645_cover.jpg
 
----
+1771210519507_cover.jpg
 
-## 20. Bloqueo de Acceso a Invitados (Fallas de Firma en Assets Públicos)
-**Fecha:** 19 de marzo de 2026
-**Ubicación:** `server/src/infrastructure/http/routes/r2.routes.js` / `script/auth-utils.js`
+1771127737850_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233744Z&X-Amz-Expires=86400&X-Amz-Signature=f2ad11b3453f3f67c8e68fc376f77bb267ecaa6c7e390ff9536c847a5a75ea79&X-Amz-SignedHeaders=host&x-id=GetObject
 
-### Problema:
-Usuarios no logueados (invitados) veían imágenes y audios rotos. Las políticas de firma denegaban el acceso porque los prefijos de productos (como `[UUID]/covers/`) no estaban en la lista blanca de "públicos" en el backend ni en el frontend.
+1771687536635_cover.jpg
 
-### Solución:
-1. **Backend**: Se amplió `publicPrefixes` en `r2.routes.js` para incluir `products/`, permitiendo que el servidor firme estos recursos incluso sin un token de sesión.
-2. **Frontend**: Se mejoró `_handleSigningFailure` en `AuthUtils` para que, si falla la firma privada, intente cargar el recurso a través del proxy público del API (`/r2-public/`), asegurando visibilidad total sin cuenta.
+1771182661845_cover.jpg
 
----
+1771967542155_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233744Z&X-Amz-Expires=86400&X-Amz-Signature=34f3cf9f08ad42f8832b40f8ac178fe9360e123ecaa0e3f4d4e854dd89fc5a09&X-Amz-SignedHeaders=host&x-id=GetObject
 
-## 21. Falta de `storage_version` en Creación de Productos
-**Fecha:** 19 de marzo de 2026
-**Ubicación:** `server/src/infrastructure/http/controllers/ProductController.js`
+1772388752571_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233744Z&X-Amz-Expires=86400&X-Amz-Signature=fc9df2abb491d76ee68a9d17fb58ecef78d929e5d3bc9794ae268ea7f3b5d9d8&X-Amz-SignedHeaders=host&x-id=GetObject
 
-### Problema:
-Los nuevos productos se guardaban sin la columna `storage_version` definida, lo que causaba que el sistema "adivinara" o fallara al intentar determinar el proveedor de almacenamiento en el futuro.
+1772674833518_cover.jpg
 
-### Solución:
-Se modificó `createProduct` en el controlador para establecer explícitamente `storage_version: 'supabase'` y `r2_version: 'v1'` (como respaldo legacy) en el momento de la inserción. Esto estandariza todos los nuevos activos bajo el ecosistema de Supabase Storage.
+1772158905709_cover.jpg
 
----
+1772145443928_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233744Z&X-Amz-Expires=86400&X-Amz-Signature=0038f304026c461957bd43431d7c19975625d33b5b9c70164b10344e0c9c1ccc&X-Amz-SignedHeaders=host&x-id=GetObject
 
-## 22. Desajuste de Esquema en Tabla `users` (Falta `storage_version`)
-**Fecha:** 19 de marzo de 2026
-**Ubicación:** Base de Datos (Supabase) / `UserController.js` / `ProductController.js`
+1773028653205_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233753Z&X-Amz-Expires=86400&X-Amz-Signature=fd6fe48415d5e0f0305f83e7fc905c3f7a50f5865601a744759e8ed82881c49a&X-Amz-SignedHeaders=host&x-id=GetObject
 
-### Problema:
-Mientras que los productos tenían la columna `storage_version` para rastrear su ubicación (Supabase, V1, V2), la tabla `users` carecía de esta columna. Al intentar unificar la lógica de firmas en el backend solicitando `storage_version` de los productores, la API fallaba (`column "storage_version" does not exist`).
+1771627987053_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260331%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260331T000118Z&X-Amz-Expires=86400&X-Amz-Signature=74bc5fe9004a334ffb22cc4ae438cd63f26f3674e9d4628e3a78c9dd727e7e39&X-Amz-SignedHeaders=host&x-id=GetObject
 
-### Solución:
-1. Se ejecutó una migración SQL para añadir la columna `storage_version` a las tablas `users` y `profiles` con valor por defecto `'v1'`.
-2. Se sincronizaron los valores existentes basados en `r2_version`.
-3. Se actualizaron los controladores para incluir esta columna en todas las consultas de unión y selección de productores.
+1771630665467_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233753Z&X-Amz-Expires=86400&X-Amz-Signature=f64b71bfc10900c7afecda7212d4f10992557617eb675dd1d339f58274b0aaeb&X-Amz-SignedHeaders=host&x-id=GetObject
 
----
+1771355421849_cover.jpg
 
-## 23. Handles Genéricos (@usuario) para Productores no Destacados
-**Fecha:** 19 de marzo de 2026
-## 9. Checkboxes Invisibles (Doble-Toggle)
-**Fecha:** 6 de marzo de 2026
-**Ubicación:** `script/producers.js` / `producers.css`
+1772150970623_cover.jpg
 
-### Problema:
-Los checkboxes de los filtros de roles no mostraban el estado "marcado" (fondo blanco con check) al hacer clic. Esto ocurría por un conflicto de eventos: el navegador marcaba el checkbox automáticamente por estar dentro de un `<label>`, y el script de JS volvía a cambiar el estado manualmente en el evento `click`, haciendo que se cancelaran entre sí.
+1772674546932_cover.jpg
 
-### Solución:
-1. **JS**: Se eliminó el escuchador de eventos `click` en el contenedor del item y se dejó que el navegador maneje el cambio del checkbox nativamente. Ahora el script solo escucha el evento `change` del input.
-2. **CSS**: Se forzó el uso de `bootstrap-icons` con `!important` y un `font-weight: 900` en el pseudo-elemento `::after` para garantizar que el icono de la palomita sea visible sobre el fondo blanco.
-3. **ID Sync**: Se sincronizaron los valores de los checkboxes con los nombres de los chips para evitar discrepancias al eliminar filtros desde la UI principal.
+1772151156694_cover.jpg
 
----
+1771187092055_cover.jpg
 
-## 10. Gaps en el Top 1-10 (Sincronización de Exclusiones)
-**Fecha:** 6 de marzo de 2026
-**Ubicación:** `LeaderboardController.js` (Backend) / `producers.js` (Frontend)
+1771618523066_cover.jpg
 
-### Problema:
-El ranking mostraba números saltados (ej: 1, 2, 6, 7) porque las cuentas de prueba estaban siendo filtradas en el frontend pero seguían ocupando puestos en el cálculo del backend.
+1771104263789_cover.jpg
 
-### Solución:
-Se sincronizaron las listas de exclusión de IDs en ambos lados. Ahora el backend ignora por completo a los usuarios de prueba al calcular los puestos, asegurando un Top 10 real y continuo de usuarios legítimos.
+1771796569284_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233744Z&X-Amz-Expires=86400&X-Amz-Signature=e4de3eb2bf6c6a57c5610dcc737983960d5590c0bae787b947fae903e31b0dfd&X-Amz-SignedHeaders=host&x-id=GetObject
 
----
+1771354688151_cover.jpg
 
-## 11. Portadas R2 Rotas (Error 404 en Covers de Productos)
-**Fecha:** 15 de marzo de 2026
-**Ubicación:** `script/auth-utils.js` / `server/src/infrastructure/http/routes/r2.routes.js` / `script/r2-loader.js`
+1771807025817_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233753Z&X-Amz-Expires=86400&X-Amz-Signature=299e3fd2b72a0ec713b48e738188bd953d55d15ebc1b7c24006fe928ad810500&X-Amz-SignedHeaders=host&x-id=GetObject
 
-### Problema:
-Algunos beats (como "Pulsar 200") mostraban portadas rotas en el feed de Explorar, generando errores 404 en la consola. Esto ocurría porque la base de datos guardaba la URL completa de R2 (en lugar de la ruta relativa), y la función encargada de firmarlas (`getAuthorizedUrl`) asimilaba que no necesitaba firma al detectar `http`, evadiendo el proceso y causando denegación de acceso en las cubiertas. Además, en caso de fallar, la ruta pública de fallback en el backend generaba un error interno (`PathError`) por sintaxis incompatible en Express 5.
+1771824666946_cover_edit.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233744Z&X-Amz-Expires=86400&X-Amz-Signature=558d2e3a912fc75443ef87e081698d271750d05f87af12881cb65a4396c7affb&X-Amz-SignedHeaders=host&x-id=GetObject
 
-### Solución:
-1. **Detección Mejorada de URLs R2 (`auth-utils.js`)**: Se actualizó `getAuthorizedUrl` para procesar correctamente las URLs absolutas de R2 y asegurar que sean firmadas si no contienen una firma activa (`X-Amz-Signature`). Además, se corrigió la construcción de la URL de fallback del API en `_handleSigningFailure`.
-2. **Corrección de Ruta Backend (`r2.routes.js`)**: Se solucionó el error fatal en Express 5 (`PathError: Missing parameter name`) reemplazando el patrón `/r2-public/:key*` por una expresión literal nativa `/^\/r2-public\/(.*)/`.
-3. **Supresión de Errores Visuales (`r2-loader.js`)**: Se asignó un `src` temporal con un GIF transparente al identificar elementos con atributo `data-r2-version`, impidiendo que el navegador lance el error inicial de "Not Found" mientras se obtiene asíncronamente la firma.
+1771639692955_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T234138Z&X-Amz-Expires=86400&X-Amz-Signature=de28d7cab82e6846008199a653ac3f708007e5582556f364e242be7ed4418706&X-Amz-SignedHeaders=host&x-id=GetObject
 
----
+1771543978958_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233744Z&X-Amz-Expires=86400&X-Amz-Signature=3dcb7cd6e4e01331f1c6d940b268dbe30c6aea34bcc9d380c100a152e26da2fa&X-Amz-SignedHeaders=host&x-id=GetObject
 
-## 12. Vulnerabilidad de Seguridad y Validación de Entorno en Páginas Sensibles
-**Fecha:** 15 de marzo de 2026
-**Ubicación:** `pages/` (`login.html`, `register.html`, `update-password.html`, `verify-email.html`, `purchase-success.html`, `success.html`, `welcome.html`)
+1771543843225_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233744Z&X-Amz-Expires=86400&X-Amz-Signature=04c8be96c41affe242e5ad2a254d34581ffa8ab614bb04a482061c6284f7e1cd&X-Amz-SignedHeaders=host&x-id=GetObject
 
-### Problema:
-Se identificaron varias páginas HTML sensibles que mantenían codificadas en el código fuente (`hardcoded`) las credenciales `SUPABASE_URL` y `SUPABASE_ANON_KEY`, violando las políticas de seguridad estipuladas. Además, los recursos de CDN externos carecían del atributo `crossorigin="anonymous"`, lo que podría ocasionar bloqueos por políticas COEP. Finalmente, en `success.html`, se detectó una inyección directa de variables de base de datos en el `innerHTML`, exponiendo el sitio a ataques XSS.
+1772406619486_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T234138Z&X-Amz-Expires=86400&X-Amz-Signature=3beea2dbf54a2a9e0bfd5677e44276a71032adda9d04342c709e8fa47da53d25&X-Amz-SignedHeaders=host&x-id=GetObject
 
-### Solución Implementada:
-1. **Remoción de Credenciales Relativas**: Se eliminaron los bloques de scripts con las claves hardcoded en el `<head>` de los 7 archivos HTML, inyectando de forma segura las variables configuradas en el entorno desde el servidor mediante `<script src="/env.js"></script>`.
-2. **Cabeceras Cross-Origin**: Se añadió el atributo `crossorigin="anonymous"` a todas las llamadas externas de scripts, fuentes de Google Fonts, iconos y estilos (como TailwindCSS y CropperJS) para cumplir cabalmente con la política de seguridad estricta y evitar excepciones de CORS/COEP en el navegador.
-3. **Mitigación XSS (DOM Injection)**: En `success.html`, se incluyó la función `escapeHTML()` para el renderizado dinámico del `item.product.name` y los nombres de las licencias antes de su inyección en la vista html, eliminando un posible vector de ataques por inyección.
+1771126415209_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233744Z&X-Amz-Expires=86400&X-Amz-Signature=5c234f8633c625acedcb155804351466a36bc6e534f4a8476031ad76de22cba5&X-Amz-SignedHeaders=host&x-id=GetObject
 
----
+1771353588560_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233744Z&X-Amz-Expires=86400&X-Amz-Signature=fd29c11a1c59fe0f3b17c972d2b19647645109c1626783442c00570f8ab810a1&X-Amz-SignedHeaders=host&x-id=GetObject
 
-## 13. Errores 403 Forbidden por URLs Firmadas Expiradas en DB
-**Fecha:** 16 de marzo de 2026
-**Ubicación:** Tabla `products` (campos `image_url`, `audio_url`) / `r2-storage.service.js`
+1772176734640_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233744Z&X-Amz-Expires=86400&X-Amz-Signature=e863a0ec6a1b9b195e02c2c0911c676b1bbef0e1daa64ead26e6fd5751ab5e57&X-Amz-SignedHeaders=host&x-id=GetObject
 
-### Problema:
-Al guardar productos, se estaban almacenando URLs firmadas completas de R2 (con `X-Amz-Signature`). Estas URLs expiran en 24h, dejando el recurso inaccesible (403 Forbidden) permanentemente en la base de datos.
+1771721235696_cover.jpg
 
-### Solución:
-1. **Limpieza de DB:** Se ejecutó un script para convertir todas las URLs absolutas de R2 en rutas relativas (ej. `products/covers/.../file.jpg`).
-2. **Firma Dinámica:** El frontend (`AuthUtils.getAuthorizedUrl`) ahora detecta si la URL es de R2 y solicita una firma fresca al backend solo cuando es necesario mostrar el recurso.
-3. **Regla de Oro:** NUNCA guardar tokens de acceso o firmas temporales en Supabase. Guardar solo el "Key" o "Path" del archivo.
+1771967542155_cover.jpg
 
----
+1771627987053_cover.jpg
 
-## 14. Bloqueo CORB (Cross-Origin Read Blocking) en R2
-**Fecha:** 16 de marzo de 2026
-**Ubicación:** `server/src/infrastructure/services/r2-storage.service.js`
+1771478782332_cover.jpg
 
-### Problema:
-Las imágenes de R2 no cargaban en el navegador, mostrando un error de CORB en la consola. El inspector mostraba que las URLs firmadas incluían el parámetro `x-amz-checksum-mode=ENABLED`, el cual Cloudflare R2 maneja de forma que activa protecciones de seguridad del navegador.
+1771252294794_cover.jpg
 
-### Solución:
-Desactivar explícitamente el cálculo de checksums en el cliente de S3 de AWS SDK:
-```javascript
-const s3Client = new S3Client({
-    // ...
-    requestChecksumCalculation: "WHEN_REQUIRED",
-    responseChecksumValidation: "WHEN_REQUIRED"
-});
-```
-Esto elimina el header de checksum en la URL firmada y permite la carga transparente del recurso.
+1771966710913_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233744Z&X-Amz-Expires=86400&X-Amz-Signature=8420e1df046ccaa24c0174a5b238f05a9d03f0a693dddf19f113e5e709310983&X-Amz-SignedHeaders=host&x-id=GetObject
 
----
+1771967878870_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233744Z&X-Amz-Expires=86400&X-Amz-Signature=b92812f2d45c94610687ebba8166bc61ba0dc4479d218833a963ec634e30e742&X-Amz-SignedHeaders=host&x-id=GetObject
 
-## 15. Inconsistencia de Versiones (V1 vs V2) en R2 Storage
-**Fecha:** 16 de marzo de 2026
-**Ubicación:** `r2.routes.js` / Tabla `products` (columna `r2_version`)
+1772673778346_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233744Z&X-Amz-Expires=86400&X-Amz-Signature=bceff44ed88ec61544e5a49c3ffd3ed1a32829c7f845f17024c72999a78028f0&X-Amz-SignedHeaders=host&x-id=GetObject
 
-### Problema:
-Se detectaron 404s persistentes en productos específicos (ej. koimattoru). La causa era que los productos estaban etiquetados como `r2_version: v2` en la base de datos, pero los archivos físicos solo existían en el bucket original (V1). El servidor intentaba firmarlos con la cuenta V2, resultando en "Object Not Found".
+1771127737850_cover.jpg
 
-### Solución:
-1. **Auditoría Cruzada:** Se creó un script (`fix_versions.js`) que verifica la existencia real del archivo en ambos buckets y corrige la columna `r2_version` en Supabase según corresponda.
-2. **Detección Automática:** En el backend, se implementó lógica para detectar la versión basada en el endpoint o el nombre del bucket contenido en la URL original antes de proceder a la firma.
+1771731719628_cover.jpg
 
----
----
+1771628306022_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233715Z&X-Amz-Expires=86400&X-Amz-Signature=e1727868d141da19ebea197939ec62f75da1a5357000af5281abe9adb2c6d26b&X-Amz-SignedHeaders=host&x-id=GetObject
 
-## 16. Inconsistencia de Carpetas en Migración a Supabase (`audio` vs `mp3_tagged`)
-**Fecha:** 18 de marzo de 2026
-**Ubicación:** `r2-storage.service.js` / `AuthUtils.js`
+1772042004169_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T234138Z&X-Amz-Expires=86400&X-Amz-Signature=ff47f50113b1248ba212ca19a977b07a9bcb7bb89c91062a5bb2b0bbabfd76e6&X-Amz-SignedHeaders=host&x-id=GetObject
 
-### Problema:
-Los beats migrados desde R2 a Supabase Storage se organizaron en carpetas `mp3_tagged/`, pero el código del servidor y la base de datos a veces apuntaban a `audio/`. Esto causaba errores "Object Not Found" (404) al intentar firmar o acceder al recurso.
+1772149541278_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233744Z&X-Amz-Expires=86400&X-Amz-Signature=8536e13ecd95064411a0b36c79af13f6dfc7f9259f128605f2505179d4a3be05&X-Amz-SignedHeaders=host&x-id=GetObject
 
-### Solución:
-1. **Mapeo Inteligente**: Se actualizó la normalización en el backend para mapear `beats/mp3/` a `mp3_tagged/` automáticamente.
-2. **Ciclo de Reintento**: Se implementó un loop que, si falla la firma en `mp3_tagged/`, intenta automáticamente en `audio/` (y viceversa) antes de devolver un error.
+1772393573075_cover.jpg
 
----
+1771639692955_cover.jpg
 
-## 17. Conflicto de Cuentas R2 (Cuenta 1 vs Cuenta 2) y Smart Fallback Loop
-**Fecha:** 18 de marzo de 2026
-**Ubicación:** `r2.routes.js` (Ruta `/r2-public/`) / `auth-utils.js`
+1771824666946_cover_edit.jpg
 
-### Problema:
-Con la introducción de una segunda cuenta de R2 (V2), el sistema ya no podía predecir con certeza dónde estaba un archivo basándose solo en su prefijo o ID. Reglas "greedy" forzaban erróneamente activos de R2 V2 hacia Supabase, rompiendo imágenes y audios.
+1771801583580_cover.jpg
 
-### Solución:
-1. **Smart Fallback Loop**: La ruta pública del backend ahora **itera** sobre todas las fuentes posibles (`v2`, `supabase`, `v1`) hasta que el recurso devuelve un 200 OK. Esto garantiza la carga sin importar en qué cuenta resida el archivo.
-2. **Priorización de DB**: Se eliminaron las reglas forzosas en el frontend, delegando la decisión a la columna `r2_version` de la base de datos y usando el fallback loop como red de seguridad.
+1772388752571_cover.jpg
 
----
+1772145443928_cover.jpg
 
-## 18. Doble Prefijo y URLs Supabase Anidadas
-**Fecha:** 18 de marzo de 2026
-**Ubicación:** `r2-storage.service.js` / `r2.routes.js`
+1772042349596_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233753Z&X-Amz-Expires=86400&X-Amz-Signature=a64082326a7c0d6f5877cea2e0fa9e97d42687d6e3f5b70615a0ba6b1691c7e0&X-Amz-SignedHeaders=host&x-id=GetObject
 
-### Problema:
-Se detectaron errores de firma para rutas como `products/storage/v1/object/public/...`. Esto ocurre porque el sistema intenta tratar una URL completa de Supabase como si fuera una "key" relativa, añadiendo de nuevo el nombre del bucket al principio.
+1773028653205_cover.jpg
 
-### Solución:
-Implementar una limpieza de URL (URL Sanitization) más agresiva en el backend para detectar si el string recibido ya es una URL de Supabase y extraer únicamente la ruta del objeto antes de proceder a la normalización o firma.
+1771116032288_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233744Z&X-Amz-Expires=86400&X-Amz-Signature=eb8c5c51d58e3a622255e070a4e293b16c0040db7bb76422c705aed91af8ca01&X-Amz-SignedHeaders=host&x-id=GetObject
 
----
+1771968101006_cover.jpg
 
-## 19. Conflicto de Versión en Frontend (Fallback Hardcoded a V2)
-**Fecha:** 19 de marzo de 2026
-**Ubicación:** `script/explore.js` / `script/product-core.js`
+1772488121189_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233744Z&X-Amz-Expires=86400&X-Amz-Signature=c6ff7053d07d8e8e47107f52ee04fc13194269638852652ffc18998030b78a63&X-Amz-SignedHeaders=host&x-id=GetObject
 
-### Problema:
-Productos marcados como `storage_version: 'supabase'` en la base de datos no cargaban (404), ya que las plantillas de frontend (`preset-card-premium`, `social-post`) tenían un fallback forzado de `r2_version || 'v2'`. Esto ignoraba la columna de Supabase y forzaba la firma con credenciales de R2 V2.
+1771968705413_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233715Z&X-Amz-Expires=86400&X-Amz-Signature=cb8d12882d0510c70f17317ce6f75aeb2015bf411a7084f8b7e0e5f62e64f4a8&X-Amz-SignedHeaders=host&x-id=GetObject
 
-### Solución:
-Se actualizó la lógica de prioridad en todos los componentes de renderizado para usar:
-`${product.storage_version || product.r2_version || 'v2'}`.
-Esto garantiza que si un recurso está en Supabase, se use ese proveedor antes de intentar cualquier versión de R2.
+1772376711752_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233753Z&X-Amz-Expires=86400&X-Amz-Signature=2e44c1682666ba99a5ab9ee85799ab995a054df3a5bbb13046d5b403f4e5d17e&X-Amz-SignedHeaders=host&x-id=GetObject
 
----
+1773172211005_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233757Z&X-Amz-Expires=86400&X-Amz-Signature=ab1adbec39d529616e5c07771d5255b267340c0d6e5236a2c964d0e58d095530&X-Amz-SignedHeaders=host&x-id=GetObject
 
-## 20. Bloqueo de Acceso a Invitados (Fallas de Firma en Assets Públicos)
-**Fecha:** 19 de marzo de 2026
-**Ubicación:** `server/src/infrastructure/http/routes/r2.routes.js` / `script/auth-utils.js`
+1771630665467_cover.jpg
 
-### Problema:
-Usuarios no logueados (invitados) veían imágenes y audios rotos. Las políticas de firma denegaban el acceso porque los prefijos de productos (como `[UUID]/covers/`) no estaban en la lista blanca de "públicos" en el backend ni en el frontend.
+1771967735278_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233744Z&X-Amz-Expires=86400&X-Amz-Signature=4128886b0bb34ff46bc673b8604ef04a95499a47d6ff4f92a6d54d743b6dd10c&X-Amz-SignedHeaders=host&x-id=GetObject
 
-### Solución:
-1. **Backend**: Se amplió `publicPrefixes` en `r2.routes.js` para incluir `products/`, permitiendo que el servidor firme estos recursos incluso sin un token de sesión.
-2. **Frontend**: Se mejoró `_handleSigningFailure` en `AuthUtils` para que, si falla la firma privada, intente cargar el recurso a través del proxy público del API (`/r2-public/`), asegurando visibilidad total sin cuenta.
+1771796569284_cover.jpg
 
----
+1772151361343_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233715Z&X-Amz-Expires=86400&X-Amz-Signature=20ce301c17d0d4ca458b689f3aa9f683583aa38b5375639d12eb2cf206c9ddb3&X-Amz-SignedHeaders=host&x-id=GetObject
 
-## 21. Falta de `storage_version` en Creación de Productos
-**Fecha:** 19 de marzo de 2026
-**Ubicación:** `server/src/infrastructure/http/controllers/ProductController.js`
+1773027570013_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233744Z&X-Amz-Expires=86400&X-Amz-Signature=1c70a26cdd2d1dfc582eecb5c8c2e9c2877a05869f2e1331246f766639f49e6c&X-Amz-SignedHeaders=host&x-id=GetObject
 
-### Problema:
-Los nuevos productos se guardaban sin la columna `storage_version` definida, lo que causaba que el sistema "adivinara" o fallara al intentar determinar el proveedor de almacenamiento en el futuro.
+1772985774210_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233744Z&X-Amz-Expires=86400&X-Amz-Signature=7e131a9cc2a202c63ee8de60131419bb4652c45faa56c0634f82b92fc00f6324&X-Amz-SignedHeaders=host&x-id=GetObject
 
-### Solución:
-Se modificó `createProduct` en el controlador para establecer explícitamente `storage_version: 'supabase'` y `r2_version: 'v1'` (como respaldo legacy) en el momento de la inserción. Esto estandariza todos los nuevos activos bajo el ecosistema de Supabase Storage.
+1772673491218_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233744Z&X-Amz-Expires=86400&X-Amz-Signature=2f7a306467123cc55bf161b3bb336130745bca117d5411c4189ece6c3b2cdd98&X-Amz-SignedHeaders=host&x-id=GetObject
 
----
+1771807025817_cover.jpg
 
-## 22. Desajuste de Esquema en Tabla `users` (Falta `storage_version`)
-**Fecha:** 19 de marzo de 2026
-**Ubicación:** Base de Datos (Supabase) / `UserController.js` / `ProductController.js`
+1771824715977_cover_edit.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233744Z&X-Amz-Expires=86400&X-Amz-Signature=ea03469333b4f2f997f45c87f67ffff3ba83735be01f811ec5ba9c73ea004949&X-Amz-SignedHeaders=host&x-id=GetObject
 
-### Problema:
-Mientras que los productos tenían la columna `storage_version` para rastrear su ubicación (Supabase, V1, V2), la tabla `users` carecía de esta columna. Al intentar unificar la lógica de firmas en el backend solicitando `storage_version` de los productores, la API fallaba (`column "storage_version" does not exist`).
+1771543978958_cover.jpg
 
-### Solución:
-1. Se ejecutó una migración SQL para añadir la columna `storage_version` a las tablas `users` y `profiles` con valor por defecto `'v1'`.
-2. Se sincronizaron los valores existentes basados en `r2_version`.
-3. Se actualizaron los controladores para incluir esta columna en todas las consultas de unión y selección de productores.
+1771543843225_cover.jpg
 
----
+1771807928801_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260331%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260331T000118Z&X-Amz-Expires=86400&X-Amz-Signature=9b1bcff52b29b94a9275892dbae2ac5f6c2b7ebe624eb4922b599d337566423e&X-Amz-SignedHeaders=host&x-id=GetObject
 
-## 23. Handles Genéricos (@usuario) para Productores no Destacados
-**Fecha:** 19 de marzo de 2026
-**Ubicación:** `script/explore.js`
+1772083963727_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233744Z&X-Amz-Expires=86400&X-Amz-Signature=949d5ee19ebda02fb8b5a1bd0df54409be6a75e407649ebfc2884c2c73d26f05&X-Amz-SignedHeaders=host&x-id=GetObject
 
-### Problema:
-En la sección de "Presets de voces" (formato `social-post`), los productores que no estaban en la lista de "destacados" (caché local `allProducers`) aparecían con el handle genérico `@usuario`. Esto ocurría porque el sistema solo buscaba el handle en el objeto `producer` (caché) y no tenía un fallback robusto en la data del producto.
+1772215462830_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233744Z&X-Amz-Expires=86400&X-Amz-Signature=66bc31d332fdfc87bdad2818780a96fdcfbd14cf6220732fbf7f45b302d3b6fa&X-Amz-SignedHeaders=host&x-id=GetObject
 
-### Solución:
-Se mejoró la lógica de generación de handles en `createProductCardHtml`. Ahora, si el objeto `producer` es null, el sistema deriva el handle y el nombre artístico directamente de `product.producer_nickname`, garantizando que la identidad del creador se muestre correctamente incluso para perfiles menos populares.
+1772738265878_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233744Z&X-Amz-Expires=86400&X-Amz-Signature=3dc755fe6ccfe85ce06d897a932c492a0ad4b0ba74b6e5a5fa47c7cbf7efc96e&X-Amz-SignedHeaders=host&x-id=GetObject
 
----
+1772406619486_cover.jpg
 
-## 24. Desajuste de Versión en Librerías y Kits (404 en Portadas)
-**Fecha:** 19 de marzo de 2026
-**Ubicación:** Base de Datos (Tabla `products`)
+1772735364316_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233715Z&X-Amz-Expires=86400&X-Amz-Signature=2943381e891d3844cb3223fbf8e49bfa210523ebe7bfa7545384935a186f78fa&X-Amz-SignedHeaders=host&x-id=GetObject
 
-### Problema:
-Se detectó que varios productos (kits de batería, loops, beats y presets) tenían un desajuste entre `storage_version` y `r2_version`. Por ejemplo, productos en el bucket V1 estaban marcados como `v2` en `storage_version`. Esto causaba que el frontend intentara firmar los recursos con credenciales incorrectas, resultando en errores 404 (Not Found) para las portadas y archivos.
+1771967330757_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233715Z&X-Amz-Expires=86400&X-Amz-Signature=957f8a568f7c148efaab9cf498e79d1bc89bcdbdfca08ff85f3a54fd28b5ec64&X-Amz-SignedHeaders=host&x-id=GetObject
 
-### Solución:
-Se ejecutó una limpieza masiva en la tabla `products` para sincronizar `storage_version` con su valor real en `r2_version` para todos los productos que no están en Supabase. Esto garantiza que la lógica de renderizado del frontend siempre use el bucket y proveedor correcto.
+1771628511339_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233715Z&X-Amz-Expires=86400&X-Amz-Signature=8972962cfabe89d560890466b6d6765385d0c5aa79396603877370167fe9560c&X-Amz-SignedHeaders=host&x-id=GetObject
 
-## 25. Fallos 404 en Activos de Supabase (Refactorización Centralizada)
-**Fecha:** 19 de marzo de 2026
-**Ubicación:** `auth-utils.js`, `r2-loader.js`, `explore.js`, `product-core.js`, `marketplace.js`, `search.js`, `producers.js`
+1771857482229_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233757Z&X-Amz-Expires=86400&X-Amz-Signature=71ac521e712c594780c1166ab345b5755079542f1ff205b99fc3ed151fba423e&X-Amz-SignedHeaders=host&x-id=GetObject
 
-### Problema:
-Se detectaron errores 404 persistentes al cargar imágenes y audios almacenados en Supabase, especialmente para drumkits, loopkits y productos nuevos. El sistema confundía las rutas relativas de Supabase con claves de R2 e intentaba firmarlas con el backend de R2, lo que resultaba en fallos de autenticación y recursos no encontrados.
+1771942588754_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233757Z&X-Amz-Expires=86400&X-Amz-Signature=09624474417d536d9533fff7aab4f48a7cb70ad62a947f75aff33a7e3a132cb0&X-Amz-SignedHeaders=host&x-id=GetObject
 
-### Solución Implementada:
-1. **Detección Centralizada (`auth-utils.js`)**: Se refinó `isR2Url` para excluir explícitamente dominios de Supabase. Se añadió un "fast-path" en `getAuthorizedUrl` que detecta activos de Supabase y los resuelve inmediatamente con el prefijo correcto (`/storage/v1/object/public/products/`), evitando peticiones innecesarias al backend.
-2. **Auto-Detección en DOM (`r2-loader.js`)**: Se mejoró el observador global para identificar automáticamente rutas relativas que comienzan con un UUID (patrón típico de Supabase) y asignarles la versión `supabase` automáticamente.
-3. **Refactorización de Componentes**: Se actualizaron todos los scripts de renderizado (`explore.js`, `product-core.js`, `profile-public.js`, `marketplace.js`, `search.js`, `producers.js`) para:
-   - Priorizar la columna `storage_version` sobre `r2_version`.
-   - Usar el atributo `crossorigin="anonymous"` en todas las etiquetas `<img>`.
-   - Aplicar pre-fijado de URLs de Supabase en el lado del cliente cuando se detectan rutas relativas.
-4. **Unificación de Lógica**: Se creó una estrategia donde el frontend es capaz de "auto-reparar" la URL antes de intentar cargarla, garantizando compatibilidad total entre R2 (V1/V2) y Supabase Storage.
+1771824701051_cover_edit.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233923Z&X-Amz-Expires=86400&X-Amz-Signature=b3fd64dc828ec3446c5f5283674753aec2a7a7b2ad6142540d42ec2161acaf92&X-Amz-SignedHeaders=host&x-id=GetObject
 
----
+1771477427276_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233715Z&X-Amz-Expires=86400&X-Amz-Signature=4e6384e4e1437963423c29e732ab2611a6e07eb206cea55eea9dacbd6dd36e2f&X-Amz-SignedHeaders=host&x-id=GetObject
 
-## 26. Doble Prefijado en Supabase (400 Bad Request) y Fallback Inteligente R2 (404 Not Found)
-**Fecha:** 19 de marzo de 2026
-**Ubicación:** `auth-utils.js`, `explore.js`, `search.js`, `marketplace.js`, `producers.js`, `product-core.js`
+1771446317949_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260330%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260330T233715Z&X-Amz-Expires=86400&X-Amz-Signature=c46eb2bbddbc3ad3d1a30165cd4dfad85d0bf203e553311f77f4a23943f2c0be&X-Amz-SignedHeaders=host&x-id=GetObject
 
-### Problema:
-1. **Doble Prefijo**: Al construir URLs de Supabase, el sistema a veces anidaba el nombre del bucket (ej. `products/products/...`), resultando en errores 400.
-2. **404 en R2**: Assets marcados como R2 en la DB fallaban con 404 si el archivo ya no estaba en el bucket de R2 pero sí en Supabase, sin una forma de recuperarse automáticamente.
+1773200786392_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260331%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260331T000120Z&X-Amz-Expires=86400&X-Amz-Signature=5a369197e0ce71d0c8ae6bb6353be98aead654218de9a29c76a09b5780572570&X-Amz-SignedHeaders=host&x-id=GetObject
 
-### Solución:
-1. **Sanitización de Rutas**: Se implementó una lógica de limpieza en `getAuthorizedUrl` y en todos los renderizadores que elimina prefijos redundantes (`products/`, `avatars/`) antes de concatenar el dominio de Supabase.
-2. **Fallback en Error Global**: Se extendió el `window.addEventListener('error')` en `auth-utils.js` para detectar fallos de carga en dominios de R2. Al ocurrir un 404 de R2, el navegador ahora intenta automáticamente cargar el activo desde el bucket público de Supabase como redundancia ("Self-Healing URLs").
-3. **Resiliencia Multi-Proveedor**: Esto elimina la necesidad de migrar masivamente la base de datos si hay inconsistencias, ya que el frontend se adapta en tiempo real a la ubicación real del archivo.
- 
- ---
- 
- ## 27. Fallos 404/403 en Reproducción de Audio R2 (Feed de Solicitudes)
- **Fecha:** 20 de marzo de 2026
- **Ubicación:** `script/feed.js`, `server/src/infrastructure/http/routes/r2.routes.js`, `script/auth-utils.js`
- 
- ### Problema:
- Los audios en el feed de "productores" (previews de solicitudes personalizadas) no cargaban, mostrando errores 404 (Not Found) o 403 (Forbidden) con URLs que contenían el bucket incorrecto (`offszn-st`).
- 
- ### Causa Raíz:
- 1. **Default v1**: El script `feed.js` y el endpoint `bulk-sign` del backend usaban `'v1'` por defecto cuando la versión de R2 no estaba explícitamente presente, forzando la firma contra el bucket antiguo.
- 2. **Prefijos Privados**: La carpeta `temp-previews/` no estaba en la lista de `publicPrefixes` del backend, requiriendo tokens de sesión válidos para recursos que el feed intenta cargar de forma anónima/pública.
- 3. **Caché Persistente**: `auth-utils.js` guardaba las URLs firmadas en `sessionStorage` usando solo el path como llave, ignorando la versión. Si un usuario ya tenía una firma `'v1'` guardada, el navegador la reusaba infinitamente aunque el código ahora pidiera `'v2'`.
- 
- ### Solución:
- 1. **Estandarización a V2**: Se cambió el valor por defecto de `'v1'` a `'v2'` en `feed.js` (trackData) y en el backend (`bulk-sign` y `download-url`).
- 2. **Whitelisting**: Se agregó `temp-previews/` a la lista de `publicPrefixes` en `r2.routes.js` para permitir el acceso público a las maquetas de ofertas.
- 3. **Caché Inteligente (Cache Busting)**: Se modificó `auth-utils.js` para que la llave de la caché incluya la versión (ej. `song.mp3__v=v2`). Esto fuerza al navegador a obtener una firma nueva si la versión cambia, eliminando "fantasmas" de firmas antiguas mal generadas.
- 
- ---
- 
- ## 28. Truncado de Bucket en Consola de Chrome (`offszn-st`)
- **Fecha:** 20 de marzo de 2026
- **Ubicación:** Mensajes de consola / Inspección de red
- 
- ### Problema:
- Se reportaban errores apuntando a un bucket inexistente llamado `offszn-st`.
- 
- ### Causa Raíz:
- No es un error de código, sino de visualización. Chrome trunca los hostnames largos en los mensajes de error de la consola. El bucket real `offszn-storage.r2.cloudflarestorage.com` se recortaba visualmente a `offszn-st...`.
- 
- ### Solución:
- Ignorar el nombre truncado en la consola y verificar la URL real en la pestaña **Network** (Red), donde se confirmó que el sistema estaba intentando usar el bucket V1 (`offszn-storage`) en lugar del V2 (`offsznlatbucket`). La solución fue el re-versionado a V2 descrito en el punto anterior.
- 
- ---
- 
- ## 29. Avatares faltantes en "Presets de voces" (Explore)
- **Fecha:** 20 de marzo de 2026
- **Ubicación:** `server/src/infrastructure/http/controllers/ProductController.js`, `script/explore.js`
- 
- ### Problema:
- Las fotos de perfil de los productores no aparecían en las tarjetas de la sección "Presets de voces", mostrando un círculo vacío o la imagen por defecto incluso si el usuario tenía avatar.
- 
- ### Causa Raíz:
- 1. **Data Incompleta**: El endpoint `/api/products` (usado por el Explore) no estaba haciendo el join con la columna `avatar_url` de la tabla de usuarios. Solo enviaba el nickname.
- 2. **Caché Limitada**: El frontend (`explore.js`) solo buscaba los avatares en la lista de `allProducers` (Top 20). Si el preset era de un productor fuera del top 20, no encontraba su foto.
- 
- ### Solución:
- 1. **Join Enriquecido**: Se actualizó `ProductController.js` para incluir `avatar_url` en la consulta Supabase de todos los productos aprobados.
- 2. **Fallback Robusto**: Se modificó `createProductCardHtml` en `explore.js` para que, si el productor no está en el caché habitual, use directamente el `producer_avatar_url` que ahora viene en la data del producto.
- 3. **Consistencia de Versión**: Se aseguró que la firma de R2 para estos avatares use la versión correcta (`storage_version` o `r2_version`) del productor o del producto como respaldo.
+1772944464655_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260331%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260331T000120Z&X-Amz-Expires=86400&X-Amz-Signature=2fd8c255dba0b91b2d71d1156113bc9277aafddb9c2707f3eaabef280dedad41&X-Amz-SignedHeaders=host&x-id=GetObject
 
+1770777623937_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260331%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260331T000120Z&X-Amz-Expires=86400&X-Amz-Signature=78ee84c4ee0f1cc9cefe03df70adaa73745e1a1293351885c617cda460e57378&X-Amz-SignedHeaders=host&x-id=GetObject
 
+1773027256626_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260331%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260331T000120Z&X-Amz-Expires=86400&X-Amz-Signature=399a671b14839552bc833878a2844bc6c95edd7b4e6238daaf939c9b078105e4&X-Amz-SignedHeaders=host&x-id=GetObject
+
+1771733964442_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260331%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260331T000120Z&X-Amz-Expires=86400&X-Amz-Signature=672511f1f6a9629febc5d805d3c015d958f1e3dfaa5a773724e7384cddbe5b96&X-Amz-SignedHeaders=host&x-id=GetObject
+
+1771516589373_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260331%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260331T000120Z&X-Amz-Expires=86400&X-Amz-Signature=0f6758a937e518df16f7c5e3d9024e3e9e75c71003182777b969cadf4c757441&X-Amz-SignedHeaders=host&x-id=GetObject
+
+1771545930654_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260331%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260331T000120Z&X-Amz-Expires=86400&X-Amz-Signature=213a3c4e4ca5bbe7941f971f7381f1c32606494bd8e55dce25efe23315556608&X-Amz-SignedHeaders=host&x-id=GetObject
+
+1771986804480_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260331%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260331T000120Z&X-Amz-Expires=86400&X-Amz-Signature=6c9604113cc6bd95f68c6671e9349efb28e96ad68f00324a11f4c796c1241eb8&X-Amz-SignedHeaders=host&x-id=GetObject
+
+1770924516430_cover.jpg
+
+1771803946777_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260331%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260331T000120Z&X-Amz-Expires=86400&X-Amz-Signature=b344f473cb158f163a1756d7a50b56d2fad36ac234bc9b1b505b09f4cd60007e&X-Amz-SignedHeaders=host&x-id=GetObject
+
+1771294051764_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260331%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260331T000120Z&X-Amz-Expires=86400&X-Amz-Signature=39ee13b0965a2ff79a354b7c12169a7f81acaf118fd502399a28b97026950fda&X-Amz-SignedHeaders=host&x-id=GetObject
+
+1771476678639_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260331%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260331T000120Z&X-Amz-Expires=86400&X-Amz-Signature=5776e5f6bcfed909d452179fc96f80f55914ff00f74e2181a5424d842432d07a&X-Amz-SignedHeaders=host&x-id=GetObject
+
+1771728852163_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260331%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260331T000120Z&X-Amz-Expires=86400&X-Amz-Signature=3fa30fe3c9c484ddbb650434ca55bf654fae388db73f4965083580a981bce6ab&X-Amz-SignedHeaders=host&x-id=GetObject
+
+1771353104372_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260331%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260331T000120Z&X-Amz-Expires=86400&X-Amz-Signature=ee56434b657a587bbf06a4975b643d7b1763f5a6f5a2c74cae5ab9af65b3352c&X-Amz-SignedHeaders=host&x-id=GetObject
+
+1772072382353_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260331%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260331T000120Z&X-Amz-Expires=86400&X-Amz-Signature=31e963096e998bf88581b1ebe81e4c11540bff9bc9a10fb0ee543978fd1f0a20&X-Amz-SignedHeaders=host&x-id=GetObject
+
+1771208801371_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260331%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260331T000120Z&X-Amz-Expires=86400&X-Amz-Signature=e2f63b5b4204595cd9c8073382abbfe23771ba97bcef3d43d754bd671eec3a16&X-Amz-SignedHeaders=host&x-id=GetObject
+
+1771206957038_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260331%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260331T000120Z&X-Amz-Expires=86400&X-Amz-Signature=fa122225290e47c665019a2fd9783f2cb72e3647bdd4b4f7ae1afb806c32fc73&X-Amz-SignedHeaders=host&x-id=GetObject
+
+1771654957729_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260331%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260331T000120Z&X-Amz-Expires=86400&X-Amz-Signature=b88d8bcdf80d69732218f66b3cd2d7c20cdbdf0f7911d400dd10afad12420b5f&X-Amz-SignedHeaders=host&x-id=GetObject
+
+1771985307610_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260331%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260331T000120Z&X-Amz-Expires=86400&X-Amz-Signature=a07afba99f895f2ae74c4fe83905631723c08771029c21135029cc82bad5be4b&X-Amz-SignedHeaders=host&x-id=GetObject
+
+1771795379480_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260331%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260331T000120Z&X-Amz-Expires=86400&X-Amz-Signature=cd4acc058ecee6f76c6d2325ffc57c40af2e77c7611deec5006c2d59ee878d11&X-Amz-SignedHeaders=host&x-id=GetObject
+
+1772044424566_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260331%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260331T000120Z&X-Amz-Expires=86400&X-Amz-Signature=cc8e6b252c5d9277a8d6be5d2fddedbfe47a2a1cb9ab53a52e23914a177baa45&X-Amz-SignedHeaders=host&x-id=GetObject
+
+1771294622977_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260331%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260331T000120Z&X-Amz-Expires=86400&X-Amz-Signature=197995844aa1c9946d4b33a9e30f581d940086480f26bffe1d33629cd4ebe594&X-Amz-SignedHeaders=host&x-id=GetObject
+
+1770757942192_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260331%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260331T000120Z&X-Amz-Expires=86400&X-Amz-Signature=7e12d81aa5d2c43c172bbf9e35037052a80016f44c28ced3390a5124ee206b67&X-Amz-SignedHeaders=host&x-id=GetObject
+
+1771804806870_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260331%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260331T000120Z&X-Amz-Expires=86400&X-Amz-Signature=381a7bafb415c29945ebf19cba8a6fa3683ab481a5de3a51493a0c70d0935453&X-Amz-SignedHeaders=host&x-id=GetObject
+
+1771173587048_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260331%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260331T000120Z&X-Amz-Expires=86400&X-Amz-Signature=7c94d47f4aecfc1627a7fd21185b8b8e2adb5627858bf64a2a550f07b94d25d5&X-Amz-SignedHeaders=host&x-id=GetObject
+
+1771342626425_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260331%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260331T000120Z&X-Amz-Expires=86400&X-Amz-Signature=d014d6727161356b7c36d0262ed4140290aa10bf05a9a9e5848ca2ee4ce521fe&X-Amz-SignedHeaders=host&x-id=GetObject
+
+1770949419983_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260331%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260331T000120Z&X-Amz-Expires=86400&X-Amz-Signature=57785318fe27c76619c6884ef688645d0da5a9aef2b6c372790b34ed4d3aff2e&X-Amz-SignedHeaders=host&x-id=GetObject
+
+1771616469523_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260331%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260331T000120Z&X-Amz-Expires=86400&X-Amz-Signature=4a4aab69f892daed1c892d8986eaafc98906befc5d9f64f85ef07d54e726b303&X-Amz-SignedHeaders=host&x-id=GetObject
+
+1771444701757_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260331%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260331T000120Z&X-Amz-Expires=86400&X-Amz-Signature=869c3b0397b580b78140e2f4e636a5fd0c382812ef0925ec9bd78002ed9bd5a3&X-Amz-SignedHeaders=host&x-id=GetObject
+
+1771977573959_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260331%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260331T000120Z&X-Amz-Expires=86400&X-Amz-Signature=f16de4d5f61d207b6f7316f9e3a295f5d995d111857acaca4cbabe472dee74ba&X-Amz-SignedHeaders=host&x-id=GetObject
+
+1772868295429_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260331%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260331T000120Z&X-Amz-Expires=86400&X-Amz-Signature=492c3e3b2e5bff1064b3cb9772887220fd771fbc4fd6ba42dc21a7c0c7178636&X-Amz-SignedHeaders=host&x-id=GetObject
+
+1772130834334_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260331%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260331T000120Z&X-Amz-Expires=86400&X-Amz-Signature=4d8ae0d71a4e9f722e46c12b5303cbd15d701a36eb89afd592910c969c1be9d9&X-Amz-SignedHeaders=host&x-id=GetObject
+
+1770760307057_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260331%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260331T000120Z&X-Amz-Expires=86400&X-Amz-Signature=04c2ce685b45ecb4453c4b0df47e91ea09a6eb13796de91b653021c547b81fdb&X-Amz-SignedHeaders=host&x-id=GetObject
+
+1771189999301_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260331%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260331T000120Z&X-Amz-Expires=86400&X-Amz-Signature=e8b7b0ee708448822be00ef90b2914b4ca95e71934b521643b426ad45e05b59e&X-Amz-SignedHeaders=host&x-id=GetObject
+
+1772392903569_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260331%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260331T000120Z&X-Amz-Expires=86400&X-Amz-Signature=2ceeb3ab8c9042bf408e7456f2d533e31a43d99b06d01c66ac3129023fbcdc7b&X-Amz-SignedHeaders=host&x-id=GetObject
+
+1773105561816_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260331%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260331T000120Z&X-Amz-Expires=86400&X-Amz-Signature=11549e60532b66c952d20b3e80ce57b2b809ba6f3f73d6d3ea442a4650ecea5c&X-Amz-SignedHeaders=host&x-id=GetObject
+
+1772925549647_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260331%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260331T000120Z&X-Amz-Expires=86400&X-Amz-Signature=6babb45c29c53a04b4308a5f5e556e1e59d235416f10fb5dddaebeb39e0ed65a&X-Amz-SignedHeaders=host&x-id=GetObject
+
+1771746146419_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260331%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260331T000120Z&X-Amz-Expires=86400&X-Amz-Signature=ebd5119af2c7ff60ae83917ef577b994ec6be6626d8388fd35bc23031610400a&X-Amz-SignedHeaders=host&x-id=GetObject
+
+1771187899215_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260331%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260331T000120Z&X-Amz-Expires=86400&X-Amz-Signature=c9d40ed264357c6057f37c49e7aa2524cd462695a454a7796dea2494546cee30&X-Amz-SignedHeaders=host&x-id=GetObject
+
+1771114723248_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260331%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260331T000120Z&X-Amz-Expires=86400&X-Amz-Signature=531e9f00b4da0f315494942967fa3ec5b61c2dbb41dbe9ca548b7b994a976d25&X-Amz-SignedHeaders=host&x-id=GetObject
+
+1771786088950_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260331%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260331T000120Z&X-Amz-Expires=86400&X-Amz-Signature=0cd6eee531e915f127e6a18016664cd35693d1ec53554a8fb6aadecda30be60f&X-Amz-SignedHeaders=host&x-id=GetObject
+
+1771802119468_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260331%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260331T000120Z&X-Amz-Expires=86400&X-Amz-Signature=a17da245bc4090fb2753271b07cc266c72ce7b10821f6c01af8781643f1f78e3&X-Amz-SignedHeaders=host&x-id=GetObject
+
+1771966996033_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260331%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260331T000120Z&X-Amz-Expires=86400&X-Amz-Signature=ed3488da5178d0b8c3c00c28ff44d0b2100d63f6f68f43d70683c47b5f56ea6b&X-Amz-SignedHeaders=host&x-id=GetObject
+
+1771802543359_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260331%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260331T000120Z&X-Amz-Expires=86400&X-Amz-Signature=c71ec61035f6c29679081d44ae95fc4b82e617dafa8a46f66fe946a193675f95&X-Amz-SignedHeaders=host&x-id=GetObject
+
+1771986941870_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260331%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260331T000120Z&X-Amz-Expires=86400&X-Amz-Signature=8e221fb41ad3451c0b1d7c6a71ce1c49c1f64232f8d3e600a6c381b495425524&X-Amz-SignedHeaders=host&x-id=GetObject
+
+1773028766828_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260331%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260331T000120Z&X-Amz-Expires=86400&X-Amz-Signature=c77a0cd0343a1d32f80b5477b9d5f9cf82c2b778828782ac0a6aedc8a77954d4&X-Amz-SignedHeaders=host&x-id=GetObject
+
+1772416302243_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260331%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260331T000120Z&X-Amz-Expires=86400&X-Amz-Signature=78985b0fb2e53bf1fbd94a622ed51e2743ba899422e0e0d52cb2ee5da3d2689b&X-Amz-SignedHeaders=host&x-id=GetObject
+
+1770760984672_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260331%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260331T000120Z&X-Amz-Expires=86400&X-Amz-Signature=e43b7952a23cb62cb2bc9efa4a91a335842615d7550210581627760291712533&X-Amz-SignedHeaders=host&x-id=GetObject
+
+1771652597617_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260331%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260331T000120Z&X-Amz-Expires=86400&X-Amz-Signature=038f72b2dbe8acb9aa4c6d74207da1c36ea9980ead252ac70343a093c92a4f26&X-Amz-SignedHeaders=host&x-id=GetObject
+
+1771205388545_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260331%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260331T000120Z&X-Amz-Expires=86400&X-Amz-Signature=98a76d7a9894296f510aaea0aa0a8de5cf03e73852f81077b7b39606d3a252b2&X-Amz-SignedHeaders=host&x-id=GetObject
+
+1771223760090_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260331%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260331T000120Z&X-Amz-Expires=86400&X-Amz-Signature=684683cc0fc5927af2f85d355dc1e1ae5e91ec73854e31aa85be2e654b954f15&X-Amz-SignedHeaders=host&x-id=GetObject
+
+1772555253348_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260331%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260331T000120Z&X-Amz-Expires=86400&X-Amz-Signature=8f0a06ecab2600cb8401bba6aa6847c3193bbce579ec701995257e2c1fc079ca&X-Amz-SignedHeaders=host&x-id=GetObject
+
+1771731253675_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260331%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260331T000120Z&X-Amz-Expires=86400&X-Amz-Signature=1705dda537a9ae9ee91a6189233c6736026a5e9b26c01012c7d8a5e44ddfd788&X-Amz-SignedHeaders=host&x-id=GetObject
+
+1772153326856_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260331%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260331T000120Z&X-Amz-Expires=86400&X-Amz-Signature=b4b9a7a796aa34627883f5b992cb5e33cb0d491445bf49e2a3b2160dd8676dc8&X-Amz-SignedHeaders=host&x-id=GetObject
+
+1772407145344_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260331%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260331T000120Z&X-Amz-Expires=86400&X-Amz-Signature=a4f01d162f8b833865346bb0542a1e8cb819b032c37ea5cc7360658db3d105d6&X-Amz-SignedHeaders=host&x-id=GetObject
+
+1772056500626_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260331%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260331T000120Z&X-Amz-Expires=86400&X-Amz-Signature=af1bf5ff10af85bb56a34c86c0c92e3112ccaf62f405696523afd3815de72529&X-Amz-SignedHeaders=host&x-id=GetObject
+
+1771628415707_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260331%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260331T000120Z&X-Amz-Expires=86400&X-Amz-Signature=114dd10521706c2c216c3f2fb5f0bfc9d659a2fe92a1ab520aa0a06119c054ef&X-Amz-SignedHeaders=host&x-id=GetObject
+
+1773027943001_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260331%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260331T000120Z&X-Amz-Expires=86400&X-Amz-Signature=78e4a63991571f79ae477c5839fe6c9cfcbaed10c90fda10f206307495dd68e2&X-Amz-SignedHeaders=host&x-id=GetObject
+
+1773208582000_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260331%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260331T000120Z&X-Amz-Expires=86400&X-Amz-Signature=cfd52fd5025d1158b643fc9c7c0003c8de7e971ceeb62d2c7e2d5d4f91f03a52&X-Amz-SignedHeaders=host&x-id=GetObject
+
+1772393084902_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260331%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260331T000120Z&X-Amz-Expires=86400&X-Amz-Signature=10c2bd4e92086267b29f283a79cb31058ee9cfe9192d98f1177a66cee4c298ad&X-Amz-SignedHeaders=host&x-id=GetObject
+
+1771542369437_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260331%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260331T000120Z&X-Amz-Expires=86400&X-Amz-Signature=bdf6f62dcd8a22d2c150efc7b1b9b46aee0ed30a5cff299d9c86791322063cf7&X-Amz-SignedHeaders=host&x-id=GetObject
+
+1772047874529_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260331%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260331T000120Z&X-Amz-Expires=86400&X-Amz-Signature=1425c8747b7d3dc3f280184e8cf8a9814fc5adead42acb8ca484ecf533d6dc5d&X-Amz-SignedHeaders=host&x-id=GetObject
+
+1771824729018_cover_edit.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260331%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260331T000120Z&X-Amz-Expires=86400&X-Amz-Signature=cb1e2d8ad104f0c7be59245eb76c7f3f867dbcda3474979103128a3912906151&X-Amz-SignedHeaders=host&x-id=GetObject
+
+1772042824437_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260331%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260331T000120Z&X-Amz-Expires=86400&X-Amz-Signature=0163aedf00a0ea42cd3354c8c76d5b1a2a8ea664f067ff098ad258120184488c&X-Amz-SignedHeaders=host&x-id=GetObject
+
+1772151525329_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260331%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260331T000120Z&X-Amz-Expires=86400&X-Amz-Signature=c354f20486b4479fd92af016c5bc0fd178525a6ff6d874a6290d9d9d8bdc1fe6&X-Amz-SignedHeaders=host&x-id=GetObject
+
+1773039403913_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260331%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260331T000120Z&X-Amz-Expires=86400&X-Amz-Signature=56781ae947491a546bb7d4c646f4c513c043e9b4f26ab535ae9974313cdb044c&X-Amz-SignedHeaders=host&x-id=GetObject
+
+1773028386010_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260331%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260331T000120Z&X-Amz-Expires=86400&X-Amz-Signature=68081fa0e164666e11f0cd1810b52119270518542c4e9d65882dcb7138392efc&X-Amz-SignedHeaders=host&x-id=GetObject
+
+1773028222858_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260331%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260331T000120Z&X-Amz-Expires=86400&X-Amz-Signature=23a08a0ad56635b9b306fac5695c68df4efad433b99532f64176c9f2cacf6a74&X-Amz-SignedHeaders=host&x-id=GetObject
+
+1771473998165_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260331%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260331T000120Z&X-Amz-Expires=86400&X-Amz-Signature=513b9d11469d5338a69600d4eaf677f3fe9cb017b059a8916ccddc5eef0d864b&X-Amz-SignedHeaders=host&x-id=GetObject
+
+1772647754944_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260331%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260331T000120Z&X-Amz-Expires=86400&X-Amz-Signature=4333174e761b0601669fbb08a07164e70012e3e26af59c1ffff9bbc43479ea69&X-Amz-SignedHeaders=host&x-id=GetObject
+
+1771644752926_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260331%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260331T000120Z&X-Amz-Expires=86400&X-Amz-Signature=f0f13a204042119c9958e7411c382db017df2ddc9064dec1f835c7d723ec5d18&X-Amz-SignedHeaders=host&x-id=GetObject
+
+1772085569317_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260331%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260331T000120Z&X-Amz-Expires=86400&X-Amz-Signature=601a848c7d8fde35f176bf7e68897fc2b69b0f5899d2ab1e79d87fd370aab918&X-Amz-SignedHeaders=host&x-id=GetObject
+
+1771983820980_cover.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=090fc361ac3433dfeacd5b062dc37e69%2F20260331%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260331T000120Z&X-Amz-Expires=86400&X-Amz-Signature=8d4a09149a5e302eacee95067a724849535ae233289e565366427a23d50ffac3&X-Amz-SignedHeaders=host&x-id=GetObject
+
+1772176734640_cover.jpg
+
+1771353588560_cover.jpg
+
+1771126415209_cover.jpg
+
+1771967878870_cover.jpg
+
+1772673778346_cover.jpg
+
+1771966710913_cover.jpg
+
+1772149541278_cover.jpg
+
+1772042004169_cover.jpg
+
+1771116032288_cover.jpg
+
+1772042349596_cover.jpg
+
+1771628306022_cover.jpg
+
+1771968705413_cover.jpg
+
+1772488121189_cover.jpg
+
+1772376711752_cover.jpg
+
+1773172211005_cover.jpg
+
+1771967735278_cover.jpg
+
+1773027570013_cover.jpg
+
+1772151361343_cover.jpg
+
+1772985774210_cover.jpg
+
+1772673491218_cover.jpg
+
+1771824715977_cover_edit.jpg
+
+1771807928801_cover.jpg
+
+1772738265878_cover.jpg
+
+1772083963727_cover.jpg
+
+1771628511339_cover.jpg
+
+1772215462830_cover.jpg
+
+1771476678639_cover.jpg
+
+1771628415707_cover.jpg
+
+1771728852163_cover.jpg
+
+1771986804480_cover.jpg
+
+1771733964442_cover.jpg
+
+1772647754944_cover.jpg
+
+1771446317949_cover.jpg
+
+1773027943001_cover.jpg
+
+1772130834334_cover.jpg
+
+1771857482229_cover.jpg
+
+1771824701051_cover_edit.jpg
+
+1771967330757_cover.jpg
+
+1772735364316_cover.jpg
+
+1770777623937_cover.jpg
+
+1771477427276_cover.jpg
+
+1771294622977_cover.jpg
+
+1770760307057_cover.jpg
+
+1771353104372_cover.jpg
+
+1772072382353_cover.jpg
+
+1771942588754_cover.jpg
+
+1771294051764_cover.jpg
+
+1772393084902_cover.jpg
+
+1771985307610_cover.jpg
+
+1771977573959_cover.jpg
+
+1772151525329_cover.jpg
+
+1771786088950_cover.jpg
+
+1770949419983_cover.jpg
+
+1771173587048_cover.jpg
+
+1771223760090_cover.jpg
+
+1771516589373_cover.jpg
+
+1770760984672_cover.jpg
+
+1773027256626_cover.jpg
+
+1771802119468_cover.jpg
+
+1773200786392_cover.jpg
+
+1772392903569_cover.jpg
+
+1770757942192_cover.jpg
+
+1771114723248_cover.jpg
+
+1771986941870_cover.jpg
+
+1771208801371_cover.jpg
+
+1772416302243_cover.jpg
+
+1771652597617_cover.jpg
+
+1772056500626_cover.jpg
+
+1772085569317_cover.jpg
+
+1771803946777_cover.jpg
+
+1771189999301_cover.jpg
+
+1772925549647_cover.jpg
+
+1772944464655_cover.jpg
+
+1771983820980_cover.jpg
+
+1771802543359_cover.jpg
+
+1771644752926_cover.jpg
+
+1773028222858_cover.jpg
+
+1771206957038_cover.jpg
+
+1772047874529_cover.jpg
+
+1773039403913_cover.jpg
+
+1773028766828_cover.jpg
+
+1771795379480_cover.jpg
+
+1771545930654_cover.jpg
+
+1773105561816_cover.jpg
+
+1771966996033_cover.jpg
+
+1771473998165_cover.jpg
+
+1771746146419_cover.jpg
+
+1772407145344_cover.jpg
+
+1771205388545_cover.jpg
+
+1772044424566_cover.jpg
+
+1771654957729_cover.jpg
+
+1772555253348_cover.jpg
+
+1772042824437_cover.jpg
+
+1771444701757_cover.jpg
+
+1771542369437_cover.jpg
+
+1771616469523_cover.jpg
+
+1771187899215_cover.jpg
+
+1773028386010_cover.jpg
+
+1771824729018_cover_edit.jpg
+
+1771342626425_cover.jpg
+
+1771804806870_cover.jpg
+
+1772868295429_cover.jpg
+
+1772153326856_cover.jpg
+
+1771731253675_cover.jpg
+
+1773208582000_cover.jpg
