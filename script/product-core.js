@@ -1905,7 +1905,7 @@ window.openLicenseSelectionModal = function (licenses) {
     const selectedId = localStorage.getItem(`offszn_lic_select_${window.currentProductData?.id}`) || enabledLicenses[0]?.id;
 
     backdrop.innerHTML = `
-        <div class="share-modal-content lic-modal" id="modal-lic-selection-container" style="max-width: 500px;">
+        <div class="share-modal-content lic-modal" id="modal-lic-selection-container">
             <div class="modal-pull-bar"></div>
             <div class="lic-modal-header">
                 <h3 class="lic-modal-title">Elegir Licencia</h3>
@@ -2010,7 +2010,7 @@ window.openLicenseComparisonModal = function (licenses) {
     let gridCols = `1fr repeat(${enabledLicenses.length}, 1fr)`;
 
     let html = `
-        <div class="share-modal-content lic-modal" style="max-width: 900px; width: 95%;">
+        <div class="share-modal-content lic-modal lic-modal-compare" style="width: 95%;">
             <div class="lic-modal-header">
                 <h3>Comparar Licencias</h3>
                 <button onclick="closeLicenseComparisonModal()" class="lic-modal-close"><i class="bi bi-x-lg"></i></button>
@@ -2051,24 +2051,20 @@ window.openLicenseComparisonModal = function (licenses) {
                     <div class="compare-cell feature-col">Radio</div>
                     ${enabledLicenses.map(l => `<div class="compare-cell">${l.radio}</div>`).join('')}
 
-                    <!-- EXCLUSIVITY ROW (Only if Unlimited exists) -->
-                    <div class="compare-cell feature-col" style="color: #A020F0; font-weight: bold;">Exclusividad</div>
-                     ${enabledLicenses.map(l => `<div class="compare-cell check">${(l.name.toLowerCase().includes('unlimited')) ? '<i class="bi bi-check-circle-fill active" style="color:#A020F0"></i>' : '<i class="bi bi-x-circle inactive"></i>'}</div>`).join('')}
+
 
                     <!-- SELECT BUTTONS -->
-                    <div class="compare-cell feature-col"></div>
+                    <div class="compare-cell feature-col" style="border-bottom:none;"></div>
                     ${enabledLicenses.map(l => `
-                        <div class="compare-cell">
-                            <button class="btn-glass-primary-v2" style="font-size:0.8rem; padding: 6px 12px; height: auto;" onclick="selectLicenseAndClose('${l.id}')">
-                                Elegir
+                        <div class="compare-cell" style="border-bottom:none;">
+                            <button class="btn-compare-select" onclick="selectLicenseAndClose('${l.id}')">
+                                ELEGIR
                             </button>
                         </div>
                     `).join('')}
 
                 </div>
             </div>
-            
-            </style>
         </div>
     `;
 
