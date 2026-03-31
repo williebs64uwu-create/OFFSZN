@@ -162,11 +162,12 @@ class AnalyzerCheckout {
 
         const script = document.createElement('script');
         script.id = 'paypal-sdk-analyzer';
-        script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&currency=USD&intent=capture&merchant-id=MXV5F6X8JXG4S`; 
-        // Note: The merchant-id in the SDK URL is for the "platform" side of multiparty if needed, 
-        // but here we are doing simple direct multi-payee in the backend. 
-        // Actually, just the client-id is enough for the buttons to show.
+        // USE merchant-id=* for multiparty/split payments
+        script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&currency=USD&intent=capture&merchant-id=*`; 
         
+        // Note: MXV5F6X8JXG4S is Willie, Email is used for Crocker for maximum compatibility
+        script.setAttribute('data-merchant-id', 'MXV5F6X8JXG4S,pagos.crockertheproducer@gmail.com');
+
         script.onload = () => this.renderPayPalButtons();
         document.head.appendChild(script);
     }

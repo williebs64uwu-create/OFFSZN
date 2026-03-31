@@ -3,6 +3,11 @@ import paypalClient from '../paypalClient.js';
 import { supabase } from '../../database/connection.js';
 import { v4 as uuidv4 } from 'uuid';
 import { sendOffsznEmail } from '../../../shared/utils/mailer.js';
+ 
+// PayPal Recipient Credentials from environment
+const EMAIL_CROCKER = process.env.CROCKER_PAYPAL_EMAIL || 'pagos.crockertheproducer@gmail.com';
+const MERCHANT_ID_CROCKER = 'JZ28XQ5XLPFMA'; // Derived from Crocker's email
+const MERCHANT_ID_WILLIE = process.env.PAYPAL_MERCHANT_ID_WILLIE || 'MXV5F6X8JXG4S';
 
 /**
  * Creates a PayPal order for the X Flow - Analyzer with a hardcoded $10/$5 split.
@@ -14,9 +19,6 @@ export const createAnalyzerOrder = async (req, res) => {
         const amount_crocker = 10.00;
         const amount_willie = 5.00;
 
-        // Recipient details
-        const email_crocker = 'pagos.crockertheproducer@gmail.com';
-        const merchant_id_willie = 'MXV5F6X8JXG4S'; // Provided by user
 
         const request = new paypal.orders.OrdersCreateRequest();
         request.prefer("return=representation");
@@ -28,22 +30,22 @@ export const createAnalyzerOrder = async (req, res) => {
             },
             purchase_units: [
                 {
-                    reference_id: `crocker_split_${uuidv4().substring(0, 8)}`,
-                    amount: {
-                        currency_code: 'USD',
-                        value: amount_crocker.toFixed(2)
-                    },
-                    description: 'X Flow Analyzer - Part 1 (Producer)',
-                    payee: { email_address: email_crocker }
-                },
-                {
                     reference_id: `willie_split_${uuidv4().substring(0, 8)}`,
                     amount: {
                         currency_code: 'USD',
                         value: amount_willie.toFixed(2)
                     },
-                    description: 'X Flow Analyzer - Part 2 (Platform/Owner)',
-                    payee: { merchant_id: merchant_id_willie }
+                    description: 'X Flow Analyzer - Part 1 (Platform)',
+                    payee: { merchant_id: MERCHANT_ID_WILLIE }
+                },
+                {
+                    reference_id: `crocker_split_${uuidv4().substring(0, 8)}`,
+                    amount: {
+                        currency_code: 'USD',
+                        value: amount_crocker.toFixed(2)
+                    },
+                    description: 'X Flow Analyzer - Part 2 (Producer)',
+                    payee: { email_address: EMAIL_CROCKER }
                 }
             ]
         });
@@ -126,7 +128,7 @@ export const captureAnalyzerOrder = async (req, res) => {
                         </div>
                     `;
                     await sendOffsznEmail({
-                        to: 'pagos.crockertheproducer@gmail.com',
+                        to: EMAIL_CROCKER,
                         subject: `💸 ¡Venta Confirmada! Alguien compró X Flow - Analyzer`,
                         html: crockerHtml,
                         fromName: 'OFFSZN Notificaciones'

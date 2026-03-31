@@ -19,6 +19,7 @@ const API_URL = `${window.OFFSZN_CONFIG?.API_BASE_URL || 'https://offszn.lat'}/a
 let allProducts = [];
 let allProducers = [];
 window.currentUserFollowing = window.currentUserFollowing || new Set();
+window.currentUserReposts = window.currentUserReposts || new Set();
 let heroProducts = [];
 let currentHeroIndex = 0;
 let heroTimer = null;
@@ -89,7 +90,7 @@ function initGlobalListeners() {
     if (window.FavoritesManager) {
         window.FavoritesManager.subscribe((likedSet) => {
             // Unify syncing logic similar to search.js syncLikes()
-            const allHearts = document.querySelectorAll('.card-like-btn, .post-like-btn');
+            const allHearts = document.querySelectorAll('.card-like-btn, .post-like-btn, .like-btn');
             allHearts.forEach(btn => {
                 const id = btn.closest('[data-product-id]')?.dataset.productId;
                 if (id) {
@@ -171,6 +172,18 @@ async function fetchData() {
             window.currentUserFollowing = new Set(followingData);
         } else {
             window.currentUserFollowing = window.currentUserFollowing || new Set();
+        }
+
+        // --- NEW: Fetch Reposts ---
+        if (token && window.supabaseClient) {
+            const userId = window.AuthUtils.getUserId();
+            if (userId) {
+                const { data: rd } = await window.supabaseClient
+                    .from('reposts')
+                    .select('product_id')
+                    .eq('user_id', userId);
+                if (rd) window.currentUserReposts = new Set(rd.map(r => String(r.product_id)));
+            }
         }
 
         if (allProducts.length > 0) {
@@ -1142,13 +1155,15 @@ function createProductCardHtml(product, format = 'standard') {
                             <i class="bi bi-cart-plus"></i> ${priceDisplay}
                         </button>
                         <div class="post-actions">
-                            <div class="post-action like-btn ${isLiked ? 'liked' : ''}" onclick="toggleLike(event, '${product.id}', this)">
+                            <div class="post-action post-like-btn like-btn ${isLiked ? 'liked' : ''}" onclick="toggleLike(event, '${product.id}', this, '${product.producer_id}')" data-product-id="${product.id}">
                                 <i class="bi ${isLiked ? 'bi-heart-fill' : 'bi-heart'}"></i>
                                 <span class="like-counter">${product.likes_count || 0}</span>
                             </div>
-                            <div class="post-action post-repost-btn" title="Repost">
+                            <div class="post-action post-repost-btn ${window.currentUserReposts.has(String(product.id)) ? 'active' : ''}" 
+                                 title="Repost" 
+                                 onclick="toggleRepost(event, '${product.id}', this, '${product.producer_id}')">
                                 <i class="bi bi-arrow-repeat"></i>
-                                <span>0</span>
+                                <span class="repost-counter">${product.reposts_count || 0}</span>
                             </div>
                             <div class="post-action post-comment-btn" title="Comentar">
                                 <i class="bi bi-chat"></i>
@@ -1308,7 +1323,8 @@ async function handleLike(id, btn, ownerId) {
 
         // Robust check for the button element
         const targetBtn = (btn && typeof btn.querySelector === 'function') ? btn : null;
-        const span = targetBtn ? targetBtn.querySelector('.like-count') : null;
+        // Check for both .like-count (standard) and .like-counter (social)
+        const span = targetBtn ? (targetBtn.querySelector('.like-count') || targetBtn.querySelector('.like-counter')) : null;
 
         if (span) {
             let currentCount = parseInt(span.textContent) || 0;
@@ -1349,6 +1365,61 @@ async function handleLike(id, btn, ownerId) {
 // Backward compatibility alias
 window.toggleLike = handleLike;
 window.handleLike = handleLike;
+
+// --- NEW: Repost Logic (Supabase) ---
+const repostProcessing = new Set();
+async function toggleRepost(event, productId, btn, producerId) {
+    if (event) event.stopPropagation();
+    if (!productId || repostProcessing.has(productId)) return;
+
+    if (!window.AuthUtils.isLoggedIn()) {
+        window.location.href = '/login';
+        return;
+    }
+
+    const userId = window.AuthUtils.getUserId();
+    const isActive = btn.classList.contains('active');
+    const span = btn.querySelector('.repost-counter');
+    let count = span ? (parseInt(span.textContent) || 0) : 0;
+
+    repostProcessing.add(productId);
+
+    // Optimistic UI update
+    btn.classList.toggle('active', !isActive);
+    if (span) span.textContent = !isActive ? count + 1 : Math.max(0, count - 1);
+
+    try {
+        if (!isActive) {
+            // INSERT REPOST
+            const { error } = await window.supabaseClient
+                .from('reposts')
+                .insert([{ 
+                    product_id: productId, 
+                    user_id: userId, 
+                    producer_id: producerId || null 
+                }]);
+            if (error) throw error;
+            window.currentUserReposts.add(String(productId));
+        } else {
+            // DELETE REPOST
+            const { error } = await window.supabaseClient
+                .from('reposts')
+                .delete()
+                .eq('product_id', productId)
+                .eq('user_id', userId);
+            if (error) throw error;
+            window.currentUserReposts.delete(String(productId));
+        }
+    } catch (err) {
+        console.error('[Explore] Repost failed:', err);
+        // Revert UI on failure
+        btn.classList.toggle('active', isActive);
+        if (span) span.textContent = count;
+    } finally {
+        setTimeout(() => repostProcessing.delete(productId), 500);
+    }
+}
+window.toggleRepost = toggleRepost;
 
 function getCookie(name) {
     const value = `; ${document.cookie}`;

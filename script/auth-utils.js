@@ -41,6 +41,29 @@ window.AuthUtils = {
     _apiBase: null,
 
     /**
+     * @returns {boolean} True if a non-anon token exists.
+     */
+    isLoggedIn: function () {
+        return !!this.getAccessToken();
+    },
+
+    /**
+     * Returns the current User ID from Memory, JWT sub, or window.currentUserId.
+     * @returns {string|null}
+     */
+    getUserId: function () {
+        if (window.currentUserId) return String(window.currentUserId);
+        const token = this.getAccessToken();
+        if (!token) return null;
+        try {
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            return payload.sub || null;
+        } catch (e) {
+            return null;
+        }
+    },
+
+    /**
      * Initialize Supabase Client globally if credentials exist.
      * Use this ensuring window.SUPABASE_URL is defined before loading this script.
      */
