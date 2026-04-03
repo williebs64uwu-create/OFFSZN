@@ -64,7 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
         price.className = 'product-price';
 
         if (product.is_free) {
-          price.textContent = 'PLUGINS VST';
+          price.textContent = 'GRATIS';
           price.classList.add('free-price');
         } else {
           const prices = [
@@ -78,7 +78,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const lowestPrice = Math.min(...prices);
             price.textContent = `Desde $${lowestPrice.toFixed(2)}`;
           } else {
-            price.textContent = 'PLUGINS VST';
+            price.textContent = 'GRATIS';
           }
         }
         content.append(title);

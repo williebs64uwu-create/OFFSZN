@@ -91,8 +91,11 @@ window.AuthUtils = {
 
             // 🔄 SYNC: Listen for Auto-Refresh Events to keep token fresh
             window.supabaseClient.auth.onAuthStateChange((event, session) => {
-                if (session && session.access_token) {
+                if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || (event === 'INITIAL_SESSION' && session)) {
                     window.AuthUtils._cachedToken = session.access_token;
+                    // --- SYNC GLOBAL VARIABLES ---
+                    window.currentUserId = session.user.id;
+                    window.currentUserNickname = session.user.user_metadata?.nickname || localStorage.getItem('offszn_cached_nickname');
                     
                     // Always ensure localStorage has the token for strict client guards
                     localStorage.setItem('authToken', session.access_token);
@@ -102,6 +105,8 @@ window.AuthUtils = {
                     document.cookie = `sb-access-token=${session.access_token}; path=/; max-age=${maxAge}; SameSite=Strict; Secure`;
                 } else if (event === 'SIGNED_OUT') {
                     window.AuthUtils._cachedToken = null;
+                    window.currentUserId = null;
+                    window.currentUserNickname = null;
                     localStorage.removeItem('authToken');
                     document.cookie = `sb-access-token=; path=/; max-age=0; SameSite=Strict; Secure`;
                 }
@@ -109,8 +114,10 @@ window.AuthUtils = {
 
             // Try to set initial cache
             window.supabaseClient.auth.getSession().then(({ data }) => {
-                if (data?.session?.access_token) {
+                if (data?.session) {
                     window.AuthUtils._cachedToken = data.session.access_token;
+                    window.currentUserId = data.session.user.id;
+                    window.currentUserNickname = data.session.user.user_metadata?.nickname;
                 }
             });
 

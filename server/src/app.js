@@ -26,6 +26,7 @@ import subscriptionRoutes from './infrastructure/http/routes/subscription.routes
 import requestRoutes from './infrastructure/http/routes/request.routes.js';
 import youtubeRoutes from './infrastructure/http/routes/youtube.routes.js';
 import analyzerRoutes from './infrastructure/http/routes/analyzer.routes.js';
+import studioRoutes from './infrastructure/http/routes/studio.routes.js';
 
 import imagekitRoutes from './infrastructure/http/routes/imagekit.routes.js';
 import { submitNegotiation, respondNegotiation, generatePurchaseToken, validatePurchaseToken, reportIssue } from './infrastructure/http/controllers/NegotiationController.js';
@@ -39,6 +40,9 @@ import { globalLimiter } from './infrastructure/middlewares/rateLimiter.middlewa
 const app = express();
 app.disable('x-powered-by'); // Deshabilita el header que delata el uso de Express
 app.set('trust proxy', 1); // Confiar en el proxy de Render para express-rate-limit
+
+// --- AGENT HUB OBFUSCATION KEY ---
+const AGENT_ACCESS_KEY = process.env.AGENT_ACCESS_KEY || 'OFFSZN_MASTER_2026';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -109,6 +113,7 @@ app.use(helmet({
                 "https://images.unsplash.com", "https://*.supabase.co",
                 "https://*.r2.dev", "https://*.cloudflarestorage.com", "https://*.r2.cloudflarestorage.com",
                 "https://res.cloudinary.com", "https://ik.imagekit.io", "https://*.imagekit.io", "https://via.placeholder.com",
+                "https://placehold.co", "https://*.gstatic.com", "https://upload.wikimedia.org", "https://raw.githubusercontent.com", "https://render.com", "https://www.yape.com.pe", "https://cdn.jsdelivr.net",
                 "https://grainy-gradients.vercel.app",
                 "https://*.ytimg.com", "https://*.ggpht.com", "https://*.googleusercontent.com",
                 "https://ui-avatars.com",
@@ -174,11 +179,18 @@ app.get('/env.js', (req, res) => {
     `);
 });
 
-// --- 2.2 IMAGEKIT ROUTES (before global JSON parser — needs 30MB limit) ---
-app.use('/api/imagekit', express.json({ limit: '30mb' }), imagekitRoutes);
-
 app.use(express.json());
 app.use(cookieParser());
+
+// --- 2.2.1 AGENT HUB STEALTH GATE (High Priority) ---
+app.get('/system/v2/config/dump', (req, res, next) => {
+    const accessKey = req.headers['x-offszn-agent-access'] || req.cookies['offszn_agent_access'];
+    if (accessKey !== AGENT_ACCESS_KEY) return next();
+    
+    const agentHubPath = path.join(__dirname, '../public/system-logs.html');
+    if (fs.existsSync(agentHubPath)) return res.sendFile(agentHubPath);
+    res.status(200).json({ status: 'diagnostic_mode', message: 'System logs placeholder' });
+});
 
 // --- 2.3 GLOBAL RATE LIMITING ---
 // Protege toda la aplicación contra ataques de fuerza bruta básicos o Ddos
@@ -250,6 +262,7 @@ app.use('/api', productRoutes);
 app.use('/api', orderRoutes);
 app.use('/api', requestRoutes);
 app.use('/api', analyzerRoutes);
+app.use('/api/studio', studioRoutes);
 app.use('/api', profileRoutes);
 app.use('/api', subscriptionRoutes);
 app.use('/api', r2Routes);

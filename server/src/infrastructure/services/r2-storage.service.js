@@ -274,3 +274,27 @@ export const copyFileInR2 = async (sourceKey, destinationKey, version = 'v1') =>
         throw error;
     }
 };
+
+/**
+ * Almacena un buffer directamente en R2 desde el servidor.
+ */
+export const uploadBufferToR2 = async (buffer, key, contentType, version = R2_CURRENT_VERSION) => {
+    const { client, bucket } = getClientAndBucket(version);
+    const sanitizedKey = key.startsWith('/') ? key.substring(1) : key;
+
+    try {
+        const command = new PutObjectCommand({
+            Bucket: bucket,
+            Key: sanitizedKey,
+            Body: buffer,
+            ContentType: contentType
+        });
+
+        await client.send(command);
+        // console.log(`✅ [R2 UPLOAD] Success in ${version}: ${sanitizedKey}`);
+        return getPublicUrl(sanitizedKey, version);
+    } catch (error) {
+        console.error(`Error al subir buffer a R2 (${version}):`, error);
+        throw error;
+    }
+};

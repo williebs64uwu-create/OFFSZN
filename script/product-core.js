@@ -389,7 +389,7 @@ function injectDynamicSEO(product) {
         document.head.appendChild(metaDesc);
     }
     const descText = product.is_free
-        ? `Descarga Plugins VST "${product.name}" por ${producerName}. ${categoryLabel} disponible en OFFSZN.lat`
+        ? `Descarga GRATIS "${product.name}" por ${producerName}. ${categoryLabel} disponible en OFFSZN.lat`
         : `Escucha y compra "${product.name}" por ${producerName}. ${categoryLabel} a $${price}. Licencia disponible en OFFSZN.lat`;
     metaDesc.content = descText;
 
@@ -697,11 +697,11 @@ function renderProductPage(product) {
     // --- 🧪 OPTIMIZATION: Check if it's R2 vs Supabase ---
     const rawImgMain = product.image_url || '/images/portada-default.png';
     const storageVerMain = product.storage_version || product.r2_version || 'v2';
-    
+
     // Explicitly skip R2 signing if storage_version is 'supabase'
     const isR2Main = (storageVerMain !== 'supabase') && window.AuthUtils && window.AuthUtils.isR2Url(rawImgMain);
     const imgPlaceholder = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=';
-    
+
     let finalSrcMain = rawImgMain;
     if (!isR2Main && !rawImgMain.startsWith('http') && !rawImgMain.startsWith('/') && !rawImgMain.startsWith('data:')) {
         const sbUrl = window.SUPABASE_URL || "https://qtjpvztpgfymjhhpoouq.supabase.co";
@@ -1413,8 +1413,8 @@ window.openBlockedPaymentModal = function (producer) {
 
     // 🚨 REGISTRO DE NOTIFICACIÓN PARA EL PRODUCTOR
     // Intentamos obtener quién es el comprador (si está logueado) para una mejor notificación
-    const currentUser = window.AuthUtils && typeof window.AuthUtils.getCurrentUser === 'function' 
-        ? window.AuthUtils.getCurrentUser() 
+    const currentUser = window.AuthUtils && typeof window.AuthUtils.getCurrentUser === 'function'
+        ? window.AuthUtils.getCurrentUser()
         : null;
 
     if (currentUser && currentUser.id !== producer.id) {
@@ -1461,7 +1461,7 @@ window.openBlockedPaymentModal = function (producer) {
 
     const nickname = producer.nickname || 'este productor';
     const email = producer.email || '';
-    
+
     // Build context for message
     const category = (productData?.product_type || 'producto').toLowerCase();
     const productLink = window.location.href;
@@ -1572,10 +1572,10 @@ async function renderBeatSpecifics(product) {
 
         const licenses = licenseKeys.map(key => {
             const offsznKey = `offszn_${key}`;
-            
+
             // --- 1. Identify Product JSON Data with Alias Support ---
             let prodLic = productLicenses[offsznKey] || productLicenses[key] || {};
-            
+
             if (key === 'unlimited') {
                 // Unlimited prioritizes 'exclusive' settings
                 const exclusiveData = productLicenses['offszn_exclusive'] || productLicenses['exclusive'];
@@ -1588,10 +1588,10 @@ async function renderBeatSpecifics(product) {
             }
 
             // --- 2. Identify Producer Settings with Alias Support ---
-            let userLic = (producerSettings && (producerSettings[offsznKey] || producerSettings[key])) 
-                ? (producerSettings[offsznKey] || producerSettings[key]) 
+            let userLic = (producerSettings && (producerSettings[offsznKey] || producerSettings[key]))
+                ? (producerSettings[offsznKey] || producerSettings[key])
                 : {};
-            
+
             if (key === 'unlimited' && producerSettings) {
                 const exclusiveUserData = producerSettings['offszn_exclusive'] || producerSettings['exclusive'];
                 if (exclusiveUserData && Object.keys(exclusiveUserData).length > 0) userLic = exclusiveUserData;
@@ -1675,7 +1675,7 @@ async function renderBeatSpecifics(product) {
 
                 enabledLicenses.forEach(lic => {
                     const price = parseFloat(lic.price) || 0;
-                    const priceStr = price > 0 ? (window.CurrencyManager ? window.CurrencyManager.format(price) : `$${price.toFixed(2)}`) : 'PLUGINS VST';
+                    const priceStr = price > 0 ? (window.CurrencyManager ? window.CurrencyManager.format(price) : `$${price.toFixed(2)}`) : 'GRATIS';
 
                     const card = document.createElement('div');
                     card.className = `license-card-v2 ${isMobile ? 'mobile-lic-card' : 'desktop-lic-card'} ${lic.id === selectedId ? 'selected' : ''}`;
@@ -1741,7 +1741,7 @@ async function renderBeatSpecifics(product) {
                     freeBtn.style.margin = '10px auto 0';
                     freeBtn.style.fontSize = '0.9rem';
                     freeBtn.style.color = '#ccc';
-                    freeBtn.innerHTML = '<i class="bi bi-download"></i> DESCARGA PLUGINS VST MP3 CON TAG';
+                    freeBtn.innerHTML = '<i class="bi bi-download"></i> DESCARGA GRATIS MP3 CON TAG';
                     freeBtn.onclick = () => {
                         if (window.openDownloadGateModal) window.openDownloadGateModal(product.audio_url, product.producer?.nickname, product.id);
                         else window.open(product.audio_url, '_blank');
@@ -1810,7 +1810,7 @@ window.openLicenseModal = function (lic, product) {
     }
 
     const price = lic.price || 0;
-    const priceStr = price > 0 ? `$${parseFloat(price).toFixed(2)}` : 'PLUGINS VST';
+    const priceStr = price > 0 ? `$${parseFloat(price).toFixed(2)}` : 'GRATIS';
 
     backdrop.innerHTML = `
         <div class="share-modal-content lic-modal" id="modal-lic-container">
@@ -2025,7 +2025,7 @@ window.openLicenseComparisonModal = function (licenses) {
 
                     <!-- Price Row -->
                     <div class="compare-cell feature-col">Precio</div>
-                    ${enabledLicenses.map(l => `<div class="compare-cell price">${parseFloat(l.price) > 0 ? '$' + parseFloat(l.price).toFixed(2) : 'PLUGINS VST'}</div>`).join('')}
+                    ${enabledLicenses.map(l => `<div class="compare-cell price">${parseFloat(l.price) > 0 ? '$' + parseFloat(l.price).toFixed(2) : 'GRATIS'}</div>`).join('')}
 
                     <!-- MP3 -->
                     <div class="compare-cell feature-col">MP3</div>
@@ -2106,7 +2106,7 @@ function renderPresetSpecifics(product) {
     const isTrulyFree = product.is_free && (Number(product.price_basic) === 0 || !product.price_basic);
 
     if (isTrulyFree) {
-        buyBtn.innerHTML = 'DESCARGA PLUGINS VST';
+        buyBtn.innerHTML = 'DESCARGA GRATIS';
         buyBtn.onclick = () => {
             const downloadUrl = product.kit_url || product.download_url_wav || product.download_url_stems || product.wav_url || product.stems_url || product.audio_url;
             if (window.openDownloadGateModal) {
@@ -2182,7 +2182,7 @@ function renderGenericSpecifics(product) {
 
     const isTrulyFree = product.is_free && (parseFloat(product.price_basic) || 0) === 0;
     if (isTrulyFree) {
-        buyBtn.innerHTML = 'DESCARGAR PLUGINS VST';
+        buyBtn.innerHTML = 'DESCARGAR GRATIS';
         buyBtn.onclick = () => {
             const downloadUrl = product.download_url || product.audio_url;
             window.open(downloadUrl, '_blank');
@@ -2212,7 +2212,7 @@ function renderKitSpecifics(product) {
     const isTrulyFree = product.is_free && (parseFloat(product.price_basic) || 0) === 0;
     if (isTrulyFree) {
         // Free Product: Show "DESCARGA GRATIS" ONLY (Clean)
-        buyBtn.innerHTML = `DESCARGA PLUGINS VST`;
+        buyBtn.innerHTML = `DESCARGA GRATIS`;
         buyBtn.onclick = () => {
             const downloadUrl = product.kit_url || product.download_url_wav || product.download_url_stems || product.wav_url || product.stems_url || product.audio_url;
             if (window.openDownloadGateModal) {
@@ -2237,7 +2237,7 @@ function renderKitSpecifics(product) {
         const freeBtn = document.createElement('button');
         freeBtn.className = 'btn-minimal-link';
         freeBtn.style.margin = '10px auto';
-        freeBtn.innerHTML = `<i class="bi bi-arrow-down-circle"></i> Descargar Demo / Plugins VST`;
+        freeBtn.innerHTML = `<i class="bi bi-arrow-down-circle"></i> Descargar GRATIS`;
         freeBtn.onclick = () => window.open(product.audio_url, '_blank');
         buyBox.appendChild(freeBtn);
     }
@@ -2680,7 +2680,7 @@ function renderRelatedGrid(products, container) {
 
         const rawImgRelated = p.image_url || '/images/portada-default.png';
         const storageVerRelated = p.storage_version || p.r2_version || 'v2';
-        
+
         // Explicitly skip R2 signing if storage_version is 'supabase'
         const isR2Related = (storageVerRelated !== 'supabase') && window.AuthUtils && window.AuthUtils.isR2Url(rawImgRelated);
         const placeholder = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=';

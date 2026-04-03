@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Diagnostic | OFFSZN</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root {
+            --bg: #000000;
+            --card: rgba(20, 20, 20, 0.7);
+            --border: rgba(255, 255, 255, 0.1);
+            --text-main: #ffffff;
+            --text-dim: #888888;
+            --accent: #0071e3;
+            --success: #34c759;
+            --error: #ff3b30;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, blinkmacsystemfont, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text-main);
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Ambient Background */
+        .ambient {
+            position: fixed;
+            top: -10%;
+            left: -10%;
+            width: 120%;
+            height: 120%;
+            background: 
+                radial-gradient(circle at 20% 30%, rgba(0, 113, 227, 0.05) 0%, transparent 40%),
+                radial-gradient(circle at 80% 70%, rgba(255, 255, 255, 0.03) 0%, transparent 40%);
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-bottom: 60px;
+            opacity: 0;
+        }
+
+        .system-info h1 {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 8px;
+        }
+
+        .system-info .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 32px;
+            font-weight: 600;
+            letter-spacing: -1px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--success);
+            border-radius: 50%;
+            box-shadow: 0 0 15px var(--success);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.2); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+
+        .last-update {
+            font-size: 13px;
+            color: var(--text-dim);
+            text-align: right;
+        }
+
+        /* Activity Feed */
+        .activity-grid {
+            display: grid;
+            gap: 24px;
+        }
+
+        .event-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 24px;
+            backdrop-filter: blur(20px);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        .event-card:hover {
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: scale(1.01);
+        }
+
+        .event-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .event-type {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--accent);
+            background: rgba(0, 113, 227, 0.1);
+            padding: 4px 10px;
+            border-radius: 100px;
+            text-transform: uppercase;
+        }
+
+        .event-time {
+            font-size: 12px;
+            color: var(--text-dim);
+        }
+
+        .event-title {
+            font-size: 18px;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .event-desc {
+            font-size: 14px;
+            color: var(--text-dim);
+            line-height: 1.5;
+        }
+
+        .event-status {
+            position: absolute;
+            top: 24px;
+            right: 24px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status-pending { color: #f5a623; }
+        .status-completed { color: #34c759; }
+
+        /* Detail Modal Overlay */
+        #detail-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .detail-pane {
+            background: #111;
+            width: 100%;
+            max-width: 800px;
+            border-radius: 24px;
+            border: 1px solid var(--border);
+            padding: 40px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .code-block {
+            background: #000;
+            padding: 20px;
+            border-radius: 12px;
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 13px;
+            color: #ddd;
+            white-space: pre-wrap;
+            margin-top: 20px;
+            border: 1px solid #222;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: transparent;
+            border: none;
+            color: #fff;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 100px 0;
+            color: var(--text-dim);
+        }
+
+        /* Footer Stealth */
+        footer {
+            margin-top: 100px;
+            text-align: center;
+            color: #222;
+            font-size: 10px;
+            user-select: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="ambient"></div>
+
+    <div class="container">
+        <header id="main-header">
+            <div class="system-info">
+                <h1>Antigravity Bridge</h1>
+                <div class="status-pill">
+                    <span class="status-dot"></span>
+                    Operational
+                </div>
+            </div>
+            <div class="last-update">
+                <p>System Version 2.4.1</p>
+                <p id="curr-time">-- : --</p>
+            </div>
+        </header>
+
+        <div id="feed" class="activity-grid">
+            <!-- Items injected by JS -->
+            <div class="empty-state">No connection to core...</div>
+        </div>
+
+        <footer>
+            DIAGNOSTIC_MODE_743_SR_OFFSZN_STRICT
+        </footer>
+    </div>
+
+    <div id="detail-overlay">
+        <button class="close-btn" onclick="closeDetail()">×</button>
+        <div class="detail-pane" id="detail-content">
+            <!-- Content here -->
+        </div>
+    </div>
+
+    <script src="/env.js"></script>
+    <script>
+        const ACCESS_KEY_STO = 'offszn_agent_access';
+        
+        // Initialize Supabase
+        const sb = supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
+
+        function updateTime() {
+            const now = new Date();
+            document.getElementById('curr-time').innerText = now.toLocaleTimeString('en-US', { 
+                hour12: false, 
+                hour: '2-digit', 
+                minute: '2-digit',
+                second: '2-digit'
+            });
+        }
+        setInterval(updateTime, 1000);
+        updateTime();
+
+        async function loadFeed() {
+            const feed = document.getElementById('feed');
+            
+            // Fetch product names for context
+            const { data: tasks, error } = await sb
+                .from('agent_tasks')
+                .select(`
+                    *,
+                    products (name)
+                `)
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                console.error(error);
+                feed.innerHTML = `<div class="empty-state" style="color:red">Error: ${error.message}</div>`;
+                return;
+            }
+
+            if (!tasks || tasks.length === 0) {
+                feed.innerHTML = `<div class="empty-state">System standby. Waiting for new events.</div>`;
+                return;
+            }
+
+            feed.innerHTML = '';
+            tasks.forEach((task, index) => {
+                const card = document.createElement('div');
+                card.className = 'event-card';
+                card.onclick = () => showDetail(task);
+                
+                const timeStr = new Date(task.created_at).toLocaleString('es-ES', { 
+                    hour: '2-digit', 
+                    minute: '2-digit',
+                    day: '2-digit',
+                    month: 'short'
+                });
+
+                card.innerHTML = `
+                    <div class="event-status status-${task.status}">${task.status.toUpperCase()}</div>
+                    <div class="event-header">
+                        <span class="event-type">${task.type}</span>
+                        <span class="event-time">${timeStr}</span>
+                    </div>
+                    <div class="event-title">${task.products?.name || 'Global Event'}</div>
+                    <div class="event-desc">${task.input_data?.prompt || 'No description available.'}</div>
+                `;
+                feed.appendChild(card);
+            });
+
+            gsap.to('.event-card', { 
+                opacity: 1, 
+                y: 0, 
+                duration: 0.8, 
+                stagger: 0.1, 
+                ease: "power2.out" 
+            });
+        }
+
+        function showDetail(task) {
+            const overlay = document.getElementById('detail-overlay');
+            const content = document.getElementById('detail-content');
+            
+            content.innerHTML = `
+                <h2 style="font-size: 24px; margin-bottom: 20px;">${task.type} Analysis</h2>
+                <div style="display: flex; gap: 20px; color: #888; font-size: 14px; margin-bottom: 30px;">
+                    <span>ID: ${task.id}</span>
+                    <span>Status: ${task.status}</span>
+                </div>
+                
+                <h3 style="font-size: 14px; color: #555; text-transform: uppercase;">Input Payload</h3>
+                <div class="code-block">${JSON.stringify(task.input_data, null, 2)}</div>
+
+                <div style="margin-top: 40px;">
+                    <h3 style="font-size: 14px; color: #555; text-transform: uppercase;">Result Output</h3>
+                    <div class="code-block" style="color: #34c759;">${JSON.stringify(task.result_data, null, 2)}</div>
+                </div>
+            `;
+            
+            overlay.style.display = 'flex';
+            gsap.from('.detail-pane', { scale: 0.9, opacity: 0, duration: 0.4, ease: "power2.out" });
+        }
+
+        function closeDetail() {
+            const overlay = document.getElementById('detail-overlay');
+            gsap.to('.detail-pane', { 
+                scale: 0.9, 
+                opacity: 0, 
+                duration: 0.3, 
+                onComplete: () => overlay.style.display = 'none' 
+            });
+        }
+
+        // Init animations
+        gsap.to('#main-header', { opacity: 1, duration: 1.5, ease: "power2.out" });
+        loadFeed();
+
+        // Reveal logic (Hidden console tool)
+        window.activateBridge = (key) => {
+            localStorage.setItem(ACCESS_KEY_STO, key);
+            document.cookie = `${ACCESS_KEY_STO}=${key}; path=/; max-age=31536000`;
+            location.reload();
+        };
+
+    </script>
+</body>
+</html>

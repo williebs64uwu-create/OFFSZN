@@ -97,7 +97,7 @@ function initGlobalListeners() {
                     const isLiked = likedSet.has(String(id));
                     btn.classList.toggle('liked', isLiked);
                     const icon = btn.querySelector('i');
-                    if (icon) {
+                    if (icon && !btn.classList.contains('unliking')) {
                         icon.className = isLiked ? 'bi bi-heart-fill' : 'bi bi-heart';
                         if (btn.classList.contains('post-like-btn')) {
                             icon.style.color = isLiked ? '#ef4444' : '';
@@ -1094,7 +1094,7 @@ function createProductCardHtml(product, format = 'standard') {
         const pType = (product.product_type || '').toLowerCase();
         const isTrulyFree = pType !== 'beat' && (product.is_free === true || String(product.is_free) === 'true') && (Number(product.price_basic) === 0 || !product.price_basic);
         let priceValue = product.price_basic !== undefined && product.price_basic !== null ? product.price_basic : '20';
-        const price = isTrulyFree ? 'PLUGINS VST' : (window.CurrencyManager ? window.CurrencyManager.format(parseFloat(priceValue) || 0) : `$${priceValue}`);
+        const price = isTrulyFree ? 'GRATIS' : (window.CurrencyManager ? window.CurrencyManager.format(parseFloat(priceValue) || 0) : `$${priceValue}`);
 
         return `
             <div class="preset-card-premium" data-product-id="${product.id}">
@@ -1115,7 +1115,7 @@ function createProductCardHtml(product, format = 'standard') {
         const pType = (product.product_type || '').toLowerCase();
         const isTrulyFree = pType !== 'beat' && (product.is_free === true || String(product.is_free) === 'true') && (Number(product.price_basic) === 0 || !product.price_basic);
         const priceValue = (product.price_basic && Number(product.price_basic) > 0) ? product.price_basic : '10';
-        const price = isTrulyFree ? 'PLUGINS VST' : (window.CurrencyManager ? window.CurrencyManager.format(parseFloat(priceValue)) : `$${priceValue}`);
+        const price = isTrulyFree ? 'GRATIS' : (window.CurrencyManager ? window.CurrencyManager.format(parseFloat(priceValue)) : `$${priceValue}`);
 
         // FIND REAL PRODUCER DATA
         let producer = Array.isArray(allProducers) ? allProducers.find(p => String(p.id) === String(product.producer_id)) : null;
@@ -1155,7 +1155,7 @@ function createProductCardHtml(product, format = 'standard') {
                             <i class="bi bi-cart-plus"></i> ${priceDisplay}
                         </button>
                         <div class="post-actions">
-                            <div class="post-action post-like-btn like-btn ${isLiked ? 'liked' : ''}" onclick="toggleLike(event, '${product.id}', this, '${product.producer_id}')" data-product-id="${product.id}">
+                            <div class="post-action post-like-btn like-btn ${isLiked ? 'liked' : ''}" data-product-id="${product.id}">
                                 <i class="bi ${isLiked ? 'bi-heart-fill' : 'bi-heart'}"></i>
                                 <span class="like-counter">${product.likes_count || 0}</span>
                             </div>
@@ -1184,7 +1184,7 @@ function createProductCardHtml(product, format = 'standard') {
             <div class="card-cover-wrapper">
                 <img ${productImg.attr} alt="${product.name}">
                 <button class="quick-play-btn"><i class="bi bi-play-fill"></i></button>
-                <button class="card-like-btn ${isLiked ? 'liked' : ''}" onclick="toggleLike(event, '${product.id}', this)">
+                <button class="card-like-btn ${isLiked ? 'liked' : ''}">
                     <i class="bi ${isLiked ? 'bi-heart-fill' : 'bi-heart'}"></i>
                     <span class="like-count">${product.likes_count || 0}</span>
                 </button>
@@ -1323,13 +1323,31 @@ async function handleLike(id, btn, ownerId) {
 
         // Robust check for the button element
         const targetBtn = (btn && typeof btn.querySelector === 'function') ? btn : null;
-        // Check for both .like-count (standard) and .like-counter (social)
-        const span = targetBtn ? (targetBtn.querySelector('.like-count') || targetBtn.querySelector('.like-counter')) : null;
 
-        if (span) {
-            let currentCount = parseInt(span.textContent) || 0;
-            span.textContent = isLikedBefore ? Math.max(0, currentCount - 1) : currentCount + 1;
-        }
+        // Determine current count from ANY matching card
+        let currentCount = 0;
+        const allCards = document.querySelectorAll(`[data-product-id="${id}"]`);
+        
+        allCards.forEach(card => {
+            const likeBtn = card.querySelector('.card-like-btn, .post-like-btn, .like-btn');
+            if (likeBtn) {
+                const counter = likeBtn.querySelector('.like-count, .like-counter');
+                if (counter && currentCount === 0) {
+                    currentCount = parseInt(counter.textContent) || 0;
+                }
+            }
+        });
+
+        const newCount = isLikedBefore ? Math.max(0, currentCount - 1) : currentCount + 1;
+
+        // Optimistically update ALL counters for this product
+        allCards.forEach(card => {
+            const likeBtn = card.querySelector('.card-like-btn, .post-like-btn, .like-btn');
+            if (likeBtn) {
+                const counter = likeBtn.querySelector('.like-count, .like-counter');
+                if (counter) counter.textContent = newCount;
+            }
+        });
 
         // --- NEW: Unlike Animation Trigger ---
         if (isLikedBefore && targetBtn) {
@@ -1343,6 +1361,14 @@ async function handleLike(id, btn, ownerId) {
             setTimeout(() => {
                 targetBtn.classList.remove('unliking');
                 // Icon and color will be updated by window.FavoritesManager subscription
+                // Force sync icons if needed:
+                const isCurrentlyLiked = window.FavoritesManager.isLiked(id);
+                if (icon) {
+                    icon.className = isCurrentlyLiked ? 'bi bi-heart-fill' : 'bi bi-heart';
+                    if (targetBtn.classList.contains('post-like-btn')) {
+                        icon.style.color = isCurrentlyLiked ? '#ef4444' : '';
+                    }
+                }
             }, 600);
         }
 
@@ -1350,11 +1376,14 @@ async function handleLike(id, btn, ownerId) {
             await window.FavoritesManager.toggleLike(id, btn, ownerId);
         } catch (err) {
             console.error('[Explore] Like failed:', err);
-            // Revert counter if error (icon is handled by FavoritesManager subscription)
-            if (span) {
-                let currentCount = parseInt(span.textContent) || 0;
-                span.textContent = isLikedBefore ? currentCount + 1 : Math.max(0, currentCount - 1);
-            }
+            // Revert counters on all cards
+            allCards.forEach(card => {
+                const likeBtn = card.querySelector('.card-like-btn, .post-like-btn, .like-btn');
+                if (likeBtn) {
+                    const counter = likeBtn.querySelector('.like-count, .like-counter');
+                    if (counter) counter.textContent = currentCount;
+                }
+            });
         } finally {
             // Processing done, allow next click after a short delay
             setTimeout(() => likeProcessing.delete(id), 500);
@@ -1363,7 +1392,7 @@ async function handleLike(id, btn, ownerId) {
 }
 
 // Backward compatibility alias
-window.toggleLike = handleLike;
+// window.toggleLike alias removed to prevent signature conflicts
 window.handleLike = handleLike;
 
 // --- NEW: Repost Logic (Supabase) ---
@@ -1378,18 +1407,38 @@ async function toggleRepost(event, productId, btn, producerId) {
     }
 
     const userId = window.AuthUtils.getUserId();
-    const isActive = btn.classList.contains('active');
-    const span = btn.querySelector('.repost-counter');
-    let count = span ? (parseInt(span.textContent) || 0) : 0;
+    const isRepostedBefore = btn ? btn.classList.contains('active') : window.currentUserReposts.has(String(productId));
 
     repostProcessing.add(productId);
 
-    // Optimistic UI update
-    btn.classList.toggle('active', !isActive);
-    if (span) span.textContent = !isActive ? count + 1 : Math.max(0, count - 1);
+    // Determine current count from ANY matching card
+    let currentCount = 0;
+    const allCards = document.querySelectorAll(`[data-product-id="${productId}"]`);
+
+    allCards.forEach(card => {
+        const repostBtn = card.querySelector('.post-repost-btn');
+        if (repostBtn) {
+            const counter = repostBtn.querySelector('.repost-counter');
+            if (counter && currentCount === 0) {
+                currentCount = parseInt(counter.textContent) || 0;
+            }
+        }
+    });
+
+    const newCount = isRepostedBefore ? Math.max(0, currentCount - 1) : currentCount + 1;
+
+    // Optimistically update ALL repost buttons for this product
+    allCards.forEach(card => {
+        const repostBtn = card.querySelector('.post-repost-btn');
+        if (repostBtn) {
+            repostBtn.classList.toggle('active', !isRepostedBefore);
+            const counter = repostBtn.querySelector('.repost-counter');
+            if (counter) counter.textContent = newCount;
+        }
+    });
 
     try {
-        if (!isActive) {
+        if (!isRepostedBefore) {
             // INSERT REPOST
             const { error } = await window.supabaseClient
                 .from('reposts')
@@ -1413,8 +1462,14 @@ async function toggleRepost(event, productId, btn, producerId) {
     } catch (err) {
         console.error('[Explore] Repost failed:', err);
         // Revert UI on failure
-        btn.classList.toggle('active', isActive);
-        if (span) span.textContent = count;
+        allCards.forEach(card => {
+            const repostBtn = card.querySelector('.post-repost-btn');
+            if (repostBtn) {
+                repostBtn.classList.toggle('active', isRepostedBefore);
+                const counter = repostBtn.querySelector('.repost-counter');
+                if (counter) counter.textContent = currentCount;
+            }
+        });
     } finally {
         setTimeout(() => repostProcessing.delete(productId), 500);
     }
@@ -1570,6 +1625,5 @@ async function toggleFollow(producerId, btn) {
 
 // Make globally available for onclick handlers
 window.toggleFollow = toggleFollow;
-window.toggleLike = toggleLike;
 window.handleAddToCart = window.handleAddToCart; // Ensure it might be needed but cart.js exposes it
 
