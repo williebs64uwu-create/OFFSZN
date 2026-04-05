@@ -246,9 +246,8 @@ document.addEventListener('DOMContentLoaded', () => {
               }
             } else if (profileCheck && profileCheck.nickname) {
               // Usuario Veterano -> Perfil Público (Directo)
-              const profilePath = `/@${profileCheck.nickname}`;
-              console.log(`Usuario completo. Redirigiendo a ${profilePath}`);
-              window.location.href = profilePath;
+              console.log(`Usuario completo. Redirigiendo a /explorar`);
+              window.location.href = '/explorar';
             } else {
               // Row exists but no nickname
               console.log("Usuario incompleto. Redirigiendo a /pages/welcome.html");
@@ -419,9 +418,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         showMessage(messageDiv, '¡Contraseña actualizada! Redirigiendo...', false);
 
-        // Wait a sec then redirect to home
+        // Wait a sec then redirect to explore
         setTimeout(() => {
-          window.location.href = '/';
+          window.location.href = '/explorar.html';
         }, 2000);
 
       } catch (error) {

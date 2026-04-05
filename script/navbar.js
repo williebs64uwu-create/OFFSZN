@@ -1055,7 +1055,7 @@ async function initAuth() {
             const isProtected = protectedPrefixes.some(p => window.location.pathname.includes(p));
 
             if (isProtected) {
-                window.location.href = '/';
+                window.location.href = '/explorar.html';
             } else {
                 console.log("Navbar: User signed out on public page. Updating UI only.");
             }
@@ -1278,7 +1278,7 @@ window.handleLogout = async function (e) {
     if (typeof supabaseClient !== 'undefined') {
         await supabaseClient.auth.signOut();
         localStorage.removeItem('authToken'); // Explicitly clear token
-        window.location.href = '/'; // Redirect to ensure state refresh
+        window.location.href = '/explorar'; // Redirect to ensure state refresh
     }
 }
 

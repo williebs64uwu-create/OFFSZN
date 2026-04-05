@@ -430,6 +430,7 @@
                     else if (n.type === 'new_message') extraId = n.data?.conversation_id || '';
                     else if (n.type === 'custom_request') extraId = n.data?.request_id || '';
                     else if (n.type?.startsWith('negotiate_') || n.type === 'negotiate_offer') extraId = n.data?.product_id || '';
+                    else if (n.type === 'system_alert') extraId = n.data?.action || '';
 
                     extraId = extraId ? extraId.toString().replace(/"/g, '&quot;') : '';
 
@@ -656,8 +657,8 @@
                 finalUrl = extraId ? `/comunidad/feed.html?reqId=${extraId}` : '/comunidad/feed.html';
             } else if (type?.startsWith('negotiate_') || type === 'negotiate_offer') {
                 finalUrl = '/cuenta/negociar';
-            } else if (type === 'payment_method_missing') {
-                finalUrl = '/transacciones.html';
+            } else if (type === 'payment_method_missing' || (type === 'system_alert' && extraId === 'open_paypal_settings')) {
+                finalUrl = '/transacciones';
             }
         }
 

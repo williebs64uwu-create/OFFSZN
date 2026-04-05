@@ -11,8 +11,8 @@ import { supabase } from '../../database/connection.js';
 
 // 🔥 Plan limits (must match auth-utils.js PLAN_LIMITS)
 const YT_PLAN_LIMITS = {
-    free: 1,
-    starter: 5,
+    free: 3,
+    starter: 10,
     pro: 30
 };
 

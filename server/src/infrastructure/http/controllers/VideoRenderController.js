@@ -20,7 +20,7 @@ import ffmpegPath from '@ffmpeg-installer/ffmpeg';
 import { supabase } from '../../database/connection.js';
 
 // Plan limits (must match auth-utils.js)
-const YT_PLAN_LIMITS = { free: 1, starter: 5, pro: 30 };
+const YT_PLAN_LIMITS = { free: 3, starter: 10, pro: 30 };
 
 // Allowed MIME types
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'];

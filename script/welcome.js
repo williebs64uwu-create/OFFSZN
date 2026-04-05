@@ -429,7 +429,7 @@ document.addEventListener('DOMContentLoaded', () => {
           title: '¡Configura tu PayPal!',
           message: 'Bienvenido a <strong>OFFSZN</strong>. Para empezar a recibir ventas de tus beats y kits, por favor configura tu correo de PayPal en tus ajustes.',
           read: false,
-          data: { action: 'open_paypal_settings', link: '/cuenta/ajustes' }
+          data: { action: 'open_paypal_settings', link: '/transacciones' }
         }]);
       }
 

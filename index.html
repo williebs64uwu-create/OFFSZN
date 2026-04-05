@@ -16,9 +16,11 @@
   <!-- Global Styles -->
   <link rel="stylesheet" href="/css/auth-ui.css">
   <link rel="stylesheet" href="/css/global-overlays.css">
+  <link rel="stylesheet" href="/css/navbar.css">
+  <link rel="stylesheet" href="/css/footer.css">
 
   <!-- Custom Premium Landing Style -->
-  <link rel="stylesheet" href="/css/premium-landing.css?v=6">
+  <link rel="stylesheet" href="/css/premium-landing.css?v=13">
 
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -38,7 +40,7 @@
   <script src="/env.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.48.1"></script>
   <script src="/script/auth-utils.js?v=11"></script>
-  <script src="/script/notifications.js?v=26"></script>
+
 </head>
 
 <body>
@@ -61,6 +63,15 @@
             }
           }
         });
+        // Auth: toggle navbar state after HTML is injected
+        function tryAuthInit(retries) {
+          if (typeof initAuthState === 'function') {
+            initAuthState();
+          } else if (retries > 0) {
+            setTimeout(() => tryAuthInit(retries - 1), 200);
+          }
+        }
+        tryAuthInit(15);
       });
   </script>
 
@@ -75,15 +86,10 @@
 
         <!-- Left: Branding & Text -->
         <div class="hero-v4-content">
-          <a href="/pages/register.html" class="hero-badge">
-            <span class="badge-tag">NUEVO</span>
-            <span class="badge-text">Crece 10x más rápido con OFFSZN</span>
-            <i class="bi bi-arrow-right"></i>
-          </a>
 
-          <h1 class="hero-v4-title">Automatiza tu canal de <br>Youtube de beats</h1>
-          <p class="hero-v4-subtext">Genera videos para redes <br>Lanza tu tienda,
-            personaliza y vende en segundos.</p>
+          <h1 class="hero-v4-title">Automatiza tu canal de Youtube de beats</h1>
+          <p class="hero-v4-subtext">Genera videos para redes, lanza tu tienda, personaliza y vende en segundos.</p>
+
 
           <!-- CTA Area: Two Buttons -->
           <div class="hero-v4-cta-wrap">
@@ -101,10 +107,16 @@
           </ul>
         </div>
 
-        <!-- Right/Abstract Visual -->
+        <!-- Right Section: Video Showcase -->
         <div class="hero-v4-visual">
-          <img src="https://ik.imagekit.io/lrigu76hy/tailark/abstract-bg.jpg?updatedAt=1745733473768"
-            alt="OFFSZN Abstract Design" class="abstract-img">
+          <div class="hero-video-wrapper"
+            style="border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 0 50px rgba(255,255,255,0.05); overflow: hidden; border-radius: 20px;">
+            <video autoplay muted loop playsinline class="hero-product-video"
+              style="width: 100%; aspect-ratio: 16/9; object-fit: cover; display: block;">
+              <source src="/images/2026-04-03%2017-24-45.mp4" type="video/mp4">
+              Tu navegador no soporta el elemento de video.
+            </video>
+          </div>
         </div>
 
       </div>
@@ -200,7 +212,6 @@
       <div class="foundation-container">
         <div class="foundation-header">
           <h2 class="foundation-title">Ahorra tiempo y <br> enfócate en Crear </h2>
-
         </div>
 
         <div class="foundation-grid">
@@ -245,6 +256,485 @@
         </div>
       </div>
     </section>
+
+    <!-- ==================== SECTION: HOW IT WORKS (3 PASOS) ==================== -->
+    <section class="how-it-works-section" id="how-it-works">
+      <div class="how-it-works-container">
+        <div class="how-header-centered">
+          <div class="section-label">PROCESO</div>
+          <h2 class="section-title-large">En 3 pasos simples</h2>
+        </div>
+
+        <div class="steps-row">
+          <div class="step-card">
+            <span class="step-num">01</span>
+            <h3>Sube tu Beat</h3>
+            <p>Arrastra tu archivo MP3 y tu portada. Nuestro sistema procesa el BPM y KEY automático
+            </p>
+          </div>
+
+          <div class="step-card">
+            <span class="step-num">02</span>
+            <h3>Personaliza</h3>
+            <p>Elige el estilo de visualizer y genera tu video.</p>
+          </div>
+
+          <div class="step-card">
+            <span class="step-num">03</span>
+            <h3>Exporta y Vende</h3>
+            <p>Tu video se sube a youtube automáticamente y en tu tienda se actualiza con el nuevo
+              beat creado en tu perfil.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== SECTION: TESTIMONIALS (INFINITE SCROLL) ==================== -->
+    <section class="testimonials-section" id="testimonials">
+      <div class="testimonials-header">
+        <div class="section-label">COMUNIDAD</div>
+        <h2>Lo que dice nuestra comunidad</h2>
+      </div>
+
+      <div class="testimonials-container">
+        <div class="testimonials-columns-grid">
+          <!-- Columna 1 -->
+          <div class="testimonials-column col-1">
+            <div class="testimonials-scroll-track col-speed-1">
+              <!-- Jorge Gutierrez (ares) -->
+              <a href="/@ares" class="testimonial-card-v2">
+                <p class="testi-text">"Automatizar mis releases cambió las reglas del juego. Subo Beats 5x más rápido
+                  que antes."</p>
+                <div class="testi-user">
+                  <img src="https://ik.imagekit.io/6gzqp4xam/avatars/a07ba6ef-278c-489b-b6be-c27259874898.jpg"
+                    alt="Jorge Gutierrez">
+                  <div class="testi-info">
+                    <h4>Jorge Gutierrez</h4>
+                    <span>@ares</span>
+                  </div>
+                </div>
+              </a>
+              <!-- Mateo Gonzalez (koimattoru) -->
+              <a href="/@koimattoru" class="testimonial-card-v2">
+                <p class="testi-text">"El sistema de 0% comisiones me ha permitido reinvertir en mejores equipos. Ya no
+                  le regalo mi dinero a plataformas de terceros."</p>
+                <div class="testi-user">
+                  <img src="https://ik.imagekit.io/6gzqp4xam/avatars/5deec33a-a343-4d1c-a659-607dce6aea21.jpg"
+                    alt="Mateo Gonzalez">
+                  <div class="testi-info">
+                    <h4>Mateo Gonzalez</h4>
+                    <span>@koimattoru</span>
+                  </div>
+                </div>
+              </a>
+              <!-- Daniel Alonso (daniel) -->
+              <a href="/@daniel" class="testimonial-card-v2">
+                <p class="testi-text">"OFFSZN cambió mi forma de trabajar. Antes tardaba 2 días en editar un video para
+                  YouTube, ahora lo hago en segundos."</p>
+                <div class="testi-user">
+                  <img src="https://ik.imagekit.io/6gzqp4xam/avatars/33475582-34d4-449c-bf91-2d39b2f83125.jpg"
+                    alt="Daniel Alonso">
+                  <div class="testi-info">
+                    <h4>Daniel Alonso</h4>
+                    <span>@daniel</span>
+                  </div>
+                </div>
+              </a>
+              <!-- Duplicados para loop infinito -->
+              <a href="/@ares" class="testimonial-card-v2">
+                <p class="testi-text">"Automatizar mis releases cambió las reglas del juego. Subo Beats 5x más rápido
+                  que antes."</p>
+                <div class="testi-user">
+                  <img src="https://ik.imagekit.io/6gzqp4xam/avatars/a07ba6ef-278c-489b-b6be-c27259874898.jpg"
+                    alt="Jorge Gutierrez">
+                  <div class="testi-info">
+                    <h4>Jorge Gutierrez</h4>
+                    <span>@ares</span>
+                  </div>
+                </div>
+              </a>
+              <a href="/@koimattoru" class="testimonial-card-v2">
+                <p class="testi-text">"El sistema de 0% comisiones me ha permitido reinvertir en mejores equipos. Ya no
+                  le regalo mi dinero a plataformas de terceros."</p>
+                <div class="testi-user">
+                  <img src="https://ik.imagekit.io/6gzqp4xam/avatars/5deec33a-a343-4d1c-a659-607dce6aea21.jpg"
+                    alt="Mateo Gonzalez">
+                  <div class="testi-info">
+                    <h4>Mateo Gonzalez</h4>
+                    <span>@koimattoru</span>
+                  </div>
+                </div>
+              </a>
+              <a href="/@daniel" class="testimonial-card-v2">
+                <p class="testi-text">"OFFSZN cambió mi forma de trabajar. Antes tardaba 2 días en editar un video para
+                  YouTube, ahora lo hago en segundos."</p>
+                <div class="testi-user">
+                  <img src="https://ik.imagekit.io/6gzqp4xam/avatars/33475582-34d4-449c-bf91-2d39b2f83125.jpg"
+                    alt="Daniel Alonso">
+                  <div class="testi-info">
+                    <h4>Daniel Alonso</h4>
+                    <span>@daniel</span>
+                  </div>
+                </div>
+              </a>
+            </div>
+          </div>
+
+          <!-- Columna 2 -->
+          <div class="testimonials-column col-2">
+            <div class="testimonials-scroll-track col-speed-2">
+              <!-- Daniel Borbón (pallooou) -->
+              <a href="/@pallooou" class="testimonial-card-v2">
+                <p class="testi-text">"La gestión de licencias es súper flexible. Puedo vender exactamente como quiero y
+                  cobrar al instante."</p>
+                <div class="testi-user">
+                  <img src="https://ik.imagekit.io/6gzqp4xam/avatars/18f1d12c-8268-4898-bf6a-a660b9df117d.jpg"
+                    alt="Daniel Borbón">
+                  <div class="testi-info">
+                    <h4>Daniel Borbón</h4>
+                    <span>@pallooou</span>
+                  </div>
+                </div>
+              </a>
+              <!-- Alex Maidana (prodbymaidana) -->
+              <a href="/@prodbymaidana" class="testimonial-card-v2">
+                <p class="testi-text">"No sabía nada de edición de video, pero con OFFSZN solo arrastras y ya tienes
+                  contenido de alta calidad."</p>
+                <div class="testi-user">
+                  <img
+                    src="https://ik.imagekit.io/6gzqp4xam/avatars/avatar_964fc649-7479-4a4f-b089-03fb281809ff_zMKkMGggq?tr=width-500,height-500,cropType-maintain_ratio,focus-face&v=1774817095593"
+                    alt="Alex Maidana">
+                  <div class="testi-info">
+                    <h4>Alex Maidana</h4>
+                    <span>@prodbymaidana</span>
+                  </div>
+                </div>
+              </a>
+              <!-- Mathias Davila (blodi) -->
+              <a href="/@blodi" class="testimonial-card-v2">
+                <p class="testi-text">"La estética de los visualizers es increíble. Mis clientes piensan que tengo un
+                  equipo de edición profesional."</p>
+                <div class="testi-user">
+                  <img src="https://ik.imagekit.io/6gzqp4xam/avatars/3d1db2f0-7128-443f-a1a9-ceb932c000da.jpg"
+                    alt="Mathias Davila">
+                  <div class="testi-info">
+                    <h4>Mathias Davila</h4>
+                    <span>@blodi</span>
+                  </div>
+                </div>
+              </a>
+              <!-- Duplicados para Column 2 -->
+              <a href="/@pallooou" class="testimonial-card-v2">
+                <p class="testi-text">"La gestión de licencias es súper flexible. Puedo vender exactamente como quiero y
+                  cobrar al instante."</p>
+                <div class="testi-user">
+                  <img src="https://ik.imagekit.io/6gzqp4xam/avatars/18f1d12c-8268-4898-bf6a-a660b9df117d.jpg"
+                    alt="Daniel Borbón">
+                  <div class="testi-info">
+                    <h4>Daniel Borbón</h4>
+                    <span>@pallooou</span>
+                  </div>
+                </div>
+              </a>
+              <a href="/@prodbymaidana" class="testimonial-card-v2">
+                <p class="testi-text">"No sabía nada de edición de video, pero con OFFSZN solo arrastras y ya tienes
+                  contenido de alta calidad."</p>
+                <div class="testi-user">
+                  <img
+                    src="https://ik.imagekit.io/6gzqp4xam/avatars/avatar_964fc649-7479-4a4f-b089-03fb281809ff_zMKkMGggq?tr=width-500,height-500,cropType-maintain_ratio,focus-face&v=1774817095593"
+                    alt="Alex Maidana">
+                  <div class="testi-info">
+                    <h4>Alex Maidana</h4>
+                    <span>@prodbymaidana</span>
+                  </div>
+                </div>
+              </a>
+              <a href="/@blodi" class="testimonial-card-v2">
+                <p class="testi-text">"La estética de los visualizers es increíble. Mis clientes piensan que tengo un
+                  equipo de edición profesional."</p>
+                <div class="testi-user">
+                  <img src="https://ik.imagekit.io/6gzqp4xam/avatars/3d1db2f0-7128-443f-a1a9-ceb932c000da.jpg"
+                    alt="Mathias Davila">
+                  <div class="testi-info">
+                    <h4>Mathias Davila</h4>
+                    <span>@blodi</span>
+                  </div>
+                </div>
+              </a>
+            </div>
+          </div>
+
+          <!-- Columna 3 -->
+          <div class="testimonials-column col-3">
+            <div class="testimonials-scroll-track col-speed-3">
+              <!-- Raktenlo (raktenlo) -->
+              <a href="/@raktenlo" class="testimonial-card-v2">
+                <p class="testi-text">"He probado todas las tiendas de Beats, y nada se siente tan fluido y rápido como
+                  el dashboard de OFFSZN."</p>
+                <div class="testi-user">
+                  <img src="https://ik.imagekit.io/6gzqp4xam/avatars/dc9a7ba3-9da0-4887-9b68-79cccfe393eb.png"
+                    alt="Raktenlo ss">
+                  <div class="testi-info">
+                    <h4>Raktenlo ss</h4>
+                    <span>@raktenlo</span>
+                  </div>
+                </div>
+              </a>
+              <!-- Willie Inspired (willieinspired) -->
+              <a href="/@willieinspired" class="testimonial-card-v2">
+                <p class="testi-text">"Es la herramienta definitiva para el productor independiente. Ahorras tiempo,
+                  dinero y salud mental."</p>
+                <div class="testi-user">
+                  <img
+                    src="https://ik.imagekit.io/6gzqp4xam/avatars/avatar_0382a813-85c7-46c3-8d2c-61a5692adffd_vkCmhNcg7"
+                    alt="Willie Garay">
+                  <div class="testi-info">
+                    <h4>Willie Garay</h4>
+                    <span>@willieinspired</span>
+                  </div>
+                </div>
+              </a>
+              <!-- ProdBy65 (prodby65_) -->
+              <a href="/@prodby65_" class="testimonial-card-v2">
+                <p class="testi-text">"Vengo de usar Premiere por años. El ahorro de tiempo es absurdo. OFFSZN es
+                  obligatorio para escalar."</p>
+                <div class="testi-user">
+                  <img src="https://ik.imagekit.io/6gzqp4xam/avatars/551af656-f77a-423c-9ede-40bfb917b72a.jpg"
+                    alt="Andrés del Rio">
+                  <div class="testi-info">
+                    <h4>Andrés del Rio</h4>
+                    <span>@prodby65_</span>
+                  </div>
+                </div>
+              </a>
+              <!-- Duplicados para Column 3 -->
+              <a href="/@raktenlo" class="testimonial-card-v2">
+                <p class="testi-text">"He probado todas las tiendas de Beats, y nada se siente tan fluido y rápido como
+                  el dashboard de OFFSZN."</p>
+                <div class="testi-user">
+                  <img src="https://ik.imagekit.io/6gzqp4xam/avatars/dc9a7ba3-9da0-4887-9b68-79cccfe393eb.png"
+                    alt="Raktenlo ss">
+                  <div class="testi-info">
+                    <h4>Raktenlo ss</h4>
+                    <span>@raktenlo</span>
+                  </div>
+                </div>
+              </a>
+              <a href="/@willieinspired" class="testimonial-card-v2">
+                <p class="testi-text">"Es la herramienta definitiva para el productor independiente. Ahorras tiempo,
+                  dinero y salud mental."</p>
+                <div class="testi-user">
+                  <img
+                    src="https://ik.imagekit.io/6gzqp4xam/avatars/avatar_0382a813-85c7-46c3-8d2c-61a5692adffd_vkCmhNcg7"
+                    alt="Willie Garay">
+                  <div class="testi-info">
+                    <h4>Willie Garay</h4>
+                    <span>@willieinspired</span>
+                  </div>
+                </div>
+              </a>
+              <a href="/@prodby65_" class="testimonial-card-v2">
+                <p class="testi-text">"Vengo de usar Premiere por años. El ahorro de tiempo es absurdo. OFFSZN es
+                  obligatorio para escalar."</p>
+                <div class="testi-user">
+                  <img src="https://ik.imagekit.io/6gzqp4xam/avatars/551af656-f77a-423c-9ede-40bfb917b72a.jpg"
+                    alt="Andrés del Rio">
+                  <div class="testi-info">
+                    <h4>Andrés del Rio</h4>
+                    <span>@prodby65_</span>
+                  </div>
+                </div>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== SECTION: PRICING ==================== -->
+    <section class="pricing-section" id="pricing">
+      <div class="pricing-container">
+        <div class="section-label" style="justify-content: center; display: flex;">PLANES</div>
+        <h2 class="pricing-main-title">Precios simples y transparentes.</h2>
+
+        <!-- Pricing Toggle -->
+        <div class="pricing-toggle-wrap">
+          <span class="toggle-label active" id="label-monthly">Mensual</span>
+          <div class="pricing-toggle" id="pricing-toggle">
+            <div class="toggle-knob"></div>
+          </div>
+          <span class="toggle-label" id="label-annual">Anual <span class="discount-badge">Ahorra hasta 60%</span></span>
+        </div>
+
+        <div class="grid-pricing">
+          <!-- Plan: Básico -->
+          <div class="pricing-card">
+            <div class="pricing-card-header">
+              <h3 class="plan-name">Básico</h3>
+              <div class="plan-price" id="price-basic">$0</div>
+            </div>
+            <div class="pricing-card-features">
+              <ul class="feature-list">
+                <li><i class="bi bi-check-lg"></i> 30 subidas de productos</li>
+                <li><i class="bi bi-check-lg"></i> 5% Comisión por venta</li>
+                <li><i class="bi bi-check-lg"></i> 3 YouTube Videos / mes</li>
+                <li><i class="bi bi-check-lg"></i> 20 Créditos de Bienvenida</li>
+                <li class="disabled"><i class="bi bi-dash"></i> 0 Créditos Mensuales</li>
+              </ul>
+            </div>
+            <div class="pricing-card-footer">
+              <a href="/pages/register.html" class="btn-pricing-secondary">Empezar Gratis</a>
+            </div>
+          </div>
+
+          <!-- Plan: Starter -->
+          <div class="pricing-card">
+            <div class="pricing-card-header">
+              <h3 class="plan-name">Starter</h3>
+              <div class="plan-price" id="price-starter">$5<span class="price-period">/mes</span></div>
+            </div>
+            <div class="pricing-card-features">
+              <ul class="feature-list">
+                <li><i class="bi bi-check-lg"></i> 60 subidas de productos</li>
+                <li><i class="bi bi-check-lg"></i> 3% Comisión por venta</li>
+                <li><i class="bi bi-check-lg"></i> 10 YouTube Videos / mes</li>
+                <li><i class="bi bi-check-lg"></i> 60 Créditos Mensuales</li>
+                <li><i class="bi bi-check-lg"></i> Insignia de Verificación</li>
+              </ul>
+            </div>
+            <div class="pricing-card-footer">
+              <a href="/pages/register.html" class="btn-pricing-secondary">Suscribirse</a>
+            </div>
+          </div>
+
+          <!-- Plan: PRO (Recommended) -->
+          <div class="pricing-card recommended">
+            <div class="recommended-badge">RECOMENDADO</div>
+            <div class="pricing-card-header">
+              <h3 class="plan-name">PRO</h3>
+              <div class="plan-price" id="price-pro">$7<span class="price-period">/mes</span></div>
+            </div>
+            <div class="pricing-card-features">
+              <ul class="feature-list">
+                <li><i class="bi bi-check-lg"></i> Subidas Ilimitadas</li>
+                <li><i class="bi bi-check-lg"></i> 0% Comisión por venta</li>
+                <li><i class="bi bi-check-lg"></i> 30 YouTube Videos / mes</li>
+                <li><i class="bi bi-check-lg"></i> 100 Créditos Mensuales</li>
+                <li><i class="bi bi-check-lg"></i> Soporte VIP 24/7</li>
+              </ul>
+            </div>
+            <div class="pricing-card-footer">
+              <a href="/pages/register.html" class="btn-pricing-primary">Elegir Plan</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== SECTION: FAQ ==================== -->
+    <section class="faq-section" id="faq">
+      <div class="section-label" style="justify-content: center; display: flex;">COMUNIDAD</div>
+      <h2 class="faq-main-title">Preguntas</h2>
+
+      <div class="faq-list">
+        <!-- Item 1 -->
+        <div class="faq-item">
+          <button class="faq-trigger">
+            <span>¿Cobran comisiones por mis ventas?</span>
+            <div class="faq-icon"><i class="bi bi-chevron-down"></i></div>
+          </button>
+          <div class="faq-content">
+            <p>No. OFFSZN es 0% comisiones.Recibes el dinero
+              directamente en tu cuenta de paypal o Yape.</p>
+          </div>
+        </div>
+        <!-- Item 2 -->
+        <div class="faq-item">
+          <button class="faq-trigger">
+            <span>¿Necesito un canal de YouTube?</span>
+            <div class="faq-icon"><i class="bi bi-chevron-down"></i></div>
+          </button>
+          <div class="faq-content">
+            <p>No es obligatorio, pero si tienes uno, OFFSZN automatiza la subida de forma 100% segura mediante la
+              <strong>API Oficial de YouTube</strong>
+            </p>
+          </div>
+        </div>
+        <!-- Item 3 -->
+        <div class="faq-item">
+          <button class="faq-trigger">
+            <span>¿Puedo programar las subidas?</span>
+            <div class="faq-icon"><i class="bi bi-chevron-down"></i></div>
+          </button>
+          <div class="faq-content">
+            <p>Sí, nuestros planes Creator y Pro te permiten agendar tus lanzamientos para mantener una consistencia
+              perfecta sin esfuerzo.</p>
+          </div>
+        </div>
+        <!-- Item 4 -->
+        <div class="faq-item">
+          <button class="faq-trigger">
+            <span>¿Qué métodos de pago soportan?</span>
+            <div class="faq-icon"><i class="bi bi-chevron-down"></i></div>
+          </button>
+          <div class="faq-content">
+            <p>Como productor puedes recibir pagos vía PayPal, Yape según configures en tu perfil
+              profesional.</p>
+          </div>
+        </div>
+        <!-- Item 5 -->
+        <div class="faq-item">
+          <button class="faq-trigger">
+            <span>¿Puedo cancelar en cualquier momento?</span>
+            <div class="faq-icon"><i class="bi bi-chevron-down"></i></div>
+          </button>
+          <div class="faq-content">
+            <p>Totalmente. No hay contratos ni permanencia. Puedes subir o bajar de plan, o cancelar cuando lo desees
+              desde tus ajustes.</p>
+          </div>
+        </div>
+        <!-- Item 6 -->
+        <div class="faq-item">
+          <button class="faq-trigger">
+            <span>¿Las subidas automáticas pueden penalizar mi canal?</span>
+            <div class="faq-icon"><i class="bi bi-chevron-down"></i></div>
+          </button>
+          <div class="faq-content">
+            <p>Para nada. Estamos alineados con los <strong>términos de servicio de YouTube</strong>. Usamos métodos
+              oficiales de automatización.</p>
+          </div>
+        </div>
+        <!-- Item 7 -->
+        <div class="faq-item">
+          <button class="faq-trigger">
+            <span>Ya tengo beats en otra plataforma. ¿Vale la pena cambiarme?</span>
+            <div class="faq-icon"><i class="bi bi-chevron-down"></i></div>
+          </button>
+          <div class="faq-content">
+            <p>Muchos productores usan OFFSZN como su base principal por las mayores ganancias, la automatización de
+              videos te permite centrarte en crear y recibir tus ganancias sin comisiones.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="faq-footer-support">
+        <p>¿Aún tienes dudas? <a href="/legal/ayuda-y-contacto.html">Contactar a soporte</a></p>
+      </div>
+    </section>
+
+    <!-- ==================== SECTION: FINAL CTA ==================== -->
+    <section class="final-cta-section">
+      <div class="final-cta-content">
+        <h2 class="final-cta-title">
+          Gratis para siempre.<br>
+          <span class="strikethrough-red">Sin necesidad de tarjetas.</span>
+        </h2>
+        <p class="final-cta-subtext">Únete a los mejores productores y empieza a crear hoy mismo.</p>
+        <div class="final-cta-footer">
+          <a href="/pages/register.html" class="btn-hero-premium">Empezar Ahora</a>
+        </div>
+      </div>
+    </section>
   </main>
 
   <!-- ==================== GLOBAL FOOTER ==================== -->
@@ -259,8 +749,9 @@
   <script src="/libs/gsap/gsap.min.js"></script>
   <script src="/libs/gsap/ScrollTrigger.min.js"></script>
 
+
   <!-- Scripts -->
-  <script src="/script/premium-landing.js"></script>
+  <script src="/script/premium-landing.js?v=4"></script>
 </body>
 
 </html>

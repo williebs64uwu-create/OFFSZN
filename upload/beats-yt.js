@@ -1693,6 +1693,80 @@ async function uploadToR2(file, folder = 'uploads', onProgress = null) {
     }
 }
 
+// --- GSAP PREMIUM OVERLAY HELPERS ---
+let publishGsapTimeline = null;
+let publishTextInterval = null;
+
+function startPremiumOverlay() {
+    const overlay = document.getElementById('publishOverlay');
+    const title = document.getElementById('publishOverlayTitle');
+    const wrapper = document.getElementById('publishProgressWrapper');
+    const progressBar = document.getElementById('publishProgressBar');
+    const mainText = document.getElementById('publishOverlayText');
+    const subText = document.getElementById('publishSubtitleText');
+    
+    if(!overlay) return;
+    
+    overlay.style.display = 'flex';
+    if(progressBar) gsap.set(progressBar, { width: '0%' });
+    
+    // Animate Introduction
+    publishGsapTimeline = gsap.timeline();
+    publishGsapTimeline
+        .to(title, { opacity: 1, scale: 1, duration: 0.5, ease: 'back.out(1.5)' })
+        .to(wrapper, { opacity: 1, y: 0, duration: 0.4, ease: 'power2.out' }, "-=0.2")
+        .to(mainText, { opacity: 1, y: 0, duration: 0.4, ease: 'power2.out' }, "-=0.2")
+        .to(subText, { opacity: 1, duration: 0.3 }, "-=0.1");
+
+    // Start text rotation
+    const texts = [
+        "Procesando calidad máx. MP3...",
+        "Calculando metadatos 720p...",
+        "Comprimiendo assets visuales...",
+        "Optimizando audio a 320kbps...",
+        "Negociando conexión segura..."
+    ];
+    let tIdx = 0;
+    if(publishTextInterval) clearInterval(publishTextInterval);
+    if(subText) subText.innerHTML = texts[tIdx];
+    publishTextInterval = setInterval(() => {
+        if(subText) {
+            gsap.timeline()
+                .to(subText, { opacity: 0, duration: 0.2 })
+                .call(() => {
+                    tIdx = (tIdx + 1) % texts.length;
+                    subText.innerHTML = texts[tIdx];
+                })
+                .to(subText, { opacity: 1, duration: 0.2 });
+        }
+    }, 2500);
+}
+
+function updatePremiumProgress(targetPercent, durationSec = 0.5, easeType = 'power1.inOut') {
+    const progressBar = document.getElementById('publishProgressBar');
+    if(progressBar) {
+        gsap.to(progressBar, { width: `${targetPercent}%`, duration: durationSec, ease: easeType });
+    }
+}
+
+function stopPremiumOverlay(hide = true) {
+    if(publishTextInterval) clearInterval(publishTextInterval);
+    const title = document.getElementById('publishOverlayTitle');
+    const wrapper = document.getElementById('publishProgressWrapper');
+    const mainText = document.getElementById('publishOverlayText');
+    const subText = document.getElementById('publishSubtitleText');
+    
+    if (hide) {
+        gsap.timeline({
+            onComplete: () => {
+                const overlay = document.getElementById('publishOverlay');
+                if(overlay) overlay.style.display = 'none';
+            }
+        })
+        .to([subText, mainText, wrapper, title], { opacity: 0, y: -10, duration: 0.3, stagger: 0.05, ease: 'power2.in' });
+    }
+}
+
 window.handlePublish = async function () {
     console.log('🚀 [PUBLISH] Initiating new handlePublish override...');
 
@@ -1721,9 +1795,7 @@ window.handlePublish = async function () {
     const progressBar = document.getElementById('publishProgressBar');
 
     try {
-        // Reset progress bar
-        if (progressBar) progressBar.style.width = '0%';
-
+        publishGsapTimeline = null; // reset state
         // 3. YouTube Pre-Interception (Custom Flow for beats-yt.html)
         const isEditing = !!uploaderState.editId;
         
@@ -1741,12 +1813,12 @@ window.handlePublish = async function () {
                 // If it resolves, we have a token (or it was already cached)
                 console.log('✅ [YT] Auth obtained, proceeding to render.');
 
-                if (overlay) {
-                    if (overlayTitle) overlayTitle.innerText = 'GENERANDO VIDEO...';
-                    if (overlayText) overlayText.innerText = 'Preparando video en 720p para YouTube';
-                    overlay.style.display = 'flex';
-                    if (progressBar) progressBar.style.width = '10%';
-                }
+                if (overlayTitle) overlayTitle.innerText = 'GENERANDO VIDEO...';
+                if (overlayText) overlayText.innerText = 'Preparando video en 720p para YouTube';
+                startPremiumOverlay();
+                updatePremiumProgress(10, 0.5);
+                // Ilusión de progreso constante mientras el servidor Render gratis renderiza lentamente
+                updatePremiumProgress(45, 6, 'none');
 
                 // 3b. Prepare Blobs
                 const coverBlob = uploaderState.cover;
@@ -1780,7 +1852,8 @@ window.handlePublish = async function () {
                 const videoArrayBuffer = await response.arrayBuffer();
                 const renderedVideoBlob = new Blob([videoArrayBuffer], { type: 'video/mp4' });
                 
-                if (progressBar) progressBar.style.width = '30%';
+                updatePremiumProgress(50, 0.5);
+                updatePremiumProgress(80, 5, 'none'); // Lentamente subir a 80 mientras YouTube carga
 
                 // 3d. YouTube Upload
                 const beatTitle = document.getElementById('titleInput').value || 'Sin Título';
@@ -1798,7 +1871,8 @@ window.handlePublish = async function () {
 
                 window.YouTubeUploader.setRenderedVideo(renderedVideoBlob);
 
-                if (overlayText) overlayText.innerText = 'Subiendo a YouTube: 0%';
+                const subText = document.getElementById('publishSubtitleText');
+                if (subText) subText.innerHTML = '<span style="color: #22c55e;">Conectando con YouTube...</span>';
                 
                 // handleUpload will now use the token we already got (cached in v2)
                 const videoId = await window.YouTubeUploader.handleUpload(ytMetadata);
@@ -1806,7 +1880,7 @@ window.handlePublish = async function () {
                 uploaderState.youtube_video_id = videoId; // Store for final DB save
                 showToast('Video subido a YouTube correctamente 📹', 'success');
                 
-                if (progressBar) progressBar.style.width = '50%';
+                updatePremiumProgress(85, 0.5);
             } catch (ytErr) {
                 console.error('❌ [YT] specialized flow fail:', ytErr);
                 window.isPublishing = false; // 🔥 IMPORTANT: Reset state so user can retry
@@ -1823,7 +1897,7 @@ window.handlePublish = async function () {
                 
                 if (isCancel) {
                     console.warn('⚠️ [YT] Auth cancelled or timed out. Stopping flow.');
-                    if (overlay) overlay.style.display = 'none';
+                    stopPremiumOverlay();
                     if (btn) {
                         btn.disabled = false;
                         btn.innerHTML = btn.getAttribute('data-original-text') || 'Publicar Ahora';
@@ -1832,7 +1906,7 @@ window.handlePublish = async function () {
                 }
 
                 // If it's a real error, we hide overlay and show toast
-                if (overlay) overlay.style.display = 'none';
+                stopPremiumOverlay();
                 showToast('Error en YouTube: ' + (ytErr.message || 'Error desconocido'), 'error');
                 
                 if (btn) {
@@ -1871,11 +1945,11 @@ window.handlePublish = async function () {
             return;
         }
 
-        // Show Overlay
-        if (overlay) {
-            if (overlayTitle) overlayTitle.innerText = 'SUBIENDO PRODUCTO...';
-            if (overlayText) overlayText.innerText = 'por favor no cierres esta pestaña';
-            overlay.style.display = 'flex';
+        // Show Overlay if it wasn't triggered by YT flow
+        if (!publishGsapTimeline) {
+            if (overlayTitle) overlayTitle.innerText = 'GUARDANDO BEAT...';
+            if (overlayText) overlayText.innerText = 'Por favor no cierres la página';
+            startPremiumOverlay();
         }
 
         // 5. File Uploads to R2
@@ -1904,11 +1978,15 @@ window.handlePublish = async function () {
         for (const item of filesToUpload) {
             const currentFileIndex = filesProcessed;
             const progressHandler = (p) => {
-                const individualContribution = 100 / totalFiles;
-                const baseProgress = currentFileIndex * individualContribution;
-                const currentFileProgress = (p / 100) * individualContribution;
+                const startPoint = publishGsapTimeline ? 85 : 0;
+                const spaceToFill = publishGsapTimeline ? 15 : 100;
+                
+                const individualSpace = spaceToFill / totalFiles;
+                const baseProgress = startPoint + (currentFileIndex * individualSpace);
+                const currentFileProgress = (p / 100) * individualSpace;
+                
                 const totalProgress = baseProgress + currentFileProgress;
-                if (progressBar) progressBar.style.width = `${totalProgress}%`;
+                updatePremiumProgress(totalProgress, 0.3, 'power1.out');
 
                 let fileDesc = 'Archivo';
                 if (item.type === 'cover') fileDesc = 'Portada';
@@ -1945,7 +2023,7 @@ window.handlePublish = async function () {
             if (uploaderState.stems === "EXISTING") stems_url = uploaderState.old_stems_url;
         }
 
-        if (progressBar) progressBar.style.width = '100%';
+        updatePremiumProgress(100, 0.4);
         if (overlayText) overlayText.innerText = '¡Archivos subidos! Guardando datos...';
 
         // 6. Build Final Data Object
@@ -2069,6 +2147,23 @@ window.handlePublish = async function () {
         // 9. Persistence
         await window.saveLastUsedLicenses(); // Save license settings to user profile
 
+        // 🔥 INCREMENT YOUTUBE UPLOAD QUOTA
+        if (uploaderState.isYouTubeUpload && !uploaderState.editId) {
+            try {
+                console.log('📈 [YT] Incrementando cuota de YouTube...');
+                const url = AuthUtils._apiUrl ? `${AuthUtils._apiUrl}/youtube/increment-upload` : '/api/youtube/increment-upload';
+                await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...AuthUtils.getAuthHeaderObj()
+                    }
+                });
+            } catch (err) {
+                console.warn('⚠️ [YT] Error al incrementar cuota:', err);
+            }
+        }
+
         isDirty = false;
         showToast('¡Beat publicado con éxito!', 'success');
 
@@ -2086,7 +2181,7 @@ window.handlePublish = async function () {
 
         if (err.status === 403) {
             // Subscription limit reached
-            if (overlay) overlay.style.display = 'none';
+            stopPremiumOverlay();
             const limitModal = document.getElementById('modalLimitReached');
             if (limitModal) {
                 limitModal.classList.add('active');
@@ -2095,7 +2190,7 @@ window.handlePublish = async function () {
             }
         } else {
             showToast('Error al publicar: ' + (err.message || 'Error desconocido'), 'error');
-            if (overlay) overlay.style.display = 'none';
+            stopPremiumOverlay();
         }
 
         window.isPublishing = false;

@@ -4,141 +4,821 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OFFSZN | Master Template</title>
+    <title>OFFSZN | Studio AI</title>
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
 
-    <!-- SEO & Social Meta Tags -->
-    <meta name="description" content="OFFSZN - El marketplace #1 de productores musicales en Perú.">
-    <meta property="og:title" content="OFFSZN | Master Template">
-    <meta property="og:description" content="Explora, compra y vende recursos musicales de alta calidad.">
+    <meta name="description" content="OFFSZN Studio AI - Genera samples únicos con inteligencia artificial.">
+    <meta property="og:title" content="OFFSZN | Studio AI">
+    <meta property="og:description" content="Genera samples únicos con inteligencia artificial.">
     <meta property="og:image" content="https://offszn.lat/images/logo.webp">
-    <meta property="og:url" content="https://offszn.lat/">
+    <meta property="og:url" content="https://offszn.lat/studio/texto-a-sample">
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:image" content="https://offszn.lat/images/logo.webp">
 
-    <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="/css/auth-ui.css">
     <link rel="stylesheet" href="/css/global-overlays.css">
     <link rel="stylesheet" href="/css/navbar.css">
     <link rel="stylesheet" href="/css/avatar-manager.css">
-    <!-- Fonts -->
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Plus+Jakarta+Sans:wght@400;500;700;800&display=swap"
-        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Plus+Jakarta+Sans:wght@400;500;700;800&display=swap" rel="stylesheet">
 
-    <!-- 1. Cargar Configuración Segura y Supabase -->
     <script src="/env.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script>
-        window.supabaseClient = null;
-    </script>
+    <script>window.supabaseClient = null;</script>
     <script src="/script/auth-utils.js?v=11"></script>
+    <script src="https://unpkg.com/wavesurfer.js@7"></script>
+
+    <style>
+        /* ===== VARIABLES ===== */
+        :root {
+            --sidebar-w: 380px;
+            --sidebar-min: 320px;
+            --sidebar-max: 560px;
+            --sidebar-bg: #0a0a0a;
+            --viewport-bg: #000;
+            --glass-border: rgba(255, 255, 255, 0.07);
+            --card-bg: rgba(255, 255, 255, 0.03);
+        }
+
+        /* ===== RESET ===== */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: var(--viewport-bg);
+            color: #fff;
+            font-family: 'Inter', sans-serif;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.06); border-radius: 10px; }
+
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background:
+                radial-gradient(circle at 70% 20%, rgba(63, 0, 255, 0.04) 0%, transparent 40%),
+                radial-gradient(circle at 30% 80%, rgba(255, 0, 150, 0.02) 0%, transparent 40%);
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        /* ===== LAYOUT ===== */
+        .studio-pro-layout {
+            display: flex;
+            height: calc(100vh - 58px);
+        }
+
+        /* ===== SIDEBAR ===== */
+        .ai-sidebar {
+            width: var(--sidebar-w);
+            min-width: var(--sidebar-min);
+            max-width: var(--sidebar-max);
+            background: var(--sidebar-bg);
+            border-right: 1px solid var(--glass-border);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            z-index: 2;
+            user-select: none;
+        }
+
+        /* -- Resize Handle -- */
+        .sidebar-resize-handle {
+            position: absolute;
+            top: 0;
+            right: -3px;
+            width: 6px;
+            height: 100%;
+            cursor: col-resize;
+            z-index: 10;
+            transition: background 0.2s;
+        }
+        .sidebar-resize-handle:hover,
+        .sidebar-resize-handle.active {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        /* -- Header -- */
+        .sidebar-header {
+            padding: 16px 20px 12px;
+            border-bottom: 1px solid var(--glass-border);
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .sidebar-project h2 {
+            font-size: 0.65rem;
+            font-weight: 800;
+            letter-spacing: 1.5px;
+            color: rgba(255,255,255,0.4);
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        .variant-selector {
+            position: relative; /* para el dropdown */
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.65rem;
+            color: #444;
+            cursor: pointer;
+            transition: 0.2s;
+            background: rgba(255,255,255,0.03);
+            padding: 3px 9px;
+            border-radius: 12px;
+            border: 1px solid transparent;
+        }
+        .variant-selector:hover {
+            color: #fff;
+            border-color: var(--glass-border);
+        }
+
+        /* ===== DROPDOWNS (Model & Context) ===== */
+        .glass-dropdown {
+            position: absolute;
+            background: rgba(15, 15, 15, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 6px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            z-index: 100;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.2s ease;
+            transform: translateY(10px);
+        }
+        .glass-dropdown.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+        .dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 14px;
+            color: #ccc;
+            font-size: 0.8rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: left;
+            border: none;
+            background: transparent;
+            width: 100%;
+        }
+        .dropdown-item:hover, .dropdown-item.active {
+            background: rgba(255,255,255,0.08);
+            color: #fff;
+        }
+        .dropdown-item i {
+            color: #888;
+            font-size: 0.9rem;
+            width: 16px;
+            text-align: center;
+        }
+        .dropdown-item:hover i, .dropdown-item.active i {
+            color: #fff;
+        }
+        .dropdown-item .badge {
+            margin-left: auto;
+            font-size: 0.65rem;
+            background: rgba(255,255,255,0.1);
+            padding: 2px 6px;
+            border-radius: 10px;
+            color: #aaa;
+        }
+        .dropdown-item.active .badge {
+            background: #2ed573;
+            color: #000;
+            font-weight: bold;
+        }
+        .dropdown-item .desc {
+            display: block;
+            font-size: 0.65rem;
+            color: #666;
+            margin-top: 2px;
+            font-weight: normal;
+        }
+
+        #model-menu {
+            top: 35px;
+            right: 0;
+            width: 260px;
+        }
+        
+        #context-menu {
+            bottom: 45px;
+            left: 0;
+            width: 220px;
+        }
+
+        /* ===== CHAT MESSAGES ===== */
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        /* -- Bubble Base -- */
+        .chat-bubble {
+            max-width: 90%;
+            animation: msgIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .chat-bubble.ai {
+            align-self: flex-start;
+        }
+        .chat-bubble.user {
+            align-self: flex-end;
+        }
+
+        /* -- AI Label -- */
+        .bubble-label {
+            font-size: 0.55rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            color: #444;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .bubble-label .dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #2ed573;
+            display: inline-block;
+        }
+
+        /* -- Bubble Content -- */
+        .bubble-content {
+            padding: 12px 16px;
+            border-radius: 16px;
+            font-size: 0.85rem;
+            line-height: 1.5;
+        }
+
+        .chat-bubble.ai .bubble-content {
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.12);
+            color: #e0e0e0;
+            border-bottom-left-radius: 4px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        }
+
+        .chat-bubble.user .bubble-content {
+            background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.05) 100%);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: #fff;
+            border-bottom-right-radius: 4px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+
+        /* -- Quick Suggestions inside AI bubble -- */
+        .bubble-suggestions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 12px;
+        }
+
+        .bubble-suggestion {
+            font-size: 0.7rem;
+            font-weight: 600;
+            padding: 6px 14px;
+            border-radius: 20px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            color: #888;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .bubble-suggestion:hover {
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+            border-color: rgba(255,255,255,0.15);
+            transform: translateY(-1px);
+        }
+
+        /* -- Status Log inside AI bubble -- */
+        .bubble-status {
+            margin-top: 10px;
+            font-family: 'Inter', monospace;
+            font-size: 0.7rem;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .bubble-status .s-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: #444;
+        }
+        .bubble-status .s-item.done { color: #2ed573; }
+        .bubble-status .s-item.running { color: #ffa502; }
+        .bubble-status .s-item i { font-size: 0.55rem; }
+
+        /* -- Typing Indicator -- */
+        .typing-indicator {
+            display: flex;
+            gap: 4px;
+            padding: 12px 16px;
+        }
+        .typing-indicator span {
+            width: 6px;
+            height: 6px;
+            background: #444;
+            border-radius: 50%;
+            animation: typing 1.4s infinite;
+        }
+        .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes typing {
+            0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+            30% { transform: translateY(-4px); opacity: 1; }
+        }
+
+        /* ===== CHAT INPUT (Bottom) ===== */
+        .sidebar-chat-input {
+            border-top: 1px solid var(--glass-border);
+            flex-shrink: 0;
+        }
+
+        .chat-input-wrapper {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 16px;
+            padding: 8px;
+            margin: 12px 14px 6px;
+            transition: border-color 0.3s, background 0.3s;
+        }
+        .chat-input-wrapper:focus-within {
+            border-color: rgba(255,255,255,0.12);
+            background: rgba(255,255,255,0.05);
+        }
+
+        #ai-prompt-input {
+            background: transparent;
+            border: none;
+            color: #fff;
+            width: 100%;
+            padding: 6px 8px;
+            font-size: 0.85rem;
+            outline: none;
+            resize: none;
+            min-height: 36px;
+            max-height: 80px;
+            font-family: inherit;
+            line-height: 1.4;
+        }
+        #ai-prompt-input::placeholder { color: #333; }
+
+        /* Selected Tags (inside input wrapper, above textarea) */
+        #ai-tags-area {
+            display: none;
+            flex-wrap: wrap;
+            gap: 6px;
+            padding: 2px 2px 8px 2px;
+        }
+
+        .chat-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.55rem;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 14px;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.12);
+            color: #fff;
+            letter-spacing: 0.3px;
+        }
+        .chat-tag i {
+            cursor: pointer;
+            opacity: 0.4;
+            font-size: 0.5rem;
+            transition: 0.2s;
+            margin-left: 2px;
+        }
+        .chat-tag i:hover { opacity: 1; color: #ff4757; }
+
+        /* Typewriter cursor */
+        .typewriter-cursor {
+            color: #fff;
+            animation: blink 0.8s steps(1) infinite;
+            font-weight: 300;
+        }
+        @keyframes blink {
+            50% { opacity: 0; }
+        }
+
+        /* Bubble suggestion selected state */
+        .bubble-suggestion.selected {
+            background: #fff !important;
+            color: #000 !important;
+            border-color: #fff !important;
+        }
+
+        .chat-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 4px;
+        }
+        
+        .chat-controls-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            position: relative; /* para el dropdown context */
+        }
+
+        #char-counter {
+            font-size: 0.6rem;
+            color: #666;
+            font-weight: 500;
+            font-variant-numeric: tabular-nums;
+        }
+        #char-counter.limit {
+            color: #ff4757;
+        }
+
+        #btn-attach-context {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.05);
+            color: #444;
+            font-size: 0.6rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+            transition: 0.2s;
+            padding: 4px 10px;
+            border-radius: 14px;
+            font-weight: 600;
+        }
+        #btn-attach-context:hover {
+            color: #fff;
+            background: rgba(255,255,255,0.06);
+        }
+
+        #btn-generate-ai {
+            background: #fff;
+            color: #000;
+            border: none;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: 0.2s;
+            font-size: 0.7rem;
+        }
+        #btn-generate-ai:hover { transform: scale(1.08); background: #eee; }
+        #btn-generate-ai:disabled { opacity: 0.2; cursor: not-allowed; transform: none; }
+
+        #btn-arrow-icon { transition: transform 0.2s ease; }
+
+        /* -- Genre Chips (Below Input) -- */
+        .sidebar-genres {
+            padding: 10px 14px 14px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            flex-shrink: 0;
+        }
+
+        .genre-chip {
+            font-size: 0.55rem;
+            font-weight: 700;
+            padding: 4px 9px;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.05);
+            color: #444;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+        .genre-chip:hover {
+            background: rgba(255,255,255,0.07);
+            color: #ccc;
+            border-color: rgba(255,255,255,0.1);
+        }
+        .genre-chip.active {
+            background: #fff;
+            color: #000;
+            border-color: #fff;
+        }
+
+        /* -- File Items -- */
+        #ai-files-list { display: flex; flex-direction: column; gap: 5px; margin: 6px 14px 0; }
+
+        .file-item {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 7px 10px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            animation: slideIn 0.3s ease;
+        }
+        .file-info { flex: 1; }
+        .file-name { font-size: 0.75rem; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 160px; }
+        .file-status { font-size: 0.6rem; color: #555; margin-top: 1px; }
+        .file-remove { color: #ff4757; cursor: pointer; font-size: 0.75rem; opacity: 0.4; transition: 0.2s; }
+        .file-remove:hover { opacity: 1; }
+
+        .scanning { position: relative; overflow: hidden; }
+        .scanning::after {
+            content: "";
+            position: absolute;
+            top: 0; left: -100%;
+            width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.03), transparent);
+            animation: scan 2s infinite;
+        }
+
+        /* ===== VIEWPORT ===== */
+        .ai-viewport {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            background: var(--viewport-bg);
+        }
+
+        .viewport-header {
+            padding: 14px 20px;
+            display: flex;
+            justify-content: flex-end;
+            flex-shrink: 0;
+        }
+
+        .credits-pill {
+            background: rgba(255, 215, 0, 0.04);
+            border: 1px solid rgba(255, 215, 0, 0.08);
+            padding: 5px 12px;
+            border-radius: 14px;
+            color: #ffd700;
+            font-size: 0.6rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .viewport-content {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 30px;
+        }
+
+        #ai-result-area { width: 100%; max-width: 780px; }
+
+        #ai-placeholder-view { text-align: center; }
+        .placeholder-icon { font-size: 2.5rem; margin-bottom: 20px; color: #fff; opacity: 0.04; }
+        #ai-placeholder-view h2 { font-size: 1.1rem; margin-bottom: 8px; color: rgba(255,255,255,0.2); font-weight: 600; }
+        #ai-placeholder-view p { font-size: 0.8rem; color: rgba(255,255,255,0.08); }
+
+        #ai-loader { text-align: center; }
+        #ai-loader p { color: #555; font-size: 0.85rem; margin-top: 10px; }
+        .waves-loader { display: flex; justify-content: center; gap: 4px; height: 36px; }
+        .waves-loader span { width: 3px; height: 100%; background: #fff; animation: waveLoader 1.2s infinite ease-in-out; }
+        .waves-loader span:nth-child(2) { animation-delay: -1.1s; }
+        .waves-loader span:nth-child(3) { animation-delay: -1.0s; }
+        .waves-loader span:nth-child(4) { animation-delay: -0.9s; }
+        .waves-loader span:nth-child(5) { animation-delay: -0.8s; }
+
+        #ai-result-card {
+            background: rgba(10, 10, 10, 0.5);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 32px;
+            backdrop-filter: blur(30px);
+            box-shadow: 0 30px 80px rgba(0,0,0,0.5);
+        }
+
+        .result-card-header { margin-bottom: 24px; }
+        .badge-new { font-size: 0.6rem; padding: 3px 8px; border-radius: 4px; background: #fff; color: #000; font-weight: 800; letter-spacing: 0.5px; }
+        #result-prompt-title { margin-top: 10px; font-size: 1.2rem; font-weight: 600; color: rgba(255,255,255,0.85); }
+
+        #waveform { margin: 24px 0; background: rgba(255,255,255,0.02); padding: 16px; border-radius: 16px; min-height: 100px; }
+
+        .playback-controls { display: flex; justify-content: space-between; align-items: center; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.04); }
+        .play-group { display: flex; align-items: center; gap: 14px; }
+        #btn-play-ai { background: #fff; color: #000; border: none; width: 48px; height: 48px; border-radius: 50%; font-size: 1rem; cursor: pointer; transition: 0.2s; }
+        #btn-play-ai:hover { transform: scale(1.05); }
+        #ai-time { font-family: monospace; color: #555; font-size: 0.8rem; }
+
+        .btn-download { background: rgba(255,255,255,0.04); border: 1px solid var(--glass-border); padding: 10px 20px; border-radius: 16px; color: #fff; font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: 0.2s; }
+        .btn-download:hover { background: #fff; color: #000; }
+
+        /* ===== ANIMATIONS ===== */
+        @keyframes msgIn {
+            from { opacity: 0; transform: translateY(10px) scale(0.98); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-8px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes waveLoader {
+            0%, 40%, 100% { transform: scaleY(0.4); }
+            20% { transform: scaleY(1); }
+        }
+        @keyframes scan { 100% { left: 100%; } }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 1100px) {
+            .ai-sidebar { --sidebar-w: 320px; width: var(--sidebar-w); min-width: 280px; }
+        }
+
+        /* ===== DRAG STATE ===== */
+        body.resizing { cursor: col-resize !important; user-select: none !important; }
+        body.resizing * { cursor: col-resize !important; }
+    </style>
 </head>
 
 <body>
 
-    <!-- ==================== DYNAMIC NAVBAR ==================== -->
+    <!-- NAVBAR -->
     <div id="navbar-placeholder">
-        <div
-            style="background: rgba(0, 0, 0, 0.95); height: 58px; width: 100%; border-bottom: 1px solid rgba(255, 255, 255, 0.08); backdrop-filter: blur(20px); position: sticky; top: 0; z-index: 1000;">
-        </div>
+        <div style="background: rgba(0, 0, 0, 0.95); height: 58px; width: 100%; border-bottom: 1px solid rgba(255, 255, 255, 0.08); backdrop-filter: blur(20px); position: sticky; top: 0; z-index: 1000;"></div>
     </div>
     <script src="/script/load-navbar.js?v=21"></script>
 
-    <!-- ==================== AI STUDIO HERO ==================== -->
-    <main style="min-height: 80vh; padding: 80px 20px; text-align: center; color: #fff;">
-        <div style="max-width: 800px; margin: 0 auto;">
-            
-            <!-- Credits Badge -->
-            <div style="display: inline-flex; align-items: center; gap: 8px; background: rgba(255, 215, 0, 0.1); border: 1px solid rgba(255, 215, 0, 0.3); padding: 6px 16px; border-radius: 20px; color: #ffd700; font-size: 0.85rem; font-weight: 600; margin-bottom: 24px;">
-                <i class="fas fa-gem"></i>
-                <span id="user-credits-display">Cargando créditos...</span>
-            </div>
+    <!-- ==================== STUDIO PRO ==================== -->
+    <main class="studio-pro-layout">
 
-            <h1 style="font-size: 3rem; font-weight: 800; letter-spacing: -1px; margin-bottom: 16px; font-family: 'Plus Jakarta Sans', sans-serif;">
-                Genera tu <span style="background: linear-gradient(90deg, #fff, #888); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;">Sonido.</span>
-            </h1>
-            <p style="color: #999; font-size: 1.1rem; margin-bottom: 40px; max-width: 600px; margin-left: auto; margin-right: auto;">
-                Describe lo que quieres escuchar. Nuestra IA creará un sample único y libre de royalties en segundos. 10 créditos por generación.
-            </p>
+        <!-- SIDEBAR -->
+        <aside class="ai-sidebar" id="ai-sidebar">
+            <div class="sidebar-resize-handle" id="resize-handle"></div>
 
-            <!-- Search / Prompt Area -->
-            <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 16px; padding: 12px; display: flex; align-items:center; transition: all 0.3s;" id="prompt-container">
-                <input type="text" id="ai-prompt-input" placeholder="Ej. Un bombo 808 muy distorsionado para drill, BPM 140..." 
-                    style="flex: 1; background: transparent; border: none; color: #fff; padding: 16px 20px; font-size: 1.1rem; outline: none;">
-                
-                <button id="btn-generate-ai" style="background: #fff; color: #000; border: none; padding: 14px 28px; border-radius: 12px; font-weight: 700; font-size: 1rem; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 8px;">
-                    <i class="fas fa-wand-magic-sparkles"></i>
-                    Generar 
-                </button>
-            </div>
-            
-            <!-- Feedback & Loader -->
-            <div id="ai-feedback" style="margin-top: 16px; font-size: 0.9rem; color: #ff4757; display: none;"></div>
-            <div id="ai-loader" style="margin-top: 40px; display: none;">
-                <div style="display: flex; justify-content: center; gap: 4px; align-items: center; height: 30px;" class="wave-loader">
-                    <div style="width: 4px; height: 10px; background: #fff; border-radius: 2px; animation: wave 1s infinite ease-in-out;"></div>
-                    <div style="width: 4px; height: 20px; background: #fff; border-radius: 2px; animation: wave 1s infinite ease-in-out 0.1s;"></div>
-                    <div style="width: 4px; height: 30px; background: #fff; border-radius: 2px; animation: wave 1s infinite ease-in-out 0.2s;"></div>
-                    <div style="width: 4px; height: 20px; background: #fff; border-radius: 2px; animation: wave 1s infinite ease-in-out 0.3s;"></div>
-                    <div style="width: 4px; height: 10px; background: #fff; border-radius: 2px; animation: wave 1s infinite ease-in-out 0.4s;"></div>
+            <div class="sidebar-header">
+                <div class="sidebar-project">
+                    <h2>OFFSZN STUDIO</h2>
                 </div>
-                <p style="color: #888; margin-top: 16px; font-size: 0.9rem; letter-spacing: 1px; font-weight: 500;">Sintetizando audio...</p>
-            </div>
-
-            <!-- Result Player -->
-            <div id="ai-result-card" style="margin-top: 40px; padding: 24px; background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; text-align: left; display: none;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                    <h3 style="font-size: 1.1rem; font-weight: 600; margin: 0;">Resultado Generado</h3>
-                    <button id="btn-download-ai" style="background: transparent; border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 6px 16px; border-radius: 8px; cursor: pointer; transition: 0.2s;">
-                        <i class="fas fa-download"></i> Descargar .WAV
-                    </button>
+                <div class="variant-selector" id="model-selector-btn">
+                    <span id="current-variant">OFFSZN FLASH</span>
+                    <i class="fas fa-chevron-down" style="font-size: 0.45rem;"></i>
+                    
+                    <!-- Model Dropdown -->
+                    <div class="glass-dropdown" id="model-menu">
+                        <button class="dropdown-item active" data-model="flash" data-cost="5">
+                            <div>
+                                <i class="fas fa-bolt"></i> OFFSZN FLASH
+                                <span class="desc">Rápido y preciso para la mayoría de beats.</span>
+                            </div>
+                            <span class="badge">5 CR</span>
+                        </button>
+                        <button class="dropdown-item" data-model="advanced" data-cost="10">
+                            <div>
+                                <i class="fas fa-brain"></i> OFFSZN ADVANCED
+                                <span class="desc">Diseño sonoro complejo y texturas ricas.</span>
+                            </div>
+                            <span class="badge">10 CR</span>
+                        </button>
+                    </div>
                 </div>
-                <!-- Native Audio Player injected here -->
-                <audio id="ai-audio-player" crossorigin="anonymous" controls style="width: 100%; border-radius: 8px; outline: none;"></audio>
             </div>
 
-        </div>
+            <!-- Chat Messages -->
+            <div class="chat-messages" id="chat-messages">
+                <!-- AI welcome message will be injected by JS -->
+            </div>
+
+        <!-- Chat Input -->
+            <div class="sidebar-chat-input">
+                <div class="chat-input-wrapper">
+                    <!-- Selected Tags (appear inside wrapper, above input) -->
+                    <div id="ai-tags-area"></div>
+                    
+                    <textarea id="ai-prompt-input" placeholder="Describe un sonido... (Máx 150 caracteres)" maxlength="150" rows="1"></textarea>
+                    <div class="chat-controls">
+                        <div class="chat-controls-left">
+                            <button id="btn-attach-context" title="Añadir Contexto">
+                                <i class="fas fa-at"></i>
+                                <span>Context</span>
+                            </button>
+                            <div class="glass-dropdown" id="context-menu">
+                                <button class="dropdown-item" id="btn-context-audio">
+                                    <i class="fas fa-file-audio"></i> Audio Ref (MP3/WAV)
+                                </button>
+                                <button class="dropdown-item" id="btn-context-text">
+                                    <i class="fas fa-file-alt"></i> Guía PDF/TXT
+                                </button>
+                            </div>
+                            <span id="char-counter">0 / 150</span>
+                        </div>
+                        <div class="chat-actions">
+                            <button id="btn-generate-ai">
+                                <i class="fas fa-arrow-up" id="btn-arrow-icon"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Genre Chips (Below Input) -->
+                <div class="sidebar-genres">
+                    <div class="genre-chip" data-genre="TRAP">TRAP</div>
+                    <div class="genre-chip" data-genre="CRANK">CRANK</div>
+                    <div class="genre-chip" data-genre="PLUGG">PLUGG</div>
+                    <div class="genre-chip" data-genre="AFROBEAT">AFROBEAT</div>
+                    <div class="genre-chip" data-genre="DANCEHALL">DANCEHALL</div>
+                    <div class="genre-chip" data-genre="RNB">RNB</div>
+                    <div class="genre-chip" data-genre="SPINZ 808">SPINZ 808</div>
+                    <div class="genre-chip" data-genre="ZAY 808">ZAY 808</div>
+                </div>
+
+                <div id="ai-files-list"></div>
+                <input type="file" id="ai-file-input" accept=".mp3" multiple style="display: none;">
+            </div>
+        </aside>
+
+        <!-- VIEWPORT -->
+        <section class="ai-viewport">
+            <div class="viewport-header">
+                <div class="credits-pill">
+                    <i class="fas fa-gem"></i>
+                    <span id="user-credits-display">Cargando...</span>
+                </div>
+            </div>
+
+            <div class="viewport-content">
+                <div id="ai-result-area">
+                    <div id="ai-placeholder-view">
+                        <div class="placeholder-icon"><i class="fas fa-wave-square"></i></div>
+                        <h2>Tu sonido aparecerá aquí</h2>
+                        <p>Usa el chat a la izquierda para generar.</p>
+                    </div>
+
+                    <div id="ai-loader" style="display: none;">
+                        <div class="waves-loader"><span></span><span></span><span></span><span></span><span></span></div>
+                        <p>Esculpiendo el sonido...</p>
+                    </div>
+
+                    <div id="ai-result-card" style="display: none;">
+                        <div class="result-card-header">
+                            <span class="badge-new">NUEVO SONIDO</span>
+                            <h3 id="result-prompt-title">...</h3>
+                        </div>
+                        <div id="waveform"></div>
+                        <div class="playback-controls">
+                            <div class="play-group">
+                                <button id="btn-play-ai"><i class="fas fa-play"></i></button>
+                                <span id="ai-time">00:00 / 00:00</span>
+                            </div>
+                            <button id="btn-download-ai" class="btn-download">
+                                <i class="fas fa-download"></i> Descargar .WAV
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
     </main>
-    
-    <style>
-        /* Loader Animation */
-        @keyframes wave {
-            0%, 100% { transform: scaleY(0.5); opacity: 0.5; }
-            50% { transform: scaleY(1.5); opacity: 1; }
-        }
-        #prompt-container:focus-within {
-            border-color: rgba(255, 255, 255, 0.4) !important;
-            box-shadow: 0 0 20px rgba(255,255,255,0.05);
-        }
-        #btn-generate-ai:hover {
-            transform: scale(1.02);
-            box-shadow: 0 0 15px rgba(255,255,255,0.2);
-        }
-        #btn-generate-ai:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            transform: none;
-        }
-    </style>
 
-    <!-- ==================== SIDE PANELS ==================== -->
-
-    <!-- BACKDROP -->
+    <!-- SIDE PANELS -->
     <div class="overlay-backdrop" id="globalBackdrop" onclick="closeAllOverlays()"></div>
-
-    <!-- CART SIDE PANEL -->
     <div class="side-panel" id="globalCartPanel">
         <div class="panel-header">
             <div class="panel-title" style="display: flex; align-items: center; gap: 8px;">
                 <div style="position: relative; display: flex;">
                     <i class="fas fa-shopping-cart"></i>
-                    <span id="cart-panel-count" class="notification-badge"
-                        style="position: absolute; top: -6px; right: -6px; display: flex;">0</span>
+                    <span id="cart-panel-count" class="notification-badge" style="position: absolute; top: -6px; right: -6px; display: flex;">0</span>
                 </div>
                 Tu Carrito
             </div>
@@ -155,42 +835,29 @@
                 <span>Total:</span>
                 <span id="cart-total-price">$0.00</span>
             </div>
-            <button class="btn-checkout-global" id="cart-checkout-btn"
-                onclick="window.location.href='/pages/checkout.html'">
+            <button class="btn-checkout-global" id="cart-checkout-btn" onclick="window.location.href='/pages/checkout.html'">
                 <i class="bi bi-lock-fill" style="margin-right:6px;"></i> Ir a Pagar Seguro
             </button>
-
-            <!-- TRUST BADGES -->
-            <div
-                style="margin-top: 20px; text-align: center; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 15px;">
-                <p style="font-size: 0.65rem; color: #666; margin-bottom: 10px; letter-spacing: 1px; font-weight: 700;">
-                    METODOS DE PAGO SEGUROS</p>
-
-                <div style="display: flex; gap: 12px; justify-content: center; align-items: center; opacity: 0.8; filter: grayscale(100%); transition: filter 0.3s;"
-                    onmouseover="this.style.filter='grayscale(0%)'" onmouseout="this.style.filter='grayscale(100%)'">
+            <div style="margin-top: 20px; text-align: center; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 15px;">
+                <p style="font-size: 0.65rem; color: #666; margin-bottom: 10px; letter-spacing: 1px; font-weight: 700;">METODOS DE PAGO SEGUROS</p>
+                <div style="display: flex; gap: 12px; justify-content: center; align-items: center; opacity: 0.8; filter: grayscale(100%);">
                     <i class="fab fa-cc-paypal" style="font-size: 26px; color: #fff;"></i>
                     <i class="fab fa-cc-visa" style="font-size: 26px; color: #fff;"></i>
                     <i class="fab fa-cc-mastercard" style="font-size: 26px; color: #fff;"></i>
-                    <!-- Standardized YAPE format -->
                     <span class="badge-yape">YAPE</span>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- ==================== FOOTER ==================== -->
-    <div id="footer-placeholder"></div>
-
     <!-- SCRIPTS -->
     <script src="/script/id-obfuscator.js?v=1"></script>
     <script src="/script/cart.js?v=21"></script>
     <script src="/script/notifications.js?v=21"></script>
     <script src="/script/avatar-manager.js?v=21"></script>
-    <script src="/script/footer.js?v=21"></script>
     <script src="/script/navbar.js?v=21" type="module"></script>
     <script src="/script/toast.js?v=21" type="module"></script>
-    <script src="/script/studio-ai.js?v=1" type="module"></script>
+    <script src="/script/studio-ai.js?v=3" type="module"></script>
 
 </body>
-
 </html>

@@ -9,9 +9,10 @@ window.PLAN_LIMITS = {
         price: 'Free',
         max_uploads: 30,
         commission: 0.05,
-        youtube_uploads_per_month: 1,
+        youtube_uploads_per_month: 3,
         requests_per_day: 1,
         credits_per_month: 0,
+        welcome_credits: 20,
         badge: 'None'
     },
     starter: {
@@ -19,7 +20,7 @@ window.PLAN_LIMITS = {
         price: '$5/mo',
         max_uploads: 60,
         commission: 0.03,
-        youtube_uploads_per_month: 5,
+        youtube_uploads_per_month: 10,
         requests_per_day: 5,
         credits_per_month: 60,
         badge: 'Purple'

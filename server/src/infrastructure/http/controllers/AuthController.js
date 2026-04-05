@@ -71,12 +71,15 @@ export const registerUser = async (req, res) => {
 
         const tempNickname = `user_${uuidv4().substring(0, 8)}`;
 
+        const WELCOME_CREDITS = 20;
+
         const { data, error } = await supabase
             .from('users')
             .insert([{
                 email: email,
                 password: hashedPassword,
-                nickname: tempNickname
+                nickname: tempNickname,
+                reward_balance: WELCOME_CREDITS
             }])
             .select('id, email, created_at, nickname, is_admin');
 
@@ -92,7 +95,12 @@ export const registerUser = async (req, res) => {
         }
         const newUser = data[0];
 
-        // res.status(201).json({ message: 'Usuario registrado exitosamente.', user: newUser });
+        // Sync welcome credits to profiles table (for consistency with SubscriptionController)
+        try {
+            await supabase.from('profiles').update({ reward_balance: WELCOME_CREDITS }).eq('id', newUser.id);
+        } catch (profileErr) {
+            console.warn('[Register] Could not sync welcome credits to profiles:', profileErr.message);
+        }
 
         const tokenPayload = {
             userId: newUser.id,
@@ -100,6 +108,8 @@ export const registerUser = async (req, res) => {
             isAdmin: newUser.is_admin || false
         };
         const token = generateToken(tokenPayload);
+
+        console.log(`🎁 [Register] ${WELCOME_CREDITS} welcome credits granted to ${newUser.email}`);
 
         res.status(201).json({
             message: 'Usuario registrado. Completa tu perfil.',
@@ -117,11 +127,14 @@ export const registerUser = async (req, res) => {
                     </div>
                     <h1 style="color: #8b5cf6; font-size: 1.8rem; margin-bottom: 20px; text-align: center;">¡Bienvenido a la comunidad, ${newUser.nickname}! 🌊</h1>
                     <p style="color: #ccc; font-size: 1.05rem; line-height: 1.6;">Estamos emocionados de tenerte en <b>OFFSZN</b>. Ahora tienes acceso a los mejores kits, presets y una comunidad de productores listos para elevar su sonido.</p>
-                    <div style="background: rgba(139, 92, 246, 0.1); padding: 20px; border-radius: 12px; margin: 25px 0;">
+                    <div style="background: rgba(139, 92, 246, 0.15); padding: 20px; border-radius: 12px; margin: 25px 0; border: 1px solid rgba(139, 92, 246, 0.3);">
+                        <h3 style="color: #a78bfa; margin: 0 0 6px;">🎁 ¡${WELCOME_CREDITS} Créditos de Bienvenida!</h3>
+                        <p style="color: #94a3b8; margin: 0 0 15px; font-size: 0.95rem;">Para que empieces a experimentar con el AI Studio y más.</p>
                         <h3 style="color: #a78bfa; margin: 0 0 10px;">Próximos pasos:</h3>
                         <ul style="color: #94a3b8; margin: 0; padding-left: 20px; line-height: 1.6;">
                             <li>Completa tu perfil de artista</li>
                             <li>Explora los kits curados por expertos</li>
+                            <li>Prueba el AI Studio con tus créditos gratis</li>
                             <li>Conéctate con otros productores</li>
                         </ul>
                     </div>

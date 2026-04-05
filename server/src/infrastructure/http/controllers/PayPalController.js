@@ -260,7 +260,7 @@ export const createPayPalOrder = async (req, res) => {
                     user_id: prodId,
                     type: 'system_alert',
                     title: '¡Venta Perdida!',
-                    message: `<strong>${buyerName}</strong> intentó comprar tu producto <strong>"${item.productName}"</strong>, pero no tienes configurado tu PayPal. <a href="/cuenta/ajustes" style="color:#8b5cf6;">Configúralo ahora</a> para no perder más ventas.`,
+                    message: `<strong>${buyerName}</strong> intentó comprar tu producto <strong>"${item.productName}"</strong>, pero no tienes configurado tu PayPal. <a href="/transacciones" style="color:#8b5cf6;">Configúralo ahora</a> para no perder más ventas.`,
                     read: false,
                     data: { action: 'open_paypal_settings' }
                 });

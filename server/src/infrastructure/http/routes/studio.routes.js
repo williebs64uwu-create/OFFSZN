@@ -1,5 +1,5 @@
 import express from 'express';
-import { generateSample } from '../controllers/AiStudioController.js';
+import { generateSample, chatWithIA } from '../controllers/AiStudioController.js';
 import { authenticateTokenMiddleware } from '../../middlewares/authenticateTokenMiddleware.js';
 
 const router = express.Router();
@@ -10,5 +10,12 @@ const router = express.Router();
  * @access  Private (Costs 10 credits)
  */
 router.post('/generate', authenticateTokenMiddleware, generateSample);
+
+/**
+ * @route   POST /api/studio/chat
+ * @desc    Get AI conversational response via NVIDIA NIM
+ * @access  Private
+ */
+router.post('/chat', authenticateTokenMiddleware, chatWithIA);
 
 export default router;
