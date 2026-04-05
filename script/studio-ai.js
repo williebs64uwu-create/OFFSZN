@@ -71,6 +71,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             currentVariantLabel.textContent = newLabel;
             
             modelMenu.classList.remove('show');
+            checkCreditAvailability();
         });
     });
 
@@ -331,9 +332,22 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (error) throw error;
             currentCredits = data.reward_balance || 0;
             creditsDisplay.innerHTML = `${currentCredits} Créditos`;
+            checkCreditAvailability();
             fetchHistory(user.id);
         } catch (err) {
             console.error('[Studio AI] Credits error:', err);
+        }
+    }
+
+    function checkCreditAvailability() {
+        if (currentCredits < currentModelCost) {
+            promptInput.disabled = true;
+            btnGenerate.disabled = true;
+            promptInput.placeholder = `Sin créditos para esto (Cuesta ${currentModelCost})...`;
+        } else {
+            promptInput.disabled = false;
+            btnGenerate.disabled = false;
+            promptInput.placeholder = 'Describe un sonido... (Máx 150 caracteres)';
         }
     }
 

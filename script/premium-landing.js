@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initMobileNav();
     initSmoothScroll();
     initPricingToggle();
+    initGsapAnimations();
     // NOTE: initAuthState is called from the navbar fetch callback in index.html
     // because the navbar DOM doesn't exist here yet (loaded via fetch).
 });
@@ -161,17 +162,75 @@ function initSmoothScroll() {
 }
 
 /**
- * GSAP Animations for the 3-Step Simulator Guide
+ * GSAP Animations for Landing Elements
  */
-function initSimulatorAnimations() {
+function initGsapAnimations() {
     if (!window.gsap || !window.ScrollTrigger) return;
     
     gsap.registerPlugin(ScrollTrigger);
 
-    // Animate Step Items one by one
-    gsap.from(".step-item", {
+    // Hero Section Animations (Subtle fade and slide up)
+    gsap.from(".hero-v4-title", {
+        y: 20,
+        opacity: 0,
+        duration: 0.8,
+        ease: "power3.out"
+    });
+    
+    gsap.from(".hero-v4-subtext", {
+        y: 20,
+        opacity: 0,
+        duration: 0.8,
+        delay: 0.1,
+        ease: "power3.out"
+    });
+
+    gsap.from(".hero-cta-buttons a", {
+        y: 20,
+        opacity: 0,
+        duration: 0.8,
+        stagger: 0.1,
+        delay: 0.2,
+        ease: "power3.out"
+    });
+
+    gsap.from(".hero-v4-visual", {
+        y: 30,
+        opacity: 0,
+        duration: 1,
+        delay: 0.3,
+        ease: "expo.out"
+    });
+
+    // Logo Cloud fade in
+    gsap.from(".logo-cloud-section", {
         scrollTrigger: {
-            trigger: ".steps-guide",
+            trigger: ".logo-cloud-section",
+            start: "top 90%",
+        },
+        opacity: 0,
+        y: 20,
+        duration: 1,
+        ease: "power2.out"
+    });
+
+    // Foundation Grid Cards
+    gsap.from(".foundation-card", {
+        scrollTrigger: {
+            trigger: ".foundation-section",
+            start: "top 80%",
+        },
+        y: 30,
+        opacity: 0,
+        duration: 0.8,
+        stagger: 0.1,
+        ease: "power3.out"
+    });
+
+    // Animate Step Items one by one
+    gsap.from(".step-card", {
+        scrollTrigger: {
+            trigger: ".how-it-works-section",
             start: "top 80%",
         },
         y: 30,
@@ -181,22 +240,10 @@ function initSimulatorAnimations() {
         ease: "power3.out"
     });
 
-    // Animate Dropzone
-    gsap.from(".simulator-interaction-box", {
-        scrollTrigger: {
-            trigger: ".simulator-interaction-box",
-            start: "top 85%",
-        },
-        scale: 0.95,
-        opacity: 0,
-        duration: 1,
-        ease: "expo.out"
-    });
-
     // Animate Pricing Cards
     gsap.from(".pricing-card", {
         scrollTrigger: {
-            trigger: ".pricing-section",
+            trigger: "#pricing",
             start: "top 75%",
         },
         y: 40,
