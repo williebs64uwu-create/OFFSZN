@@ -822,7 +822,13 @@
             .single();
 
           if (profile && profile.nickname) {
-            window.location.replace('/' + profile.nickname);
+            const urlParams = new URLSearchParams(window.location.search);
+            const redirect = urlParams.get('redirect');
+            if (redirect) {
+              window.location.replace(decodeURIComponent(redirect));
+            } else {
+              window.location.replace('/' + profile.nickname);
+            }
           } else {
             document.body.style.opacity = '1';
             document.body.style.pointerEvents = 'auto';

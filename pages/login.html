@@ -89,10 +89,18 @@
       }
 
       const { data: { session } } = await supabaseGuard.auth.getSession();
-
+      
       if (session) {
-        console.log("? Ya autenticado, redirigiendo...");
-        window.location.replace('/explorar.html');
+        console.log("ℹ️ Ya autenticado, comprobando redirección...");
+        const urlParams = new URLSearchParams(window.location.search);
+        const redirect = urlParams.get('redirect');
+        
+        if (redirect) {
+          console.log("🚀 Redirigiendo a destino previo:", redirect);
+          window.location.replace(decodeURIComponent(redirect));
+        } else {
+          window.location.replace('/explorar.html');
+        }
       } else {
         document.body.style.opacity = '1';
         document.body.style.pointerEvents = 'auto';

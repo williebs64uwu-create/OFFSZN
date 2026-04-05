@@ -4,15 +4,45 @@
  */
 
 document.addEventListener('DOMContentLoaded', () => {
+    initLenis();
     initFaq();
-    initScrollReveal();
     initMobileNav();
     initSmoothScroll();
     initPricingToggle();
     initGsapAnimations();
-    // NOTE: initAuthState is called from the navbar fetch callback in index.html
-    // because the navbar DOM doesn't exist here yet (loaded via fetch).
 });
+
+/**
+ * Smooth Scroll (Lenis)
+ * Provides the premium "buttery" scroll feel.
+ */
+function initLenis() {
+    if (typeof Lenis === 'undefined') return;
+
+    const lenis = new Lenis({
+        duration: 1.2,
+        easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+        smoothWheel: true,
+        smoothTouch: false,
+    });
+
+    function raf(time) {
+        lenis.raf(time);
+        requestAnimationFrame(raf);
+    }
+    requestAnimationFrame(raf);
+
+    // Sync ScrollTrigger with Lenis
+    lenis.on('scroll', ScrollTrigger.update);
+
+    gsap.ticker.add((time) => {
+        lenis.raf(time * 1000);
+    });
+
+    gsap.ticker.lagSmoothing(0);
+    
+    window.lenis = lenis; // Global access if needed
+}
 
 /**
  * Auth State Handler
@@ -27,7 +57,6 @@ async function initAuthState() {
     if (!loggedOutEl || !loggedInEl) return;
 
     try {
-        // Wait for Supabase client to be ready (loaded in <head>)
         if (!window.supabaseClient) {
             if (window.AuthUtils && typeof window.AuthUtils.initSupabase === 'function') {
                 window.AuthUtils.initSupabase();
@@ -45,15 +74,9 @@ async function initAuthState() {
         const { data: { session } } = await window.supabaseClient.auth.getSession();
 
         if (session) {
-            // === LOGGED IN ===
-            // 1. Hide guest buttons (must use class, not inline style,
-            //    because .nav-cta has display:flex!important that beats inline)
             loggedOutEl.classList.add('auth-hidden');
-
-            // 2. Show profile bar
             loggedInEl.classList.add('active');
 
-            // 3. Inject real user data
             const user = session.user;
             const meta = user.user_metadata || {};
             const displayName = meta.nickname || meta.full_name || meta.name || 'Mi Perfil';
@@ -64,7 +87,6 @@ async function initAuthState() {
             if (nameEl)   nameEl.textContent = displayName;
             if (avatarEl && meta.avatar_url) avatarEl.src = meta.avatar_url;
         }
-        // If no session → default HTML is correct (logged-out visible, logged-in hidden via CSS)
     } catch (err) {
         console.warn('Auth state check skipped:', err.message);
     }
@@ -75,22 +97,16 @@ async function initAuthState() {
  */
 function initFaq() {
     const faqItems = document.querySelectorAll('.faq-item');
-    
     faqItems.forEach(item => {
         const trigger = item.querySelector('.faq-trigger');
         const content = item.querySelector('.faq-content');
-        
         trigger.addEventListener('click', () => {
             const isActive = item.classList.contains('active');
-            
-            // Close all items
             faqItems.forEach(otherItem => {
                 otherItem.classList.remove('active');
                 const otherContent = otherItem.querySelector('.faq-content');
                 if (otherContent) otherContent.style.maxHeight = null;
             });
-            
-            // Toggle current item
             if (!isActive) {
                 item.classList.add('active');
                 if (content) content.style.maxHeight = content.scrollHeight + "px";
@@ -103,36 +119,11 @@ function initFaq() {
 }
 
 /**
- * Basic Scroll Reveal (Using Intersection Observer)
- */
-function initScrollReveal() {
-    const observerOptions = {
-        threshold: 0.1,
-        rootMargin: "0px 0px -50px 0px"
-    };
-
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.classList.add('active');
-                observer.unobserve(entry.target);
-            }
-        });
-    }, observerOptions);
-
-    const revealElements = document.querySelectorAll('.reveal-on-scroll');
-    revealElements.forEach(el => {
-        observer.observe(el);
-    });
-}
-
-/**
- * Mobile Navigation (Simple)
+ * Mobile Navigation
  */
 function initMobileNav() {
     const toggle = document.getElementById('mobile-toggle');
     const header = document.querySelector('.navbar-landing');
-    
     if (toggle && header) {
         toggle.addEventListener('click', () => {
             header.classList.toggle('mobile-menu-active');
@@ -149,108 +140,85 @@ function initSmoothScroll() {
             e.preventDefault();
             const targetId = this.getAttribute('href');
             if (targetId === '#') return;
-            
             const target = document.querySelector(targetId);
             if (target) {
-                window.scrollTo({
-                    top: target.offsetTop - 80,
-                    behavior: 'smooth'
-                });
+                if (window.lenis) {
+                    window.lenis.scrollTo(target, { offset: -80 });
+                } else {
+                    window.scrollTo({ top: target.offsetTop - 80, behavior: 'smooth' });
+                }
             }
         });
     });
 }
 
 /**
- * GSAP Animations for Landing Elements
+ * GSAP Animations: Advanced Reveal Engine
  */
 function initGsapAnimations() {
     if (!window.gsap || !window.ScrollTrigger) return;
-    
     gsap.registerPlugin(ScrollTrigger);
 
-    // Hero Section Animations (Subtle fade and slide up)
-    gsap.from(".hero-v4-title", {
-        y: 20,
-        opacity: 0,
-        duration: 0.8,
-        ease: "power3.out"
-    });
-    
-    gsap.from(".hero-v4-subtext", {
-        y: 20,
-        opacity: 0,
-        duration: 0.8,
-        delay: 0.1,
-        ease: "power3.out"
-    });
+    const isMobile = window.innerWidth <= 768;
+    const revealOffset = isMobile ? 15 : 30;
+    const heroOffset = isMobile ? 10 : 20;
 
-    gsap.from(".hero-cta-buttons a", {
-        y: 20,
-        opacity: 0,
-        duration: 0.8,
-        stagger: 0.1,
-        delay: 0.2,
-        ease: "power3.out"
-    });
+    // Initial states
+    gsap.set(".reveal-content", { y: "110%" });
+    gsap.set(".reveal-group > *", { opacity: 0, y: revealOffset, filter: "blur(4px)" });
+    gsap.set(".hero-v4-visual", { scale: isMobile ? 0.95 : 0.9, opacity: 0 });
+    gsap.set(".hero-cta-buttons", { opacity: 0, y: heroOffset });
+    // NEW: Subtle initial state for Hero text
+    gsap.set(".hero-v4-title, .hero-v4-subtext", { opacity: 0, y: 20, filter: "blur(10px)" });
+    gsap.set([".reveal-mask", ".reveal-group", ".gsap-reveal"], { visibility: "visible", opacity: 1 });
 
-    gsap.from(".hero-v4-visual", {
-        y: 30,
-        opacity: 0,
-        duration: 1,
-        delay: 0.3,
-        ease: "expo.out"
-    });
+    // Hero Entry Sequence
+    const heroTl = gsap.timeline({ defaults: { ease: "power3.out", duration: 1.5 } });
+    heroTl.to(".hero-v4-title", { opacity: 1, y: 0, filter: "blur(0px)", duration: 1.5 })
+          .to(".hero-v4-subtext", { opacity: 1, y: 0, filter: "blur(0px)", duration: 1.3 }, "-=1.1")
+          .to(".hero-cta-buttons", { opacity: 1, y: 0, duration: 1.2 }, "-=1.0")
+          .to(".hero-v4-visual", { scale: 1, opacity: 1, duration: 2, ease: "power2.out" }, "-=1.2");
 
-    // Logo Cloud fade in
     gsap.from(".logo-cloud-section", {
         scrollTrigger: {
             trigger: ".logo-cloud-section",
-            start: "top 90%",
+            start: "top bottom",
+            end: "bottom top",
+            scrub: 1
         },
-        opacity: 0,
-        y: 20,
-        duration: 1,
-        ease: "power2.out"
+        y: 50,
+        opacity: 0.5,
+        ease: "none"
     });
 
-    // Foundation Grid Cards
-    gsap.from(".foundation-card", {
-        scrollTrigger: {
-            trigger: ".foundation-section",
-            start: "top 80%",
-        },
-        y: 30,
-        opacity: 0,
-        duration: 0.8,
-        stagger: 0.1,
-        ease: "power3.out"
+    const sections = document.querySelectorAll('section');
+    sections.forEach(section => {
+        const maskTitles = section.querySelectorAll('.reveal-mask .reveal-content');
+        const groups     = section.querySelectorAll('.reveal-group');
+        const cards      = section.querySelectorAll('.reveal-group > *');
+        if (maskTitles.length === 0 && groups.length === 0) return;
+
+        const tl = gsap.timeline({
+            scrollTrigger: {
+                trigger: section,
+                start: "top 80%",
+                toggleActions: "play none none none"
+            }
+        });
+
+        if (maskTitles.length > 0) {
+            tl.to(maskTitles, { y: 0, duration: 1.2, stagger: 0.1, ease: "expo.out" });
+        }
+        if (cards.length > 0) {
+            tl.to(cards, { opacity: 1, y: 0, filter: "blur(0px)", duration: 1, stagger: 0.1, ease: "power4.out" }, maskTitles.length > 0 ? "-=0.8" : "0");
+        }
     });
 
-    // Animate Step Items one by one
-    gsap.from(".step-card", {
-        scrollTrigger: {
-            trigger: ".how-it-works-section",
-            start: "top 80%",
-        },
-        y: 30,
-        opacity: 0,
-        duration: 0.8,
-        stagger: 0.2,
-        ease: "power3.out"
-    });
-
-    // Animate Pricing Cards
-    gsap.from(".pricing-card", {
-        scrollTrigger: {
-            trigger: "#pricing",
-            start: "top 75%",
-        },
-        y: 40,
-        opacity: 0,
-        duration: 1,
-        stagger: 0.15,
-        ease: "power4.out"
+    document.querySelectorAll('.gsap-reveal').forEach(el => {
+        gsap.to(el, {
+            scrollTrigger: { trigger: el, start: "top 90%", toggleActions: "play none none none" },
+            autoAlpha: 1, y: 0, duration: 1, ease: "power3.out"
+        });
     });
 }
 

@@ -166,6 +166,11 @@
             visibility: visible;
             transform: translateY(0);
         }
+        #context-menu {
+            bottom: calc(100% + 8px);
+            left: 0;
+            min-width: 190px;
+        }
         .dropdown-item {
             display: flex;
             align-items: center;
@@ -359,6 +364,28 @@
             30% { transform: translateY(-4px); opacity: 1; }
         }
 
+        /* Low credits banner */
+        .low-credits-banner {
+            display: none; /* Hidden by default */
+            background: rgba(255, 71, 87, 0.1);
+            border-bottom: 1px solid rgba(255, 71, 87, 0.2);
+            padding: 10px 14px;
+            font-size: 0.7rem;
+            color: #ff4757;
+            font-weight: 600;
+            align-items: center;
+            gap: 8px;
+            animation: slideDown 0.3s ease-out;
+            flex-shrink: 0;
+            z-index: 10;
+        }
+        .low-credits-banner i { font-size: 0.8rem; }
+        
+        @keyframes slideDown {
+            from { transform: translateY(-100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
         /* ===== CHAT INPUT (Bottom) ===== */
         .sidebar-chat-input {
             border-top: 1px solid var(--glass-border);
@@ -479,10 +506,31 @@
             border-radius: 14px;
             font-weight: 600;
         }
+        #btn-attach-context i { font-size: 0.7rem; }
         #btn-attach-context:hover {
             color: #fff;
             background: rgba(255,255,255,0.06);
         }
+
+        /* Reference Chip (above input) */
+        .ref-chip {
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.12);
+            padding: 4px 12px;
+            border-radius: 10px;
+            font-size: 0.65rem;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+            animation: fadeIn 0.3s ease;
+        }
+        .ref-chip .bi-soundwave { color: #888; }
+        .ref-remove { color: #ff4757; cursor: pointer; opacity: 0.5; transition: 0.2s; }
+        .ref-remove:hover { opacity: 1; }
+        
+        .scanning-text { font-size: 0.6rem; color: #555; font-style: italic; margin-left: 4px; }
 
         #btn-generate-ai {
             background: #fff;
@@ -575,10 +623,43 @@
         }
 
         .viewport-header {
-            padding: 14px 20px;
+            padding: 10px 20px;
+            border-bottom: 1px solid var(--glass-border);
             display: flex;
-            justify-content: flex-end;
-            flex-shrink: 0;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(0,0,0,0.2);
+            backdrop-filter: blur(10px);
+            z-index: 20;
+        }
+
+        /* Viewport Tabs */
+        .viewport-tabs {
+            display: flex;
+            gap: 20px;
+        }
+        .tab-btn {
+            background: transparent;
+            border: none;
+            color: #555;
+            font-size: 0.65rem;
+            font-weight: 700;
+            padding: 8px 0;
+            cursor: pointer;
+            position: relative;
+            transition: 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .tab-btn:hover { color: #888; }
+        .tab-btn.active { color: #fff; }
+        .tab-btn.active::after {
+            content: "";
+            position: absolute;
+            bottom: -2px; left: 0; width: 100%; height: 2px;
+            background: #fff;
+            border-radius: 2px;
+            box-shadow: 0 0 10px rgba(255,255,255,0.5);
         }
 
         .credits-pill {
@@ -596,13 +677,78 @@
 
         .viewport-content {
             flex: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 30px;
+            position: relative;
+            overflow: hidden;
         }
 
-        #ai-result-area { width: 100%; max-width: 780px; }
+        /* Tab Panes */
+        .tab-pane {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            display: none;
+            overflow-y: auto;
+            padding: 30px;
+        }
+        .tab-pane.active { display: block; }
+        
+        #ai-result-area { width: 100%; max-width: 780px; margin: 0 auto; }
+
+        /* History Browser Style */
+        .history-browser {
+            width: 100%;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        .history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .history-item {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.04);
+            border-radius: 12px;
+            padding: 12px 16px;
+            display: grid;
+            grid-template-columns: 40px 1fr auto auto;
+            align-items: center;
+            gap: 16px;
+            transition: 0.2s;
+        }
+        .history-item:hover {
+            background: rgba(255,255,255,0.04);
+            border-color: rgba(255,255,255,0.08);
+        }
+        .history-icon {
+            width: 40px; height: 40px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            color: #555;
+            font-size: 1.2rem;
+        }
+        .history-main { overflow: hidden; }
+        .h-prompt { 
+            font-size: 0.85rem; font-weight: 600; color: #fff; 
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            margin-bottom: 2px;
+        }
+        .h-meta { font-size: 0.6rem; color: #555; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+        
+        .h-actions { display: flex; gap: 8px; }
+        .h-btn {
+            background: rgba(255,255,255,0.05);
+            border: none;
+            width: 32px; height: 32px;
+            border-radius: 8px;
+            color: #888;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.8rem;
+        }
+        .h-btn:hover { background: #fff; color: #000; }
+        .h-btn.primary { background: #fff; color: #000; }
 
         #ai-placeholder-view { text-align: center; }
         .placeholder-icon { font-size: 2.5rem; margin-bottom: 20px; color: #fff; opacity: 0.04; }
@@ -659,9 +805,120 @@
             0%, 40%, 100% { transform: scaleY(0.4); }
             20% { transform: scaleY(1); }
         }
-        @keyframes scan { 100% { left: 100%; } }
+        /* ===== LOW CREDITS BANNER (Claude Style) ===== */
+        .low-credits-banner {
+            background: linear-gradient(90deg, rgba(255, 71, 87, 0.1), rgba(255, 71, 87, 0.05));
+            border: 1px solid rgba(255, 71, 87, 0.15);
+            padding: 10px 16px;
+            margin: 10px 14px 0;
+            border-radius: 12px;
+            display: none; /* Managed by JS */
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            animation: slideDown 0.4s ease forwards;
+        }
+        .low-credits-banner:hover {
+            background: linear-gradient(90deg, rgba(255, 71, 87, 0.15), rgba(255, 71, 87, 0.08));
+            border-color: rgba(255, 71, 87, 0.3);
+            transform: translateY(-1px);
+        }
+        .low-credits-banner i { color: #ff4757; font-size: 0.85rem; }
+        .low-credits-banner span { color: #ffb8b8; font-size: 0.75rem; font-weight: 600; flex: 1; }
+        .low-credits-banner::after { content: '\f054'; font-family: 'Font Awesome 5 Free'; font-weight: 900; font-size: 0.6rem; color: #ff4757; opacity: 0.5; }
+
+        /* ===== UPGRADE MODAL (Runway Style) ===== */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(12px);
+            z-index: 10000;
+            display: none;
+            opacity: 0;
+            align-items: center; justify-content: center;
+            padding: 20px;
+        }
+        .modal-container {
+            background: #0a0a0a;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            width: 100%;
+            max-width: 440px;
+            border-radius: 28px;
+            padding: 40px;
+            position: relative;
+            box-shadow: 0 40px 100px rgba(0,0,0,0.8);
+            transform: translateY(20px);
+        }
+        .modal-close {
+            position: absolute;
+            top: 24px; right: 24px;
+            background: rgba(255,255,255,0.03);
+            border: none; width: 32px; height: 32px;
+            border-radius: 50%; color: #888;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            transition: 0.2s;
+        }
+        .modal-close:hover { background: #fff; color: #000; }
+        
+        .modal-header { text-align: center; margin-bottom: 32px; }
+        .modal-icon { 
+            width: 56px; height: 56px; 
+            background: linear-gradient(135deg, #fff, #888);
+            border-radius: 16px; margin: 0 auto 20px;
+            display: flex; align-items: center; justify-content: center;
+            color: #000; font-size: 1.5rem;
+            box-shadow: 0 10px 30px rgba(255,255,255,0.1);
+        }
+        .modal-header h2 { font-size: 1.5rem; font-weight: 700; color: #fff; letter-spacing: -0.5px; margin-bottom: 12px; }
+        .modal-header p { font-size: 0.9rem; color: #666; line-height: 1.5; }
+
+        .modal-features { display: flex; flex-direction: column; gap: 16px; margin-bottom: 32px; }
+        .feature-item { display: flex; align-items: center; gap: 14px; color: #aaa; font-size: 0.85rem; font-weight: 500; }
+        .feature-item i { color: #fff; font-size: 0.75rem; width: 14px; text-align: center; }
+
+        .modal-footer { display: flex; flex-direction: column; gap: 12px; }
+        .btn-upgrade-pro {
+            background: #fff; color: #000;
+            border: none; padding: 14px; border-radius: 14px;
+            font-size: 0.9rem; font-weight: 700; width: 100%;
+            cursor: pointer; transition: 0.2s;
+            text-align: center; text-decoration: none;
+        }
+        .btn-upgrade-pro:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(255,255,255,0.1); }
+        .btn-later {
+            background: transparent; border: none; color: #444;
+            font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: 0.2s;
+            padding: 8px;
+        }
+        .btn-later:hover { color: #888; }
+
+        /* ===== AUTH MODAL (Teaser - Premium B&W) ===== */
+        .auth-icon { 
+            width: 56px; height: 56px; 
+            background: linear-gradient(135deg, #eee, #333);
+            border-radius: 16px; margin: 0 auto 20px;
+            display: flex; align-items: center; justify-content: center;
+            color: #000; font-size: 1.5rem;
+            box-shadow: 0 10px 30px rgba(255, 255, 255, 0.05);
+        }
+        .btn-auth-primary {
+            background: #fff; color: #000;
+            border: none; padding: 16px; border-radius: 14px;
+            font-size: 0.95rem; font-weight: 800; width: 100%;
+            cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            text-align: center; text-decoration: none;
+            display: block;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .btn-auth-primary:hover { transform: translateY(-3px); background: #f0f0f0; box-shadow: 0 15px 30px rgba(255, 255, 255, 0.1); }
+
 
         /* ===== RESPONSIVE ===== */
+
+
         @media (max-width: 1100px) {
             .ai-sidebar { --sidebar-w: 320px; width: var(--sidebar-w); min-width: 280px; }
         }
@@ -715,6 +972,12 @@
                 </div>
             </div>
 
+            <!-- Low Credits Warning (Claude Style) -->
+            <div id="low-credits-banner" class="low-credits-banner">
+                <i class="fas fa-gem"></i>
+                <span>Mejora tu plan para seguir generando</span>
+            </div>
+
             <!-- Chat Messages -->
             <div class="chat-messages" id="chat-messages">
                 <!-- AI welcome message will be injected by JS -->
@@ -729,16 +992,13 @@
                     <textarea id="ai-prompt-input" placeholder="Describe un sonido... (Máx 150 caracteres)" maxlength="150" rows="1"></textarea>
                     <div class="chat-controls">
                         <div class="chat-controls-left">
-                            <button id="btn-attach-context" title="Añadir Contexto">
-                                <i class="fas fa-at"></i>
-                                <span>Context</span>
+                            <button id="btn-attach-context" title="Añadir Referencia">
+                                <i class="fas fa-plus-circle"></i>
+                                <span>Añadir Referencia</span>
                             </button>
                             <div class="glass-dropdown" id="context-menu">
                                 <button class="dropdown-item" id="btn-context-audio">
-                                    <i class="fas fa-file-audio"></i> Audio Ref (MP3/WAV)
-                                </button>
-                                <button class="dropdown-item" id="btn-context-text">
-                                    <i class="fas fa-file-alt"></i> Guía PDF/TXT
+                                    <i class="fas fa-file-audio"></i> Referencia MP3/WAV
                                 </button>
                             </div>
                             <span id="char-counter">0 / 150</span>
@@ -771,6 +1031,10 @@
         <!-- VIEWPORT -->
         <section class="ai-viewport">
             <div class="viewport-header">
+                <div class="viewport-tabs">
+                    <button class="tab-btn active" data-tab="result">Recién Generado</button>
+                    <button class="tab-btn" data-tab="history">Historial</button>
+                </div>
                 <div class="credits-pill">
                     <i class="fas fa-gem"></i>
                     <span id="user-credits-display">Cargando...</span>
@@ -778,32 +1042,44 @@
             </div>
 
             <div class="viewport-content">
-                <div id="ai-result-area">
-                    <div id="ai-placeholder-view">
-                        <div class="placeholder-icon"><i class="fas fa-wave-square"></i></div>
-                        <h2>Tu sonido aparecerá aquí</h2>
-                        <p>Usa el chat a la izquierda para generar.</p>
-                    </div>
-
-                    <div id="ai-loader" style="display: none;">
-                        <div class="waves-loader"><span></span><span></span><span></span><span></span><span></span></div>
-                        <p>Esculpiendo el sonido...</p>
-                    </div>
-
-                    <div id="ai-result-card" style="display: none;">
-                        <div class="result-card-header">
-                            <span class="badge-new">NUEVO SONIDO</span>
-                            <h3 id="result-prompt-title">...</h3>
+                <!-- Pane 1: Current Result -->
+                <div class="tab-pane active" id="pane-result">
+                    <div id="ai-result-area">
+                        <div id="ai-placeholder-view">
+                            <div class="placeholder-icon"><i class="fas fa-wave-square"></i></div>
+                            <h2>Tu sonido aparecerá aquí</h2>
+                            <p>Usa el chat a la izquierda para generar.</p>
                         </div>
-                        <div id="waveform"></div>
-                        <div class="playback-controls">
-                            <div class="play-group">
-                                <button id="btn-play-ai"><i class="fas fa-play"></i></button>
-                                <span id="ai-time">00:00 / 00:00</span>
+
+                        <div id="ai-loader" style="display: none;">
+                            <div class="waves-loader"><span></span><span></span><span></span><span></span><span></span></div>
+                            <p>Esculpiendo el sonido...</p>
+                        </div>
+
+                        <div id="ai-result-card" style="display: none;">
+                            <div class="result-card-header">
+                                <span class="badge-new">NUEVO SONIDO</span>
+                                <h3 id="result-prompt-title">...</h3>
                             </div>
-                            <button id="btn-download-ai" class="btn-download">
-                                <i class="fas fa-download"></i> Descargar .WAV
-                            </button>
+                            <div id="waveform"></div>
+                            <div class="playback-controls">
+                                <div class="play-group">
+                                    <button id="btn-play-ai"><i class="fas fa-play"></i></button>
+                                    <span id="ai-time">00:00 / 00:00</span>
+                                </div>
+                                <button id="btn-download-ai" class="btn-download">
+                                    <i class="fas fa-download"></i> Descargar .WAV
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pane 2: DAW Browser History -->
+                <div class="tab-pane" id="pane-history">
+                    <div class="history-browser">
+                        <div id="ai-history-list" class="history-list">
+                            <!-- Items populated by JS -->
                         </div>
                     </div>
                 </div>
@@ -850,6 +1126,71 @@
         </div>
     </div>
 
+    <!-- UPGRADE MODAL -->
+    <div class="modal-overlay" id="upgrade-modal-overlay">
+        <div class="modal-container" id="upgrade-modal">
+            <button class="modal-close" id="btn-close-modal"><i class="fas fa-times"></i></button>
+            <div class="modal-header">
+                <div class="modal-icon"><i class="fas fa-crown"></i></div>
+                <h2>Lleva tu sonido al siguiente nivel</h2>
+                <p>Has alcanzado el límite de tu plan actual. Desbloquea todo el potencial de la IA con un plan profesional.</p>
+            </div>
+            <div class="modal-features">
+                <div class="feature-item">
+                    <i class="fas fa-infinity"></i>
+                    Generaciones ilimitadas cada mes
+                </div>
+                <div class="feature-item">
+                    <i class="fas fa-rocket"></i>
+                    Acceso prioritario a modelos avanzados
+                </div>
+                <div class="feature-item">
+                    <i class="fas fa-wave-square"></i>
+                    Exportación en alta calidad (WAV 24-bit)
+                </div>
+                <div class="feature-item">
+                    <i class="fas fa-magic"></i>
+                    Análisis de referencias de audio extendido
+                </div>
+            </div>
+            <div class="modal-footer">
+                <a href="/planes" class="btn-upgrade-pro">Explorar Planes Pro</a>
+                <button class="btn-later" id="btn-later-modal">Quizás más tarde</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- AUTH MODAL (Guest Teaser) -->
+    <div class="modal-overlay" id="auth-modal-overlay">
+        <div class="modal-container" id="auth-modal">
+            <button class="modal-close" id="btn-close-auth"><i class="fas fa-times"></i></button>
+            <div class="modal-header">
+                <div class="modal-icon auth-icon"><i class="fas fa-bolt"></i></div>
+                <h2>Crea tu primer sonido ahora</h2>
+                <p>Para generar este audio necesitas una cuenta. Regístrate gratis en 5 segundos y obtén 20 créditos de regalo para tus primeras muestras.</p>
+            </div>
+            <div class="modal-features">
+                <div class="feature-item">
+                    <i class="fas fa-check"></i>
+                    20 Créditos GRATIS al instante
+                </div>
+                <div class="feature-item">
+                    <i class="fas fa-check"></i>
+                    Descargas ilimitadas de tus archivos
+                </div>
+                <div class="feature-item">
+                    <i class="fas fa-check"></i>
+                    Acceso total al Studio AI
+                </div>
+            </div>
+            <div class="modal-footer">
+                <a href="/login?redirect=/studio/texto-a-sample" class="btn-auth-primary">Registrarse y Generar</a>
+                <button class="btn-later" id="btn-close-auth-secondary">Quizás más tarde</button>
+            </div>
+        </div>
+    </div>
+
+
     <!-- SCRIPTS -->
     <script src="/script/id-obfuscator.js?v=1"></script>
     <script src="/script/cart.js?v=21"></script>
@@ -857,7 +1198,8 @@
     <script src="/script/avatar-manager.js?v=21"></script>
     <script src="/script/navbar.js?v=21" type="module"></script>
     <script src="/script/toast.js?v=21" type="module"></script>
-    <script src="/script/studio-ai.js?v=3" type="module"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/wavesurfer.js/6.6.3/wavesurfer.min.js"></script>
+    <script src="/script/studio-ai.js?v=49" type="module"></script>
 
 </body>
 </html>

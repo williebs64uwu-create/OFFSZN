@@ -28,7 +28,50 @@ body {
   position: relative;
 }
 
-/* Pure Black Base (Resend Style) */
+/* ==================== SMOOTH SCROLL (LENIS) ==================== */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+.lenis.lenis-scrolling iframe {
+  pointer-events: none;
+}
+
+/* ==================== REVEAL UTILITY (ADVANCED) ==================== */
+.reveal-mask {
+  overflow: hidden;
+  display: block;
+  position: relative;
+}
+
+.reveal-content {
+  display: block;
+}
+
+/* Staggered Groups */
+.reveal-group {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.gsap-reveal {
+  opacity: 0;
+  visibility: hidden;
+}
+
 body {
   margin: 0;
   padding: 0;
@@ -373,19 +416,91 @@ body {
   display: flex !important;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 768px) {
   .navbar-landing {
-    top: 10px !important;
+    top: 8px !important;
     width: 96% !important;
-    padding: 0 20px !important;
-    height: 56px !important;
+    padding: 0 12px !important;
+    height: 48px !important; /* Shorter for better fit */
+    border-radius: 100px !important;
   }
+
+  .navbar-landing .navbar-container {
+    flex-direction: row !important;
+    justify-content: space-between !important;
+    gap: 8px !important;
+  }
+
+  /* Force Logo to the Absolute Left */
+  .navbar-landing .logo {
+    order: -1 !important;
+    flex-grow: 0 !important;
+  }
+
+  .navbar-landing .logo-text {
+    font-size: 1.1rem !important;
+    letter-spacing: -0.8px !important;
+  }
+
+  /* Hide center links */
   .navbar-landing .nav-links {
     display: none !important;
+  }
+
+  /* Actions to the Right */
+  .navbar-landing .nav-cta,
+  .navbar-landing .nav-auth-profile {
+    order: 1 !important;
+    gap: 8px !important;
+  }
+
+  /* Compact buttons for Mobile */
+  .navbar-landing .login-link {
+    font-size: 0.75rem !important;
+    white-space: nowrap !important;
+  }
+
+  .navbar-landing .btn-premium-cta {
+    padding: 6px 14px !important;
+    font-size: 0.72rem !important;
+    border-radius: 100px !important;
+  }
+
+  /* Logged-in Profile (Mobile) */
+  .navbar-landing .nav-auth-profile .login-link {
+    display: none !important; /* Hide 'Explorar' to save space */
+  }
+
+  .navbar-landing .btn-premium-profile {
+    padding: 2px 10px 2px 2px !important;
+    font-size: 0.75rem !important;
+    gap: 6px !important;
+    max-width: 120px !important;
+  }
+
+  .navbar-landing .nav-profile-img {
+    width: 24px !important;
+    height: 24px !important;
+  }
+
+  .navbar-landing #nav-user-name {
+    display: block !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    font-size: 0.75rem !important;
   }
 }
 
 /* ==================== HERO v4 (RESEND / TAILARK STYLE) ==================== */
+/* Pre-hide elements managed by GSAP to prevent FOUC */
+.hero-v4-title,
+.hero-v4-subtext,
+.hero-cta-buttons,
+.hero-v4-visual {
+  opacity: 0;
+}
+
 .hero-v4 {
   padding: 130px 0 100px; /* Increased top padding to clear fixed floating navbar */
   position: relative;
@@ -491,6 +606,58 @@ body {
   text-decoration: none;
   transition: all 0.2s ease;
   border: 1px solid transparent;
+}
+
+@media (max-width: 768px) {
+  .hero-v4 {
+    padding: 85px 0 50px !important; /* Compact top/bottom padding */
+  }
+
+  .hero-v4-container {
+    gap: 15px !important;
+  }
+
+  .hero-badge {
+    margin-bottom: 20px !important;
+    padding: 4px 12px 4px 6px !important;
+    font-size: 0.75rem !important;
+  }
+
+  .hero-v4-title {
+    font-size: 2.15rem !important; /* Smaller text for Mobile */
+    letter-spacing: -1.2px !important;
+    margin-bottom: 16px !important;
+  }
+
+  .hero-v4-subtext {
+    font-size: 0.95rem !important;
+    line-height: 1.5 !important;
+    margin-bottom: 20px !important;
+    padding: 0 10px !important;
+  }
+
+  .hero-v4-cta-wrap {
+    margin-bottom: 20px !important;
+  }
+
+  .btn-hero-primary {
+    padding: 14px 32px !important;
+    font-size: 1rem !important;
+    width: 100% !important; /* Full width so it doesn't get lost */
+    text-align: center !important;
+    box-shadow: 0 4px 15px rgba(255, 255, 255, 0.1) !important;
+  }
+
+  .btn-hero-secondary {
+    width: 100% !important;
+    text-align: center !important;
+  }
+
+  .hero-cta-buttons {
+    gap: 12px !important;
+    flex-direction: column !important; /* Stack buttons vertically to give primary full focus */
+    width: 100% !important;
+  }
 }
 
 .btn-hero-primary:hover {
@@ -1966,9 +2133,38 @@ body {
   }
   .grid-pricing {
     grid-template-columns: 1fr;
-    gap: 40px;
+    gap: 20px; /* Reduced gap for mobile */
+  }
+  .pricing-card {
+    padding: 24px; /* Reduced padding inside cards for mobile */
   }
   .pricing-card.recommended {
     order: -1; /* Show recommended first on mobile */
+  }
+
+  /* GLOBAL MOBILE SPACING REDUCTION */
+  .logo-cloud-section,
+  .foundation-section,
+  .how-it-works-section,
+  .testimonials-section,
+  .pricing-section,
+  .faq-section,
+  .final-cta-section {
+    padding-top: 50px !important;
+    padding-bottom: 50px !important;
+  }
+  
+  .pricing-main-title,
+  .faq-main-title,
+  .foundation-title,
+  .section-title-large,
+  .testimonials-header h2 {
+    margin-bottom: 30px !important;
+  }
+
+  /* Prevent text cramming on mobile */
+  .final-cta-title,
+  .faq-main-title {
+    letter-spacing: -1.5px !important;
   }
 }

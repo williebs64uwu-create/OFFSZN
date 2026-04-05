@@ -22,7 +22,7 @@ async function initOnboardingWidget() {
 
     // 1. Check if we are on the welcome page or login/register
     const currentPath = window.location.pathname;
-    if (currentPath.includes('welcome') || currentPath.includes('login') || currentPath.includes('register')) {
+    if (currentPath.includes('welcome') || currentPath.includes('login') || currentPath.includes('register') || currentPath.includes('studio')) {
         return;
     }
 

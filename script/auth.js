@@ -17,6 +17,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const redirectParam = urlParams.get('redirect');
   const referralParam = urlParams.get('ref');
 
+  let callbackURL = `${window.location.origin}/pages/login.html`;
+  if (redirectParam) {
+      callbackURL += `?redirect=${encodeURIComponent(redirectParam)}`;
+  }
+
   // Guardar código de referido si existe
   if (referralParam) {
     console.log('🎁 Referral code detected:', referralParam);
@@ -209,15 +214,10 @@ document.addEventListener('DOMContentLoaded', () => {
         document.cookie = `sb-access-token=${token}; path=/; max-age=${maxAge}; SameSite=Strict; Secure`;
 
 
-        // ✅ PRIORIDAD 1: Redirect Inteligente (Carrito o URL específica)
+        // ✅ PRIORIDAD 1: Redirect Inteligente
         if (redirectParam) {
-          if (redirectParam === 'carrito') {
-            console.log('Redirigiendo al carrito...');
-            window.location.href = '/carrito.html';
-          } else {
-            console.log('Redirigiendo post-login a:', redirectParam);
-            window.location.href = decodeURIComponent(redirectParam);
-          }
+          console.log('🚀 Redirigiendo post-login a:', redirectParam);
+          window.location.href = decodeURIComponent(redirectParam);
           return;
         }
 

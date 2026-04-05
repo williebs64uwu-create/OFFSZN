@@ -450,7 +450,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if(goToDashboardBtn) {
         goToDashboardBtn.addEventListener('click', () => {
-           window.location.replace('/' + finalNick);
+           const urlParams = new URLSearchParams(window.location.search);
+           const redirect = urlParams.get('redirect');
+           if (redirect) {
+             console.log("🚀 Redirigiendo a destino previo tras onboarding:", redirect);
+             window.location.replace(decodeURIComponent(redirect));
+           } else {
+             window.location.replace('/' + finalNick);
+           }
         });
       }
 
