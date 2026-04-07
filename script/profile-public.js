@@ -106,6 +106,31 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 async function loadUserProfile(username) {
+    const profileRoot = document.getElementById('profile-root');
+    const loadingBar = document.getElementById('top-loading-bar');
+
+    // --- START LOADING BAR ---
+    if (loadingBar) {
+        loadingBar.classList.add('loading');
+        loadingBar.style.width = '30%';
+    }
+    
+    // --- ANTI-FOUC SYNC ---
+    // Check if the early head-script already applied a template class
+    const tplApplied = document.documentElement.className.match(/template-[^\s]+/);
+    
+    if (tplApplied) {
+        // If template is already known, just ensure profileRoot is ready
+        if (profileRoot) { 
+            profileRoot.style.opacity = '1';
+            // Sync class to root for legacy selectors
+            profileRoot.classList.add(tplApplied[0]);
+        }
+    } else if (profileRoot) {
+        // If unknown user, hide root until we fetch the data
+        profileRoot.style.opacity = '0';
+    }
+
     try {
         // Switch to the stable public users endpoint
         const response = await fetch(`/api/users/${username}`);
@@ -118,23 +143,36 @@ async function loadUserProfile(username) {
         console.log("DEBUG: Perfil cargado:", user.nickname, "Template:", user.template);
         window.currentUserProfile = user; // Store for tab rendering
 
+        // --- CACHE TEMPLATE ---
+        // Save the template for this user so we can predict it next time
+        if (user.nickname && user.template) {
+            localStorage.setItem(`tpl_${user.nickname.toLowerCase()}`, user.template);
+        }
+
         // Wait for auth/following data to be ready before rendering header
         if (window.profileInitPromise) {
             await window.profileInitPromise;
         }
 
         // 2. Apply Template Class
-        const profileRoot = document.getElementById('profile-root');
         if (profileRoot && user.template) {
-            // Remove previous template classes if any
-            profileRoot.classList.forEach(cls => {
-                if (cls.startsWith('template-')) profileRoot.classList.remove(cls);
+            // 🔥 CRITICAL: Clean up ANY previous template classes from ALL potential roots
+            const targets = [document.documentElement, document.body, profileRoot];
+            targets.forEach(el => {
+                el.classList.forEach(cls => {
+                    if (cls.startsWith('template-')) el.classList.remove(cls);
+                });
             });
+
             profileRoot.classList.add(`template-${user.template}`);
+            document.documentElement.classList.add(`template-${user.template}`);
+
+            const tabs = document.getElementById('profileTabs');
+            const productList = document.getElementById('profileProductsList');
+            const headerContent = document.querySelector('.profile-header-content');
 
             // Special case for Old School: reposition tabs to the main content area
             if (user.template === 'produccion_template_old_school') {
-                const tabs = document.getElementById('profileTabs');
                 const profileBody = document.querySelector('.profile-body');
                 const proToolbar = document.querySelector('.pro-toolbar-container');
                 if (tabs && profileBody) {
@@ -145,12 +183,45 @@ async function loadUserProfile(username) {
                     }
                 }
 
+                // Inyectamos el skeleton de Old School dinámicamente si no existe
+                if (headerContent && !document.getElementById('os-skeleton')) {
+                    const skelHTML = `
+                        <div id="os-skeleton" class="os-skeleton-wrapper">
+                            <div class="os-skel-avatar skeleton"></div>
+                            <div class="os-skel-role skeleton"></div>
+                            <div class="os-skel-name skeleton"></div>
+                            <div class="os-skel-actions">
+                                <div class="os-skel-btn skeleton"></div>
+                                <div class="os-skel-btn skeleton"></div>
+                            </div>
+                            <div class="os-skel-body-block skeleton"></div>
+                        </div>
+                    `;
+                    headerContent.insertAdjacentHTML('afterbegin', skelHTML);
+                }
+
                 // Add grid-view class to the products list container
-                const productList = document.getElementById('profileProductsList');
                 if (productList) {
                     productList.classList.add('grid-view');
                 }
+            } else {
+                // 🔥 RESET LOGIC: Revert Old School changes if template is anything else
+                const profileDetails = document.querySelector('.profile-details');
+                if (tabs && profileDetails) {
+                    // Move tabs back to their original position in the bio/details area
+                    profileDetails.appendChild(tabs);
+                }
+                if (productList) {
+                    productList.classList.remove('grid-view');
+                }
             }
+        }
+
+        // 2.5 REVEAL profile root now that the correct template layout is applied
+        if (profileRoot) {
+            void profileRoot.offsetWidth; // Force reflow so grid layout is computed
+            profileRoot.style.transition = 'opacity 0.25s ease';
+            profileRoot.style.opacity = '1';
         }
 
         // 3. Render Header Data (IMMEDIATE)
@@ -163,8 +234,24 @@ async function loadUserProfile(username) {
         // 4. Fetch User Products (via API) - SYNC WAIT
         // We wait for the products fetch to complete so we can remove ALL skeletons together.
         await loadUserProducts(user);
+
+        // --- FINISH LOADING BAR ---
+        if (loadingBar) {
+            loadingBar.style.width = '100%';
+            setTimeout(() => {
+                loadingBar.classList.remove('loading');
+                loadingBar.style.opacity = '0';
+                setTimeout(() => { loadingBar.style.width = '0%'; }, 300);
+            }, 400);
+        }
+
     } catch (e) {
         console.error("Error loading profile:", e);
+        if (profileRoot) profileRoot.style.opacity = '1';
+        if (loadingBar) {
+            loadingBar.classList.remove('loading');
+            loadingBar.style.opacity = '0';
+        }
         document.getElementById('profileName').innerText = "Usuario no encontrado";
         document.getElementById('profileBio').innerText = "No se pudo cargar el perfil.";
     }
@@ -234,6 +321,12 @@ async function renderHeader(user, categoryCounts = null) {
     document.getElementById('profileName').innerText = user.nickname || "User";
 
     // Role / Verified
+    const rolePlaceholder = document.getElementById('profileRolePlaceholder');
+    if (rolePlaceholder) rolePlaceholder.style.display = 'none';
+
+    const profileMeta = document.querySelector('.profile-meta');
+    if (profileMeta) profileMeta.style.display = 'flex';
+
     if (user.is_verified || user.is_producer || user.plan) {
         const verifyBadge = document.getElementById('profileVerified');
         verifyBadge.style.display = 'inline-block';
@@ -1781,8 +1874,11 @@ function setupTrendingControls(user, collabStats) {
     const [prevBtn, nextBtn] = arrows;
     const totalItems = (window.trendingProducts || productsCache).length;
 
+    const isOldSchool = document.documentElement.classList.contains('template-produccion_template_old_school') || (user && user.template === 'produccion_template_old_school');
+    const pageSize = isOldSchool ? 3 : 7;
+
     // Visibility Check
-    if (totalItems <= 6) {
+    if (totalItems <= pageSize) {
         prevBtn.style.opacity = '0.3';
         prevBtn.style.cursor = 'default';
         nextBtn.style.opacity = '0.3';
@@ -1799,24 +1895,27 @@ function setupTrendingControls(user, collabStats) {
 
     // Next Logic
     nextBtn.onclick = () => {
-        const pageSize = 6;
-        const maxPages = Math.ceil(totalItems / pageSize);
-        trendingPage = (trendingPage + 1) % maxPages; // Cycle: 0 -> 1 -> 0
+        const source = window.trendingProducts || productsCache;
+        const total = source.length;
+        const maxPages = Math.ceil(total / pageSize);
+        trendingPage = (trendingPage + 1) % maxPages;
         updateTrendingView(user, collabStats);
     };
 
     // Prev Logic
     prevBtn.onclick = () => {
-        const pageSize = 6;
-        const maxPages = Math.ceil(totalItems / pageSize);
-        trendingPage = (trendingPage - 1 + maxPages) % maxPages; // Cycle: 0 -> 1 -> 0
+        const source = window.trendingProducts || productsCache;
+        const total = source.length;
+        const maxPages = Math.ceil(total / pageSize);
+        trendingPage = (trendingPage - 1 + maxPages) % maxPages;
         updateTrendingView(user, collabStats);
     };
 }
 
 function updateTrendingView(user, collabStats) {
-    const pageSize = 6;
-    const start = trendingPage * pageSize; // 0, 6, 12
+    const isOldSchool = document.documentElement.classList.contains('template-produccion_template_old_school') || (user && user.template === 'produccion_template_old_school');
+    const pageSize = isOldSchool ? 3 : 7;
+    const start = trendingPage * pageSize; // Pagination starts here
 
     // USAR LISTA ORDENADA POR ALGORITMO
     const source = window.trendingProducts || productsCache;
@@ -2361,6 +2460,10 @@ async function renderProductList(items, user, collabStats = {}) {
 
     // 3. Swap
     if (window.profileRevealSignal) await window.profileRevealSignal;
+
+    // Signal that header data is ready (Used for skeleton toggling)
+    const profileRoot = document.getElementById('profile-root');
+    if (profileRoot) profileRoot.classList.add('header-loaded');
 
     list.innerHTML = '';
     list.appendChild(fragment);

@@ -71,9 +71,28 @@
       }
     });
   </script>
+  <!-- Anti-FOUC Early Template Detection -->
+  <script>
+    (function() {
+      const path = window.location.pathname;
+      let username = null;
+      const atMatch = path.match(/\/@(.+)/);
+      if (atMatch) username = atMatch[1];
+      else {
+        const parts = path.split('/');
+        if (parts.length > 1 && parts[parts.length-1]) username = parts[parts.length-1];
+      }
+      
+      if (username) {
+        const tpl = localStorage.getItem('tpl_' + username.toLowerCase());
+        if (tpl) document.documentElement.classList.add('template-' + tpl);
+      }
+    })();
+  </script>
 </head>
 
 <body>
+  <div id="top-loading-bar"></div>
 
   <!-- ==================== EXTRACTED NAVBAR ==================== -->
   <div id="navbar-placeholder">
@@ -87,6 +106,7 @@
       <!-- HEADER / BANNER -->
       <header class="profile-header">
         <div class="profile-header-content">
+          <!-- Dynamic Skeleton injected here for Old School via JS -->
           <div class="profile-avatar-container">
             <div id="profileAvatar" class="profile-avatar-img">
               <div class="skeleton skeleton-profile-avatar"></div>
@@ -98,45 +118,53 @@
           </div>
 
           <div class="profile-details">
+            <!-- Order changed: Role then Nickname -->
+            <div id="profileRolePlaceholder" class="profile-role no-bg" style="margin-bottom: 4px;">
+              <div class="skeleton skeleton-profile-role" style="width:100px; height:16px; border-radius:4px;"></div>
+            </div>
+
             <div class="profile-top-row">
               <h1 id="profileName">
-                <span class="skeleton skeleton-profile-name" style="display:inline-block;"></span>
+                <span class="skeleton skeleton-profile-name" style="display:inline-block; width:180px; height:24px;"></span>
               </h1>
               <div id="profileVerified" class="verified-badge" style="display:none;"><i
                   class="bi bi-patch-check-fill"></i>
               </div>
             </div>
 
-            <div class="profile-meta">
-              <div id="profileRole" class="profile-role">
-                <div class="skeleton skeleton-profile-meta" style="width:100px;"></div>
-              </div>
+            <!-- This is the container for REAL metadata once loaded -->
+            <div class="profile-meta" style="display:none;">
+              <div id="profileRole" class="profile-role"></div>
               <span class="dot-separator">.</span>
-              <div id="profileLocation">
-                <div class="skeleton skeleton-profile-meta" style="width:80px; display:inline-block;"></div>
-              </div>
-              <!-- Removed Joined Date as per request -->
+              <div id="profileLocation"></div>
             </div>
 
-            <div id="profileBio" class="profile-bio">
-              <div class="skeleton skeleton-profile-bio"></div>
+            <div id="profileBio" class="profile-bio text-center">
+              <div class="skeleton skeleton-profile-bio" style="width: 100%; height: 12px; margin-bottom: 8px;"></div>
+              <div class="skeleton skeleton-profile-bio" style="width: 40%; height: 12px;"></div>
             </div>
 
             <div class="profile-middle-row">
               <div class="profile-stats">
+                <!-- Stat 1 -->
                 <div class="stat">
+                  <div class="skeleton skeleton-profile-meta" style="width:70px; height:12px;"></div>
                   <b id="profileProductsCount">
-                    <div class="skeleton skeleton-profile-stats" style="width:80px;"></div>
+                    <div class="skeleton skeleton-profile-stats" style="width:40px; height:12px;"></div>
                   </b>
                 </div>
+                <!-- Stat 2 -->
                 <div class="stat">
+                  <div class="skeleton skeleton-profile-meta" style="width:80px; height:12px;"></div>
                   <b id="profileFollowersCount">
-                    <div class="skeleton skeleton-profile-stats" style="width:100px;"></div>
+                    <div class="skeleton skeleton-profile-stats" style="width:40px; height:12px;"></div>
                   </b>
                 </div>
+                <!-- Stat 3 -->
                 <div class="stat">
+                  <div class="skeleton skeleton-profile-meta" style="width:60px; height:12px;"></div>
                   <b id="profileFollowingCount">
-                    <div class="skeleton skeleton-profile-stats" style="width:90px;"></div>
+                    <div class="skeleton skeleton-profile-stats" style="width:40px; height:12px;"></div>
                   </b>
                 </div>
               </div>
@@ -151,7 +179,7 @@
 
             <div class="profile-actions">
               <!-- SKELETONS (Shown Initially) -->
-              <div id="skeletonActions" style="display: flex; gap: 8px;">
+              <div id="skeletonActions" class="skeleton-actions-container">
                 <div class="skeleton skeleton-profile-btn" style="width:120px; height:40px; border-radius:8px;"></div>
                 <div class="skeleton skeleton-profile-btn" style="width:120px; height:40px; border-radius:8px;"></div>
               </div>
@@ -200,15 +228,12 @@
         </div>
 
         <div id="trendingGrid" class="trending-grid" style="margin-bottom: 48px;">
-          <!-- JS Injects Trending Cards Here -->
-          <!-- SKELETON STATE (Consistent Grid) -->
+          <!-- 7 Skeletons for the new 7-column grid -->
           <div class="skeleton-card" style="display:flex; flex-direction:column; gap:8px;">
             <div class="skeleton skeleton-card-cover" style="width:100%; aspect-ratio:1/1; border-radius:8px;"></div>
             <div style="display:flex; flex-direction:column; gap:4px;">
               <div class="skeleton skeleton-card-title" style="width:80%; height:16px; border-radius:4px;"></div>
               <div class="skeleton skeleton-card-subtitle" style="width:50%; height:12px; border-radius:2px;"></div>
-              <div class="skeleton skeleton-card-subtitle"
-                style="width:30%; height:10px; border-radius:2px; opacity:0.6; margin-top:2px;"></div>
             </div>
           </div>
           <div class="skeleton-card" style="display:flex; flex-direction:column; gap:8px;">
@@ -216,8 +241,13 @@
             <div style="display:flex; flex-direction:column; gap:4px;">
               <div class="skeleton skeleton-card-title" style="width:75%; height:16px; border-radius:4px;"></div>
               <div class="skeleton skeleton-card-subtitle" style="width:45%; height:12px; border-radius:2px;"></div>
-              <div class="skeleton skeleton-card-subtitle"
-                style="width:35%; height:10px; border-radius:2px; opacity:0.6; margin-top:2px;"></div>
+            </div>
+          </div>
+          <div class="skeleton-card" style="display:flex; flex-direction:column; gap:8px;">
+            <div class="skeleton skeleton-card-cover" style="width:100%; aspect-ratio:1/1; border-radius:8px;"></div>
+            <div style="display:flex; flex-direction:column; gap:4px;">
+              <div class="skeleton skeleton-card-title" style="width:70%; height:16px; border-radius:4px;"></div>
+              <div class="skeleton skeleton-card-subtitle" style="width:40%; height:12px; border-radius:2px;"></div>
             </div>
           </div>
           <div class="skeleton-card" style="display:flex; flex-direction:column; gap:8px;">
@@ -225,26 +255,27 @@
             <div style="display:flex; flex-direction:column; gap:4px;">
               <div class="skeleton skeleton-card-title" style="width:85%; height:16px; border-radius:4px;"></div>
               <div class="skeleton skeleton-card-subtitle" style="width:55%; height:12px; border-radius:2px;"></div>
-              <div class="skeleton skeleton-card-subtitle"
-                style="width:25%; height:10px; border-radius:2px; opacity:0.6; margin-top:2px;"></div>
             </div>
           </div>
           <div class="skeleton-card" style="display:flex; flex-direction:column; gap:8px;">
             <div class="skeleton skeleton-card-cover" style="width:100%; aspect-ratio:1/1; border-radius:8px;"></div>
             <div style="display:flex; flex-direction:column; gap:4px;">
               <div class="skeleton skeleton-card-title" style="width:80%; height:16px; border-radius:4px;"></div>
-              <div class="skeleton skeleton-card-subtitle" style="width:40%; height:12px; border-radius:2px;"></div>
-              <div class="skeleton skeleton-card-subtitle"
-                style="width:30%; height:10px; border-radius:2px; opacity:0.6; margin-top:2px;"></div>
+              <div class="skeleton skeleton-card-subtitle" style="width:50%; height:12px; border-radius:2px;"></div>
+            </div>
+          </div>
+          <div class="skeleton-card" style="display:flex; flex-direction:column; gap:8px;">
+            <div class="skeleton skeleton-card-cover" style="width:100%; aspect-ratio:1/1; border-radius:8px;"></div>
+            <div style="display:flex; flex-direction:column; gap:4px;">
+              <div class="skeleton skeleton-card-title" style="width:75%; height:16px; border-radius:4px;"></div>
+              <div class="skeleton skeleton-card-subtitle" style="width:45%; height:12px; border-radius:2px;"></div>
             </div>
           </div>
           <div class="skeleton-card" style="display:flex; flex-direction:column; gap:8px;">
             <div class="skeleton skeleton-card-cover" style="width:100%; aspect-ratio:1/1; border-radius:8px;"></div>
             <div style="display:flex; flex-direction:column; gap:4px;">
               <div class="skeleton skeleton-card-title" style="width:70%; height:16px; border-radius:4px;"></div>
-              <div class="skeleton skeleton-card-subtitle" style="width:60%; height:12px; border-radius:2px;"></div>
-              <div class="skeleton skeleton-card-subtitle"
-                style="width:40%; height:10px; border-radius:2px; opacity:0.6; margin-top:2px;"></div>
+              <div class="skeleton skeleton-card-subtitle" style="width:40%; height:12px; border-radius:2px;"></div>
             </div>
           </div>
         </div>

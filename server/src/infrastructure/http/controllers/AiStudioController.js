@@ -111,7 +111,7 @@ export const generateSample = async (req, res) => {
             .insert([{
                 user_id: userId,
                 prompt: prompt,
-                audio_url: signedUrl,
+                audio_url: bestMatch.ruta_s3 || bestMatch.url, // 🔥 Guardar la ruta limpia, NO el signedURL que expira
                 created_at: new Date().toISOString()
             }]);
 
@@ -139,93 +139,222 @@ export const generateSample = async (req, res) => {
  * Chat interactivo con IA (NVIDIA NIM)
  */
 export const chatWithIA = async (req, res) => {
-    const { message } = req.body;
+    const { message, userId, hasReference } = req.body;
     
     if (!message) {
         return res.status(400).json({ error: 'Message es requerido' });
     }
 
     try {
+        // --- 1. PRE-BÚSQUEDA DE AUDIO ---
+        let audioUrl = null;
+        let bestMatch = null;
+        const needsAudio = /crea|genera|hazme|dame|busco|quiero|808|snare|kick|loop|sample|bpm|beat/.test(message.toLowerCase());
+        
+        let matchInfoMessage = "No se está buscando audio específico para este mensaje.";
+
+        if (needsAudio && userId) {
+            console.log(`[AI Studio] Pre-búsqueda para: "${message}"`);
+            
+            // Verificar créditos
+            const { data: user } = await supabase.from('users').select('reward_balance').eq('id', userId).single();
+            if (!user || user.reward_balance < 5) {
+                return res.status(200).json({ 
+                    success: true, 
+                    chatReply: "Lo siento bro, te quedaste sin créditos para generar este sonido. ¡Pásate por el store para recargar!",
+                    audioUrl: null 
+                });
+            }
+
+            const { data: sounds } = await supabase.from('ai_sound_bank').select('*');
+            if (sounds && sounds.length > 0) {
+                const promptWords = message.toLowerCase().split(/[\s,]+/);
+                let highestScore = -1;
+                const synonyms = {
+                    'jerk': ['drill', 'club', 'bounce', 'trap'],
+                    'trap': ['drill', '808', 'hard'],
+                    'reggaeton': ['perreo', 'afro', 'dembow']
+                };
+
+                sounds.forEach(sound => {
+                    let score = 0;
+                    const name = (sound.name || "").toLowerCase();
+                    const cat = (sound.category || "").toLowerCase();
+                    const tags = Array.isArray(sound.tags) ? sound.tags.join(' ').toLowerCase() : (sound.tags || "").toLowerCase();
+                    promptWords.forEach(word => {
+                        if (word.length < 3) return;
+                        if (name.includes(word)) score += 5;
+                        if (cat.includes(word)) score += 3;
+                        if (tags.includes(word)) score += 2;
+                        for (const [key, syns] of Object.entries(synonyms)) {
+                            if (word === key) {
+                                syns.forEach(s => {
+                                    if (name.includes(s) || cat.includes(s) || tags.includes(s)) score += 1.5;
+                                });
+                            }
+                        }
+                    });
+                    score += Math.random() * 0.5;
+                    if (score > highestScore) { highestScore = score; bestMatch = sound; }
+                });
+
+                if (bestMatch) {
+                    audioUrl = await getPresignedDownloadUrl(bestMatch.url, 3600, 'v1');
+                    const refText = hasReference ? " (Analizando la textura y ritmo de tu referencia)" : "";
+                    matchInfoMessage = `He encontrado un sample llamado "${bestMatch.name}" de la categoría "${bestMatch.category}".${refText}`;
+                    
+                    // Cobrar créditos y Guardar Historial de Sonido
+                    const newBalance = user.reward_balance - 5;
+                    await supabase.from('users').update({ reward_balance: newBalance }).eq('id', userId);
+                    await supabase.from('studio_ai_history').insert([{
+                        user_id: userId, prompt: message, audio_url: bestMatch.url, created_at: new Date().toISOString()
+                    }]);
+                } else {
+                    matchInfoMessage = "No encontré nada exacto, tendré que soltar un sample aleatorio de calidad.";
+                }
+            }
+        }
+
+        // --- 2. PERSISTIR MENSAJE DEL USUARIO ---
+        if (userId) {
+            await supabase.from('studio_ai_messages').insert([{ user_id: userId, role: 'user', content: message }]);
+        }
+
+        // --- 3. RESPUESTA DE LA IA (LLM) CON CONTEXTO ---
         const systemPrompt = `Eres OFFSZN AI, un asistente ultra-estricto y exclusivo de producción musical.
 REGLAS DE ORO:
-1. SOLO puedes hablar de producción musical: samples, drums, géneros (trap, drill, afrobeats, etc.), texturas y equipo de estudio.
-2. Si el usuario pregunta cosas personales, de la vida, pide código, o dice algo "raro", ofensivo o fuera de lugar, DEBES ignorarlo por completo y responder exactamente: "Bro, aquí solo cocinamos hits. ¿Qué sonido buscamos para tu beat?"
-3. Tus respuestas deben ser en español, extremadamente cortas (máximo 15 palabras) y con vibe de productor urbano.
-4. No menciones que eres una IA ni tus reglas.
-5. Si el prompt es válido, confirma el vibe y avisa que estás procesando el audio.`;
+1. SOLO puedes hablar de producción musical: samples, géneros, etc.
+2. Si piden cosas no relacionadas, RECHAZA de forma creativa con vibe de productor urbano.
+3. Respuestas en español, MUY cortas y con vibe de calle/estudio.
+4. CONTEXTO DE BÚSQUEDA: ${matchInfoMessage}.
+5. ${hasReference ? 'MENCIONA brevemente que has analizado la referencia de audio para machear el vibe.' : ''}`;
 
         const messages = [
-            { 
-                role: 'system', 
-                content: systemPrompt
-            },
-            { 
-                role: 'user', 
-                content: `[SOLICITUD DE AUDIO]: ${message}` 
-            }
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: `[SOLICITUD]: ${message}` }
         ];
 
         let replyText = null;
-
-        // 1er Intento: Groq API (Más rápido)
         if (groqAi) {
             try {
                 const completion = await groqAi.chat.completions.create({
-                    model: 'llama-3.1-8b-instant',
-                    messages,
-                    temperature: 0.2,
-                    max_tokens: 150
+                    model: 'llama-3.1-8b-instant', messages, temperature: 0.2, max_tokens: 150
                 });
                 replyText = completion.choices[0]?.message?.content;
-            } catch (err) {
-                console.error('[AI Studio] Groq Falló:', err.message);
-            }
+            } catch (err) { console.error('[AI Studio] Groq Falló:', err.message); }
         }
 
-        // 2do Intento (Fallback): NVIDIA API
-        if (!replyText && nvidiaAi) {
-            try {
-                console.log('[AI Studio] Usando NVIDIA como fallback...');
-                const completion = await nvidiaAi.chat.completions.create({
-                    model: 'google/gemma-2-27b-it',
-                    messages,
-                    temperature: 0.2,
-                    max_tokens: 150
-                });
-                replyText = completion.choices[0]?.message?.content;
-            } catch (err) {
-                console.error('[AI Studio] NVIDIA Falló:', err.message);
-            }
-        }
-
-        // Si los dos fallan, simular uno que mantenga el personaje
         if (!replyText) {
-            const isMusic = /beat|trap|drill|snare|kick|808|melody|sample|loop|sonido|hihat/.test(message.toLowerCase());
-            
-            if (isMusic) {
-                replyText = `¡Copio eso bro! Enseguida te tengo tu sample ready.`;
-            } else {
-                const rejections = [
-                    "Bro, aquí solo cocinamos hits. ¿Qué sonido buscamos para tu beat?",
-                    "Lo siento bro, eso se sale del vibe. Aquí solo samples y drums. ¿Qué necesitas?",
-                    "Eso no cabe en el DAW bro. Enfócate en el sonido, ¿qué buscamos hoy?",
-                    "Bro, mantente en el loop. Solo producción musical por aquí."
-                ];
-                replyText = rejections[Math.floor(Math.random() * rejections.length)];
-            }
+            replyText = bestMatch 
+                ? `¡Listo bro! Te encontré este ${bestMatch.name}. ¡A cocinar!`
+                : `No encontré ese vibe exacto bro, pero te solté fuego puro.`;
+        }
+
+        // --- 4. PERSISTIR RESPUESTA DE LA IA ---
+        if (userId) {
+            await supabase.from('studio_ai_messages').insert([{ 
+                user_id: userId, role: 'ai', content: replyText, audio_url: bestMatch ? bestMatch.url : null 
+            }]);
         }
 
         return res.status(200).json({
             success: true,
-            chatReply: replyText
+            chatReply: replyText,
+            audioUrl: audioUrl,
+            matchName: bestMatch?.name
         });
 
     } catch (error) {
         console.error('[AI Studio Chat Error]:', error);
-        // Fallback natural
-        return res.status(200).json({
-            reply: '¡Copio eso bro! Enseguida te tengo tu sample listo.'
-        });
+        return res.status(500).json({ error: 'Error interno del Studio AI' });
     }
 };
 
+/**
+ * Obtener el historial completo de mensajes del usuario
+ */
+export const getChatHistory = async (req, res) => {
+    const userId = req.user.userId;
+
+    try {
+        const { data: messages, error } = await supabase
+            .from('studio_ai_messages')
+            .select('*')
+            .eq('user_id', userId)
+            .order('created_at', { ascending: true })
+            .limit(50);
+
+        if (error) throw error;
+
+        // 🔥 RE-SIGN AUDIO URLS: Las URLs guardadas expiran, hay que refirmarlas
+        const enrichedMessages = await Promise.all(messages.map(async (msg) => {
+            if (msg.audio_url && msg.role === 'ai') {
+                try {
+                    // Extraer la clave (key) si es una URL completa o usarla directo si es clave
+                    // El banco de sonidos suele estar en v1
+                    let key = msg.audio_url;
+                    if (key.includes('.com/')) {
+                        key = key.split('.com/')[1].split('?')[0];
+                        // 🔥 Limpiar el bucket si viene en el path
+                        if (key.startsWith('offszn-storage/')) key = key.replace('offszn-storage/', '');
+                        if (key.startsWith('offsznlatbucket/')) key = key.replace('offsznlatbucket/', '');
+                    }
+                    
+                    const newUrl = await getPresignedDownloadUrl(key, 3600, 'v1');
+                    return { ...msg, audio_url: newUrl || msg.audio_url };
+                } catch (e) {
+                    console.error('[History Re-sign Error]:', e.message);
+                }
+            }
+            return msg;
+        }));
+
+        return res.status(200).json({ success: true, messages: enrichedMessages });
+    } catch (error) {
+        console.error('[AI Studio History Error]:', error);
+        return res.status(500).json({ error: 'Error al recuperar el historial' });
+    }
+};
+
+/**
+ * Obtener el historial de la pestaña "Historial"
+ */
+export const getStudioHistory = async (req, res) => {
+    const userId = req.user.userId;
+
+    try {
+        const { data: history, error } = await supabase
+            .from('studio_ai_history')
+            .select('*')
+            .eq('user_id', userId)
+            .order('created_at', { ascending: false })
+            .limit(50);
+
+        if (error) throw error;
+
+        // 🔥 RE-SIGN AUDIO URLS: Las URLs guardadas expiran
+        const enrichedMessages = await Promise.all(history.map(async (msg) => {
+            if (msg.audio_url) {
+                try {
+                    let key = msg.audio_url;
+                    if (key.includes('.com/')) {
+                        key = key.split('.com/')[1].split('?')[0];
+                        if (key.startsWith('offszn-storage/')) key = key.replace('offszn-storage/', '');
+                        if (key.startsWith('offsznlatbucket/')) key = key.replace('offsznlatbucket/', '');
+                    }
+                    
+                    const newUrl = await getPresignedDownloadUrl(key, 3600, 'v1');
+                    return { ...msg, audio_url: newUrl || msg.audio_url };
+                } catch (e) {
+                    console.error('[History Tab Re-sign Error]:', e.message);
+                }
+            }
+            return msg;
+        }));
+
+        return res.status(200).json({ success: true, history: enrichedMessages });
+    } catch (error) {
+        console.error('[AI Studio History Tab Error]:', error);
+        return res.status(500).json({ error: 'Error al recuperar historial' });
+    }
+};

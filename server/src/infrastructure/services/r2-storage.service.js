@@ -12,7 +12,7 @@ import {
 const s3ClientV1 = new S3Client({
     region: "auto",
     endpoint: R2_ENDPOINT,
-    forcePathStyle: true,
+    forcePathStyle: false, // 🔥 Recommended for Cloudflare R2 Virtual Host Style
     requestChecksumCalculation: "WHEN_REQUIRED",
     responseChecksumValidation: "WHEN_REQUIRED",
     credentials: {
@@ -25,7 +25,7 @@ const s3ClientV1 = new S3Client({
 const s3ClientV2 = new S3Client({
     region: "auto",
     endpoint: R2_ENDPOINT_V2,
-    forcePathStyle: true,
+    forcePathStyle: false, // 🔥 Recommended for Cloudflare R2 Virtual Host Style
     requestChecksumCalculation: "WHEN_REQUIRED",
     responseChecksumValidation: "WHEN_REQUIRED",
     credentials: {
@@ -156,9 +156,15 @@ export const getPresignedDownloadUrl = async (key, expiresIn = 3600, version = R
         const { client, bucket } = getClientAndBucket(version);
         if (!client) throw new Error(`R2 Client for version ${version} not found`);
 
+        // 🔥 FIX: R2 fails with 403 if the key starts with / during signing
+        let cleanKey = key;
+        if (typeof cleanKey === 'string') {
+            while (cleanKey.startsWith('/')) cleanKey = cleanKey.substring(1);
+        }
+
         const command = new GetObjectCommand({
             Bucket: bucket,
-            Key: key
+            Key: cleanKey
         });
 
         const signedUrl = await getSignedUrl(client, command, { expiresIn });

@@ -12,17 +12,22 @@
    ========================================== */
 
 /* --- Centering & Alignment --- */
-#profile-root.template-produccion_template_old_school {
+.template-produccion_template_old_school #profile-root {
     display: grid !important;
     grid-template-columns: 320px 1fr;
-    grid-template-rows: auto;
+    grid-template-areas: "sidebar main";
+    align-items: start;
     max-width: 1400px;
     margin: 0 auto !important;
-    padding: 40px 2rem 64px !important; /* Added 40px top padding for breathing room */
+    padding: 40px 2rem 64px !important;
     min-height: calc(100vh - 58px);
     background: transparent !important;
-    gap: 64px; /* Increased gap for editorial feel */
+    gap: 64px;
     font-family: 'Inter', sans-serif !important;
+}
+
+.template-produccion_template_old_school #profile-root > #profileBanner {
+    display: none !important;
 }
 
 body.template-produccion_template_old_school {
@@ -30,7 +35,8 @@ body.template-produccion_template_old_school {
 }
 
 /* --- Sidebar --- */
-#profile-root.template-produccion_template_old_school > .profile-header {
+.template-produccion_template_old_school #profile-root > .profile-header {
+    grid-area: sidebar;
     position: sticky;
     top: 80px;
     padding: 24px;
@@ -44,25 +50,27 @@ body.template-produccion_template_old_school {
     z-index: 10;
 }
 
-#profile-root.template-produccion_template_old_school .profile-header-content {
-    flex-direction: column;
+.template-produccion_template_old_school #profile-root .profile-header-content {
+    display: flex !important;
+    flex-direction: column !important;
     align-items: center;
     text-align: center;
-    gap: 16px;
+    gap: 0; /* Gap handled by margins for precision */
     width: 100%;
 }
 
 /* Avatar - Shrinking to match YVIv4 */
-#profile-root.template-produccion_template_old_school .profile-avatar-container {
+.template-produccion_template_old_school #profile-root .profile-avatar-container {
+    order: -1 !important; /* Force to the very top */
     width: 96px;
     height: 96px;
-    margin-bottom: 8px;
+    margin-bottom: 24px;
     display: flex;
     justify-content: center;
     align-items: center;
 }
 
-#profile-root.template-produccion_template_old_school .profile-avatar-img {
+.template-produccion_template_old_school #profile-root .profile-avatar-img {
     width: 100%;
     height: 100%;
     border-radius: 50%;
@@ -70,71 +78,113 @@ body.template-produccion_template_old_school {
     overflow: hidden;
 }
 
-#profile-root.template-produccion_template_old_school .profile-avatar-img img {
+.template-produccion_template_old_school #profile-root .profile-avatar-img img {
     border-radius: 50%;
     width: 100%;
     height: 100%;
     object-fit: cover;
 }
 
-/* Details */
-#profile-root.template-produccion_template_old_school .profile-details {
-    display: flex;
-    flex-direction: column;
+/* --- Details (Name & Role) --- */
+.template-produccion_template_old_school #profile-root .profile-details {
+    order: 2 !important;
+    display: flex !important;
+    flex-direction: column !important;
     align-items: center;
     width: 100%;
+    margin-bottom: 8px !important;
 }
 
-#profile-root.template-produccion_template_old_school .profile-top-row {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    width: 100%;
+/* --- Top Level Sidebar Sections (Siblings in .profile-header-content) --- */
+.template-produccion_template_old_school #profile-root .profile-actions {
+    order: 3 !important;
 }
 
-#profile-root.template-produccion_template_old_school .profile-details h1 {
-    font-size: 1.75rem;
-    font-weight: 800;
-    letter-spacing: -0.02em; 
-    margin: 0;
-    color: #fff;
+.template-produccion_template_old_school #profile-root .sidebar-section {
+    order: 4 !important; /* Stats by default */
 }
 
-#profile-root.template-produccion_template_old_school .profile-meta {
+.template-produccion_template_old_school #profile-root .sidebar-products-section {
+    order: 5 !important;
+}
+
+.template-produccion_template_old_school #profile-root .sidebar-bio-section {
+    order: 6 !important;
+}
+
+.template-produccion_template_old_school #profile-root .sidebar-socials-section {
+    order: 7 !important;
+}
+
+
+/* Match the hierarchy: Role on top of Name */
+.template-produccion_template_old_school #profile-root .profile-details {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    background: none !important;
+    padding: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+.template-produccion_template_old_school #profile-root .profile-meta {
+    order: 1 !important; /* 2. Rol */
     font-size: 0.7rem;
     color: rgba(255, 255, 255, 0.4);
-    margin-top: -2px;
+    margin: 0 0 8px 0 !important;
+    display: flex !important;
+    justify-content: center !important;
+    width: 100% !important;
+    background: none !important;
 }
 
-#profile-root.template-produccion_template_old_school #profileRole {
+.template-produccion_template_old_school #profile-root .profile-top-row {
+    order: 2 !important; /* 3. Nickname */
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 100% !important;
+    background: none !important;
+    padding: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+    margin-bottom: 24px !important;
+}
+
+.template-produccion_template_old_school #profile-root .profile-role-sub {
     font-size: 0.75rem;
     color: rgba(255, 255, 255, 0.4);
     font-weight: 500;
-    margin-bottom: 2px;
 }
 
-#profile-root.template-produccion_template_old_school .profile-bio {
-    font-size: 0.8rem;
-    color: #888;
-    margin: 12px 0;
-    max-width: 260px;
+.template-produccion_template_old_school #profile-root .profile-bio-section {
+    margin-top: 0 !important;
 }
 
 /* --- Premium Buttons (YVIv4 Style) --- */
-#profile-root.template-produccion_template_old_school .profile-actions {
+.template-produccion_template_old_school #profile-root .profile-actions {
     position: static !important;
     transform: none !important;
     flex-direction: column;
     width: 100%;
     gap: 8px;
-    margin-top: 8px;
-    margin-bottom: 4px; /* Reduced gap to separator */
+    margin-top: 0 !important;
+    margin-bottom: 32px !important;
     max-width: 260px;
+    align-items: center;
+    display: flex !important;
+}
+
+.template-produccion_template_old_school #profile-root .skeleton-actions-container {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px;
+    width: 100%;
     align-items: center;
 }
 
-#profile-root.template-produccion_template_old_school .profile-actions button {
+.template-produccion_template_old_school #profile-root .profile-actions button {
     width: 100% !important;
     height: 40px;
     border-radius: 8px !important;
@@ -149,28 +199,25 @@ body.template-produccion_template_old_school {
     justify-content: center;
 }
 
-#profile-root.template-produccion_template_old_school .profile-actions button:hover {
+.template-produccion_template_old_school #profile-root .profile-actions button:hover {
     background: #333 !important;
 }
 
 /* --- Main Content Area --- */
-#profile-root.template-produccion_template_old_school > .profile-body {
+.template-produccion_template_old_school #profile-root > .profile-body {
+    grid-area: main;
     padding: 32px 0; /* Content also spans to the right alignment */
     width: 100%;
+    min-width: 0;
     margin: 0;
 }
 
 /* Tabs (Moved to Header of Body) */
-#profile-root.template-produccion_template_old_school .profile-tabs-nav {
-    display: flex !important;
-    gap: 32px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-    margin-bottom: 24px;
-    padding-bottom: 0;
-    justify-content: flex-start;
+.template-produccion_template_old_school #profile-root .profile-tabs-nav {
+    display: none !important; /* Removed as requested for simplification */
 }
 
-#profile-root.template-produccion_template_old_school .profile-tab-btn {
+.template-produccion_template_old_school #profile-root .profile-tab-btn {
     font-size: 0.85rem;
     font-weight: 800;
     padding: 12px 0;
@@ -178,20 +225,25 @@ body.template-produccion_template_old_school {
     border-bottom: 2px solid transparent;
 }
 
-#profile-root.template-produccion_template_old_school .profile-tab-btn.active {
+.template-produccion_template_old_school #profile-root .profile-tab-btn.active {
     color: #fff;
     border-bottom-color: #fff;
 }
 
 /* --- TRENDING / PACKS (Recommended Style) --- */
-#profile-root.template-produccion_template_old_school .trending-grid {
+.template-produccion_template_old_school #profile-root .trending-grid {
     display: grid !important;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)) !important;
-    gap: 20px;
+    grid-template-columns: repeat(3, 1fr) !important; /* Forces 3 smaller cards as requested */
+    gap: 24px;
 }
 
-#profile-root.template-produccion_template_old_school .skeleton-card,
-#profile-root.template-produccion_template_old_school .trending-card {
+/* Solo mostrar 3 skeletons en esta plantilla (que ahora es de 3 cols) */
+.template-produccion_template_old_school #profile-root .trending-grid .skeleton-card:nth-child(n+4) {
+    display: none !important;
+}
+
+.template-produccion_template_old_school #profile-root .skeleton-card,
+.template-produccion_template_old_school #profile-root .trending-card {
     padding: 12px;
     background: transparent;
     border-radius: 12px;
@@ -199,15 +251,15 @@ body.template-produccion_template_old_school {
     gap: 12px;
 }
 
-#profile-root.template-produccion_template_old_school .trending-card:hover {
+.template-produccion_template_old_school #profile-root .trending-card:hover {
     background: #1A1A1A;
 }
 
-#profile-root.template-produccion_template_old_school .t-card-cover {
+.template-produccion_template_old_school #profile-root .t-card-cover {
     border-radius: 8px;
 }
 
-#profile-root.template-produccion_template_old_school .t-play-btn {
+.template-produccion_template_old_school #profile-root .t-play-btn {
     top: auto;
     bottom: 8px;
     left: auto;
@@ -220,16 +272,16 @@ body.template-produccion_template_old_school {
     color: #000;
 }
 
-#profile-root.template-produccion_template_old_school .trending-card:hover .t-play-btn {
+.template-produccion_template_old_school #profile-root .trending-card:hover .t-play-btn {
     opacity: 1;
     transform: translateY(0);
 }
 
-#profile-root.template-produccion_template_old_school .t-play-btn:hover {
+.template-produccion_template_old_school #profile-root .t-play-btn:hover {
     transform: translateY(0) scale(1.05) !important;
 }
 
-#profile-root.template-produccion_template_old_school .t-overlay-badge {
+.template-produccion_template_old_school #profile-root .t-overlay-badge {
     bottom: auto;
     top: 8px;
     left: auto;
@@ -241,45 +293,45 @@ body.template-produccion_template_old_school {
     transition: opacity 0.2s ease;
 }
 
-#profile-root.template-produccion_template_old_school .trending-card:hover .t-overlay-badge {
+.template-produccion_template_old_school #profile-root .trending-card:hover .t-overlay-badge {
     opacity: 1;
 }
 
-#profile-root.template-produccion_template_old_school .t-card-info {
+.template-produccion_template_old_school #profile-root .t-card-info {
     text-align: left;
 }
 
-#profile-root.template-produccion_template_old_school .t-card-info h4 {
+.template-produccion_template_old_school #profile-root .t-card-info h4 {
     font-size: 0.95rem;
     font-weight: 700;
     margin-bottom: 4px;
 }
 
-#profile-root.template-produccion_template_old_school .t-card-author span {
+.template-produccion_template_old_school #profile-root .t-card-author span {
     font-size: 0.8rem;
     color: rgba(255, 255, 255, 0.5);
     text-decoration: none;
     transition: color 0.2s ease;
 }
 
-#profile-root.template-produccion_template_old_school .t-card-author span:hover {
+.template-produccion_template_old_school #profile-root .t-card-author span:hover {
     text-decoration: underline;
     color: rgba(255, 255, 255, 0.8);
 }
 
-#profile-root.template-produccion_template_old_school .t-meta-row {
+.template-produccion_template_old_school #profile-root .t-meta-row {
     display: none !important;
 }
 
 /* Trending actions (injected via JS) */
-#profile-root.template-produccion_template_old_school .t-card-actions {
+.template-produccion_template_old_school #profile-root .t-card-actions {
     display: flex;
     gap: 8px;
     margin-top: 12px;
     width: 100%;
 }
 
-#profile-root.template-produccion_template_old_school .t-card-actions .btn-t-price {
+.template-produccion_template_old_school #profile-root .t-card-actions .btn-t-price {
     flex: 1;
     background: transparent;
     color: #fff;
@@ -295,11 +347,11 @@ body.template-produccion_template_old_school {
     transition: all 0.2s ease;
 }
 
-#profile-root.template-produccion_template_old_school .t-card-actions .btn-t-price:hover {
+.template-produccion_template_old_school #profile-root .t-card-actions .btn-t-price:hover {
     background: rgba(45, 136, 255, 0.1);
 }
 
-#profile-root.template-produccion_template_old_school .t-card-actions .btn-t-download {
+.template-produccion_template_old_school #profile-root .t-card-actions .btn-t-download {
     background: transparent;
     color: #888;
     border: 1px solid #444;
@@ -313,19 +365,19 @@ body.template-produccion_template_old_school {
     transition: all 0.2s ease;
 }
 
-#profile-root.template-produccion_template_old_school .t-card-actions .btn-t-download:hover {
+.template-produccion_template_old_school #profile-root .t-card-actions .btn-t-download:hover {
     color: #fff;
     border-color: #888;
 }
 
 /* --- PRODUCT LIST (HORIZONTAL ROWS ONLY) --- */
-#profile-root.template-produccion_template_old_school #profileProductsList {
+.template-produccion_template_old_school #profile-root #profileProductsList {
     display: flex !important;
     flex-direction: column;
     gap: 4px;
 }
 
-#profile-root.template-produccion_template_old_school #profileProductsList .list-row {
+.template-produccion_template_old_school #profile-root #profileProductsList .list-row {
     display: flex !important;
     flex-direction: row !important;
     align-items: center;
@@ -341,14 +393,14 @@ body.template-produccion_template_old_school {
     margin-bottom: 0;
 }
 
-#profile-root.template-produccion_template_old_school #profileProductsList .list-row:hover {
+.template-produccion_template_old_school #profile-root #profileProductsList .list-row:hover {
     background: #1A1A1A !important;
     transform: none !important;
     box-shadow: none !important;
 }
 
 /* Image */
-#profile-root.template-produccion_template_old_school .list-row .list-cover {
+.template-produccion_template_old_school #profile-root .list-row .list-cover {
     width: 48px !important;
     height: 48px !important;
     border-radius: 6px;
@@ -357,7 +409,7 @@ body.template-produccion_template_old_school {
 }
 
 /* Info Column */
-#profile-root.template-produccion_template_old_school .list-row .list-col-info {
+.template-produccion_template_old_school #profile-root .list-row .list-col-info {
     flex: 1; 
     min-width: 0; /* CRITICAL for text truncation in flex */
     display: flex;
@@ -367,7 +419,7 @@ body.template-produccion_template_old_school {
     margin-right: 16px;
 }
 
-#profile-root.template-produccion_template_old_school .list-row .list-track-title {
+.template-produccion_template_old_school #profile-root .list-row .list-track-title {
     font-size: 1rem;
     font-weight: 700;
     color: #fff;
@@ -376,14 +428,14 @@ body.template-produccion_template_old_school {
     text-overflow: ellipsis;
 }
 
-#profile-root.template-produccion_template_old_school .list-row .list-track-author {
+.template-produccion_template_old_school #profile-root .list-row .list-track-author {
     font-size: 0.85rem;
     color: rgba(255, 255, 255, 0.5);
     margin-top: 2px;
 }
 
 /* Price Button Column */
-#profile-root.template-produccion_template_old_school .list-row .list-col-price {
+.template-produccion_template_old_school #profile-root .list-row .list-col-price {
     flex-shrink: 0;
     display: flex;
     align-items: center;
@@ -391,7 +443,7 @@ body.template-produccion_template_old_school {
     margin-top: 0 !important;
 }
 
-#profile-root.template-produccion_template_old_school .list-row .btn-list-price {
+.template-produccion_template_old_school #profile-root .list-row .btn-list-price {
     background: #fff;
     color: #000;
     border-radius: 6px;
@@ -406,17 +458,17 @@ body.template-produccion_template_old_school {
     transition: all 0.2s ease;
 }
 
-#profile-root.template-produccion_template_old_school .list-row .btn-list-price:hover {
+.template-produccion_template_old_school #profile-root .list-row .btn-list-price:hover {
     background: #e0e0e0;
 }
 
 /* Hide waveform in old school template to keep it clean */
-#profile-root.template-produccion_template_old_school .list-row .list-col-player {
+.template-produccion_template_old_school #profile-root .list-row .list-col-player {
     display: none !important;
 }
 
 /* Options Menu & Download Buttons */
-#profile-root.template-produccion_template_old_school .list-row .list-col-actions {
+.template-produccion_template_old_school #profile-root .list-row .list-col-actions {
     display: flex !important;
     width: auto !important;
     margin-top: 0 !important;
@@ -425,7 +477,7 @@ body.template-produccion_template_old_school {
     gap: 8px; /* space between download and menu */
 }
 
-#profile-root.template-produccion_template_old_school .list-row .btn-list-action {
+.template-produccion_template_old_school #profile-root .list-row .btn-list-action {
     background: transparent;
     color: #fff;
     border: 1px solid rgba(255, 255, 255, 0.2);
@@ -438,13 +490,69 @@ body.template-produccion_template_old_school {
     transition: all 0.2s ease;
 }
 
-#profile-root.template-produccion_template_old_school .list-row .btn-list-action:hover {
+.template-produccion_template_old_school #profile-root .list-row .btn-list-action:hover {
     background: rgba(255, 255, 255, 0.05);
     border-color: rgba(255, 255, 255, 0.4);
 }
 
+/* --- PRODUCT SKELETON OVERRIDES (OLD SCHOOL MATCH) --- */
+.template-produccion_template_old_school #profile-root .products-list-container .skeleton-list-row {
+    display: flex !important; /* Switch to flex to match Old School tracks */
+    gap: 16px !important;
+    padding: 12px 16px !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+    background: transparent !important;
+    min-height: 73px;
+    align-items: center;
+}
+
+/* Match cover size */
+.template-produccion_template_old_school #profile-root .skeleton-list-row > div:nth-child(1) {
+    width: 48px !important;
+    height: 48px !important;
+    flex-shrink: 0;
+}
+
+/* Match info column */
+.template-produccion_template_old_school #profile-root .skeleton-list-row > div:nth-child(2) {
+    flex: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 6px !important;
+}
+
+/* Hide waveform and extra columns in skeleton */
+.template-produccion_template_old_school #profile-root .skeleton-list-row > div:nth-child(3), /* Original Waveform col */
+.template-produccion_template_old_school #profile-root .skeleton-list-row .skeleton-waveform,
+.template-produccion_template_old_school #profile-root .skeleton-list-row > div:nth-child(4), /* Original price col */
+.template-produccion_template_old_school #profile-root .skeleton-list-row > div:nth-child(5) {
+    display: none !important;
+}
+
+/* Add Price skeleton at the end */
+.template-produccion_template_old_school #profile-root .skeleton-list-row::after {
+    content: "";
+    width: 80px;
+    height: 36px;
+    background: rgba(255, 255, 255, 0.08); 
+    border-radius: 6px;
+    flex-shrink: 0;
+    margin-left: 16px;
+    order: 2;
+}
+
+/* Actions skeleton */
+.template-produccion_template_old_school #profile-root .skeleton-list-row > div:last-child {
+    display: flex !important;
+    gap: 8px !important;
+    flex-shrink: 0;
+    margin-left: 16px;
+    order: 3;
+}
+
+
 /* --- SIDEBAR SECTIONS (Old School Redesign) --- */
-#profile-root.template-produccion_template_old_school .sidebar-section {
+.template-produccion_template_old_school #profile-root .sidebar-section {
     width: 100%;
     margin-top: 16px;
     padding-top: 16px;
@@ -453,7 +561,7 @@ body.template-produccion_template_old_school {
     align-items: flex-start;
 }
 
-#profile-root.template-produccion_template_old_school .sidebar-label {
+.template-produccion_template_old_school #profile-root .sidebar-label {
     font-size: 0.8rem;
     font-weight: 600;
     text-transform: none; /* Just normal case */
@@ -463,13 +571,13 @@ body.template-produccion_template_old_school {
 }
 
 /* Stats */
-#profile-root.template-produccion_template_old_school .sidebar-stats-list {
+.template-produccion_template_old_school #profile-root .sidebar-stats-list {
     display: flex;
     flex-direction: column;
     gap: 12px;
 }
 
-#profile-root.template-produccion_template_old_school .sidebar-stat-row {
+.template-produccion_template_old_school #profile-root .sidebar-stat-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -477,19 +585,19 @@ body.template-produccion_template_old_school {
     color: rgba(255, 255, 255, 0.6);
 }
 
-#profile-root.template-produccion_template_old_school .sidebar-stat-row b {
+.template-produccion_template_old_school #profile-root .sidebar-stat-row b {
     color: #fff;
     font-weight: 700;
 }
 
 /* Products Chips */
-#profile-root.template-produccion_template_old_school .sidebar-chips {
+.template-produccion_template_old_school #profile-root .sidebar-chips {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
 }
 
-#profile-root.template-produccion_template_old_school .sidebar-chip {
+.template-produccion_template_old_school #profile-root .sidebar-chip {
     padding: 6px 14px;
     background: #282828;
     border: none;
@@ -503,24 +611,24 @@ body.template-produccion_template_old_school {
     transition: background 0.2s ease;
 }
 
-#profile-root.template-produccion_template_old_school .sidebar-chip:hover {
+.template-produccion_template_old_school #profile-root .sidebar-chip:hover {
     background: #383838;
 }
 
-#profile-root.template-produccion_template_old_school .sidebar-chip span {
+.template-produccion_template_old_school #profile-root .sidebar-chip span {
     color: #fff;
     font-weight: 700;
 }
 
 /* Bio */
-#profile-root.template-produccion_template_old_school .sidebar-bio {
+.template-produccion_template_old_school #profile-root .sidebar-bio {
     font-size: 0.85rem;
     line-height: 1.6;
     color: rgba(255, 255, 255, 0.6);
     word-break: break-word;
 }
 
-#profile-root.template-produccion_template_old_school .bio-toggle-link {
+.template-produccion_template_old_school #profile-root .bio-toggle-link {
     color: #2d88ff; /* Beatstars vibrant blue */
     font-weight: 600;
     font-size: 0.8rem;
@@ -530,18 +638,18 @@ body.template-produccion_template_old_school {
     transition: opacity 0.2s;
 }
 
-#profile-root.template-produccion_template_old_school .bio-toggle-link:hover {
+.template-produccion_template_old_school #profile-root .bio-toggle-link:hover {
     opacity: 0.7;
 }
 
 /* Socials */
-#profile-root.template-produccion_template_old_school .sidebar-social-list {
+.template-produccion_template_old_school #profile-root .sidebar-social-list {
     display: flex;
     flex-direction: column;
     gap: 16px;
 }
 
-#profile-root.template-produccion_template_old_school .sidebar-social-row {
+.template-produccion_template_old_school #profile-root .sidebar-social-row {
     display: flex;
     align-items: center;
     gap: 12px;
@@ -552,20 +660,384 @@ body.template-produccion_template_old_school {
     transition: all 0.2s ease;
 }
 
-#profile-root.template-produccion_template_old_school .sidebar-social-row:hover {
+.template-produccion_template_old_school #profile-root .sidebar-social-row:hover {
     color: #fff;
     transform: translateX(4px);
 }
 
-#profile-root.template-produccion_template_old_school .sidebar-social-row i {
+.template-produccion_template_old_school #profile-root .sidebar-social-row i {
     font-size: 1.2rem;
     color: #fff;
 }
 
 /* Responsive Grid */
 @media (max-width: 1024px) {
-    #profile-root.template-produccion_template_old_school {
+    .template-produccion_template_old_school #profile-root {
         grid-template-columns: 1fr;
-        padding: 0 1rem;
+        grid-template-areas: 
+            "sidebar"
+            "main";
+        padding: 24px 1rem !important;
+        gap: 32px;
     }
+    
+    .template-produccion_template_old_school #profile-root > .profile-header {
+        position: relative;
+        top: 0;
+        width: 100%;
+    }
+
+    .template-produccion_template_old_school #profile-root > .profile-body {
+        width: 100%;
+        min-width: 0;
+        overflow: hidden;
+    }
+}
+
+/* --- Professional Skeleton Overhaul (Old School) --- */
+.template-produccion_template_old_school .profile-header-content {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+}
+
+/* 1. Avatar (Top) */
+.template-produccion_template_old_school .profile-avatar-container {
+    order: -1 !important;
+    margin-bottom: 24px !important;
+}
+
+/* 2. Meta (Role) - Real Content style: Role on TOP of name */
+.template-produccion_template_old_school .profile-details .profile-meta {
+    order: 1 !important;
+    display: flex !important;
+    justify-content: center !important;
+    margin-bottom: 8px !important;
+    background: none !important;
+    padding: 0 !important;
+}
+
+/* 3. Top-Row (Name) - Remove any background/pill artifact */
+.template-produccion_template_old_school .profile-details .profile-top-row {
+    order: 2 !important;
+    display: flex !important;
+    justify-content: center !important;
+    margin-bottom: 24px !important;
+    background: none !important;
+    padding: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+/* --- Professional Skeleton Overhaul (Old School) --- */
+.template-produccion_template_old_school .profile-header-content {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    background: none !important;
+}
+
+/* 1. Avatar (Top) */
+.template-produccion_template_old_school .profile-avatar-container {
+    order: 1 !important;
+    margin-bottom: 24px !important;
+}
+
+/* 2. Meta (Role) - Real Content style: Role on TOP of name */
+.template-produccion_template_old_school .profile-meta {
+    order: 2 !important;
+    display: flex !important;
+    justify-content: center !important;
+    margin-bottom: 8px !important;
+    background: none !important;
+    padding: 0 !important;
+}
+
+/* 3. Top-Row (Name) - Remove any background/pill artifact */
+.template-produccion_template_old_school .profile-top-row {
+    order: 3 !important;
+    display: flex !important;
+    justify-content: center !important;
+    margin-bottom: 24px !important;
+    background: none !important;
+    padding: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+/* 4. Actions (Buttons) - Stacked vertical bars */
+.template-produccion_template_old_school .profile-actions {
+    order: 4 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+    width: 100% !important;
+    max-width: 260px !important;
+    margin-bottom: 32px !important;
+}
+
+.template-produccion_template_old_school .skeleton-actions-container {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+    width: 100% !important;
+}
+
+/* 5. "Bloque grande imaginario" para el resto */
+.template-produccion_template_old_school .profile-middle-row {
+    order: 5 !important;
+    width: 100% !important;
+    height: 320px !important;
+    background: linear-gradient(90deg, #1a1a1a 25%, #262626 50%, #1a1a1a 75%) !important;
+    background-size: 200% 100% !important;
+    animation: skeleton-shimmer 1.5s infinite linear !important;
+    border-radius: 12px !important;
+}
+
+/* Hide specific internal skeletons inside the large block to keep it clean */
+.template-produccion_template_old_school .profile-middle-row * {
+    display: none !important;
+}
+
+/* --- Isolated Skeleton Toggling --- */
+.template-produccion_template_old_school #os-skeleton {
+    display: flex !important;
+}
+
+.template-produccion_template_old_school .profile-avatar-container,
+.template-produccion_template_old_school .profile-details {
+    display: none !important;
+}
+
+/* Show real content once loaded (when skeletons are removed/hidden by JS) */
+.template-produccion_template_old_school.loaded-profile .profile-avatar-container,
+.template-produccion_template_old_school.loaded-profile .profile-details {
+    display: flex !important;
+}
+.template-produccion_template_old_school.loaded-profile #os-skeleton {
+    display: none !important;
+}
+
+/* --- Old School Skeleton Styles --- */
+.os-skeleton-container {
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    gap: 0;
+}
+
+.os-skel-avatar {
+    width: 96px !important;
+    height: 96px !important;
+    border-radius: 50% !important;
+    margin-bottom: 24px !important;
+}
+
+.os-skel-role {
+    width: 120px !important;
+    height: 14px !important;
+    margin-bottom: 8px !important;
+}
+
+.os-skel-name {
+    width: 180px !important;
+    height: 24px !important;
+    margin-bottom: 24px !important;
+}
+
+.os-skel-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+    max-width: 260px;
+    margin-bottom: 32px;
+}
+
+.os-skel-btn {
+    width: 100% !important;
+    height: 40px !important;
+    border-radius: 8px !important;
+}
+
+.os-skel-body-block {
+    width: 100% !important;
+    height: 320px !important;
+    border-radius: 12px !important;
+}
+
+/* --- Isolated Old School Skeleton System --- */
+.template-produccion_template_old_school #os-skeleton {
+    display: flex !important;
+}
+
+/* Hide default skeleton parts while template is active and LOADING */
+.template-produccion_template_old_school #profile-root:not(.header-loaded) .profile-avatar-container,
+.template-produccion_template_old_school #profile-root:not(.header-loaded) .profile-details {
+    display: none !important;
+}
+
+/* Swap: Hide os-skeleton and show real content when data arrives */
+.template-produccion_template_old_school #profile-root.header-loaded #os-skeleton {
+    display: none !important;
+}
+
+.template-produccion_template_old_school #profile-root.header-loaded .profile-avatar-container,
+.template-produccion_template_old_school #profile-root.header-loaded .profile-details {
+    display: flex !important;
+}
+
+/* Styles for Isolated os-skel classes */
+.os-skeleton-wrapper {
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+}
+
+.os-skel-avatar {
+    width: 96px !important;
+    height: 96px !important;
+    border-radius: 50% !important;
+    margin-bottom: 24px !important;
+}
+
+.os-skel-role {
+    width: 120px !important;
+    height: 14px !important;
+    margin-bottom: 8px !important;
+}
+
+.os-skel-name {
+    width: 180px !important;
+    height: 24px !important;
+    margin-bottom: 24px !important;
+}
+
+.os-skel-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+    max-width: 260px;
+    margin-bottom: 32px;
+}
+
+.os-skel-btn {
+    width: 100% !important;
+    height: 40px !important;
+    border-radius: 8px !important;
+}
+
+.os-skel-body-block {
+    width: 100% !important;
+    height: 320px !important;
+    border-radius: 12px !important;
+}
+
+/* Premium Shimmer Animation */
+.os-skeleton-wrapper .skeleton {
+    background: linear-gradient(90deg, #121212 25%, #1d1d1d 50%, #121212 75%) !important;
+    background-size: 200% 100% !important;
+    animation: os-shimmer 1.5s infinite linear !important;
+    border: none !important;
+}
+
+@keyframes os-shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+}
+
+.template-produccion_template_old_school .skeleton {
+    background: linear-gradient(90deg, #1a1a1a 25%, #262626 50%, #1a1a1a 75%) !important;
+    background-size: 200% 100% !important;
+    animation: skeleton-shimmer 1.5s infinite linear !important;
+    border-radius: 4px !important;
+    display: inline-block !important;
+    border: none !important;
+    color: transparent !important;
+}
+
+.template-produccion_template_old_school .skeleton-profile-avatar {
+    width: 96px !important;
+    height: 96px !important;
+    border-radius: 50% !important;
+    margin: 0 auto 16px !important;
+    display: block !important;
+}
+
+.template-produccion_template_old_school .skeleton-profile-name {
+    width: 180px !important;
+    height: 24px !important;
+    margin-bottom: 8px !important;
+}
+
+.template-produccion_template_old_school .skeleton-profile-meta {
+    width: 120px !important;
+    height: 14px !important;
+    margin-bottom: 4px !important;
+}
+
+.template-produccion_template_old_school .skeleton-profile-btn {
+    width: 100% !important;
+    height: 40px !important;
+    border-radius: 8px !important;
+    margin-bottom: 8px !important;
+}
+
+.template-produccion_template_old_school .skeleton-profile-stats {
+    width: 100% !important;
+    height: 12px !important;
+    margin-bottom: 12px !important;
+}
+
+.template-produccion_template_old_school .skeleton-profile-bio {
+    width: 100% !important;
+    height: 12px !important;
+    margin-bottom: 8px !important;
+}
+
+.template-produccion_template_old_school .skeleton-profile-social {
+    width: 24px !important;
+    height: 24px !important;
+    border-radius: 50% !important;
+    margin-right: 12px !important;
+}
+
+
+
+/* --- Skeleton Global Cleanup --- */
+/* Hide all skeletons once the real data is loaded and the 'header-loaded' class is added to #profile-root */
+#profile-root.header-loaded .skeleton,
+#profile-root.header-loaded .skeleton-profile-meta,
+#profile-root.header-loaded .skeleton-profile-stats,
+#profile-root.header-loaded .skeleton-profile-social,
+#profile-root.header-loaded .skeleton-profile-btn,
+#profile-root.header-loaded .os-skeleton-wrapper {
+    display: none !important;
+}
+
+/* --- TOP LOADING BAR --- */
+#top-loading-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 0%;
+    height: 3px;
+    background: linear-gradient(90deg, #7c3aed, #db2777, #7c3aed); /* Purple to Pink gradient */
+    background-size: 200% 100%;
+    z-index: 9999;
+    transition: width 0.4s cubic-bezier(0.1, 0.7, 0.1, 1), opacity 0.3s ease;
+    box-shadow: 0 0 10px rgba(124, 58, 237, 0.5), 0 0 5px rgba(219, 39, 119, 0.3);
+    pointer-events: none;
+    opacity: 0;
+}
+
+#top-loading-bar.loading {
+    opacity: 1;
+    animation: loading-bar-shimmer 2s infinite linear;
+}
+
+@keyframes loading-bar-shimmer {
+    0% { background-position: 100% 0; }
+    100% { background-position: -100% 0; }
 }
