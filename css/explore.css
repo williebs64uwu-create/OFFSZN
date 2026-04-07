@@ -2931,20 +2931,37 @@
     transform: scale(1.02);
 }
 
+.pw-featured-img-wrapper {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    overflow: hidden;
+}
+
 .pw-featured-img {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    transition: transform 0.4s ease;
 }
 
-.pw-featured-info {
+.pw-featured-card:hover .pw-featured-img {
+    transform: scale(1.1);
+}
+
+.pw-featured-content {
     position: absolute;
     bottom: 0;
     left: 0;
     width: 100%;
     padding: 24px;
-    background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 100%);
+    background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 100%);
     pointer-events: none;
+    z-index: 4;
+}
+
+.pw-featured-stats {
+    display: none; /* Hidden on Desktop */
 }
 
 .pw-featured-name {
@@ -2955,6 +2972,53 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+}
+
+/* Play Button Overlay (Desktop Only) */
+.pw-featured-play-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.2);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+    z-index: 5;
+}
+
+.pw-featured-card:hover .pw-featured-play-overlay {
+    opacity: 1;
+}
+
+.pw-featured-play-btn {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: auto;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+}
+
+.pw-featured-play-btn i {
+    font-size: 2rem;
+    margin-left: 4px; /* Optical center for icon */
+}
+
+.pw-featured-play-btn:hover {
+    background: #fff;
+    color: #000 !important;
+    transform: scale(1.1);
 }
 
 /* 2. Tracks Grid (2 Columns) */
@@ -2992,6 +3056,38 @@
     width: 100%;
     height: 100%;
     object-fit: cover;
+    transition: transform 0.4s ease;
+}
+
+.pw-track-play-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: all 0.3s ease;
+    z-index: 2;
+}
+
+.pw-track-play-overlay i {
+    color: #fff;
+    font-size: 1.4rem;
+    transform: scale(0.8);
+    transition: transform 0.3s ease;
+}
+
+.pw-track-item:hover .pw-track-play-overlay {
+    opacity: 1;
+}
+
+.pw-track-item:hover .pw-track-play-overlay i {
+    transform: scale(1);
+}
+
+.pw-track-item:hover .pw-track-cover {
+    transform: scale(1.1);
 }
 
 .pw-track-info {
@@ -3060,9 +3156,92 @@
 }
 
 @media (max-width: 900px) {
+    .pw-header {
+        flex-direction: column;
+        gap: 16px;
+        text-align: center;
+    }
+    
+    .pw-grid {
+        display: block;
+    }
+
     .pw-tracks-grid {
-        grid-template-columns: 1fr;
+        display: none !important;
+    }
+
+    /* Transition Hero to Compact Row */
+    .pw-featured-card {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
         gap: 20px;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255,255,255,0.05);
+        padding: 16px;
+        aspect-ratio: auto;
+        border-radius: 16px;
+    }
+
+    .pw-featured-img-wrapper {
+        width: 100px;
+        height: 100px;
+        flex-shrink: 0;
+        border-radius: 12px;
+        aspect-ratio: auto;
+    }
+
+    .pw-featured-content {
+        position: static;
+        padding: 0;
+        background: none;
+        pointer-events: auto;
+    }
+
+    .pw-featured-name {
+        font-size: 1.25rem;
+        margin-bottom: 8px;
+        white-space: normal;
+    }
+
+    .pw-featured-stats {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .pw-stat-row {
+        display: flex;
+        align-items: baseline;
+        gap: 6px;
+    }
+
+    .pw-stat-value {
+        font-size: 0.9rem;
+        font-weight: 800;
+        color: #fff;
+    }
+
+    .pw-stat-label {
+        font-size: 0.75rem;
+        color: rgba(255, 255, 255, 0.4);
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .pw-featured-play-overlay {
+        opacity: 1; /* Always show small play btn on mobile */
+        background: transparent;
+    }
+
+    .pw-featured-play-btn {
+        width: 44px;
+        height: 44px;
+    }
+
+    .pw-featured-play-btn i {
+        font-size: 1.5rem;
     }
 }
 

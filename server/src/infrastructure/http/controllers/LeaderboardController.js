@@ -111,6 +111,7 @@ export const getLeaderboard = async (req, res) => {
             role: p.role,
             is_verified: p.is_verified,
             r2_version: p.r2_version || 'v1',
+            followers_count: followerCounts[p.id] || 0,
             products_count: productCounts[p.id] || 0,
             score: scores[p.id] || 0,
             trend: 'neutral'

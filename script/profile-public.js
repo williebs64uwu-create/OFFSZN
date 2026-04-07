@@ -2205,6 +2205,8 @@ async function renderProductList(items, user, collabStats = {}) {
     window.currentlyPlaying = null;
 
     if (items.length === 0) {
+        const profileRoot = document.getElementById('profile-root');
+        if (profileRoot) profileRoot.classList.add('header-loaded');
         list.innerHTML = '';
         list.classList.add('fade-in');
         const isOwner = window.currentUserId && (user.id === window.currentUserId);
