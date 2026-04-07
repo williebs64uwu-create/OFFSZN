@@ -49,392 +49,275 @@
     </script>
     <script src="/script/auth-utils.js?v=11"></script>
     <style>
-        .producers-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
-            gap: 20px;
-            width: 100%;
-        }
-
-        .mini-skeleton {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 12px;
-            padding: 16px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 12px;
-            aspect-ratio: 1 / 1.15;
-            position: relative;
-            overflow: hidden;
-            width: 100%;
-        }
-
-        .mini-skeleton::after {
-            content: "";
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 50%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.03), transparent);
-            animation: skeleton-wave 1.5s infinite;
-        }
-
-
-
-        @media (max-width: 768px) {
-
-            .tx-grid,
-            .skeleton-row {
-                grid-template-columns: 1fr 1fr;
-                gap: 10px;
-            }
-
-            .transaction-item {
-                gap: 10px;
-                /* Backup */
-            }
-
-            .tr-date {
-                display: none;
-            }
-        }
-
-        .mini-skeleton-text {
-            height: 12px;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 4px;
-            width: 70%;
-        }
-
-        /* Status Dots */
-        .status-dot {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            display: inline-block;
-        }
-
-        .status-dot.online {
-            background-color: #10b981;
-            box-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
-        }
-
-        .status-dot.offline {
-            background-color: #ef4444;
-            box-shadow: 0 0 8px rgba(239, 68, 68, 0.4);
-        }
-
-        /* PayPal Modal Style Override */
+        /* Modal Visibility Fix */
         .modal-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            backdrop-filter: blur(4px);
-            z-index: 9999;
-            align-items: center;
-            justify-content: center;
+            display: none !important;
         }
-
         .modal-overlay.active {
-            display: flex;
+            display: flex !important;
         }
 
-        .elite-modal {
-            background: #121214;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+        /* Premium Modal Classes */
+        .modal-content {
+            background: #09090b;
+            border: 1px solid rgba(255, 255, 255, 0.08);
             border-radius: 20px;
-            width: 450px;
-            max-width: 90%;
-            padding: 30px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            box-shadow: 0 24px 48px rgba(0, 0, 0, 0.5);
+            width: 100%;
+            color: #fff;
+            position: relative;
         }
-
+        .modal-small {
+            max-width: 480px;
+        }
         .modal-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
         }
-
-        .modal-header h3 {
-            margin: 0;
-            font-size: 1.25rem;
-            font-weight: 700;
-        }
-
         .btn-close-modal {
-            background: none;
+            background: rgba(255, 255, 255, 0.05) !important;
             border: none;
-            color: #666;
-            font-size: 1.5rem;
+            color: #a1a1aa !important;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             cursor: pointer;
+            font-size: 1rem !important;
+            transition: all 0.2s;
+        }
+        .btn-close-modal:hover {
+            background: rgba(255, 255, 255, 0.1) !important;
+            color: #fff !important;
         }
 
-        .modal-body input {
-            width: 100%;
-            background: rgba(255, 255, 255, 0.05);
+        /* Redesign: Transactions Table */
+        .tx-header-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            gap: 16px;
+        }
+
+        .tx-filter-input {
+            flex: 1;
+            max-width: 400px;
+            background: rgba(255, 255, 255, 0.03);
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 12px;
-            padding: 14px;
+            padding: 10px 16px;
             color: #fff;
-            margin-top: 10px;
+            font-size: 0.9rem;
             outline: none;
+            transition: all 0.2s;
         }
 
-        .modal-footer {
-            display: flex;
-            justify-content: flex-end;
-            gap: 12px;
-            margin-top: 30px;
+        .tx-filter-input:focus {
+            border-color: rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.05);
         }
 
-        .btn-modal-cancel {
-            background: transparent;
+        .btn-export {
+            background: rgba(255, 255, 255, 0.05);
             border: 1px solid rgba(255, 255, 255, 0.1);
             color: #fff;
-            padding: 10px 20px;
-            border-radius: 100px;
-            cursor: pointer;
-        }
-
-        .btn-modal-save {
-            background: #8b5cf6;
-            color: #fff;
-            border: none;
-            padding: 10px 24px;
-            border-radius: 100px;
-            cursor: pointer;
+            padding: 8px 16px;
+            border-radius: 10px;
+            font-size: 0.9rem;
             font-weight: 600;
-        }
-
-        /* Transactions List Styles */
-        .transaction-list {
+            cursor: pointer;
             display: flex;
-            flex-direction: column;
-            gap: 12px;
-            margin-top: 20px;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
         }
 
-        /* Shared Grid Layout for Items and Skeletons */
+        .btn-export:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Revised Grid */
         .tx-grid {
             display: grid;
-            grid-template-columns: 2fr 1fr 1fr 1fr;
+            grid-template-columns: 40px 130px 1fr 100px 100px 50px;
             align-items: center;
-            gap: 20px;
+            gap: 12px;
+        }
+
+        .tx-table-header {
+            padding: 12px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            color: #666;
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .transaction-item {
-            padding: 16px 20px;
-            background: rgba(255, 255, 255, 0.02);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            border-radius: 12px;
-            transition: all 0.2s ease;
+            padding: 14px 20px;
+            background: transparent;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            transition: background 0.2s;
         }
-
 
         .transaction-item:hover {
-            background: rgba(255, 255, 255, 0.04);
-            border-color: rgba(139, 92, 246, 0.3);
-            transform: translateY(-1px);
+            background: rgba(255, 255, 255, 0.02);
         }
 
-        .tr-customer {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .tr-customer-info h4 {
-            margin: 0;
-            font-size: 0.9rem;
-            color: #eee;
-        }
-
-        .tr-customer-info p {
-            margin: 0;
-            font-size: 0.75rem;
-            color: #666;
-        }
-
+        /* Status Tags */
         .tr-status {
-            font-size: 0.8rem;
+            font-size: 0.75rem;
+            font-weight: 700;
             padding: 4px 10px;
             border-radius: 6px;
-            text-transform: capitalize;
             width: fit-content;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
         }
 
-        .tr-status.approved,
-        .tr-status.completed {
+        .tr-status.completado {
             background: rgba(16, 185, 129, 0.1);
             color: #10b981;
+        }
+
+        .tr-status.procesando {
+            background: rgba(245, 158, 11, 0.1);
+            color: #f59e0b;
+        }
+
+        .tr-status.fallado {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+        }
+
+        .tr-email {
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+            color: #a1a1aa;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .tr-amount {
             font-weight: 700;
             color: #fff;
             text-align: right;
+            font-size: 0.95rem;
         }
 
-        .tr-date {
-            font-size: 0.8rem;
-            color: #888;
-        }
-
-        @media (max-width: 768px) {
-            .transaction-item {
-                grid-template-columns: 1fr 1fr;
-                gap: 10px;
-            }
-
-            .tr-date {
-                display: none;
-            }
-        }
-
-        /* Yape Inline Config Styles */
-        .yape-input-box {
-            width: 60px;
-            height: 46px;
-            background: rgba(255,255,255,0.03);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 10px;
-            text-align: center;
-            color: #fff;
-            font-size: 1.15rem;
-            font-weight: 700;
-            letter-spacing: 2px;
-            outline: none;
-            transition: all 0.2s ease;
-        }
-        .yape-input-box:focus {
-            border-color: #00e5ff;
-            background: rgba(0, 229, 255, 0.05);
-            box-shadow: 0 0 0 3px rgba(0, 229, 255, 0.15);
-        }
-        .yape-input-box::placeholder {
-            color: rgba(255,255,255,0.15);
-            font-weight: 500;
-        }
-
-        /* Animated Checkbox (Global — NOT for Yape) */
-        .checkbox-visual {
-            position: relative;
-        }
-        input[type="checkbox"]:checked ~ .checkbox-visual {
-            background: #8b5cf6 !important;
-            border-color: #8b5cf6 !important;
-        }
-        input[type="checkbox"]:checked ~ .checkbox-visual i.bi-check {
-            opacity: 1 !important;
-            transform: scale(1) !important;
-        }
-        input[type="checkbox"]:focus-visible ~ .checkbox-visual {
-            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.3);
-        }
-
-        /* Yape Checkbox Override — B&W only */
-        .yape-card #yape-terms-checkbox:checked + #yape-checkbox-visual {
-            background: #fff !important;
-            border-color: #fff !important;
-            box-shadow: none !important;
-        }
-        .yape-card #yape-terms-checkbox:checked + #yape-checkbox-visual i {
-            display: block !important;
-            color: #000 !important;
-        }
-        #yape-checkbox-visual {
-            display: flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-        }
-        #yape-checkbox-visual i {
-            display: none !important;
-            font-size: 0.85rem !important;
-        }
-
-        /* === OTP Verification Modal === */
-        .otp-input-container {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-            margin: 28px 0 24px;
-        }
-        .otp-box {
-            width: 48px !important;
-            height: 56px !important;
-            background: rgba(255,255,255,0.05) !important;
-            border: 2px solid rgba(255,255,255,0.12) !important;
-            border-radius: 14px !important;
-            text-align: center !important;
-            color: #fff !important;
-            font-size: 1.5rem !important;
-            font-weight: 800 !important;
-            outline: none !important;
-            transition: all 0.2s !important;
-            padding: 0 !important;
-            margin: 0 !important;
-            caret-color: #fff;
-        }
-        .otp-box:focus {
-            border-color: #fff !important;
-            background: rgba(255,255,255,0.08) !important;
-            box-shadow: 0 0 0 3px rgba(255,255,255,0.08) !important;
-        }
-        .otp-box.filled {
-            border-color: rgba(255,255,255,0.3) !important;
-        }
-        .otp-box.error {
-            border-color: #ef4444 !important;
-            animation: otp-shake 0.4s ease;
-        }
-        @keyframes otp-shake {
-            0%, 100% { transform: translateX(0); }
-            20%, 60% { transform: translateX(-4px); }
-            40%, 80% { transform: translateX(4px); }
-        }
-        .resend-timer {
-            margin-top: 20px;
-            font-size: 0.85rem;
-            color: #71717a;
-        }
-        .resend-link {
-            color: #fff;
-            font-weight: 700;
+        .btn-details {
+            background: none;
+            border: none;
+            color: #666;
             cursor: pointer;
-            text-decoration: underline;
-            transition: opacity 0.2s;
+            font-size: 1.2rem;
+            padding: 4px;
+            transition: color 0.2s;
+            display: flex;
+            justify-content: center;
         }
-        .resend-link.disabled {
-            opacity: 0.3;
-            cursor: not-allowed;
-            pointer-events: none;
+
+        .btn-details:hover {
+            color: #fff;
         }
-        .btn-verify-otp {
-            width: 100%;
-            height: 50px;
-            border-radius: 14px;
-            background: #fff !important;
-            color: #000 !important;
-            border: none !important;
-            font-weight: 700 !important;
-            font-size: 1rem;
+
+        /* Pagination Footer */
+        .tx-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 24px 0;
+            margin-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .tx-selection-summary {
+            font-size: 0.85rem;
+            color: #666;
+        }
+
+        .tx-pagination-controls {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-page {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fff;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
             cursor: pointer;
             transition: all 0.2s;
         }
-        .btn-verify-otp:disabled {
-            opacity: 0.5;
+
+        .btn-page:hover:not(:disabled) {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .btn-page:disabled {
+            opacity: 0.3;
             cursor: not-allowed;
         }
-        .btn-verify-otp:not(:disabled):hover {
-            opacity: 0.9;
+
+        /* Custom Checkbox */
+        .tx-checkbox {
+            width: 18px;
+            height: 18px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            appearance: none;
+            -webkit-appearance: none;
+            position: relative;
+        }
+
+        .tx-checkbox:checked {
+            background: #fff;
+            border-color: #fff;
+        }
+
+        .tx-checkbox:checked::after {
+            content: "\F26E"; /* Bootstrap Icons Check */
+            font-family: "bootstrap-icons";
+            color: #000;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        /* Transaction Details Modal Styles */
+        .tx-detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .tx-detail-label {
+            color: #666;
+            font-size: 0.85rem;
+        }
+
+        .tx-detail-value {
+            color: #fff;
+            font-weight: 600;
+            font-size: 0.9rem;
+            text-align: right;
         }
     </style>
 </head>
@@ -627,11 +510,38 @@
                 <div class="settings-group">
                     <h2 class="settings-group-title"><i class="bi bi-clock-history"></i> Historial de Ventas</h2>
 
-                    <div id="sales-history-container" class="transaction-list">
-                        <div style="text-align: center; padding: 40px; color: var(--text-secondary);">
-                            <i class="bi bi-clipboard-data"
-                                style="font-size: 3rem; opacity: 0.2; display: block; margin-bottom: 16px;"></i>
-                            <p>&nbsp;</p>
+                    <div class="tx-header-actions">
+                        <input type="text" id="tx-search-input" class="tx-filter-input" placeholder="Filtrar por email de comprador...">
+                        <button id="btn-export-reports" class="btn-export">
+                            <i class="bi bi-download"></i> Exportar Reporte
+                        </button>
+                    </div>
+
+                    <div class="tx-table-container" style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; overflow: hidden;">
+                        <div class="tx-table-header tx-grid">
+                            <input type="checkbox" id="header-checkbox" class="tx-checkbox">
+                            <span>Estado</span>
+                            <span>Email</span>
+                            <span>Fecha</span>
+                            <span style="text-align: right;">Monto</span>
+                            <span></span>
+                        </div>
+
+                        <div id="sales-history-container" class="transaction-list" style="margin-top: 0; gap: 0;">
+                            <div style="text-align: center; padding: 60px; color: var(--text-secondary);">
+                                <i class="bi bi-clipboard-data" style="font-size: 3rem; opacity: 0.2; display: block; margin-bottom: 16px;"></i>
+                                <p>Cargando historial...</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tx-footer">
+                        <div id="selection-summary" class="tx-selection-summary">
+                            0 de 0 fila(s) seleccionada(s).
+                        </div>
+                        <div class="tx-pagination-controls">
+                            <button id="btn-prev-page" class="btn-page" disabled>Anterior</button>
+                            <button id="btn-next-page" class="btn-page" disabled>Siguiente</button>
                         </div>
                     </div>
                 </div>
@@ -720,6 +630,24 @@
                     <span id="resend-countdown" style="font-weight: 700; color: #fff;">60s</span>
                     <a id="btn-resend-otp" class="resend-link disabled" style="display: none;">Reenviar SMS</a>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Transaction Details Modal -->
+    <div id="modal-tx-details" class="modal-overlay" style="backdrop-filter: blur(12px); background: rgba(0,0,0,0.9);">
+        <div class="modal-content modal-small" style="padding: 30px;">
+            <div class="modal-header" style="padding: 0 0 20px 0; border-bottom: 1px solid rgba(255,255,255,0.05); margin-bottom: 24px;">
+                <h3 style="margin: 0; font-size: 1.25rem;">Detalles de la Transacción</h3>
+                <button class="btn-close-modal" id="btn-close-tx-details" style="background: none; border: none; color: #666; cursor: pointer; font-size: 1.4rem;">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+            <div id="tx-details-content" class="modal-body" style="padding: 0;">
+                <!-- Content injected via JS -->
+            </div>
+            <div class="modal-footer" style="padding: 30px 0 0 0; display: flex; justify-content: center;">
+                <button class="btn-secondary" id="btn-close-tx-details-alt" style="padding: 12px 32px; border-radius: 100px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff; font-weight: 600; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'; this.style.borderColor='#fff'" onmouseout="this.style.background='rgba(255,255,255,0.05)'; this.style.borderColor='rgba(255,255,255,0.1)'">Cerrar</button>
             </div>
         </div>
     </div>

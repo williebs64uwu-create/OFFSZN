@@ -20,7 +20,11 @@ const PaymentSettings = {
         status: null,
         yapePhone: null,
         isVerified: false,
-        sales: []
+        sales: [],
+        filteredSales: [],
+        selectedSalesIds: new Set(),
+        currentPage: 1,
+        rowsPerPage: 10
     },
 
     init: async function () {
@@ -56,14 +60,17 @@ const PaymentSettings = {
         await Promise.all([timerPromise, uniqueFetchPromise]);
 
         // 5. Render Everything Simultaneously
-        this.removeSidebarSkeletons();
         this.renderSidebar();
         this.renderStatus();
         this.renderYapeStatus();
+        
+        // Initial filter and render
+        this.data.filteredSales = [...(this.data.sales || [])];
         this.renderSalesHistory();
 
         this.setupListeners();
         this.setupYapeListeners();
+        this.setupTableListeners();
     },
 
     getSession: async function () {
@@ -127,7 +134,7 @@ const PaymentSettings = {
                     price_at_purchase,
                     created_at,
                     product:products(id, name, producer_id),
-                    order:orders(id, transaction_id, status, user_id, buyer:users(nickname, email))
+                    order:orders(id, transaction_id, status, user_id, guest_email, buyer:users(nickname, email))
                 `)
                 .eq('products.producer_id', this.userId)
                 .order('created_at', { ascending: false });
@@ -259,6 +266,8 @@ const PaymentSettings = {
     renderSidebar: function () {
         if (!this.data.sidebar) return;
 
+        this.removeSidebarSkeletons();
+
         const data = this.data.sidebar;
         const nameEl = document.getElementById('sidebarName');
         const roleEl = document.getElementById('sidebarRole');
@@ -295,113 +304,330 @@ const PaymentSettings = {
         const container = document.getElementById('sales-history-container');
         if (!container) return;
 
-        const mySales = this.data.sales;
+        const allFiltered = this.data.filteredSales || [];
+        const totalRows = allFiltered.length;
+        const totalPages = Math.ceil(totalRows / this.data.rowsPerPage);
+        
+        // Clamp current page
+        if (this.data.currentPage > totalPages && totalPages > 0) this.data.currentPage = totalPages;
+        if (this.data.currentPage < 1) this.data.currentPage = 1;
 
-        if (mySales === null) {
-            container.innerHTML = '';
-            const p = document.createElement('p');
-            p.style.color = "#ef4444";
-            p.style.textAlign = "center";
-            p.textContent = "Error al cargar el historial.";
-            container.appendChild(p);
-            return;
-        }
+        const start = (this.data.currentPage - 1) * this.data.rowsPerPage;
+        const end = start + this.data.rowsPerPage;
+        const pageSales = allFiltered.slice(start, end);
 
-        if (mySales.length === 0) {
+        // Update Pagination Info
+        this.updatePaginationUI(totalRows, totalPages);
+
+        if (allFiltered.length === 0) {
             container.innerHTML = '';
             const div = document.createElement('div');
             div.style.textAlign = "center";
-            div.style.padding = "40px";
+            div.style.padding = "60px 40px";
             div.style.color = "var(--text-secondary)";
 
             const i = document.createElement('i');
-            i.className = "bi bi-clipboard-data";
+            i.className = "bi bi-search";
             i.style.fontSize = "3rem";
-            i.style.opacity = "0.2";
+            i.style.opacity = "0.15";
             i.style.display = "block";
             i.style.marginBottom = "16px";
 
             const p = document.createElement('p');
-            p.textContent = "No tienes ventas registradas aún.";
-
-            const a = document.createElement('a');
-            a.href = "/cuenta/subir-kit.html";
-            a.style.color = "var(--accent)";
-            a.style.fontWeight = "600";
-            a.style.textDecoration = "none";
-            a.textContent = "¡Sube tu primer producto!";
+            p.textContent = this.data.sales?.length === 0 ? "No tienes ventas registradas aún." : "No se encontraron transacciones para ese filtro.";
 
             div.appendChild(i);
             div.appendChild(p);
-            div.appendChild(a);
             container.appendChild(div);
             return;
         }
 
         container.innerHTML = '';
-        mySales.forEach(sale => {
-            const dateStr = new Date(sale.created_at).toLocaleDateString('es-ES', {
-                day: '2-digit',
-                month: 'short',
-                year: 'numeric'
-            });
-            const customerName = sale.order?.buyer?.nickname || (sale.order?.guest_email ? "Invitado" : "Usuario Anónimo");
+        pageSales.forEach(sale => {
             const customerEmail = sale.order?.buyer?.email || sale.order?.guest_email || "N/A";
-            const statusStr = sale.order?.status || 'completed';
-            const amountStr = parseFloat(sale.price_at_purchase || 0).toFixed(2);
+            const statusType = (sale.order?.status || 'completed').toLowerCase();
+            const amount = parseFloat(sale.price_at_purchase || 0);
+            
+            const isSelected = this.data.selectedSalesIds.has(sale.id);
 
             const row = document.createElement('div');
             row.className = 'transaction-item tx-grid';
 
-            const customerDiv = document.createElement('div');
-            customerDiv.className = 'tr-customer';
-            const icon = document.createElement('i');
-            icon.className = 'bi bi-person-circle';
-            icon.style.fontSize = '1.5rem';
-            icon.style.color = '#444';
-            const infoDiv = document.createElement('div');
-            infoDiv.className = 'tr-customer-info';
-            const h4 = document.createElement('h4');
-            h4.textContent = customerName;
-            const p = document.createElement('p');
-            p.textContent = customerEmail;
-            infoDiv.appendChild(h4);
-            infoDiv.appendChild(p);
-            customerDiv.appendChild(icon);
-            customerDiv.appendChild(infoDiv);
+            // 1. Checkbox
+            const cbContainer = document.createElement('div');
+            const cb = document.createElement('input');
+            cb.type = 'checkbox';
+            cb.className = 'tx-checkbox';
+            cb.checked = isSelected;
+            cb.onclick = (e) => {
+                e.stopPropagation();
+                this.toggleRowSelection(sale.id);
+            };
+            cbContainer.appendChild(cb);
 
-            const dateDiv = document.createElement('div');
-            dateDiv.className = 'tr-date';
-            dateDiv.textContent = dateStr;
-
+            // 2. Status
             const statusContainer = document.createElement('div');
             const statusSpan = document.createElement('span');
-            statusSpan.className = `tr-status ${statusStr}`;
-            statusSpan.textContent = statusStr;
+            const mapped = this.mapStatus(statusType);
+            statusSpan.className = `tr-status ${mapped.class}`;
+            statusSpan.innerHTML = `<i class="bi ${mapped.icon}"></i> ${mapped.text}`;
             statusContainer.appendChild(statusSpan);
 
+            // 3. Email
+            const emailDiv = document.createElement('div');
+            emailDiv.className = 'tr-email';
+            emailDiv.textContent = customerEmail;
+            emailDiv.title = customerEmail;
+
+            // 3.5 Date
+            const dateDiv = document.createElement('div');
+            dateDiv.className = 'tr-date';
+            dateDiv.style.fontSize = '0.85rem';
+            dateDiv.style.color = '#71717a';
+            dateDiv.style.fontWeight = '500';
+            
+            const saleDate = new Date(sale.created_at);
+            const today = new Date();
+            const yesterday = new Date();
+            yesterday.setDate(today.getDate() - 1);
+            
+            const isToday = saleDate.getDate() === today.getDate() && saleDate.getMonth() === today.getMonth() && saleDate.getFullYear() === today.getFullYear();
+            const isYesterday = saleDate.getDate() === yesterday.getDate() && saleDate.getMonth() === yesterday.getMonth() && saleDate.getFullYear() === yesterday.getFullYear();
+            
+            if (isToday) {
+                dateDiv.textContent = "Hoy";
+            } else if (isYesterday) {
+                dateDiv.textContent = "Ayer";
+            } else {
+                dateDiv.textContent = `${saleDate.getDate()}/${(saleDate.getMonth() + 1).toString().padStart(2, '0')}`;
+            }
+
+            // 4. Amount
             const amountDiv = document.createElement('div');
             amountDiv.className = 'tr-amount';
-            amountDiv.textContent = `$${amountStr}`;
+            if (amount <= 0) {
+                amountDiv.style.color = "#fff";
+                amountDiv.innerHTML = '<span style="font-weight: 800; letter-spacing: 0.5px;">GRATIS</span>';
+            } else {
+                amountDiv.textContent = `$${amount.toFixed(2)}`;
+            }
 
+            // 5. Actions
             const actionDiv = document.createElement('div');
             actionDiv.style.display = 'flex';
-            actionDiv.style.justifyContent = 'flex-end';
-            const logBtn = document.createElement('button');
-            logBtn.className = 'btn-security-log';
-            logBtn.title = "Ver Bitácora de Seguridad";
-            logBtn.innerHTML = '<i class="bi bi-shield-lock"></i>';
-            logBtn.onclick = () => this.viewSecurityLogs(sale.order?.id);
-            actionDiv.appendChild(logBtn);
+            actionDiv.style.justifyContent = 'center';
+            const detailsBtn = document.createElement('button');
+            detailsBtn.className = 'btn-details';
+            detailsBtn.title = "Ver Detalles";
+            detailsBtn.innerHTML = '<i class="bi bi-three-dots"></i>';
+            detailsBtn.onclick = () => this.showTransactionDetails(sale);
+            actionDiv.appendChild(detailsBtn);
 
-            row.appendChild(customerDiv);
-            row.appendChild(dateDiv);
+            row.appendChild(cbContainer);
             row.appendChild(statusContainer);
+            row.appendChild(emailDiv);
+            row.appendChild(dateDiv);
             row.appendChild(amountDiv);
             row.appendChild(actionDiv);
 
             container.appendChild(row);
         });
+    },
+
+    mapStatus: function(status) {
+        if (status.includes('complet') || status.includes('approv') || status.includes('success')) {
+            return { text: 'Completado', class: 'completado', icon: 'bi-check-circle-fill' };
+        }
+        if (status.includes('process') || status.includes('pend') || status.includes('yape')) {
+            return { text: 'Procesando', class: 'procesando', icon: 'bi-hourglass-split' };
+        }
+        return { text: 'Fallado', class: 'fallado', icon: 'bi-exclamation-circle-fill' };
+    },
+
+    updatePaginationUI: function(totalRows, totalPages) {
+        const summary = document.getElementById('selection-summary');
+        const prevBtn = document.getElementById('btn-prev-page');
+        const nextBtn = document.getElementById('btn-next-page');
+        const exportBtn = document.getElementById('btn-export-reports');
+
+        const selectedCount = this.data.selectedSalesIds.size;
+
+        if (summary) {
+            summary.textContent = `${selectedCount} de ${totalRows} fila(s) seleccionada(s).`;
+        }
+
+        if (exportBtn) {
+            if (selectedCount === 0) {
+                exportBtn.style.opacity = '0.5';
+                exportBtn.style.pointerEvents = 'none';
+            } else {
+                exportBtn.style.opacity = '1';
+                exportBtn.style.pointerEvents = 'auto';
+            }
+        }
+
+        if (prevBtn) prevBtn.disabled = this.data.currentPage <= 1;
+        if (nextBtn) nextBtn.disabled = this.data.currentPage >= totalPages || totalPages === 0;
+    },
+
+    toggleRowSelection: function(id) {
+        if (this.data.selectedSalesIds.has(id)) {
+            this.data.selectedSalesIds.delete(id);
+        } else {
+            this.data.selectedSalesIds.add(id);
+        }
+        this.renderSalesHistory();
+    },
+
+    toggleAllSelection: function(checked) {
+        const allFiltered = this.data.filteredSales || [];
+        if (checked) {
+            allFiltered.forEach(sale => this.data.selectedSalesIds.add(sale.id));
+        } else {
+            this.data.selectedSalesIds.clear();
+        }
+        this.renderSalesHistory();
+    },
+
+    setupTableListeners: function() {
+        // Search Filter
+        const searchInput = document.getElementById('tx-search-input');
+        if (searchInput) {
+            searchInput.oninput = (e) => {
+                const val = e.target.value.toLowerCase();
+                this.data.filteredSales = this.data.sales.filter(sale => {
+                    const email = (sale.order?.buyer?.email || sale.order?.guest_email || "").toLowerCase();
+                    return email.includes(val);
+                });
+                this.data.currentPage = 1;
+                this.renderSalesHistory();
+            };
+        }
+
+        // Export Button
+        const exportBtn = document.getElementById('btn-export-reports');
+        if (exportBtn) {
+            exportBtn.onclick = () => this.exportToCSV();
+        }
+
+        // Pagination
+        const prevBtn = document.getElementById('btn-prev-page');
+        const nextBtn = document.getElementById('btn-next-page');
+        if (prevBtn) {
+            prevBtn.onclick = () => {
+                this.data.currentPage--;
+                this.renderSalesHistory();
+            };
+        }
+        if (nextBtn) {
+            nextBtn.onclick = () => {
+                this.data.currentPage++;
+                this.renderSalesHistory();
+            };
+        }
+
+        // Header Checkbox
+        const headerCb = document.getElementById('header-checkbox');
+        if (headerCb) {
+            headerCb.onchange = (e) => this.toggleAllSelection(e.target.checked);
+        }
+
+        // Modal Close
+        const closeBtn1 = document.getElementById('btn-close-tx-details');
+        const closeBtn2 = document.getElementById('btn-close-tx-details-alt');
+        if (closeBtn1) closeBtn1.onclick = () => this.closeDetailsModal();
+        if (closeBtn2) closeBtn2.onclick = () => this.closeDetailsModal();
+    },
+
+    exportToCSV: function() {
+        const selectedIds = this.data.selectedSalesIds;
+        let toExport = [];
+        
+        if (selectedIds.size > 0) {
+            toExport = this.data.sales.filter(s => selectedIds.has(s.id));
+        } else {
+            toExport = this.data.filteredSales;
+        }
+
+        if (toExport.length === 0) {
+            if (window.showToast) window.showToast("No hay transacciones para exportar.", "info");
+            return;
+        }
+
+        const headers = ["Fecha", "Email Comprador", "Producto", "Monto", "Estado", "ID Transaccion"];
+        const rows = toExport.map(s => [
+            new Date(s.created_at).toLocaleString(),
+            s.order?.buyer?.email || s.order?.guest_email || "N/A",
+            s.product?.name || "Eliminado",
+            s.price_at_purchase || 0,
+            this.mapStatus(s.order?.status || 'completed').text,
+            s.order?.transaction_id || "N/A"
+        ]);
+
+        let csvContent = "data:text/csv;charset=utf-8," 
+            + headers.join(",") + "\n"
+            + rows.map(e => e.join(",")).join("\n");
+
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", `reporte_ventas_${new Date().toISOString().split('T')[0]}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        if (window.showToast) window.showToast("Reporte exportado correctamente.", "success");
+    },
+
+    showTransactionDetails: function(sale) {
+        const modal = document.getElementById('modal-tx-details');
+        const content = document.getElementById('tx-details-content');
+        if (!modal || !content) return;
+
+        const date = new Date(sale.created_at).toLocaleString('es-ES', {
+            day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit'
+        });
+        const buyer = sale.order?.buyer?.nickname || (sale.order?.guest_email ? "Invitado" : "Usuario");
+        const buyerEmail = sale.order?.buyer?.email || sale.order?.guest_email || "N/A";
+        const status = this.mapStatus(sale.order?.status || 'completed');
+
+        content.innerHTML = `
+            <div class="tx-detail-row">
+                <span class="tx-detail-label">Producto</span>
+                <span class="tx-detail-value">${sale.product?.name || 'Producto Eliminado'}</span>
+            </div>
+            <div class="tx-detail-row">
+                <span class="tx-detail-label">Fecha</span>
+                <span class="tx-detail-value">${date}</span>
+            </div>
+            <div class="tx-detail-row">
+                <span class="tx-detail-label">Comprador</span>
+                <span class="tx-detail-value">${buyer}</span>
+            </div>
+            <div class="tx-detail-row">
+                <span class="tx-detail-label">Email</span>
+                <span class="tx-detail-value">${buyerEmail}</span>
+            </div>
+            <div class="tx-detail-row">
+                <span class="tx-detail-label">Monto</span>
+                <span class="tx-detail-value" style="color: #fff; font-size: 1.1rem;">$${parseFloat(sale.price_at_purchase || 0).toFixed(2)}</span>
+            </div>
+            <div class="tx-detail-row">
+                <span class="tx-detail-label">Estado</span>
+                <span class="tr-status ${status.class}">${status.text}</span>
+            </div>
+            <div class="tx-detail-row" style="border-bottom: none;">
+                <span class="tx-detail-label">ID Transacción</span>
+                <span class="tx-detail-value" style="font-family: monospace; font-size: 0.8rem; background: rgba(255,255,255,0.05); padding: 4px 8px; border-radius: 4px;">${sale.order?.transaction_id || 'N/A'}</span>
+            </div>
+        `;
+
+        modal.classList.add('active');
+    },
+
+    closeDetailsModal: function() {
+        const modal = document.getElementById('modal-tx-details');
+        if (modal) modal.classList.remove('active');
     },
 
     updateUI: function (paypalEmail) {

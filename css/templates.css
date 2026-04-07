@@ -233,12 +233,12 @@ body.template-produccion_template_old_school {
 /* --- TRENDING / PACKS (Recommended Style) --- */
 .template-produccion_template_old_school #profile-root .trending-grid {
     display: grid !important;
-    grid-template-columns: repeat(3, 1fr) !important; /* Forces 3 smaller cards as requested */
+    grid-template-columns: repeat(4, 1fr) !important; /* Forces 4 smaller cards as requested */
     gap: 24px;
 }
 
-/* Solo mostrar 3 skeletons en esta plantilla (que ahora es de 3 cols) */
-.template-produccion_template_old_school #profile-root .trending-grid .skeleton-card:nth-child(n+4) {
+/* Solo mostrar 4 skeletons en esta plantilla (que ahora es de 4 cols) */
+.template-produccion_template_old_school #profile-root .trending-grid .skeleton-card:nth-child(n+5) {
     display: none !important;
 }
 
@@ -406,6 +406,34 @@ body.template-produccion_template_old_school {
     border-radius: 6px;
     margin-bottom: 0 !important;
     flex-shrink: 0;
+    position: relative; /* For overlay */
+    overflow: hidden;
+}
+
+.template-produccion_template_old_school #profile-root .list-row .list-cover .play-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #000; /* Solid background to cover image */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    z-index: 10;
+    pointer-events: auto;
+    cursor: pointer;
+}
+
+.template-produccion_template_old_school #profile-root .list-row .list-cover .play-overlay i {
+    color: #fff;
+    font-size: 1.8rem;
+}
+
+.template-produccion_template_old_school #profile-root .list-row:hover .list-cover .play-overlay {
+    opacity: 1;
 }
 
 /* Info Column */
@@ -798,74 +826,6 @@ body.template-produccion_template_old_school {
 .template-produccion_template_old_school .profile-middle-row * {
     display: none !important;
 }
-
-/* --- Isolated Skeleton Toggling --- */
-.template-produccion_template_old_school #os-skeleton {
-    display: flex !important;
-}
-
-.template-produccion_template_old_school .profile-avatar-container,
-.template-produccion_template_old_school .profile-details {
-    display: none !important;
-}
-
-/* Show real content once loaded (when skeletons are removed/hidden by JS) */
-.template-produccion_template_old_school.loaded-profile .profile-avatar-container,
-.template-produccion_template_old_school.loaded-profile .profile-details {
-    display: flex !important;
-}
-.template-produccion_template_old_school.loaded-profile #os-skeleton {
-    display: none !important;
-}
-
-/* --- Old School Skeleton Styles --- */
-.os-skeleton-container {
-    flex-direction: column;
-    align-items: center;
-    width: 100%;
-    gap: 0;
-}
-
-.os-skel-avatar {
-    width: 96px !important;
-    height: 96px !important;
-    border-radius: 50% !important;
-    margin-bottom: 24px !important;
-}
-
-.os-skel-role {
-    width: 120px !important;
-    height: 14px !important;
-    margin-bottom: 8px !important;
-}
-
-.os-skel-name {
-    width: 180px !important;
-    height: 24px !important;
-    margin-bottom: 24px !important;
-}
-
-.os-skel-actions {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    width: 100%;
-    max-width: 260px;
-    margin-bottom: 32px;
-}
-
-.os-skel-btn {
-    width: 100% !important;
-    height: 40px !important;
-    border-radius: 8px !important;
-}
-
-.os-skel-body-block {
-    width: 100% !important;
-    height: 320px !important;
-    border-radius: 12px !important;
-}
-
 /* --- Isolated Old School Skeleton System --- */
 .template-produccion_template_old_school #os-skeleton {
     display: flex !important;
@@ -889,11 +849,13 @@ body.template-produccion_template_old_school {
 
 /* Styles for Isolated os-skel classes */
 .os-skeleton-wrapper {
+    display: flex;
     flex-direction: column;
     align-items: center;
     width: 100%;
 }
 
+#profile-root.template-produccion_template_old_school #os-skeleton .os-skel-avatar,
 .os-skel-avatar {
     width: 96px !important;
     height: 96px !important;
