@@ -149,7 +149,14 @@ async function fetchData() {
             promises.push(userPromises[0]);
         }
 
-        const results = await Promise.all(promises);
+        const timeout = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Fetch Timeout')), 5000)
+        );
+
+        const results = await Promise.race([
+            Promise.all(promises),
+            timeout
+        ]);
         const productsRes = results[0];
         const producersRes = results[1];
         const leaderboardRes = results[2];
@@ -165,7 +172,12 @@ async function fetchData() {
             );
         }
         if (producersRes.ok) allProducers = await producersRes.json();
-        if (leaderboardRes.ok) window.topProducers = await leaderboardRes.json();
+        if (leaderboardRes.ok) {
+            const lbData = await leaderboardRes.json();
+            window.topProducers = Array.isArray(lbData) ? lbData : [];
+        } else {
+            window.topProducers = window.topProducers || [];
+        }
 
         // Process User State (Reliable)
         if (followingData && Array.isArray(followingData)) {
@@ -206,8 +218,10 @@ function renderExploreFeed() {
     if (!container) return;
 
     // 🔥 Remove static list skeletons
-    const staticListSkeleton = document.getElementById('explore-list-skeleton');
-    if (staticListSkeleton) staticListSkeleton.style.display = 'none';
+    ['explore-list-skeleton', 'explore-pw-skeleton', 'explore-leaderboard-skeleton'].forEach(id => {
+        const sk = document.getElementById(id);
+        if (sk) sk.style.display = 'none';
+    });
 
     container.innerHTML = '';
     usedProductIds.clear();
@@ -223,6 +237,12 @@ function renderExploreFeed() {
     listGridContainer.id = 'explore-list-grid-wrapper';
     listGridContainer.appendChild(renderTwoColLists());
     container.appendChild(listGridContainer);
+
+    // NEW: 3.5 PRODUCER OF THE WEEK (Spotlight) - Injecting dynamically after lists
+    const pwDynamicContainer = document.createElement('div');
+    pwDynamicContainer.id = 'explore-pw-container';
+    container.appendChild(pwDynamicContainer);
+    renderProducerOfTheWeek();
 
     // 2. LEADERBOARD (Top Producers) - MOVED BELOW as per user request
     if (window.topProducers && window.topProducers.length > 0) {
@@ -812,6 +832,138 @@ window.navToHero = function(index) {
 };
 
 // renderHeroSlide and duplicate functions removed in favor of renderHeroSlideHtml and track layout.
+
+/**
+ * PRODUCER OF THE WEEK (PW) - Logic & Rendering
+ */
+function renderProducerOfTheWeek() {
+    console.log('[PW] Rendering Producer of the Week...');
+    const pwContainer = document.getElementById('explore-pw-container');
+    if (!pwContainer) {
+        console.warn('[PW] Container not found');
+        return;
+    }
+
+    // Wait for data
+    if (!window.topProducers || window.topProducers.length === 0 || !allProducts || allProducts.length === 0) {
+        console.log('[PW] Data not ready', { producers: !!window.topProducers, products: allProducts.length });
+        return;
+    }
+
+    // 1. Find a Producer with tracks (search whole leaderboard)
+    let featured = null;
+    let producerTracks = [];
+
+    const lb = window.topProducers || [];
+    for (let i = 0; i < lb.length; i++) {
+        const candidate = lb[i];
+        if (!candidate) continue;
+
+        const tracks = allProducts
+            .filter(p => String(p.producer_id) === String(candidate.id))
+            .sort((a, b) => (b.plays_count || 0) - (a.plays_count || 0))
+            .slice(0, 6);
+        
+        if (tracks.length > 0) {
+            featured = candidate;
+            producerTracks = tracks;
+            break;
+        }
+    }
+
+    // Fallback if none in leaderboard has tracks - pick ANY one from leaderboard or allProducers
+    if (!featured && lb.length > 0) {
+        featured = lb[0];
+        producerTracks = allProducts
+            .filter(p => String(p.producer_id) === String(featured.id))
+            .slice(0, 6);
+    }
+
+    if (!featured || producerTracks.length === 0) {
+        console.log('[PW] No producer with tracks found in top 3');
+        return;
+    }
+
+    console.log('[PW] Featured Artist:', featured.nickname || featured.name);
+
+    // 2. Prepare Visuals
+    const artistName = escapeHTML(featured.nickname || featured.name || 'Artista');
+    const handle = (featured.handle || featured.nickname || 'artista').toLowerCase().replace(/\s+/g, '');
+    const avatar = featured.avatar_url || '/images/portada-default.png';
+    const storageVer = featured.storage_version || featured.r2_version || 'v2';
+    const isR2 = (storageVer !== 'supabase') && window.AuthUtils && window.AuthUtils.isR2Url(avatar);
+    const imgPlaceholder = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
+
+    const productsCount = featured.products_count || producerTracks.length;
+    const playsCount = producerTracks.reduce((acc, t) => acc + (t.plays_count || 0), 0);
+
+    // 3. Construct HTML
+    pwContainer.innerHTML = `
+        <section class="pw-section">
+            <div class="pw-header">
+                <h2 class="pw-title">Producer Of The Week</h2>
+                <a href="/@${handle}" class="pw-view-all">View All <i class="bi bi-arrow-right"></i></a>
+            </div>
+            <div class="pw-grid">
+                <!-- Featured Artist Side -->
+                <div class="pw-featured-card" onclick="window.location.href='/@${handle}'">
+                    <img ${isR2 ? `src="${imgPlaceholder}" data-r2-src="${escapeHTML(avatar)}"` : `src="${escapeHTML(avatar)}"`} 
+                         data-r2-version="${storageVer}"
+                         class="pw-featured-img" alt="${artistName}">
+                    <div class="pw-featured-info">
+                        <div class="pw-featured-name">${artistName}</div>
+                    </div>
+                </div>
+
+                <!-- Tracks List Side (2 Columns) -->
+                <div class="pw-tracks-grid">
+                    ${producerTracks.map((track, i) => renderPWTrackItemHtml(track, i)).join('')}
+                </div>
+            </div>
+        </section>
+    `;
+}
+
+function renderPWTrackItemHtml(product, index) {
+    const name = escapeHTML(product.name || 'Sin título');
+    const rawImg = product.image_url || '/images/portada-default.png';
+    const imgUrl = escapeHTML(rawImg);
+    
+    // Genre/Tags (Hashtags style)
+    const genre = (product.category || 'Beat').trim();
+    const subGenre = (product.sub_category || 'Detroit').trim();
+
+    // Price formatting
+    const isTrulyFree = (product.is_free === true || String(product.is_free) === 'true') && (Number(product.price_basic) === 0 || !product.price_basic);
+    const priceValue = (product.price_basic && Number(product.price_basic) > 0) ? product.price_basic : '75';
+    const price = isTrulyFree ? 'FREE' : `$${priceValue}.00`;
+
+    const storageVer = product.storage_version || product.r2_version || 'v2';
+    const isR2 = (storageVer !== 'supabase') && window.AuthUtils && window.AuthUtils.isR2Url(rawImg);
+    const imgPlaceholder = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
+    const src = isR2 ? imgPlaceholder : rawImg;
+
+    return `
+        <div class="pw-track-item" id="pw-track-${product.id}" onclick="window.handleTrackPlay(event, '${product.id}')">
+            <div class="pw-track-cover-wrapper">
+                <img ${isR2 ? `src="${imgPlaceholder}" data-r2-src="${imgUrl}"` : `src="${escapeHTML(src)}"`} 
+                     data-r2-version="${storageVer}"
+                     class="pw-track-cover" alt="${name}">
+            </div>
+            <div class="pw-track-info" onclick="event.stopPropagation(); window.location.href='${getProductUrl(product)}'">
+                <h3 class="pw-track-name">${name}</h3>
+                <div class="pw-track-hashtags">
+                    <span class="pw-track-tag">#${genre}</span>
+                    <span class="pw-track-tag">#${subGenre}</span>
+                </div>
+            </div>
+            <button class="pw-track-btn-pill" onclick="event.stopPropagation(); window.handleAddToCart(event, '${product.id}')">
+                <i class="bi bi-cart3"></i>
+                <span class="pw-track-price">${price}</span>
+            </button>
+        </div>
+    `;
+}
 
 function initHeroParticles(canvas) {
     if (!canvas) canvas = document.querySelector('.hero-particles-canvas');

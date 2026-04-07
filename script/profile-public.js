@@ -1646,15 +1646,6 @@ async function loadUserProducts(user) {
     // We do NOT wipe trendGrid or listContainer here, to avoid flicker.
 
     try {
-        // Wait for FavoritesManager to be available if it's not yet
-        if (!window.FavoritesManager) {
-            for (let i = 0; i < 10; i++) {
-                if (window.FavoritesManager) break;
-                await new Promise(r => setTimeout(r, 100));
-            }
-        }
-        if (window.FavoritesManager) await window.FavoritesManager.init();
-        
         const response = await fetch(`/api/users/${username}/products`);
         if (!response.ok) throw new Error('Error fetch');
 
@@ -2283,7 +2274,6 @@ async function renderProductList(items, user, collabStats = {}) {
         coverDiv.className = 'list-cover';
         coverDiv.style.cursor = 'pointer';
         coverDiv.onclick = () => window.location.href = seoLink;
-        
         const img = document.createElement('img');
         img.src = initialImgList;
         img.dataset.r2Src = rawImgList;
@@ -2292,28 +2282,6 @@ async function renderProductList(items, user, collabStats = {}) {
         img.alt = 'cover';
         img.className = 'skeleton-img-transition';
         coverDiv.appendChild(img);
-
-        // Play Overlay (for hover effect)
-        const playOverlay = document.createElement('div');
-        playOverlay.className = 'play-overlay';
-        const poIcon = document.createElement('i');
-        poIcon.className = 'bi bi-play-fill';
-        playOverlay.appendChild(poIcon);
-        
-        // ⚡ Reproducir al darle click al overlay
-        playOverlay.onclick = (e) => {
-            e.preventDefault();
-            e.stopPropagation(); // Evitar redirección a la página del producto
-            
-            if (window.StickyPlayer) {
-                // Asegurar que el objeto tenga los datos del artista para el reproductor
-                const trackData = { ...prod, artist_users: user };
-                window.StickyPlayer.play(trackData);
-            }
-        };
-
-        coverDiv.appendChild(playOverlay);
-        
         row.appendChild(coverDiv);
 
         // Info
@@ -2451,14 +2419,6 @@ async function renderProductList(items, user, collabStats = {}) {
         const hIcon = document.createElement('i');
         hIcon.className = isLiked ? 'bi bi-heart-fill' : 'bi bi-heart';
         heartBtn.appendChild(hIcon);
-        
-        heartBtn.onclick = async (e) => {
-            e.stopPropagation();
-            if (!window.FavoritesManager) return;
-            const nowLiked = await window.FavoritesManager.toggleLike(prod.id);
-            hIcon.className = nowLiked ? 'bi bi-heart-fill' : 'bi bi-heart';
-            heartBtn.style.color = nowLiked ? '#ef4444' : '';
-        };
         actionsDiv.appendChild(heartBtn);
 
         const dlBtn = document.createElement('button');
@@ -2467,23 +2427,6 @@ async function renderProductList(items, user, collabStats = {}) {
         const dlIcon = document.createElement('i');
         dlIcon.className = 'bi bi-download';
         dlBtn.appendChild(dlIcon);
-
-        dlBtn.onclick = (e) => {
-            e.stopPropagation();
-            const pType = (prod.product_type || '').toLowerCase();
-            const isTrulyFree = pType !== 'beat' && (prod.is_free === true || String(prod.is_free) === 'true' || Number(prod.price_basic) === 0);
-            
-            if (isTrulyFree) {
-                if (window.openDownloadGateModal) {
-                    const downloadUrl = prod.file_url || prod.preview_url || prod.audio_url;
-                    window.openDownloadGateModal(downloadUrl, user.nickname || 'Productor', prod.id);
-                } else {
-                    window.location.href = seoLink;
-                }
-            } else {
-                window.location.href = seoLink;
-            }
-        };
         actionsDiv.appendChild(dlBtn);
 
         const shareBtn = document.createElement('button');
