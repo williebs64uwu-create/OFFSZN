@@ -28,8 +28,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     window.profileRevealSignal = new Promise(res => { triggerReveal = res; });
     window.triggerProfileReveal = triggerReveal;
 
+    // 🔥 SPA FIX: Reset loading lock in case router re-triggered DOMContentLoaded
+    isLoadingProducts = false;
+
     // 1. SAFETY CHECK: Only run if on Profile Page
     if (!document.getElementById('profile-root')) return;
+
+    // 🔥 SPA FIX: Reset header-loaded so skeletons show fresh on re-navigation
+    const profileRootInit = document.getElementById('profile-root');
+    if (profileRootInit) profileRootInit.classList.remove('header-loaded');
 
     // 1. Get Username from URL
     // 1. Get Username from URL
@@ -114,14 +121,14 @@ async function loadUserProfile(username) {
         loadingBar.classList.add('loading');
         loadingBar.style.width = '30%';
     }
-    
+
     // --- ANTI-FOUC SYNC ---
     // Check if the early head-script already applied a template class
     const tplApplied = document.documentElement.className.match(/template-[^\s]+/);
-    
+
     if (tplApplied) {
         // If template is already known, just ensure profileRoot is ready
-        if (profileRoot) { 
+        if (profileRoot) {
             profileRoot.style.opacity = '1';
             // Sync class to root for legacy selectors
             profileRoot.classList.add(tplApplied[0]);
@@ -155,15 +162,19 @@ async function loadUserProfile(username) {
         }
 
         // 2. Apply Template Class
-        if (profileRoot && user.template) {
-            // 🔥 CRITICAL: Clean up ANY previous template classes from ALL potential roots
+        // 🔥 CRITICAL: ALWAYS clean up previous template classes, even if new profile has no template
+        if (profileRoot) {
             const targets = [document.documentElement, document.body, profileRoot];
             targets.forEach(el => {
+                const toRemove = [];
                 el.classList.forEach(cls => {
-                    if (cls.startsWith('template-')) el.classList.remove(cls);
+                    if (cls.startsWith('template-')) toRemove.push(cls);
                 });
+                toRemove.forEach(cls => el.classList.remove(cls));
             });
+        }
 
+        if (profileRoot && user.template) {
             profileRoot.classList.add(`template-${user.template}`);
             document.documentElement.classList.add(`template-${user.template}`);
 
@@ -315,7 +326,7 @@ async function renderHeader(user, categoryCounts = null) {
     if (user.is_verified || user.is_producer || user.plan) {
         const verifyBadge = document.getElementById('profileVerified');
         verifyBadge.style.display = 'inline-block';
-        
+
         // Remove previous plan classes for clean state
         verifyBadge.classList.remove('starter', 'pro');
         if (user.plan) verifyBadge.classList.add(user.plan);
@@ -336,11 +347,11 @@ async function renderHeader(user, categoryCounts = null) {
         const ttIcon = document.createElement('i');
         ttIcon.className = 'bi bi-patch-check-fill';
         ttHeader.appendChild(ttIcon);
-        
+
         let planTitle = ' VERIFICADO OFFSZN';
         if (user.plan === 'pro') planTitle = ' OFFSZN PRO';
         else if (user.plan === 'starter') planTitle = ' OFFSZN STARTER';
-        
+
         const planLink = document.createElement('a');
         planLink.href = '/cuenta/planes';
         planLink.textContent = planTitle;
@@ -349,11 +360,11 @@ async function renderHeader(user, categoryCounts = null) {
 
         const ttBody = document.createElement('div');
         ttBody.className = 'v-tooltip-body';
-        
+
         let planDesc = 'Plan Premium OFFSZN';
         if (user.plan === 'pro') planDesc = 'Usuario Pro';
         else if (user.plan === 'starter') planDesc = 'Usuario Starter';
-        
+
         ttBody.appendChild(document.createTextNode(planDesc));
 
         // Add plan start date if available
@@ -361,7 +372,7 @@ async function renderHeader(user, categoryCounts = null) {
             const date = new Date(user.plan_start_date);
             const options = { year: 'numeric', month: 'long' };
             const dateStr = date.toLocaleDateString('es-ES', options);
-            
+
             ttBody.appendChild(document.createElement('br'));
             const dateEl = document.createElement('span');
             dateEl.style.color = user.plan === 'pro' ? '#fbbf24' : '#94a3b8';
@@ -371,7 +382,7 @@ async function renderHeader(user, categoryCounts = null) {
             dateEl.textContent = `Desde ${dateStr}`;
             ttBody.appendChild(dateEl);
         }
-        
+
         tooltip.appendChild(ttBody);
 
         verifyBadge.appendChild(tooltip);
@@ -1774,12 +1785,16 @@ async function loadUserProducts(user) {
 
     } catch (e) {
         console.error("Error loading products:", e);
+        // 🔥 Ensure reveal fires even on error so profile doesn't stay frozen
+        if (window.triggerProfileReveal) window.triggerProfileReveal();
+        const profileRoot = document.getElementById('profile-root');
+        if (profileRoot) profileRoot.classList.add('header-loaded');
         listContainer.innerHTML = '';
         const emptyDiv = document.createElement('div');
         emptyDiv.className = 'empty-state';
         emptyDiv.textContent = 'Error cargando productos.';
         listContainer.appendChild(emptyDiv);
-        trendGrid.innerHTML = '';
+        if (trendGrid) trendGrid.innerHTML = '';
     } finally {
         isLoadingProducts = false;
     }
@@ -1930,9 +1945,9 @@ async function renderTrending(items, user, collabStats = {}) {
     // 2. Prepare all cards in memory
     const fragment = document.createDocumentFragment();
 
-        items.forEach((prod, idx) => {
-            const div = document.createElement('div');
-            div.className = 'ots-smart-card';
+    items.forEach((prod, idx) => {
+        const div = document.createElement('div');
+        div.className = 'ots-smart-card';
         const plays = prod.plays_count || 0;
         const seoLink = window.createSeoLink ? window.createSeoLink(prod) : '/producto.html?id=' + prod.id;
 
@@ -2107,7 +2122,7 @@ async function renderTrending(items, user, collabStats = {}) {
         metaRow.appendChild(bpmSpan);
 
         // infoDiv.appendChild(metaRow); // Removed as per user request
-        
+
 
         // --- NEW: Inject Buy & Download actions for trending cards ---
         const tActions = document.createElement('div');
@@ -2117,10 +2132,10 @@ async function renderTrending(items, user, collabStats = {}) {
         priceBtn.className = 'ots-btn-price';
         const pType = (prod.product_type || '').toLowerCase();
         const isTrulyFree = pType !== 'beat' && (prod.is_free === true || String(prod.is_free) === 'true' || Number(prod.price_basic) === 0);
-        
+
         let priceValue = prod.price_basic !== undefined && prod.price_basic !== null ? prod.price_basic : '20';
         const priceTxt = isTrulyFree ? 'FREE' : (window.CurrencyManager ? window.CurrencyManager.format(parseFloat(priceValue) || 0) : '$' + parseFloat(priceValue).toFixed(2));
-        
+
         priceBtn.innerHTML = '<i class="bi bi-bag" style="margin-right:6px;"></i>' + priceTxt;
         priceBtn.onclick = (e) => { e.stopPropagation(); window.location.href = seoLink; };
 
@@ -2134,13 +2149,13 @@ async function renderTrending(items, user, collabStats = {}) {
                 const dlBtn = document.createElement('button');
                 dlBtn.className = 'ots-btn-download';
                 dlBtn.innerHTML = '<i class="bi bi-download"></i>';
-                dlBtn.onclick = (e) => { 
-                    e.stopPropagation(); 
+                dlBtn.onclick = (e) => {
+                    e.stopPropagation();
                     if (window.openDownloadGateModal) {
                         const dlUrl = prod.free_download_url || getProductAudio(prod) || '';
                         window.openDownloadGateModal(dlUrl, user.nickname, prod.id);
                     } else {
-                        window.location.href = seoLink; 
+                        window.location.href = seoLink;
                     }
                 };
                 tActions.appendChild(dlBtn);
@@ -2155,14 +2170,14 @@ async function renderTrending(items, user, collabStats = {}) {
         const authUrl = authorizedUrls[idx];
         if (prod.image_url) {
             const parent = img.parentElement;
-            if (parent) parent.classList.add('skeleton'); // Ensure skeleton is on
+            if (parent) parent.classList.add('img-loading-skeleton'); // Safe skeleton
 
             img.onload = () => {
-                if (parent) parent.classList.remove('skeleton');
+                if (parent) parent.classList.remove('img-loading-skeleton');
                 img.style.opacity = 1;
             };
             img.onerror = () => {
-                if (parent) parent.classList.remove('skeleton');
+                if (parent) parent.classList.remove('img-loading-skeleton');
                 img.src = '/images/portada-default.png';
                 img.style.opacity = 1;
             };
@@ -2466,15 +2481,15 @@ async function renderProductList(items, user, collabStats = {}) {
         if (prod.image_url) {
             const img = row.querySelector('img');
             const parent = img?.parentElement;
-            if (parent) parent.classList.add('skeleton');
+            if (parent) parent.classList.add('img-loading-skeleton');
 
             if (img) {
                 img.onload = () => {
-                    if (parent) parent.classList.remove('skeleton');
+                    if (parent) parent.classList.remove('img-loading-skeleton');
                     img.style.opacity = 1;
                 };
                 img.onerror = () => {
-                    if (parent) parent.classList.remove('skeleton');
+                    if (parent) parent.classList.remove('img-loading-skeleton');
                     img.src = '/images/portada-default.png';
                     img.style.opacity = 1;
                 };
@@ -2870,13 +2885,13 @@ document.addEventListener('DOMContentLoaded', () => {
             document.querySelectorAll('.ots-heart-btn[data-id]').forEach(btn => {
                 const prodId = btn.dataset.id;
                 const isLiked = likedIds.has(String(prodId));
-                
+
                 // Set active class
                 btn.classList.toggle('active', isLiked);
-                
+
                 // Set icon
                 btn.innerHTML = `<i class="bi ${isLiked ? 'bi-heart-fill' : 'bi-heart'}"></i>`;
-                
+
                 // If the element expects inline style for red:
                 const icon = btn.querySelector('i');
                 if (icon) {

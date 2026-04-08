@@ -39,18 +39,23 @@ export const getLeaderboard = async (req, res) => {
         if (prodError) throw prodError;
 
         // 3. Followers Count (Real Data)
-        // We select user_id (the producer being followed)
+        // We fetch count per user_id
+        console.log("Fetching followers count...");
         const { data: followersData, error: followersError } = await supabase
             .from('followers')
-            .select('user_id')
-            .in('user_id', producerIds);
+            .select('user_id');
+        
+        if (followersError) console.error("Followers Fetch Error:", followersError);
 
         const followerCounts = {};
-        if (followersData) {
+        if (followersData && Array.isArray(followersData)) {
             followersData.forEach(f => {
-                followerCounts[f.user_id] = (followerCounts[f.user_id] || 0) + 1;
+                if (f.user_id) {
+                    followerCounts[f.user_id] = (followerCounts[f.user_id] || 0) + 1;
+                }
             });
         }
+        console.log(`Aggregated stats for ${Object.keys(followerCounts).length} entities.`);
 
         // 4. Calculate Scores (Aggregating Stats)
         // Formula aligned with Trending:
