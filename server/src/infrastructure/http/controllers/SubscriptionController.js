@@ -216,7 +216,7 @@ const processSubscriptionAudit = async (paymentId) => {
                 });
 
                 // Actualizar profile (rol)
-                await supabase.from('profiles').update({ plan: newPlan }).eq('id', userId);
+                await supabase.from('users').update({ plan: newPlan }).eq('id', userId);
 
                 // Dar los créditos iniciales
                 const creditsMap = { 'starter': 60, 'pro': 100 };
@@ -224,9 +224,9 @@ const processSubscriptionAudit = async (paymentId) => {
 
                 // Asumiendo que existe una columna 'reward_balance' según task.md
                 // O se inserta un registro de transaccion de tarjeta/crédito
-                const { data: profile } = await supabase.from('profiles').select('reward_balance').eq('id', userId).single();
+                const { data: profile } = await supabase.from('users').select('reward_balance').eq('id', userId).single();
                 const currentBalance = profile?.reward_balance || 0;
-                await supabase.from('profiles').update({ reward_balance: currentBalance + creditsToGive }).eq('id', userId);
+                await supabase.from('users').update({ reward_balance: currentBalance + creditsToGive }).eq('id', userId);
 
                 console.log(`✅ [SUB SUCCESS] Plan actualizado y ${creditsToGive} créditos otorgados.`);
             }
@@ -416,13 +416,13 @@ export const capturePayPalSubscriptionOrder = async (req, res) => {
 
         // 5. Update Profile (Immediate Tier Upgrade)
         // Even if stacking time, the user TIER becomes the new plan immediately
-        await supabase.from('profiles').update({ plan: plan }).eq('id', userId);
+        await supabase.from('users').update({ plan: plan }).eq('id', userId);
 
         // 6. Give credits
         const creditsToGive = planData.credits;
-        const { data: profile } = await supabase.from('profiles').select('reward_balance').eq('id', userId).single();
+        const { data: profile } = await supabase.from('users').select('reward_balance').eq('id', userId).single();
         const currentBalance = profile?.reward_balance || 0;
-        await supabase.from('profiles').update({ reward_balance: currentBalance + creditsToGive }).eq('id', userId);
+        await supabase.from('users').update({ reward_balance: currentBalance + creditsToGive }).eq('id', userId);
 
         console.log(`✅ [PayPal Sub] Plan upgraded to ${plan} (${interval}), ${creditsToGive} credits given. New Expiry: ${newPeriodEnd}`);
 
@@ -609,7 +609,7 @@ export const checkRefundEligibility = async (req, res) => {
         const planInterval = planParts[1] || 'monthly';
         const expectedCredits = PAYPAL_PLAN_PRICES[planType]?.[planInterval]?.credits || 0;
 
-        const { data: profile } = await supabase.from('profiles').select('reward_balance').eq('id', userId).single();
+        const { data: profile } = await supabase.from('users').select('reward_balance').eq('id', userId).single();
         
         if (!profile || profile.reward_balance < expectedCredits) {
             return res.status(200).json({ eligible: false, reason: 'Has utilizado créditos del plan.' });
@@ -663,13 +663,13 @@ export const subscribePayPalSubscription = async (req, res) => {
             current_period_end: newPeriodEnd
         });
 
-        await supabase.from('profiles').update({ plan: plan }).eq('id', userId);
+        await supabase.from('users').update({ plan: plan }).eq('id', userId);
 
         // Give credits
         const creditsToGive = planData.credits;
-        const { data: profile } = await supabase.from('profiles').select('reward_balance').eq('id', userId).single();
+        const { data: profile } = await supabase.from('users').select('reward_balance').eq('id', userId).single();
         const currentBalance = profile?.reward_balance || 0;
-        await supabase.from('profiles').update({ reward_balance: currentBalance + creditsToGive }).eq('id', userId);
+        await supabase.from('users').update({ reward_balance: currentBalance + creditsToGive }).eq('id', userId);
 
         console.log(`✅ [PayPal Sub] Plan upgraded to ${plan} (${interval}), ${creditsToGive} credits given.`);
 

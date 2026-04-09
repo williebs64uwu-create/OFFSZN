@@ -211,9 +211,33 @@ async function fetchData() {
             // Populate Top 3 PW Producers who have tracks
             window.topPWProducers = [];
             const lb = window.topProducers || [];
+
+            // 🔥 VIP BOOST: User jdagust (Starter)
+            const vipId = '91dbeab3-deae-443c-b5c9-af14448884dc';
+            let vipProducer = Array.isArray(allProducers) ? allProducers.find(p => String(p.id) === vipId) : null;
+            if (!vipProducer) vipProducer = lb.find(p => String(p.id) === vipId);
+            
+            if (!vipProducer) {
+                vipProducer = {
+                    id: vipId,
+                    nickname: 'jdagust',
+                    name: 'jdagust',
+                    avatar_url: 'https://ik.imagekit.io/6gzqp4xam/avatars/avatar_91dbeab3-deae-443c-b5c9-af14448884dc_f0ciUJIfE?tr=width-500,height-500,cropType-maintain_ratio,focus-face&v=1774637251819',
+                    followers_count: 5,
+                    products_count: 4
+                };
+            }
+
+            if (vipProducer) {
+                const tracks = allProducts.filter(p => String(p.producer_id) === vipId);
+                if (tracks.length > 0) {
+                    window.topPWProducers.push(vipProducer);
+                }
+            }
+
             for (let i = 0; i < lb.length; i++) {
                 const candidate = lb[i];
-                if (!candidate) continue;
+                if (!candidate || String(candidate.id) === vipId) continue;
                 const tracks = allProducts.filter(p => String(p.producer_id) === String(candidate.id));
                 if (tracks.length > 0) {
                     window.topPWProducers.push(candidate);
@@ -967,7 +991,7 @@ function renderPWTrackItemHtml(product, index) {
     // Price formatting
     const isTrulyFree = (product.is_free === true || String(product.is_free) === 'true') && (Number(product.price_basic) === 0 || !product.price_basic);
     const priceValue = (product.price_basic && Number(product.price_basic) > 0) ? product.price_basic : '75';
-    const price = isTrulyFree ? 'FREE' : `$${priceValue}.00`;
+    const price = isTrulyFree ? 'FREE' : (window.CurrencyManager ? window.CurrencyManager.format(parseFloat(priceValue)) : `$${priceValue}`);
 
     const storageVer = product.storage_version || product.r2_version || 'v2';
     const isR2 = (storageVer !== 'supabase') && window.AuthUtils && window.AuthUtils.isR2Url(rawImg);

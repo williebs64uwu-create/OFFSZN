@@ -1739,6 +1739,14 @@ async function loadUserProducts(user) {
         const urlsToWarm = [];
         if (user.avatar_url) urlsToWarm.push({ url: user.avatar_url, version: user.r2_version || 'v2' });
 
+        // Extraer URL del banner para precargarlo
+        if (user.banner_url) {
+            let bUrl = user.banner_url;
+            if (bUrl.startsWith('url:')) bUrl = bUrl.substring(bUrl.indexOf(':') + 1);
+            else if (bUrl.startsWith('gif:')) bUrl = bUrl.substring(bUrl.indexOf(':') + 1);
+            if (bUrl.startsWith('http')) urlsToWarm.push({ url: bUrl, version: 'v2' });
+        }
+
         // Trending
         if (window.trendingProducts) {
             window.trendingProducts.slice(0, 5).forEach(p => {
@@ -1752,7 +1760,23 @@ async function loadUserProducts(user) {
         });
 
         if (urlsToWarm.length > 0 && window.getAuthorizedUrl) {
-            await Promise.all(urlsToWarm.map(obj => window.getAuthorizedUrl(obj.url, obj.version).catch(() => null)));
+            // 1. Obtener URLs firmadas
+            const authorizedArray = await Promise.all(urlsToWarm.map(obj => window.getAuthorizedUrl(obj.url, obj.version).catch(() => null)));
+            
+            // 2. Ejecutar Bulk Preload (Descarga a RAM)
+            const preloadPromises = authorizedArray.map(finalUrl => {
+                if (!finalUrl) return Promise.resolve();
+                return new Promise((resolve) => {
+                    const img = new Image();
+                    img.onload = () => resolve();
+                    img.onerror = () => resolve(); // No trabar si una falla
+                    img.src = finalUrl;
+                });
+            });
+
+            // 3. Race contra timeout (Max 1.5s extra para la red, sin exceder el profileTimer)
+            const maxWaitPromise = new Promise(resolve => setTimeout(resolve, 1500));
+            await Promise.race([Promise.allSettled(preloadPromises), maxWaitPromise]);
         }
 
         // 1. Start all preparation in parallel
@@ -2298,6 +2322,7 @@ async function renderProductList(items, user, collabStats = {}) {
         img.id = `list-img-${prod.id}`;
         img.alt = 'cover';
         img.className = 'skeleton-img-transition';
+        img.loading = 'lazy';
         coverDiv.appendChild(img);
         row.appendChild(coverDiv);
 
