@@ -4,8 +4,15 @@ export const authenticateTokenMiddleware = async (req, res, next) => {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
 
-    // MODIFICADO: Bypass para rutas de descarga R2 que manejan su propia auth (público/privado)
-    if (req.url.includes('/r2/download-url')) {
+    // MODIFICADO: Bypass para rutas de descarga R2, links de orden y simulación de compra
+    // Usamos originalUrl para que funcione aunque el router esté montado en un prefijo (ej: /api)
+    const bypassRoutes = [
+        '/r2/download-url',
+        '/api/orders/download-link',
+        '/api/test/simulate-purchase-email'
+    ];
+    
+    if (bypassRoutes.some(route => req.originalUrl.includes(route))) {
         return next();
     }
 

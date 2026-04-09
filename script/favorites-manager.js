@@ -11,6 +11,9 @@ window.FavoritesManager = (function () {
     // Throttling: Track IDs currently being toggled
     let pendingToggles = new Set();
 
+    // Cache for producer metadata (badges, plans, etc)
+    let producerMap = new Map();
+
     // 1. Initialize (with Promise Singleton Pattern)
     let initPromise = null;
 
@@ -136,6 +139,25 @@ window.FavoritesManager = (function () {
                 }
 
                 const products = await res.json();
+
+                // --- 🔥 BULK PRODUCER VERIFICATION ---
+                // Extract all unique producer IDs and fetch their metadata in one go
+                const producerIds = [...new Set(products.map(p => p.producer_id || p.user_id))].filter(Boolean);
+                if (producerIds.length > 0) {
+                    try {
+                        const pRes = await fetch('/api/users/bulk-info', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ ids: producerIds })
+                        });
+                        if (pRes.ok) {
+                            const pData = await pRes.json();
+                            pData.forEach(u => producerMap.set(String(u.id), u));
+                        }
+                    } catch (e) {
+                        console.warn("Failed to fetch bulk producer info for favorites", e);
+                    }
+                }
 
                 // --- 🔥 VISIBILITY FILTERING ---
                 // We only show products that are both PUBLIC and NOT DELETED
@@ -446,14 +468,28 @@ window.FavoritesManager = (function () {
             return `<span class="artist-hover-trigger ${extraClass}" data-artist='${safeData}' onmouseenter="if(window.showArtistCard) window.showArtistCard(event, this)" onmouseleave="if(window.hideArtistCard) window.hideArtistCard(event, this)">${escapeHTML(name)}</span>`;
         };
 
+        const producerId = prod.producer_id || prod.user_id;
+        const producerInfo = producerMap.get(String(producerId)) || prodUser;
+
         const producerData = {
-            id: prodUser.id,
-            nickname: prodUser.nickname,
-            avatar_url: prodUser.avatar_url,
-            is_verified: prodUser.is_verified,
-            stats: { followers: 0 }
+            id: producerId,
+            nickname: producerInfo.nickname || prodUser.nickname,
+            avatar_url: producerInfo.avatar_url || prodUser.avatar_url,
+            is_verified: producerInfo.is_verified || prodUser.is_verified,
+            plan: producerInfo.plan || null,
+            stats: { followers: producerInfo.followers_count || 0 }
         };
-        let artistHtml = createArtistSpan(prodUser.nickname, producerData, 'producer-link-thin');
+
+        // --- VERIFIED BADGE ---
+        let badgeHtml = '';
+        const plan = producerData.plan;
+        const isVerified = producerData.is_verified || !!plan;
+        if (isVerified) {
+            const badgeColor = plan === 'pro' ? '#fbbf24' : (plan === 'starter' ? '#a855f7' : '#1DB954');
+            badgeHtml = `<i class="bi bi-patch-check-fill" style="margin-left: 4px; font-size: 0.85rem; color: ${badgeColor};" title="Verificado"></i>`;
+        }
+
+        let artistHtml = createArtistSpan(producerData.nickname, producerData, 'producer-link-thin') + badgeHtml;
 
         let collabs = typeof prod.collaborators === 'string' ? JSON.parse(prod.collaborators) : (prod.collaborators || []);
         if (Array.isArray(collabs) && collabs.length > 0) {
@@ -514,7 +550,12 @@ window.FavoritesManager = (function () {
 
         card.innerHTML = `
             <div class="fav-card-cover" onclick="window.location.href='${seoUrl}'">
-                <img src="${escapeHTML(imgUrl)}" id="fav-img-${prod.id}" onerror="this.src='/images/portada-default.png'" alt="${escapeHTML(prod.name)}">
+                <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" 
+                     id="fav-img-${prod.id}" 
+                     data-r2-src="${escapeHTML(prod.image_url)}"
+                     data-r2-version="${prod.r2_version || 'v2'}"
+                     onerror="this.src='/images/portada-default.png'" 
+                     alt="${escapeHTML(prod.name)}">
                 <div class="fav-badge-floating">${escapeHTML(pType)}</div>
                 <div class="fav-card-overlay">
                     <button class="fav-play-btn" id="btn-play-${waveformId}">
@@ -621,18 +662,9 @@ window.FavoritesManager = (function () {
             };
         }
 
-        // --- 🧪 IMAGE OPTIMIZATION ---
-        // Let R2-Loader handle generic loading and fallback, but if it is unmistakably a Supabase raw object link,
-        // we can attempt a quick optimize. If not, just use the raw URL.
-        const imgEl = card.querySelector(`#fav-img-${prod.id}`);
-        if (imgEl) {
-            if (prod.image_url && prod.image_url.includes('.supabase.co') && prod.image_url.includes('/object/public/')) {
-                const optimizedUrlBase = prod.image_url.replace('/object/public/', '/render/image/public/');
-                const finalUrl = `${optimizedUrlBase}?width=400&quality=80&resize=contain`;
-                imgEl.src = finalUrl;
-            } else if (prod.image_url) {
-                imgEl.src = prod.image_url;
-            }
+        // --- 🧪 IMAGE OPTIMIZATION (R2) ---
+        if (typeof window.signR2Images === 'function') {
+            setTimeout(() => window.signR2Images(card), 0);
         }
 
         return card;

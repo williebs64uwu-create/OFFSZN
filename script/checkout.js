@@ -77,11 +77,11 @@ const CheckoutManager = {
 
     // Wait for CartManager to be ready (it loads async)
     await this.waitForCart();
-    
+
     // IMPORTANT: Show empty state ASAP if cart is empty
     const initialItemsCount = window.CartManager?.state?.items?.length || 0;
     this.updateEmptyState(initialItemsCount);
-    
+
     // RENDER IMMEDIATELY (if we have cached data, it will show content; else skeleton)
     this.renderOrderSummary();
 
@@ -89,7 +89,7 @@ const CheckoutManager = {
     const user = window.CartManager?.state?.user;
     const contactSection = document.getElementById('section-contact');
     const guestEmailInput = document.getElementById('guest-email');
-    
+
     if (!user) {
       if (contactSection) contactSection.style.display = 'block';
       if (guestEmailInput) {
@@ -110,27 +110,27 @@ const CheckoutManager = {
 
     // Run verification in the background to unblock the rest of the page
     if (window.CartManager && typeof window.CartManager.verifyCart === 'function') {
-        const verifyBg = async () => {
-            try {
-                await window.CartManager.verifyCart();
-                // After background verification finishes, re-sync everything
-                this.checkBlockedStatus();
-                this.renderOrderSummary();
-                this.updatePayPalButtonsVisibility();
-                
-                // If PayPal is now eligible, init it if not already done
-                const eligibility = window.CartManager?.state?.paymentEligibility;
-                if (eligibility?.paypal && initialItemsCount > 0) {
-                    this.initPayPal();
-                }
-            } catch (e) {
-                console.warn("[Checkout] Background verification failed:", e);
-                // Even on failure, ensure we try to show what we can
-                this.renderOrderSummary();
-                this.updatePayPalButtonsVisibility();
-            }
-        };
-        verifyBg(); 
+      const verifyBg = async () => {
+        try {
+          await window.CartManager.verifyCart();
+          // After background verification finishes, re-sync everything
+          this.checkBlockedStatus();
+          this.renderOrderSummary();
+          this.updatePayPalButtonsVisibility();
+
+          // If PayPal is now eligible, init it if not already done
+          const eligibility = window.CartManager?.state?.paymentEligibility;
+          if (eligibility?.paypal && initialItemsCount > 0) {
+            this.initPayPal();
+          }
+        } catch (e) {
+          console.warn("[Checkout] Background verification failed:", e);
+          // Even on failure, ensure we try to show what we can
+          this.renderOrderSummary();
+          this.updatePayPalButtonsVisibility();
+        }
+      };
+      verifyBg();
     }
 
     // SYNC Check for initial cached/state data
@@ -169,7 +169,7 @@ const CheckoutManager = {
           this._lastCartHash = currentCartHash;
 
           this.updateEmptyState(count);
-          
+
           if (count === 0) {
             this.blockedItems = []; // Clear blocked items on empty cart
             this.renderOrderSummary();
@@ -200,7 +200,7 @@ const CheckoutManager = {
       if (grid) grid.style.display = 'none';
       if (emptyState) emptyState.style.display = 'block';
       this.loadRecommendations();
-      
+
       // Auto-scroll to top when cart empties to ensure the empty state is visible
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } else {
@@ -216,12 +216,12 @@ const CheckoutManager = {
   },
 
   // --- GUEST VALIDATION (NEW) ---
-  validateGuestEmail: function() {
+  validateGuestEmail: function () {
     const email = this.guestEmail || '';
     const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const isValid = re.test(email);
     const input = document.getElementById('guest-email');
-    
+
     if (email.length > 0) {
       if (isValid) {
         input?.classList.remove('invalid');
@@ -237,10 +237,10 @@ const CheckoutManager = {
     return isValid;
   },
 
-  updatePaymentAccess: function(isAllowed) {
+  updatePaymentAccess: function (isAllowed) {
     const overlay = document.getElementById('payment-blocking-overlay');
     const methodsContainer = document.getElementById('checkout-payment-methods');
-    
+
     if (overlay) overlay.style.display = isAllowed ? 'none' : 'flex';
     if (methodsContainer) {
       if (isAllowed) {
@@ -300,7 +300,7 @@ const CheckoutManager = {
         const producerIds = [...new Set(validData.map(p => p.producer_id))];
         let profilesDict = {};
         let eligibleProducers = new Set();
-        
+
         if (producerIds.length > 0) {
           const { data: profilesData } = await window.supabaseClient
             .from('users')
@@ -311,11 +311,11 @@ const CheckoutManager = {
             profilesData.forEach(pf => {
               const nameToUse = pf.nickname || 'Productor';
               profilesDict[pf.id] = nameToUse;
-              
+
               // Check eligibility (PayPal exists or Yape is setup)
               const hasPayPal = pf.paypal_email || pf.payment_methods?.paypal?.enabled || pf.payment_methods?.paypal;
               const hasYape = pf.yape_phone;
-              
+
               if (hasPayPal || hasYape) {
                 eligibleProducers.add(pf.id);
               }
@@ -325,7 +325,7 @@ const CheckoutManager = {
 
         // Filter validData for eligible producers ONLY
         const filteredData = validData.filter(p => eligibleProducers.has(p.producer_id));
-        
+
         // If we have none eligible, we show any as fallback (though ideally we should have many)
         const finalPool = filteredData.length > 0 ? filteredData : validData;
 
@@ -855,50 +855,50 @@ const CheckoutManager = {
     const paypalSkeleton = document.getElementById('paypal-skeleton');
     const yapeSkeleton = document.getElementById('yape-skeleton');
     const yapeActual = document.getElementById('yape-actual-content');
-    
+
     const paypalHeaderContent = document.getElementById('paypal-header-content');
     const paypalHeaderSkeleton = document.getElementById('paypal-header-skeleton');
     const yapeHeaderContent = document.getElementById('yape-header-content');
     const yapeHeaderSkeleton = document.getElementById('yape-header-skeleton');
-    
+
     const eligibility = window.CartManager?.state?.paymentEligibility;
     const isVerifying = window.CartManager?.state?.isVerifying;
 
     // 0. Si estamos verificando o no tenemos elegibilidad aún, mostramos skeletons globales y BLOQUEAMOS clicks
     if (isVerifying || !eligibility) {
-        if (paypalSkeleton) paypalSkeleton.style.display = 'flex';
-        if (container) container.style.display = 'none';
-        
-        // Bloquear interacción en ambos métodos
-        if (paypalSection) {
-            paypalSection.style.pointerEvents = 'none';
-            paypalSection.style.opacity = '0.9';
-            if (paypalHeaderContent) paypalHeaderContent.style.display = 'none';
-            if (paypalHeaderSkeleton) paypalHeaderSkeleton.style.display = 'flex';
-        }
+      if (paypalSkeleton) paypalSkeleton.style.display = 'flex';
+      if (container) container.style.display = 'none';
 
-        if (yapeSection) {
-            yapeSection.style.pointerEvents = 'none';
-            yapeSection.style.opacity = '0.9';
-            if (yapeHeaderContent) yapeHeaderContent.style.display = 'none';
-            if (yapeHeaderSkeleton) yapeHeaderSkeleton.style.display = 'flex';
-        }
+      // Bloquear interacción en ambos métodos
+      if (paypalSection) {
+        paypalSection.style.pointerEvents = 'none';
+        paypalSection.style.opacity = '0.9';
+        if (paypalHeaderContent) paypalHeaderContent.style.display = 'none';
+        if (paypalHeaderSkeleton) paypalHeaderSkeleton.style.display = 'flex';
+      }
 
-        // Mostrar skeleton de Yape BODY SOLO si es el método activo (o por defecto)
-        if (yapeSkeleton && (yapeSection && yapeSection.classList.contains('active'))) {
-            yapeSkeleton.style.display = 'flex';
-            const yapeContent = document.getElementById('yape-content');
-            if (yapeContent) yapeContent.style.display = 'block';
-            if (yapeActual) yapeActual.style.display = 'none';
-        }
-        return; 
+      if (yapeSection) {
+        yapeSection.style.pointerEvents = 'none';
+        yapeSection.style.opacity = '0.9';
+        if (yapeHeaderContent) yapeHeaderContent.style.display = 'none';
+        if (yapeHeaderSkeleton) yapeHeaderSkeleton.style.display = 'flex';
+      }
+
+      // Mostrar skeleton de Yape BODY SOLO si es el método activo (o por defecto)
+      if (yapeSkeleton && (yapeSection && yapeSection.classList.contains('active'))) {
+        yapeSkeleton.style.display = 'flex';
+        const yapeContent = document.getElementById('yape-content');
+        if (yapeContent) yapeContent.style.display = 'block';
+        if (yapeActual) yapeActual.style.display = 'none';
+      }
+      return;
     }
-    
+
     // Si ya no estamos verificando y TENEMOS elegibilidad, ocultamos los skeletons globales y RESTAURAMOS clicks
     if (paypalSkeleton && (this._paypalRendered || this._paypalError)) {
-        paypalSkeleton.style.display = 'none';
+      paypalSkeleton.style.display = 'none';
     }
-    
+
     // RESTAURAR CABECERAS
     if (paypalHeaderContent) paypalHeaderContent.style.display = 'flex';
     if (paypalHeaderSkeleton) paypalHeaderSkeleton.style.display = 'none';
@@ -907,24 +907,24 @@ const CheckoutManager = {
 
     // Hide Yape body skeleton ONLY if not currently in manual toggle
     if (yapeSkeleton && !this._manualToggleInProgress) {
-        yapeSkeleton.style.display = 'none';
+      yapeSkeleton.style.display = 'none';
     }
 
     if (yapeActual && yapeSection && yapeSection.classList.contains('active')) {
-        // Show content if not in manual toggle
-        if (!this._manualToggleInProgress) {
-            yapeActual.style.display = 'block';
-        }
+      // Show content if not in manual toggle
+      if (!this._manualToggleInProgress) {
+        yapeActual.style.display = 'block';
+      }
     }
 
     // Desbloquear clics
     if (paypalSection) {
-        paypalSection.style.pointerEvents = 'auto';
-        paypalSection.style.opacity = '1';
+      paypalSection.style.pointerEvents = 'auto';
+      paypalSection.style.opacity = '1';
     }
     if (yapeSection) {
-        yapeSection.style.pointerEvents = 'auto';
-        yapeSection.style.opacity = '1';
+      yapeSection.style.pointerEvents = 'auto';
+      yapeSection.style.opacity = '1';
     }
 
     // 1. Visibilidad de Métodos según Elegibilidad (Golden Condition)
@@ -1050,7 +1050,7 @@ const CheckoutManager = {
       input.value = this.appliedCoupon;
       input.disabled = true;
       btn.style.display = 'none';
-      
+
       // Ensure coupon box is visible if coupon is active
       document.getElementById('coupon-box')?.classList.add('active');
     } else {
@@ -1093,7 +1093,7 @@ const CheckoutManager = {
     const itemsContainer = document.getElementById('checkout-order-summary-items');
     const totalsContainer = document.getElementById('checkout-order-summary-totals');
     const headerTotalEl = document.getElementById('summary-header-total');
-    
+
     if (!itemsContainer || !totalsContainer) return;
 
     const { items, subtotal, discountAmount, serviceFee, total } = this.calculateTotals();
@@ -1104,11 +1104,11 @@ const CheckoutManager = {
     // Toggle from Skeleton to Content
     const summarySkeleton = document.getElementById('summary-skeleton');
     const summaryMainContent = document.getElementById('summary-content-main');
-    
+
     if (summarySkeleton) summarySkeleton.style.display = 'none';
     if (summaryMainContent) {
-        summaryMainContent.style.display = 'flex';
-        summaryMainContent.style.opacity = '1';
+      summaryMainContent.style.display = 'flex';
+      summaryMainContent.style.opacity = '1';
     }
 
     if (items.length === 0) {
@@ -1142,16 +1142,16 @@ const CheckoutManager = {
           </div>
         </div>
       `;
-      
+
       // Lazy load image if applicable (Sync with Cart Drawer logic)
       const coverPath = item.product.cover_path || item.product.image_url;
       const storageVer = item.product.storage_version || item.product.r2_version || 'v2';
-      
+
       if (coverPath && window.getAuthorizedUrl) {
-          window.getAuthorizedUrl(coverPath, storageVer, item.product.id).then(url => {
-              const el = document.getElementById(imgId);
-              if (el && url) el.src = url;
-          });
+        window.getAuthorizedUrl(coverPath, storageVer, item.product.id).then(url => {
+          const el = document.getElementById(imgId);
+          if (el && url) el.src = url;
+        });
       }
     });
     itemsContainer.innerHTML = itemsHTML;
@@ -1189,11 +1189,11 @@ const CheckoutManager = {
     this.renderBottomSummaryRow(items, total);
   },
 
-  renderBottomSummaryRow: function(items, total) {
+  renderBottomSummaryRow: function (items, total) {
     const container = document.getElementById('bottom-summary-row');
     if (!container || items.length === 0) {
-        if (container) container.innerHTML = '';
-        return;
+      if (container) container.innerHTML = '';
+      return;
     }
 
     // Hide Bottom Skeleton if exists
@@ -1209,11 +1209,11 @@ const CheckoutManager = {
     // Only render the display row if it doesn't exist (Ignoring the skeleton)
     let toggleRow = container.querySelector('.bottom-total-row:not(#bottom-summary-skeleton)');
     if (!toggleRow) {
-        toggleRow = document.createElement('div');
-        toggleRow.className = 'bottom-total-row';
-        container.appendChild(toggleRow);
+      toggleRow = document.createElement('div');
+      toggleRow.className = 'bottom-total-row';
+      container.appendChild(toggleRow);
     }
-    
+
     // Explicitly ensure it's visible if we reuse it
     toggleRow.style.display = 'flex';
 
@@ -1234,12 +1234,12 @@ const CheckoutManager = {
     // Lazy load bottom thumb using R2 Auth logic (same as Cart)
     const coverPath = firstItem.product.cover_path || firstItem.product.image_url;
     const storageVer = firstItem.product.storage_version || firstItem.product.r2_version || 'v1';
-    
+
     if (coverPath && window.getAuthorizedUrl) {
-        window.getAuthorizedUrl(coverPath, storageVer, firstItem.product.id).then(url => {
-            const el = document.getElementById(imgId);
-            if (el && url) el.src = url;
-        });
+      window.getAuthorizedUrl(coverPath, storageVer, firstItem.product.id).then(url => {
+        const el = document.getElementById(imgId);
+        if (el && url) el.src = url;
+      });
     }
   },
 
@@ -1247,23 +1247,23 @@ const CheckoutManager = {
     const accordion = document.getElementById('summary-accordion');
     const content = document.getElementById('summary-content');
     const text = document.getElementById('summary-toggle-text');
-    
+
     if (!accordion || !content) return;
-    
+
     const isActive = accordion.classList.toggle('active');
     content.classList.toggle('active');
-    
+
     if (text) {
-        text.textContent = isActive ? 'Ocultar mi carrito' : 'Mostrar mi carrito';
+      text.textContent = isActive ? 'Ocultar mi carrito' : 'Mostrar mi carrito';
     }
   },
 
   toggleCoupon: function () {
     const box = document.getElementById('coupon-box');
     if (box) {
-        const isHidden = box.style.display === 'none' || !box.style.display;
-        box.style.display = isHidden ? 'block' : 'none';
-        box.classList.toggle('active');
+      const isHidden = box.style.display === 'none' || !box.style.display;
+      box.style.display = isHidden ? 'block' : 'none';
+      box.classList.toggle('active');
     }
   },
 
@@ -1323,8 +1323,8 @@ const CheckoutManager = {
         const container = document.getElementById('paypal-button-container');
         const skeleton = document.getElementById('paypal-skeleton');
         if (container) {
-            container.innerHTML = '';
-            container.style.display = 'none';
+          container.innerHTML = '';
+          container.style.display = 'none';
         }
         if (skeleton) skeleton.style.display = 'flex';
       }
@@ -1403,7 +1403,7 @@ const CheckoutManager = {
 
       createOrder: function (data, actions) {
         // Disclaimer handled by text under buttons now
-        const body = { 
+        const body = {
           couponCode: self.appliedCoupon,
           guestEmail: self.guestEmail // PASS GUEST EMAIL
         };
@@ -1434,8 +1434,8 @@ const CheckoutManager = {
       onApprove: function (data, actions) {
         self.showProcessingState(true);
 
-        const body = { 
-          orderID: data.orderID, 
+        const body = {
+          orderID: data.orderID,
           couponCode: self.appliedCoupon,
           guestEmail: self.guestEmail // PASS GUEST EMAIL
         };
@@ -1472,22 +1472,22 @@ const CheckoutManager = {
       onError: function (err) {
         console.error("PayPal Error:", err);
         const errMsg = (err?.message || String(err)).toLowerCase();
-        
+
         // Ignore "User closed" errors silently
         const ignoreTerms = [
-            'missing_producer_paypal', 
-            'detected popup close', 
-            'window closed', 
-            'popup_closed_by_user',
-            'closed the popup',
-            'popup closed',
-            'user cancelled',
-            'cancelado por el usuario'
+          'missing_producer_paypal',
+          'detected popup close',
+          'window closed',
+          'popup_closed_by_user',
+          'closed the popup',
+          'popup closed',
+          'user cancelled',
+          'cancelado por el usuario'
         ];
         if (ignoreTerms.some(term => errMsg.includes(term))) {
-            console.log("[PayPal] Popup closed or handled error ignored.");
-            this.showProcessingState(false);
-            return;
+          console.log("[PayPal] Popup closed or handled error ignored.");
+          this.showProcessingState(false);
+          return;
         }
 
         alert("Ocurrió un error al procesar la solicitud con PayPal. Intenta nuevamente.");
@@ -1593,21 +1593,21 @@ const CheckoutManager = {
       const yapeSkeleton = document.getElementById('yape-skeleton');
       const yapeActual = document.getElementById('yape-actual-content');
       const yapeWrapper = document.getElementById('yape-content');
-      
+
       if (yapeSkeleton && yapeActual) {
-          this._manualToggleInProgress = true;
-          yapeWrapper.style.display = 'block'; 
-          yapeActual.style.display = 'none';
-          yapeSkeleton.style.display = 'flex';
-          
-          setTimeout(() => {
-              this.updateYapeTotalPEN();
-              if (yapeSkeleton) yapeSkeleton.style.display = 'none';
-              if (yapeActual) yapeActual.style.display = 'block';
-              this._manualToggleInProgress = false;
-          }, 800);
-      } else {
+        this._manualToggleInProgress = true;
+        yapeWrapper.style.display = 'block';
+        yapeActual.style.display = 'none';
+        yapeSkeleton.style.display = 'flex';
+
+        setTimeout(() => {
           this.updateYapeTotalPEN();
+          if (yapeSkeleton) yapeSkeleton.style.display = 'none';
+          if (yapeActual) yapeActual.style.display = 'block';
+          this._manualToggleInProgress = false;
+        }, 800);
+      } else {
+        this.updateYapeTotalPEN();
       }
     }
   },

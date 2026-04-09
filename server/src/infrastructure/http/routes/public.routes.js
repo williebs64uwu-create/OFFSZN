@@ -1,7 +1,7 @@
 import { Router } from 'express';
 
 // Importamos los controladores
-import { getUserByNickname, getProductsByNickname, getAllProducers } from '../controllers/UserController.js';
+import { getUserByNickname, getProductsByNickname, getAllProducers, getUsersBulk } from '../controllers/UserController.js';
 import { getAllProducts } from '../controllers/ProductController.js';
 import { getLeaderboard } from '../controllers/LeaderboardController.js';
 import { validateCoupon } from '../controllers/CouponController.js';
@@ -12,6 +12,8 @@ const router = Router();
 
 // 1. Obtener perfil público de usuario
 router.get('/users/:nickname', getUserByNickname);
+router.post('/users/bulk-info', getUsersBulk);
+
 
 // 2. Obtener productos de un usuario específico
 router.get('/users/:nickname/products', getProductsByNickname);

@@ -2,715 +2,640 @@
 <html lang="es">
 
 <head>
-  <!-- Supabase Config & Auth Utils -->
-      <script src="/env.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.48.1" crossorigin="anonymous"></script>
-
-  <script src="/script/auth-utils.js?v=11"></script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>¡Compra Exitosa! - OFFSZN</title>
-  <link
-    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Montserrat:wght@700;800;900&display=swap"
-    rel="stylesheet" crossorigin="anonymous">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" crossorigin="anonymous">
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+
+  <!-- SEO & Social Meta Tags -->
+  <meta name="description" content="Tu compra en OFFSZN ha sido procesada con éxito. Descarga tus archivos ahora.">
+
+  <!-- Bootstrap & Font Awesome -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Modular Styles -->
+  <link rel="stylesheet" href="/css/auth-ui.css">
+  <link rel="stylesheet" href="/css/global-overlays.css">
+  <link rel="stylesheet" href="/css/navbar.css">
+  <link rel="stylesheet" href="/css/avatar-manager.css">
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;700;800&display=swap" rel="stylesheet">
+
+  <!-- 1. Cargar Configuración Segura y Supabase -->
+  <script src="/env.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>window.supabaseClient = null;</script>
+  <script src="/script/auth-utils.js?v=21"></script>
+
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
+    :root {
+      --primary: #7209b7;
+      --primary-dark: #560bad;
+      --success: #0cbc87;
+      --bg-dark: #000;
+      --card-bg: #0a0a0a;
+      --border: rgba(255, 255, 255, 0.08);
     }
 
     body {
+      background: var(--bg-dark);
+      color: #fff;
       font-family: 'Inter', sans-serif;
-      background: #000;
-      color: #fff;
+      margin: 0;
       min-height: 100vh;
-      padding: 0;
-    }
-
-    /* ==================== NAVBAR ==================== */
-    .navbar {
-      position: sticky;
-      top: 0;
-      background: rgba(0, 0, 0, 0.95);
-      backdrop-filter: blur(20px);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-      padding: 0.75rem 0;
-      z-index: 1000;
-    }
-
-    .navbar-container {
-      max-width: 1400px;
-      margin: 0 auto;
-      padding: 0 1.5rem;
       display: flex;
-      align-items: center;
-      justify-content: space-between;
+      flex-direction: column;
     }
 
-    .logo a {
-      color: #fff;
-      text-decoration: none;
-      font-size: 1.25rem;
-      font-weight: 900;
-    }
-
-    .navbar-right {
+    .main-content {
+      flex: 1;
+      padding: 60px 20px;
       display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .btn-dashboard {
-      background: linear-gradient(135deg, #7209b7 0%, #560bad 100%);
-      color: #fff;
-      padding: 0.5rem 1rem;
-      border-radius: 8px;
-      text-decoration: none;
-      font-size: 0.8125rem;
-      font-weight: 700;
-      transition: all 0.3s;
-      display: flex;
-      align-items: center;
-      gap: 0.375rem;
-      white-space: nowrap;
-    }
-
-    .btn-dashboard:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(114, 9, 183, 0.5);
-    }
-
-    .navbar-icon-button {
-      background: transparent;
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      color: rgba(255, 255, 255, 0.75);
-      width: 36px;
-      height: 36px;
-      border-radius: 8px;
-      font-size: 1rem;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
       justify-content: center;
-      transition: all 0.3s;
-      text-decoration: none;
+      align-items: center;
     }
 
-    .navbar-icon-button:hover {
-      color: #fff;
-      background: rgba(255, 255, 255, 0.05);
-      border-color: rgba(255, 255, 255, 0.2);
-    }
-
-    /* ==================== CONTENIDO PRINCIPAL ==================== */
-    .success-container {
-      max-width: 700px;
-      margin: 0 auto;
-      padding: 4rem 2rem;
+    .success-card {
+      max-width: 650px;
+      width: 100%;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 40px;
       text-align: center;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+      position: relative;
+      overflow: hidden;
     }
 
-    .success-icon {
-      width: 100px;
-      height: 100px;
-      background: linear-gradient(135deg, #0cbc87, #0a9d72);
+    .success-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 4px;
+      background: linear-gradient(90deg, var(--primary), #c9a7eb);
+    }
+
+    .success-icon-wrapper {
+      width: 80px;
+      height: 80px;
+      background: rgba(12, 188, 135, 0.1);
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      margin: 0 auto 2rem;
-      font-size: 3rem;
-      animation: popIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-      box-shadow: 0 8px 25px rgba(12, 188, 135, 0.3);
-    }
-
-    @keyframes popIn {
-      0% {
-        transform: scale(0);
-        opacity: 0;
-      }
-
-      50% {
-        transform: scale(1.05);
-      }
-
-      100% {
-        transform: scale(1);
-        opacity: 1;
-      }
-    }
-
-    .success-icon i {
-      animation: fadeIn 0.3s 0.2s ease-out forwards;
-      opacity: 0;
-    }
-
-    @keyframes fadeIn {
-      to {
-        opacity: 1;
-      }
+      margin: 0 auto 24px;
+      color: var(--success);
+      font-size: 40px;
+      box-shadow: 0 0 30px rgba(12, 188, 135, 0.1);
     }
 
     h1 {
-      font-size: 2.5rem;
-      font-weight: 900;
-      font-family: 'Montserrat', sans-serif;
-      margin-bottom: 1rem;
-      background: linear-gradient(135deg, #7209b7, #c9a7eb);
-      -webkit-background-clip: text;
-      -moz-background-clip: text;
-      background-clip: text;
-      -webkit-text-fill-color: transparent;
-      animation: slideUp 0.5s ease-out;
+      font-size: 2rem;
+      font-weight: 800;
+      margin-bottom: 12px;
+      letter-spacing: -0.5px;
     }
 
-    @keyframes slideUp {
-      from {
-        opacity: 0;
-        transform: translateY(20px);
-      }
-
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    .success-message {
-      font-size: 1.125rem;
+    .success-msg {
       color: #999;
-      margin-bottom: 2rem;
-      line-height: 1.6;
-      animation: slideUp 0.5s 0.1s ease-out backwards;
-    }
-
-    /* ð§ ALERTA DE EMAIL */
-    .email-alert {
-      background: linear-gradient(135deg, rgba(114, 9, 183, 0.15), rgba(86, 11, 173, 0.15));
-      border: 2px solid rgba(114, 9, 183, 0.4);
-      border-radius: 12px;
-      padding: 1.5rem;
-      margin-bottom: 2rem;
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      animation: slideUp 0.5s 0.2s ease-out backwards;
-    }
-
-    .email-alert-icon {
-      width: 50px;
-      height: 50px;
-      background: linear-gradient(135deg, #7209b7, #560bad);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-      font-size: 1.5rem;
-    }
-
-    .email-alert-content {
-      flex: 1;
-      text-align: left;
-    }
-
-    .email-alert-title {
       font-size: 1rem;
-      font-weight: 700;
-      color: #fff;
-      margin-bottom: 0.25rem;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
+      line-height: 1.6;
+      margin-bottom: 32px;
     }
 
-    .email-alert-text {
-      font-size: 0.875rem;
-      color: #c9a7eb;
-      line-height: 1.5;
-    }
-
-    .email-badge {
-      background: rgba(12, 188, 135, 0.2);
-      color: #0cbc87;
-      padding: 0.25rem 0.5rem;
-      border-radius: 4px;
-      font-size: 0.75rem;
-      font-weight: 600;
-      display: inline-flex;
-      align-items: center;
-      gap: 0.25rem;
-    }
-
-    .order-info {
-      background: #1a1a1a;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 12px;
-      padding: 2rem;
-      margin-bottom: 2rem;
+    .order-summary {
+      background: rgba(255,255,255,0.02);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 32px;
       text-align: left;
-      animation: slideUp 0.5s 0.3s ease-out backwards;
     }
 
     .info-row {
       display: flex;
       justify-content: space-between;
-      padding: 0.75rem 0;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      padding: 8px 0;
+      font-size: 0.9rem;
     }
 
-    .info-row:last-child {
-      border-bottom: none;
-    }
+    .info-label { color: #666; }
+    .info-value { font-weight: 600; color: #fff; }
 
-    .info-label {
-      color: #999;
-      font-size: 0.875rem;
-    }
-
-    .info-value {
-      font-weight: 600;
-      color: #fff;
-    }
-
-    .purchases-list {
-      background: #1a1a1a;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 12px;
-      padding: 1.5rem;
-      margin-bottom: 2rem;
+    .items-list {
       text-align: left;
-      animation: slideUp 0.5s 0.4s ease-out backwards;
+      margin-bottom: 32px;
     }
 
-    .purchases-list h3 {
-      font-size: 1.125rem;
+    .items-title {
+      font-size: 0.9rem;
       font-weight: 700;
-      margin-bottom: 1rem;
+      color: var(--primary);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
 
     .purchase-item {
       display: flex;
       align-items: center;
-      gap: 1rem;
-      padding: 1rem;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-      background: rgba(255, 255, 255, 0.02);
-      border-radius: 8px;
-      margin-bottom: 0.75rem;
-    }
-
-    .purchase-item:last-child {
-      border-bottom: none;
-      margin-bottom: 0;
-    }
-
-    .purchase-icon {
-      width: 50px;
-      height: 50px;
-      background: rgba(114, 9, 183, 0.2);
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #7209b7;
-      font-size: 1.5rem;
-      flex-shrink: 0;
-    }
-
-    .purchase-info {
-      flex: 1;
-    }
-
-    .purchase-name {
-      font-weight: 600;
-      font-size: 1rem;
-      margin-bottom: 0.25rem;
-    }
-
-    .purchase-license {
-      font-size: 0.8125rem;
-      color: #7209b7;
-    }
-
-    .purchase-actions {
-      display: flex;
-      gap: 0.5rem;
-      flex-shrink: 0;
-    }
-
-    .btn-download-beat {
-      background: linear-gradient(135deg, #0cbc87, #0a9d72);
-      border: none;
-      color: #fff;
-      padding: 0.625rem 1rem;
-      border-radius: 6px;
-      font-size: 0.8125rem;
-      font-weight: 600;
-      cursor: pointer;
+      gap: 16px;
+      background: rgba(255,255,255,0.03);
+      padding: 12px 16px;
+      border-radius: 12px;
+      margin-bottom: 12px;
+      border: 1px solid transparent;
       transition: all 0.3s;
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      text-decoration: none;
     }
 
-    .btn-download-beat:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(12, 188, 135, 0.4);
+    .purchase-item:hover {
+      border-color: var(--border);
+      background: rgba(255,255,255,0.05);
     }
 
-    .btn-download-license {
-      background: transparent;
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      color: #fff;
-      padding: 0.625rem 1rem;
-      border-radius: 6px;
-      font-size: 0.8125rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.3s;
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
+    .item-img-wrapper {
+        width: 48px;
+        height: 48px;
+        border-radius: 8px;
+        background: var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        overflow: hidden;
     }
 
-    .btn-download-license:hover {
-      background: rgba(255, 255, 255, 0.05);
-      border-color: rgba(255, 255, 255, 0.3);
+    .item-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
     }
 
-    .btn-download-license:disabled,
-    .btn-download-beat:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-
-    .actions {
-      display: flex;
-      gap: 1rem;
-      justify-content: center;
-      flex-wrap: wrap;
-      animation: slideUp 0.5s 0.5s ease-out backwards;
-    }
-
-    .btn {
-      padding: 1rem 2rem;
-      border-radius: 8px;
-      text-decoration: none;
+    .item-main { flex: 1; min-width: 0; }
+    .item-name { font-weight: 600; font-size: 0.95rem; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .item-details { display: flex; align-items: center; gap: 8px; font-size: 0.75rem; color: #666; }
+    
+    .license-badge {
+      color: var(--primary);
       font-weight: 700;
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      transition: all 0.3s;
-      font-size: 0.9375rem;
+      background: rgba(114, 9, 183, 0.1);
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    .btn-download {
+      background: var(--success);
+      color: #fff;
       border: none;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 0.8rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.3s;
+    }
+
+    .btn-download:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(12, 188, 135, 0.3);
+    }
+
+    .btn-contract {
+      background: var(--border);
+      color: #fff;
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      transition: all 0.3s;
       cursor: pointer;
     }
 
-    .btn-primary {
-      background: linear-gradient(135deg, #7209b7, #560bad);
-      color: #fff;
+    .btn-contract:hover {
+      background: rgba(255,255,255,0.15);
     }
 
-    .btn-primary:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(114, 9, 183, 0.5);
+    .support-block {
+      background: rgba(114, 9, 183, 0.05);
+      border: 1px dashed rgba(114, 9, 183, 0.3);
+      border-radius: 16px;
+      padding: 20px;
+      margin-top: 10px;
+      text-align: left;
     }
 
-    .btn-secondary {
+    .support-item {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 12px;
+      font-size: 0.85rem;
+      color: #999;
+    }
+
+    .support-item i { color: var(--primary); margin-top: 3px; }
+    .support-item b { color: #fff; }
+    .support-item a { color: var(--primary); text-decoration: none; font-weight: 600; }
+
+    .test-badge {
+      background: #dc2626;
+      color: white;
+      font-size: 0.7rem;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-weight: 900;
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      text-transform: uppercase;
+      z-index: 10;
+    }
+
+    .btn-test-email {
+      margin-top: 16px;
       background: transparent;
-      border: 1px solid rgba(255, 255, 255, 0.2);
+      border: 1px solid var(--border);
+      color: #666;
+      width: 100%;
+      padding: 10px;
+      border-radius: 10px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .btn-test-email:hover {
+      color: #fff;
+      border-color: #fff;
+    }
+
+    .footer-actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 32px;
+    }
+
+    .btn-action {
+      flex: 1;
+      padding: 14px;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 0.9rem;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.3s;
+    }
+
+    .btn-primary-action {
+      background: var(--primary);
       color: #fff;
     }
 
-    .btn-secondary:hover {
-      background: rgba(255, 255, 255, 0.05);
+    .btn-secondary-action {
+      background: rgba(255,255,255,0.05);
+      color: #fff;
+      border: 1px solid var(--border);
     }
 
-    @media (max-width: 768px) {
-      .navbar-container {
-        padding: 0 1rem;
-      }
+    .btn-action:hover {
+      transform: translateY(-2px);
+    }
 
-      .btn-dashboard {
-        padding: 0.5rem 0.75rem;
-        font-size: 0.75rem;
-      }
-
-      .success-container {
-        padding: 2rem 1rem;
-      }
-
-      .email-alert {
-        flex-direction: column;
-        text-align: center;
-      }
-
-      .email-alert-content {
-        text-align: center;
-      }
-
-      .email-alert-title {
-        justify-content: center;
-      }
-
-      .purchase-item {
-        flex-direction: column;
-        text-align: center;
-      }
-
-      .purchase-actions {
-        width: 100%;
-        flex-direction: column;
-      }
-
-      .btn-download-beat,
-      .btn-download-license {
-        width: 100%;
-        justify-content: center;
-      }
+    @media (max-width: 600px) {
+      .success-card { padding: 30px 20px; border-radius: 0; border: none; }
+      .footer-actions { flex-direction: column; }
     }
   </style>
 </head>
 
 <body>
 
-  <!-- ==================== NAVBAR ==================== -->
-  <header class="navbar">
-    <!-- Supabase Config & Auth Utils (Loaded globally in head) -->
-    <div class="navbar-container">
-      <div class="logo">
-        <a href="/explorar.html">OFFSZN</a>
-      </div>
-      <div class="navbar-right">
-        <a href="/pages/dashboard.html" class="btn-dashboard">
-          <i class="bi bi-grid"></i>
-          Dashboard
-        </a>
-        <a href="/pages/notifications.html" class="navbar-icon-button" title="Notificaciones">
-          <i class="bi bi-bell"></i>
-        </a>
-        <a href="/pages/cart.html" class="navbar-icon-button" title="Carrito">
-          <i class="bi bi-cart3"></i>
-        </a>
-        <a href="/pages/profile.html" class="navbar-icon-button" title="Perfil">
-          <i class="bi bi-person"></i>
-        </a>
-      </div>
-    </div>
-  </header>
-
-  <!-- ==================== CONTENIDO PRINCIPAL ==================== -->
-  <div class="success-container">
-    <div class="success-icon">
-      <i class="bi bi-check-lg"></i>
-    </div>
-
-    <h1>Â¡Compra Exitosa!</h1>
-    <p class="success-message">
-      Tu pago se ha procesado correctamente. Los archivos estÃ¡n listos para descargar.
-    </p>
-
-    <!-- ð§ ALERTA DE EMAIL -->
-    <div class="email-alert">
-      <div class="email-alert-icon">
-        <i class="bi bi-envelope-check"></i>
-      </div>
-      <div class="email-alert-content">
-        <div class="email-alert-title">
-          <span>Revisa tu correo electrÃ³nico</span>
-          <span class="email-badge">
-            <i class="bi bi-check-circle-fill"></i>
-            Enviado
-          </span>
-        </div>
-        <div class="email-alert-text">
-          Te hemos enviado un recibo de compra con todos los detalles de tu orden. Si no lo ves, revisa tu carpeta de
-          spam.
-        </div>
-      </div>
-    </div>
-
-    <div class="order-info" id="orderInfo">
-      <div class="info-row">
-        <span class="info-label">NÃºmero de orden</span>
-        <span class="info-value" id="orderId">Cargando...</span>
-      </div>
-      <div class="info-row">
-        <span class="info-label">Fecha</span>
-        <span class="info-value" id="orderDate">---</span>
-      </div>
-      <div class="info-row">
-        <span class="info-label">Total pagado</span>
-        <span class="info-value" id="orderTotal">$0.00</span>
-      </div>
-    </div>
-
-    <div class="purchases-list" id="purchasesList">
-      <h3>ð¦ Productos comprados</h3>
-      <div id="purchasesContent">
-        <p style="color: #999; text-align: center; padding: 1rem;">Cargando productos...</p>
-      </div>
-    </div>
-
-    <div class="actions">
-      <a href="/pages/my-purchases.html" class="btn btn-primary">
-        <i class="bi bi-folder-open"></i>
-        Ver todas mis compras
-      </a>
-      <a href="/explorar.html" class="btn btn-secondary">
-        <i class="bi bi-house"></i>
-        Volver al inicio
-      </a>
-    </div>
+  <!-- ==================== DYNAMIC NAVBAR ==================== -->
+  <div id="navbar-placeholder">
+      <div style="background: rgba(0, 0, 0, 0.95); height: 58px; width: 100%; border-bottom: 1px solid rgba(255, 255, 255, 0.08); backdrop-filter: blur(20px); position: sticky; top: 0; z-index: 1000;"></div>
   </div>
+  <script src="/script/load-navbar.js?v=21"></script>
+
+  <!-- ==================== MAIN CONTENT ==================== -->
+  <main class="main-content">
+    <div class="success-card">
+      <div id="simBadge" class="test-badge" style="display:none;">SIMULACIÓN</div>
+      
+      <div class="success-icon-wrapper">
+        <i class="bi bi-check2-circle"></i>
+      </div>
+
+      <h1>¡Compra Realizada!</h1>
+      <p class="success-msg">
+        Gracias por tu compra. Hemos procesado tu pago y tus archivos están listos para ser descargados. También hemos enviado un recibo a tu correo.
+      </p>
+
+      <div class="order-summary">
+        <div class="info-row">
+          <span class="info-label">Orden ID</span>
+          <span class="info-value" id="orderIdText">...</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Fecha</span>
+          <span class="info-value" id="orderDateText">...</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Total</span>
+          <span class="info-value" id="orderTotalText">$0.00</span>
+        </div>
+      </div>
+
+      <div class="items-list">
+        <div class="items-title">
+          <i class="bi bi-box-seam"></i> PRODUCTOS ADQUIRIDOS
+        </div>
+        <div id="itemsContainer">
+          <p style="text-align:center; color:#444;">Buscando productos...</p>
+        </div>
+      </div>
+
+      <div class="support-block" id="supportContainer" style="display: block !important;">
+        <div style="font-weight: 700; font-size: 0.95rem; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+           <i class="bi bi-headset"></i> ¿Problemas con tu compra?
+        </div>
+        <div id="producerSupportList"></div>
+        <div class="support-item" style="margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.05);">
+          <i class="bi bi-envelope-fill"></i>
+          <span>Soporte OFFSZN: <a href="mailto:soporte@offszn.lat">soporte@offszn.lat</a></span>
+        </div>
+      </div>
+
+      <button id="btnSimEmail" class="btn-test-email" style="display:none;">
+          <i class="bi bi-send"></i> Re-enviar email de prueba
+      </button>
+
+      <div class="footer-actions">
+        <a href="/pages/dashboard.html" id="btnPanel" class="btn-action btn-primary-action">
+          <i class="bi bi-grid-fill"></i> Mi Panel
+        </a>
+        <a href="/explorar.html" class="btn-action btn-secondary-action">
+          <i class="bi bi-house-door"></i> Seguir Comprando
+        </a>
+      </div>
+    </div>
+  </main>
+
+  <!-- ==================== SIDE PANELS ==================== -->
+  <div class="overlay-backdrop" id="globalBackdrop" onclick="closeAllOverlays()"></div>
+
+  <!-- Global Cart Panel -->
+  <div class="side-panel" id="globalCartPanel">
+      <div class="panel-header">
+          <div class="panel-title">
+              <i class="fas fa-shopping-cart"></i> Tu Carrito
+              <span id="cart-panel-count" class="notification-badge">0</span>
+          </div>
+          <button class="panel-close" onclick="closeAllOverlays()">&times;</button>
+      </div>
+      <div class="panel-content" id="cart-items-container"></div>
+      <div class="cart-total-section" id="cart-summary">
+          <div style="display:flex; justify-content:space-between; margin-bottom:1rem; font-weight:700;">
+              <span>Total:</span><span id="cart-total-price">$0.00</span>
+          </div>
+          <button class="btn-checkout-global" onclick="window.location.href='/pages/checkout.html'">Ir a Pagar</button>
+      </div>
+  </div>
+
+  <!-- ==================== FOOTER ==================== -->
+  <div id="footer-placeholder"></div>
+
+  <!-- SCRIPTS MODULARES -->
+  <script src="/script/id-obfuscator.js?v=21"></script>
+  <script src="/script/cart.js?v=21"></script>
+  <script src="/script/notifications.js?v=21"></script>
+  <script src="/script/avatar-manager.js?v=21"></script>
+  <script src="/script/footer.js?v=21"></script>
+  <script src="/script/navbar.js?v=21" type="module"></script>
+  <script src="/script/toast.js?v=21" type="module"></script>
 
   <script type="module">
     import { generarLicencia } from '../script/generate-license.js';
 
-    // Use the global client initialized by auth-utils.js
     const supabase = window.supabaseClient;
+    const DOWNLOAD_ENDPOINT = '/api/orders/download-link';
+    const EMAIL_ENDPOINT = '/api/test/simulate-purchase-email';
 
-    if (!supabase) {
-      console.error("Critical: Global Supabase not found. Ensure auth-utils.js is loaded.");
-    }
-
-    async function cargarDetallesCompra() {
+    async function init() {
       const params = new URLSearchParams(window.location.search);
-      const orderId = params.get('order');
+      const orderRef = params.get('order');
 
-      if (!orderId) {
+      if (!orderRef) {
         window.location.href = '/explorar.html';
         return;
       }
 
-      document.getElementById('orderId').textContent = orderId;
-      document.getElementById('orderDate').textContent = new Date().toLocaleDateString('es-ES', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      });
+      const isSim = orderRef.startsWith('SIMULATED_TEST');
+      if(isSim) {
+        document.getElementById('simBadge').style.display = 'block';
+        document.getElementById('btnSimEmail').style.display = 'block';
+        document.getElementById('btnSimEmail').onclick = () => simulateEmail(orderRef);
+      }
+
+      document.getElementById('orderIdText').textContent = orderRef;
+      document.getElementById('orderDateText').textContent = new Date().toLocaleDateString('es-ES', { day:'2-digit', month:'short', year:'numeric'});
 
       try {
-        const { data: { user } } = await supabase.auth.getUser();
-
-        if (!user) {
-          window.location.href = '/pages/login';
-          return;
-        }
-
-        const { data: purchases, error } = await supabase
-          .from('purchases')
+        const { data: order, error } = await supabase
+          .from('orders')
           .select(`
-      *,
-      products (
-      name,
-      image_url,
-      download_url_mp3,
-      download_url_wav,
-      download_url_stems
-      )
-      `)
-          .eq('paypal_transaction_id', orderId)
-          .eq('user_id', user.id);
+            *,
+            order_items (
+              *,
+              products (
+                id, name, image_url, producer_id, product_type, storage_version, r2_version,
+                user:users!products_producer_id_fkey(id, nickname, email)
+              )
+            )
+          `)
+          .eq('transaction_id', orderRef)
+          .single();
 
-        if (error) throw error;
-
-        if (purchases && purchases.length > 0) {
-          const total = purchases.reduce((sum, p) => sum + parseFloat(p.amount), 0);
-          document.getElementById('orderTotal').textContent = `$${total.toFixed(2)}`;
-
-          const purchasesHTML = purchases.map(p => {
-            const downloadUrl = getDownloadUrl(p);
-            const buyerName = user.user_metadata?.full_name ||
-              `${user.user_metadata?.first_name || ''} ${user.user_metadata?.last_name || ''}`.trim() ||
-              user.email.split('@')[0];
-
-            return `
-      <div class="purchase-item">
-        <div class="purchase-icon">
-          <i class="bi bi-music-note-beamed"></i>
-        </div>
-        <div class="purchase-info">
-          <div class="purchase-name">${p.products.name}</div>
-          <div class="purchase-license">${getLicenseName(p.license_type)}</div>
-        </div>
-        <div class="purchase-actions">
-          <a href="${downloadUrl}" download target="_blank" class="btn-download-beat" ${!downloadUrl ||
-                downloadUrl === '#' ? 'style="opacity:0.5;pointer-events:none;"' : ''}>
-            <i class="bi bi-music-note-beamed"></i>
-            Descargar Beat
-          </a>
-          <button class="btn-download-license" onclick='descargarLicencia(${JSON.stringify({
-                  id: p.id,
-                  productName: p.products.name,
-                  producerName: "Willie Inspired",
-                  licenseType: p.license_type,
-                  amount: p.amount,
-                  buyerName: buyerName,
-                  buyerEmail: user.email,
-                  purchaseDate: p.created_at,
-                  orderId: p.paypal_transaction_id
-                }).replace(/"/g, "&quot;")})'>
-            <i class="bi bi-file-earmark-text"></i>
-            Descargar Licencia
-          </button>
-        </div>
-      </div>
-      `;
-          }).join('');
-
-          document.getElementById('purchasesContent').innerHTML = purchasesHTML;
+        if (error || !order) {
+           if(isSim) {
+             console.warn("Usando datos de prueba para SIMULATED_TEST");
+             await renderOrder(getMockOrder(orderRef));
+           } else {
+             throw error || new Error("No order found");
+           }
+        } else {
+           await renderOrder(order);
         }
-      } catch (error) {
-        console.error('Error cargando compra:', error);
+      } catch (err) {
+        console.error("Error al cargar orden:", err);
+        document.getElementById('itemsContainer').innerHTML = "<p style='color:#666; text-align:center; padding: 20px;'>No pudimos cargar los detalles reales, pero aquí tienes el soporte.</p>";
+      }
+
+      // BOTONES SIEMPRE FUNCIONALES
+      const btnPanel = document.getElementById('btnPanel');
+      const isLogged = AuthUtils.isLoggedIn();
+      if(isLogged) {
+          btnPanel.innerHTML = '<i class="bi bi-grid-fill"></i> Panel de Usuario';
+          btnPanel.href = '/pages/dashboard.html';
+      } else {
+          btnPanel.innerHTML = '<i class="bi bi-search"></i> Explorar más';
+          btnPanel.href = '/explorar.html';
       }
     }
 
-    function getDownloadUrl(purchase) {
-      const urls = {
-        'basic': purchase.products.download_url_mp3,
-        'premium': purchase.products.download_url_wav,
-        'stems': purchase.products.download_url_stems,
-        'exclusive': purchase.products.download_url_stems
-      };
-      return urls[purchase.license_type] || purchase.products.download_url_mp3 || '#';
+    async function renderOrder(order) {
+      document.getElementById('orderTotalText').textContent = `$${parseFloat(order.total_price).toFixed(2)}`;
+      
+      const container = document.getElementById('itemsContainer');
+      const producers = new Map();
+      
+      // Procesar items de forma asíncrona para firmar imágenes
+      const itemsHtmlStrings = await Promise.all(order.order_items.map(async item => {
+        const p = item.products;
+        if(p.user) producers.set(p.user.id, p.user);
+
+        // REGLA: Solo beats muestran licencia y contrato
+        const isBeat = (p.product_type || '').toLowerCase() === 'beat';
+        const fileType = isBeat ? 'wav' : 'kit'; // Simplificado para la UI
+
+        // FIX: Usar AuthUtils para manejar Supabase vs R2 Account 1/2
+        const coverSrc = await AuthUtils.getAuthorizedUrl(
+            p.image_url, 
+            p.storage_version || p.r2_version, 
+            p.id
+        ) || '/images/portada-default.png';
+
+        return `
+          <div class="purchase-item">
+            <div class="item-img-wrapper">
+                <img src="${coverSrc}" class="item-img" onerror="this.src='/images/portada-default.png'">
+            </div>
+            <div class="item-main">
+              <div class="item-name">${p.name}</div>
+              <div class="item-details">
+                ${isBeat ? `<span class="license-badge">${item.license_name || 'Standard'}</span>` : `<span class="license-badge">${p.product_type || 'Producto'}</span>`}
+                <span>Qty: ${item.quantity}</span>
+              </div>
+            </div>
+            <div style="display:flex; gap:8px;">
+              ${isBeat ? `
+                <div class="btn-contract" title="Ver Contrato" onclick="handleLicenseClick('${order.transaction_id}', '${p.id}', '${item.license_name}')">
+                  <i class="bi bi-file-earmark-text"></i>
+                </div>
+              ` : ''}
+              <button class="btn-download" onclick="downloadFile('${order.transaction_id}', '${p.id}', '${fileType}')">
+                <i class="bi bi-download"></i> Descargar
+              </button>
+            </div>
+          </div>
+        `;
+      }));
+      
+      container.innerHTML = itemsHtmlStrings.join('');
+
+      // AJUSTE DINÁMICO DE BOTONES (GUEST VS USER) - Resiliente a simulación
+      renderSupport(producers);
     }
 
-    function getLicenseName(licenseId) {
-      const licenses = {
-        'basic': 'Licencia BÃ¡sica',
-        'premium': 'Licencia Premium',
-        'stems': 'Stems Trackout',
-        'exclusive': 'Licencia Exclusiva'
+    function getMockOrder(ref) {
+      return {
+        transaction_id: ref,
+        total_price: 10.00,
+        order_items: [{
+          quantity: 1,
+          license_name: 'Licencia Premium',
+          products: {
+            id: 618,
+            name: 'PRESET DE NATÁN - ENGUALICHASTE',
+            product_type: 'kit',
+            image_url: 'products/covers/0382a813-85c7-46c3-8d2c-61a5692adffd/1775697725025_cover.jpg',
+            user: { nickname: 'Willie', email: 'soporte@offszn.lat' }
+          }
+        }]
       };
-      return licenses[licenseId] || licenseId;
     }
 
-    window.descargarLicencia = async function (purchaseData) {
-      const button = event.target;
-      const originalHTML = button.innerHTML;
-      button.innerHTML = '<i class="bi bi-hourglass-split"></i> Generando...';
-      button.disabled = true;
+    function renderSupport(producers) {
+      // Siempre mostrar el bloque de soporte
+      document.getElementById('supportContainer').style.display = 'block';
+      const list = document.getElementById('producerSupportList');
+      if(producers.size === 0) {
+          list.innerHTML = ""; // No hay productores específicos pero el bloque general se queda
+          return;
+      }
+      list.innerHTML = Array.from(producers.values()).map(p => `
+        <div class="support-item">
+          <i class="bi bi-person-badge"></i>
+          <span>Productor <b>${p.nickname}</b>: <a href="mailto:${p.email}">${p.email}</a></span>
+        </div>
+      `).join('');
+    }
 
+    window.downloadFile = async (orderId, productId, type) => {
       try {
-        await generarLicencia(purchaseData);
-        alert('â Â¡Licencia descargada!\n\nRevisa tu carpeta de Descargas.');
-      } catch (error) {
-        console.error('Error:', error);
-        alert('â Error al generar la licencia.');
-      } finally {
-        button.innerHTML = originalHTML;
-        button.disabled = false;
+        const response = await fetch(`${DOWNLOAD_ENDPOINT}?orderId=${orderId}&productId=${productId}&type=${type}`, {
+            headers: AuthUtils.getAuthHeaderObj()
+        });
+        const data = await response.json();
+        const downloadUrl = data.url || data.signedUrl;
+        
+        if(downloadUrl) {
+          window.open(downloadUrl, '_blank');
+        } else {
+          alert("Error: " + (data.error || "No pudimos generar el link de descarga."));
+        }
+      } catch (e) {
+        console.error("Download error:", e);
       }
     };
 
-    document.addEventListener('DOMContentLoaded', cargarDetallesCompra);
+    window.handleLicenseClick = (orderId, productId, licenseName) => {
+        alert(`Generando contrato para: ${licenseName}. Esta función se integrará con el PDF generator en la siguiente fase.`);
+    };
+
+    async function simulateEmail(orderId) {
+      const btn = document.getElementById('btnSimEmail');
+      const oldText = btn.innerHTML;
+      btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Enviando...';
+      btn.disabled = true;
+      try {
+        const res = await fetch(EMAIL_ENDPOINT, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...AuthUtils.getAuthHeaderObj()
+          },
+          body: JSON.stringify({ transactionId: orderId })
+        });
+        if(res.ok) alert("✅ Email enviado satisfactoriamente.");
+        else alert("❌ Falló el envío del email.");
+      } catch (e) {
+        console.log(e);
+      } finally {
+        btn.innerHTML = oldText;
+        btn.disabled = false;
+      }
+    }
+
+    // Initialize
+    init();
   </script>
-
 </body>
-
 </html>

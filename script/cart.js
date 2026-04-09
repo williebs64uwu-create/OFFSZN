@@ -367,18 +367,18 @@ const CartManager = {
         this.state.isVerifying = true;
         
         try {
-            // Fetch Users (payment methods, email, nickname, YAPE)
+            // Fetch Users (plan, payment methods, email, nickname, YAPE)
             const { data: usersData, error: usersError } = await window.supabaseClient
                 .from('users')
-                .select('id, payment_methods, paypal_email, nickname, yape_phone, is_verified')
+                .select('id, plan, payment_methods, paypal_email, nickname, yape_phone, is_verified')
                 .in('id', producerIds);
 
             if (usersError) throw usersError;
 
-            // Fetch Profiles (plan, username)
+            // Profiles is now only for username fallback
             const { data: profilesData, error: profilesError } = await window.supabaseClient
                 .from('profiles')
-                .select('user_id, plan, username')
+                .select('user_id, username')
                 .in('user_id', producerIds);
 
             if (profilesError) throw profilesError;
@@ -398,7 +398,7 @@ const CartManager = {
                 verification[pId] = {
                     hasPayPal: hasPayPal,
                     paypalEmail: user.paypal_email || user.payment_methods?.paypal || null,
-                    plan: profile.plan || 'free',
+                    plan: user.plan || profile.plan || 'free',
                     nickname: user.nickname || profile.username || 'Productor',
                     username: profile.username || user.nickname || null,
                     hasYape: !!(user.yape_phone)
@@ -631,12 +631,19 @@ const CartManager = {
 
     openCart: function () {
         const panel = document.getElementById('globalCartPanel');
-        if (panel && panel.classList.contains('active')) return;
+        const backdrop = document.getElementById('globalBackdrop');
+        
+        if (!panel) return;
+        if (panel.classList.contains('active')) return;
 
+        // Close any other open UI elements first
         if (window.closeAllOverlays) window.closeAllOverlays();
-        if (window.toggleCartPanel) {
-            window.toggleCartPanel({ preventDefault: () => { }, stopPropagation: () => { } });
-        }
+        
+        // Direct DOM manipulation — bypass handleSmartToggle to avoid
+        // its "ANY_OPEN → return" guard which can block the cart from opening
+        // when closeAllOverlays just ran in the same tick.
+        panel.classList.add('active');
+        if (backdrop) backdrop.classList.add('active');
     },
 
     clearCart: function () {

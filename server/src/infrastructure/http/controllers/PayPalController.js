@@ -193,7 +193,7 @@ export const createPayPalOrder = async (req, res) => {
                 .eq('user_id', userId);
 
             if (cartError) throw cartError;
-            
+
             // Filter out deleted products (matching frontend cart.js behavior)
             cartItems = (data || []).filter(item => item.product && item.product.status !== 'deleted');
             console.log(`[PayPalOrder] Auth user cart: ${data?.length || 0} raw items → ${cartItems.length} after filtering deleted`);
@@ -211,7 +211,7 @@ export const createPayPalOrder = async (req, res) => {
         const producerIds = [...new Set(cartItems.map(item => item.product.producer_id))];
         const [{ data: producers, error: producerError }, { data: profiles, error: profileError }] = await Promise.all([
             supabase.from('users').select('id, paypal_email, license_settings, nickname, payment_methods').in('id', producerIds),
-            supabase.from('profiles').select('id, plan').in('id', producerIds)
+            supabase.from('users').select('id, plan').in('id', producerIds)
         ]);
 
         if (producerError) console.error('[PayPalDebug] Error fetching producers:', producerError);
@@ -222,17 +222,17 @@ export const createPayPalOrder = async (req, res) => {
             const profile = profiles?.find(p => p.id === u.id);
             // Use paypal_email column primarily, fallback to payment_methods.paypal
             const finalPaypalEmail = u.paypal_email || u.payment_methods?.paypal;
-            
-      producerMap.set(u.id, {
-        id: u.id,
-        email: finalPaypalEmail,
-        settings: u.license_settings,
-        nickname: u.nickname,
-        plan: profile?.plan || 'free'
-      });
-    });
 
-    console.log('[PayPalOrder] Producer Map entries:', Array.from(producerMap.entries()).map(([id, p]) => ({ id, email: p.email, nickname: p.nickname })));
+            producerMap.set(u.id, {
+                id: u.id,
+                email: finalPaypalEmail,
+                settings: u.license_settings,
+                nickname: u.nickname,
+                plan: profile?.plan || 'free'
+            });
+        });
+
+        console.log('[PayPalOrder] Producer Map entries:', Array.from(producerMap.entries()).map(([id, p]) => ({ id, email: p.email, nickname: p.nickname })));
 
         // --- NEW: Identify Producers without PayPal ---
         const missingPaymentProducers = [];
@@ -542,7 +542,7 @@ export const createPayPalOrder = async (req, res) => {
         if (err.statusCode) {
             console.error("[PayPal Create Error] Status:", err.statusCode, "Details:", JSON.stringify(err.result || err.details || {}, null, 2));
         }
-        const userMsg = err.statusCode === 422 
+        const userMsg = err.statusCode === 422
             ? 'Error de PayPal: El correo del productor no está vinculado a una cuenta PayPal válida. Contacta al productor.'
             : (err.message || 'Error interno al crear la orden.');
         res.status(err.statusCode || 500).json({ error: userMsg });
@@ -580,7 +580,7 @@ export const capturePayPalOrder = async (req, res) => {
 
                     // Fetch producer plan for commission calculation
                     const { data: profile } = await supabase
-                        .from('profiles')
+                        .from('users')
                         .select('plan')
                         .eq('id', proposal.product?.producer_id) // Corrected from proposal.products?.producer_id
                         .single();
@@ -641,7 +641,8 @@ export const capturePayPalOrder = async (req, res) => {
                 return acc + (capture ? parseFloat(capture.amount.value) : 0);
             }, 0);
 
-            const payerEmail = response.result.payer?.email_address;
+            // Prioritize email from request body (typed by user) over PayPal account email
+            const payerEmail = req.body.guestEmail || response.result.payer?.email_address;
 
             const { data: order, error: orderError } = await supabase
                 .from('orders')
@@ -651,7 +652,7 @@ export const capturePayPalOrder = async (req, res) => {
                     status: 'completed',
                     total_price: totalPaid,
                     amount: totalPaid,
-                    payer_email: payerEmail // Save this for guest flow linking
+                    guest_email: payerEmail // CORRECT COLUMN: guest_email
                 })
                 .select()
                 .single();
@@ -681,7 +682,7 @@ export const capturePayPalOrder = async (req, res) => {
             const producerIds = [...new Set(dbProducts.map(p => p.producer_id))];
             const [{ data: producerSettings, error: pSetError }, { data: producerPlans, error: pPlanError }] = await Promise.all([
                 supabase.from('users').select('id, license_settings').in('id', producerIds),
-                supabase.from('profiles').select('id, plan').in('id', producerIds)
+                supabase.from('users').select('id, plan').in('id', producerIds)
             ]);
 
             if (pSetError) console.error("[PayPalCapture] Error fetching producer settings:", pSetError);
@@ -905,9 +906,9 @@ export const capturePayPalOrder = async (req, res) => {
                         }
                     }
 
-                    // Fallback to PayPal Payer Email if guest or user record not found
+                    // Fallback to Request Body guestEmail then PayPal Payer Email
                     if (!userEmail) {
-                        userEmail = response.result.payer?.email_address;
+                        userEmail = req.body.guestEmail || response.result.payer?.email_address;
                         userNickname = (response.result.payer?.name?.given_name) || 'Cliente';
                     }
 
@@ -983,37 +984,86 @@ export const capturePayPalOrder = async (req, res) => {
  */
 export const getSecureDownloadUrl = async (req, res) => {
     try {
-        const { orderId, productId, fileType } = req.query;
+        const orderId = req.query.orderId;
+        const productId = req.query.productId;
+        const fileType = req.query.type || req.query.fileType;
         const userId = req.user?.userId;
 
-        console.log(`[SecureDownload] Request: order=${orderId}, product=${productId}, type=${fileType}, user=${userId}`);
+        console.log(`[SecureDownload] DebugParams: orderId=${orderId}, productId=${productId}, fileType=${fileType}`);
 
         if (!orderId || !productId || !fileType) {
-            return res.status(400).json({ error: 'Faltan parámetros' });
+            console.error('[SecureDownload] Missing parameters:', { orderId, productId, fileType });
+            return res.status(400).json({ error: 'Faltan parámetros (orderId, productId o type)' });
         }
 
         // 1. Verificar que el producto está en el pedido y obtener rutas
+        // --- BYPASS PARA PRUEBAS SIMULADAS ---
+        if (orderId && orderId.startsWith('SIMULATED_TEST')) {
+            console.log('[SecureDownload] Bypassing DB for simulated order:', orderId);
+            return res.status(200).json({
+                url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+                signedUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+                isSimulated: true
+            });
+        }
+
+        // 1. Verificar que el producto está en el pedido y obtener rutas
+        // Intentamos buscar la relación real en la DB
         const { data: item, error: itemError } = await supabase
             .from('order_items')
             .select(`
                 id, 
                 order_id, 
                 product_id,
-                orders!inner(user_id, status),
-                products!inner(mp3_url, wav_url, stems_url, kit_url, storage_version, r2_version)
+                orders!inner(transaction_id, user_id, status),
+                products!inner(name, kit_url, mp3_url, wav_url, stems_url, storage_version, r2_version)
             `)
-            .eq('order_id', orderId)
+            .eq('orders.transaction_id', orderId)
             .eq('product_id', productId)
             .single();
 
+        // --- MANEJO DE SIMULACIÓN Y CRASH RECOVERY ---
         if (itemError || !item) {
-            console.error('[SecureDownload] Order item not found:', itemError);
+            if (orderId && orderId.startsWith('SIMULATED_TEST')) {
+                console.log('[SecureDownload] Order not in DB, fetching info for product:', productId);
+
+                // Si es simulación, buscamos el producto directamente para que la descarga funcione
+                const { data: product } = await supabase
+                    .from('products')
+                    .select('kit_url, mp3_url, wav_url, stems_url, storage_version, r2_version')
+                    .eq('id', productId)
+                    .single();
+
+                if (product) {
+                    // Mapeamos el archivo según el tipo solicitado
+                    let mockPath = product.kit_url;
+                    if (fileType === 'wav') mockPath = product.wav_url;
+                    else if (fileType === 'mp3') mockPath = product.mp3_url;
+
+                    if (mockPath) {
+                        try {
+                            const storageType = product.storage_version || product.r2_version || 'v1';
+                            const signedUrl = await getPresignedDownloadUrl(mockPath, 3600, storageType);
+                            return res.status(200).json({
+                                url: signedUrl,
+                                signedUrl: signedUrl,
+                                isSimulated: true,
+                                tempBypass: true
+                            });
+                        } catch (signErr) {
+                            console.error('[SecureDownload] Sign error in bypass:', signErr);
+                        }
+                    }
+                }
+            }
+            console.error('[SecureDownload] Error or not found:', itemError);
             return res.status(404).json({ error: 'Pedido o producto no encontrado' });
         }
 
         // 2. Verificación de Autorización
         // Si el pedido tiene dueño, debe coincidir con el usuario logueado.
-        if (item.orders.user_id && item.orders.user_id !== userId) {
+        // Si no hay usuario logueado (guest), permitimos la descarga si el pedido está completado.
+        if (userId && item.orders.user_id && item.orders.user_id !== userId) {
             console.warn(`[SecureDownload] Access Denied: User ${userId} tried to access order ${orderId} owned by ${item.orders.user_id}`);
             return res.status(403).json({ error: 'No tienes permiso para acceder a este archivo' });
         }
@@ -1079,14 +1129,14 @@ export const getSecureDownloadUrl = async (req, res) => {
         if (isR2) {
             // Restore the full key, R2 uses the full path as key
             let finalKey = rawCleanPath;
-            
+
             // If the rawCleanPath doesn't have the prefix yet but it belongs in secure-products, we prepend it for R2, BUT 
             // the DB usually stores the full "secure-products/..." in R2.
             // If the user appended raw paths, let's make sure it's valid:
             if (!finalKey.startsWith('secure-products/') && bucket === 'secure-products') {
-                 finalKey = `secure-products/${cleanPath}`;
+                finalKey = `secure-products/${cleanPath}`;
             } else if (!finalKey.startsWith('products/') && bucket === 'products') {
-                 finalKey = `products/${cleanPath}`;
+                finalKey = `products/${cleanPath}`;
             }
 
             console.log(`[SecureDownload] Signing with R2: key=${finalKey}, version=${storageType}`);
@@ -1177,6 +1227,102 @@ export const linkGuestOrder = async (req, res) => {
     } catch (err) {
         console.error('[LinkOrder] Error:', err);
         res.status(500).json({ error: 'Error interno al vincular la orden' });
+    }
+};
+
+/**
+ * SIMULACIÓN: Re-envía o envía por primera vez los correos de una orden.
+ * Útil para probar la integración con Brevo/Gmail sin hacer pagos reales.
+ */
+export const simulatePurchaseEmail = async (req, res) => {
+    try {
+        const { transactionId } = req.body;
+        if (!transactionId) return res.status(400).json({ error: 'Falta transactionId' });
+
+        console.log(`[EmailSimulation] Triggered for ${transactionId}`);
+
+        // 1. Buscar la orden y sus items
+        // --- BYPASS PARA PRUEBAS SIMULADAS ---
+        if (transactionId && transactionId.startsWith('SIMULATED_TEST')) {
+            console.log('[EmailSimulation] Bypassing DB for simulated order:', transactionId);
+            return res.status(200).json({ message: 'Correos enviados (Simulación - Bypass DB activo)' });
+        }
+
+        const { data: order, error: orderError } = await supabase
+            .from('orders')
+            .select('*, order_items(*, products(*))')
+            .eq('transaction_id', transactionId)
+            .single();
+
+        if (orderError || !order) {
+            return res.status(404).json({ error: 'Orden no encontrada en la DB' });
+        }
+
+        let userEmail = order.guest_email;
+        let userNickname = 'Cliente';
+
+        if (order.user_id) {
+            const { data: userData } = await supabase.from('users').select('email, nickname').eq('id', order.user_id).single();
+            if (userData) {
+                userEmail = userData.email;
+                userNickname = userData.nickname || 'Cliente';
+            }
+        }
+
+        if (!userEmail) {
+            return res.status(400).json({ error: 'La orden no tiene un email asociado (guest_email o user_id)' });
+        }
+
+        // 2. Enviar correos por cada item (siguiendo la lógica de capture)
+        for (const item of order.order_items) {
+            const product = item.products;
+            if (!product) continue;
+
+            // A. Notify Client (Receipt)
+            const buyerHtml = `
+                <div style="font-family: 'Segoe UI', sans-serif; padding: 30px; background: #0a0a0a; border-radius: 12px; color: #fff; max-width: 600px;">
+                    <h2 style="color: #10B981; margin-bottom:20px;">¡Gracias por tu compra! (Simulación)</h2>
+                    <p style="color:#ccc; line-height:1.6;">Hola <b>${userNickname}</b>, este es un correo de prueba para tu compra de <b style="color:#fff;">${product.name}</b>.</p>
+                    <p style="color:#888; line-height:1.5;">Puedes descargar tus archivos directamente desde la página de éxito o en tu panel de transacciones.</p>
+                    <a href="https://offszn.lat/pages/purchase-success?order=${transactionId}" style="display:inline-block; background:#10B981; color:#fff; padding:14px 30px; border-radius:10px; text-decoration:none; font-weight:700; margin-top:15px;">DESCARGAR AHORA</a>
+                    <hr style="border:0; border-top:1px solid #222; margin:25px 0;">
+                    <p style="font-size:0.75rem; color:#555;">Recibo de prueba - OFFSZN.</p>
+                </div>
+            `;
+
+            await sendOffsznEmail({
+                to: userEmail,
+                subject: `✅ [SIMULACIÓN] Compra Exitosa - ${product.name}`,
+                html: buyerHtml,
+                fromName: 'OFFSZN'
+            });
+
+            // B. Notify Producer
+            const { data: prodData } = await supabase.from('users').select('email, nickname').eq('id', product.producer_id).single();
+            if (prodData?.email) {
+                const prodHtml = `
+                    <div style="font-family: 'Segoe UI', sans-serif; padding: 30px; background: #0a0a0a; border-radius: 12px; color: #fff; max-width: 600px;">
+                        <h2 style="color: #8B5CF6; margin-bottom:20px;">¡Nueva Venta! (Simulación) 💰</h2>
+                        <p style="color:#ccc; line-height:1.6;">Hola <b>${prodData.nickname || 'Productor'}</b>, alguien acaba de comprar <b style="color:#fff;">${product.name}</b> en esta prueba.</p>
+                        <div style="background:#111; border:1px solid #333; border-radius:10px; padding:20px; margin:20px 0;">
+                            <p style="color:#888; margin:0;"><b style="color:#fff;">Precio simulado:</b> $${item.price_at_purchase} USD</p>
+                        </div>
+                        <p style="font-size:0.75rem; color:#555;">Notificación de prueba - OFFSZN.</p>
+                    </div>
+                `;
+                await sendOffsznEmail({
+                    to: prodData.email,
+                    subject: `💸 [SIMULACIÓN] Nueva Venta - ${product.name}`,
+                    html: prodHtml,
+                    fromName: 'OFFSZN Notificaciones'
+                });
+            }
+        }
+
+        res.status(200).json({ message: 'Correos enviados (Simulación)' });
+    } catch (err) {
+        console.error('[EmailSimulation] Error:', err);
+        res.status(500).json({ error: err.message });
     }
 };
 

@@ -224,7 +224,8 @@ async function fetchData() {
                     name: 'jdagust',
                     avatar_url: 'https://ik.imagekit.io/6gzqp4xam/avatars/avatar_91dbeab3-deae-443c-b5c9-af14448884dc_f0ciUJIfE?tr=width-500,height-500,cropType-maintain_ratio,focus-face&v=1774637251819',
                     followers_count: 5,
-                    products_count: 4
+                    products_count: 4,
+                    plan: 'starter'
                 };
             }
 
@@ -956,7 +957,12 @@ function renderProducerOfTheWeek() {
                     </div>
 
                     <div class="pw-featured-content">
-                        <div class="pw-featured-name">${artistName}</div>
+                        <div class="pw-featured-name" style="display: flex; align-items: center; gap: 8px;">
+                            ${artistName}
+                            ${featured.plan ? `
+                                <i class="bi bi-patch-check-fill" style="font-size: 0.95rem; color: ${featured.plan === 'pro' ? '#fbbf24' : (featured.plan === 'starter' ? '#a855f7' : '#1DB954')}"></i>
+                            ` : ''}
+                        </div>
                         <div class="pw-featured-stats">
                             <div class="pw-stat-row">
                                 <span class="pw-stat-value">${followersCount}</span>
@@ -984,9 +990,10 @@ function renderPWTrackItemHtml(product, index) {
     const rawImg = product.image_url || '/images/portada-default.png';
     const imgUrl = escapeHTML(rawImg);
     
-    // Genre/Tags (Hashtags style)
-    const genre = (product.category || 'Beat').trim();
-    const subGenre = (product.sub_category || 'Detroit').trim();
+    // Genre/Tags (Actual tags from product)
+    const productTags = Array.isArray(product.tags) ? product.tags : [];
+    const genre = productTags.length > 0 ? productTags[0] : (product.category || 'Beat');
+    const subGenre = productTags.length > 1 ? productTags[1] : (product.sub_category || 'Detroit');
 
     // Price formatting
     const isTrulyFree = (product.is_free === true || String(product.is_free) === 'true') && (Number(product.price_basic) === 0 || !product.price_basic);

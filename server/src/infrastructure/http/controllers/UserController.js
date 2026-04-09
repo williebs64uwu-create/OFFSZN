@@ -701,3 +701,36 @@ export const claimWelcomeCoupon = async (req, res) => {
         res.status(500).json({ error: 'Error al generar cupón' });
     }
 };
+
+export const getUsersBulk = async (req, res) => {
+    try {
+        const { ids } = req.body;
+        if (!ids || !Array.isArray(ids)) {
+            return res.status(400).json({ error: 'Se requiere una lista de IDs de usuario.' });
+        }
+
+        const { data: users, error } = await supabase
+            .from('users')
+            .select('id, nickname, avatar_url, is_verified, is_producer, r2_version, storage_version, plan, plan_start_date')
+            .in('id', ids);
+
+        if (error) throw error;
+
+        // Fetch counts for each user (Optional but good for hover cards)
+        const countsPromises = users.map(async (u) => {
+            const [followersRes, productsRes] = await Promise.all([
+                supabase.from('followers').select('*', { count: 'exact', head: true }).eq('user_id', u.id),
+                supabase.from('products').select('*', { count: 'exact', head: true }).eq('producer_id', u.id).eq('status', 'approved').eq('visibility', 'public')
+            ]);
+            u.followers_count = followersRes.count || 0;
+            u.products_count = productsRes.count || 0;
+        });
+
+        await Promise.all(countsPromises);
+
+        res.status(200).json(users);
+    } catch (err) {
+        console.error("Error en getUsersBulk:", err.message);
+        res.status(500).json({ error: 'Error al obtener información de usuarios' });
+    }
+};

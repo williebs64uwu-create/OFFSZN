@@ -15,4 +15,8 @@ router.get('/orders/download-link', optionalAuthenticateTokenMiddleware, getSecu
 router.get('/auth/paypal/connect', authenticateTokenMiddleware, connectPayPal);
 router.get('/auth/paypal/callback', callbackPayPal); // PayPal redirects here
 
+// --- Simulation/Test Tools ---
+import { simulatePurchaseEmail } from '../controllers/PayPalController.js';
+router.post('/test/simulate-purchase-email', simulatePurchaseEmail);
+
 export default router;

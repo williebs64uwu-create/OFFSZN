@@ -2778,9 +2778,7 @@ window.scrollRelated = function (direction) {
 
 // --- 10. GLOBAL CART OVERRIDE (CRITICAL FIX FOR LICENSE PRICE) ---
 // This ensures that when "Add to Cart" is clicked, we grab the CURRENTLY SELECTED license price.
-window.addToCart = (id, license) => {
-
-
+window.addToCart = async (id, license) => {
     // 1. Get Product Data from global scope (set in init or passed)
     let product = window.currentProductData;
 
@@ -2809,7 +2807,7 @@ window.addToCart = (id, license) => {
 
             if (!has_paypal && !has_yape) {
                 if (window.openBlockedPaymentModal) {
-                    window.openBlockedPaymentModal(producer);
+                    window.openBlockedPaymentModal(producer, product);
                 } else {
                     alert("Este productor no tiene configurados métodos de pago.");
                 }
@@ -2820,23 +2818,25 @@ window.addToCart = (id, license) => {
 
     // 2. Determine Price, License Name, and Details
     let finalPrice = parseFloat(product.price_basic) || 0;
-    let licenseName = product.product_type === 'beat' ? 'Basic Lease' : 'Standard License';
     let licenseId = license || 'basic';
+    let licenseName = product.product_type === 'beat' ? 'Basic Lease' : 'Standard License';
     let licenseDetails = {};
 
     const availLicenses = product.available_licenses || [];
 
-    // Check for selected card in UI
+    // Check for selected card in UI (Robust logic for Desktop/Mobile)
     const selectedCard = document.querySelector('.license-card-v2.selected');
     if (selectedCard) {
-        licenseId = selectedCard.id.replace('lic-card-', '');
+        const fullId = selectedCard.id;
+        // Strip prefixes: 'desktop-lic-', 'mobile-lic-', 'lic-card-'
+        licenseId = fullId.replace(/^(desktop-lic-|mobile-lic-|lic-card-)/, '');
     }
 
     // Find the license object to get details
     const selectedLicObj = availLicenses.find(l => l.id === licenseId);
 
     if (selectedLicObj) {
-        finalPrice = parseFloat(selectedLicObj.price) || 0;
+        finalPrice = parseFloat(selectedLicObj.price);
         licenseName = selectedLicObj.name;
         licenseDetails = {
             files_preview: (window.getFilesPreview) ? window.getFilesPreview(selectedLicObj.files, selectedLicObj.name) : '',
@@ -2850,9 +2850,13 @@ window.addToCart = (id, license) => {
         const cardNameEl = selectedCard.querySelector('.lic-name');
 
         if (cardPriceEl) {
-            const match = cardPriceEl.innerText.trim().match(/[0-9.]+/);
-            if (match) finalPrice = parseFloat(match[0]);
-            else if (cardPriceEl.innerText.toLowerCase().includes('gratis')) finalPrice = 0;
+            const rawPriceText = cardPriceEl.innerText.trim();
+            if (rawPriceText.toLowerCase().includes('gratis')) {
+                finalPrice = 0;
+            } else {
+                const match = rawPriceText.match(/[0-9.]+/);
+                if (match) finalPrice = parseFloat(match[0]);
+            }
         }
         if (cardNameEl) licenseName = cardNameEl.innerText.trim();
     }
@@ -2866,20 +2870,19 @@ window.addToCart = (id, license) => {
             id: licenseId,
             details: licenseDetails
         }
-
-
     };
-
-
 
     // 4. Call Manager
     if (window.CartManager) {
-        window.CartManager.addToCart(checkProduct);
-        window.CartManager.openCart(); // Auto-open sidebar
+        // Await the addition to ensure state is ready before opening
+        await window.CartManager.addToCart(checkProduct);
+        // CartManager.addToCart already calls openCart(), but we can call it again for safety
+        window.CartManager.openCart();
     } else {
         alert("Error: Carrito no disponible. Recarga la página.");
     }
 };
+
 
 // === TABS SYSTEM LOGIC (OFFSZN IDENTITY) ===
 
