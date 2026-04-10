@@ -2339,9 +2339,9 @@ window.handlePublish = async function () {
         if (err.status === 403) {
             // Subscription limit reached
             stopPremiumOverlay();
-            const limitModal = document.getElementById('modalLimitReached');
+            const limitModal = document.getElementById('premiumUpgradeModal');
             if (limitModal) {
-                limitModal.classList.add('active');
+                limitModal.style.display = 'flex';
             } else {
                 showToast(err.message || 'Límite alcanzado', 'error');
             }

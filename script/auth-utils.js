@@ -878,6 +878,24 @@ window.AuthUtils = {
     },
 
     /**
+     * 🔥 YOUTUBE LIMIT CHECK: Multi-tier monthly quota enforcement.
+     * @returns {Promise<{isLimited: boolean, used: number, limit: number}>}
+     */
+    getYouTubeUploadStatus: async function () {
+        const planData = await this.getUserPlanData();
+        if (!planData) return { isLimited: true, used: 0, limit: 0 };
+
+        const limit = planData.limits.youtube_uploads_per_month || 0;
+        const used = planData.usage?.youtube_uploads_this_month || 0;
+
+        return {
+            isLimited: used >= limit,
+            used: used,
+            limit: limit
+        };
+    },
+
+    /**
      * Checks if a user has access to a specific feature or limit.
      * @param {string} feature Feature key to check.
      * @returns {Promise<boolean>}

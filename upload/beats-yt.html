@@ -20,16 +20,218 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
     <link rel="stylesheet" href="nuevo.css">
-    <script>
-        // Proactive limit enforcement for free users (Instant Check)
-        if (window.AuthGuard && window.AuthGuard.protectUploadEntry) {
-            window.AuthGuard.protectUploadEntry();
+    <style>
+        /* Premium Upgrade Modal Styles (Black & White) */
+        .premium-upgrade-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.98);
+            z-index: 99999;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(20px);
+            padding: 24px;
+            animation: fadeInOverlay 0.5s ease forwards;
         }
+
+        @keyframes fadeInOverlay {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        .premium-upgrade-card {
+            background: rgba(18, 18, 18, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 32px;
+            padding: 48px 32px;
+            max-width: 440px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5);
+            transform: translateY(20px);
+            animation: slideUpCard 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+        }
+
+        @keyframes slideUpCard {
+            to {
+                transform: translateY(0);
+            }
+        }
+
+        .premium-icon-box {
+            width: 72px;
+            height: 72px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 32px auto;
+        }
+
+        .premium-title {
+            color: #fff;
+            font-size: 28px;
+            font-weight: 800;
+            margin-bottom: 12px;
+            letter-spacing: -1px;
+            line-height: 1.2;
+        }
+
+        .premium-desc {
+            color: #888;
+            font-size: 15px;
+            line-height: 1.6;
+            margin-bottom: 32px;
+        }
+
+        .premium-features {
+            text-align: left;
+            margin-bottom: 40px;
+            padding: 0 10px;
+        }
+
+        .premium-feature-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 16px;
+            color: #eee;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .premium-feature-item i {
+            color: #fff;
+            font-size: 14px;
+            margin-top: 3px;
+        }
+
+        .premium-btn-primary {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            background: #ffffff;
+            color: #000;
+            padding: 18px;
+            border-radius: 50px;
+            font-size: 16px;
+            font-weight: 700;
+            text-decoration: none;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: none;
+            cursor: pointer;
+            margin-bottom: 16px;
+        }
+
+        .premium-btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(255, 255, 255, 0.2);
+            background: #f0f0f0;
+        }
+
+        .premium-btn-secondary {
+            color: #555;
+            font-size: 14px;
+            font-weight: 500;
+            text-decoration: none;
+            transition: color 0.2s;
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+
+        .premium-btn-secondary:hover {
+            color: #fff;
+            text-decoration: underline;
+        }
+    </style>
+    <script>
+        // Proactive limit enforcement (Instant Check & Blocking)
+        async function runGuard() {
+            if (window.AuthGuard && window.AuthGuard.protectUploadEntry) {
+                const result = await window.AuthGuard.protectUploadEntry();
+
+                if (result.isLimited || result.isYTLimited || !result.hasYT) {
+                    console.warn("⛔ Entry Denied: Showing Premium Modal");
+                    // Show modal and KEEP main hidden
+                    const modal = document.getElementById('premiumUpgradeModal');
+                    if (modal) {
+                        modal.style.display = 'flex';
+                        // Update content if it's specifically a YT limit
+                        if (result.isYTLimited || !result.hasYT) {
+                            const titleEl = document.getElementById('premiumTitle');
+                            const descEl = document.getElementById('premiumDesc');
+                            if (titleEl) titleEl.innerText = 'Límite de videos alcanzado';
+                            if (descEl) descEl.innerText = 'Has alcanzado el límite mensual de videos en tu plan actual. Mejora para usar el Auto-Publisher de YouTube sin restricciones.';
+                        }
+                    }
+                } else {
+                    // Access Granted: Show form
+                    const container = document.getElementById('main-upload-container');
+                    if (container) container.style.display = 'block';
+                }
+            }
+        }
+        document.addEventListener('DOMContentLoaded', runGuard);
     </script>
 </head>
 
 <body>
-    <!-- Loading Overlay Removed (Legacy) -->
+    <!-- Premium Upgrade Modal (Black & White) -->
+    <div id="premiumUpgradeModal" class="premium-upgrade-overlay">
+        <div class="premium-upgrade-card">
+            <div class="premium-icon-box">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path>
+                </svg>
+            </div>
+            <h2 class="premium-title" id="premiumTitle">Mejora tu plan para subir ilimitado</h2>
+            <p class="premium-desc" id="premiumDesc">Has alcanzado el límite de subidas en tu plan actual. Mejora tu
+                experiencia para seguir creciendo sin límites.</p>
+
+            <div class="premium-features">
+                <div class="premium-feature-item">
+                    <i class="bi bi-check2-circle"></i>
+                    <span>Subidas ilimitadas de Beats y Kits</span>
+                </div>
+                <div class="premium-feature-item">
+                    <i class="bi bi-check2-circle"></i>
+                    <span>Acceso Total para generar videos y subir a YOUTUBE</span>
+                </div>
+                <div class="premium-feature-item">
+                    <i class="bi bi-check2-circle"></i>
+                    <span>100 créditos para generar sonidos con IA</span>
+                </div>
+                <div class="premium-feature-item">
+                    <i class="bi bi-check2-circle"></i>
+                    <span>Conserva el 100% de tus ganancias</span>
+                </div>
+            </div>
+
+            <a href="/cuenta/planes.html" class="premium-btn-primary">
+                REGISTRARSE Y MEJORAR
+            </a>
+
+            <button onclick="window.location.href='/cuenta/subir-kit.html'" class="premium-btn-secondary">
+                Quizás más tarde
+            </button>
+        </div>
+    </div>
 
     <div class="toast-container" id="toastContainer"></div>
 
@@ -55,8 +257,8 @@
     </header>
 
     <main>
-        <!-- 🔥 MAIN UPLOAD FORM (Visible by default — old hub removed) -->
-        <div id="main-upload-container" style="display:block;" class="fade-in">
+        <!-- 🔥 MAIN UPLOAD FORM (Initially hidden for security) -->
+        <div id="main-upload-container" style="display:none;" class="fade-in">
             <div class="steps-container">
                 <div class="steps-line"></div>
                 <div class="steps-progress" id="stepsProgress"></div>
@@ -409,7 +611,9 @@
                             <!-- BPM & Key -->
                             <div class="grid-2">
                                 <div class="form-group">
-                                    <div class="label">BPM <span style="color: #666; font-size: 11px; margin-left: 4px;">(Opcional)</span></div>
+                                    <div class="label">BPM <span
+                                            style="color: #666; font-size: 11px; margin-left: 4px;">(Opcional)</span>
+                                    </div>
                                     <div class="number-control input-with-icon">
                                         <input type="number" class="input-field" id="bpmInput" placeholder="Ej: 140"
                                             style="padding-left: 42px;" min="40" max="250"
@@ -475,11 +679,14 @@
 
                             <!-- Ofertas y Promociones (Individuales) -->
                             <div class="form-group" style="margin-top: 30px;">
-                                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                                <div
+                                    style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
                                     <div class="label" style="margin-bottom: 0;">Ofertas y Promociones</div>
-                                    <div style="background: rgba(139, 92, 246, 0.1); color: var(--accent-purple); font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.5px;">Individual</div>
+                                    <div
+                                        style="background: rgba(139, 92, 246, 0.1); color: var(--accent-purple); font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.5px;">
+                                        Individual</div>
                                 </div>
-                                
+
                                 <!-- DESKTOP TABS -->
                                 <div class="promo-switcher-desktop">
                                     <button type="button" class="promo-tab active" data-value="none">Ninguna</button>
@@ -490,7 +697,8 @@
 
                                 <!-- MOBILE DROPDOWN -->
                                 <div class="promo-switcher-mobile">
-                                    <div class="input-field" id="promoCustomTrigger" onclick="togglePromoDropdown(event)"
+                                    <div class="input-field" id="promoCustomTrigger"
+                                        onclick="togglePromoDropdown(event)"
                                         style="cursor: pointer; display: flex; align-items: center; justify-content: space-between; height: 45px; user-select: none;">
                                         <span id="promoSelectedDisplay">Ninguna</span>
                                         <i class="bi bi-chevron-down promo-trigger-arrow" id="promoChevron"></i>
@@ -505,11 +713,14 @@
                                 </div>
 
                                 <!-- Custom Inputs (Hidden by default) -->
-                                <div id="customPromoInputs" style="display: none; margin-top: 15px; gap: 10px; align-items: center; background: rgba(255,255,255,0.03); padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+                                <div id="customPromoInputs"
+                                    style="display: none; margin-top: 15px; gap: 10px; align-items: center; background: rgba(255,255,255,0.03); padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
                                     <span style="font-size: 13px; color: #888;">Compra</span>
-                                    <input type="number" id="customPromoBuy" value="1" min="1" max="10" style="width: 60px; text-align: center;" class="input-field">
+                                    <input type="number" id="customPromoBuy" value="1" min="1" max="10"
+                                        style="width: 60px; text-align: center;" class="input-field">
                                     <span style="font-size: 13px; color: #888;">y lleva</span>
-                                    <input type="number" id="customPromoGet" value="1" min="1" max="10" style="width: 60px; text-align: center;" class="input-field">
+                                    <input type="number" id="customPromoGet" value="1" min="1" max="10"
+                                        style="width: 60px; text-align: center;" class="input-field">
                                     <span style="font-size: 13px; color: #888;">Gratis</span>
                                 </div>
                             </div>
@@ -760,7 +971,8 @@
         </p>
 
         <!-- Rotating Text Display -->
-        <p id="publishSubtitleText" style="color: #666; font-size: 13px; font-weight: 400; text-align: center; margin-bottom: 24px; height: 18px; overflow: hidden; opacity: 0;">
+        <p id="publishSubtitleText"
+            style="color: #666; font-size: 13px; font-weight: 400; text-align: center; margin-bottom: 24px; height: 18px; overflow: hidden; opacity: 0;">
             Generando conexión segura...
         </p>
 
@@ -773,29 +985,6 @@
 
     </div>
 
-    <!-- Premium Limit Reached Modal -->
-    <div id="modalLimitReached" class="modal-overlay">
-        <div class="elite-modal" style="max-width:400px; text-align:center;">
-            <div
-                style="width:60px; height:60px; background:rgba(255, 215, 0, 0.1); border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 20px auto; border:1px solid rgba(255, 215, 0, 0.2);">
-                <i class="bi bi-star-fill" style="font-size:24px; color:#FFD700;"></i>
-            </div>
-            <h3 id="modalLimitTitle" style="color:#fff; margin-bottom: 8px; font-weight: 800; letter-spacing: -0.5px;">¡Límite Alcanzado!</h3>
-            <p id="modalLimitBody" style="color:#aaa; font-size:14px; line-height:1.6; margin-bottom:24px;">
-                Has alcanzado el límite de productos de tu plan actual.
-                <br><br>
-                Actualiza a <strong>STARTER</strong> o <strong>PRO</strong> para subir contenido ilimitado y potenciar tus ventas.
-            </p>
-            <a href="/cuenta/planes.html" class="elite-btn"
-                style="text-decoration:none; background:#fff; color:#000;">
-                <i class="bi bi-lightning-charge-fill"></i> MEJORAR MI PLAN
-            </a>
-            <button onclick="document.getElementById('modalLimitReached').classList.remove('active')" class="elite-btn"
-                style="background:transparent; border:1px solid #333; color:#888; margin-top: 8px;">
-                Luego lo haré
-            </button>
-        </div>
-    </div>
 
     <!-- Google Identity Services -->
     <!-- Google Scripts Fix -->

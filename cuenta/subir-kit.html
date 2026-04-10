@@ -998,9 +998,9 @@
                             style="width: 80%; height: 80%; object-fit: contain; filter: drop-shadow(0 0 20px rgba(139, 92, 246, 0.2)); margin: auto;">
                     </div>
 
-                    <div style="text-align: center; margin-bottom: -10px; display: flex; flex-direction: column; gap: 4px;">
-                        <span id="globalUploadCounter" style="color: #888; font-size: 13px; font-weight: 500;">0 de 30 productos subidos</span>
-                        <div id="globalLimitStatusLabel" style="display:none; color: #FFD700; font-size: 13px; font-weight: 600;">Límite de productos alcanzado</div>
+                    <div style="text-align: center; margin-bottom: -10px; display: flex; flex-direction: column; gap: 4px; min-height: 40px; justify-content: center;">
+                        <span id="globalUploadCounter" style="color: #666; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Cargando contador...</span>
+                        <div id="globalLimitStatusLabel" style="display:none; color: #fff; font-size: 13px; font-weight: 800; text-transform: uppercase;">¡Límite alcanzado!</div>
                     </div>
                     <button id="btnGlobalUploadStrategy"
                         style="width: 100%; padding: 16px; border-radius: 50px; background: #fff; color: #000; border: none; font-size: 16px; font-weight: 700; cursor: pointer; transition: all 0.2s; margin-top: 10px;"
@@ -1021,9 +1021,9 @@
                             style="width: 115%; height: 115%; object-fit: contain; margin: auto;">
                     </div>
 
-                    <div style="text-align: center; margin-bottom: -10px; display: flex; flex-direction: column; gap: 4px;">
-                        <span id="ytUploadCounter" style="color: #888; font-size: 13px; font-weight: 500;">0 de 3 videos subidos</span>
-                        <div id="ytLimitStatusLabel" style="display:none; color: #FFD700; font-size: 13px; font-weight: 600;">Límite de 3 videos alcanzado</div>
+                    <div style="text-align: center; margin-bottom: -10px; display: flex; flex-direction: column; gap: 4px; min-height: 40px; justify-content: center;">
+                        <span id="ytUploadCounter" style="color: #666; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Cargando contador...</span>
+                        <div id="ytLimitStatusLabel" style="display:none; color: #fff; font-size: 13px; font-weight: 800; text-transform: uppercase;">¡Límite de videos alcanzado!</div>
                     </div>
                     <button id="btnYoutubeUploadStrategy"
                         style="width: 100%; padding: 16px; border-radius: 50px; background: #fff; color: #000; border: none; font-size: 16px; font-weight: 700; cursor: pointer; transition: all 0.2s; margin-top: 10px;"
@@ -1065,51 +1065,43 @@
                         bannerText.innerHTML = `Tienes <b>${status.count}</b> productos. Mejora tu plan por solo <b>$7/mes</b> para tener subidas ilimitadas y 0% de comisión.`;
                     }
 
-                    // Disable cards and point them to upgrade
+                    // Enable Pro style for cards even when limited
                     const cards = document.querySelectorAll('.option-card');
                     cards.forEach(card => {
                         const btn = card.querySelector('button');
-                        if (btn) {
+                        if (btn && (status.isLimited || isForcedLimit)) {
+                            btn.innerHTML = '<i class="bi bi-lightning-charge-fill" style="margin-right: 8px;"></i>Mejorar Plan';
+                            btn.style.background = '#fff';
+                            btn.style.color = '#000';
                             btn.onclick = (e) => {
                                 e.preventDefault();
                                 e.stopPropagation();
-                                window.showLimitReachedModal ? window.showLimitReachedModal() : window.openPricingModal();
+                                window.showUpgradeModal();
                             };
-                            btn.style.background = '#444';
-                            btn.style.color = '#888';
                         }
-
-                        card.onclick = (e) => {
-                            e.preventDefault();
-                            if (window.showLimitReachedModal) {
-                                window.showLimitReachedModal();
-                            }
-                        };
                     });
                 }
 
-                const hasAccess = await window.AuthUtils.checkFeatureAccess('youtube_upload');
+                // 1. YouTube Strategy Protection
+                const hasYTFeature = await window.AuthUtils.checkFeatureAccess('unlimited_uploads') || 
+                                    (await window.AuthUtils.getUserPlanData()).plan !== 'free';
+                const ytStatus = await window.AuthUtils.getYouTubeUploadStatus();
                 const ytBtn = document.getElementById('btnYoutubeUploadStrategy');
+                const ytCounter = document.getElementById('ytUploadCounter');
+                
+                if (ytCounter) {
+                    ytCounter.innerText = `${ytStatus.used} de ${ytStatus.limit} videos subidos`.toUpperCase();
+                }
 
-                if (ytBtn) {
-                    const planData = await window.AuthUtils.getUserPlanData();
-                    const ytLimit = planData?.limits?.youtube_uploads_per_month || 3;
-                    const ytUsed = planData?.usage?.youtube_uploads_this_month || 0;
-                    
-                    // Update Counter (Always visible)
-                    const counter = document.getElementById('ytUploadCounter');
-                    if (counter) {
-                        counter.innerText = `${ytUsed} de ${ytLimit} videos subidos`;
+                if (!hasYTFeature || ytStatus.isLimited) {
+                    const label = document.getElementById('ytLimitStatusLabel');
+                    if (label) {
+                        label.innerText = `¡Límite de ${ytStatus.limit} videos alcanzado!`.toUpperCase();
+                        label.style.display = 'block';
                     }
 
-                    if (!hasAccess) {
-                        const label = document.getElementById('ytLimitStatusLabel');
-                        if (label) {
-                            label.innerText = `Límite de ${ytLimit} videos alcanzado`;
-                            label.style.display = 'block';
-                        }
-
-                        ytBtn.innerHTML = '<i class="bi bi-star-fill" style="margin-right: 8px;"></i>Mejorar Plan';
+                    if (ytBtn) {
+                        ytBtn.innerHTML = '<i class="bi bi-star-fill" style="margin-right: 8px;"></i>MEJORAR PLAN';
                         ytBtn.style.background = '#FFD700'; // Gold style
                         ytBtn.style.color = '#000';
                         ytBtn.onclick = (e) => {
@@ -1119,18 +1111,18 @@
                     }
                 }
 
-                // 2. Global Modal Logic (Sync with YouTube style if limited)
+                // 2. Global Modal Logic
                 const mainBtn = document.getElementById('btnGlobalUploadStrategy');
                 const globalCounter = document.getElementById('globalUploadCounter');
                 
                 if (globalCounter) {
-                    globalCounter.innerText = `${status.count} de ${status.limit} productos subidos`;
+                    globalCounter.innerText = `${status.count} de ${status.limit} productos subidos`.toUpperCase();
                 }
 
                 if (status.isLimited) {
                     if (mainBtn) {
-                        mainBtn.innerHTML = '<i class="bi bi-star-fill" style="margin-right: 8px;"></i>Mejorar Plan';
-                        mainBtn.style.background = '#FFD700';
+                        mainBtn.innerHTML = '<i class="bi bi-star-fill" style="margin-right: 8px;"></i>MEJORAR PLAN';
+                        mainBtn.style.background = '#FFD700'; // Gold style
                         mainBtn.style.color = '#000';
                         mainBtn.onclick = (e) => {
                             e.stopPropagation();
@@ -1139,7 +1131,7 @@
                     }
                     const globalLimitLabel = document.getElementById('globalLimitStatusLabel');
                     if (globalLimitLabel) {
-                        globalLimitLabel.innerText = `Límite de ${status.limit} productos alcanzado`;
+                        globalLimitLabel.innerText = `¡Límite de ${status.limit} productos alcanzado!`.toUpperCase();
                         globalLimitLabel.style.display = 'block';
                     }
                 }

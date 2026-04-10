@@ -61,38 +61,55 @@
             const searchParams = new URLSearchParams(window.location.search);
             if (searchParams.has('edit') || searchParams.has('draft')) {
                 // User is editing an existing product. Let them pass.
-                return;
+                return { isLimited: false, hasYT: true, isYTLimited: false, bypass: true };
             }
+            
+            const isYTPage = window.location.pathname.includes('beats-yt.html');
 
             // 1. FAST CACHE CHECK (Synchronous protection)
             const cached = sessionStorage.getItem('offszn_upload_limit_status');
             if (cached) {
                 try {
                     const status = JSON.parse(cached);
-                    if (status.isLimited) {
-                        console.warn("⛔ Auth Guard: Cached upload limit reached. Redirecting...");
-                        window.location.href = '/cuenta/subir-kit.html?limit=reached';
-                        return;
+                    const hasYTFeature = sessionStorage.getItem('offszn_yt_access') === 'true';
+                    const isYTLimitedCached = sessionStorage.getItem('offszn_yt_limited') === 'true';
+                    
+                    if (status.isLimited || !hasYTFeature || (isYTPage && isYTLimitedCached)) {
+                        console.warn("⛔ Auth Guard: Cached limit reached.");
+                        return { 
+                            isLimited: status.isLimited, 
+                            hasYT: hasYTFeature, 
+                            isYTLimited: isYTLimitedCached,
+                            fromCache: true 
+                        };
                     }
                 } catch(e) {}
             }
 
-            if (!window.AuthUtils) return;
+            if (!window.AuthUtils) return { isLimited: false, hasYT: true, isYTLimited: false };
             
             try {
                 // 2. LIVE CHECK (Async)
-                const [status, hasYT] = await Promise.all([
+                const [status, ytStatus] = await Promise.all([
                     window.AuthUtils.getUploadLimitStatus(),
-                    window.location.pathname.includes('beats-yt.html') ? window.AuthUtils.checkFeatureAccess('youtube_upload') : Promise.resolve(true)
+                    window.AuthUtils.getYouTubeUploadStatus()
                 ]);
 
-                if (status.isLimited || !hasYT) {
-                    console.warn("⛔ Auth Guard: Upload limit reached. Redirecting...");
-                    const reason = !hasYT ? 'youtube_limit' : 'global_limit';
-                    window.location.href = `/cuenta/subir-kit.html?limit=${reason}`;
-                }
+                // Sync YT access to cache
+                const hasYTFeature = await window.AuthUtils.checkFeatureAccess('unlimited_uploads') || 
+                                   (await window.AuthUtils.getUserPlanData()).plan !== 'free'; // Basic check for feature
+                
+                sessionStorage.setItem('offszn_yt_access', hasYTFeature ? 'true' : 'false');
+                sessionStorage.setItem('offszn_yt_limited', ytStatus.isLimited ? 'true' : 'false');
+
+                return { 
+                    isLimited: status.isLimited, 
+                    hasYT: hasYTFeature, 
+                    isYTLimited: ytStatus.isLimited 
+                };
             } catch (e) {
                 console.error("Auth Guard Limit Check Error:", e);
+                return { isLimited: false, hasYT: true, isYTLimited: false, error: true };
             }
         },
 
