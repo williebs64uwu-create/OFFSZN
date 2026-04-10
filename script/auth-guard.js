@@ -81,10 +81,15 @@
             
             try {
                 // 2. LIVE CHECK (Async)
-                const status = await window.AuthUtils.getUploadLimitStatus();
-                if (status.isLimited) {
+                const [status, hasYT] = await Promise.all([
+                    window.AuthUtils.getUploadLimitStatus(),
+                    window.location.pathname.includes('beats-yt.html') ? window.AuthUtils.checkFeatureAccess('youtube_upload') : Promise.resolve(true)
+                ]);
+
+                if (status.isLimited || !hasYT) {
                     console.warn("⛔ Auth Guard: Upload limit reached. Redirecting...");
-                    window.location.href = '/cuenta/subir-kit.html?limit=reached';
+                    const reason = !hasYT ? 'youtube_limit' : 'global_limit';
+                    window.location.href = `/cuenta/subir-kit.html?limit=${reason}`;
                 }
             } catch (e) {
                 console.error("Auth Guard Limit Check Error:", e);

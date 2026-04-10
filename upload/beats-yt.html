@@ -472,6 +472,47 @@
                                     </div>
                                 </div>
                             </div>
+
+                            <!-- Ofertas y Promociones (Individuales) -->
+                            <div class="form-group" style="margin-top: 30px;">
+                                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                                    <div class="label" style="margin-bottom: 0;">Ofertas y Promociones</div>
+                                    <div style="background: rgba(139, 92, 246, 0.1); color: var(--accent-purple); font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.5px;">Individual</div>
+                                </div>
+                                
+                                <!-- DESKTOP TABS -->
+                                <div class="promo-switcher-desktop">
+                                    <button type="button" class="promo-tab active" data-value="none">Ninguna</button>
+                                    <button type="button" class="promo-tab" data-value="2,1">2x1</button>
+                                    <button type="button" class="promo-tab" data-value="3,1">3x1</button>
+                                    <button type="button" class="promo-tab" data-value="custom">Personalizado</button>
+                                </div>
+
+                                <!-- MOBILE DROPDOWN -->
+                                <div class="promo-switcher-mobile">
+                                    <div class="input-field" id="promoCustomTrigger" onclick="togglePromoDropdown(event)"
+                                        style="cursor: pointer; display: flex; align-items: center; justify-content: space-between; height: 45px; user-select: none;">
+                                        <span id="promoSelectedDisplay">Ninguna</span>
+                                        <i class="bi bi-chevron-down promo-trigger-arrow" id="promoChevron"></i>
+                                    </div>
+                                    <div id="promoOptionsList" class="custom-scrollbar"
+                                        style="display: none; position: absolute; top: calc(100% + 4px); left: 0; width: 100%; max-height: 200px; overflow-y: auto; background: #1a1a1a; border: 1px solid #333; border-radius: 8px; z-index: 999; box-shadow: 0 4px 20px rgba(0,0,0,0.8);">
+                                        <div class="custom-option selected" data-value="none">Ninguna</div>
+                                        <div class="custom-option" data-value="2,1">2x1</div>
+                                        <div class="custom-option" data-value="3,1">3x1</div>
+                                        <div class="custom-option" data-value="custom">Personalizado</div>
+                                    </div>
+                                </div>
+
+                                <!-- Custom Inputs (Hidden by default) -->
+                                <div id="customPromoInputs" style="display: none; margin-top: 15px; gap: 10px; align-items: center; background: rgba(255,255,255,0.03); padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+                                    <span style="font-size: 13px; color: #888;">Compra</span>
+                                    <input type="number" id="customPromoBuy" value="1" min="1" max="10" style="width: 60px; text-align: center;" class="input-field">
+                                    <span style="font-size: 13px; color: #888;">y lleva</span>
+                                    <input type="number" id="customPromoGet" value="1" min="1" max="10" style="width: 60px; text-align: center;" class="input-field">
+                                    <span style="font-size: 13px; color: #888;">Gratis</span>
+                                </div>
+                            </div>
                         </div>
 
                         <!-- COLUMNA DERECHA: Precios -->
@@ -739,9 +780,9 @@
                 style="width:60px; height:60px; background:rgba(255, 215, 0, 0.1); border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 20px auto; border:1px solid rgba(255, 215, 0, 0.2);">
                 <i class="bi bi-star-fill" style="font-size:24px; color:#FFD700;"></i>
             </div>
-            <h3 style="color:#fff; margin-bottom: 8px; font-weight: 800; letter-spacing: -0.5px;">¡Límite Alcanzado!</h3>
-            <p style="color:#aaa; font-size:14px; line-height:1.6; margin-bottom:24px;">
-                Has alcanzado el límite de <strong>30 productos</strong> de tu plan actual.
+            <h3 id="modalLimitTitle" style="color:#fff; margin-bottom: 8px; font-weight: 800; letter-spacing: -0.5px;">¡Límite Alcanzado!</h3>
+            <p id="modalLimitBody" style="color:#aaa; font-size:14px; line-height:1.6; margin-bottom:24px;">
+                Has alcanzado el límite de productos de tu plan actual.
                 <br><br>
                 Actualiza a <strong>STARTER</strong> o <strong>PRO</strong> para subir contenido ilimitado y potenciar tus ventas.
             </p>

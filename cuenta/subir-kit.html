@@ -1017,6 +1017,10 @@
                             style="width: 115%; height: 115%; object-fit: contain; margin: auto;">
                     </div>
 
+                    <div style="text-align: center; margin-bottom: -10px; display: flex; flex-direction: column; gap: 4px;">
+                        <span id="ytUploadCounter" style="color: #888; font-size: 13px; font-weight: 500;">0 de 3 videos subidos</span>
+                        <div id="ytLimitStatusLabel" style="display:none; color: #FFD700; font-size: 13px; font-weight: 600;">Límite de 3 videos alcanzado</div>
+                    </div>
                     <button id="btnYoutubeUploadStrategy"
                         style="width: 100%; padding: 16px; border-radius: 50px; background: #fff; color: #000; border: none; font-size: 16px; font-weight: 700; cursor: pointer; transition: all 0.2s; margin-top: 10px;"
                         onclick="if(window.AuthGuard) window.AuthGuard.safeNavigate('/upload/beats-yt.html'); else window.location.href='/upload/beats-yt.html';"
@@ -1083,14 +1087,58 @@
                 const hasAccess = await window.AuthUtils.checkFeatureAccess('youtube_upload');
                 const ytBtn = document.getElementById('btnYoutubeUploadStrategy');
 
-                if (ytBtn && !hasAccess) {
-                    ytBtn.innerHTML = '<i class="bi bi-star-fill" style="margin-right: 8px;"></i>Mejorar Plan';
-                    ytBtn.style.background = '#FFD700'; // Gold style
-                    ytBtn.style.color = '#000';
-                    ytBtn.onclick = (e) => {
-                        e.stopPropagation();
-                        window.location.href = '/cuenta/planes.html';
-                    };
+                if (ytBtn) {
+                    const planData = await window.AuthUtils.getUserPlanData();
+                    const ytLimit = planData?.limits?.youtube_uploads_per_month || 3;
+                    const ytUsed = planData?.usage?.youtube_uploads_this_month || 0;
+                    
+                    // Update Counter (Always visible)
+                    const counter = document.getElementById('ytUploadCounter');
+                    if (counter) {
+                        counter.innerText = `${ytUsed} de ${ytLimit} videos subidos`;
+                    }
+
+                    if (!hasAccess) {
+                        const label = document.getElementById('ytLimitStatusLabel');
+                        if (label) {
+                            label.innerText = `Límite de ${ytLimit} videos alcanzado`;
+                            label.style.display = 'block';
+                        }
+
+                        ytBtn.innerHTML = '<i class="bi bi-star-fill" style="margin-right: 8px;"></i>Mejorar Plan';
+                        ytBtn.style.background = '#FFD700'; // Gold style
+                        ytBtn.style.color = '#000';
+                        ytBtn.onclick = (e) => {
+                            e.stopPropagation();
+                            window.location.href = '/cuenta/planes.html';
+                        };
+                    }
+                }
+
+                // 2. Global Modal Logic (Sync with YouTube style if limited)
+                if (status.isLimited) {
+                    const mainBtn = document.querySelector('#modalUploadStrategy div:first-child button');
+                    if (mainBtn) {
+                        mainBtn.innerHTML = '<i class="bi bi-star-fill" style="margin-right: 8px;"></i>Mejorar Plan';
+                        mainBtn.style.background = '#FFD700';
+                        mainBtn.style.color = '#000';
+                        mainBtn.onclick = (e) => {
+                            e.stopPropagation();
+                            window.location.href = '/cuenta/planes.html';
+                        };
+                    }
+                }
+            }
+
+            // 🔥 AUTO-OPEN MODAL ON LIMIT REDIRECT
+            if (urlParams.get('limit')) {
+                const strategyModal = document.getElementById('modalUploadStrategy');
+                if (strategyModal) {
+                    strategyModal.classList.add('active');
+                    // If it's the YouTube limit, specifically show a toast
+                    if (urlParams.get('limit') === 'youtube_limit') {
+                        if (window.showToast) window.showToast("Límite de videos alcanzado", "error");
+                    }
                 }
             }
         });

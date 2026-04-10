@@ -3572,6 +3572,10 @@
                             style="width: 115%; height: 115%; object-fit: contain; margin: auto;">
                     </div>
 
+                    <div style="text-align: center; margin-bottom: -10px; display: flex; flex-direction: column; gap: 4px;">
+                        <span id="ytUploadCounter" style="color: #888; font-size: 13px; font-weight: 500;">0 de 3 videos subidos</span>
+                        <div id="ytLimitStatusLabel" style="display:none; color: #FFD700; font-size: 13px; font-weight: 600;">Límite de 3 videos alcanzado</div>
+                    </div>
                     <button id="btnYoutubeUploadStrategy"
                         style="width: 100%; padding: 16px; border-radius: 50px; background: #fff; color: #000; border: none; font-size: 16px; font-weight: 700; cursor: pointer; transition: all 0.2s; margin-top: 10px;"
                         onclick="if(window.AuthGuard) window.AuthGuard.safeNavigate('/upload/beats-yt.html'); else window.location.href='/upload/beats-yt.html';"
@@ -3677,11 +3681,67 @@
             } catch (e) { console.warn('Sidebar profile load error:', e); }
         })();
         // Auto-show modal if redirected with limit reached
-        window.addEventListener('DOMContentLoaded', () => {
+        window.addEventListener('DOMContentLoaded', async () => {
             const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.get('limit') === 'reached') {
-                const modal = document.getElementById('modalLimitReached');
+            const limitType = urlParams.get('limit');
+            
+            if (limitType === 'reached' || limitType === 'global_limit') {
+                const modal = document.getElementById('modalPricing');
                 if (modal) modal.classList.add('active');
+            } else if (limitType === 'youtube_limit') {
+                const strategyModal = document.getElementById('modalUploadStrategy');
+                if (strategyModal) {
+                    strategyModal.classList.add('active');
+                    if (window.showToast) window.showToast("Límite de videos alcanzado", "error");
+                }
+            }
+
+            // 🔥 Check YouTube and Global Limits for Modal UI
+            if (window.AuthUtils) {
+                const [status, hasYTAccess] = await Promise.all([
+                    window.AuthUtils.getUploadLimitStatus(),
+                    window.AuthUtils.checkFeatureAccess('youtube_upload')
+                ]);
+
+                // 1. YouTube Modal UI Handling
+                const ytBtn = document.getElementById('btnYoutubeUploadStrategy');
+                if (ytBtn) {
+                    const planData = await window.AuthUtils.getUserPlanData();
+                    const ytLimit = planData?.limits?.youtube_uploads_per_month || 3;
+                    const ytUsed = planData?.usage?.youtube_uploads_this_month || 0;
+                    
+                    const counter = document.getElementById('ytUploadCounter');
+                    if (counter) counter.innerText = `${ytUsed} de ${ytLimit} videos subidos`;
+
+                    if (!hasYTAccess) {
+                        const label = document.getElementById('ytLimitStatusLabel');
+                        if (label) {
+                            label.innerText = `Límite de ${ytLimit} videos alcanzado`;
+                            label.style.display = 'block';
+                        }
+                        ytBtn.innerHTML = '<i class="bi bi-star-fill" style="margin-right: 8px;"></i>Mejorar Plan';
+                        ytBtn.style.background = '#FFD700';
+                        ytBtn.style.color = '#000';
+                        ytBtn.onclick = (e) => {
+                            e.stopPropagation();
+                            window.location.href = '/cuenta/planes.html';
+                        };
+                    }
+                }
+
+                // 2. Global Modal Logic (Only if limited)
+                if (status.isLimited) {
+                    const mainBtn = document.querySelector('#modalUploadStrategy div:first-child button');
+                    if (mainBtn) {
+                        mainBtn.innerHTML = '<i class="bi bi-star-fill" style="margin-right: 8px;"></i>Mejorar Plan';
+                        mainBtn.style.background = '#FFD700';
+                        mainBtn.style.color = '#000';
+                        mainBtn.onclick = (e) => {
+                            e.stopPropagation();
+                            window.location.href = '/cuenta/planes.html';
+                        };
+                    }
+                }
             }
         });
     </script>

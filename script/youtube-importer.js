@@ -341,9 +341,11 @@
             if (found) {
                 keyInput.value = found.value;
                 if (window.uploaderState) window.uploaderState.key = found.value;
+                
                 // Update Custom UI Trigger
                 const display = document.getElementById('keyDisplay');
-                if (display) display.textContent = found.text.trim();
+                if (display) display.innerHTML = `<span>${found.text.trim()}</span>`;
+                
                 // Select in list visually
                 const list = document.getElementById('keyOptionsList');
                 if (list) {
@@ -441,14 +443,14 @@
             if (val >= 0 && val <= 250) return val;
         }
 
-        // 2. Standalone number fallback: Find a standalone 2-3 digit number between 40 and 220
+        // 2. Standalone number fallback: Find a standalone 2-3 digit number between 40 and 250
         // (Avoiding common years like 2023 or small counts)
         const looseRegex = /\b(\d{2,3})\b/g;
         let candidate = null;
         while ((match = looseRegex.exec(clean)) !== null) {
             const val = parseInt(match[1]);
-            // If it's in a likely BPM range (40-220), we take it as candidate
-            if (val >= 40 && val <= 220) {
+            // If it's in a likely BPM range (40-250), we take it as candidate
+            if (val >= 40 && val <= 250) {
                 candidate = val;
                 break;
             }

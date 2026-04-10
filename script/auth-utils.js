@@ -307,8 +307,15 @@ window.AuthUtils = {
     getAuthorizedUrl: async function (pathOrUrl, version = null, productId = null) {
         if (!pathOrUrl) return null;
 
-        // 🔥 SUPABASE/IMAGEKIT FAST-PATH: If it's already a full external URL, skip signing
-        if (version === 'supabase' || (typeof pathOrUrl === 'string' && (pathOrUrl.includes('supabase.co') || pathOrUrl.includes('ik.imagekit.io') || pathOrUrl.includes('cloudinary.com')))) {
+        // 🔥 PROXIED/EXTERNAL FAST-PATH: If it's already authorized, skip signing
+        if (typeof pathOrUrl === 'string' && (
+            pathOrUrl.includes('/r2-public/') || 
+            pathOrUrl.includes('r2-public/') ||
+            pathOrUrl.includes('supabase.co') || 
+            pathOrUrl.includes('ik.imagekit.io') || 
+            pathOrUrl.includes('cloudinary.com') ||
+            version === 'supabase'
+        )) {
             return (version === 'supabase' || pathOrUrl.includes('supabase.co')) ? this.getFormattedSupabaseUrl(pathOrUrl) : pathOrUrl;
         }
 

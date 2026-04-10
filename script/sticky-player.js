@@ -474,10 +474,14 @@ window.StickyPlayer = (function () {
         if (!audioUrl) return;
 
         // 🔥 ZERO LATENCY FIX & SYNC GESTURE FIX: 
-        // If it's a public Cloudflare URL, DO NOT AWAIT. Awaiting breaks the mobile user gesture token 
-        // in Safari/Chrome which causes the browser to pause audio until network idle (the 10 second delay).
+        // If it's a public Cloudflare URL or a proxied public URL, DO NOT AWAIT. 
+        // Awaiting breaks the mobile user gesture token in Safari/Chrome which causes 
+        // the browser to pause audio until network idle (the 10 second delay).
         let finalAudioUrl = audioUrl;
-        if (audioUrl.includes('pub-') && audioUrl.includes('.r2.dev')) {
+        const isPublicDirect = audioUrl.includes('pub-') && audioUrl.includes('.r2.dev');
+        const isPublicProxied = audioUrl.includes('r2-public/');
+
+        if (isPublicDirect || isPublicProxied) {
             finalAudioUrl = audioUrl; // Synchronous, keeping gesture alive
         } else {
             finalAudioUrl = await window.getAuthorizedUrl(audioUrl, trackData.storage_version || trackData.r2_version || 'v2', trackData.id);

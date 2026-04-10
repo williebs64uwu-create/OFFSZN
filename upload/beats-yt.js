@@ -44,7 +44,10 @@ window.uploaderState = {
     tags: [],
     collaborators: [],
     currentUser: null,
-    isYouTubeUpload: true // 🔥 Default TRUE for beats-yt.html
+    isYouTubeUpload: true, // 🔥 Default TRUE for beats-yt.html
+    promo_active: false,
+    promo_buy_qty: 1,
+    promo_get_qty: 1
 };
 let uploaderState = window.uploaderState;
 
@@ -891,6 +894,105 @@ window.saveStemsLink = () => {
     notify('Link de STEMS guardado correctamente.', 'success');
 };
 
+// --- Promotion Switcher Logic ---
+
+function initPromoSwitcher() {
+    console.log('?? [PROMOS] Initializing individual promotion switcher...');
+    const tabs = document.querySelectorAll('.promo-tab');
+    const customInputs = document.getElementById('customPromoInputs');
+    const bInput = document.getElementById('customPromoBuy');
+    const gInput = document.getElementById('customPromoGet');
+
+    tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            tabs.forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+
+            const val = tab.getAttribute('data-value');
+            if (val === 'none') {
+                uploaderState.promo_active = false;
+                if (customInputs) customInputs.style.display = 'none';
+            } else if (val === 'custom') {
+                uploaderState.promo_active = true;
+                if (customInputs) customInputs.style.display = 'flex';
+                // Trigger initial value sync
+                uploaderState.promo_buy_qty = parseInt(bInput?.value) || 1;
+                uploaderState.promo_get_qty = parseInt(gInput?.value) || 1;
+            } else {
+                uploaderState.promo_active = true;
+                if (customInputs) customInputs.style.display = 'none';
+                const [b, g] = val.split(',').map(Number);
+                uploaderState.promo_buy_qty = b;
+                uploaderState.promo_get_qty = g;
+            }
+            window.renderPreview();
+        });
+    });
+
+    // Custom Input Listeners
+    [bInput, gInput].forEach(inp => {
+        inp?.addEventListener('input', () => {
+            if (customInputs && customInputs.style.display !== 'none') {
+                uploaderState.promo_buy_qty = parseInt(bInput.value) || 1;
+                uploaderState.promo_get_qty = parseInt(gInput.value) || 1;
+                window.renderPreview();
+            }
+        });
+    });
+}
+
+/**
+ * Global function for Mobile Dropdown (Promo)
+ */
+window.togglePromoDropdown = (e) => {
+    e.stopPropagation();
+    const list = document.getElementById('promoOptionsList');
+    const chevron = document.getElementById('promoChevron');
+    if (!list) return;
+
+    const isOpen = list.style.display === 'block';
+    
+    // Close other dropdowns if open
+    document.querySelectorAll('.custom-scrollbar').forEach(d => {
+        if(d.id !== 'promoOptionsList') d.style.display = 'none';
+    });
+
+    list.style.display = isOpen ? 'none' : 'block';
+    if(chevron) chevron.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(180deg)';
+};
+
+// Document listener to close promo dropdown
+document.addEventListener('click', () => {
+    const list = document.getElementById('promoOptionsList');
+    const chevron = document.getElementById('promoChevron');
+    if (list) list.style.display = 'none';
+    if (chevron) chevron.style.transform = 'rotate(0deg)';
+});
+
+// Initialize Promo Dropdown items
+function initPromoDropdownItems() {
+    const list = document.getElementById('promoOptionsList');
+    const display = document.getElementById('promoSelectedDisplay');
+    const tabs = document.querySelectorAll('.promo-tab');
+    if (!list) return;
+
+    list.querySelectorAll('.custom-option').forEach(opt => {
+        opt.addEventListener('click', (e) => {
+            const val = opt.getAttribute('data-value');
+            const text = opt.textContent;
+            
+            // Sync with Desktop Tabs
+            tabs.forEach(t => {
+                if (t.getAttribute('data-value') === val) t.click();
+            });
+
+            if (display) display.textContent = text;
+            list.querySelectorAll('.custom-option').forEach(o => o.classList.remove('selected'));
+            opt.classList.add('selected');
+        });
+    });
+}
+
 // --- Main Init ---
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -922,6 +1024,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     initVisibilityDropdown();
     initKeyDropdown();
     initDateTime();
+    initPromoSwitcher();
+    initPromoDropdownItems();
     await initLicenses();
     initTagsInput();
 
@@ -1101,9 +1205,23 @@ async function checkForEditMode() {
 
         if (product.key) {
             document.getElementById('keyInput').value = product.key;
+            uploaderState.key = product.key;
             // visually update custom select
             const keyDisp = document.getElementById('keyDisplay');
             if (keyDisp) keyDisp.innerHTML = `<span>${product.key}</span>`;
+            
+            // 🔥 FIX: Sync "selected" class in Custom Dropdown List
+            const keyList = document.getElementById('keyOptionsList');
+            if (keyList) {
+                keyList.querySelectorAll('.dropdown-item').forEach(opt => {
+                    const optVal = opt.getAttribute('data-value');
+                    if (optVal === product.key) {
+                        opt.classList.add('selected');
+                    } else {
+                        opt.classList.remove('selected');
+                    }
+                });
+            }
         }
 
         if (product.visibility) {
@@ -1164,6 +1282,40 @@ async function checkForEditMode() {
 
             if (typeof window.renderLicenses === 'function') {
                 window.renderLicenses();
+            }
+
+            // --- Load Individual Promotions (Edit Mode) ---
+            if (product.promo_active) {
+                uploaderState.promo_active = true;
+                uploaderState.promo_buy_qty = product.promo_buy_qty || 1;
+                uploaderState.promo_get_qty = product.promo_get_qty || 1;
+
+                // Update UI: Find correct tab
+                const tabs = document.querySelectorAll('.promo-tab');
+                let foundTab = false;
+                tabs.forEach(t => {
+                    const val = t.getAttribute('data-value');
+                    if (val === `${uploaderState.promo_buy_qty},${uploaderState.promo_get_qty}`) {
+                        t.click();
+                        foundTab = true;
+                    }
+                });
+
+                if (!foundTab) {
+                    // It's a custom promo
+                    const customTab = document.querySelector('.promo-tab[data-value="custom"]');
+                    if (customTab) {
+                        customTab.click();
+                        const bInp = document.getElementById('customPromoBuy');
+                        const gInp = document.getElementById('customPromoGet');
+                        if (bInp) bInp.value = uploaderState.promo_buy_qty;
+                        if (gInp) gInp.value = uploaderState.promo_get_qty;
+                    }
+                }
+            } else {
+                // Explicitly select "Ninguna"
+                const noneTab = document.querySelector('.promo-tab[data-value="none"]');
+                if (noneTab) noneTab.click();
             }
         }, 500);
 
@@ -2061,7 +2213,11 @@ window.handlePublish = async function () {
                 is_guest: c.is_guest
             })),
             youtube_id: uploaderState.youtube_video_id || null,
-            youtube_url: uploaderState.youtube_video_id ? `https://www.youtube.com/watch?v=${uploaderState.youtube_video_id}` : null
+            youtube_url: uploaderState.youtube_video_id ? `https://www.youtube.com/watch?v=${uploaderState.youtube_video_id}` : null,
+            // Individual Promo fields
+            promo_active: uploaderState.promo_active || false,
+            promo_buy_qty: uploaderState.promo_buy_qty || 1,
+            promo_get_qty: uploaderState.promo_get_qty || 1
         };
 
         // 7. DB Operation (INSERT vs UPDATE)

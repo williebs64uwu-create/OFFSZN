@@ -1121,7 +1121,10 @@ window.playProductCover = async function () {
 
     // Resolve R2 URL if needed
     let finalAudioUrl = audioUrl;
-    if (window.getAuthorizedUrl && !(audioUrl.includes('pub-') && audioUrl.includes('.r2.dev'))) {
+    const isPublicDirect = audioUrl.includes('pub-') && audioUrl.includes('.r2.dev');
+    const isPublicProxied = audioUrl.includes('r2-public/');
+
+    if (window.getAuthorizedUrl && !isPublicDirect && !isPublicProxied) {
         try {
             finalAudioUrl = await window.getAuthorizedUrl(audioUrl, product.storage_version || product.r2_version || 'v2', product.id);
         } catch (e) {

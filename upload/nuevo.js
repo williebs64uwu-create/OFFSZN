@@ -1101,9 +1101,23 @@ async function checkForEditMode() {
 
         if (product.key) {
             document.getElementById('keyInput').value = product.key;
+            uploaderState.key = product.key;
             // visually update custom select
             const keyDisp = document.getElementById('keyDisplay');
             if (keyDisp) keyDisp.innerHTML = `<span>${product.key}</span>`;
+
+            // 🔥 FIX: Sync "selected" class in Custom Dropdown List
+            const keyList = document.getElementById('keyOptionsList');
+            if (keyList) {
+                keyList.querySelectorAll('.dropdown-item').forEach(opt => {
+                    const optVal = opt.getAttribute('data-value');
+                    if (optVal === product.key) {
+                        opt.classList.add('selected');
+                    } else {
+                        opt.classList.remove('selected');
+                    }
+                });
+            }
         }
 
         if (product.visibility) {
