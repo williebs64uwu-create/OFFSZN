@@ -2431,6 +2431,7 @@
                             // Separate R2 keys from Supabase paths
                             const r2Keys = [];
                             const supabaseTasks = [];
+                            const productVersion = item.r2_version || item.storage_version || 'v1';
 
                             for (const f of filesToProcess) {
                                 if (!f.url) continue;
@@ -2439,16 +2440,21 @@
                                     (!f.url.startsWith('http') && f.url.includes('/'));
 
                                 if (isR2) {
-                                    r2Keys.push(f.url);
+                                    // Manually assign version so we can batch them later
+                                    r2Keys.push({ url: f.url, version: productVersion });
                                 } else if (f.url.includes('supabase.co')) {
                                     supabaseTasks.push(deleteFileFromStorage(f.url, f.bucket));
                                 }
                             }
 
                             // Execute Deletions
-                            if (r2Keys.length > 0) await AuthUtils.deleteFromR2(r2Keys);
+                            if (r2Keys.length > 0) {
+                                const v1s = r2Keys.filter(k => k.version === 'v1').map(k => k.url);
+                                const v2s = r2Keys.filter(k => k.version === 'v2').map(k => k.url);
+                                if (v1s.length > 0) await AuthUtils.deleteFromR2(v1s, 'v1');
+                                if (v2s.length > 0) await AuthUtils.deleteFromR2(v2s, 'v2');
+                            }
                             if (supabaseTasks.length > 0) await Promise.all(supabaseTasks);
-
                         } catch (err) { console.warn(`Storage cleanup failed for item ${id}:`, err); }
                     } // End if (item.isDraft || !isPurchased)
 
