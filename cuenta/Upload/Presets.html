@@ -3471,17 +3471,17 @@
                     <div>
                         <div class="grid-2" style="margin-bottom: 20px;">
                             <div class="form-group" style="margin-top: 55px;">
-                                <div class="label">Archivo del Preset(.rar, .zip) <span class="required">*</span>
+                                <div class="label">Archivo del Preset (.fst, .flp, .rar, .zip) <span class="required">*</span>
                                 </div>
                                 <div class="upload-zone" id="fileDropZone">
-                                    <input type="file" id="fileInput" accept=".rar,.zip" hidden>
+                                    <input type="file" id="fileInput" accept=".fst,.flp,.rar,.zip" hidden>
                                     <svg class="upload-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                             d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12">
                                         </path>
                                     </svg>
                                     <div class="upload-text">Arrastra tu archivo aquí</div>
-                                    <div class="upload-subtext">.rar o .zip (50mb max)</div>
+                                    <div class="upload-subtext">.fst, .flp, .rar o .zip (50mb max)</div>
                                 </div>
                                 <div id="filePreviewContainer"></div>
                             </div>
@@ -4844,8 +4844,8 @@
                 const errorMsg = parent.querySelector('.error-message');
                 if (errorMsg) errorMsg.style.display = 'none';
 
-                if (type === 'kit' && !file.name.match(/\.(rar|zip)$/i)) {
-                    showInlineError(dropZone.id, 'Solo archivos .rar o .zip');
+                if (type === 'kit' && !file.name.match(/\.(fst|flp|rar|zip)$/i)) {
+                    showInlineError(dropZone.id, 'Solo archivos .fst, .flp, .rar o .zip');
                     dropZone.classList.remove('uploading');
                     delete uploadsInProgress[type];
                     return;
@@ -6133,7 +6133,7 @@
                 },
                 {
                     key: 'kit',
-                    label: 'Archivo del Preset (.rar o .zip)',
+                    label: 'Archivo del Preset (.fst, .flp, .rar, .zip)',
                     icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>',
                     fileName: formData.files.kit ? formData.files.kit.name : null // ?? NUEVO
                 },
@@ -6439,7 +6439,7 @@
             if (step === 1) {
                 // 1. Kit File (Check formData OR if already uploaded in Edit Mode)
                 if (!formData.files.kit && !filesUploaded.kit) {
-                    showInlineError('filePreviewContainer', 'Debes subir el archivo del Preset<div style="margin-top: 4px; font-size: 13px; font-weight: 400; opacity: 0.9;">(.rar o .zip)</div>');
+                    showInlineError('filePreviewContainer', 'Debes subir el archivo del Preset<div style="margin-top: 4px; font-size: 13px; font-weight: 400; opacity: 0.9;">(.fst, .flp, .rar o .zip)</div>');
                     errors.push('Falta el archivo del Preset');
                     isValid = false;
                 }
@@ -8495,6 +8495,8 @@
                     sounds_count: parseInt(document.getElementById('soundsInput').value) || null,
                     tags: tags.length > 0 ? tags : null,
                     category: selectedCategory,
+                    storage_version: 'v2',
+                    r2_version: 'v2',
                     collaborators: collaborators.length > 0 ? collaborators : null // ?? FIX: Save Collaborators
                 };
 

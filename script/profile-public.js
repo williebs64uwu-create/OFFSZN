@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Signals to reveal the content (Fired after preparation + timer)
     let triggerReveal;
-    window.profileRevealSignal = new Promise(res => { 
+    window.profileRevealSignal = new Promise(res => {
         triggerReveal = () => {
             // console.log("[Profile] Reveal Signal Fired!");
             res();
@@ -159,6 +159,18 @@ async function loadUserProfile(username) {
         const user = await response.json();
         console.log("DEBUG: Perfil cargado:", user.nickname, "Template:", user.template);
         window.currentUserProfile = user; // Store for tab rendering
+
+        // --- 30-DAY TRIAL INITIALIZATION ---
+        const isMe = window.currentUserId && (user.id === window.currentUserId);
+        if (isMe && user.plan === 'free' && !user.plan_start_date) {
+            console.log("[Trial] Initializing 30-day trial for owner...");
+            const now = new Date().toISOString();
+            await window.supabaseClient
+                .from('users')
+                .update({ plan_start_date: now })
+                .eq('id', user.id);
+            user.plan_start_date = now;
+        }
 
         // --- CACHE TEMPLATE ---
         // Save the template for this user so we can predict it next time
@@ -408,7 +420,7 @@ async function renderHeader(user, categoryCounts = null) {
         const roleText = user.role || '';
         roleEl.innerText = roleText;
         const lowerRole = roleText.toLowerCase();
-        // Palabras clave que indican que el rol debe ir sin fondo (IngenierÃ­a/Mixing/Mastering)
+        // Palabras clave que indican que el rol debe ir sin fondo (Ingeniería/Mixing/Mastering)
         const keywords = ['ingeniero', 'mezcla', 'master', 'mix', 'engineer', 'ingenieria'];
         if (keywords.some(k => lowerRole.includes(k))) {
             roleEl.classList.add('no-bg');
@@ -754,19 +766,19 @@ function renderAboutTab(container) {
     aboutGrid.style.gap = '24px';
     aboutGrid.style.marginTop = '20px';
 
-    // BiografÃ­a Card
+    // Biografía Card
     const bioCard = document.createElement('div');
     bioCard.className = 'about-card';
     bioCard.style.cssText = 'background: #111; padding: 24px; border-radius: 12px; border: 1px solid #222;';
 
     const bioTitle = document.createElement('h4');
     bioTitle.style.cssText = 'color: #8b5cf6; margin-bottom: 12px; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px;';
-    bioTitle.textContent = 'BiografÃ­a';
+    bioTitle.textContent = 'Biografí­a';
     bioCard.appendChild(bioTitle);
 
     const bioText = document.createElement('p');
     bioText.style.cssText = 'color: #ccc; line-height: 1.6; font-size: 0.95rem; white-space: pre-wrap;';
-    bioText.textContent = user.bio || "Sin biografÃ­a disponible.";
+    bioText.textContent = user.bio || "Sin biografí­a disponible.";
     bioCard.appendChild(bioText);
 
     aboutGrid.appendChild(bioCard);
@@ -829,71 +841,185 @@ function renderServicesTab(container) {
     servicesContainer.style.marginTop = '20px';
 
     const socials = user.socials || {};
-    const services = socials.offered_services || {};
-    const hasServices = services.mixing || services.mastering;
+    const customServices = socials.custom_services || [];
+    const playlists = socials.playlists || [];
 
-    if (hasServices) {
-        const servicesGrid = document.createElement('div');
-        servicesGrid.style.cssText = 'display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 32px;';
+    // Check trial expiration
+    const isMe = window.currentUserId && (user.id === window.currentUserId);
+    let trialExpired = false;
+    if (user.plan === 'free' && user.plan_start_date) {
+        const start = new Date(user.plan_start_date);
+        const now = new Date();
+        const diffDays = Math.ceil((now - start) / (1000 * 60 * 60 * 24));
+        if (diffDays > 30) trialExpired = true;
+    }
 
-        const createServiceCard = (type) => {
-            const card = document.createElement('div');
-            card.style.cssText = 'background: #111; border: 1px solid #222; padding: 24px; border-radius: 12px; text-align: center;';
+    // --- OWNER CONTROLS (Add Button) ---
+    if (isMe) {
+        const addBtnContainer = document.createElement('div');
+        addBtnContainer.className = 'services-owner-actions';
+        addBtnContainer.style.marginBottom = '20px';
 
-            const icon = document.createElement('i');
-            if (type === 'mixing') {
-                icon.className = 'bi bi-mic-fill';
-                icon.style.color = '#8b5cf6';
-            } else {
-                icon.className = 'bi bi-waveform';
-                icon.style.color = '#10b981';
+        const addServiceBtn = document.createElement('button');
+        addServiceBtn.className = 'btn-add-service';
+        addServiceBtn.innerHTML = '<i class="bi bi-plus-lg"></i> Añadir Servicio / Link';
+        addServiceBtn.onclick = () => window.ServicesManager.openAddModal('service');
+
+        const addPlaylistBtn = document.createElement('button');
+        addPlaylistBtn.className = 'btn-add-playlist';
+        addPlaylistBtn.innerHTML = '<i class="bi bi-music-note-list"></i> Nueva Playlist';
+        addPlaylistBtn.style.marginLeft = '12px';
+        addPlaylistBtn.onclick = () => {
+            if (trialExpired && !isMe) return; // Visitor logic
+            if (trialExpired && isMe) {
+                window.ServicesManager.showUpgradeModal();
+                return;
             }
-            icon.style.cssText += 'font-size: 2rem; display: block; margin-bottom: 12px;';
-            card.appendChild(icon);
+            window.ServicesManager.openAddModal('playlist');
+        };
 
-            const h4 = document.createElement('h4');
-            h4.style.cssText = 'color: #fff; margin-bottom: 4px;';
-            h4.textContent = type === 'mixing' ? 'Servicio de Mezcla' : 'Servicio de Mastering';
-            card.appendChild(h4);
+        addBtnContainer.appendChild(addServiceBtn);
+        addBtnContainer.appendChild(addPlaylistBtn);
+        servicesContainer.appendChild(addBtnContainer);
+    }
 
-            const p = document.createElement('p');
-            p.style.cssText = 'color: #666; font-size: 0.8rem;';
-            p.textContent = type === 'mixing' ? 'Mezcla profesional para tus tracks.' : 'El toque final para un sonido comercial.';
-            card.appendChild(p);
+    // --- RENDER PLAYLISTS (Spotify Style) ---
+    if (playlists.length > 0) {
+        const playlistSection = document.createElement('div');
+        playlistSection.className = 'playlists-grid-offszn';
 
+        playlists.forEach(pl => {
+            const card = document.createElement('div');
+            card.className = 'playlist-card-spotify';
+            card.innerHTML = `
+                <div class="playlist-cover-wrapper">
+                    <img src="${pl.cover_url || 'https://ik.imagekit.io/offszn/placeholder_playlist.png'}" alt="${pl.title}">
+                    <div class="playlist-play-overlay"><i class="bi bi-play-fill"></i></div>
+                </div>
+                <div class="playlist-info">
+                    <h4>${escapeHTML(pl.title)}</h4>
+                    <p>${pl.track_ids ? pl.track_ids.length : 0} Beats</p>
+                </div>
+            `;
+            card.onclick = () => window.ServicesManager.openPlaylist(pl.id);
+            playlistSection.appendChild(card);
+        });
+        servicesContainer.appendChild(playlistSection);
+    }
+
+    // --- RENDER CUSTOM SERVICES (Grid) ---
+    if (customServices.length > 0) {
+        const servicesGrid = document.createElement('div');
+        servicesGrid.className = 'services-grid-redesign';
+
+        customServices.forEach(s => {
+            const card = document.createElement('div');
+            card.className = 'service-card-premium';
+            card.id = s.id; // Unique ID servicios_offszn_xnombre
+
+            // Logic for icons based on platform or default
+            let iconClass = 'bi-briefcase-fill';
+            let iconColor = '#8b5cf6';
+            if (s.link && s.link.includes('spotify')) { iconClass = 'bi-spotify'; iconColor = '#1DB954'; }
+            else if (s.link && s.link.includes('youtube')) { iconClass = 'bi-youtube'; iconColor = '#FF0000'; }
+            else if (s.link && s.link.includes('soundcloud')) { iconClass = 'bi-soundcloud'; iconColor = '#FF3300'; }
+
+            // Logic for iframe embeds (like Spotify)
+            let embedHtml = '';
+            if (s.link && s.link.includes('open.spotify.com')) {
+                let embedUrl = '';
+                if (s.link.includes('/playlist/')) {
+                    const id = s.link.split('/playlist/')[1].split('?')[0];
+                    embedUrl = `https://open.spotify.com/embed/playlist/${id}?utm_source=generator&theme=0`;
+                } else if (s.link.includes('/track/')) {
+                    const id = s.link.split('/track/')[1].split('?')[0];
+                    embedUrl = `https://open.spotify.com/embed/track/${id}?utm_source=generator&theme=0`;
+                } else if (s.link.includes('/album/')) {
+                    const id = s.link.split('/album/')[1].split('?')[0];
+                    embedUrl = `https://open.spotify.com/embed/album/${id}?utm_source=generator&theme=0`;
+                }
+
+                if (embedUrl) {
+                    const height = s.link.includes('/track/') ? '152' : '352';
+                    embedHtml = `<iframe style="border-radius:12px; margin-top: 16px; width: 100%; border: none;" src="${embedUrl}" width="100%" height="${height}" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>`;
+                }
+            }
+
+            card.innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                    <div style="display:flex; flex-direction:column; gap:8px;">
+                        <div class="service-icon" style="color: ${iconColor}; margin:0;"><i class="bi ${iconClass}"></i></div>
+                        ${s.category ? `<span class="service-category-tag">${escapeHTML(s.category)}</span>` : ''}
+                    </div>
+                    ${!embedHtml && s.link ? `<a href="${s.link}" target="_blank" class="service-link-btn" style="padding: 8px 16px; font-size: 0.8rem;">Ver Más</a>` : ''}
+                </div>
+                <h3>${escapeHTML(s.title)}</h3>
+                <p style="white-space: pre-line;">${escapeHTML(s.description)}</p>
+                ${s.price ? `<span class="service-price">$${s.price}</span>` : ''}
+                ${embedHtml}
+            `;
+            servicesGrid.appendChild(card);
+        });
+        servicesContainer.appendChild(servicesGrid);
+    }
+
+    // --- RENDER LEGACY SERVICES (Only if no custom services exist) ---
+    const legacyServices = socials.offered_services || {};
+    const hasLegacy = legacyServices.mixing || legacyServices.mastering;
+
+    if (customServices.length === 0 && hasLegacy) {
+        const legacyGrid = document.createElement('div');
+        legacyGrid.style.cssText = 'display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 32px;';
+
+        const createLegacyCard = (type) => {
+            const card = document.createElement('div');
+            card.className = 'service-card-premium'; // Use new style
+            const data = legacyServices[type];
+            if (!data) return null;
+
+            card.innerHTML = `
+                <div class="service-icon"><i class="bi bi-gear-fill"></i></div>
+                <h3>${type.charAt(0).toUpperCase() + type.slice(1)}</h3>
+                <p>${escapeHTML(data.details || '')}</p>
+                ${data.price ? `<span class="service-price">$${data.price}</span>` : ''}
+                <a href="${data.link || '#'}" target="_blank" class="service-link-btn">Contactar</a>
+            `;
             return card;
         };
 
-        if (services.mixing) servicesGrid.appendChild(createServiceCard('mixing'));
-        if (services.mastering) servicesGrid.appendChild(createServiceCard('mastering'));
+        ['mixing', 'mastering', 'production'].forEach(type => {
+            const card = createLegacyCard(type);
+            if (card) legacyGrid.appendChild(card);
+        });
+        servicesContainer.appendChild(legacyGrid);
+    }
 
-        // Contact Button
-        const contactCard = document.createElement('div');
-        contactCard.style.cssText = 'background: #181818; border: 1px dashed #333; padding: 24px; border-radius: 12px; text-align: center; display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: pointer;';
-        contactCard.onclick = () => document.getElementById('btnMessage')?.click();
-
-        const cIcon = document.createElement('i');
-        cIcon.className = 'bi bi-chat-left-text';
-        cIcon.style.cssText = 'font-size: 1.5rem; color: #555; margin-bottom: 8px;';
-        contactCard.appendChild(cIcon);
-
-        const cSpan = document.createElement('span');
-        cSpan.style.cssText = 'color: #888; font-size: 0.85rem; font-weight: 600;';
-        cSpan.textContent = 'Contactar ahora';
-        contactCard.appendChild(cSpan);
-
-        servicesGrid.appendChild(contactCard);
-        servicesContainer.appendChild(servicesGrid);
-    } else {
+    // --- EMPTY STATE ---
+    if (!hasLegacy && customServices.length === 0 && playlists.length === 0) {
         const emptyDiv = document.createElement('div');
         emptyDiv.className = 'empty-state';
         emptyDiv.style.cssText = 'padding: 40px 20px; text-align: center; background: #111; border-radius: 12px; border: 1px solid #222; margin-bottom: 32px;';
+
+        const emptyIcon = document.createElement('i');
+        emptyIcon.className = 'bi bi-grid-3x3-gap';
+        emptyIcon.style.cssText = 'font-size: 2rem; color: #333; margin-bottom: 16px; display: block;';
+        emptyDiv.appendChild(emptyIcon);
+
         const emptyP = document.createElement('p');
-        emptyP.style.cssText = 'color: #666; margin: 0;';
-        emptyP.textContent = 'Este usuario no ofrece servicios listados actualmente.';
+        emptyP.style.cssText = 'color: #666; margin: 0; font-size: 1rem; font-weight: 500;';
+        emptyP.textContent = 'Aún no hay servicios ni playlists disponibles.';
         emptyDiv.appendChild(emptyP);
+
+        if (isMe) {
+            const emptySub = document.createElement('p');
+            emptySub.style.cssText = 'color: #555; margin-top: 8px; font-size: 0.85rem;';
+            emptySub.innerHTML = 'Usa los botones de arriba para añadir tu contenido.';
+            emptyDiv.appendChild(emptySub);
+        }
+
         servicesContainer.appendChild(emptyDiv);
     }
+
 
     if (socials.spotify_content) {
         const spotifyUrl = socials.spotify_content;
@@ -1777,7 +1903,7 @@ async function loadUserProducts(user) {
         if (urlsToWarm.length > 0 && window.getAuthorizedUrl) {
             // 1. Obtener URLs firmadas
             const authorizedArray = await Promise.all(urlsToWarm.map(obj => window.getAuthorizedUrl(obj.url, obj.version).catch(() => null)));
-            
+
             // 2. Ejecutar Bulk Preload (Descarga a RAM)
             const preloadPromises = authorizedArray.map(finalUrl => {
                 if (!finalUrl) return Promise.resolve();

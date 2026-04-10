@@ -43,7 +43,10 @@ window.uploaderState = {
     loop: false,
     tags: [],
     collaborators: [],
-    currentUser: null
+    currentUser: null,
+    promo_active: false,
+    promo_buy_qty: 1,
+    promo_get_qty: 1
 };
 let uploaderState = window.uploaderState;
 
@@ -479,6 +482,19 @@ function processFile(file, zone, stateKey, maxSize, successText, extension, pref
         const validExt = extArray.some(ext => file.name.toLowerCase().endsWith(ext));
         if (!validExt) {
             notify(`Selecciona un archivo ${extArray.join(' o ').toUpperCase()}.`, 'error');
+            return;
+        }
+    }
+
+    // 🔥 Check for duplicates (same name in different slot)
+    const fileKeys = {
+        'mp3_tagged': 'MP3',
+        'wav_untagged': 'WAV',
+        'stems': 'Stems'
+    };
+    for (const [key, label] of Object.entries(fileKeys)) {
+        if (key !== stateKey && uploaderState[key] && uploaderState[key] instanceof File && uploaderState[key].name === file.name) {
+            notify(`Este archivo ya está seleccionado en la sección ${label}.`, 'error');
             return;
         }
     }
@@ -1149,6 +1165,42 @@ async function checkForEditMode() {
             if (typeof window.renderLicenses === 'function') {
                 window.renderLicenses();
             }
+
+            // --- Load Individual Promotions (Edit Mode) ---
+            if (product.promo_active) {
+                uploaderState.promo_active = true;
+                uploaderState.promo_buy_qty = product.promo_buy_qty || 1;
+                uploaderState.promo_get_qty = product.promo_get_qty || 1;
+
+                // Update UI: Find correct tab
+                const tabs = document.querySelectorAll('.promo-tab');
+                let foundTab = false;
+                tabs.forEach(t => {
+                    const val = t.getAttribute('data-value');
+                    if (val === `${uploaderState.promo_buy_qty},${uploaderState.promo_get_qty}`) {
+                        t.click();
+                        foundTab = true;
+                    }
+                });
+
+                if (!foundTab) {
+                    // It must be custom
+                    const customTab = Array.from(tabs).find(t => t.getAttribute('data-value') === 'custom');
+                    if (customTab) {
+                        customTab.click();
+                        // Pre-fill custom inputs
+                        const buyIn = document.getElementById('promoBuyQty');
+                        const getIn = document.getElementById('promoGetQty');
+                        if (buyIn) buyIn.value = uploaderState.promo_buy_qty;
+                        if (getIn) getIn.value = uploaderState.promo_get_qty;
+                        updatePromoResult();
+                    }
+                }
+            } else {
+                uploaderState.promo_active = false;
+                const noneTab = document.querySelector('.promo-tab[data-value="none"]');
+                if (noneTab) noneTab.click();
+            }
         }, 500);
 
         // Files: Pre-fill and Authorize URLs for display
@@ -1449,9 +1501,139 @@ function initDateTime() {
     const year = now.getFullYear();
     const month = String(now.getMonth() + 1).padStart(2, '0');
     const day = String(now.getDate()).padStart(2, '0');
-
     dateInput.value = `${year}-${month}-${day}`;
     dateInput.readOnly = true;
+}
+
+// --- Promotion Management ---
+
+function initPromotions() {
+    console.log('?? [PROMOS] Initializing promotion selector...');
+    
+    // Desktop Tabs
+    const tabs = document.querySelectorAll('.promo-tab');
+    tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            const val = tab.getAttribute('data-value');
+            setPromotionValue(val);
+            
+            // UI Update
+            tabs.forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            
+            // Sync Mobile
+            const mobileDisplay = document.getElementById('promoSelectedDisplay');
+            if (mobileDisplay) {
+                const map = { 'none': 'Ninguna', '2,1': '2x1', '3,1': '3x1', 'custom': 'Personalizado' };
+                mobileDisplay.innerText = map[val] || 'Ninguna';
+            }
+        });
+    });
+}
+
+window.togglePromoDropdown = (e) => {
+    if (e) e.stopPropagation();
+    const list = document.getElementById('promoOptionsList');
+    const chevron = document.getElementById('promoChevron');
+    if (!list) return;
+    
+    const isVisible = list.style.display === 'block';
+    list.style.display = isVisible ? 'none' : 'block';
+    if (chevron) chevron.style.transform = isVisible ? 'rotate(0deg)' : 'rotate(180deg)';
+};
+
+// Handle mobile option clicks
+document.addEventListener('DOMContentLoaded', () => {
+    const options = document.querySelectorAll('#promoOptionsList .custom-option');
+    options.forEach(opt => {
+        opt.addEventListener('click', () => {
+            const val = opt.getAttribute('data-value');
+            setPromotionValue(val);
+            
+            // UI Update
+            options.forEach(o => o.classList.remove('selected'));
+            opt.classList.add('selected');
+            
+            const display = document.getElementById('promoSelectedDisplay');
+            if (display) display.innerText = opt.innerText;
+            
+            // Hide list
+            const list = document.getElementById('promoOptionsList');
+            if (list) list.style.display = 'none';
+            const chevron = document.getElementById('promoChevron');
+            if (chevron) chevron.style.transform = 'rotate(0deg)';
+            
+            // Sync Desktop
+            const tabs = document.querySelectorAll('.promo-tab');
+            tabs.forEach(t => {
+                t.classList.toggle('active', t.getAttribute('data-value') === val);
+            });
+        });
+    });
+    
+    // Close dropdown on click outside
+    document.addEventListener('click', () => {
+        const list = document.getElementById('promoOptionsList');
+        if (list) list.style.display = 'none';
+    });
+    
+    initPromotions();
+});
+
+function setPromotionValue(val) {
+    const customRow = document.getElementById('customPromoRow');
+    
+    if (val === 'none') {
+        uploaderState.promo_active = false;
+        if (customRow) customRow.style.display = 'none';
+    } else if (val === '2,1') {
+        uploaderState.promo_active = true;
+        uploaderState.promo_buy_qty = 1;
+        uploaderState.promo_get_qty = 1;
+        if (customRow) customRow.style.display = 'none';
+    } else if (val === '3,1') {
+        uploaderState.promo_active = true;
+        uploaderState.promo_buy_qty = 2;
+        uploaderState.promo_get_qty = 1;
+        if (customRow) customRow.style.display = 'none';
+    } else if (val === 'custom') {
+        uploaderState.promo_active = true;
+        if (customRow) customRow.style.display = 'block';
+        updatePromoResult();
+    }
+    
+    if (window.renderPreview) window.renderPreview();
+}
+
+window.adjustPromoQty = (type, amt) => {
+    const buyIn = document.getElementById('promoBuyQty');
+    const getIn = document.getElementById('promoGetQty');
+    
+    if (type === 'buy') {
+        let val = parseInt(buyIn.value) + amt;
+        if (val < 1) val = 1;
+        if (val > 10) val = 10;
+        buyIn.value = val;
+        uploaderState.promo_buy_qty = val;
+    } else {
+        let val = parseInt(getIn.value) + amt;
+        if (val < 1) val = 1;
+        if (val > 10) val = 10;
+        getIn.value = val;
+        uploaderState.promo_get_qty = val;
+    }
+    
+    updatePromoResult();
+    if (window.renderPreview) window.renderPreview();
+};
+
+function updatePromoResult() {
+    const res = document.getElementById('promoResultText');
+    if (!res) return;
+    const buy = uploaderState.promo_buy_qty;
+    const get = uploaderState.promo_get_qty;
+    const total = buy + get;
+    res.innerText = `OFERTA: COMPRA ${buy} LLEVA ${total}`;
 }
 
 // --- Tag Logic ---
@@ -1868,7 +2050,11 @@ window.handlePublish = async function () {
                 role: c.role,
                 percent: c.percent,
                 is_guest: c.is_guest
-            }))
+            })),
+            // 🔥 Individual Promotions
+            promo_active: uploaderState.promo_active || false,
+            promo_buy_qty: uploaderState.promo_buy_qty || 1,
+            promo_get_qty: uploaderState.promo_get_qty || 1
         };
 
         // 7. DB Operation (INSERT vs UPDATE)
@@ -2564,11 +2750,26 @@ window.renderPreview = () => {
         if (collabSection) collabSection.style.display = 'block';
         verifyCollabs.innerHTML = uploaderState.collaborators.map(c => `
             <div class="verify-item">
-                <span>${c.display_name}</span>
-                <strong>${c.profit_share}%</strong>
+                <span>${c.name || c.nickname || 'Colaborador'}</span>
+                <strong>${c.percent}%</strong>
             </div>
         `).join('');
     } else if (collabSection) {
         collabSection.style.display = 'none';
+    }
+
+    // Promotion Verification (Step 4)
+    const activePromoText = document.getElementById('activePromoText');
+    if (activePromoText) {
+        if (uploaderState.promo_active) {
+            const buy = uploaderState.promo_buy_qty;
+            const get = uploaderState.promo_get_qty;
+            const total = buy + get;
+            activePromoText.innerHTML = `<span style="color: var(--accent-purple); font-weight: 800;">PROMO ACTIVA:</span> Compra ${buy} lleva ${total}`;
+            activePromoText.style.color = '#fff';
+        } else {
+            activePromoText.textContent = 'Sin promoción activa';
+            activePromoText.style.color = '#aaa';
+        }
     }
 };

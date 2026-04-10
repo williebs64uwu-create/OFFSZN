@@ -135,7 +135,7 @@ const CartManager = {
                 // AUTH: Load from DB
                 const { data, error } = await supabaseClient
                     .from('cart_items')
-                    .select('quantity, license_name, variant_price, product:products(id, name, price_basic, image_url, product_type, producer_id, status, storage_version, r2_version, producer:producer_id(*))')
+                    .select('quantity, license_name, variant_price, product:products(id, name, price_basic, image_url, product_type, producer_id, status, storage_version, r2_version, promo_active, promo_buy_qty, promo_get_qty, producer:producer_id(*))')
                     .eq('user_id', this.state.user.id);
 
                     if (!error && data) {
@@ -462,29 +462,54 @@ const CartManager = {
             originalTotal += price * i.quantity;
         });
 
-        // 3. Consultar promociones de estos productores (Opcional: Cachear esto)
+        // 3. Consultar promociones de estos productores
         const pIds = Object.keys(producersMap);
         if (pIds.length > 0) {
             try {
-                const { data: promos } = await supabaseClient
+                // 3.a Fetch producer-wide promos (Legacy fallback)
+                const { data: globalPromos } = await supabaseClient
                     .from('promociones_offszn_seguro')
                     .select('*')
                     .in('producer_id', pIds)
                     .eq('active', true);
 
-                if (promos) {
-                    promos.forEach(promo => {
-                        const items = producersMap[promo.producer_id];
-                        const count = items.reduce((acc, curr) => acc + curr.quantity, 0);
-                        const threshold = promo.buy_quantity + promo.get_quantity;
+                // 4. Aplicar por cada productor
+                for (const pId of pIds) {
+                    const groupItems = producersMap[pId];
+                    const globalPromo = globalPromos ? globalPromos.find(p => p.producer_id === pId) : null;
+                    
+                    // Priority: Use individual promo if ANY item in the group has it explicitly active
+                    const itemWithPromo = groupItems.find(i => i.product.promo_active === true);
+                    
+                    let buyQty = 0;
+                    let getQty = 0;
+                    let qualifyingItems = [];
 
-                        if (count >= threshold) {
-                            // Cuántas veces aplica la oferta (ej: si es 2x1 y tiene 6, aplica 2 veces)
-                            const times = Math.floor(count / threshold);
-                            const freeCount = times * promo.get_quantity;
+                    if (itemWithPromo) {
+                        // INDIVIDUAL LOGIC: Threshold based on specific product settings
+                        buyQty = itemWithPromo.product.promo_buy_qty || 1;
+                        getQty = itemWithPromo.product.promo_get_qty || 1;
+                        // For individual, maybe only items with promo_active count? 
+                        // Actually, if a producer puts "2x1" on a beat, usually they mean "Buy 1 of this, get 1 of anything (or another beat) for free".
+                        // To keep it simple and powerful: if an item has a promo, it triggers the deal for the producer's group.
+                        qualifyingItems = groupItems.filter(i => i.product.promo_active === true);
+                    } else if (globalPromo) {
+                        // LEGACY LOGIC: Threshold based on global settings
+                        buyQty = globalPromo.buy_quantity;
+                        getQty = globalPromo.get_quantity;
+                        qualifyingItems = groupItems; // All beats count for global
+                    }
 
-                            // Ordenar items de este productor por precio (Gratis los más baratos)
-                            const sortedItems = [...items].sort((a, b) => {
+                    if (qualifyingItems.length > 0) {
+                        const totalQualifyingCount = qualifyingItems.reduce((acc, curr) => acc + curr.quantity, 0);
+                        const threshold = buyQty + getQty;
+
+                        if (totalQualifyingCount >= threshold) {
+                            const times = Math.floor(totalQualifyingCount / threshold);
+                            const freeCount = times * getQty;
+
+                            // Sort by price ascending (cheapest ones are free)
+                            const sortedItems = [...groupItems].sort((a, b) => {
                                 const pA = parseFloat(a.variant_price) || parseFloat(a.product.price_basic) || 0;
                                 const pB = parseFloat(b.variant_price) || parseFloat(b.product.price_basic) || 0;
                                 return pA - pB;
@@ -494,18 +519,15 @@ const CartManager = {
                             sortedItems.forEach(item => {
                                 if (discountedRemaining <= 0) return;
                                 const price = parseFloat(item.variant_price) || parseFloat(item.product.price_basic) || 0;
-
-                                // Aplicamos descuento al item (solo a la cantidad que quepa)
                                 const taking = Math.min(item.quantity, discountedRemaining);
                                 discountTotal += price * taking;
                                 discountedRemaining -= taking;
-
-                                item.isPromotionFree = true; // Flag visual
+                                item.isPromotionFree = true;
                             });
 
-                            appliedPromos.push(`${promo.buy_quantity}x${promo.buy_quantity + promo.get_quantity} activa`);
+                            appliedPromos.push(`${buyQty}x${buyQty + getQty} activa (${itemWithPromo ? 'Individual' : 'Global'})`);
                         }
-                    });
+                    }
                 }
             } catch (e) {
                 console.error("Error aplicando promos en carrito:", e);
