@@ -3553,7 +3553,11 @@
                             style="width: 80%; height: 80%; object-fit: contain; filter: drop-shadow(0 0 20px rgba(139, 92, 246, 0.2)); margin: auto;">
                     </div>
 
-                    <button
+                    <div style="text-align: center; margin-bottom: -10px; display: flex; flex-direction: column; gap: 4px;">
+                        <span id="globalUploadCounter" style="color: #888; font-size: 13px; font-weight: 500;">0 de 30 productos subidos</span>
+                        <div id="globalLimitStatusLabel" style="display:none; color: #FFD700; font-size: 13px; font-weight: 600;">Límite de productos alcanzado</div>
+                    </div>
+                    <button id="btnGlobalUploadStrategy"
                         style="width: 100%; padding: 16px; border-radius: 50px; background: #fff; color: #000; border: none; font-size: 16px; font-weight: 700; cursor: pointer; transition: all 0.2s; margin-top: 10px;"
                         onclick="if(window.AuthGuard) window.AuthGuard.safeNavigate('/upload/beats.html'); else window.location.href='/upload/beats.html';"
                         onmouseover="this.style.transform='scale(1.02)'; this.style.boxShadow='0 0 20px rgba(255,255,255,0.2)'"
@@ -3730,8 +3734,14 @@
                 }
 
                 // 2. Global Modal Logic (Only if limited)
+                const mainBtn = document.getElementById('btnGlobalUploadStrategy');
+                const globalCounter = document.getElementById('globalUploadCounter');
+                
+                if (globalCounter) {
+                    globalCounter.innerText = `${status.count} de ${status.limit} productos subidos`;
+                }
+
                 if (status.isLimited) {
-                    const mainBtn = document.querySelector('#modalUploadStrategy div:first-child button');
                     if (mainBtn) {
                         mainBtn.innerHTML = '<i class="bi bi-star-fill" style="margin-right: 8px;"></i>Mejorar Plan';
                         mainBtn.style.background = '#FFD700';
@@ -3740,6 +3750,11 @@
                             e.stopPropagation();
                             window.location.href = '/cuenta/planes.html';
                         };
+                    }
+                    const globalLimitLabel = document.getElementById('globalLimitStatusLabel');
+                    if (globalLimitLabel) {
+                        globalLimitLabel.innerText = `Límite de ${status.limit} productos alcanzado`;
+                        globalLimitLabel.style.display = 'block';
                     }
                 }
             }
