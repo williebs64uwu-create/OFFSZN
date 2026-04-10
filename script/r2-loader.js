@@ -13,12 +13,20 @@
             const src = el.getAttribute('data-r2-src') || el.getAttribute('src');
             if (!src) return;
 
+            // 🔥 EXTERNAL FAST-PATH: If it's already an optimized external URL, show immediately
+            if (typeof src === 'string' && (src.includes('ik.imagekit.io') || src.includes('cloudinary.com'))) {
+                el.src = src;
+                el.style.opacity = '1';
+                return;
+            }
+
             const isR2 = (window.AuthUtils && window.AuthUtils.isR2Url) 
                 ? window.AuthUtils.isR2Url(src)
                 : (
                     (src.includes('r2.offszn.lat') || src.includes('pub-') || src.includes('offsznlatbucket')) && 
                     !src.includes('supabase.co') &&
-                    !src.startsWith('http') // Only treat local/relative as R2 if it's NOT Supabase
+                    !src.includes('ik.imagekit.io') &&
+                    !src.startsWith('http') 
                 );
 
             if (isR2 && !src.includes('X-Amz-Signature')) {

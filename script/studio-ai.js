@@ -179,7 +179,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             const icon = document.createElement('i');
             icon.className = 'fas fa-times';
             icon.style.cursor = 'pointer';
-            icon.addEventListener('click', () => window.removeGenre(g));
+            icon.addEventListener('click', (e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                window.removeGenre(g);
+            });
             tag.appendChild(icon);
             genresContainer.appendChild(tag);
         });
@@ -422,7 +426,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         });
 
-        bubble.innerHTML = `<div class="bubble-content">${text}</div>`;
+        const contentDiv = document.createElement('div');
+        contentDiv.className = 'bubble-content';
+        contentDiv.textContent = text;
+        
+        bubble.appendChild(contentDiv);
         bubble.appendChild(editBtn);
 
         chatMessages?.appendChild(bubble);
@@ -786,9 +794,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (pillWavesurfer) return;
         pillWavesurfer = WaveSurfer.create({
             container: '#mini-waveform',
-            waveColor: 'rgba(255, 255, 255, 0.4)',
+            waveColor: 'rgba(255, 255, 255, 0.15)',
             progressColor: '#ffffff',
-            cursorColor: 'transparent',
+            cursorColor: '#ffffff',
             barWidth: 2, 
             height: 28, 
             barGap: 3,
@@ -1148,8 +1156,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                     
                     <div style="padding: 24px; text-align: center;">
                         <h3 style="font-size: 1.4rem; margin-bottom: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 900; color: #fff; letter-spacing: -0.5px;">${title}</h3>
-                        <div style="color: #ff4757; font-size: 0.85rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 15px;">
-                            ${producer}
+                        <div style="margin-bottom: 15px;">
+                            <a href="/producto/${beat.id}" target="_blank" style="color: #fff; font-size: 0.85rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1.2px; text-decoration: none;">
+                                ${producer}
+                            </a>
                         </div>
                         <div style="display: flex; gap: 8px; justify-content: center; opacity: 0.6;">
                             <span style="border: 1px solid rgba(255,255,255,0.15); padding: 4px 12px; border-radius: 20px; font-size: 0.6rem; font-weight: 700; text-transform: uppercase;">BEAT</span>
@@ -1165,7 +1175,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         <i class="fas fa-times" style="font-size:1.8rem;"></i>
                     </button>
                     
-                    <button tabindex="-1" style="width: 65px; height: 65px; background: #ffffff; color: #ff4757; border-radius: 50%; border: none; display: flex; align-items:center; justify-content:center; cursor: pointer; box-shadow: 0 10px 25px rgba(0,0,0,0.3); transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);" 
+                    <button tabindex="-1" style="width: 65px; height: 65px; background: #ffffff; color: #000; border-radius: 50%; border: none; display: flex; align-items:center; justify-content:center; cursor: pointer; box-shadow: 0 10px 25px rgba(0,0,0,0.3); transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);" 
                             onmouseenter="this.style.transform='scale(1.15)';" onmouseleave="this.style.transform='scale(1)';"
                             onclick="window.matchSound('${beat.id}')">
                         <i class="fas fa-heart" style="font-size:1.8rem;"></i>
@@ -1303,7 +1313,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             matchOverlay.style.cssText = `
                 position: absolute; top:0; left:0; width:100%; height:100%;
                 display: flex; align-items: center; justify-content: center;
-                background: rgba(255, 71, 87, 0.4); color: #fff;
+                background: rgba(255, 255, 255, 0.2); color: #fff;
                 font-size: 4rem; font-weight: 900; z-index: 1000;
                 opacity: 0; transform: scale(0.5); font-style: italic;
                 text-shadow: 0 10px 30px rgba(0,0,0,0.5); border-radius: 20px;
@@ -1332,7 +1342,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         document.getElementById('match-modal-title').innerText = beat.name || 'Beat';
         const producer = beat.producer_nickname || (beat.producer ? beat.producer.nickname : 'Artista');
-        document.getElementById('match-modal-producer').innerText = producer;
+        const producerEl = document.getElementById('match-modal-producer');
+        producerEl.innerText = producer;
+        producerEl.href = `/producto/${beat.id}`;
         
         const cover = beat.authorized_cover_url || beat.image_url || '/images/LOGO-OFFSZN.png';
         document.getElementById('match-modal-cover').src = cover;
@@ -1341,8 +1353,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!matchWavesurfer) {
             matchWavesurfer = WaveSurfer.create({
                 container: '#match-waveform',
-                waveColor: 'rgba(255, 255, 255, 0.1)',
-                progressColor: '#ff4757',
+                waveColor: 'rgba(255, 255, 255, 0.15)',
+                progressColor: '#ffffff',
                 barWidth: 3, height: 75, barGap: 3,
                 responsive: true, normalize: true,
                 crossOrigin: 'anonymous'
@@ -1405,7 +1417,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         promptInput.dispatchEvent(new Event('input'));
         
         // Efecto visual: el input brilla
-        promptInput.style.borderColor = '#ff4757';
+        promptInput.style.borderColor = '#ffffff';
         setTimeout(() => promptInput.style.borderColor = '', 2000);
     };
 

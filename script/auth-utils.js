@@ -226,6 +226,29 @@ window.AuthUtils = {
     },
 
     /**
+     * Identifies if a path or URL belongs to Cloudflare R2 storage.
+     * Supports both full URLs and relative storage paths.
+     * @param {string} pathOrUrl 
+     * @returns {boolean}
+     */
+    isR2Url: function (pathOrUrl) {
+        if (!pathOrUrl || typeof pathOrUrl !== 'string') return false;
+        
+        // 1. Full URL check
+        const r2Identifiers = ['r2.offszn.lat', 'pub-', 'offsznlatbucket', 'offszn-storage'];
+        if (r2Identifiers.some(id => pathOrUrl.includes(id))) return true;
+
+        // 2. Relative Path prefixes check
+        const r2Prefixes = ['beats/', 'drumkits/', 'avatars/', 'banners/', 'public/', 'products/', 'covers/', 'temp-previews/', 'audio/'];
+        const isRelativeR2 = r2Prefixes.some(prefix => pathOrUrl.startsWith(prefix));
+        
+        // 3. UUID-style root paths (e.g. 550e8400-e29b-41d4-a716-446655440000/audio/...)
+        const isUUIDRoot = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i.test(pathOrUrl);
+
+        return (isRelativeR2 || isUUIDRoot) && !pathOrUrl.includes('supabase.co') && !pathOrUrl.startsWith('http');
+    },
+
+    /**
      * Retrieves the current logged-in user's essential information.
      * Checks multiple sources for robustness (cached values, global variables).
      * @returns {Object|null} {id, nickname} or null if not logged in.
@@ -284,9 +307,9 @@ window.AuthUtils = {
     getAuthorizedUrl: async function (pathOrUrl, version = null, productId = null) {
         if (!pathOrUrl) return null;
 
-        // 🔥 SUPABASE FAST-PATH: If version is 'supabase' or URL is already Supabase, skip signing
-        if (version === 'supabase' || (typeof pathOrUrl === 'string' && pathOrUrl.includes('supabase.co'))) {
-            return this.getFormattedSupabaseUrl(pathOrUrl);
+        // 🔥 SUPABASE/IMAGEKIT FAST-PATH: If it's already a full external URL, skip signing
+        if (version === 'supabase' || (typeof pathOrUrl === 'string' && (pathOrUrl.includes('supabase.co') || pathOrUrl.includes('ik.imagekit.io') || pathOrUrl.includes('cloudinary.com')))) {
+            return (version === 'supabase' || pathOrUrl.includes('supabase.co')) ? this.getFormattedSupabaseUrl(pathOrUrl) : pathOrUrl;
         }
 
         // Ensure cache is loaded (once)
@@ -595,8 +618,8 @@ window.AuthUtils = {
     isR2Url: function (pathOrUrl) {
         if (!pathOrUrl || typeof pathOrUrl !== 'string') return false;
 
-        // 🔥 SUPABASE EXCLUSION: If it contains supabase.co, it's NOT an R2 URL that needs signing by our proxy
-        if (pathOrUrl.includes('supabase.co')) return false;
+        // 🔥 EXTERNAL STORAGE EXCLUSION: If it contains ik.imagekit.io or cloudinary.com, it's NOT an R2 URL that needs signing by our proxy
+        if (pathOrUrl.includes('supabase.co') || pathOrUrl.includes('ik.imagekit.io') || pathOrUrl.includes('cloudinary.com')) return false;
         if (pathOrUrl.startsWith('products/')) return true;
 
         // UUID Path detection (for migrated image_url)

@@ -25,8 +25,18 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Signals to reveal the content (Fired after preparation + timer)
     let triggerReveal;
-    window.profileRevealSignal = new Promise(res => { triggerReveal = res; });
+    window.profileRevealSignal = new Promise(res => { 
+        triggerReveal = () => {
+            // console.log("[Profile] Reveal Signal Fired!");
+            res();
+        };
+    });
     window.triggerProfileReveal = triggerReveal;
+
+    // 🔥 SAFETY: Force reveal after 5 seconds if something hangs
+    setTimeout(() => {
+        if (window.triggerProfileReveal) window.triggerProfileReveal();
+    }, 5000);
 
     // 🔥 SPA FIX: Reset loading lock in case router re-triggered DOMContentLoaded
     isLoadingProducts = false;
@@ -241,6 +251,9 @@ async function loadUserProfile(username) {
             }, 400);
         }
 
+        // 🔥 REVEAL CONTENT: Everything is ready
+        if (window.triggerProfileReveal) window.triggerProfileReveal();
+
     } catch (e) {
         console.error("Error loading profile:", e);
         if (profileRoot) profileRoot.style.opacity = '1';
@@ -267,21 +280,23 @@ async function renderHeader(user, categoryCounts = null) {
     // We render the container immediately with either the public URL (Supabase) or a transparent placeholder (R2).
     // R2 Authorization happens in the background.
 
-    const isR2 = window.AuthUtils && window.AuthUtils.isR2Url(user.avatar_url);
+    const isR2 = window.AuthUtils && window.AuthUtils.isR2Url && window.AuthUtils.isR2Url(user.avatar_url);
+    const isAvExternalOpt = user.avatar_url && (user.avatar_url.includes('ik.imagekit.io') || user.avatar_url.includes('cloudinary.com'));
+
     const avatarContainer = document.getElementById('profileAvatar');
 
     if (user.avatar_url) {
         // Default to public URL or Placeholder
         const placeholder = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=';
-        let currentSrc = isR2 ? placeholder : user.avatar_url;
-        let diffOpacity = isR2 ? 0 : 1;
+        let currentSrc = (isR2 && !isAvExternalOpt) ? placeholder : user.avatar_url;
+        let diffOpacity = (isR2 && !isAvExternalOpt) ? 0 : 1;
 
         avatarContainer.innerHTML = '';
         const avatarImg = document.createElement('img');
         // avatarImg.crossOrigin = 'anonymous';
         avatarImg.src = currentSrc;
         if (isR2) {
-            avatarImg.dataset.r2Src = user.avatar_url;
+            // dataset.r2Src removed to prevent r2-loader conflict since we fetch it below
             avatarImg.dataset.r2Version = user.r2_version || 'v2';
         }
         avatarImg.id = 'profileAvatarImg';
@@ -1981,12 +1996,13 @@ async function renderTrending(items, user, collabStats = {}) {
 
         // Explicitly skip R2 signing if storage_version is 'supabase'
         const isR2Trending = (storageVerTrending !== 'supabase') && window.AuthUtils && window.AuthUtils.isR2Url(rawImgTrending);
+        const isExternalOpt = rawImgTrending.includes('ik.imagekit.io') || rawImgTrending.includes('cloudinary.com');
         const imgPlaceholder = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=';
 
         let finalSrcTrending = rawImgTrending;
         finalSrcTrending = window.AuthUtils?.getFormattedSupabaseUrl ? window.AuthUtils.getFormattedSupabaseUrl(rawImgTrending) : rawImgTrending;
 
-        const initialImgTrending = isR2Trending ? imgPlaceholder : finalSrcTrending;
+        const initialImgTrending = (isR2Trending && !isExternalOpt) ? imgPlaceholder : finalSrcTrending;
 
         div.innerHTML = ''; // Ensure clear
 
@@ -1995,7 +2011,6 @@ async function renderTrending(items, user, collabStats = {}) {
 
         const img = document.createElement('img');
         img.src = initialImgTrending;
-        img.dataset.r2Src = rawImgTrending;
         img.dataset.r2Version = storageVerTrending;
         img.id = `trending-img-${prod.id}`;
         img.alt = prod.name || 'Product';
@@ -2299,14 +2314,15 @@ async function renderProductList(items, user, collabStats = {}) {
         const rawImgList = prod.image_url || '/images/portada-default.png';
         const storageVerList = prod.storage_version || prod.r2_version || 'v2';
 
-        // Explicitly skip R2 signing if storage_version is 'supabase'
-        const isR2List = (storageVerList !== 'supabase') && window.AuthUtils && window.AuthUtils.isR2Url(rawImgList);
+        // Explicitly check if it's R2 using AuthUtils standardized helper
+        const isR2List = (storageVerList !== 'supabase') && window.AuthUtils && window.AuthUtils.isR2Url && window.AuthUtils.isR2Url(rawImgList);
+        const isExternalListOpt = rawImgList.includes('ik.imagekit.io') || rawImgList.includes('cloudinary.com');
         const imgPlaceholder = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=';
 
         let finalSrcList = rawImgList;
         finalSrcList = window.AuthUtils?.getFormattedSupabaseUrl ? window.AuthUtils.getFormattedSupabaseUrl(rawImgList) : rawImgList;
 
-        const initialImgList = isR2List ? imgPlaceholder : finalSrcList;
+        const initialImgList = (isR2List && !isExternalListOpt) ? imgPlaceholder : finalSrcList;
 
         row.innerHTML = ''; // Start clean
 
@@ -2317,7 +2333,6 @@ async function renderProductList(items, user, collabStats = {}) {
         coverDiv.onclick = () => window.location.href = seoLink;
         const img = document.createElement('img');
         img.src = initialImgList;
-        img.dataset.r2Src = rawImgList;
         img.dataset.r2Version = storageVerList;
         img.id = `list-img-${prod.id}`;
         img.alt = 'cover';

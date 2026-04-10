@@ -56,14 +56,58 @@ Los siguientes archivos no fueron encontrados en ninguno de los dos buckets de R
 
 ---
 
-## 5. Recomendaciones para el Futuro (R2 Versión 3)
+## 6. Optimización de Carga Masiva y Proxy Inteligente (Abril 2026)
 
-Si decides implementar una **R2 V3**, sigue estas reglas de oro para evitar que esto vuelva a pasar:
+Este apartado documenta la resolución de cuellos de botella críticos detectados al cargar perfiles de productores con alta densidad de productos (+50 filas).
 
-1.  **Migración Única:** No mantengas 3 buckets activos. Lo ideal es mover todo lo de V1 y V2 al bucket de V3 y actualizar TODA la base de datos a `v3`.
-2.  **Rutas Normalizadas:** Nunca guardes `http://...` en la base de datos. Guarda siempre la ruta relativa (ej: `products/covers/imagen.jpg`).
-3.  **Script de Verificación:** Antes de lanzar, corre un script de "Integridad de Portadas" que avise si existe alguna fila en la DB cuyo archivo no esté en R2.
-4.  **Configuración Centralizada:** Mantén las versiones en una sola tabla de configuración o variable de entorno, evitando que cada producto tenga que "adivinar" su versión si es posible.
+### Problemas Detectados
+1.  **Cuello de botella en Discovery Loop**: El proxy `/api/r2-public/` intentaba descubrir la versión (v1, v2, supabase) mediante `fetch` internos. Con 50 activos simultáneos, esto generaba cientos de peticiones internas, causando timeouts y errores 404/CORS falsos.
+2.  **Conflicto de Observadores (Race Condition)**: `profile-public.js` y `r2-loader.js` (el observador global) intentaban autorizar la misma imagen. El observador reemplazaba la imagen cargada por un GIF transparente, sobrescribiendo el evento `onload` y dejando el "skeleton" gris pegado permanentemente.
+
+### Soluciones Implementadas
+*   **Version Hinting (`?v=`)**: Agregado parámetro de versión en la URL del proxy. Si se provee `?v=v1` o `?v=v2`, el servidor ignora la lógica de descubrimiento y redirige inmediatamente, reduciendo la latencia de 3.5s a milisegundos.
+*   **Fast-Path Público**: El frontend ahora identifica activos públicos (covers, avatars, previews) y usa el proxy directamente sin encolar firmas innecesarias a Supabase.
+*   **Desactivación de Gatillos Manuales**: Se eliminó `dataset.r2Src` en elementos cargados manualmente por scripts premium. Esto evita que `r2-loader.js` interfiera con cargas ya optimizadas.
 
 ---
-*Reporte generado por Antigravity (IA).*
+
+## 7. Guía Técnica: Implementación de R2 Versión 3
+
+Si decides añadir una **tercera cuenta de R2 (v3)**, el sistema ya está preparado para ser "consciente de versiones". Los pasos técnicos son:
+
+### 1. Variables de Entorno (.env)
+Añade las nuevas credenciales al servidor:
+```env
+R2_V3_ACCESS_KEY=tu_llave
+R2_V3_SECRET_KEY=tu_secreto
+R2_V3_BUCKET=nombre_bucket_v3
+R2_V3_ENDPOINT=https://<id>.r2.cloudflarestorage.com
+```
+
+### 2. Configuración S3 (s3.config.js)
+Inicializa el nuevo cliente en el backend:
+```javascript
+const s3v3 = new S3Client({
+    region: "auto",
+    endpoint: process.env.R2_V3_ENDPOINT,
+    credentials: {
+        accessKeyId: process.env.R2_V3_ACCESS_KEY,
+        secretAccessKey: process.env.R2_V3_SECRET_KEY,
+    },
+});
+// Exportar como s3Clients.v3
+```
+
+### 3. Proxy de Redirección (r2.routes.js)
+Actualiza el "Short-Circuit" para soportar el hint de v3:
+```javascript
+if (v === 'v3') {
+    return res.redirect(`${process.env.R2_V3_PUBLIC_URL}/${path}`);
+}
+```
+
+### 4. Frontend (auth-utils.js)
+El frontend ya es dinámico. Al llamar a `window.getAuthorizedUrl(path, 'v3')`, el sistema generará automáticamente la URL apuntando a la nueva cuenta sin cambios adicionales en la lógica de colas.
+
+---
+*Reporte actualizado por Antigravity (IA) - Abril 2026*
