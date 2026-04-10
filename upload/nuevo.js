@@ -1218,10 +1218,10 @@ async function checkForEditMode() {
         }, 500);
 
         // Files: Pre-fill and Authorize URLs for display
-        let rawCover = product.cover_url || product.image_url || product.image_uri || product.cover_uri;
-        let rawMp3 = product.file_url || product.download_uri_mp3 || product.mp3_url || product.mp3_uri || product.audio_url;
-        let rawWav = product.wav_url || product.download_uri_wav || product.wav_uri;
-        let rawStems = product.stems_url || product.download_uri_stems || product.stems_uri;
+        let rawCover = product.cover_url || product.image_url || product.image_uri || product.cover_uri || product.download_url_cover;
+        let rawMp3 = product.file_url || product.download_url_mp3 || product.download_uri_mp3 || product.mp3_url || product.mp3_uri || product.audio_url;
+        let rawWav = product.wav_url || product.download_url_wav || product.download_uri_wav || product.wav_uri;
+        let rawStems = product.stems_url || product.download_url_stems || product.download_uri_stems || product.stems_uri;
 
         // Sign R2 URLs so they render in the browser (private buckets)
         if (typeof window.getAuthorizedUrl === 'function') {
@@ -1340,9 +1340,12 @@ function updateZoneUI(zoneId, titleText, subtitleText, iconClass, color, fileTyp
     let title = zone.querySelector('.fw-bold') || (textContainer ? textContainer.querySelector('div:first-child') : null);
     let subtitle = zone.querySelector('p') || (textContainer ? textContainer.querySelectorAll('div')[1] : null);
 
-    zone.classList.add('has-file');
+    zone.classList.add('success', 'has-file');
     zone.style.borderColor = color;
     zone.style.background = `rgba(16, 185, 129, 0.05)`;
+
+    const successIcon = zone.querySelector('.success-state');
+    if (successIcon) successIcon.style.display = 'flex';
 
     if (icon) {
         // User wants icon "normal" (not green) even if uploaded

@@ -574,7 +574,7 @@ function renderProductPage(product) {
             </div>
             <div class="info-row desktop-only-flex">
                 <span class="info-label">Key</span>
-                <span class="info-val" style="text-transform: capitalize;">${product.key ? (product.key + (product.key_scale ? ' ' + product.key_scale : '')) : '--'}</span>
+                <span class="info-val" style="text-transform: capitalize;">${product.key ? product.key.trim() : '--'}</span>
             </div>
         `;
     }
@@ -596,7 +596,7 @@ function renderProductPage(product) {
             </div>
             <div class="tech-spec-row" style="display: flex; justify-content: space-between; padding: 8px 0;">
                 <span style="color: #888; font-size: 0.85rem;"><i class="bi bi-music-note"></i> KEY</span>
-                <b style="font-size: 0.95rem; text-transform: uppercase;">${product.key ? (product.key + (product.key_scale ? ' ' + product.key_scale : '')) : '--'}</b>
+                <b style="font-size: 0.95rem; text-transform: capitalize;">${product.key ? product.key.trim() : '--'}</b>
             </div>
         </div>
     `;
@@ -620,8 +620,8 @@ function renderProductPage(product) {
                 <span class="info-val" style="font-weight: 800;">${product.bpm || '--'}</span>
             </div>
             <div class="info-row" style="display: flex; justify-content: space-between; align-items: center; border:none; padding: 5px 0; width: 100%;">
-                <span class="info-label"><i class="bi bi-music-note"></i> KEY</span>
-                <span class="info-val" style="font-weight: 800;">${product.key ? (product.key + (product.key_scale ? ' ' + product.key_scale : '')) : '--'}</span>
+                <span class="info-label"><i class="bi bi-music-note"></i> Key</span>
+                <span class="info-val" style="font-weight: 800; text-transform: capitalize;">${product.key ? product.key.trim() : '--'}</span>
             </div>
         </div>
     `;

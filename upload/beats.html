@@ -39,8 +39,13 @@
         }
 
         @keyframes fadeInOverlay {
-            from { opacity: 0; }
-            to { opacity: 1; }
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
         }
 
         .premium-upgrade-card {
@@ -57,7 +62,9 @@
         }
 
         @keyframes slideUpCard {
-            to { transform: translateY(0); }
+            to {
+                transform: translateY(0);
+            }
         }
 
         .premium-icon-box {
@@ -116,23 +123,24 @@
             justify-content: center;
             gap: 10px;
             width: 100%;
-            background: #ffffff;
+            background: #FFD700;
             color: #000;
             padding: 18px;
             border-radius: 50px;
             font-size: 16px;
-            font-weight: 700;
+            font-weight: 800;
             text-decoration: none;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             border: none;
             cursor: pointer;
             margin-bottom: 16px;
+            text-transform: uppercase;
         }
 
         .premium-btn-primary:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(255, 255, 255, 0.2);
-            background: #f0f0f0;
+            box-shadow: 0 10px 25px rgba(255, 215, 0, 0.3);
+            background: #ffe033;
         }
 
         .premium-btn-secondary {
@@ -156,7 +164,7 @@
         async function runGuard() {
             if (window.AuthGuard && window.AuthGuard.protectUploadEntry) {
                 const result = await window.AuthGuard.protectUploadEntry();
-                
+
                 if (result.isLimited) {
                     console.warn("⛔ Entry Denied: Showing Premium Modal");
                     const modal = document.getElementById('premiumUpgradeModal');
@@ -178,36 +186,35 @@
     <div id="premiumUpgradeModal" class="premium-upgrade-overlay">
         <div class="premium-upgrade-card">
             <div class="premium-icon-box">
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path>
-                </svg>
+                <i class="bi bi-star-fill" style="font-size: 32px; color: #FFD700;"></i>
             </div>
-            <h2 class="premium-title">Mejora tu plan para subir ilimitado</h2>
-            <p class="premium-desc">Has alcanzado el límite de subidas en tu plan actual. Mejora tu experiencia para seguir creciendo sin límites.</p>
-            
+            <h2 class="premium-title" id="premiumTitle">LÍMITE ALCANZADO</h2>
+            <p class="premium-desc" id="premiumDesc">Has alcanzado el límite de tu plan. Mejora tu experiencia para
+                subir sin límites.</p>
+
             <div class="premium-features">
                 <div class="premium-feature-item">
-                    <i class="bi bi-check2-circle"></i>
-                    <span>Subidas ilimitadas de Beats y Kits</span>
+                    <i class="bi bi-check-lg"></i>
+                    <span>Subidas ilimitadas (Beats y Kits)</span>
                 </div>
                 <div class="premium-feature-item">
-                    <i class="bi bi-check2-circle"></i>
-                    <span>Acceso Total para generar videos y subir a YOUTUBE</span>
+                    <i class="bi bi-check-lg"></i>
+                    <span>Generador de videos para YOUTUBE</span>
                 </div>
                 <div class="premium-feature-item">
-                    <i class="bi bi-check2-circle"></i>
-                    <span>100 créditos para generar sonidos con IA</span>
+                    <i class="bi bi-check-lg"></i>
+                    <span>100 créditos IA mensuales</span>
                 </div>
                 <div class="premium-feature-item">
-                    <i class="bi bi-check2-circle"></i>
-                    <span>Conserva el 100% de tus ganancias</span>
+                    <i class="bi bi-check-lg"></i>
+                    <span>Quédate con el 100% de tus ventas</span>
                 </div>
             </div>
 
             <a href="/cuenta/planes.html" class="premium-btn-primary">
-                REGISTRARSE Y MEJORAR
+                <i class="bi bi-star-fill"></i> MEJORAR PLAN
             </a>
-            
+
             <button onclick="window.location.href='/cuenta/subir-kit.html'" class="premium-btn-secondary">
                 Quizás más tarde
             </button>
@@ -658,11 +665,14 @@
 
                             <!-- Ofertas y Promociones (Individuales) -->
                             <div class="form-group" style="margin-top: 30px;">
-                                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                                <div
+                                    style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
                                     <div class="label" style="margin-bottom: 0;">Ofertas y Promociones</div>
-                                    <div style="background: rgba(139, 92, 246, 0.1); color: var(--accent-purple); font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.5px;">Individual</div>
+                                    <div
+                                        style="background: rgba(139, 92, 246, 0.1); color: var(--accent-purple); font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.5px;">
+                                        Individual</div>
                                 </div>
-                                
+
                                 <!-- DESKTOP TABS -->
                                 <div class="promo-switcher-desktop">
                                     <button type="button" class="promo-tab active" data-value="none">Ninguna</button>
@@ -673,7 +683,8 @@
 
                                 <!-- MOBILE DROPDOWN -->
                                 <div class="promo-switcher-mobile">
-                                    <div class="input-field" id="promoCustomTrigger" onclick="togglePromoDropdown(event)"
+                                    <div class="input-field" id="promoCustomTrigger"
+                                        onclick="togglePromoDropdown(event)"
                                         style="cursor: pointer; display: flex; align-items: center; justify-content: space-between; height: 45px; user-select: none;">
                                         <span id="promoSelectedDisplay">Ninguna</span>
                                         <i class="bi bi-chevron-down promo-trigger-arrow" id="promoChevron"></i>
@@ -688,26 +699,34 @@
                                 </div>
 
                                 <!-- CUSTOM PROMO ROW -->
-                                <div id="customPromoRow" style="display: none; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; padding: 20px; margin-top: 15px;">
+                                <div id="customPromoRow"
+                                    style="display: none; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; padding: 20px; margin-top: 15px;">
                                     <div class="custom-promo-grid">
                                         <div class="promo-field-group">
                                             <div class="label" style="font-size: 11px; color: #666;">COMPRAS</div>
                                             <div class="qty-control">
-                                                <button type="button" class="qty-btn" onclick="adjustPromoQty('buy', -1)">-</button>
-                                                <input type="number" id="promoBuyQty" value="1" min="1" max="10" readonly>
-                                                <button type="button" class="qty-btn" onclick="adjustPromoQty('buy', 1)">+</button>
+                                                <button type="button" class="qty-btn"
+                                                    onclick="adjustPromoQty('buy', -1)">-</button>
+                                                <input type="number" id="promoBuyQty" value="1" min="1" max="10"
+                                                    readonly>
+                                                <button type="button" class="qty-btn"
+                                                    onclick="adjustPromoQty('buy', 1)">+</button>
                                             </div>
                                         </div>
                                         <div class="promo-field-group">
                                             <div class="label" style="font-size: 11px; color: #666;">LLEVAS GRATIS</div>
                                             <div class="qty-control">
-                                                <button type="button" class="qty-btn" onclick="adjustPromoQty('get', -1)">-</button>
-                                                <input type="number" id="promoGetQty" value="1" min="1" max="10" readonly>
-                                                <button type="button" class="qty-btn" onclick="adjustPromoQty('get', 1)">+</button>
+                                                <button type="button" class="qty-btn"
+                                                    onclick="adjustPromoQty('get', -1)">-</button>
+                                                <input type="number" id="promoGetQty" value="1" min="1" max="10"
+                                                    readonly>
+                                                <button type="button" class="qty-btn"
+                                                    onclick="adjustPromoQty('get', 1)">+</button>
                                             </div>
                                         </div>
                                     </div>
-                                    <div id="promoResultText" style="margin-top: 15px; text-align: center; font-size: 13px; font-weight: 700; color: var(--accent-purple);">
+                                    <div id="promoResultText"
+                                        style="margin-top: 15px; text-align: center; font-size: 13px; font-weight: 700; color: var(--accent-purple);">
                                         OFERTA: COMPRA 1 LLEVA 2
                                     </div>
                                 </div>

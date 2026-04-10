@@ -194,7 +194,7 @@
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 24px;
-            max-width: 1100px;
+            max-width: 1200px;
             width: 100%;
             padding: 0 20px 80px 20px;
             margin-top: 10px;
@@ -263,7 +263,7 @@
         .billed-note {
             font-size: 11px;
             color: #444;
-            margin-bottom: 25px;
+            margin-bottom: 8px; /* Compacted layout */
             min-height: 16px;
             font-weight: 600;
         }
@@ -297,8 +297,9 @@
         .feature-item {
             display: flex;
             align-items: center;
+            justify-content: flex-start;
             gap: 12px;
-            margin-bottom: 18px;
+            margin-bottom: 20px;
             font-size: 14px;
             color: #888;
             transition: color 0.2s;
@@ -335,7 +336,7 @@
             font-family: 'Plus Jakarta Sans', sans-serif;
             text-align: center;
             text-decoration: none;
-            margin-top: 10px;
+            margin-top: 4px;
         }
 
         .btn-basic {
@@ -706,10 +707,38 @@
             font-size: 12px;
             color: #333;
         }
+
+        /* === PARTICLES BACKGROUND === */
+        #bg-particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        .particle {
+            position: absolute;
+            background: #fff;
+            border-radius: 50%;
+            opacity: 0.15;
+            filter: blur(1px);
+            animation: floatParticle linear infinite;
+        }
+
+        @keyframes floatParticle {
+            0% { transform: translateY(0) translateX(0); }
+            100% { transform: translateY(-120vh) translateX(30px); }
+        }
     </style>
 </head>
 
 <body>
+
+    <div id="bg-particles"></div>
 
     <div class="nav-stub">
         <a href="/explorar.html" class="logo">
@@ -749,18 +778,17 @@
                 <div class="plan-name">Básico</div>
                 <div class="plan-price" id="price-basic">$0<span>/mes</span></div>
                 <div class="billed-note" id="note-basic"></div>
-                <p class="plan-desc">Todo lo necesario para empezar a vender tus beats y kits.</p>
                 <button id="btn-plan-free" class="btn-plan btn-basic">Plan Actual</button>
             </div>
 
             <div class="features-container">
                 <span class="feature-subhead">Características:</span>
                 <ul class="feature-list">
-                    <li class="feature-item check"><span class="icon-circle"><i class="bi bi-check-lg"></i></span> <b>30 subidas</b> de productos</li>
-                    <li class="feature-item check"><span class="icon-circle"><i class="bi bi-check-lg"></i></span> <b>5% Comisión</b> por venta</li>
-                    <li class="feature-item check"><span class="icon-circle"><i class="bi bi-check-lg"></i></span> <b>3</b> automatizaciones de Youtube</li>
-                    <li class="feature-item check"><span class="icon-circle"><i class="bi bi-check-lg"></i></span> <b>20 créditos</b> para generar sonidos con IA</li>
-                    <li class="feature-item check"><span class="icon-circle"><i class="bi bi-check-lg"></i></span> Soporte Estándar</li>
+                    <li class="feature-item check"><span class="icon-circle"><i class="bi bi-check-lg"></i></span> <span><b>30 subidas</b> de productos</span></li>
+                    <li class="feature-item check"><span class="icon-circle"><i class="bi bi-check-lg"></i></span> <span><b>5% Comisión</b> por venta</span></li>
+                    <li class="feature-item check"><span class="icon-circle"><i class="bi bi-check-lg"></i></span> <span><b>3</b> automatizaciones de Youtube</span></li>
+                    <li class="feature-item check"><span class="icon-circle"><i class="bi bi-check-lg"></i></span> <span><b>20 créditos</b> para sonidos con IA</span></li>
+                    <li class="feature-item check"><span class="icon-circle"><i class="bi bi-check-lg"></i></span> <span>Soporte Estándar</span></li>
                 </ul>
             </div>
         </div>
@@ -771,18 +799,17 @@
                 <div class="plan-name">Starter</div>
                 <div class="plan-price" id="price-starter">$5<span>/mes</span></div>
                 <div class="billed-note" id="note-starter"></div>
-                <p class="plan-desc">Escala tu marca con más subidas y menos comisiones.</p>
                 <button id="btn-plan-starter" onclick="goToCheckout('starter')" class="btn-plan btn-upgrade">Mejorar Plan</button>
             </div>
 
             <div class="features-container">
                 <span class="feature-subhead">Todo en Básico más:</span>
                 <ul class="feature-list">
-                    <li class="feature-item check"><span class="icon-circle"><i class="bi bi-check-lg"></i></span> <b>60 subidas</b> de productos</li>
-                    <li class="feature-item check"><span class="icon-circle"><i class="bi bi-check-lg"></i></span> <b>3% Comisión</b> por venta</li>
-                    <li class="feature-item check"><span class="icon-circle"><i class="bi bi-check-lg"></i></span> <b>10</b> automatizaciones de Youtube</li>
-                    <li class="feature-item check"><span class="icon-circle"><i class="bi bi-check-lg"></i></span> <b>60 créditos</b> para generar sonidos con IA</li>
-                    <li class="feature-item check"><span class="icon-circle"><i class="bi bi-check-lg"></i></span> Insignia de Verificación</li>
+                    <li class="feature-item check"><span class="icon-circle"><i class="bi bi-check-lg"></i></span> <span><b>60 subidas</b> de productos</span></li>
+                    <li class="feature-item check"><span class="icon-circle"><i class="bi bi-check-lg"></i></span> <span><b>3% Comisión</b> por venta</span></li>
+                    <li class="feature-item check"><span class="icon-circle"><i class="bi bi-check-lg"></i></span> <span><b>10</b> automatizaciones de Youtube</span></li>
+                    <li class="feature-item check"><span class="icon-circle"><i class="bi bi-check-lg"></i></span> <span><b>60 créditos</b> para sonidos con IA</span></li>
+                    <li class="feature-item check"><span class="icon-circle"><i class="bi bi-check-lg"></i></span> <span>Insignia de Verificación</span></li>
                 </ul>
                 <a href="https://wa.link/66n1ux" target="_blank" class="whatsapp-chat">Preguntas? Escríbenos por whatsapp</a>
             </div>
@@ -794,19 +821,18 @@
                 <div class="plan-name">PRO <span class="tag-badge">RECOMENDADO</span></div>
                 <div class="plan-price" id="price-pro">$7<span>/mes</span></div>
                 <div class="billed-note" id="note-pro"></div>
-                <p class="plan-desc">La herramienta definitiva para productores profesionales.</p>
                 <button id="btn-plan-pro" onclick="goToCheckout('pro')" class="btn-plan btn-upgrade">Mejorar Plan</button>
             </div>
 
             <div class="features-container">
                 <span class="feature-subhead">Todo en Starter más:</span>
                 <ul class="feature-list">
-                    <li class="feature-item check"><span class="icon-circle"><i class="bi bi-star-fill"></i></span> <b>Subidas Ilimitadas</b></li>
-                    <li class="feature-item check"><span class="icon-circle"><i class="bi bi-star-fill"></i></span> <b>0% Comisión</b> por venta</li>
-                    <li class="feature-item check"><span class="icon-circle"><i class="bi bi-star-fill"></i></span> 30 automatizaciones de Youtube</li>
-                    <li class="feature-item check"><span class="icon-circle"><i class="bi bi-star-fill"></i></span> <b>100 créditos</b> para generar sonidos con IA</li>
-                    <li class="feature-item check"><span class="icon-circle"><i class="bi bi-star-fill"></i></span> Soporte VIP 24/7</li>
-                    <li class="feature-item check"><span class="icon-circle"><i class="bi bi-star-fill"></i></span> Promoción en Feed</li>
+                    <li class="feature-item check"><span class="icon-circle"><i class="bi bi-star-fill"></i></span> <span><b>Subidas Ilimitadas</b></span></li>
+                    <li class="feature-item check"><span class="icon-circle"><i class="bi bi-star-fill"></i></span> <span><b>0% Comisión</b> por venta</span></li>
+                    <li class="feature-item check"><span class="icon-circle"><i class="bi bi-star-fill"></i></span> <span><b>30</b> automatizaciones de Youtube</span></li>
+                    <li class="feature-item check"><span class="icon-circle"><i class="bi bi-star-fill"></i></span> <span><b>100 créditos</b> para sonidos con IA</span></li>
+                    <li class="feature-item check"><span class="icon-circle"><i class="bi bi-star-fill"></i></span> <span>Soporte VIP 24/7</span></li>
+                    <li class="feature-item check"><span class="icon-circle"><i class="bi bi-star-fill"></i></span> <span>Promoción en Feed</span></li>
                 </ul>
                 <a href="https://wa.link/jgult2" target="_blank" class="whatsapp-chat">Preguntas? Escríbenos por whatsapp</a>
             </div>
@@ -1178,5 +1204,32 @@
         });
     </script>
 
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const container = document.getElementById('bg-particles');
+            if (container) {
+                // Generate 25 subtle particles for background effect
+                for (let i = 0; i < 25; i++) {
+                    const el = document.createElement('div');
+                    el.classList.add('particle');
+                    
+                    // Random sizes 1.5px to 4px
+                    const size = Math.random() * 2.5 + 1.5;
+                    el.style.width = `${size}px`;
+                    el.style.height = `${size}px`;
+                    
+                    // Random positions
+                    el.style.left = `${Math.random() * 100}%`;
+                    el.style.top = `${Math.random() * 100 + 100}%`; // Start below screen or near bottom
+                    
+                    // Random animations
+                    el.style.animationDuration = `${Math.random() * 15 + 20}s`; // 20-35s floating
+                    el.style.animationDelay = `${Math.random() * 10}s`;
+                    
+                    container.appendChild(el);
+                }
+            }
+        });
+    </script>
 </body>
 </html>
