@@ -1,8 +1,14 @@
 import express from 'express';
-import { generateSample, chatWithIA, getChatHistory, getStudioHistory } from '../controllers/AiStudioController.js';
+import { generateSample, chatWithIA, getChatHistory, getStudioHistory, downloadWithMetadata } from '../controllers/AiStudioController.js';
 import { authenticateTokenMiddleware } from '../../middlewares/authenticateTokenMiddleware.js';
 
 const router = express.Router();
+
+/**
+ * @route   GET /api/studio/download
+ * @desc    Download audio with injected metadata (Title/Artist)
+ */
+router.get('/download', downloadWithMetadata);
 
 /**
  * @route   POST /api/studio/generate

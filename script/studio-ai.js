@@ -61,7 +61,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }, 5000);
  
-    let selectedGenres = []; // 🔥 Nueva lista de géneros seleccionados
+    let selectedGenres = []; 
+    let generationAbortController = null; // 🔥 Para poder cancelar
 
 
     // Modal Elements
@@ -137,6 +138,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             promptInput.style.height = newH + 'px';
         };
         promptInput.addEventListener('input', setInputHeight);
+        window.setInputHeight = setInputHeight; // Expose to handle programmatic updates
         
         // También actualizar al enfocar por si hubo cambios programáticos
         promptInput.addEventListener('focus', setInputHeight);
@@ -144,6 +146,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Inicializar si ya tiene texto (por el bridge de match)
         setTimeout(setInputHeight, 200);
     }
+
 
     // ===== GENRE CHIPS LOGIC (Categories) =====
     genreChips.forEach(chip => {
@@ -168,11 +171,18 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     function renderGenreTags() {
         if (!genresContainer) return;
-        genresContainer.innerHTML = selectedGenres.map(g => `
-            <div class="genre-tag">
-                ${g} <i class="fas fa-times" onclick="window.removeGenre('${g}')"></i>
-            </div>
-        `).join('');
+        genresContainer.innerHTML = '';
+        selectedGenres.forEach(g => {
+            const tag = document.createElement('div');
+            tag.className = 'genre-tag';
+            tag.textContent = g + ' ';
+            const icon = document.createElement('i');
+            icon.className = 'fas fa-times';
+            icon.style.cursor = 'pointer';
+            icon.addEventListener('click', () => window.removeGenre(g));
+            tag.appendChild(icon);
+            genresContainer.appendChild(tag);
+        });
     }
 
     window.removeGenre = (g) => {
@@ -332,10 +342,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!promptInput || !charCounter) return;
         const len = promptInput.value.length;
         charCounter.innerText = `${len} / 150`;
-        charCounter.classList.toggle('limit', len >= 150);
+        charCounter.classList.toggle('limit', len >= 140);
         
-        promptInput.style.height = 'auto';
-        promptInput.style.height = promptInput.scrollHeight + 'px';
+        if (window.setInputHeight) window.setInputHeight();
     }
     window.updateCharCounter = updateCharCounter;
     promptInput?.addEventListener('input', updateCharCounter);
@@ -389,7 +398,33 @@ document.addEventListener('DOMContentLoaded', async () => {
     function addUserMessage(text) {
         const bubble = document.createElement('div');
         bubble.className = 'chat-bubble user';
+        bubble.style.position = 'relative';
+
+        // Pencil edit icon (top-right corner)
+        const editBtn = document.createElement('button');
+        editBtn.className = 'bubble-edit-btn';
+        editBtn.title = 'Editar este mensaje';
+        editBtn.innerHTML = '<i class="fas fa-pen"></i>';
+        editBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (promptInput) {
+                const cleanText = text.replace(/^\[.*?\]\s*/, '');
+                promptInput.value = cleanText;
+                promptInput.focus();
+                if (window.updateCharCounter) window.updateCharCounter();
+                if (window.setInputHeight) window.setInputHeight();
+
+                // Flash feedback on the bubble
+                bubble.style.opacity = '0.5';
+                setTimeout(() => bubble.style.opacity = '1', 250);
+
+                if (window.showToast) window.showToast('Prompt copiado al input', 'info');
+            }
+        });
+
         bubble.innerHTML = `<div class="bubble-content">${text}</div>`;
+        bubble.appendChild(editBtn);
+
         chatMessages?.appendChild(bubble);
         if (chatMessages) chatMessages.scrollTop = chatMessages.scrollHeight;
     }
@@ -425,6 +460,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                             promptInput.value = s;
                             updateCharCounter();
                             promptInput.focus();
+                            if (window.setInputHeight) window.setInputHeight();
                         }
                     });
                     sugCont.appendChild(b);
@@ -482,34 +518,44 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     async function handleGenerate() {
+        // 🔥 Si ya está cargando, este botón ahora es STOP
+        if (btnGenerate.classList.contains('loading')) {
+            if (generationAbortController) generationAbortController.abort();
+            return;
+        }
+
         const prompt = promptInput.value.trim();
         if (!prompt) {
             if (window.showToast) window.showToast('Describe el sonido, bro (el prompt es obligatorio)', 'warning');
             return;
         }
 
+        // Limpiar input inmediatamente para una sensación de rapidez
+        promptInput.value = '';
+        if (window.updateCharCounter) window.updateCharCounter();
+        if (window.setInputHeight) window.setInputHeight();
+
         // TEASER MODE: If guest, simulate a bit of processing then show auth modal
         if (isGuest) {
-            btnGenerate.disabled = true;
+            btnGenerate.classList.add('loading');
             if (btnArrow) btnArrow.className = 'fas fa-spinner fa-spin';
-            
             setTimeout(() => {
                 toggleAuthModal(true);
-                btnGenerate.disabled = false;
+                btnGenerate.classList.remove('loading');
                 if (btnArrow) btnArrow.className = 'fas fa-arrow-up';
             }, 600);
             return;
         }
-
 
         if (currentCredits < currentModelCost) {
             checkCreditAvailability();
             return;
         }
 
+        btnGenerate.classList.add('loading');
+        if (btnArrow) btnArrow.className = 'fas fa-stop'; // Cambiar a cuadrado de STOP
 
-        btnGenerate.disabled = true;
-        if (btnArrow) btnArrow.className = 'fas fa-spinner fa-spin';
+        generationAbortController = new AbortController();
 
         // Combinar géneros + texto
         const fullPrompt = (selectedGenres.length > 0 ? `[${selectedGenres.join(', ')}] ` : '') + prompt;
@@ -537,6 +583,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
                 },
+                signal: generationAbortController.signal,
                 body: JSON.stringify({ 
                     message: fullPrompt, 
                     model: currentModelId,
@@ -578,8 +625,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (currentSampleUrl) {
                 // TRUE: Es una generación, queremos skeleton y pasos
                 loadIntoViewport(currentSampleUrl, prompt, true, true); 
-                promptInput.value = '';
-                updateCharCounter();
                 switchToTab('generados');
                 // Refrescar historial
                 if (user?.id) fetchHistory(user.id);
@@ -590,11 +635,17 @@ document.addEventListener('DOMContentLoaded', async () => {
             fetchCredits(); 
 
         } catch (err) {
-            console.error('[Studio AI] Failed:', err);
-            addAiMessage(`Error: ${err.message}`, { instant: true });
+            if (err.name === 'AbortError') {
+                console.log('[Studio AI] Generación cancelada por el usuario');
+                addAiMessage(`Generación detenida.`, { instant: true });
+            } else {
+                console.error('[Studio AI] Failed:', err);
+                addAiMessage(`Error: ${err.message}`, { instant: true });
+            }
         } finally {
-            btnGenerate.disabled = false;
+            btnGenerate.classList.remove('loading');
             if (btnArrow) btnArrow.className = 'fas fa-arrow-up';
+            generationAbortController = null;
         }
     }
 
@@ -606,16 +657,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         try {
-            if (window.showToast) window.showToast('Descargando sonido...', 'info');
+            if (window.showToast) window.showToast('Etiquetando y descargando...', 'info');
             
-            // Forzar descarga mediante fetch + blob (instántaneo y real)
-            const response = await fetch(currentAudioUrl);
+            const promptTitle = document.getElementById('result-prompt-title')?.textContent?.replace(/"/g, '') || 'Studio AI Sample';
+            const apiUrl = `/api/studio/download?url=${encodeURIComponent(currentAudioUrl)}&title=${encodeURIComponent(promptTitle)}`;
+            
+            const response = await fetch(apiUrl);
             const blob = await response.blob();
             const blobUrl = URL.createObjectURL(blob);
             
             const link = document.createElement('a');
             link.href = blobUrl;
-            link.download = `offszn-${Date.now()}.wav`;
+            link.download = `${promptTitle}.wav`;
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
@@ -792,11 +845,27 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Setup Download button
         const dlBtn = document.getElementById('btn-pill-download');
         if (dlBtn) {
-            dlBtn.onclick = () => {
-                const link = document.createElement('a');
-                link.href = url;
-                link.download = `${title}.wav`;
-                link.click();
+            dlBtn.onclick = async () => {
+                try {
+                    if (window.showToast) window.showToast('Etiquetando y descargando...', 'info');
+                    
+                    const apiUrl = `/api/studio/download?url=${encodeURIComponent(url)}&title=${encodeURIComponent(title)}`;
+                    const response = await fetch(apiUrl);
+                    const blob = await response.blob();
+                    const blobUrl = URL.createObjectURL(blob);
+                    
+                    const link = document.createElement('a');
+                    link.href = blobUrl;
+                    link.download = `${title}.wav`;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    
+                    setTimeout(() => URL.revokeObjectURL(blobUrl), 100);
+                } catch (err) {
+                    console.error('[Studio AI] Download failed:', err);
+                    window.open(url, '_blank');
+                }
             };
         }
     }
@@ -1181,15 +1250,20 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (recentSwiperInstance) recentSwiperInstance.slideNext();
     };
 
-    window.downloadSample = async (url) => {
+    window.downloadSample = async (url, title = 'Studio AI Sample') => {
         try {
-            const res = await fetch(url);
+            if (window.showToast) window.showToast('Etiquetando y descargando...', 'info');
+            const apiUrl = `/api/studio/download?url=${encodeURIComponent(url)}&title=${encodeURIComponent(title)}`;
+            const res = await fetch(apiUrl);
             const blob = await res.blob();
             const link = document.createElement('a');
             link.href = URL.createObjectURL(blob);
-            link.download = `offszn-studio-${Date.now()}.wav`;
+            link.download = `${title.replace(/\s+/g, '_')}.wav`;
             link.click();
-        } catch (e) { window.open(url, '_blank'); }
+        } catch (e) { 
+            console.error('[Studio AI] Utility Download failed:', e);
+            window.open(url, '_blank'); 
+        }
     };
 
     window.matchSound = async (beatId) => {

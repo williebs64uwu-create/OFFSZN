@@ -116,6 +116,14 @@ export const createRequest = async (req, res) => {
             }
         }
 
+        // 🔥 DYNAMIC STORAGE VERSION FETCH
+        // Ensure request previews match the buyer's account version.
+        const { data: userData } = await supabase
+            .from('users')
+            .select('storage_version, r2_version')
+            .eq('id', buyerId)
+            .single();
+
         // 3. Insert Request
         const { data: newRequest, error: insertErr } = await supabase
             .from('custom_requests')
@@ -129,8 +137,8 @@ export const createRequest = async (req, res) => {
                 reference_link_1: referenceLink1 || null,
                 reference_link_2: referenceLink2 || null,
                 preview_url: previewUrl || null,
-                r2_version: r2_version || 'v2',
-                storage_version: storage_version || 'v2'
+                r2_version: r2_version || userData?.r2_version || 'v2',
+                storage_version: storage_version || userData?.storage_version || 'v2'
             })
             .select()
             .single();
@@ -312,14 +320,22 @@ export const respondRequest = async (req, res) => {
         const expiresAt = new Date();
         expiresAt.setHours(expiresAt.getHours() + 24);
 
+        // 🔥 DYNAMIC STORAGE VERSION FETCH
+        // Ensure response previews match the producer's account version.
+        const { data: userDataResponse } = await supabase
+            .from('users')
+            .select('storage_version, r2_version')
+            .eq('id', producerId)
+            .single();
+
         // Update database
         const { data: updatedRequest, error: updateErr } = await supabase
             .from('custom_requests')
             .update({
                 status: 'responded',
                 preview_url: previewUrl,
-                r2_version: r2_version || 'v2',
-                storage_version: storage_version || 'v2',
+                r2_version: r2_version || userDataResponse?.r2_version || 'v2',
+                storage_version: storage_version || userDataResponse?.storage_version || 'v2',
                 expires_at: expiresAt.toISOString()
             })
             .eq('id', requestId)

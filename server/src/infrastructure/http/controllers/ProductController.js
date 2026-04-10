@@ -135,6 +135,14 @@ export const createProduct = async (req, res) => {
             }
         }
 
+        // 🔥 DYNAMIC STORAGE VERSION FETCH
+        // Ensure new products match the producer's account version, preventing 404s for V1 users.
+        const { data: userData } = await supabase
+            .from('users')
+            .select('storage_version, r2_version')
+            .eq('id', userId)
+            .single();
+
         const productData = {
             producer_id: userId,
             name: finalTitle,
@@ -151,8 +159,8 @@ export const createProduct = async (req, res) => {
             download_url_mp3: finalMp3Url,
             download_url_wav: wav_url || null,
             download_url_stems: stems_url || null,
-            r2_version: r2_version || 'v2', // 🔥 Use v2 by default since March 2026
-            storage_version: storage_version || 'v2', // 🔥 Use v2 by default since March 2026
+            r2_version: r2_version || userData?.r2_version || 'v2', 
+            storage_version: storage_version || userData?.storage_version || 'v2', 
 
             is_free: finalIsFree,
             price_basic: price_basic !== undefined ? price_basic : (licenses?.basic || null),

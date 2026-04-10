@@ -2,8 +2,12 @@ import { supabase } from '../../database/connection.js';
 import { uploadBufferToR2, getPresignedDownloadUrl } from '../../services/r2-storage.service.js';
 import dotenv from 'dotenv';
 import OpenAI from 'openai';
+import { spawn } from 'child_process';
+import ffmpegPath from '@ffmpeg-installer/ffmpeg';
 
 dotenv.config();
+
+const FFMPEG_BIN = ffmpegPath.path;
 
 // Groq AI Initialization (Open Source Models: Gemma, Llama)
 const groqAi = process.env.GROQ_API_KEY ? new OpenAI({
@@ -356,5 +360,72 @@ export const getStudioHistory = async (req, res) => {
     } catch (error) {
         console.error('[AI Studio History Tab Error]:', error);
         return res.status(500).json({ error: 'Error al recuperar historial' });
+    }
+};
+
+/**
+ * Descargar audio con metadatos personalizados inyectados al vuelo (FFMPEG)
+ */
+export const downloadWithMetadata = async (req, res) => {
+    const { url, title } = req.query;
+
+    if (!url) {
+        return res.status(400).json({ error: 'URL del audio es requerida' });
+    }
+
+    try {
+        console.log(`[Metadata Proxy] Procesando descarga: ${title || 'Sin título'} desde ${url}`);
+
+        // 1. Obtener el archivo original
+        const audioResponse = await fetch(url);
+        if (!audioResponse.ok) throw new Error(`Fallo al obtener el audio: ${audioResponse.statusText}`);
+
+        // 2. Preparar metadatos (Sanitización básica para FFmpeg)
+        const cleanTitle = (title || 'Studio AI Sample').substring(0, 100).replace(/[\\"]/g, '');
+        const artist = 'OFFSZN';
+        const album = 'OFFSZN Studio AI';
+        const year = new Date().getFullYear().toString();
+        const genre = 'Studio AI';
+
+        // Determinar formato (si es wav o mp3)
+        const isWav = url.toLowerCase().includes('.wav');
+        const format = isWav ? 'wav' : 'mp3';
+
+        // 3. Configurar Headers para la descarga
+        const filename = `${cleanTitle.replace(/\s+/g, '_')}.${format}`;
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+        res.setHeader('Content-Type', isWav ? 'audio/wav' : 'audio/mpeg');
+
+        // 4. Inyectar metadatos vía FFMPEG (Streaming)
+        const ffmpegProcess = spawn(FFMPEG_BIN, [
+            '-i', 'pipe:0',
+            '-metadata', `title=${cleanTitle}`,
+            '-metadata', `artist=${artist}`,
+            '-metadata', `album=${album}`,
+            '-metadata', `date=${year}`,
+            '-metadata', `genre=${genre}`,
+            '-metadata', `comment=Generado en OFFSZN.lat`,
+            '-f', format,
+            'pipe:1'
+        ]);
+
+        ffmpegProcess.on('error', (err) => {
+            console.error('[FFMPEG Error]:', err);
+            if (!res.headersSent) res.status(500).json({ error: 'Error procesando audio' });
+        });
+
+        // 5. Pipe: Stream Input -> FFmpeg -> Response
+        const bodyStream = audioResponse.body;
+        const { Readable } = await import('stream');
+        const readable = Readable.from(bodyStream);
+        
+        readable.pipe(ffmpegProcess.stdin);
+        ffmpegProcess.stdout.pipe(res);
+
+    } catch (error) {
+        console.error('[Metadata Proxy Error]:', error);
+        if (!res.headersSent) {
+            return res.status(500).json({ error: 'Error al procesar la descarga con metadatos' });
+        }
     }
 };

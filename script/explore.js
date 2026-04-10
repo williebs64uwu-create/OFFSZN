@@ -154,7 +154,7 @@ async function fetchData() {
         }
 
         const timeout = new Promise((_, reject) => 
-            setTimeout(() => reject(new Error('Fetch Timeout')), 5000)
+            setTimeout(() => reject(new Error('Fetch Timeout')), 15000)
         );
 
         const results = await Promise.race([
@@ -1711,8 +1711,12 @@ function getCookie(name) {
 }
 
 function showErrorState() {
+    ['explore-list-skeleton', 'explore-pw-skeleton', 'explore-leaderboard-skeleton'].forEach(id => {
+        const sk = document.getElementById(id);
+        if (sk) sk.style.display = 'none';
+    });
     const container = document.getElementById('explore-rows-container');
-    if (container) container.innerHTML = '<div style="padding: 100px 5%; color: #666; text-align: center;">Error al cargar el feed.</div>';
+    if (container) container.innerHTML = '<div style="padding: 100px 5%; color: #666; text-align: center;">Error de conexión. El servidor tardó en responder.<br><button onclick="window.location.reload()" style="margin-top: 20px; padding: 10px 20px; border-radius: 8px; background: #8b5cf6; color: white; border: none; cursor: pointer; font-family: inherit; font-weight: 500;">Recargar la página</button></div>';
 }
 
 

@@ -52,7 +52,8 @@
                             if (!el.dataset.r2FallbackAttempted) {
                                 el.dataset.r2FallbackAttempted = 'true';
                                 const apiRoot = (window.AuthUtils && window.AuthUtils._apiUrl) || '/api';
-                                el.src = `${apiRoot}/r2-public/${originalSrc.startsWith('/') ? originalSrc.substring(1) : originalSrc}`;
+                                const fallbackSrc = originalSrc.startsWith('/') ? originalSrc.substring(1) : originalSrc;
+                                el.src = `${apiRoot}/r2-public/${fallbackSrc}?v=${r2Version}`;
                             } else {
                                 el.style.opacity = '1';
                             }

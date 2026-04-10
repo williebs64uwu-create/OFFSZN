@@ -322,14 +322,19 @@ window.AuthUtils = {
 
         if (!key) return pathOrUrl;
         
-        // 🔥 FAST-PATH for Public Folders: Avatars, Banners, and anything in 'public/' doesn't need signing
-        // This eliminates 401 errors when logged out and improves loading performance.
-        const isPublicPath = key.startsWith('avatars/') || key.startsWith('banners/') || key.includes('/public/');
-        if (isPublicPath) {
+        // 🔥 FAST-PATH for Public Folders: Avatars, Banners, Covers, MP3s don't need signing
+        // This eliminates 401 errors when logged out and drastically improves performance by bypassing the signing queue.
+        const publicList = ['avatars/', 'banners/', 'public/', 'products/', 'covers/', 'beats/mp3/', 'drumkits/', 'temp-previews/', 'audio/'];
+        const isPublicPath = publicList.some(prefix => key.startsWith(prefix)) || /[0-9a-f]{8}-[0-9a-f]{4}/i.test(key);
+        
+        // Exclude strictly private files from fast-path (Project files, WAVs if not explicitly public)
+        const isPrivate = key.includes('secure-products/') || key.endsWith('.zip') || key.endsWith('.rar');
+
+        if (isPublicPath && !isPrivate) {
             const apiRoot = this._apiUrl || '/api';
-            const publicUrl = `${apiRoot}/r2-public/${key}`;
+            const publicUrl = `${apiRoot}/r2-public/${key}?v=${actualVersion}`;
             this._saveCache(cacheKey, publicUrl);
-            return publicUrl;
+            return Promise.resolve(publicUrl);
         }
 
         if (window.OFFSZN_DEBUG) console.log(`[AuthUtils] Queueing sign for key: ${key} (Version: ${actualVersion})`);

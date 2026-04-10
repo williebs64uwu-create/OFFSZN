@@ -97,6 +97,43 @@
             user-select: none;
         }
 
+        .chat-messages, .chat-bubble, .bubble-content, .bubble-text {
+            user-select: text !important;
+            -webkit-user-select: text !important;
+        }
+
+        .chat-bubble.user {
+            position: relative;
+        }
+
+        /* Pencil edit button */
+        .bubble-edit-btn {
+            position: absolute;
+            top: 4px;
+            left: -28px;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            border: none;
+            background: rgba(255,255,255,0.08);
+            color: rgba(255,255,255,0.4);
+            font-size: 9px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.2s ease, background 0.2s ease, color 0.2s ease;
+            z-index: 2;
+        }
+        .chat-bubble.user:hover .bubble-edit-btn {
+            opacity: 1;
+        }
+        .bubble-edit-btn:hover {
+            background: rgba(255,255,255,0.18);
+            color: #fff;
+        }
+
         /* -- Resize Handle -- */
         .sidebar-resize-handle {
             position: absolute;
@@ -658,7 +695,14 @@
             font-size: 0.7rem;
         }
         #btn-generate-ai:hover { transform: scale(1.08); background: #eee; }
-        #btn-generate-ai:disabled { opacity: 0.2; cursor: not-allowed; transform: none; }
+        #btn-generate-ai:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        #btn-generate-ai.loading { 
+            background: #ff4757 !important; 
+            color: #fff !important; 
+            cursor: pointer !important; 
+            opacity: 1 !important; 
+            pointer-events: auto !important; 
+        }
 
         #btn-arrow-icon { transition: transform 0.2s ease; }
 
@@ -1510,12 +1554,7 @@
                     <button class="player-ctrl" title="Siguiente">
                         <i class="fas fa-step-forward"></i>
                     </button>
-                    <button class="player-ctrl" title="Shuffle">
-                        <i class="fas fa-random"></i>
-                    </button>
-                    <button class="player-ctrl" title="Repeat">
-                        <i class="fas fa-redo-alt"></i>
-                    </button>
+
                     <button class="player-ctrl" id="btn-pill-download" title="Descargar .WAV">
                         <i class="fas fa-download"></i>
                     </button>

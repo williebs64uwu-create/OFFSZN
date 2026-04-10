@@ -344,7 +344,9 @@ router.get(/\/r2-public\/(.*)/, async (req, res) => {
 
         // Smart Version Selection: Try most likely versions first
         let versionsToTry = ['v2', 'supabase', 'v1'];
-        if (isUUIDPath) {
+        if (req.query.v && ['v1', 'v2', 'supabase'].includes(req.query.v)) {
+            versionsToTry = [req.query.v]; // Trust the explicit version first!
+        } else if (isUUIDPath) {
             versionsToTry = ['v2', 'supabase', 'v1']; 
         } else if (key.includes('beats/mp3/') || key.includes('drumkits/')) {
             versionsToTry = ['v1', 'v2', 'supabase'];
@@ -355,6 +357,11 @@ router.get(/\/r2-public\/(.*)/, async (req, res) => {
             for (const ver of versionsToTry) {
                 const targetUrl = await getPresignedDownloadUrl(tKey, 300, ver);
                 if (!targetUrl) continue;
+
+                // Explicit version requested? Skip expensive headless fetch-discovery and trust the DB explicitly.
+                if (req.query.v === ver) {
+                     return res.redirect(302, targetUrl);
+                }
 
                 try {
                     const controller = new AbortController();
