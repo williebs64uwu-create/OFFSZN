@@ -594,8 +594,8 @@ window.ServicesManager = {
             }
 
             socials.custom_services = socials.custom_services || [];
-            if (socials.custom_services.length >= 5) {
-                return alert("Límite de 5 servicios alcanzado.");
+            if (socials.custom_services.length >= 6) {
+                return alert("Límite de 6 servicios alcanzado.");
             }
 
             const newService = {

@@ -951,9 +951,8 @@ function renderServicesTab(container) {
 
         customServices.forEach(s => {
             const card = document.createElement('div');
-            card.className = 'service-card-premium';
+            card.className = 'service-card-modern-v2';
             card.id = s.id;
-            // ... (keeping icon logic same)
 
             // Logic for iframe embeds (like Spotify)
             let embedHtml = '';
@@ -972,14 +971,14 @@ function renderServicesTab(container) {
 
                 if (embedUrl) {
                     const height = s.link.includes('/track/') ? '152' : '352';
-                    embedHtml = `<iframe style="border-radius:12px; margin-top: 16px; width: 100%; border: none;" src="${embedUrl}" width="100%" height="${height}" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>`;
+                    embedHtml = `<div class="service-v2-embed"><iframe style="border: none;" src="${embedUrl}" width="100%" height="${height}" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe></div>`;
                 }
             }
 
             let ownerControls = '';
             if (isMe) {
                 ownerControls = `
-                    <div style="display: flex; gap: 8px;">
+                    <div class="service-v2-owner">
                         <button onclick="window.ServicesManager.editItem('service', '${s.id}'); event.stopPropagation();" style="background: rgba(255,255,255,0.05); border: none; color: #aaa; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; display: flex; justify-content: center; align-items: center; transition: all 0.2s;" onmouseover="this.style.color='#fff'; this.style.background='rgba(255,255,255,0.1)';" onmouseout="this.style.color='#aaa'; this.style.background='rgba(255,255,255,0.05)';"><i class="bi bi-pencil-fill" style="font-size: 0.8rem;"></i></button>
                         <button onclick="window.ServicesManager.deleteItem('service', '${s.id}'); event.stopPropagation();" style="background: rgba(255,255,255,0.05); border: none; color: #ff4d4d; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; display: flex; justify-content: center; align-items: center; transition: all 0.2s;" onmouseover="this.style.color='#fff'; this.style.background='rgba(255,100,100,0.2)';" onmouseout="this.style.color='#ff4d4d'; this.style.background='rgba(255,255,255,0.05)';"><i class="bi bi-trash-fill" style="font-size: 0.8rem;"></i></button>
                     </div>
@@ -987,25 +986,30 @@ function renderServicesTab(container) {
             }
 
             card.innerHTML = `
-                <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-                    <div style="display:flex; flex-direction:column; gap:8px;">
-                        ${s.category ? `<span class="service-category-tag">${escapeHTML(s.category)}</span>` : ''}
-                    </div>
-                    <div style="display: flex; align-items: center; gap: 12px;">
-                        ${!embedHtml && s.link ? `<a href="${s.link}" target="_blank" class="service-link-btn" style="padding: 8px 16px; font-size: 0.8rem;" onclick="event.stopPropagation();">Ver Más</a>` : ''}
-                        ${ownerControls}
+                ${ownerControls}
+                <div class="service-v2-top">
+                    <div class="service-v2-info">
+                        <h3 class="title">${escapeHTML(s.title)}</h3>
+                        <p class="description">${escapeHTML(s.description)}</p>
                     </div>
                 </div>
-                <h3>${escapeHTML(s.title)}</h3>
-                <p style="white-space: pre-line;">${escapeHTML(s.description)}</p>
-                ${s.price ? `<span class="service-price">$${s.price}</span>` : ''}
+
                 ${embedHtml}
+
+                <div class="service-v2-actions">
+                    <a href="${s.link || '#'}" target="_blank" class="btn-v2-buy">
+                        COMPRAR ${s.price ? `$${s.price}` : 'FREE'}
+                    </a>
+                    <button class="btn-v2-details" onclick="window.location.hash='${s.id}'">
+                        VER DETALLES
+                    </button>
+                </div>
             `;
             servicesGrid.appendChild(card);
         });
 
-        // Add placeholder at the end
-        if (isMe) {
+        // Add placeholder at the end (Only if under limit of 6)
+        if (isMe && customServices.length < 6) {
             const placeholder = document.createElement('div');
             placeholder.className = 'service-card-placeholder';
             placeholder.id = 'service-placeholder-card';
