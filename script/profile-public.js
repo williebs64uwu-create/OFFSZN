@@ -942,6 +942,15 @@ function renderServicesTab(container) {
     const customServices = socials.custom_services || [];
     const isMe = window.currentUserId && (user.id === window.currentUserId);
 
+    // --- TRIAL LOGIC (Keep sync with profile-public.js header) ---
+    let trialExpired = false;
+    if (user.plan === 'free' && user.plan_start_date) {
+        const start = new Date(user.plan_start_date);
+        const now = new Date();
+        const diffDays = Math.ceil((now - start) / (1000 * 60 * 60 * 24));
+        if (diffDays > 30) trialExpired = true;
+    }
+
     // --- RENDER CUSTOM SERVICES ---
     if (customServices.length > 0 || isMe) {
         const servicesGrid = document.createElement('div');
