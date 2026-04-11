@@ -90,6 +90,8 @@
         loadDependency(pathPrefix + 'script/share-modal.js?v=23', 'js', 'share-modal-script');
         loadDependency(pathPrefix + 'css/share-modal.css?v=23', 'css', 'share-modal-css');
         loadDependency(pathPrefix + 'script/onboarding-widget.js?v=2', 'js', 'onboarding-widget-script');
+        loadDependency(pathPrefix + 'script/updates-handler.js?v=1', 'js', 'updates-handler-script');
+        loadDependency(pathPrefix + 'css/updates-modal.css?v=1', 'css', 'updates-modal-css');
 
     } catch (error) {
         console.error('Error loading navbar component:', error);

@@ -5,6 +5,8 @@
 
 window.ServicesManager = {
     currentAction: null, // 'service' or 'playlist'
+    userBeats: [],
+    selectedTracks: [],
 
     init() {
         console.log("ServicesManager initialized");
@@ -59,9 +61,54 @@ window.ServicesManager = {
                     font-family: inherit; font-size: 1rem; outline: none; 
                 }
                 .price-input-wrapper input::placeholder { color: #444; }
+
+                /* Group-Style Selection Chips */
+                .playlist-stack-container {
+                    display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 0; transition: margin 0.3s ease;
+                }
+                .playlist-stack-container:not(:empty) { margin-bottom: 20px; }
+
+                .stack-chip {
+                    display: flex; align-items: center; gap: 8px; padding: 6px 10px;
+                    background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+                    border-radius: 100px; animation: chipEnter 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                    cursor: default; transition: all 0.2s;
+                }
+                .stack-chip:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.3); }
+                .stack-chip img { width: 20px; height: 20px; border-radius: 50%; object-fit: cover; }
+                .stack-chip span { font-size: 0.75rem; font-weight: 700; color: #fff; max-width: 120px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+                .chip-remove { cursor: pointer; color: #666; transition: color 0.2s; display: flex; align-items: center; }
+                .chip-remove:hover { color: #ff4d4d; }
+
+                @keyframes chipEnter { from { opacity: 0; transform: scale(0.8) translateY(5px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+
+                /* Category Pills & Item Hover Refinements */
+                .cat-pill {
+                    padding: 6px 14px; background: transparent; border: 1px solid rgba(255, 255, 255, 0.2);
+                    border-radius: 100px; color: #fff; font-size: 0.65rem; font-weight: 800;
+                    text-transform: uppercase; letter-spacing: 0.5px; cursor: pointer;
+                    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+                }
+                .cat-pill:hover { background: rgba(255, 255, 255, 0.05); border-color: rgba(255, 255, 255, 0.4); }
+                .cat-pill.active { background: #fff; color: #000; border-color: #fff; box-shadow: 0 4px 15px rgba(255, 255, 255, 0.2); }
+                
+                .beat-selector-item:hover { background: rgba(255, 255, 255, 0.04) !important; }
+                .beat-selector-item:hover div:last-child { opacity: 1 !important; }
+
+                /* Skeletons */
+                @keyframes shimmer-srv {
+                    0% { background-position: -200% 0; }
+                    100% { background-position: 200% 0; }
+                }
+                .srv-skeleton {
+                    background: linear-gradient(90deg, rgba(255,255,255,0.03) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.03) 75%);
+                    background-size: 200% 100%;
+                    animation: shimmer-srv 1.5s infinite;
+                    border-radius: 4px;
+                }
             </style>
-            <div id="servicesModalOffszn" class="p-modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 10000; backdrop-filter: blur(15px); color: #fff; font-family: 'Plus Jakarta Sans', sans-serif;">
-                <div class="p-modal-content" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 440px; background: #080808; border: 1px solid #1a1a1a; border-radius: 24px; overflow: hidden; box-shadow: 0 50px 120px rgba(0,0,0,0.95);">
+            <div id="servicesModalOffszn" class="p-modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 10000; backdrop-filter: blur(20px); color: #fff; font-family: 'Plus Jakarta Sans', sans-serif;">
+                <div class="p-modal-content" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 560px; background: #0c0c0c; border: 1px solid #1a1a1a; border-radius: 28px; overflow: hidden; box-shadow: 0 50px 120px rgba(0,0,0,0.95);">
                     <div class="p-modal-header" style="padding: 24px 32px; border-bottom: 1px solid #1a1a1a; display: flex; justify-content: space-between; align-items: center;">
                         <h3 id="servicesModalTitle" style="margin: 0; font-size: 1.15rem; font-weight: 800; letter-spacing: -0.3px;">Añadir Servicio</h3>
                         <button onclick="window.ServicesManager.closeAddModal()" style="background: rgba(255,255,255,0.04); border: none; color: #666; width: 32px; height: 32px; border-radius: 50%; font-size: 1rem; display:flex; align-items:center; justify-content:center; cursor: pointer; transition: all 0.2s;">&times;</button>
@@ -121,12 +168,44 @@ window.ServicesManager = {
                         </div>
 
                         <div id="playlistFields" style="display: none;">
-                            <label class="offszn-label">Nombre de la Playlist</label>
-                            <input type="text" id="playlistTitle" class="offszn-input-field" placeholder="Mis Mejores Beats" style="margin-bottom: 20px;">
-                            <p style="font-size: 0.8rem; color: #666; line-height: 1.4;">Luego podrás añadir tus beats de OFFSZN a esta lista directamente.</p>
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                <label class="offszn-label" style="margin:0;">Nombre de la Playlist</label>
+                                <span id="playlistTitleCounter" style="font-size: 0.6rem; color: #444;">0/30</span>
+                            </div>
+                            <input type="text" id="playlistTitle" class="offszn-input-field" maxlength="30" placeholder="Title" style="margin-bottom: 24px;" oninput="window.ServicesManager.updatePlaylistCounter()">
+                            
+                            <label class="offszn-label">Categoría de la Playlist</label>
+                            <div class="playlist-category-pills" style="display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap;">
+                                <div class="cat-pill active" onclick="window.ServicesManager.setPlaylistCategory('beat', this)">Beats</div>
+                                <div class="cat-pill" onclick="window.ServicesManager.setPlaylistCategory('preset', this)">Presets/Plantillas</div>
+                                <div class="cat-pill" onclick="window.ServicesManager.setPlaylistCategory('drumkit', this)">Drumkits</div>
+                                <div class="cat-pill" onclick="window.ServicesManager.setPlaylistCategory('loopkit', this)">Loopkits</div>
+                            </div>
+                            <input type="hidden" id="playlistCategory" value="beat">
+
+                            <div id="beatSelectorArea">
+                                <label class="offszn-label">Añadir Productos</label>
+                                <div id="playlistStack" class="playlist-stack-container">
+                                    <!-- Selected items will chips here -->
+                                </div>
+                                
+                                <div style="margin-bottom: 12px;" id="beatDropdownContainer">
+                                    <div style="position: relative;">
+                                        <i class="bi bi-search" style="position: absolute; left: 12px; top: 14px; color: #444;"></i>
+                                        <input type="text" id="beatSelectorSearch" class="offszn-input-field" placeholder="Buscar en tu catálogo..." style="padding-left: 36px; height: 44px; font-size: 0.85rem;" oninput="window.ServicesManager.filterSelector(this.value)">
+                                    </div>
+                                    
+                                    <div id="beatSelectorDropdownList" style="margin-top: 8px; background: #080808; border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; overflow: hidden;">
+                                        <!-- Limit to roughly 2 items with scroll -->
+                                        <div id="beatSelectorList" class="beat-selector-list" style="max-height: 180px; overflow-y: auto;">
+                                            <!-- Results will be rendered here -->
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
-                        <button onclick="window.ServicesManager.saveItem()" style="width: 100%; padding: 18px; margin-top: 10px; background: #fff; color: #000; border: none; border-radius: 14px; font-weight: 800; cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); font-size: 0.95rem;">Guardar Servicio</button>
+                        <button id="saveItemBtn" onclick="window.ServicesManager.saveItem()" style="width: 100%; padding: 18px; margin-top: 24px; background: #fff; color: #000; border: none; border-radius: 14px; font-weight: 800; cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); font-size: 0.95rem;">Guardar</button>
                     </div>
                 </div>
             </div>
@@ -157,36 +236,68 @@ window.ServicesManager = {
         document.body.appendChild(div);
     },
 
-    openAddModal(type) {
+    openAddModal(type, isEdit = false) {
+        const user = window.currentUserProfile;
+        if (user && !isEdit) {
+            const socials = typeof user.socials === 'string' ? JSON.parse(user.socials) : (user.socials || {});
+            if (type === 'service') {
+                if ((socials.custom_services || []).length >= 5) return alert("Has alcanzado el límite máximo de 5 servicios.");
+            } else {
+                if ((socials.playlists || []).length >= 5) return alert("Has alcanzado el límite máximo de 5 playlists.");
+            }
+        }
+
+        if (!isEdit) this.editingItemId = null;
         this.currentAction = type;
         const modal = document.getElementById('servicesModalOffszn');
         const title = document.getElementById('servicesModalTitle');
         const serviceFields = document.getElementById('serviceFields');
         const playlistFields = document.getElementById('playlistFields');
 
-        // Reset fields
+        // Reset fields if not editing
         if (type === 'service') {
-            title.innerText = 'Añadir Servicio';
+            title.innerText = isEdit ? 'Editar Servicio' : 'Añadir Servicio';
             serviceFields.style.display = 'block';
             playlistFields.style.display = 'none';
             
-            // Clear inputs
-            document.getElementById('serviceCategory').value = 'Mix y master';
-            document.getElementById('serviceCustomTag').value = '';
-            document.getElementById('serviceTitle').value = '';
-            document.getElementById('serviceDesc').value = '';
-            document.getElementById('serviceLink').value = '';
-            document.getElementById('servicePrice').value = '';
-            document.getElementById('customTagGroup').style.display = 'none';
-            document.getElementById('linkError').style.display = 'none';
+            document.getElementById('saveItemBtn').innerText = 'Guardar Cambios';
             
-            this.updateCounters();
+            if (!isEdit) {
+                // Clear inputs
+                document.getElementById('serviceCategory').value = 'Mix y master';
+                document.getElementById('serviceCustomTag').value = '';
+                document.getElementById('serviceTitle').value = '';
+                document.getElementById('serviceDesc').value = '';
+                document.getElementById('serviceLink').value = '';
+                document.getElementById('servicePrice').value = '';
+                document.getElementById('customTagGroup').style.display = 'none';
+                document.getElementById('linkError').style.display = 'none';
+                this.updateCounters();
+            }
             this.setupListeners();
         } else {
-            title.innerText = 'Nueva Playlist (Estilo Spotify)';
+            title.innerText = isEdit ? 'Editar Playlist' : 'Nueva Playlist';
             serviceFields.style.display = 'none';
             playlistFields.style.display = 'block';
-            document.getElementById('playlistTitle').value = '';
+            
+            document.getElementById('saveItemBtn').innerText = 'Guardar Cambios';
+            
+            if (!isEdit) {
+                document.getElementById('playlistTitle').value = '';
+                document.getElementById('playlistCategory').value = 'beat';
+                document.getElementById('playlistTitleCounter').innerText = '0/30';
+                
+                // Reset active pill
+                document.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('active'));
+                const firstPill = document.querySelector('.cat-pill:first-child');
+                if (firstPill) firstPill.classList.add('active');
+
+                // Initialize Playlist Selector
+                this.selectedTracks = [];
+                document.getElementById('playlistStack').innerHTML = '';
+                document.getElementById('beatSelectorSearch').value = '';
+                this.loadUserBeats();
+            }
         }
 
         modal.style.display = 'block';
@@ -281,6 +392,175 @@ window.ServicesManager = {
         document.getElementById('upgradeModalOffszn').style.display = 'none';
     },
 
+    updatePlaylistCounter() {
+        const val = document.getElementById('playlistTitle').value;
+        const counter = document.getElementById('playlistTitleCounter');
+        if (counter) counter.innerText = `${val.length}/30`;
+    },
+
+    setPlaylistCategory(cat, el) {
+        document.getElementById('playlistCategory').value = cat;
+        document.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('active'));
+        el.classList.add('active');
+        
+        // Show skeletons for a brief feel
+        this.renderSkeletons();
+        
+        setTimeout(() => {
+            this.renderBeatSelector(document.getElementById('beatSelectorSearch').value);
+        }, 400); // Wait 400ms to mimic load
+    },
+
+    renderSkeletons() {
+        const listEl = document.getElementById('beatSelectorList');
+        if (!listEl) return;
+        
+        // Render 1 skeleton to minimize layout shift while still showing loading state
+        listEl.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 16px; padding: 16px 20px; border-bottom: 1px solid rgba(255,255,255,0.02);">
+                <div class="srv-skeleton" style="width: 50px; height: 50px; border-radius: 12px; flex-shrink: 0;"></div>
+                <div style="display:flex; flex-direction:column; gap: 8px; width: 100%;">
+                    <div class="srv-skeleton" style="width: 50%; height: 12px;"></div>
+                    <div class="srv-skeleton" style="width: 30%; height: 10px;"></div>
+                </div>
+            </div>
+        `;
+    },
+
+    async loadUserBeats() {
+        const user = window.currentUserProfile;
+        if (!user) return;
+
+        // Render Initial Skeletons Behind the Scenes
+        this.renderSkeletons();
+
+        const { data, error } = await window.supabaseClient
+            .from('products')
+            .select('id, name, image_url, product_type, r2_version, storage_version')
+            .eq('producer_id', user.id)
+            .eq('visibility', 'public')
+            .in('status', ['published', 'approved'])
+            .order('created_at', { ascending: false });
+
+        if (error) {
+            console.error("Error loading user products:", error);
+            const listEl = document.getElementById('beatSelectorList');
+            if (listEl) listEl.innerHTML = '<div style="padding: 20px; text-align: center; color: #fa5252; font-size: 0.8rem;">Error al cargar</div>';
+            return;
+        }
+
+        // PRE-AUTHORIZE ASSETS (Correct R2/Supabase handling)
+        if (data && window.AuthUtils?.getAuthorizedUrl) {
+            for (const b of data) {
+                b._authorized_url = await window.AuthUtils.getAuthorizedUrl(
+                    b.image_url, 
+                    b.r2_version || b.storage_version, 
+                    b.id
+                );
+            }
+        }
+
+        this.userBeats = data || [];
+        this.renderBeatSelector();
+    },
+
+    renderBeatSelector(filter = '') {
+        const listEl = document.getElementById('beatSelectorList');
+        const search = filter.toLowerCase();
+        const currentCat = document.getElementById('playlistCategory').value;
+        const defaultFallback = '/images/portada-default.png';
+        
+        // STRICT CATEGORY FILTERING
+        // Only show products matching the selected category (e.g., 'beat', 'preset')
+        let filtered = this.userBeats.filter(b => {
+            const matchesSearch = b.name.toLowerCase().includes(search);
+            const isNotSelected = !this.selectedTracks.includes(String(b.id));
+            const matchesCategory = (b.product_type || '').toLowerCase() === currentCat;
+            
+            return matchesSearch && isNotSelected && matchesCategory;
+        });
+
+        // Capping total items rendered to 10 (user constraint). 
+        // max-height handles visual constraint to approx 2 items
+        filtered = filtered.slice(0, 10);
+
+        if (filtered.length === 0) {
+            listEl.innerHTML = `<div style="padding: 20px; text-align: center; color: #444; font-size: 0.8rem;">${filter ? 'No hay resultados coincidiendo' : 'No hay productos en esta categoría'}</div>`;
+            return;
+        }
+
+        listEl.innerHTML = filtered.map(b => `
+            <div class="beat-selector-item" onclick="window.ServicesManager.addProductToStack('${b.id}'); event.stopPropagation();" style="display: flex; align-items: center; gap: 16px; padding: 16px 20px; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.02); transition: all 0.25s ease;">
+                <div style="position: relative; width: 56px; height: 56px; flex-shrink: 0;">
+                    <img src="${b._authorized_url || b.image_url || defaultFallback}" onerror="this.src='${defaultFallback}'" style="width: 100%; height: 100%; border-radius: 12px; object-fit: cover; background: #111;">
+                </div>
+                <div style="display:flex; flex-direction:column; gap: 4px; overflow: hidden;">
+                    <span style="font-size: 0.95rem; font-weight: 700; color: #fff; text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">${b.name}</span>
+                </div>
+                <div style="margin-left: auto; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; opacity: 0.3; transition: opacity 0.2s;">
+                    <i class="bi bi-plus-lg" style="color: #fff; font-size: 1.1rem;"></i>
+                </div>
+            </div>
+        `).join('');
+    },
+
+    filterSelector(val) {
+        // Clear existing debounce timer
+        clearTimeout(this._searchTimer);
+        
+        // Show skeletons immediately when typing
+        this.renderSkeletons();
+        
+        // Wait briefly after user stops typing to filter the actual list
+        this._searchTimer = setTimeout(() => {
+            this.renderBeatSelector(val);
+        }, 350);
+    },
+
+    addProductToStack(beatId) {
+        // STRING CONVERSION FIX for BigInt IDs
+        const bId = String(beatId);
+        if (this.selectedTracks.includes(bId)) return;
+        if (this.selectedTracks.length >= 10) return alert("Máximo 10 productos por playlist");
+
+        const beat = this.userBeats.find(b => String(b.id) === bId);
+        if (!beat) {
+            console.warn("Product not found in local cache:", bId);
+            return;
+        }
+
+        this.selectedTracks.push(bId);
+        
+        // Update Stack UI
+        const stackEl = document.getElementById('playlistStack');
+        const chip = document.createElement('div');
+        const defaultFallback = '/images/portada-default.png';
+        chip.className = 'stack-chip';
+        chip.id = `stack-${bId}`;
+        chip.innerHTML = `
+            <img src="${beat._authorized_url || beat.image_url || defaultFallback}" onerror="this.src='${defaultFallback}'" alt="thumb">
+            <span>${beat.name}</span>
+            <div class="chip-remove" onclick="window.ServicesManager.removeFromStack('${bId}')">
+                <i class="bi bi-x" style="font-size: 1.1rem;"></i>
+            </div>
+        `;
+        
+        stackEl.appendChild(chip);
+        
+        // Re-render selector to hide selected
+        this.renderBeatSelector(document.getElementById('beatSelectorSearch').value);
+    },
+
+    removeFromStack(beatId) {
+        const bId = String(beatId);
+        this.selectedTracks = this.selectedTracks.filter(id => id !== bId);
+        const item = document.getElementById(`stack-${bId}`);
+        if (item) item.remove();
+        
+        // Re-render selector to show again
+        this.renderBeatSelector(document.getElementById('beatSelectorSearch').value);
+    },
+
     async saveItem() {
         const user = window.currentUserProfile;
         if (!user) return;
@@ -319,7 +599,7 @@ window.ServicesManager = {
             }
 
             const newService = {
-                id: 'servicios_offszn_' + Date.now(),
+                id: this.editingItemId || ('servicios_offszn_' + Date.now()),
                 category: category === 'Otro' ? customTag : category,
                 title,
                 description: desc,
@@ -327,23 +607,38 @@ window.ServicesManager = {
                 price: price || null
             };
 
-            socials.custom_services.push(newService);
+            if (this.editingItemId) {
+                const idx = socials.custom_services.findIndex(s => s.id === this.editingItemId);
+                if (idx !== -1) socials.custom_services[idx] = newService;
+            } else {
+                socials.custom_services.push(newService);
+            }
         } else {
             const title = document.getElementById('playlistTitle').value;
             if (!title) return alert("Por favor pon un nombre a la playlist");
 
+            const firstTrackId = this.selectedTracks[0];
+            const firstTrack = this.userBeats.find(b => String(b.id) === String(firstTrackId));
+
             const newPlaylist = {
-                id: 'playlist_offszn_' + Date.now(),
+                id: this.editingItemId || ('playlist_offszn_' + Date.now()),
                 title,
-                cover_url: '', 
-                track_ids: []
+                category: document.getElementById('playlistCategory').value,
+                cover_url: firstTrack ? firstTrack.image_url : '', 
+                track_ids: [...this.selectedTracks]
             };
 
             socials.playlists = socials.playlists || [];
-            if (socials.playlists.length >= 5) {
-                return alert("Límite de 5 playlists alcanzado.");
+            
+            if (this.editingItemId) {
+                const idx = socials.playlists.findIndex(p => p.id === this.editingItemId);
+                if (idx !== -1) socials.playlists[idx] = newPlaylist;
+            } else {
+                if (socials.playlists.length >= 5) {
+                    return alert("Límite de 5 playlists alcanzado.");
+                }
+                socials.playlists.push(newPlaylist);
             }
-            socials.playlists.push(newPlaylist);
         }
 
         // Save to Supabase
@@ -365,6 +660,88 @@ window.ServicesManager = {
     openPlaylist(id) {
         console.log("Opening playlist:", id);
         alert("Función de reproducción de playlist próximamente...");
+    },
+
+    async editItem(type, id) {
+        const user = window.currentUserProfile;
+        if (!user) return;
+        const socials = typeof user.socials === 'string' ? JSON.parse(user.socials) : (user.socials || {});
+
+        this.editingItemId = id;
+        
+        // Find existing item
+        let item = null;
+        if (type === 'service') item = (socials.custom_services || []).find(s => s.id === id);
+        else item = (socials.playlists || []).find(p => p.id === id);
+
+        if (!item) return;
+
+        // Open modal in edit mode (won't clear fields)
+        this.openAddModal(type, true);
+
+        // Pre-fill data
+        if (type === 'service') {
+            const standardCats = ['Mix y master', 'Producción completa', 'Mezcla de voces', 'Master', 'Remake de beats', 'Preset de voces', 'Plantilla de voces', 'Grabación de voces'];
+            const isStandard = standardCats.includes(item.category);
+            
+            this.selectCategory(isStandard ? item.category : 'Otro');
+            if (!isStandard) document.getElementById('serviceCustomTag').value = item.category || '';
+            
+            document.getElementById('serviceTitle').value = item.title || '';
+            document.getElementById('serviceDesc').value = item.description || '';
+            document.getElementById('serviceLink').value = item.link || '';
+            document.getElementById('servicePrice').value = item.price || '';
+            this.updateCounters();
+        } else {
+            document.getElementById('playlistTitle').value = item.title || '';
+            this.updatePlaylistCounter();
+            
+            // Set category pill
+            const cat = item.category || 'beat';
+            document.getElementById('playlistCategory').value = cat;
+            document.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('active'));
+            const pill = document.querySelector(`.cat-pill[onclick*="'${cat}'"]`);
+            if (pill) pill.classList.add('active');
+
+            // Wait for user beats to load if not already
+            if (this.userBeats.length === 0) await this.loadUserBeats();
+            
+            // Populate tracks
+            this.selectedTracks = [];
+            document.getElementById('playlistStack').innerHTML = '';
+            document.getElementById('beatSelectorSearch').value = '';
+            
+            if (item.track_ids && item.track_ids.length > 0) {
+                // Must add them manually using internal logic to render properly
+                item.track_ids.forEach(tId => this.addProductToStack(tId));
+            }
+            
+            this.renderBeatSelector(); // Final render refresh on the remaining list
+        }
+    },
+
+    async deleteItem(type, id) {
+        if (!confirm(`¿Estás seguro de que deseas eliminar est${type === 'playlist' ? 'a playlist' : 'e servicio'}? No podrás recuperarlo.`)) return;
+
+        const user = window.currentUserProfile;
+        if (!user) return;
+        const socials = typeof user.socials === 'string' ? JSON.parse(user.socials) : (user.socials || {});
+
+        if (type === 'playlist') {
+            socials.playlists = (socials.playlists || []).filter(p => p.id !== id);
+        } else {
+            socials.custom_services = (socials.custom_services || []).filter(s => s.id !== id);
+        }
+
+        const { error } = await window.supabaseClient.from('users').update({ socials }).eq('id', user.id);
+        
+        if (error) {
+            console.error(error);
+            alert("Error al eliminar");
+        } else {
+            user.socials = socials;
+            if (window.setActiveTab) window.setActiveTab('services'); // Refresh view
+        }
     }
 };
 

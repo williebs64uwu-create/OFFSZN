@@ -2500,9 +2500,14 @@
                 showToast("Producto eliminado", "success");
                 closeDeleteModal();
                 deselectAll();
+
+                // 🔥 Clear cached limit status so modal counter refreshes from DB
+                sessionStorage.removeItem('offszn_upload_limit_status');
+                if (window.AuthUtils) window.AuthUtils._userPlanCache = null;
+
                 setTimeout(() => {
                     loadProducts(currentTab, currentStatus);
-                    initUploadLimit(); // ?? Refresh counter after deletion
+                    initUploadLimit(); // 🔄 Refresh counter after deletion
                 }, 500);
 
             } catch (e) {
@@ -3013,7 +3018,7 @@
                     <i class="bi bi-box-seam" style="font-size:48px; color:#333; margin-bottom:16px;"></i>
                     <h3 style="color:#fff; font-size:18px; font-weight:600; margin-bottom:8px;">No tienes ${label} publicados</h3>
                     <p style="color:#888; font-size:14px; max-width:300px; margin-bottom:24px;">Sube tu primer producto y empieza a generar ventas hoy mismo.</p>
-                    <a href="${uploadLink}" class="btn-glow-purple" style="text-decoration:none;">
+                    <a href="${uploadLink}" onclick="handleCreateNewClick(event)" class="btn-glow-purple" style="text-decoration:none;">
                         <i class="bi bi-cloud-upload"></i> ${btnText}
                     </a>
                 </div>

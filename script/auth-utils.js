@@ -992,7 +992,8 @@ window.AuthUtils = {
             const { count, error } = await window.supabaseClient
                 .from('products')
                 .select('*', { count: 'exact', head: true })
-                .eq('producer_id', userId);
+                .eq('producer_id', userId)
+                .neq('status', 'deleted');
 
             if (error) throw error;
             return count || 0;

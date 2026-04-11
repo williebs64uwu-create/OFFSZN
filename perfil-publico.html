@@ -21,10 +21,10 @@
   <link rel="stylesheet" href="/css/auth-ui.css">
   <link rel="stylesheet" href="/css/global-overlays.css">
   <link rel="stylesheet" href="/css/navbar.css">
-  <link rel="stylesheet" href="/css/profile-public.css?v=3"> <!-- PROFILE STYLES -->
+  <link rel="stylesheet" href="/css/profile-public.css?v=4"> <!-- PROFILE STYLES -->
   <link rel="stylesheet" href="/css/services-redesign.css?v=1"> <!-- NEW SERVICES REDESIGN -->
   <link rel="stylesheet" href="/css/templates.css?v=21"> <!-- PROFILE TEMPLATES -->
-  <link rel="stylesheet" href="/css/skeleton.css?v=2">
+  <link rel="stylesheet" href="/css/skeleton.css?v=3">
   <link rel="stylesheet" href="/css/hover-card.css">
   <link rel="stylesheet" href="/css/download-gate.css">
   <link rel="stylesheet" href="/css/sticky-player.css">
@@ -159,25 +159,21 @@
 
             <div class="profile-middle-row">
               <div class="profile-stats">
-                <!-- Stat 1 -->
                 <div class="stat">
-                  <div class="skeleton skeleton-profile-meta" style="width:70px; height:12px;"></div>
                   <b id="profileProductsCount">
-                    <div class="skeleton skeleton-profile-stats" style="width:40px; height:12px;"></div>
+                    <div class="skeleton skeleton-profile-stats" style="width:70px; height:12px;"></div>
                   </b>
                 </div>
                 <!-- Stat 2 -->
                 <div class="stat">
-                  <div class="skeleton skeleton-profile-meta" style="width:80px; height:12px;"></div>
                   <b id="profileFollowersCount">
-                    <div class="skeleton skeleton-profile-stats" style="width:40px; height:12px;"></div>
+                    <div class="skeleton skeleton-profile-stats" style="width:80px; height:12px;"></div>
                   </b>
                 </div>
                 <!-- Stat 3 -->
-                <div class="stat">
-                  <div class="skeleton skeleton-profile-meta" style="width:60px; height:12px;"></div>
+                <div class="stat" style="display: none;">
                   <b id="profileFollowingCount">
-                    <div class="skeleton skeleton-profile-stats" style="width:40px; height:12px;"></div>
+                    <div class="skeleton skeleton-profile-stats" style="width:60px; height:12px;"></div>
                   </b>
                 </div>
               </div>
@@ -514,7 +510,7 @@
   <div id="personalizeModal" class="p-modal"
     style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 9999; backdrop-filter: blur(10px); color: #fff; font-family: 'Plus Jakarta Sans', sans-serif;">
     <div class="p-modal-content"
-      style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 440px; background: #0c0c0c; border: 1px solid #1a1a1a; border-radius: 24px; overflow: hidden; box-shadow: 0 40px 100px rgba(0,0,0,0.9); transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);">
+      style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 440px; max-width: 95vw; background: #0c0c0c; border: 1px solid #1a1a1a; border-radius: 24px; overflow: hidden; box-shadow: 0 40px 100px rgba(0,0,0,0.9); transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);">
       <div class="p-modal-header"
         style="padding: 24px 32px; border-bottom: 1px solid #1a1a1a; display: flex; justify-content: space-between; align-items: center;">
         <h3 style="margin: 0; font-size: 1.25rem; font-weight: 800; letter-spacing: -0.5px;">Personalizar Perfil</h3>
@@ -697,6 +693,39 @@
                 grid-template-columns: repeat(4, 1fr);
                 gap: 10px;
                 margin-bottom: 24px;
+              }
+
+              /* --- Mockup Specific Overrides --- */
+              #previewHeaderMockup.template-old_school {
+                padding: 32px !important;
+                height: 100% !important;
+              }
+              
+              #previewHeaderMockup.template-old_school .mockup-content {
+                flex-direction: column !important;
+                align-items: center !important;
+                text-align: center !important;
+                gap: 24px !important;
+              }
+
+              #previewHeaderMockup.template-old_school #previewAvatarOuter {
+                width: 96px !important;
+                height: 96px !important;
+              }
+
+              #previewHeaderMockup.template-old_school #previewName {
+                font-size: 1.5rem !important;
+              }
+
+              #previewHeaderMockup.template-old_school .mockup-details {
+                align-items: center !important;
+              }
+
+              /* Mobile Responsive Logic for Personalizer */
+              @media (max-width: 1024px) {
+                .p-modal-content {
+                    width: 95vw !important;
+                }
               }
 
               /* Mobile Responsive Logic for Personalizer */
@@ -1019,7 +1048,7 @@
             </div>
 
             <!-- Content (Sync with .profile-header-content) -->
-            <div
+            <div class="mockup-content"
               style="position: relative; z-index: 10; display: flex; align-items: center; gap: 40px; width: 100%; text-align: left;">
               <!-- Avatar (Scaled) -->
               <div id="previewAvatarOuter"
@@ -1031,7 +1060,7 @@
               </div>
 
               <!-- Details -->
-              <div style="flex: 1; display: flex; flex-direction: column; gap: 12px;">
+              <div class="mockup-details" style="flex: 1; display: flex; flex-direction: column; gap: 12px;">
                 <div style="display: flex; align-items: center; gap: 12px;">
                   <h1 id="previewName"
                     style="font-size: 2.5rem; font-weight: 900; color: #fff; margin:0; line-height: 1; letter-spacing: -1.5px;">

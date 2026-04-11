@@ -242,15 +242,15 @@ async function loadUserProfile(username) {
             profileRoot.style.opacity = '1';
         }
 
-        // 3. Render Header Data (IMMEDIATE)
-        // We render this ASAP so the user sees the profile info while products load.
-        renderHeader(user);
+        // 3. Render Header Data (IMMEDIATE INITIAL POPULATION)
+        // We render this immediately so elements exist, but skeletons still cover them.
+        renderHeader(user, window.profileCategoryCounts);
 
         // 3.1 Inject Dynamic SEO for Profiles
         injectProfileSEO(user);
 
         // 4. Fetch User Products (via API) - SYNC WAIT
-        // We wait for the products fetch to complete so we can remove ALL skeletons together.
+        // This ensures productsCache and other variables are ready.
         await loadUserProducts(user);
 
         // --- FINISH LOADING BAR ---
@@ -263,8 +263,25 @@ async function loadUserProfile(username) {
             }, 400);
         }
 
-        // 🔥 REVEAL CONTENT: Everything is ready
+        // 🔥 ATOMIC REVEAL COORDINATION
+        // 1. Wait for the standard premium delay promise (master coordination)
+        if (window.profileTimerPromise) await window.profileTimerPromise;
+
+        // 2. Ensure everything is rendered in the DOM before we lose skeletons
+        // (Note: loadUserProducts already populated productsCache, 
+        // but we might need to re-trigger renderProductList if it was waiting on a signal)
+        // Actually, renderProductList was called by loadUserProducts, so it already ran.
+
+        // 3. Signal internal reveal (in case anything else is waiting)
         if (window.triggerProfileReveal) window.triggerProfileReveal();
+
+        // 4. FINAL REVEAL: Add class to remove all skeletons simultaneously
+        if (profileRoot) {
+            profileRoot.classList.add('header-loaded');
+            
+            // Safety: ensure opacity is 1 if it wasn't already
+            profileRoot.style.opacity = '1';
+        }
 
     } catch (e) {
         console.error("Error loading profile:", e);
@@ -279,9 +296,6 @@ async function loadUserProfile(username) {
 }
 
 async function renderHeader(user, categoryCounts = null) {
-    // 0. Hold reveal until signal
-    if (window.profileRevealSignal) await window.profileRevealSignal;
-
     // --- TEMPLATE BRANCHING ---
     if (user.template === 'produccion_template_old_school') {
         renderOldSchoolSidebar(user, categoryCounts);
@@ -854,68 +868,85 @@ function renderServicesTab(container) {
         if (diffDays > 30) trialExpired = true;
     }
 
-    // --- OWNER CONTROLS (Add Button) ---
+    // --- OWNER CONTROLS (Removed top buttons, using inline placeholders) ---
+    // Section kept for spacing or future global actions
     if (isMe) {
-        const addBtnContainer = document.createElement('div');
-        addBtnContainer.className = 'services-owner-actions';
-        addBtnContainer.style.marginBottom = '20px';
-
-        const addServiceBtn = document.createElement('button');
-        addServiceBtn.className = 'btn-add-service';
-        addServiceBtn.innerHTML = '<i class="bi bi-plus-lg"></i> Añadir Servicio / Link';
-        addServiceBtn.onclick = () => window.ServicesManager.openAddModal('service');
-
-        const addPlaylistBtn = document.createElement('button');
-        addPlaylistBtn.className = 'btn-add-playlist';
-        addPlaylistBtn.innerHTML = '<i class="bi bi-music-note-list"></i> Nueva Playlist';
-        addPlaylistBtn.style.marginLeft = '12px';
-        addPlaylistBtn.onclick = () => {
-            if (trialExpired && !isMe) return; // Visitor logic
-            if (trialExpired && isMe) {
-                window.ServicesManager.showUpgradeModal();
-                return;
-            }
-            window.ServicesManager.openAddModal('playlist');
-        };
-
-        addBtnContainer.appendChild(addServiceBtn);
-        addBtnContainer.appendChild(addPlaylistBtn);
-        servicesContainer.appendChild(addBtnContainer);
+        const workspaceHeader = document.createElement('div');
+        workspaceHeader.id = 'inline-workspace-anchor';
+        servicesContainer.appendChild(workspaceHeader);
     }
 
-    // --- RENDER PLAYLISTS (Spotify Style) ---
-    if (playlists.length > 0) {
+    // --- RENDER PLAYLISTS ---
+    if (playlists.length > 0 || isMe) {
         const playlistSection = document.createElement('div');
         playlistSection.className = 'playlists-grid-offszn';
+        playlistSection.id = 'playlists-grid-main';
+
 
         playlists.forEach(pl => {
             const card = document.createElement('div');
             card.className = 'playlist-card-spotify';
+            card.style.position = 'relative'; // Ensure absolute positioning of controls works
+            
+            let ownerControls = '';
+            if (isMe) {
+                ownerControls = `
+                    <div style="position: absolute; top: 12px; right: 12px; display: flex; gap: 8px; z-index: 10;">
+                        <button onclick="window.ServicesManager.editItem('playlist', '${pl.id}'); event.stopPropagation();" style="background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); border: none; color: #fff; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; display: flex; justify-content: center; align-items: center; transition: background 0.2s;"><i class="bi bi-pencil-fill" style="font-size: 0.8rem;"></i></button>
+                        <button onclick="window.ServicesManager.deleteItem('playlist', '${pl.id}'); event.stopPropagation();" style="background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); border: none; color: #ff4d4d; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; display: flex; justify-content: center; align-items: center; transition: background 0.2s;"><i class="bi bi-trash-fill" style="font-size: 0.8rem;"></i></button>
+                    </div>
+                `;
+            }
+
             card.innerHTML = `
+                ${ownerControls}
                 <div class="playlist-cover-wrapper">
                     <img src="${pl.cover_url || 'https://ik.imagekit.io/offszn/placeholder_playlist.png'}" alt="${pl.title}">
                     <div class="playlist-play-overlay"><i class="bi bi-play-fill"></i></div>
                 </div>
                 <div class="playlist-info">
                     <h4>${escapeHTML(pl.title)}</h4>
-                    <p>${pl.track_ids ? pl.track_ids.length : 0} Beats</p>
+                    <p>${pl.track_ids ? pl.track_ids.length : 0} Productos</p>
                 </div>
             `;
             card.onclick = () => window.ServicesManager.openPlaylist(pl.id);
             playlistSection.appendChild(card);
         });
+
+        // Add placeholder at the end
+        if (isMe) {
+            const placeholder = document.createElement('div');
+            placeholder.className = 'service-card-placeholder';
+            placeholder.id = 'playlist-placeholder-card';
+            placeholder.innerHTML = `
+                <i class="bi bi-plus-lg"></i>
+                <span>Nueva Playlist</span>
+            `;
+            placeholder.onclick = () => {
+                if (trialExpired) {
+                    window.ServicesManager.showUpgradeModal();
+                } else {
+                    window.ServicesManager.openAddModal('playlist');
+                }
+            };
+            playlistSection.appendChild(placeholder);
+        }
+
         servicesContainer.appendChild(playlistSection);
     }
 
-    // --- RENDER CUSTOM SERVICES (Grid) ---
-    if (customServices.length > 0) {
+    // --- RENDER CUSTOM SERVICES ---
+    if (customServices.length > 0 || isMe) {
         const servicesGrid = document.createElement('div');
         servicesGrid.className = 'services-grid-redesign';
+        servicesGrid.id = 'services-grid-main';
+
 
         customServices.forEach(s => {
             const card = document.createElement('div');
             card.className = 'service-card-premium';
-            card.id = s.id; // Unique ID servicios_offszn_xnombre
+            card.id = s.id;
+            // ... (keeping icon logic same)
 
             // Logic for icons based on platform or default
             let iconClass = 'bi-briefcase-fill';
@@ -945,13 +976,26 @@ function renderServicesTab(container) {
                 }
             }
 
+            let ownerControls = '';
+            if (isMe) {
+                ownerControls = `
+                    <div style="display: flex; gap: 8px;">
+                        <button onclick="window.ServicesManager.editItem('service', '${s.id}'); event.stopPropagation();" style="background: rgba(255,255,255,0.05); border: none; color: #aaa; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; display: flex; justify-content: center; align-items: center; transition: all 0.2s;" onmouseover="this.style.color='#fff'; this.style.background='rgba(255,255,255,0.1)';" onmouseout="this.style.color='#aaa'; this.style.background='rgba(255,255,255,0.05)';"><i class="bi bi-pencil-fill" style="font-size: 0.8rem;"></i></button>
+                        <button onclick="window.ServicesManager.deleteItem('service', '${s.id}'); event.stopPropagation();" style="background: rgba(255,255,255,0.05); border: none; color: #ff4d4d; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; display: flex; justify-content: center; align-items: center; transition: all 0.2s;" onmouseover="this.style.color='#fff'; this.style.background='rgba(255,100,100,0.2)';" onmouseout="this.style.color='#ff4d4d'; this.style.background='rgba(255,255,255,0.05)';"><i class="bi bi-trash-fill" style="font-size: 0.8rem;"></i></button>
+                    </div>
+                `;
+            }
+
             card.innerHTML = `
                 <div style="display:flex; justify-content:space-between; align-items:flex-start;">
                     <div style="display:flex; flex-direction:column; gap:8px;">
                         <div class="service-icon" style="color: ${iconColor}; margin:0;"><i class="bi ${iconClass}"></i></div>
                         ${s.category ? `<span class="service-category-tag">${escapeHTML(s.category)}</span>` : ''}
                     </div>
-                    ${!embedHtml && s.link ? `<a href="${s.link}" target="_blank" class="service-link-btn" style="padding: 8px 16px; font-size: 0.8rem;">Ver Más</a>` : ''}
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        ${!embedHtml && s.link ? `<a href="${s.link}" target="_blank" class="service-link-btn" style="padding: 8px 16px; font-size: 0.8rem;" onclick="event.stopPropagation();">Ver Más</a>` : ''}
+                        ${ownerControls}
+                    </div>
                 </div>
                 <h3>${escapeHTML(s.title)}</h3>
                 <p style="white-space: pre-line;">${escapeHTML(s.description)}</p>
@@ -960,6 +1004,27 @@ function renderServicesTab(container) {
             `;
             servicesGrid.appendChild(card);
         });
+
+        // Add placeholder at the end
+        if (isMe) {
+            const placeholder = document.createElement('div');
+            placeholder.className = 'service-card-placeholder';
+            placeholder.id = 'service-placeholder-card';
+            placeholder.style.minHeight = '300px';
+            placeholder.innerHTML = `
+                <i class="bi bi-plus-lg"></i>
+                <span>Nuevo Servicio</span>
+            `;
+            placeholder.onclick = () => {
+                if (trialExpired) {
+                    window.ServicesManager.showUpgradeModal();
+                } else {
+                    window.ServicesManager.openAddModal('service');
+                }
+            };
+            servicesGrid.appendChild(placeholder);
+        }
+
         servicesContainer.appendChild(servicesGrid);
     }
 
@@ -995,8 +1060,9 @@ function renderServicesTab(container) {
     }
 
     // --- EMPTY STATE ---
-    if (!hasLegacy && customServices.length === 0 && playlists.length === 0) {
+    if (!hasLegacy && customServices.length === 0 && playlists.length === 0 && !isMe) {
         const emptyDiv = document.createElement('div');
+        // ... (remaining empty state for visitors only)
         emptyDiv.className = 'empty-state';
         emptyDiv.style.cssText = 'padding: 40px 20px; text-align: center; background: #111; border-radius: 12px; border: 1px solid #222; margin-bottom: 32px;';
 
@@ -1143,8 +1209,17 @@ window.ProfilePersonalizer = {
         const actualHeader = document.querySelector('.profile-header');
         const mockupHeader = document.getElementById('previewHeaderMockup');
         if (actualHeader && mockupHeader) {
-            mockupHeader.style.background = actualHeader.style.background;
-            mockupHeader.style.backgroundImage = actualHeader.style.backgroundImage;
+            // Apply current template class to mockup
+            mockupHeader.className = ''; // Reset
+            if (user.template === 'produccion_template_old_school') {
+                mockupHeader.classList.add('template-old_school');
+            }
+
+            // Sync background
+            const computedStyle = window.getComputedStyle(actualHeader);
+            mockupHeader.style.background = computedStyle.background || actualHeader.style.background;
+            mockupHeader.style.backgroundImage = computedStyle.backgroundImage || actualHeader.style.backgroundImage;
+            mockupHeader.style.backgroundColor = computedStyle.backgroundColor || actualHeader.style.backgroundColor;
             mockupHeader.style.backgroundSize = 'cover';
             mockupHeader.style.backgroundPosition = 'center';
         }
@@ -1160,7 +1235,7 @@ window.ProfilePersonalizer = {
         if (modal) {
             const content = modal.querySelector('.p-modal-content');
             if (content) {
-                content.style.width = '440px';
+                content.style.width = window.innerWidth > 1024 ? '440px' : '95vw';
                 // Reset to default on back
             }
         }
@@ -1199,7 +1274,7 @@ window.ProfilePersonalizer = {
             if (modal) {
                 const content = modal.querySelector('.p-modal-content');
                 if (content) {
-                    content.style.width = '1000px'; // Wide for panoramic
+                    content.style.width = window.innerWidth > 1024 ? '1000px' : '95vw';
                     content.style.transition = 'width 0.4s cubic-bezier(0.4, 0, 0.2, 1)';
                     // ðŸ”¥ Trigger layout recalculation
                     setTimeout(() => window.dispatchEvent(new Event('resize')), 100);
@@ -1328,7 +1403,7 @@ window.ProfilePersonalizer = {
         if (preview) preview.style.display = 'none';
 
         if (modalContainer) {
-            modalContainer.style.width = '1000px'; // Standardized wide width
+            modalContainer.style.width = window.innerWidth > 1024 ? '1000px' : '95vw';
             modalContainer.style.transition = 'width 0.4s cubic-bezier(0.4, 0, 0.2, 1)';
             // ðŸ”¥ Force recalculation to avoid clipping reported by user
             setTimeout(() => window.dispatchEvent(new Event('resize')), 100);
@@ -2385,8 +2460,6 @@ async function renderProductList(items, user, collabStats = {}) {
     window.currentlyPlaying = null;
 
     if (items.length === 0) {
-        const profileRoot = document.getElementById('profile-root');
-        if (profileRoot) profileRoot.classList.add('header-loaded');
         list.innerHTML = '';
         list.classList.add('fade-in');
         const isOwner = window.currentUserId && (user.id === window.currentUserId);
@@ -2627,14 +2700,9 @@ async function renderProductList(items, user, collabStats = {}) {
     });
 
     // 3. Swap
-    if (window.profileRevealSignal) await window.profileRevealSignal;
-
-    // Signal that header data is ready (Used for skeleton toggling)
-    const profileRoot = document.getElementById('profile-root');
-    if (profileRoot) profileRoot.classList.add('header-loaded');
-
     list.innerHTML = '';
     list.appendChild(fragment);
+
     list.classList.remove('fade-in');
     void list.offsetWidth;
     list.classList.add('fade-in');

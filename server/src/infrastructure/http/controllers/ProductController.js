@@ -87,7 +87,10 @@ export const createProduct = async (req, res) => {
             storage_version,
             release_date,
             visibility,
-            status
+            status,
+            promo_active,
+            promo_buy_qty,
+            promo_get_qty
         } = req.body;
 
         const finalTitle = name || title;
@@ -168,6 +171,10 @@ export const createProduct = async (req, res) => {
             price_stems: price_stems !== undefined ? price_stems : (licenses?.stems || null),
             price_exclusive: price_exclusive !== undefined ? price_exclusive : (licenses?.exclusive || null),
             
+            promo_active: promo_active || false,
+            promo_buy_qty: promo_buy_qty || 1,
+            promo_get_qty: promo_get_qty || 1,
+
             release_date: release_date || null,
             visibility: visibility || 'public'
         };
