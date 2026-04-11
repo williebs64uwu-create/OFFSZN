@@ -113,7 +113,7 @@ window.ServicesManager = {
                         <h3 id="servicesModalTitle" style="margin: 0; font-size: 1.15rem; font-weight: 800; letter-spacing: -0.3px;">Añadir Servicio</h3>
                         <button onclick="window.ServicesManager.closeAddModal()" style="background: rgba(255,255,255,0.04); border: none; color: #666; width: 32px; height: 32px; border-radius: 50%; font-size: 1rem; display:flex; align-items:center; justify-content:center; cursor: pointer; transition: all 0.2s;">&times;</button>
                     </div>
-                    <div class="p-modal-main-view" style="padding: 32px; display: flex; flex-direction: column; max-height: 75vh; overflow-y: auto;">
+                    <div class="p-modal-main-view" style="padding: 32px; display: flex; flex-direction: column; max-height: 85vh; overflow-y: auto;">
                         <div id="serviceFields">
                             <label class="offszn-label">Categoría</label>
                             <div class="custom-select-container">

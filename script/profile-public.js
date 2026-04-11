@@ -252,6 +252,7 @@ async function loadUserProfile(username) {
         // 4. Fetch User Products (via API) - SYNC WAIT
         // This ensures productsCache and other variables are ready.
         await loadUserProducts(user);
+        renderGlobalPlaylists(user);
 
         // --- FINISH LOADING BAR ---
         if (loadingBar) {
@@ -281,6 +282,9 @@ async function loadUserProfile(username) {
             
             // Safety: ensure opacity is 1 if it wasn't already
             profileRoot.style.opacity = '1';
+
+            // Ensure default tab content is correctly displayed
+            window.setActiveTab('products');
         }
 
     } catch (e) {
@@ -736,12 +740,15 @@ window.setActiveTab = function (tabName) {
         document.querySelector('.profile-body').appendChild(aboutSection);
     }
 
+    const plSection = document.getElementById('profilePlaylistsSection');
+
     // Logic
     if (tabName === 'products') {
         if (trendingArea) trendingArea.style.display = 'flex';
         if (trendingGrid) trendingGrid.style.display = '';
         if (toolbar) toolbar.style.display = 'flex';
         if (productsList) productsList.style.display = 'flex';
+        if (plSection) plSection.style.display = 'block';
         servicesSection.style.display = 'none';
         aboutSection.style.display = 'none';
     } else if (tabName === 'services') {
@@ -749,6 +756,7 @@ window.setActiveTab = function (tabName) {
         if (trendingGrid) trendingGrid.style.setProperty('display', 'none', 'important');
         if (toolbar) toolbar.style.display = 'none';
         if (productsList) productsList.style.display = 'none';
+        if (plSection) plSection.style.display = 'none';
         servicesSection.style.display = 'block';
         aboutSection.style.display = 'none';
 
@@ -759,6 +767,7 @@ window.setActiveTab = function (tabName) {
         if (trendingGrid) trendingGrid.style.setProperty('display', 'none', 'important');
         if (toolbar) toolbar.style.display = 'none';
         if (productsList) productsList.style.display = 'none';
+        if (plSection) plSection.style.display = 'none';
         servicesSection.style.display = 'none';
         aboutSection.style.display = 'block';
 
@@ -845,6 +854,81 @@ function renderAboutTab(container) {
     container.appendChild(aboutGrid);
 }
 
+function renderGlobalPlaylists(user) {
+    if (!user) return;
+    const container = document.getElementById('playlists-feed-container');
+    if (!container) return;
+
+    container.innerHTML = '';
+    const socials = user.socials || {};
+    const playlists = socials.playlists || [];
+    const isMe = window.currentUserId && (user.id === window.currentUserId);
+
+    if (playlists.length === 0 && !isMe) {
+        const section = document.getElementById('profilePlaylistsSection');
+        if (section) section.style.display = 'none';
+        
+        const skel = document.getElementById('playlistsSkeleton');
+        if (skel) skel.style.display = 'none';
+        return;
+    }
+
+    // Hide Skeleton, Show Container
+    const skel = document.getElementById('playlistsSkeleton');
+    if (skel) skel.style.display = 'none';
+    container.style.display = 'grid';
+
+    const playlistSection = document.createElement('div');
+    playlistSection.className = 'playlists-grid-offszn';
+    playlistSection.id = 'playlists-grid-main';
+
+    playlists.forEach(pl => {
+        const card = document.createElement('div');
+        card.className = 'playlist-card-spotify';
+        card.style.position = 'relative'; 
+        
+        let ownerControls = '';
+        if (isMe) {
+            ownerControls = `
+                <div style="position: absolute; top: 12px; right: 12px; display: flex; gap: 8px; z-index: 10;">
+                    <button onclick="window.ServicesManager.editItem('playlist', '${pl.id}'); event.stopPropagation();" style="background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); border: none; color: #fff; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; display: flex; justify-content: center; align-items: center; transition: background 0.2s;"><i class="bi bi-pencil-fill" style="font-size: 0.8rem;"></i></button>
+                    <button onclick="window.ServicesManager.deleteItem('playlist', '${pl.id}'); event.stopPropagation();" style="background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); border: none; color: #ff4d4d; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; display: flex; justify-content: center; align-items: center; transition: background 0.2s;"><i class="bi bi-trash-fill" style="font-size: 0.8rem;"></i></button>
+                </div>
+            `;
+        }
+
+        card.innerHTML = `
+            ${ownerControls}
+            <div class="playlist-cover-wrapper">
+                <img src="${pl.cover_url || 'https://ik.imagekit.io/offszn/placeholder_playlist.png'}" alt="${pl.title}">
+                <div class="playlist-play-overlay"><i class="bi bi-play-fill"></i></div>
+            </div>
+            <div class="playlist-info">
+                <h4>${escapeHTML(pl.title)}</h4>
+                <p>${pl.track_ids ? pl.track_ids.length : 0} Productos</p>
+            </div>
+        `;
+        card.onclick = () => window.ServicesManager.openPlaylist(pl.id);
+        playlistSection.appendChild(card);
+    });
+
+    if (isMe) {
+        const placeholder = document.createElement('div');
+        placeholder.className = 'service-card-placeholder';
+        placeholder.id = 'playlist-placeholder-card';
+        placeholder.innerHTML = `
+            <i class="bi bi-plus-lg"></i>
+            <span>Nueva Playlist</span>
+        `;
+        placeholder.onclick = () => {
+             window.ServicesManager.openAddModal('playlist');
+        };
+        playlistSection.appendChild(placeholder);
+    }
+
+    container.appendChild(playlistSection);
+}
+
 function renderServicesTab(container) {
     const user = window.currentUserProfile;
     if (!user) return;
@@ -856,84 +940,7 @@ function renderServicesTab(container) {
 
     const socials = user.socials || {};
     const customServices = socials.custom_services || [];
-    const playlists = socials.playlists || [];
-
-    // Check trial expiration
     const isMe = window.currentUserId && (user.id === window.currentUserId);
-    let trialExpired = false;
-    if (user.plan === 'free' && user.plan_start_date) {
-        const start = new Date(user.plan_start_date);
-        const now = new Date();
-        const diffDays = Math.ceil((now - start) / (1000 * 60 * 60 * 24));
-        if (diffDays > 30) trialExpired = true;
-    }
-
-    // --- OWNER CONTROLS (Removed top buttons, using inline placeholders) ---
-    // Section kept for spacing or future global actions
-    if (isMe) {
-        const workspaceHeader = document.createElement('div');
-        workspaceHeader.id = 'inline-workspace-anchor';
-        servicesContainer.appendChild(workspaceHeader);
-    }
-
-    // --- RENDER PLAYLISTS ---
-    if (playlists.length > 0 || isMe) {
-        const playlistSection = document.createElement('div');
-        playlistSection.className = 'playlists-grid-offszn';
-        playlistSection.id = 'playlists-grid-main';
-
-
-        playlists.forEach(pl => {
-            const card = document.createElement('div');
-            card.className = 'playlist-card-spotify';
-            card.style.position = 'relative'; // Ensure absolute positioning of controls works
-            
-            let ownerControls = '';
-            if (isMe) {
-                ownerControls = `
-                    <div style="position: absolute; top: 12px; right: 12px; display: flex; gap: 8px; z-index: 10;">
-                        <button onclick="window.ServicesManager.editItem('playlist', '${pl.id}'); event.stopPropagation();" style="background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); border: none; color: #fff; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; display: flex; justify-content: center; align-items: center; transition: background 0.2s;"><i class="bi bi-pencil-fill" style="font-size: 0.8rem;"></i></button>
-                        <button onclick="window.ServicesManager.deleteItem('playlist', '${pl.id}'); event.stopPropagation();" style="background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); border: none; color: #ff4d4d; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; display: flex; justify-content: center; align-items: center; transition: background 0.2s;"><i class="bi bi-trash-fill" style="font-size: 0.8rem;"></i></button>
-                    </div>
-                `;
-            }
-
-            card.innerHTML = `
-                ${ownerControls}
-                <div class="playlist-cover-wrapper">
-                    <img src="${pl.cover_url || 'https://ik.imagekit.io/offszn/placeholder_playlist.png'}" alt="${pl.title}">
-                    <div class="playlist-play-overlay"><i class="bi bi-play-fill"></i></div>
-                </div>
-                <div class="playlist-info">
-                    <h4>${escapeHTML(pl.title)}</h4>
-                    <p>${pl.track_ids ? pl.track_ids.length : 0} Productos</p>
-                </div>
-            `;
-            card.onclick = () => window.ServicesManager.openPlaylist(pl.id);
-            playlistSection.appendChild(card);
-        });
-
-        // Add placeholder at the end
-        if (isMe) {
-            const placeholder = document.createElement('div');
-            placeholder.className = 'service-card-placeholder';
-            placeholder.id = 'playlist-placeholder-card';
-            placeholder.innerHTML = `
-                <i class="bi bi-plus-lg"></i>
-                <span>Nueva Playlist</span>
-            `;
-            placeholder.onclick = () => {
-                if (trialExpired) {
-                    window.ServicesManager.showUpgradeModal();
-                } else {
-                    window.ServicesManager.openAddModal('playlist');
-                }
-            };
-            playlistSection.appendChild(placeholder);
-        }
-
-        servicesContainer.appendChild(playlistSection);
-    }
 
     // --- RENDER CUSTOM SERVICES ---
     if (customServices.length > 0 || isMe) {
@@ -947,13 +954,6 @@ function renderServicesTab(container) {
             card.className = 'service-card-premium';
             card.id = s.id;
             // ... (keeping icon logic same)
-
-            // Logic for icons based on platform or default
-            let iconClass = 'bi-briefcase-fill';
-            let iconColor = '#8b5cf6';
-            if (s.link && s.link.includes('spotify')) { iconClass = 'bi-spotify'; iconColor = '#1DB954'; }
-            else if (s.link && s.link.includes('youtube')) { iconClass = 'bi-youtube'; iconColor = '#FF0000'; }
-            else if (s.link && s.link.includes('soundcloud')) { iconClass = 'bi-soundcloud'; iconColor = '#FF3300'; }
 
             // Logic for iframe embeds (like Spotify)
             let embedHtml = '';
@@ -989,7 +989,6 @@ function renderServicesTab(container) {
             card.innerHTML = `
                 <div style="display:flex; justify-content:space-between; align-items:flex-start;">
                     <div style="display:flex; flex-direction:column; gap:8px;">
-                        <div class="service-icon" style="color: ${iconColor}; margin:0;"><i class="bi ${iconClass}"></i></div>
                         ${s.category ? `<span class="service-category-tag">${escapeHTML(s.category)}</span>` : ''}
                     </div>
                     <div style="display: flex; align-items: center; gap: 12px;">
@@ -1060,7 +1059,7 @@ function renderServicesTab(container) {
     }
 
     // --- EMPTY STATE ---
-    if (!hasLegacy && customServices.length === 0 && playlists.length === 0 && !isMe) {
+    if (!hasLegacy && customServices.length === 0 && !isMe) {
         const emptyDiv = document.createElement('div');
         // ... (remaining empty state for visitors only)
         emptyDiv.className = 'empty-state';
@@ -1144,7 +1143,7 @@ window.ProfilePersonalizer = {
         }
         // Reset view
         document.getElementById('sideBySideContainer').style.display = 'none';
-        const mainView = document.querySelector('.p-modal-main-view');
+        const mainView = document.getElementById('p-modal-main-menu');
         if (mainView) mainView.style.display = 'flex';
 
         // Fetch Plan Status
@@ -1257,7 +1256,7 @@ window.ProfilePersonalizer = {
         const sideContainer = document.getElementById('sideBySideContainer');
         if (sideContainer) sideContainer.style.height = '600px';
 
-        const mainView = document.querySelector('.p-modal-main-view');
+        const mainView = document.getElementById('p-modal-main-menu');
         if (mainView) mainView.style.display = 'flex';
     },
 
@@ -1281,7 +1280,7 @@ window.ProfilePersonalizer = {
                 }
             }
 
-            const mainView = document.querySelector('.p-modal-main-view');
+            const mainView = document.getElementById('p-modal-main-menu');
             if (mainView) mainView.style.display = 'none';
             document.getElementById('sideBySideContainer').style.display = 'flex';
 
