@@ -192,6 +192,13 @@ app.get('/system/v2/config/dump', (req, res, next) => {
     res.status(200).json({ status: 'diagnostic_mode', message: 'System logs placeholder' });
 });
 
+app.get('/api/health', (req, res) => {
+    const secret = req.headers['x-offszn-secret'];
+    const expectedSecret = 'offszn_keep_alive_2026_safe';
+    if (secret !== expectedSecret) return res.status(403).json({ error: 'Unauthorized' });
+    res.status(200).send('OK');
+});
+
 // --- 2.3 GLOBAL RATE LIMITING ---
 // Protege toda la aplicación contra ataques de fuerza bruta básicos o Ddos
 app.use('/api', r2Routes);
@@ -207,12 +214,7 @@ app.post('/api/negotiate/purchase-token', authenticateTokenMiddleware, generateP
 app.get('/api/negotiate/validate-token', validatePurchaseToken);
 app.post('/api/negotiate/report', authenticateTokenMiddleware, reportIssue);
 
-app.get('/api/health', (req, res) => {
-    const secret = req.headers['x-offszn-secret'];
-    const expectedSecret = 'offszn_keep_alive_2026_safe';
-    if (secret !== expectedSecret) return res.status(403).json({ error: 'Unauthorized' });
-    res.status(200).send('OK');
-});
+
 
 // --- 2.4 NEWSLETTER (EMAIL OCTOPUS) ---
 app.post('/api/newsletter/subscribe', async (req, res) => {

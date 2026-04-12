@@ -12,7 +12,7 @@ export const globalLimiter = rateLimit({
     },
     skip: (req) => {
         const ua = req.get('User-Agent') || '';
-        return /Discordbot|Twitterbot|facebookexternalhit|LinkedInBot|slackbot|Googlebot|TelegramBot|WhatsApp/i.test(ua);
+        return /Discordbot|Twitterbot|facebookexternalhit|LinkedInBot|slackbot|Googlebot|TelegramBot|WhatsApp|cron-job\.org/i.test(ua);
     }
 });
 
