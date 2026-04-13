@@ -32,29 +32,6 @@ window.IdObfuscator = {
     // 2. Base64-ish text
 
     encodeId: function (n) {
-        // Use a simple multiplicative inverse obfuscation
-        // Max ID approx 1 billion.
-        // We just want it to look random.
-        // Let's use standard Hex transformation + slight shuffle
-        // Actually, let's keep it robust: Base64 of a transformed number.
-
-        let x = BigInt(n);
-        // Transform: x' = x * 6364136223846793005 + 1442695040888963407 (Knuth's LCG constants)
-        // But simpler: just XOR with a mask and maybe swap bits.
-        // Let's simpler:
-        const xorMask = 0xA5A5A5;
-        const result = (Number(n) ^ xorMask).toString(16);
-        // To make it look "short code-ish", remove typical hex look.
-        // Actually, the user just wants "Short".
-
-        // Let's use simple Base64 of ID but without '==' padding and URL safe.
-        // prod.id = 72 -> "NzI"
-        // prod.id = 12345 -> "MTIzNDU"
-
-        // The user specifically disliked "NzI=".
-        // He liked "LmIrJ".
-        // Let's map 0-9 a-z A-Z to a shuffled alphabet.
-
         return toShuffledBase(n);
     },
 
@@ -76,7 +53,25 @@ const LEGACY_MAPPINGS = {
 
 function toShuffledBase(num) {
     let n = Number(num);
-    if (isNaN(n) || n === 0) return CHARS[0];
+    
+    // Si no es un número puro (como servicios_offszn_123), intentamos extraer el timestamp
+    if (isNaN(n)) {
+        const matches = String(num).match(/\d+/);
+        if (matches) {
+            n = Number(matches[0]);
+        } else {
+            // Si realmente no hay números, usamos un hash simple de la cadena
+            let hash = 0;
+            const str = String(num);
+            for (let i = 0; i < str.length; i++) {
+                hash = (hash << 5) - hash + str.charCodeAt(i);
+                hash |= 0;
+            }
+            n = Math.abs(hash);
+        }
+    }
+
+    if (n === 0) return CHARS[0];
 
     // Add a salt offset so ID 1 isn't just 'q'
     n = (n * 321) + 74;

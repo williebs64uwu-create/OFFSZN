@@ -158,6 +158,7 @@
                 const productIds = new Set();
 
                 (notifs || []).forEach(n => {
+                    if (n.actor_id) actorIds.add(n.actor_id); // Universal actor_id if exists
                     if (n.type === 'product_like' && n.data?.liker_id) actorIds.add(n.data.liker_id);
                     if (n.type === 'product_like' && n.data?.product_id) productIds.add(n.data.product_id);
                     if (n.type === 'new_follower') {
@@ -286,6 +287,21 @@
                         }
 
 
+                    } else if (n.type === 'welcome') {
+                        const actor = n.actor_id ? actorsMap[n.actor_id] : null;
+                        if (actor) {
+                            const name = actor.nickname || actor.first_name || 'Alguien';
+                            const artistData = JSON.stringify({ nickname: name }).replace(/'/g, "&apos;").replace(/"/g, "&quot;");
+                            const profileUrl = window.createProfileLink(actor);
+                            const nameHtml = `<strong class="artist-hover-trigger" 
+                                                      data-artist='${artistData}'
+                                                      data-id="${actor.id}" 
+                                                      onmouseenter="window.showArtistCard(event, this)" 
+                                                      onmouseleave="window.hideArtistCard(event, this)"
+                                                      onclick="event.stopPropagation(); window.location.href='${profileUrl}'" 
+                                                      style="cursor:pointer;">${name}</strong>`;
+                            finalMessage = `${nameHtml} te ha dado la bienvenida a la comunidad.`;
+                        }
                     } else if (n.type === 'payment_method_missing') {
                         const buyerName = n.data?.buyer_username || 'Un comprador';
                         const prodName = n.data?.product_name || 'un producto';
@@ -321,7 +337,9 @@
                                         ? `/comunidad/feed.html?reqId=${n.data?.request_id || ''}`
                                         : (n.type?.startsWith('negotiate_'))
                                         ? '/cuenta/negociar'
-                                        : null
+                                        : (n.type === 'welcome')
+                                        ? (n.actor_id && actorsMap[n.actor_id] ? window.createProfileLink(actorsMap[n.actor_id]) : n.link)
+                                        : n.link // Use db link if explicitly provided for unknowns
                     };
                 });
 
@@ -517,6 +535,7 @@
                 case 'collab_accepted': return 'fa-check-circle';
                 case 'new_follower': return 'fa-user-plus';
                 case 'product_like': return 'fa-heart text-danger';
+                case 'welcome': return 'fa-hand-sparkles style="color: #ecc94b;"'; // Gold sparkles
                 case 'product_published': return 'fa-rocket';
                 case 'new_message': return 'fa-comment-dots';
                 case 'negotiate_offer': return 'fa-sack-dollar';
@@ -659,6 +678,8 @@
                 finalUrl = '/cuenta/negociar';
             } else if (type === 'payment_method_missing' || (type === 'system_alert' && extraId === 'open_paypal_settings')) {
                 finalUrl = '/transacciones';
+            } else if (type === 'welcome') {
+                finalUrl = targetUrl;
             }
         }
 

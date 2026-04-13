@@ -279,7 +279,7 @@ async function loadUserProfile(username) {
         // 4. FINAL REVEAL: Add class to remove all skeletons simultaneously
         if (profileRoot) {
             profileRoot.classList.add('header-loaded');
-            
+
             // Safety: ensure opacity is 1 if it wasn't already
             profileRoot.style.opacity = '1';
 
@@ -657,7 +657,7 @@ async function renderHeader(user, categoryCounts = null) {
                 if (window.showGuestModal) {
                     window.showGuestModal(
                         "Â¡Sigue a este productor!",
-                        "Crea una cuenta para seguir a tus artistas favoritos, recibir notificaciones de nuevos lanzamientos y mÃ¡s."
+                        "Crea una cuenta para seguir a tus artistas favoritos, recibir notificaciones de nuevos lanzamientos y más!."
                     );
                 } else {
                     window.location.href = '/pages/login.html';
@@ -696,7 +696,7 @@ async function renderHeader(user, categoryCounts = null) {
                     }
                 } else if (res.status === 400) {
                     const data = await res.json();
-                    showToast(data.error || "No puedes realizar esta acciÃ³n");
+                    showToast(data.error || "No puedes realizar esta acción");
                 }
             } catch (e) { console.error(e); }
             finally { followBtn.disabled = false; }
@@ -867,7 +867,7 @@ function renderGlobalPlaylists(user) {
     if (playlists.length === 0 && !isMe) {
         const section = document.getElementById('profilePlaylistsSection');
         if (section) section.style.display = 'none';
-        
+
         const skel = document.getElementById('playlistsSkeleton');
         if (skel) skel.style.display = 'none';
         return;
@@ -885,8 +885,8 @@ function renderGlobalPlaylists(user) {
     playlists.forEach(pl => {
         const card = document.createElement('div');
         card.className = 'playlist-card-spotify';
-        card.style.position = 'relative'; 
-        
+        card.style.position = 'relative';
+
         let ownerControls = '';
         if (isMe) {
             ownerControls = `
@@ -921,7 +921,7 @@ function renderGlobalPlaylists(user) {
             <span>Nueva Playlist</span>
         `;
         placeholder.onclick = () => {
-             window.ServicesManager.openAddModal('playlist');
+            window.ServicesManager.openAddModal('playlist');
         };
         playlistSection.appendChild(placeholder);
     }
@@ -994,6 +994,12 @@ function renderServicesTab(container) {
                 `;
             }
 
+            const cleanTitle = s.slug || (s.title || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+            const encodedId = window.IdObfuscator?.encodeId(s.id) || s.id;
+            const nickname = (user.nickname || user.username || 'user').toLowerCase().replace(/[^a-z0-9]+/g, '');
+            const serviceSlug = `${cleanTitle}-${encodedId}-${nickname}`;
+            const internalChatUrl = `/mensajes.html?to=${user.id}&text=${encodeURIComponent('Hola, me interesa tu servicio: ' + s.title)}`;
+
             card.innerHTML = `
                 ${ownerControls}
                 <div class="service-v2-top">
@@ -1006,10 +1012,10 @@ function renderServicesTab(container) {
                 ${embedHtml}
 
                 <div class="service-v2-actions">
-                    <a href="${s.link || '#'}" target="_blank" class="btn-v2-buy">
+                    <a href="${internalChatUrl}" class="btn-v2-buy">
                         COMPRAR ${s.price ? `$${s.price}` : 'FREE'}
                     </a>
-                    <button class="btn-v2-details" onclick="window.location.hash='${s.id}'">
+                    <button class="btn-v2-details" onclick="window.location.href='/servicio/${serviceSlug}'">
                         VER DETALLES
                     </button>
                 </div>
@@ -1379,7 +1385,7 @@ window.ProfilePersonalizer = {
         if (!file) return;
 
         if (file.size > 30 * 1024 * 1024) {
-            if (window.showToast) window.showToast("El archivo es muy pesado (mÃ¡x 30MB).", "error");
+            if (window.showToast) window.showToast("El archivo es muy pesado (max 30MB).", "error");
             return;
         }
 
@@ -2094,7 +2100,7 @@ function setupBioCollapse() {
             const toggle = document.createElement('span');
             toggle.id = 'bioToggle';
             toggle.style.cssText = 'color:var(--p-accent); cursor:pointer; font-weight:600; margin-top:4px; display:inline-block;';
-            toggle.textContent = isShort ? 'Ver mÃ¡s' : 'Ver menos';
+            toggle.textContent = isShort ? 'Ver más' : 'Ver menos';
             bioText.appendChild(toggle);
         }
     };

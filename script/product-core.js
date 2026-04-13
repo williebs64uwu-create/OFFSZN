@@ -57,83 +57,55 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     try {
-        // 0. Get Session (for "My Like" status and Coupons)
+        // --- CONCURRENT FETCH 1: Session & Product ---
+        let productPromise = null;
+        if (urlData.id) {
+            productPromise = window.supabaseClient.from('products').select(`*, producer:producer_id (*)`).eq('id', urlData.id).neq('status', 'deleted').maybeSingle();
+        } else if (urlData.slug) {
+            productPromise = window.supabaseClient.from('products').select(`*, producer:producer_id (*)`).eq('public_slug', urlData.slug).neq('status', 'deleted').maybeSingle();
+        } else {
+            productPromise = Promise.resolve({ data: null, error: new Error("Invalid URL params") });
+        }
+
+        const sessionPromise = window.supabaseClient.auth.getSession();
+
+        // Await simultaneously reducing waterfall latency
+        const [productRes, sessionRes] = await Promise.all([productPromise, sessionPromise]);
+        
+        let product = productRes.data;
+        let error = productRes.error;
+
+        // 🔥 SEO REDIRECT: If we found product via ID but the slug doesn't match the official public_slug
+        if (urlData.id && product && urlData.slug && product.public_slug && product.public_slug !== urlData.slug) {
+            const currentPath = window.location.pathname;
+            const newPath = currentPath.replace(urlData.slug, product.public_slug);
+            if (newPath !== currentPath) {
+                window.location.replace(newPath);
+                return;
+            }
+        }
+
+        // Attempt 2: Slug Lookup (Fallback if ID failed or was invalid/collision)
+        if (!product && urlData.id && urlData.slug) {
+            const fallbackRes = await window.supabaseClient.from('products').select(`*, producer:producer_id (*)`).eq('public_slug', urlData.slug).neq('status', 'deleted').maybeSingle();
+            product = fallbackRes.data;
+            if (fallbackRes.error) error = fallbackRes.error;
+        }
+
+        if (error) throw error;
+        if (!product) throw new Error("Producto no encontrado.");
+
         let currentUser = null;
-        const sessionRes = await window.supabaseClient.auth.getSession();
         if (sessionRes.data && sessionRes.data.session) {
             currentUser = sessionRes.data.session.user;
-            // Ensure userId is in localStorage for consistency in other checks
             localStorage.setItem('userId', currentUser.id);
-            // Sync coupons if logged in
             if (currentUser.email) {
-                await syncClaimedCoupon(currentUser.email);
+                // Async no bloqueante
+                typeof syncClaimedCoupon === 'function' && syncClaimedCoupon(currentUser.email).catch(() => {});
             }
         }
 
-        // 2. Fetch Data from Supabase (Dual Lookup: ID or Slug)
-        // 2. Fetch Data from Supabase (Robust Dual Lookup)
-        let product = null;
-        let error = null;
-
-        // Attempt 1: ID Lookup (Fastest)
-        if (urlData.id) {
-            const { data, error: err } = await window.supabaseClient
-                .from('products')
-                .select(`*, producer:producer_id (*)`)
-                .eq('id', urlData.id)
-                .neq('status', 'deleted') // Soft Delete Check
-                .maybeSingle();
-
-            // 🔥 SEO REDIRECT: If we found product via ID but the slug doesn't match the official public_slug,
-            // we redirect to the correct canonical URL instead of failing.
-            if (data && urlData.slug && data.public_slug && data.public_slug !== urlData.slug) {
-                const currentPath = window.location.pathname;
-                const newPath = currentPath.replace(urlData.slug, data.public_slug);
-                if (newPath !== currentPath) {
-                    window.location.replace(newPath);
-                    return; // Prevent further execution
-                }
-            }
-            product = data;
-            error = err;
-        }
-
-        // Attempt 2: Slug Lookup (Fallback if ID failed or was invalid/collision)
-        // This fixes cases where the URL parser mistakenly decodes part of the name (e.g. "bpm") as an ID.
-        // Attempt 2: Slug Lookup (Fallback if ID failed or was invalid/collision)
-        // This fixes cases where the URL parser mistakenly decodes part of the name (e.g. "bpm") as an ID.
-        if (!product && urlData.slug) {
-
-            const { data, error: err } = await window.supabaseClient
-                .from('products')
-                .select(`*, producer:producer_id (*)`)
-                .eq('public_slug', urlData.slug)
-                .neq('status', 'deleted') // Soft Delete Check
-                .maybeSingle();
-
-            product = data;
-            if (err) error = err; // Update error only if this attempt also fails
-        }
-
-        if (error) {
-            throw error;
-        }
-
-        if (!product) {
-            throw new Error("Producto no encontrado.");
-        }
-
-        // --- PARALLEL DATA FETCHING (Likes & Followers) ---
-        const promises = [];
-
-        // A. Real Like Count
-        const likesCountPromise = window.supabaseClient
-            .from('likes')
-            .select('*', { count: 'exact', head: true })
-            .eq('target_id', product.id)
-            .eq('target_type', 'product');
-
-        // B. Did I Like?
+        // --- CONCURRENT FETCH 2: Likes & Followers ---
         let userLikePromise = Promise.resolve({ count: 0 }); // Default false
         if (currentUser) {
             userLikePromise = window.supabaseClient
@@ -144,7 +116,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 .eq('user_id', currentUser.id);
         }
 
-        // C. Producer Follower Count
         let producerFollowersPromise = Promise.resolve({ count: 0 });
         if (product.producer_id) {
             producerFollowersPromise = window.supabaseClient
@@ -153,27 +124,34 @@ document.addEventListener('DOMContentLoaded', async () => {
                 .eq('user_id', product.producer_id); // user_id is the Leader
         }
 
-        const [likesRes, userLikeRes, followersRes] = await Promise.all([
-            likesCountPromise,
-            userLikePromise,
-            producerFollowersPromise
-        ]);
-
-        // Attach Real Data to Product Object for Rendering
-        product.stats_likes = likesRes.count || 0;
-        product.user_has_liked = (userLikeRes.count && userLikeRes.count > 0);
-
-        // Enrich producer object if exists
+        // 3. Inject Dynamic SEO
+        product.stats_likes = product.likes_count || 0;
         if (product.producer) {
-            if (Array.isArray(product.producer)) product.producer = product.producer[0]; // Safety
-            product.producer.followers_count = followersRes.count || 0;
+            if (Array.isArray(product.producer)) product.producer = product.producer[0];
         }
-
-        // 3. Inject Dynamic SEO (Title, Meta, Schema JSON-LD)
         injectDynamicSEO(product);
 
-        // 4. Kick off the rendering
+        // 4. Kick off the rendering securely WITHOUT waiting for likes/followers
         renderProductPage(product);
+
+        // 5. Resolve likes and followers in background (NO JSON REPLACE BUGS, NO DOM FLICKER)
+        Promise.all([userLikePromise, producerFollowersPromise]).then(([userLikeRes, followersRes]) => {
+            product.user_has_liked = (userLikeRes?.count && userLikeRes.count > 0);
+            if (product.producer) product.producer.followers_count = followersRes?.count || 0;
+            
+            // Silently paint the heart red if confirmed liked via DB, avoiding double click issues
+            const isActuallyLiked = product.user_has_liked || (window.FavoritesManager && window.FavoritesManager.isLiked(String(product.id)));
+            if (isActuallyLiked) {
+                document.querySelectorAll('.btn-like-action').forEach(btn => {
+                    btn.classList.add('liked');
+                    const icon = btn.querySelector('i');
+                    if (icon) {
+                        icon.classList.remove('bi-heart');
+                        icon.classList.add('bi-heart-fill');
+                    }
+                });
+            }
+        }).catch(e => console.warn("Background metrics load error:", e));
 
         // --- NEW: Pending Coupon Activation on Return from Onboarding ---
         const pendingCoupon = localStorage.getItem('offszn_pending_coupon_claim');

@@ -533,6 +533,71 @@ app.get([
     }
 });
 
+// --- 3.4.5 SERVICE SHORTCUT ROUTE (/servicio/:slug) ---
+app.get('/servicio/:slug', async (req, res, next) => {
+    const { slug } = req.params;
+    const servicePagePath = path.join(rootPath, 'servicio.html');
+    if (!fs.existsSync(servicePagePath)) return next();
+
+    try {
+        const { supabase: db } = await import('./infrastructure/database/connection.js');
+        
+        // Extract parts: [title]-[code]-[nickname]
+        const segments = slug.split('-').filter(p => p.trim());
+        if (segments.length < 2) return res.sendFile(servicePagePath);
+
+        const nickname = segments[segments.length - 1];
+        const code = segments[segments.length - 2];
+        const targetId = serverDecodeId(code) || code;
+
+        // Fetch user basic data for OG Tags
+        const { data: user } = await db
+            .from('users')
+            .select('id, nickname, avatar_url, socials')
+            .eq('nickname', nickname)
+            .single();
+
+        let html = fs.readFileSync(servicePagePath, 'utf8');
+
+        if (user) {
+            const services = user.socials?.custom_services || [];
+            const service = services.find(s => s.id === targetId || s.id === `servicios_offszn_${targetId}`);
+            
+            if (service) {
+                const title = `${service.title} | ${user.nickname} - OFFSZN`;
+                const description = service.description 
+                    ? service.description.substring(0, 160) + '...'
+                    : `Contrata el servicio "${service.title}" de ${user.nickname} en OFFSZN.lat`;
+                
+                let image = user.avatar_url || 'https://offszn.lat/images/LOGO%20OFFSZN.webp';
+                const url = `https://offszn.lat/servicio/${slug}`;
+
+                const ogTags = `
+    <!-- Dynamic Service OG Tags -->
+    <meta property="og:title" content="${title}">
+    <meta property="og:description" content="${description}">
+    <meta property="og:image" content="${image}">
+    <meta property="og:url" content="${url}">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="${title}">
+    <meta name="twitter:description" content="${description}">
+    <meta name="twitter:image" content="${image}">
+                `;
+
+                html = html.replace('<head>', `<head>\n${ogTags}`);
+                html = html.replace(/<title>.*?<\/title>/, `<title>${title}</title>`);
+            }
+        }
+
+        res.send(html);
+
+    } catch (err) {
+        console.error("Error serving service page:", err);
+        res.sendFile(servicePagePath);
+    }
+});
+
 // --- 3.5 BIOLINK SHORTCUT ROUTE (/b/:username) ---
 // Supports both /b/@username and /b/username
 app.get([

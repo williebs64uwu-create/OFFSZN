@@ -929,11 +929,11 @@
     <div class="modal-overlay" id="modalCoupon">
         <div class="elite-modal">
             <div class="modal-header">
-                <h3><i class="bi bi-ticket-perforated" style="color:var(--accent-purple);"></i> Crear CupÃ³n</h3>
+                <h3><i class="bi bi-ticket-perforated" style="color:var(--accent-purple);"></i> Crear Cupón</h3>
                 <button class="btn-close-modal" onclick="closeModals()"><i class="bi bi-x-lg"></i></button>
             </div>
             <div class="modal-body">
-                <input type="text" id="couponCode" placeholder="CÃ³digo (ej. VERANO2025)"
+                <input type="text" id="couponCode" placeholder="Código (ej. VERANO2025)"
                     style="text-transform:uppercase;">
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
                     <input type="number" id="couponAmount" placeholder="Monto (ej. 20)">
@@ -945,7 +945,7 @@
             </div>
             <div class="modal-footer">
                 <button class="elite-btn-ghost" onclick="closeModals()">Cancelar</button>
-                <button class="elite-btn" onclick="saveCoupon()">Crear CupÃ³n</button>
+                <button class="elite-btn" onclick="saveCoupon()">Crear Cupón</button>
             </div>
         </div>
     </div>
@@ -998,9 +998,14 @@
                             style="width: 80%; height: 80%; object-fit: contain; filter: drop-shadow(0 0 20px rgba(139, 92, 246, 0.2)); margin: auto;">
                     </div>
 
-                    <div style="text-align: center; margin-bottom: -10px; display: flex; flex-direction: column; gap: 4px; min-height: 40px; justify-content: center;">
-                        <span id="globalUploadCounter" style="color: #666; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Cargando contador...</span>
-                        <div id="globalLimitStatusLabel" style="display:none; color: #fff; font-size: 13px; font-weight: 800; text-transform: uppercase;">¡Límite alcanzado!</div>
+                    <div
+                        style="text-align: center; margin-bottom: -10px; display: flex; flex-direction: column; gap: 4px; min-height: 40px; justify-content: center;">
+                        <span id="globalUploadCounter"
+                            style="color: #666; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Cargando
+                            contador...</span>
+                        <div id="globalLimitStatusLabel"
+                            style="display:none; color: #fff; font-size: 13px; font-weight: 800; text-transform: uppercase;">
+                            ¡Límite alcanzado!</div>
                     </div>
                     <button id="btnGlobalUploadStrategy"
                         style="width: 100%; padding: 16px; border-radius: 50px; background: #fff; color: #000; border: none; font-size: 16px; font-weight: 700; cursor: pointer; transition: all 0.2s; margin-top: 10px;"
@@ -1021,9 +1026,14 @@
                             style="width: 115%; height: 115%; object-fit: contain; margin: auto;">
                     </div>
 
-                    <div style="text-align: center; margin-bottom: -10px; display: flex; flex-direction: column; gap: 4px; min-height: 40px; justify-content: center;">
-                        <span id="ytUploadCounter" style="color: #666; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Cargando contador...</span>
-                        <div id="ytLimitStatusLabel" style="display:none; color: #fff; font-size: 13px; font-weight: 800; text-transform: uppercase;">¡Límite de videos alcanzado!</div>
+                    <div
+                        style="text-align: center; margin-bottom: -10px; display: flex; flex-direction: column; gap: 4px; min-height: 40px; justify-content: center;">
+                        <span id="ytUploadCounter"
+                            style="color: #666; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Cargando
+                            contador...</span>
+                        <div id="ytLimitStatusLabel"
+                            style="display:none; color: #fff; font-size: 13px; font-weight: 800; text-transform: uppercase;">
+                            ¡Límite de videos alcanzado!</div>
                     </div>
                     <button id="btnYoutubeUploadStrategy"
                         style="width: 100%; padding: 16px; border-radius: 50px; background: #fff; color: #000; border: none; font-size: 16px; font-weight: 700; cursor: pointer; transition: all 0.2s; margin-top: 10px;"
@@ -1083,12 +1093,12 @@
                 }
 
                 // 1. YouTube Strategy Protection
-                const hasYTFeature = await window.AuthUtils.checkFeatureAccess('unlimited_uploads') || 
-                                    (await window.AuthUtils.getUserPlanData()).plan !== 'free';
+                const hasYTFeature = await window.AuthUtils.checkFeatureAccess('unlimited_uploads') ||
+                    (await window.AuthUtils.getUserPlanData()).plan !== 'free';
                 const ytStatus = await window.AuthUtils.getYouTubeUploadStatus();
                 const ytBtn = document.getElementById('btnYoutubeUploadStrategy');
                 const ytCounter = document.getElementById('ytUploadCounter');
-                
+
                 if (ytCounter) {
                     ytCounter.innerText = `${ytStatus.used} de ${ytStatus.limit} videos subidos`.toUpperCase();
                 }
@@ -1114,7 +1124,7 @@
                 // 2. Global Modal Logic
                 const mainBtn = document.getElementById('btnGlobalUploadStrategy');
                 const globalCounter = document.getElementById('globalUploadCounter');
-                
+
                 if (globalCounter) {
                     globalCounter.innerText = `${status.count} de ${status.limit} productos subidos`.toUpperCase();
                 }
@@ -1158,8 +1168,8 @@
         window.saveCoupon = () => {
             // Mock Save
             const code = document.getElementById('couponCode').value;
-            if (!code) return window.showToast("Ingresa un cÃ³digo", "error");
-            window.showToast("CupÃ³n creado (Demo)", "success");
+            if (!code) return window.showToast("Ingresa un código", "error");
+            window.showToast("Cupón creado (Demo)", "success");
             window.closeModals();
         };
 

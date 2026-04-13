@@ -598,10 +598,15 @@ window.ServicesManager = {
                 return alert("Límite de 6 servicios alcanzado.");
             }
 
+            const slugGenerated = title.toLowerCase()
+                .replace(/[^a-z0-9]+/g, '-')
+                .replace(/(^-|-$)+/g, '');
+
             const newService = {
                 id: this.editingItemId || ('servicios_offszn_' + Date.now()),
                 category: category === 'Otro' ? customTag : category,
                 title,
+                slug: slugGenerated,
                 description: desc,
                 link,
                 price: price || null

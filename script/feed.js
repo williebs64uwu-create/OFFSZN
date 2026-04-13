@@ -65,47 +65,112 @@ function initModal() {
     }
 }
 
+window.FeedState = { likes: new Set(), follows: new Set(), welcomes: new Set() };
+
+async function loadUserFeedState() {
+    const user = AuthUtils.getCurrentUser();
+    if (!user || !user.id) return;
+
+    try {
+        const [likesRes, followsRes, welcomesRes] = await Promise.all([
+            window.supabaseClient.from('likes').select('target_id').eq('user_id', user.id).limit(1000),
+            window.supabaseClient.from('followers').select('user_id').eq('follower_id', user.id).limit(1000),
+            window.supabaseClient.from('notifications').select('user_id').eq('actor_id', user.id).eq('type', 'welcome').limit(1000)
+        ]);
+
+        if (likesRes.data) likesRes.data.forEach(l => window.FeedState.likes.add(String(l.target_id)));
+        if (followsRes.data) followsRes.data.forEach(f => window.FeedState.follows.add(String(f.user_id)));
+        if (welcomesRes.data) welcomesRes.data.forEach(w => window.FeedState.welcomes.add(String(w.user_id)));
+    } catch (e) {
+        console.error("Error loading feed states", e);
+    }
+}
+
 async function initFeed() {
     const requestsContainer = document.getElementById('requests-container');
     if (!requestsContainer) return;
 
-    // Try to get current user ID for the "isOwnRequest" check
-    if (!window.currentUserId && window.supabaseClient) {
-        try {
-            const { data } = await window.supabaseClient.auth.getSession();
-            if (data?.session?.user) {
-                window.currentUserId = data.session.user.id;
-            }
-        } catch (e) { }
-    }
+    // Loading State
+    requestsContainer.innerHTML = `
+        <div style="grid-column: 1/-1; text-align: center; padding: 60px; color: #555;">
+            <div class="simple-loader"></div>
+            <p style="margin-top: 15px; font-size: 0.85rem;">Cargando interacciones...</p>
+        </div>
+    `;
 
     try {
-        const token = AuthUtils.getAccessToken();
-        const headers = {};
-        if (token) {
-            headers['Authorization'] = `Bearer ${token}`;
+        if (!window.supabaseClient && window.AuthUtils) {
+            window.AuthUtils.initSupabase();
         }
 
-        const response = await fetch('/api/custom-requests/public', {
-            headers: headers
+        // --- PARALLEL LOAD ---
+        // Fire both, but only await the activities for instant UI
+        const statePromise = loadUserFeedState();
+        const activitiesPromise = window.supabaseClient
+            .from('community_activities')
+            .select('*')
+            .order('created_at', { ascending: false })
+            .limit(60);
+
+        const [activitiesRes] = await Promise.all([activitiesPromise]);
+        const activities = activitiesRes.data;
+        const error = activitiesRes.error;
+
+        if (error) throw error;
+
+        window.allActivities = activities || [];
+        renderFeed(activities);
+
+        // --- BACKGROUND HYDRATION ---
+        // Once likes/follows are loaded, quietly update the UI buttons
+        statePromise.then(() => {
+            document.querySelectorAll('.activity-card').forEach(card => {
+                const activityId = card.getAttribute('data-activity-id');
+                const activity = window.allActivities.find(a => String(a.id) === activityId);
+                if (!activity) return;
+
+                const targetId = String(activity.target_id || activity.id);
+                const actorId = String(activity.actor_id);
+
+                // Update Like Button
+                const likeBtn = card.querySelector('.action-btn[title="Like"]');
+                if (likeBtn && window.FeedState.likes.has(targetId)) {
+                    likeBtn.classList.add('active');
+                    const icon = likeBtn.querySelector('i');
+                    if (icon) {
+                        icon.classList.remove('bi-heart');
+                        icon.classList.add('bi-heart-fill');
+                    }
+                }
+
+                // Update Follow Button
+                const followBtn = card.querySelector('.btn-follow-small');
+                if (followBtn && window.FeedState.follows.has(actorId)) {
+                    followBtn.innerText = 'Siguiendo';
+                    followBtn.style.color = '#fff';
+                }
+
+                // Update Welcome Button
+                const waveBtn = card.querySelector('.action-btn-wave');
+                if (waveBtn && window.FeedState.welcomes.has(actorId)) {
+                    waveBtn.classList.add('active');
+                    waveBtn.innerHTML = '<i class="bi bi-hand-wave-fill"></i> ¡Saludado!';
+                }
+            });
         });
 
-        if (!response.ok) {
-            throw new Error('Error al cargar solicitudes');
-        }
+        if (error) throw error;
 
-        const { requests } = await response.json();
-        window.allRequests = requests || [];
-        renderRequests(requests);
+        window.allActivities = activities || [];
+        renderFeed(activities);
 
-        // Auto-open modal if reqId is linked
+        // Auto-open modal if linked
         const urlParams = new URLSearchParams(window.location.search);
-        const autoReqId = urlParams.get('reqId');
-        if (autoReqId) {
-            const reqMatch = window.allRequests.find(r => String(r.id) === String(autoReqId));
-            if (reqMatch) {
-                // Ensure auth/utils exists immediately
-                setTimeout(() => showRequestDetails(reqMatch), 300);
+        const autoId = urlParams.get('id') || urlParams.get('reqId');
+        if (autoId) {
+            const match = window.allActivities.find(a => String(a.id) === String(autoId) || String(a.target_id) === String(autoId));
+            if (match) {
+                setTimeout(() => showActivityDetails(match), 300);
             }
         }
     } catch (error) {
@@ -113,38 +178,32 @@ async function initFeed() {
         requestsContainer.innerHTML = `
             <div style="grid-column: 1/-1; text-align: center; padding: 40px; color: #666;">
                 <i class="bi bi-exclamation-triangle" style="font-size: 2rem; display: block; margin-bottom: 10px;"></i>
-                <p>No se pudieron cargar las solicitudes en este momento.</p>
+                <p>No se pudieron cargar las interacciones en este momento.</p>
             </div>
         `;
     }
 }
 
-function renderRequests(requests) {
-    const requestsContainer = document.getElementById('requests-container');
-    requestsContainer.innerHTML = '';
+function renderFeed(activities) {
+    const container = document.getElementById('requests-container');
+    container.innerHTML = '';
 
-    if (!requests || requests.length === 0) {
-        requestsContainer.innerHTML = `
-            <div style="grid-column: 1/-1; text-align: center; padding: 60px; color: #555;">
-                <h3 style="color: #fff; margin-bottom: 10px;">Tablón Vacío</h3>
-                <p>No hay solicitudes pendientes en este momento. ¡Vuelve más tarde!</p>
+    if (!activities || activities.length === 0) {
+        container.innerHTML = `
+            <div style="grid-column: 1/-1; text-align: center; padding: 80px 20px; color: #555;">
+                <div style="background: rgba(255,255,255,0.03); width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
+                    <i class="bi bi-chat-dots" style="font-size: 2rem; color: #333;"></i>
+                </div>
+                <h3 style="color: #fff; margin-bottom: 10px; font-size: 1.2rem;">Sin novedades por aquí</h3>
+                <p style="max-width: 300px; margin: 0 auto; font-size: 0.9rem;">Sigue a otros productores para ver sus actualizaciones.</p>
             </div>
         `;
         return;
     }
 
-    // 🔥 TEMPORARY FILTER: Show only the new target request as per user request
-    const targetText = "Quiero Buscar un sonido parecido a este beat";
-    const filtered = requests.filter(request => {
-        return (request.description && request.description.includes(targetText)) || 
-               (request.buyer_id === window.currentUserId); // Show own as well for testing
-    });
-
-    const displayRequests = filtered.length > 0 ? filtered : requests;
-
-    displayRequests.forEach(request => {
-        const card = createRequestCard(request);
-        requestsContainer.appendChild(card);
+    activities.forEach(activity => {
+        const card = createActivityCard(activity);
+        container.appendChild(card);
     });
 }
 
@@ -183,95 +242,346 @@ function getEmbedHtml(url) {
     return null;
 }
 
-function createRequestCard(request) {
+function createActivityCard(activity) {
     const card = document.createElement('div');
-    card.className = 'request-card';
+    card.className = `activity-card ${activity.type}`;
+    card.setAttribute('data-activity-id', String(activity.id));
+    
+    const actorName = activity.actor_nickname || 'Usuario';
+    const actorAvatar = activity.actor_avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(actorName)}&background=0a0a0a&color=fff`;
+    const timeAgo = formatTimeAgo(new Date(activity.created_at));
+    const activeUser = window.AuthUtils?.getCurrentUser();
+    const isSelf = activeUser?.id === activity.actor_id;
 
-    const buyerName = request.buyer?.nickname || request.buyer?.display_name || request.buyer?.username || 'Usuario';
-    const defaultAvatarUrl = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(buyerName) + '&background=random';
-    const buyerAvatar = request.buyer?.avatar_url || defaultAvatarUrl;
-    const budget = request.budget ? `$${request.budget}` : 'A convenir';
-    // Relative date
-    const now = new Date();
-    const created = new Date(request.created_at);
-    const diffMs = now - created;
-    const diffDays = Math.floor(diffMs / 86400000);
-    let relDate;
-    if (diffDays === 0) relDate = 'Hoy';
-    else if (diffDays === 1) relDate = 'Ayer';
-    else if (diffDays < 7) relDate = `Hace ${diffDays}d`;
-    else relDate = created.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
+    let contentHtml = '';
+    const metadata = activity.metadata || {};
 
-    const roleLabel = request.request_type === 'preset' ? 'Preset' : request.request_type === 'servicio' ? 'Servicio' : 'Beat';
+    switch(activity.type) {
+        case 'product_published':
+            contentHtml = `
+                <div class="product-sub-card">
+                    <div style="position: relative; display: flex;">
+                        <img src="${metadata.image_url || '/images/default-cover.jpg'}" class="sub-card-art" loading="lazy">
+                        <button class="btn-play-activity" data-id="${activity.target_id}" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 40px; height: 40px; border-radius: 50%; background: rgba(0,0,0,0.6); color: #fff; border: 1px solid rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; cursor: pointer;">
+                            <i class="bi bi-play-fill" style="font-size: 1.4rem;"></i>
+                        </button>
+                    </div>
+                    <div class="sub-card-info">
+                        <span class="sub-card-title">${metadata.name || 'Sin título'}</span>
+                        <span class="sub-card-artist">By ${actorName}</span>
+                        <span class="sub-card-tag">${metadata.tags?.[0] || 'BEAT'}</span>
+                        <div class="sub-card-waveform">
+                            ${Array.from({ length: 40 }).map(() => `<div class="wf-bar" style="height: ${Math.floor(Math.random() * 80 + 20)}%"></div>`).join('')}
+                        </div>
+                    </div>
+                    <div class="sub-card-buy">
+                        <button class="btn-buy-feed">
+                            ${metadata.price && metadata.price > 0 ? `$${metadata.price}` : 'FREE'} <i class="bi bi-cart3"></i>
+                        </button>
+                        <span style="font-size: 0.65rem; color: #444; font-weight: 700;"> <i class="bi bi-play"></i> 0</span>
+                    </div>
+                </div>
+            `;
+            break;
 
-    const previewContainerId = `wavesurfer-${request.id}`;
-    const previewHtml = request.preview_url ? `
-        <div class="maqueta-preview-box" style="margin-top: 15px; border-color: #333;">
-            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
-                <span style="font-size: 0.7rem; color: #888; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Maqueta Previa</span>
-                <button class="btn-play-maqueta-mini" data-url="${request.preview_url}" data-id="${request.id}">
-                    <i class="bi bi-play-fill"></i>
-                </button>
-            </div>
-            <div id="${previewContainerId}" class="maqueta-wavesurfer"></div>
-        </div>
-    ` : '';
+        case 'product_liked':
+            contentHtml = `
+                <p class="activity-text" style="padding: 10px 0;">le ha dado me gusta a <strong>${metadata.target_name || 'un beat'}</strong></p>
+            `;
+            break;
 
-    const currentUserId = window.currentUserId || localStorage.getItem('userId');
-    const isOwnRequest = currentUserId === request.buyer_id;
+        case 'new_follower':
+            const targetProfileLinkFollow = window.createProfileLink({ id: activity.target_id, nickname: metadata.target_nickname });
+            contentHtml = `
+                <p class="activity-text" style="padding: 10px 0;">ha comenzado a seguir a <strong onclick="window.location.href='${targetProfileLinkFollow}'" style="cursor:pointer; color:#fff;">${metadata.target_nickname || 'un productor'}</strong></p>
+            `;
+            break;
 
-    card.innerHTML = `
-        <div class="request-header">
-            <div class="buyer-info">
-                <img src="${buyerAvatar}" alt="${buyerName}" class="buyer-avatar" style="border-color: #333;">
-                <span class="buyer-name">${buyerName}</span>
-                <span class="buyer-role">${roleLabel}</span>
-                <span class="buyer-date">· ${relDate}</span>
-            </div>
-            <div class="budget-tag" style="background: #111; color: #fff; border: 1px solid #333;">${budget}</div>
-        </div>
-        
-        <p class="request-description" style="margin-top: 15px; font-size: 0.9rem; color: #ccc;">${request.description}</p>
-        
-        ${previewHtml}
+        case 'user_welcomed':
+            const targetProfileLinkWelcome = window.createProfileLink({ id: activity.target_id, nickname: metadata.target_nickname });
+            contentHtml = `
+                <div class="welcome-mini-card" style="padding: 12px; background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center; gap: 12px; margin-top: 5px;">
+                    <img src="${metadata.target_avatar || actorAvatar}" style="width: 32px; height: 32px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.1); cursor: pointer;" onclick="window.location.href='${targetProfileLinkWelcome}'">
+                    <p class="activity-text" style="margin: 0;">le ha dado la bienvenida a <strong onclick="window.location.href='${targetProfileLinkWelcome}'" style="cursor:pointer; color:#fff;">${metadata.target_nickname || 'un nuevo miembro'}</strong> ✨</p>
+                </div>
+            `;
+            break;
 
-        <div class="request-footer" style="margin-top: 25px; display: flex; gap: 10px;">
-            <button class="btn-view-details" style="flex: 1;">Ver detalles</button>
-            <button class="btn-take-job" data-id="${request.id}" style="flex: 1;" ${isOwnRequest ? 'disabled' : ''}>
-                ${isOwnRequest ? 'Tu solicitud' : 'Tomar Trabajo'}
-            </button>
-        </div>
+        case 'custom_request':
+            contentHtml = `
+                <div class="activity-text" style="padding: 10px 0;">
+                    necesita ayuda: <span style="color: #fff; font-style: italic;">"${metadata.description}"</span>
+                    <div style="margin-top: 10px; font-size: 0.8rem; color: #777;">Presupuesto: <strong style="color: #fff;">${metadata.budget ? `$${metadata.budget}` : 'A convenir'}</strong></div>
+                </div>
+                <button class="btn-buy-feed btn-view-activity" style="width: 100%; justify-content: center; margin-top: 10px; background: #fff; color: #000; text-transform: uppercase;">Ver detalles</button>
+            `;
+            break;
 
-        <style>
-            .ref-link { color: #fff; text-decoration: none; font-size: 0.8rem; background: rgba(255, 255, 255, 0.05); padding: 4px 10px; border-radius: 6px; border: 1px solid rgba(255, 255, 255, 0.1); }
-            .ref-link:hover { background: rgba(255, 255, 255, 0.1); border-color: rgba(255, 255, 255, 0.2); }
-            .btn-view-details { background: rgba(255,255,255,0.05); border: 1px solid #333; color: #fff; padding: 10px; border-radius: 12px; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: 0.2s; }
-            .btn-view-details:hover { background: rgba(255,255,255,0.1); border-color: #555; }
-            .btn-take-job { background: #fff; border: 1px solid #fff; color: #000; padding: 10px; border-radius: 12px; font-size: 0.85rem; font-weight: 700; cursor: pointer; transition: 0.2s; }
-            .btn-take-job:hover:not(:disabled) { background: #000; color: #fff; }
-            .btn-take-job:disabled { opacity: 0.3; cursor: not-allowed; background: #222; border-color: #222; color: #555; }
-            .maqueta-preview-box { background: rgba(255,255,255,0.02); border: 1px solid #222; border-radius: 12px; padding: 12px; }
-            .maqueta-wavesurfer { height: 40px; margin-top: 5px; }
-            .btn-play-maqueta-mini { background: #fff; border: none; color: #000; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 1rem; transition: 0.2s; }
-            .btn-play-maqueta-mini:hover { transform: scale(1.1); background: #eee; }
-        </style>
-    `;
+        case 'user_joined':
+            const bioText = activity.metadata?.bio ? `<p class="welcome-bio">"${activity.metadata.bio}"</p>` : '';
+            const socialsObj = activity.metadata?.socials || {};
+            
+            let socialsHtml = '';
+            const knownSocials = {
+                instagram: { icon: 'bi-instagram', color: '#fff' },
+                twitter: { icon: 'bi-twitter-x', color: '#fff' },
+                youtube: { icon: 'bi-youtube', color: '#fff' },
+                spotify: { icon: 'bi-spotify', color: '#fff' },
+                tiktok: { icon: 'bi-tiktok', color: '#fff' },
+                soundcloud: { icon: 'bi-cloud-fill', color: '#fff' },
+                website: { icon: 'bi-globe', color: '#fff' }
+            };
+            
+            Object.keys(socialsObj).forEach(key => {
+                const url = socialsObj[key];
+                if(url && knownSocials[key]) {
+                    socialsHtml += `<a href="${url}" target="_blank" class="welcome-social-icon" title="${key}"><i class="bi ${knownSocials[key].icon}"></i></a>`;
+                }
+            });
 
-    // Interaction Listeners
-    card.querySelector('.btn-view-details').onclick = () => showRequestDetails(request);
+            const socialSection = socialsHtml ? `<div class="welcome-socials">${socialsHtml}</div>` : '';
 
-    if (!isOwnRequest) {
-        card.querySelector('.btn-take-job').onclick = (e) => handleClaimRequest(request.id, e.target);
+            contentHtml = `
+                <div class="welcome-sub-card">
+                    <div class="welcome-banner">NUEVO MIEMBRO</div>
+                    <div class="welcome-content">
+                        <div class="welcome-avatar-wrapper" style="cursor: pointer;" onclick="window.location.href=window.createProfileLink({id: '${activity.actor_id}', nickname: '${activity.actor_nickname || ''}'})">
+                            <img data-r2-version="${activity.actor_r2_version || 'v2'}"
+                                 data-r2-src="${actorAvatar}"
+                                 src="${actorAvatar}"
+                                 alt="Avatar" class="welcome-avatar">
+                        </div>
+                        <div class="welcome-info">
+                            <h3 class="welcome-nickname" style="cursor: pointer;" onclick="window.location.href=window.createProfileLink({id: '${activity.actor_id}', nickname: '${activity.actor_nickname || ''}'})">${actorName}</h3>
+                            <span class="welcome-tag">Productor</span>
+                            ${socialSection}
+                        </div>
+                        <div class="welcome-actions" style="margin-left: auto;">
+                            ${isSelf ? '' : (window.FeedState?.welcomes?.has(String(activity.actor_id)) 
+                                ? `<button class="btn-welcome-wave action-btn-wave active"><i class="bi bi-hand-wave-fill"></i> ¡Saludado!</button>` 
+                                : `<button class="btn-welcome-wave action-btn-wave"><i class="bi bi-hand-wave"></i> Dar la bienvenida</button>`)}
+                        </div>
+                    </div>
+                    ${bioText}
+                </div>
+            `;
+            break;
+
+        default:
+            contentHtml = `<p class="activity-text">${activity.type}</p>`;
+            break;
     }
 
-    if (request.preview_url) {
-        // Use setTimeout to ensure container exists in DOM
-        setTimeout(() => {
-            initWaveSurfer(card.querySelector('.btn-play-maqueta-mini'), previewContainerId, request);
-        }, 0);
+    card.innerHTML = `
+        <div class="activity-inner">
+            <div class="activity-header">
+                <img src="${actorAvatar}" class="actor-avatar" loading="lazy" style="cursor: pointer;" onclick="window.location.href=window.createProfileLink({id: '${activity.actor_id}', nickname: '${activity.actor_nickname || ''}'})">
+                <div class="actor-details">
+                    <span class="actor-nickname" style="cursor: pointer;" onclick="window.location.href=window.createProfileLink({id: '${activity.actor_id}', nickname: '${activity.actor_nickname || ''}'})">${actorName}</span>
+                    ${isSelf ? '' : (window.FeedState?.follows?.has(String(activity.actor_id)) 
+                        ? `<button class="btn-follow-small active">Siguiendo</button>` 
+                        : `<button class="btn-follow-small">+ Follow</button>`)}
+                </div>
+                <span class="activity-time">${timeAgo}</span>
+            </div>
+            
+            <div class="activity-body">
+                ${contentHtml}
+            </div>
+
+            <div class="activity-actions">
+                <button class="action-btn ${window.FeedState?.likes?.has(String(activity.target_id || activity.id)) ? 'active' : ''}" title="Like">
+                    <i class="bi ${window.FeedState?.likes?.has(String(activity.target_id || activity.id)) ? 'bi-heart-fill' : 'bi-heart'}"></i>
+                </button>
+                <button class="action-btn comment-btn" title="Comment"><i class="bi bi-chat"></i></button>
+                <button class="action-btn" title="Share"><i class="bi bi-send"></i></button>
+            </div>
+        </div>
+    `;
+
+    // Listeners
+    if (activity.type === 'product_published') {
+        const playBtn = card.querySelector('.btn-play-activity');
+        playBtn.onclick = () => playProduct(activity);
+    }
+
+    if (activity.type === 'custom_request') {
+        card.querySelector('.btn-view-activity').onclick = () => showActivityDetails(activity);
+    }
+
+    // Helper: Auth Guard Wrapper
+    const authGuard = (callback) => {
+        if (!AuthUtils.getAccessToken()) {
+            if (window.showGuestModal) {
+                window.showGuestModal("Únete a OFFSZN", "Para interactuar con la comunidad y apoyar a tus productores favoritos, necesitas iniciar sesión.");
+            } else {
+                window.location.href = "/pages/login.html";
+            }
+            return;
+        }
+        callback();
+    };
+
+    // "Coming soon" for comments
+    card.querySelector('.comment-btn').onclick = () => {
+        authGuard(() => alert('Comentarios: Próximamente'));
+    };
+
+    // Simple Like toggle with Auth Guard
+    const likeBtn = card.querySelector('.action-btn[title="Like"]');
+    likeBtn.onclick = () => {
+        authGuard(async () => {
+            const isCurrentlyLiked = window.FeedState.likes.has(String(activity.target_id || activity.id));
+            const user = AuthUtils.getCurrentUser();
+            const targetId = String(activity.target_id || activity.id);
+
+            const icon = likeBtn.querySelector('i');
+            likeBtn.disabled = true;
+
+            if (isCurrentlyLiked) {
+                window.FeedState.likes.delete(targetId);
+                likeBtn.classList.remove('active');
+                icon.classList.remove('bi-heart-fill');
+                icon.classList.add('bi-heart');
+                await window.supabaseClient.from('likes').delete().match({ user_id: user.id, target_id: targetId });
+            } else {
+                window.FeedState.likes.add(targetId);
+                likeBtn.classList.add('active');
+                icon.classList.remove('bi-heart');
+                icon.classList.add('bi-heart-fill');
+                await window.supabaseClient.from('likes').insert({
+                    user_id: user.id, 
+                    target_id: targetId, 
+                    target_type: activity.type === 'product_published' ? 'product' : 'activity'
+                });
+            }
+            likeBtn.disabled = false;
+        });
+    };
+
+    // Follow button with Auth Guard
+    const followBtn = card.querySelector('.btn-follow-small');
+    if (followBtn) {
+        followBtn.onclick = (e) => {
+            e.stopPropagation();
+            authGuard(async () => {
+                if (window.FeedState.follows.has(String(activity.actor_id))) return;
+                
+                const user = AuthUtils.getCurrentUser();
+                if(user.id === activity.actor_id) {
+                    if(window.showToast) window.showToast('No puedes seguirte a ti mismo', 'error');
+                    return;
+                }
+
+                followBtn.classList.add('active');
+                followBtn.innerText = 'Siguiendo';
+                window.FeedState.follows.add(String(activity.actor_id));
+                
+                await window.supabaseClient.from('followers').insert({
+                    follower_id: user.id,
+                    user_id: activity.actor_id
+                });
+            });
+        };
+    }
+
+    // Welcome Wave Button with Auth Guard
+    const waveBtn = card.querySelector('.action-btn-wave');
+    if (waveBtn) {
+        waveBtn.onclick = (e) => {
+            e.stopPropagation();
+            authGuard(async () => {
+                if(window.FeedState.welcomes.has(String(activity.actor_id))) return;
+                
+                const user = AuthUtils.getCurrentUser();
+                if(user.id === activity.actor_id) return;
+
+                waveBtn.classList.add('active', 'disabled');
+                waveBtn.innerHTML = '<i class="bi bi-hand-wave-fill"></i> ¡Saludado!';
+                window.FeedState.welcomes.add(String(activity.actor_id));
+
+                // 1. Send private notification
+                await window.supabaseClient.from('notifications').insert({
+                    user_id: activity.actor_id,
+                    actor_id: user.id,
+                    type: 'welcome',
+                    title: '¡Nueva Bienvenida!',
+                    message: 'Alguien de la comunidad te ha dado la bienvenida.',
+                    read: false,
+                    link: window.createProfileLink({ id: user.id, nickname: user.user_metadata?.nickname })
+                });
+
+                // 2. Log public activity in the feed
+                await window.supabaseClient.from('activity_feed').insert({
+                    actor_id: user.id,
+                    type: 'user_welcomed',
+                    target_id: activity.actor_id,
+                    metadata: {
+                        target_nickname: activity.actor_nickname,
+                        target_avatar: activity.actor_avatar
+                    }
+                });
+
+                if(window.showToast) window.showToast('Bienvenida enviada bro', 'success');
+            });
+        };
     }
 
     return card;
+}
+
+function formatTimeAgo(date) {
+    const now = new Date();
+    const diff = now - date;
+    const seconds = Math.floor(diff / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+
+    if (days > 7) return date.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
+    if (days > 0) return `hace ${days}d`;
+    if (hours > 0) return `hace ${hours}h`;
+    if (minutes > 0) return `hace ${minutes}m`;
+    return 'ahora';
+}
+
+async function playProduct(activity) {
+    if (!window.StickyPlayer) return;
+    
+    // Structure compatible with StickyPlayer
+    const trackData = {
+        id: activity.target_id,
+        name: activity.metadata.name,
+        artist: activity.actor_nickname,
+        image_url: activity.metadata.image_url,
+        preview_url: activity.metadata.audio_url,
+        metadata: activity.metadata
+    };
+    
+    window.StickyPlayer.play(trackData);
+}
+
+function showActivityDetails(activity) {
+    // Reuse existing modal logic but adapted
+    const modal = document.getElementById('details-modal');
+    const body = document.getElementById('modal-body');
+
+    if (activity.type === 'custom_request') {
+        // Map back to what showRequestDetails expects if needed, or just rewrite
+        const request = {
+            id: activity.target_id,
+            buyer_id: activity.actor_id,
+            buyer: {
+                nickname: activity.actor_nickname,
+                avatar_url: activity.actor_avatar
+            },
+            description: activity.metadata.description,
+            budget: activity.metadata.budget,
+            bpm: activity.metadata.bpm,
+            key: activity.metadata.key
+        };
+        showRequestDetails(request);
+    }
 }
 
 const activePlayers = new Map();
