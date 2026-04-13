@@ -21,7 +21,8 @@ function escapeHTML(str) {
 
 document.addEventListener('DOMContentLoaded', async () => {
     // 0. INITIALIZE REVEAL PROMISES (Master Coordination)
-    window.profileTimerPromise = new Promise(res => setTimeout(res, 2300));
+    // REDUCED: 2300ms was too slow. 800ms keeps the premium reveal feel but is 3x faster.
+    window.profileTimerPromise = new Promise(res => setTimeout(res, 800));
 
     // Signals to reveal the content (Fired after preparation + timer)
     let triggerReveal;
@@ -157,34 +158,28 @@ async function loadUserProfile(username) {
         }
 
         const user = await response.json();
-        console.log("DEBUG: Perfil cargado:", user.nickname, "Template:", user.template);
+        // console.log("DEBUG: Perfil cargado:", user.nickname, "Template:", user.template);
         window.currentUserProfile = user; // Store for tab rendering
 
-        // --- 30-DAY TRIAL INITIALIZATION ---
+        // --- PARALLEL FETCH 2: Products & Initial UI Rendering ---
+        // We start loading products immediately without waiting for header render logic
+        const productsPromise = loadUserProducts(user);
+        const playlistsPromise = renderGlobalPlaylists(user);
+
+        // --- 30-DAY TRIAL INITIALIZATION (Async/Non-blocking) ---
         const isMe = window.currentUserId && (user.id === window.currentUserId);
         if (isMe && user.plan === 'free' && !user.plan_start_date) {
-            console.log("[Trial] Initializing 30-day trial for owner...");
             const now = new Date().toISOString();
-            await window.supabaseClient
-                .from('users')
-                .update({ plan_start_date: now })
-                .eq('id', user.id);
+            window.supabaseClient.from('users').update({ plan_start_date: now }).eq('id', user.id);
             user.plan_start_date = now;
         }
 
         // --- CACHE TEMPLATE ---
-        // Save the template for this user so we can predict it next time
         if (user.nickname && user.template) {
             localStorage.setItem(`tpl_${user.nickname.toLowerCase()}`, user.template);
         }
 
-        // Wait for auth/following data to be ready before rendering header
-        if (window.profileInitPromise) {
-            await window.profileInitPromise;
-        }
-
-        // 2. Apply Template Class
-        // 🔥 CRITICAL: ALWAYS clean up previous template classes, even if new profile has no template
+        // 2. Apply Template Class & Header Render (Instant)
         if (profileRoot) {
             const targets = [document.documentElement, document.body, profileRoot];
             targets.forEach(el => {
@@ -202,9 +197,7 @@ async function loadUserProfile(username) {
 
             const tabs = document.getElementById('profileTabs');
             const productList = document.getElementById('profileProductsList');
-            const headerContent = document.querySelector('.profile-header-content');
 
-            // Special case for Old School: reposition tabs to the main content area
             if (user.template === 'produccion_template_old_school') {
                 const profileBody = document.querySelector('.profile-body');
                 const proToolbar = document.querySelector('.pro-toolbar-container');
@@ -215,44 +208,45 @@ async function loadUserProfile(username) {
                         profileBody.prepend(tabs);
                     }
                 }
-
-                // El skeleton de Old School ya viene hardcodeado en el HTML y se muestra vía CSS para evitar Layout Shift
-
-                // Add grid-view class to the products list container
-                if (productList) {
-                    productList.classList.add('grid-view');
-                }
+                if (productList) productList.classList.add('grid-view');
             } else {
-                // 🔥 RESET LOGIC: Revert Old School changes if template is anything else
                 const profileDetails = document.querySelector('.profile-details');
-                if (tabs && profileDetails) {
-                    // Move tabs back to their original position in the bio/details area
-                    profileDetails.appendChild(tabs);
-                }
-                if (productList) {
-                    productList.classList.remove('grid-view');
-                }
+                if (tabs && profileDetails) profileDetails.appendChild(tabs);
+                if (productList) productList.classList.remove('grid-view');
             }
         }
 
-        // 2.5 REVEAL profile root now that the correct template layout is applied
         if (profileRoot) {
-            void profileRoot.offsetWidth; // Force reflow so grid layout is computed
+            void profileRoot.offsetWidth;
             profileRoot.style.transition = 'opacity 0.25s ease';
             profileRoot.style.opacity = '1';
         }
 
-        // 3. Render Header Data (IMMEDIATE INITIAL POPULATION)
-        // We render this immediately so elements exist, but skeletons still cover them.
+        // 3. Render Header Data
         renderHeader(user, window.profileCategoryCounts);
-
-        // 3.1 Inject Dynamic SEO for Profiles
         injectProfileSEO(user);
 
-        // 4. Fetch User Products (via API) - SYNC WAIT
-        // This ensures productsCache and other variables are ready.
-        await loadUserProducts(user);
-        renderGlobalPlaylists(user);
+        // 4. Wait for Products and Timer simultaneously
+        await Promise.all([productsPromise, playlistsPromise, window.profileTimerPromise]);
+
+        // 🔥 LATE HYDRATION: Update Follow buttons after everything is revealed if they weren't ready
+        if (window.profileInitPromise) {
+            window.profileInitPromise.then(() => {
+                const followBtn = document.getElementById('btnFollow');
+                if (followBtn) {
+                    const isFollowing = window.currentUserFollowing && window.currentUserFollowing.has(user.id);
+                    if (typeof updateButtonVisuals === 'function') updateButtonVisuals(followBtn, isFollowing);
+                }
+            });
+        }
+
+        // 2. Ensure everything is rendered in the DOM before we lose skeletons
+        // (Note: loadUserProducts already populated productsCache, 
+        // but we might need to re-trigger renderProductList if it was waiting on a signal)
+        // Actually, renderProductList was called by loadUserProducts, so it already ran.
+
+        // 3. Signal internal reveal (in case anything else is waiting)
+        if (window.triggerProfileReveal) window.triggerProfileReveal();
 
         // --- FINISH LOADING BAR ---
         if (loadingBar) {
@@ -264,26 +258,10 @@ async function loadUserProfile(username) {
             }, 400);
         }
 
-        // 🔥 ATOMIC REVEAL COORDINATION
-        // 1. Wait for the standard premium delay promise (master coordination)
-        if (window.profileTimerPromise) await window.profileTimerPromise;
-
-        // 2. Ensure everything is rendered in the DOM before we lose skeletons
-        // (Note: loadUserProducts already populated productsCache, 
-        // but we might need to re-trigger renderProductList if it was waiting on a signal)
-        // Actually, renderProductList was called by loadUserProducts, so it already ran.
-
-        // 3. Signal internal reveal (in case anything else is waiting)
-        if (window.triggerProfileReveal) window.triggerProfileReveal();
-
         // 4. FINAL REVEAL: Add class to remove all skeletons simultaneously
         if (profileRoot) {
             profileRoot.classList.add('header-loaded');
-
-            // Safety: ensure opacity is 1 if it wasn't already
             profileRoot.style.opacity = '1';
-
-            // Ensure default tab content is correctly displayed
             window.setActiveTab('products');
         }
 
@@ -1949,7 +1927,11 @@ async function loadUserProducts(user) {
                     }
                 } catch (e) { }
             });
-            await Promise.all(promises);
+            // NON-BLOCKING: We don't await here anymore.
+            Promise.all(promises).then(() => {
+                // If the user already revealed the page, we might want to refresh specific cards
+                // but usually the hover-cards handle this or the initial render uses placeholders.
+            });
         }
 
         // --- SORT BY TRENDING (Weighted Algorithm) ---
