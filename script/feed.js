@@ -146,8 +146,8 @@ async function initFeed() {
                 // Update Follow Button
                 const followBtn = card.querySelector('.btn-follow-small');
                 if (followBtn && window.FeedState.follows.has(actorId)) {
+                    followBtn.classList.add('active');
                     followBtn.innerText = 'Siguiendo';
-                    followBtn.style.color = '#fff';
                 }
 
                 // Update Welcome Button
@@ -358,8 +358,8 @@ function createActivityCard(activity) {
                         </div>
                         <div class="welcome-actions" style="margin-left: auto;">
                             ${isSelf ? '' : (window.FeedState?.welcomes?.has(String(activity.actor_id)) 
-                                ? `<button class="btn-welcome-wave action-btn-wave active"><i class="bi bi-hand-wave-fill"></i> ¡Saludado!</button>` 
-                                : `<button class="btn-welcome-wave action-btn-wave"><i class="bi bi-hand-wave"></i> Dar la bienvenida</button>`)}
+                                ? `<button class="btn-welcome-wave action-btn-wave active">¡Saludado! <i class="bi bi-check-all"></i></button>` 
+                                : `<button class="btn-welcome-wave action-btn-wave">DAR LA BIENVENIDA <i class="bi bi-arrow-right-short"></i></button>`)}
                         </div>
                     </div>
                     ${bioText}
@@ -497,7 +497,7 @@ function createActivityCard(activity) {
                 if(user.id === activity.actor_id) return;
 
                 waveBtn.classList.add('active', 'disabled');
-                waveBtn.innerHTML = '<i class="bi bi-hand-wave-fill"></i> ¡Saludado!';
+                waveBtn.innerHTML = '¡Saludado! <i class="bi bi-check-all"></i>';
                 window.FeedState.welcomes.add(String(activity.actor_id));
 
                 // 1. Send private notification
