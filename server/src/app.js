@@ -118,9 +118,10 @@ app.use(helmet({
                 "https://*.ytimg.com", "https://*.ggpht.com", "https://*.googleusercontent.com",
                 "https://ui-avatars.com",
                 // PayPal
-                "https://www.paypalobjects.com", "https://*.paypal.com"
+                "https://www.paypalobjects.com", "https://*.paypal.com",
+                "https://offszn.lat", "http://localhost:*"
             ],
-            mediaSrc: ["'self'", "data:", "blob:", "https://*.supabase.co", "https://*.r2.dev", "https://*.cloudflarestorage.com", "https://*.r2.cloudflarestorage.com", "https://res.cloudinary.com"],
+            mediaSrc: ["'self'", "data:", "blob:", "https://*.supabase.co", "https://*.r2.dev", "https://*.cloudflarestorage.com", "https://*.r2.cloudflarestorage.com", "https://res.cloudinary.com", "https://offszn.lat", "http://localhost:*"],
             connectSrc: ["'self'", "blob:",
                 "https://*.supabase.co", "wss://*.supabase.co",
                 "https://*.cloudflarestorage.com", "https://*.r2.cloudflarestorage.com", "https://*.r2.dev",
@@ -151,6 +152,7 @@ app.use(helmet({
     },
     crossOriginEmbedderPolicy: false,
     crossOriginOpenerPolicy: false, // 🔥 REQUIRED: Without this, Google OAuth popup can't send token back to opener
+    crossOriginResourcePolicy: { policy: "cross-origin" }, // 🔥 REQUIRED: Allows local testing to load production images via <img> without being blocked by CORP.
     hsts: {
         maxAge: 31536000, // 1 año en segundos
         includeSubDomains: true,

@@ -1586,7 +1586,9 @@ async function renderBeatSpecifics(product) {
             } else if (key === 'trackout') {
                 // Trackout checks for 'stems' synonyms if primary key is missing
                 if (Object.keys(prodLic).length === 0) {
-                    prodLic = productLicenses['offszn_stems'] || productLicenses['stems'] || {};
+                    // 🔥 FIX: The uploader saves "Trackout (Stems)" under 'offszn_unlimited',
+                    // so we must also check that key to correctly resolve enabled/price.
+                    prodLic = productLicenses['offszn_stems'] || productLicenses['stems'] || productLicenses['offszn_unlimited'] || productLicenses['unlimited'] || {};
                 }
             }
 
@@ -1600,7 +1602,7 @@ async function renderBeatSpecifics(product) {
                 if (exclusiveUserData && Object.keys(exclusiveUserData).length > 0) userLic = exclusiveUserData;
             } else if (key === 'trackout' && producerSettings) {
                 if (Object.keys(userLic).length === 0) {
-                    userLic = producerSettings['offszn_stems'] || producerSettings['stems'] || {};
+                    userLic = producerSettings['offszn_stems'] || producerSettings['stems'] || producerSettings['offszn_unlimited'] || producerSettings['unlimited'] || {};
                 }
             }
 

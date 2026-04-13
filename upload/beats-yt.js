@@ -1295,8 +1295,20 @@ async function checkForEditMode() {
                 let foundTab = false;
                 tabs.forEach(t => {
                     const val = t.getAttribute('data-value');
-                    if (val === `${uploaderState.promo_buy_qty},${uploaderState.promo_get_qty}`) {
+                    let matchesTab = false;
+                    if (uploaderState.promo_buy_qty === 1 && uploaderState.promo_get_qty === 1 && val === '2,1') matchesTab = true;
+                    if (uploaderState.promo_buy_qty === 2 && uploaderState.promo_get_qty === 1 && val === '3,1') matchesTab = true;
+
+                    if (matchesTab) {
                         t.click();
+                        
+                        // Sync mobile dropdown text if it exists
+                        const promoSelectedDisplay = document.getElementById('promoSelectedDisplay');
+                        if (promoSelectedDisplay) {
+                            if (val === '2,1') promoSelectedDisplay.innerText = '2x1';
+                            if (val === '3,1') promoSelectedDisplay.innerText = '3x1';
+                        }
+                        
                         foundTab = true;
                     }
                 });
@@ -2248,7 +2260,7 @@ window.handlePublish = async function () {
             }
 
             const data = await response.json();
-            product_id = data.id;
+            product_id = data.product ? data.product.id : data.id;
         } else {
             console.log('📝 [PUBLISH] UPDATING existing product:', product_id);
             const { error } = await supabaseClient.from('products').update(finalData).eq('id', product_id);

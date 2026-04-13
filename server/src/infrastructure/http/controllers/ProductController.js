@@ -77,6 +77,7 @@ export const createProduct = async (req, res) => {
             moods,
             is_free, isFree,
             licenses,
+            collaborators,
             price_basic, price_premium, price_stems, price_exclusive,
             image_url, artwork_url,
             mp3_url, audio_url,
@@ -171,6 +172,7 @@ export const createProduct = async (req, res) => {
             price_stems: price_stems !== undefined ? price_stems : (licenses?.stems || null),
             price_exclusive: price_exclusive !== undefined ? price_exclusive : (licenses?.exclusive || null),
             
+            collaborators: collaborators || [],
             promo_active: promo_active || false,
             promo_buy_qty: promo_buy_qty || 1,
             promo_get_qty: promo_get_qty || 1,
