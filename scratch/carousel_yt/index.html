@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carousel YT - OFFSZN</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --white: #FFFFFF;
+            --black: #000000;
+            --gray-light: #F2F2F2;
+            --font-main: 'Inter', sans-serif;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: var(--font-main); background: #f0f0f0; display: flex; justify-content: center; align-items: center; min-height: 100vh; overflow: hidden; }
+
+        .ig-frame {
+            width: 420px; height: 680px;
+            background: #fff; overflow: hidden;
+            display: flex; flex-direction: column; position: relative;
+        }
+
+        .ig-header {
+            padding: 12px 14px; display: flex; align-items: center; gap: 10px;
+            background: #fff; border-bottom: 1px solid #eee; z-index: 10;
+        }
+
+        .avatar {
+            width: 32px; height: 32px; border-radius: 50%;
+            background: var(--black); display: flex; align-items: center; justify-content: center;
+            color: #fff; font-size: 14px; font-weight: 700;
+        }
+
+        .handle { font-size: 13px; font-weight: 700; color: var(--black); }
+        .subtitle { font-size: 11px; color: #666; }
+
+        .carousel-viewport { width: 420px; height: 525px; overflow: hidden; position: relative; }
+        .carousel-track { display: flex; height: 100%; transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1); }
+
+        .slide {
+            min-width: 420px; height: 100%; position: relative;
+            display: flex; flex-direction: column; padding: 40px 36px 60px;
+            justify-content: center;
+            background-size: cover;
+            background-position: center;
+        }
+
+        .slide.light { background-color: var(--white); color: var(--black); }
+        .slide.dark { background-color: var(--black); color: var(--white); }
+
+        .slide::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.4) 0%, transparent 40%, transparent 60%, rgba(0,0,0,0.8) 100%);
+            z-index: 1;
+        }
+        .slide.light::before { background: linear-gradient(to bottom, rgba(255,255,255,0.2) 0%, transparent 40%, transparent 60%, rgba(255,255,255,0.8) 100%); }
+
+        .content { position: relative; z-index: 2; }
+
+        h2 { 
+            font-size: 42px; font-weight: 900; line-height: 0.95; letter-spacing: -2px; 
+            margin-bottom: 16px; text-transform: uppercase;
+        }
+
+        p { font-size: 16px; line-height: 1.3; font-weight: 400; opacity: 0.9; }
+
+        .progress-container {
+            position: absolute; bottom: 0; left: 0; right: 0;
+            padding: 24px 36px; display: flex; align-items: center; gap: 12px;
+            z-index: 5;
+        }
+
+        .progress-track { flex: 1; height: 2px; background: rgba(128,128,128,0.3); }
+        .slide.dark .progress-track { background: rgba(255,255,255,0.2); }
+        .progress-fill { height: 100%; }
+        .slide.light .progress-fill { background: var(--black); }
+        .slide.dark .progress-fill { background: var(--white); }
+        .progress-counter { font-size: 11px; font-weight: 900; opacity: 0.7; }
+
+        .swipe-arrow { position: absolute; right: 20px; top: 50%; transform: translateY(-50%); opacity: 0.5; z-index: 5; }
+
+        .ig-actions { padding: 12px 14px; display: flex; justify-content: space-between; align-items: center; background: #fff; }
+        .ig-dots { display: flex; gap: 4px; justify-content: center; padding-bottom: 12px; background: #fff; }
+        .dot { width: 6px; height: 6px; border-radius: 50%; background: #ddd; }
+        .dot.active { background: #0095f6; }
+        .ig-caption { padding: 0 14px 14px; font-size: 13px; background: #fff; }
+        
+        .cta-btn {
+            margin-top: 32px; padding: 18px 45px; font-size: 15px; font-weight: 900;
+            text-transform: uppercase; letter-spacing: 2px; display: inline-block;
+        }
+        .slide.dark .cta-btn { background: var(--white); color: var(--black); }
+        .slide.light .cta-btn { background: var(--black); color: var(--white); }
+
+        .logo-offszn {
+            font-size: 24px; font-weight: 900; letter-spacing: -1px; margin-bottom: 40px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="ig-frame">
+        <div class="ig-header">
+            <div class="avatar">O</div>
+            <div class="header-info">
+                <span class="handle">offszn.pro</span>
+                <span class="subtitle">YouTube Automation</span>
+            </div>
+        </div>
+
+        <div class="carousel-viewport" id="viewport">
+            <div class="carousel-track" id="track">
+                
+                <!-- Slide 1: Hero -->
+                <div class="slide dark" style="background-image: url('../../brain/34106a23-99d0-4d94-be3c-63d0f8a56bde/yt_slide_1_hero_1776135760457.png')">
+                    <div class="content">
+                        <h2>¿Sigues <br>subiendo beats <br>a mano?</h2>
+                        <p>Automatiza tu tienda <br>en segundos.</p>
+                    </div>
+                </div>
+
+                <!-- Slide 2: Problem -->
+                <div class="slide light" style="background-image: url('../../brain/34106a23-99d0-4d94-be3c-63d0f8a56bde/yt_slide_2_pain_1776135805524.png')">
+                    <div class="content">
+                        <h2>Copiar y <br>pegar es <br>de 2010.</h2>
+                        <p>Perder 1h al día en metadatos <br>te está quitando hits.</p>
+                    </div>
+                </div>
+
+                <!-- Slide 3: Tool -->
+                <div class="slide dark" style="background-image: url('../../brain/34106a23-99d0-4d94-be3c-63d0f8a56bde/yt_slide_3_sync_1776135994724.png')">
+                    <div class="content">
+                        <h2>UN CLIC. <br>TODO LISTO.</h2>
+                        <p>Importamos BPM, Key y Portada <br>desde YouTube directamente.</p>
+                    </div>
+                </div>
+
+                <!-- Slide 4: CTA -->
+                <div class="slide dark" style="background: #000;">
+                    <div class="content" style="text-align: center;">
+                        <div class="logo-offszn">OFFSZN</div>
+                        <h2>EMPIEZA A <br>AHORRAR <br>TIEMPO.</h2>
+                        <p>Tu tiempo vale más. <br>Comenta "YOUTUBE" para probar.</p>
+                        <div class="cta-btn">Comenta "YOUTUBE"</div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="ig-dots" id="dots"></div>
+        <div class="ig-actions">
+            <div class="main-actions"><span>🖤</span><span>💬</span><span>✈️</span></div>
+            <span>🏁</span>
+        </div>
+        <div class="ig-caption"><strong>offszn.pro</strong> No trabajes duro. Trabaja inteligente. 🦾</div>
+    </div>
+
+    <script>
+        const track = document.getElementById('track');
+        const dotsContainer = document.getElementById('dots');
+        const slides = document.querySelectorAll('.slide');
+        const totalSlides = slides.length;
+        let currentIndex = 0;
+
+        slides.forEach((slide, i) => {
+            const dot = document.createElement('div');
+            dot.className = 'dot' + (i === 0 ? ' active' : '');
+            dotsContainer.appendChild(dot);
+
+            const progress = document.createElement('div');
+            progress.className = 'progress-container';
+            const pct = ((i + 1) / totalSlides) * 100;
+            progress.innerHTML = `
+                <div class="progress-track"><div class="progress-fill" style="width:${pct}%"></div></div>
+                <div class="progress-counter">${i+1}/${totalSlides}</div>
+            `;
+            slide.appendChild(progress);
+
+            if (i < totalSlides - 1) {
+                const arrow = document.createElement('div');
+                arrow.className = 'swipe-arrow';
+                const isLight = slide.classList.contains('light');
+                const strokeColor = isLight ? '#000' : '#fff';
+                arrow.innerHTML = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="${strokeColor}" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>`;
+                slide.appendChild(arrow);
+            }
+        });
+
+        const dots = document.querySelectorAll('.dot');
+        function updateCarousel() {
+            track.style.transform = `translateX(${-currentIndex * 420}px)`;
+            dots.forEach((dot, i) => dot.classList.toggle('active', i === currentIndex));
+        }
+
+        let startX = 0;
+        const viewport = document.getElementById('viewport');
+        viewport.addEventListener('mousedown', e => { startX = e.clientX; });
+        viewport.addEventListener('mouseup', e => {
+            const diff = startX - e.clientX;
+            if (Math.abs(diff) > 50) {
+                if (diff > 0 && currentIndex < totalSlides - 1) currentIndex++;
+                else if (diff < 0 && currentIndex > 0) currentIndex--;
+                updateCarousel();
+            }
+        });
+    </script>
+</body>
+</html>
