@@ -8,10 +8,33 @@
     --p-subtext: #b3b3b3;
 }
 
+/* Utility for SEO-only labels */
+.visually-hidden {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    padding: 0 !important;
+    margin: -1px !important;
+    overflow: hidden !important;
+    clip: rect(0, 0, 0, 0) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+}
+
 body {
     background-color: var(--p-bg);
     position: relative;
     transition: background-color 0.5s ease;
+}
+
+#profile-root {
+    opacity: 0;
+    transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    will-change: opacity;
+}
+
+#profile-root.header-loaded {
+    opacity: 1 !important;
 }
 
 .fade-in {
@@ -427,7 +450,7 @@ input:checked+.slider:before {
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 0px; /* Zero gap for skeletons, spacing handled by margins */
 }
 
 .profile-avatar-container {
@@ -437,10 +460,9 @@ input:checked+.slider:before {
 
 .profile-avatar-img {
     width: 175px;
-    /* Increased from 150px for better presence */
     height: 175px;
     border-radius: 50%;
-    background-color: #1a1a1a;
+    background-color: #080808; /* Darker default to avoid flash */
     overflow: hidden;
     box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
     display: flex;
@@ -448,9 +470,9 @@ input:checked+.slider:before {
     justify-content: center;
     font-size: 3.5rem;
     font-weight: 800;
-    color: #444;
-    border: 4px solid #1a1a1a;
-    transition: transform 0.3s ease;
+    color: #222; /* Dimmer icon while loading */
+    border: 4px solid #080808; /* Match background */
+    transition: transform 0.3s ease, border-color 0.4s ease;
 }
 
 .profile-avatar-img:hover {
@@ -497,19 +519,96 @@ input:checked+.slider:before {
 .profile-top-row {
     display: flex;
     align-items: center;
-    gap: 8px;
-    background: #000;
-    padding: 4px 10px; /* Reduced from 6px 14px to be less intrusive */
-    border-radius: 8px;
+    gap: 12px;
+    background: transparent;
+    padding: 8px 0; /* Align with bio during loading */
+    border-radius: 12px;
     width: fit-content;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+    box-shadow: none;
+    min-height: 45px;
+    transition: background 0.2s ease, padding 0.2s ease, box-shadow 0.2s ease;
 }
 
-/* Cleanup for Skeleton state: remove background/shadow while loading */
-#profile-root:not(.header-loaded) .profile-top-row {
-    background: transparent !important;
-    box-shadow: none !important;
-    padding: 0 !important;
+/* Revealed as soon as User Data is ready (Fast Reveal) */
+.header-data-ready .profile-top-row {
+    background: #000;
+    padding: 8px 16px !important; /* Restore padding on fast reveal */
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+}
+
+/* Revealed when EVERYTHING is ready (Atomic Reveal) */
+.header-loaded #profile-root {
+    opacity: 1 !important;
+}
+
+/* Keep header revealed if total page loads */
+.header-loaded .profile-top-row {
+    background: #000 !important;
+    padding: 8px 16px !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6) !important;
+}
+
+/* Base state for profile root (Hidden until data ready) */
+#profile-root {
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+/* Show profile root atomically when either data or full header is ready */
+#profile-root.header-data-ready,
+#profile-root.header-loaded {
+    opacity: 1 !important;
+}
+
+/* Trending Grid: Strict 7-column layout */
+.trending-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 16px;
+    margin-bottom: 48px;
+}
+
+.skeleton-card {
+    display: flex; 
+    flex-direction: column; 
+    gap: 12px;
+}
+
+.skeleton-card-cover {
+    width: 100%;
+    aspect-ratio: 1/1;
+    border-radius: 8px;
+    background: #111;
+}
+
+.skeleton-card-info {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.skeleton-card-title {
+    width: 80%;
+    height: 14px;
+    border-radius: 4px;
+}
+
+.skeleton-card-subtitle {
+    width: 50%;
+    height: 10px;
+    border-radius: 4px;
+}
+
+@media (max-width: 1200px) {
+    .trending-grid {
+        grid-template-columns: repeat(5, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .trending-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
 }
 
 .profile-details h1 {
@@ -517,7 +616,7 @@ input:checked+.slider:before {
     font-weight: 800;
     margin: 0;
     line-height: 1;
-    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-family: 'Geist', sans-serif;
     color: #fff;
     letter-spacing: -0.8px;
 }
@@ -578,7 +677,7 @@ input:checked+.slider:before {
     color: #ccc;
     font-size: 1rem;
     max-width: 600px;
-    margin-top: 4px;
+    margin-top: 0px; /* Tightest possible fit */
     line-height: 1.5;
     text-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
     white-space: pre-line;
@@ -2766,7 +2865,7 @@ input:checked+.slider:before {
     /* Hidden by default */
     flex-direction: column;
     color: #fff;
-    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-family: 'Geist', sans-serif;
 }
 
 .filters-modal.active {
@@ -3245,4 +3344,48 @@ input:checked+.slider:before {
     display: none !important;
     opacity: 0 !important;
     pointer-events: none !important;
+}
+
+/* === SOCIAL PROOF & RATINGS (INFO TAB) === */
+.about-card.social-proof-card {
+    transition: transform 0.3s ease, border-color 0.3s ease;
+}
+
+.about-card.social-proof-card:hover {
+    border-color: rgba(255, 255, 255, 0.2) !important;
+    transform: translateY(-2px);
+}
+
+.stat-item {
+    transition: background 0.2s ease;
+}
+
+.stat-item:hover {
+    background: rgba(255, 255, 255, 0.05) !important;
+}
+
+.ratings-card {
+    position: relative;
+    overflow: hidden;
+}
+
+.ratings-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 100px;
+    height: 100px;
+    background: radial-gradient(circle at top right, rgba(255, 255, 255, 0.03), transparent);
+    pointer-events: none;
+}
+
+.star-rating i {
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+}
+
+@media (max-width: 768px) {
+    .about-grid {
+        grid-template-columns: 1fr !important;
+    }
 }

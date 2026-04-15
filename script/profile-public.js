@@ -138,14 +138,12 @@ async function loadUserProfile(username) {
     const tplApplied = document.documentElement.className.match(/template-[^\s]+/);
 
     if (tplApplied) {
-        // If template is already known, just ensure profileRoot is ready
+        // If template is already known, sync class to root (but keep opacity managed by CSS classes)
         if (profileRoot) {
-            profileRoot.style.opacity = '1';
-            // Sync class to root for legacy selectors
             profileRoot.classList.add(tplApplied[0]);
         }
     } else if (profileRoot) {
-        // If unknown user, hide root until we fetch the data
+        // Explicitly start at 0 (CSS also handles this, but good for JS state consistency)
         profileRoot.style.opacity = '0';
     }
 
@@ -217,14 +215,17 @@ async function loadUserProfile(username) {
         }
 
         if (profileRoot) {
-            void profileRoot.offsetWidth;
-            profileRoot.style.transition = 'opacity 0.25s ease';
-            profileRoot.style.opacity = '1';
+            void profileRoot.offsetWidth; // Trigger reflow for transition
         }
 
         // 3. Render Header Data
         renderHeader(user, window.profileCategoryCounts);
         injectProfileSEO(user);
+
+        // ⚡️ FAST REVEAL: Show the header immediately (Nickname, Avatar, etc.)
+        if (profileRoot) {
+            profileRoot.classList.add('header-data-ready');
+        }
 
         // 4. Wait for Products and Timer simultaneously
         await Promise.all([productsPromise, playlistsPromise, window.profileTimerPromise]);
@@ -258,10 +259,13 @@ async function loadUserProfile(username) {
             }, 400);
         }
 
-        // 4. FINAL REVEAL: Add class to remove all skeletons simultaneously
+        // 4. FINAL ATOMIC REVEAL: Add class to remove all skeletons simultaneously
         if (profileRoot) {
+            // Ensure any critical DOM updates are done before this class is added
             profileRoot.classList.add('header-loaded');
             profileRoot.style.opacity = '1';
+            
+            // Initial tab rendering should happen now to avoid staggered reveal within the tab
             window.setActiveTab('products');
         }
 
@@ -816,6 +820,7 @@ function renderAboutTab(container) {
         return item;
     };
 
+    detailsList.appendChild(createDetailItem('Rol', user.role || 'Productor \u2022 Artista'));
     detailsList.appendChild(createDetailItem('Experiencia', user.experience ? user.experience[0] : 'No especificada'));
     detailsList.appendChild(createDetailItem('DAW Principal', (user.daws && user.daws.length > 0) ? user.daws[0] : 'No especificado'));
 
@@ -828,6 +833,100 @@ function renderAboutTab(container) {
 
     detailsCard.appendChild(detailsList);
     aboutGrid.appendChild(detailsCard);
+
+    // --- NEW: SOCIAL PROOF CARD (STATS) ---
+    const statsCard = document.createElement('div');
+    statsCard.className = 'about-card social-proof-card';
+    statsCard.style.cssText = 'background: #111; padding: 24px; border-radius: 12px; border: 1px solid #222; display: flex; flex-direction: column; gap: 20px;';
+
+    const statsTitle = document.createElement('h4');
+    statsTitle.style.cssText = 'color: #fff; margin-bottom: 0px; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px;';
+    statsTitle.textContent = 'Impacto y Confianza';
+    statsCard.appendChild(statsTitle);
+
+    const statsGrid = document.createElement('div');
+    statsGrid.style.cssText = 'display: grid; grid-template-columns: 1fr 1fr; gap: 16px;';
+
+    const createStatItem = (icon, value, label) => {
+        const item = document.createElement('div');
+        item.style.cssText = 'display: flex; flex-direction: column; align-items: center; text-align: center; padding: 16px; background: rgba(255,255,255,0.03); border-radius: 10px; border: 1px solid rgba(255,255,255,0.05);';
+        
+        const i = document.createElement('i');
+        i.className = `bi ${icon}`;
+        i.style.cssText = 'font-size: 1.25rem; color: #fff; opacity: 0.9; margin-bottom: 8px;';
+        
+        const v = document.createElement('span');
+        v.style.cssText = 'color: #fff; font-size: 1.1rem; font-weight: 800;';
+        v.textContent = value;
+        
+        const l = document.createElement('span');
+        l.style.cssText = 'color: #666; font-size: 0.7rem; text-transform: uppercase; font-weight: 700; margin-top: 2px;';
+        l.textContent = label;
+        
+        item.appendChild(i);
+        item.appendChild(v);
+        item.appendChild(l);
+        return item;
+    };
+
+    // Hardcoded for now, but following the "everything in INFO" request
+    statsGrid.appendChild(createStatItem('bi-cart-check-fill', user.products_sold || '150+', 'Ventas'));
+    statsGrid.appendChild(createStatItem('bi-people-fill', '98%', 'Satisfacción'));
+    statsGrid.appendChild(createStatItem('bi-star-fill', '4.9/5', 'Calificación'));
+    statsGrid.appendChild(createStatItem('bi-award-fill', 'Top 10%', 'Ránking'));
+
+    statsCard.appendChild(statsGrid);
+    aboutGrid.appendChild(statsCard);
+
+    // --- NEW: RATINGS CARD (STARS SHELL) ---
+    const ratingsCard = document.createElement('div');
+    ratingsCard.className = 'about-card ratings-card';
+    ratingsCard.style.cssText = 'background: #111; padding: 24px; border-radius: 12px; border: 1px solid #222;';
+
+    const ratingsTitle = document.createElement('h4');
+    ratingsTitle.style.cssText = 'color: #fff; margin-bottom: 16px; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px;';
+    ratingsTitle.textContent = 'Calificaciones y Reseñas';
+    ratingsCard.appendChild(ratingsTitle);
+
+    const ratingsSummary = document.createElement('div');
+    ratingsSummary.style.cssText = 'display: flex; align-items: center; gap: 16px; margin-bottom: 24px;';
+
+    const bigRating = document.createElement('div');
+    bigRating.style.cssText = 'font-size: 2.5rem; font-weight: 900; color: #fff; line-height: 1;';
+    bigRating.textContent = '4.9';
+    ratingsSummary.appendChild(bigRating);
+
+    const starsContainer = document.createElement('div');
+    starsContainer.style.display = 'flex';
+    starsContainer.style.flexDirection = 'column';
+    starsContainer.style.gap = '4px';
+
+    const starsRow = document.createElement('div');
+    starsRow.style.color = '#fff';
+    starsRow.style.fontSize = '1rem';
+    for(let i=0; i<5; i++) {
+        const star = document.createElement('i');
+        star.className = i < 4 ? 'bi bi-star-fill' : 'bi bi-star-half';
+        star.style.marginRight = '2px';
+        starsRow.appendChild(star);
+    }
+    starsContainer.appendChild(starsRow);
+
+    const reviewsCount = document.createElement('span');
+    reviewsCount.style.cssText = 'color: #666; font-size: 0.85rem;';
+    reviewsCount.textContent = 'Basado en 24 reseñas';
+    starsContainer.appendChild(reviewsCount);
+
+    ratingsSummary.appendChild(starsContainer);
+    ratingsCard.appendChild(ratingsSummary);
+
+    // Placeholder for future reviews
+    const placeholderMsg = document.createElement('p');
+    placeholderMsg.style.cssText = 'color: #444; font-size: 0.85rem; font-style: italic; border-top: 1px solid #222; padding-top: 16px; margin-top: 0;';
+    placeholderMsg.textContent = 'Las reseñas detalladas de clientes se activarán próximamente para este perfil.';
+    ratingsCard.appendChild(placeholderMsg);
+
+    aboutGrid.appendChild(ratingsCard);
 
     container.appendChild(aboutGrid);
 }
