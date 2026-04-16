@@ -20,6 +20,14 @@
                     // Note: API key is not strictly needed for the token flow if using GIS client
                 });
                 await gapi.client.load('youtube', 'v3');
+                
+                // 🔥 Restore token if available to prevent 403 on auto-import
+                const savedToken = sessionStorage.getItem('yt_access_token');
+                if (savedToken) {
+                    gapi.client.setToken({ access_token: savedToken });
+                    console.log("📹 Importer: Token restored from sessionStorage");
+                }
+
                 gapiInited = true;
                 window._gapiInited = true;
                 console.log("📹 Importer: GAPI Client Ready");
@@ -113,6 +121,35 @@
                 btn.style.pointerEvents = 'auto';
             }
             console.log("📹 Importer: Buttons Enabled");
+            
+            // 🔥 Check for automatic import from Dashboard
+            handleAutoImport();
+        }
+    }
+
+    async function handleAutoImport() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const videoId = urlParams.get('auto_import');
+        if (!videoId) return;
+
+        console.log("🚀 [AUTO-IMPORT] Detectado VideoId:", videoId);
+
+        try {
+            // Need snippet to populate title/desc
+            const response = await gapi.client.youtube.videos.list({
+                id: videoId,
+                part: 'snippet'
+            });
+
+            if (response.result.items?.length > 0) {
+                const snippet = response.result.items[0].snippet;
+                console.log("🚀 [AUTO-IMPORT] Datos obtenidos, poblando formulario...");
+                selectVideo(videoId, snippet);
+            } else {
+                console.warn("⚠️ [AUTO-IMPORT] No se encontró el video o es privado.");
+            }
+        } catch (err) {
+            console.error("❌ [AUTO-IMPORT] Error:", err);
         }
     }
 

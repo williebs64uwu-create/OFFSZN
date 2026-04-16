@@ -91,6 +91,19 @@ async function initExplore() {
 }
 
 function initGlobalListeners() {
+    // 🔥 SMART REDIRECT: "Probar Gratis" button
+    const ctaBtn = document.querySelector('.cta-link-btn');
+    if (ctaBtn) {
+        ctaBtn.addEventListener('click', (e) => {
+            // Check if user is logged in
+            const token = window.AuthUtils ? window.AuthUtils.getAccessToken() : null;
+            if (token) {
+                e.preventDefault();
+                window.location.href = '/cuenta/mis-kits';
+            }
+        });
+    }
+
     if (window.FavoritesManager) {
         window.FavoritesManager.subscribe((likedSet) => {
             // Unify syncing logic similar to search.js syncLikes()

@@ -564,40 +564,322 @@
             color: var(--accent-purple);
         }
 
-        /* ===== 2. BENTO STATS GRID ===== */
-        .bento-stats-grid {
+        /* ===== 2. QUICK ACTIONS GRID ===== */
+        .quick-actions-grid {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 20px;
+            grid-template-columns: 1fr 2fr 1fr; /* Center is wider */
+            gap: 16px;
             margin-bottom: 32px;
+            align-items: center;
         }
 
-        .stat-card-pro {
+        /* Special Card for YouTube Carousel */
+        .action-card-wide {
+            grid-column: span 1; /* Now part of the 1-2-1 flow */
+            height: 220px;
+            background: rgba(20, 20, 20, 0.6);
+            border: 1px solid #222;
+            border-radius: 20px;
+            padding: 24px;
+            position: relative;
+            overflow: visible; /* Fix: Allow tooltips to be visible outside boundaries */
+            display: flex;
+            flex-direction: column;
+            transition: all 0.3s ease;
+        }
+
+        .action-card-wide:hover {
+            border-color: #fff;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .yt-carousel {
+            display: flex;
+            gap: 12px;
+            overflow-x: auto;
+            scroll-snap-type: x mandatory;
+            scrollbar-width: none;
+            height: 100%;
+            margin-top: 10px;
+            scroll-behavior: smooth;
+            padding: 0 40px; /* Space for arrows */
+            border-radius: 12px;
+            overflow: hidden; /* Clips carousel videos specifically within the card */
+        }
+
+        .yt-carousel::-webkit-scrollbar { display: none; }
+
+        .yt-nav-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 36px;
+            height: 36px;
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #000;
+            cursor: pointer;
+            z-index: 10;
+            opacity: 1; /* Always visible */
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+
+        .yt-nav-btn:disabled {
+            opacity: 0.3 !important;
+            cursor: not-allowed;
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .yt-nav-btn:hover:not(:disabled) {
+            background: #fff;
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        .action-card-wide:hover .yt-nav-btn {
+            opacity: 1;
+        }
+
+        .yt-nav-btn.prev { left: 10px; }
+        .yt-nav-btn.next { right: 10px; }
+
+        .yt-video-item {
+            flex: 0 0 calc(50% - 6px); /* Show exactly 2 videos */
+            scroll-snap-align: start;
+            border-radius: 12px;
+            overflow: hidden;
+            position: relative;
+            cursor: pointer;
+            transition: opacity 0.2s;
+            height: 100%;
+            box-sizing: border-box;
+        }
+
+        .yt-video-item:hover { 
+            /* No scaling */
+            opacity: 0.9; 
+        }
+
+        .yt-video-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .yt-video-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            opacity: 0;
+            transition: all 0.3s ease;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .yt-video-item:hover .yt-video-overlay {
+            opacity: 1;
+        }
+
+        .yt-video-overlay i {
+            font-size: 32px;
+            color: #fff;
+        }
+
+        .yt-video-overlay .import-text {
+            color: #fff;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            line-height: 1.4;
+        }
+
+        /* Standard Action Cards */
+        .action-card {
             background: rgba(15, 15, 15, 0.6);
             backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
             border: 1px solid var(--border-color);
             border-radius: 16px;
-            padding: 24px;
-            height: 140px;
-            /* Compact */
+            padding: 20px;
+            height: 220px; /* Matched to YouTube card height */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            text-align: center;
+            text-decoration: none;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+
+        .action-card:hover {
+            border-color: #fff;
+            background: rgba(255, 255, 255, 0.05);
+            /* No scaling */
+        }
+
+        .action-card i {
+            font-size: 28px;
+            transition: color 0.3s;
+            color: #444;
+        }
+
+        .action-card:hover i {
+            color: #fff;
+        }
+
+        .action-card span {
+            font-size: 13px;
+            font-weight: 600;
+            color: #888;
+            transition: color 0.3s;
+        }
+
+        .action-card:hover span {
+            color: #fff;
+        }
+
+        .action-card-icon {
+            width: 44px;
+            height: 44px;
+            object-fit: contain;
+            filter: grayscale(1) brightness(0.8);
+            transition: all 0.3s ease;
+            opacity: 0.6;
+        }
+
+        .action-card:hover .action-card-icon {
+            filter: grayscale(0) brightness(1.2);
+            opacity: 1;
+            /* No scaling */
+        }
+
+        /* YT Status Tag & Tooltip */
+        .yt-status-tag {
+            cursor: help;
+            position: relative;
+            transition: all 0.2s;
+        }
+
+        .yt-status-tag.active {
+            cursor: pointer;
+            background: #fff !important;
+            color: #000 !important;
+        }
+
+        .yt-status-tag .tooltip {
+            visibility: hidden;
+            width: 320px;
+            background-color: #080808;
+            color: #fff;
+            text-align: left;
+            border-radius: 12px;
+            padding: 18px 22px;
+            position: absolute;
+            z-index: 999999;
+            top: 50%;
+            right: calc(100% + 15px);
+            transform: translateY(-50%);
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.19, 1, 0.22, 1);
+            font-size: 14px;
+            font-weight: 500;
+            line-height: 1.5;
+            border: 1px solid #333;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.8), 0 0 20px rgba(255,255,255,0.03);
+            pointer-events: none;
+        }
+
+        .yt-status-tag:hover .tooltip {
+            visibility: visible;
+            opacity: 1;
+            right: calc(100% + 10px);
+        }
+
+        /* Modal Styles */
+        .premium-modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            z-index: 10000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .premium-modal-container {
+            width: 90%;
+            max-width: 1000px;
+            max-height: 85vh;
+            background: #0a0a0a;
+            border: 1px solid #333;
+            border-radius: 20px;
             position: relative;
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
-            transition: all 0.3s ease;
             overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.8);
         }
 
-        .stat-card-pro:hover {
-            border-color: var(--accent-purple);
-            background: rgba(255, 255, 255, 0.05);
-            /* very subtle lighten */
-            /* box-shadow removed for simpler selection */
+        .modal-header {
+            padding: 20px 30px;
+            border-bottom: 1px solid #222;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
-        /* Gradient Border Trick */
-        /* Gradient Border Trick REMOVED for simplicity */
+        .modal-body {
+            padding: 30px;
+            overflow-y: auto;
+            flex-grow: 1;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .modal-footer {
+            padding: 20px 30px;
+            border-top: 1px solid #222;
+            display: flex;
+            justify-content: center;
+        }
+
+        .btn-modal-close {
+            background: none; border: none; color: #888; cursor: pointer; font-size: 24px;
+        }
+
+        .btn-modal-close:hover { color: #fff; }
+
+        .btn-load-more {
+            background: #fff; color: #000; border: none; padding: 10px 30px; border-radius: 100px; font-weight: 700; cursor: pointer; transition: opacity 0.2s;
+        }
+        .btn-load-more:hover { opacity: 0.8; }
+        .btn-load-more:disabled { opacity: 0.3; cursor: not-allowed; }
+
+        @media (max-width: 1200px) {
+            .quick-actions-grid { grid-template-columns: repeat(4, 1fr); }
+            .action-card-wide { grid-column: span 4; }
+        }
+
+        @media (max-width: 800px) {
+            .quick-actions-grid { grid-template-columns: repeat(2, 1fr); }
+            .action-card-wide { grid-column: span 2; }
+        }
         /*
         .stat-card-pro::before {
             content: "";
@@ -1577,63 +1859,48 @@
         </div>
 
         <!-- BENTO KPI GRID -->
-        <div class="bento-stats-grid">
-            <div class="stat-card-pro">
-                <span class="stat-label skeleton" id="lblRev"
-                    style="width:100px; display:block; margin-bottom:5px;">Ingresos Totales</span>
-                <div class="stat-main">
-                    <span class="stat-value skeleton" id="totalRevenue"
-                        style="width:120px; height:40px; display:block;">---</span>
-                    <span class="stat-trend neutral skeleton" id="trendRev"
-                        style="width:80px; display:block; margin-top:5px;">Histórico</span>
+        <!-- QUICK ACTIONS GRID -->
+        <div class="quick-actions-grid">
+            <!-- 1: GENERAR VIDEO -->
+            <a href="/upload/beats.html" target="_blank" class="action-card blue">
+                <img src="/images/icons/video.png" class="action-card-icon" alt="Generar Video">
+                <span>Generar Video</span>
+            </a>
+
+            <!-- 2: SMART YOUTUBE CAROUSEL -->
+            <div class="action-card-wide" id="ytSmartCard">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; position:relative; z-index: 5;">
+                    <span style="font-size: 14px; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 8px;">
+                        <i class="bi bi-youtube" style="color: #fff; font-size: 18px;"></i>
+                        Importación
+                    </span>
+                    <span id="ytSyncStatus" class="yt-status-tag" style="font-size: 10px; color: #666; background: #1a1a1a; padding: 2px 8px; border-radius: 20px;">
+                        Ver todos
+                        <span class="tooltip">Sincroniza tu canal de youtube para poder importar datos de tus videos y subir tus beats rápido a OFFSZN</span>
+                    </span>
                 </div>
-                <!-- <div class="stat-icon-aura"><i class="bi bi-wallet2"></i></div> -->
+
+                <!-- Navigation Arrows -->
+                <button id="ytPrev" class="yt-nav-btn prev"><i class="bi bi-chevron-left"></i></button>
+                <button id="ytNext" class="yt-nav-btn next"><i class="bi bi-chevron-right"></i></button>
+                
+                <div id="ytCarouselContainer" class="yt-carousel">
+                    <!-- SKELETONS -->
+                    <div class="yt-video-item skeleton"></div>
+                </div>
+
+                <div id="ytUnlinkedMessage" style="display: none; height: 100%; width: 100%; flex-direction: column; justify-content: center; align-items: center; gap: 12px; text-align: center;">
+                    <p style="font-size: 13px; color: #fff; font-weight: 500;">Conecta tu cuenta para importar + sincronizar canal</p>
+                    <a href="/cuenta/ajustes.html" class="btn-xs-adjust" style="border-color: #fff; color: #fff; padding: 6px 16px; border-radius: 100px;">Sincronizar Canal</a>
+                </div>
             </div>
 
-            <div class="stat-card-pro">
-                <span class="stat-label skeleton" id="lblDownloads"
-                    style="width:90px; display:block; margin-bottom:5px;">Descargas</span>
-                <div class="stat-main">
-                    <span class="stat-value skeleton" id="totalDownloads"
-                        style="width:60px; height:40px; display:block;">---</span>
-                    <span class="stat-trend neutral skeleton" id="downloadsTrend"
-                        style="width:80px; display:block; margin-top:5px;">Histórico</span>
-                </div>
-                <!-- <div class="stat-icon-aura"><i class="bi bi-download"></i></div> -->
-            </div>
+            <!-- 3: MI PERFIL -->
+            <a id="actionMyProfile" href="/perfilpro.html" target="_blank" class="action-card">
+                <img src="/images/icons/profile.png" class="action-card-icon" alt="Mi Perfil">
+                <span>Mi Perfil</span>
+            </a>
 
-            <div class="stat-card-pro">
-                <span class="stat-label skeleton" id="lblPlays"
-                    style="width:100px; display:block; margin-bottom:5px;">Plays Totales</span>
-                <div class="stat-main">
-                    <span class="stat-value skeleton" id="totalPlays"
-                        style="width:80px; height:40px; display:block;">---</span>
-                    <span class="stat-trend neutral skeleton" id="trendPlays"
-                        style="width:60px; display:block; margin-top:5px;">Global</span>
-                </div>
-                <!-- <div class="stat-icon-aura"><i class="bi bi-play-circle"></i></div> -->
-            </div>
-
-            <div class="stat-card-pro" style="height: auto; min-height: 140px; justify-content: flex-start;">
-                <span class="stat-label skeleton" id="lblTopProducts"
-                    style="width:110px; display:block; margin-bottom:5px;">Top Productos</span>
-                <div id="topProductsContainer"
-                    style="display: flex; flex-direction: column; gap: 8px; margin-top: 5px;">
-                    <!-- SKELETON STATE -->
-                    <div class="skeleton" style="width:100%; height:14px;"></div>
-                    <div class="skeleton" style="width:80%; height:14px;"></div>
-                </div>
-                <div id="ctaContainer"
-                    style="margin-top: 15px; padding-top: 10px; border-top: 1px solid #1A1A1A; font-size: 13px; display: none;">
-                    <span style="color: #666;">vas muy bien!</span><br>
-                    <a href="/cuenta/mis-kits.html"
-                        style="color: var(--accent-purple); text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;"
-                        onmouseover="this.style.textDecoration='underline'"
-                        onmouseout="this.style.textDecoration='none'">
-                        sube tu siguiente producto <i class="bi bi-arrow-right"></i>
-                    </a>
-                </div>
-            </div>
         </div>
 
         <!-- TREND CHART -->
@@ -1834,7 +2101,10 @@
                     Planes</button>
             </div>
         </div>
-    </div>
+    <!-- YOUTUBE API SCRIPTS -->
+    <script src="/script/yt-dashboard-sync.js"></script>
+    <script src="https://apis.google.com/js/api.js" onload="gapiLoaded()"></script>
+    <script src="https://accounts.google.com/gsi/client" onload="gisLoaded()"></script>
 
     <script>
         // 1. INITIALIZATION (GLOBAL)
@@ -1878,7 +2148,8 @@
                     fetchStats(userId),
                     loadDrafts(userId),
                     loadActivityFeed(userId),
-                    checkProfileCompletion(userId)
+                    checkProfileCompletion(userId),
+                    window.initYoutubeDashboard(userId)
                 ]);
 
                 // Global helper for range updates
@@ -2026,7 +2297,7 @@
 
             try {
                 // B. PLAYS & DOWNLOADS & TOP PRODUCTS (Products)
-                // We fetch all products to get total stats and top products
+                // We fetch all products for the chart
                 const { data: products, error: prodErr } = await supabaseClient
                     .from('products')
                     .select('id, name, downloads_count, plays_count, sales_count')
@@ -2035,33 +2306,18 @@
                     .order('sales_count', { ascending: false });
 
                 if (!prodErr && products) {
-                    // Totals
-                    products.forEach(p => {
-                        totalPlays += parseInt(p.plays_count || 0);
-                        totalDownloads += parseInt(p.downloads_count || 0);
-                    });
-
-                    // Render Top Products (Max 3)
-                    const top3 = products.slice(0, 3);
-                    renderTopProducts(top3);
-
                     // Store for range changes
                     window.lastFetchedProducts = products;
 
-                    // PASS TO CHART LOGIC to handle "inflated" stats if needed
+                    // PASS TO CHART LOGIC
                     initChart(userId, products, 7); // Default 7 days
                 } else {
                     initChart(userId, [], 7);
                 }
             } catch (e) {
-                console.warn("Stats fetch failed (Products/Top):", e);
+                console.warn("Stats fetch failed (Products):", e);
                 initChart(userId, []);
             }
-
-            // ALWAYS UPDATE UI (Even with zeroes if failed)
-            updateStat('totalRevenue', `$${totalRev.toFixed(0)}`);
-            updateStat('totalDownloads', totalDownloads);
-            updateStat('totalPlays', totalPlays);
 
             // Clear message skeleton
             const unreadEl = document.getElementById('unreadCount');
@@ -2071,42 +2327,6 @@
             }
         }
 
-        function renderTopProducts(products) {
-            const container = document.getElementById('topProductsContainer');
-            const lbl = document.getElementById('lblTopProducts');
-            const cta = document.getElementById('ctaContainer');
-
-            if (!container) return;
-            container.innerHTML = '';
-            if (lbl) lbl.classList.remove('skeleton');
-
-            if (!products || products.length === 0) {
-                container.innerHTML = '<span style="color: #444; font-size: 13px;">No hay productos aún.</span>';
-            } else {
-                products.forEach((p, idx) => {
-                    const row = document.createElement('div');
-                    row.style.display = 'flex';
-                    row.style.justifyContent = 'space-between';
-                    row.style.alignItems = 'center';
-                    row.style.fontSize = '14px';
-                    row.style.color = idx === 0 ? '#fff' : '#ccc';
-                    row.style.fontWeight = idx === 0 ? '600' : '400';
-
-                    row.innerHTML = `
-                        <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px;">
-                            ${idx + 1}. ${p.name}
-                        </span>
-                        <span style="color: #666; font-size: 12px; font-family: var(--font-display);">
-                            ${p.sales_count || 0} sales
-                        </span>
-                    `;
-                    container.appendChild(row);
-                });
-            }
-
-            // Always show CTA if logic reached
-            if (cta) cta.style.display = 'block';
-        }
 
         // ... (updateStat helper) ...
 
@@ -2116,19 +2336,6 @@
             if (el) {
                 el.textContent = value;
                 el.classList.remove('skeleton');
-                // Also remove skeleton from associated labels if strictly matched by ID convention
-                if (id == 'totalRevenue') {
-                    if (document.getElementById('lblRev')) document.getElementById('lblRev').classList.remove('skeleton');
-                    if (document.getElementById('trendRev')) document.getElementById('trendRev').classList.remove('skeleton');
-                }
-                if (id == 'totalDownloads') {
-                    if (document.getElementById('lblDownloads')) document.getElementById('lblDownloads').classList.remove('skeleton');
-                    if (document.getElementById('downloadsTrend')) document.getElementById('downloadsTrend').classList.remove('skeleton');
-                }
-                if (id == 'totalPlays') {
-                    if (document.getElementById('lblPlays')) document.getElementById('lblPlays').classList.remove('skeleton');
-                    if (document.getElementById('trendPlays')) document.getElementById('trendPlays').classList.remove('skeleton');
-                }
             }
         }
 
@@ -2899,6 +3106,21 @@
         // Refresh data periodically or on load
         setTimeout(loadSubscriptionInfo, 1000);
     </script>
+    <!-- PREMUM MODAL: YT SELECTION -->
+    <div id="ytAllVideosModal" class="premium-modal-overlay">
+        <div class="premium-modal-container">
+            <div class="modal-header">
+                <h2 style="font-size: 18px; font-weight: 700; color: #fff; margin: 0;">Seleccionar Video de YouTube</h2>
+                <button class="btn-modal-close" id="btnCloseYtModal">&times;</button>
+            </div>
+            <div class="modal-body" id="ytModalGrid">
+                <!-- Videos will be injected here -->
+            </div>
+            <div class="modal-footer">
+                <button id="btnLoadMoreYt" class="btn-load-more">Cargar más videos</button>
+            </div>
+        </div>
+    </div>
 </body>
 
 </html>

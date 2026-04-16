@@ -19,6 +19,33 @@ function escapeHTML(str) {
         .replace(/'/g, "&#039;");
 }
 
+/**
+ * Converts URLs and @mentions into clickable links
+ */
+function linkify(text) {
+    if (!text) return '';
+    
+    // 1. First escape existing HTML
+    let escaped = escapeHTML(text);
+    
+    // 2. Wrap URLs
+    // Regex for URLs starting with http/https/www
+    const urlRegex = /(https?:\/\/[^\s<]+)/g;
+    escaped = escaped.replace(urlRegex, (url) => {
+        return `<a href="${url}" target="_blank" rel="noopener noreferrer" class="bio-link">${url}</a>`;
+    });
+    
+    // 3. Wrap @mentions
+    // Regex for @mentions (supporting OFFSZN nickname chars: letters, numbers, _, ., -)
+    const mentionRegex = /(@[a-zA-Z0-9_.-]+)/g;
+    escaped = escaped.replace(mentionRegex, (mention) => {
+        const username = mention.substring(1);
+        return `<a href="/@${username}" class="bio-mention">${mention}</a>`;
+    });
+    
+    return escaped;
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
     // 0. INITIALIZE REVEAL PROMISES (Master Coordination)
     // REDUCED: 2300ms was too slow. 800ms keeps the premium reveal feel but is 3x faster.
@@ -264,7 +291,7 @@ async function loadUserProfile(username) {
             // Ensure any critical DOM updates are done before this class is added
             profileRoot.classList.add('header-loaded');
             profileRoot.style.opacity = '1';
-            
+
             // Initial tab rendering should happen now to avoid staggered reveal within the tab
             window.setActiveTab('products');
         }
@@ -428,7 +455,7 @@ async function renderHeader(user, categoryCounts = null) {
             roleEl.classList.remove('no-bg');
         }
     }
-    document.getElementById('profileBio').innerText = user.bio || '';
+    document.getElementById('profileBio').innerHTML = linkify(user.bio || '');
 
     // Apply Banner Style (Aligned to Schema: using banner_url for style string)
     if (user.banner_url) {
@@ -638,7 +665,7 @@ async function renderHeader(user, categoryCounts = null) {
             if (!token) {
                 if (window.showGuestModal) {
                     window.showGuestModal(
-                        "Â¡Sigue a este productor!",
+                        "¡Sigue a este productor!",
                         "Crea una cuenta para seguir a tus artistas favoritos, recibir notificaciones de nuevos lanzamientos y más!."
                     );
                 } else {
@@ -777,13 +804,13 @@ function renderAboutTab(container) {
     bioCard.style.cssText = 'background: #111; padding: 24px; border-radius: 12px; border: 1px solid #222;';
 
     const bioTitle = document.createElement('h4');
-    bioTitle.style.cssText = 'color: #8b5cf6; margin-bottom: 12px; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px;';
+    bioTitle.style.cssText = 'color: #fff; margin-bottom: 12px; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px;';
     bioTitle.textContent = 'Biografí­a';
     bioCard.appendChild(bioTitle);
 
     const bioText = document.createElement('p');
     bioText.style.cssText = 'color: #ccc; line-height: 1.6; font-size: 0.95rem; white-space: pre-wrap;';
-    bioText.textContent = user.bio || "Sin biografí­a disponible.";
+    bioText.innerHTML = linkify(user.bio || "Sin biografí­a disponible.");
     bioCard.appendChild(bioText);
 
     aboutGrid.appendChild(bioCard);
@@ -794,7 +821,7 @@ function renderAboutTab(container) {
     detailsCard.style.cssText = 'background: #111; padding: 24px; border-radius: 12px; border: 1px solid #222;';
 
     const detailsTitle = document.createElement('h4');
-    detailsTitle.style.cssText = 'color: #8b5cf6; margin-bottom: 20px; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px;';
+    detailsTitle.style.cssText = 'color: #fff; margin-bottom: 20px; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px;';
     detailsTitle.textContent = 'Detalles';
     detailsCard.appendChild(detailsTitle);
 
@@ -850,19 +877,19 @@ function renderAboutTab(container) {
     const createStatItem = (icon, value, label) => {
         const item = document.createElement('div');
         item.style.cssText = 'display: flex; flex-direction: column; align-items: center; text-align: center; padding: 16px; background: rgba(255,255,255,0.03); border-radius: 10px; border: 1px solid rgba(255,255,255,0.05);';
-        
+
         const i = document.createElement('i');
         i.className = `bi ${icon}`;
         i.style.cssText = 'font-size: 1.25rem; color: #fff; opacity: 0.9; margin-bottom: 8px;';
-        
+
         const v = document.createElement('span');
         v.style.cssText = 'color: #fff; font-size: 1.1rem; font-weight: 800;';
         v.textContent = value;
-        
+
         const l = document.createElement('span');
         l.style.cssText = 'color: #666; font-size: 0.7rem; text-transform: uppercase; font-weight: 700; margin-top: 2px;';
         l.textContent = label;
-        
+
         item.appendChild(i);
         item.appendChild(v);
         item.appendChild(l);
@@ -904,7 +931,7 @@ function renderAboutTab(container) {
     const starsRow = document.createElement('div');
     starsRow.style.color = '#fff';
     starsRow.style.fontSize = '1rem';
-    for(let i=0; i<5; i++) {
+    for (let i = 0; i < 5; i++) {
         const star = document.createElement('i');
         star.className = i < 4 ? 'bi bi-star-fill' : 'bi bi-star-half';
         star.style.marginRight = '2px';
@@ -943,10 +970,20 @@ function renderGlobalPlaylists(user) {
 
     if (playlists.length === 0 && !isMe) {
         const section = document.getElementById('profilePlaylistsSection');
-        if (section) section.style.display = 'none';
+        if (section) section.style.display = 'block'; // Make sure section is visible
 
         const skel = document.getElementById('playlistsSkeleton');
         if (skel) skel.style.display = 'none';
+
+        container.style.display = 'block';
+        container.innerHTML = `
+            <div style="padding: 4rem 0; color: #888; text-align: center; font-size: 0.95rem; font-weight: 500; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1rem;">
+                <p style="margin: 0;">@${user.nickname || 'usuario'} no tiene playlist aún</p>
+                <a href="/explorar.html" style="display: inline-flex; align-items: center; gap: 8px; color: #000; background: #fff; text-decoration: none; font-weight: 600; padding: 12px 28px; border-radius: 100px; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                    Explorar playlists <i class="bi bi-arrow-right" style="font-size: 1.1rem;"></i>
+                </a>
+            </div>
+        `;
         return;
     }
 
@@ -1258,7 +1295,7 @@ window.ProfilePersonalizer = {
         const verifiedEl = document.getElementById('previewVerified');
 
         if (nameEl) nameEl.innerText = user.nickname || "User";
-        if (roleEl) roleEl.innerText = user.role || "Productor â€¢ Artista";
+        if (roleEl) roleEl.innerText = user.role || "Productor €¢ Artista";
         if (verifiedEl) verifiedEl.style.display = (user.is_verified || user.is_producer) ? 'inline-block' : 'none';
 
         // 2. Stats
@@ -2152,20 +2189,36 @@ function setupBioCollapse() {
 
     if (!cleanText) return;
 
-    // --- MENTIONS CONVERSION ---
-    const parseMentions = (text) => {
+    // --- BIO TEXT CONVERSION (LINKS & MENTIONS) ---
+    const parseBioText = (text) => {
         const frag = document.createDocumentFragment();
-        const parts = text.split(/(@[a-z0-9._-]+)/gi);
+        // Regex to match URLs (http/https) OR @mentions
+        const parts = text.split(/(https?:\/\/[^\s]+|@[a-z0-9._-]+)/gi);
         parts.forEach(part => {
-            if (part.startsWith('@')) {
-                const username = part.substring(1);
-                const a = document.createElement('a');
-                a.href = `/@${username}`;
-                a.className = 'bio-mention';
-                a.textContent = part;
-                frag.appendChild(a);
-            } else if (part) {
-                frag.appendChild(document.createTextNode(part));
+            if (part) {
+                if (part.match(/^https?:\/\//i)) {
+                    const a = document.createElement('a');
+                    a.href = part;
+                    a.className = 'bio-link';
+                    a.target = '_blank';
+                    a.rel = 'noopener noreferrer';
+                    a.textContent = part;
+                    // Inherit accent color and avoid standard blue link look
+                    a.style.color = 'var(--p-accent)';
+                    a.style.textDecoration = 'none';
+                    a.style.fontWeight = '500';
+                    a.style.wordBreak = 'break-word';
+                    frag.appendChild(a);
+                } else if (part.startsWith('@')) {
+                    const username = part.substring(1);
+                    const a = document.createElement('a');
+                    a.href = `/@${username}`;
+                    a.className = 'bio-mention';
+                    a.textContent = part;
+                    frag.appendChild(a);
+                } else {
+                    frag.appendChild(document.createTextNode(part));
+                }
             }
         });
         return frag;
@@ -2174,7 +2227,7 @@ function setupBioCollapse() {
     const renderBio = (isShort) => {
         const text = isShort ? cleanText.substring(0, 150) + "..." : cleanText;
         bioText.innerHTML = '';
-        bioText.appendChild(parseMentions(text));
+        bioText.appendChild(parseBioText(text));
 
         if (cleanText.length > 150) {
             bioText.appendChild(document.createElement('br'));
@@ -2202,7 +2255,7 @@ function setupBioCollapse() {
         };
     } else {
         bioText.innerHTML = '';
-        bioText.appendChild(parseMentions(cleanText));
+        bioText.appendChild(parseBioText(cleanText));
     }
 }
 
@@ -2453,7 +2506,7 @@ async function renderTrending(items, user, collabStats = {}) {
 
         const dot = document.createElement('span');
         dot.style.fontSize = '0.4rem';
-        dot.textContent = ' â— ';
+        dot.textContent = ' — ';
         metaRow.appendChild(dot);
 
         const bpmSpan = document.createElement('span');
@@ -3161,7 +3214,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (!token) {
                     if (window.showGuestModal) {
                         window.showGuestModal(
-                            "Â¡Guarda tus favoritos!",
+                            "¡Guarda tus favoritos!",
                             "Inicia sesiÃ³n para guardar estos sonidos en tu colecciÃ³n personal."
                         );
                     } else {
