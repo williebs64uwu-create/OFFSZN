@@ -231,10 +231,20 @@ window.AuthUtils = {
      * @param {string} pathOrUrl 
      * @returns {boolean}
      */
+    /**
+     * Identifies if a path or URL belongs to Cloudflare R2 storage.
+     * Supports both full URLs and relative storage paths.
+     * @param {string} pathOrUrl 
+     * @returns {boolean}
+     */
     isR2Url: function (pathOrUrl) {
         if (!pathOrUrl || typeof pathOrUrl !== 'string') return false;
         
-        // 1. Full URL check
+        // 🔥 EXTERNAL & ABSOLUTE FAST-PATH: If it has a protocol, it's NOT a relative R2 path that needs signing.
+        // This is the most important fix to prevent double-prefixing or malformed local requests.
+        if (pathOrUrl.startsWith('http') || pathOrUrl.startsWith('data:') || pathOrUrl.startsWith('blob:')) return false;
+
+        // 1. Full URL check (legacy fallbacks if protocol is missing but domain is there)
         const r2Identifiers = ['r2.offszn.lat', 'pub-', 'offsznlatbucket', 'offszn-storage'];
         if (r2Identifiers.some(id => pathOrUrl.includes(id))) return true;
 
@@ -245,7 +255,7 @@ window.AuthUtils = {
         // 3. UUID-style root paths (e.g. 550e8400-e29b-41d4-a716-446655440000/audio/...)
         const isUUIDRoot = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i.test(pathOrUrl);
 
-        return (isRelativeR2 || isUUIDRoot) && !pathOrUrl.includes('supabase.co') && !pathOrUrl.startsWith('http');
+        return (isRelativeR2 || isUUIDRoot) && !pathOrUrl.includes('supabase.co');
     },
 
     /**
@@ -619,37 +629,7 @@ window.AuthUtils = {
         return rawOriginal; // Last resort: return original string
     },
 
-    /**
-     * Identification if a URL belongs to a storage provider structure (R2 or Supabase).
-     */
-    isR2Url: function (pathOrUrl) {
-        if (!pathOrUrl || typeof pathOrUrl !== 'string') return false;
-
-        // 🔥 EXTERNAL STORAGE EXCLUSION: If it contains ik.imagekit.io or cloudinary.com, it's NOT an R2 URL that needs signing by our proxy
-        if (pathOrUrl.includes('supabase.co') || pathOrUrl.includes('ik.imagekit.io') || pathOrUrl.includes('cloudinary.com')) return false;
-        if (pathOrUrl.startsWith('products/')) return true;
-
-        // UUID Path detection (for migrated image_url)
-        // We ONLY consider it R2 if it starts with 'products/' or other R2 prefixes.
-        // Plain UUID/covers/... paths are now treated as Supabase by default unless r2_version is explicitly set to v1/v2.
-        const isUUIDPath = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i.test(pathOrUrl);
-
-        return (
-            pathOrUrl.includes('r2.cloudflarestorage.com') ||
-            pathOrUrl.includes('pub-') ||
-            pathOrUrl.startsWith('@') ||
-            (!pathOrUrl.startsWith('http') &&
-                !pathOrUrl.startsWith('data:') &&
-                !pathOrUrl.startsWith('/images') &&
-                !pathOrUrl.startsWith('../images') &&
-                !pathOrUrl.startsWith('/assets') &&
-                !pathOrUrl.startsWith('../assets') &&
-                !pathOrUrl.startsWith('/icon') &&
-                !pathOrUrl.startsWith('/script') &&
-                (pathOrUrl.includes('/') || /\.(jpg|jpeg|png|webp|gif|svg|mp3|wav|zip)$/i.test(pathOrUrl) || pathOrUrl.startsWith('@') || pathOrUrl.startsWith('beats/') || pathOrUrl.startsWith('products/'))
-            )
-        );
-    },
+    // [REDUNDANT isR2Url REMOVED - Using centralized version at L234]
 
     /**
      * Uploads a file to Cloudflare R2 via the backend API.

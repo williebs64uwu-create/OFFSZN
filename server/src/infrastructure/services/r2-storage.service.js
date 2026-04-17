@@ -37,7 +37,7 @@ const s3ClientV2 = new S3Client({
 /**
  * Helper to get the correct client and bucket based on version.
  */
-const getClientAndBucket = (version = R2_CURRENT_VERSION) => {
+export const getClientAndBucket = (version = R2_CURRENT_VERSION) => {
     // If V1 is requested but credentials are missing, fallback to V2
     // console.log(`[R2-DEBUG] getClientAndBucket called with version: ${version}`);
     if (version === 'v2') {
@@ -304,3 +304,26 @@ export const uploadBufferToR2 = async (buffer, key, contentType, version = R2_CU
         throw error;
     }
 };
+
+/**
+ * Verifica si un objeto existe en R2.
+ */
+export const existsInR2 = async (key, version = R2_CURRENT_VERSION) => {
+    const { client, bucket } = getClientAndBucket(version);
+    if (!client) return false;
+    
+    let cleanKey = key;
+    if (typeof cleanKey === 'string') {
+        while (cleanKey.startsWith('/')) cleanKey = cleanKey.substring(1);
+    }
+    
+    try {
+        await client.send(new HeadObjectCommand({
+            Bucket: bucket,
+            Key: cleanKey
+        }));
+        return true;
+    } catch (error) {
+        return false;
+    }
+};

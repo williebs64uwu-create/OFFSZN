@@ -1,5 +1,14 @@
 import { Router } from 'express';
-import { getPresignedUploadUrl, getPresignedDownloadUrl, getPublicUrl, deleteFromR2, copyFileInR2 } from '../../services/r2-storage.service.js';
+import { 
+    getPresignedUploadUrl, 
+    getPresignedDownloadUrl, 
+    getPublicUrl, 
+    deleteFromR2, 
+    copyFileInR2,
+    existsInR2,
+    getClientAndBucket
+} from '../../services/r2-storage.service.js';
+import { GetObjectCommand } from "@aws-sdk/client-s3";
 import { authenticateTokenMiddleware } from '../../middlewares/authenticateTokenMiddleware.js';
 import { R2_BUCKET_NAME, R2_SECURE_BUCKET_NAME } from '../../../shared/config/config.js';
 import { supabase } from '../../database/connection.js';
@@ -307,86 +316,121 @@ router.get(/\/r2-public\/(.*)/, async (req, res) => {
         let key = req.params[0];
         if (!key) return res.status(400).send('Key missing');
 
-        // 🔥 FIX: Strip any trailing query parameters to avoid signing a key that contains ?X-Amz-Signature...
+        // 🔥 FIX: Strip any trailing query parameters (eg ?v=v2)
         if (key.includes('?')) {
             key = key.split('?')[0];
         }
 
-        const publicPrefixes = ['products/', 'beats/mp3/', 'avatars/', 'public/', 'banners/', 'drumkits/', 'covers/', 'audio/'];
-        const isUUIDPath = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i.test(key);
-        // Match legacy root files starting with timestamps, e.g. 1771706193704_cover.jpg
-        const isLegacyRoot = /^[0-9]+_.*\.(jpg|jpeg|png|webp|gif|svg|mp3|wav)$/i.test(key);
+        // 1. Determinar orden de búsqueda (Prioridad segun ?v=)
+        let versionsToTry = ['v2', 'v1'];
+        if (req.query.v === 'v1') versionsToTry = ['v1', 'v2'];
         
-        const isPublicPrefix = publicPrefixes.some(prefix => key.startsWith(prefix)) || isUUIDPath || isLegacyRoot;
-
-        if (!isPublicPrefix) {
-            return res.status(403).send('Access Denied: Resource is not public');
-        }
-
-        // --- DATABASE DISCOVERY STEP (For Filename-only fallbacks) ---
-        let targetKeys = [key];
-        if (!key.includes('/') && isLegacyRoot) {
-            try {
-                const { data: product } = await supabase
-                    .from('products')
-                    .select('image_url')
-                    .ilike('image_url', `%${key}`)
-                    .limit(1)
-                    .maybeSingle();
-
-                if (product?.image_url) {
-                    targetKeys = [product.image_url, key]; // Try the real path first, then filename-only
-                }
-            } catch (err) {
-                // Silently continue if database search fails
+        // 2. Limpieza agresiva del Key (Quitar buckets si vienen en el path)
+        let cleanKey = key;
+        const knownBuckets = ['offsznlatbucket', 'offszn-storage', 'offszn-storage/'];
+        for (const bucket of knownBuckets) {
+            if (cleanKey.toLowerCase().startsWith(`${bucket}/`)) {
+                cleanKey = cleanKey.substring(bucket.length + 1);
             }
         }
+        if (cleanKey.includes('?')) cleanKey = cleanKey.split('?')[0];
 
-        // Smart Version Selection: Try most likely versions first
-        let versionsToTry = ['v2', 'supabase', 'v1'];
-        if (req.query.v && ['v1', 'v2', 'supabase'].includes(req.query.v)) {
-            versionsToTry = [req.query.v]; // Trust the explicit version first!
-        } else if (isUUIDPath) {
-            versionsToTry = ['v2', 'supabase', 'v1']; 
-        } else if (key.includes('beats/mp3/') || key.includes('drumkits/')) {
-            versionsToTry = ['v1', 'v2', 'supabase'];
+        // 3. Generar patrones de búsqueda inteligentes
+        const filename = cleanKey.split('/').pop();
+        const uuidMatch = cleanKey.match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i);
+        const uuid = uuidMatch ? uuidMatch[0] : null;
+
+        // Path base "puro" (solo uuid/archivo o solo archivo)
+        const purePath = uuid ? `${uuid}/${filename}` : filename;
+
+        const trialPrefixes = [
+            '',               // Exacto como viene
+            'products/',      // products/
+            'products/covers/', 
+            'products/audio/',
+            'beats/mp3/',     // Muy común para audios migrados
+            'mp3_tagged/',    // Muy común para audios migrados
+            'audio/'          // General
+        ];
+
+        const patternsToTry = [];
+        for (const prefix of trialPrefixes) {
+            patternsToTry.push(`${prefix}${cleanKey}`); // Con el path tal cual
+            patternsToTry.push(`${prefix}${purePath}`); // Con el path purificado
+            patternsToTry.push(`${prefix}${filename}`); // Solo el archivo
         }
 
-        // --- DISCOVERY LOOP ---
-        for (const tKey of targetKeys) {
-            for (const ver of versionsToTry) {
-                const targetUrl = await getPresignedDownloadUrl(tKey, 300, ver);
-                if (!targetUrl) continue;
+        const uniquePatterns = [...new Set(patternsToTry.filter(p => !!p))].map(p => {
+            let pClean = p;
+            while (pClean.startsWith('/')) pClean = pClean.substring(1);
+            return pClean;
+        });
 
-                // Explicit version requested? Skip expensive headless fetch-discovery and trust the DB explicitly.
-                if (req.query.v === ver) {
-                     return res.redirect(302, targetUrl);
+        // 4. BUSQUEDA EXHAUSTIVA DIRECTA EN S3
+        let foundVersion = null;
+        let foundKey = null;
+
+        for (const version of versionsToTry) {
+            for (const pattern of uniquePatterns) {
+                const exists = await existsInR2(pattern, version);
+                if (exists) {
+                    foundVersion = version;
+                    foundKey = pattern;
+                    break;
                 }
-
-                try {
-                    const controller = new AbortController();
-                    const timeoutId = setTimeout(() => controller.abort(), 3500); 
-                    const response = await fetch(targetUrl, { method: 'GET', signal: controller.signal });
-                    clearTimeout(timeoutId);
-                    
-                    if (response.ok) {
-                        try { controller.abort(); } catch (e) {}
-                        return res.redirect(302, targetUrl);
-                    } else {
-                        try { controller.abort(); } catch (e) {}
-                    }
-                } catch (err) { }
             }
+            if (foundKey) break;
         }
 
-        // If we reach here, nothing was found
-        return res.status(404).send('Resource not found');
+
+        // 4. Si no se encontró en R2, 404
+        if (!foundKey) {
+            return res.status(404).send('Asset not found in R2 V1 or V2');
+        }
+
+        // 5. STREAMING CON SOPORTE PARA RANGE (Crucial para Audio)
+        const { client, bucket } = getClientAndBucket(foundVersion);
+        const range = req.headers.range;
+        
+        const getParams = { Bucket: bucket, Key: foundKey };
+        if (range) {
+            getParams.Range = range;
+        }
+
+        const command = new GetObjectCommand(getParams);
+        const response = await client.send(command);
+
+        const headers = {
+            'Content-Type': response.ContentType || 'application/octet-stream',
+            'Cache-Control': 'public, max-age=31536000, immutable',
+            'X-R2-Discovered-Version': foundVersion,
+            'X-R2-Discovered-Key': foundKey,
+            'Accept-Ranges': 'bytes'
+        };
+
+        if (response.ContentRange) {
+            headers['Content-Range'] = response.ContentRange;
+            res.status(206);
+        } else {
+            res.status(200);
+        }
+
+        if (response.ContentLength) {
+            headers['Content-Length'] = response.ContentLength;
+        }
+
+        res.set(headers);
+        response.Body.pipe(res);
+
 
     } catch (error) {
-        console.error('Error in R2 public fallback:', error);
-        res.status(500).send('Error accessory public resource');
+        console.error('Error en Proxy R2 Público:', error);
+        if (!res.headersSent) {
+            res.status(500).send('Internal Storage Proxy Error');
+        }
     }
 });
+
 
 router.post('/r2/copy-file', authenticateTokenMiddleware, async (req, res) => {
     try {

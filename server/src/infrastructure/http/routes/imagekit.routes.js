@@ -76,7 +76,10 @@ router.post('/avatar', authenticateTokenMiddleware, async (req, res) => {
         const uploadResult = await uploadToImageKit(image, fileName, folder);
 
         // 🔥 Build display URL (ImageKit transformations)
-        let displayUrl = uploadResult.url;
+        // Use filePath (which includes /avatars/) to construct the correct URL
+        // The SDK's .url field sometimes omits the folder, causing 404s
+        const ikEndpoint = process.env.IMAGEKIT_URL_ENDPOINT || 'https://ik.imagekit.io/6gzqp4xam';
+        let displayUrl = `${ikEndpoint}${uploadResult.filePath}`;
 
         // Apply transformations if crop exists or default 500x500
         const ikTransformations = [];
@@ -160,7 +163,8 @@ router.post('/banner', authenticateTokenMiddleware, upload.single('imageFile'), 
         const uploadResult = await uploadToImageKit(image, fileName, folder);
 
         const version = Date.now();
-        let displayUrl = uploadResult.url;
+        const ikEndpoint = process.env.IMAGEKIT_URL_ENDPOINT || 'https://ik.imagekit.io/6gzqp4xam';
+        let displayUrl = `${ikEndpoint}${uploadResult.filePath}`;
 
         const ikTransformations = [];
         if (crop && crop.width && crop.height) {

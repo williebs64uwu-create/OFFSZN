@@ -166,7 +166,7 @@ async function fetchData() {
             promises.push(userPromises[0]);
         }
 
-        const timeout = new Promise((_, reject) => 
+        const timeout = new Promise((_, reject) =>
             setTimeout(() => reject(new Error('Fetch Timeout')), 15000)
         );
 
@@ -183,8 +183,8 @@ async function fetchData() {
         if (productsRes.ok) {
             allProducts = await productsRes.json();
             // 🔥 FILTER DELETED: Ensure they don't show up in Explore
-            allProducts = allProducts.filter(p => 
-                p.status !== 'deleted' && 
+            allProducts = allProducts.filter(p =>
+                p.status !== 'deleted' &&
                 !(p.public_slug && p.public_slug.startsWith('deleted'))
             );
         }
@@ -229,7 +229,7 @@ async function fetchData() {
             const vipId = '91dbeab3-deae-443c-b5c9-af14448884dc';
             let vipProducer = Array.isArray(allProducers) ? allProducers.find(p => String(p.id) === vipId) : null;
             if (!vipProducer) vipProducer = lb.find(p => String(p.id) === vipId);
-            
+
             if (!vipProducer) {
                 vipProducer = {
                     id: vipId,
@@ -342,13 +342,14 @@ function renderExploreFeed() {
         container.appendChild(createShelfRow('Kits y Librerías', kits, 'standard'));
     }
 
-    // 6. SHELF: PRESETS (Section 5: Social Post format) - Dedicated section
+    // 6. SHELF: PRESETS
     const presets = allProducts
-        .filter(p => !p.public_slug?.startsWith('deleted') && presetCriteria(p))
-        .slice(0, 10); // Show up to 10 presets to fill the shelf better
+        .filter(p => !usedProductIds.has(p.id) && presetCriteria(p) && !p.public_slug?.startsWith('deleted'))
+        .slice(0, EXPLORE_CONFIG.CAROUSEL_LIMIT);
 
     if (presets.length > 0) {
-        container.appendChild(createShelfRow('Presets de voces', presets, 'social-post'));
+        presets.forEach(p => usedProductIds.add(p.id));
+        container.appendChild(createShelfRow('Presets de voces', presets, 'standard'));
     }
 
     /* GSAP Entrance Animation Removed as per user request (instante loading preferred)
@@ -409,7 +410,7 @@ function renderTwoColLists(category = 'Todo') {
     grid.innerHTML = `
         <div class="list-col" style="margin-bottom: 60px;">
             <div class="list-col-header">
-                <h3 class="list-col-title">Tendencias</h3>
+                <h2 class="pw-title" id="explore-tendencias-title" style="margin-bottom: 4px;">Tendencias</h2>
                 <span class="list-col-subtitle">Lo más escuchado ahora</span>
             </div>
             <div id="trends-list-container">
@@ -419,7 +420,7 @@ function renderTwoColLists(category = 'Todo') {
         </div>
         <div class="list-col">
             <div class="list-col-header">
-                <h3 class="list-col-title">Super Fresh</h3>
+                <h2 class="pw-title" id="explore-fresh-title" style="margin-bottom: 4px;">Super Fresh</h2>
                 <span class="list-col-subtitle">Subidos esta semana</span>
             </div>
             <div id="fresh-list-container">
@@ -535,12 +536,12 @@ function createListItemHtml(item, index, type) {
     const name = escapeHTML(item.name || item.nickname || 'Sin nombre');
     const sub = type === 'product' ? escapeHTML(item.producer_nickname || 'OFFSZN Artist') : `${item.products_count || 0} productos`;
     const rawImg = item.image_url || item.avatar_url || '/images/portada-default.png';
-    
+
     // 🔥 R2 Signing Optimization (Match product-core.js)
     const storageVer = item.storage_version || item.r2_version || 'v2';
     const isR2 = (storageVer !== 'supabase') && window.AuthUtils && window.AuthUtils.isR2Url(rawImg);
     const imgPlaceholder = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
-    
+
     let initialSrc = rawImg;
     if (!isR2 && !rawImg.startsWith('http')) {
         const sbUrl = window.SUPABASE_URL || "https://qtjpvztpgfymjhhpoouq.supabase.co";
@@ -667,13 +668,14 @@ function startHeroSlider() {
 
     // Render all slides into a track
     heroContainer.innerHTML = `
-        <div class="hero-track" id="hero-track">
+        <div class="wavs-hero-track" id="wavs-hero-track">
             ${heroProducts.map((p, i) => renderHeroSlideHtml(p, i)).join('')}
         </div>
-        <div class="hero-indicators">
-            ${heroProducts.map((_, i) => `<div class="hero-dot ${i === currentHeroIndex ? 'active' : ''}" onclick="window.navToHero(${i})"></div>`).join('')}
+        <div class="wavs-hero-indicators">
+            ${heroProducts.map((_, i) => `<div class="wavs-hero-indicator ${i === currentHeroIndex ? 'active' : ''}" onclick="window.navToHero(${i})"></div>`).join('')}
         </div>
     `;
+
 
     // Sign all images in the track
     if (window.signR2Images) window.signR2Images(heroContainer);
@@ -763,12 +765,13 @@ function moveToNextHero() {
 }
 
 function performHeroTransition(index) {
-    const track = document.getElementById('hero-track');
+    const track = document.getElementById('wavs-hero-track');
     const heroContainer = document.getElementById('explore-hero-container');
     if (!track || !heroContainer) return;
 
     const slideWidth = heroContainer.getBoundingClientRect().width;
     const offset = -index * slideWidth;
+
 
     gsap.to(track, {
         x: offset,
@@ -784,10 +787,11 @@ function performHeroTransition(index) {
 // Add global resize listener to keep track aligned
 window.addEventListener('resize', () => {
     if (isExplorePage()) {
-        const track = document.getElementById('hero-track');
+        const track = document.getElementById('wavs-hero-track');
         const heroContainer = document.getElementById('explore-hero-container');
         if (track && heroContainer) {
             const slideWidth = heroContainer.getBoundingClientRect().width;
+
             track.style.transition = 'none';
             track.style.transform = `translateX(${-currentHeroIndex * slideWidth}px)`;
         }
@@ -795,74 +799,57 @@ window.addEventListener('resize', () => {
 });
 
 function updateHeroIndicators() {
-    const dots = document.querySelectorAll('.hero-dot');
-    dots.forEach((dot, i) => {
-        dot.classList.toggle('active', i === currentHeroIndex);
+    const lines = document.querySelectorAll('.wavs-hero-indicator');
+    lines.forEach((line, i) => {
+        line.classList.toggle('active', i === currentHeroIndex);
     });
 }
 
+
 function renderHeroSlideHtml(product, index) {
     const rawImg = product.image_url || '/images/portada-default.png';
-    const imgUrl = escapeHTML(rawImg);
     const producer = escapeHTML(product.producer_nickname || 'Artista');
     const type = escapeHTML((product.product_type || 'Beat').toUpperCase());
     const productName = escapeHTML(product.name || 'Sin título');
+    const productUrl = getProductUrl(product);
 
-    const storageVer = product.storage_version || product.r2_version || 'v2';
-    const isR2 = (storageVer !== 'supabase') && window.AuthUtils && window.AuthUtils.isR2Url(rawImg);
-    const imgPlaceholder = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
-
-    let initialSrc = rawImg;
-    if (!isR2 && !rawImg.startsWith('http')) {
-        const sbUrl = window.SUPABASE_URL || "https://qtjpvztpgfymjhhpoouq.supabase.co";
-        if (!rawImg.includes('supabase.co')) {
-            initialSrc = `${sbUrl}/storage/v1/object/public/products/${rawImg}`;
-        }
-    } else if (isR2) {
-        initialSrc = imgPlaceholder;
-    }
-
-    const mobileBgAttr = isR2 ? `data-r2-bg="${imgUrl}"` : `style="background-image: url('${escapeHTML(initialSrc)}')"`;
+    // Experimental Background Mapping (Premium distinct assets)
+    const expBgs = [
+        '/images/hero_exp_1.png',
+        '/images/hero_exp_2.png',
+        '/images/hero_exp_3.png',
+        '/images/hero_exp_4.png'
+    ];
+    const bgUrl = expBgs[index % expBgs.length];
 
     return `
-            <div class="explore-hero" onclick="window.handleHeroClick(${index})">
-                <!-- Mobile Background Image & Gradient -->
-                <div class="hero-mobile-bg mobile-only" ${mobileBgAttr} data-r2-version="${storageVer}"></div>
-                <div class="hero-mobile-gradient mobile-only"></div>
-
-                <canvas class="hero-particles-canvas desktop-only"></canvas>
+            <div class="wavs-hero" onclick="window.handleHeroClick(${index})" style="background-image: url('${bgUrl}')">
+                <div class="wavs-hero-overlay"></div>
             
-                <div class="hero-content">
-                    <h1 class="hero-title">${productName}</h1>
-                    <p class="hero-subtitle desktop-only">Una creación de <strong data-artist="${product.producer_id}" onmouseenter="showArtistCard(event, this)" onmouseleave="hideArtistCard(event, this)">${producer}</strong> • ${type}</p>
+                <div class="wavs-hero-content">
+                    <h1 class="wavs-hero-title">
+                        <a href="${productUrl}" onclick="event.stopPropagation()">${productName}</a>
+                    </h1>
+                    <p class="wavs-hero-meta">
+                        <span class="wavs-hero-meta-item">
+                            <i class="bi bi-record-circle" style="font-size: 0.8em; margin-right: 4px;"></i>
+                            <a href="/@${producer}" onclick="event.stopPropagation()">${producer}</a>
+                        </span>
+                        <span class="wavs-hero-meta-sep">·</span>
+                        <span class="wavs-hero-meta-item">${type}</span>
+                    </p>
                     
-                    <div class="hero-mobile-info mobile-only">
-                        <span class="hero-mobile-artist" data-artist="${product.producer_id}" onmouseenter="showArtistCard(event, this)" onmouseleave="hideArtistCard(event, this)">${producer}</span>
-                        <span class="hero-mobile-dot">&bull;</span>
-                        <span class="hero-mobile-type">${type}</span>
-                    </div>
-
-                    <div class="hero-actions desktop-only">
-                        <button class="btn-hero-play" data-hero-index="${index}" onclick="event.stopPropagation(); window.handleHeroPlay(this)">
-                            <i class="bi bi-play-fill"></i> Escuchar Ahora
+                    <div class="wavs-hero-actions">
+                        <button class="wavs-btn-play" data-hero-index="${index}" onclick="event.stopPropagation(); window.handleHeroPlay(this)">
+                            <i class="bi bi-play-fill"></i>
                         </button>
-                        <button class="btn-hero-outline" onclick="event.stopPropagation(); window.location.href='${getProductUrl(product)}'">Ver Detalles</button>
+                        <button class="wavs-btn-browse" onclick="event.stopPropagation(); window.location.href='${productUrl}'">Ver detalles</button>
                     </div>
                 </div>
-
-                <div class="hero-image-container desktop-only">
-                    <img ${isR2 ? `src="${imgPlaceholder}" data-r2-src="${imgUrl}"` : `src="${escapeHTML(initialSrc)}"`} 
-                         data-r2-version="${storageVer}" data-artist="${product.producer_id}" onmouseenter="showArtistCard(event, this)" onmouseleave="hideArtistCard(event, this)"
-                         alt="cover" class="hero-image">
-                </div>
-
-                <!-- Mobile White Play Button -->
-                <button class="hero-mobile-play-btn mobile-only" data-hero-index="${index}" onclick="event.stopPropagation(); window.handleHeroPlay(this)">
-                    <i class="bi bi-play-fill" style="margin-left: 3px; color: #000;"></i>
-                </button>
             </div>
     `;
 }
+
 
 window.handleHeroPlay = function (btn) {
     const idx = btn.dataset.heroIndex;
@@ -879,20 +866,20 @@ function handleHeroClick(index) {
 }
 window.handleHeroClick = handleHeroClick;
 
-window.navToHero = function(index) {
+window.navToHero = function (index) {
     currentHeroIndex = index;
     performHeroTransition(index);
     if (heroTimer) clearInterval(heroTimer);
     heroTimer = setInterval(() => moveToNextHero(), EXPLORE_CONFIG.HERO_ROTATE_MS);
 };
 
-window.changePW = function(direction) {
+window.changePW = function (direction) {
     if (!window.topPWProducers || window.topPWProducers.length === 0) return;
-    
+
     window.currentPWIndex += direction;
     if (window.currentPWIndex >= window.topPWProducers.length) window.currentPWIndex = 0;
     if (window.currentPWIndex < 0) window.currentPWIndex = window.topPWProducers.length - 1;
-    
+
     renderProducerOfTheWeek();
 };
 
@@ -1002,7 +989,7 @@ function renderPWTrackItemHtml(product, index) {
     const name = escapeHTML(product.name || 'Sin título');
     const rawImg = product.image_url || '/images/portada-default.png';
     const imgUrl = escapeHTML(rawImg);
-    
+
     // Genre/Tags (Actual tags from product)
     const productTags = Array.isArray(product.tags) ? product.tags : [];
     const genre = productTags.length > 0 ? productTags[0] : (product.category || 'Beat');
@@ -1016,7 +1003,7 @@ function renderPWTrackItemHtml(product, index) {
     const storageVer = product.storage_version || product.r2_version || 'v2';
     const isR2 = (storageVer !== 'supabase') && window.AuthUtils && window.AuthUtils.isR2Url(rawImg);
     const imgPlaceholder = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
-    
+
     let initialSrc = rawImg;
     if (!isR2 && !rawImg.startsWith('http') && !rawImg.startsWith('/images')) {
         const sbUrl = window.SUPABASE_URL || "https://qtjpvztpgfymjhhpoouq.supabase.co";
@@ -1162,67 +1149,17 @@ function createShelfRow(title, items, format = 'standard') {
         </div>
     `;
     // Different step scroll based on format
-    const stepSize = (format === 'premium-preset' || format === 'social-post') ? 340 : 264;
+    const stepSize = (format === 'premium-preset') ? 340 : 264;
     initShelfNavigation(row, rowId, stepSize);
     setTimeout(() => {
         // Support both standard and premium formats
-        const cards = row.querySelectorAll('.product-card-smart, .preset-card-premium, .preset-card-social');
+        const cards = row.querySelectorAll('.product-card-smart, .preset-card-premium');
         cards.forEach(card => {
             const id = card.dataset.productId;
             const item = items.find(i => String(i.id) === String(id));
 
-            // Social Card Specific Actions
-            if (format === 'social-post') {
-                const priceBtn = card.querySelector('.post-price-btn');
-                if (priceBtn) priceBtn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    if (window.Cart) {
-                        window.Cart.addItem(item);
-                    } else {
-                        window.location.href = getProductUrl(item);
-                    }
-                });
-
-                const likeBtnSoc = card.querySelector('.post-like-btn');
-                if (likeBtnSoc) likeBtnSoc.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    handleLike(id, likeBtnSoc, item.producer_id);
-                });
-
-                const shareBtn = card.querySelector('.post-share-btn');
-                if (shareBtn) shareBtn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    if (window.openShareModal) {
-                        window.openShareModal(item);
-                    } else {
-                        const url = window.location.origin + getProductUrl(item);
-                        if (navigator.share) {
-                            navigator.share({ title: item.name, url: url }).catch(() => { });
-                        } else {
-                            navigator.clipboard.writeText(url).then(() => {
-                                const icon = shareBtn.querySelector('i');
-                                icon.className = 'bi bi-check2';
-                                setTimeout(() => icon.className = 'bi bi-share', 2000);
-                            });
-                        }
-                    }
-                });
-
-                const repostBtn = card.querySelector('.post-repost-btn');
-                if (repostBtn) repostBtn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    alert("Función de Repost próximamente 🚀");
-                });
-
-                const commentBtn = card.querySelector('.post-comment-btn');
-                if (commentBtn) commentBtn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    alert("Comentarios próximamente 💬");
-                });
-            }
-
             // Standard Card Actions
-            const playBtn = card.querySelector('.quick-play-btn, .post-play-btn');
+            const playBtn = card.querySelector('.quick-play-btn');
             const likeBtn = card.querySelector('.card-like-btn');
 
             if (playBtn) playBtn.addEventListener('click', (e) => { e.stopPropagation(); playTrack(item); });
@@ -1353,71 +1290,7 @@ function createProductCardHtml(product, format = 'standard') {
     }
 
     if (format === 'social-post') {
-        const pType = (product.product_type || '').toLowerCase();
-        const isTrulyFree = pType !== 'beat' && (product.is_free === true || String(product.is_free) === 'true') && (Number(product.price_basic) === 0 || !product.price_basic);
-        const priceValue = (product.price_basic && Number(product.price_basic) > 0) ? product.price_basic : '10';
-        const price = isTrulyFree ? 'GRATIS' : (window.CurrencyManager ? window.CurrencyManager.format(parseFloat(priceValue)) : `$${priceValue}`);
-
-        // FIND REAL PRODUCER DATA
-        let producer = Array.isArray(allProducers) ? allProducers.find(p => String(p.id) === String(product.producer_id)) : null;
-
-        // Robust fallback: if not in allProducers, check topProducers
-        if (!producer && window.topProducers) {
-            producer = window.topProducers.find(p => String(p.id) === String(product.producer_id));
-        }
-
-        const realArtist = producer ? (producer.nickname || producer.name || artist) : (product.producer_nickname || artist);
-        const realAvatarPath = producer ? producer.avatar_url : (product.producer_avatar_url || null);
-        const realAvatar = getImgInfo(realAvatarPath, producer?.storage_version || producer?.r2_version || product.producer_storage_version || product.producer_r2_version);
-        const realHandle = producer ? (producer.handle || producer.nickname || 'artista').toLowerCase().replace(/\s+/g, '') : (product.producer_nickname || 'usuario').toLowerCase().replace(/\s+/g, '');
-
-        const isLiked = window.FavoritesManager ? window.FavoritesManager.isLiked(product.id) : false;
-        const priceDisplay = price;
-
-        return `
-            <div class="preset-card-social" data-product-id="${product.id}">
-                <div class="post-header" onclick="window.location.href='/@' + encodeURIComponent('${realHandle}')">
-                    <img ${realAvatar.attr} class="post-avatar" alt="${realArtist}" data-artist="${product.producer_id}" onmouseenter="showArtistCard(event, this)" onmouseleave="hideArtistCard(event, this)" onerror="this.src='/images/portada-default.png'">
-                    <div class="post-user-info">
-                        <span class="post-user-handle" data-artist="${product.producer_id}" onmouseenter="showArtistCard(event, this)" onmouseleave="hideArtistCard(event, this)">@${escapeHTML(realHandle)}</span>
-                    </div>
-                    <div class="post-options">
-                        <i class="bi bi-three-dots"></i>
-                    </div>
-                </div>
-                <div class="post-body">
-                    <div class="post-cover-wrapper" onclick="window.location.href='${getProductUrl(product)}'">
-                        <img ${productImg.attr} class="post-cover" alt="${escapeHTML(product.name)}" onerror="this.src='/images/portada-default.png'">
-                        <button class="post-play-btn"><i class="bi bi-play-fill"></i></button>
-                    </div>
-                    <div class="post-content">
-                        <h3 class="post-title">${escapeHTML(product.name)}</h3>
-                        <button class="post-price-btn" onclick="handleAddToCart(event, '${product.id}')">
-                            <i class="bi bi-cart-plus"></i> ${priceDisplay}
-                        </button>
-                        <div class="post-actions">
-                            <div class="post-action post-like-btn like-btn ${isLiked ? 'liked' : ''}" data-product-id="${product.id}">
-                                <i class="bi ${isLiked ? 'bi-heart-fill' : 'bi-heart'}"></i>
-                                <span class="like-counter">${product.likes_count || 0}</span>
-                            </div>
-                            <div class="post-action post-repost-btn ${window.currentUserReposts.has(String(product.id)) ? 'active' : ''}" 
-                                 title="Repost" 
-                                 onclick="toggleRepost(event, '${product.id}', this, '${product.producer_id}')">
-                                <i class="bi bi-arrow-repeat"></i>
-                                <span class="repost-counter">${product.reposts_count || 0}</span>
-                            </div>
-                            <div class="post-action post-comment-btn" title="Comentar">
-                                <i class="bi bi-chat"></i>
-                                <span>0</span>
-                            </div>
-                            <div class="post-action post-share-btn" title="Compartir">
-                                <i class="bi bi-share"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
+        return ''; // Experimental social format removed in favor of standard kits design
     }
 
     return `
@@ -1568,7 +1441,7 @@ async function handleLike(id, btn, ownerId) {
         // Determine current count from ANY matching card
         let currentCount = 0;
         const allCards = document.querySelectorAll(`[data-product-id="${id}"]`);
-        
+
         allCards.forEach(card => {
             const likeBtn = card.querySelector('.card-like-btn, .post-like-btn, .like-btn');
             if (likeBtn) {
@@ -1683,10 +1556,10 @@ async function toggleRepost(event, productId, btn, producerId) {
             // INSERT REPOST
             const { error } = await window.supabaseClient
                 .from('reposts')
-                .insert([{ 
-                    product_id: productId, 
-                    user_id: userId, 
-                    producer_id: producerId || null 
+                .insert([{
+                    product_id: productId,
+                    user_id: userId,
+                    producer_id: producerId || null
                 }]);
             if (error) throw error;
             window.currentUserReposts.add(String(productId));

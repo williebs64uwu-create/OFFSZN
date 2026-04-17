@@ -43,12 +43,18 @@ description: optimiza la visibilidad en buscadores mediante auditorías técnica
 - Usa listas estructuradas y tablas para comparar precios o características.
 - Mantén oraciones claras y directas que respondan preguntas del tipo "¿Cómo descargar beats en OFFSZN?".
 
+### 5. Auditoría Dinámica (Playwright)
+- Cuando el SEO dependa de JS (ej: perfiles de Supabase), usa: `npx --no-install playwright-cli open <url>` (o `npx --no-install playwright-cli snapshot <url>`).
+- Analiza si el `title` y `h1` finales coinciden con los del código fuente.
+- Verifica que las imágenes perezosas (lazy-loaded) tengan su `alt` listo al renderizar.
+
 ## Output (formato exacto)
 Devolver un reporte estructurado con:
 - **Estado Actual**: <Puntaje 1-10>
 - **Problemas Detectados**: <Lista de errores técnicos>
+- **Análisis de Renderizado (Playwright)**: <Resultados del snapshot dinámico>
 - **Mejoras Aplicadas**: <Cambios en código/etiquetas>
 - **Código Generado (si aplica)**: <Bloque JSON-LD o HTML>
 
 ## Manejo de errores y correcciones
-Si no puedes acceder a la URL, pide al usuario el contenido HTML de la página o usa `view_file` si es un archivo local. Si falta información de un producto, consulta la base de datos (Supabase) antes de inventar datos.
+Si no puedes acceder a la URL, pide al usuario el contenido HTML de la página o usa `view_file` si es un archivo local. Para sitios dinámicos, SIEMPRE intenta usar `npx playwright-cli` si quieres ver el resultado final tras la ejecución de los scripts. Si falta información de un producto, consulta la base de datos (Supabase) antes de inventar datos.
