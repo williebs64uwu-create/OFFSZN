@@ -1627,8 +1627,9 @@ async function renderBeatSpecifics(product) {
             window.currentProductData.available_licenses = licenses;
         }
 
+        buyBox.innerHTML = '';
+
         if (enabledLicenses.length > 0) {
-            buyBox.innerHTML = '';
 
             // --- FUNCTION TO CREATE LAYOUT (Reusable) ---
             const createBuyingLayout = (isMobile) => {
@@ -1726,8 +1727,9 @@ async function renderBeatSpecifics(product) {
                     freeBtn.style.color = '#ccc';
                     freeBtn.innerHTML = '<i class="bi bi-download"></i> DESCARGA GRATIS MP3 CON TAG';
                     freeBtn.onclick = () => {
-                        if (window.openDownloadGateModal) window.openDownloadGateModal(product.audio_url, product.producer?.nickname, product.id);
-                        else window.open(product.audio_url, '_blank');
+                        const urlToDownload = product.download_url_mp3 || product.audio_url || product.mp3_url;
+                        if (window.openDownloadGateModal) window.openDownloadGateModal(urlToDownload, product.producer?.nickname, product.id);
+                        else window.open(urlToDownload, '_blank');
                     };
                     container.appendChild(freeBtn);
                 }
@@ -1739,9 +1741,34 @@ async function renderBeatSpecifics(product) {
             buyBox.appendChild(createBuyingLayout(false)); // Desktop
             buyBox.appendChild(createBuyingLayout(true));  // Mobile
 
-            // Initial Tab Update
             const initialSelected = localStorage.getItem(`offszn_lic_select_${product.id}`) || enabledLicenses[0].id;
             if (window.updateTermsTab) window.updateTermsTab(initialSelected);
+        } else {
+            // No licenses enabled. If it's free, show only the free download button.
+            const emptyState = document.createElement('div');
+            emptyState.className = 'empty-licenses-container';
+            emptyState.style.textAlign = 'center';
+            emptyState.style.padding = '20px';
+            emptyState.style.width = '100%';
+
+            if (product.is_free) {
+                const freeBtn = document.createElement('button');
+                freeBtn.className = 'btn-purchase-kit'; // Use the big button style for prominence
+                freeBtn.style.padding = '16px';
+                freeBtn.style.fontSize = '1.1rem';
+                freeBtn.style.fontWeight = '800';
+                freeBtn.style.width = '100%';
+                freeBtn.innerHTML = '<i class="bi bi-download"></i> DESCARGA GRATIS MP3';
+                freeBtn.onclick = () => {
+                    const urlToDownload = product.download_url_mp3 || product.audio_url || product.mp3_url;
+                    if (window.openDownloadGateModal) window.openDownloadGateModal(urlToDownload, product.producer?.nickname, product.id);
+                    else window.open(urlToDownload, '_blank');
+                };
+                emptyState.appendChild(freeBtn);
+            } else {
+                emptyState.innerHTML = '<p style="color: #666; font-size: 0.95rem;">Este beat no tiene licencias disponibles para compra en este momento.</p>';
+            }
+            buyBox.appendChild(emptyState);
         }
 
 

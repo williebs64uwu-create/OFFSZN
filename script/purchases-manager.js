@@ -81,7 +81,10 @@ window.PurchasesManager = (function () {
                                 name,
                                 image_url,
                                 product_type,
+                                audio_url,
+                                download_url_mp3,
                                 mp3_url,
+                                download_url_wav,
                                 wav_url,
                                 stems_url,
                                 kit_url,
@@ -230,13 +233,16 @@ window.PurchasesManager = (function () {
         const pType = product.product_type || '';
         const isKit = ['drumkit', 'loopkit', 'preset'].includes(pType);
 
+        const hasMp3 = product.mp3_url || product.download_url_mp3 || product.audio_url;
+        const hasWav = product.wav_url || product.download_url_wav;
+
         if (isFree && pType === 'beat') {
-            if (product.mp3_url) actionsHtml += `<button class="download-btn" onclick="window.PurchasesManager.downloadFile(this, ${orderId}, '${productId}', 'mp3')" title="Bajar MP3"><i class="bi bi-music-note-beamed"></i> MP3</button>`;
+            if (hasMp3) actionsHtml += `<button class="download-btn" onclick="window.PurchasesManager.downloadFile(this, ${orderId}, '${productId}', 'mp3')" title="Bajar MP3"><i class="bi bi-music-note-beamed"></i> MP3</button>`;
         } else if (isFree && isKit) {
             if (product.kit_url) actionsHtml += `<button class="download-btn" onclick="window.PurchasesManager.downloadFile(this, ${orderId}, '${productId}', 'kit')" title="Bajar ZIP"><i class="bi bi-box-seam"></i> ZIP</button>`;
         } else {
-            if (product.mp3_url) actionsHtml += `<button class="download-btn" onclick="window.PurchasesManager.downloadFile(this, ${orderId}, '${productId}', 'mp3')" title="Bajar MP3"><i class="bi bi-music-note-beamed"></i> MP3</button>`;
-            if (product.wav_url) actionsHtml += `<button class="download-btn" onclick="window.PurchasesManager.downloadFile(this, ${orderId}, '${productId}', 'wav')" title="Bajar WAV"><i class="bi bi-music-note-beamed"></i> WAV</button>`;
+            if (hasMp3) actionsHtml += `<button class="download-btn" onclick="window.PurchasesManager.downloadFile(this, ${orderId}, '${productId}', 'mp3')" title="Bajar MP3"><i class="bi bi-music-note-beamed"></i> MP3</button>`;
+            if (hasWav) actionsHtml += `<button class="download-btn" onclick="window.PurchasesManager.downloadFile(this, ${orderId}, '${productId}', 'wav')" title="Bajar WAV"><i class="bi bi-music-note-beamed"></i> WAV</button>`;
             if (product.stems_url) actionsHtml += `<button class="download-btn" onclick="window.PurchasesManager.downloadFile(this, ${orderId}, '${productId}', 'stems')" title="Bajar STEMS"><i class="bi bi-archive"></i> STEMS</button>`;
             if (product.kit_url || isKit) actionsHtml += `<button class="download-btn" onclick="window.PurchasesManager.downloadFile(this, ${orderId}, '${productId}', 'kit')" title="Bajar ZIP"><i class="bi bi-box-seam"></i> ZIP</button>`;
         }
@@ -254,8 +260,15 @@ window.PurchasesManager = (function () {
             actionsHtml += `<button class="download-btn primary" onclick="window.PurchasesManager.generatePDF(this, '${pdfDataStr}')" title="Licencia PDF"><i class="bi bi-file-earmark-pdf"></i> PDF</button>`;
         }
 
+        let imageUrl = product.image_url || '/images/portada-default.png';
+        if (imageUrl && !imageUrl.startsWith('http') && !imageUrl.startsWith('/images/')) {
+            // Eliminar slash inicial y asegurar que use el proxy local
+            const cleanUrl = imageUrl.startsWith('/') ? imageUrl.substring(1) : imageUrl;
+            imageUrl = `/api/r2-public/${cleanUrl}`;
+        }
+
         row.innerHTML = `
-            <img src="${product.image_url || '/images/portada-default.png'}" class="purchase-cover" alt="Portada" onerror="this.src='/images/portada-default.png'">
+            <img src="${imageUrl}" class="purchase-cover" alt="Portada" onerror="this.src='/images/portada-default.png'">
             <div class="purchase-info">
                 <span class="purchase-name">${product.name}</span>
                 <span class="purchase-producer">${producerName}</span>

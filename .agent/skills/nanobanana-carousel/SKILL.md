@@ -7,10 +7,11 @@ description: Generates high-fidelity Instagram carousels using KIE AI (Nano Bana
 
 This skill allows the agent to generate full Instagram carousels (4:5) by orchestrating multiple image generation tasks via the KIE AI API.
 
-## Design Aesthetic
-*   **Default Style**: "Animated Cinematic AI / 3D Stylized".
-*   **Palette**: Primary Red (#FF0000), Pure White (#FFFFFF), and Deep Slate/Black for contrast.
-*   **Vibe**: Premium tech, high-energy, "The Future of AI".
+## Design Aesthetic (Minimalist Branding)
+*   **Style**: "Minimalist / Sober / Professional / Static / Object-Oriented".
+*   **Palette**: Primary Red (#FF0000) and Pure White (#FFFFFF). Black/Dark Gray for backgrounds.
+*   **Subjects**: **NO HUMANS**. Use only concrete objects (microphones, knobs, icons, waveforms, hardware rack units).
+*   **Vibe**: Clean, low-noise, direct. High-quality product photography style.
 
 ## Workflow
 1.  **Scripting**: Use `copywriting-premium` and `psicologia-ventas` to draft a 5-slide script.

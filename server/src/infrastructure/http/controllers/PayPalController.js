@@ -1016,7 +1016,7 @@ export const getSecureDownloadUrl = async (req, res) => {
                 order_id, 
                 product_id,
                 orders!inner(transaction_id, user_id, status),
-                products!inner(name, kit_url, mp3_url, wav_url, stems_url, storage_version, r2_version)
+                products!inner(name, kit_url, mp3_url, wav_url, stems_url, audio_url, download_url_mp3, download_url_wav, storage_version, r2_version)
             `)
             .eq('orders.transaction_id', orderId)
             .eq('product_id', productId)
@@ -1030,15 +1030,15 @@ export const getSecureDownloadUrl = async (req, res) => {
                 // Si es simulación, buscamos el producto directamente para que la descarga funcione
                 const { data: product } = await supabase
                     .from('products')
-                    .select('kit_url, mp3_url, wav_url, stems_url, storage_version, r2_version')
+                    .select('kit_url, mp3_url, wav_url, stems_url, audio_url, download_url_mp3, download_url_wav, storage_version, r2_version')
                     .eq('id', productId)
                     .single();
 
                 if (product) {
                     // Mapeamos el archivo según el tipo solicitado
                     let mockPath = product.kit_url;
-                    if (fileType === 'wav') mockPath = product.wav_url;
-                    else if (fileType === 'mp3') mockPath = product.mp3_url;
+                    if (fileType === 'wav') mockPath = product.download_url_wav || product.wav_url;
+                    else if (fileType === 'mp3') mockPath = product.download_url_mp3 || product.mp3_url || product.audio_url;
 
                     if (mockPath) {
                         try {
@@ -1075,13 +1075,13 @@ export const getSecureDownloadUrl = async (req, res) => {
 
         // 3. Obtener la ruta según el tipo
         let path = '';
-        if (fileType === 'wav') path = item.products.wav_url;
+        if (fileType === 'wav') path = item.products.download_url_wav || item.products.wav_url;
         else if (fileType === 'stems') path = item.products.stems_url;
-        else if (fileType === 'mp3') path = item.products.mp3_url;
+        else if (fileType === 'mp3') path = item.products.download_url_mp3 || item.products.mp3_url || item.products.audio_url;
         else if (fileType === 'kit') path = item.products.kit_url;
         else if (fileType === 'other') {
             // Fallback: try to find any available path if type is ambiguous
-            path = item.products.mp3_url || item.products.wav_url || item.products.kit_url;
+            path = item.products.download_url_mp3 || item.products.mp3_url || item.products.audio_url || item.products.download_url_wav || item.products.wav_url || item.products.kit_url;
         }
 
         if (!path) {

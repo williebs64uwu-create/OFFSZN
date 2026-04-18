@@ -138,7 +138,8 @@ export const getPresignedDownloadUrl = async (key, expiresIn = 3600, version = R
             }
 
             // 2. Primary Signing Attempt
-            const { data, error } = await supabase.storage.from(bucketName).createSignedUrl(normalizedPath, expiresIn);
+            const filenameObj = { download: normalizedPath.split('/').pop() };
+            const { data, error } = await supabase.storage.from(bucketName).createSignedUrl(normalizedPath, expiresIn, filenameObj);
 
             // 3. Robust Fallback (Try alternative UUID paths if it's a product)
             if (error || !data?.signedUrl) {
@@ -154,7 +155,7 @@ export const getPresignedDownloadUrl = async (key, expiresIn = 3600, version = R
 
                     for (const alt of alternatives) {
                         if (alt === normalizedPath) continue;
-                        const retry = await supabase.storage.from(bucketName).createSignedUrl(alt, expiresIn);
+                        const retry = await supabase.storage.from(bucketName).createSignedUrl(alt, expiresIn, filenameObj);
                         if (retry.data?.signedUrl) return retry.data.signedUrl;
                     }
                 }
@@ -180,9 +181,12 @@ export const getPresignedDownloadUrl = async (key, expiresIn = 3600, version = R
             while (cleanKey.startsWith('/')) cleanKey = cleanKey.substring(1);
         }
 
+        const filename = cleanKey.split('/').pop() || 'descarga_offszn.mp3';
+
         const command = new GetObjectCommand({
             Bucket: bucket,
-            Key: cleanKey
+            Key: cleanKey,
+            ResponseContentDisposition: `attachment; filename="${filename}"`
         });
 
         const signedUrl = await getSignedUrl(client, command, { expiresIn });

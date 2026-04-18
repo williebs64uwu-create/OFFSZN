@@ -151,11 +151,35 @@ window.renderLicenses = () => {
 
     container.innerHTML = '';
 
+    const activeLics = Object.values(licensesState).filter(l => l.enabled);
+    const hasInvalidPrice = activeLics.some(l => {
+        const p = parseFloat(l.price);
+        return isNaN(p) || p <= 0;
+    });
+
+    // 🔥 V2 GUARDRAIL: Update Next Button State
+    const nextBtn = document.getElementById('nextBtn');
+    if (nextBtn && uploaderState.currentStep === 2) {
+        if (hasInvalidPrice) {
+            nextBtn.disabled = true;
+            nextBtn.style.opacity = '0.5';
+            nextBtn.style.cursor = 'not-allowed';
+            nextBtn.style.filter = 'grayscale(1)';
+        } else {
+            nextBtn.disabled = false;
+            nextBtn.style.opacity = '1';
+            nextBtn.style.cursor = 'pointer';
+            nextBtn.style.filter = 'none';
+        }
+    }
+
     Object.keys(licensesState).forEach(id => {
         const license = licensesState[id];
         const card = document.createElement('div');
         card.id = `offszn_licencia_${id}`;
         card.className = `license-card ${license.enabled ? 'active' : ''}`;
+
+        const isLastActive = license.enabled && activeLics.length === 1;
 
         const hasMP3 = !!uploaderState.mp3_tagged;
         const hasWAV = !!uploaderState.wav_untagged;
@@ -195,15 +219,22 @@ window.renderLicenses = () => {
             }
         }
 
+        const isActuallyZero = license.enabled && (parseFloat(license.price) <= 0 || isNaN(license.price));
+        let zeroError = '';
+        if (isActuallyZero) {
+            zeroError = `<div class="price-error-msg" style="color: #ef4444; font-size: 11px; margin-top: 4px; font-weight: 500; text-align: right;"><i class="bi bi-exclamation-triangle-fill"></i> Debes poner un precio</div>`;
+        }
+
         card.innerHTML = `
             <div class="license-main-row">
                 <div class="license-left-group">
-                    <label class="toggle-switch">
+                    <label class="toggle-switch" style="${isLastActive ? 'pointer-events: none; opacity: 1;' : ''}">
                         <input type="checkbox" 
                             id="enabled_${id}" 
                             name="enabled_${id}"
                             ${license.enabled ? 'checked' : ''} 
-                            onchange="window.toggleLicense('${id}')">
+                            onchange="window.toggleLicense('${id}')"
+                            ${isLastActive ? 'disabled' : ''}>
                         <span class="slider"></span>
                     </label>
                     <span class="offszn_nombre">${license.name === 'Basic' ? 'MP3 Lease' : (license.name === 'Premium' ? 'WAV Lease' : (license.name === 'Unlimited' ? 'Trackout (Stems)' : 'Ilimitado'))}</span>
@@ -217,10 +248,12 @@ window.renderLicenses = () => {
                             class="license-price-input" 
                             value="${Number(license.price || 0).toFixed(2)}" 
                             oninput="if(this.value.includes('.') && this.value.split('.')[1].length > 2) this.value = this.value.slice(0, -1)"
-                            onchange="window.updateLicensePrice('${id}', this.value)">
+                            onchange="window.updateLicensePrice('${id}', this.value)"
+                            onpaste="setTimeout(() => window.updateLicensePrice('${id}', this.value), 0)">
                     </div>
                 </div>
             </div>
+            ${zeroError}
             <div class="license-status-row ${isComplete ? 'status-success' : 'status-error'}">
                 <span>${statusText}</span>
             </div>
@@ -268,6 +301,7 @@ window.toggleLicense = (id) => {
 
         // If trying to disable and it's the only one left, do nothing
         if (licensesState[id].enabled && enabledCount <= 1) {
+            notify("Debes tener al menos una licencia activa.", "error");
             return;
         }
 
@@ -283,7 +317,21 @@ window.updateLicensePrice = (id, price) => {
         // Strict truncation to 2 decimals (no rounding)
         p = Math.floor(p * 100) / 100;
         if (p > 1000) p = 1000;
+        
         licensesState[id].price = p;
+
+        // 🔥 GUARDRAIL: Precio 0 logic
+        if (p <= 0) {
+            const otherActive = Object.values(licensesState).filter(l => l.id !== id && l.enabled).length;
+            if (otherActive > 0) {
+                // Not the last one -> Disable it
+                licensesState[id].enabled = false;
+            } else {
+                // Last one! Must stay ON but show error (handled in renderLicenses)
+                licensesState[id].enabled = true;
+            }
+        }
+
         window.renderLicenses(); 
     }
 };

@@ -33,14 +33,16 @@ Utilizas una dualidad de canales súper inteligente que no requiere centralizars
 
 ### Productos Top Ganancias Neta (El "Dinero Grande")
 *Son los que más dólares generan aunque necesiten menos pedidos.*
-1. PLANTILLA DE GRABACIÓN Y MEZCLA - PLUGINS NATIVOS: 260 pedidos | **$295.88 USD**
-2. PRESET DEFINITIVO en FL STUDIO: 21 pedidos | **$295.48 USD** 
+1. PLANTILLA DE GRABACIÓN Y MEZCLA - PLUGINS NATIVOS: 261 pedidos | **$310.88 USD**
+2. PRESET DEFINITIVO en FL STUDIO: 22 pedidos | **$310.48 USD** 
 3. PLANTILLA PROFESIONAL DE MEZCLA - FL STUDIO: 15 pedidos | **$233.48 USD**
+4. 2026 BUNDLE PRESETS: 2 pedidos | **$77.00 USD**
+5. PRESET de YAN BLOCK: 161 pedidos | **$58.89 USD**
 
 ### Productos Top Tracción/Lead-Magnet (Ticket $1 o Freebie)
 *Sirven para englobar ventas en volumen, cross-selling y atrapar a las masas.*
-1. PRESET de D4VD: 318 pedidos ($1)
-2. PRESET de YSY A: 73 pedidos ($1)
+1. PRESET NATIVO PARA MAQUETAS EN FL STUDIO: 1,502 pedidos ($1)
+2. PRESET de D4VD: 321 pedidos ($1)
 3. PRESET de Zell: 264 pedidos ($35.95)
 
 ---

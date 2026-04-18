@@ -213,6 +213,21 @@ window.completeGate = async function (url, productId, guestEmail = null) {
     
     // 1. Prevenir múltiples clics
     if (btn.disabled) return;
+
+    // Validación temprana para evitar crasheos si el beat no tiene archivo
+    if (!url || url === 'null' || url === 'undefined') {
+        console.error("[Gate] Download failed: URL is missing or null.");
+        if (typeof showEliteToast === 'function') {
+            showEliteToast("Este beat aún no tiene un archivo de audio disponible para descarga.", "error");
+        } else if (typeof notify === 'function') {
+            notify("Este beat aún no tiene un archivo de audio disponible para descarga.", "error");
+        } else {
+            alert("Este beat no tiene archivo disponible.");
+        }
+        window.closeDownloadGateModal();
+        return;
+    }
+
     btn.disabled = true;
     btn.innerHTML = '<div class="spinner" style="width:20px; height:20px; border-width:2px; margin:0 auto;"></div>';
 
@@ -302,7 +317,11 @@ window.completeGate = async function (url, productId, guestEmail = null) {
         console.log("[Gate] Triggering download...");
         const a = document.createElement('a');
         a.href = finalUrl;
-        a.download = url.split('/').pop().split('?')[0] || 'descarga-offszn';
+        try {
+            a.download = typeof finalUrl === 'string' ? finalUrl.split('/').pop().split('?')[0] : 'descarga-offszn.mp3';
+        } catch (e) {
+            a.download = 'descarga-offszn.mp3';
+        }
         a.target = '_blank';
         document.body.appendChild(a);
         a.click();
