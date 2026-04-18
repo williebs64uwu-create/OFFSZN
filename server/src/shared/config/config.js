@@ -58,6 +58,12 @@ export const R2_ACCESS_KEY_ID_V2 = cleanConfigValue(process.env.R2_ACCESS_KEY_ID
 export const R2_SECRET_ACCESS_KEY_V2 = cleanConfigValue(process.env.R2_SECRET_ACCESS_KEY_V2);
 export const R2_BUCKET_NAME_V2 = cleanConfigValue(process.env.R2_BUCKET_NAME_V2);
 
+// CLOUDFLARE R2 V3 (Scale Account)
+export const R2_ENDPOINT_V3 = cleanConfigValue(process.env.R2_ENDPOINT_V3);
+export const R2_ACCESS_KEY_ID_V3 = cleanConfigValue(process.env.R2_ACCESS_KEY_ID_V3);
+export const R2_SECRET_ACCESS_KEY_V3 = cleanConfigValue(process.env.R2_SECRET_ACCESS_KEY_V3);
+export const R2_BUCKET_NAME_V3 = cleanConfigValue(process.env.R2_BUCKET_NAME_V3);
+
 // Email Octopus
 export const EMAILOCTOPUS_API_KEY = process.env.EMAILOCTOPUS_API_KEY;
 export const EMAILOCTOPUS_LIST_ID = process.env.EMAILOCTOPUS_LIST_ID;

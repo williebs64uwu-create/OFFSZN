@@ -14,6 +14,11 @@ import { R2_BUCKET_NAME, R2_SECURE_BUCKET_NAME } from '../../../shared/config/co
 import { supabase } from '../../database/connection.js';
 const router = Router();
 
+// 🔥 PERFORMANCE CACHE: Stores 'requestedKey -> { version, foundKey }' to skip discovery loops.
+// Max size roughly 2000 items to keep memory footprint low.
+const resolveCache = new Map();
+const MAX_CACHE_SIZE = 2000;
+
 // 🔥 FILE SIZE LIMITS (server-side enforcement)
 // 🔥 FILE SIZE LIMITS (server-side enforcement)
 const MAX_FILE_SIZE = 1000 * 1024 * 1024; // 1GB (Increased for Stems/WAVs)
@@ -321,9 +326,32 @@ router.get(/\/r2-public\/(.*)/, async (req, res) => {
             key = key.split('?')[0];
         }
 
-        // 1. Determinar orden de búsqueda (Prioridad segun ?v=)
-        let versionsToTry = ['v2', 'v1'];
-        if (req.query.v === 'v1') versionsToTry = ['v1', 'v2'];
+        // 1. Check PERFORMANCE CACHE first
+        const cacheHit = resolveCache.get(key);
+        if (cacheHit) {
+            // Found in cache - SKIP DISCOVERY!
+            const { version: foundVersion, key: foundKey } = cacheHit;
+            const { client, bucket } = getClientAndBucket(foundVersion);
+            const range = req.headers.range;
+            const getParams = { Bucket: bucket, Key: foundKey };
+            if (range) getParams.Range = range;
+
+            const command = new GetObjectCommand(getParams);
+            const { Body, ContentType, ContentLength, ContentRange } = await client.send(command);
+
+            if (ContentType) res.setHeader('Content-Type', ContentType);
+            if (ContentLength) res.setHeader('Content-Length', ContentLength);
+            if (ContentRange) res.setHeader('Content-Range', ContentRange);
+            if (range) res.status(206);
+
+            return Body.pipe(res);
+        }
+
+        // 2. Determinar orden de búsqueda (Prioridad segun ?v=)
+        // V3 Added in preparation for future scale
+        let versionsToTry = ['v2', 'v1', 'v3']; 
+        if (req.query.v === 'v1') versionsToTry = ['v1', 'v2', 'v3'];
+        if (req.query.v === 'v3') versionsToTry = ['v3', 'v2', 'v1'];
         
         // 2. Limpieza agresiva del Key (Quitar buckets si vienen en el path)
         let cleanKey = key;
@@ -345,13 +373,19 @@ router.get(/\/r2-public\/(.*)/, async (req, res) => {
 
         const trialPrefixes = [
             '',               // Exacto como viene
-            'products/',      // products/
-            'products/covers/', 
-            'products/audio/',
-            'beats/mp3/',     // Muy común para audios migrados
-            'mp3_tagged/',    // Muy común para audios migrados
+            'products/',      // Pre-migración
             'audio/'          // General
         ];
+
+        // SMART SORTING: Prioritize folders based on file type
+        const ext = filename.toLowerCase().split('.').pop();
+        if (['mp3', 'wav'].includes(ext)) {
+            trialPrefixes.splice(1, 0, 'beats/mp3/', 'mp3_tagged/', 'products/audio/');
+        } else if (['jpg', 'png', 'webp', 'jpeg'].includes(ext)) {
+            trialPrefixes.splice(1, 0, 'products/covers/');
+        } else {
+            trialPrefixes.push('products/covers/', 'beats/mp3/', 'mp3_tagged/', 'products/audio/');
+        }
 
         const patternsToTry = [];
         for (const prefix of trialPrefixes) {
@@ -376,6 +410,14 @@ router.get(/\/r2-public\/(.*)/, async (req, res) => {
                 if (exists) {
                     foundVersion = version;
                     foundKey = pattern;
+                    
+                    // 🔥 CACHE THE RESULT for future speed
+                    if (resolveCache.size >= MAX_CACHE_SIZE) {
+                        const firstKey = resolveCache.keys().next().value;
+                        resolveCache.delete(firstKey);
+                    }
+                    resolveCache.set(key, { version: foundVersion, key: foundKey });
+                    
                     break;
                 }
             }

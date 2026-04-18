@@ -5,6 +5,7 @@ import { supabase } from '../database/connection.js';
 import {
     R2_ENDPOINT, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET_NAME,
     R2_ENDPOINT_V2, R2_ACCESS_KEY_ID_V2, R2_SECRET_ACCESS_KEY_V2, R2_BUCKET_NAME_V2,
+    R2_ENDPOINT_V3, R2_ACCESS_KEY_ID_V3, R2_SECRET_ACCESS_KEY_V3, R2_BUCKET_NAME_V3,
     R2_CURRENT_VERSION
 } from '../../shared/config/config.js';
 
@@ -34,12 +35,29 @@ const s3ClientV2 = new S3Client({
     }
 });
 
+// V3 Client (Future Account / Scale)
+const s3ClientV3 = (R2_ENDPOINT_V3 && R2_ACCESS_KEY_ID_V3) ? new S3Client({
+    region: "auto",
+    endpoint: R2_ENDPOINT_V3,
+    forcePathStyle: false,
+    credentials: {
+        accessKeyId: R2_ACCESS_KEY_ID_V3,
+        secretAccessKey: R2_SECRET_ACCESS_KEY_V3,
+    }
+}) : null;
+
 /**
  * Helper to get the correct client and bucket based on version.
  */
 export const getClientAndBucket = (version = R2_CURRENT_VERSION) => {
     // If V1 is requested but credentials are missing, fallback to V2
     // console.log(`[R2-DEBUG] getClientAndBucket called with version: ${version}`);
+    if (version === 'v3') {
+        return { 
+            client: s3ClientV3 || s3ClientV2, 
+            bucket: R2_BUCKET_NAME_V3 || 'offszn-v3' 
+        };
+    }
     if (version === 'v2') {
         return { client: s3ClientV2, bucket: R2_BUCKET_NAME_V2 || 'offsznlatbucket' };
     }
