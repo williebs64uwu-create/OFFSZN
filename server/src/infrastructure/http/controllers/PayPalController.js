@@ -1008,19 +1008,44 @@ export const getSecureDownloadUrl = async (req, res) => {
         }
 
         // 1. Verificar que el producto está en el pedido y obtener rutas
-        // Intentamos buscar la relación real en la DB
-        const { data: item, error: itemError } = await supabase
-            .from('order_items')
-            .select(`
+        // Soporta búsqueda por order.id numérico O por transaction_id string
+        const selectFields = `
                 id, 
                 order_id, 
                 product_id,
-                orders!inner(transaction_id, user_id, status),
+                orders!inner(id, transaction_id, user_id, status),
                 products!inner(name, kit_url, mp3_url, wav_url, stems_url, audio_url, download_url_mp3, download_url_wav, storage_version, r2_version)
-            `)
-            .eq('orders.transaction_id', orderId)
-            .eq('product_id', productId)
-            .single();
+        `;
+
+        let item = null;
+        let itemError = null;
+
+        // Intento 1: buscar por order.id numérico (lo que manda purchases-manager)
+        const isNumericId = /^\d+$/.test(orderId);
+        if (isNumericId) {
+            const res1 = await supabase
+                .from('order_items')
+                .select(selectFields)
+                .eq('order_id', parseInt(orderId, 10))
+                .eq('product_id', productId)
+                .single();
+            item = res1.data;
+            itemError = res1.error;
+        }
+
+        // Intento 2: si no se encontró por ID numérico, buscar por transaction_id
+        if (!item) {
+            const res2 = await supabase
+                .from('order_items')
+                .select(selectFields)
+                .eq('orders.transaction_id', orderId)
+                .eq('product_id', productId)
+                .single();
+            item = res2.data;
+            itemError = res2.error;
+        }
+
+        console.log(`[SecureDownload] Lookup result: found=${!!item}, method=${isNumericId ? 'numeric_id' : 'transaction_id'}`);
 
         // --- MANEJO DE SIMULACIÓN Y CRASH RECOVERY ---
         if (itemError || !item) {
@@ -1127,17 +1152,10 @@ export const getSecureDownloadUrl = async (req, res) => {
         const isR2 = storageType.startsWith('v') || storageType === 'r2';
 
         if (isR2) {
-            // Restore the full key, R2 uses the full path as key
-            let finalKey = rawCleanPath;
-
-            // If the rawCleanPath doesn't have the prefix yet but it belongs in secure-products, we prepend it for R2, BUT 
-            // the DB usually stores the full "secure-products/..." in R2.
-            // If the user appended raw paths, let's make sure it's valid:
-            if (!finalKey.startsWith('secure-products/') && bucket === 'secure-products') {
-                finalKey = `secure-products/${cleanPath}`;
-            } else if (!finalKey.startsWith('products/') && bucket === 'products') {
-                finalKey = `products/${cleanPath}`;
-            }
+            // La key en R2 es exactamente como se guardó en la DB.
+            // El upload-url genera keys como: beats/mp3/uuid/file.mp3
+            // o secure-products/kits/uuid/file.rar — sin prefijo 'products/' adicional.
+            let finalKey = cleanPath;
 
             console.log(`[SecureDownload] Signing with R2: key=${finalKey}, version=${storageType}`);
 

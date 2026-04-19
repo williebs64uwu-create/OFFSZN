@@ -91,6 +91,8 @@ window.PurchasesManager = (function () {
                                 users!products_producer_id_fkey (
                                     id,
                                     nickname,
+                                    email,
+                                    socials,
                                     license_settings
                                 ),
                                 r2_version
@@ -232,19 +234,24 @@ window.PurchasesManager = (function () {
         const productId = product.id;
         const pType = product.product_type || '';
         const isKit = ['drumkit', 'loopkit', 'preset'].includes(pType);
+        const producerData = encodeURIComponent(JSON.stringify({
+            nickname: producerName,
+            email: product.users?.email || '',
+            socials: product.users?.socials || {}
+        }));
 
         const hasMp3 = product.mp3_url || product.download_url_mp3 || product.audio_url;
         const hasWav = product.wav_url || product.download_url_wav;
 
         if (isFree && pType === 'beat') {
-            if (hasMp3) actionsHtml += `<button class="download-btn" onclick="window.PurchasesManager.downloadFile(this, ${orderId}, '${productId}', 'mp3')" title="Bajar MP3"><i class="bi bi-music-note-beamed"></i> MP3</button>`;
+            if (hasMp3) actionsHtml += `<button class="download-btn" onclick="window.PurchasesManager.downloadFile(this, ${orderId}, '${productId}', 'mp3', '${producerData}')" title="Bajar MP3"><i class="bi bi-music-note-beamed"></i> MP3</button>`;
         } else if (isFree && isKit) {
-            if (product.kit_url) actionsHtml += `<button class="download-btn" onclick="window.PurchasesManager.downloadFile(this, ${orderId}, '${productId}', 'kit')" title="Bajar ZIP"><i class="bi bi-box-seam"></i> ZIP</button>`;
+            if (product.kit_url) actionsHtml += `<button class="download-btn" onclick="window.PurchasesManager.downloadFile(this, ${orderId}, '${productId}', 'kit', '${producerData}')" title="Bajar ZIP"><i class="bi bi-box-seam"></i> ZIP</button>`;
         } else {
-            if (hasMp3) actionsHtml += `<button class="download-btn" onclick="window.PurchasesManager.downloadFile(this, ${orderId}, '${productId}', 'mp3')" title="Bajar MP3"><i class="bi bi-music-note-beamed"></i> MP3</button>`;
-            if (hasWav) actionsHtml += `<button class="download-btn" onclick="window.PurchasesManager.downloadFile(this, ${orderId}, '${productId}', 'wav')" title="Bajar WAV"><i class="bi bi-music-note-beamed"></i> WAV</button>`;
-            if (product.stems_url) actionsHtml += `<button class="download-btn" onclick="window.PurchasesManager.downloadFile(this, ${orderId}, '${productId}', 'stems')" title="Bajar STEMS"><i class="bi bi-archive"></i> STEMS</button>`;
-            if (product.kit_url || isKit) actionsHtml += `<button class="download-btn" onclick="window.PurchasesManager.downloadFile(this, ${orderId}, '${productId}', 'kit')" title="Bajar ZIP"><i class="bi bi-box-seam"></i> ZIP</button>`;
+            if (hasMp3) actionsHtml += `<button class="download-btn" onclick="window.PurchasesManager.downloadFile(this, ${orderId}, '${productId}', 'mp3', '${producerData}')" title="Bajar MP3"><i class="bi bi-music-note-beamed"></i> MP3</button>`;
+            if (hasWav) actionsHtml += `<button class="download-btn" onclick="window.PurchasesManager.downloadFile(this, ${orderId}, '${productId}', 'wav', '${producerData}')" title="Bajar WAV"><i class="bi bi-music-note-beamed"></i> WAV</button>`;
+            if (product.stems_url) actionsHtml += `<button class="download-btn" onclick="window.PurchasesManager.downloadFile(this, ${orderId}, '${productId}', 'stems', '${producerData}')" title="Bajar STEMS"><i class="bi bi-archive"></i> STEMS</button>`;
+            if (product.kit_url || isKit) actionsHtml += `<button class="download-btn" onclick="window.PurchasesManager.downloadFile(this, ${orderId}, '${productId}', 'kit', '${producerData}')" title="Bajar ZIP"><i class="bi bi-box-seam"></i> ZIP</button>`;
         }
 
         const licenseType = item.license_name || 'basic';
@@ -282,7 +289,7 @@ window.PurchasesManager = (function () {
         return row;
     }
 
-    async function downloadFile(btnElement, orderId, productId, fileType) {
+    async function downloadFile(btnElement, orderId, productId, fileType, producerDataStr) {
         if (btnElement?.classList.contains('disabled-cooldown')) return;
         const { data: { session } } = await window.supabaseClient.auth.getSession();
         if (!session) return window.toast ? window.toast.error('Debes iniciar sesión') : alert('Debes iniciar sesión');
@@ -297,15 +304,79 @@ window.PurchasesManager = (function () {
             const res = await fetch(`/api/orders/download-link?orderId=${orderId}&productId=${productId}&fileType=${fileType}`, {
                 headers: { 'Authorization': `Bearer ${session.access_token}` }
             });
-            if (!res.ok) throw new Error('Error al generar enlace');
+            if (!res.ok) {
+                // Si falla, mostrar modal de contactar productor
+                let producerInfo = null;
+                try { producerInfo = JSON.parse(decodeURIComponent(producerDataStr)); } catch(e) {}
+                showContactProducerModal(producerInfo);
+                return;
+            }
             const { signedUrl } = await res.json();
-            const a = document.createElement('a'); a.href = signedUrl; a.click();
+            
+            // Forzar descarga directa con Content-Disposition
+            const a = document.createElement('a');
+            a.href = signedUrl;
+            a.download = '';
+            a.target = '_blank';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
             if (window.toast) window.toast.success('Descarga iniciada');
         } catch (err) {
-            if (window.toast) window.toast.error(err.message);
+            // En caso de error de red, mostrar modal de contacto
+            let producerInfo = null;
+            try { producerInfo = JSON.parse(decodeURIComponent(producerDataStr)); } catch(e) {}
+            showContactProducerModal(producerInfo);
         } finally {
             if (btnElement) setTimeout(() => { btnElement.classList.remove('disabled-cooldown'); btnElement.style.opacity = '1'; }, 4000);
         }
+    }
+
+    function showContactProducerModal(producer) {
+        // Remover modal anterior si existe
+        const existing = document.getElementById('contact-producer-modal');
+        if (existing) existing.remove();
+
+        const name = producer?.nickname || 'el productor';
+        const email = producer?.email || '';
+        const socials = producer?.socials || {};
+
+        // Construir links de redes sociales
+        let socialsHtml = '';
+        const socialIcons = {
+            instagram: { icon: 'bi-instagram', label: 'Instagram', prefix: 'https://instagram.com/' },
+            tiktok: { icon: 'bi-tiktok', label: 'TikTok', prefix: 'https://tiktok.com/@' },
+            youtube: { icon: 'bi-youtube', label: 'YouTube', prefix: 'https://youtube.com/' },
+            twitter: { icon: 'bi-twitter-x', label: 'X / Twitter', prefix: 'https://x.com/' },
+            soundcloud: { icon: 'bi-soundwave', label: 'SoundCloud', prefix: 'https://soundcloud.com/' },
+            spotify: { icon: 'bi-spotify', label: 'Spotify', prefix: '' },
+            beatstars: { icon: 'bi-music-note-list', label: 'BeatStars', prefix: '' }
+        };
+
+        Object.entries(socials).forEach(([key, value]) => {
+            if (!value) return;
+            const info = socialIcons[key.toLowerCase()] || { icon: 'bi-link-45deg', label: key, prefix: '' };
+            const url = value.startsWith('http') ? value : (info.prefix + value);
+            socialsHtml += `<a href="${url}" target="_blank" rel="noopener" class="contact-social-link"><i class="bi ${info.icon}"></i> ${info.label}</a>`;
+        });
+
+        const modal = document.createElement('div');
+        modal.id = 'contact-producer-modal';
+        modal.className = 'contact-producer-overlay';
+        modal.innerHTML = `
+            <div class="contact-producer-card">
+                <button class="contact-producer-close" onclick="this.closest('.contact-producer-overlay').remove()">&times;</button>
+                <div class="contact-producer-icon"><i class="bi bi-exclamation-triangle"></i></div>
+                <h3>Archivo no disponible</h3>
+                <p>No pudimos generar el enlace de descarga. Contacta directamente a <strong>${name}</strong> para obtener el archivo.</p>
+                ${email ? `<a href="mailto:${email}" class="contact-email-btn"><i class="bi bi-envelope"></i> ${email}</a>` : ''}
+                ${socialsHtml ? `<div class="contact-socials-grid">${socialsHtml}</div>` : ''}
+                <div class="contact-producer-divider"></div>
+                <p class="contact-support-text">¿Necesitas ayuda? Escríbenos a <a href="mailto:offszn.studio@gmail.com">offszn.studio@gmail.com</a></p>
+            </div>
+        `;
+        modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
+        document.body.appendChild(modal);
     }
 
     async function downloadAnalyzer(btnElement) {
@@ -376,7 +447,7 @@ window.PurchasesManager = (function () {
         });
     }
 
-    return { init, downloadFile, generatePDF, downloadAnalyzer };
+    return { init, downloadFile, generatePDF, downloadAnalyzer, showContactProducerModal };
 })();
 
 // Auto-init
