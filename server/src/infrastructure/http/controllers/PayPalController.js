@@ -415,12 +415,14 @@ export const createPayPalOrder = async (req, res) => {
                         } else if (coupon.discount_amount) {
                             totalDiscount = coupon.discount_amount;
                         }
-                    } else if (coupon.applies_to === 'product' && coupon.specific_products) {
+                    } else if (coupon.applies_to === 'product' && (coupon.specific_products || coupon.applies_to_id)) {
                         // Product-Specific Discount
-                        const targetProductIds = Array.isArray(coupon.specific_products) ? coupon.specific_products : [coupon.specific_products];
+                        const couponTargetProduct = coupon.specific_products || coupon.applies_to_id;
+                        let targetProductIds = Array.isArray(couponTargetProduct) ? couponTargetProduct : [couponTargetProduct];
+                        targetProductIds = targetProductIds.map(String);
 
                         verifiedCartItems.forEach(item => {
-                            if (targetProductIds.includes(item.product.id)) {
+                            if (targetProductIds.includes(String(item.product.id))) {
                                 if (coupon.discount_percent) {
                                     totalDiscount += item.variant_price * (coupon.discount_percent / 100);
                                 } else if (coupon.discount_amount) {
@@ -433,7 +435,7 @@ export const createPayPalOrder = async (req, res) => {
 
                         // Special case for fixed amount on product-specific: only once.
                         if (coupon.discount_amount && totalDiscount === 0) {
-                            const hasMatch = verifiedCartItems.some(item => targetProductIds.includes(item.product.id));
+                            const hasMatch = verifiedCartItems.some(item => targetProductIds.includes(String(item.product.id)));
                             if (hasMatch) totalDiscount = coupon.discount_amount;
                         }
                     }
@@ -727,17 +729,19 @@ export const capturePayPalOrder = async (req, res) => {
                             } else if (coupon.discount_amount) {
                                 totalOrderDiscount = coupon.discount_amount;
                             }
-                        } else if (coupon.applies_to === 'product' && coupon.specific_products) {
-                            const targetIds = Array.isArray(coupon.specific_products) ? coupon.specific_products : [coupon.specific_products];
+                        } else if (coupon.applies_to === 'product' && (coupon.specific_products || coupon.applies_to_id)) {
+                            const couponTargetProduct = coupon.specific_products || coupon.applies_to_id;
+                            let targetIds = Array.isArray(couponTargetProduct) ? couponTargetProduct : [couponTargetProduct];
+                            targetIds = targetIds.map(String);
                             cartItems.forEach(item => {
-                                if (targetIds.includes(item.product.id)) {
+                                if (targetIds.includes(String(item.product.id))) {
                                     if (coupon.discount_percent) {
                                         totalOrderDiscount += (parseFloat(item.variant_price) || 0) * (coupon.discount_percent / 100);
                                     }
                                 }
                             });
                             if (coupon.discount_amount && totalOrderDiscount === 0) {
-                                if (cartItems.some(i => targetIds.includes(i.product.id))) totalOrderDiscount = coupon.discount_amount;
+                                if (cartItems.some(i => targetIds.includes(String(i.product.id)))) totalOrderDiscount = coupon.discount_amount;
                             }
                         }
                     }

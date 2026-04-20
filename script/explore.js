@@ -1305,7 +1305,7 @@ function createProductCardHtml(product, format = 'standard') {
             </div>
             <div class="card-info">
                 <div class="card-title">${cleanName(product.name)}</div>
-                <div class="card-producer" data-artist="${product.producer_id}" onmouseenter="showArtistCard(event, this)" onmouseleave="hideArtistCard(event, this)">${artist}</div>
+                <div class="card-producer" data-artist="${product.producer_id}" onclick="event.stopPropagation(); window.location.href='/@${encodeURIComponent(product.producer_nickname || product.producer_handle || 'artista')}'" onmouseenter="showArtistCard(event, this)" onmouseleave="hideArtistCard(event, this)">${artist}</div>
             </div>
         </div>
     `;

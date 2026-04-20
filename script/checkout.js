@@ -266,7 +266,7 @@ const CheckoutManager = {
                 <div class="shelf-inner">
                     <div class="shelf-container" style="gap: 16px;">
     `;
-    for (let i = 0; i < 7; i++) {
+    for (let i = 0; i < 6; i++) {
       skeletonHTML += `
             <div class="skeleton-card">
                 <div class="skeleton-cover skeleton-shimmer"></div>
@@ -330,7 +330,7 @@ const CheckoutManager = {
         const finalPool = filteredData.length > 0 ? filteredData : validData;
 
         const shuffled = finalPool.sort(() => 0.5 - Math.random());
-        const selected = shuffled.slice(0, 7);
+        const selected = shuffled.slice(0, 6);
 
         let html = `
                 <div id="checkout-recs-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 24px; width: 100%;">
@@ -344,7 +344,7 @@ const CheckoutManager = {
                         <div class="product-card-smart" data-product-id="${p.id}" onclick="window.location.href='/producto.html?id=${p.id}'" style="margin: 0; width: 100%; min-width: 180px;">
                             <div class="card-cover-wrapper">
                                 <img id="rec-img-${p.id}" src="${img}" alt="${this.escapeHTML(p.name)}"
-                                     data-artist="${p.producer_id}" onmouseenter="showArtistCard(event, this)" onmouseleave="hideArtistCard(event, this)">
+                                     data-artist="${p.producer_id}">
                                 <button class="quick-play-btn" onclick="event.stopPropagation(); window.playCheckoutTrack('${p.id}')"><i class="bi bi-play-fill"></i></button>
                                 <button class="card-like-btn" onclick="event.stopPropagation(); window.handleLike(event, '${p.id}', this)">
                                      <i class="bi bi-heart"></i>
@@ -353,10 +353,9 @@ const CheckoutManager = {
                             <div class="card-info">
                                 <div class="card-title" style="font-size: 0.85rem;">${this.escapeHTML(p.name)}</div>
                                 <div class="card-producer"
-                                     style="font-size: 0.75rem;"
+                                     style="font-size: 0.75rem; cursor: pointer;"
                                      data-artist="${p.producer_id}"
-                                     onmouseenter="showArtistCard(event, this)"
-                                     onmouseleave="hideArtistCard(event, this)">
+                                     onclick="event.stopPropagation(); window.location.href='/@${encodeURIComponent(profilesDict[p.producer_id]?.replace(/\\s+/g, '') || 'artista')}'">
                                     ${artist}
                                 </div>
                             </div>
@@ -801,16 +800,17 @@ const CheckoutManager = {
           discountAmount = this.couponData.discount_amount;
         }
       } else if (this.couponData.applies_to === 'product' && this.couponData.specific_products) {
-        const targetIds = Array.isArray(this.couponData.specific_products) ? this.couponData.specific_products : [this.couponData.specific_products];
+        let targetIds = Array.isArray(this.couponData.specific_products) ? this.couponData.specific_products : [this.couponData.specific_products];
+        targetIds = targetIds.map(String);
         processedItems.forEach(item => {
-          if (targetIds.includes(item.product.id)) {
+          if (targetIds.includes(String(item.product.id))) {
             if (this.couponData.discount_percent) {
               discountAmount += item.price * (this.couponData.discount_percent / 100);
             }
           }
         });
         if (this.couponData.discount_amount && discountAmount === 0) {
-          if (processedItems.some(i => targetIds.includes(i.product.id))) discountAmount = this.couponData.discount_amount;
+          if (processedItems.some(i => targetIds.includes(String(i.product.id)))) discountAmount = this.couponData.discount_amount;
         }
       }
     } else if (this.discount > 0) {
@@ -1035,21 +1035,52 @@ const CheckoutManager = {
     if (!input || !msg || !btn) return;
 
     if (active) {
-      const label = this.couponData?.discount_percent
-        ? `${this.couponData.discount_percent}%`
-        : (this.couponData?.discount_amount ? `$${this.couponData.discount_amount}` : 'Aplicado');
+      let isValidForCart = true;
+      if (this.couponData && this.couponData.applies_to === 'product' && this.couponData.specific_products && window.CartManager) {
+         const items = window.CartManager.state.items || [];
+         let targetIds = Array.isArray(this.couponData.specific_products) ? this.couponData.specific_products : [this.couponData.specific_products];
+         targetIds = targetIds.map(String);
+         isValidForCart = items.some(i => targetIds.includes(String(i.product.id)));
+         
+         // Fix array format check (stored as string "[648]" sometimes in local)
+         if (!isValidForCart && typeof this.couponData.specific_products === 'string' && this.couponData.specific_products.startsWith('[')) {
+             try {
+                 let parsed = JSON.parse(this.couponData.specific_products);
+                 targetIds = Array.isArray(parsed) ? parsed.map(String) : [String(parsed)];
+                 isValidForCart = items.some(i => targetIds.includes(String(i.product.id)));
+             } catch(e){}
+         }
+      }
 
-      msg.innerHTML = `
+      if (!isValidForCart) {
+          msg.innerHTML = `
               <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
-                  <span><i class="bi bi-patch-check-fill"></i> ¡Cupón <b>${this.appliedCoupon}</b> aplicado! (${label})</span>
+                  <span><i class="bi bi-info-circle"></i> Cupón <b>${this.escapeHTML(this.appliedCoupon)}</b> no aplica a estos productos.</span>
                   <button onclick="CheckoutManager.removeCoupon()" style="background:none; border:none; color:#ef4444; font-size:0.7rem; cursor:pointer; text-decoration:underline; font-weight:600;">QUITAR</button>
               </div>
           `;
-      msg.style.color = '#10b981';
-      msg.style.display = 'block';
-      input.value = this.appliedCoupon;
-      input.disabled = true;
-      btn.style.display = 'none';
+          msg.style.color = '#f59e0b'; // warning color (amber/orange)
+          msg.style.display = 'block';
+          input.value = this.appliedCoupon;
+          input.disabled = true;
+          btn.style.display = 'none';
+      } else {
+          const label = this.couponData?.discount_percent
+            ? `${this.couponData.discount_percent}%`
+            : (this.couponData?.discount_amount ? `$${this.couponData.discount_amount}` : 'Aplicado');
+
+          msg.innerHTML = `
+              <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
+                  <span><i class="bi bi-patch-check-fill"></i> ¡Cupón <b>${this.escapeHTML(this.appliedCoupon)}</b> aplicado! (${label})</span>
+                  <button onclick="CheckoutManager.removeCoupon()" style="background:none; border:none; color:#ef4444; font-size:0.7rem; cursor:pointer; text-decoration:underline; font-weight:600;">QUITAR</button>
+              </div>
+          `;
+          msg.style.color = '#10b981';
+          msg.style.display = 'block';
+          input.value = this.appliedCoupon;
+          input.disabled = true;
+          btn.style.display = 'none';
+      }
 
       // Ensure coupon box is visible if coupon is active
       document.getElementById('coupon-box')?.classList.add('active');
@@ -1111,6 +1142,10 @@ const CheckoutManager = {
       summaryMainContent.style.opacity = '1';
     }
 
+    if (this.appliedCoupon) {
+      this.updateCouponUI(true);
+    }
+
     if (items.length === 0) {
       itemsContainer.innerHTML = `
         <div style="text-align: center; padding: 20px; color: #888;">
@@ -1128,13 +1163,16 @@ const CheckoutManager = {
       const safeName = this.escapeHTML(item.product.name);
       const safeLicName = this.escapeHTML(item.license_name || item.product.product_type);
       const imgId = `summary-img-${item.product.id}`;
+      const safeProducer = this.escapeHTML(item.producerName || 'Productor');
+      const producerUrl = item.producerUsername ? `/@${item.producerUsername}` : '#';
 
       itemsHTML += `
         <div class="checkout-item-simple">
           <img id="${imgId}" src="${fallbackImg}" data-r2-version="${item.product.storage_version || item.product.r2_version || 'v2'}"
-               onerror="this.src='${fallbackImg}'; this.onerror=null;">
+               onerror="this.src='${fallbackImg}'; this.onerror=null;" style="cursor: pointer;" onclick="window.location.href='/producto.html?id=${item.product.id}'">
           <div class="checkout-item-info">
-            <div class="checkout-item-name truncate">"${safeName}"</div>
+            <div class="checkout-item-name truncate" style="cursor: pointer; transition: color 0.2s;" onmouseover="this.style.color='#8b5cf6'" onmouseout="this.style.color='inherit'" onclick="window.location.href='/producto.html?id=${item.product.id}'">"${safeName}"</div>
+            <div class="checkout-item-producer" style="font-size: 0.75rem; color: #888; cursor: pointer; margin-bottom: 2px; text-decoration: underline;" onclick="event.stopPropagation(); window.location.href='${producerUrl}'">${safeProducer}</div>
             <div class="checkout-item-license">${safeLicName}</div>
           </div>
           <div class="checkout-item-remove" onclick="CheckoutManager.removeFromCheckout('${item.product.id}')">
@@ -1218,7 +1256,7 @@ const CheckoutManager = {
     toggleRow.style.display = 'flex';
 
     toggleRow.innerHTML = `
-        <div class="bottom-total-left">
+        <div class="bottom-total-left" style="pointer-events: none;">
             <img id="${imgId}" src="${fallbackImg}" class="bottom-total-thumb"
                  onerror="this.src='${fallbackImg}'; this.onerror=null;">
             <div class="bottom-total-info">
@@ -1226,8 +1264,9 @@ const CheckoutManager = {
                 <div class="bottom-total-count">${countText}</div>
             </div>
         </div>
-        <div class="bottom-total-right">
-            USD $${total.toFixed(2)}
+        <div class="bottom-total-right" style="pointer-events: none;">
+            <span>USD $${total.toFixed(2)}</span>
+            <i class="bi bi-chevron-down accordion-chevron"></i>
         </div>
     `;
 
@@ -1246,16 +1285,11 @@ const CheckoutManager = {
   toggleSummary: function () {
     const accordion = document.getElementById('summary-accordion');
     const content = document.getElementById('summary-content');
-    const text = document.getElementById('summary-toggle-text');
 
     if (!accordion || !content) return;
 
-    const isActive = accordion.classList.toggle('active');
+    accordion.classList.toggle('active');
     content.classList.toggle('active');
-
-    if (text) {
-      text.textContent = isActive ? 'Ocultar mi carrito' : 'Mostrar mi carrito';
-    }
   },
 
   toggleCoupon: function () {

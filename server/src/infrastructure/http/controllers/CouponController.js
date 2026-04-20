@@ -66,7 +66,7 @@ export const validateCoupon = async (req, res) => {
             discount_percent: coupon.discount_percent,
             discount_amount: coupon.discount_amount,
             applies_to: coupon.applies_to,
-            specific_products: coupon.specific_products,
+            specific_products: coupon.specific_products || coupon.applies_to_id,
             message: 'Cupón aplicado correctamente.'
         });
 

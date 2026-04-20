@@ -15,6 +15,7 @@
     <link rel="stylesheet" href="/css/sticky-player.css">
     <link rel="stylesheet" href="/css/expanded-player.css">
     <link rel="stylesheet" href="/css/checkout-premium.css">
+    <link rel="stylesheet" href="/css/marketing-popups.css">
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -169,62 +170,46 @@
     <!-- ==================== MAIN CHECKOUT CONTENT ==================== -->
     <main class="checkout-main-premium">
         <div id="checkout-container">
-            <!-- 1. SUMMARY ACCORDION (TOP) -->
-        <div class="summary-accordion" id="summary-accordion" style="margin-bottom: 12px;">
-            <div class="summary-toggle" onclick="CheckoutManager.toggleSummary()" style="height: 52px;">
-                <!-- State: LOADING (Skeleton) -->
-                <div id="summary-skeleton" style="display: flex; align-items: center; justify-content: space-between; width: 100%; height: 100%;">
-                    <div class="skeleton-shimmer" style="width: 140px; height: 1.1rem; border-radius: 4px; opacity: 0.6;"></div>
-                    <div class="skeleton-shimmer" style="width: 80px; height: 1.1rem; border-radius: 4px; opacity: 0.6;"></div>
-                </div>
-
-                <!-- State: READY -->
-                <div id="summary-content-main" style="display: none; align-items: center; justify-content: space-between; width: 100%;">
-                    <div class="summary-toggle-left">
-                        <i class="bi bi-chevron-down"></i>
-                        <span id="summary-toggle-text">Mostrar mi carrito</span>
+        <div class="summary-accordion" id="summary-accordion" style="margin-bottom: 24px; border-bottom: none; padding-bottom: 0;">
+            <!-- 1. TOTAL CARD (ACTS AS ACCORDION TOGGLE) -->
+            <div id="bottom-summary-row" class="bottom-summary-container" onclick="CheckoutManager.toggleSummary()" style="cursor: pointer;">
+                <!-- Cohesive Card Skeleton while loading -->
+                <div id="bottom-summary-skeleton" class="bottom-total-row skeleton-container" style="display: flex; pointer-events: none; margin: 0;">
+                    <div class="bottom-total-left">
+                        <div class="skeleton-shimmer" style="width: 48px; height: 48px; border-radius: 8px;"></div>
+                        <div style="display: flex; flex-direction: column; gap: 6px;">
+                            <div class="skeleton-shimmer" style="width: 60px; height: 1.1rem; border-radius: 4px;"></div>
+                            <div class="skeleton-shimmer" style="width: 40px; height: 0.75rem; border-radius: 4px; opacity: 0.4;"></div>
+                        </div>
                     </div>
-                    <div class="summary-header-total" id="summary-header-total" style="font-weight: 700; color: #fff;">USD $0.00</div>
+                    <div class="skeleton-shimmer" style="width: 100px; height: 1.3rem; border-radius: 4px;"></div>
                 </div>
             </div>
+
+            <!-- 2. CART ITEMS AND BREAKDOWN (EXPANDS DOWNWARDS) -->
             <div class="summary-content" id="summary-content">
-                <div class="summary-inner">
+                <div class="summary-inner" style="padding-top: 0;">
                     <div id="checkout-order-summary-items"></div>
                     <div id="checkout-order-summary-totals" style="margin-top: 20px;"></div>
                 </div>
             </div>
         </div>
 
-        <!-- 2. INFORMACIÓN DE CONTACTO (Guest only) -->
-
-        <!-- 3. DETALLES ADICIONALES & CUPÓN -->
-        <div class="coupon-area" style="margin-top: 10px;">
+        <!-- 3. CUPÓN (ABOVE PAYMENT METHODS) -->
+        <div class="coupon-area" style="display: flex; flex-direction: column; align-items: flex-end; margin-top: 10px; margin-bottom: 30px;">
             <div class="coupon-toggle-link" onclick="CheckoutManager.toggleCoupon()">
                 <i class="bi bi-tag"></i> Añadir cupón
             </div>
-            <div class="coupon-box" id="coupon-box" style="display: none; margin-bottom: 24px;">
+            <div class="coupon-box" id="coupon-box" style="display: none; margin-bottom: 24px; width: 100%; max-width: 320px;">
                 <div style="display: flex; gap: 8px;">
-                    <input type="text" id="coupon-input" class="contact-input" placeholder="Código" style="padding: 10px 14px; font-size: 0.8rem;">
-                    <button id="apply-coupon-btn" class="btn-checkout-global" onclick="CheckoutManager.applyCoupon()" style="width: auto; padding: 0 20px; margin: 0; font-size: 0.75rem; height: 40px; border-radius: 10px;">APLICAR</button>
+                    <input type="text" id="coupon-input" class="contact-input" placeholder="Código" style="padding: 10px 14px; font-size: 0.8rem; width: 100%;">
+                    <button id="apply-coupon-btn" class="btn-checkout-global" onclick="CheckoutManager.applyCoupon()" style="width: auto; padding: 0 20px; margin: 0; font-size: 0.75rem; height: 40px; border-radius: 10px; flex-shrink: 0;">APLICAR</button>
                 </div>
-                <div id="coupon-status-msg" style="margin-top: 8px; font-size: 0.75rem; display: none;"></div>
+                <div id="coupon-status-msg" style="margin-top: 8px; font-size: 0.75rem; display: none; text-align: right;"></div>
             </div>
         </div>
 
-        <!-- 4. BOTTOM SUMMARY ROW (STAY AS TOTAL DISPLAY) -->
-        <div id="bottom-summary-row" class="bottom-summary-container">
-            <!-- Cohesive Card Skeleton while loading -->
-            <div id="bottom-summary-skeleton" class="bottom-total-row skeleton-container" style="display: flex; cursor: default; pointer-events: none;">
-                <div class="bottom-total-left">
-                    <div class="skeleton-shimmer" style="width: 48px; height: 48px; border-radius: 8px;"></div>
-                    <div style="display: flex; flex-direction: column; gap: 6px;">
-                        <div class="skeleton-shimmer" style="width: 60px; height: 1.1rem; border-radius: 4px;"></div>
-                        <div class="skeleton-shimmer" style="width: 40px; height: 0.75rem; border-radius: 4px; opacity: 0.4;"></div>
-                    </div>
-                </div>
-                <div class="skeleton-shimmer" style="width: 100px; height: 1.3rem; border-radius: 4px;"></div>
-            </div>
-        </div>
+
 
         <!-- 5. MÉTODOS DE PAGO -->
             <!-- Terms & Conditions Disclaimer removed as checkbox, moved to payment button areas -->
@@ -255,8 +240,8 @@
                             </div>
                         </div>
                     </div>
-                        <div id="paypal-button-container" style="display: none; min-height: 50px;"></div>
-                        <p style="font-size: 0.75rem; color: #888; text-align: center; margin-top: 12px; line-height: 1.4;">
+                        <div id="paypal-button-container" style="display: none; min-height: 50px; padding: 0 12px 12px 12px;"></div>
+                        <p style="font-size: 0.75rem; color: #888; text-align: center; margin-top: 12px; margin-bottom: 8px; line-height: 1.4;">
                             Al completar tu compra, aceptas nuestros <a href="/legal/terminos-de-servicio.html" target="_blank" style="color: #fff; text-decoration: underline;">Términos y Condiciones</a>.
                         </p>
                     </div>
@@ -652,6 +637,7 @@
 
     <script src="/script/notifications.js"></script>
     <script src="/script/navbar.js?v=20" type="module"></script>
+    <script src="/script/marketing-engine.js"></script>
     <!-- Removed redundant inline script -->
 </body>
 

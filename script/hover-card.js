@@ -297,7 +297,7 @@ window.showArtistCard = async function (event, element) {
         }
 
         // Bind Actions
-        const getRedirectUrl = () => fullData.nickname ? `/${fullData.nickname}` : null;
+        const getRedirectUrl = () => fullData.nickname ? `/@${fullData.nickname}` : null;
 
         const avatarEl = card.querySelector('.ahc-avatar');
         avatarEl.style.cursor = 'pointer';
