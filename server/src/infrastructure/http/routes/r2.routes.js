@@ -342,6 +342,8 @@ router.get(/\/r2-public\/(.*)/, async (req, res) => {
             if (ContentType) res.setHeader('Content-Type', ContentType);
             if (ContentLength) res.setHeader('Content-Length', ContentLength);
             if (ContentRange) res.setHeader('Content-Range', ContentRange);
+            res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+            res.setHeader('Accept-Ranges', 'bytes');
             if (range) res.status(206);
 
             return Body.pipe(res);
