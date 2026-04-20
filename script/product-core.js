@@ -2871,25 +2871,37 @@ window.addToCart = async (id, license) => {
         if (cardNameEl) licenseName = cardNameEl.innerText.trim();
     }
 
-    // 3. Construct Cart Item
+    // 3. Construct the product object that CartManager expects
     const checkProduct = {
         ...product,
         price_basic: finalPrice,
         license: {
-            name: licenseName,
             id: licenseId,
+            name: licenseName,
+            price: finalPrice,
             details: licenseDetails
         }
     };
 
-    // 4. Call Manager
+    // 4. Perform Addition
     if (window.CartManager) {
-        // Await the addition to ensure state is ready before opening
-        await window.CartManager.addToCart(checkProduct);
-        // CartManager.addToCart already calls openCart(), but we can call it again for safety
-        window.CartManager.openCart();
+        // Detect if we should use Fast Checkout (Redirect directly)
+        const type = (product.product_type || '').toLowerCase();
+        const isFastCheckout = type === 'preset' || type === 'kit' || type.includes('drumkit') || type.includes('loopkit');
+
+        if (isFastCheckout) {
+            console.log(`[FastCheckout] Redirecting for ${type}: ${product.name}`);
+            // Add silently (no sidebar)
+            await window.CartManager.addToCart(checkProduct, { silent: true });
+            // Redirect immediately to checkout (standard page)
+            window.location.href = '/pages/checkout.html';
+        } else {
+            // Standard Flow (Beats): Add and open sidebar
+            await window.CartManager.addToCart(checkProduct);
+        }
     } else {
-        alert("Error: Carrito no disponible. Recarga la página.");
+        console.error("CartManager not found!");
+        alert("Error: El sistema de carrito no está disponible.");
     }
 };
 

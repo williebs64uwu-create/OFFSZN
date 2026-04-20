@@ -180,7 +180,7 @@ const CartManager = {
         this.render();
     },
 
-    addToCart: async function (product) {
+    addToCart: async function (product, options = {}) {
         // --- DEFENSIVE ELIGIBILITY CHECK ---
         // Block if NOT free and producer has no payment methods
         const isFree = product.is_free || false;
@@ -224,7 +224,7 @@ const CartManager = {
             // Check if it's the SAME license
             if (existingItem.license_name === newItem.license_name) {
                 if (window.toast) window.toast.info("Ya está en tu carrito", 3000, product.id);
-                this.openCart();
+                if (!options.silent) this.openCart();
                 return; // Don't proceed with redundant add
             }
 
@@ -243,7 +243,9 @@ const CartManager = {
         }
 
         this.render();
-        this.openCart(); // Auto-open on add
+        if (!options.silent) {
+            this.openCart(); // Auto-open on add
+        }
 
         // BACKGROUND SYNC
         if (this.state.user) {
@@ -625,7 +627,9 @@ const CartManager = {
 
     updateBadge: function () {
         // Also update navbar badge if it exists
-        const count = this.state.items.length;
+        const count = (this.state && this.state.items) ? this.state.items.length : 0;
+        
+        // Target specific ID from init
         if (this.ui.countBadge) {
             this.ui.countBadge.innerText = count;
             this.ui.countBadge.style.display = count > 0 ? 'flex' : 'none';
@@ -640,15 +644,32 @@ const CartManager = {
         const panelCount = document.getElementById('cart-panel-count');
         if (panelCount) {
             panelCount.innerText = count;
-            panelCount.style.display = count > 0 ? 'inline' : 'none'; // Hide if 0
+            panelCount.style.display = count > 0 ? 'inline' : 'none';
         }
 
-        // Fallback for independent navbar elements
-        const navBadges = document.querySelectorAll('.cart-count');
-        navBadges.forEach(b => {
-            b.innerText = count;
-            b.style.display = count > 0 ? 'flex' : 'none';
+        // 🚀 GUEST RESILIENCE: Update all elements with potential badge classes
+        const selectors = [
+            '.cart-count', 
+            '.cart-badge', 
+            '#cart-badge-count', 
+            '.navbar-cart-count',
+            '.mobile-cart-count'
+        ];
+        
+        selectors.forEach(selector => {
+            document.querySelectorAll(selector).forEach(b => {
+                b.innerText = count;
+                b.style.display = count > 0 ? (selector.includes('badge') ? 'flex' : 'inline-block') : 'none';
+                
+                // If it's a flex circle (badge), ensure it's visible
+                if (count > 0 && b.classList.contains('badge-circle')) {
+                    b.style.display = 'flex';
+                }
+            });
         });
+
+        // Notify navbar.js specifically
+        window.dispatchEvent(new CustomEvent('offszn-cart-badge-updated', { detail: { count } }));
     },
 
     openCart: function () {
