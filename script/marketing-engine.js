@@ -21,7 +21,7 @@ const MarketingEngine = {
         }
     },
 
-    init: async function() {
+    init: async function () {
         this.state.sessionId = this.getOrCreateSessionId();
         this.state.group = this.getOrCreateGroup();
         this.state.isKuraimokhaPage = window.location.pathname.includes(this.CONFIG.targetProductSlug);
@@ -37,23 +37,37 @@ const MarketingEngine = {
         }
     },
 
-    getTimerEnd: function() {
+    getTimerEnd: function () {
         let end = localStorage.getItem('offszn_mkt_timer_end');
-        if (!end) {
-            end = Date.now() + (24 * 60 * 60 * 1000);
+        const now = Date.now();
+        const oneHourPlusBuffer = 1.5 * 60 * 60 * 1000;
+
+        // If it doesn't exist OR if it's too far in the future (legacy 24h timer), reset to 1h
+        if (!end || (parseInt(end) - now > oneHourPlusBuffer)) {
+            end = now + (60 * 60 * 1000);
             localStorage.setItem('offszn_mkt_timer_end', end);
         }
         return parseInt(end);
     },
 
-    startTimer: function(displayElementId) {
+    startTimer: function (displayElementId) {
         const endTime = this.getTimerEnd();
         const update = () => {
             const now = Date.now();
             const diff = endTime - now;
-            
+
             if (diff <= 0) {
-                document.getElementById(displayElementId).innerText = "00:00:00";
+                const el = document.getElementById(displayElementId);
+                if (el) el.innerText = "00:00:00";
+
+                // Urgency change: If time ends, update popup text to "soft urgency"
+                const popup = document.getElementById('mkt-discount-overlay');
+                if (popup) {
+                    const title = popup.querySelector('.mkt-title');
+                    const desc = popup.querySelector('.mkt-desc');
+                    if (title) title.innerText = "¡Aún puedes usar tu descuento!";
+                    if (desc) desc.innerText = "No dejes pasar esta oportunidad única para tu primer preset.";
+                }
                 return;
             }
 
@@ -72,7 +86,7 @@ const MarketingEngine = {
         return setInterval(update, 1000);
     },
 
-    getOrCreateSessionId: function() {
+    getOrCreateSessionId: function () {
         let sid = sessionStorage.getItem('offszn_mkt_sid');
         if (!sid) {
             sid = Math.random().toString(36).substring(2, 15);
@@ -81,7 +95,7 @@ const MarketingEngine = {
         return sid;
     },
 
-    getOrCreateGroup: function() {
+    getOrCreateGroup: function () {
         let group = localStorage.getItem('offszn_mkt_group');
         if (!group) {
             group = Math.random() < 0.5 ? 'A' : 'B';
@@ -90,10 +104,13 @@ const MarketingEngine = {
         return group;
     },
 
-    trackEvent: async function(eventType) {
+    trackEvent: async function (eventType) {
+        // Segmentation check: Only show and track if user is Guest
+        const userId = localStorage.getItem('userId');
+        if (userId) return; // Don't run marketing logic for logged-in users as requested
+
         console.log(`[MarketingEngine] Event: ${eventType}`);
         try {
-            const userId = localStorage.getItem('userId');
             const { error } = await window.supabaseClient
                 .from('marketing_stats')
                 .insert([{
@@ -111,29 +128,25 @@ const MarketingEngine = {
         }
     },
 
-    handleProductPageLogic: function() {
-        if (this.state.group === 'A') {
-            // Variant A: Membership ONLY on product page
-            setTimeout(() => this.showMembershipPopup(), 100);
-        } else {
-            // Variant B: Discount ONLY on product page
-            setTimeout(() => this.showDiscountPopup('¡Felicidades! Tienes un Cupón de Bienvenida'), 100);
-        }
+    handleProductPageLogic: function () {
+        // Unified: Show the Willie Inspired Discount Popup as the primary offer
+        // Prioritizing the personalized discount over the generic membership
+        setTimeout(() => this.showDiscountPopup(), 100);
     },
 
-    handleCheckoutPageLogic: function() {
+    handleCheckoutPageLogic: function () {
         // Synergy: If Group A comes to checkout, show them the Welcome Discount
         setTimeout(() => {
             const hasKuraimokhaInCart = document.body.innerText.includes('Kuraimokha');
             const alreadyApplied = localStorage.getItem('offszn_applied_coupon');
-            
+
             if (hasKuraimokhaInCart && !alreadyApplied && this.state.group === 'A') {
                 this.showDiscountPopup('¡Regalo de Bienvenida para tu primera compra!');
             }
         }, 1500);
     },
 
-    showMembershipPopup: function() {
+    showMembershipPopup: function () {
         if (this.state.popupsShown.membership) return;
         this.state.popupsShown.membership = true;
 
@@ -157,8 +170,11 @@ const MarketingEngine = {
         this.state.timerInterval = this.startTimer('mkt-timer-membership');
     },
 
-    showDiscountPopup: function(titleText = '¡Espera! Obtén un 25% de Descuento') {
+    showDiscountPopup: function (titleText = 'Obtén 25% de descuento en tu primer preset de willie inspired') {
         if (this.state.popupsShown.discount) return;
+
+        // Per-session check is fine since it reappears on reload if not used, 
+        // as long as the state is reset on reload but timer persists in localStorage.
         this.state.popupsShown.discount = true;
 
         const html = `
@@ -170,9 +186,9 @@ const MarketingEngine = {
                         <div class="mkt-timer" id="mkt-timer-discount">--:--:--</div>
                     </div>
                     <h2 class="mkt-title">${titleText}</h2>
-                    <p class="mkt-desc">Usa el código <b style="color:#fff">${this.CONFIG.couponCode}</b> en el checkout para comprar este preset por solo $3.75.</p>
+                    <p class="mkt-desc" style="display:none"></p>
                     <button class="mkt-btn" onclick="MarketingEngine.handleCtaClick('discount')">
-                        Aplicar Cupón de Bienvenida
+                        Aplicar Descuento
                     </button>
                 </div>
             </div>
@@ -181,7 +197,7 @@ const MarketingEngine = {
         this.state.timerInterval = this.startTimer('mkt-timer-discount');
     },
 
-    injectAndShow: function(html, id, eventName) {
+    injectAndShow: function (html, id, eventName) {
         if (document.getElementById(id)) return;
         document.body.insertAdjacentHTML('beforeend', html);
         const overlay = document.getElementById(id);
@@ -189,7 +205,7 @@ const MarketingEngine = {
         this.trackEvent(eventName);
     },
 
-    closePopup: function(id) {
+    closePopup: function (id) {
         const overlay = document.getElementById(id);
         if (overlay) {
             overlay.classList.remove('active');
@@ -199,13 +215,13 @@ const MarketingEngine = {
         }
     },
 
-    handleCtaClick: function(type, url) {
+    handleCtaClick: function (type, url) {
         this.trackEvent(`click_${type}`);
         if (type === 'discount') {
             // Copy coupon and go to checkout
             localStorage.setItem('offszn_applied_coupon', this.CONFIG.couponCode);
             localStorage.setItem('offszn_coupon_data', JSON.stringify({ valid: true, discount_percent: 25, applies_to: 'all' }));
-            
+
             if (window.location.pathname.includes('checkout.html')) {
                 window.location.reload(); // Refresh to apply
             } else {

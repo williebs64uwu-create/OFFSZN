@@ -1028,9 +1028,17 @@ const CheckoutManager = {
   },
 
   updateCouponUI: function (active) {
+    const box = document.getElementById('coupon-box');
     const input = document.getElementById('coupon-input');
     const msg = document.getElementById('coupon-status-msg');
     const btn = document.getElementById('apply-coupon-btn');
+
+    if (active && box) {
+      // Auto-open if applied and box is currently hidden
+      if (box.style.display === 'none' || !box.style.display) {
+        this.toggleCoupon();
+      }
+    }
 
     if (!input || !msg || !btn) return;
 
