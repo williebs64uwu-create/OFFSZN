@@ -69,22 +69,35 @@ window.AuthUtils = {
      * Use this ensuring window.SUPABASE_URL is defined before loading this script.
      */
     initSupabase: function () {
-        const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-
-        // 🔥 DEBUG: Disabled by default to keep console clean
-        // if (isLocal) window.OFFSZN_DEBUG = true;
-
+        const isLocal = window.location.hostname === 'localhost' || 
+                        window.location.hostname === '127.0.0.1' || 
+                        window.location.hostname.startsWith('192.168.') || 
+                        window.location.hostname === 'offszn-local.lat';
         let apiBase = window.OFFSZN_CONFIG?.API_BASE_URL;
 
-        // Auto-detect port 3008 if on localhost and no config
-        if (isLocal && !apiBase) {
-            apiBase = window.location.port === '3008' ? 'http://localhost:3008' : 'http://localhost:3000';
-        } else if (!apiBase) {
-            apiBase = 'https://offszn.lat';
+        // 🔥 STRATEGY: Explicit hostname-based override if no config exists
+        if (!apiBase) {
+            if (isLocal) {
+                apiBase = (window.location.port === '3008') ? 'http://localhost:3008' : 'http://localhost:3000';
+            } else {
+                apiBase = 'https://offszn.lat';
+            }
         }
 
-        this._apiUrl = `${apiBase}/api`;
-        this._apiBase = apiBase; // Keep base for fallbacks
+        // --- PRODUCTION ENFORCEMENT ---
+        // If we are on the main domain, ensure we never use a local API base
+        if (window.location.hostname === 'offszn.lat' || window.location.hostname === 'www.offszn.lat') {
+            if (!apiBase || apiBase.includes('localhost')) {
+                apiBase = 'https://offszn.lat';
+            }
+        }
+
+        this._apiBase = apiBase.replace(/\/$/, '');
+        this._apiUrl = `${this._apiBase}/api`;
+
+        if (window.OFFSZN_DEBUG || !isLocal) {
+            console.log(`[AuthUtils] Initialized. Environment: ${isLocal ? 'LOCAL' : 'PRODUCTION'}. API: ${this._apiUrl}`);
+        }
 
         if (window.supabaseClient) return; // Already initialized
         if (typeof window.supabase !== 'undefined' && window.supabase.createClient && window.SUPABASE_URL && window.SUPABASE_ANON_KEY) {
