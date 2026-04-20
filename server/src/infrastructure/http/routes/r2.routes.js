@@ -371,57 +371,78 @@ router.get(/\/r2-public\/(.*)/, async (req, res) => {
         // Path base "puro" (solo uuid/archivo o solo archivo)
         const purePath = uuid ? `${uuid}/${filename}` : filename;
 
-        const trialPrefixes = [
-            '',               // Exacto como viene
-            'products/',      // Pre-migración
-            'audio/'          // General
-        ];
-
-        // SMART SORTING: Prioritize folders based on file type
-        const ext = filename.toLowerCase().split('.').pop();
-        if (['mp3', 'wav'].includes(ext)) {
-            trialPrefixes.splice(1, 0, 'beats/mp3/', 'mp3_tagged/', 'products/audio/');
-        } else if (['jpg', 'png', 'webp', 'jpeg'].includes(ext)) {
-            trialPrefixes.splice(1, 0, 'products/covers/');
-        } else {
-            trialPrefixes.push('products/covers/', 'beats/mp3/', 'mp3_tagged/', 'products/audio/');
-        }
-
-        const patternsToTry = [];
-        for (const prefix of trialPrefixes) {
-            patternsToTry.push(`${prefix}${cleanKey}`); // Con el path tal cual
-            patternsToTry.push(`${prefix}${purePath}`); // Con el path purificado
-            patternsToTry.push(`${prefix}${filename}`); // Solo el archivo
-        }
-
-        const uniquePatterns = [...new Set(patternsToTry.filter(p => !!p))].map(p => {
-            let pClean = p;
-            while (pClean.startsWith('/')) pClean = pClean.substring(1);
-            return pClean;
-        });
-
-        // 4. BUSQUEDA EXHAUSTIVA DIRECTA EN S3
+        // 🔥 FAST PATH: Try the exact key on the preferred version FIRST (covers 95%+ of traffic)
         let foundVersion = null;
         let foundKey = null;
+        const preferredVersion = versionsToTry[0]; // v2 by default
 
-        for (const version of versionsToTry) {
-            for (const pattern of uniquePatterns) {
-                const exists = await existsInR2(pattern, version);
-                if (exists) {
-                    foundVersion = version;
-                    foundKey = pattern;
-                    
-                    // 🔥 CACHE THE RESULT for future speed
-                    if (resolveCache.size >= MAX_CACHE_SIZE) {
-                        const firstKey = resolveCache.keys().next().value;
-                        resolveCache.delete(firstKey);
-                    }
-                    resolveCache.set(key, { version: foundVersion, key: foundKey });
-                    
-                    break;
-                }
+        if (await existsInR2(cleanKey, preferredVersion)) {
+            foundVersion = preferredVersion;
+            foundKey = cleanKey;
+        }
+
+        // 🔥 FAST PATH 2: Try exact key on secondary version
+        if (!foundKey && versionsToTry.length > 1) {
+            const secondVersion = versionsToTry[1];
+            if (await existsInR2(cleanKey, secondVersion)) {
+                foundVersion = secondVersion;
+                foundKey = cleanKey;
             }
-            if (foundKey) break;
+        }
+
+        // 🔥 SLOW PATH: Only if exact key fails, run discovery loop
+        if (!foundKey) {
+            const trialPrefixes = [
+                '',               // Exacto como viene
+                'products/',      // Pre-migración
+                'audio/'          // General
+            ];
+
+            // SMART SORTING: Prioritize folders based on file type
+            const ext = filename.toLowerCase().split('.').pop();
+            if (['mp3', 'wav'].includes(ext)) {
+                trialPrefixes.splice(1, 0, 'beats/mp3/', 'mp3_tagged/', 'products/audio/');
+            } else if (['jpg', 'png', 'webp', 'jpeg'].includes(ext)) {
+                trialPrefixes.splice(1, 0, 'products/covers/');
+            } else {
+                trialPrefixes.push('products/covers/', 'beats/mp3/', 'mp3_tagged/', 'products/audio/');
+            }
+
+            const patternsToTry = [];
+            for (const prefix of trialPrefixes) {
+                patternsToTry.push(`${prefix}${cleanKey}`); // Con el path tal cual
+                patternsToTry.push(`${prefix}${purePath}`); // Con el path purificado
+                patternsToTry.push(`${prefix}${filename}`); // Solo el archivo
+            }
+
+            const uniquePatterns = [...new Set(patternsToTry.filter(p => !!p))].map(p => {
+                let pClean = p;
+                while (pClean.startsWith('/')) pClean = pClean.substring(1);
+                return pClean;
+            })
+            // Remove the exact cleanKey since we already tried it above
+            .filter(p => p !== cleanKey);
+
+            for (const version of versionsToTry) {
+                for (const pattern of uniquePatterns) {
+                    const exists = await existsInR2(pattern, version);
+                    if (exists) {
+                        foundVersion = version;
+                        foundKey = pattern;
+                        break;
+                    }
+                }
+                if (foundKey) break;
+            }
+        }
+
+        // Cache the result for future speed
+        if (foundKey) {
+            if (resolveCache.size >= MAX_CACHE_SIZE) {
+                const firstKey = resolveCache.keys().next().value;
+                resolveCache.delete(firstKey);
+            }
+            resolveCache.set(key, { version: foundVersion, key: foundKey });
         }
 
 

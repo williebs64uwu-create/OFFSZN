@@ -40,6 +40,7 @@ window.AuthUtils = {
     _userPlanCache: null,
     _apiUrl: null,
     _apiBase: null,
+    _initialized: false,
 
     /**
      * @returns {boolean} True if a non-anon token exists.
@@ -69,6 +70,10 @@ window.AuthUtils = {
      * Use this ensuring window.SUPABASE_URL is defined before loading this script.
      */
     initSupabase: function () {
+        // 🔒 GUARD: Only run once to prevent duplicate logs and work
+        if (this._initialized) return;
+        this._initialized = true;
+
         const isLocal = window.location.hostname === 'localhost' || 
                         window.location.hostname === '127.0.0.1' || 
                         window.location.hostname.startsWith('192.168.') || 
@@ -95,7 +100,8 @@ window.AuthUtils = {
         this._apiBase = apiBase.replace(/\/$/, '');
         this._apiUrl = `${this._apiBase}/api`;
 
-        if (window.OFFSZN_DEBUG || !isLocal) {
+        // 🔒 Only log in LOCAL dev or explicit debug mode — never expose API URL in production console
+        if (window.OFFSZN_DEBUG || isLocal) {
             console.log(`[AuthUtils] Initialized. Environment: ${isLocal ? 'LOCAL' : 'PRODUCTION'}. API: ${this._apiUrl}`);
         }
 

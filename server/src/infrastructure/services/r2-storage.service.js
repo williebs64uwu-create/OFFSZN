@@ -179,6 +179,9 @@ export const getPresignedDownloadUrl = async (key, expiresIn = 3600, version = R
         let cleanKey = key;
         if (typeof cleanKey === 'string') {
             while (cleanKey.startsWith('/')) cleanKey = cleanKey.substring(1);
+            if (cleanKey.startsWith('products/secure-products/')) {
+                cleanKey = cleanKey.replace('products/secure-products/', 'secure-products/');
+            }
         }
 
         const filename = cleanKey.split('/').pop() || 'descarga_offszn.mp3';

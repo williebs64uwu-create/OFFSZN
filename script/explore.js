@@ -501,6 +501,11 @@ function renderTwoColLists(category = 'Todo') {
     setTimeout(() => {
         initWS(grid);
 
+        // Process R2 signatures for covers
+        if (typeof window.signR2Images === 'function') {
+            window.signR2Images(grid);
+        }
+
         // Events for "Ver mas"
         const btnMoreTrends = grid.querySelector('#btn-more-trends');
         if (btnMoreTrends) {
@@ -511,6 +516,7 @@ function renderTwoColLists(category = 'Todo') {
                 container.insertAdjacentHTML('beforeend', html);
                 limitTrends += 5;
                 initWS(container);
+                if (typeof window.signR2Images === 'function') window.signR2Images(container);
                 if (limitTrends >= Math.min(15, allTrends.length)) btnMoreTrends.style.display = 'none';
             };
         }
@@ -524,6 +530,7 @@ function renderTwoColLists(category = 'Todo') {
                 container.insertAdjacentHTML('beforeend', html);
                 limitFresh += 5;
                 initWS(container);
+                if (typeof window.signR2Images === 'function') window.signR2Images(container);
                 if (limitFresh >= Math.min(15, allFresh.length)) btnMoreFresh.style.display = 'none';
             };
         }
