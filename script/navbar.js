@@ -81,7 +81,7 @@ function closeAllUI(exceptSearch = false) {
 /**
  * GLOBAL GUEST AUTH MODAL
  */
-window.showGuestModal = function (title = "Inicia Sesión", text = "Para realizar esta acción, necesitas una cuenta en OFFSZN.") {
+window.showGuestModal = function (title = "Inicia Sesión", text = "Para realizar esta acción, necesitas una cuenta en OFFSZN.", redirectUrl = null) {
     let modal = getEl('globalGuestModal');
 
     // --- SELF-HEALING: Inject Modal if missing ---
@@ -94,7 +94,7 @@ window.showGuestModal = function (title = "Inicia Sesión", text = "Para realiza
                     <div class="guest-auth-title" id="guestModalTitle"></div>
                     <div class="guest-auth-text" id="guestModalText"></div>
                     <div class="guest-auth-btns">
-                        <a href="/pages/login.html" class="guest-btn-primary">
+                        <a href="/pages/login.html" class="guest-btn-primary" id="guestModalPrimaryBtn">
                             <i class="bi bi-person-plus-fill"></i> INICIAR SESIÓN / REGISTRARSE
                         </a>
                         <button class="guest-btn-secondary" onclick="closeGuestModal()">Quizás luego</button>
@@ -108,10 +108,14 @@ window.showGuestModal = function (title = "Inicia Sesión", text = "Para realiza
 
     const titleEl = getEl('guestModalTitle');
     const textEl = getEl('guestModalText');
+    const btnEl = getEl('guestModalPrimaryBtn') || modal.querySelector('.guest-btn-primary');
 
     if (modal) {
         if (titleEl) titleEl.innerText = title;
         if (textEl) textEl.innerText = text;
+        if (btnEl) {
+            btnEl.href = redirectUrl ? `/pages/login.html?redirect=${encodeURIComponent(redirectUrl)}` : '/pages/login.html';
+        }
 
         modal.classList.add('active');
         modal.style.display = 'flex';

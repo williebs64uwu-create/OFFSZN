@@ -195,8 +195,15 @@
             </div>
         </div>
 
-        <!-- 3. CUPÓN (ABOVE PAYMENT METHODS) -->
-        <div class="coupon-area" style="margin-top: 10px; margin-bottom: 30px;">
+        <!-- 3. GUEST EMAIL (ONLY VISIBLE FOR GUESTS) -->
+        <div id="section-contact" style="display: none; margin-bottom: 24px;">
+            <div style="margin-bottom: 8px; font-size: 0.85rem; color: #fff; font-weight: 700;">Correo Electrónico</div>
+            <p style="font-size: 0.75rem; color: #888; margin-bottom: 12px; line-height: 1.4;">Ingresa tu correo para recibir tus archivos y crear tu cuenta automáticamente.</p>
+            <input type="email" id="guest-email" class="contact-input" placeholder="tu@correo.com" style="width: 100%; padding: 12px 14px; font-size: 0.9rem; border-radius: 10px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); color: #fff;">
+        </div>
+
+        <!-- 4. CUPÓN (ABOVE PAYMENT METHODS) -->
+        <div class="coupon-area" style="margin-bottom: 30px;">
             <div class="coupon-toggle-link" onclick="CheckoutManager.toggleCoupon()">
                 <i class="bi bi-tag"></i> Añadir cupón
             </div>
@@ -214,7 +221,14 @@
         <!-- 5. MÉTODOS DE PAGO -->
             <!-- Terms & Conditions Disclaimer removed as checkbox, moved to payment button areas -->
 
-            <div class="payment-methods-container" id="checkout-payment-methods">
+            <div class="payment-methods-container" id="checkout-payment-methods" style="position: relative;">
+                <!-- Payment Blocking Overlay (Guests) -->
+                <div id="payment-blocking-overlay" style="display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(10, 10, 10, 0.95); backdrop-filter: blur(8px); z-index: 1000; border-radius: 16px; align-items: center; justify-content: center; flex-direction: column; text-align: center; border: 1px solid rgba(139, 92, 246, 0.3); padding: 20px;">
+                    <i class="bi bi-envelope-exclamation" style="font-size: 2.2rem; color: #8b5cf6; margin-bottom: 12px;"></i>
+                    <p style="font-size: 0.95rem; color: #fff; font-weight: 800; margin-bottom: 6px;">Ingresa tu correo arriba</p>
+                    <p style="font-size: 0.8rem; color: #aaa; margin: 0; max-width: 260px; line-height: 1.5;">Es obligatorio para poder enviarte los archivos del producto después de que pagues.</p>
+                </div>
+                
                 <!-- PayPal -->
                 <div class="payment-option active" id="method-paypal" onclick="CheckoutManager.togglePaymentMethod('paypal')">
                     <div class="payment-option-header">

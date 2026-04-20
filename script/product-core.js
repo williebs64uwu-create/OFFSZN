@@ -2890,10 +2890,26 @@ window.addToCart = async (id, license) => {
         const isFastCheckout = type === 'preset' || type === 'kit' || type.includes('drumkit') || type.includes('loopkit');
 
         if (isFastCheckout) {
-            console.log(`[FastCheckout] Redirecting for ${type}: ${product.name}`);
+            console.log(`[FastCheckout] Resolving for ${type}: ${product.name}`);
             // Add silently (no sidebar)
             await window.CartManager.addToCart(checkProduct, { silent: true });
-            // Redirect immediately to checkout (standard page)
+            
+            // EMERGENCY GUEST CHECK: Force login/signup before moving to checkout
+            const user = window.CartManager?.state?.user;
+            if (!user) {
+                if (typeof window.showGuestModal === 'function') {
+                    window.showGuestModal(
+                        "Inicia Sesión o Regístrate",
+                        "Para comprar y tener acceso permanente a tus archivos desde cualquier lugar, crea tu cuenta o inicia sesión en segundos.",
+                        "/pages/checkout.html"
+                    );
+                } else {
+                    window.location.href = "/pages/login.html?redirect=/pages/checkout.html";
+                }
+                return;
+            }
+
+            // Redirect immediately to checkout (if already logged in)
             window.location.href = '/pages/checkout.html';
         } else {
             // Standard Flow (Beats): Add and open sidebar

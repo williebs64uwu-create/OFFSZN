@@ -113,8 +113,8 @@ document.addEventListener('DOMContentLoaded', () => {
             sessionStorage.removeItem('pending_order_link');
           }
 
-          if (redirectParam === 'carrito') {
-            window.location.href = '/carrito.html';
+          if (redirectParam) {
+            window.location.href = decodeURIComponent(redirectParam);
           } else {
             console.log("Registro exitoso. Redirigiendo a Welcome...");
             window.location.href = '/pages/welcome.html';
@@ -440,9 +440,10 @@ document.addEventListener('DOMContentLoaded', () => {
       // FIX: Localhost whitelist typically only includes root. Production uses specific callback page.
       const callbackPath = isLocal ? '/' : '/pages/auth-callback.html';
 
-      const callbackURL = redirectParam === 'carrito'
-        ? `${baseURL}${callbackPath}?redirect=carrito`
-        : `${baseURL}${callbackPath}`;
+      let callbackURL = `${baseURL}${callbackPath}`;
+      if (redirectParam) {
+          callbackURL += `?redirect=${encodeURIComponent(redirectParam)}`;
+      }
 
       console.log('🔍 OAuth Google - Callback URL:', callbackURL);
 
@@ -470,9 +471,10 @@ document.addEventListener('DOMContentLoaded', () => {
       // FIX: Localhost whitelist typically only includes root. Production uses specific callback page.
       const callbackPath = isLocal ? '/' : '/pages/auth-callback.html';
 
-      const callbackURL = redirectParam === 'carrito'
-        ? `${baseURL}${callbackPath}?redirect=carrito`
-        : `${baseURL}${callbackPath}`;
+      let callbackURL = `${baseURL}${callbackPath}`;
+      if (redirectParam) {
+          callbackURL += `?redirect=${encodeURIComponent(redirectParam)}`;
+      }
 
       console.log('🔍 OAuth Apple - Callback URL:', callbackURL);
 

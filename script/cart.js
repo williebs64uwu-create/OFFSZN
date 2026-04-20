@@ -56,7 +56,7 @@ const CartManager = {
           style="color: #666; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; font-weight: 700;">Subtotal</span>
         <span id="cart-total-price">$0.00</span>
       </div>
-      <button class="btn-checkout-global" id="cart-checkout-btn" onclick="window.location.href='/pages/checkout.html'">
+      <button class="btn-checkout-global" id="cart-checkout-btn" onclick="window.CartManager.proceedToCheckout()">
         PROCEDER AL PAGO
       </button>
 
@@ -687,6 +687,28 @@ const CartManager = {
         // when closeAllOverlays just ran in the same tick.
         panel.classList.add('active');
         if (backdrop) backdrop.classList.add('active');
+    },
+
+    proceedToCheckout: function() {
+        // Enforce Login/Registration for Guests
+        const user = this.state.user;
+        if (!user) {
+            if (typeof window.showGuestModal === 'function') {
+               // Close sidebar first to avoid stacking issues
+               if (window.closeAllOverlays) window.closeAllOverlays();
+               // Open guest modal
+               window.showGuestModal(
+                   "Inicia Sesión o Regístrate",
+                   "Para comprar y tener acceso permanente a tus archivos desde cualquier lugar, crea tu cuenta o inicia sesión en segundos.",
+                   "/pages/checkout.html"
+               );
+            } else {
+               window.location.href = "/pages/login.html?redirect=/pages/checkout.html";
+            }
+            return;
+        }
+        
+        window.location.href = '/pages/checkout.html';
     },
 
     clearCart: function () {
