@@ -135,7 +135,7 @@ const CartManager = {
                 // AUTH: Load from DB
                 const { data, error } = await supabaseClient
                     .from('cart_items')
-                    .select('quantity, license_name, variant_price, product:products(id, name, price_basic, image_url, product_type, producer_id, status, storage_version, r2_version, promo_active, promo_buy_qty, promo_get_qty, producer:producer_id(*))')
+                    .select('quantity, license_name, variant_price, product:products(id, name, price_basic, image_url, product_type, producer_id, status, storage_version, r2_version, promo_active, promo_buy_qty, promo_get_qty, licenses, producer:producer_id(*))')
                     .eq('user_id', this.state.user.id);
 
                     if (!error && data) {

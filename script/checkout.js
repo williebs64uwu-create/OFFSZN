@@ -1161,22 +1161,57 @@ const CheckoutManager = {
     items.forEach(item => {
       const fallbackImg = '/images/portada-default.png';
       const safeName = this.escapeHTML(item.product.name);
-      const safeLicName = this.escapeHTML(item.license_name || item.product.product_type);
+      
+      const isBeat = String(item.product.product_type).toLowerCase() === 'beat';
+      const enabledLicenses = item.product.licenses ? item.product.licenses.filter(l => l.enabled) : [];
+      
+      // Label logic
+      let safeLicDisplay = '';
+      if (isBeat) {
+        safeLicDisplay = `Licencia ${item.license_name || 'Basic'}`;
+      } else {
+        safeLicDisplay = String(item.product.product_type || 'PRODUCTO').toUpperCase();
+      }
+      
+      // Link visibility
+      const canChangeLicense = isBeat && enabledLicenses.length > 1;
+      const itemPrice = parseFloat(item.variant_price) || 0;
+
       const imgId = `summary-img-${item.product.id}`;
       const safeProducer = this.escapeHTML(item.producerName || 'Productor');
       const producerUrl = item.producerUsername ? `/@${item.producerUsername}` : '#';
 
       itemsHTML += `
-        <div class="checkout-item-simple">
-          <img id="${imgId}" src="${fallbackImg}" data-r2-version="${item.product.storage_version || item.product.r2_version || 'v2'}"
-               onerror="this.src='${fallbackImg}'; this.onerror=null;" style="cursor: pointer;" onclick="window.location.href='/producto.html?id=${item.product.id}'">
-          <div class="checkout-item-info">
-            <div class="checkout-item-name truncate" style="cursor: pointer; transition: color 0.2s;" onmouseover="this.style.color='#8b5cf6'" onmouseout="this.style.color='inherit'" onclick="window.location.href='/producto.html?id=${item.product.id}'">"${safeName}"</div>
-            <div class="checkout-item-producer" style="font-size: 0.75rem; color: #888; cursor: pointer; margin-bottom: 2px; text-decoration: underline;" onclick="event.stopPropagation(); window.location.href='${producerUrl}'">${safeProducer}</div>
-            <div class="checkout-item-license">${safeLicName}</div>
-          </div>
-          <div class="checkout-item-remove" onclick="CheckoutManager.removeFromCheckout('${item.product.id}')">
-            <i class="bi bi-x"></i>
+        <div class="checkout-item-simple" style="display: flex; flex-direction: column; align-items: stretch; gap: 0; padding: 16px 0;">
+          
+          <div style="display: flex; align-items: flex-start; gap: 12px; width: 100%;">
+            <img id="${imgId}" src="${fallbackImg}" data-r2-version="${item.product.storage_version || item.product.r2_version || 'v2'}"
+                 onerror="this.src='${fallbackImg}'; this.onerror=null;" 
+                 style="width: 50px; height: 50px; border-radius: 8px; object-fit: cover; cursor: pointer;" 
+                 onclick="window.location.href='/producto.html?id=${item.product.id}'">
+            
+            <div class="checkout-item-info" style="flex: 1; padding-top: 2px;">
+              <div class="checkout-item-name" style="cursor: pointer; font-size: 0.95rem; line-height: 1.3;" onclick="window.location.href='/producto.html?id=${item.product.id}'">"${safeName}"</div>
+              
+              <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 4px;">
+                <div class="checkout-item-producer" style="font-size: 0.75rem; color: #888; cursor: pointer;" onclick="event.stopPropagation(); window.location.href='${producerUrl}'">${safeProducer}</div>
+                <div class="checkout-item-license" style="font-size: 0.65rem; color: rgba(255,255,255,0.3); background: rgba(255,255,255,0.05); padding: 2px 6px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.5px;">${safeLicDisplay}</div>
+                ${canChangeLicense ? `
+                  <div style="font-size: 0.65rem; color: #8b5cf6; cursor: pointer; text-decoration: underline;" onclick="CheckoutManager.openLicenseModal('${item.product.id}')">Cambiar</div>
+                ` : ''}
+              </div>
+            </div>
+
+            <div style="text-align: right; display: flex; flex-direction: column; align-items: flex-end; justify-content: center; gap: 8px;">
+               <div style="font-size: 1rem; font-weight: 700; color: #fff; font-family: 'Geist', sans-serif;">$${itemPrice.toFixed(2)}</div>
+               <div class="checkout-item-remove" 
+                    onclick="CheckoutManager.removeFromCheckout('${item.product.id}')" 
+                    style="cursor: pointer; width: 28px; height: 28px; border-radius: 50%; background: rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; transition: all 0.2s ease; border: 1px solid rgba(255,255,255,0.05); color: #888;"
+                    onmouseover="this.style.background='rgba(255,255,255,0.1)'; this.style.borderColor='rgba(255,255,255,0.2)'; this.style.color='#fff';"
+                    onmouseout="this.style.background='rgba(255,255,255,0.05)'; this.style.borderColor='rgba(255,255,255,0.05)'; this.style.color='#888';">
+                 <i class="bi bi-x" style="font-size: 1.2rem;"></i>
+               </div>
+            </div>
           </div>
         </div>
       `;
@@ -1376,15 +1411,17 @@ const CheckoutManager = {
     const script = document.createElement('script');
     script.id = 'paypal-sdk-script';
 
-    // Dynamic merchant string handling
+    // Dynamic merchant handling for PayPal SDK
     if (merchantIdArr.length > 1) {
-      script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&currency=USD&merchant-id=*`;
+      // MULTI-PAYEE: Use asterisk in URL and list in data-merchant-id attribute
+      script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&currency=USD&intent=capture&merchant-id=*`;
       script.setAttribute('data-merchant-id', merchantIdString);
     } else if (merchantIdArr.length === 1) {
-      script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&currency=USD&merchant-id=${merchantIdArr[0]}`;
+      // SINGLE PAYEE: Put the specific merchant ID directly in the URL
+      script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&currency=USD&intent=capture&merchant-id=${merchantIdArr[0]}`;
     } else {
-      // Fallback
-      script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&currency=USD`;
+      // FALLBACK: Standard SDK load
+      script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&currency=USD&intent=capture`;
     }
     script.setAttribute('data-merchant-id-string', merchantIdString);
 
@@ -1721,6 +1758,168 @@ const CheckoutManager = {
       alert("Error al procesar el pedido: " + err.message);
     } finally {
       this.showProcessingState(false);
+    }
+  },
+
+  // ==========================================================================
+  // LICENSE MODAL LOGIC (VERTICAL SELECTION)
+  // ==========================================================================
+
+  openLicenseModal: async function (productId) {
+    const item = window.CartManager?.state?.items.find(i => String(i.product.id) === String(productId));
+    if (!item) return;
+
+    let backdrop = document.getElementById('checkout-lic-backdrop');
+    if (!backdrop) {
+      backdrop = document.createElement('div');
+      backdrop.id = 'checkout-lic-backdrop';
+      backdrop.className = 'share-modal-backdrop';
+      backdrop.style.zIndex = '10000';
+      backdrop.onclick = (e) => { if (e.target === backdrop) this.closeLicenseModal(); };
+      document.body.appendChild(backdrop);
+    }
+
+    const safeName = this.escapeHTML(item.product.name);
+    const fallbackImg = '/images/portada-default.png';
+    const imgId = `modal-header-img-${productId}`;
+
+    backdrop.innerHTML = `
+      <div class="share-modal-content lic-modal" style="width: 95%; max-width: 500px; padding: 25px;">
+          <div class="lic-modal-header" style="margin-bottom: 20px; display: flex; align-items: flex-start; gap: 15px;">
+              <img id="${imgId}" src="${fallbackImg}" style="width: 60px; height: 60px; border-radius: 8px; object-fit: cover; border: 1px solid rgba(255,255,255,0.1);">
+              <div style="flex: 1;">
+                 <h3 style="margin: 0; font-size: 1.1rem; color: #fff;">Licencias de "${safeName}"</h3>
+                 <p style="margin: 5px 0 0; font-size: 0.75rem; color: #888;">Selecciona la licencia que prefieras aplicar.</p>
+              </div>
+              <button onclick="CheckoutManager.closeLicenseModal()" class="lic-modal-close" style="background:none; border:none; color:#666; font-size:1.5rem; cursor:pointer; line-height:1;">&times;</button>
+          </div>
+          
+          <div class="lic-modal-body" id="checkout-lic-body" style="max-height: 70vh; overflow-y: auto; padding-right: 5px;">
+              <!-- Cards injected here -->
+              <div style="text-align:center; padding: 30px;">
+                 <div class="spinner-small"></div>
+              </div>
+          </div>
+      </div>
+    `;
+
+    backdrop.style.display = 'flex';
+    setTimeout(() => { backdrop.classList.add('active'); }, 10);
+
+    // Fetch Authorized URL for header image
+    if (item.product.image_url && window.getAuthorizedUrl) {
+       const storageVer = item.product.storage_version || item.product.r2_version || 'v2';
+       window.getAuthorizedUrl(item.product.image_url, storageVer, productId).then(url => {
+          const img = document.getElementById(imgId);
+          if (img && url) img.src = url;
+       });
+    }
+
+    this.renderLicenseSelection(productId, item.license_name || item.product.product_type);
+  },
+
+  renderLicenseSelection: function (productId, currentLicName) {
+    const item = window.CartManager?.state?.items.find(i => String(i.product.id) === String(productId));
+    if (!item) return;
+
+    const container = document.getElementById('checkout-lic-body');
+    if (!container) return;
+
+    const licenses = item.product.licenses || [];
+    if (licenses.length === 0) {
+      container.innerHTML = `<p style="color:#666; font-size:0.85rem; text-align:center; padding: 20px;">No se encontraron licencias para este producto.</p>`;
+      return;
+    }
+
+    const enabledLicenses = licenses.filter(l => l.enabled);
+    
+    // Sort licenses (Basic < Premium < Unlimited)
+    const order = { 'basic': 1, 'premium': 2, 'unlimited': 3, 'exclusive': 4 };
+    enabledLicenses.sort((a, b) => (order[a.id.toLowerCase()] || 99) - (order[b.id.toLowerCase()] || 99));
+
+    let html = `<div class="checkout-lic-list">`;
+    enabledLicenses.forEach(lic => {
+      const isActive = lic.name.toLowerCase() === currentLicName.toLowerCase();
+      const price = parseFloat(lic.price) > 0 ? `$${parseFloat(lic.price).toFixed(2)}` : 'GRATIS';
+      const filesDesc = lic.files?.stems ? 'MP3, WAV, STEMS' : (lic.files?.wav ? 'MP3, WAV' : 'SOLO MP3');
+
+      html += `
+        <div class="checkout-lic-card ${isActive ? 'active' : ''}" onclick="CheckoutManager.selectCheckoutLicense('${productId}', '${lic.name}', '${lic.price}', '${lic.id}')">
+            <div class="lic-header-row">
+                <span class="lic-name">${lic.name}</span>
+                <span class="lic-price">${price}</span>
+            </div>
+            <div class="lic-files">${filesDesc}</div>
+            ${isActive ? '<i class="bi bi-check-circle-fill" style="position:absolute; top:18px; right:-20px; color:#8b5cf6; font-size:0.8rem; transform: translateX(-40px);"></i>' : ''}
+        </div>
+      `;
+    });
+    html += `</div>`;
+
+    // Benefit Panel for the current selection
+    const activeLic = enabledLicenses.find(l => l.name.toLowerCase() === currentLicName.toLowerCase()) || enabledLicenses[0];
+    if (activeLic) {
+        html += `
+          <div class="checkout-lic-info-panel">
+            <h4>Beneficios de ${activeLic.name}</h4>
+            <div class="lic-benefit-grid">
+               <div class="lic-benefit-item"><i class="bi bi-check2"></i> ${activeLic.streams || 'Unlimited'} Streams</div>
+               <div class="lic-benefit-item"><i class="bi bi-check2"></i> ${activeLic.sales || 'Unlimited'} Ventas</div>
+               <div class="lic-benefit-item"><i class="bi bi-check2"></i> ${activeLic.radio || 'Universal'} Radio</div>
+               <div class="lic-benefit-item"><i class="bi bi-check2"></i> PDF Oficial</div>
+            </div>
+          </div>
+          
+          <div style="margin-top: 25px;">
+             <button onclick="CheckoutManager.closeLicenseModal()" class="btn-checkout-global" style="width:100%; border-radius:12px; height:50px;">CONFIRMAR SELECCIÓN</button>
+          </div>
+        `;
+    }
+
+    container.innerHTML = html;
+  },
+
+  selectCheckoutLicense: async function (productId, licenseName, price, licenseId) {
+    if (!window.CartManager) return;
+
+    // 1. Find item in cart
+    const itemIndex = window.CartManager.state.items.findIndex(i => String(i.product.id) === String(productId));
+    if (itemIndex === -1) return;
+
+    // 2. Update state locally
+    const item = window.CartManager.state.items[itemIndex];
+    item.license_name = licenseName;
+    item.variant_price = price;
+
+    // 3. Update in Supabase if logged in
+    if (window.CartManager.state.user) {
+        const { error } = await window.supabaseClient
+            .from('cart_items')
+            .update({ 
+                license_name: licenseName, 
+                variant_price: price 
+            })
+            .eq('user_id', window.CartManager.state.user.id)
+            .eq('product_id', productId);
+        
+        if (error) console.error("[Checkout] Error updating license in DB:", error);
+    } else {
+        // Update local storage for guests
+        window.CartManager.saveLocal();
+    }
+
+    // 4. Refresh internal lists (Card Row + Modal info)
+    this.renderLicenseSelection(productId, licenseName);
+    
+    // 5. Trigger global re-render (this will update totals and Order Summary)
+    window.CartManager.render(); // This will dispatch 'cart-updated'
+  },
+
+  closeLicenseModal: function () {
+    const backdrop = document.getElementById('checkout-lic-backdrop');
+    if (backdrop) {
+      backdrop.classList.remove('active');
+      setTimeout(() => { backdrop.style.display = 'none'; }, 300);
     }
   },
 };
