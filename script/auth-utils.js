@@ -43,6 +43,22 @@ window.AuthUtils = {
     _initialized: false,
 
     /**
+     * 🔒 SAFE API URL GETTER: Never returns localhost when running on production domain.
+     * This prevents Mixed Content errors caused by stale cache or race conditions.
+     */
+    _getApiUrl: function () {
+        const url = this._apiUrl;
+        // Safety net: if we're on the production domain but _apiUrl resolved to localhost, override it
+        if (url && url.includes('localhost') && 
+            typeof window !== 'undefined' && 
+            (window.location.hostname === 'offszn.lat' || window.location.hostname === 'www.offszn.lat')) {
+            this._apiUrl = 'https://offszn.lat/api';
+            return this._apiUrl;
+        }
+        return url || '/api';
+    },
+
+    /**
      * @returns {boolean} True if a non-anon token exists.
      */
     isLoggedIn: function () {
@@ -390,7 +406,7 @@ window.AuthUtils = {
         const isPrivate = key.includes('secure-products/') || key.endsWith('.zip') || key.endsWith('.rar');
 
         if (isPublicPath && !isPrivate) {
-            const apiRoot = this._apiUrl || '/api';
+            const apiRoot = this._getApiUrl();
             const publicUrl = `${apiRoot}/r2-public/${key}?v=${actualVersion}`;
             this._saveCache(cacheKey, publicUrl);
             return Promise.resolve(publicUrl);
@@ -640,8 +656,8 @@ window.AuthUtils = {
                 return `${sbUrl}/storage/v1/object/public/products/${key}`;
             }
 
-            // 🔥 FIX: Use _apiUrl which already includes /api
-            const apiRoot = this._apiUrl || '/api';
+            // 🔥 FIX: Use _getApiUrl() which enforces production safety
+            const apiRoot = this._getApiUrl();
             return `${apiRoot}/r2-public/${key}`;
         }
 

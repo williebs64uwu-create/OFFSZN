@@ -59,7 +59,7 @@
                         el.onerror = () => {
                             if (!el.dataset.r2FallbackAttempted) {
                                 el.dataset.r2FallbackAttempted = 'true';
-                                const apiRoot = (window.AuthUtils && window.AuthUtils._apiUrl) || '/api';
+                                const apiRoot = (window.AuthUtils && window.AuthUtils._getApiUrl) ? window.AuthUtils._getApiUrl() : '/api';
                                 const fallbackSrc = originalSrc.startsWith('/') ? originalSrc.substring(1) : originalSrc;
                                 el.src = `${apiRoot}/r2-public/${fallbackSrc}?v=${r2Version}`;
                             } else {
@@ -105,7 +105,7 @@
                     tempImg.onerror = () => {
                         if (!el.dataset.r2FallbackAttempted) {
                             el.dataset.r2FallbackAttempted = 'true';
-                            const apiRoot = (window.AuthUtils && window.AuthUtils._apiUrl) || '/api';
+                            const apiRoot = (window.AuthUtils && window.AuthUtils._getApiUrl) ? window.AuthUtils._getApiUrl() : '/api';
                             const cleanPath = bgPath.startsWith('/') ? bgPath.substring(1) : bgPath;
                             el.style.backgroundImage = `url('${apiRoot}/r2-public/${cleanPath}')`;
                             el.classList.add('r2-loaded');
