@@ -455,61 +455,60 @@ export const createPayPalOrder = async (req, res) => {
             }
         }
 
-        // --- REFACTOR: Multi-Payee Split ---
+        // --- REFACTOR: Multi-Payee Split (Consolidated) ---
         const purchaseUnits = [];
-        const producerGroups = new Map();
+        const payeeGroups = new Map(); // Identificador (email/id) -> { amount: number, type: 'email' | 'id', nickname: string }
 
         if (!verifiedCartItems || verifiedCartItems.length === 0) {
             console.error('[PayPalOrder] No items were verified successfully.');
-            return res.status(400).json({ error: 'No se pudieron verificar los productos en el carrito. Asegúratede que estén activos.' });
+            return res.status(400).json({ error: 'No se pudieron verificar los productos en el carrito. Asegúrate de que estén activos.' });
         }
 
         // Distribution factor for global discounts
         const globalDiscountFactor = subtotal > 0 ? (subtotal - totalDiscount) / subtotal : 1.0;
         console.log(`[PayPalOrder] Subtotal: ${subtotal}, Discount: ${totalDiscount}, Factor: ${globalDiscountFactor}`);
 
-        // Group items by producer
+        // 1. Group Producers by Payee Identifier
         verifiedCartItems.forEach(item => {
-            const pId = item.product.producer_id;
-            if (!producerGroups.has(pId)) {
-                producerGroups.set(pId, 0);
-            }
+            const producer = producerMap.get(item.product.producer_id);
+            if (!producer?.email) return;
+
+            const payeeId = producer.email.toLowerCase().trim();
             const itemNet = (parseFloat(item.variant_price) || 0) * globalDiscountFactor;
-            producerGroups.set(pId, producerGroups.get(pId) + itemNet);
+
+            const current = payeeGroups.get(payeeId) || { amount: 0, type: 'email', nickname: producer.nickname };
+            current.amount += itemNet;
+            payeeGroups.set(payeeId, current);
         });
 
-        // 1. Create units for each producer
-        producerGroups.forEach((netAmount, pId) => {
-            const producer = producerMap.get(pId);
-            if (netAmount > 0 && producer?.email) {
-                purchaseUnits.push({
-                    reference_id: `prod_${pId}_${uuidv4().substring(0, 8)}`,
-                    amount: {
-                        currency_code: 'USD',
-                        value: netAmount.toFixed(2)
-                    },
-                    description: `Pago para ${producer.nickname || 'Productor'} - OFFSZN`,
-                    payee: { email_address: producer.email }
-                });
-            }
-        });
-
-        // 2. Create unit for platform commission
+        // 2. Add Platform Fee (Consolidates if email matches a producer)
         if (serviceFee > 0) {
-            const platformPayee = (!PLATFORM_PAYPAL_EMAIL || !PLATFORM_PAYPAL_EMAIL.includes('@'))
-                ? { merchant_id: PLATFORM_PAYPAL_EMAIL || 'MXV5F6X8JXG4S' }
-                : { email_address: PLATFORM_PAYPAL_EMAIL };
+            const isEmail = PLATFORM_PAYPAL_EMAIL && PLATFORM_PAYPAL_EMAIL.includes('@');
+            const platformId = isEmail ? PLATFORM_PAYPAL_EMAIL.toLowerCase().trim() : (PLATFORM_PAYPAL_EMAIL || 'MXV5F6X8JXG4S');
+            
+            const current = payeeGroups.get(platformId) || { amount: 0, type: isEmail ? 'email' : 'id', nickname: 'OFFSZN' };
+            current.amount += serviceFee;
+            payeeGroups.set(platformId, current);
+        }
+
+        // 3. Build Final Purchase Units (One per unique Payee)
+        payeeGroups.forEach((data, identifier) => {
+            if (data.amount <= 0) return;
+
+            const payeeObj = data.type === 'email' 
+                ? { email_address: identifier } 
+                : { merchant_id: identifier };
 
             purchaseUnits.push({
-                reference_id: `offszn_fee_${uuidv4().substring(0, 8)}`,
+                reference_id: `payee_${identifier.substring(0, 8)}_${uuidv4().substring(0, 4)}`,
                 amount: {
                     currency_code: 'USD',
-                    value: serviceFee.toFixed(2)
+                    value: data.amount.toFixed(2)
                 },
-                description: 'Tarifa de servicio - OFFSZN',
-                payee: platformPayee
+                description: `Pago consolidado - ${data.nickname || 'OFFSZN'}`,
+                payee: payeeObj
             });
-        }
+        });
 
         console.log(`[PayPalOrder] Setup Complete. Total Units: ${purchaseUnits.length}`);
 

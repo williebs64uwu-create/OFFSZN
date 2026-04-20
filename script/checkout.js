@@ -1356,14 +1356,16 @@ const CheckoutManager = {
     // Only include platform merchant ID if there is a service fee
     const totals = this.calculateTotals();
     if (totals.serviceFee > 0) {
-      merchantIds.add('MXV5F6X8JXG4S'); // Platform fee recipient
+      // Must match exactly PLATFORM_PAYPAL_EMAIL in backend config
+      merchantIds.add('willie2008garay@gmail.com');
     }
 
     // Add all producer emails from the cart
     CartManager.state.items.forEach(item => {
       const pData = window.CartManager?.state?.producerVerification?.[item.product.producer_id];
       if (pData && pData.hasPayPal && pData.paypalEmail) {
-        merchantIds.add(pData.paypalEmail);
+        // Enforce lowercase/trimmed to match backend Map identifiers
+        merchantIds.add(pData.paypalEmail.toLowerCase().trim());
       }
     });
 
