@@ -129,12 +129,38 @@ const MarketingEngine = {
     },
 
     handleProductPageLogic: function () {
+        // Logged-in users: Popup completely disappears
+        if (localStorage.getItem('userId') || localStorage.getItem('sb-access-token')) {
+            console.log("[MarketingEngine] User logged in: Popups disabled.");
+            return;
+        }
+
+        const alreadyApplied = localStorage.getItem('offszn_applied_coupon');
+        if (alreadyApplied) return;
+
         // Unified: Show the Willie Inspired Discount Popup as the primary offer
-        // Prioritizing the personalized discount over the generic membership
         setTimeout(() => this.showDiscountPopup(), 100);
+
+        // Respawn every 2 minutes for Guests
+        setInterval(() => {
+            if (localStorage.getItem('userId') || localStorage.getItem('sb-access-token')) return; // Just in case they logged in
+            if (localStorage.getItem('offszn_applied_coupon')) return; // They used it!
+
+            // If it's not currently open, show it again
+            const activePopup = document.getElementById('mkt-discount-overlay');
+            if (activePopup && activePopup.classList.contains('active')) return; 
+
+            // Reset the internal shown flag so it triggers again
+            this.state.popupsShown.discount = false;
+            this.showDiscountPopup();
+            
+        }, 2 * 60 * 1000); // 120,000ms = 2 minutos
     },
 
     handleCheckoutPageLogic: function () {
+        // Logged-in users: Popup completely disappears
+        if (localStorage.getItem('userId') || localStorage.getItem('sb-access-token')) return;
+
         // Synergy: If Group A comes to checkout, show them the Welcome Discount
         setTimeout(() => {
             const hasKuraimokhaInCart = document.body.innerText.includes('Kuraimokha');
