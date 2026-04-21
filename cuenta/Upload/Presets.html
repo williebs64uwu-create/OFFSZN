@@ -7525,8 +7525,24 @@
                     status: 'pending'
                 }));
 
+                // 🔥 PLAN-BASED UPLOAD LIMIT CHECK (Before Insert)
+                const PLAN_LIMITS = { free: 30, starter: 60, pro: Infinity };
+                const { data: _profile } = await supabaseClient.from('profiles').select('plan').eq('id', userId).single();
+                const _userPlan = _profile?.plan || 'free';
+                const _maxLimit = PLAN_LIMITS[_userPlan] || PLAN_LIMITS.free;
+
+                if (_maxLimit !== Infinity) {
+                    const { count: _totalProducts } = await supabaseClient
+                        .from('products').select('*', { count: 'exact', head: true })
+                        .eq('producer_id', userId).neq('status', 'deleted');
+                    
+                    if ((_totalProducts || 0) >= _maxLimit) {
+                        throw new Error(`Has alcanzado el límite de ${_maxLimit} productos para tu plan "${_userPlan}". Mejora tu plan para subir más.`);
+                    }
+                }
+
                 // 5. Insertar en tabla products
-                console.log('?? [DB] Insertando nuevo producto en la base de datos...');
+                console.log('🎵 [DB] Insertando nuevo producto en la base de datos...');
                 const { data: product, error: insertError } = await supabaseClient
                     .from('products')
                     .insert({

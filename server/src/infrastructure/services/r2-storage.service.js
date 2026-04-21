@@ -1,4 +1,4 @@
-import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectsCommand, CopyObjectCommand, HeadObjectCommand } from "@aws-sdk/client-s3";
+import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectsCommand, CopyObjectCommand, HeadObjectCommand, ListObjectsV2Command } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { supabase } from '../database/connection.js';
 
@@ -116,6 +116,65 @@ export const resolveScavengerKey = async (initialKey, version = R2_CURRENT_VERSI
             if (await checkKeyExists(variant, v)) {
                 console.log(`[R2-Scavenger] ✅ FOUND in ${v}: ${variant}`);
                 return { key: variant, version: v };
+            }
+        }
+    }
+
+    // --- PHASE 2: UUID FOLDER LISTING (Last Resort) ---
+    // The exact filename doesn't exist anywhere. But the UUID folder might
+    // contain the file under a DIFFERENT name (re-uploaded).
+    if (uuid && uuid.length > 30) {
+        // Detect file extension from original key to filter results
+        const origExt = key.split('.').pop()?.toLowerCase() || 'wav';
+        const audioExts = ['wav', 'mp3', 'flac', 'zip', 'rar'];
+        const targetExt = audioExts.includes(origExt) ? origExt : 'wav';
+
+        // Prioritize specific subfolders before broad UUID folders
+        const folderPrefixes = [
+            `secure-products/beats/wav/${uuid}/`,
+            `products/${uuid}/wav_untagged/`,
+            `secure-products/beats/mp3/${uuid}/`,
+            `products/${uuid}/mp3_tagged/`,
+            `secure-products/kits/${uuid}/`,
+            `products/${uuid}/stems/`,
+            `secure-products/${uuid}/`,
+            `products/${uuid}/`,
+        ];
+
+        console.log(`[R2-Scavenger] 🗂️ Exact file not found. Listing UUID folders (want .${targetExt})...`);
+
+        for (const prefix of folderPrefixes) {
+            for (const v of versionsToTry) {
+                const { client: listClient, bucket: listBucket } = getClientAndBucket(v);
+                if (!listClient) continue;
+
+                try {
+                    const listResult = await listClient.send(new ListObjectsV2Command({
+                        Bucket: listBucket,
+                        Prefix: prefix,
+                        MaxKeys: 10
+                    }));
+
+                    if (listResult.Contents && listResult.Contents.length > 0) {
+                        // Filter: prefer files matching the target extension
+                        const matchingFile = listResult.Contents.find(obj => {
+                            const ext = obj.Key.split('.').pop()?.toLowerCase();
+                            return ext === targetExt;
+                        });
+                        // Fallback: any audio file (not images/covers)
+                        const audioFile = matchingFile || listResult.Contents.find(obj => {
+                            const ext = obj.Key.split('.').pop()?.toLowerCase();
+                            return audioExts.includes(ext) && !obj.Key.includes('/covers/');
+                        });
+
+                        if (audioFile) {
+                            console.log(`[R2-Scavenger] ✅ FOUND via folder listing in ${v} (prefix: ${prefix}): ${audioFile.Key}`);
+                            return { key: audioFile.Key, version: v };
+                        }
+                    }
+                } catch (listErr) {
+                    // Silently continue
+                }
             }
         }
     }
