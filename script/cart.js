@@ -564,7 +564,8 @@ const CartManager = {
         } else {
             // Render Items
             const itemsHtml = this.state.items.map(item => {
-                const displayPrice = parseFloat(item.variant_price) > 0 ? item.variant_price : item.product.price_basic;
+                const displayPriceRaw = parseFloat(item.variant_price) > 0 ? item.variant_price : item.product.price_basic;
+                const displayPrice = displayPriceRaw !== null && displayPriceRaw !== undefined ? parseFloat(displayPriceRaw) : null;
                 
                 let rawLicName = item.license_name || item.product.product_type || 'Licencia';
                 if (item.product.product_type && item.product.product_type.toLowerCase() !== 'beat') {
@@ -582,7 +583,12 @@ const CartManager = {
                     rawLicName = item.license_name || 'Licencia Estándar';
                 }
                 const licName = this.escapeHTML(rawLicName);
-                const isFree = item.isPromotionFree;
+                
+                // Robust check for FREE status
+                const isFree = item.isPromotionFree || 
+                             item.product.is_free === true || 
+                             (item.product.is_free && String(item.product.is_free) !== 'false') ||
+                             (displayPrice === 0 || displayPrice === null);
                 const imgId = `cart-row-img-${item.product.id}`;
                 const safeName = this.escapeHTML(item.product.name);
 
@@ -599,7 +605,7 @@ const CartManager = {
                                 <span style="font-size:0.6rem; font-weight:800; color:#000; background:#22c55e; padding: 2px 6px; border-radius:4px; margin-bottom:2px;">OFERTA</span>
                                 <span style="font-size:1rem; font-weight:800; color:#22c55e; font-family: 'Plus Jakarta Sans', sans-serif;">GRATIS</span>
                             ` : `
-                                <span style="font-size:1rem; font-weight:800; color:#fff; font-family: 'Plus Jakarta Sans', sans-serif;">$${parseFloat(displayPrice).toFixed(2)}</span>
+                                <span id="cart-item-price-${item.product.id}" style="font-size:1rem; font-weight:800; color:#fff; font-family: 'Plus Jakarta Sans', sans-serif;">$${(displayPrice || 0).toFixed(2)}</span>
                             `}
                             <button onclick="CartManager.removeFromCart('${item.product.id}')" style="background:none; border:none; color:#444; font-size:0.85rem; cursor:pointer; padding: 4px; transition:all 0.2s; display: flex; align-items: center;" onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='#444'">
                                 <i class="bi bi-trash"></i>

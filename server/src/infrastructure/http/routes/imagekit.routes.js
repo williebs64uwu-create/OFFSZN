@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { v2 as cloudinary } from 'cloudinary';
 import { createClient } from '@supabase/supabase-js';
 import { authenticateTokenMiddleware } from '../../middlewares/authenticateTokenMiddleware.js';
-import { uploadToImageKit } from '../../services/imagekit.service.js';
+import { uploadToImageKit, deleteFromImageKitByPath } from '../../services/imagekit.service.js';
 import multer from 'multer';
 
 const storage = multer.memoryStorage();
@@ -28,6 +28,39 @@ const supabase = createClient(
 
 // 🔥 SIZE LIMIT — 30MB
 const MAX_AVATAR_SIZE = 30 * 1024 * 1024;
+
+// ============================================
+// HELPERS
+// ============================================
+
+/**
+ * Extracts the ImageKit path from a full URL.
+ * Format: https://ik.imagekit.io/<id>/folder/file.ext?tr=...
+ */
+function extractPathFromIkUrl(url) {
+    if (!url) return null;
+    
+    // Clean prefix if exists (used in banner/avatar storage)
+    let cleanUrl = url.replace(/^url:/, '').replace(/^gif:/, '');
+    
+    // Check if it's an ImageKit URL
+    if (!cleanUrl.includes('ik.imagekit.io')) return null;
+
+    try {
+        const parsed = new URL(cleanUrl);
+        // Pathname is /<endpoint_id>/<folder>/<filename>
+        // We need just /<folder>/<filename>
+        const pathParts = parsed.pathname.split('/').filter(p => p.length > 0);
+        
+        if (pathParts.length >= 2) {
+            // The first part is usually the endpoint ID (e.g., 6gzqp4xam)
+            return '/' + pathParts.slice(1).join('/');
+        }
+    } catch (e) {
+        return null;
+    }
+    return null;
+}
 
 // ============================================
 // POST /api/imagekit/avatar — Upload avatar to ImageKit
@@ -112,6 +145,19 @@ router.post('/avatar', authenticateTokenMiddleware, async (req, res) => {
             message: 'Avatar actualizado correctamente'
         });
 
+        // 🔥 CLEANUP: Delete previous avatar if exists (Strictly after success)
+        if (oldUrl) {
+            const oldPath = extractPathFromIkUrl(oldUrl);
+            if (oldPath) {
+                console.log(`🧹 [Avatar Cleanup] Triggering deletion for: ${oldPath}`);
+                // Use fire-and-forget or await? 
+                // Since this is cleanup and logic is finished, we don't block the client
+                deleteFromImageKitByPath(oldPath).catch(err => 
+                    console.error('❌ Error in background cleanup:', err)
+                );
+            }
+        }
+
     } catch (error) {
         console.error('❌ Error uploading avatar to ImageKit:', error);
         res.status(500).json({ error: 'Error al subir el avatar' });
@@ -125,6 +171,15 @@ router.post('/banner', authenticateTokenMiddleware, upload.single('imageFile'), 
     try {
         const userId = req.user.userId;
         let { image, isGif, fileSize, crop } = req.body;
+
+        // Fetch current banner before update for cleanup
+        const { data: currentUser } = await supabase
+            .from('users')
+            .select('banner_url')
+            .eq('id', userId)
+            .single();
+
+        const oldUrl = currentUser?.banner_url;
 
         if (req.file) {
             const b64 = Buffer.from(req.file.buffer).toString('base64');
@@ -190,6 +245,17 @@ router.post('/banner', authenticateTokenMiddleware, upload.single('imageFile'), 
             url: displayUrl,
             message: 'Banner actualizado correctamente'
         });
+
+        // 🔥 CLEANUP: Delete previous banner if exists (Strictly after success)
+        if (oldUrl) {
+            const oldPath = extractPathFromIkUrl(oldUrl);
+            if (oldPath) {
+                console.log(`🧹 [Banner Cleanup] Triggering deletion for: ${oldPath}`);
+                deleteFromImageKitByPath(oldPath).catch(err => 
+                    console.error('❌ Error in background cleanup:', err)
+                );
+            }
+        }
 
     } catch (error) {
         console.error('❌ Error uploading banner to ImageKit:', error);

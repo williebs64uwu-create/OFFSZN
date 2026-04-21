@@ -121,16 +121,16 @@ export const resolveScavengerKey = async (initialKey, version = R2_CURRENT_VERSI
     }
 
     // --- PHASE 2: UUID FOLDER LISTING (Last Resort) ---
-    // The exact filename doesn't exist anywhere. But the UUID folder might
-    // contain the file under a DIFFERENT name (re-uploaded).
     if (uuid && uuid.length > 30) {
-        // Detect file extension from original key to filter results
         const origExt = key.split('.').pop()?.toLowerCase() || 'wav';
-        const audioExts = ['wav', 'mp3', 'flac', 'zip', 'rar'];
-        const targetExt = audioExts.includes(origExt) ? origExt : 'wav';
+        const compressedExts = ['zip', 'rar', '7z'];
+        const audioExts = ['wav', 'mp3', 'flac'];
+        
+        const isCompressed = compressedExts.includes(origExt);
+        const targetExt = isCompressed ? origExt : (audioExts.includes(origExt) ? origExt : 'wav');
 
-        // Prioritize specific subfolders before broad UUID folders
         const folderPrefixes = [
+            `secure-products/beats/stems/${uuid}/`,
             `secure-products/beats/wav/${uuid}/`,
             `products/${uuid}/wav_untagged/`,
             `secure-products/beats/mp3/${uuid}/`,
@@ -164,6 +164,9 @@ export const resolveScavengerKey = async (initialKey, version = R2_CURRENT_VERSI
                         // Fallback: any audio file (not images/covers)
                         const audioFile = matchingFile || listResult.Contents.find(obj => {
                             const ext = obj.Key.split('.').pop()?.toLowerCase();
+                            if (isCompressed) {
+                                return compressedExts.includes(ext);
+                            }
                             return audioExts.includes(ext) && !obj.Key.includes('/covers/');
                         });
 

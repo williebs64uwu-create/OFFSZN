@@ -755,8 +755,7 @@ function showSkeletons(count = 50, forceClear = true) {
                 <div class="skeleton-line skeleton-role"></div>
                 <div class="skeleton-line skeleton-meta"></div>
             </div>
-            <div class="card-actions-grid">
-                <div class="skeleton-btn"></div>
+            <div class="card-actions-single">
                 <div class="skeleton-btn"></div>
             </div>
         `;
@@ -969,13 +968,13 @@ function createProducerCard(producer, rank) {
     
     const isOwnCard = currentUserId === producer.id;
 
-    const solicitarHtml = isOwnCard
-        ? `<button class="btn-card-action btn-solicitar" disabled style="opacity:0.3; cursor:not-allowed;">solicitar</button>`
-        : `<button class="btn-card-action btn-solicitar">solicitar</button>`;
-
-    const enviarHtml = isOwnCard
-        ? `<button class="btn-card-action btn-enviar" disabled style="opacity:0.3; cursor:not-allowed;">enviar</button>`
-        : `<button class="btn-card-action btn-enviar" onclick="window.location.href='/@${nickname}'">enviar</button>`;
+    const mensajeHtml = isOwnCard
+        ? `<button class="btn-card-action btn-mensaje" disabled style="opacity:0.3; cursor:not-allowed;">
+            <i class="bi bi-chat-left-text"></i> MENSAJE
+           </button>`
+        : `<button class="btn-card-action btn-mensaje" onclick="window.location.href='/@${nickname}'">
+            <i class="bi bi-chat-left-text"></i> MENSAJE
+           </button>`;
 
     col.innerHTML = `
         <div class="card-avatar-container">
@@ -990,35 +989,10 @@ function createProducerCard(producer, rank) {
                 <span>${producer.products_count || 0}</span>
             </div>
         </div>
-        <div class="card-actions-grid">
-            ${solicitarHtml}
-            ${enviarHtml}
+        <div class="card-actions-single">
+            ${mensajeHtml}
         </div>
     `;
-
-    const solicitarBtn = col.querySelector('.btn-solicitar');
-    if (solicitarBtn && !isOwnCard) {
-        solicitarBtn.addEventListener('click', () => {
-        const token = AuthUtils.getAccessToken();
-        if (!token) {
-            window.location.href = '/pages/login.html?redirect=/comunidad/productores';
-            return;
-        }
-
-        const modal = document.getElementById('solicitarModal');
-        if (modal) {
-            // First, reset everything
-            resetWizard();
-
-            // Set new producer info
-            document.getElementById('solicitarProducerId').value = producer.id;
-            document.getElementById('solicitarProducerName').value = nickname;
-            document.getElementById('solicitarProducerDisplay').textContent = nickname;
-
-            modal.style.display = 'flex';
-        }
-    });
-    }
 
     return col;
 }

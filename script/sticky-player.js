@@ -458,7 +458,10 @@ window.StickyPlayer = (function () {
                 const isBeat = trackData.product_type === 'beat';
                 const rawPrice = trackData.price_basic !== undefined && trackData.price_basic !== null ? parseFloat(trackData.price_basic) : null;
                 
-                const isTrulyFree = isBeat ? (rawPrice === 0) : (trackData.is_free === true || String(trackData.is_free) === 'true' || rawPrice === 0);
+                // Fix: If it's a beat and price is null but is_free is true, it should be FREE
+                const isTrulyFree = isBeat 
+                    ? (rawPrice === 0 || (rawPrice === null && (trackData.is_free === true || String(trackData.is_free) === 'true'))) 
+                    : (trackData.is_free === true || String(trackData.is_free) === 'true' || rawPrice === 0);
 
                 els.priceLabel.innerText = isTrulyFree ? 'FREE' : (window.CurrencyManager && rawPrice !== null ? window.CurrencyManager.format(rawPrice) : (rawPrice !== null ? `$${rawPrice}` : '—'));
                 if (els.buyBtn) {

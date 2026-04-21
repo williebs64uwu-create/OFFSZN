@@ -30,7 +30,7 @@ const getBestProductPath = (product, type) => {
         return product.download_url_wav || product.wav_url || product.download_url_mp3 || product.mp3_url || product.audio_url;
     }
     if (type === 'stems') {
-        return product.stems_url || product.download_url_wav || product.wav_url;
+        return product.stems_url || '';
     }
 
     // 2. MP3 / PREVIEW fallbacks
@@ -1035,8 +1035,12 @@ export const getSecureDownloadUrl = async (req, res) => {
                 id, 
                 order_id, 
                 product_id,
+                license_name,
                 orders!inner(id, transaction_id, user_id, status),
-                products!inner(name, kit_url, mp3_url, wav_url, stems_url, audio_url, download_url_mp3, download_url_wav, storage_version, r2_version)
+                products!inner(
+                    id, name, kit_url, mp3_url, wav_url, stems_url, audio_url, download_url_mp3, download_url_wav, storage_version, r2_version,
+                    user:users!products_producer_id_fkey(id, license_settings)
+                )
         `;
 
         let item = null;
@@ -1071,19 +1075,46 @@ export const getSecureDownloadUrl = async (req, res) => {
 
         // --- MANEJO DE SIMULACIÓN Y CRASH RECOVERY ---
         if (itemError || !item) {
-            if (orderId && orderId.startsWith('SIMULATED_TEST')) {
-                console.log('[SecureDownload] Order not in DB, fetching info for product:', productId);
+            if (orderId && (orderId.startsWith('SIMULATED_TEST') || orderId.startsWith('AUDIT_'))) {
+                console.log('[SecureDownload] RUNNING AUDIT/SIMULATION for product:', productId);
 
                 // Si es simulación, buscamos el producto directamente para que la descarga funcione
                 const { data: product } = await supabase
                     .from('products')
-                    .select('kit_url, mp3_url, wav_url, stems_url, audio_url, download_url_mp3, download_url_wav, storage_version, r2_version')
+                    .select('producer_id, product_type, kit_url, mp3_url, wav_url, stems_url, audio_url, download_url_mp3, download_url_wav, storage_version, r2_version')
                     .eq('id', productId)
                     .single();
 
                 if (product) {
-                    const mockPath = getBestProductPath(product, fileType);
+                    // Si es simulación, permitimos pasar el licenseName por query para probar restricciones
+                    const mockLicenseName = req.query.testLicense || req.query.licenseName || 'Basic Lease';
+                    const licKey = mapLicenseToKey(mockLicenseName);
+                    
+                    // Obtener configuración del productor (usamos una por defecto si el mock no tiene)
+                    const { data: producer } = await supabase
+                        .from('users')
+                        .select('license_settings')
+                        .eq('id', product.producer_id)
+                        .single();
 
+                    const settings = producer?.license_settings?.[licKey];
+                    
+                    if (settings && settings.files) {
+                        const canDownload = (fileType === 'mp3' && settings.files.mp3) ||
+                                          (fileType === 'wav' && settings.files.wav) ||
+                                          (fileType === 'stems' && settings.files.stems);
+                        
+                        if (!canDownload) {
+                            console.warn(`[SecureDownload] SIMULATION BLOCK: License ${mockLicenseName} does not include ${fileType}`);
+                            return res.status(403).json({ 
+                                error: `Tu licencia (${mockLicenseName}) no incluye el archivo ${fileType.toUpperCase()}`,
+                                licenseName: mockLicenseName,
+                                allowedFiles: settings.files
+                            });
+                        }
+                    }
+
+                    const mockPath = getBestProductPath(product, fileType);
                     if (mockPath) {
                         try {
                             const storageType = product.storage_version || product.r2_version || 'v2';
@@ -1092,7 +1123,10 @@ export const getSecureDownloadUrl = async (req, res) => {
                                 url: signedUrl,
                                 signedUrl: signedUrl,
                                 isSimulated: true,
-                                tempBypass: true
+                                tempBypass: true,
+                                licenseName: mockLicenseName,
+                                debug_cleaned_path: mockPath,
+                                debug_is_r2: storageType !== 'supabase'
                             });
                         } catch (signErr) {
                             console.error('[SecureDownload] Sign error in bypass:', signErr);
@@ -1117,6 +1151,24 @@ export const getSecureDownloadUrl = async (req, res) => {
             return res.status(403).json({ error: 'El pedido no está completado' });
         }
 
+        // 2.5 Validación de Licencia Real
+        const licKey = mapLicenseToKey(item.license_name);
+        const producerSettings = item.products?.user?.license_settings?.[licKey];
+
+        if (producerSettings && producerSettings.files) {
+            const isAllowed = (fileType === 'mp3' && producerSettings.files.mp3) ||
+                             (fileType === 'wav' && producerSettings.files.wav) ||
+                             (fileType === 'stems' && producerSettings.files.stems);
+            
+            if (!isAllowed) {
+                console.warn(`[SecureDownload] License check failed: ${item.license_name} does not include ${fileType} for product ${productId}`);
+                return res.status(403).json({ 
+                    error: `Tu licencia (${item.license_name}) no incluye el archivo ${fileType.toUpperCase()}`,
+                    licenseName: item.license_name
+                });
+            }
+        }
+
         // 3. Obtener la ruta según el tipo (Consistente con Explorar)
         const path = getBestProductPath(item.products, fileType);
 
@@ -1128,18 +1180,56 @@ export const getSecureDownloadUrl = async (req, res) => {
         // 4. Determinar bucket y limpiar ruta
         let cleanPath = path.trim();
 
-        // Handle full Supabase URLs
-        if (cleanPath.startsWith('http')) {
-            if (cleanPath.includes('supabase.co')) {
-                const publicParts = cleanPath.split('/v1/object/public/');
-                if (publicParts.length > 1) {
-                    cleanPath = publicParts[1];
-                } else {
-                    const signParts = cleanPath.split('/v1/object/sign/');
-                    if (signParts.length > 1) cleanPath = signParts[1].split('?')[0];
+        // --- NUCLEAR URL CLEANING (R2 / Supabase / External) ---
+        console.log(`[SecureDownload] Raw input path: ${cleanPath}`);
+        
+        // 1. Check for Cloudflare R2 URLs (Anywhere in the string)
+        if (cleanPath.includes('cloudflarestorage.com') || cleanPath.includes('.r2.dev')) {
+            console.log(`[SecureDownload] R2-style URL detected. Searching for key...`);
+            const keywords = ['secure-products', 'products', 'wav_untagged', 'mp3_untagged', 'stems', 'wav', 'mp3'];
+            let foundKey = false;
+            
+            for (const k of keywords) {
+                const searchStr = `/${k}/`;
+                const idx = cleanPath.indexOf(searchStr);
+                if (idx !== -1) {
+                    cleanPath = cleanPath.substring(idx + 1).split('?')[0];
+                    foundKey = true;
+                    break;
                 }
             }
+            
+            if (!foundKey) {
+                // Try matching via bucket names if keywords fail
+                const r2Match = cleanPath.match(/(?:offszn-storage|offsznlatbucket|bucket3lat)\/([^?]+)/i);
+                if (r2Match) {
+                    cleanPath = r2Match[1];
+                    foundKey = true;
+                }
+            }
+            
+            if (foundKey) {
+                 console.log(`[SecureDownload] Key extracted via R2 scan: ${cleanPath}`);
+            }
+        } 
+        // 2. Check for Supabase URLs
+        else if (cleanPath.includes('supabase.co')) {
+            console.log(`[SecureDownload] Supabase-style URL detected.`);
+            const parts = cleanPath.split('/v1/object/public/');
+            if (parts.length > 1) {
+                cleanPath = parts[1].split('?')[0];
+            } else {
+                const signParts = cleanPath.split('/v1/object/sign/');
+                if (signParts.length > 1) cleanPath = signParts[1].split('?')[0];
+            }
         }
+        // 3. Fallback for generic full URLs
+        else if (cleanPath.startsWith('http')) {
+            console.log(`[SecureDownload] External URL detected: ${cleanPath}`);
+            return res.status(200).json({ url: cleanPath, signedUrl: cleanPath, isExternal: true });
+        }
+
+        console.log(`[SecureDownload] Post-cleaning path: ${cleanPath}`);
 
         // Standardize: No leading slash
         cleanPath = cleanPath.startsWith('/') ? cleanPath.substring(1) : cleanPath;
@@ -1181,7 +1271,11 @@ export const getSecureDownloadUrl = async (req, res) => {
 
             try {
                 const downloadUrl = await getPresignedDownloadUrl(finalKey, 3600, storageType);
-                return res.status(200).json({ signedUrl: downloadUrl });
+                return res.status(200).json({ 
+                    signedUrl: downloadUrl,
+                    debug_cleaned_path: finalKey,
+                    debug_is_r2: true
+                });
             } catch (r2Error) {
                 console.error('[SecureDownload] R2 Signing Error:', r2Error);
                 return res.status(500).json({ error: 'Error al generar enlace seguro (R2)' });
@@ -1204,7 +1298,11 @@ export const getSecureDownloadUrl = async (req, res) => {
                 return res.status(500).json({ error: 'Error al generar enlace seguro' });
             }
 
-            res.status(200).json({ signedUrl: data.signedUrl });
+            res.status(200).json({ 
+                signedUrl: data.signedUrl,
+                debug_cleaned_path: cleanPath,
+                debug_is_r2: false
+            });
         }
 
     } catch (err) {

@@ -519,7 +519,7 @@
               *,
               products (
                 id, name, image_url, producer_id, product_type, storage_version, r2_version,
-                user:users!products_producer_id_fkey(id, nickname, email)
+                user:users!products_producer_id_fkey(id, nickname, email, license_settings)
               )
             )
           `)
@@ -568,7 +568,55 @@
 
         // REGLA: Solo beats muestran licencia y contrato
         const isBeat = (p.product_type || '').toLowerCase() === 'beat';
-        const fileType = isBeat ? 'wav' : 'kit'; // Simplificado para la UI
+        
+        // --- Lógica de Botones Dinámicos por Licencia ---
+        let buttonsHtml = '';
+        const licName = item.license_name || 'Basic Lease';
+        
+        if (isBeat) {
+          // Mapeo interno igual que el backend
+          const mapToKey = (name) => {
+            const n = (name || '').toLowerCase();
+            if (n.includes('básica') || n.includes('basica')) return 'basic';
+            if (n.includes('premium')) return 'premium';
+            if (n.includes('stems') || n.includes('trackout')) return 'trackout';
+            if (n.includes('ilimitada') || n.includes('unlimited')) return 'unlimited';
+            if (n.includes('exclusiva') || n.includes('exclusive')) return 'exclusive';
+            if (['basic', 'premium', 'stems', 'trackout', 'unlimited', 'exclusive'].includes(n)) return n;
+            return 'basic';
+          };
+
+          const licKey = mapToKey(licName);
+          const settings = p.user?.license_settings?.[licKey];
+
+          if (settings && settings.files) {
+            // Caso 1: Producer configuró archivos específicos
+            if (settings.files.mp3) {
+              buttonsHtml += `
+                <button class="btn-download" onclick="downloadFile('${order.transaction_id}', '${p.id}', 'mp3', '${licName}')">
+                  <i class="bi bi-music-note-beamed"></i> MP3
+                </button>`;
+            }
+            if (settings.files.wav) {
+              buttonsHtml += `
+                <button class="btn-download" onclick="downloadFile('${order.transaction_id}', '${p.id}', 'wav', '${licName}')">
+                  <i class="bi bi-file-earmark-music"></i> WAV
+                </button>`;
+            }
+            if (settings.files.stems) {
+              buttonsHtml += `
+                <button class="btn-download" onclick="downloadFile('${order.transaction_id}', '${p.id}', 'stems', '${licName}')">
+                  <i class="bi bi-layers-half"></i> STEMS
+                </button>`;
+            }
+          } else {
+            // Caso 2: Sin configuración (Fallback conservador: MP3)
+            buttonsHtml = `<button class="btn-download" onclick="downloadFile('${order.transaction_id}', '${p.id}', 'mp3', '${licName}')"><i class="bi bi-download"></i> Descargar</button>`;
+          }
+        } else {
+          // Caso 3: No es Beat (Drumkits/etc)
+          buttonsHtml = `<button class="btn-download" onclick="downloadFile('${order.transaction_id}', '${p.id}', 'kit', '${licName}')"><i class="bi bi-download"></i> Descargar Kit</button>`;
+        }
 
         // FIX: Usar AuthUtils para manejar Supabase vs R2 Account 1/2
         const coverSrc = await AuthUtils.getAuthorizedUrl(
@@ -589,15 +637,13 @@
                 <span>Qty: ${item.quantity}</span>
               </div>
             </div>
-            <div style="display:flex; gap:8px;">
+            <div style="display:flex; gap:8px; flex-wrap: wrap; justify-content: flex-end;">
               ${isBeat ? `
                 <div class="btn-contract" title="Ver Contrato" onclick="handleLicenseClick('${order.transaction_id}', '${p.id}', '${item.license_name}')">
                   <i class="bi bi-file-earmark-text"></i>
                 </div>
               ` : ''}
-              <button class="btn-download" onclick="downloadFile('${order.transaction_id}', '${p.id}', '${fileType}')">
-                <i class="bi bi-download"></i> Descargar
-              </button>
+              ${buttonsHtml}
             </div>
           </div>
         `;
@@ -610,21 +656,30 @@
     }
 
     function getMockOrder(ref, overrideProductId, overrideProductType) {
+      const params = new URLSearchParams(window.location.search);
+      const mockLicName = params.get('licenseName') || 'Basic Lease';
+      
       return {
         transaction_id: ref,
-        total_price: 10.00,
+        total_price: 15.99,
         order_items: [{
           quantity: 1,
-          license_name: 'Standard',
+          license_name: mockLicName,
           products: {
-            id: overrideProductId || 2,
-            name: "Producto de Prueba",
-            product_type: overrideProductType || "kit",
+            id: overrideProductId || 86,
+            name: "Beat de Prueba (Scavenger 2.0)",
+            product_type: overrideProductType || "beat",
             image_url: null,
             user: {
                id: 'test-user',
                nickname: 'Productor Demo',
-               email: 'demo@offszn.com'
+               email: 'demo@offszn.com',
+               license_settings: {
+                 basic: { name: 'Basic Lease', files: { mp3: true, wav: false, stems: false } },
+                 premium: { name: 'Premium Lease', files: { mp3: true, wav: true, stems: false } },
+                 trackout: { name: 'Trackout Lease', files: { mp3: true, wav: true, stems: true } },
+                 exclusive: { name: 'Exclusive License', files: { mp3: true, wav: true, stems: true } }
+               }
             }
           }
         }]
@@ -647,35 +702,29 @@
       `).join('');
     }
 
-    window.downloadFile = async (orderId, productId, type) => {
+    window.downloadFile = async (orderId, productId, type, licenseName = '') => {
       const modal = document.getElementById('downloadLoadingModal');
       modal.style.display = 'flex';
 
       try {
-        let response = await fetch(`${DOWNLOAD_ENDPOINT}?orderId=${orderId}&productId=${productId}&type=${type}`, {
+        const url = `${DOWNLOAD_ENDPOINT}?orderId=${orderId}&productId=${productId}&type=${type}&licenseName=${encodeURIComponent(licenseName)}`;
+        const response = await fetch(url, {
             headers: AuthUtils.getAuthHeaderObj()
         });
         
-        // Si pedimos wav y falló, intentemos fallback a mp3 automáticamente
-        if(!response.ok && type === 'wav') {
-            console.log("WAV no encontrado, intentando fallback a MP3...");
-            response = await fetch(`${DOWNLOAD_ENDPOINT}?orderId=${orderId}&productId=${productId}&type=mp3`, {
-                headers: AuthUtils.getAuthHeaderObj()
-            });
-        }
-
         const data = await response.json();
         const downloadUrl = data.url || data.signedUrl;
         
         if(response.ok && downloadUrl) {
           window.open(downloadUrl, '_blank');
         } else {
-          // Mostrar mensaje para contactar a soporte si falla la descarga
-          alert(`Error al generar enlace: ${data.error || 'Archivo no disponible'}.\n\nPor favor, contacta a soporte@offszn.lat indicando tu ID de orden: ${orderId}`);
+          // Mostrar mensaje de error si la licencia no lo permite o el archivo no existe
+          const errorMsg = data.error || 'Archivo no disponible';
+          alert(`Error: ${errorMsg}.\n\nSi crees que esto es un error, por favor contacta a soporte@offszn.lat`);
         }
       } catch (e) {
         console.error("Download error:", e);
-        alert(`Error de conexión.\n\nPor favor, contacta a soporte@offszn.lat indicando tu ID de orden: ${orderId}`);
+        alert(`Error de conexión.\n\nPor favor, contacta a soporte@offszn.lat`);
       } finally {
         modal.style.display = 'none';
       }
