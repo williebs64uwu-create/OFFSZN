@@ -1064,9 +1064,19 @@ window.StickyPlayer = (function () {
 
             // KITS / PRESETS: Construct a single "Standard" license
             if (productType !== 'beat') {
+                const typeMap = {
+                    'drum kit': 'Drum Kit', 'drumkit': 'Drum Kit', 'drum_kit': 'Drum Kit',
+                    'loop kit': 'Loop Kit', 'loopkit': 'Loop Kit', 'loop_kit': 'Loop Kit',
+                    'preset': 'Preset', 'vocal preset': 'Vocal Preset', 'vocal_preset': 'Vocal Preset',
+                    'midi kit': 'MIDI Kit', 'midikit': 'MIDI Kit', 'midi_kit': 'MIDI Kit',
+                    'oneshot': 'One-Shot Kit', 'one_shot': 'One-Shot Kit', 'one shot': 'One-Shot Kit',
+                    'plugin': 'Plugin'
+                };
+                let formattedName = typeMap[productType] || (productType ? productType.charAt(0).toUpperCase() + productType.slice(1) : 'Standard License');
+
                 return [{
                     id: 'basic',
-                    name: productType === 'preset' ? 'Preset License' : (productType === 'loopkit' ? 'Loop Kit License' : 'Standard License'),
+                    name: formattedName,
                     price: parseFloat(track.price_basic) || 0,
                     enabled: true,
                     streams: 'N/A',

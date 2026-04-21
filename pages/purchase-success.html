@@ -323,6 +323,50 @@
       .success-card { padding: 30px 20px; border-radius: 0; border: none; }
       .footer-actions { flex-direction: column; }
     }
+
+    /* PREMIUM LOADING MODAL */
+    .loading-overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.85);
+      backdrop-filter: blur(10px);
+      z-index: 10000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .loading-box {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      padding: 40px;
+      border-radius: 28px;
+      text-align: center;
+      max-width: 400px;
+      box-shadow: 0 30px 60px rgba(0,0,0,0.8);
+    }
+
+    .pulse-loader {
+      width: 60px; height: 60px;
+      background: var(--primary);
+      border-radius: 50%;
+      margin: 0 auto 24px;
+      position: relative;
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(114, 9, 183, 0.7); }
+      70% { transform: scale(1); box-shadow: 0 0 0 20px rgba(114, 9, 183, 0); }
+      100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(114, 9, 183, 0); }
+    }
+
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    .loading-title { font-weight: 800; font-size: 1.2rem; margin-bottom: 10px; color: #fff; }
+    .loading-subtitle { color: #666; font-size: 0.9rem; line-height: 1.5; }
   </style>
 </head>
 
@@ -401,6 +445,15 @@
   <!-- ==================== SIDE PANELS ==================== -->
   <div class="overlay-backdrop" id="globalBackdrop" onclick="closeAllOverlays()"></div>
 
+  <!-- LOADING MODAL -->
+  <div id="downloadLoadingModal" class="loading-overlay">
+    <div class="loading-box">
+      <div class="pulse-loader"></div>
+      <div class="loading-title">Preparando Descarga</div>
+      <div class="loading-subtitle">Nuestro Scavenger está analizando la bóveda de seguridad para encontrar tus archivos...</div>
+    </div>
+  </div>
+
   <!-- Global Cart Panel -->
   <div class="side-panel" id="globalCartPanel">
       <div class="panel-header">
@@ -476,7 +529,9 @@
         if (error || !order) {
            if(isSim) {
              console.warn("Usando datos de prueba para SIMULATED_TEST");
-             await renderOrder(getMockOrder(orderRef));
+             const prodId = params.get('productId') || 648;
+             const prodType = params.get('productType') || 'kit';
+             await renderOrder(getMockOrder(orderRef, prodId, prodType));
            } else {
              throw error || new Error("No order found");
            }
@@ -554,19 +609,23 @@
       renderSupport(producers);
     }
 
-    function getMockOrder(ref) {
+    function getMockOrder(ref, overrideProductId, overrideProductType) {
       return {
         transaction_id: ref,
         total_price: 10.00,
         order_items: [{
           quantity: 1,
-          license_name: 'Licencia Premium',
+          license_name: 'Standard',
           products: {
-            id: 618,
-            name: 'PRESET DE NATÁN - ENGUALICHASTE',
-            product_type: 'kit',
-            image_url: 'products/covers/0382a813-85c7-46c3-8d2c-61a5692adffd/1775697725025_cover.jpg',
-            user: { nickname: 'Willie', email: 'soporte@offszn.lat' }
+            id: overrideProductId || 2,
+            name: "Producto de Prueba",
+            product_type: overrideProductType || "kit",
+            image_url: null,
+            user: {
+               id: 'test-user',
+               nickname: 'Productor Demo',
+               email: 'demo@offszn.com'
+            }
           }
         }]
       };
@@ -589,6 +648,9 @@
     }
 
     window.downloadFile = async (orderId, productId, type) => {
+      const modal = document.getElementById('downloadLoadingModal');
+      modal.style.display = 'flex';
+
       try {
         let response = await fetch(`${DOWNLOAD_ENDPOINT}?orderId=${orderId}&productId=${productId}&type=${type}`, {
             headers: AuthUtils.getAuthHeaderObj()
@@ -614,6 +676,8 @@
       } catch (e) {
         console.error("Download error:", e);
         alert(`Error de conexión.\n\nPor favor, contacta a soporte@offszn.lat indicando tu ID de orden: ${orderId}`);
+      } finally {
+        modal.style.display = 'none';
       }
     };
 
@@ -621,7 +685,8 @@
       try {
         // En un caso real, necesitaríamos extraer estos datos del backend o estado global.
         // Simulamos la llamada enviando los datos básicos que tenemos en la vista de éxito.
-        const orderText = document.getElementById('orderNumberText').textContent;
+        const orderTextEl = document.getElementById('orderIdText');
+        const orderText = orderTextEl ? orderTextEl.textContent : orderId;
         const buyerName = "Cliente"; // En purchase-success usualmente no tenemos el username a la mano sin un fetch
         
         const mockData = {
@@ -673,6 +738,12 @@
 
     // Initialize
     init();
+  </script>
+
+  <!-- Importar generador de PDF globalmente para esta página -->
+  <script type="module">
+    import { generarLicencia } from '/script/generate-license.js';
+    window.generarLicencia = generarLicencia;
   </script>
 </body>
 </html>

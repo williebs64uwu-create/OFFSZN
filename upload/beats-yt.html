@@ -19,6 +19,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
     <link rel="stylesheet" href="nuevo.css">
     <style>
         /* Premium Upgrade Modal Styles (Black & White) */
@@ -161,23 +162,53 @@
         }
     </style>
     <script>
-        // Proactive limit enforcement (Instant Check & Blocking)
+        // Proactive limit enforcement (FRESH check - no stale cache)
         async function runGuard() {
-            if (window.AuthGuard && window.AuthGuard.protectUploadEntry) {
-                const result = await window.AuthGuard.protectUploadEntry();
+            if (!window.AuthUtils || !window.AuthGuard) {
+                // Fallback: show form if guard not loaded
+                const container = document.getElementById('main-upload-container');
+                if (container) container.style.display = 'block';
+                return;
+            }
 
-                if (result.isLimited || result.isYTLimited || !result.hasYT) {
+            try {
+                // 🔥 ALWAYS do a fresh live check for beats-yt (clear stale cache first)
+                sessionStorage.removeItem('offszn_yt_access');
+                sessionStorage.removeItem('offszn_yt_limited');
+                sessionStorage.removeItem('offszn_user_plan');
+                window.AuthUtils._userPlanCache = null;
+
+                const searchParams = new URLSearchParams(window.location.search);
+                if (searchParams.has('edit') || searchParams.has('draft')) {
+                    const container = document.getElementById('main-upload-container');
+                    if (container) container.style.display = 'block';
+                    return;
+                }
+
+                // Fresh live checks
+                const [uploadStatus, ytStatus] = await Promise.all([
+                    window.AuthUtils.getUploadLimitStatus(),
+                    window.AuthUtils.getYouTubeUploadStatus()
+                ]);
+
+                const planData = await window.AuthUtils.getUserPlanData();
+                const userPlan = planData?.plan || 'free';
+                const hasYTFeature = userPlan !== 'free'; // Starter and Pro have YT access
+
+                console.log(`[BeatsYT Guard] Plan: ${userPlan}, YT: ${ytStatus.used}/${ytStatus.limit}, Upload: ${uploadStatus.count}/${uploadStatus.limit}, hasYT: ${hasYTFeature}`);
+
+                const isBlocked = uploadStatus.isLimited || ytStatus.isLimited || !hasYTFeature;
+
+                if (isBlocked) {
                     console.warn("⛔ Entry Denied: Showing Premium Modal");
-                    // Show modal and KEEP main hidden
                     const modal = document.getElementById('premiumUpgradeModal');
                     if (modal) {
                         modal.style.display = 'flex';
-                        // Update content if it's specifically a YT limit
-                        if (result.isYTLimited || !result.hasYT) {
+                        if (ytStatus.isLimited || !hasYTFeature) {
                             const titleEl = document.getElementById('premiumTitle');
                             const descEl = document.getElementById('premiumDesc');
                             if (titleEl) titleEl.innerText = 'Límite de videos alcanzado';
-                            if (descEl) descEl.innerText = 'Has alcanzado el límite mensual de videos en tu plan actual. Mejora para usar el Auto-Publisher de YouTube sin restricciones.';
+                            if (descEl) descEl.innerText = `Has alcanzado el límite mensual de videos en tu plan actual. Mejora para usar el Auto-Publisher de YouTube sin restricciones.`;
                         }
                     }
                 } else {
@@ -185,6 +216,11 @@
                     const container = document.getElementById('main-upload-container');
                     if (container) container.style.display = 'block';
                 }
+            } catch (e) {
+                console.error("Guard Error:", e);
+                // On error, allow access rather than blocking
+                const container = document.getElementById('main-upload-container');
+                if (container) container.style.display = 'block';
             }
         }
         document.addEventListener('DOMContentLoaded', runGuard);

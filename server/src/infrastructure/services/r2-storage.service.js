@@ -9,6 +9,122 @@ import {
     R2_CURRENT_VERSION
 } from '../../shared/config/config.js';
 
+/**
+ * Checks if a key exists in R2 using a HEAD request.
+ */
+export const checkKeyExists = async (key, version = R2_CURRENT_VERSION) => {
+    try {
+        const { client, bucket } = getClientAndBucket(version);
+        if (!client) return false;
+
+        let cleanKey = key;
+        while (cleanKey.startsWith('/')) cleanKey = cleanKey.substring(1);
+
+        const command = new HeadObjectCommand({
+            Bucket: bucket,
+            Key: cleanKey
+        });
+
+        await client.send(command);
+        return true;
+    } catch (error) {
+        if (error.name === 'NotFound' || error.$metadata?.httpStatusCode === 404) {
+            return false;
+        }
+        // console.warn(`[R2-Scavenger] HEAD error for ${key}:`, error.message);
+        return false;
+    }
+};
+
+/**
+ * Scavenger Logic: Tries multiple path variations to find the correct key in R2.
+ * Levels: 
+ * 1. Guess direct
+ * 2. Flat-UUID (Stripping middle folders to match R2 migration)
+ * 3. Multi-Version (Checks V2 then V1 as backup)
+ */
+export const resolveScavengerKey = async (initialKey, version = R2_CURRENT_VERSION) => {
+    if (!initialKey) return null;
+    
+    let key = initialKey.trim();
+    while (key.startsWith('/')) key = key.substring(1);
+
+    const variations = new Set();
+    variations.add(key);
+
+    let body = key;
+    if (body.startsWith('products/')) body = body.replace('products/', '');
+    if (body.startsWith('secure-products/')) body = body.replace('secure-products/', '');
+    
+    const parts = body.split('/');
+    const filename = parts.pop();
+    const uuid = parts.length > 0 ? parts[0] : null;
+
+    // --- VARIATION LIST ---
+    
+    // 1. Common prefixes
+    variations.add(body);
+    variations.add(`secure-products/${body}`);
+    variations.add(`products/${body}`);
+
+    // 2. FLAT-UUID MAPPING (The Migration "Win" Logic)
+    // Matches patterns like: secure-products/beats/wav/[UUID]/[FILENAME]
+    if (uuid && filename && uuid.length > 30) {
+        // Beats
+        variations.add(`secure-products/beats/wav/${uuid}/${filename}`);
+        variations.add(`secure-products/beats/mp3/${uuid}/${filename}`);
+        variations.add(`secure-products/beats/stems/${uuid}/${filename}`);
+        variations.add(`secure-products/beats/mp3_tagged/${uuid}/${filename}`);
+        
+        // Kits
+        variations.add(`secure-products/kits/${uuid}/${filename}`);
+        variations.add(`secure-products/drumkits/${uuid}/${filename}`);
+        
+        // Root UUID
+        variations.add(`secure-products/${uuid}/${filename}`);
+    }
+
+    // 3. Fallback subfolder guesses
+    if (body.includes('wav') || body.includes('untagged')) {
+        variations.add(`secure-products/beats/wav/${body}`);
+        variations.add(`secure-products/beats/wav_untagged/${body}`);
+        if(uuid && filename) {
+            variations.add(`secure-products/beats/wav_untagged/${uuid}/${filename}`);
+            variations.add(`secure-products/beats/wav/${uuid}/${filename}`);
+            variations.add(`beats/wav/${uuid}/${filename}`);
+        }
+    }
+    
+    if (filename) {
+        variations.add(`secure-products/beats/wav/${filename}`);
+        variations.add(`secure-products/beats/wav_untagged/${filename}`);
+        variations.add(`secure-products/kits/${filename}`);
+        variations.add(`beats/wav/${filename}`);
+        // Super legacy fallback
+        variations.add(`products/${filename}`);
+    }
+
+    // --- PROBING PHASE (V2 then V1) ---
+    const versionsToTry = ['v2', 'v1', 'v3'].filter(v => v !== version);
+    versionsToTry.unshift(version); 
+
+    console.log(`[R2-Scavenger] 🧭 Probing ${variations.size} variations for: ${uuid || 'unknown'}`);
+
+    for (const v of versionsToTry) {
+        for (const variant of variations) {
+            // console.log(`[R2-Scavenger] Checking ${v}: ${variant}`);
+            if (await checkKeyExists(variant, v)) {
+                console.log(`[R2-Scavenger] ✅ FOUND in ${v}: ${variant}`);
+                return { key: variant, version: v };
+            }
+        }
+    }
+
+    console.warn(`[R2-Scavenger] ❌ No match found for: ${key}. Returning original.`);
+    // Fallback: Return original key on requested version
+    return { key: key, version: version };
+};
+
 // V1 Client (Old Account)
 const s3ClientV1 = new S3Client({
     region: "auto",
@@ -175,24 +291,22 @@ export const getPresignedDownloadUrl = async (key, expiresIn = 3600, version = R
         const { client, bucket } = getClientAndBucket(version);
         if (!client) throw new Error(`R2 Client for version ${version} not found`);
 
-        // 🔥 FIX: R2 fails with 403 if the key starts with / during signing
-        let cleanKey = key;
-        if (typeof cleanKey === 'string') {
-            while (cleanKey.startsWith('/')) cleanKey = cleanKey.substring(1);
-            if (cleanKey.startsWith('products/secure-products/')) {
-                cleanKey = cleanKey.replace('products/secure-products/', 'secure-products/');
-            }
-        }
+        // 🔥 SCAVENGER FIX: Search for the real key across multiple path variations AND versions
+        const discovery = await resolveScavengerKey(key, version);
+        const finalKey = discovery.key;
+        const finalVersion = discovery.version;
 
-        const filename = cleanKey.split('/').pop() || 'descarga_offszn.mp3';
+        const { client: finalClient, bucket: finalBucket } = getClientAndBucket(finalVersion);
+        
+        const filename = finalKey.split('/').pop() || 'descarga_offszn.mp3';
 
         const command = new GetObjectCommand({
-            Bucket: bucket,
-            Key: cleanKey,
+            Bucket: finalBucket,
+            Key: finalKey,
             ResponseContentDisposition: `attachment; filename="${filename}"`
         });
 
-        const signedUrl = await getSignedUrl(client, command, { expiresIn });
+        const signedUrl = await getSignedUrl(finalClient, command, { expiresIn });
         return signedUrl;
     } catch (error) {
         console.error(`Error in getPresignedDownloadUrl (R2 ${version}) for ${key}:`, error.message);

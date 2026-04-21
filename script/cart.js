@@ -565,7 +565,23 @@ const CartManager = {
             // Render Items
             const itemsHtml = this.state.items.map(item => {
                 const displayPrice = parseFloat(item.variant_price) > 0 ? item.variant_price : item.product.price_basic;
-                const licName = this.escapeHTML(item.license_name || item.product.product_type || 'Licencia');
+                
+                let rawLicName = item.license_name || item.product.product_type || 'Licencia';
+                if (item.product.product_type && item.product.product_type.toLowerCase() !== 'beat') {
+                    const typeStr = item.product.product_type.toLowerCase();
+                    const typeMap = {
+                        'drum kit': 'Drum Kit', 'drumkit': 'Drum Kit', 'drum_kit': 'Drum Kit',
+                        'loop kit': 'Loop Kit', 'loopkit': 'Loop Kit', 'loop_kit': 'Loop Kit',
+                        'preset': 'Preset', 'vocal preset': 'Vocal Preset', 'vocal_preset': 'Vocal Preset',
+                        'midi kit': 'MIDI Kit', 'midikit': 'MIDI Kit', 'midi_kit': 'MIDI Kit',
+                        'oneshot': 'One-Shot Kit', 'one_shot': 'One-Shot Kit', 'one shot': 'One-Shot Kit',
+                        'plugin': 'Plugin'
+                    };
+                    rawLicName = typeMap[typeStr] || (typeStr.charAt(0).toUpperCase() + typeStr.slice(1));
+                } else {
+                    rawLicName = item.license_name || 'Licencia Estándar';
+                }
+                const licName = this.escapeHTML(rawLicName);
                 const isFree = item.isPromotionFree;
                 const imgId = `cart-row-img-${item.product.id}`;
                 const safeName = this.escapeHTML(item.product.name);

@@ -20,6 +20,33 @@ const PAYPAL_API_BASE = PAYPAL_ENVIRONMENT === 'live'
 const REDIRECT_URI = process.env.PAYPAL_REDIRECT_URI || 'http://localhost:3000/api/auth/paypal/callback';
 
 /**
+ * Helper logic to find the best available path across multiple database fields.
+ */
+const getBestProductPath = (product, type) => {
+    if (!product) return '';
+    
+    // 1. WAV / STEMS fallbacks
+    if (type === 'wav') {
+        return product.download_url_wav || product.wav_url || product.download_url_mp3 || product.mp3_url || product.audio_url;
+    }
+    if (type === 'stems') {
+        return product.stems_url || product.download_url_wav || product.wav_url;
+    }
+
+    // 2. MP3 / PREVIEW fallbacks
+    if (type === 'mp3') {
+        return product.download_url_mp3 || product.mp3_url || product.audio_url || product.preview_url || product.demo_file || product.tagged_file;
+    }
+
+    // 3. KIT / OTHER fallbacks
+    if (type === 'kit' || type === 'other') {
+        return product.kit_url || product.download_url_wav || product.wav_url || product.download_url_mp3 || product.mp3_url || product.audio_url || product.file_url || product.cloud_url;
+    }
+
+    return '';
+};
+
+/**
  * Inicia el flujo de OAuth para conectar PayPal
  */
 export const connectPayPal = async (req, res) => {
@@ -1000,15 +1027,7 @@ export const getSecureDownloadUrl = async (req, res) => {
         }
 
         // 1. Verificar que el producto está en el pedido y obtener rutas
-        // --- BYPASS PARA PRUEBAS SIMULADAS ---
-        if (orderId && orderId.startsWith('SIMULATED_TEST')) {
-            console.log('[SecureDownload] Bypassing DB for simulated order:', orderId);
-            return res.status(200).json({
-                url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-                signedUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-                isSimulated: true
-            });
-        }
+
 
         // 1. Verificar que el producto está en el pedido y obtener rutas
         // Soporta búsqueda por order.id numérico O por transaction_id string
@@ -1063,14 +1082,11 @@ export const getSecureDownloadUrl = async (req, res) => {
                     .single();
 
                 if (product) {
-                    // Mapeamos el archivo según el tipo solicitado
-                    let mockPath = product.kit_url;
-                    if (fileType === 'wav') mockPath = product.download_url_wav || product.wav_url;
-                    else if (fileType === 'mp3') mockPath = product.download_url_mp3 || product.mp3_url || product.audio_url;
+                    const mockPath = getBestProductPath(product, fileType);
 
                     if (mockPath) {
                         try {
-                            const storageType = product.storage_version || product.r2_version || 'v1';
+                            const storageType = product.storage_version || product.r2_version || 'v2';
                             const signedUrl = await getPresignedDownloadUrl(mockPath, 3600, storageType);
                             return res.status(200).json({
                                 url: signedUrl,
@@ -1101,16 +1117,8 @@ export const getSecureDownloadUrl = async (req, res) => {
             return res.status(403).json({ error: 'El pedido no está completado' });
         }
 
-        // 3. Obtener la ruta según el tipo
-        let path = '';
-        if (fileType === 'wav') path = item.products.download_url_wav || item.products.wav_url;
-        else if (fileType === 'stems') path = item.products.stems_url;
-        else if (fileType === 'mp3') path = item.products.download_url_mp3 || item.products.mp3_url || item.products.audio_url;
-        else if (fileType === 'kit') path = item.products.kit_url;
-        else if (fileType === 'other') {
-            // Fallback: try to find any available path if type is ambiguous
-            path = item.products.download_url_mp3 || item.products.mp3_url || item.products.audio_url || item.products.download_url_wav || item.products.wav_url || item.products.kit_url;
-        }
+        // 3. Obtener la ruta según el tipo (Consistente con Explorar)
+        const path = getBestProductPath(item.products, fileType);
 
         if (!path) {
             console.warn(`[SecureDownload] Path empty for type ${fileType}`);

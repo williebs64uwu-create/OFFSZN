@@ -190,33 +190,7 @@ IN WITNESS WHEREOF, the parties have executed this Agreement as of the date of p
     // Black Background
     page1.drawRectangle({ x: 0, y: 0, width, height, color: rgb(0, 0, 0) });
 
-    // --- LOGO & HEADER ---
-    try {
-      // Use the PNG version for PDF embedding
-      const logoUrl = '/images/LOGO-OFFSZN.png';
-      const logoBytes = await fetch(logoUrl).then(res => res.arrayBuffer());
-      const logoImage = await pdfDoc.embedPng(logoBytes);
 
-      const targetWidth = 160; // Slightly smaller for better proportions
-      const logoDims = logoImage.scale(targetWidth / logoImage.width);
-
-      // Ensure it doesn't clip (50pt margin from top)
-      const logoY = height - 40 - logoDims.height;
-
-      page1.drawImage(logoImage, {
-        x: 50,
-        y: logoY,
-        width: logoDims.width,
-        height: logoDims.height,
-      });
-    } catch (err) {
-      console.warn("Logo not found or could not be loaded, skipping image header.", err);
-      // Fallback text if image fails
-      page1.drawText('OFFSZN', {
-        x: 50, y: height - 100, size: 40, font: boldFont,
-        color: rgb(0.45, 0.04, 0.72)
-      });
-    }
 
     // --- ISSUANCE & VERIFICATION DATA ---
     const verificationHash = btoa(orderId + buyerEmail).substring(0, 16).toUpperCase();

@@ -2829,7 +2829,17 @@ window.addToCart = async (id, license) => {
     // 2. Determine Price, License Name, and Details
     let finalPrice = parseFloat(product.price_basic) || 0;
     let licenseId = license || 'basic';
-    let licenseName = product.product_type === 'beat' ? 'Basic Lease' : 'Standard License';
+    const typeStr = (product.product_type || '').toLowerCase();
+    const typeMap = {
+        'drum kit': 'Drum Kit', 'drumkit': 'Drum Kit', 'drum_kit': 'Drum Kit',
+        'loop kit': 'Loop Kit', 'loopkit': 'Loop Kit', 'loop_kit': 'Loop Kit',
+        'preset': 'Preset', 'vocal preset': 'Vocal Preset', 'vocal_preset': 'Vocal Preset',
+        'midi kit': 'MIDI Kit', 'midikit': 'MIDI Kit', 'midi_kit': 'MIDI Kit',
+        'oneshot': 'One-Shot Kit', 'one_shot': 'One-Shot Kit', 'one shot': 'One-Shot Kit',
+        'plugin': 'Plugin'
+    };
+    let defaultLicName = typeMap[typeStr] || (typeStr ? typeStr.charAt(0).toUpperCase() + typeStr.slice(1) : 'Standard License');
+    let licenseName = product.product_type === 'beat' ? 'Basic Lease' : defaultLicName;
     let licenseDetails = {};
 
     const availLicenses = product.available_licenses || [];
