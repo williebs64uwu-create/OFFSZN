@@ -1155,10 +1155,19 @@ export const getSecureDownloadUrl = async (req, res) => {
         const isR2 = storageType.startsWith('v') || storageType === 'r2';
 
         if (isR2) {
-            // La key en R2 es exactamente como se guardó en la DB.
-            // El upload-url genera keys como: beats/mp3/uuid/file.mp3
-            // o secure-products/kits/uuid/file.rar — sin prefijo 'products/' adicional.
-            let finalKey = cleanPath;
+            // For R2, use rawCleanPath which preserves 'secure-products/' prefix.
+            // The stripping at lines above is only for Supabase bucket separation.
+            // In R2, 'secure-products/' IS part of the actual object key.
+            let finalKey = rawCleanPath;
+
+            // Handle legacy 'products/' prefix from old DB entries
+            if (finalKey.startsWith('products/secure-products/')) {
+                finalKey = finalKey.replace('products/secure-products/', 'secure-products/');
+            } else if (finalKey.startsWith('products/')) {
+                // For paths like 'products/UUID/wav_untagged/...' the actual R2 key
+                // is just 'UUID/wav_untagged/...' (no 'products/' prefix in R2)
+                finalKey = finalKey.replace('products/', '');
+            }
 
             console.log(`[SecureDownload] Signing with R2: key=${finalKey}, version=${storageType}`);
 

@@ -372,7 +372,7 @@ window.PurchasesManager = (function () {
                 ${email ? `<a href="mailto:${email}" class="contact-email-btn"><i class="bi bi-envelope"></i> ${email}</a>` : ''}
                 ${socialsHtml ? `<div class="contact-socials-grid">${socialsHtml}</div>` : ''}
                 <div class="contact-producer-divider"></div>
-                <p class="contact-support-text">¿Necesitas ayuda? Escríbenos a <a href="mailto:offszn.studio@gmail.com">offszn.studio@gmail.com</a></p>
+                <p class="contact-support-text">¿Necesitas ayuda? Escríbenos a <a href="mailto:soporte@offszn.lat">soporte@offszn.lat</a></p>
             </div>
         `;
         modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });

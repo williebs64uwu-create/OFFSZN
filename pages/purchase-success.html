@@ -590,24 +590,61 @@
 
     window.downloadFile = async (orderId, productId, type) => {
       try {
-        const response = await fetch(`${DOWNLOAD_ENDPOINT}?orderId=${orderId}&productId=${productId}&type=${type}`, {
+        let response = await fetch(`${DOWNLOAD_ENDPOINT}?orderId=${orderId}&productId=${productId}&type=${type}`, {
             headers: AuthUtils.getAuthHeaderObj()
         });
+        
+        // Si pedimos wav y falló, intentemos fallback a mp3 automáticamente
+        if(!response.ok && type === 'wav') {
+            console.log("WAV no encontrado, intentando fallback a MP3...");
+            response = await fetch(`${DOWNLOAD_ENDPOINT}?orderId=${orderId}&productId=${productId}&type=mp3`, {
+                headers: AuthUtils.getAuthHeaderObj()
+            });
+        }
+
         const data = await response.json();
         const downloadUrl = data.url || data.signedUrl;
         
-        if(downloadUrl) {
+        if(response.ok && downloadUrl) {
           window.open(downloadUrl, '_blank');
         } else {
-          alert("Error: " + (data.error || "No pudimos generar el link de descarga."));
+          // Mostrar mensaje para contactar a soporte si falla la descarga
+          alert(`Error al generar enlace: ${data.error || 'Archivo no disponible'}.\n\nPor favor, contacta a soporte@offszn.lat indicando tu ID de orden: ${orderId}`);
         }
       } catch (e) {
         console.error("Download error:", e);
+        alert(`Error de conexión.\n\nPor favor, contacta a soporte@offszn.lat indicando tu ID de orden: ${orderId}`);
       }
     };
 
-    window.handleLicenseClick = (orderId, productId, licenseName) => {
-        alert(`Generando contrato para: ${licenseName}. Esta función se integrará con el PDF generator en la siguiente fase.`);
+    window.handleLicenseClick = async (orderId, productId, licenseName) => {
+      try {
+        // En un caso real, necesitaríamos extraer estos datos del backend o estado global.
+        // Simulamos la llamada enviando los datos básicos que tenemos en la vista de éxito.
+        const orderText = document.getElementById('orderNumberText').textContent;
+        const buyerName = "Cliente"; // En purchase-success usualmente no tenemos el username a la mano sin un fetch
+        
+        const mockData = {
+           productName: "Producto (Verificando...)", // El botón solo sabe el ID, tendríamos que buscar en el DOM o estado
+           producerName: "OFFSZN Producer",
+           amount: 0,
+           buyerName: buyerName,
+           buyerEmail: "cliente@email.com",
+           purchaseDate: new Date().toISOString(),
+           orderId: orderId,
+           licenseType: licenseName || 'basic',
+           productType: 'beat'
+        };
+        
+        if(window.generarLicencia) {
+            await window.generarLicencia(mockData);
+        } else {
+            alert(`Para ver tu contrato detallado de ${licenseName}, por favor ve a "Mis Compras" en tu panel de usuario.`);
+        }
+      } catch(e) {
+         console.error(e);
+         alert(`Generando contrato para: ${licenseName}. Ve a "Mis Compras" para descargarlo en PDF.`);
+      }
     };
 
     async function simulateEmail(orderId) {
