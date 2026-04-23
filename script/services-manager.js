@@ -662,9 +662,70 @@ window.ServicesManager = {
         }
     },
 
-    openPlaylist(id) {
+    async openPlaylist(id) {
         console.log("Opening playlist:", id);
-        alert("Función de reproducción de playlist próximamente...");
+        
+        const user = window.currentUserProfile;
+        if (!user) {
+            console.warn("No user profile found for playlist:", id);
+            return;
+        }
+
+        const socials = typeof user.socials === 'string' ? JSON.parse(user.socials) : (user.socials || {});
+        const playlists = socials.playlists || [];
+        const playlist = playlists.find(p => p.id === id);
+
+        if (!playlist || !playlist.track_ids || playlist.track_ids.length === 0) {
+            console.warn("Playlist empty or not found:", id);
+            alert("Esta playlist no tiene productos aún.");
+            return;
+        }
+
+        try {
+            // 1. Fetch full product data from Supabase
+            // We use 'products' table and fetch all relevant metadata for StickyPlayer
+            const { data: products, error } = await window.supabaseClient
+                .from('products')
+                .select('*, artist_users:producer_id(id, nickname, avatar_url, is_verified)')
+                .in('id', playlist.track_ids)
+                .eq('visibility', 'public')
+                .in('status', ['published', 'approved']);
+
+            if (error) throw error;
+
+            if (!products || products.length === 0) {
+                alert("No se pudieron cargar los productos de esta playlist.");
+                return;
+            }
+
+            // 2. Map back to the original order defined in track_ids
+            const trackMap = {};
+            products.forEach(p => trackMap[String(p.id)] = p);
+            
+            const orderedTracks = playlist.track_ids
+                .map(tId => trackMap[String(tId)])
+                .filter(t => !!t);
+
+            if (orderedTracks.length === 0) {
+                alert("Los productos de esta playlist ya no están disponibles.");
+                return;
+            }
+
+            // 3. Initialize StickyPlayer with the playlist context
+            if (window.StickyPlayer) {
+                // Update the global playlist in the player
+                window.StickyPlayer.updatePlaylist(orderedTracks, playlist.title);
+                
+                // Play the first track
+                window.StickyPlayer.play(orderedTracks[0]);
+            } else {
+                console.error("StickyPlayer not found in window object.");
+                alert("El reproductor no está disponible en este momento.");
+            }
+        } catch (err) {
+            console.error("Error opening playlist:", err);
+            alert("Error al cargar la playlist. Por favor intenta de nuevo.");
+        }
     },
 
     async editItem(type, id) {
