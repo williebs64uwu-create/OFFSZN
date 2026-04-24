@@ -1020,9 +1020,19 @@ function renderGlobalPlaylists(user) {
             <div class="playlist-info">
                 <h4>${escapeHTML(pl.title)}</h4>
                 <p>${pl.track_ids ? pl.track_ids.length : 0} Productos</p>
+                <button class="playlist-listen-btn" style="margin-top: 12px; padding: 10px 20px; background: #fff; color: #000; border-radius: 100px; font-weight: 800; font-size: 0.85rem; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s; cursor: pointer; border: none; width: 100%;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
+                    <i class="bi bi-play-fill" style="font-size: 1.1rem;"></i> Escuchar Ahora
+                </button>
             </div>
         `;
-        card.onclick = () => window.ServicesManager.openPlaylist(pl.id);
+        card.onclick = () => {
+            const finalSlug = pl.slug || pl.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+            if (finalSlug) {
+                window.location.href = `/@${user.nickname}/${finalSlug}`;
+            } else {
+                window.ServicesManager.openPlaylist(pl.id);
+            }
+        };
         playlistSection.appendChild(card);
     });
 

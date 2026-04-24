@@ -625,9 +625,12 @@ window.ServicesManager = {
             const firstTrackId = this.selectedTracks[0];
             const firstTrack = this.userBeats.find(b => String(b.id) === String(firstTrackId));
 
+            const slugGenerated = this.generateUniquePlaylistSlug(title, socials.playlists || [], this.editingItemId);
+
             const newPlaylist = {
                 id: this.editingItemId || ('playlist_offszn_' + Date.now()),
                 title,
+                slug: slugGenerated,
                 category: document.getElementById('playlistCategory').value,
                 cover_url: firstTrack ? firstTrack.image_url : '', 
                 track_ids: [...this.selectedTracks]
@@ -808,6 +811,24 @@ window.ServicesManager = {
             user.socials = socials;
             if (window.setActiveTab) window.setActiveTab('services'); // Refresh view
         }
+    },
+
+    generateUniquePlaylistSlug(title, existingPlaylists, currentId = null) {
+        let slug = title.toLowerCase()
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/(^-|-$)+/g, '');
+        
+        if (!slug) slug = 'playlist';
+
+        let finalSlug = slug;
+        let counter = 1;
+        
+        while (existingPlaylists.some(p => p.slug === finalSlug && p.id !== currentId)) {
+            finalSlug = `${slug}-${counter}`;
+            counter++;
+        }
+        
+        return finalSlug;
     }
 };
 

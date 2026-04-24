@@ -41,11 +41,13 @@ const ProfLoader = {
             const nickname = container.querySelector('#nav-nickname');
             const userLink = container.querySelector('#nav-user-link');
             const servicesLink = container.querySelector('#nav-services-link');
+            const playlistsLink = container.querySelector('#nav-playlists-link');
 
             if (nickname) nickname.textContent = user.nickname;
             if (avatar && user.avatar_url) avatar.src = user.avatar_url;
             if (userLink) userLink.href = `/@${user.nickname}`;
             if (servicesLink) servicesLink.href = `/@${user.nickname}`;
+            if (playlistsLink) playlistsLink.href = `/@${user.nickname}`;
             
         } catch (err) {
             console.error("Error loading professional navbar:", err);

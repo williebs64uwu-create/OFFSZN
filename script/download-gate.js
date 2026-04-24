@@ -45,9 +45,9 @@ window.openDownloadGateModal = function (url, producerName, productId) {
                         <div style="width: 70px; height: 70px; background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(139, 92, 246, 0.05)); color: #a78bfa; border-radius: 22px; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; font-size: 2rem; border: 1px solid rgba(139, 92, 246, 0.2);">
                             <i class="bi bi-cloud-download"></i>
                         </div>
-                        <h3 style="color:#fff; margin:0 0 10px; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.5rem; font-weight: 700; letter-spacing: -0.5px;">Descarga para invitados</h3>
+                        <h3 style="color:#fff; margin:0 0 10px; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.5rem; font-weight: 700; letter-spacing: -0.5px;">¡Descárgalo ahora!</h3>
                         <p style="color:#a1a1aa; font-size:0.95rem; line-height:1.6; margin: 0; font-weight: 400;">
-                            Ingresa tu correo oficial para recibir el enlace y guardar tus kits.
+                            Ingresa tu correo para recibir el enlace y guardar tus kits.
                         </p>
                     </div>
 
@@ -74,7 +74,7 @@ window.openDownloadGateModal = function (url, producerName, productId) {
             const validateEmail = (email) => {
                 const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
                 if (!re.test(email)) return false;
-                
+
                 // Real provider check (requested: gmail, icloud, etc)
                 const realProviders = ['gmail.com', 'icloud.com', 'outlook.com', 'hotmail.com', 'yahoo.com', 'live.com', 'me.com', 'msn.com', 'protonmail.com'];
                 const domain = email.split('@')[1]?.toLowerCase();
@@ -210,7 +210,7 @@ window.openDownloadGateModal = function (url, producerName, productId) {
 window.completeGate = async function (url, productId, guestEmail = null) {
     const btn = document.getElementById('btn-gate-action');
     const originalHTML = btn.innerHTML;
-    
+
     // 1. Prevenir múltiples clics
     if (btn.disabled) return;
 
@@ -325,7 +325,7 @@ window.completeGate = async function (url, productId, guestEmail = null) {
         a.target = '_blank';
         document.body.appendChild(a);
         a.click();
-        
+
         setTimeout(() => document.body.removeChild(a), 200);
 
     } catch (e) {

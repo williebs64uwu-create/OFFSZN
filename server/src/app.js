@@ -178,6 +178,7 @@ app.get('/env.js', (req, res) => {
         window.SUPABASE_ANON_KEY = "${SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0anB2enRwZ2Z5bWpoaHBvb3VxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3ODA5MTUsImV4cCI6MjA3NjM1NjkxNX0.YsItTFk3hSQaVuy707-z7Z-j34mXa03O0wWGAlAzjrw'}";
         window.EMAILJS_PUBLIC_KEY = "${EMAILJS_PUBLIC_KEY || 'If_WAVcuXiGSPp2SB'}";
         window.PAYPAL_CLIENT_ID = "${process.env.PAYPAL_CLIENT_ID || ''}";
+        window.IMAGEKIT_URL_ENDPOINT = "${process.env.IMAGEKIT_URL_ENDPOINT || 'https://ik.imagekit.io/offszn/'}";
     `);
 });
 
@@ -673,6 +674,71 @@ app.get([
         console.error("Error serving Biolink:", err);
         // Fallback to static version
         res.sendFile(bioPagePath);
+    }
+});
+
+// --- 3.5.5 PLAYLIST SHORTCUT ROUTE (/@:username/:slug) ---
+app.get(['/@:username/:slug', '/:username/:slug'], async (req, res, next) => {
+    const { username, slug } = req.params;
+    const playlistPagePath = path.join(rootPath, 'playlist.html');
+    if (!fs.existsSync(playlistPagePath)) return next();
+
+    // 1. Reserved Words Exclusion (same as profile)
+    const reserved = ['api', 'auth', 'dashboard', 'login', 'register', 'admin', 'pages', 'legal', 'studio', 'comunidad', 'cursos'];
+    if (reserved.includes(username)) return next();
+
+    try {
+        const { supabase: db } = await import('./infrastructure/database/connection.js');
+        
+        // Fetch user data
+        const { data: user } = await db
+            .from('users')
+            .select('nickname, avatar_url, socials')
+            .eq('nickname', username)
+            .single();
+
+        let html = fs.readFileSync(playlistPagePath, 'utf8');
+
+        if (user) {
+            const playlists = user.socials?.playlists || [];
+            // Try to match by slug field, then by slugified title
+            const playlist = playlists.find(p => p.slug === slug) || 
+                           playlists.find(p => {
+                               const autoSlug = p.title.toLowerCase()
+                                   .replace(/[^a-z0-9]+/g, '-')
+                                   .replace(/(^-|-$)+/g, '');
+                               return autoSlug === slug;
+                           });
+            
+            if (playlist) {
+                const title = `${playlist.title} | @${user.nickname} - OFFSZN`;
+                const description = `Escucha la playlist "${playlist.title}" de ${user.nickname} en OFFSZN.lat`;
+                let image = playlist.cover_url || user.avatar_url || 'https://offszn.lat/images/LOGO%20OFFSZN.webp';
+                const url = `https://offszn.lat/@${user.nickname}/${slug}`;
+
+                const ogTags = `
+    <!-- Dynamic Playlist OG Tags -->
+    <meta property="og:title" content="${title}">
+    <meta property="og:description" content="${description}">
+    <meta property="og:image" content="${image}">
+    <meta property="og:url" content="${url}">
+    <meta property="og:type" content="music.playlist">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="${title}">
+    <meta name="twitter:description" content="${description}">
+    <meta name="twitter:image" content="${image}">
+                `;
+
+                html = html.replace('<head>', `<head>\n${ogTags}`);
+                html = html.replace(/<title>.*?<\/title>/, `<title>${title}</title>`);
+            }
+        }
+
+        res.send(html);
+
+    } catch (err) {
+        console.error("Error serving playlist page:", err);
+        res.sendFile(playlistPagePath);
     }
 });
 

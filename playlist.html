@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Playlist - OFFSZN</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <script src="/env.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>window.supabaseClient = null;</script>
+    <script src="/script/config.js"></script>
+    <script src="/script/auth-utils.js"></script>
+    <script src="/components/offszn_perfiles_profesionales/loader.js"></script>
+    
+    <link rel="stylesheet" href="/css/navbar.css">
+    <link rel="stylesheet" href="/css/footer.css">
+    <link rel="stylesheet" href="/css/global-overlays.css">
+    <link rel="stylesheet" href="/css/sticky-player.css">
+    
+    <script src="https://unpkg.com/wavesurfer.js@7/dist/wavesurfer.min.js"></script>
+    <script src="/script/r2-loader.js?v=2"></script>
+    <script src="/script/sticky-player.js?v=11"></script>
+    <style>
+        :root {
+            --bg-color: #000;
+            --text-main: #fff;
+            --text-secondary: #999;
+            --accent-color: #fff;
+            --card-bg: #111;
+            --border-color: rgba(255,255,255,0.1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: 'Inter', -apple-system, sans-serif;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        /* Navbar Premium Override */
+        .prof-nav {
+            background-color: #000 !important;
+            border-bottom: 1px solid rgba(255,255,255,0.1) !important;
+            backdrop-filter: blur(10px);
+        }
+        .prof-nav .nav-link, .prof-nav .user-nav-name {
+            color: #fff !important;
+        }
+
+        #app {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding-bottom: 140px;
+        }
+
+        /* Hero Section */
+        .playlist-hero {
+            padding: 120px 5% 40px;
+            background: linear-gradient(to bottom, #181818 0%, #000 100%);
+            display: flex;
+            justify-content: center;
+        }
+
+        .hero-content {
+            width: 100%;
+            max-width: 1200px;
+            display: flex;
+            gap: 32px;
+            align-items: flex-end;
+        }
+
+        .hero-cover {
+            width: 232px;
+            height: 232px;
+            object-fit: cover;
+            border-radius: 4px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+            background: #282828;
+        }
+
+        .hero-text {
+            flex: 1;
+        }
+
+        .playlist-label {
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .title-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        #pl-title {
+            font-size: clamp(2rem, 6vw, 4.5rem);
+            font-weight: 900;
+            line-height: 1.1;
+            letter-spacing: -2px;
+        }
+
+        .hero-side-actions {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .icon-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        .icon-btn:hover { color: #fff; }
+
+        .btn-play-circle {
+            background: #fff;
+            color: #000;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+            border: none;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+        .btn-play-circle:active { transform: scale(0.95); }
+
+        .playlist-meta {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+            color: #fff;
+            margin-bottom: 24px;
+        }
+        .playlist-meta .dot { color: var(--text-secondary); }
+        .meta-user { font-weight: 700; text-decoration: none; color: inherit; }
+        .meta-stats { color: var(--text-secondary); }
+
+        .btn-compartir {
+            background: #fff;
+            color: #000;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 30px;
+            font-size: 0.85rem;
+            font-weight: 800;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: background 0.2s;
+        }
+        .btn-compartir:hover { background: #eee; }
+
+        /* Tracks Table */
+        .tracks-wrapper {
+            padding: 20px 5%;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .tracklist-header {
+            display: grid;
+            grid-template-columns: 48px 1fr 100px 80px;
+            padding: 0 16px 12px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            color: var(--text-secondary);
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        .track-row {
+            display: grid;
+            grid-template-columns: 48px 1fr 100px 80px;
+            padding: 10px 16px;
+            border-radius: 4px;
+            align-items: center;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .track-row:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .track-index-container {
+            position: relative;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .track-index {
+            font-size: 1rem;
+            color: var(--text-secondary);
+        }
+
+        .track-play-icon {
+            display: none;
+            font-size: 1.2rem;
+            color: #fff;
+        }
+
+        .track-row:hover .track-index { display: none; }
+        .track-row:hover .track-play-icon { display: block; }
+
+        .track-info-main {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            padding-right: 20px;
+        }
+
+        .track-title {
+            font-weight: 600;
+            font-size: 1rem;
+            color: #fff;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .track-producer {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .track-duration {
+            text-align: right;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            opacity: 0.8;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .track-options {
+            text-align: right;
+            color: var(--text-secondary);
+            font-size: 1.4rem;
+            opacity: 0.6;
+            transition: opacity 0.2s, color 0.2s;
+            padding-right: 8px;
+        }
+        .track-row:hover .track-options { opacity: 1; color: #fff; }
+
+        /* Modal Share */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(10px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background: #111;
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 32px;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+        .modal-title { font-size: 1.5rem; font-weight: 800; margin-bottom: 24px; }
+        .share-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+        .share-btn {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 16px;
+            border-radius: 8px;
+            color: #fff;
+            text-decoration: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.8rem;
+            transition: background 0.2s;
+        }
+        .share-btn:hover { background: rgba(255,255,255,0.1); }
+        .share-btn i { font-size: 1.5rem; }
+
+        #toast {
+            position: fixed;
+            bottom: 32px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #fff;
+            color: #000;
+            padding: 12px 24px;
+            border-radius: 4px;
+            font-weight: 800;
+            font-size: 0.9rem;
+            display: none;
+            z-index: 2000;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+        }
+
+        /* Error States */
+        #error-container {
+            display: none;
+            text-align: center;
+            padding: 120px 24px;
+        }
+
+        #loading {
+            padding: 100px 5%;
+            text-align: center;
+        }
+
+        @media (max-width: 768px) {
+            .hero-content { flex-direction: column; align-items: center; text-align: center; }
+            .hero-cover { width: 192px; height: 192px; }
+            .tracklist-header, .track-row {
+                grid-template-columns: 40px 1fr 48px;
+            }
+            .track-duration { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="prof-navbar-container"></div>
+
+    <main id="app">
+        <div id="loading" style="display: flex; justify-content: center; align-items: center; min-height: 50vh;">
+            <div style="width: 40px; height: 40px; border: 3px solid rgba(255,255,255,0.1); border-top-color: #fff; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+            <style>
+                @keyframes spin { to { transform: rotate(360deg); } }
+            </style>
+        </div>
+
+        <div id="playlist-view" style="display: none;">
+            <header class="playlist-hero">
+                <div class="hero-content">
+                    <img id="pl-cover" src="" alt="Cover" class="hero-cover">
+                    <div class="hero-text">
+                        <span class="playlist-label">Playlist</span>
+                        <div class="title-row">
+                            <h1 id="pl-title"></h1>
+                            <div class="hero-side-actions">
+                                <button class="icon-btn"><i class="bi bi-shuffle"></i></button>
+                                <button id="pl-play-all" class="btn-play-circle"><i class="bi bi-play-fill"></i></button>
+                            </div>
+                        </div>
+                        <div class="playlist-meta">
+                            <a href="#" id="pl-username" class="meta-user"></a>
+                            <span class="dot">&bull;</span>
+                            <span id="pl-count" class="meta-stats"></span>
+                            <span class="dot">&bull;</span>
+                            <span id="pl-duration" class="meta-stats">--m --s</span>
+                        </div>
+                        <div class="hero-actions">
+                            <button id="pl-share-btn" class="btn-compartir">
+                                <i class="bi bi-share"></i> Compartir
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <section class="tracks-wrapper">
+                <div class="tracklist-header">
+                    <div>#</div>
+                    <div>Título</div>
+                    <div class="h-duration" style="text-align: right;">Duración</div>
+                    <div style="text-align: right;"></div>
+                </div>
+                <div id="tracks-container"></div>
+            </section>
+        </div>
+
+        <div id="share-modal" class="modal-overlay">
+            <div class="modal-content">
+                <h3 class="modal-title">Compartir Playlist</h3>
+                <div class="share-grid">
+                    <a href="#" id="share-whatsapp" class="share-btn" target="_blank">
+                        <i class="bi bi-whatsapp"></i>
+                        <span>WhatsApp</span>
+                    </a>
+                    <a href="#" id="share-twitter" class="share-btn" target="_blank">
+                        <i class="bi bi-twitter-x"></i>
+                        <span>Twitter</span>
+                    </a>
+                    <a href="#" id="share-facebook" class="share-btn" target="_blank">
+                        <i class="bi bi-facebook"></i>
+                        <span>Facebook</span>
+                    </a>
+                    <button id="copy-link-btn" class="share-btn">
+                        <i class="bi bi-link-45deg"></i>
+                        <span>Copiar Link</span>
+                    </button>
+                </div>
+                <button onclick="closeModal()" class="btn-compartir" style="margin: 24px auto 0; background: transparent; color: #fff; border: 1px solid #444;">Cerrar</button>
+            </div>
+        </div>
+
+        <div id="toast">¡Link copiado al portapapeles!</div>
+
+        <div id="error-container" style="display: none;">
+            <h2 style="font-size: 2.5rem; margin-bottom: 16px;">Playlist no encontrada</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 32px;">El link es inválido o la playlist ya no existe.</p>
+            <a href="/explorar" class="play-all-btn" style="text-decoration: none;">Explorar OFFSZN</a>
+        </div>
+    </main>
+
+    <div id="prof-footer-container"></div>
+
+    <!-- Sticky Player Root -->
+    <div id="sticky-player-root"></div>
+
+    <script>
+        // Init Supabase from global config
+        AuthUtils.initSupabase();
+        const supabaseClient = window.supabaseClient;
+        let currentTracks = [];
+        let currentPlaylistData = null;
+        document.title = "Playlist | OFFSZN";
+
+        // --- BRIDGE: Sync with StickyPlayer ---
+        function syncWithPlayer() {
+            if (!window.StickyPlayer || !window.StickyPlayer.getCurrentTrackId) return;
+            const currentId = window.StickyPlayer.getCurrentTrackId();
+            if (!currentId) return;
+            
+            // Read duration from DOM since getDuration is not exposed
+            const timeStr = document.getElementById('sp-total-time')?.innerText;
+            if (!timeStr || timeStr === '0:00' || timeStr === '--:--') return;
+
+            // Look for this track in our current list
+            currentTracks.forEach((t, idx) => {
+                if (String(t.id) === String(currentId)) {
+                    // Convert "M:SS" to seconds
+                    const parts = timeStr.split(':');
+                    let playerDuration = 0;
+                    if (parts.length === 2) {
+                        playerDuration = parseInt(parts[0], 10) * 60 + parseInt(parts[1], 10);
+                    }
+                    
+                    if (playerDuration > 0 && (!t.duration || Math.abs(t.duration - playerDuration) > 1)) {
+                        t.duration = playerDuration;
+                        const el = document.getElementById(`duration-${idx}`);
+                        if (el) el.textContent = formatDuration(t.duration);
+                        updateTotalDuration();
+                    }
+                }
+            });
+        }
+
+        // Run sync every second to catch any updates from the player
+        setInterval(syncWithPlayer, 1000);
+
+        // Also listen for a custom event if StickyPlayer fires one
+        window.addEventListener('StickyPlayerReady', syncWithPlayer);
+        window.addEventListener('StickyPlayerTrackChange', syncWithPlayer);
+
+        async function getSafeImageUrl(path, version = 'v2', productId = null) {
+            if (!path) return '/images/portada-default.png';
+            if (path.startsWith('http') && !path.includes('supabase.co')) return path;
+            
+            // Auto-detect version if not provided or likely wrong
+            let targetVersion = version;
+            if (path.includes('r2-public') || path.includes('nuclear')) targetVersion = 'v1';
+            else if (path.includes('r2-v2')) targetVersion = 'v2';
+
+            if (window.AuthUtils && window.AuthUtils.getAuthorizedUrl) {
+                try {
+                    return await window.AuthUtils.getAuthorizedUrl(path, targetVersion, productId);
+                } catch (e) {
+                    console.error("Error authorizing URL:", e);
+                    return '/images/portada-default.png';
+                }
+            }
+            return path;
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Initialize Player
+            if (window.StickyPlayer) {
+                window.StickyPlayer.init();
+            }
+
+            const urlParams = new URLSearchParams(window.location.search);
+            let uParam = urlParams.get('u');
+            let sParam = urlParams.get('s');
+
+            if (!uParam || !sParam) {
+                const pathParts = window.location.pathname.split('/').filter(p => p !== "");
+                if (pathParts.length >= 2) {
+                    uParam = pathParts[0].replace('@', '');
+                    sParam = pathParts[1];
+                }
+            }
+
+            if (!uParam || !sParam) {
+                showError();
+                return;
+            }
+
+            try {
+                // Wait for AuthUtils to be ready if needed
+                if (window.AuthUtils && window.AuthUtils.initSupabase) {
+                    window.AuthUtils.initSupabase();
+                }
+
+                // 1. Fetch User
+                const { data: user, error: userError } = await window.supabaseClient
+                    .from('users')
+                    .select('id, nickname, avatar_url, socials')
+                    .eq('nickname', uParam)
+                    .single();
+
+                if (userError || !user) throw new Error("User not found");
+
+                // 2. Find Playlist
+                const socials = typeof user.socials === 'string' ? JSON.parse(user.socials) : (user.socials || {});
+                const playlists = socials.playlists || [];
+                const playlist = playlists.find(p => p.slug === sParam) || 
+                                 playlists.find(p => {
+                                     const autoSlug = p.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+                                     return autoSlug === sParam;
+                                  });
+
+                if (!playlist) throw new Error("Playlist not found");
+                currentPlaylistData = playlist;
+
+                // 3. Fetch Tracks
+                const { data: tracks, error: tracksError } = await window.supabaseClient
+                    .from('products')
+                    .select('*, artist_users:producer_id(id, nickname, avatar_url, is_verified)')
+                    .in('id', playlist.track_ids)
+                    .eq('visibility', 'public');
+
+                if (tracksError) throw tracksError;
+
+                // Sort by the original order in track_ids
+                const trackMap = {};
+                tracks.forEach(t => trackMap[String(t.id)] = t);
+                currentTracks = playlist.track_ids.map(id => trackMap[String(id)]).filter(t => !!t);
+
+                await renderPlaylist(playlist, user, currentTracks);
+
+            } catch (err) {
+                console.error("Error:", err);
+                showError();
+            }
+        });
+
+        function formatDuration(seconds) {
+            if (!seconds || isNaN(seconds) || seconds <= 0) return '--:--';
+            const m = Math.floor(seconds / 60);
+            const s = Math.floor(seconds % 60);
+            return `${m}:${s.toString().padStart(2, '0')}`;
+        }
+
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            if (!t) return;
+            t.textContent = msg;
+            t.style.display = 'block';
+            setTimeout(() => t.style.display = 'none', 2500);
+        }
+
+        function openModal() {
+            document.getElementById('share-modal').style.display = 'flex';
+            setupShareLinks();
+        }
+
+        function closeModal() {
+            document.getElementById('share-modal').style.display = 'none';
+        }
+
+        function setupShareLinks() {
+            const url = window.location.href;
+            const text = `Escucha esta playlist en OFFSZN: ${document.getElementById('pl-title').textContent}`;
+            
+            document.getElementById('share-whatsapp').href = `https://api.whatsapp.com/send?text=${encodeURIComponent(text + " " + url)}`;
+            document.getElementById('share-twitter').href = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`;
+            document.getElementById('share-facebook').href = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
+            
+            document.getElementById('copy-link-btn').onclick = () => {
+                navigator.clipboard.writeText(url).then(() => {
+                    showToast("¡Link copiado!");
+                });
+            };
+        }
+
+        async function renderPlaylist(playlist, user, tracks) {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('playlist-view').style.display = 'block';
+            document.getElementById('error-container').style.display = 'none';
+
+            if (window.ProfLoader) window.ProfLoader.init(user);
+
+            // Resolve Playlist Cover (First product's image)
+            const coverImg = document.getElementById('pl-cover');
+            const firstTrack = tracks[0];
+            const coverPath = playlist.cover_url || (firstTrack ? firstTrack.image_url : null);
+            
+            const resolvedCover = await getSafeImageUrl(
+                coverPath, 
+                firstTrack ? (firstTrack.storage_version || firstTrack.r2_version || 'v2') : 'v2',
+                firstTrack ? firstTrack.id : null
+            );
+            
+            coverImg.src = resolvedCover;
+            coverImg.onerror = () => {
+                coverImg.src = '/images/portada-default.png';
+            };
+
+            document.getElementById('pl-title').textContent = playlist.title;
+            const userLink = document.getElementById('pl-username');
+            userLink.textContent = `@${user.nickname}`;
+            userLink.href = `/@${user.nickname}`;
+
+            document.getElementById('pl-count').textContent = `${tracks.length} canciones`;
+            
+            updateTotalDuration();
+
+            document.title = `${playlist.title} | @${user.nickname} - OFFSZN`;
+
+            const container = document.getElementById('tracks-container');
+            container.innerHTML = tracks.map((t, idx) => `
+                <div class="track-row" onclick="playTrack(${idx})">
+                    <div class="track-index-container">
+                        <span class="track-index">${idx + 1}</span>
+                        <i class="bi bi-play-fill track-play-icon"></i>
+                    </div>
+                    <div class="track-info-main">
+                        <span class="track-title">${t.name}</span>
+                        <span class="track-producer">${t.artist_users?.nickname || user.nickname}</span>
+                    </div>
+                    <div id="duration-${idx}" class="track-duration">${formatDuration(t.duration)}</div>
+                    <div class="track-options" onclick="event.stopPropagation(); openModal()">
+                        <i class="bi bi-share"></i>
+                    </div>
+                </div>
+            `).join('');
+
+            // Background Discovery of Durations
+            tracks.forEach((t, idx) => {
+                if (!t.duration || isNaN(t.duration) || t.duration <= 0) {
+                    discoverTrackDuration(t, idx);
+                }
+            });
+
+            document.getElementById('pl-play-all').onclick = () => playTrack(0);
+            
+            const mainShareBtn = document.getElementById('pl-share-btn');
+            mainShareBtn.onclick = () => {
+                navigator.clipboard.writeText(window.location.href).then(() => {
+                    showToast("¡Link copiado!");
+                    // Feedback visual temporal
+                    const icon = mainShareBtn.querySelector('i');
+                    const originalClass = icon.className;
+                    icon.className = 'bi bi-check-lg';
+                    setTimeout(() => { icon.className = originalClass; }, 2000);
+                });
+            };
+
+            // Shuffle Button
+            const shuffleBtn = document.querySelector('.bi-shuffle')?.parentElement;
+            if (shuffleBtn) {
+                shuffleBtn.onclick = () => shuffleAndPlay();
+            }
+        }
+
+        async function discoverTrackDuration(track, index) {
+            if (track.duration && track.duration > 0) return;
+
+            const getTrackAudioPath = (t) => {
+                const cat = (t.category || '').toLowerCase();
+                const isPreset = cat === 'plantilla' || cat === 'vocal preset' || cat.includes('preset');
+                if (isPreset) {
+                    if (t.audio_after_url) return t.audio_after_url;
+                    if (t.audio_before_url) return t.audio_before_url;
+                }
+                return t.mp3_url || t.audio_url || t.download_url_mp3 || t.preview_url || t.demo_file || t.tagged_file || t.file_url || t.url_file || t.cloud_url || t.audio_before_url || t.audio_after_url || '';
+            };
+
+            const mainPath = getTrackAudioPath(track);
+            const paths = [mainPath, track.audio_url].filter(p => !!p);
+            // Prioritize the actual storage version, fallback to v2 and v1
+            const versions = [track.storage_version || track.r2_version || 'v2', 'v1'].filter((v, i, a) => a.indexOf(v) === i);
+            
+            const promises = [];
+
+            for (const path of [...new Set(paths)]) {
+                for (const ver of versions) {
+                    promises.push(new Promise(async (resolve, reject) => {
+                        try {
+                            const authUrl = await getSafeImageUrl(path, ver, track.id);
+                            if (!authUrl || authUrl.includes('portada-default')) return reject();
+
+                            const variations = [authUrl, encodeURI(authUrl).replace(/%25/g, '%')];
+                            
+                            for (const urlVariant of [...new Set(variations)]) {
+                                const audio = document.createElement('audio');
+                                audio.style.display = 'none';
+                                audio.preload = "metadata";
+                                document.body.appendChild(audio);
+
+                                const cleanup = () => {
+                                    if (audio.parentNode) audio.parentNode.removeChild(audio);
+                                };
+
+                                const timeout = setTimeout(() => {
+                                    audio.src = "";
+                                    cleanup();
+                                    reject();
+                                }, 2000); // 2 seconds timeout is enough for metadata
+
+                                audio.onloadedmetadata = () => {
+                                    clearTimeout(timeout);
+                                    if (audio.duration > 0) {
+                                        cleanup();
+                                        resolve(audio.duration);
+                                    } else {
+                                        cleanup();
+                                        reject();
+                                    }
+                                };
+                                audio.onerror = () => {
+                                    clearTimeout(timeout);
+                                    cleanup();
+                                    reject();
+                                };
+                                audio.src = urlVariant;
+                            }
+                        } catch (e) {
+                            reject(e);
+                        }
+                    }));
+                }
+            }
+
+            try {
+                // Wait for the FIRST successful duration resolution (Race Condition)
+                const duration = await Promise.any(promises);
+                if (duration) {
+                    track.duration = duration;
+                    const el = document.getElementById(`duration-${index}`);
+                    if (el) el.textContent = formatDuration(track.duration);
+                    updateTotalDuration();
+                }
+            } catch (err) {
+                console.warn(`[DurationDiscovery] Failed for track: ${track.name} (ID: ${track.id})`);
+            }
+        }
+
+        function updateTotalDuration() {
+            const totalSec = currentTracks.reduce((acc, t) => acc + (parseFloat(t.duration) || 0), 0);
+            const h = Math.floor(totalSec / 3600);
+            const m = Math.floor((totalSec % 3600) / 60);
+            const s = Math.floor(totalSec % 60);
+            
+            const durationEl = document.getElementById('pl-duration');
+            if (!durationEl) return;
+
+            if (totalSec > 0) {
+                durationEl.textContent = `${h > 0 ? h + 'h ' : ''}${m}m ${s}s`;
+            } else {
+                durationEl.textContent = '--m --s';
+            }
+        }
+
+        function shuffleAndPlay() {
+            if (currentTracks.length === 0) return;
+            const shuffled = [...currentTracks].sort(() => Math.random() - 0.5);
+            playFullList(shuffled, 0);
+            showToast("Modo aleatorio activado");
+        }
+
+        async function playFullList(tracks, startIndex) {
+            if (!window.StickyPlayer) return;
+            
+            const formattedTracks = await Promise.all(tracks.map(async t => {
+                const authImg = await getSafeImageUrl(t.image_url, t.storage_version || t.r2_version || 'v2', t.id);
+                return {
+                    ...t,
+                    producer_nickname: t.artist_users?.nickname || "OFFSZN",
+                    image_url: authImg
+                };
+            }));
+
+            window.StickyPlayer.updatePlaylist(formattedTracks, currentPlaylistData?.title || "Playlist");
+            window.StickyPlayer.play(formattedTracks[startIndex]);
+        }
+
+        async function playTrack(index) {
+            playFullList(currentTracks, index);
+        }
+
+        function showError() {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('error-container').style.display = 'block';
+        }
+    </script>
+</body>
+</html>
