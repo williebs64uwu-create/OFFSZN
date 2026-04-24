@@ -95,9 +95,9 @@
                     window.AuthUtils.getYouTubeUploadStatus()
                 ]);
 
-                // Sync YT access to cache
-                const hasYTFeature = await window.AuthUtils.checkFeatureAccess('unlimited_uploads') || 
-                                   (await window.AuthUtils.getUserPlanData()).plan !== 'free'; // Basic check for feature
+                // 🔥 FIX: Use actual quota, not plan name. Free=3/mo, Starter=10, Pro=30.
+                // Server-side (YouTubeController.js) enforces the real limit regardless.
+                const hasYTFeature = ytStatus.limit > 0;
                 
                 sessionStorage.setItem('offszn_yt_access', hasYTFeature ? 'true' : 'false');
                 sessionStorage.setItem('offszn_yt_limited', ytStatus.isLimited ? 'true' : 'false');

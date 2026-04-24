@@ -193,7 +193,10 @@
 
                 const planData = await window.AuthUtils.getUserPlanData();
                 const userPlan = planData?.plan || 'free';
-                const hasYTFeature = userPlan !== 'free'; // Starter and Pro have YT access
+                // 🔥 FIX: Check actual YT quota, not just plan name.
+                // Free=3/mo, Starter=10/mo, Pro=30/mo — all have access if limit > 0.
+                // Server-side (YouTubeController.js) enforces the real limit regardless.
+                const hasYTFeature = ytStatus.limit > 0;
 
                 console.log(`[BeatsYT Guard] Plan: ${userPlan}, YT: ${ytStatus.used}/${ytStatus.limit}, Upload: ${uploadStatus.count}/${uploadStatus.limit}, hasYT: ${hasYTFeature}`);
 

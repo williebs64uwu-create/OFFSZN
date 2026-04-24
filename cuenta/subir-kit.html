@@ -1091,9 +1091,11 @@
                 }
 
                 // 1. YouTube Strategy Protection
-                const hasYTFeature = await window.AuthUtils.checkFeatureAccess('unlimited_uploads') ||
-                    (await window.AuthUtils.getUserPlanData()).plan !== 'free';
                 const ytStatus = await window.AuthUtils.getYouTubeUploadStatus();
+                // 🔥 FIX: Check actual YT quota, not just plan name.
+                // Free=3/mo, Starter=10/mo, Pro=30/mo — all have access if limit > 0.
+                // Server-side (YouTubeController.js) enforces the real limit regardless.
+                const hasYTFeature = ytStatus.limit > 0;
                 const ytBtn = document.getElementById('btnYoutubeUploadStrategy');
                 const ytCounter = document.getElementById('ytUploadCounter');
 

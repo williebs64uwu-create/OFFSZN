@@ -2379,6 +2379,11 @@ window.handlePublish = async function () {
                         ...AuthUtils.getAuthHeaderObj()
                     }
                 });
+                // 🔥 CACHE BUST: Prevent stale limit data on next page visit
+                sessionStorage.removeItem('offszn_upload_limit_status');
+                sessionStorage.removeItem('offszn_yt_limited');
+                sessionStorage.removeItem('offszn_user_plan');
+                if (window.AuthUtils) window.AuthUtils._userPlanCache = null;
             } catch (err) {
                 console.warn('⚠️ [YT] Error al incrementar cuota:', err);
             }

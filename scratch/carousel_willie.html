@@ -1,179 +1,171 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Voice Preset Carousel - Minimalist</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap');
+        
         :root {
-            --brand-primary: #FFFFFF;
-            --brand-white: #FFFFFF;
-            --bg-dark: #000000;
-            --slide-width: 1080px;
-            --slide-height: 1350px;
-        }
-
-        /* Ambient Backgrounds - Subtly Tinted Blacks */
-        #slide-1 { background: #000000; }
-        #slide-2 { background: #08090b; } /* Subtle Cold/Blue tint */
-        #slide-3 { background: #0d0a0a; } /* Subtle Warm/Red tint */
-        #slide-4 { background: #090a09; } /* Subtle Neutral/Green tint */
-        #slide-5 { background: #000000; }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Inter', sans-serif;
+            --white: #ffffff;
+            --black: #000000;
+            --gray: #666666;
         }
 
         body {
-            background: #1a1a1a;
+            margin: 0;
+            background: #111;
+            font-family: 'Geist', sans-serif;
             display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 50px;
-            gap: 50px;
+            gap: 0;
+            padding: 0;
         }
 
         .slide {
-            width: var(--slide-width);
-            height: var(--slide-height);
-            color: var(--brand-white);
-            position: relative;
-            overflow: hidden;
+            min-width: 1080px;
+            width: 1080px;
+            height: 1350px; /* Ratio 4:5 real size */
+            padding: 100px;
+            box-sizing: border-box;
             display: flex;
             flex-direction: column;
             justify-content: center;
-            padding: 100px;
-            border: 1px solid #222;
+            position: relative;
         }
 
-        /* Progress Bar - Minimalist B&W */
-        .progress-container {
+        .white-bg { background: var(--white); color: var(--black); }
+        .black-bg { background: var(--black); color: var(--white); }
+
+        .heading {
+            font-size: 82px;
+            font-weight: 900;
+            line-height: 1.05;
+            text-transform: uppercase;
+            margin-bottom: 40px;
+            letter-spacing: -3px;
+        }
+
+        .body-text {
+            font-size: 38px;
+            font-weight: 400;
+            line-height: 1.4;
+            color: inherit;
+            opacity: 0.8;
+            max-width: 800px;
+        }
+
+        .img-placeholder {
+            margin-top: 60px;
+            border: 4px dashed rgba(128,128,128,0.3);
+            height: 450px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: #999;
+            text-transform: uppercase;
+            letter-spacing: 5px;
+        }
+
+        .cta-button {
+            margin-top: 80px;
+            background: var(--white);
+            color: var(--black);
+            padding: 35px;
+            text-align: center;
+            font-weight: 900;
+            font-size: 32px;
+            letter-spacing: 4px;
+            width: fit-content;
+            padding-left: 60px;
+            padding-right: 60px;
+        }
+
+        .footer {
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 4px;
-            background: rgba(255,255,255,0.03);
+            bottom: 80px;
+            left: 100px;
+            right: 100px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: 4px;
+            opacity: 0.5;
         }
 
         .progress-bar {
-            height: 100%;
-            background: var(--brand-primary);
-        }
-
-        /* Content Styles */
-        .tag {
-            color: #555;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 6px;
-            font-size: 22px;
-            margin-bottom: 30px;
-        }
-
-        h1 {
-            font-size: 100px;
-            font-weight: 800;
-            line-height: 1;
-            letter-spacing: -4px;
-            margin-bottom: 40px;
-            text-transform: uppercase;
-        }
-
-        .highlight {
-            background: white;
-            color: black;
-            padding: 0 15px;
-            display: inline-block;
-        }
-
-        p {
-            font-size: 38px;
-            line-height: 1.3;
-            color: #777;
-            max-width: 850px;
-            font-weight: 400;
-        }
-
-        .cta-container {
-            margin-top: 60px;
-        }
-
-        .cta-box {
-            border: 2px solid white;
-            color: white;
-            padding: 30px 60px;
-            font-size: 40px;
-            font-weight: 800;
-            display: inline-block;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-        }
-
-        .handle {
             position: absolute;
-            bottom: 60px;
-            left: 100px;
-            font-weight: 400;
-            font-size: 24px;
-            color: #333;
-            letter-spacing: 1px;
+            bottom: 0;
+            left: 0;
+            height: 12px;
+            background: rgba(128,128,128,0.2);
+            width: 100%;
         }
+
+        .progress-fill {
+            height: 100%;
+            background: #888;
+        }
+
+        /* Helper to hide other slides for capture */
+        .slide { display: none; }
+        .slide.active { display: flex; }
     </style>
 </head>
 <body>
 
-    <!-- Slide 1: Hook -->
-    <div class="slide" id="slide-1">
-        <div class="progress-container"><div class="progress-bar" style="width: 20%;"></div></div>
-        <div class="tag">Preset Regalo</div>
-        <h1>CADENA DE <br><span class="highlight">VOCES PRO</span></h1>
-        <p>Dame 5 minutos y te regalo mi preset secreto con <b>Plugins Nativos</b> de FL Studio.</p>
-        <div class="handle">@willieinspired</div>
-    </div>
-
-    <!-- Slide 2: Problem -->
-    <div class="slide" id="slide-2">
-        <div class="progress-container"><div class="progress-bar" style="width: 40%;"></div></div>
-        <div class="tag">El Problema</div>
-        <h1>¿VOCES <br><span class="highlight">OPACAS?</span></h1>
-        <p>Si tus grabaciones suenan enterradas o sin brillo, el problema no es tu micro. Es el procesamiento.</p>
-        <div class="handle">@willieinspired</div>
-    </div>
-
-    <!-- Slide 3: Solution -->
-    <div class="slide" id="slide-3">
-        <div class="progress-container"><div class="progress-bar" style="width: 60%;"></div></div>
-        <div class="tag">La Solución</div>
-        <h1>AÑOS DE <br><span class="highlight">EXPERIENCIA.</span></h1>
-        <p>He condensado años de mezcla en un solo preset que funciona al instante.</p>
-        <div class="handle">@willieinspired</div>
-    </div>
-
-    <!-- Slide 4: Feature -->
-    <div class="slide" id="slide-4">
-        <div class="progress-container"><div class="progress-bar" style="width: 80%;"></div></div>
-        <div class="tag">Plugins Nativos</div>
-        <h1>100% <br><span class="highlight">NATIVO.</span></h1>
-        <p>Sin plugins externos. Usa todo el poder que ya tienes en FL Studio para sonar pro.</p>
-        <div class="handle">@willieinspired</div>
-    </div>
-
-    <!-- Slide 5: CTA -->
-    <div class="slide" id="slide-5">
-        <div class="progress-container"><div class="progress-bar" style="width: 100%;"></div></div>
-        <div class="tag">Acceso Directo</div>
-        <h1>¿LO <br><span class="highlight">QUIERES?</span></h1>
-        <p>Estaré enviando el link de descarga directo a tu bandeja de entrada.</p>
-        <div class="cta-container">
-            <div class="cta-box">COMENTA "🔥"</div>
+    <!-- SLIDE 1 -->
+    <div class="slide white-bg active" id="slide-1">
+        <div class="heading">¿Haces beats, pero no te gusta editar videos?</div>
+        <div class="body-text">Con esta herramienta para productores, puedes crear videos para redes y tener tu propia tienda.</div>
+        <div class="img-placeholder">TU VIDEO / IMAGEN AQUÍ</div>
+        <div class="footer">
+            <span>@WILLIEINSPIRED</span>
+            <span>01 / 04 ➡️</span>
         </div>
-        <div class="handle">@willieinspired</div>
+        <div class="progress-bar"><div class="progress-fill" style="width: 25%;"></div></div>
     </div>
 
+    <!-- SLIDE 2 -->
+    <div class="slide black-bg" id="slide-2">
+        <div class="heading">DEJA DE REGALAR TU TRABAJO, EMPIEZA A VENDER.</div>
+        <div class="body-text">Necesitas tener tu propio valor como productor.</div>
+        <div class="img-placeholder">ESPACIO VACÍO</div>
+        <div class="footer">
+            <span>@WILLIEINSPIRED</span>
+            <span>02 / 04 ➡️</span>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" style="width: 50%;"></div></div>
+    </div>
+
+    <!-- SLIDE 3 -->
+    <div class="slide white-bg" id="slide-3">
+        <div class="heading">CUALQUIERA PUEDE SUBIR 100 BEATS Y NADIE LOS VA A REVISAR.</div>
+        <div class="img-placeholder">ESPACIO VACÍO</div>
+        <div class="footer">
+            <span>@WILLIEINSPIRED</span>
+            <span>03 / 04 ➡️</span>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" style="width: 75%;"></div></div>
+    </div>
+
+    <!-- SLIDE 4 -->
+    <div class="slide black-bg" id="slide-4">
+        <div class="heading">¿CUÁL VAS A SER HOY?</div>
+        <div class="body-text">Si estás listo para recibir las ganancias que tu música merece sin editar videos...</div>
+        <div class="cta-button">COMENTA "NEGOCIO"</div>
+        <div class="footer">
+            <span>@WILLIEINSPIRED</span>
+            <span>04 / 04</span>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" style="width: 100%;"></div></div>
+    </div>
+
+    <script>
+        function showSlide(index) {
+            document.querySelectorAll('.slide').forEach(s => s.classList.remove('active'));
+            document.getElementById('slide-' + index).classList.add('active');
+        }
+    </script>
 </body>
 </html>
