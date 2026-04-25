@@ -546,17 +546,21 @@ function createListItemHtml(item, index, type) {
 
     // 🔥 R2 Signing Optimization (Match product-core.js)
     const storageVer = item.storage_version || item.r2_version || 'v2';
-    const isR2 = (storageVer !== 'supabase') && window.AuthUtils && window.AuthUtils.isR2Url(rawImg);
+    // 🔥 ENHANCED R2 DETECTION: Use storage_version as primary signal, fallback to path analysis
+    const isR2 = (storageVer !== 'supabase') && window.AuthUtils && 
+                (window.AuthUtils.isR2Url(rawImg) || storageVer === 'v2' || storageVer === 'v1');
     const imgPlaceholder = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
 
     let initialSrc = rawImg;
-    if (!isR2 && !rawImg.startsWith('http')) {
+    // 1. If it's NOT R2 and NOT an absolute URL, prefix with Supabase (unless it's a local path)
+    if (!isR2 && !rawImg.startsWith('http') && !rawImg.startsWith('/') && !rawImg.startsWith('./') && !rawImg.startsWith('../')) {
         const sbUrl = window.SUPABASE_URL || "https://qtjpvztpgfymjhhpoouq.supabase.co";
         // Check if it's already a full URL
         if (!rawImg.includes('supabase.co')) {
             initialSrc = `${sbUrl}/storage/v1/object/public/products/${rawImg}`;
         }
     } else if (isR2) {
+        // 2. If it IS R2, we use a placeholder and let signR2Images handle the async signing
         initialSrc = imgPlaceholder;
     }
 

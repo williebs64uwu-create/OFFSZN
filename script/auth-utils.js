@@ -268,20 +268,18 @@ window.AuthUtils = {
      */
     /**
      * Identifies if a path or URL belongs to Cloudflare R2 storage.
-     * Supports both full URLs and relative storage paths.
-     * @param {string} pathOrUrl 
-     * @returns {boolean}
-     */
     isR2Url: function (pathOrUrl) {
         if (!pathOrUrl || typeof pathOrUrl !== 'string') return false;
-        
-        // 🔥 EXTERNAL & ABSOLUTE FAST-PATH: If it has a protocol, it's NOT a relative R2 path that needs signing.
-        // This is the most important fix to prevent double-prefixing or malformed local requests.
-        if (pathOrUrl.startsWith('http') || pathOrUrl.startsWith('data:') || pathOrUrl.startsWith('blob:')) return false;
 
-        // 1. Full URL check (legacy fallbacks if protocol is missing but domain is there)
-        const r2Identifiers = ['r2.offszn.lat', 'pub-', 'offsznlatbucket', 'offszn-storage'];
-        if (r2Identifiers.some(id => pathOrUrl.includes(id))) return true;
+        // 1. Full URL check (legacy fallbacks or absolute links)
+        const r2Identifiers = ['r2.cloudflarestorage.com', 'r2.offszn.lat', 'pub-', 'offsznlatbucket', 'offszn-storage'];
+        const hasR2Identifier = r2Identifiers.some(id => pathOrUrl.includes(id));
+
+        // 🔥 EXTERNAL & ABSOLUTE FAST-PATH: If it's a data/blob or a non-R2 external URL, it's NOT a relative R2 path.
+        if ((pathOrUrl.startsWith('data:') || pathOrUrl.startsWith('blob:'))) return false;
+        if (pathOrUrl.startsWith('http') && !hasR2Identifier) return false;
+
+        if (hasR2Identifier) return true;
 
         // 2. Relative Path prefixes check
         const r2Prefixes = ['beats/', 'drumkits/', 'avatars/', 'banners/', 'public/', 'products/', 'covers/', 'temp-previews/', 'audio/'];

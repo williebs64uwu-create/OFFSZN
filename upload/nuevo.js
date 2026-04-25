@@ -50,6 +50,22 @@ window.uploaderState = {
 };
 let uploaderState = window.uploaderState;
 
+// --- Slug Generation ---
+function generatePublicSlug(title) {
+    if (!title) return "";
+    return title
+        .toLowerCase()
+        .trim()
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // Remove accents
+        .replace(/\+/g, '-') // Replace + with -
+        .replace(/_/g, '-') // Replace _ with -
+        .replace(/[^\w\s-]/g, '') // Remove special characters
+        .replace(/\s+/g, '-') // Spaces to hyphens
+        .replace(/-+/g, '-') // Multiple hyphens to single
+        .replace(/^-+|-+$/g, '') // Trim hyphens from ends
+        .substring(0, 60); // Max 60 characters
+}
+
 // --- Licensing Logic ---
 const DEFAULT_LICENSES = {
     offszn_basic: { name: 'Basic', price: 20.00, enabled: true, features: ['MP3 Tagged'], id: 'offszn_basic' },
@@ -2099,6 +2115,7 @@ window.handlePublish = async function () {
         const finalData = {
             producer_id: userId,
             name: document.getElementById('titleInput').value,
+            public_slug: generatePublicSlug(document.getElementById('titleInput').value),
             description: document.getElementById('descInput').value || '',
             release_date: document.getElementById('dateInput').value || null,
             visibility: document.getElementById('visibilityInput').value || 'public',
