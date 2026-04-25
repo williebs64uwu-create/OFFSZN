@@ -91,7 +91,10 @@ export const createProduct = async (req, res) => {
             status,
             promo_active,
             promo_buy_qty,
-            promo_get_qty
+            promo_get_qty,
+            public_slug,
+            youtube_id,
+            youtube_url
         } = req.body;
 
         const finalTitle = name || title;
@@ -178,7 +181,13 @@ export const createProduct = async (req, res) => {
             promo_get_qty: promo_get_qty || 1,
 
             release_date: release_date || null,
-            visibility: visibility || 'public'
+            visibility: visibility || 'public',
+            public_slug: public_slug || req.body.public_slug || null,
+            youtube_id: youtube_id || null,
+            youtube_url: youtube_url || null,
+            licenses: licenses || null,
+            mp3_url: mp3_url || audio_url || null,
+            audio_url: audio_url || mp3_url || null
         };
 
         const { data: newProduct, error: insertError } = await supabase
