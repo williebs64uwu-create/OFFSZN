@@ -24,17 +24,17 @@ function escapeHTML(str) {
  */
 function linkify(text) {
     if (!text) return '';
-    
+
     // 1. First escape existing HTML
     let escaped = escapeHTML(text);
-    
+
     // 2. Wrap URLs
     // Regex for URLs starting with http/https/www
     const urlRegex = /(https?:\/\/[^\s<]+)/g;
     escaped = escaped.replace(urlRegex, (url) => {
         return `<a href="${url}" target="_blank" rel="noopener noreferrer" class="bio-link">${url}</a>`;
     });
-    
+
     // 3. Wrap @mentions
     // Regex for @mentions (supporting OFFSZN nickname chars: letters, numbers, _, ., -)
     const mentionRegex = /(@[a-zA-Z0-9_.-]+)/g;
@@ -42,7 +42,7 @@ function linkify(text) {
         const username = mention.substring(1);
         return `<a href="/@${username}" class="bio-mention">${mention}</a>`;
     });
-    
+
     return escaped;
 }
 
@@ -1753,7 +1753,7 @@ window.ProfilePersonalizer = {
                 const { data: { session }, error: sessionError } = await window.supabaseClient.auth.getSession();
 
                 if (sessionError || !session) {
-                    throw new Error("Tu sesiÃ³n ha expirado. Por favor recarga la pÃ¡gina.");
+                    throw new Error("Tu Sesión ha expirado. Por favor recarga la pÃ¡gina.");
                 }
 
                 const res = await fetch('/api/imagekit/banner', {
@@ -3225,7 +3225,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (window.showGuestModal) {
                         window.showGuestModal(
                             "¡Guarda tus favoritos!",
-                            "Inicia sesiÃ³n para guardar estos sonidos en tu colecciÃ³n personal."
+                            "Inicia Sesión para guardar estos sonidos en tu colecciÃ³n personal."
                         );
                     } else {
                         window.location.href = '/pages/login.html';

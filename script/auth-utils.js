@@ -268,6 +268,7 @@ window.AuthUtils = {
      */
     /**
      * Identifies if a path or URL belongs to Cloudflare R2 storage.
+     */
     isR2Url: function (pathOrUrl) {
         if (!pathOrUrl || typeof pathOrUrl !== 'string') return false;
 
