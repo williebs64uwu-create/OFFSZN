@@ -8,7 +8,7 @@
 
 ## 2. Métricas Financieras y Capital (Reporte Abril 2026)
 ### Estado de Cuenta y Rentabilidad
-- **Capital Actual Banco:** ~12,342 PEN (Aprox. $3,663 USD, tipo de cambio histórico/referencial ~3.37).
+- **Capital Actual Banco:** ~13,100 PEN (Aprox. $3,880 USD, tipo de cambio histórico/referencial ~3.37).
 - **Rendimiento Financiero (TREA):** El capital depositado genera intereses con una TREA del 5% al 5.5%. El dinero genera dinero pasivamente (Último pago registrado por puros intereses: 44.62 soles).
   - *Growth Hack Financiero:* Aprovechamiento de historial crediticio impecable para aceptar préstamos a 0% de costo/comisiones (ej. 32,000 soles). Ese dinero se inyecta temporalmente a la cuenta TREA, generando intereses (ej. ~100 soles de ganancia extra rápida), y luego se devuelve el capital exacto sin pagar un céntimo de costo.
 - **Ingresos Externos Adicionales (Out-of-platform):** +$500 generados fuera de transacciones digitales automatizadas. Se divide en:

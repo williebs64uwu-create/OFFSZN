@@ -36,11 +36,11 @@ function linkify(text) {
     });
 
     // 3. Wrap @mentions
-    // Regex for @mentions (supporting OFFSZN nickname chars: letters, numbers, _, ., -)
-    const mentionRegex = /(@[a-zA-Z0-9_.-]+)/g;
-    escaped = escaped.replace(mentionRegex, (mention) => {
+    // Only match @mentions at the start of a string or after a whitespace to avoid breaking inside URLs
+    const mentionRegex = /(^|\s)(@[a-zA-Z0-9_.-]+)/g;
+    escaped = escaped.replace(mentionRegex, (match, prefix, mention) => {
         const username = mention.substring(1);
-        return `<a href="/@${username}" class="bio-mention">${mention}</a>`;
+        return `${prefix}<a href="/@${username}" class="bio-mention">${mention}</a>`;
     });
 
     return escaped;
