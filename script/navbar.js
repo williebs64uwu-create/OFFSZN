@@ -661,22 +661,28 @@ function renderActualResults(results) {
         let imgDisplaySrc = '';
         let isImageKit = false;
         
-        if (item.img) {
+        let rawImg = item.img;
+        if (rawImg && rawImg.includes('cloudinary.com')) {
+            const match = rawImg.match(/\/upload\/(?:[^\/]+\/)?(?:v\d+\/)?(.+)$/);
+            if (match) rawImg = match[1];
+        }
+
+        if (rawImg) {
             if (isUser) {
                 const IK_BASE = 'https://ik.imagekit.io/6gzqp4xam/';
-                if (!item.img.startsWith('http')) {
-                    const cleanImg = item.img.startsWith('/') ? item.img.substring(1) : item.img;
+                if (!rawImg.startsWith('http')) {
+                    const cleanImg = rawImg.startsWith('/') ? rawImg.substring(1) : rawImg;
                     imgDisplaySrc = `${IK_BASE}${cleanImg}?tr:w-100,h-100,fo-auto`;
                     isImageKit = true;
-                } else if (item.img.includes('ik.imagekit.io')) {
-                    imgDisplaySrc = item.img.includes('?') ? item.img : `${item.img}?tr:w-100,h-100,fo-auto`;
+                } else if (rawImg.includes('ik.imagekit.io')) {
+                    imgDisplaySrc = rawImg.includes('?') ? rawImg : `${rawImg}?tr:w-100,h-100,fo-auto`;
                     isImageKit = true;
                 } else {
-                    imgDisplaySrc = item.img;
+                    imgDisplaySrc = rawImg;
                 }
             } else {
                 // Products (Beats/Kits) -> ALWAYS R2/Supabase
-                imgDisplaySrc = item.img;
+                imgDisplaySrc = rawImg;
             }
         } else {
             // PRO PLACEHOLDER: Clean circular avatars for missing images
@@ -777,9 +783,28 @@ function renderHistoryAndTrends() {
 
         let iconHtml = '<div class="bi bi-clock-history" style="width:24px; height:24px; display:flex; align-items:center; justify-content:center; background:#222; border-radius:50%; font-size:0.8rem;"></div>';
         const isUserHistory = historyObj.type === 'user';
-        
-        if (historyObj.img) {
-            iconHtml = `<img data-r2-version="${historyObj.r2_version || historyObj.storage_version || 'v2'}" data-r2-src="${historyObj.img}" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" style="width:24px; height:24px; border-radius:50%; object-fit:cover; background:#1a1a1a; opacity: 0.4;">`;
+        let rawHistoryImg = historyObj.img;
+        // 🔥 CACHE HEALING: If history contains a cloudinary link, discard it. 
+        // It will show a clean placeholder and naturally update next time they click the user.
+        if (rawHistoryImg && rawHistoryImg.includes('cloudinary.com')) {
+            rawHistoryImg = null;
+        }
+
+        if (rawHistoryImg) {
+            let finalSrc = rawHistoryImg;
+            let isImageKitLocal = false;
+
+            if (isUserHistory) {
+                const IK_BASE = 'https://ik.imagekit.io/6gzqp4xam/';
+                if (!rawHistoryImg.startsWith('http')) {
+                    finalSrc = `${IK_BASE}${rawHistoryImg.startsWith('/') ? rawHistoryImg.substring(1) : rawHistoryImg}?tr:w-100,h-100,fo-auto`;
+                    isImageKitLocal = true;
+                } else if (rawHistoryImg.includes('ik.imagekit.io')) {
+                    isImageKitLocal = true;
+                }
+            }
+            
+            iconHtml = `<img data-r2-version="${historyObj.r2_version || historyObj.storage_version || 'v2'}" data-r2-src="${isImageKitLocal ? '' : finalSrc}" src="${isImageKitLocal ? finalSrc : 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'}" style="width:24px; height:24px; border-radius:50%; object-fit:cover; background:#1a1a1a; opacity: ${isImageKitLocal ? '1' : '0.4'};">`;
         } else if (isUserHistory) {
             const placeholderBase = 'https://ui-avatars.com/api/?background=252525&color=fff&size=64&bold=true';
             const placeholder = `${placeholderBase}&name=${encodeURIComponent(historyObj.term || 'U')}`;
@@ -799,7 +824,7 @@ function renderHistoryAndTrends() {
             id: historyObj.id,
             public_slug: historyObj.public_slug,
             product_type: historyObj.product_type,
-            img: historyObj.img,
+            img: rawHistoryImg || historyObj.img,
             subtitle: historyObj.subtitle,
             r2_version: historyObj.r2_version || historyObj.storage_version || 'v2'
         }));

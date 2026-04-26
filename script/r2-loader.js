@@ -14,10 +14,23 @@
             if (!src) return;
 
             // 🔥 EXTERNAL FAST-PATH: If it's already an optimized external URL, show immediately
-            if (typeof src === 'string' && (src.includes('ik.imagekit.io') || src.includes('cloudinary.com'))) {
+            if (typeof src === 'string' && src.includes('ik.imagekit.io')) {
                 el.src = src;
                 el.style.opacity = '1';
                 return;
+            }
+
+            // 🔥 CLEAN CLOUDINARY: Convert old cloudinary URLs to relative paths
+            if (typeof src === 'string' && src.includes('cloudinary.com')) {
+                const match = src.match(/\/upload\/(?:[^\/]+\/)?(?:v\d+\/)?(.+)$/);
+                if (match) {
+                    src = match[1];
+                    el.setAttribute('data-r2-src', src);
+                } else {
+                    el.src = src;
+                    el.style.opacity = '1';
+                    return;
+                }
             }
 
             const isR2 = (window.AuthUtils && window.AuthUtils.isR2Url) 
