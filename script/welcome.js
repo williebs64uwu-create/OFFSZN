@@ -456,7 +456,7 @@ document.addEventListener('DOMContentLoaded', () => {
              console.log("🚀 Redirigiendo a destino previo tras onboarding:", redirect);
              window.location.replace(decodeURIComponent(redirect));
            } else {
-             window.location.replace('/' + finalNick);
+             window.location.replace('/@' + finalNick);
            }
         });
       }
