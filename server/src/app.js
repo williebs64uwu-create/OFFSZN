@@ -49,12 +49,9 @@ const __dirname = path.dirname(__filename);
 const rootPath = path.join(__dirname, '../../');
 
 // --- 0. SECURITY HEADERS (MANDATORY FOR FFMPEG WASM) ---
-// We apply this only to pages that need FFmpeg and their cleaning scripts
-// to avoid breaking external resources (like avatars/images) on the rest of the site.
 app.use((req, res, next) => {
     const ffmpegPaths = [
         '/legal/offszn-debug',
-        // '/cuenta/Upload/Beats', // 🔥 REMOVED: This strict COOP header blocks Google Auth Popup callbacks. The new Clean Pipeline doesn't need it.
         '/ffmpeg_clean',
         '/offszn-debug'
     ];
@@ -68,6 +65,23 @@ app.use((req, res, next) => {
     next();
 });
 
+// --- 0.1 SUBDOMAIN DETECTION MIDDLEWARE ---
+app.use((req, res, next) => {
+    const host = req.headers.host;
+    if (host && (host.endsWith('.offszn.lat') || host.endsWith('.localhost:3000'))) {
+        const parts = host.split('.');
+        const subdomain = parts[0];
+        
+        // Exclude reserved subdomains
+        const reserved = ['www', 'api', 'admin', 'offszn', 'studio', 'cuenta', 'explorar'];
+        if (!reserved.includes(subdomain) && parts.length >= (host.includes('localhost') ? 2 : 3)) {
+            req.isSubdomain = true;
+            req.subdomainUser = subdomain;
+        }
+    }
+    next();
+});
+
 // --- 1. CONFIGURACIÓN CORS ROBUSTA ---
 const allowedOrigins = [
     'https://offszn.lat',
@@ -77,7 +91,12 @@ const allowedOrigins = [
 const corsOptions = {
     origin: function (origin, callback) {
         if (!origin) return callback(null, true);
-        if (allowedOrigins.indexOf(origin) !== -1 || origin.startsWith('http://localhost') || origin === 'null') {
+        
+        // Permite el dominio principal, localhost y cualquier subdominio de offszn.lat
+        const isMainDomain = allowedOrigins.indexOf(origin) !== -1;
+        const isSubdomain = origin.endsWith('.offszn.lat') || origin.endsWith('.localhost:3000');
+        
+        if (isMainDomain || isSubdomain || origin.startsWith('http://localhost') || origin === 'null') {
             callback(null, true);
         } else {
             console.log("⚠️ CORS Warning (dev):", origin);
@@ -743,9 +762,16 @@ app.get(['/@:username/:slug', '/:username/:slug'], async (req, res, next) => {
 });
 
 // --- 3.6 PROFILE SHORTCUT ROUTE (/:username) ---
-// Supports both /@username and /username
-app.get(['/@:username', '/:username'], async (req, res, next) => {
-    const { username } = req.params;
+// Supports /@username, /username, and username.offszn.lat
+app.get(['/@:username', '/:username', '/'], async (req, res, next) => {
+    let username = req.params.username;
+
+    // Handle Subdomain Root
+    if (!username && req.isSubdomain) {
+        username = req.subdomainUser;
+    }
+
+    if (!username) return next();
 
     // 1. Reserved Words / Known Routes Exclusion
     const reserved = [
@@ -767,44 +793,52 @@ app.get(['/@:username', '/:username'], async (req, res, next) => {
     const localPath = path.join(rootPath, username);
     if (fs.existsSync(localPath)) return next();
 
-    // Serve Profile Template with OG Tags injected
-    const profilePagePath = path.join(rootPath, 'perfil-publico.html');
-    if (!fs.existsSync(profilePagePath)) return next();
-
     try {
         const { supabase: db } = await import('./infrastructure/database/connection.js');
         const { data: user } = await db
             .from('users')
-            .select('nickname, role, avatar_url, bio')
+            .select('id, nickname, role, avatar_url, bio, template')
             .eq('nickname', username)
             .single();
 
+        if (!user) return next();
+
+        // --- TEMPLATE SELECTION ---
+        let templateFile = 'perfil-publico.html';
+        if (user.template === 'premium') {
+            templateFile = 'premium-profile.html';
+        }
+        
+        const profilePagePath = path.join(rootPath, templateFile);
+        if (!fs.existsSync(profilePagePath)) {
+            // Fallback if premium template not found
+            return res.sendFile(path.join(rootPath, 'perfil-publico.html'));
+        }
+
         let html = fs.readFileSync(profilePagePath, 'utf8');
 
-        if (user) {
-            const title = `${user.nickname} | ${user.role || 'Productor'} - OFFSZN`;
-            const description = user.bio 
-                ? user.bio.substring(0, 160) + '...'
-                : `Escucha los últimos beats y recursos de ${user.nickname} en OFFSZN.lat`;
-            let image = user.avatar_url || 'https://offszn.lat/images/LOGO%20OFFSZN.webp';
-            if (image && image.startsWith('http')) {
-                // If it's a private R2 URL, redirect to proxy
-                if (image.includes('r2.cloudflarestorage.com')) {
-                    try {
-                        const urlObj = new URL(image);
-                        const key = urlObj.pathname.startsWith('/') ? urlObj.pathname.substring(1) : urlObj.pathname;
-                        image = `https://offszn.lat/api/r2-public/${key}`;
-                    } catch (e) {}
-                }
-            } else if (image && !image.startsWith('http')) {
-                // Relative path, use proxy
-                image = `https://offszn.lat/api/r2-public/${image}`;
+        // --- OG TAGS & INJECTION ---
+        const title = `${user.nickname} | ${user.role || 'Productor'} - OFFSZN`;
+        const description = user.bio 
+            ? user.bio.substring(0, 160) + '...'
+            : `Escucha los últimos beats y recursos de ${user.nickname} en OFFSZN.lat`;
+        
+        let image = user.avatar_url || 'https://offszn.lat/images/LOGO%20OFFSZN.webp';
+        if (image && image.startsWith('http')) {
+            if (image.includes('r2.cloudflarestorage.com')) {
+                try {
+                    const urlObj = new URL(image);
+                    const key = urlObj.pathname.startsWith('/') ? urlObj.pathname.substring(1) : urlObj.pathname;
+                    image = `https://offszn.lat/api/r2-public/${key}`;
+                } catch (e) {}
             }
+        } else if (image && !image.startsWith('http')) {
+            image = `https://offszn.lat/api/r2-public/${image}`;
+        }
 
+        const url = req.isSubdomain ? `https://${user.nickname}.offszn.lat` : `https://offszn.lat/@${user.nickname}`;
 
-            const url = `https://offszn.lat/@${user.nickname}`;
-
-            const ogTags = `
+        const ogTags = `
     <!-- Dynamic Profile OG Tags -->
     <meta property="og:title" content="${title}">
     <meta property="og:description" content="${description}">
@@ -820,28 +854,35 @@ app.get(['/@:username', '/:username'], async (req, res, next) => {
     <meta name="twitter:title" content="${title}">
     <meta name="twitter:description" content="${description}">
     <meta name="twitter:image" content="${image}">
-            `;
+        `;
 
-            const personSchema = {
-                "@context": "https://schema.org",
-                "@type": "Person",
-                "name": user.nickname,
-                "url": url,
-                "image": image,
-                "description": user.bio || description,
-                "jobTitle": user.role || "Productor Musical"
-            };
-            const schemaTag = `<script type="application/ld+json">${JSON.stringify(personSchema)}</script>`;
+        const personSchema = {
+            "@context": "https://schema.org",
+            "@type": "Person",
+            "name": user.nickname,
+            "url": url,
+            "image": image,
+            "description": user.bio || description,
+            "jobTitle": user.role || "Productor Musical"
+        };
+        const schemaTag = `<script type="application/ld+json">${JSON.stringify(personSchema)}</script>`;
 
-            html = html.replace('<head>', `<head>\n${ogTags}\n    ${schemaTag}`);
-            html = html.replace(/<title>.*?<\/title>/, `<title>${title}</title>`);
+        // Specific Premium Template Placeholders
+        if (user.template === 'premium') {
+            html = html.replace(/{{USER_NICKNAME}}/g, user.nickname);
+            html = html.replace(/{{USER_NAME_HERO}}/g, user.nickname.toUpperCase());
+            html = html.replace(/{{USER_BIO}}/g, user.bio || 'Productor Musical');
+            html = html.replace('</head>', `<script>window.OFFSZN_USER_ID = "${user.id}";</script></head>`);
         }
+
+        html = html.replace('<head>', `<head>\n${ogTags}\n    ${schemaTag}`);
+        html = html.replace(/<title>.*?<\/title>/, `<title>${title}</title>`);
 
         res.send(html);
 
     } catch (err) {
         console.error("Error serving Profile:", err);
-        res.sendFile(profilePagePath);
+        res.status(404).sendFile(path.join(rootPath, '404.html'));
     }
 });
 

@@ -138,13 +138,15 @@ window.AuthUtils = {
                     
                     // Always ensure cookie has the token for server API calls
                     const maxAge = 60 * 60 * 24 * 7; // 1 week
-                    document.cookie = `sb-access-token=${session.access_token}; path=/; max-age=${maxAge}; SameSite=Strict; Secure`;
+                    const domain = window.location.hostname.includes('offszn.lat') ? '; domain=.offszn.lat' : '';
+                    document.cookie = `sb-access-token=${session.access_token}; path=/; max-age=${maxAge}; SameSite=Lax; Secure${domain}`;
                 } else if (event === 'SIGNED_OUT') {
                     window.AuthUtils._cachedToken = null;
                     window.currentUserId = null;
                     window.currentUserNickname = null;
                     localStorage.removeItem('authToken');
-                    document.cookie = `sb-access-token=; path=/; max-age=0; SameSite=Strict; Secure`;
+                    const domain = window.location.hostname.includes('offszn.lat') ? '; domain=.offszn.lat' : '';
+                    document.cookie = `sb-access-token=; path=/; max-age=0; SameSite=Lax; Secure${domain}`;
                 }
             });
 
