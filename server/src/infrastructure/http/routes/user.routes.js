@@ -12,7 +12,8 @@ import {
     updateMyProfile,
     getMyListenHistory,
     clearMyListenHistory,
-    claimWelcomeCoupon
+    claimWelcomeCoupon,
+    rateProducerProfile
 } from '../controllers/UserController.js';
 import {
     followUser,
@@ -48,6 +49,7 @@ router.post('/products/:id/like', toggleProductLike); // New
 router.put('/complete-onboarding', completeOnboarding);
 router.put('/me/onboarding', completeOnboarding);
 router.post('/me/claim-welcome-coupon', claimWelcomeCoupon);
+router.post('/me/rate-producer', rateProducerProfile);
 
 // ¡YA NO ESTÁN LAS RUTAS PÚBLICAS AQUÍ!
 

@@ -563,9 +563,18 @@ input:checked+.slider:before {
 /* Trending Grid: Strict 7-column layout */
 .trending-grid {
     display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 16px;
+    /* Mejorado: usa auto-fill con minmax para que las tarjetas mantengan su tamaño ideal (aprox 180-200px) 
+       y no se deformen ni se pongan desiguales cuando hay pocos productos. */
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 20px;
     margin-bottom: 48px;
+    width: 100%;
+}
+
+/* Asegurar que las tarjetas dentro del grid tengan un ancho consistente */
+.trending-grid .ots-smart-card {
+    min-width: 0; /* Permite que el grid controle el ancho sin desbordamientos */
+    width: 100%;
 }
 
 .skeleton-card {
@@ -1269,10 +1278,11 @@ input:checked+.slider:before {
     color: #999;
 }
 
-/* Trending Grid Responsive */
+/* Las reglas de arriba con auto-fill ya manejan la mayoría de los casos de redimensionamiento */
 @media (max-width: 1400px) {
     .trending-grid {
-        grid-template-columns: repeat(6, 1fr);
+        grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+        gap: 16px;
     }
 }
 

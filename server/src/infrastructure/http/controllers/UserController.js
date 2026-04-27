@@ -347,17 +347,102 @@ export const getUserByNickname = async (req, res) => {
         }
 
         // Fetch counts manually to ensure accuracy
-        const [followersRes, productsRes, playsRes] = await Promise.all([
+        const [followersRes, productsRes, productStatsRes, ratingsRes] = await Promise.all([
             supabase.from('followers').select('*', { count: 'exact', head: true }).eq('user_id', user.id),
             supabase.from('products').select('*', { count: 'exact', head: true }).eq('producer_id', user.id).eq('status', 'approved').eq('visibility', 'public'),
-            supabase.from('products').select('plays_count').eq('producer_id', user.id).eq('status', 'approved').eq('visibility', 'public')
+            supabase.from('products').select('plays_count, sales_count, downloads_count, views_count').eq('producer_id', user.id).eq('status', 'approved'),
+            supabase.from('profile_ratings').select('rating').eq('producer_id', user.id)
         ]);
 
         user.followers_count = followersRes.count || 0;
         user.products_count = productsRes.count || 0;
-        user.total_plays = (playsRes.data || []).reduce((acc, curr) => acc + (curr.plays_count || 0), 0);
+        
+        const stats = productStatsRes.data || [];
+        user.total_plays = stats.reduce((acc, curr) => acc + (curr.plays_count || 0), 0);
+        user.total_sales = stats.reduce((acc, curr) => acc + (curr.sales_count || 0), 0);
+        user.total_downloads = stats.reduce((acc, curr) => acc + (curr.downloads_count || 0), 0);
 
-        console.log(`✅ UserController: Found '${user.nickname}' (ID: ${user.id}) | Followers: ${user.followers_count} | Products: ${user.products_count} | Plays: ${user.total_plays}`);
+        const ratings = ratingsRes.data || [];
+        user.total_ratings = ratings.length;
+        user.average_rating = ratings.length > 0 
+            ? parseFloat((ratings.reduce((acc, curr) => acc + curr.rating, 0) / ratings.length).toFixed(1)) 
+            : 0;
+
+        // 4. Calculate Ranking (Fair Algorithm)
+        try {
+            // Fetch all producers to calculate rank
+            const { data: allProducers } = await supabase
+                .from('users')
+                .select('id, is_verified, banner_url, bio')
+                .eq('is_producer', true);
+
+            if (allProducers) {
+                // Fetch stats for all producers
+                const { data: allProductStats } = await supabase
+                    .from('products')
+                    .select('producer_id, views_count, plays_count, downloads_count, sales_count')
+                    .eq('status', 'approved');
+
+                const { data: allFollowers } = await supabase
+                    .from('followers')
+                    .select('user_id');
+
+                const { data: allRatings } = await supabase
+                    .from('profile_ratings')
+                    .select('producer_id, rating');
+
+                // Map data for fast access
+                const followerCounts = {};
+                allFollowers?.forEach(f => followerCounts[f.user_id] = (followerCounts[f.user_id] || 0) + 1);
+
+                const prodStats = {};
+                allProductStats?.forEach(ps => {
+                    if (!prodStats[ps.producer_id]) prodStats[ps.producer_id] = { views: 0, plays: 0, downloads: 0, sales: 0, uploads: 0 };
+                    prodStats[ps.producer_id].views += (ps.views_count || 0);
+                    prodStats[ps.producer_id].plays += (ps.plays_count || 0);
+                    prodStats[ps.producer_id].downloads += (ps.downloads_count || 0);
+                    prodStats[ps.producer_id].sales += (ps.sales_count || 0);
+                    prodStats[ps.producer_id].uploads += 1;
+                });
+
+                const ratingStats = {};
+                allRatings?.forEach(r => {
+                    if (!ratingStats[r.producer_id]) ratingStats[r.producer_id] = { total: 0, count: 0 };
+                    ratingStats[r.producer_id].total += r.rating;
+                    ratingStats[r.producer_id].count += 1;
+                });
+
+                // Calculate scores for everyone
+                const leaderboard = allProducers.map(p => {
+                    const stats = prodStats[p.id] || { views: 0, plays: 0, downloads: 0, sales: 0, uploads: 0 };
+                    const fCount = followerCounts[p.id] || 0;
+                    const rStat = ratingStats[p.id] || { total: 0, count: 0 };
+                    const avgR = rStat.count > 0 ? rStat.total / rStat.count : 0;
+
+                    let score = 0;
+                    score += stats.views * 1;
+                    score += stats.plays * 2;
+                    score += stats.downloads * 20;
+                    score += stats.sales * 50;
+                    score += stats.uploads * 10;
+                    score += fCount * 10;
+                    score += avgR * 100; // Average rating bonus
+                    if (p.is_verified) score += 100;
+                    if (p.banner_url || (p.bio && p.bio.length > 10)) score += 50;
+
+                    return { id: p.id, score };
+                });
+
+                leaderboard.sort((a, b) => b.score - a.score);
+                const rank = leaderboard.findIndex(p => p.id === user.id) + 1;
+                user.ranking = rank > 0 ? rank : 'N/A';
+            }
+        } catch (rankErr) {
+            console.error("Error calculating rank:", rankErr);
+            user.ranking = 'N/A';
+        }
+
+        console.log(`✅ UserController: Found '${user.nickname}' (ID: ${user.id}) | Followers: ${user.followers_count} | Sales: ${user.total_sales} | Rating: ${user.average_rating}`);
         res.status(200).json(user);
 
     } catch (err) {
@@ -732,5 +817,97 @@ export const getUsersBulk = async (req, res) => {
     } catch (err) {
         console.error("Error en getUsersBulk:", err.message);
         res.status(500).json({ error: 'Error al obtener información de usuarios' });
+    }
+};
+
+export const rateProducerProfile = async (req, res) => {
+    try {
+        const userId = req.user.userId;
+        const { producerId, rating, comment } = req.body;
+
+        if (!producerId || !rating) {
+            return res.status(400).json({ error: 'Faltan datos obligatorios (producerId, rating).' });
+        }
+
+        if (rating < 1 || rating > 5) {
+            return res.status(400).json({ error: 'La calificación debe estar entre 1 y 5.' });
+        }
+
+        // Check if rating self
+        if (userId === producerId) {
+            return res.status(400).json({ error: 'No puedes calificarte a ti mismo.' });
+        }
+
+        // 1. Check for 24-hour rate limit
+        const { data: existingRating, error: fetchError } = await supabase
+            .from('profile_ratings')
+            .select('created_at')
+            .eq('user_id', userId)
+            .eq('producer_id', producerId)
+            .single();
+
+        if (existingRating) {
+            const lastRated = new Date(existingRating.created_at);
+            const now = new Date();
+            const diffMs = now - lastRated;
+            const diffHours = diffMs / (1000 * 60 * 60);
+
+            if (diffHours < 24) {
+                const remainingHours = Math.ceil(24 - diffHours);
+                return res.status(429).json({ 
+                    error: `Ya has calificado a este productor. Debes esperar ${remainingHours} ${remainingHours === 1 ? 'hora' : 'horas'} para volver a hacerlo.` 
+                });
+            }
+        }
+
+        // 2. Upsert rating (resets created_at to now)
+        const { data, error } = await supabase
+            .from('profile_ratings')
+            .upsert({
+                user_id: userId,
+                producer_id: producerId,
+                rating: rating,
+                comment: comment || null,
+                created_at: new Date().toISOString()
+            }, { onConflict: 'user_id, producer_id' })
+            .select();
+
+        if (error) throw error;
+
+        // 3. Send Notification to Producer
+        try {
+            // Fetch actor's nickname
+            const { data: actorData } = await supabase
+                .from('users')
+                .select('nickname')
+                .eq('id', userId)
+                .single();
+
+            const actorNickname = actorData?.nickname || 'Alguien';
+            const stars = '⭐'.repeat(rating);
+
+            await supabase.from('notifications').insert([{
+                user_id: producerId,
+                actor_id: userId,
+                type: 'new_rating',
+                title: 'Nueva Calificación',
+                message: `<strong>${actorNickname}</strong> te ha dado una calificación de <strong>${rating}</strong> estrellas ${stars}`,
+                link: `/@${actorNickname}`,
+                data: { rating, rater_id: userId, rater_nickname: actorNickname },
+                read: false
+            }]);
+        } catch (notifErr) {
+            console.error("Error sending notification:", notifErr.message);
+            // Don't fail the request if notification fails
+        }
+
+        res.status(200).json({
+            message: 'Calificación enviada correctamente.',
+            data: data[0]
+        });
+
+    } catch (err) {
+        console.error("Error en rateProducerProfile:", err.message);
+        res.status(500).json({ error: 'Error al procesar la calificación.' });
     }
 };

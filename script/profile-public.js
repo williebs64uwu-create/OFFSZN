@@ -871,12 +871,13 @@ function renderAboutTab(container) {
     statsTitle.textContent = 'Impacto y Confianza';
     statsCard.appendChild(statsTitle);
 
+    // --- REAL STATS: IMPACTO Y CONFIANZA ---
     const statsGrid = document.createElement('div');
     statsGrid.style.cssText = 'display: grid; grid-template-columns: 1fr 1fr; gap: 16px;';
 
     const createStatItem = (icon, value, label) => {
         const item = document.createElement('div');
-        item.style.cssText = 'display: flex; flex-direction: column; align-items: center; text-align: center; padding: 16px; background: rgba(255,255,255,0.03); border-radius: 10px; border: 1px solid rgba(255,255,255,0.05);';
+        item.style.cssText = 'display: flex; flex-direction: column; align-items: center; text-align: center; padding: 16px; background: rgba(255,255,255,0.03); border-radius: 10px; border: 1px solid rgba(255,255,255,0.05); transition: all 0.3s ease;';
 
         const i = document.createElement('i');
         i.className = `bi ${icon}`;
@@ -896,11 +897,16 @@ function renderAboutTab(container) {
         return item;
     };
 
-    // Hardcoded for now, but following the "everything in INFO" request
-    statsGrid.appendChild(createStatItem('bi-cart-check-fill', user.products_sold || '150+', 'Ventas'));
-    statsGrid.appendChild(createStatItem('bi-people-fill', '98%', 'Satisfacción'));
-    statsGrid.appendChild(createStatItem('bi-star-fill', '4.9/5', 'Calificación'));
-    statsGrid.appendChild(createStatItem('bi-award-fill', 'Top 10%', 'Ránking'));
+    // Real Data from UserController
+    const totalSales = user.total_sales || 0;
+    const avgRating = user.average_rating || 0;
+    const totalDownloads = user.total_downloads || 0;
+    const ranking = user.ranking || 'N/A';
+
+    statsGrid.appendChild(createStatItem('bi-cart-check-fill', totalSales > 0 ? totalSales : '0', 'Ventas'));
+    statsGrid.appendChild(createStatItem('bi-trophy-fill', ranking !== 'N/A' ? `#${ranking}` : 'N/A', 'Ránking'));
+    statsGrid.appendChild(createStatItem('bi-star-fill', avgRating > 0 ? `${avgRating}/5` : 'N/A', 'Calificación'));
+    statsGrid.appendChild(createStatItem('bi-cloud-arrow-down-fill', totalDownloads > 0 ? totalDownloads : '0', 'Descargas'));
 
     statsCard.appendChild(statsGrid);
     aboutGrid.appendChild(statsCard);
@@ -915,12 +921,13 @@ function renderAboutTab(container) {
     ratingsTitle.textContent = 'Calificaciones y Reseñas';
     ratingsCard.appendChild(ratingsTitle);
 
+    // --- REAL RATINGS SUMMARY ---
     const ratingsSummary = document.createElement('div');
     ratingsSummary.style.cssText = 'display: flex; align-items: center; gap: 16px; margin-bottom: 24px;';
 
     const bigRating = document.createElement('div');
     bigRating.style.cssText = 'font-size: 2.5rem; font-weight: 900; color: #fff; line-height: 1;';
-    bigRating.textContent = '4.9';
+    bigRating.textContent = avgRating > 0 ? avgRating : '0.0';
     ratingsSummary.appendChild(bigRating);
 
     const starsContainer = document.createElement('div');
@@ -929,11 +936,18 @@ function renderAboutTab(container) {
     starsContainer.style.gap = '4px';
 
     const starsRow = document.createElement('div');
-    starsRow.style.color = '#fff';
-    starsRow.style.fontSize = '1rem';
-    for (let i = 0; i < 5; i++) {
+    starsRow.style.color = '#FFB800'; // Color dorado para estrellas
+    starsRow.style.fontSize = '1.1rem';
+    for (let i = 1; i <= 5; i++) {
         const star = document.createElement('i');
-        star.className = i < 4 ? 'bi bi-star-fill' : 'bi bi-star-half';
+        if (i <= Math.floor(avgRating)) {
+            star.className = 'bi bi-star-fill';
+        } else if (i - 0.5 <= avgRating) {
+            star.className = 'bi bi-star-half';
+        } else {
+            star.className = 'bi bi-star';
+            star.style.opacity = '0.3';
+        }
         star.style.marginRight = '2px';
         starsRow.appendChild(star);
     }
@@ -941,17 +955,134 @@ function renderAboutTab(container) {
 
     const reviewsCount = document.createElement('span');
     reviewsCount.style.cssText = 'color: #666; font-size: 0.85rem;';
-    reviewsCount.textContent = 'Basado en 24 reseñas';
+    reviewsCount.textContent = `Basado en ${user.total_ratings || 0} calificaciones`;
     starsContainer.appendChild(reviewsCount);
 
     ratingsSummary.appendChild(starsContainer);
     ratingsCard.appendChild(ratingsSummary);
 
-    // Placeholder for future reviews
-    const placeholderMsg = document.createElement('p');
-    placeholderMsg.style.cssText = 'color: #444; font-size: 0.85rem; font-style: italic; border-top: 1px solid #222; padding-top: 16px; margin-top: 0;';
-    placeholderMsg.textContent = 'Las reseñas detalladas de clientes se activarán próximamente para este perfil.';
-    ratingsCard.appendChild(placeholderMsg);
+    // --- SECCIÓN "CALIFICAR" INTERACTIVA ---
+    const rateSection = document.createElement('div');
+    rateSection.style.cssText = 'border-top: 1px solid #222; padding-top: 20px; margin-top: 20px;';
+
+    const rateLabel = document.createElement('h5');
+    rateLabel.style.cssText = 'color: #fff; font-size: 0.85rem; margin-bottom: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;';
+    rateLabel.textContent = 'Calificar';
+    rateSection.appendChild(rateLabel);
+
+    const interactiveStars = document.createElement('div');
+    interactiveStars.style.cssText = 'display: flex; gap: 8px; font-size: 1.5rem; color: #333; cursor: pointer; margin-bottom: 20px;';
+    
+    let selectedRating = 0;
+    const stars = [];
+
+    for (let i = 1; i <= 5; i++) {
+        const star = document.createElement('i');
+        star.className = 'bi bi-star-fill';
+        star.dataset.value = i;
+        star.style.transition = 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)';
+        
+        star.onmouseover = () => {
+            stars.forEach((s, idx) => {
+                s.style.color = (idx < i) ? '#FFB800' : '#333';
+                s.style.transform = (idx < i) ? 'scale(1.1)' : 'scale(1)';
+            });
+        };
+
+        star.onmouseout = () => {
+            stars.forEach((s, idx) => {
+                s.style.color = (idx < selectedRating) ? '#FFB800' : '#333';
+                s.style.transform = (idx < selectedRating) ? 'scale(1.1)' : 'scale(1)';
+            });
+        };
+
+        star.onclick = () => {
+            selectedRating = i;
+            stars.forEach((s, idx) => {
+                s.style.color = (idx < i) ? '#FFB800' : '#333';
+                s.style.transform = (idx < i) ? 'scale(1.2)' : 'scale(1)';
+            });
+            setTimeout(() => {
+                stars.forEach((s, idx) => {
+                   if (idx < selectedRating) s.style.transform = 'scale(1.1)';
+                   else s.style.transform = 'scale(1)';
+                });
+            }, 200);
+        };
+
+        stars.push(star);
+        interactiveStars.appendChild(star);
+    }
+    rateSection.appendChild(interactiveStars);
+
+    const submitBtn = document.createElement('button');
+    submitBtn.className = 'btn-premium-mini';
+    submitBtn.style.cssText = 'width: 100%; padding: 14px; font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;';
+    submitBtn.textContent = 'Enviar Calificación';
+    
+    submitBtn.onclick = async () => {
+        if (selectedRating === 0) {
+            alert('Por favor selecciona una calificación.');
+            return;
+        }
+
+        // --- AUTH CHECK FIX ---
+        const token = window.AuthUtils?.getAccessToken() || localStorage.getItem('authToken');
+        
+        if (!token) {
+            if (window.showGuestModal) window.showGuestModal();
+            else alert('Inicia sesión para calificar.');
+            return;
+        }
+
+        // Pre-check self-rating
+        const currentUserId = window.AuthUtils?.getUserId() || window.currentUserId;
+        if (currentUserId === user.id) {
+            alert('No puedes calificarte a ti mismo.');
+            return;
+        }
+
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Enviando...';
+        submitBtn.style.opacity = '0.5';
+
+        try {
+            const response = await fetch('/api/me/rate-producer', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ producerId: user.id, rating: selectedRating })
+            });
+
+            if (response.ok) {
+                rateSection.innerHTML = `
+                    <div style="text-align: center; padding: 24px; background: rgba(0,255,100,0.05); border-radius: 12px; border: 1px solid rgba(0,255,100,0.1); animation: slideUp 0.4s ease-out;">
+                        <i class="bi bi-check-circle-fill" style="font-size: 2.5rem; color: #00FF66; display: block; margin-bottom: 12px;"></i>
+                        <span style="color: #fff; font-weight: 700; font-size: 0.95rem;">¡Tu calificación ha sido enviada!</span>
+                    </div>
+                `;
+                // Refresh only relevant data instead of full reload if possible, 
+                // but reload is safer for now to sync all stats.
+                setTimeout(() => window.location.reload(), 2000);
+            } else {
+                const data = await response.json();
+                alert(data.error || 'Error al enviar calificación');
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Enviar Calificación';
+                submitBtn.style.opacity = '1';
+            }
+        } catch (err) {
+            console.error("Rating error:", err);
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Reintentar';
+            submitBtn.style.opacity = '1';
+        }
+    };
+
+    rateSection.appendChild(submitBtn);
+    ratingsCard.appendChild(rateSection);
 
     aboutGrid.appendChild(ratingsCard);
 
