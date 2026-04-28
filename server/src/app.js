@@ -807,6 +807,8 @@ app.get(['/@:username', '/:username', '/'], async (req, res, next) => {
         let templateFile = 'perfil-publico.html';
         if (user.template === 'premium') {
             templateFile = 'premium-profile.html';
+        } else if (user.template === 'editor_tienda') {
+            templateFile = 'plantilla-editor-tienda.html';
         }
         
         const profilePagePath = path.join(rootPath, templateFile);
@@ -868,7 +870,7 @@ app.get(['/@:username', '/:username', '/'], async (req, res, next) => {
         const schemaTag = `<script type="application/ld+json">${JSON.stringify(personSchema)}</script>`;
 
         // Specific Premium Template Placeholders
-        if (user.template === 'premium') {
+        if (user.template === 'premium' || user.template === 'editor_tienda') {
             html = html.replace(/{{USER_NICKNAME}}/g, user.nickname);
             html = html.replace(/{{USER_NAME_HERO}}/g, user.nickname.toUpperCase());
             html = html.replace(/{{USER_BIO}}/g, user.bio || 'Productor Musical');
