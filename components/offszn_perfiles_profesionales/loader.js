@@ -40,14 +40,33 @@ const ProfLoader = {
             const avatar = container.querySelector('#nav-avatar');
             const nickname = container.querySelector('#nav-nickname');
             const userLink = container.querySelector('#nav-user-link');
-            const servicesLink = container.querySelector('#nav-services-link');
-            const playlistsLink = container.querySelector('#nav-playlists-link');
+            
+            // Unique IDs from navbar.html
+            const beatsLink = container.querySelector('#nav-link-beats');
+            const servicesLink = container.querySelector('#nav-link-services');
+            const playlistsLink = container.querySelector('#nav-link-playlists');
+            const aboutLink = container.querySelector('#nav-link-about');
 
-            if (nickname) nickname.textContent = user.nickname;
+            if (nickname) nickname.textContent = (user.nickname || '').toUpperCase();
             if (avatar && user.avatar_url) avatar.src = user.avatar_url;
             if (userLink) userLink.href = `/@${user.nickname}`;
-            if (servicesLink) servicesLink.href = `/@${user.nickname}`;
-            if (playlistsLink) playlistsLink.href = `/@${user.nickname}`;
+
+            // 1. SERVICES VISIBILITY
+            const services = user.socials?.custom_services || [];
+            if (services.length === 0 && servicesLink) {
+                servicesLink.style.display = 'none';
+            }
+
+            // 2. PLAYLISTS VISIBILITY & LOGIC
+            const playlists = user.socials?.playlists || [];
+            if (playlists.length === 0 && playlistsLink) {
+                playlistsLink.style.display = 'none';
+            } else if (playlists.length === 1 && playlistsLink) {
+                // If only 1 playlist, link directly to it
+                playlistsLink.href = `/playlist.html?id=${playlists[0].id}`;
+            }
+
+            // 3. ABOUT LINK (Points to FAQ by default in navbar.html)
             
         } catch (err) {
             console.error("Error loading professional navbar:", err);

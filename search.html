@@ -813,6 +813,103 @@
             animation: skeleton-pulse 1.5s infinite ease-in-out;
             background: rgba(255, 255, 255, 0.05) !important;
         }
+
+        /* Producer Filter Card Styles */
+        .producer-filter-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 18px 12px;
+            margin-bottom: 20px;
+            position: relative;
+            text-align: center;
+        }
+
+        .p-card-content img {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: 2px solid #fff;
+            margin-bottom: 10px;
+            object-fit: cover;
+        }
+
+        .p-card-content h4 {
+            color: #fff;
+            font-size: 0.95rem;
+            font-weight: 800;
+            margin-bottom: 12px;
+        }
+
+        .btn-p-profile {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fff;
+            padding: 6px 16px;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+
+        /* Empty state styles */
+        .empty-results-producer {
+            text-align: center;
+            padding: 60px 20px;
+            color: #fff;
+        }
+
+        .empty-results-producer h2 {
+            font-size: 1.5rem;
+            font-weight: 800;
+            margin-bottom: 15px;
+            opacity: 0.9;
+        }
+
+        .empty-results-producer p {
+            color: #888;
+            margin-bottom: 30px;
+        }
+
+        .btn-explore-others {
+            background: #fff;
+            color: #000;
+            padding: 12px 30px;
+            border-radius: 50px;
+            font-weight: 800;
+            text-decoration: none;
+            display: inline-block;
+            transition: transform 0.2s;
+        }
+
+        .btn-explore-others:hover {
+            transform: scale(1.05);
+        }
+
+        .btn-p-profile:hover {
+            background: #fff;
+            color: #000;
+        }
+
+        .remove-producer-filter {
+            position: absolute;
+            top: 10px;
+            right: 12px;
+            background: none;
+            border: none;
+            color: #666;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .remove-producer-filter:hover {
+            color: #fff;
+        }
     </style>
 </head>
 
@@ -831,6 +928,17 @@
     <main class="search-main-container">
         <!-- Sidebar Filters -->
         <aside class="search-sidebar">
+            
+            <!-- Producer Filter Card (Case Special) -->
+            <div id="producer-filter-card" class="producer-filter-card" style="display: none;">
+                <button class="remove-producer-filter" onclick="window.clearProducerFilter()">&times;</button>
+                <div class="p-card-content">
+                    <img id="p-card-avatar" src="/images/default-avatar.png" alt="Avatar">
+                    <h4 id="p-card-name">Nickname</h4>
+                    <a id="p-card-link" href="#" class="btn-p-profile">Ir al perfil <i class="bi bi-arrow-right"></i></a>
+                </div>
+            </div>
+
             <div class="filter-group">
                 <div class="filter-header-static">
                     <span class="filter-title"><i class="bi bi-grid"></i> CATEGORÍA</span>
@@ -1031,6 +1139,16 @@
         </div>
 
         <div class="m-filter-body">
+            <!-- Producer Filter Card (Case Special - Mobile) -->
+            <div id="m-producer-filter-card" class="producer-filter-card" style="display: none; margin-bottom: 30px;">
+                <button class="remove-producer-filter" onclick="window.clearProducerFilter()">&times;</button>
+                <div class="p-card-content">
+                    <img id="m-p-card-avatar" src="/images/default-avatar.png" alt="Avatar">
+                    <h4 id="m-p-card-name">Nickname</h4>
+                    <a id="m-p-card-link" href="#" class="btn-p-profile">Ir al perfil <i class="bi bi-arrow-right"></i></a>
+                </div>
+            </div>
+            
             <!-- Ordenar por -->
             <div class="m-filter-section">
                 <div class="m-filter-section-title">Ordenar por</div>

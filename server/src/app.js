@@ -309,7 +309,7 @@ app.use('/api', youtubeRoutes);
 
 // A. Security Block (Prevent access to backend source & secrets)
 app.use((req, res, next) => {
-    const sensitiveStart = ['/server', '/.env', '/.git', '/render.yaml', '/node_modules', '/backend'];
+    const sensitiveStart = ['/server', '/.env', '/.git', '/render.yaml', '/node_modules', '/backend', '/.vscode'];
     if (sensitiveStart.some(s => req.path.startsWith(s))) {
         return res.status(403).send('Forbidden');
     }
@@ -319,7 +319,7 @@ app.use((req, res, next) => {
 // B. Clean URLs (Force Redirects & Internal Rewrites)
 app.use((req, res, next) => {
     // Skip API routes and FFmpeg/Debug folders to avoid loops or blocking
-    const skipPaths = ['/api', '/ffmpeg_clean', '/offszn-debug', '/legal/offszn-debug', '/env.js'];
+    const skipPaths = ['/api', '/ffmpeg_clean', '/offszn-debug', '/legal/offszn-debug', '/env.js', '/components'];
     if (skipPaths.some(p => req.path.startsWith(p))) return next();
 
     // 1. Force Redirect: Remove .html from browser address bar
@@ -777,7 +777,7 @@ app.get(['/@:username', '/:username', '/'], async (req, res, next) => {
     const reserved = [
         'api', 'auth', 'dashboard', 'login', 'register', 'admin',
         'css', 'script', 'images', 'favicon.ico', '404', 'robots.txt',
-        'pages', 'welcome', 'home', 'index', 'health', 'status',
+        'pages', 'welcome', 'home', 'index', 'health', 'status', 'components',
         'explorar', 'productores', 'feeds', 'reels', 'carrito', 'checkout',
         'transacciones', 'ajustes', 'subir-kit', 'mis-compras', 'notificaciones',
         'preferencias', 'favoritos', 'historial', 'mensajes', 'perfilpro',
@@ -872,7 +872,10 @@ app.get(['/@:username', '/:username', '/'], async (req, res, next) => {
             html = html.replace(/{{USER_NICKNAME}}/g, user.nickname);
             html = html.replace(/{{USER_NAME_HERO}}/g, user.nickname.toUpperCase());
             html = html.replace(/{{USER_BIO}}/g, user.bio || 'Productor Musical');
-            html = html.replace('</head>', `<script>window.OFFSZN_USER_ID = "${user.id}";</script></head>`);
+            html = html.replace('</head>', `
+                <script>window.OFFSZN_USER_ID = "${user.id}";</script>
+                <script src="/components/offszn_perfiles_profesionales/loader.js" defer></script>
+            </head>`);
         }
 
         html = html.replace('<head>', `<head>\n${ogTags}\n    ${schemaTag}`);

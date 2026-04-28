@@ -16,38 +16,53 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="/script/config.js"></script>
   <script src="/script/auth-utils.js"></script>
+  <script src="/script/navbar.js"></script>
+  <script src="/script/id-obfuscator.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
   
-  <!-- Global Nav/Footer Styles (same as playlist) -->
+  <!-- Global Nav/Footer Styles -->
   <link rel="stylesheet" href="/css/navbar.css">
   <link rel="stylesheet" href="/css/footer.css">
   <link rel="stylesheet" href="/css/global-overlays.css">
+  <link rel="stylesheet" href="/css/sticky-player.css">
+  <link rel="stylesheet" href="/css/skeleton.css">
 
   <style>
     /* ========== PREMIUM AESTHETIC VARIABLES ========== */
     :root {
-      --bg: #000000;
-      --fg: #ffffff;
-      --text-secondary: #888888;
-      --glass: rgba(255, 255, 255, 0.03);
-      --glass-hover: rgba(255, 255, 255, 0.05);
+      --bg-dark: #000;
+      --accent-white: #fff;
+      --text-main: #fff;
+      --text-secondary: #888;
+      --glass-bg: rgba(255, 255, 255, 0.03);
       --glass-border: rgba(255, 255, 255, 0.08);
-      --accent: #fff;
-    }
-    
-    body {
-      background-color: var(--bg);
-      color: var(--fg);
-      font-family: 'Geist', sans-serif;
-      margin: 0;
-      padding: 0;
-      overflow-x: hidden;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
     }
 
-    /* ========== INITIAL LOADER ========== */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      font-family: 'Geist', sans-serif;
+      overflow-x: hidden;
+      line-height: 1.5;
+    }
+
+    #prof-navbar-container {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      width: 100%;
+    }
+
+    .prof-nav {
+      background: rgba(0, 0, 0, 0.8) !important;
+      backdrop-filter: blur(10px);
+    }
+
+
+    /* ========== LOADER ========== */
     #initial-loader {
       position: fixed;
       inset: 0;
@@ -58,335 +73,538 @@
       z-index: 10000;
       transition: opacity 0.5s ease, visibility 0.5s;
     }
-    
     .loader-icon {
       width: 40px;
       height: 40px;
       border: 2px solid rgba(255,255,255,0.1);
       border-top-color: #fff;
       border-radius: 50%;
-      animation: spin 0.8s linear infinite;
+      animation: spin 1s linear infinite;
     }
-    
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-
-    /* ========== NAVBAR PREMIUM ========== */
-    .prof-nav {
-      background-color: transparent !important;
-      backdrop-filter: none !important;
-      border-bottom: none !important;
-      position: fixed !important;
-      width: 100%;
-      top: 0;
-      z-index: 1000;
-      transition: all 0.3s ease !important;
-    }
-    
-    .prof-nav.scrolled {
-      background-color: rgba(0, 0, 0, 0.8) !important;
-      backdrop-filter: blur(20px) !important;
-      border-bottom: 1px solid var(--glass-border) !important;
-    }
+    @keyframes spin { to { transform: rotate(360deg); } }
 
     /* ========== HERO SECTION ========== */
     .hero {
-      position: relative;
       height: 100vh;
       display: flex;
-      flex-direction: column;
       align-items: center;
       justify-content: center;
-      text-align: center;
+      position: relative;
       overflow: hidden;
+      padding: 0 5%;
+      text-align: center;
     }
 
     #particles-bg {
       position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 0;
-      pointer-events: none;
+      top: 0; left: 0; width: 100%; height: 100%;
+      z-index: 1;
     }
 
     .hero-content {
       position: relative;
-      z-index: 1;
+      z-index: 2;
       opacity: 0;
-      transform: translateY(20px);
+      transform: translateY(30px);
     }
 
     .hero-title {
-      font-size: clamp(3rem, 10vw, 8rem);
-      font-weight: 800;
-      line-height: 1;
+      font-size: 6rem;
+      font-weight: 900;
       letter-spacing: -0.05em;
-      margin: 0 0 16px 0;
-      color: #fff;
-      text-transform: uppercase;
+      margin-bottom: 16px;
+      line-height: 0.9;
+      text-transform: uppercase; /* MAYUSCULA TODO BRO */
     }
 
     .hero-subtitle {
-      font-size: clamp(1rem, 2vw, 1.25rem);
+      font-size: 1.25rem;
       color: var(--text-secondary);
-      font-weight: 400;
-      letter-spacing: 0.5px;
       max-width: 600px;
       margin: 0 auto;
     }
 
-    /* ========== TABS SECTION ========== */
+    /* ========== PRODUCT TABS (centered, fitted underline) ========== */
     .tabs-section {
-      max-width: 1200px;
-      margin: 0 auto 120px;
-      padding: 0 24px;
+      padding: 0 5%;
+      margin-bottom: 80px;
     }
-    
+
     .tabs-header {
       display: flex;
       justify-content: center;
-      gap: 32px;
-      margin-bottom: 48px;
-      border-bottom: 1px solid var(--glass-border);
-      padding-bottom: 16px;
+      gap: 28px;
+      margin-bottom: 40px;
+      padding-bottom: 12px;
+      position: relative;
+      width: 100%;
+      text-align: center;
     }
     
+    .tabs-inner {
+      display: flex;
+      gap: 28px;
+      justify-content: center;
+    }
+
+    /* Line only spans the tabs, not full width */
+    .tabs-header::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: auto;
+      min-width: 0;
+      height: 1px;
+      background: rgba(255,255,255,0.1);
+      /* The pseudo will stretch to the flex container's content width */
+    }
+
+    .tabs-header {
+      display: flex;
+      justify-content: center;
+      width: 100%;
+      margin-bottom: 40px;
+    }
+
+    .tabs-inner {
+      display: flex;
+      gap: 28px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      padding-bottom: 12px;
+      position: relative;
+    }
+
     .tab-trigger {
       background: none;
       border: none;
       color: var(--text-secondary);
-      font-size: 0.9rem;
-      font-weight: 600;
-      letter-spacing: 1px;
+      font-size: 1rem;
+      font-weight: 700;
       cursor: pointer;
-      padding: 8px 0;
       position: relative;
-      transition: color 0.3s;
+      transition: color 0.3s ease;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 0;
     }
-    
-    .tab-trigger:hover { color: #fff; }
-    
+
     .tab-trigger.active {
       color: #fff;
     }
-    
+
     .tab-trigger.active::after {
       content: '';
       position: absolute;
-      bottom: -17px;
+      bottom: -13px;
       left: 0;
       width: 100%;
       height: 2px;
       background: #fff;
     }
-    
-    .products-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-      gap: 32px;
+
+    .products-container-modular {
+      margin: 0 auto;
+      width: fit-content;
+      max-width: 100%;
+      display: flex;
+      flex-direction: column;
+      padding: 0 20px;
     }
 
-    /* ========== PRODUCT CARD (EXPLORE STYLE) ========== */
-    .product-card-premium {
-      background: var(--glass);
-      border: 1px solid var(--glass-border);
-      border-radius: 12px;
-      overflow: hidden;
-      transition: all 0.3s ease;
-      cursor: pointer;
+    /* Row header with arrows + Ver todos */
+    .products-row-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      width: 100%;
     }
-    
-    .product-card-premium:hover {
-      background: var(--glass-hover);
-      transform: translateY(-4px);
+
+    .products-row-header .row-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .products-row-header .view-all {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #ffffff;
+      border: 1px solid #ffffff;
+      color: #000000;
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-decoration: none;
+      cursor: pointer;
+      padding: 8px 18px;
+      border-radius: 50px;
+      transition: opacity 0.2s ease;
+      white-space: nowrap;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .products-row-header .view-all:hover { 
+      opacity: 0.9;
+    }
+
+    .btn-nav-mini {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: #1a1a1a;
+      border: 1px solid rgba(255,255,255,0.1);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 0.85rem;
+    }
+
+    .btn-nav-mini:hover {
+      background: #2a2a2a;
       border-color: rgba(255,255,255,0.2);
     }
-    
-    .card-img-wrapper {
-      position: relative;
-      width: 100%;
-      aspect-ratio: 1/1;
-      background: #111;
+
+    .btn-nav-mini.disabled {
+      opacity: 0.3;
+      cursor: default;
     }
-    
-    .card-img {
+
+    /* Horizontal shelf (not grid), centered if few items */
+    .products-shelf {
+      display: flex;
+      gap: 16px;
+      overflow-x: auto;
+      scroll-behavior: smooth;
+      padding: 8px 0 20px 0;
+      scrollbar-width: none;
+      margin: 0 auto;
+      width: max-content;
+      max-width: 100%;
+      scroll-snap-type: x mandatory;
+      justify-content: center; /* Centrar cuando hay pocos items */
+    }
+    .products-shelf::-webkit-scrollbar { display: none; }
+
+    /* Medium-small cards (215px) */
+    .premium-product-card {
+      flex: 0 0 215px;
+      width: 215px;
+      background: transparent;
+      border-radius: 16px;
+      overflow: hidden;
+      cursor: pointer;
+      padding: 12px;
+      transition: background 0.3s ease;
+      scroll-snap-align: start;
+    }
+
+    .premium-product-card:hover {
+      background: rgba(255,255,255,0.04);
+    }
+
+    .explore-img-container {
+      position: relative;
+      aspect-ratio: 1/1;
+      overflow: hidden;
+      border-radius: 12px;
+    }
+
+    .explore-main-img {
       width: 100%;
       height: 100%;
       object-fit: cover;
     }
-    
-    .quick-play-btn {
+
+    .explore-play-action {
       position: absolute;
-      bottom: 12px;
-      right: 12px;
-      width: 44px;
-      height: 44px;
-      border-radius: 50%;
+      bottom: 10px;
+      right: 10px;
+      width: 40px;
+      height: 40px;
       background: #fff;
       color: #000;
+      border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 1.5rem;
-      border: none;
       opacity: 0;
-      transform: scale(0.8);
-      transition: all 0.3s ease;
+      transform: translateY(6px);
+      transition: all 0.25s ease;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      border: none;
     }
-    
-    .product-card-premium:hover .quick-play-btn {
+
+    .premium-product-card:hover .explore-play-action {
       opacity: 1;
-      transform: scale(1);
+      transform: translateY(0);
     }
-    
-    .card-info {
-      padding: 16px;
+
+    .explore-heart-action {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      width: 32px;
+      height: 32px;
+      background: rgba(0,0,0,0.5);
+      backdrop-filter: blur(8px);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: none;
+      color: #fff;
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: all 0.2s ease;
     }
-    
-    .card-title {
-      font-size: 1rem;
+
+    .explore-product-info {
+      padding: 10px 4px 0;
+    }
+
+    .explore-product-name {
+      font-size: 0.8rem;
       font-weight: 700;
+      margin-bottom: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .explore-product-author {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+    }
+
+    /* ========== SHELF ROW & CARDS (EXPLORE STYLE) ========== */
+    .explore-row {
+      margin-bottom: 80px;
+      padding: 0 5%;
+      position: relative;
+    }
+    
+    .row-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-bottom: 24px;
+    }
+    
+    .row-title {
+      font-size: 2rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .shelf-container {
+      display: flex;
+      gap: 20px;
+      overflow-x: auto;
+      scroll-behavior: smooth;
+      padding: 10px 0 20px 0;
+      scrollbar-width: none; /* Firefox */
+      justify-content: center; /* Center items */
+      flex-wrap: wrap; /* Wrap instead of scroll if many */
+    }
+    
+    .shelf-container::-webkit-scrollbar {
+      display: none; /* Chrome/Safari */
+    }
+
+    .shelf-card {
+      flex: 0 0 200px; /* Reduced size */
+      background: #111;
+      border-radius: 20px;
+      padding: 12px;
+      transition: background 0.3s ease;
+      cursor: pointer;
+      border: 1px solid transparent;
+    }
+
+    .shelf-card:hover {
+      background: #181818;
+      border-color: rgba(255,255,255,0.05);
+      transform: none !important; /* No growth */
+    }
+
+    .shelf-card-img {
+      width: 100%;
+      aspect-ratio: 1/1;
+      border-radius: 16px;
+      object-fit: cover;
+      margin-bottom: 12px;
+    }
+
+    .shelf-card-info {
+      padding: 0 4px;
+    }
+
+    .shelf-card-title {
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: #fff;
       margin-bottom: 4px;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
-    
-    .card-price {
-      font-size: 0.85rem;
+
+    .shelf-card-sub {
+      font-size: 0.8rem;
       color: var(--text-secondary);
-      font-weight: 500;
     }
 
-    /* ========== LICENSES (BENTO) ========== */
-    .pricing-section {
-      max-width: 1200px;
-      margin: 0 auto 120px;
-      padding: 0 24px;
+    /* ========== LICENSES SECTION ========== */
+    .premium-lic-section {
+      padding: 100px 5%;
+      background: #050505;
     }
-    
-    .pricing-grid {
+
+    .premium-lic-grid {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
       gap: 24px;
+      max-width: 1200px;
+      margin: 0 auto;
     }
-    
-    @media (max-width: 900px) {
-      .pricing-grid { grid-template-columns: 1fr; }
-    }
-    
-    .pricing-card {
-      background: var(--glass);
+
+    .lic-card-premium {
+      background: #0d0d0d;
       border: 1px solid var(--glass-border);
-      border-radius: 24px;
-      padding: 40px;
+      border-radius: 32px;
+      padding: 48px 32px;
+      transition: all 0.4s ease;
+      position: relative;
       display: flex;
       flex-direction: column;
-      transition: all 0.3s;
     }
-    
-    .pricing-card:hover {
-      background: var(--glass-hover);
-      border-color: rgba(255,255,255,0.15);
+
+    .lic-card-premium.featured {
+      background: #fff;
+      color: #000;
+      transform: scale(1.05);
+      z-index: 2;
     }
-    
-    .pricing-card.popular {
-      background: rgba(255,255,255,0.05);
-      border-color: rgba(255,255,255,0.2);
-      transform: scale(1.02);
-    }
-    
-    .price-tag {
-      font-size: 3rem;
-      font-weight: 800;
-      margin: 20px 0;
-    }
-    
-    .pricing-features {
-      list-style: none;
-      padding: 0;
-      margin: 0 0 40px 0;
-      color: var(--text-secondary);
+
+    .lic-name-label {
       font-size: 0.9rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 24px;
+      opacity: 0.6;
+    }
+
+    .lic-price-tag {
+      font-size: 4rem;
+      font-weight: 900;
+      margin-bottom: 32px;
+      letter-spacing: -0.04em;
       display: flex;
-      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .lic-price-tag span {
+      font-size: 1.5rem;
+      margin-top: 12px;
+      margin-right: 4px;
+    }
+
+    .lic-feature-list {
+      list-style: none;
+      margin-bottom: 40px;
+      flex-grow: 1;
+    }
+
+    .lic-feature-list li {
+      margin-bottom: 16px;
+      font-size: 1rem;
+      display: flex;
+      align-items: center;
       gap: 12px;
     }
-    
-    .pricing-features li {
-      display: flex;
-      align-items: center;
-      gap: 8px;
+
+    .lic-feature-list li i { font-size: 1.2rem; }
+
+    .lic-cta-btn {
+      width: 100%;
+      padding: 18px;
+      border-radius: 16px;
+      border: 1px solid var(--glass-border);
+      background: transparent;
+      color: #fff;
+      font-weight: 800;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .featured .lic-cta-btn {
+      background: #000;
+      color: #fff;
+      border: none;
+    }
+
+    .lic-cta-btn:hover {
+      background: #fff;
+      color: #000;
+    }
+
+    .featured .lic-cta-btn:hover {
+      background: #333;
+    }
+
+    /* ========== FAQ SECTION ========== */
+    .section-header {
+      text-align: left;
+      margin-bottom: 48px;
+      padding: 0 5%;
     }
     
-    .pricing-features i { color: #fff; font-size: 1rem; }
+    .section-header h2 {
+      font-size: 3rem;
+      font-weight: 800;
+      margin-bottom: 12px;
+      letter-spacing: -0.04em;
+    }
+    
+    .section-header p {
+      color: var(--text-secondary);
+      font-size: 1.1rem;
+    }
 
-    .playlist-section {
+    .faq-section {
       max-width: 1000px;
       margin: 0 auto 120px;
-      padding: 0 24px;
-    }
-    
-    .playlist-container {
-      background: var(--glass);
-      border: 1px solid var(--glass-border);
-      border-radius: 24px;
-      overflow: hidden;
-    }
-    
-    .track-item {
-      display: flex;
-      align-items: center;
-      padding: 16px 24px;
-      border-bottom: 1px solid var(--glass-border);
-      transition: background 0.3s;
-      cursor: pointer;
-    }
-    
-    .track-item:last-child { border-bottom: none; }
-    
-    .track-item:hover { background: var(--glass-hover); }
-    
-    .track-num { width: 40px; color: var(--text-secondary); font-size: 0.9rem; }
-    
-    .track-img { width: 48px; height: 48px; border-radius: 4px; object-fit: cover; margin-right: 16px; }
-    
-    .track-info { flex: 1; }
-    
-    .track-title { font-weight: 600; font-size: 1rem; }
-    
-    .track-meta { font-size: 0.8rem; color: var(--text-secondary); margin-top: 2px; }
-    
-    .track-action { color: #fff; font-size: 1.2rem; opacity: 0.5; transition: opacity 0.3s; }
-    
-    .track-item:hover .track-action { opacity: 1; }
-
-    /* ========== FAQ ========== */
-    .faq-section {
-      max-width: 800px;
-      margin: 0 auto 120px;
-      padding: 0 24px;
+      padding: 0 5%;
     }
     
     .faq-item {
-      background: var(--glass);
-      border: 1px solid var(--glass-border);
-      border-radius: 16px;
+      background: #0d0d0d;
+      border: 1px solid rgba(255,255,255,0.05);
+      border-radius: 20px;
       margin-bottom: 16px;
-      overflow: hidden;
+      transition: all 0.3s ease;
+    }
+
+    .faq-item:hover {
+      border-color: rgba(255,255,255,0.1);
     }
     
     .faq-question {
       width: 100%;
-      padding: 24px;
+      padding: 24px 32px;
       background: none;
       border: none;
       color: #fff;
       font-size: 1.1rem;
-      font-weight: 600;
+      font-weight: 700;
       text-align: left;
       cursor: pointer;
       display: flex;
@@ -397,33 +615,83 @@
     .faq-answer {
       max-height: 0;
       overflow: hidden;
-      transition: max-height 0.3s ease-out;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
       color: var(--text-secondary);
-      padding: 0 24px;
+      padding: 0 32px;
+      line-height: 1.6;
     }
     
     .faq-item.active .faq-answer {
       max-height: 200px;
-      padding-bottom: 24px;
+      padding-bottom: 32px;
     }
     
     .faq-item.active .bi-plus { transform: rotate(45deg); }
 
-    .section-header {
-      text-align: center;
-      margin-bottom: 64px;
+    /* ========== RESPONSIVE REFINEMENTS ========== */
+    @media (max-width: 768px) {
+      .hero { 
+        height: auto; 
+        min-height: 50vh; 
+        padding: 80px 5% 40px; 
+      }
+      .hero-title {
+        font-size: 3.5rem !important;
+        line-height: 1.1;
+        margin-bottom: 20px;
+      }
+      .hero-subtitle {
+        font-size: 1rem;
+        padding: 0 20px;
+      }
+      .tabs-section {
+        margin-bottom: 40px !important;
+      }
+      .section-header h2 {
+        font-size: 2.2rem !important;
+      }
+      .section-header {
+        margin-bottom: 24px !important;
+        text-align: center;
+        padding: 0 20px;
+      }
+      .faq-question {
+        padding: 20px;
+        font-size: 1rem;
+      }
+      .faq-section {
+        margin-bottom: 60px !important;
+      }
+      #playlists-section, #about-section {
+        padding: 30px 0 !important;
+      }
+      .premium-lic-section {
+        margin-bottom: 40px !important;
+      }
+      .premium-product-card { 
+        flex: 0 0 calc(50% - 8px) !important;
+        width: calc(50% - 8px) !important;
+        padding: 8px;
+      }
+      .premium-lic-grid { grid-template-columns: 1fr !important; }
+      .products-shelf { gap: 16px; }
     }
-    
-    .section-header h2 {
-      font-size: 3rem;
-      font-weight: 800;
-      margin-bottom: 16px;
-      letter-spacing: -0.03em;
-    }
-    
-    .section-header p {
-      color: var(--text-secondary);
-      font-size: 1.1rem;
+
+    @media (max-width: 480px) {
+      .hero {
+        min-height: 45vh;
+        padding: 70px 5% 30px;
+      }
+      .hero-title {
+        font-size: 2.8rem !important;
+      }
+      .tabs-header {
+        gap: 16px;
+        flex-wrap: wrap;
+      }
+      .tab-trigger {
+        font-size: 0.75rem;
+      }
     }
 
   </style>
@@ -449,37 +717,62 @@
     </section>
 
     <!-- PRODUCTS TABS -->
-    <section class="tabs-section" id="products-section" style="display: none;">
-      <div class="tabs-header">
-        <button class="tab-trigger active" onclick="switchTab('BEATS')">BEATS</button>
-        <button class="tab-trigger" onclick="switchTab('DRUMKITS')">DRUMKITS</button>
-        <button class="tab-trigger" onclick="switchTab('LOOPKITS')">LOOPKITS</button>
-        <button class="tab-trigger" onclick="switchTab('PRESETS')">PRESETS</button>
+    <section class="tabs-section" id="products-section" style="display: none; margin-bottom: 100px;">
+      <div class="tabs-header" id="product-tabs">
+        <!-- Render dinámico de pestañas -->
       </div>
-      <div id="products-grid" class="products-grid"></div>
+      
+      <div class="products-container-modular">
+        <div class="products-row-header">
+          <div></div>
+          <div class="row-actions">
+            <div class="view-all" id="view-all-products" onclick="window.location.href='#'">
+              Ver todos <i class="bi bi-arrow-right"></i>
+            </div>
+            <button class="btn-nav-mini prev" id="products-prev"><i class="bi bi-chevron-left"></i></button>
+            <button class="btn-nav-mini next" id="products-next"><i class="bi bi-chevron-right"></i></button>
+          </div>
+        </div>
+        <div id="products-grid" class="products-shelf"></div>
+      </div>
     </section>
 
-    <!-- LICENSES -->
-    <section class="pricing-section" id="licencias-section" style="display: none;">
-      <div class="section-header">
+    <!-- SECTION 2: SERVICIOS 
+    <section class="explore-row" id="services-section" style="display: none; margin-top: 60px;">
+      <div class="row-header" style="justify-content: center;">
+        <h2 class="row-title">Servicios</h2>
+      </div>
+      <div class="shelf-container" id="services-shelf">
+      </div>
+    </section>
+    -->
+
+    <!-- SECTION 4: LICENSES -->
+    <section class="premium-lic-section" id="licencias-section" style="display: none;">
+      <div class="section-header" style="padding: 0; margin-bottom: 40px; text-align: center;">
         <h2>Licencias</h2>
         <p>Derechos de uso profesional para tu carrera.</p>
       </div>
-      <div class="pricing-grid" id="licenses-grid"></div>
+      <div class="premium-lic-grid" id="premium-licenses-grid"></div>
     </section>
 
-    <!-- PLAYLIST SECTION -->
-    <section class="playlist-section" id="playlist-section" style="display: none;">
-      <div class="section-header">
-        <h2>Playlist Destacada</h2>
-        <p>Escucha mis mejores producciones en un solo lugar.</p>
+    <!-- SECTION 5: PLAYLISTS -->
+    <section id="playlists-section" style="padding: 60px 0; display: none;">
+      <div class="section-header" style="text-align: center;">
+        <h2>Playlists</h2>
       </div>
-      <div class="playlist-container" id="playlist-grid"></div>
+    </section>
+
+    <!-- SECTION 6: SOBRE MI -->
+    <section id="about-section" style="padding: 60px 0; display: none;">
+      <div class="section-header" style="text-align: center;">
+        <h2>Sobre mí</h2>
+      </div>
     </section>
 
     <!-- FAQ -->
-    <section class="faq-section">
-      <div class="section-header">
+    <section class="faq-section" id="faq-section">
+      <div class="section-header" style="padding: 0; margin-bottom: 40px; text-align: center;">
         <h2>Preguntas Frecuentes</h2>
       </div>
       <div id="faq-container">
@@ -512,216 +805,235 @@
           </div>
         </div>
       </div>
+      
+      <!-- CONTACT SECTION -->
+      <div class="contact-footer" style="text-align: center; margin-top: 60px; padding-bottom: 40px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 40px;">
+        <p style="color: rgba(255,255,255,0.5); font-size: 0.95rem; font-weight: 500;">
+          ¿No encontraste lo que buscabas? <span style="color: #fff; margin-left: 5px;">Contáctanos:</span>
+          <a href="#" id="dynamic-contact-email" style="color: #fff; text-decoration: none; font-weight: 700; margin-left: 5px; transition: opacity 0.2s;">
+            {{USER_EMAIL}}
+          </a>
+        </p>
+      </div>
     </section>
   </main>
 
   <!-- FOOTER -->
   <div id="prof-footer-container"></div>
 
+  <!-- SUBSCRIPTION MODAL -->
+  <div id="subscription-modal" class="premium-modal">
+    <div class="modal-overlay" onclick="closeSubscriptionModal()"></div>
+    <div class="modal-content">
+      <button class="modal-close" onclick="closeSubscriptionModal()">
+        <i class="bi bi-x"></i>
+      </button>
+      
+      <div class="modal-header">
+        <div class="status-badge" id="modal-status-badge">ACTIVO</div>
+        <h2 id="modal-title">Tu suscripción</h2>
+      </div>
+
+      <div class="modal-body">
+        <div class="plan-info">
+          <span class="label">Plan Actual</span>
+          <div class="plan-name" id="modal-plan-name">STARTER</div>
+        </div>
+
+        <div class="expiration-box">
+          <div class="exp-days" id="modal-days-left">--</div>
+          <div class="exp-label">Días restantes</div>
+        </div>
+
+        <div class="renewal-info" id="modal-renewal-info">
+          <i class="bi bi-info-circle"></i>
+          <span>Se renovará automáticamente el <strong id="modal-next-date">--</strong></span>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-primary" onclick="window.location.href='/settings.html?tab=billing'">Gestionar Suscripción</button>
+        <button class="btn-ghost" onclick="closeSubscriptionModal()">Entendido</button>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    /* ========== SUBSCRIPTION MODAL STYLES ========== */
+    .premium-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 10000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .premium-modal.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .modal-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(10px);
+    }
+
+    .modal-content {
+      position: relative;
+      background: #0d0d0d;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      width: 90%;
+      max-width: 420px;
+      padding: 40px;
+      border-radius: 32px;
+      transform: translateY(20px) scale(0.95);
+      transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+      text-align: center;
+      box-shadow: 0 30px 60px rgba(0,0,0,0.5);
+    }
+
+    .premium-modal.active .modal-content {
+      transform: translateY(0) scale(1);
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: none;
+      border: none;
+      color: #888;
+      font-size: 1.5rem;
+      cursor: pointer;
+      padding: 8px;
+      transition: color 0.2s;
+    }
+    .modal-close:hover { color: #fff; }
+
+    .status-badge {
+      display: inline-block;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #fff;
+      padding: 4px 12px;
+      border-radius: 50px;
+      font-size: 0.7rem;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+      margin-bottom: 16px;
+    }
+
+    #modal-title {
+      font-size: 2rem;
+      font-weight: 900;
+      letter-spacing: -0.02em;
+      margin-bottom: 30px;
+    }
+
+    .plan-info {
+      margin-bottom: 24px;
+    }
+    .plan-info .label {
+      font-size: 0.8rem;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      display: block;
+      margin-bottom: 4px;
+    }
+    .plan-name {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: #fff;
+    }
+
+    .expiration-box {
+      background: #151515;
+      padding: 30px;
+      border-radius: 24px;
+      margin-bottom: 24px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .exp-days {
+      font-size: 4rem;
+      font-weight: 900;
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+    .exp-label {
+      font-size: 0.9rem;
+      color: #888;
+      font-weight: 600;
+    }
+
+    .renewal-info {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-size: 0.85rem;
+      color: #888;
+      margin-bottom: 30px;
+    }
+    .renewal-info i { color: #fff; }
+
+    .modal-footer {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .btn-primary {
+      background: #fff;
+      color: #000;
+      border: none;
+      padding: 16px;
+      border-radius: 16px;
+      font-weight: 800;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-primary:hover { background: #e0e0e0; }
+
+    .btn-ghost {
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #fff;
+      padding: 16px;
+      border-radius: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-ghost:hover { background: rgba(255, 255, 255, 0.05); }
+
+  </style>
+
   <script>
-    let currentCategory = 'BEATS';
-    let allProducts = [];
-    const userId = window.OFFSZN_USER_ID;
-
-    document.addEventListener('DOMContentLoaded', async () => {
-      AuthUtils.initSupabase();
-      const supabase = window.supabaseClient;
-
-      // 1. Cargar Datos en paralelo
-      try {
-        const [userRes, productsRes] = await Promise.all([
-          supabase.from('users').select('*').eq('id', userId).single(),
-          supabase.from('products').select('*').eq('producer_id', userId).eq('visibility', 'public').order('created_at', { ascending: false })
-        ]);
-
-        if (userRes.data) {
-          const user = userRes.data;
-          renderLicenses(user.license_settings);
-          // Iniciar Nav y Footer del Loader de Perfiles
-          if (window.ProfLoader) window.ProfLoader.init(user);
-        }
-
-        if (productsRes.data) {
-          allProducts = productsRes.data;
-          if (allProducts.length > 0) {
-            document.getElementById('products-section').style.display = 'block';
-            switchTab('BEATS');
-            renderPlaylist(allProducts.filter(p => (p.product_type || '').toUpperCase() === 'BEAT'));
-          }
-        }
-
-        // 2. Iniciar Partículas
-        initParticles();
-
-        // 3. Quitar Loader y Animación Hero
-        setTimeout(() => {
-          document.getElementById('initial-loader').style.opacity = '0';
-          setTimeout(() => {
-            document.getElementById('initial-loader').style.visibility = 'hidden';
-            gsap.to('#hero-content', { opacity: 1, y: 0, duration: 1, ease: 'power3.out' });
-          }, 500);
-        }, 800);
-
-      } catch (err) {
-        console.error("Error loading data:", err);
-      }
-    });
-
-    function switchTab(cat) {
-      currentCategory = cat;
-      
-      // UI Update
-      document.querySelectorAll('.tab-trigger').forEach(t => {
-        t.classList.toggle('active', t.innerText === cat);
-      });
-
-      const grid = document.getElementById('products-grid');
-      const filtered = allProducts.filter(p => {
-        const type = (p.product_type || '').toUpperCase();
-        if (cat === 'BEATS') return type === 'BEAT';
-        if (cat === 'DRUMKITS') return type === 'DRUMKIT';
-        if (cat === 'LOOPKITS') return type === 'LOOPKIT';
-        if (cat === 'PRESETS') return type.includes('PRESET') || type === 'TEMPLATE';
-        return false;
-      }).slice(0, 5); // Limit 5 cards
-
-      if (filtered.length === 0) {
-        grid.innerHTML = `<p style="grid-column: 1/-1; text-align: center; color: var(--text-secondary); padding: 40px;">No hay ${cat.toLowerCase()} disponibles aún.</p>`;
-      } else {
-        grid.innerHTML = filtered.map(p => {
-          const img = p.image_url ? (p.image_url.startsWith('http') ? p.image_url : 'https://qtjpvztpgfymjhhpoouq.supabase.co/storage/v1/object/public/products/' + p.image_url) : '/images/portada-default.png';
-          const link = `/${p.product_type?.toLowerCase() || 'beat'}/${p.public_slug || p.id}`;
-          return `
-            <div class="product-card-premium" onclick="window.location.href='${link}'">
-              <div class="card-img-wrapper">
-                <img src="${img}" class="card-img" alt="${p.name}">
-                <button class="quick-play-btn"><i class="bi bi-play-fill"></i></button>
-              </div>
-              <div class="card-info">
-                <div class="card-title">${p.name}</div>
-                <div class="card-price">$${p.price_basic || '20'}</div>
-              </div>
-            </div>
-          `;
-        }).join('');
-      }
+    function openSubscriptionModal() {
+      document.getElementById('subscription-modal').classList.add('active');
     }
-
-    function renderLicenses(settings) {
-      const grid = document.getElementById('licenses-grid');
-      const defaults = {
-        basic: { name: 'Basic Lease', price: 20, enabled: true, usage: { streams: '5000', sales: '500' } },
-        premium: { name: 'Premium Lease', price: 50, enabled: true, usage: { streams: '50000', sales: '2000' } },
-        unlimited: { name: 'Unlimited', price: 300, enabled: true, usage: { streams: 'Unlimited', sales: 'Unlimited' } }
-      };
-
-      const finalSettings = settings || defaults;
-      const activeKeys = Object.keys(finalSettings).filter(k => finalSettings[k].enabled);
-
-      if (activeKeys.length > 0) {
-        document.getElementById('licencias-section').style.display = 'block';
-        grid.innerHTML = activeKeys.map((key, i) => {
-          const lic = finalSettings[key];
-          const isPopular = i === 1;
-          return `
-            <div class="pricing-card ${isPopular ? 'popular' : ''}">
-              <div style="font-weight: 700; letter-spacing: 1px; text-transform: uppercase; font-size: 0.75rem;">${lic.name}</div>
-              <div class="price-tag">$${lic.price}</div>
-              <ul class="pricing-features">
-                <li><i class="bi bi-check2"></i> ${lic.usage?.streams || 'Unlimited'} Streams</li>
-                <li><i class="bi bi-check2"></i> ${lic.usage?.sales || 'Unlimited'} Ventas</li>
-                <li><i class="bi bi-check2"></i> Uso Comercial</li>
-              </ul>
-              <button class="pricing-btn" style="margin-top: auto; padding: 16px; border-radius: 100px; background: ${isPopular ? '#fff' : 'transparent'}; color: ${isPopular ? '#000' : '#fff'}; border: 1px solid #fff; font-weight: 700; cursor: pointer;">SELECCIONAR</button>
-            </div>
-          `;
-        }).join('');
-      }
+    function closeSubscriptionModal() {
+      document.getElementById('subscription-modal').classList.remove('active');
     }
-
-    function toggleFaq(btn) {
-      const item = btn.parentElement;
-      const isActive = item.classList.contains('active');
-      document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('active'));
-      if (!isActive) item.classList.add('active');
-    }
-
-    function initParticles() {
-      const canvas = document.getElementById('particles-bg');
-      const ctx = canvas.getContext('2d');
-      let particles = [];
-      
-      const resize = () => {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-      };
-      
-      window.addEventListener('resize', resize);
-      resize();
-
-      class Particle {
-        constructor() {
-          this.reset();
-        }
-        reset() {
-          this.x = Math.random() * canvas.width;
-          this.y = Math.random() * canvas.height;
-          this.vx = (Math.random() - 0.5) * 0.5;
-          this.vy = (Math.random() - 0.5) * 0.5;
-          this.size = Math.random() * 2;
-        }
-        update() {
-          this.x += this.vx;
-          this.y += this.vy;
-          if (this.x < 0 || this.x > canvas.width || this.y < 0 || this.y > canvas.height) this.reset();
-        }
-        draw() {
-          ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
-          ctx.beginPath();
-          ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-          ctx.fill();
-        }
-      }
-
-      for (let i = 0; i < 60; i++) particles.push(new Particle());
-
-      function animate() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        particles.forEach(p => { p.update(); p.draw(); });
-        requestAnimationFrame(animate);
-      }
-      animate();
-    }
-
-    // Scroll effect for navbar
-    window.addEventListener('scroll', () => {
-      const nav = document.querySelector('.prof-nav');
-      if (nav) {
-        nav.classList.toggle('scrolled', window.scrollY > 50);
-      }
-    });
-
-    function renderPlaylist(beats) {
-      const container = document.getElementById('playlist-grid');
-      if (beats.length > 0) {
-        document.getElementById('playlist-section').style.display = 'block';
-        container.innerHTML = beats.map((b, i) => {
-          const img = b.image_url ? (b.image_url.startsWith('http') ? b.image_url : 'https://qtjpvztpgfymjhhpoouq.supabase.co/storage/v1/object/public/products/' + b.image_url) : '/images/portada-default.png';
-          return `
-            <div class="track-item" onclick="window.location.href='/beat/${b.public_slug || b.id}'">
-              <div class="track-num">${i + 1}</div>
-              <img src="${img}" class="track-img">
-              <div class="track-info">
-                <div class="track-title">${b.name}</div>
-                <div class="track-meta">${b.bpm || '--'} BPM • ${b.key || ''}</div>
-              </div>
-              <div class="track-action"><i class="bi bi-play-circle"></i></div>
-            </div>
-          `;
-        }).join('');
-      }
-    }
-
   </script>
+
+  <!-- External Libraries -->
+  <script src="https://unpkg.com/wavesurfer.js@7"></script>
+  <script src="/script/favorites-manager.js"></script>
+  <script src="/script/sticky-player.js"></script>
+
+  <!-- MODULAR LOGIC -->
+  <script src="/script/premium-profile-render.js"></script>
+  <script src="/script/premium-profile-bg.js"></script>
+  <script src="/script/premium-profile-core.js"></script>
+
 </body>
 </html>

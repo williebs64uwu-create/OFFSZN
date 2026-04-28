@@ -25,6 +25,7 @@ let currentFilters = {
     fileTypes: [],
     scale: 'minor',
     licenses: [],
+    producerNickname: '',
     isDraggingSlider: false
 };
 let renderTimeout = null; // Debounce for results rendering
@@ -538,9 +539,23 @@ async function performSearch() {
             // Use the unified category matcher: check URL param directly or current filters
             let matchesCat = isProductInCategory(p, currentFilters.categories.length > 0 ? currentFilters.categories : category);
 
-            return { ...p, _matchScore: score, _matchesCat: matchesCat };
+            // Filter by producer if specific producer filter is active
+            let matchesProducer = true;
+            if (currentFilters.producerNickname) {
+                matchesProducer = normalizeString(p.producer_name) === normalizeString(currentFilters.producerNickname);
+            }
+
+            return { ...p, _matchScore: score, _matchesCat: matchesCat, _matchesProducer: matchesProducer };
         })
-            .filter(p => p._matchScore > 0 && p._matchesCat);
+            .filter(p => p._matchScore > 0 && p._matchesCat && p._matchesProducer);
+
+        // UI: Render Producer Card if filter is active
+        if (currentFilters.producerNickname && fetchedProducers.length > 0) {
+            const prod = fetchedProducers.find(pr => normalizeString(pr.nickname) === normalizeString(currentFilters.producerNickname));
+            if (prod) {
+                renderProducerCard(prod);
+            }
+        }
 
         applySorting(matchedProducts);
 
@@ -580,6 +595,9 @@ function parseUrlFilters(params) {
     if (params.has('genre')) currentFilters.genres = params.get('genre').split(',');
     if (params.has('free') && params.get('free') === 'true') {
         currentFilters.freeOnly = true;
+    }
+    if (params.has('producer')) {
+        currentFilters.producerNickname = params.get('producer');
     }
 }
 
@@ -797,6 +815,39 @@ function setupFilterListeners() {
     initMobileFilters();
 }
 
+// --- Producer Filter Logic ---
+function renderProducerCard(producer) {
+    // Desktop Card
+    const card = document.getElementById('producer-filter-card');
+    if (card) {
+        const avatar = document.getElementById('p-card-avatar');
+        const name = document.getElementById('p-card-name');
+        const link = document.getElementById('p-card-link');
+        if (avatar) avatar.src = producer.avatar_url || '/images/default-avatar.png';
+        if (name) name.innerText = producer.nickname || 'Usuario';
+        if (link) link.href = `/${producer.nickname}`;
+        card.style.display = 'block';
+    }
+
+    // Mobile Card (Modal)
+    const mCard = document.getElementById('m-producer-filter-card');
+    if (mCard) {
+        const mAvatar = document.getElementById('m-p-card-avatar');
+        const mName = document.getElementById('m-p-card-name');
+        const mLink = document.getElementById('m-p-card-link');
+        if (mAvatar) mAvatar.src = producer.avatar_url || '/images/default-avatar.png';
+        if (mName) mName.innerText = producer.nickname || 'Usuario';
+        if (mLink) mLink.href = `/${producer.nickname}`;
+        mCard.style.display = 'block';
+    }
+}
+
+window.clearProducerFilter = function() {
+    const url = new URL(window.location.href);
+    url.searchParams.delete('producer');
+    window.location.href = url.toString();
+};
+
 /**
  * Mobile Filter Modal Logic
  */
@@ -1012,15 +1063,23 @@ function applyFilters() {
             results = results.map(p => ({ ...p, _matchScore: 100 }));
         }
 
-        // 2. Category Filter
+        // 2. Producer Filter (Case Special)
+        if (currentFilters.producerNickname) {
+            const normTarget = normalizeString(currentFilters.producerNickname);
+            results = results.filter(p => normalizeString(p.producer_name) === normTarget);
+        }
+
+        // 3. Category Filter
         if (currentFilters.categories.length > 0 && !currentFilters.categories.includes('Todo')) {
             results = results.filter(p => isProductInCategory(p, currentFilters.categories));
         }
 
-        // 3. BPM Filter
+        // 4. BPM Filter - Conditional (Only for beats or if product has BPM)
         if (currentFilters.bpmMin !== null || currentFilters.bpmMax !== null) {
             results = results.filter(p => {
-                if (!p.bpm) return true;
+                const isBeat = (p.product_type || '').toLowerCase() === 'beat';
+                if (!p.bpm) return !isBeat; // If no BPM, only show if NOT a beat (Presets, Kits pass)
+                
                 const b = parseInt(p.bpm);
                 const min = currentFilters.bpmMin || 0;
                 const max = currentFilters.bpmMax || 999;
@@ -1032,7 +1091,7 @@ function applyFilters() {
             });
         }
 
-        // 4. Price Filter
+        // 5. Price Filter
         if (currentFilters.priceMax !== null || currentFilters.freeOnly) {
             results = results.filter(p => {
                 const licenses = p._resolvedLicenses || [];
@@ -1042,16 +1101,18 @@ function applyFilters() {
             });
         }
 
-        // 5. Key Filter
+        // 6. Key Filter - Conditional
         if (currentFilters.keys && currentFilters.keys.length > 0) {
             const normalizedTargetKeys = currentFilters.keys.map(k => normalizeKey(k));
             results = results.filter(p => {
+                const isBeat = (p.product_type || '').toLowerCase() === 'beat';
                 const pKey = normalizeKey(p.key || p.key_scale || '');
-                return pKey && normalizedTargetKeys.includes(pKey);
+                if (!pKey) return !isBeat; // If no Key, only show if NOT a beat
+                return normalizedTargetKeys.includes(pKey);
             });
         }
 
-        // 6. File Type Filter
+        // 7. File Type Filter
         if (currentFilters.fileTypes && currentFilters.fileTypes.length > 0) {
             results = results.filter(p => {
                 const tagsStr = (p.tags || '').toLowerCase();
@@ -1260,7 +1321,17 @@ function renderResults(products, producers, exactProducer) {
     }
 
     if (totalCount === 0) {
-        container.innerHTML = '<div style="padding:40px; text-align:center; color:#666;">No se encontraron resultados para tu búsqueda.</div>';
+        if (currentFilters.producerNickname) {
+            container.innerHTML = `
+                <div class="empty-results-producer">
+                    <h2>"${currentFilters.producerNickname}" no tiene estos productos aún</h2>
+                    <p>Pero puedes explorar lo que otros productores tienen para ofrecer.</p>
+                    <a href="/search.html" class="btn-explore-others">Explorar otros productores</a>
+                </div>
+            `;
+        } else {
+            container.innerHTML = '<div style="padding:40px; text-align:center; color:#666;">No se encontraron resultados para tu búsqueda.</div>';
+        }
         return;
     }
 

@@ -1311,8 +1311,10 @@
                                     <!-- Dummy to fix chrome autofill weirdness -->
                                     <input type="number" id="inputPrice" step="0.01" min="5" max="1000"
                                         onkeydown="return event.keyCode !== 69 && event.keyCode !== 187 && event.keyCode !== 189">
-                                    <div id="price-error-msg" style="color: #ef4444; font-size: 11px; margin-top: 4px; display: none; font-weight: 500;">
-                                        <i class="bi bi-exclamation-triangle-fill"></i> Debes poner un precio para esta licencia
+                                    <div id="price-error-msg"
+                                        style="color: #ef4444; font-size: 11px; margin-top: 4px; display: none; font-weight: 500;">
+                                        <i class="bi bi-exclamation-triangle-fill"></i> Debes poner un precio para esta
+                                        licencia
                                     </div>
                                 </div>
                             </div>
@@ -1715,7 +1717,7 @@
                     const p = parseFloat(l.price);
                     return isNaN(p) || p <= 0;
                 });
-                
+
                 const saveBtn = document.getElementById('btnSaveTab');
                 if (saveBtn && !isSaving) {
                     if (hasInvalidPrice) {
@@ -1792,7 +1794,7 @@
                 inputs.forEach(i => {
                     i.addEventListener('input', () => {
                         const priceError = document.getElementById('price-error-msg');
-                        
+
                         if (i.id === 'inputPrice') {
                             let val = parseFloat(i.value);
                             if (val >= 1000) i.value = "1000";
@@ -1804,7 +1806,7 @@
                             // 🔥 GUARDRAIL: Precio 0
                             updateCurrentState(); // Sync state with current inputs
                             const otherActive = Object.keys(currentLicenses).filter(k => k !== currentTab && currentLicenses[k].enabled).length;
-                            
+
                             if (val <= 0 || isNaN(val) || i.value === "") {
                                 if (otherActive > 0) {
                                     // If not the last one, turn it OFF
@@ -1851,7 +1853,7 @@
                         i.addEventListener('change', () => {
                             updateCurrentState();
                             const activeCount = Object.values(currentLicenses).filter(l => l.enabled).length;
-                            
+
                             if (!i.checked && activeCount === 0) {
                                 // Block turning OFF the last one
                                 i.checked = true;
