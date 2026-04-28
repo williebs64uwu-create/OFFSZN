@@ -259,8 +259,15 @@ async function fetchData() {
                 }
             }
         }
-    } catch (err) {
-        console.error("Fetch error:", err);
+    } catch (error) {
+        console.error('❌ Error fetching explore data:', error);
+        
+        // Hide skeletons and show error even if fetch fails early
+        ['explore-list-skeleton', 'explore-pw-skeleton', 'explore-leaderboard-skeleton'].forEach(id => {
+            const sk = document.getElementById(id);
+            if (sk) sk.style.display = 'none';
+        });
+        
         showErrorState();
     }
 }
@@ -695,8 +702,11 @@ function startHeroSlider() {
     const canvases = heroContainer.querySelectorAll('.hero-particles-canvas');
     canvases.forEach(canvas => initHeroParticles(canvas));
 
-    const track = document.getElementById('hero-track');
-    if (!track) return;
+    const track = document.getElementById('wavs-hero-track');
+    if (!track) {
+        console.warn('⚠️ Hero track not found, slider skipped');
+        return;
+    }
 
     // Final entry animation for the initial slide
     const initialSlide = track.children[currentHeroIndex];
