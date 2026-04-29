@@ -710,10 +710,11 @@ function startHeroSlider() {
 
     // Final entry animation for the initial slide
     const initialSlide = track.children[currentHeroIndex];
-    if (initialSlide) {
-        const content = initialSlide.querySelector('.hero-content');
-        const image = initialSlide.querySelector('.hero-image-container');
-        gsap.fromTo([content, image], { opacity: 0 }, { opacity: 1, duration: 0.5, ease: "power2.out" });
+    if (initialSlide && window.gsap) {
+        const content = initialSlide.querySelector('.wavs-hero-content');
+        if (content) {
+            gsap.fromTo(content, { opacity: 0 }, { opacity: 1, duration: 0.5, ease: "power2.out" });
+        }
     }
 
     if (heroTimer) clearInterval(heroTimer);
@@ -794,15 +795,21 @@ function performHeroTransition(index) {
     const offset = -index * slideWidth;
 
 
-    gsap.to(track, {
-        x: offset,
-        duration: 0.6,
-        ease: "power3.out",
-        onComplete: () => {
-            currentHeroIndex = index;
-            updateHeroIndicators();
-        }
-    });
+    if (window.gsap) {
+        gsap.to(track, {
+            x: offset,
+            duration: 0.6,
+            ease: "power3.out",
+            onComplete: () => {
+                currentHeroIndex = index;
+                updateHeroIndicators();
+            }
+        });
+    } else {
+        track.style.transform = `translateX(${offset}px)`;
+        currentHeroIndex = index;
+        updateHeroIndicators();
+    }
 }
 
 // Add global resize listener to keep track aligned

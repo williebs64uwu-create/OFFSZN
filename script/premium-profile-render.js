@@ -100,8 +100,9 @@ window.PremiumRender = {
                 const img = s.image_url || '/images/portada-default.png';
                 const slug = (s.title || 'servicio').toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '');
                 const code = window.IdObfuscator ? window.IdObfuscator.encodeId(s.id) : s.id;
-                // Absolute URL to avoid 'undefined' paths
-                const link = `${window.location.origin}/servicio/${slug}-${code}-${userNickname}`;
+                
+                // If service has an external link, use it. Otherwise use internal /servicio/ link.
+                const link = s.link ? s.link : `${window.location.origin}/servicio/${slug}-${code}-${userNickname}`;
 
                 return `
                     <div class="shelf-card" onclick="window.location.href='${link}'">
@@ -109,6 +110,34 @@ window.PremiumRender = {
                         <div class="shelf-card-info">
                             <div class="shelf-card-title">${s.title || s.name}</div>
                             <div class="shelf-card-sub">${s.category || 'Servicio profesional'} • Desde $${s.price || s.price_basic || '0'}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+    },
+
+    /**
+     * Renders the playlists shelf
+     */
+    renderPlaylists: function(containerId, sectionId, playlists, userNickname) {
+        const container = document.getElementById(containerId);
+        const section = document.getElementById(sectionId);
+        if (!container || !section) return;
+
+        if (playlists.length > 0) {
+            section.style.display = 'block';
+            
+            container.innerHTML = playlists.map((p, i) => {
+                const img = p.cover_url ? (p.cover_url.startsWith('http') ? p.cover_url : `https://offszn.lat/api/r2-public/${p.cover_url}`) : '/images/portada-default.png';
+                const link = `/playlist.html?id=${p.id}`;
+
+                return `
+                    <div class="shelf-card" onclick="window.location.href='${link}'">
+                        <img src="${img}" class="shelf-card-img" onerror="this.src='/images/portada-default.png'">
+                        <div class="shelf-card-info">
+                            <div class="shelf-card-title">${p.title || 'Playlist'}</div>
+                            <div class="shelf-card-sub">${p.category || 'Colección'} • ${p.track_ids?.length || 0} tracks</div>
                         </div>
                     </div>
                 `;
