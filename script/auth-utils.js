@@ -171,25 +171,36 @@ window.AuthUtils = {
      * @returns {string|null} The access token or null if not found.
      */
     getAccessToken: function () {
+        // Helper to safely decode JWT payload (with UTF-8 support for special chars in names)
+        const decodeJwtPayload = (token) => {
+            try {
+                const parts = token.split('.');
+                if (parts.length !== 3) return null;
+                let base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+                while (base64.length % 4) {
+                    base64 += '=';
+                }
+                const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+                    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                }).join(''));
+                return JSON.parse(jsonPayload);
+            } catch (e) {
+                return null;
+            }
+        };
+
         // 0. Try Memory Cache (Synced with Auto-Refresh)
         // 🔒 VALIDATE EXPIRY: Don't return stale tokens from cache
         if (this._cachedToken) {
-            try {
-                const parts = this._cachedToken.split('.');
-                if (parts.length === 3) {
-                    const payload = JSON.parse(atob(parts[1]));
-                    if (payload && payload.exp && payload.exp < (Date.now() / 1000)) {
-                        // Token expired — clear cache and fall through to cookie/localStorage
-                        this._cachedToken = null;
-                    } else {
-                        return this._cachedToken;
-                    }
-                } else {
-                    return this._cachedToken;
-                }
-            } catch (e) {
-                // If decoding fails, clear cache to be safe
+            const payload = decodeJwtPayload(this._cachedToken);
+            if (payload && payload.exp && payload.exp < (Date.now() / 1000)) {
+                // Token expired — clear cache and fall through to cookie/localStorage
                 this._cachedToken = null;
+            } else if (!payload) {
+                // Mangled token in cache
+                this._cachedToken = null;
+            } else {
+                return this._cachedToken;
             }
         }
 
@@ -200,24 +211,20 @@ window.AuthUtils = {
             if (!t || t === 'undefined' || t === 'null' || t === ANON_KEY) return false;
 
             // Robust Check: Is it an 'anon' role JWT?
-            try {
-                // Decode payload (middle part of JWT)
-                const payloadStr = t.split('.')[1];
-                if (!payloadStr) return true; // Not a JWT? Let it through for standard validation
-
-                const payload = JSON.parse(atob(payloadStr));
-                if (payload && payload.role === 'anon') return false;
+            const payload = decodeJwtPayload(t);
+            if (payload) {
+                if (payload.role === 'anon') return false;
 
                 // --- EXPIRY CHECK ---
                 // If strictly expired, we prefer NOT to return it to avoid 401s.
                 // However, we don't delete it immediately to allow refresh logic to run.
-                if (payload && payload.exp && payload.exp < (Date.now() / 1000)) {
+                if (payload.exp && payload.exp < (Date.now() / 1000)) {
                     // console.warn("⚠️ AuthUtils: Token found but expired. Waiting for refresh...");
                     return false;
                 }
-            } catch (e) {
-                // If decoding fails, it might not be a JWT or is mangled.
-                // We let it pass to the server to decide, unless it's the known ANON_KEY.
+            } else {
+                // If it can't be decoded, let it pass to the server to decide, 
+                // unless it was empty (which is caught above).
             }
 
             return true;
