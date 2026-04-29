@@ -3,13 +3,20 @@
  * Shows a floating checklist for users who haven't completed their profile 100%.
  */
 
+let onb_initialized = false;
+let onb_loading = false;
+
 async function initOnboardingWidget() {
-    // 0. Mobile hide
-    if (window.innerWidth < 768) {
-        const existing = document.getElementById('offszn-onb-widget');
-        if (existing) existing.remove();
-        return;
-    }
+    if (onb_loading) return;
+    onb_loading = true;
+
+    try {
+        // 0. Mobile hide
+        if (window.innerWidth < 768) {
+            const existing = document.getElementById('offszn-onb-widget');
+            if (existing) existing.remove();
+            return;
+        }
 
     // 1. Wait for Supabase to be initialized
     const maxRetries = 50;
@@ -142,6 +149,11 @@ async function initOnboardingWidget() {
 
     // 7. Render Widget
     renderWidget(tasks, completedWeight, profile, { productCount, referralCount });
+    } catch (e) {
+        console.error("Onboarding Widget Error:", e);
+    } finally {
+        onb_loading = false;
+    }
 }
 
 // Expose globally
@@ -150,9 +162,13 @@ window.refreshOnboardingWidget = initOnboardingWidget;
 // Initial Call
 initOnboardingWidget();
 
-// Window Resize Handling
+// Debounce for resize and other triggers
+let onbResizeTimeout = null;
 window.addEventListener('resize', () => {
-    initOnboardingWidget();
+    if (onbResizeTimeout) clearTimeout(onbResizeTimeout);
+    onbResizeTimeout = setTimeout(() => {
+        initOnboardingWidget();
+    }, 250);
 });
 
 function renderWidget(tasks, progress, profile, stats) {
@@ -435,8 +451,10 @@ function updateWidgetContent(tasks, progress, profile, stats, wasActive) {
     const hasSeen = localStorage.getItem('offszn_onb_modal_seen') === '1';
     const refProgress = Math.min((stats.referralCount / 30) * 100, 100);
 
+    const shouldAutoOpen = !onb_initialized && !hasSeen;
+    
     container.innerHTML = `
-        <div class="onb-modal ${wasActive || !hasSeen ? 'active' : ''}" id="onbModal">
+        <div class="onb-modal ${wasActive || shouldAutoOpen ? 'active' : ''}" id="onbModal">
             <!-- Main Content (Checklist) -->
             <div id="onbChecklist">
                 <div class="onb-header">
@@ -550,6 +568,7 @@ function updateWidgetContent(tasks, progress, profile, stats, wasActive) {
         </div>
     `;
 
+    onb_initialized = true;
     setupWidgetListeners(container);
 }
 
@@ -572,6 +591,7 @@ function setupWidgetListeners(container) {
     closeBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         modal.classList.remove('active');
+        localStorage.setItem('offszn_onb_modal_seen', '1');
     });
 
     tasksEls.forEach(el => {
