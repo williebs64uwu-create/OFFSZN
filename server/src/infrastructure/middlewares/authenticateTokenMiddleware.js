@@ -1,11 +1,12 @@
 import { supabase } from '../database/connection.js';
+import jwt from 'jsonwebtoken';
+import { JWT_SECRET } from '../../shared/config/config.js';
 
 export const authenticateTokenMiddleware = async (req, res, next) => {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
 
-    // MODIFICADO: Bypass para rutas de descarga R2, links de orden y simulación de compra
-    // Usamos originalUrl para que funcione aunque el router esté montado en un prefijo (ej: /api)
+    // Bypass para rutas de descarga R2, links de orden y simulación de compra
     const bypassRoutes = [
         '/r2/download-url',
         '/api/orders/download-link',
@@ -16,34 +17,58 @@ export const authenticateTokenMiddleware = async (req, res, next) => {
         return next();
     }
 
-    // Validar token: No solo null/undefined, sino también strings vacíos o literales 'undefined'/'null'
     if (!token || token === 'undefined' || token === 'null') {
         return res.status(401).json({ error: 'Acceso denegado: No se proporcionó token válido' });
     }
 
     try {
-        const { data: { user }, error } = await supabase.auth.getUser(token);
+        let user = null;
 
-        if (error) {
-            // Reducir ruido en el log para errores de sesión comunes
-            if (error.message && (error.message.includes('expired') || error.message.includes('missing'))) {
-                console.warn(`[AuthMiddleware] ${error.message} para ${req.url}`);
-            } else {
-                console.error('❌ Supabase Auth Error checking token:', error.message);
+        // 🚀 FASE 1: Verificación de JWT Local (Super rápida ~0.1ms)
+        if (JWT_SECRET) {
+            try {
+                const decoded = jwt.verify(token, JWT_SECRET);
+                // Supabase JWT claims include sub (user id) and email
+                if (decoded && decoded.sub) {
+                    user = {
+                        id: decoded.sub,
+                        userId: decoded.sub,
+                        email: decoded.email || ''
+                    };
+                    // console.log('⚡ [Auth] JWT Verificado localmente en 0ms');
+                }
+            } catch (jwtError) {
+                if (jwtError.name === 'TokenExpiredError') {
+                    throw new Error('Token expirado');
+                } else if (jwtError.name === 'JsonWebTokenError') {
+                    // Si el secret no coincide o el token está mal formado, 
+                    // caemos en el fallback seguro (Supabase de red)
+                    console.warn(`⚠️ [AuthMiddleware] JWT Local Verify falló (¿Secret incorrecto?). Fallback a Supabase Red.`);
+                }
             }
-            throw new Error(error.message || 'Token inválido o expirado');
         }
 
+        // 🛡️ FALLBACK: Validación por red con Supabase (Segura pero lenta ~100ms)
         if (!user) {
-            return res.status(403).json({ error: 'Acceso denegado: Token inválido' });
+            const { data, error } = await supabase.auth.getUser(token);
+            if (error) {
+                if (error.message && (error.message.includes('expired') || error.message.includes('missing'))) {
+                    console.warn(`[AuthMiddleware] ${error.message} para ${req.url}`);
+                } else {
+                    console.error('❌ Supabase Auth Error checking token:', error.message);
+                }
+                throw new Error(error.message || 'Token inválido o expirado');
+            }
+            if (!data.user) throw new Error('Token inválido');
+            
+            user = {
+                id: data.user.id,
+                userId: data.user.id,
+                email: data.user.email
+            };
         }
 
-        req.user = {
-            id: user.id,
-            userId: user.id,
-            email: user.email,
-        };
-
+        req.user = user;
         next();
 
     } catch (error) {
