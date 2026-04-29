@@ -172,7 +172,26 @@ window.AuthUtils = {
      */
     getAccessToken: function () {
         // 0. Try Memory Cache (Synced with Auto-Refresh)
-        if (this._cachedToken) return this._cachedToken;
+        // 🔒 VALIDATE EXPIRY: Don't return stale tokens from cache
+        if (this._cachedToken) {
+            try {
+                const parts = this._cachedToken.split('.');
+                if (parts.length === 3) {
+                    const payload = JSON.parse(atob(parts[1]));
+                    if (payload && payload.exp && payload.exp < (Date.now() / 1000)) {
+                        // Token expired — clear cache and fall through to cookie/localStorage
+                        this._cachedToken = null;
+                    } else {
+                        return this._cachedToken;
+                    }
+                } else {
+                    return this._cachedToken;
+                }
+            } catch (e) {
+                // If decoding fails, clear cache to be safe
+                this._cachedToken = null;
+            }
+        }
 
         const ANON_KEY = window.SUPABASE_ANON_KEY || "";
 

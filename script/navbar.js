@@ -1365,10 +1365,19 @@ function updateUserVisuals(displayName, displayLetter, avatarUrl, plan = 'free',
 
 window.handleLogout = async function (e) {
     if (e) e.preventDefault();
-    if (typeof supabaseClient !== 'undefined') {
-        await supabaseClient.auth.signOut();
+    if (window.supabaseClient) {
+        await window.supabaseClient.auth.signOut();
         localStorage.removeItem('authToken'); // Explicitly clear token
+        // Clear the cookie as well
+        const domain = window.location.hostname.includes('offszn.lat') ? '; domain=.offszn.lat' : '';
+        document.cookie = `sb-access-token=; path=/; max-age=0; SameSite=Lax; Secure${domain}`;
         window.location.href = '/explorar'; // Redirect to ensure state refresh
+    } else {
+        // Fallback: even without supabase, clear local state and redirect
+        localStorage.removeItem('authToken');
+        const domain = window.location.hostname.includes('offszn.lat') ? '; domain=.offszn.lat' : '';
+        document.cookie = `sb-access-token=; path=/; max-age=0; SameSite=Lax; Secure${domain}`;
+        window.location.href = '/explorar';
     }
 }
 
@@ -1522,7 +1531,7 @@ async function syncSearchHistory(user) {
     // We will try to fetch from Supabase.
 
     try {
-        const { data: profiles, error } = await supabaseClient
+        const { data: profiles, error } = await window.supabaseClient
             .from('profiles')
             .select('search_history')
             .eq('id', user.id);
@@ -1557,7 +1566,7 @@ async function syncSearchHistory(user) {
         const mergedArray = Array.from(mergedMap.values()).slice(0, 50); // Limit to 50 for full history
 
         // D. Save Back to Profile
-        const { error: updateError } = await supabaseClient
+        const { error: updateError } = await window.supabaseClient
             .from('profiles')
             .update({ search_history: mergedArray })
             .eq('id', user.id);
