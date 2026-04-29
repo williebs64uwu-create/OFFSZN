@@ -250,6 +250,23 @@ window.FavoritesManager = (function () {
                 }
             });
 
+            if (res.status === 401 || res.status === 403) {
+                // Token was sent but server rejected it (expired/invalid)
+                if (window.AuthUtils) window.AuthUtils._cachedToken = null;
+                localStorage.removeItem('authToken');
+                document.cookie = `sb-access-token=; path=/; max-age=0; SameSite=Lax;`;
+                
+                if (window.showGuestModal) {
+                    window.showGuestModal(
+                        "Sesión expirada",
+                        "Tu sesión ha expirado o es inválida. Por favor inicia sesión nuevamente."
+                    );
+                } else {
+                    window.location.href = '/pages/register.html';
+                }
+                throw new Error('Unauthorized');
+            }
+
             if (!res.ok) throw new Error('API Error');
 
             const data = await res.json();
