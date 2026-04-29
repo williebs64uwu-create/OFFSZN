@@ -50,20 +50,43 @@ export const deleteFromImageKitByPath = async (filePath) => {
     try {
         const searchPath = filePath.startsWith('/') ? filePath : `/${filePath}`;
         
-        // Find the file by path
-        const files = await imagekit.assets.list({
-            path: searchPath
-        });
+        // Extract folder and filename from the path
+        // e.g., /avatars/avatar_xxx_RspRVFvcw -> folder: avatars, name: avatar_xxx_RspRVFvcw
+        const lastSlash = searchPath.lastIndexOf('/');
+        const folder = lastSlash > 0 ? searchPath.substring(1, lastSlash) : '';
+        const fileName = lastSlash >= 0 ? searchPath.substring(lastSlash + 1) : searchPath.replace(/^\//, '');
+        
+        if (!fileName) {
+            console.warn(`⚠️ [ImageKit] Could not extract filename from path: ${searchPath}`);
+            return;
+        }
+
+        // Use searchQuery (Lucene-like syntax) — the only reliable way to find files
+        // When searchQuery is present, other params like `name` and `path` are ignored per docs
+        let query = `name="${fileName}"`;
+        if (folder) {
+            // filePath in ImageKit includes the leading slash
+            query += ` AND filePath="/${folder}/"`;
+        }
+
+        let files = await imagekit.assets.list({ searchQuery: query });
+
+        // Fallback: search by name only (in case folder path format differs)
+        if ((!files || files.length === 0) && folder) {
+            files = await imagekit.assets.list({ searchQuery: `name="${fileName}"` });
+        }
 
         if (files && files.length > 0) {
             const fileId = files[0].fileId;
             await imagekit.files.delete(fileId);
-            console.log(`🗑️ [ImageKit] Deleted file at path ${searchPath} (ID: ${fileId})`);
+            console.log(`🗑️ [ImageKit] Deleted "${fileName}" from /${folder} (ID: ${fileId})`);
         } else {
-            console.warn(`⚠️ [ImageKit] No file found at path: ${searchPath}`);
+            // Not an error — file may have been already deleted or never existed
+            console.warn(`⚠️ [ImageKit] No file found: ${fileName} in /${folder} (already cleaned?)`);
         }
     } catch (error) {
-        console.error("❌ [ImageKit Service] Delete By Path Error:", error);
+        // Don't throw — cleanup failures shouldn't crash the app
+        console.error("❌ [ImageKit Service] Delete By Path Error:", error?.message || error);
     }
 };
 
