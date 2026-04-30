@@ -132,16 +132,16 @@
             loader.style.opacity = '0';
             setTimeout(() => {
                 loader.style.visibility = 'hidden';
-                
-                // Animación entrada Hero
-                const tl = gsap.timeline();
-                tl.to('#hero-content', { autoAlpha: 1, y: 0, duration: 1.2, ease: 'power4.out' });
-                
-                // Animación sutil para los tabs si ya están listos
-                if (document.querySelector('.tab-trigger')) {
-                    tl.from('.tab-trigger', { autoAlpha: 0, y: 15, stagger: 0.08, duration: 0.8, ease: 'back.out(1.7)' }, "-=0.6");
-                }
             }, 500);
+        }
+        
+        // Animación entrada Hero
+        const tl = gsap.timeline();
+        tl.to('#hero-content', { autoAlpha: 1, y: 0, duration: 1.2, ease: 'power4.out' });
+        
+        // Animación sutil para los tabs si ya están listos
+        if (document.querySelector('.tab-trigger')) {
+            tl.from('.tab-trigger', { autoAlpha: 0, y: 15, stagger: 0.08, duration: 0.8, ease: 'back.out(1.7)' }, "-=0.6");
         }
     }
 
