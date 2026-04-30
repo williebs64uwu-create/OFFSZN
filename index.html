@@ -95,8 +95,11 @@
   <!-- ==================== NAVBAR ==================== -->
   <div id="navbar-landing-container"></div>
   <script>
-    fetch('/components/navbar-landing.html')
-      .then(res => res.text())
+    fetch('/components/navbar-landing.html?v=55')
+      .then(res => {
+        if (!res.ok) throw new Error("Navbar failed to load");
+        return res.text();
+      })
       .then(html => {
         document.getElementById('navbar-landing-container').innerHTML = html;
         // Scroll Effect for Glass UI

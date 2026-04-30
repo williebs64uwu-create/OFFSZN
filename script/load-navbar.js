@@ -9,8 +9,8 @@
 
 (async () => {
     const placeholder = document.getElementById('navbar-placeholder');
-    const CACHE_KEY = 'offszn_navbar_cache_v12'; // Increment key to force update
-    const NAVBAR_URL = 'components/navbar.html?v=32';
+    const CACHE_KEY = 'offszn_navbar_cache_v13'; // Increment key to force update
+    const NAVBAR_URL = 'components/navbar.html?v=33';
 
     /**
      * 🔥 ZERO-FLASH CACHING LOGIC
@@ -73,6 +73,11 @@
 
         // 3. Update if different or not already injected
         if (freshHtml !== cachedHtml) {
+            // SEGURIDAD: Evitar que el servidor inyecte la página 404 si hubo un fallo en el routing
+            if (freshHtml.includes('Te perdiste') || freshHtml.includes('<title>404')) {
+                throw new Error("El servidor devolvió la página 404 en lugar de la barra de navegación.");
+            }
+
             placeholder.innerHTML = freshHtml;
             localStorage.setItem(CACHE_KEY, freshHtml);
 
