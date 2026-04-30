@@ -168,9 +168,27 @@ function initGsapAnimations() {
     gsap.set(".reveal-group > *", { opacity: 0, y: revealOffset, filter: "blur(4px)" });
     gsap.set(".hero-v4-visual", { scale: isMobile ? 0.95 : 0.9, opacity: 0 });
     gsap.set(".hero-cta-buttons", { opacity: 0, y: heroOffset });
-    // NEW: Subtle initial state for Hero text
     gsap.set(".hero-v4-title, .hero-v4-subtext", { opacity: 0, y: 20, filter: "blur(10px)" });
     gsap.set([".reveal-mask", ".reveal-group", ".gsap-reveal"], { visibility: "visible", opacity: 1 });
+
+    // 🛡️ SAFETY OVERRIDE: If animations don't trigger, show content anyway after 3.5s
+    setTimeout(() => {
+        const title = document.querySelector(".hero-v4-title");
+        if (title && getComputedStyle(title).opacity === "0") {
+            console.warn("[OFFSZN Safety] Forcing reveal due to animation timeout");
+            gsap.to(".reveal-content", { y: 0, duration: 0.4 });
+            gsap.to(".reveal-group > *, .hero-v4-visual, .hero-cta-buttons, .hero-v4-title, .hero-v4-subtext", { 
+                opacity: 1, y: 0, scale: 1, filter: "blur(0px)", duration: 0.4, stagger: 0.05, autoAlpha: 1
+            });
+            // Direct CSS backup for absolute certainty
+            document.querySelectorAll(".reveal-group, .gsap-reveal, .hero-v4-title").forEach(el => {
+                el.style.opacity = "1";
+                el.style.visibility = "visible";
+                el.style.filter = "none";
+                el.style.transform = "none";
+            });
+        }
+    }, 3500);
 
     // Hero Entry Sequence
     const heroTl = gsap.timeline({ defaults: { ease: "power3.out", duration: 1.5 } });

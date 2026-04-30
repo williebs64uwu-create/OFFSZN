@@ -119,6 +119,17 @@
           }
         }
         tryAuthInit(15);
+      })
+      .catch(err => {
+        console.warn('Navbar fetch failed, initializing auth anyway:', err);
+        function tryAuthInit(retries) {
+          if (typeof initAuthState === 'function') {
+            initAuthState();
+          } else if (retries > 0) {
+            setTimeout(() => tryAuthInit(retries - 1), 200);
+          }
+        }
+        tryAuthInit(15);
       });
   </script>
 

@@ -61,10 +61,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
     window.triggerProfileReveal = triggerReveal;
 
-    // 🔥 SAFETY: Force reveal after 5 seconds if something hangs
+    // 🔥 SAFETY: Force reveal after 4 seconds if something hangs
     setTimeout(() => {
         if (window.triggerProfileReveal) window.triggerProfileReveal();
-    }, 5000);
+    }, 4000);
 
     // 🔥 SPA FIX: Reset loading lock in case router re-triggered DOMContentLoaded
     isLoadingProducts = false;
@@ -298,13 +298,21 @@ async function loadUserProfile(username) {
 
     } catch (e) {
         console.error("Error loading profile:", e);
-        if (profileRoot) profileRoot.style.opacity = '1';
+        if (profileRoot) {
+            profileRoot.classList.add('header-data-ready');
+            profileRoot.classList.add('header-loaded');
+            profileRoot.style.opacity = '1';
+        }
         if (loadingBar) {
             loadingBar.classList.remove('loading');
             loadingBar.style.opacity = '0';
         }
-        document.getElementById('profileName').innerText = "Usuario no encontrado";
-        document.getElementById('profileBio').innerText = "No se pudo cargar el perfil.";
+        const pName = document.getElementById('profileName');
+        const pBio = document.getElementById('profileBio');
+        if (pName) pName.innerText = "Usuario no encontrado";
+        if (pBio) pBio.innerText = "No se pudo cargar el perfil o el usuario no existe.";
+        
+        if (window.triggerProfileReveal) window.triggerProfileReveal();
     }
 }
 
