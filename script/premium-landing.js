@@ -200,7 +200,7 @@ function initGsapAnimations() {
     gsap.set(".reveal-group > *", { opacity: 0, y: revealOffset, filter: "blur(4px)" });
     gsap.set(".hero-v4-visual", { scale: isMobile ? 0.95 : 0.9, opacity: 0 });
     gsap.set(".hero-cta-buttons", { opacity: 0, y: heroOffset });
-    gsap.set(".hero-v4-title, .hero-v4-subtext", { opacity: 0, y: 20, filter: "blur(10px)" });
+    gsap.set(".hero-v4-title", { opacity: 0, y: 20, filter: "blur(10px)" });
     gsap.set([".reveal-mask", ".reveal-group", ".gsap-reveal"], { visibility: "visible", opacity: 1 });
 
     // 🛡️ SAFETY OVERRIDE: If animations don't trigger, show content anyway after 3.5s
@@ -209,7 +209,7 @@ function initGsapAnimations() {
         if (title && getComputedStyle(title).opacity === "0") {
             console.warn("[OFFSZN Safety] Forcing reveal due to animation timeout");
             gsap.to(".reveal-content", { y: 0, duration: 0.4 });
-            gsap.to(".reveal-group > *, .hero-v4-visual, .hero-cta-buttons, .hero-v4-title, .hero-v4-subtext", { 
+            gsap.to(".reveal-group > *, .hero-v4-visual, .hero-cta-buttons, .hero-v4-title", { 
                 opacity: 1, y: 0, scale: 1, filter: "blur(0px)", duration: 0.4, stagger: 0.05, autoAlpha: 1
             });
             // Safety Override: Force reveal if something hangs
@@ -226,7 +226,6 @@ function initGsapAnimations() {
     // Hero Entry Sequence
     const heroTl = gsap.timeline({ defaults: { ease: "power3.out", duration: 1.5 } });
     heroTl.to(".hero-v4-title", { opacity: 1, y: 0, filter: "blur(0px)", duration: 1.5 })
-          .to(".hero-v4-subtext", { opacity: 1, y: 0, filter: "blur(0px)", duration: 1.3 }, "-=1.1")
           .to(".hero-cta-buttons", { opacity: 1, y: 0, duration: 1.2 }, "-=1.0")
           .to(".hero-v4-visual", { scale: 1, opacity: 1, duration: 2, ease: "power2.out" }, "-=1.2");
 
